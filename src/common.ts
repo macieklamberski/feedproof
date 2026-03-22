@@ -57,3 +57,16 @@ export const applyStringTransforms = (
 
   return output
 }
+
+// Strips outermost matching wrapper tags, looping until stable.
+export const unwrapOuterTag = (html: string, pattern: RegExp): string => {
+  let result = html.trim()
+  let match = pattern.exec(result)
+
+  while (match) {
+    result = match[3].trim()
+    match = pattern.exec(result)
+  }
+
+  return result
+}
