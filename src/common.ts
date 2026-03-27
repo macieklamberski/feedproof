@@ -70,3 +70,53 @@ export const unwrapOuterTag = (html: string, pattern: RegExp): string => {
 
   return result
 }
+
+export const blockElements = new Set([
+  'address',
+  'article',
+  'aside',
+  'blockquote',
+  'center',
+  'dd',
+  'details',
+  'div',
+  'dl',
+  'dt',
+  'fieldset',
+  'figcaption',
+  'figure',
+  'footer',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'header',
+  'hr',
+  'li',
+  'main',
+  'nav',
+  'ol',
+  'p',
+  'pre',
+  'section',
+  'summary',
+  'table',
+  'ul',
+])
+
+export const isSkippable = (node: Node): boolean => {
+  const isWhitespaceText = node.nodeType === Node.TEXT_NODE && !(node.textContent ?? '').trim()
+  const isBr =
+    node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName.toLowerCase() === 'br'
+
+  return isWhitespaceText || isBr
+}
+
+export const isBlockElement = (node: Node): boolean => {
+  return (
+    node.nodeType === Node.ELEMENT_NODE &&
+    blockElements.has((node as Element).tagName.toLowerCase())
+  )
+}
