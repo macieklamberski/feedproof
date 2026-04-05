@@ -1,4 +1,5 @@
 import { parseHTML } from 'linkedom'
+import type { EmbedResolverResult } from './types.js'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3 } as const
@@ -119,4 +120,48 @@ export const isBlockElement = (node: Node): boolean => {
     node.nodeType === Node.ELEMENT_NODE &&
     blockElements.has((node as Element).tagName.toLowerCase())
   )
+}
+
+export const createEmbedPlaceholder = (
+  document: Document,
+  src: string,
+  type: 'video' | 'audio' | 'iframe',
+  metadata?: Partial<EmbedResolverResult>,
+): HTMLElement => {
+  const element = document.createElement('div')
+
+  element.setAttribute('data-embed', metadata?.type ?? type)
+  element.setAttribute('data-embed-src', metadata?.src ?? src)
+
+  if (metadata?.provider) {
+    element.setAttribute('data-embed-provider', metadata.provider)
+  }
+
+  if (metadata?.url) {
+    element.setAttribute('data-embed-url', metadata.url)
+  }
+
+  if (metadata?.thumbnail) {
+    element.setAttribute('data-embed-thumbnail', metadata.thumbnail)
+  }
+
+  if (metadata?.autoload) {
+    element.setAttribute('data-embed-autoload', '')
+  }
+
+  if (metadata?.width) {
+    element.setAttribute('data-embed-width', String(metadata.width))
+  }
+
+  if (metadata?.height) {
+    element.setAttribute('data-embed-height', String(metadata.height))
+  }
+
+  const fallbackUrl = metadata?.url ?? metadata?.src ?? src
+  const link = document.createElement('a')
+  link.setAttribute('href', fallbackUrl)
+  link.textContent = fallbackUrl
+  element.appendChild(link)
+
+  return element
 }
