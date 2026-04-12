@@ -25,3 +25,31 @@ export type TransformContext = {
 export type DomTransform = (context: TransformContext) => (document: Document) => void
 
 export type StringTransform = (context: TransformContext) => (html: string) => string
+
+export type TransformToggles = {
+  decodeDoubleEncodedTags?: boolean
+  unwrapWrappers?: boolean
+  paragraphizePlainText?: boolean
+  fixLazyImages?: boolean
+  resolveRelativeUrls?: boolean
+  unwrapRedirectUrls?: boolean
+  stripTrackingParams?: boolean
+  removeTrackingPixels?: boolean
+  stripInterBlockBreaks?: boolean
+  simplifyFigures?: boolean
+  highlightCode?: boolean
+  mergeConsecutiveOneLinerPres?: boolean
+  replacePreLineBreaks?: boolean
+  trimPreWhitespace?: boolean
+  linkifyUrls?: boolean
+  replaceMediaWithEmbedPlaceholders?: boolean
+  injectEnclosureEmbedPlaceholders?: boolean
+}
+
+export type TransformContentOptions = {
+  baseUrl?: string
+  enclosures?: Array<Enclosure>
+  resolveEmbed?: (url: string) => EmbedResolverResult | undefined
+  embedDomains?: Array<string>
+  transforms?: TransformToggles
+}
