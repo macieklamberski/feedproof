@@ -64,3 +64,48 @@ export const transformContent = (html: string, options: TransformContentOptions 
 
   return afterDom
 }
+
+export {
+  applyDomTransforms,
+  applyStringTransforms,
+  createEmbedPlaceholder,
+  parseFragment,
+  stripOversizedBase64Sources,
+  transformHtml,
+} from './common.js'
+export { soundcloudEmbedDomains } from './platforms/soundcloud.js'
+export { spotifyEmbedDomains } from './platforms/spotify.js'
+export { vimeoEmbedDomains } from './platforms/vimeo.js'
+export {
+  composeThumbnailUrl,
+  extractVideoId,
+  youtubeEmbedDomains,
+  youtubeResolveEmbed,
+} from './platforms/youtube.js'
+export { decodeDoubleEncodedTags } from './transforms/decodeDoubleEncodedTags.js'
+export { fixLazyImages } from './transforms/fixLazyImages.js'
+export { detectLanguage, highlightCode } from './transforms/highlightCode.js'
+export { injectEnclosureEmbedPlaceholders } from './transforms/injectEnclosureEmbedPlaceholders.js'
+export { linkifyUrls } from './transforms/linkifyUrls.js'
+export { mergeConsecutiveOneLinerPres } from './transforms/mergeConsecutiveOneLinerPres.js'
+export { paragraphizePlainText } from './transforms/paragraphizePlainText.js'
+export { removeTrackingPixels } from './transforms/removeTrackingPixels.js'
+export { replaceMediaWithEmbedPlaceholders } from './transforms/replaceMediaWithEmbedPlaceholders.js'
+export { replacePreLineBreaks } from './transforms/replacePreLineBreaks.js'
+export { resolveRelativeUrls } from './transforms/resolveRelativeUrls.js'
+export { simplifyFigures } from './transforms/simplifyFigures.js'
+export { stripInterBlockBreaks } from './transforms/stripInterBlockBreaks.js'
+export { stripTrackingParams } from './transforms/stripTrackingParams.js'
+export { trimPreWhitespace } from './transforms/trimPreWhitespace.js'
+export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/unwrapRedirectUrls.js'
+export { unwrapWrappers } from './transforms/unwrapWrappers.js'
+export type {
+  DomTransform,
+  EmbedResolverResult,
+  Enclosure,
+  StringTransform,
+  TransformContentOptions,
+  TransformContext,
+  TransformToggles,
+} from './types.js'
+export { chooseBaseUrl, coerceNumber } from './utils.js'
