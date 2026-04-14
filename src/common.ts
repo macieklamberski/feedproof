@@ -4,10 +4,10 @@ import type { EmbedResolverResult } from './types.js'
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3 } as const
 
-const base64SrcPattern = /((?:src|srcset|poster)=["'])data:[^"']*;base64,[^"']*(["'])/g
+const base64SrcRegex = /((?:src|srcset|poster)=["'])data:[^"']*;base64,[^"']*(["'])/g
 
 export const stripOversizedBase64Sources = (html: string, maxSize: number): string => {
-  return html.replace(base64SrcPattern, (match, prefix, suffix) => {
+  return html.replace(base64SrcRegex, (match, prefix, suffix) => {
     if (match.length < maxSize) {
       return match
     }

@@ -1,16 +1,16 @@
 import type { StringTransform } from '../types.js'
 
-const hasHtmlPattern = /<[a-z][a-z0-9]*[\s>]/i
+const hasHtmlRegex = /<[a-z][a-z0-9]*[\s>]/i
 
 // Matches entity-encoded HTML tags: &lt;tagname ...&gt; or &lt;/tagname&gt;.
 // Attribute group uses negative lookahead to stop at &gt; but allow other & sequences
 // (e.g. &amp; inside attribute values).
-const encodedTagPattern = /&lt;(\/?)([a-zA-Z][\w-]*)((?:[^&]|&(?!gt;))*)&gt;/g
-const hasEncodedTagPattern = /&lt;[a-zA-Z/]/
+const encodedTagRegex = /&lt;(\/?)([a-zA-Z][\w-]*)((?:[^&]|&(?!gt;))*)&gt;/g
+const hasEncodedTagRegex = /&lt;[a-zA-Z/]/
 
 // Matches <code>, <pre>, or <pre><code> blocks (with optional attributes) and their
 // content, used to protect intentionally-encoded tags inside code from being decoded.
-const codeBlockPattern = /<(code|pre)(\s[^>]*)?>[\s\S]*?<\/\1>/gi
+const codeBlockRegex = /<(code|pre)(\s[^>]*)?>[\s\S]*?<\/\1>/gi
 
 // Decodes HTML tags that were double-encoded by buggy feed generators. Some feeds
 // mix real HTML (<p>, <ul>) with entity-encoded tags (&lt;a href="..."&gt;) in the
@@ -20,26 +20,26 @@ const codeBlockPattern = /<(code|pre)(\s[^>]*)?>[\s\S]*?<\/\1>/gi
 // blocks where entity-encoded tags are intentional (e.g. tutorials showing HTML).
 export const decodeDoubleEncodedTags: StringTransform = () => {
   return (html) => {
-    if (!hasHtmlPattern.test(html) || !hasEncodedTagPattern.test(html)) {
+    if (!hasHtmlRegex.test(html) || !hasEncodedTagRegex.test(html)) {
       return html
     }
 
     let result = ''
     let lastIndex = 0
 
-    for (const match of html.matchAll(codeBlockPattern)) {
+    for (const match of html.matchAll(codeBlockRegex)) {
       const matchStart = match.index
       const matchEnd = matchStart + match[0].length
 
       // Decode tags in the segment before this code block.
-      result += html.slice(lastIndex, matchStart).replace(encodedTagPattern, '<$1$2$3>')
+      result += html.slice(lastIndex, matchStart).replace(encodedTagRegex, '<$1$2$3>')
       // Preserve the code block as-is.
       result += match[0]
       lastIndex = matchEnd
     }
 
     // Decode tags in any remaining content after the last code block.
-    result += html.slice(lastIndex).replace(encodedTagPattern, '<$1$2$3>')
+    result += html.slice(lastIndex).replace(encodedTagRegex, '<$1$2$3>')
 
     return result
   }
