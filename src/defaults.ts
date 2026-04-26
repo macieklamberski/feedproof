@@ -13,7 +13,9 @@ import { removeTrackingPixels } from './transforms/removeTrackingPixels.js'
 import { replaceMediaWithEmbedPlaceholders } from './transforms/replaceMediaWithEmbedPlaceholders.js'
 import { replacePreLineBreaks } from './transforms/replacePreLineBreaks.js'
 import { resolveRelativeUrls } from './transforms/resolveRelativeUrls.js'
+import { stripEmptyTags } from './transforms/stripEmptyTags.js'
 import { stripInterBlockBreaks } from './transforms/stripInterBlockBreaks.js'
+import { stripOrphanedClosingTags } from './transforms/stripOrphanedClosingTags.js'
 import { stripTrackingParams } from './transforms/stripTrackingParams.js'
 import { trimPreWhitespace } from './transforms/trimPreWhitespace.js'
 import { unwrapRedirectUrls } from './transforms/unwrapRedirectUrls.js'
@@ -21,9 +23,11 @@ import { unwrapWrappers } from './transforms/unwrapWrappers.js'
 import type { DomTransform, EmbedResolverResult, StringTransform } from './types.js'
 
 export const defaultStringTransforms: Array<StringTransform> = [
+  stripOrphanedClosingTags,
   decodeDoubleEncodedTags,
   unwrapWrappers,
   paragraphizePlainText,
+  stripEmptyTags,
 ]
 
 export const defaultDomTransforms: Array<DomTransform> = [

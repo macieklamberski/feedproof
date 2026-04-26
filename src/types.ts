@@ -27,9 +27,11 @@ export type DomTransform = (context: TransformContext) => (document: Document) =
 export type StringTransform = (context: TransformContext) => (html: string) => string
 
 export type TransformToggles = {
+  stripOrphanedClosingTags?: boolean
   decodeDoubleEncodedTags?: boolean
   unwrapWrappers?: boolean
   paragraphizePlainText?: boolean
+  stripEmptyTags?: boolean
   fixLazyImages?: boolean
   resolveRelativeUrls?: boolean
   unwrapRedirectUrls?: boolean
