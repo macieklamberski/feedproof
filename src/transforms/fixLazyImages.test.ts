@@ -111,8 +111,8 @@ describe('fixLazyImages', () => {
     expect(result).toContain('<p>No images here</p>')
   })
 
-  describe('lazySrcAttributes override', () => {
-    it('should ignore default attributes when override is provided', () => {
+  describe('overrides', () => {
+    it('should ignore default lazySrcAttributes when override is provided', () => {
       const customContext: TransformContext = { lazySrcAttributes: ['data-img'] }
       const html = '<img data-src="ignored.jpg">'
       const result = transformHtml(html, fixLazyImages(customContext))
@@ -121,7 +121,7 @@ describe('fixLazyImages', () => {
       expect(result).not.toContain('<img src=')
     })
 
-    it('should use the provided attributes', () => {
+    it('should use the provided lazySrcAttributes', () => {
       const customContext: TransformContext = { lazySrcAttributes: ['data-img'] }
       const html = '<img data-img="photo.jpg">'
       const result = transformHtml(html, fixLazyImages(customContext))

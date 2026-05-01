@@ -58,3 +58,17 @@ export const defaultResolveEmbed = (url: string): EmbedResolverResult | undefine
 }
 
 export const defaultLazySrcAttributes = ['data-src', 'data-original', 'data-lazy-src', 'data-url']
+
+// Hosts that overwhelmingly serve analytics or tracking pixels.
+export const defaultTrackingHosts = [
+  'feedsportal.com',
+  'stats.wordpress.com',
+  'pixel.wp.com',
+  'doubleclick.net',
+  'google-analytics.com',
+]
+
+// Path segments that strongly indicate a tracking pixel rather than a real image.
+// Combined into a regex anchored with `[./]` boundaries to avoid false positives
+// on words like `tracker` or `counter`.
+export const defaultTrackingPathSegments = ['pixel', 'beacon', 'track', 'count']

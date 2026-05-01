@@ -21,6 +21,8 @@ export type TransformContext = {
   resolveEmbed?: (url: string) => EmbedResolverResult | undefined
   embedDomains?: Array<string>
   lazySrcAttributes?: Array<string>
+  trackingHosts?: Array<string>
+  trackingPathSegments?: Array<string>
 }
 
 export type DomTransform = (context: TransformContext) => (document: Document) => void
@@ -55,5 +57,7 @@ export type TransformContentOptions = {
   resolveEmbed?: (url: string) => EmbedResolverResult | undefined
   embedDomains?: Array<string>
   lazySrcAttributes?: Array<string>
+  trackingHosts?: Array<string>
+  trackingPathSegments?: Array<string>
   transforms?: TransformToggles
 }
