@@ -15,6 +15,8 @@ export type EmbedResolverResult = {
   height?: number
 }
 
+export type RedirectExtractor = (url: URL) => string | null
+
 export type TransformContext = {
   baseUrl?: string
   enclosures?: Array<Enclosure>
@@ -23,6 +25,7 @@ export type TransformContext = {
   lazySrcAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
+  redirectExtractors?: Array<RedirectExtractor>
 }
 
 export type DomTransform = (context: TransformContext) => (document: Document) => void
@@ -59,5 +62,6 @@ export type TransformContentOptions = {
   lazySrcAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
+  redirectExtractors?: Array<RedirectExtractor>
   transforms?: TransformToggles
 }

@@ -49,6 +49,7 @@ export const transformContent = (html: string, options: TransformContentOptions 
     lazySrcAttributes: options.lazySrcAttributes,
     trackingHosts: options.trackingHosts,
     trackingPathSegments: options.trackingPathSegments,
+    redirectExtractors: options.redirectExtractors,
   }
 
   // Phase 1: String transforms.

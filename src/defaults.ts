@@ -62,3 +62,4 @@ export {
   defaultTrackingHosts,
   defaultTrackingPathSegments,
 } from './transforms/removeTrackingPixels.js'
+export { defaultRedirectExtractors } from './transforms/unwrapRedirectUrls.js'
