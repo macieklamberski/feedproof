@@ -1,5 +1,14 @@
-import { defaultTrackingHosts, defaultTrackingPathSegments } from '../defaults.js'
 import type { DomTransform } from '../types.js'
+
+export const defaultTrackingHosts = [
+  'feedsportal.com',
+  'stats.wordpress.com',
+  'pixel.wp.com',
+  'doubleclick.net',
+  'google-analytics.com',
+]
+
+export const defaultTrackingPathSegments = ['pixel', 'beacon', 'track', 'count']
 
 // `[./]` anchors require the segment to terminate with `.` (file extension) or `/`
 // (path boundary) to avoid false positives on words like `tracker` or `counter`.
