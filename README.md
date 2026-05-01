@@ -1,5 +1,6 @@
 # Feedproof
 
+[![codecov](https://codecov.io/gh/macieklamberski/feedproof/branch/main/graph/badge.svg)](https://codecov.io/gh/macieklamberski/feedproof)
 [![npm version](https://img.shields.io/npm/v/feedproof.svg)](https://www.npmjs.com/package/feedproof)
 [![license](https://img.shields.io/npm/l/feedproof.svg)](https://github.com/macieklamberski/feedproof/blob/main/LICENSE)
 
