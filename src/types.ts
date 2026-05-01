@@ -20,6 +20,7 @@ export type TransformContext = {
   enclosures?: Array<Enclosure>
   resolveEmbed?: (url: string) => EmbedResolverResult | undefined
   embedDomains?: Array<string>
+  lazySrcAttributes?: Array<string>
 }
 
 export type DomTransform = (context: TransformContext) => (document: Document) => void
@@ -53,5 +54,6 @@ export type TransformContentOptions = {
   enclosures?: Array<Enclosure>
   resolveEmbed?: (url: string) => EmbedResolverResult | undefined
   embedDomains?: Array<string>
+  lazySrcAttributes?: Array<string>
   transforms?: TransformToggles
 }

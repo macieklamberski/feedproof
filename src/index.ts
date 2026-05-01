@@ -46,6 +46,7 @@ export const transformContent = (html: string, options: TransformContentOptions 
     enclosures: options.enclosures,
     resolveEmbed: options.resolveEmbed ?? defaultResolveEmbed,
     embedDomains: options.embedDomains ?? defaultEmbedDomains,
+    lazySrcAttributes: options.lazySrcAttributes,
   }
 
   // Phase 1: String transforms.

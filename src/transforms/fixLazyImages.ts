@@ -1,9 +1,11 @@
+import { defaultLazySrcAttributes } from '../defaults.js'
 import type { DomTransform } from '../types.js'
 
-const lazySrcAttributes = ['data-src', 'data-original', 'data-lazy-src', 'data-url']
 const imgPattern = /<img\s/i
 
-export const fixLazyImages: DomTransform = () => {
+export const fixLazyImages: DomTransform = (context) => {
+  const lazySrcAttributes = context.lazySrcAttributes ?? defaultLazySrcAttributes
+
   return (document) => {
     // Move lazy-load data attributes to real src/srcset.
     for (const image of document.querySelectorAll('img')) {
