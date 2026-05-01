@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'bun:test'
-
 import { applyDomTransforms, transformHtml } from '../common.js'
 import type { TransformContext } from '../types.js'
 import { mergeConsecutiveOneLinerPres } from './mergeConsecutiveOneLinerPres.js'

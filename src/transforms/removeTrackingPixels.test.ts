@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'bun:test'
-
 import { transformHtml } from '../common.js'
 import type { TransformContext } from '../types.js'
 import { removeTrackingPixels } from './removeTrackingPixels.js'

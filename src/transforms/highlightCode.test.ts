@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-
 import { parseHTML } from 'linkedom'
-
 import { transformHtml } from '../common.js'
 import type { TransformContext } from '../types.js'
 import { detectLanguage, highlightCode } from './highlightCode.js'

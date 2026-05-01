@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'bun:test'
-
 import type { TransformContext } from '../types.js'
 import { stripEmptyTags } from './stripEmptyTags.js'
 
