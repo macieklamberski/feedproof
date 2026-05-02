@@ -26,6 +26,7 @@ export type TransformContext = {
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
   redirectExtractors?: Array<RedirectExtractor>
+  articleTitle?: string
 }
 
 export type DomTransform = (context: TransformContext) => (document: Document) => void
@@ -43,6 +44,7 @@ export type TransformToggles = {
   unwrapRedirectUrls?: boolean
   stripTrackingParams?: boolean
   removeTrackingPixels?: boolean
+  stripDuplicateTitleHeading?: boolean
   stripInterBlockBreaks?: boolean
   simplifyFigures?: boolean
   highlightCode?: boolean
@@ -63,5 +65,6 @@ export type TransformContentOptions = {
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
   redirectExtractors?: Array<RedirectExtractor>
+  articleTitle?: string
   transforms?: TransformToggles
 }

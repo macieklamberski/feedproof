@@ -50,6 +50,7 @@ export const transformContent = (html: string, options: TransformContentOptions 
     trackingHosts: options.trackingHosts,
     trackingPathSegments: options.trackingPathSegments,
     redirectExtractors: options.redirectExtractors,
+    articleTitle: options.articleTitle,
   }
 
   // Phase 1: String transforms.
@@ -98,6 +99,7 @@ export { replaceMediaWithEmbedPlaceholders } from './transforms/replaceMediaWith
 export { replacePreLineBreaks } from './transforms/replacePreLineBreaks.js'
 export { resolveRelativeUrls } from './transforms/resolveRelativeUrls.js'
 export { simplifyFigures } from './transforms/simplifyFigures.js'
+export { stripDuplicateTitleHeading } from './transforms/stripDuplicateTitleHeading.js'
 export { stripEmptyTags } from './transforms/stripEmptyTags.js'
 export { stripInterBlockBreaks } from './transforms/stripInterBlockBreaks.js'
 export { stripOrphanedClosingTags } from './transforms/stripOrphanedClosingTags.js'
