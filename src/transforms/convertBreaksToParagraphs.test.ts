@@ -163,4 +163,70 @@ describe('convertBreaksToParagraphs', () => {
     expect(result).toContain('<p>Caption text</p>')
     expect(result).toContain('<p><img src="x.jpg" alt="photo"></p>')
   })
+
+  it('should be idempotent', () => {
+    const html = '<div>First<br><br>Second<br><br>Third</div>'
+    const once = transformHtml(html, convertBreaksToParagraphs(context))
+    const twice = transformHtml(once, convertBreaksToParagraphs(context))
+
+    expect(twice).toBe(once)
+  })
+
+  it('should empty a container that contains only <br><br>', () => {
+    const html = '<div><br><br><br></div>'
+    const result = transformHtml(html, convertBreaksToParagraphs(context))
+
+    expect(result).toBe('<div></div>')
+  })
+
+  it('should not collapse <br> separated by an inline element', () => {
+    const html = '<div>One<br><span>x</span><br>Two</div>'
+    const result = transformHtml(html, convertBreaksToParagraphs(context))
+
+    expect(result).toBe('<div>One<br><span>x</span><br>Two</div>')
+  })
+
+  it('should not collapse <br> separated by a comment', () => {
+    const html = '<div>One<br><!--gap--><br>Two</div>'
+    const result = transformHtml(html, convertBreaksToParagraphs(context))
+
+    expect(result).toContain('<!--gap-->')
+    expect(result).not.toContain('<p>')
+  })
+
+  it('should preserve existing <p> tags interleaved with <br><br>', () => {
+    const html = '<div>Lead-in<br><br><p>Existing</p><br><br>Tail</div>'
+    const result = transformHtml(html, convertBreaksToParagraphs(context))
+
+    expect(result).toContain('<p>Lead-in</p>')
+    expect(result).toContain('<p>Existing</p>')
+    expect(result).toContain('<p>Tail</p>')
+    expect(result).not.toContain('<p><p>')
+  })
+
+  it('should not wrap chunk containing block-void element <hr>', () => {
+    const html = '<div>Text<br><br><hr><br><br>More</div>'
+    const result = transformHtml(html, convertBreaksToParagraphs(context))
+
+    expect(result).toContain('<p>Text</p>')
+    expect(result).toContain('<hr>')
+    expect(result).toContain('<p>More</p>')
+    expect(result).not.toContain('<p><hr>')
+  })
+
+  it('should recognize <br> with attributes', () => {
+    const html = '<div>One<br class="x"><br id="y">Two</div>'
+    const result = transformHtml(html, convertBreaksToParagraphs(context))
+
+    expect(result).toContain('<p>One</p>')
+    expect(result).toContain('<p>Two</p>')
+  })
+
+  it('should normalize self-closing <br/> variants', () => {
+    const html = '<div>One<br/><br/>Two</div>'
+    const result = transformHtml(html, convertBreaksToParagraphs(context))
+
+    expect(result).toContain('<p>One</p>')
+    expect(result).toContain('<p>Two</p>')
+  })
 })
