@@ -2,6 +2,8 @@ import type { EmbedResolverResult } from '../types.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]+$/
 
+const pathIdSegments = ['shorts', 'embed', 'v']
+
 export const youtubeEmbedDomains = ['youtube-nocookie.com', 'youtube.com', 'www.youtube.com']
 
 export const composeThumbnailUrl = (videoId: string): string => {
@@ -10,8 +12,19 @@ export const composeThumbnailUrl = (videoId: string): string => {
 
 export const extractVideoId = (link: string): string | undefined => {
   try {
-    const { pathname, searchParams } = new URL(link)
-    const id = searchParams.get('v') ?? pathname.split('/').filter(Boolean).pop()
+    const { hostname, pathname, searchParams } = new URL(link)
+    const segments = pathname.split('/').filter(Boolean)
+    const isShortDomain = hostname === 'youtu.be' || hostname.endsWith('.youtu.be')
+
+    let id: string | null | undefined
+
+    if (isShortDomain) {
+      id = segments[0]
+    } else if (segments[0] === 'watch') {
+      id = searchParams.get('v')
+    } else if (segments.length >= 2 && pathIdSegments.includes(segments[0])) {
+      id = segments[1]
+    }
 
     if (id && safeVideoIdRegex.test(id)) {
       return id

@@ -84,6 +84,30 @@ describe('extractVideoId', () => {
 
     expect(extractVideoId(value)).toBeUndefined()
   })
+
+  it('should return undefined for shorts url with no id', () => {
+    expect(extractVideoId('https://www.youtube.com/shorts/')).toBeUndefined()
+  })
+
+  it('should return undefined for embed url with no id', () => {
+    expect(extractVideoId('https://www.youtube.com/embed/')).toBeUndefined()
+  })
+
+  it('should return undefined for playlist url', () => {
+    expect(extractVideoId('https://www.youtube.com/playlist?list=PLrAXtmErZgOe')).toBeUndefined()
+  })
+
+  it('should return undefined for channel url', () => {
+    expect(extractVideoId('https://www.youtube.com/@channel')).toBeUndefined()
+  })
+
+  it('should extract id from /v/ legacy embed url', () => {
+    expect(extractVideoId('https://www.youtube.com/v/dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ')
+  })
+
+  it('should extract id from shorts url with trailing path', () => {
+    expect(extractVideoId('https://www.youtube.com/shorts/dQw4w9WgXcQ?si=abc')).toBe('dQw4w9WgXcQ')
+  })
 })
 
 describe('youtubeResolveEmbed', () => {
