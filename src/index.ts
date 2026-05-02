@@ -86,6 +86,7 @@ export {
   youtubeEmbedDomains,
   youtubeResolveEmbed,
 } from './platforms/youtube.js'
+export { convertBreaksToParagraphs } from './transforms/convertBreaksToParagraphs.js'
 export { decodeDoubleEncodedTags } from './transforms/decodeDoubleEncodedTags.js'
 export { fixLazyImages } from './transforms/fixLazyImages.js'
 export { detectLanguage, highlightCode } from './transforms/highlightCode.js'

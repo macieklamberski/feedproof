@@ -2,6 +2,7 @@ import { soundcloudEmbedDomains } from './platforms/soundcloud.js'
 import { spotifyEmbedDomains } from './platforms/spotify.js'
 import { vimeoEmbedDomains } from './platforms/vimeo.js'
 import { youtubeEmbedDomains, youtubeResolveEmbed } from './platforms/youtube.js'
+import { convertBreaksToParagraphs } from './transforms/convertBreaksToParagraphs.js'
 import { decodeDoubleEncodedTags } from './transforms/decodeDoubleEncodedTags.js'
 import { fixLazyImages } from './transforms/fixLazyImages.js'
 import { highlightCode } from './transforms/highlightCode.js'
@@ -36,6 +37,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   unwrapRedirectUrls,
   stripTrackingParams,
   removeTrackingPixels,
+  convertBreaksToParagraphs,
   stripInterBlockBreaks,
   highlightCode,
   mergeConsecutiveOneLinerPres,

@@ -38,6 +38,7 @@ export type TransformToggles = {
   unwrapWrappers?: boolean
   paragraphizePlainText?: boolean
   stripEmptyTags?: boolean
+  convertBreaksToParagraphs?: boolean
   fixLazyImages?: boolean
   resolveRelativeUrls?: boolean
   unwrapRedirectUrls?: boolean
