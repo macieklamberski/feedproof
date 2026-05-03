@@ -1,50 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../common.js'
+import { vimeoEmbedHandler } from '../embeds/vimeo.js'
+import { youtubeEmbedHandler } from '../embeds/youtube.js'
 import type { EmbedHandler, TransformContext } from '../types.js'
 import { replaceEmbedsWithPlaceholders } from './replaceEmbedsWithPlaceholders.js'
 
-const youtubeHandler: EmbedHandler = {
-  selector: 'iframe[src]',
-  extract: (element) => {
-    const src = element.getAttribute('src') ?? ''
-
-    try {
-      const { hostname, pathname } = new URL(src)
-
-      if (!hostname.includes('youtube')) {
-        return
-      }
-
-      const videoId = pathname.split('/').pop()
-
-      return {
-        provider: 'youtube',
-        src: `https://www.youtube-nocookie.com/embed/${videoId}`,
-        url: `https://www.youtube.com/watch?v=${videoId}`,
-        thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
-        type: 'iframe',
-      }
-    } catch {}
-  },
-}
-
-const vimeoHandler: EmbedHandler = {
-  selector: 'iframe[src]',
-  extract: (element) => {
-    const src = element.getAttribute('src') ?? ''
-
-    try {
-      const { hostname } = new URL(src)
-
-      if (hostname === 'player.vimeo.com') {
-        return { provider: 'vimeo', src, autoload: true, type: 'iframe' }
-      }
-    } catch {}
-  },
-}
-
 const withHandlers: TransformContext = {
-  embedHandlers: [youtubeHandler, vimeoHandler],
+  embedHandlers: [youtubeEmbedHandler, vimeoEmbedHandler],
 }
 
 const withNoHandlers: TransformContext = {
