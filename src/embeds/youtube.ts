@@ -1,8 +1,11 @@
+import { isHostOf, isSubdomainOf } from 'feedscout/utils'
 import type { EmbedHandler, EmbedResolverResult } from '../types.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]+$/
 
 const pathIdSegments = ['shorts', 'embed', 'v']
+
+const youtubeHosts = ['youtube.com', 'youtube-nocookie.com', 'youtu.be']
 
 export const composeThumbnailUrl = (videoId: string): string => {
   return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`
@@ -49,8 +52,12 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
 export const youtubeEmbedHandler: EmbedHandler = {
   selector: 'iframe[src]',
   extract: (element) => {
-    const src = element.getAttribute('src')
+    const src = element.getAttribute('src') ?? ''
 
-    return src ? youtubeResolveEmbed(src) : undefined
+    if (!isHostOf(src, youtubeHosts) && !isSubdomainOf(src, youtubeHosts)) {
+      return
+    }
+
+    return youtubeResolveEmbed(src)
   },
 }
