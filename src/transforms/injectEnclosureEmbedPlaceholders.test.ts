@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../common.js'
-import type { EmbedPlatformHandler, TransformContext } from '../types.js'
+import type { EmbedHandler, TransformContext } from '../types.js'
 import { injectEnclosureEmbedPlaceholders } from './injectEnclosureEmbedPlaceholders.js'
 
 const context: TransformContext = { baseUrl: undefined }
 
-const youtubeHandler: EmbedPlatformHandler = {
+const youtubeHandler: EmbedHandler = {
   selector: 'iframe[src]',
   extract: (element) => {
     const src = element.getAttribute('src') ?? ''

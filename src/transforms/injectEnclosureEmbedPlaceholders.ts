@@ -1,10 +1,5 @@
 import { createEmbedPlaceholder } from '../common.js'
-import type {
-  DomTransform,
-  EmbedPlatformHandler,
-  EmbedResolverResult,
-  Enclosure,
-} from '../types.js'
+import type { DomTransform, EmbedHandler, EmbedResolverResult, Enclosure } from '../types.js'
 import { defaultEmbedHandlers } from './replaceEmbedsWithPlaceholders.js'
 
 const isAudioEnclosure = (enclosure: Enclosure): boolean => {
@@ -19,7 +14,7 @@ const isVideoEnclosure = (enclosure: Enclosure): boolean => {
 // iframe-shaped handlers (YouTube etc.) can claim platform-specific enclosures.
 const resolveEnclosure = (
   url: string,
-  handlers: ReadonlyArray<EmbedPlatformHandler>,
+  handlers: ReadonlyArray<EmbedHandler>,
   document: Document,
 ): EmbedResolverResult | undefined => {
   const probe = document.createElement('iframe')

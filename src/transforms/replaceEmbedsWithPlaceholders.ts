@@ -1,12 +1,12 @@
 import { createEmbedPlaceholder } from '../common.js'
-import { soundcloudEmbedHandler } from '../platforms/soundcloud.js'
-import { spotifyEmbedHandler } from '../platforms/spotify.js'
-import { vimeoEmbedHandler } from '../platforms/vimeo.js'
-import { youtubeEmbedHandler } from '../platforms/youtube.js'
-import type { DomTransform, EmbedPlatformHandler } from '../types.js'
+import { soundcloudEmbedHandler } from '../embeds/soundcloud.js'
+import { spotifyEmbedHandler } from '../embeds/spotify.js'
+import { vimeoEmbedHandler } from '../embeds/vimeo.js'
+import { youtubeEmbedHandler } from '../embeds/youtube.js'
+import type { DomTransform, EmbedHandler } from '../types.js'
 import { coerceNumber } from '../utils.js'
 
-export const defaultEmbedHandlers: Array<EmbedPlatformHandler> = [
+export const defaultEmbedHandlers: Array<EmbedHandler> = [
   youtubeEmbedHandler,
   vimeoEmbedHandler,
   spotifyEmbedHandler,

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../common.js'
-import type { EmbedPlatformHandler, TransformContext } from '../types.js'
+import type { EmbedHandler, TransformContext } from '../types.js'
 import { replaceEmbedsWithPlaceholders } from './replaceEmbedsWithPlaceholders.js'
 
-const youtubeHandler: EmbedPlatformHandler = {
+const youtubeHandler: EmbedHandler = {
   selector: 'iframe[src]',
   extract: (element) => {
     const src = element.getAttribute('src') ?? ''
@@ -28,7 +28,7 @@ const youtubeHandler: EmbedPlatformHandler = {
   },
 }
 
-const vimeoHandler: EmbedPlatformHandler = {
+const vimeoHandler: EmbedHandler = {
   selector: 'iframe[src]',
   extract: (element) => {
     const src = element.getAttribute('src') ?? ''
@@ -126,7 +126,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
     })
 
     it('should emit data-embed-author and data-embed-text when handler returns them', () => {
-      const customHandler: EmbedPlatformHandler = {
+      const customHandler: EmbedHandler = {
         selector: 'blockquote.tweet',
         extract: () => ({
           provider: 'twitter',

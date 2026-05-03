@@ -17,7 +17,7 @@ export type EmbedResolverResult = {
   text?: string
 }
 
-export type EmbedPlatformHandler = {
+export type EmbedHandler = {
   selector: string
   extract: (element: Element) => EmbedResolverResult | undefined
 }
@@ -27,7 +27,7 @@ export type RedirectExtractor = (url: URL) => string | null
 export type TransformContext = {
   baseUrl?: string
   enclosures?: Array<Enclosure>
-  embedHandlers?: Array<EmbedPlatformHandler>
+  embedHandlers?: Array<EmbedHandler>
   lazySrcAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
@@ -63,7 +63,7 @@ export type TransformToggles = {
 export type TransformContentOptions = {
   baseUrl?: string
   enclosures?: Array<Enclosure>
-  embedHandlers?: Array<EmbedPlatformHandler>
+  embedHandlers?: Array<EmbedHandler>
   lazySrcAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>

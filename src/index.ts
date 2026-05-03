@@ -71,15 +71,15 @@ export {
   stripOversizedBase64Sources,
   transformHtml,
 } from './common.js'
-export { soundcloudEmbedHandler } from './platforms/soundcloud.js'
-export { spotifyEmbedHandler } from './platforms/spotify.js'
-export { vimeoEmbedHandler } from './platforms/vimeo.js'
+export { soundcloudEmbedHandler } from './embeds/soundcloud.js'
+export { spotifyEmbedHandler } from './embeds/spotify.js'
+export { vimeoEmbedHandler } from './embeds/vimeo.js'
 export {
   composeThumbnailUrl,
   extractVideoId,
   youtubeEmbedHandler,
   youtubeResolveEmbed,
-} from './platforms/youtube.js'
+} from './embeds/youtube.js'
 export { decodeDoubleEncodedTags } from './transforms/decodeDoubleEncodedTags.js'
 export { fixLazyImages } from './transforms/fixLazyImages.js'
 export { detectLanguage, highlightCode } from './transforms/highlightCode.js'
@@ -101,7 +101,7 @@ export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/unwrapRe
 export { unwrapWrappers } from './transforms/unwrapWrappers.js'
 export type {
   DomTransform,
-  EmbedPlatformHandler,
+  EmbedHandler,
   EmbedResolverResult,
   Enclosure,
   StringTransform,
