@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { parseFragment } from '../common.js'
+import type { EmbedResolverResult } from '../types.js'
 import { spotifyEmbedHandler } from './spotify.js'
 
 const firstMatch = (html: string): Element | undefined => {
@@ -10,13 +11,14 @@ describe('spotifyEmbedHandler', () => {
   it('should extract metadata from open.spotify.com iframe', () => {
     const element = firstMatch('<iframe src="https://open.spotify.com/embed/track/abc"></iframe>')
     const result = element ? spotifyEmbedHandler.extract(element) : undefined
-
-    expect(result).toEqual({
+    const expected: EmbedResolverResult = {
       provider: 'spotify',
       src: 'https://open.spotify.com/embed/track/abc',
       autoload: true,
       type: 'iframe',
-    })
+    }
+
+    expect(result).toEqual(expected)
   })
 
   it('should return undefined for non-spotify iframes', () => {

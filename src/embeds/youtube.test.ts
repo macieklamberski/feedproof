@@ -130,19 +130,41 @@ describe('youtubeResolveEmbed', () => {
   })
 
   it('should resolve youtube embed url', () => {
-    expect(youtubeResolveEmbed('https://www.youtube.com/embed/dQw4w9WgXcQ')?.provider).toBe(
-      'youtube',
-    )
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      type: 'iframe',
+    }
+
+    expect(youtubeResolveEmbed('https://www.youtube.com/embed/dQw4w9WgXcQ')).toEqual(expected)
   })
 
   it('should resolve youtu.be short url', () => {
-    expect(youtubeResolveEmbed('https://youtu.be/dQw4w9WgXcQ')?.provider).toBe('youtube')
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      type: 'iframe',
+    }
+
+    expect(youtubeResolveEmbed('https://youtu.be/dQw4w9WgXcQ')).toEqual(expected)
   })
 
   it('should resolve youtube-nocookie embed url', () => {
-    expect(
-      youtubeResolveEmbed('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')?.provider,
-    ).toBe('youtube')
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      type: 'iframe',
+    }
+
+    expect(youtubeResolveEmbed('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')).toEqual(
+      expected,
+    )
   })
 
   it('should return undefined for invalid url', () => {
@@ -167,17 +189,29 @@ describe('youtubeEmbedHandler', () => {
   it('should extract metadata from a youtube iframe', () => {
     const element = firstMatch('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>')
     const result = element ? youtubeEmbedHandler.extract(element) : undefined
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      type: 'iframe',
+    }
 
-    expect(result?.provider).toBe('youtube')
-    expect(result?.src).toBe('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')
+    expect(result).toEqual(expected)
   })
 
   it('should extract metadata from a youtube subdomain iframe', () => {
     const element = firstMatch('<iframe src="https://m.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>')
     const result = element ? youtubeEmbedHandler.extract(element) : undefined
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      type: 'iframe',
+    }
 
-    expect(result?.provider).toBe('youtube')
-    expect(result?.src).toBe('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')
+    expect(result).toEqual(expected)
   })
 
   it('should return undefined for non-youtube iframes', () => {
