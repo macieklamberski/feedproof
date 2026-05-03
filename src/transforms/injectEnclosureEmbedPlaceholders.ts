@@ -1,5 +1,11 @@
 import { createEmbedPlaceholder } from '../common.js'
-import type { DomTransform, Enclosure } from '../types.js'
+import type {
+  DomTransform,
+  EmbedPlatformHandler,
+  EmbedResolverResult,
+  Enclosure,
+} from '../types.js'
+import { defaultEmbedHandlers } from './replaceEmbedsWithPlaceholders.js'
 
 const isAudioEnclosure = (enclosure: Enclosure): boolean => {
   return enclosure.medium === 'audio' || !!enclosure.type?.startsWith('audio/')
@@ -9,22 +15,44 @@ const isVideoEnclosure = (enclosure: Enclosure): boolean => {
   return enclosure.medium === 'video' || !!enclosure.type?.startsWith('video/')
 }
 
-export const injectEnclosureEmbedPlaceholders: DomTransform = ({ enclosures, resolveEmbed }) => {
+// Run handlers against a synthesized iframe carrying the enclosure URL so that
+// iframe-shaped handlers (YouTube etc.) can claim platform-specific enclosures.
+const resolveEnclosure = (
+  url: string,
+  handlers: ReadonlyArray<EmbedPlatformHandler>,
+  document: Document,
+): EmbedResolverResult | undefined => {
+  const probe = document.createElement('iframe')
+  probe.setAttribute('src', url)
+
+  for (const handler of handlers) {
+    if (probe.matches(handler.selector)) {
+      const metadata = handler.extract(probe)
+
+      if (metadata) {
+        return metadata
+      }
+    }
+  }
+}
+
+export const injectEnclosureEmbedPlaceholders: DomTransform = (context) => {
+  const handlers = context.embedHandlers ?? defaultEmbedHandlers
+
   return (document) => {
-    if (!enclosures?.length) {
+    if (!context.enclosures?.length) {
       return
     }
 
     const html = document.toString()
 
-    for (const enclosure of enclosures) {
+    for (const enclosure of context.enclosures) {
       if (html.includes(enclosure.url)) {
         continue
       }
 
-      const resolved = resolveEmbed?.(enclosure.url)
+      const resolved = resolveEnclosure(enclosure.url, handlers, document)
 
-      // Skip enclosures that no resolver recognizes and aren't audio/video by type/medium.
       if (!resolved && !isAudioEnclosure(enclosure) && !isVideoEnclosure(enclosure)) {
         continue
       }

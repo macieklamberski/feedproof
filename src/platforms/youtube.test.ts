@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'bun:test'
+import { parseFragment } from '../common.js'
 import type { EmbedResolverResult } from '../types.js'
-import { composeThumbnailUrl, extractVideoId, youtubeResolveEmbed } from './youtube.js'
+import {
+  composeThumbnailUrl,
+  extractVideoId,
+  youtubeEmbedHandler,
+  youtubeResolveEmbed,
+} from './youtube.js'
 
 describe('extractVideoId', () => {
   it('should extract id from standard watch url', () => {
@@ -150,5 +156,26 @@ describe('composeThumbnailUrl', () => {
     const expected = 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg'
 
     expect(composeThumbnailUrl(value)).toBe(expected)
+  })
+})
+
+describe('youtubeEmbedHandler', () => {
+  const firstMatch = (html: string): Element | undefined => {
+    return parseFragment(html).querySelector(youtubeEmbedHandler.selector) ?? undefined
+  }
+
+  it('should extract metadata from a youtube iframe', () => {
+    const element = firstMatch('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>')
+    const result = element ? youtubeEmbedHandler.extract(element) : undefined
+
+    expect(result?.provider).toBe('youtube')
+    expect(result?.src).toBe('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')
+  })
+
+  it('should return undefined for non-youtube iframes', () => {
+    const element = firstMatch('<iframe src="https://example.com/video"></iframe>')
+    const result = element ? youtubeEmbedHandler.extract(element) : undefined
+
+    expect(result).toBeUndefined()
   })
 })

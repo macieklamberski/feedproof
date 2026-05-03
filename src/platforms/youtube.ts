@@ -1,10 +1,8 @@
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedPlatformHandler, EmbedResolverResult } from '../types.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]+$/
 
 const pathIdSegments = ['shorts', 'embed', 'v']
-
-export const youtubeEmbedDomains = ['youtube-nocookie.com', 'youtube.com', 'www.youtube.com']
 
 export const composeThumbnailUrl = (videoId: string): string => {
   return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`
@@ -46,4 +44,13 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
     thumbnail: composeThumbnailUrl(videoId),
     type: 'iframe',
   }
+}
+
+export const youtubeEmbedHandler: EmbedPlatformHandler = {
+  selector: 'iframe[src]',
+  extract: (element) => {
+    const src = element.getAttribute('src')
+
+    return src ? youtubeResolveEmbed(src) : undefined
+  },
 }

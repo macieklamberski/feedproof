@@ -157,6 +157,14 @@ export const createEmbedPlaceholder = (
     element.setAttribute('data-embed-height', String(metadata.height))
   }
 
+  if (metadata?.author) {
+    element.setAttribute('data-embed-author', metadata.author)
+  }
+
+  if (metadata?.text) {
+    element.setAttribute('data-embed-text', metadata.text)
+  }
+
   const fallbackUrl = metadata?.url ?? metadata?.src ?? src
   const link = document.createElement('a')
   link.setAttribute('href', fallbackUrl)

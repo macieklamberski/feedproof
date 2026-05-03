@@ -1,36 +1,38 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../common.js'
-import type { EmbedResolverResult, TransformContext } from '../types.js'
+import type { EmbedPlatformHandler, TransformContext } from '../types.js'
 import { injectEnclosureEmbedPlaceholders } from './injectEnclosureEmbedPlaceholders.js'
 
 const context: TransformContext = { baseUrl: undefined }
 
-const youtubeResolver = (url: string): EmbedResolverResult | undefined => {
-  try {
-    const { hostname, pathname } = new URL(url)
+const youtubeHandler: EmbedPlatformHandler = {
+  selector: 'iframe[src]',
+  extract: (element) => {
+    const src = element.getAttribute('src') ?? ''
 
-    if (!hostname.includes('youtube')) {
-      return
-    }
+    try {
+      const { hostname, pathname } = new URL(src)
 
-    const videoId = pathname.split('/').pop()
+      if (!hostname.includes('youtube')) {
+        return
+      }
 
-    return {
-      provider: 'youtube',
-      src: `https://www.youtube-nocookie.com/embed/${videoId}`,
-      url: `https://www.youtube.com/watch?v=${videoId}`,
-      thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
-      type: 'iframe',
-    }
-  } catch {}
+      const videoId = pathname.split('/').pop()
+
+      return {
+        provider: 'youtube',
+        src: `https://www.youtube-nocookie.com/embed/${videoId}`,
+        url: `https://www.youtube.com/watch?v=${videoId}`,
+        thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+        type: 'iframe',
+      }
+    } catch {}
+  },
 }
-
-const embedDomains = ['youtube-nocookie.com', 'youtube.com', 'player.vimeo.com']
 
 const withResolver: TransformContext = {
   ...context,
-  resolveEmbed: youtubeResolver,
-  embedDomains,
+  embedHandlers: [youtubeHandler],
 }
 
 const withEnclosures = (
