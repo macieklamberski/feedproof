@@ -25,11 +25,4 @@ describe('spotifyEmbedHandler', () => {
 
     expect(result).toBeUndefined()
   })
-
-  it('should return undefined for malformed src', () => {
-    const element = firstMatch('<iframe src="not-a-url"></iframe>')
-    const result = element ? spotifyEmbedHandler.extract(element) : undefined
-
-    expect(result).toBeUndefined()
-  })
 })

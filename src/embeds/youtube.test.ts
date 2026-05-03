@@ -172,8 +172,25 @@ describe('youtubeEmbedHandler', () => {
     expect(result?.src).toBe('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')
   })
 
+  it('should extract metadata from a youtube subdomain iframe', () => {
+    const element = firstMatch('<iframe src="https://m.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>')
+    const result = element ? youtubeEmbedHandler.extract(element) : undefined
+
+    expect(result?.provider).toBe('youtube')
+    expect(result?.src).toBe('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')
+  })
+
   it('should return undefined for non-youtube iframes', () => {
     const element = firstMatch('<iframe src="https://example.com/video"></iframe>')
+    const result = element ? youtubeEmbedHandler.extract(element) : undefined
+
+    expect(result).toBeUndefined()
+  })
+
+  // Regression: a non-youtube host carrying a watch?v=<id> shaped query must
+  // not be claimed just because extractVideoId could parse the id from it.
+  it('should reject iframe with valid video id but wrong host', () => {
+    const element = firstMatch('<iframe src="https://evil.com/watch?v=dQw4w9WgXcQ"></iframe>')
     const result = element ? youtubeEmbedHandler.extract(element) : undefined
 
     expect(result).toBeUndefined()
