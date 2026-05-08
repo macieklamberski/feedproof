@@ -49,7 +49,7 @@ const result = transformContent('<p>Check <img data-src="photo.jpg"> and visit /
 ## Options
 
 ```typescript
-import { transformContent } from 'feedproof'
+import { simplifyFigures, transformContent } from 'feedproof'
 import { defaultDomTransforms } from 'feedproof/defaults'
 
 const result = transformContent(html, {
@@ -64,14 +64,12 @@ const result = transformContent(html, {
       extract: (element) => ({ provider: 'custom', src: element.getAttribute('src') ?? '' }),
     },
   ],
-  // Replace the DOM transform pipeline (omit to use defaults).
-  domTransforms: defaultDomTransforms.filter(
-    (t) => t.name !== 'highlightCode' && t.name !== 'linkifyUrls',
-  ),
+  // Compose your own pipeline by mixing defaults with individual transforms.
+  domTransforms: [...defaultDomTransforms, simplifyFigures],
 })
 ```
 
-The `stringTransforms`, `domTransforms`, and `finalStringTransforms` options each fully replace the corresponding default phase when provided. To disable a single transform, filter it out of the matching default array; to add a custom one, append it to the array.
+The `stringTransforms`, `domTransforms`, and `finalStringTransforms` options each fully replace the corresponding default phase when provided. Every transform is also exported individually from `feedproof`, so you can compose any pipeline — spread the defaults to extend them, filter to remove one, or list transforms explicitly to build a pipeline from scratch.
 
 ## Individual Transforms
 
