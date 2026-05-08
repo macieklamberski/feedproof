@@ -1,6 +1,5 @@
 import { createEmbedPlaceholder } from '../common.js'
 import type { DomTransform, EmbedHandler, EmbedResolverResult, Enclosure } from '../types.js'
-import { defaultEmbedHandlers } from './replaceEmbedsWithPlaceholders.js'
 
 const isAudioEnclosure = (enclosure: Enclosure): boolean => {
   return enclosure.medium === 'audio' || !!enclosure.type?.startsWith('audio/')
@@ -32,7 +31,7 @@ const resolveEnclosure = (
 }
 
 export const injectEnclosureEmbedPlaceholders: DomTransform = (context) => {
-  const handlers = context.embedHandlers ?? defaultEmbedHandlers
+  const handlers = context.embedHandlers ?? []
 
   return (document) => {
     if (!context.enclosures?.length) {

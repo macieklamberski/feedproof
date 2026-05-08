@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../common.js'
+import { defaultTrackingHosts, defaultTrackingPathSegments } from '../defaults.js'
 import type { TransformContext } from '../types.js'
 import { removeTrackingPixels } from './removeTrackingPixels.js'
 
-const context: TransformContext = {}
+const context: TransformContext = {
+  trackingHosts: defaultTrackingHosts,
+  trackingPathSegments: defaultTrackingPathSegments,
+}
 
 describe('removeTrackingPixels', () => {
   describe('size-based detection', () => {

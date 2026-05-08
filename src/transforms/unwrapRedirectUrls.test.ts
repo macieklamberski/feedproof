@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../common.js'
+import { defaultRedirectExtractors } from '../defaults.js'
 import type { TransformContext } from '../types.js'
 import { unwrapRedirectUrls } from './unwrapRedirectUrls.js'
 
-const context: TransformContext = {}
+const context: TransformContext = { redirectExtractors: defaultRedirectExtractors }
 
 describe('unwrapRedirectUrls', () => {
   it('should unwrap Google redirect with url param', () => {

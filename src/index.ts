@@ -1,8 +1,13 @@
 import { applyDomTransforms, applyStringTransforms } from './common.js'
 import {
   defaultDomTransforms,
+  defaultEmbedHandlers,
   defaultFinalStringTransforms,
+  defaultLazySrcAttributes,
+  defaultRedirectExtractors,
   defaultStringTransforms,
+  defaultTrackingHosts,
+  defaultTrackingPathSegments,
 } from './defaults.js'
 import type {
   DomTransform,
@@ -43,11 +48,11 @@ export const transformContent = (html: string, options: TransformContentOptions 
   const context: TransformContext = {
     baseUrl: options.baseUrl,
     enclosures: options.enclosures,
-    embedHandlers: options.embedHandlers,
-    lazySrcAttributes: options.lazySrcAttributes,
-    trackingHosts: options.trackingHosts,
-    trackingPathSegments: options.trackingPathSegments,
-    redirectExtractors: options.redirectExtractors,
+    embedHandlers: options.embedHandlers ?? defaultEmbedHandlers,
+    lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,
+    trackingHosts: options.trackingHosts ?? defaultTrackingHosts,
+    trackingPathSegments: options.trackingPathSegments ?? defaultTrackingPathSegments,
+    redirectExtractors: options.redirectExtractors ?? defaultRedirectExtractors,
   }
 
   // Phase 1: String transforms.

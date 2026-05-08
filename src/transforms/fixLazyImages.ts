@@ -2,10 +2,8 @@ import type { DomTransform } from '../types.js'
 
 const imgPattern = /<img\s/i
 
-export const defaultLazySrcAttributes = ['data-src', 'data-original', 'data-lazy-src', 'data-url']
-
 export const fixLazyImages: DomTransform = (context) => {
-  const lazySrcAttributes = context.lazySrcAttributes ?? defaultLazySrcAttributes
+  const lazySrcAttributes = context.lazySrcAttributes ?? []
 
   return (document) => {
     // Move lazy-load data attributes to real src/srcset.

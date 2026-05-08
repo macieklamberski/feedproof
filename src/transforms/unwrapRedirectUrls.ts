@@ -49,16 +49,11 @@ export const extractFacebookShim: RedirectExtractor = (url) => {
   return null
 }
 
-export const defaultRedirectExtractors: Array<RedirectExtractor> = [
-  extractGoogleRedirect,
-  extractGoogleNewsRedirect,
-  extractGoogleTranslateRedirect,
-  extractPocketRedirect,
-  extractFacebookShim,
-]
-
-export const extractRedirectTarget = (url: URL): string | null => {
-  for (const extractor of defaultRedirectExtractors) {
+export const extractRedirectTarget = (
+  url: URL,
+  extractors: ReadonlyArray<RedirectExtractor>,
+): string | null => {
+  for (const extractor of extractors) {
     const target = extractor(url)
 
     if (target) {
@@ -70,7 +65,7 @@ export const extractRedirectTarget = (url: URL): string | null => {
 }
 
 export const unwrapRedirectUrls: DomTransform = (context) => {
-  const extractors = context.redirectExtractors ?? defaultRedirectExtractors
+  const extractors = context.redirectExtractors ?? []
 
   return (document) => {
     for (const anchor of document.querySelectorAll('a[href]')) {

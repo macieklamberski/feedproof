@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../common.js'
+import { defaultEmbedHandlers } from '../defaults.js'
 import { youtubeEmbedHandler } from '../embeds/youtube.js'
 import type { EmbedHandler, TransformContext } from '../types.js'
 import { replaceEmbedsWithPlaceholders } from './replaceEmbedsWithPlaceholders.js'
@@ -148,10 +149,21 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).toContain('data-embed-provider="example"')
   })
 
-  it('should use defaultEmbedHandlers when context omits embedHandlers', () => {
+  it('should resolve YouTube via defaultEmbedHandlers export', () => {
+    const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+    const result = transformHtml(
+      value,
+      replaceEmbedsWithPlaceholders({ embedHandlers: defaultEmbedHandlers }),
+    )
+
+    expect(result).toContain('data-embed-provider="youtube"')
+  })
+
+  it('should do nothing when context omits embedHandlers', () => {
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     const result = transformHtml(value, replaceEmbedsWithPlaceholders({}))
 
-    expect(result).toContain('data-embed-provider="youtube"')
+    expect(result).toContain('<iframe')
+    expect(result).not.toContain('data-embed')
   })
 })
