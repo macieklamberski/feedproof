@@ -9,6 +9,7 @@ import { injectEnclosureEmbedPlaceholders } from './transforms/injectEnclosureEm
 import { linkifyUrls } from './transforms/linkifyUrls.js'
 import { mergeConsecutiveOneLinerPres } from './transforms/mergeConsecutiveOneLinerPres.js'
 import { paragraphizePlainText } from './transforms/paragraphizePlainText.js'
+import { removeSubstackSubscribeWidget } from './transforms/removeSubstackSubscribeWidget.js'
 import { removeTrackingPixels } from './transforms/removeTrackingPixels.js'
 import { replaceMediaWithEmbedPlaceholders } from './transforms/replaceMediaWithEmbedPlaceholders.js'
 import { replacePreLineBreaks } from './transforms/replacePreLineBreaks.js'
@@ -36,6 +37,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   unwrapRedirectUrls,
   stripTrackingParams,
   removeTrackingPixels,
+  removeSubstackSubscribeWidget,
   stripInterBlockBreaks,
   highlightCode,
   mergeConsecutiveOneLinerPres,

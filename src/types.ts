@@ -43,6 +43,7 @@ export type TransformToggles = {
   unwrapRedirectUrls?: boolean
   stripTrackingParams?: boolean
   removeTrackingPixels?: boolean
+  removeSubstackSubscribeWidget?: boolean
   stripInterBlockBreaks?: boolean
   simplifyFigures?: boolean
   highlightCode?: boolean

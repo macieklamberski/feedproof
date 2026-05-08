@@ -93,6 +93,7 @@ export { injectEnclosureEmbedPlaceholders } from './transforms/injectEnclosureEm
 export { linkifyUrls } from './transforms/linkifyUrls.js'
 export { mergeConsecutiveOneLinerPres } from './transforms/mergeConsecutiveOneLinerPres.js'
 export { paragraphizePlainText } from './transforms/paragraphizePlainText.js'
+export { removeSubstackSubscribeWidget } from './transforms/removeSubstackSubscribeWidget.js'
 export { removeTrackingPixels } from './transforms/removeTrackingPixels.js'
 export { replaceMediaWithEmbedPlaceholders } from './transforms/replaceMediaWithEmbedPlaceholders.js'
 export { replacePreLineBreaks } from './transforms/replacePreLineBreaks.js'
