@@ -1,3 +1,4 @@
+import { youtubeEmbedHandler } from './embeds/youtube.js'
 import { decodeDoubleEncodedTags } from './transforms/decodeDoubleEncodedTags.js'
 import { fixLazyImages } from './transforms/fixLazyImages.js'
 import { highlightCode } from './transforms/highlightCode.js'
@@ -16,9 +17,16 @@ import { stripOrphanedClosingTags } from './transforms/stripOrphanedClosingTags.
 import { stripParagraphBoundaryBreaks } from './transforms/stripParagraphBoundaryBreaks.js'
 import { stripTrackingParams } from './transforms/stripTrackingParams.js'
 import { trimPreWhitespace } from './transforms/trimPreWhitespace.js'
-import { unwrapRedirectUrls } from './transforms/unwrapRedirectUrls.js'
+import {
+  extractFacebookShim,
+  extractGoogleNewsRedirect,
+  extractGoogleRedirect,
+  extractGoogleTranslateRedirect,
+  extractPocketRedirect,
+  unwrapRedirectUrls,
+} from './transforms/unwrapRedirectUrls.js'
 import { unwrapWrappers } from './transforms/unwrapWrappers.js'
-import type { DomTransform, StringTransform } from './types.js'
+import type { DomTransform, EmbedHandler, RedirectExtractor, StringTransform } from './types.js'
 
 export const defaultStringTransforms: Array<StringTransform> = [
   stripOrphanedClosingTags,
@@ -48,10 +56,24 @@ export const defaultDomTransforms: Array<DomTransform> = [
 
 export const defaultFinalStringTransforms: Array<StringTransform> = [stripEmptyTags]
 
-export { defaultLazySrcAttributes } from './transforms/fixLazyImages.js'
-export {
-  defaultTrackingHosts,
-  defaultTrackingPathSegments,
-} from './transforms/removeTrackingPixels.js'
-export { defaultEmbedHandlers } from './transforms/replaceEmbedsWithPlaceholders.js'
-export { defaultRedirectExtractors } from './transforms/unwrapRedirectUrls.js'
+export const defaultEmbedHandlers: Array<EmbedHandler> = [youtubeEmbedHandler]
+
+export const defaultLazySrcAttributes = ['data-src', 'data-original', 'data-lazy-src', 'data-url']
+
+export const defaultTrackingHosts = [
+  'feedsportal.com',
+  'stats.wordpress.com',
+  'pixel.wp.com',
+  'doubleclick.net',
+  'google-analytics.com',
+]
+
+export const defaultTrackingPathSegments = ['pixel', 'beacon', 'track', 'count']
+
+export const defaultRedirectExtractors: Array<RedirectExtractor> = [
+  extractGoogleRedirect,
+  extractGoogleNewsRedirect,
+  extractGoogleTranslateRedirect,
+  extractPocketRedirect,
+  extractFacebookShim,
+]

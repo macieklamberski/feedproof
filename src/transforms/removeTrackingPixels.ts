@@ -1,15 +1,5 @@
 import type { DomTransform } from '../types.js'
 
-export const defaultTrackingHosts = [
-  'feedsportal.com',
-  'stats.wordpress.com',
-  'pixel.wp.com',
-  'doubleclick.net',
-  'google-analytics.com',
-]
-
-export const defaultTrackingPathSegments = ['pixel', 'beacon', 'track', 'count']
-
 // `[./]` anchors require the segment to terminate with `.` (file extension) or `/`
 // (path boundary) to avoid false positives on words like `tracker` or `counter`.
 const buildPathRegex = (segments: ReadonlyArray<string>): RegExp | null => {
@@ -39,8 +29,8 @@ const isTrackingUrl = (src: string, hosts: Set<string>, pathRegex: RegExp | null
 }
 
 export const removeTrackingPixels: DomTransform = (context) => {
-  const hosts = new Set(context.trackingHosts ?? defaultTrackingHosts)
-  const pathRegex = buildPathRegex(context.trackingPathSegments ?? defaultTrackingPathSegments)
+  const hosts = new Set(context.trackingHosts ?? [])
+  const pathRegex = buildPathRegex(context.trackingPathSegments ?? [])
 
   return (document) => {
     for (const image of document.querySelectorAll('img')) {

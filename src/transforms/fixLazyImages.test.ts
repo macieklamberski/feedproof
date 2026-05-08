@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../common.js'
+import { defaultLazySrcAttributes } from '../defaults.js'
 import type { TransformContext } from '../types.js'
 import { fixLazyImages } from './fixLazyImages.js'
 
-const context: TransformContext = {}
+const context: TransformContext = { lazySrcAttributes: defaultLazySrcAttributes }
 
 describe('fixLazyImages', () => {
   it('should move data-src to src', () => {

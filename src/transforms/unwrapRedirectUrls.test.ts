@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../common.js'
-import type { TransformContext } from '../types.js'
-import { unwrapRedirectUrls } from './unwrapRedirectUrls.js'
+import { defaultRedirectExtractors } from '../defaults.js'
+import type { RedirectExtractor, TransformContext } from '../types.js'
+import { extractRedirectTarget, unwrapRedirectUrls } from './unwrapRedirectUrls.js'
 
-const context: TransformContext = {}
+const context: TransformContext = { redirectExtractors: defaultRedirectExtractors }
 
 describe('unwrapRedirectUrls', () => {
   it('should unwrap Google redirect with url param', () => {
@@ -174,5 +175,45 @@ describe('unwrapRedirectUrls', () => {
 
       expect(result).toContain('href="https://target.com"')
     })
+  })
+})
+
+describe('extractRedirectTarget', () => {
+  const matchEverything: RedirectExtractor = (url) => url.searchParams.get('target')
+  const matchNothing: RedirectExtractor = () => null
+
+  it('should return target from first matching extractor', () => {
+    const url = new URL('https://example.com/?target=https%3A%2F%2Fdest.com')
+    const result = extractRedirectTarget(url, [matchEverything])
+
+    expect(result).toBe('https://dest.com')
+  })
+
+  it('should fall through to next extractor when first returns null', () => {
+    const url = new URL('https://example.com/?target=https%3A%2F%2Fdest.com')
+    const result = extractRedirectTarget(url, [matchNothing, matchEverything])
+
+    expect(result).toBe('https://dest.com')
+  })
+
+  it('should return null when no extractor matches', () => {
+    const url = new URL('https://example.com/page')
+    const result = extractRedirectTarget(url, [matchNothing, matchNothing])
+
+    expect(result).toBeNull()
+  })
+
+  it('should return null for empty extractors array', () => {
+    const url = new URL('https://example.com/page')
+    const result = extractRedirectTarget(url, [])
+
+    expect(result).toBeNull()
+  })
+
+  it('should work with defaultRedirectExtractors', () => {
+    const url = new URL('https://www.google.com/url?url=https%3A%2F%2Fexample.com%2Fpage')
+    const result = extractRedirectTarget(url, defaultRedirectExtractors)
+
+    expect(result).toBe('https://example.com/page')
   })
 })
