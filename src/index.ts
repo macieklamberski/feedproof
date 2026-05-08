@@ -89,6 +89,7 @@ export { replaceEmbedsWithPlaceholders } from './transforms/replaceEmbedsWithPla
 export { replacePreLineBreaks } from './transforms/replacePreLineBreaks.js'
 export { resolveRelativeUrls } from './transforms/resolveRelativeUrls.js'
 export { simplifyFigures } from './transforms/simplifyFigures.js'
+export { stripComments } from './transforms/stripComments.js'
 export { stripEmptyTags } from './transforms/stripEmptyTags.js'
 export { stripInterBlockBreaks } from './transforms/stripInterBlockBreaks.js'
 export { stripOrphanedClosingTags } from './transforms/stripOrphanedClosingTags.js'
