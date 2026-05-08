@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { extractFacebookShim } from './extractFacebookShim.js'
+import { extractFacebookShim } from './facebook.js'
 
 describe('extractFacebookShim', () => {
   it('should extract target from l.facebook.com', () => {

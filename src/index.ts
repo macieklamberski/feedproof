@@ -61,11 +61,11 @@ export {
   youtubeEmbedResolver,
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
-export { extractFacebookShim } from './redirects/extractFacebookShim.js'
-export { extractGoogleNewsRedirect } from './redirects/extractGoogleNewsRedirect.js'
-export { extractGoogleRedirect } from './redirects/extractGoogleRedirect.js'
-export { extractGoogleTranslateRedirect } from './redirects/extractGoogleTranslateRedirect.js'
-export { extractPocketRedirect } from './redirects/extractPocketRedirect.js'
+export { extractFacebookShim } from './redirects/facebook.js'
+export { extractGoogleRedirect } from './redirects/google.js'
+export { extractGoogleNewsRedirect } from './redirects/googleNews.js'
+export { extractGoogleTranslateRedirect } from './redirects/googleTranslate.js'
+export { extractPocketRedirect } from './redirects/pocket.js'
 export { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js'
 export { injectEnclosureEmbedPlaceholders } from './transforms/dom/injectEnclosureEmbedPlaceholders.js'
