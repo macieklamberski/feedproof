@@ -10,9 +10,15 @@ export type EmbedResolverResult = {
   url?: string
   thumbnail?: string
   type?: 'video' | 'audio' | 'iframe'
-  autoload?: boolean
   width?: number
   height?: number
+  author?: string
+  text?: string
+}
+
+export type EmbedHandler = {
+  selector: string
+  extract: (element: Element) => EmbedResolverResult | undefined
 }
 
 export type RedirectExtractor = (url: URL) => string | null
@@ -20,8 +26,7 @@ export type RedirectExtractor = (url: URL) => string | null
 export type TransformContext = {
   baseUrl?: string
   enclosures?: Array<Enclosure>
-  resolveEmbed?: (url: string) => EmbedResolverResult | undefined
-  embedDomains?: Array<string>
+  embedHandlers?: Array<EmbedHandler>
   lazySrcAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
@@ -50,15 +55,14 @@ export type TransformToggles = {
   replacePreLineBreaks?: boolean
   trimPreWhitespace?: boolean
   linkifyUrls?: boolean
-  replaceMediaWithEmbedPlaceholders?: boolean
+  replaceEmbedsWithPlaceholders?: boolean
   injectEnclosureEmbedPlaceholders?: boolean
 }
 
 export type TransformContentOptions = {
   baseUrl?: string
   enclosures?: Array<Enclosure>
-  resolveEmbed?: (url: string) => EmbedResolverResult | undefined
-  embedDomains?: Array<string>
+  embedHandlers?: Array<EmbedHandler>
   lazySrcAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>

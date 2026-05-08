@@ -145,16 +145,20 @@ export const createEmbedPlaceholder = (
     element.setAttribute('data-embed-thumbnail', metadata.thumbnail)
   }
 
-  if (metadata?.autoload) {
-    element.setAttribute('data-embed-autoload', '')
-  }
-
   if (metadata?.width) {
     element.setAttribute('data-embed-width', String(metadata.width))
   }
 
   if (metadata?.height) {
     element.setAttribute('data-embed-height', String(metadata.height))
+  }
+
+  if (metadata?.author) {
+    element.setAttribute('data-embed-author', metadata.author)
+  }
+
+  if (metadata?.text) {
+    element.setAttribute('data-embed-text', metadata.text)
   }
 
   const fallbackUrl = metadata?.url ?? metadata?.src ?? src

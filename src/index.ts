@@ -1,10 +1,5 @@
 import { applyDomTransforms, applyStringTransforms } from './common.js'
-import {
-  defaultDomTransforms,
-  defaultEmbedDomains,
-  defaultResolveEmbed,
-  defaultStringTransforms,
-} from './defaults.js'
+import { defaultDomTransforms, defaultStringTransforms } from './defaults.js'
 import type {
   DomTransform,
   StringTransform,
@@ -44,8 +39,7 @@ export const transformContent = (html: string, options: TransformContentOptions 
   const context: TransformContext = {
     baseUrl: options.baseUrl,
     enclosures: options.enclosures,
-    resolveEmbed: options.resolveEmbed ?? defaultResolveEmbed,
-    embedDomains: options.embedDomains ?? defaultEmbedDomains,
+    embedHandlers: options.embedHandlers,
     lazySrcAttributes: options.lazySrcAttributes,
     trackingHosts: options.trackingHosts,
     trackingPathSegments: options.trackingPathSegments,
@@ -77,15 +71,12 @@ export {
   stripOversizedBase64Sources,
   transformHtml,
 } from './common.js'
-export { soundcloudEmbedDomains } from './platforms/soundcloud.js'
-export { spotifyEmbedDomains } from './platforms/spotify.js'
-export { vimeoEmbedDomains } from './platforms/vimeo.js'
 export {
   composeThumbnailUrl,
   extractVideoId,
-  youtubeEmbedDomains,
+  youtubeEmbedHandler,
   youtubeResolveEmbed,
-} from './platforms/youtube.js'
+} from './embeds/youtube.js'
 export { decodeDoubleEncodedTags } from './transforms/decodeDoubleEncodedTags.js'
 export { fixLazyImages } from './transforms/fixLazyImages.js'
 export { detectLanguage, highlightCode } from './transforms/highlightCode.js'
@@ -94,7 +85,7 @@ export { linkifyUrls } from './transforms/linkifyUrls.js'
 export { mergeConsecutiveOneLinerPres } from './transforms/mergeConsecutiveOneLinerPres.js'
 export { paragraphizePlainText } from './transforms/paragraphizePlainText.js'
 export { removeTrackingPixels } from './transforms/removeTrackingPixels.js'
-export { replaceMediaWithEmbedPlaceholders } from './transforms/replaceMediaWithEmbedPlaceholders.js'
+export { replaceEmbedsWithPlaceholders } from './transforms/replaceEmbedsWithPlaceholders.js'
 export { replacePreLineBreaks } from './transforms/replacePreLineBreaks.js'
 export { resolveRelativeUrls } from './transforms/resolveRelativeUrls.js'
 export { simplifyFigures } from './transforms/simplifyFigures.js'
@@ -107,6 +98,7 @@ export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/unwrapRe
 export { unwrapWrappers } from './transforms/unwrapWrappers.js'
 export type {
   DomTransform,
+  EmbedHandler,
   EmbedResolverResult,
   Enclosure,
   StringTransform,

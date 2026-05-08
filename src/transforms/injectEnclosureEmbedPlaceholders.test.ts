@@ -1,36 +1,14 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../common.js'
-import type { EmbedResolverResult, TransformContext } from '../types.js'
+import { youtubeEmbedHandler } from '../embeds/youtube.js'
+import type { TransformContext } from '../types.js'
 import { injectEnclosureEmbedPlaceholders } from './injectEnclosureEmbedPlaceholders.js'
 
 const context: TransformContext = { baseUrl: undefined }
 
-const youtubeResolver = (url: string): EmbedResolverResult | undefined => {
-  try {
-    const { hostname, pathname } = new URL(url)
-
-    if (!hostname.includes('youtube')) {
-      return
-    }
-
-    const videoId = pathname.split('/').pop()
-
-    return {
-      provider: 'youtube',
-      src: `https://www.youtube-nocookie.com/embed/${videoId}`,
-      url: `https://www.youtube.com/watch?v=${videoId}`,
-      thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
-      type: 'iframe',
-    }
-  } catch {}
-}
-
-const embedDomains = ['youtube-nocookie.com', 'youtube.com', 'player.vimeo.com']
-
 const withResolver: TransformContext = {
   ...context,
-  resolveEmbed: youtubeResolver,
-  embedDomains,
+  embedHandlers: [youtubeEmbedHandler],
 }
 
 const withEnclosures = (

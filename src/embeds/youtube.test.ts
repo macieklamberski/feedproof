@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'bun:test'
+import { parseFragment } from '../common.js'
 import type { EmbedResolverResult } from '../types.js'
-import { composeThumbnailUrl, extractVideoId, youtubeResolveEmbed } from './youtube.js'
+import {
+  composeThumbnailUrl,
+  extractVideoId,
+  youtubeEmbedHandler,
+  youtubeResolveEmbed,
+} from './youtube.js'
 
 describe('extractVideoId', () => {
   it('should extract id from standard watch url', () => {
@@ -124,19 +130,41 @@ describe('youtubeResolveEmbed', () => {
   })
 
   it('should resolve youtube embed url', () => {
-    expect(youtubeResolveEmbed('https://www.youtube.com/embed/dQw4w9WgXcQ')?.provider).toBe(
-      'youtube',
-    )
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      type: 'iframe',
+    }
+
+    expect(youtubeResolveEmbed('https://www.youtube.com/embed/dQw4w9WgXcQ')).toEqual(expected)
   })
 
   it('should resolve youtu.be short url', () => {
-    expect(youtubeResolveEmbed('https://youtu.be/dQw4w9WgXcQ')?.provider).toBe('youtube')
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      type: 'iframe',
+    }
+
+    expect(youtubeResolveEmbed('https://youtu.be/dQw4w9WgXcQ')).toEqual(expected)
   })
 
   it('should resolve youtube-nocookie embed url', () => {
-    expect(
-      youtubeResolveEmbed('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')?.provider,
-    ).toBe('youtube')
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      type: 'iframe',
+    }
+
+    expect(youtubeResolveEmbed('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')).toEqual(
+      expected,
+    )
   })
 
   it('should return undefined for invalid url', () => {
@@ -150,5 +178,55 @@ describe('composeThumbnailUrl', () => {
     const expected = 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg'
 
     expect(composeThumbnailUrl(value)).toBe(expected)
+  })
+})
+
+describe('youtubeEmbedHandler', () => {
+  const firstMatch = (html: string): Element | undefined => {
+    return parseFragment(html).querySelector(youtubeEmbedHandler.selector) ?? undefined
+  }
+
+  it('should extract metadata from a youtube iframe', () => {
+    const element = firstMatch('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>')
+    const result = element ? youtubeEmbedHandler.extract(element) : undefined
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      type: 'iframe',
+    }
+
+    expect(result).toEqual(expected)
+  })
+
+  it('should extract metadata from a youtube subdomain iframe', () => {
+    const element = firstMatch('<iframe src="https://m.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>')
+    const result = element ? youtubeEmbedHandler.extract(element) : undefined
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      type: 'iframe',
+    }
+
+    expect(result).toEqual(expected)
+  })
+
+  it('should return undefined for non-youtube iframes', () => {
+    const element = firstMatch('<iframe src="https://example.com/video"></iframe>')
+    const result = element ? youtubeEmbedHandler.extract(element) : undefined
+
+    expect(result).toBeUndefined()
+  })
+
+  // Regression: a non-youtube host carrying a watch?v=<id> shaped query must
+  // not be claimed just because extractVideoId could parse the id from it.
+  it('should reject iframe with valid video id but wrong host', () => {
+    const element = firstMatch('<iframe src="https://evil.com/watch?v=dQw4w9WgXcQ"></iframe>')
+    const result = element ? youtubeEmbedHandler.extract(element) : undefined
+
+    expect(result).toBeUndefined()
   })
 })

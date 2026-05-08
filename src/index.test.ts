@@ -68,15 +68,20 @@ describe('transformContent', () => {
     expect(result).toContain('youtube-nocookie.com')
   })
 
-  it('should allow custom resolveEmbed', () => {
+  it('should allow custom embedHandlers', () => {
     const html = '<iframe src="https://custom-player.example.com/video/123"></iframe>'
     const result = transformContent(html, {
-      resolveEmbed: (url) => {
-        if (url.includes('custom-player.example.com')) {
-          return { provider: 'custom', src: url }
-        }
-      },
-      embedDomains: ['custom-player.example.com'],
+      embedHandlers: [
+        {
+          selector: 'iframe[src]',
+          extract: (element) => {
+            const src = element.getAttribute('src') ?? ''
+            if (src.includes('custom-player.example.com')) {
+              return { provider: 'custom', src, type: 'iframe' }
+            }
+          },
+        },
+      ],
     })
 
     expect(result).toContain('data-embed-provider="custom"')
