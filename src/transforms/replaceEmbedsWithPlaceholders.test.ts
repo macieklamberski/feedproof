@@ -1,12 +1,20 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../common.js'
-import { vimeoEmbedHandler } from '../embeds/vimeo.js'
 import { youtubeEmbedHandler } from '../embeds/youtube.js'
 import type { EmbedHandler, TransformContext } from '../types.js'
 import { replaceEmbedsWithPlaceholders } from './replaceEmbedsWithPlaceholders.js'
 
+const stubHandler: EmbedHandler = {
+  selector: 'iframe[src*="example.com"]',
+  extract: (element) => ({
+    provider: 'example',
+    src: element.getAttribute('src') ?? '',
+    type: 'iframe',
+  }),
+}
+
 const withHandlers: TransformContext = {
-  embedHandlers: [youtubeEmbedHandler, vimeoEmbedHandler],
+  embedHandlers: [youtubeEmbedHandler, stubHandler],
 }
 
 const withNoHandlers: TransformContext = {
@@ -36,13 +44,6 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).toContain('https://www.youtube.com/watch?v=abc123</a>')
   })
 
-  it('should include fallback link with src when no canonical url', () => {
-    const value = '<iframe src="https://player.vimeo.com/video/12345"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withHandlers))
-
-    expect(result).toContain('<a href="https://player.vimeo.com/video/12345">')
-  })
-
   it('should preserve iframe dimensions as data attributes', () => {
     const value =
       '<iframe src="https://www.youtube.com/embed/abc123" width="640" height="360"></iframe>'
@@ -54,12 +55,12 @@ describe('replaceEmbedsWithPlaceholders', () => {
 
   it('should replace multiple embeds in same content', () => {
     const value =
-      '<iframe src="https://www.youtube.com/embed/abc123"></iframe><iframe src="https://player.vimeo.com/video/456"></iframe>'
+      '<iframe src="https://www.youtube.com/embed/abc123"></iframe><iframe src="https://example.com/player/xyz"></iframe>'
     const result = transformHtml(value, replaceEmbedsWithPlaceholders(withHandlers))
 
     expect(result).not.toContain('<iframe')
     expect(result).toContain('data-embed-provider="youtube"')
-    expect(result).toContain('data-embed-src="https://player.vimeo.com/video/456"')
+    expect(result).toContain('data-embed-provider="example"')
   })
 
   it('should preserve surrounding content when replacing media', () => {
@@ -95,7 +96,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
   })
 
   it('should leave iframe untouched when no handler claims it', () => {
-    const value = '<iframe src="https://unknown-site.com/embed/123"></iframe>'
+    const value = '<iframe src="https://unknown-site.com/123"></iframe>'
     const result = transformHtml(value, replaceEmbedsWithPlaceholders(withHandlers))
 
     expect(result).toContain('<iframe')
@@ -141,10 +142,10 @@ describe('replaceEmbedsWithPlaceholders', () => {
   })
 
   it('should fall through to next handler when first returns undefined', () => {
-    const value = '<iframe src="https://player.vimeo.com/video/12345"></iframe>'
+    const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const result = transformHtml(value, replaceEmbedsWithPlaceholders(withHandlers))
 
-    expect(result).toContain('data-embed-provider="vimeo"')
+    expect(result).toContain('data-embed-provider="example"')
   })
 
   it('should use defaultEmbedHandlers when context omits embedHandlers', () => {
@@ -152,12 +153,5 @@ describe('replaceEmbedsWithPlaceholders', () => {
     const result = transformHtml(value, replaceEmbedsWithPlaceholders({}))
 
     expect(result).toContain('data-embed-provider="youtube"')
-  })
-
-  it('should resolve vimeo via defaultEmbedHandlers when context omits embedHandlers', () => {
-    const value = '<iframe src="https://player.vimeo.com/video/12345"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders({}))
-
-    expect(result).toContain('data-embed-provider="vimeo"')
   })
 })

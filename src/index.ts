@@ -71,9 +71,6 @@ export {
   stripOversizedBase64Sources,
   transformHtml,
 } from './common.js'
-export { soundcloudEmbedHandler } from './embeds/soundcloud.js'
-export { spotifyEmbedHandler } from './embeds/spotify.js'
-export { vimeoEmbedHandler } from './embeds/vimeo.js'
 export {
   composeThumbnailUrl,
   extractVideoId,

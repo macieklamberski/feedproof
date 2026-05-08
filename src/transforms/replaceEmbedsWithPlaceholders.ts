@@ -1,17 +1,9 @@
 import { createEmbedPlaceholder } from '../common.js'
-import { soundcloudEmbedHandler } from '../embeds/soundcloud.js'
-import { spotifyEmbedHandler } from '../embeds/spotify.js'
-import { vimeoEmbedHandler } from '../embeds/vimeo.js'
 import { youtubeEmbedHandler } from '../embeds/youtube.js'
 import type { DomTransform, EmbedHandler } from '../types.js'
 import { coerceNumber } from '../utils.js'
 
-export const defaultEmbedHandlers: Array<EmbedHandler> = [
-  youtubeEmbedHandler,
-  vimeoEmbedHandler,
-  spotifyEmbedHandler,
-  soundcloudEmbedHandler,
-]
+export const defaultEmbedHandlers: Array<EmbedHandler> = [youtubeEmbedHandler]
 
 export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
   const handlers = context.embedHandlers ?? defaultEmbedHandlers

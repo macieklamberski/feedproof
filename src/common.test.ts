@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'bun:test'
-import { applyDomTransforms, stripOversizedBase64Sources, transformHtml } from './common.js'
+import {
+  applyDomTransforms,
+  createEmbedPlaceholder,
+  parseFragment,
+  stripOversizedBase64Sources,
+  transformHtml,
+} from './common.js'
 
 describe('transformHtml', () => {
   it('should preserve content when transform is a no-op', () => {
@@ -91,6 +97,38 @@ describe('stripOversizedBase64Sources', () => {
     const value = `<img src='data:image/png;base64,${largeData}'>`
 
     expect(stripOversizedBase64Sources(value, 50)).toBe("<img src=''>")
+  })
+})
+
+describe('createEmbedPlaceholder fallback link', () => {
+  it('should use metadata.url when present', () => {
+    const document = parseFragment('')
+    const element = createEmbedPlaceholder(document, 'https://embed.example/abc', 'iframe', {
+      provider: 'custom',
+      src: 'https://embed.example/abc',
+      url: 'https://canonical.example/abc',
+      type: 'iframe',
+    })
+
+    expect(element.querySelector('a')?.getAttribute('href')).toBe('https://canonical.example/abc')
+  })
+
+  it('should fall back to metadata.src when url is absent', () => {
+    const document = parseFragment('')
+    const element = createEmbedPlaceholder(document, 'https://passed-src.example', 'iframe', {
+      provider: 'custom',
+      src: 'https://embed.example/abc',
+      type: 'iframe',
+    })
+
+    expect(element.querySelector('a')?.getAttribute('href')).toBe('https://embed.example/abc')
+  })
+
+  it('should fall back to src argument when metadata is omitted', () => {
+    const document = parseFragment('')
+    const element = createEmbedPlaceholder(document, 'https://passed-src.example', 'iframe')
+
+    expect(element.querySelector('a')?.getAttribute('href')).toBe('https://passed-src.example')
   })
 })
 
