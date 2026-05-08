@@ -49,19 +49,29 @@ const result = transformContent('<p>Check <img data-src="photo.jpg"> and visit /
 ## Options
 
 ```typescript
+import { transformContent } from 'feedproof'
+import { defaultDomTransforms } from 'feedproof/defaults'
+
 const result = transformContent(html, {
   // Base URL for resolving relative URLs.
   baseUrl: 'https://example.com/post/1',
   // Feed item enclosures (audio/video).
   enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
-  // Custom embed resolver (extends built-in YouTube support).
-  resolveEmbed: (url) => myResolver(url),
-  // Additional embed domains to allow.
-  embedDomains: ['custom-player.example.com'],
-  // Toggle individual transforms off.
-  transforms: { highlightCode: false, linkifyUrls: false },
+  // Custom embed handlers (extends built-in YouTube support).
+  embedHandlers: [
+    {
+      selector: 'iframe[src*="custom-player.example.com"]',
+      extract: (element) => ({ provider: 'custom', src: element.getAttribute('src') ?? '' }),
+    },
+  ],
+  // Replace the DOM transform pipeline (omit to use defaults).
+  domTransforms: defaultDomTransforms.filter(
+    (t) => t.name !== 'highlightCode' && t.name !== 'linkifyUrls',
+  ),
 })
 ```
+
+The `stringTransforms`, `domTransforms`, and `finalStringTransforms` options each fully replace the corresponding default phase when provided. To disable a single transform, filter it out of the matching default array; to add a custom one, append it to the array.
 
 ## Individual Transforms
 
@@ -80,8 +90,12 @@ All default constants are available for customization:
 ```typescript
 import {
   defaultDomTransforms,
+  defaultEmbedHandlers,
+  defaultFinalStringTransforms,
+  defaultLazySrcAttributes,
+  defaultRedirectExtractors,
   defaultStringTransforms,
-  defaultEmbedDomains,
-  defaultResolveEmbed,
+  defaultTrackingHosts,
+  defaultTrackingPathSegments,
 } from 'feedproof/defaults'
 ```

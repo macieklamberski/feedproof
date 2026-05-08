@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { defaultDomTransforms, defaultStringTransforms } from './defaults.js'
 import { transformContent } from './index.js'
 
 const startsWithDiv = /^<div>/
@@ -37,10 +38,10 @@ describe('transformContent', () => {
     expect(result).not.toContain('pixel.gif')
   })
 
-  it('should allow disabling specific transforms', () => {
+  it('should allow overriding the dom transforms array', () => {
     const html = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
     const result = transformContent(html, {
-      transforms: { stripTrackingParams: false },
+      domTransforms: defaultDomTransforms.filter((t) => t.name !== 'stripTrackingParams'),
     })
 
     expect(result).toContain('utm_source')
@@ -104,9 +105,12 @@ describe('transformContent', () => {
     expect(result).toBe('<p>Hello</p><p>World</p>')
   })
 
-  it('should preserve empty paragraphs when stripEmptyTags is disabled', () => {
+  it('should preserve empty paragraphs when stripEmptyTags is removed from string phases', () => {
     const html = '<p>Hello</p><p><br></p><p>World</p>'
-    const result = transformContent(html, { transforms: { stripEmptyTags: false } })
+    const result = transformContent(html, {
+      stringTransforms: defaultStringTransforms.filter((t) => t.name !== 'stripEmptyTags'),
+      finalStringTransforms: [],
+    })
 
     expect(result).toBe('<p>Hello</p><p></p><p>World</p>')
   })
