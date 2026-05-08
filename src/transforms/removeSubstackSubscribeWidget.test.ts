@@ -6,55 +6,65 @@ import { removeSubstackSubscribeWidget } from './removeSubstackSubscribeWidget.j
 const context: TransformContext = {}
 
 describe('removeSubstackSubscribeWidget', () => {
-  it('should remove a single SubscribeWidget element with its children', () => {
-    const html =
-      '<p>Hello</p><div data-component-name="SubscribeWidget"><input type="email"><button>Subscribe</button></div><p>World</p>'
-    const result = transformHtml(html, removeSubstackSubscribeWidget(context))
+  describe('happy paths', () => {
+    it('should remove a single SubscribeWidget element with its children', () => {
+      const value =
+        '<p>Hello</p><div data-component-name="SubscribeWidget"><input type="email"><button>Subscribe</button></div><p>World</p>'
+      const expected = '<p>Hello</p><p>World</p>'
 
-    expect(result).toBe('<p>Hello</p><p>World</p>')
+      expect(transformHtml(value, removeSubstackSubscribeWidget(context))).toBe(expected)
+    })
+
+    it('should remove multiple SubscribeWidget elements', () => {
+      const value =
+        '<div data-component-name="SubscribeWidget">First</div><p>Content</p><div data-component-name="SubscribeWidget">Second</div>'
+      const expected = '<p>Content</p>'
+
+      expect(transformHtml(value, removeSubstackSubscribeWidget(context))).toBe(expected)
+    })
+
+    it('should remove SubscribeWidget regardless of element tag', () => {
+      const value = '<section data-component-name="SubscribeWidget">Inner</section><p>After</p>'
+      const expected = '<p>After</p>'
+
+      expect(transformHtml(value, removeSubstackSubscribeWidget(context))).toBe(expected)
+    })
+
+    it('should preserve surrounding content when widget is nested', () => {
+      const value =
+        '<article><h2>Title</h2><div data-component-name="SubscribeWidget">Subscribe</div><p>Body</p></article>'
+      const expected = '<article><h2>Title</h2><p>Body</p></article>'
+
+      expect(transformHtml(value, removeSubstackSubscribeWidget(context))).toBe(expected)
+    })
   })
 
-  it('should remove multiple SubscribeWidget elements', () => {
-    const html =
-      '<div data-component-name="SubscribeWidget">First</div><p>Content</p><div data-component-name="SubscribeWidget">Second</div>'
-    const result = transformHtml(html, removeSubstackSubscribeWidget(context))
+  describe('edge cases', () => {
+    it('should leave content unchanged when no SubscribeWidget is present', () => {
+      const value = '<p>No widgets here</p>'
 
-    expect(result).toBe('<p>Content</p>')
-  })
+      expect(transformHtml(value, removeSubstackSubscribeWidget(context))).toBe(value)
+    })
 
-  it('should remove SubscribeWidget regardless of element tag', () => {
-    const html = '<section data-component-name="SubscribeWidget">Inner</section><p>After</p>'
-    const result = transformHtml(html, removeSubstackSubscribeWidget(context))
+    it('should not match elements with a different data-component-name', () => {
+      const value = '<div data-component-name="ShareWidget">Share</div>'
 
-    expect(result).toBe('<p>After</p>')
-  })
+      expect(transformHtml(value, removeSubstackSubscribeWidget(context))).toBe(value)
+    })
 
-  it('should not modify content when no SubscribeWidget is present', () => {
-    const html = '<p>No widgets here</p>'
-    const result = transformHtml(html, removeSubstackSubscribeWidget(context))
+    it('should handle empty content', () => {
+      const value = ''
 
-    expect(result).toBe('<p>No widgets here</p>')
-  })
+      expect(transformHtml(value, removeSubstackSubscribeWidget(context))).toBe(value)
+    })
 
-  it('should not match elements with a different data-component-name', () => {
-    const html = '<div data-component-name="ShareWidget">Share</div>'
-    const result = transformHtml(html, removeSubstackSubscribeWidget(context))
+    it('should be idempotent', () => {
+      const value =
+        '<p>Hello</p><div data-component-name="SubscribeWidget">Subscribe</div><p>World</p>'
+      const once = transformHtml(value, removeSubstackSubscribeWidget(context))
+      const twice = transformHtml(once, removeSubstackSubscribeWidget(context))
 
-    expect(result).toBe('<div data-component-name="ShareWidget">Share</div>')
-  })
-
-  it('should preserve surrounding content when widget is nested', () => {
-    const html =
-      '<article><h2>Title</h2><div data-component-name="SubscribeWidget">Subscribe</div><p>Body</p></article>'
-    const result = transformHtml(html, removeSubstackSubscribeWidget(context))
-
-    expect(result).toBe('<article><h2>Title</h2><p>Body</p></article>')
-  })
-
-  it('should handle empty content', () => {
-    const html = ''
-    const result = transformHtml(html, removeSubstackSubscribeWidget(context))
-
-    expect(result).toBe('')
+      expect(twice).toBe(once)
+    })
   })
 })
