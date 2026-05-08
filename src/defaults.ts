@@ -13,6 +13,7 @@ import { stripComments } from './transforms/stripComments.js'
 import { stripEmptyTags } from './transforms/stripEmptyTags.js'
 import { stripInterBlockBreaks } from './transforms/stripInterBlockBreaks.js'
 import { stripOrphanedClosingTags } from './transforms/stripOrphanedClosingTags.js'
+import { stripParagraphBoundaryBreaks } from './transforms/stripParagraphBoundaryBreaks.js'
 import { stripTrackingParams } from './transforms/stripTrackingParams.js'
 import { trimPreWhitespace } from './transforms/trimPreWhitespace.js'
 import { unwrapRedirectUrls } from './transforms/unwrapRedirectUrls.js'
@@ -35,6 +36,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   stripTrackingParams,
   removeTrackingPixels,
   stripInterBlockBreaks,
+  stripParagraphBoundaryBreaks,
   highlightCode,
   mergeConsecutiveOneLinerPres,
   replacePreLineBreaks,
@@ -43,6 +45,8 @@ export const defaultDomTransforms: Array<DomTransform> = [
   replaceEmbedsWithPlaceholders,
   injectEnclosureEmbedPlaceholders,
 ]
+
+export const defaultFinalStringTransforms: Array<StringTransform> = [stripEmptyTags]
 
 export { defaultLazySrcAttributes } from './transforms/fixLazyImages.js'
 export {

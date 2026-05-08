@@ -7,71 +7,63 @@ const context: TransformContext = {}
 
 describe('stripInterBlockBreaks', () => {
   it('should remove br between two block elements', () => {
-    const html = '<p>First</p><br><p>Second</p>'
-    const result = transformHtml(html, stripInterBlockBreaks(context))
+    const value = '<p>First</p><br><p>Second</p>'
+    const expected = '<p>First</p><p>Second</p>'
 
-    expect(result).not.toContain('<br>')
-    expect(result).toContain('<p>First</p>')
-    expect(result).toContain('<p>Second</p>')
+    expect(transformHtml(value, stripInterBlockBreaks(context))).toBe(expected)
   })
 
   it('should remove multiple consecutive br between blocks', () => {
-    const html = '<p>First</p><br><br><br><p>Second</p>'
-    const result = transformHtml(html, stripInterBlockBreaks(context))
+    const value = '<p>First</p><br><br><br><p>Second</p>'
+    const expected = '<p>First</p><p>Second</p>'
 
-    expect(result).not.toContain('<br>')
+    expect(transformHtml(value, stripInterBlockBreaks(context))).toBe(expected)
   })
 
   it('should remove br before first block element', () => {
-    const html = '<br><p>Content</p>'
-    const result = transformHtml(html, stripInterBlockBreaks(context))
+    const value = '<br><p>Content</p>'
+    const expected = '<p>Content</p>'
 
-    expect(result).not.toContain('<br>')
-    expect(result).toContain('<p>Content</p>')
+    expect(transformHtml(value, stripInterBlockBreaks(context))).toBe(expected)
   })
 
   it('should remove br after last block element', () => {
-    const html = '<p>Content</p><br>'
-    const result = transformHtml(html, stripInterBlockBreaks(context))
+    const value = '<p>Content</p><br>'
+    const expected = '<p>Content</p>'
 
-    expect(result).not.toContain('<br>')
-    expect(result).toContain('<p>Content</p>')
+    expect(transformHtml(value, stripInterBlockBreaks(context))).toBe(expected)
   })
 
   it('should preserve br inside inline context', () => {
-    const html = '<p>Line one<br>Line two</p>'
-    const result = transformHtml(html, stripInterBlockBreaks(context))
+    const value = '<p>Line one<br>Line two</p>'
 
-    expect(result).toContain('<br>')
+    expect(transformHtml(value, stripInterBlockBreaks(context))).toBe(value)
   })
 
   it('should preserve br between inline elements at top level', () => {
-    const html = '<span>One</span><br><span>Two</span>'
-    const result = transformHtml(html, stripInterBlockBreaks(context))
+    const value = '<span>One</span><br><span>Two</span>'
 
-    expect(result).toContain('<br>')
+    expect(transformHtml(value, stripInterBlockBreaks(context))).toBe(value)
   })
 
   it('should remove br with whitespace text nodes between blocks', () => {
-    const html = '<p>First</p>\n  <br>\n  <p>Second</p>'
-    const result = transformHtml(html, stripInterBlockBreaks(context))
+    const value = '<p>First</p>\n  <br>\n  <p>Second</p>'
+    const expected = '<p>First</p>\n  \n  <p>Second</p>'
 
-    expect(result).not.toContain('<br>')
+    expect(transformHtml(value, stripInterBlockBreaks(context))).toBe(expected)
   })
 
   it('should remove br between different block elements', () => {
-    const html = '<p>Text</p><br><blockquote>Quote</blockquote>'
-    const result = transformHtml(html, stripInterBlockBreaks(context))
+    const value = '<p>Text</p><br><blockquote>Quote</blockquote>'
+    const expected = '<p>Text</p><blockquote>Quote</blockquote>'
 
-    expect(result).not.toContain('<br>')
+    expect(transformHtml(value, stripInterBlockBreaks(context))).toBe(expected)
   })
 
   it('should not modify content without br', () => {
-    const html = '<p>First</p><p>Second</p>'
-    const result = transformHtml(html, stripInterBlockBreaks(context))
+    const value = '<p>First</p><p>Second</p>'
 
-    expect(result).toContain('<p>First</p>')
-    expect(result).toContain('<p>Second</p>')
+    expect(transformHtml(value, stripInterBlockBreaks(context))).toBe(value)
   })
 
   it('should remove br between blocks separated by comments', () => {

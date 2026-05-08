@@ -50,6 +50,7 @@ export type TransformToggles = {
   stripTrackingParams?: boolean
   removeTrackingPixels?: boolean
   stripInterBlockBreaks?: boolean
+  stripParagraphBoundaryBreaks?: boolean
   simplifyFigures?: boolean
   highlightCode?: boolean
   mergeConsecutiveOneLinerPres?: boolean

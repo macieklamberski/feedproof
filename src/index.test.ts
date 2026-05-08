@@ -96,4 +96,25 @@ describe('transformContent', () => {
     expect(result).toContain('data-embed="audio"')
     expect(result).toContain('audio.mp3')
   })
+
+  it('should remove paragraphs left empty after boundary br stripping', () => {
+    const html = '<p>Hello</p><p><br></p><p>World</p>'
+    const result = transformContent(html)
+
+    expect(result).toBe('<p>Hello</p><p>World</p>')
+  })
+
+  it('should preserve empty paragraphs when stripEmptyTags is disabled', () => {
+    const html = '<p>Hello</p><p><br></p><p>World</p>'
+    const result = transformContent(html, { transforms: { stripEmptyTags: false } })
+
+    expect(result).toBe('<p>Hello</p><p></p><p>World</p>')
+  })
+
+  it('should preserve comments inside pre blocks through full pipeline', () => {
+    const html = '<pre>before <!-- preserved --> after</pre>'
+    const result = transformContent(html)
+
+    expect(result).toContain('<!-- preserved -->')
+  })
 })
