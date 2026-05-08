@@ -73,4 +73,18 @@ describe('stripInterBlockBreaks', () => {
     expect(result).toContain('<p>First</p>')
     expect(result).toContain('<p>Second</p>')
   })
+
+  it('should remove br between blocks separated by comments', () => {
+    const value = '<p>First</p><!--x--><br><!--y--><p>Second</p>'
+    const expected = '<p>First</p><!--x--><!--y--><p>Second</p>'
+
+    expect(transformHtml(value, stripInterBlockBreaks(context))).toBe(expected)
+  })
+
+  it('should remove br before first block when preceded by a comment', () => {
+    const value = '<!--x--><br><p>Content</p>'
+    const expected = '<!--x--><p>Content</p>'
+
+    expect(transformHtml(value, stripInterBlockBreaks(context))).toBe(expected)
+  })
 })
