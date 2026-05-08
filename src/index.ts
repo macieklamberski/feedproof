@@ -64,6 +64,7 @@ export {
 export { extractFacebookShim } from './redirects/facebook.js'
 export { extractGoogleRedirect } from './redirects/google.js'
 export { extractGoogleNewsRedirect } from './redirects/googleNews.js'
+export { extractGoogleNewsModern } from './redirects/googleNewsModern.js'
 export { extractGoogleTranslateRedirect } from './redirects/googleTranslate.js'
 export { extractPocketRedirect } from './redirects/pocket.js'
 export { fixLazyImages } from './transforms/dom/fixLazyImages.js'
