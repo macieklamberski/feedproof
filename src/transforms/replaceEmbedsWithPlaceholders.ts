@@ -22,7 +22,9 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
     }
 
     for (const handler of handlers) {
-      for (const element of document.querySelectorAll(handler.selector)) {
+      const elements = document.querySelectorAll(handler.selector)
+
+      for (const element of elements) {
         const metadata = handler.extract(element)
 
         if (!metadata) {
@@ -32,13 +34,14 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
         const width = coerceNumber(element.getAttribute('width')) ?? metadata.width
         const height = coerceNumber(element.getAttribute('height')) ?? metadata.height
 
-        element.replaceWith(
-          createEmbedPlaceholder(document, metadata.src, metadata.type ?? 'iframe', {
-            ...metadata,
-            width,
-            height,
-          }),
+        const placeholder = createEmbedPlaceholder(
+          document,
+          metadata.src,
+          metadata.type ?? 'iframe',
+          { ...metadata, width, height },
         )
+
+        element.replaceWith(placeholder)
       }
     }
   }

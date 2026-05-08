@@ -14,7 +14,6 @@ describe('vimeoEmbedHandler', () => {
     const expected: EmbedResolverResult = {
       provider: 'vimeo',
       src: 'https://player.vimeo.com/video/12345',
-      autoload: true,
       type: 'iframe',
     }
 

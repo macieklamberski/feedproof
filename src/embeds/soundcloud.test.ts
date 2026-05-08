@@ -16,7 +16,6 @@ describe('soundcloudEmbedHandler', () => {
     const expected: EmbedResolverResult = {
       provider: 'soundcloud',
       src: 'https://w.soundcloud.com/player/?url=tracks/123',
-      autoload: true,
       type: 'iframe',
     }
 

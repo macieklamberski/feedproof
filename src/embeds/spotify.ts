@@ -9,7 +9,11 @@ export const spotifyEmbedHandler: EmbedHandler = {
     const src = element.getAttribute('src') ?? ''
 
     if (isHostOf(src, spotifyHosts) || isSubdomainOf(src, spotifyHosts)) {
-      return { provider: 'spotify', src, autoload: true, type: 'iframe' }
+      return {
+        provider: 'spotify',
+        src,
+        type: 'iframe',
+      }
     }
   },
 }

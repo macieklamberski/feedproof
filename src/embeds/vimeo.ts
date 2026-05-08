@@ -9,7 +9,11 @@ export const vimeoEmbedHandler: EmbedHandler = {
     const src = element.getAttribute('src') ?? ''
 
     if (isHostOf(src, vimeoHosts) || isSubdomainOf(src, vimeoHosts)) {
-      return { provider: 'vimeo', src, autoload: true, type: 'iframe' }
+      return {
+        provider: 'vimeo',
+        src,
+        type: 'iframe',
+      }
     }
   },
 }

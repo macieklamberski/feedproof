@@ -52,20 +52,6 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).toContain('data-embed-height="360"')
   })
 
-  it('should set autoload when handler returns autoload metadata', () => {
-    const value = '<iframe src="https://player.vimeo.com/video/12345"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withHandlers))
-
-    expect(result).toContain('data-embed-autoload')
-  })
-
-  it('should not set autoload on rich-metadata placeholder', () => {
-    const value = '<iframe src="https://www.youtube.com/embed/abc123"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withHandlers))
-
-    expect(result).not.toContain('data-embed-autoload')
-  })
-
   it('should replace multiple embeds in same content', () => {
     const value =
       '<iframe src="https://www.youtube.com/embed/abc123"></iframe><iframe src="https://player.vimeo.com/video/456"></iframe>'

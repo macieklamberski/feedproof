@@ -14,7 +14,6 @@ describe('spotifyEmbedHandler', () => {
     const expected: EmbedResolverResult = {
       provider: 'spotify',
       src: 'https://open.spotify.com/embed/track/abc',
-      autoload: true,
       type: 'iframe',
     }
 

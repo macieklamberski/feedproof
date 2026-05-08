@@ -10,7 +10,6 @@ export type EmbedResolverResult = {
   url?: string
   thumbnail?: string
   type?: 'video' | 'audio' | 'iframe'
-  autoload?: boolean
   width?: number
   height?: number
   author?: string

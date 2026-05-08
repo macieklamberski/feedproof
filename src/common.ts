@@ -145,10 +145,6 @@ export const createEmbedPlaceholder = (
     element.setAttribute('data-embed-thumbnail', metadata.thumbnail)
   }
 
-  if (metadata?.autoload) {
-    element.setAttribute('data-embed-autoload', '')
-  }
-
   if (metadata?.width) {
     element.setAttribute('data-embed-width', String(metadata.width))
   }

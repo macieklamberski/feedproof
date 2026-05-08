@@ -9,7 +9,11 @@ export const soundcloudEmbedHandler: EmbedHandler = {
     const src = element.getAttribute('src') ?? ''
 
     if (isHostOf(src, soundcloudHosts) || isSubdomainOf(src, soundcloudHosts)) {
-      return { provider: 'soundcloud', src, autoload: true, type: 'iframe' }
+      return {
+        provider: 'soundcloud',
+        src,
+        type: 'iframe',
+      }
     }
   },
 }
