@@ -3,7 +3,9 @@ import type { DomTransform } from '../types.js'
 
 export const stripParagraphBoundaryBreaks: DomTransform = () => {
   return (document) => {
-    for (const paragraph of document.querySelectorAll('p')) {
+    const paragraphs = document.querySelectorAll('p')
+
+    for (const paragraph of paragraphs) {
       while (paragraph.firstChild && isSkippable(paragraph.firstChild)) {
         paragraph.firstChild.remove()
       }
