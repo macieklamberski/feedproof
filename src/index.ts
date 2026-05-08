@@ -1,5 +1,9 @@
 import { applyDomTransforms, applyStringTransforms } from './common.js'
-import { defaultDomTransforms, defaultStringTransforms } from './defaults.js'
+import {
+  defaultDomTransforms,
+  defaultFinalStringTransforms,
+  defaultStringTransforms,
+} from './defaults.js'
 import type {
   DomTransform,
   StringTransform,
@@ -60,7 +64,14 @@ export const transformContent = (html: string, options: TransformContentOptions 
     domFns.map((transform) => transform(context)),
   )
 
-  return afterDom
+  // Phase 3: Final string transforms — cleans up empties produced by Phase 2.
+  const finalFns = filterStringTransforms(defaultFinalStringTransforms, options.transforms)
+  const afterFinal = applyStringTransforms(
+    afterDom,
+    finalFns.map((transform) => transform(context)),
+  )
+
+  return afterFinal
 }
 
 export {

@@ -46,6 +46,8 @@ export const defaultDomTransforms: Array<DomTransform> = [
   injectEnclosureEmbedPlaceholders,
 ]
 
+export const defaultFinalStringTransforms: Array<StringTransform> = [stripEmptyTags]
+
 export { defaultLazySrcAttributes } from './transforms/fixLazyImages.js'
 export {
   defaultTrackingHosts,

@@ -96,4 +96,11 @@ describe('transformContent', () => {
     expect(result).toContain('data-embed="audio"')
     expect(result).toContain('audio.mp3')
   })
+
+  it('should remove paragraphs left empty after boundary br stripping', () => {
+    const html = '<p>Hello</p><p><br></p><p>World</p>'
+    const result = transformContent(html)
+
+    expect(result).toBe('<p>Hello</p><p>World</p>')
+  })
 })
