@@ -7,7 +7,9 @@ export const fixLazyImages: DomTransform = (context) => {
 
   return (document) => {
     // Move lazy-load data attributes to real src/srcset.
-    for (const image of document.querySelectorAll('img')) {
+    const images = document.querySelectorAll('img')
+
+    for (const image of images) {
       let resolved = false
 
       for (const attribute of lazySrcAttributes) {
@@ -30,7 +32,9 @@ export const fixLazyImages: DomTransform = (context) => {
     }
 
     // Extract images from noscript wrappers when sibling is a lazy placeholder.
-    for (const noscript of document.querySelectorAll('noscript')) {
+    const noscripts = document.querySelectorAll('noscript')
+
+    for (const noscript of noscripts) {
       const sibling = noscript.previousElementSibling
 
       if (sibling?.tagName !== 'IMG') {

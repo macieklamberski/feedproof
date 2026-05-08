@@ -8,8 +8,10 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
       return
     }
 
-    for (const element of document.querySelectorAll('a[href]')) {
-      const href = element.getAttribute('href')
+    const anchors = document.querySelectorAll('a[href]')
+
+    for (const anchor of anchors) {
+      const href = anchor.getAttribute('href')
 
       if (!href) {
         continue
@@ -18,11 +20,13 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
       const resolved = resolveUrl(href, baseUrl)
 
       if (resolved) {
-        element.setAttribute('href', resolved)
+        anchor.setAttribute('href', resolved)
       }
     }
 
-    for (const element of document.querySelectorAll('[src]')) {
+    const elementsWithSrc = document.querySelectorAll('[src]')
+
+    for (const element of elementsWithSrc) {
       const src = element.getAttribute('src')
 
       if (!src) {
@@ -36,8 +40,10 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
       }
     }
 
-    for (const element of document.querySelectorAll('video[poster]')) {
-      const poster = element.getAttribute('poster')
+    const videos = document.querySelectorAll('video[poster]')
+
+    for (const video of videos) {
+      const poster = video.getAttribute('poster')
 
       if (!poster) {
         continue
@@ -46,7 +52,7 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
       const resolved = resolveUrl(poster, baseUrl)
 
       if (resolved) {
-        element.setAttribute('poster', resolved)
+        video.setAttribute('poster', resolved)
       }
     }
 
@@ -54,7 +60,9 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
     // (https://github.com/facebook/react/issues/19799). Linkedom treats attributes as case-sensitive
     // (https://github.com/WebReflection/linkedom/issues/235), so querySelectorAll('[srcset]') won't
     // match. We iterate img/source and check both casings manually.
-    for (const element of document.querySelectorAll('img, source')) {
+    const elements = document.querySelectorAll('img, source')
+
+    for (const element of elements) {
       const srcset = element.getAttribute('srcset') ?? element.getAttribute('srcSet')
 
       if (!srcset) {

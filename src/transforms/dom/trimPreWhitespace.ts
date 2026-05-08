@@ -8,7 +8,9 @@ const leadingIndentRegex = /^([^\S\n]+)/
 
 export const trimPreWhitespace: DomTransform = () => {
   return (document) => {
-    for (const pre of document.querySelectorAll('pre')) {
+    const pres = document.querySelectorAll('pre')
+
+    for (const pre of pres) {
       const target = pre.querySelector('code') ?? pre
       const trimmed = target.innerHTML
         .replace(trailingWhitespaceRegex, '')

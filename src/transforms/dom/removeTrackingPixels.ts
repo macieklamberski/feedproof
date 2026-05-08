@@ -33,7 +33,9 @@ export const removeTrackingPixels: DomTransform = (context) => {
   const pathRegex = buildPathRegex(context.trackingPathSegments ?? [])
 
   return (document) => {
-    for (const image of document.querySelectorAll('img')) {
+    const images = document.querySelectorAll('img')
+
+    for (const image of images) {
       const width = image.getAttribute('width')
       const height = image.getAttribute('height')
       const src = image.getAttribute('src')
