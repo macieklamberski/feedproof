@@ -69,10 +69,10 @@ describe('transformContent', () => {
     expect(result).toContain('youtube-nocookie.com')
   })
 
-  it('should allow custom embedHandlers', () => {
+  it('should allow custom embedResolvers', () => {
     const html = '<iframe src="https://custom-player.example.com/video/123"></iframe>'
     const result = transformContent(html, {
-      embedHandlers: [
+      embedResolvers: [
         {
           selector: 'iframe[src]',
           extract: (element) => {

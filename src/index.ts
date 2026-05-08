@@ -1,7 +1,7 @@
 import { applyDomTransforms, applyStringTransforms } from './common.js'
 import {
   defaultDomTransforms,
-  defaultEmbedHandlers,
+  defaultEmbedResolvers,
   defaultFinalStringTransforms,
   defaultLazySrcAttributes,
   defaultRedirectExtractors,
@@ -15,7 +15,7 @@ export const transformContent = (html: string, options: TransformContentOptions 
   const context: TransformContext = {
     baseUrl: options.baseUrl,
     enclosures: options.enclosures,
-    embedHandlers: options.embedHandlers ?? defaultEmbedHandlers,
+    embedResolvers: options.embedResolvers ?? defaultEmbedResolvers,
     lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,
     trackingHosts: options.trackingHosts ?? defaultTrackingHosts,
     trackingPathSegments: options.trackingPathSegments ?? defaultTrackingPathSegments,
@@ -58,33 +58,38 @@ export {
 export {
   composeThumbnailUrl,
   extractVideoId,
-  youtubeEmbedHandler,
+  youtubeEmbedResolver,
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
-export { decodeDoubleEncodedTags } from './transforms/decodeDoubleEncodedTags.js'
-export { fixLazyImages } from './transforms/fixLazyImages.js'
-export { detectLanguage, highlightCode } from './transforms/highlightCode.js'
-export { injectEnclosureEmbedPlaceholders } from './transforms/injectEnclosureEmbedPlaceholders.js'
-export { linkifyUrls } from './transforms/linkifyUrls.js'
-export { mergeConsecutiveOneLinerPres } from './transforms/mergeConsecutiveOneLinerPres.js'
-export { paragraphizePlainText } from './transforms/paragraphizePlainText.js'
-export { removeTrackingPixels } from './transforms/removeTrackingPixels.js'
-export { replaceEmbedsWithPlaceholders } from './transforms/replaceEmbedsWithPlaceholders.js'
-export { replacePreLineBreaks } from './transforms/replacePreLineBreaks.js'
-export { resolveRelativeUrls } from './transforms/resolveRelativeUrls.js'
-export { simplifyFigures } from './transforms/simplifyFigures.js'
-export { stripComments } from './transforms/stripComments.js'
-export { stripEmptyTags } from './transforms/stripEmptyTags.js'
-export { stripInterBlockBreaks } from './transforms/stripInterBlockBreaks.js'
-export { stripOrphanedClosingTags } from './transforms/stripOrphanedClosingTags.js'
-export { stripParagraphBoundaryBreaks } from './transforms/stripParagraphBoundaryBreaks.js'
-export { stripTrackingParams } from './transforms/stripTrackingParams.js'
-export { trimPreWhitespace } from './transforms/trimPreWhitespace.js'
-export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/unwrapRedirectUrls.js'
-export { unwrapWrappers } from './transforms/unwrapWrappers.js'
+export { extractFacebookShim } from './redirects/extractFacebookShim.js'
+export { extractGoogleNewsRedirect } from './redirects/extractGoogleNewsRedirect.js'
+export { extractGoogleRedirect } from './redirects/extractGoogleRedirect.js'
+export { extractGoogleTranslateRedirect } from './redirects/extractGoogleTranslateRedirect.js'
+export { extractPocketRedirect } from './redirects/extractPocketRedirect.js'
+export { fixLazyImages } from './transforms/dom/fixLazyImages.js'
+export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js'
+export { injectEnclosureEmbedPlaceholders } from './transforms/dom/injectEnclosureEmbedPlaceholders.js'
+export { linkifyUrls } from './transforms/dom/linkifyUrls.js'
+export { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
+export { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
+export { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
+export { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
+export { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
+export { simplifyFigures } from './transforms/dom/simplifyFigures.js'
+export { stripComments } from './transforms/dom/stripComments.js'
+export { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
+export { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBoundaryBreaks.js'
+export { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
+export { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
+export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
+export { decodeDoubleEncodedTags } from './transforms/string/decodeDoubleEncodedTags.js'
+export { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
+export { stripEmptyTags } from './transforms/string/stripEmptyTags.js'
+export { stripOrphanedClosingTags } from './transforms/string/stripOrphanedClosingTags.js'
+export { unwrapWrappers } from './transforms/string/unwrapWrappers.js'
 export type {
   DomTransform,
-  EmbedHandler,
+  EmbedResolver,
   EmbedResolverResult,
   Enclosure,
   StringTransform,

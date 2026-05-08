@@ -4,7 +4,7 @@ import type { EmbedResolverResult } from '../types.js'
 import {
   composeThumbnailUrl,
   extractVideoId,
-  youtubeEmbedHandler,
+  youtubeEmbedResolver,
   youtubeResolveEmbed,
 } from './youtube.js'
 
@@ -181,14 +181,14 @@ describe('composeThumbnailUrl', () => {
   })
 })
 
-describe('youtubeEmbedHandler', () => {
+describe('youtubeEmbedResolver', () => {
   const firstMatch = (html: string): Element | undefined => {
-    return parseFragment(html).querySelector(youtubeEmbedHandler.selector) ?? undefined
+    return parseFragment(html).querySelector(youtubeEmbedResolver.selector) ?? undefined
   }
 
   it('should extract metadata from a youtube iframe', () => {
     const element = firstMatch('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>')
-    const result = element ? youtubeEmbedHandler.extract(element) : undefined
+    const result = element ? youtubeEmbedResolver.extract(element) : undefined
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
@@ -202,7 +202,7 @@ describe('youtubeEmbedHandler', () => {
 
   it('should extract metadata from a youtube subdomain iframe', () => {
     const element = firstMatch('<iframe src="https://m.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>')
-    const result = element ? youtubeEmbedHandler.extract(element) : undefined
+    const result = element ? youtubeEmbedResolver.extract(element) : undefined
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
@@ -216,7 +216,7 @@ describe('youtubeEmbedHandler', () => {
 
   it('should return undefined for non-youtube iframes', () => {
     const element = firstMatch('<iframe src="https://example.com/video"></iframe>')
-    const result = element ? youtubeEmbedHandler.extract(element) : undefined
+    const result = element ? youtubeEmbedResolver.extract(element) : undefined
 
     expect(result).toBeUndefined()
   })
@@ -225,7 +225,7 @@ describe('youtubeEmbedHandler', () => {
   // not be claimed just because extractVideoId could parse the id from it.
   it('should reject iframe with valid video id but wrong host', () => {
     const element = firstMatch('<iframe src="https://evil.com/watch?v=dQw4w9WgXcQ"></iframe>')
-    const result = element ? youtubeEmbedHandler.extract(element) : undefined
+    const result = element ? youtubeEmbedResolver.extract(element) : undefined
 
     expect(result).toBeUndefined()
   })
