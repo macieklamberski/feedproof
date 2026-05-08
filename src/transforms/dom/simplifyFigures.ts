@@ -13,7 +13,9 @@ const isMediaOnly = (html: string): boolean => {
 
 export const simplifyFigures: DomTransform = () => {
   return (document) => {
-    for (const figure of document.querySelectorAll('figure')) {
+    const figures = document.querySelectorAll('figure')
+
+    for (const figure of figures) {
       // Unwrap p, div, span wrappers around media elements.
       for (const child of [...figure.children]) {
         if (child.tagName.toLowerCase() === 'figcaption') {
@@ -28,7 +30,9 @@ export const simplifyFigures: DomTransform = () => {
       }
 
       // Unwrap sole div wrappers inside figcaption.
-      for (const caption of figure.querySelectorAll('figcaption')) {
+      const captions = figure.querySelectorAll('figcaption')
+
+      for (const caption of captions) {
         const elements = [...caption.children]
 
         if (elements.length !== 1 || elements[0].tagName.toLowerCase() !== 'div') {

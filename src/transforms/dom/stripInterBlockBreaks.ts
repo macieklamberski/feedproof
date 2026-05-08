@@ -3,7 +3,9 @@ import type { DomTransform } from '../../types.js'
 
 export const stripInterBlockBreaks: DomTransform = () => {
   return (document) => {
-    for (const br of [...document.querySelectorAll('br')]) {
+    const brs = document.querySelectorAll('br')
+
+    for (const br of brs) {
       let previous = br.previousSibling
 
       while (previous && isSkippable(previous)) {

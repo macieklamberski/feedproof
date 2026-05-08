@@ -6,7 +6,9 @@ const brTagRegex = /<br\s*\/?>/gi
 
 export const replacePreLineBreaks: DomTransform = () => {
   return (document) => {
-    for (const pre of document.querySelectorAll('pre')) {
+    const pres = document.querySelectorAll('pre')
+
+    for (const pre of pres) {
       const target = pre.querySelector('code') ?? pre
       target.innerHTML = target.innerHTML.replace(brTagRegex, '\n')
     }

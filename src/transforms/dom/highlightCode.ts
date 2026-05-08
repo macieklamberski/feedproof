@@ -28,7 +28,9 @@ export const detectLanguage = (pre: Element, code: Element | null): string | und
 
 export const highlightCode: DomTransform = () => {
   return (document) => {
-    for (const pre of document.querySelectorAll('pre')) {
+    const pres = document.querySelectorAll('pre')
+
+    for (const pre of pres) {
       const code = pre.querySelector('code')
 
       if (!code) {

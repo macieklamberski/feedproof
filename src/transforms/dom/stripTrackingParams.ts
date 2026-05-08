@@ -3,7 +3,9 @@ import type { DomTransform } from '../../types.js'
 
 export const stripTrackingParams: DomTransform = () => {
   return (document) => {
-    for (const anchor of document.querySelectorAll('a[href]')) {
+    const anchors = document.querySelectorAll('a[href]')
+
+    for (const anchor of anchors) {
       const href = anchor.getAttribute('href')
 
       if (!href) {
