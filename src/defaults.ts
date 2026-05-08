@@ -22,13 +22,13 @@ import type { DomTransform, StringTransform } from './types.js'
 export const defaultStringTransforms: Array<StringTransform> = [
   stripOrphanedClosingTags,
   decodeDoubleEncodedTags,
-  stripComments,
   unwrapWrappers,
   paragraphizePlainText,
   stripEmptyTags,
 ]
 
 export const defaultDomTransforms: Array<DomTransform> = [
+  stripComments,
   fixLazyImages,
   resolveRelativeUrls,
   unwrapRedirectUrls,

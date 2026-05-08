@@ -2,7 +2,7 @@ import { parseHTML } from 'linkedom'
 import type { EmbedResolverResult } from './types.js'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
-export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3 } as const
+export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
 
 const base64SrcRegex = /((?:src|srcset|poster)=["'])data:[^"']*;base64,[^"']*(["'])/g
 

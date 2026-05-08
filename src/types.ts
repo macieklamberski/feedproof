@@ -40,10 +40,10 @@ export type StringTransform = (context: TransformContext) => (html: string) => s
 export type TransformToggles = {
   stripOrphanedClosingTags?: boolean
   decodeDoubleEncodedTags?: boolean
-  stripComments?: boolean
   unwrapWrappers?: boolean
   paragraphizePlainText?: boolean
   stripEmptyTags?: boolean
+  stripComments?: boolean
   fixLazyImages?: boolean
   resolveRelativeUrls?: boolean
   unwrapRedirectUrls?: boolean
