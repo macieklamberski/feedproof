@@ -63,6 +63,7 @@ export {
 } from './embeds/youtube.js'
 export { extractAmpCache } from './redirects/ampCache.js'
 export { extractFacebookShim } from './redirects/facebook.js'
+export { extractFeedsportal } from './redirects/feedsportal.js'
 export { extractGoogleRedirect } from './redirects/google.js'
 export { extractGoogleNewsRedirect } from './redirects/googleNews.js'
 export { extractGoogleNewsModern } from './redirects/googleNewsModern.js'
