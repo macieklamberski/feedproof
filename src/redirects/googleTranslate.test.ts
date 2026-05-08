@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { extractGoogleTranslateRedirect } from './extractGoogleTranslateRedirect.js'
+import { extractGoogleTranslateRedirect } from './googleTranslate.js'
 
 describe('extractGoogleTranslateRedirect', () => {
   it('should extract target from u param', () => {

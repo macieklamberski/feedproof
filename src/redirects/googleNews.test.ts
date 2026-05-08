@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { extractGoogleNewsRedirect } from './extractGoogleNewsRedirect.js'
+import { extractGoogleNewsRedirect } from './googleNews.js'
 
 describe('extractGoogleNewsRedirect', () => {
   it('should extract target from legacy news.google.com/news/url', () => {

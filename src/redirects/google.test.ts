@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { extractGoogleRedirect } from './extractGoogleRedirect.js'
+import { extractGoogleRedirect } from './google.js'
 
 describe('extractGoogleRedirect', () => {
   it('should extract target from url param', () => {

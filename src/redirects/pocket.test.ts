@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { extractPocketRedirect } from './extractPocketRedirect.js'
+import { extractPocketRedirect } from './pocket.js'
 
 describe('extractPocketRedirect', () => {
   it('should extract target from url param', () => {
