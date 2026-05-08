@@ -1,8 +1,10 @@
 import type { RedirectExtractor } from '../types.js'
 
-// Google Translate (translate.google.com/translate?u=<target>).
+const GOOGLE_TRANSLATE_HOST = /^translate\.google\.(?:com|[a-z]{2,3}(?:\.[a-z]{2,3})?)$/
+
+// Google Translate (translate.google.<TLD>/translate?u=<target>).
 export const extractGoogleTranslateRedirect: RedirectExtractor = (url) => {
-  if (url.hostname === 'translate.google.com' && url.pathname === '/translate') {
+  if (GOOGLE_TRANSLATE_HOST.test(url.hostname) && url.pathname === '/translate') {
     return url.searchParams.get('u') ?? null
   }
 

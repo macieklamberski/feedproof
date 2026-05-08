@@ -25,4 +25,18 @@ describe('extractGoogleNewsRedirect', () => {
 
     expect(extractGoogleNewsRedirect(url)).toBeNull()
   })
+
+  it('should extract target from news.google.de host', () => {
+    const url = new URL('https://news.google.de/news/url?url=https%3A%2F%2Fexample.com%2Farticle')
+
+    expect(extractGoogleNewsRedirect(url)).toBe('https://example.com/article')
+  })
+
+  it('should extract target from news.google.co.uk host', () => {
+    const url = new URL(
+      'https://news.google.co.uk/news/url?url=https%3A%2F%2Fexample.com%2Farticle',
+    )
+
+    expect(extractGoogleNewsRedirect(url)).toBe('https://example.com/article')
+  })
 })

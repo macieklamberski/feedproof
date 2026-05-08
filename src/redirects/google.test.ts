@@ -39,4 +39,22 @@ describe('extractGoogleRedirect', () => {
 
     expect(extractGoogleRedirect(url)).toBeNull()
   })
+
+  it('should extract target from google.de host', () => {
+    const url = new URL('https://www.google.de/url?url=https%3A%2F%2Fexample.com%2Fpage')
+
+    expect(extractGoogleRedirect(url)).toBe('https://example.com/page')
+  })
+
+  it('should extract target from google.co.uk host', () => {
+    const url = new URL('https://www.google.co.uk/url?url=https%3A%2F%2Fexample.com%2Fpage')
+
+    expect(extractGoogleRedirect(url)).toBe('https://example.com/page')
+  })
+
+  it('should extract target without www subdomain', () => {
+    const url = new URL('https://google.com/url?url=https%3A%2F%2Fexample.com%2Fpage')
+
+    expect(extractGoogleRedirect(url)).toBe('https://example.com/page')
+  })
 })
