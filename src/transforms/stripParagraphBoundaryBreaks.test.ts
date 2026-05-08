@@ -154,5 +154,18 @@ describe('stripParagraphBoundaryBreaks', () => {
 
       expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(expected)
     })
+
+    it('should strip trailing br with adjacent comment', () => {
+      const value = '<p>Hi<br><!-- note --></p>'
+      const expected = '<p>Hi</p>'
+
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(expected)
+    })
+
+    it('should leave paragraph with only non-br skippables alone', () => {
+      const value = '<p> <!-- note --> </p>'
+
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(value)
+    })
   })
 })
