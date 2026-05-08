@@ -6,6 +6,7 @@ import { extractGoogleRedirect } from './redirects/google.js'
 import { extractGoogleNewsRedirect } from './redirects/googleNews.js'
 import { extractGoogleNewsModern } from './redirects/googleNewsModern.js'
 import { extractGoogleTranslateRedirect } from './redirects/googleTranslate.js'
+import { extractOutlookSafelinks } from './redirects/outlookSafelinks.js'
 import { extractPocketRedirect } from './redirects/pocket.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
@@ -80,4 +81,5 @@ export const defaultRedirectExtractors: Array<RedirectExtractor> = [
   extractFacebookShim,
   extractAmpCache,
   extractFeedsportal,
+  extractOutlookSafelinks,
 ]
