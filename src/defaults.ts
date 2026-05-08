@@ -9,6 +9,7 @@ import { removeTrackingPixels } from './transforms/removeTrackingPixels.js'
 import { replaceEmbedsWithPlaceholders } from './transforms/replaceEmbedsWithPlaceholders.js'
 import { replacePreLineBreaks } from './transforms/replacePreLineBreaks.js'
 import { resolveRelativeUrls } from './transforms/resolveRelativeUrls.js'
+import { stripComments } from './transforms/stripComments.js'
 import { stripEmptyTags } from './transforms/stripEmptyTags.js'
 import { stripInterBlockBreaks } from './transforms/stripInterBlockBreaks.js'
 import { stripOrphanedClosingTags } from './transforms/stripOrphanedClosingTags.js'
@@ -27,6 +28,7 @@ export const defaultStringTransforms: Array<StringTransform> = [
 ]
 
 export const defaultDomTransforms: Array<DomTransform> = [
+  stripComments,
   fixLazyImages,
   resolveRelativeUrls,
   unwrapRedirectUrls,
