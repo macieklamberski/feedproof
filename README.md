@@ -49,19 +49,19 @@ const result = transformContent('<p>Check <img data-src="photo.jpg"> and visit /
 ## Options
 
 ```typescript
+import { fixLazyImages, resolveRelativeUrls, transformContent } from 'feedproof'
+
 const result = transformContent(html, {
   // Base URL for resolving relative URLs.
   baseUrl: 'https://example.com/post/1',
   // Feed item enclosures (audio/video).
   enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
-  // Custom embed resolver (extends built-in YouTube support).
-  resolveEmbed: (url) => myResolver(url),
-  // Additional embed domains to allow.
-  embedDomains: ['custom-player.example.com'],
-  // Toggle individual transforms off.
-  transforms: { highlightCode: false, linkifyUrls: false },
+  // Run a custom DOM transform pipeline (omit to use defaults).
+  domTransforms: [fixLazyImages, resolveRelativeUrls],
 })
 ```
+
+The `stringTransforms`, `domTransforms`, and `finalStringTransforms` options each fully replace the corresponding default phase when provided. Every transform is also exported individually from `feedproof`, so you can compose any pipeline — list them explicitly to build from scratch, or spread `defaultDomTransforms` (etc.) from `feedproof/defaults` to extend or filter the defaults.
 
 ## Individual Transforms
 
@@ -80,8 +80,12 @@ All default constants are available for customization:
 ```typescript
 import {
   defaultDomTransforms,
+  defaultEmbedHandlers,
+  defaultFinalStringTransforms,
+  defaultLazySrcAttributes,
+  defaultRedirectExtractors,
   defaultStringTransforms,
-  defaultEmbedDomains,
-  defaultResolveEmbed,
+  defaultTrackingHosts,
+  defaultTrackingPathSegments,
 } from 'feedproof/defaults'
 ```

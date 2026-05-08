@@ -37,30 +37,6 @@ export type DomTransform = (context: TransformContext) => (document: Document) =
 
 export type StringTransform = (context: TransformContext) => (html: string) => string
 
-export type TransformToggles = {
-  stripOrphanedClosingTags?: boolean
-  decodeDoubleEncodedTags?: boolean
-  unwrapWrappers?: boolean
-  paragraphizePlainText?: boolean
-  stripEmptyTags?: boolean
-  stripComments?: boolean
-  fixLazyImages?: boolean
-  resolveRelativeUrls?: boolean
-  unwrapRedirectUrls?: boolean
-  stripTrackingParams?: boolean
-  removeTrackingPixels?: boolean
-  stripInterBlockBreaks?: boolean
-  stripParagraphBoundaryBreaks?: boolean
-  simplifyFigures?: boolean
-  highlightCode?: boolean
-  mergeConsecutiveOneLinerPres?: boolean
-  replacePreLineBreaks?: boolean
-  trimPreWhitespace?: boolean
-  linkifyUrls?: boolean
-  replaceEmbedsWithPlaceholders?: boolean
-  injectEnclosureEmbedPlaceholders?: boolean
-}
-
 export type TransformContentOptions = {
   baseUrl?: string
   enclosures?: Array<Enclosure>
@@ -69,5 +45,7 @@ export type TransformContentOptions = {
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
   redirectExtractors?: Array<RedirectExtractor>
-  transforms?: TransformToggles
+  stringTransforms?: Array<StringTransform>
+  domTransforms?: Array<DomTransform>
+  finalStringTransforms?: Array<StringTransform>
 }
