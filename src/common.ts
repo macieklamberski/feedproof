@@ -94,13 +94,20 @@ export const blockElements = new Set([
   'ul',
 ])
 
-export const isSkippable = (node: Node): boolean => {
-  const isWhitespaceText = node.nodeType === Node.TEXT_NODE && !(node.textContent ?? '').trim()
-  const isBr =
-    node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName.toLowerCase() === 'br'
-  const isComment = node.nodeType === Node.COMMENT_NODE
+export const isWhitespaceText = (node: Node): boolean => {
+  return node.nodeType === Node.TEXT_NODE && !(node.textContent ?? '').trim()
+}
 
-  return isWhitespaceText || isBr || isComment
+export const isBr = (node: Node): boolean => {
+  return node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName.toLowerCase() === 'br'
+}
+
+export const isComment = (node: Node): boolean => {
+  return node.nodeType === Node.COMMENT_NODE
+}
+
+export const isSkippable = (node: Node): boolean => {
+  return isWhitespaceText(node) || isBr(node) || isComment(node)
 }
 
 export const isBlockElement = (node: Node): boolean => {

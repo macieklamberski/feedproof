@@ -1,4 +1,4 @@
-import { isSkippable } from '../common.js'
+import { isBr, isSkippable } from '../common.js'
 import type { DomTransform } from '../types.js'
 
 export const stripParagraphBoundaryBreaks: DomTransform = () => {
@@ -6,12 +6,28 @@ export const stripParagraphBoundaryBreaks: DomTransform = () => {
     const paragraphs = document.querySelectorAll('p')
 
     for (const paragraph of paragraphs) {
-      while (paragraph.firstChild && isSkippable(paragraph.firstChild)) {
-        paragraph.firstChild.remove()
+      const leading: Array<ChildNode> = []
+      let cursor = paragraph.firstChild
+      while (cursor && isSkippable(cursor)) {
+        leading.push(cursor)
+        cursor = cursor.nextSibling
+      }
+      if (leading.some(isBr)) {
+        for (const node of leading) {
+          node.remove()
+        }
       }
 
-      while (paragraph.lastChild && isSkippable(paragraph.lastChild)) {
-        paragraph.lastChild.remove()
+      const trailing: Array<ChildNode> = []
+      cursor = paragraph.lastChild
+      while (cursor && isSkippable(cursor)) {
+        trailing.push(cursor)
+        cursor = cursor.previousSibling
+      }
+      if (trailing.some(isBr)) {
+        for (const node of trailing) {
+          node.remove()
+        }
       }
     }
   }

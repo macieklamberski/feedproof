@@ -114,5 +114,45 @@ describe('stripParagraphBoundaryBreaks', () => {
 
       expect(twice).toBe(once)
     })
+
+    it('should leave paragraph with only boundary whitespace alone', () => {
+      const value = '<p> <em>Hi</em> </p>'
+
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(value)
+    })
+
+    it('should leave paragraph with leading whitespace but no br alone', () => {
+      const value = '<p>  <span>Hi</span></p>'
+
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(value)
+    })
+
+    it('should strip boundary br nested inside blockquote', () => {
+      const value = '<blockquote><p><br>Quoted<br></p></blockquote>'
+      const expected = '<blockquote><p>Quoted</p></blockquote>'
+
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(expected)
+    })
+
+    it('should strip boundary br nested inside figure', () => {
+      const value = '<figure><p><br>Caption</p></figure>'
+      const expected = '<figure><p>Caption</p></figure>'
+
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(expected)
+    })
+
+    it('should strip boundary br nested inside list item', () => {
+      const value = '<ul><li><p>Item<br></p></li></ul>'
+      const expected = '<ul><li><p>Item</p></li></ul>'
+
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(expected)
+    })
+
+    it('should strip boundary br with adjacent comment', () => {
+      const value = '<p><!-- note --><br>Hi</p>'
+      const expected = '<p>Hi</p>'
+
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(expected)
+    })
   })
 })
