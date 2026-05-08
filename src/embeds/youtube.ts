@@ -1,5 +1,5 @@
 import { isHostOf, isSubdomainOf } from 'feedscout/utils'
-import type { EmbedHandler, EmbedResolverResult } from '../types.js'
+import type { EmbedResolver, EmbedResolverResult } from '../types.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]+$/
 
@@ -49,7 +49,7 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 }
 
-export const youtubeEmbedHandler: EmbedHandler = {
+export const youtubeEmbedResolver: EmbedResolver = {
   selector: 'iframe[src]',
   extract: (element) => {
     const src = element.getAttribute('src') ?? ''

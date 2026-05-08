@@ -43,7 +43,7 @@ const result = transformContent('<p>Check <img data-src="photo.jpg"> and visit /
 | `replacePreLineBreaks` | Replace `<br>` with `\n` inside `<pre>` |
 | `trimPreWhitespace` | Remove common leading indentation from `<pre>` |
 | `linkifyUrls` | Wrap bare URLs in `<a>` tags |
-| `replaceMediaWithEmbedPlaceholders` | Convert `<iframe>` to embed placeholders |
+| `replaceEmbedsWithPlaceholders` | Convert `<iframe>` to embed placeholders |
 | `injectEnclosureEmbedPlaceholders` | Add audio/video enclosures to content |
 
 ## Options
@@ -80,7 +80,7 @@ All default constants are available for customization:
 ```typescript
 import {
   defaultDomTransforms,
-  defaultEmbedHandlers,
+  defaultEmbedResolvers,
   defaultFinalStringTransforms,
   defaultLazySrcAttributes,
   defaultRedirectExtractors,

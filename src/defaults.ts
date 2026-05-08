@@ -1,32 +1,30 @@
-import { youtubeEmbedHandler } from './embeds/youtube.js'
-import { decodeDoubleEncodedTags } from './transforms/decodeDoubleEncodedTags.js'
-import { fixLazyImages } from './transforms/fixLazyImages.js'
-import { highlightCode } from './transforms/highlightCode.js'
-import { injectEnclosureEmbedPlaceholders } from './transforms/injectEnclosureEmbedPlaceholders.js'
-import { linkifyUrls } from './transforms/linkifyUrls.js'
-import { mergeConsecutiveOneLinerPres } from './transforms/mergeConsecutiveOneLinerPres.js'
-import { paragraphizePlainText } from './transforms/paragraphizePlainText.js'
-import { removeTrackingPixels } from './transforms/removeTrackingPixels.js'
-import { replaceEmbedsWithPlaceholders } from './transforms/replaceEmbedsWithPlaceholders.js'
-import { replacePreLineBreaks } from './transforms/replacePreLineBreaks.js'
-import { resolveRelativeUrls } from './transforms/resolveRelativeUrls.js'
-import { stripComments } from './transforms/stripComments.js'
-import { stripEmptyTags } from './transforms/stripEmptyTags.js'
-import { stripInterBlockBreaks } from './transforms/stripInterBlockBreaks.js'
-import { stripOrphanedClosingTags } from './transforms/stripOrphanedClosingTags.js'
-import { stripParagraphBoundaryBreaks } from './transforms/stripParagraphBoundaryBreaks.js'
-import { stripTrackingParams } from './transforms/stripTrackingParams.js'
-import { trimPreWhitespace } from './transforms/trimPreWhitespace.js'
-import {
-  extractFacebookShim,
-  extractGoogleNewsRedirect,
-  extractGoogleRedirect,
-  extractGoogleTranslateRedirect,
-  extractPocketRedirect,
-  unwrapRedirectUrls,
-} from './transforms/unwrapRedirectUrls.js'
-import { unwrapWrappers } from './transforms/unwrapWrappers.js'
-import type { DomTransform, EmbedHandler, RedirectExtractor, StringTransform } from './types.js'
+import { youtubeEmbedResolver } from './embeds/youtube.js'
+import { extractFacebookShim } from './redirects/extractFacebookShim.js'
+import { extractGoogleNewsRedirect } from './redirects/extractGoogleNewsRedirect.js'
+import { extractGoogleRedirect } from './redirects/extractGoogleRedirect.js'
+import { extractGoogleTranslateRedirect } from './redirects/extractGoogleTranslateRedirect.js'
+import { extractPocketRedirect } from './redirects/extractPocketRedirect.js'
+import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
+import { highlightCode } from './transforms/dom/highlightCode.js'
+import { injectEnclosureEmbedPlaceholders } from './transforms/dom/injectEnclosureEmbedPlaceholders.js'
+import { linkifyUrls } from './transforms/dom/linkifyUrls.js'
+import { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
+import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
+import { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
+import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
+import { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
+import { stripComments } from './transforms/dom/stripComments.js'
+import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
+import { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBoundaryBreaks.js'
+import { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
+import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
+import { unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
+import { decodeDoubleEncodedTags } from './transforms/string/decodeDoubleEncodedTags.js'
+import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
+import { stripEmptyTags } from './transforms/string/stripEmptyTags.js'
+import { stripOrphanedClosingTags } from './transforms/string/stripOrphanedClosingTags.js'
+import { unwrapWrappers } from './transforms/string/unwrapWrappers.js'
+import type { DomTransform, EmbedResolver, RedirectExtractor, StringTransform } from './types.js'
 
 export const defaultStringTransforms: Array<StringTransform> = [
   stripOrphanedClosingTags,
@@ -56,7 +54,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
 
 export const defaultFinalStringTransforms: Array<StringTransform> = [stripEmptyTags]
 
-export const defaultEmbedHandlers: Array<EmbedHandler> = [youtubeEmbedHandler]
+export const defaultEmbedResolvers: Array<EmbedResolver> = [youtubeEmbedResolver]
 
 export const defaultLazySrcAttributes = ['data-src', 'data-original', 'data-lazy-src', 'data-url']
 
