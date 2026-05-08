@@ -6,108 +6,113 @@ import { stripParagraphBoundaryBreaks } from './stripParagraphBoundaryBreaks.js'
 const context: TransformContext = {}
 
 describe('stripParagraphBoundaryBreaks', () => {
-  it('should remove leading br', () => {
-    const html = '<p><br>Text</p>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
+  describe('happy paths', () => {
+    it('should remove leading br from paragraph', () => {
+      const value = '<p><br>Text</p>'
+      const expected = '<p>Text</p>'
 
-    expect(result).toBe('<p>Text</p>')
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(expected)
+    })
+
+    it('should remove trailing br from paragraph', () => {
+      const value = '<p>Text<br></p>'
+      const expected = '<p>Text</p>'
+
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(expected)
+    })
+
+    it('should remove both leading and trailing br', () => {
+      const value = '<p><br>Text<br></p>'
+      const expected = '<p>Text</p>'
+
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(expected)
+    })
+
+    it('should remove multiple consecutive br at boundaries', () => {
+      const value = '<p><br><br>Text<br><br></p>'
+      const expected = '<p>Text</p>'
+
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(expected)
+    })
+
+    it('should remove whitespace text nodes alongside boundary br', () => {
+      const value = '<p> <br>Text<br> </p>'
+      const expected = '<p>Text</p>'
+
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(expected)
+    })
+
+    it('should preserve interior br', () => {
+      const value = '<p>Line one<br>Line two</p>'
+
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(value)
+    })
+
+    it('should process multiple paragraphs independently', () => {
+      const value = '<p><br>First<br></p><p><br>Second<br></p>'
+      const expected = '<p>First</p><p>Second</p>'
+
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(expected)
+    })
   })
 
-  it('should remove trailing br', () => {
-    const html = '<p>Text<br></p>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
+  describe('edge cases', () => {
+    it('should leave paragraph unchanged when it has no br', () => {
+      const value = '<p>Just text</p>'
 
-    expect(result).toBe('<p>Text</p>')
-  })
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(value)
+    })
 
-  it('should remove both leading and trailing br', () => {
-    const html = '<p><br>Text<br></p>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
+    it('should empty paragraph with only br content', () => {
+      const value = '<p><br></p>'
+      const expected = '<p></p>'
 
-    expect(result).toBe('<p>Text</p>')
-  })
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(expected)
+    })
 
-  it('should remove multiple consecutive boundary br', () => {
-    const html = '<p><br><br>Text<br><br></p>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
+    it('should not touch br outside paragraphs', () => {
+      const value = '<p>Text</p><br><div>Block</div>'
 
-    expect(result).toBe('<p>Text</p>')
-  })
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(value)
+    })
 
-  it('should remove whitespace text nodes alongside br', () => {
-    const html = '<p> <br>Text<br> </p>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
+    it('should not strip boundary br from div', () => {
+      const value = '<div><br>Text<br></div>'
 
-    expect(result).toBe('<p>Text</p>')
-  })
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(value)
+    })
 
-  it('should preserve interior br', () => {
-    const html = '<p>Line one<br>Line two</p>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
+    it('should not strip boundary br from blockquote', () => {
+      const value = '<blockquote><br>Quote<br></blockquote>'
 
-    expect(result).toBe('<p>Line one<br>Line two</p>')
-  })
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(value)
+    })
 
-  it('should not modify content without br', () => {
-    const html = '<p>Just text</p>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
+    it('should not strip boundary br from li', () => {
+      const value = '<ul><li><br>Item<br></li></ul>'
 
-    expect(result).toBe('<p>Just text</p>')
-  })
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(value)
+    })
 
-  it('should empty paragraph with only br content', () => {
-    const html = '<p><br></p>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
+    it('should not strip boundary br from heading', () => {
+      const value = '<h2><br>Heading<br></h2>'
 
-    expect(result).toBe('<p></p>')
-  })
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(value)
+    })
 
-  it('should not affect br outside paragraphs', () => {
-    const html = '<p>Text</p><br><div>Block</div>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
+    it('should strip from p but leave sibling div untouched', () => {
+      const value = '<p><br>Para<br></p><div><br>Div<br></div>'
+      const expected = '<p>Para</p><div><br>Div<br></div>'
 
-    expect(result).toBe('<p>Text</p><br><div>Block</div>')
-  })
+      expect(transformHtml(value, stripParagraphBoundaryBreaks(context))).toBe(expected)
+    })
 
-  it('should not strip boundary br from div', () => {
-    const html = '<div><br>Text<br></div>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
+    it('should be idempotent', () => {
+      const value = '<p><br>Text<br></p>'
+      const once = transformHtml(value, stripParagraphBoundaryBreaks(context))
+      const twice = transformHtml(once, stripParagraphBoundaryBreaks(context))
 
-    expect(result).toBe('<div><br>Text<br></div>')
-  })
-
-  it('should not strip boundary br from blockquote', () => {
-    const html = '<blockquote><br>Quote<br></blockquote>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
-
-    expect(result).toBe('<blockquote><br>Quote<br></blockquote>')
-  })
-
-  it('should not strip boundary br from li', () => {
-    const html = '<ul><li><br>Item<br></li></ul>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
-
-    expect(result).toBe('<ul><li><br>Item<br></li></ul>')
-  })
-
-  it('should not strip boundary br from headings', () => {
-    const html = '<h2><br>Heading<br></h2>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
-
-    expect(result).toBe('<h2><br>Heading<br></h2>')
-  })
-
-  it('should strip from p but leave sibling div untouched', () => {
-    const html = '<p><br>Para<br></p><div><br>Div<br></div>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
-
-    expect(result).toBe('<p>Para</p><div><br>Div<br></div>')
-  })
-
-  it('should handle multiple paragraphs independently', () => {
-    const html = '<p><br>First<br></p><p><br>Second<br></p>'
-    const result = transformHtml(html, stripParagraphBoundaryBreaks(context))
-
-    expect(result).toBe('<p>First</p><p>Second</p>')
+      expect(twice).toBe(once)
+    })
   })
 })
