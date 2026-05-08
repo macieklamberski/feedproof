@@ -49,27 +49,19 @@ const result = transformContent('<p>Check <img data-src="photo.jpg"> and visit /
 ## Options
 
 ```typescript
-import { simplifyFigures, transformContent } from 'feedproof'
-import { defaultDomTransforms } from 'feedproof/defaults'
+import { fixLazyImages, resolveRelativeUrls, transformContent } from 'feedproof'
 
 const result = transformContent(html, {
   // Base URL for resolving relative URLs.
   baseUrl: 'https://example.com/post/1',
   // Feed item enclosures (audio/video).
   enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
-  // Custom embed handlers (extends built-in YouTube support).
-  embedHandlers: [
-    {
-      selector: 'iframe[src*="custom-player.example.com"]',
-      extract: (element) => ({ provider: 'custom', src: element.getAttribute('src') ?? '' }),
-    },
-  ],
-  // Compose your own pipeline by mixing defaults with individual transforms.
-  domTransforms: [...defaultDomTransforms, simplifyFigures],
+  // Run a custom DOM transform pipeline (omit to use defaults).
+  domTransforms: [fixLazyImages, resolveRelativeUrls],
 })
 ```
 
-The `stringTransforms`, `domTransforms`, and `finalStringTransforms` options each fully replace the corresponding default phase when provided. Every transform is also exported individually from `feedproof`, so you can compose any pipeline — spread the defaults to extend them, filter to remove one, or list transforms explicitly to build a pipeline from scratch.
+The `stringTransforms`, `domTransforms`, and `finalStringTransforms` options each fully replace the corresponding default phase when provided. Every transform is also exported individually from `feedproof`, so you can compose any pipeline — list them explicitly to build from scratch, or spread `defaultDomTransforms` (etc.) from `feedproof/defaults` to extend or filter the defaults.
 
 ## Individual Transforms
 
