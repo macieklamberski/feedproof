@@ -1,11 +1,7 @@
-import { isSubdomainOf } from 'feedscout/utils'
-import type { RedirectExtractor } from '../types.js'
+import { createParamExtractor } from '../utils.js'
 
 // Outlook SafeLinks (<tenant>.safelinks.protection.outlook.com/?url=<target>).
-export const extractOutlookSafelinks: RedirectExtractor = (url) => {
-  if (isSubdomainOf(url.href, 'safelinks.protection.outlook.com')) {
-    return url.searchParams.get('url') ?? null
-  }
-
-  return null
-}
+export const extractOutlookSafelinks = createParamExtractor({
+  hosts: /\.safelinks\.protection\.outlook\.com$/,
+  params: ['url'],
+})
