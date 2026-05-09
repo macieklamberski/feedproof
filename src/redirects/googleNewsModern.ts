@@ -16,12 +16,9 @@ export const extractGoogleNewsModern: RedirectExtractor = (url) => {
     return null
   }
 
-  try {
-    const padded = match[1].replace(/-/g, '+').replace(/_/g, '/')
-    const decoded = Buffer.from(padded, 'base64').toString('latin1')
-    const inner = decoded.match(/\x08\x13".+?(https?:\/\/[^\xd2]+)\xd2\x01/)
-    return inner?.[1] ?? null
-  } catch {}
+  const padded = match[1].replace(/-/g, '+').replace(/_/g, '/')
+  const decoded = Buffer.from(padded, 'base64').toString('latin1')
+  const inner = decoded.match(/\x08\x13".+?(https?:\/\/[^\xd2]+)\xd2\x01/)
 
-  return null
+  return inner?.[1] ?? null
 }
