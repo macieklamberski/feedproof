@@ -1,3 +1,4 @@
+import { isHostOf } from 'feedscout/utils'
 import type { RedirectExtractor } from '../types.js'
 
 // Google News modern article URLs (news.google.com/articles/<base64> or
@@ -6,7 +7,7 @@ import type { RedirectExtractor } from '../types.js'
 // (typically post-2023) require a server-side signature exchange and can
 // only be resolved with a network call — those return null silently.
 export const extractGoogleNewsModern: RedirectExtractor = (url) => {
-  if (url.hostname !== 'news.google.com') {
+  if (!isHostOf(url.href, 'news.google.com')) {
     return null
   }
 
