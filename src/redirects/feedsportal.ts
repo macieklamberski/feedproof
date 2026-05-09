@@ -10,10 +10,10 @@ const ALPHABET: Record<string, string> = {
   O: '.co.uk', P: ';', Q: '|', R: ':', S: 'www.', T: '#', U: '$',
   V: '~', W: '!', X: '(', Y: ')', Z: 'Z',
 }
-const FEEDSPORTAL_PATH = /\/([0-9A-Za-z]{20,})\/story01\.htm$/
+const feedsportalPathRegex = /\/([0-9A-Za-z]{20,})\/story01\.htm$/
 
 export const extractFeedsportal: RedirectExtractor = (url) => {
-  const match = url.pathname.match(FEEDSPORTAL_PATH)
+  const match = url.pathname.match(feedsportalPathRegex)
   if (!match) {
     return null
   }
