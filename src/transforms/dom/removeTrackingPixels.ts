@@ -1,7 +1,7 @@
 import type { DomTransform } from '../../types.js'
 
-const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9.]+)\s*(?:px)?\s*(?:;|$)/i
-const styleHeightRegex = /(?:^|;)\s*height\s*:\s*([0-9.]+)\s*(?:px)?\s*(?:;|$)/i
+const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*(?:;|$)/i
+const styleHeightRegex = /(?:^|;)\s*height\s*:\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*(?:;|$)/i
 const styleDisplayNoneRegex = /(?:^|;)\s*display\s*:\s*none/i
 const styleVisibilityHiddenRegex = /(?:^|;)\s*visibility\s*:\s*hidden/i
 const styleOpacityZeroRegex = /(?:^|;)\s*opacity\s*:\s*0(?:\.0+)?\s*(?:;|$)/i
@@ -54,11 +54,8 @@ const getDimension = (image: Element, prop: 'width' | 'height'): number | undefi
     const match = style.match(regex)
 
     if (match) {
-      const value = Number(match[1])
-
-      if (Number.isFinite(value)) {
-        return value
-      }
+      // Regex requires `[0-9]*\.?[0-9]+`, so Number() is always finite here.
+      return Number(match[1])
     }
   }
 
