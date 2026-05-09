@@ -122,11 +122,11 @@ export const defaultEmbedResolvers: Array<EmbedResolver> = [youtubeEmbedResolver
 export const defaultLazySrcAttributes = ['data-src', 'data-original', 'data-lazy-src', 'data-url']
 
 export const defaultTrackingHosts = [
-  'feedsportal.com',
-  'stats.wordpress.com',
-  'pixel.wp.com',
-  'doubleclick.net',
-  'google-analytics.com',
+  'feedsportal.com', // Postmedia/Newsfutures feed-syndication pixels (/c/<id>/<…>.gif).
+  'stats.wordpress.com', // WordPress.com / Jetpack Stats pixels.
+  'pixel.wp.com', // WordPress.com / Jetpack Stats pixels.
+  'doubleclick.net', // Google ads tracking.
+  'google-analytics.com', // Google Analytics measurement pixels.
   'list-manage.com', // Mailchimp opens.
   'feedburner.com', // FeedBurner flare pixels (/~ff/).
   'feedproxy.google.com', // FeedBurner-via-Google.
