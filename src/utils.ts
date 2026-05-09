@@ -1,3 +1,5 @@
+import type { RedirectExtractor } from './types.js'
+
 // Priority: item link → site URL → feed URL. Item content is authored relative to the
 // item's page, so its link is the best base for resolving relative URLs in content.
 export const chooseBaseUrl = (
@@ -39,4 +41,42 @@ export const coerceNumber = (value: string | null): number | undefined => {
   const parsed = Number(value)
 
   return Number.isNaN(parsed) ? undefined : parsed
+}
+
+export type ParamExtractorConfig = {
+  hosts: string | Array<string> | RegExp
+  path?: string
+  params: Array<string>
+}
+
+export const createParamExtractor = (config: ParamExtractorConfig): RedirectExtractor => {
+  const matchesHost = (host: string): boolean => {
+    if (config.hosts instanceof RegExp) {
+      return config.hosts.test(host)
+    }
+
+    const list = Array.isArray(config.hosts) ? config.hosts : [config.hosts]
+
+    return list.includes(host)
+  }
+
+  return (url) => {
+    if (!matchesHost(url.hostname)) {
+      return null
+    }
+
+    if (config.path && url.pathname !== config.path) {
+      return null
+    }
+
+    for (const param of config.params) {
+      const value = url.searchParams.get(param)
+
+      if (value) {
+        return value
+      }
+    }
+
+    return null
+  }
 }

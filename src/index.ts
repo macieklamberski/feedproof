@@ -96,4 +96,5 @@ export type {
   TransformContentOptions,
   TransformContext,
 } from './types.js'
-export { chooseBaseUrl, coerceNumber } from './utils.js'
+export { chooseBaseUrl, coerceNumber, createParamExtractor } from './utils.js'
+export type { ParamExtractorConfig } from './utils.js'
