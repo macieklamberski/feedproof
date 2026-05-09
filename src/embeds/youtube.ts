@@ -1,14 +1,14 @@
 import { isHostOf, isSubdomainOf } from 'feedscout/utils'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
 
-const safeVideoIdRegex = /^[a-zA-Z0-9_-]+$/
+const safeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
 
-const pathIdSegments = ['shorts', 'embed', 'v']
+const pathIdSegments = ['shorts', 'embed', 'live', 'v']
 
 const youtubeHosts = ['youtube.com', 'youtube-nocookie.com', 'youtu.be']
 
 export const composeThumbnailUrl = (videoId: string): string => {
-  return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`
+  return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
 }
 
 export const extractVideoId = (link: string): string | undefined => {
@@ -22,7 +22,7 @@ export const extractVideoId = (link: string): string | undefined => {
     if (isShortDomain) {
       id = segments[0]
     } else if (segments[0] === 'watch') {
-      id = searchParams.get('v')
+      id = searchParams.get('v') ?? searchParams.get('vi')
     } else if (segments.length >= 2 && pathIdSegments.includes(segments[0])) {
       id = segments[1]
     }

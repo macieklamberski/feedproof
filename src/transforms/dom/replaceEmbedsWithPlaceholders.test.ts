@@ -24,30 +24,30 @@ const withNoResolvers: TransformContext = {
 
 describe('replaceEmbedsWithPlaceholders', () => {
   it('should replace iframe with rich-metadata placeholder when handler returns metadata', () => {
-    const value = '<p>Text</p><iframe src="https://www.youtube.com/embed/abc123"></iframe>'
+    const value = '<p>Text</p><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).toContain('data-embed="iframe"')
     expect(result).toContain('data-embed-provider="youtube"')
-    expect(result).toContain('data-embed-src="https://www.youtube-nocookie.com/embed/abc123"')
-    expect(result).toContain('data-embed-url="https://www.youtube.com/watch?v=abc123"')
+    expect(result).toContain('data-embed-src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"')
+    expect(result).toContain('data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
     expect(result).toContain(
-      'data-embed-thumbnail="https://i.ytimg.com/vi/abc123/maxresdefault.jpg"',
+      'data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"',
     )
     expect(result).not.toContain('<iframe')
   })
 
   it('should include fallback link with canonical url', () => {
-    const value = '<iframe src="https://www.youtube.com/embed/abc123"></iframe>'
+    const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
-    expect(result).toContain('<a href="https://www.youtube.com/watch?v=abc123">')
-    expect(result).toContain('https://www.youtube.com/watch?v=abc123</a>')
+    expect(result).toContain('<a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">')
+    expect(result).toContain('https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>')
   })
 
   it('should preserve iframe dimensions as data attributes', () => {
     const value =
-      '<iframe src="https://www.youtube.com/embed/abc123" width="640" height="360"></iframe>'
+      '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" width="640" height="360"></iframe>'
     const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).toContain('data-embed-width="640"')
@@ -56,7 +56,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
 
   it('should replace multiple embeds in same content', () => {
     const value =
-      '<iframe src="https://www.youtube.com/embed/abc123"></iframe><iframe src="https://example.com/player/xyz"></iframe>'
+      '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe><iframe src="https://example.com/player/xyz"></iframe>'
     const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).not.toContain('<iframe')
@@ -66,7 +66,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
 
   it('should preserve surrounding content when replacing media', () => {
     const value =
-      '<p>Before</p><iframe src="https://www.youtube.com/embed/abc123"></iframe><p>After</p>'
+      '<p>Before</p><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe><p>After</p>'
     const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).toContain('Before')
@@ -112,7 +112,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
   })
 
   it('should do nothing when embedResolvers is empty', () => {
-    const value = '<iframe src="https://www.youtube.com/embed/abc123"></iframe>'
+    const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     const result = transformHtml(value, replaceEmbedsWithPlaceholders(withNoResolvers))
 
     expect(result).toContain('<iframe')

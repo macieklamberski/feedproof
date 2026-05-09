@@ -56,7 +56,9 @@ describe('injectEnclosureEmbedPlaceholders', () => {
 
   it('should resolve video enclosure through embedResolver', () => {
     const value = '<p>Episode notes</p>'
-    const ctx = withEnclosures([{ url: 'https://www.youtube.com/embed/abc123', medium: 'video' }])
+    const ctx = withEnclosures([
+      { url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video' },
+    ])
     const result = transformHtml(value, injectEnclosureEmbedPlaceholders(ctx))
 
     expect(result).toContain('data-embed-provider="youtube"')
@@ -132,7 +134,7 @@ describe('injectEnclosureEmbedPlaceholders', () => {
   it('should resolve enclosure with unrecognized type through resolver', () => {
     const value = '<p>Content</p>'
     const ctx = withEnclosures([
-      { url: 'https://www.youtube.com/v/abc123', type: 'application/x-shockwave-flash' },
+      { url: 'https://www.youtube.com/v/dQw4w9WgXcQ', type: 'application/x-shockwave-flash' },
     ])
     const result = transformHtml(value, injectEnclosureEmbedPlaceholders(ctx))
 
@@ -142,7 +144,9 @@ describe('injectEnclosureEmbedPlaceholders', () => {
 
   it('should use resolver type over enclosure medium', () => {
     const value = '<p>Content</p>'
-    const ctx = withEnclosures([{ url: 'https://www.youtube.com/embed/abc123', medium: 'video' }])
+    const ctx = withEnclosures([
+      { url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video' },
+    ])
     const result = transformHtml(value, injectEnclosureEmbedPlaceholders(ctx))
 
     expect(result).toContain('data-embed="iframe"')

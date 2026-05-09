@@ -114,6 +114,22 @@ describe('extractVideoId', () => {
   it('should extract id from shorts url with trailing path', () => {
     expect(extractVideoId('https://www.youtube.com/shorts/dQw4w9WgXcQ?si=abc')).toBe('dQw4w9WgXcQ')
   })
+
+  it('should extract id from /live/ url', () => {
+    expect(extractVideoId('https://www.youtube.com/live/dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ')
+  })
+
+  it('should extract id from watch url with legacy ?vi= param', () => {
+    expect(extractVideoId('https://www.youtube.com/watch?vi=dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ')
+  })
+
+  it('should reject id shorter than 11 chars', () => {
+    expect(extractVideoId('https://www.youtube.com/watch?v=abc123')).toBeUndefined()
+  })
+
+  it('should reject id longer than 11 chars', () => {
+    expect(extractVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQextra')).toBeUndefined()
+  })
 })
 
 describe('youtubeResolveEmbed', () => {
@@ -122,7 +138,7 @@ describe('youtubeResolveEmbed', () => {
       provider: 'youtube',
       src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       type: 'iframe',
     }
 
@@ -134,7 +150,7 @@ describe('youtubeResolveEmbed', () => {
       provider: 'youtube',
       src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       type: 'iframe',
     }
 
@@ -146,7 +162,7 @@ describe('youtubeResolveEmbed', () => {
       provider: 'youtube',
       src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       type: 'iframe',
     }
 
@@ -158,7 +174,7 @@ describe('youtubeResolveEmbed', () => {
       provider: 'youtube',
       src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       type: 'iframe',
     }
 
@@ -173,9 +189,9 @@ describe('youtubeResolveEmbed', () => {
 })
 
 describe('composeThumbnailUrl', () => {
-  it('should build maxresdefault thumbnail url', () => {
+  it('should build hqdefault thumbnail url', () => {
     const value = 'dQw4w9WgXcQ'
-    const expected = 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg'
+    const expected = 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg'
 
     expect(composeThumbnailUrl(value)).toBe(expected)
   })
@@ -193,7 +209,7 @@ describe('youtubeEmbedResolver', () => {
       provider: 'youtube',
       src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       type: 'iframe',
     }
 
@@ -207,7 +223,7 @@ describe('youtubeEmbedResolver', () => {
       provider: 'youtube',
       src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       type: 'iframe',
     }
 
