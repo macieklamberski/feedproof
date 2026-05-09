@@ -19,9 +19,5 @@ export const extractYandexTurbo: RedirectExtractor = (url) => {
 
   const sourceHost = url.hostname.replace(turbopagesHostRegex, '').replace(dashRegex, '.')
 
-  if (!sourceHost) {
-    return null
-  }
-
   return `https://${sourceHost}/${match[1]}`
 }

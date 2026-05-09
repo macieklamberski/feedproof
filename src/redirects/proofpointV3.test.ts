@@ -51,4 +51,29 @@ describe('extractProofpointV3', () => {
 
     expect(extractProofpointV3(url)).toBeNull()
   })
+
+  it('should return null when replacements run out for a `*` marker', () => {
+    // Two `*` markers but only one replacement char ('Iw' = '#').
+    const url = new URL('https://urldefense.com/v3/__http://example.com/*foo*bar__;Iw!!abc!def$')
+
+    expect(extractProofpointV3(url)).toBeNull()
+  })
+
+  it('should return null when replacements run out inside a `**X` run', () => {
+    // `**E` = 6 bytes, but replacement b64 'Iw' = '#' is only 1 byte.
+    const url = new URL('https://urldefense.com/v3/__http://example.com/**Etest__;Iw!!abc!def$')
+
+    expect(extractProofpointV3(url)).toBeNull()
+  })
+
+  it('should carry saved bytes across multi-byte replacement boundaries', () => {
+    // `**B` = 3 bytes. Replacement 'w6Pigqw' decodes to 'ã€' — 'ã' is 2 bytes,
+    // '€' is 3 bytes. After 'ã' (2/3), peeking '€' (3 bytes) > remaining 1 byte
+    // triggers savedBytes=1, which carries to the next `**A` (2-byte) run.
+    const url = new URL(
+      'https://urldefense.com/v3/__http://x.test/**Bx**Ay__;w6Pigqw!!abc!def$',
+    )
+
+    expect(extractProofpointV3(url)).toBe('http://x.test/ãx€y')
+  })
 })

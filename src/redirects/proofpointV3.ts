@@ -23,13 +23,7 @@ const decodeReplacements = (mangled: string, replacementBase64: string): string 
     padded += '='
   }
 
-  let replacement: string
-  try {
-    replacement = Buffer.from(padded, 'base64url').toString('utf-8')
-  } catch {
-    return null
-  }
-
+  const replacement = Buffer.from(padded, 'base64url').toString('utf-8')
   const replacementChars = Array.from(replacement)
   const urlChars = Array.from(mangled)
   const result: Array<string> = []
@@ -56,9 +50,6 @@ const decodeReplacements = (mangled: string, replacementBase64: string): string 
       result.push(next)
     } else {
       let bytesToReplace = runLengthMap[match[0][2]]
-      if (bytesToReplace === undefined) {
-        return null
-      }
       if (savedBytes !== 0) {
         bytesToReplace += savedBytes
         savedBytes = 0

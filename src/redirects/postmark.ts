@@ -17,7 +17,7 @@ export const extractPostmark: RedirectExtractor = (url) => {
 
   try {
     return decodeURIComponent(match[1])
-  } catch {}
-
-  return null
+  } catch {
+    return null
+  }
 }
