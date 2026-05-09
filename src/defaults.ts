@@ -1,6 +1,7 @@
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { extractAmpCache } from './redirects/ampCache.js'
 import { extractFacebookShim } from './redirects/facebook.js'
+import { extractFeedsportal } from './redirects/feedsportal.js'
 import { extractGoogleRedirect } from './redirects/google.js'
 import { extractGoogleNewsRedirect } from './redirects/googleNews.js'
 import { extractGoogleNewsModern } from './redirects/googleNewsModern.js'
@@ -78,4 +79,5 @@ export const defaultRedirectExtractors: Array<RedirectExtractor> = [
   extractPocketRedirect,
   extractFacebookShim,
   extractAmpCache,
+  extractFeedsportal,
 ]
