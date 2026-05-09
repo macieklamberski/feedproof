@@ -1,4 +1,4 @@
-import { createParamExtractor } from './createParamExtractor.js'
+import { createParamExtractor } from '../utils.js'
 
 // Facebook link shim (l.facebook.com/l.php?u=<target>).
 export const extractFacebookShim = createParamExtractor({

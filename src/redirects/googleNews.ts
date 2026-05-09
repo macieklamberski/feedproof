@@ -1,4 +1,4 @@
-import { createParamExtractor } from './createParamExtractor.js'
+import { createParamExtractor } from '../utils.js'
 
 const googleNewsHostRegex = /^news\.google\.(?:com|[a-z]{2,3}(?:\.[a-z]{2,3})?)$/
 

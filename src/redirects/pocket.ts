@@ -1,4 +1,4 @@
-import { createParamExtractor } from './createParamExtractor.js'
+import { createParamExtractor } from '../utils.js'
 
 // Pocket redirect (getpocket.com/redirect?url=<target>).
 export const extractPocketRedirect = createParamExtractor({
