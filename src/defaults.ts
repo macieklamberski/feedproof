@@ -3,6 +3,7 @@ import { extractAmpCache } from './redirects/ampCache.js'
 import { extractFacebookShim } from './redirects/facebook.js'
 import { extractGoogleRedirect } from './redirects/google.js'
 import { extractGoogleNewsRedirect } from './redirects/googleNews.js'
+import { extractGoogleNewsModern } from './redirects/googleNewsModern.js'
 import { extractGoogleTranslateRedirect } from './redirects/googleTranslate.js'
 import { extractPocketRedirect } from './redirects/pocket.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
@@ -72,6 +73,7 @@ export const defaultTrackingPathSegments = ['pixel', 'beacon', 'track', 'count']
 export const defaultRedirectExtractors: Array<RedirectExtractor> = [
   extractGoogleRedirect,
   extractGoogleNewsRedirect,
+  extractGoogleNewsModern,
   extractGoogleTranslateRedirect,
   extractPocketRedirect,
   extractFacebookShim,
