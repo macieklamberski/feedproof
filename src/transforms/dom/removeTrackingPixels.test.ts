@@ -357,6 +357,14 @@ describe('removeTrackingPixels', () => {
 
       expect(result).toContain('://broken')
     })
+
+    it('should handle img with src that throws on URL parse gracefully', () => {
+      // `http://[invalid` (unclosed IPv6 bracket) makes `new URL()` throw.
+      const html = '<img src="http://[invalid">'
+      const result = transformHtml(html, removeTrackingPixels(context))
+
+      expect(result).toContain('http://[invalid')
+    })
   })
 
   describe('overrides', () => {
