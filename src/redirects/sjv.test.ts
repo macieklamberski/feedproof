@@ -17,12 +17,12 @@ describe('extractSjv', () => {
   it('should return null when u param is missing', () => {
     const url = new URL('https://merchant.sjv.io/?subId1=abc')
 
-    expect(extractSjv(url)).toBeNull()
+    expect(extractSjv(url)).toBeUndefined()
   })
 
   it('should return null for non-sjv hosts', () => {
     const url = new URL('https://example.com/?u=https%3A%2F%2Fother.com')
 
-    expect(extractSjv(url)).toBeNull()
+    expect(extractSjv(url)).toBeUndefined()
   })
 })

@@ -21,12 +21,12 @@ describe('extractAwin', () => {
   it('should return null when both ued and p are missing', () => {
     const url = new URL('https://www.awin1.com/cread.php?awinmid=1234&awinaffid=5678')
 
-    expect(extractAwin(url)).toBeNull()
+    expect(extractAwin(url)).toBeUndefined()
   })
 
   it('should return null for non-Awin hosts', () => {
     const url = new URL('https://example.com/cread.php?ued=https%3A%2F%2Fother.com')
 
-    expect(extractAwin(url)).toBeNull()
+    expect(extractAwin(url)).toBeUndefined()
   })
 })

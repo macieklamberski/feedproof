@@ -17,12 +17,12 @@ describe('extractYandexTurbo', () => {
   it('should return null when path lacks the /s/ marker', () => {
     const url = new URL('https://example-com.turbopages.org/example.com/no-marker/path')
 
-    expect(extractYandexTurbo(url)).toBeNull()
+    expect(extractYandexTurbo(url)).toBeUndefined()
   })
 
   it('should return null for non-turbopages hosts', () => {
     const url = new URL('https://example.com/host/s/path')
 
-    expect(extractYandexTurbo(url)).toBeNull()
+    expect(extractYandexTurbo(url)).toBeUndefined()
   })
 })

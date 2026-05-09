@@ -13,12 +13,12 @@ describe('extractEffiliation', () => {
   it('should return null when url param is missing', () => {
     const url = new URL('https://track.effiliation.com/?other=value')
 
-    expect(extractEffiliation(url)).toBeNull()
+    expect(extractEffiliation(url)).toBeUndefined()
   })
 
   it('should return null for non-effiliation hosts', () => {
     const url = new URL('https://example.com/?url=https%3A%2F%2Fother.com')
 
-    expect(extractEffiliation(url)).toBeNull()
+    expect(extractEffiliation(url)).toBeUndefined()
   })
 })

@@ -120,7 +120,7 @@ describe('createParamExtractor', () => {
     })
     const url = new URL('https://other.com/redirect?url=https%3A%2F%2Ftarget.com')
 
-    expect(extractor(url)).toBeNull()
+    expect(extractor(url)).toBeUndefined()
   })
 
   it('should return null when path is required but does not match', () => {
@@ -131,7 +131,7 @@ describe('createParamExtractor', () => {
     })
     const url = new URL('https://example.com/other?url=https%3A%2F%2Ftarget.com')
 
-    expect(extractor(url)).toBeNull()
+    expect(extractor(url)).toBeUndefined()
   })
 
   it('should extract param value when second host in array matches', () => {
@@ -153,7 +153,7 @@ describe('createParamExtractor', () => {
     })
     const url = new URL('https://other.com/redirect?url=https%3A%2F%2Ftarget.com')
 
-    expect(extractor(url)).toBeNull()
+    expect(extractor(url)).toBeUndefined()
   })
 
   it('should extract param value when no path is configured', () => {
@@ -195,7 +195,7 @@ describe('createParamExtractor', () => {
     })
     const url = new URL('https://example.com/?other=value')
 
-    expect(extractor(url)).toBeNull()
+    expect(extractor(url)).toBeUndefined()
   })
 
   it('should fall through to next param when first param is empty string', () => {
@@ -229,6 +229,6 @@ describe('createParamExtractor', () => {
     })
     const url = new URL('https://other.com/redirect?url=https%3A%2F%2Ftarget.com')
 
-    expect(extractor(url)).toBeNull()
+    expect(extractor(url)).toBeUndefined()
   })
 })

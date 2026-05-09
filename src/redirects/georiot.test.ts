@@ -13,12 +13,12 @@ describe('extractGeoriot', () => {
   it('should return null when GR_URL param is missing', () => {
     const url = new URL('https://target.georiot.com/?other=value')
 
-    expect(extractGeoriot(url)).toBeNull()
+    expect(extractGeoriot(url)).toBeUndefined()
   })
 
   it('should return null for non-georiot hosts', () => {
     const url = new URL('https://example.com/?GR_URL=https%3A%2F%2Fother.com')
 
-    expect(extractGeoriot(url)).toBeNull()
+    expect(extractGeoriot(url)).toBeUndefined()
   })
 })

@@ -9,7 +9,7 @@ const httpPathRegex = /^\/c\/(?!s\/)(.+)$/
 // hostname.
 export const extractAmpCache: RedirectExtractor = (url) => {
   if (!isHostOf(url.href, 'cdn.ampproject.org') && !isSubdomainOf(url.href, 'cdn.ampproject.org')) {
-    return null
+    return
   }
 
   const httpsMatch = url.pathname.match(httpsPathRegex)
@@ -22,5 +22,5 @@ export const extractAmpCache: RedirectExtractor = (url) => {
     return `http://${httpMatch[1]}`
   }
 
-  return null
+  return
 }

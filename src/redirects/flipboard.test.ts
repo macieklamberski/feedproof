@@ -11,18 +11,18 @@ describe('extractFlipboard', () => {
   it('should return null for non-redirect Flipboard URLs', () => {
     const url = new URL('https://flipboard.com/topic/news')
 
-    expect(extractFlipboard(url)).toBeNull()
+    expect(extractFlipboard(url)).toBeUndefined()
   })
 
   it('should return null when url param is missing', () => {
     const url = new URL('https://flipboard.com/redirect')
 
-    expect(extractFlipboard(url)).toBeNull()
+    expect(extractFlipboard(url)).toBeUndefined()
   })
 
   it('should return null for non-Flipboard hosts', () => {
     const url = new URL('https://example.com/redirect?url=https%3A%2F%2Fother.com')
 
-    expect(extractFlipboard(url)).toBeNull()
+    expect(extractFlipboard(url)).toBeUndefined()
   })
 })

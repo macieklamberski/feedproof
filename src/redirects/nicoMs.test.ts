@@ -29,12 +29,12 @@ describe('extractNicoMs', () => {
   it('should return null for an unrecognised prefix', () => {
     const url = new URL('https://nico.ms/xx12345')
 
-    expect(extractNicoMs(url)).toBeNull()
+    expect(extractNicoMs(url)).toBeUndefined()
   })
 
   it('should return null for non-nico.ms hosts', () => {
     const url = new URL('https://example.com/sm12345')
 
-    expect(extractNicoMs(url)).toBeNull()
+    expect(extractNicoMs(url)).toBeUndefined()
   })
 })

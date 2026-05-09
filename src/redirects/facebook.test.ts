@@ -17,18 +17,18 @@ describe('extractFacebookShim', () => {
   it('should return null for non-shim Facebook URLs', () => {
     const url = new URL('https://www.facebook.com/profile')
 
-    expect(extractFacebookShim(url)).toBeNull()
+    expect(extractFacebookShim(url)).toBeUndefined()
   })
 
   it('should return null when u param is missing', () => {
     const url = new URL('https://l.facebook.com/l.php')
 
-    expect(extractFacebookShim(url)).toBeNull()
+    expect(extractFacebookShim(url)).toBeUndefined()
   })
 
   it('should return null for non-Facebook hosts', () => {
     const url = new URL('https://example.com/l.php?u=https%3A%2F%2Fother.com')
 
-    expect(extractFacebookShim(url)).toBeNull()
+    expect(extractFacebookShim(url)).toBeUndefined()
   })
 })

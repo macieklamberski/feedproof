@@ -21,25 +21,25 @@ describe('extractProofpointV2', () => {
   it('should return null when u param is missing', () => {
     const url = new URL('https://urldefense.proofpoint.com/v2/url?d=DwMFAg')
 
-    expect(extractProofpointV2(url)).toBeNull()
+    expect(extractProofpointV2(url)).toBeUndefined()
   })
 
   it('should return null for non-v2 paths', () => {
     const url = new URL('https://urldefense.proofpoint.com/v1/url?u=https-3A__example.com_path')
 
-    expect(extractProofpointV2(url)).toBeNull()
+    expect(extractProofpointV2(url)).toBeUndefined()
   })
 
   it('should return null for non-Proofpoint hosts', () => {
     const url = new URL('https://example.com/v2/url?u=https-3A__other.com_path')
 
-    expect(extractProofpointV2(url)).toBeNull()
+    expect(extractProofpointV2(url)).toBeUndefined()
   })
 
   it('should return null when decoded URL has malformed percent escapes', () => {
     // `-Z` becomes `%Z` after substitution, which decodeURIComponent rejects.
     const url = new URL('https://urldefense.proofpoint.com/v2/url?u=https-Zbroken')
 
-    expect(extractProofpointV2(url)).toBeNull()
+    expect(extractProofpointV2(url)).toBeUndefined()
   })
 })

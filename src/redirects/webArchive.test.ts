@@ -21,18 +21,18 @@ describe('extractWebArchive', () => {
   it('should return null when timestamp has wrong digit count', () => {
     const url = new URL('https://web.archive.org/web/2024/https%3A%2F%2Fexample.com')
 
-    expect(extractWebArchive(url)).toBeNull()
+    expect(extractWebArchive(url)).toBeUndefined()
   })
 
   it('should return null for non-archive.org hosts', () => {
     const url = new URL('https://example.com/web/20240101120000/https%3A%2F%2Fother.com')
 
-    expect(extractWebArchive(url)).toBeNull()
+    expect(extractWebArchive(url)).toBeUndefined()
   })
 
   it('should return null when encoded URL has malformed percent escapes', () => {
     const url = new URL('https://web.archive.org/web/20240101120000/bad%ZZ')
 
-    expect(extractWebArchive(url)).toBeNull()
+    expect(extractWebArchive(url)).toBeUndefined()
   })
 })

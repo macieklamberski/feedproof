@@ -13,7 +13,7 @@ export const extractAceml: RedirectExtractor = (url) => {
   const raw = baseExtractor(url)
 
   if (!raw) {
-    return null
+    return
   }
 
   try {
@@ -23,5 +23,5 @@ export const extractAceml: RedirectExtractor = (url) => {
     }
   } catch {}
 
-  return null
+  return
 }

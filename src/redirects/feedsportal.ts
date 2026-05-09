@@ -15,7 +15,7 @@ const feedsportalPathRegex = /\/([0-9A-Za-z]{20,})\/story01\.htm$/
 export const extractFeedsportal: RedirectExtractor = (url) => {
   const match = url.pathname.match(feedsportalPathRegex)
   if (!match) {
-    return null
+    return
   }
 
   const decoded = match[1]
@@ -31,7 +31,7 @@ export const extractFeedsportal: RedirectExtractor = (url) => {
     .join('')
 
   if (!decoded.startsWith('http://') && !decoded.startsWith('https://')) {
-    return null
+    return
   }
 
   return decoded

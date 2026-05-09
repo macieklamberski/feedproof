@@ -11,18 +11,18 @@ describe('extractJianshuGo', () => {
   it('should return null when to param is missing', () => {
     const url = new URL('https://links.jianshu.com/go?other=value')
 
-    expect(extractJianshuGo(url)).toBeNull()
+    expect(extractJianshuGo(url)).toBeUndefined()
   })
 
   it('should return null for non-go Jianshu paths', () => {
     const url = new URL('https://links.jianshu.com/redirect?to=https%3A%2F%2Fexample.com')
 
-    expect(extractJianshuGo(url)).toBeNull()
+    expect(extractJianshuGo(url)).toBeUndefined()
   })
 
   it('should return null for non-Jianshu hosts', () => {
     const url = new URL('https://example.com/go?to=https%3A%2F%2Fother.com')
 
-    expect(extractJianshuGo(url)).toBeNull()
+    expect(extractJianshuGo(url)).toBeUndefined()
   })
 })

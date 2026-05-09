@@ -19,7 +19,7 @@ describe('extractAmazonAffiliate', () => {
   it('should return null when the path lacks an embedded URL', () => {
     const url = new URL('https://aax-us-east.amazon-adsystem.com/x/c/abc123/')
 
-    expect(extractAmazonAffiliate(url)).toBeNull()
+    expect(extractAmazonAffiliate(url)).toBeUndefined()
   })
 
   it('should return null for non-tracker paths', () => {
@@ -27,12 +27,12 @@ describe('extractAmazonAffiliate', () => {
       'https://aax-us-east.amazon-adsystem.com/aap/?id=abc&dest=https%3A%2F%2Fexample.com',
     )
 
-    expect(extractAmazonAffiliate(url)).toBeNull()
+    expect(extractAmazonAffiliate(url)).toBeUndefined()
   })
 
   it('should return null for non-Amazon hosts', () => {
     const url = new URL('https://example.com/x/c/abc/https://other.com/dp/X')
 
-    expect(extractAmazonAffiliate(url)).toBeNull()
+    expect(extractAmazonAffiliate(url)).toBeUndefined()
   })
 })

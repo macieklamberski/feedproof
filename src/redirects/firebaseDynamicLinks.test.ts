@@ -17,12 +17,12 @@ describe('extractFirebaseDynamicLinks', () => {
   it('should return null when ofl param is missing', () => {
     const url = new URL('https://example.page.link/?other=value')
 
-    expect(extractFirebaseDynamicLinks(url)).toBeNull()
+    expect(extractFirebaseDynamicLinks(url)).toBeUndefined()
   })
 
   it('should return null for non page.link hosts', () => {
     const url = new URL('https://example.com/?ofl=https%3A%2F%2Fother.com')
 
-    expect(extractFirebaseDynamicLinks(url)).toBeNull()
+    expect(extractFirebaseDynamicLinks(url)).toBeUndefined()
   })
 })

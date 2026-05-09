@@ -21,7 +21,7 @@ export type EmbedResolver = {
   extract: (element: Element) => EmbedResolverResult | undefined
 }
 
-export type RedirectExtractor = (url: URL) => string | null
+export type RedirectExtractor = (url: URL) => string | undefined
 
 export type TransformContext = {
   baseUrl?: string

@@ -3,7 +3,7 @@ import type { DomTransform, RedirectExtractor } from '../../types.js'
 export const extractRedirectTarget = (
   url: URL,
   extractors: ReadonlyArray<RedirectExtractor>,
-): string | null => {
+): string | undefined => {
   for (const extractor of extractors) {
     const target = extractor(url)
 
@@ -11,8 +11,6 @@ export const extractRedirectTarget = (
       return target
     }
   }
-
-  return null
 }
 
 export const unwrapRedirectUrls: DomTransform = (context) => {

@@ -6,12 +6,12 @@ const nicoMsRegex = /^\/((?:sm|nm|so|im)\w+)$/
 // nicovideo watch page; `/im` routes to the seiga illustration page.
 export const extractNicoMs: RedirectExtractor = (url) => {
   if (url.hostname !== 'nico.ms') {
-    return null
+    return
   }
 
   const match = url.pathname.match(nicoMsRegex)
   if (!match) {
-    return null
+    return
   }
 
   const id = match[1]

@@ -28,24 +28,24 @@ describe('extractAceml', () => {
       `https://abc.acemlna.com/Prod/link-tracker?redirectUrl=${encodeURIComponent(encoded)}`,
     )
 
-    expect(extractAceml(url)).toBeNull()
+    expect(extractAceml(url)).toBeUndefined()
   })
 
   it('should return null when redirectUrl is missing', () => {
     const url = new URL('https://abc.acemlna.com/Prod/link-tracker?notrack=1')
 
-    expect(extractAceml(url)).toBeNull()
+    expect(extractAceml(url)).toBeUndefined()
   })
 
   it('should return null for non-tracker paths', () => {
     const url = new URL('https://abc.acemlna.com/redirect?redirectUrl=abc')
 
-    expect(extractAceml(url)).toBeNull()
+    expect(extractAceml(url)).toBeUndefined()
   })
 
   it('should return null for non-ACEML hosts', () => {
     const url = new URL('https://example.com/Prod/link-tracker?redirectUrl=abc')
 
-    expect(extractAceml(url)).toBeNull()
+    expect(extractAceml(url)).toBeUndefined()
   })
 })

@@ -11,12 +11,12 @@ describe('extractMailpgn', () => {
   it('should return null when fl param is missing', () => {
     const url = new URL('https://t.mailpgn.com/l/?other=value')
 
-    expect(extractMailpgn(url)).toBeNull()
+    expect(extractMailpgn(url)).toBeUndefined()
   })
 
   it('should return null for non-mailpgn hosts', () => {
     const url = new URL('https://example.com/l/?fl=https%3A%2F%2Fother.com')
 
-    expect(extractMailpgn(url)).toBeNull()
+    expect(extractMailpgn(url)).toBeUndefined()
   })
 })

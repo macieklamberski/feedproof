@@ -11,12 +11,12 @@ describe('extractZhihu', () => {
   it('should return null when target param is missing', () => {
     const url = new URL('https://link.zhihu.com/?other=value')
 
-    expect(extractZhihu(url)).toBeNull()
+    expect(extractZhihu(url)).toBeUndefined()
   })
 
   it('should return null for non-Zhihu hosts', () => {
     const url = new URL('https://example.com/?target=https%3A%2F%2Fother.com')
 
-    expect(extractZhihu(url)).toBeNull()
+    expect(extractZhihu(url)).toBeUndefined()
   })
 })

@@ -13,12 +13,12 @@ describe('extractIdealoPartner', () => {
   it('should return null when trg param is missing', () => {
     const url = new URL('https://www.idealo-partner.com/?other=value')
 
-    expect(extractIdealoPartner(url)).toBeNull()
+    expect(extractIdealoPartner(url)).toBeUndefined()
   })
 
   it('should return null for non-idealo-partner hosts', () => {
     const url = new URL('https://example.com/?trg=https%3A%2F%2Fother.com')
 
-    expect(extractIdealoPartner(url)).toBeNull()
+    expect(extractIdealoPartner(url)).toBeUndefined()
   })
 })

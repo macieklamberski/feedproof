@@ -11,18 +11,18 @@ describe('extractPocketRedirect', () => {
   it('should return null for non-redirect Pocket URLs', () => {
     const url = new URL('https://getpocket.com/explore')
 
-    expect(extractPocketRedirect(url)).toBeNull()
+    expect(extractPocketRedirect(url)).toBeUndefined()
   })
 
   it('should return null when url param is missing', () => {
     const url = new URL('https://getpocket.com/redirect')
 
-    expect(extractPocketRedirect(url)).toBeNull()
+    expect(extractPocketRedirect(url)).toBeUndefined()
   })
 
   it('should return null for non-Pocket hosts', () => {
     const url = new URL('https://example.com/redirect?url=https%3A%2F%2Fother.com')
 
-    expect(extractPocketRedirect(url)).toBeNull()
+    expect(extractPocketRedirect(url)).toBeUndefined()
   })
 })

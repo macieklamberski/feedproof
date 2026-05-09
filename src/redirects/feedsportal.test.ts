@@ -15,18 +15,18 @@ describe('extractFeedsportal', () => {
   it('should return null when the path does not match the wrapper shape', () => {
     const url = new URL('http://rss.feedsportal.com/news/foo.html')
 
-    expect(extractFeedsportal(url)).toBeNull()
+    expect(extractFeedsportal(url)).toBeUndefined()
   })
 
   it('should return null when the decoded result has no http(s) prefix', () => {
     const url = new URL('http://rss.feedsportal.com/c/x/0Zexample0Nzzzzzzzzzz/story01.htm')
 
-    expect(extractFeedsportal(url)).toBeNull()
+    expect(extractFeedsportal(url)).toBeUndefined()
   })
 
   it('should return null when the id contains no digraphs and decodes to a literal', () => {
     const url = new URL('http://rss.feedsportal.com/c/x/abcdefghijklmnopqrstuvwx/story01.htm')
 
-    expect(extractFeedsportal(url)).toBeNull()
+    expect(extractFeedsportal(url)).toBeUndefined()
   })
 })

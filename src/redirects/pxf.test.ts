@@ -17,12 +17,12 @@ describe('extractPxf', () => {
   it('should return null when u param is missing', () => {
     const url = new URL('https://merchant.pxf.io/?subId1=abc')
 
-    expect(extractPxf(url)).toBeNull()
+    expect(extractPxf(url)).toBeUndefined()
   })
 
   it('should return null for non-pxf hosts', () => {
     const url = new URL('https://example.com/?u=https%3A%2F%2Fother.com')
 
-    expect(extractPxf(url)).toBeNull()
+    expect(extractPxf(url)).toBeUndefined()
   })
 })

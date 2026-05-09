@@ -11,12 +11,12 @@ describe('extractDisqus', () => {
   it('should return null when url param is missing', () => {
     const url = new URL('https://disq.us/?key=abc')
 
-    expect(extractDisqus(url)).toBeNull()
+    expect(extractDisqus(url)).toBeUndefined()
   })
 
   it('should return null for non-Disqus hosts', () => {
     const url = new URL('https://example.com/?url=https%3A%2F%2Fother.com')
 
-    expect(extractDisqus(url)).toBeNull()
+    expect(extractDisqus(url)).toBeUndefined()
   })
 })

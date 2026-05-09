@@ -7,17 +7,15 @@ const postmarkPathRegex = /^\/[23][st]\/([^/]+)\//
 // the URL-encoded target.
 export const extractPostmark: RedirectExtractor = (url) => {
   if (url.hostname !== 'click.pstmrk.it') {
-    return null
+    return
   }
 
   const match = url.pathname.match(postmarkPathRegex)
   if (!match) {
-    return null
+    return
   }
 
   try {
     return decodeURIComponent(match[1])
-  } catch {
-    return null
-  }
+  } catch {}
 }

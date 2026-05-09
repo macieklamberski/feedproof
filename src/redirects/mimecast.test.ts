@@ -35,12 +35,12 @@ describe('extractMimecast', () => {
   it('should return null when both url and domain are missing', () => {
     const url = new URL('https://protect-us.mimecast.com/s/abc123?token=xyz')
 
-    expect(extractMimecast(url)).toBeNull()
+    expect(extractMimecast(url)).toBeUndefined()
   })
 
   it('should return null for non-Mimecast hosts', () => {
     const url = new URL('https://example.com/?url=https%3A%2F%2Fother.com')
 
-    expect(extractMimecast(url)).toBeNull()
+    expect(extractMimecast(url)).toBeUndefined()
   })
 })

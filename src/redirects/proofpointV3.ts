@@ -13,7 +13,7 @@ const runLengthMap: Record<string, number> = (() => {
   return map
 })()
 
-const decodeReplacements = (mangled: string, replacementBase64: string): string | null => {
+const decodeReplacements = (mangled: string, replacementBase64: string): string | undefined => {
   if (replacementBase64.length === 0) {
     return mangled
   }
@@ -45,7 +45,7 @@ const decodeReplacements = (mangled: string, replacementBase64: string): string 
     if (match[0] === '*') {
       const next = replacementChars.shift()
       if (next === undefined) {
-        return null
+        return
       }
       result.push(next)
     } else {
@@ -59,7 +59,7 @@ const decodeReplacements = (mangled: string, replacementBase64: string): string 
       while (bytesConsumed < bytesToReplace) {
         const next = replacementChars.shift()
         if (next === undefined) {
-          return null
+          return
         }
         result.push(next)
         bytesConsumed += Buffer.byteLength(next, 'utf-8')
@@ -105,12 +105,12 @@ const positionInChars = (source: string, codeUnitIndex: number): number => {
 // `**X` runs restore a fixed byte count (A=2 through `_`=65).
 export const extractProofpointV3: RedirectExtractor = (url) => {
   if (!v3HostSet.has(url.hostname)) {
-    return null
+    return
   }
 
   const match = `${url.pathname}${url.search}`.match(v3PathRegex)
   if (!match) {
-    return null
+    return
   }
 
   return decodeReplacements(match[1], match[2])
