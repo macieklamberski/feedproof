@@ -1,10 +1,8 @@
-import type { RedirectExtractor } from '../types.js'
+import { createParamExtractor } from './createParamExtractor.js'
 
 // Pocket redirect (getpocket.com/redirect?url=<target>).
-export const extractPocketRedirect: RedirectExtractor = (url) => {
-  if (url.hostname === 'getpocket.com' && url.pathname === '/redirect') {
-    return url.searchParams.get('url') ?? null
-  }
-
-  return null
-}
+export const extractPocketRedirect = createParamExtractor({
+  hosts: 'getpocket.com',
+  path: '/redirect',
+  params: ['url'],
+})

@@ -1,13 +1,8 @@
-import type { RedirectExtractor } from '../types.js'
+import { createParamExtractor } from './createParamExtractor.js'
 
 // Facebook link shim (l.facebook.com/l.php?u=<target>).
-export const extractFacebookShim: RedirectExtractor = (url) => {
-  if (
-    (url.hostname === 'l.facebook.com' || url.hostname === 'lm.facebook.com') &&
-    url.pathname === '/l.php'
-  ) {
-    return url.searchParams.get('u') ?? null
-  }
-
-  return null
-}
+export const extractFacebookShim = createParamExtractor({
+  hosts: ['l.facebook.com', 'lm.facebook.com'],
+  path: '/l.php',
+  params: ['u'],
+})

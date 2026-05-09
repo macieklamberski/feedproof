@@ -1,12 +1,10 @@
-import type { RedirectExtractor } from '../types.js'
+import { createParamExtractor } from './createParamExtractor.js'
 
 const googleTranslateHostRegex = /^translate\.google\.(?:com|[a-z]{2,3}(?:\.[a-z]{2,3})?)$/
 
 // Google Translate (translate.google.<TLD>/translate?u=<target>).
-export const extractGoogleTranslateRedirect: RedirectExtractor = (url) => {
-  if (googleTranslateHostRegex.test(url.hostname) && url.pathname === '/translate') {
-    return url.searchParams.get('u') ?? null
-  }
-
-  return null
-}
+export const extractGoogleTranslateRedirect = createParamExtractor({
+  hosts: googleTranslateHostRegex,
+  path: '/translate',
+  params: ['u'],
+})
