@@ -10,15 +10,19 @@ import { extractDouban } from './redirects/douban.js'
 import { extractEbayRover } from './redirects/ebayRover.js'
 import { extractFacebookShim } from './redirects/facebook.js'
 import { extractFeedsportal } from './redirects/feedsportal.js'
+import { extractFlipboard } from './redirects/flipboard.js'
 import { extractGitee } from './redirects/gitee.js'
 import { extractGoogleRedirect } from './redirects/google.js'
 import { extractGoogleNewsRedirect } from './redirects/googleNews.js'
 import { extractGoogleNewsModern } from './redirects/googleNewsModern.js'
 import { extractGoogleTranslateRedirect } from './redirects/googleTranslate.js'
+import { extractHashnode } from './redirects/hashnode.js'
+import { extractIcptrack } from './redirects/icptrack.js'
 import { extractJianshuGo } from './redirects/jianshuGo.js'
 import { extractJuejin } from './redirects/juejin.js'
 import { extractLinksynergy } from './redirects/linksynergy.js'
 import { extractMailchimp } from './redirects/mailchimp.js'
+import { extractMedium } from './redirects/medium.js'
 import { extractMimecast } from './redirects/mimecast.js'
 import { extractNicoMs } from './redirects/nicoMs.js'
 import { extractOutlookSafelinks } from './redirects/outlookSafelinks.js'
@@ -36,6 +40,7 @@ import { extractSkimlinks } from './redirects/skimlinks.js'
 import { extractSlack } from './redirects/slack.js'
 import { extractSspai } from './redirects/sspai.js'
 import { extractSteamLinkfilter } from './redirects/steamLinkfilter.js'
+import { extractTelegramIv } from './redirects/telegramIv.js'
 import { extractTradedoubler } from './redirects/tradedoubler.js'
 import { extractTumblr } from './redirects/tumblr.js'
 import { extractValuecommerce } from './redirects/valuecommerce.js'
@@ -124,6 +129,7 @@ export const defaultRedirectExtractors: Array<RedirectExtractor> = [
   extractMimecast,
   extractPostmark,
   extractAceml,
+  extractIcptrack,
   extractMailchimp,
   extractSlack,
 
@@ -152,6 +158,8 @@ export const defaultRedirectExtractors: Array<RedirectExtractor> = [
   extractSteamLinkfilter,
   extractDouban,
   extractNicoMs,
+  extractMedium,
+  extractFlipboard,
 
   // Developer and publishing platforms.
   extractZhihu,
@@ -160,10 +168,12 @@ export const defaultRedirectExtractors: Array<RedirectExtractor> = [
   extractJianshuGo,
   extractSegmentfault,
   extractGitee,
+  extractHashnode,
 
   // Cache and proxy services.
   extractAmpCache,
   extractYandexTurbo,
+  extractTelegramIv,
 
   // Legacy aggregators.
   extractFeedsportal,
