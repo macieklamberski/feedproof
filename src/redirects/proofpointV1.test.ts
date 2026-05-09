@@ -35,4 +35,11 @@ describe('extractProofpointV1', () => {
 
     expect(extractProofpointV1(url)).toBeNull()
   })
+
+  it('should return null when decoded URL has malformed percent escapes', () => {
+    // `-Z` becomes `%Z` after substitution, which decodeURIComponent rejects.
+    const url = new URL('https://urldefense.proofpoint.com/v1/url?u=https-Zbroken')
+
+    expect(extractProofpointV1(url)).toBeNull()
+  })
 })

@@ -37,4 +37,11 @@ describe('extractPostmark', () => {
 
     expect(extractPostmark(url)).toBeNull()
   })
+
+  it('should return null when the encoded path segment is malformed', () => {
+    // `%ZZ` is not a valid percent escape and breaks decodeURIComponent.
+    const url = new URL('https://click.pstmrk.it/3s/bad%ZZ/abc/def')
+
+    expect(extractPostmark(url)).toBeNull()
+  })
 })
