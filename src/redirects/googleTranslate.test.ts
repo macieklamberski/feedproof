@@ -27,4 +27,20 @@ describe('extractGoogleTranslateRedirect', () => {
 
     expect(extractGoogleTranslateRedirect(url)).toBeNull()
   })
+
+  it('should extract target from translate.google.de host', () => {
+    const url = new URL(
+      'https://translate.google.de/translate?u=https%3A%2F%2Fexample.com%2Fpage&sl=fr&tl=en',
+    )
+
+    expect(extractGoogleTranslateRedirect(url)).toBe('https://example.com/page')
+  })
+
+  it('should extract target from translate.google.co.uk host', () => {
+    const url = new URL(
+      'https://translate.google.co.uk/translate?u=https%3A%2F%2Fexample.com%2Fpage&sl=fr&tl=en',
+    )
+
+    expect(extractGoogleTranslateRedirect(url)).toBe('https://example.com/page')
+  })
 })
