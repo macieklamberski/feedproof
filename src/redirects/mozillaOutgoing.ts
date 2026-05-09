@@ -11,17 +11,15 @@ const mozillaOutgoingHosts = new Set([
 // support forums. Path: /v1/<sha256>/<URL-encoded-target>
 export const extractMozillaOutgoing: RedirectExtractor = (url) => {
   if (!mozillaOutgoingHosts.has(url.hostname)) {
-    return null
+    return
   }
 
   const match = url.pathname.match(pathRegex)
   if (!match) {
-    return null
+    return
   }
 
   try {
     return decodeURIComponent(match[1])
-  } catch {
-    return null
-  }
+  } catch {}
 }

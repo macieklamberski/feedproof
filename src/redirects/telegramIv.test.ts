@@ -13,18 +13,18 @@ describe('extractTelegramIv', () => {
   it('should return null for non-iv Telegram paths', () => {
     const url = new URL('https://t.me/channelname')
 
-    expect(extractTelegramIv(url)).toBeNull()
+    expect(extractTelegramIv(url)).toBeUndefined()
   })
 
   it('should return null when url param is missing', () => {
     const url = new URL('https://t.me/iv?rhash=abc123')
 
-    expect(extractTelegramIv(url)).toBeNull()
+    expect(extractTelegramIv(url)).toBeUndefined()
   })
 
   it('should return null for non-Telegram hosts', () => {
     const url = new URL('https://example.com/iv?url=https%3A%2F%2Fother.com')
 
-    expect(extractTelegramIv(url)).toBeNull()
+    expect(extractTelegramIv(url)).toBeUndefined()
   })
 })

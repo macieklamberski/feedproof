@@ -6,7 +6,7 @@ const mimecastHostRegex = /\.mimecast\.com$/
 // ?domain=<host>). The `domain` form lacks a scheme, so we synthesise https.
 export const extractMimecast: RedirectExtractor = (url) => {
   if (!mimecastHostRegex.test(url.hostname)) {
-    return null
+    return
   }
 
   const targetUrl = url.searchParams.get('url')
@@ -19,5 +19,5 @@ export const extractMimecast: RedirectExtractor = (url) => {
     return `https://${targetDomain}`
   }
 
-  return null
+  return
 }

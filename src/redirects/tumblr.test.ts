@@ -13,18 +13,18 @@ describe('extractTumblr', () => {
   it('should return null when z param is missing', () => {
     const url = new URL('https://t.umblr.com/redirect?t=signature')
 
-    expect(extractTumblr(url)).toBeNull()
+    expect(extractTumblr(url)).toBeUndefined()
   })
 
   it('should return null for non-redirect Tumblr paths', () => {
     const url = new URL('https://t.umblr.com/dashboard?z=https%3A%2F%2Fexample.com')
 
-    expect(extractTumblr(url)).toBeNull()
+    expect(extractTumblr(url)).toBeUndefined()
   })
 
   it('should return null for non-Tumblr hosts', () => {
     const url = new URL('https://example.com/redirect?z=https%3A%2F%2Fother.com')
 
-    expect(extractTumblr(url)).toBeNull()
+    expect(extractTumblr(url)).toBeUndefined()
   })
 })

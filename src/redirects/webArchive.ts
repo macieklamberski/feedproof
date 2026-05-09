@@ -7,17 +7,15 @@ const pathRegex = /^\/web\/\d{14}\*?\/(.+)$/
 // this from defaultRedirectExtractors in their TransformContentOptions.
 export const extractWebArchive: RedirectExtractor = (url) => {
   if (url.hostname !== 'web.archive.org') {
-    return null
+    return
   }
 
   const match = url.pathname.match(pathRegex)
   if (!match) {
-    return null
+    return
   }
 
   try {
     return decodeURIComponent(match[1])
-  } catch {
-    return null
-  }
+  } catch {}
 }

@@ -24,19 +24,19 @@ describe('extractMozillaOutgoing', () => {
     const sha = 'c'.repeat(64)
     const url = new URL(`https://example.com/v1/${sha}/https%3A%2F%2Fother.com`)
 
-    expect(extractMozillaOutgoing(url)).toBeNull()
+    expect(extractMozillaOutgoing(url)).toBeUndefined()
   })
 
   it('should return null when path lacks /v1/<sha256>/ prefix', () => {
     const url = new URL('https://outgoing.prod.mozaws.net/other?url=https%3A%2F%2Fexample.com')
 
-    expect(extractMozillaOutgoing(url)).toBeNull()
+    expect(extractMozillaOutgoing(url)).toBeUndefined()
   })
 
   it('should return null when encoded target has malformed percent escapes', () => {
     const sha = 'd'.repeat(64)
     const url = new URL(`https://outgoing.prod.mozaws.net/v1/${sha}/bad%ZZ`)
 
-    expect(extractMozillaOutgoing(url)).toBeNull()
+    expect(extractMozillaOutgoing(url)).toBeUndefined()
   })
 })

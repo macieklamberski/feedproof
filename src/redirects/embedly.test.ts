@@ -19,12 +19,12 @@ describe('extractEmbedly', () => {
   it('should return null when src param is missing', () => {
     const url = new URL('https://cdn.embedly.com/widgets/media.html?other=value')
 
-    expect(extractEmbedly(url)).toBeNull()
+    expect(extractEmbedly(url)).toBeUndefined()
   })
 
   it('should return null for non-Embedly hosts', () => {
     const url = new URL('https://example.com/widgets/media.html?src=https%3A%2F%2Fother.com')
 
-    expect(extractEmbedly(url)).toBeNull()
+    expect(extractEmbedly(url)).toBeUndefined()
   })
 })

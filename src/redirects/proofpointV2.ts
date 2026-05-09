@@ -13,12 +13,10 @@ export const extractProofpointV2: RedirectExtractor = (url) => {
   const raw = baseExtractor(url)
 
   if (!raw) {
-    return null
+    return
   }
 
   try {
     return decodeURIComponent(raw.replace(/-/g, '%').replace(/_/g, '/'))
-  } catch {
-    return null
-  }
+  } catch {}
 }

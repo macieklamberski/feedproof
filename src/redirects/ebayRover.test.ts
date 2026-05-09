@@ -21,12 +21,12 @@ describe('extractEbayRover', () => {
   it('should return null when mpre param is missing', () => {
     const url = new URL('https://rover.ebay.com/rover/1/711-53200-19255-0/1?campid=12345')
 
-    expect(extractEbayRover(url)).toBeNull()
+    expect(extractEbayRover(url)).toBeUndefined()
   })
 
   it('should return null for non-rover hosts', () => {
     const url = new URL('https://example.com/?mpre=https%3A%2F%2Fother.com')
 
-    expect(extractEbayRover(url)).toBeNull()
+    expect(extractEbayRover(url)).toBeUndefined()
   })
 })

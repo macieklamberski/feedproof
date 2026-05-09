@@ -9,12 +9,12 @@ const dashRegex = /-/g
 // after `/s/` is the original path.
 export const extractYandexTurbo: RedirectExtractor = (url) => {
   if (!turbopagesHostRegex.test(url.hostname)) {
-    return null
+    return
   }
 
   const match = url.pathname.match(turbopagesPathRegex)
   if (!match) {
-    return null
+    return
   }
 
   const sourceHost = url.hostname.replace(turbopagesHostRegex, '').replace(dashRegex, '.')

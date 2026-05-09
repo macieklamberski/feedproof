@@ -34,25 +34,25 @@ describe('extractGoogleNewsModern', () => {
       .replace(/=+$/, '')
     const url = new URL(`https://news.google.com/articles/${id}`)
 
-    expect(extractGoogleNewsModern(url)).toBeNull()
+    expect(extractGoogleNewsModern(url)).toBeUndefined()
   })
 
   it('should return null for non-articles paths', () => {
     const url = new URL('https://news.google.com/foryou')
 
-    expect(extractGoogleNewsModern(url)).toBeNull()
+    expect(extractGoogleNewsModern(url)).toBeUndefined()
   })
 
   it('should return null for non-Google-News hosts', () => {
     const id = buildArticleId('https://example.com/article')
     const url = new URL(`https://example.com/articles/${id}`)
 
-    expect(extractGoogleNewsModern(url)).toBeNull()
+    expect(extractGoogleNewsModern(url)).toBeUndefined()
   })
 
   it('should return null for malformed base64 ids', () => {
     const url = new URL('https://news.google.com/articles/not-valid-base64')
 
-    expect(extractGoogleNewsModern(url)).toBeNull()
+    expect(extractGoogleNewsModern(url)).toBeUndefined()
   })
 })

@@ -13,18 +13,18 @@ describe('extractTradedoubler', () => {
   it('should return null when url param is missing', () => {
     const url = new URL('https://clk.tradedoubler.com/click?p=12345&a=67890')
 
-    expect(extractTradedoubler(url)).toBeNull()
+    expect(extractTradedoubler(url)).toBeUndefined()
   })
 
   it('should return null for non-click paths', () => {
     const url = new URL('https://clk.tradedoubler.com/redirect?url=https%3A%2F%2Fexample.com')
 
-    expect(extractTradedoubler(url)).toBeNull()
+    expect(extractTradedoubler(url)).toBeUndefined()
   })
 
   it('should return null for non-Tradedoubler hosts', () => {
     const url = new URL('https://example.com/click?url=https%3A%2F%2Fother.com')
 
-    expect(extractTradedoubler(url)).toBeNull()
+    expect(extractTradedoubler(url)).toBeUndefined()
   })
 })

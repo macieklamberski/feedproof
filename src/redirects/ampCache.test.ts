@@ -28,13 +28,13 @@ describe('extractAmpCache', () => {
     const imageUrl = new URL('https://cdn.ampproject.org/i/s/example.com/image.jpg')
     const videoUrl = new URL('https://cdn.ampproject.org/v/s/example.com/video.mp4')
 
-    expect(extractAmpCache(imageUrl)).toBeNull()
-    expect(extractAmpCache(videoUrl)).toBeNull()
+    expect(extractAmpCache(imageUrl)).toBeUndefined()
+    expect(extractAmpCache(videoUrl)).toBeUndefined()
   })
 
   it('should return null for non-AMP cache hosts', () => {
     const url = new URL('https://example.com/c/s/other.com/article')
 
-    expect(extractAmpCache(url)).toBeNull()
+    expect(extractAmpCache(url)).toBeUndefined()
   })
 })

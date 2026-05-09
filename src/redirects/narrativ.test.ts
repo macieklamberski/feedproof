@@ -21,12 +21,12 @@ describe('extractNarrativ', () => {
   it('should return null when url param is missing', () => {
     const url = new URL('https://narrativ.com/api/v0/client_redirect?other=value')
 
-    expect(extractNarrativ(url)).toBeNull()
+    expect(extractNarrativ(url)).toBeUndefined()
   })
 
   it('should return null for non-Narrativ hosts', () => {
     const url = new URL('https://example.com/?url=https%3A%2F%2Fother.com')
 
-    expect(extractNarrativ(url)).toBeNull()
+    expect(extractNarrativ(url)).toBeUndefined()
   })
 })

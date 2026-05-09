@@ -11,19 +11,19 @@ describe('extractGoogleNewsRedirect', () => {
   it('should return null for modern article URLs', () => {
     const url = new URL('https://news.google.com/articles/CBMiAbase64')
 
-    expect(extractGoogleNewsRedirect(url)).toBeNull()
+    expect(extractGoogleNewsRedirect(url)).toBeUndefined()
   })
 
   it('should return null when url param is missing', () => {
     const url = new URL('https://news.google.com/news/url')
 
-    expect(extractGoogleNewsRedirect(url)).toBeNull()
+    expect(extractGoogleNewsRedirect(url)).toBeUndefined()
   })
 
   it('should return null for non-Google-News hosts', () => {
     const url = new URL('https://www.google.com/news/url?url=https%3A%2F%2Fexample.com')
 
-    expect(extractGoogleNewsRedirect(url)).toBeNull()
+    expect(extractGoogleNewsRedirect(url)).toBeUndefined()
   })
 
   it('should extract target from news.google.de host', () => {

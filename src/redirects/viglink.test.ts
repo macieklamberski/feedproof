@@ -13,12 +13,12 @@ describe('extractViglink', () => {
   it('should return null when u param is missing', () => {
     const url = new URL('https://redirect.viglink.com/?key=abc')
 
-    expect(extractViglink(url)).toBeNull()
+    expect(extractViglink(url)).toBeUndefined()
   })
 
   it('should return null for non-VigLink hosts', () => {
     const url = new URL('https://example.com/?u=https%3A%2F%2Fother.com')
 
-    expect(extractViglink(url)).toBeNull()
+    expect(extractViglink(url)).toBeUndefined()
   })
 })

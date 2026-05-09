@@ -13,12 +13,12 @@ describe('extractPartnerAds', () => {
   it('should return null when htmlurl param is missing', () => {
     const url = new URL('https://www.partner-ads.com/?other=value')
 
-    expect(extractPartnerAds(url)).toBeNull()
+    expect(extractPartnerAds(url)).toBeUndefined()
   })
 
   it('should return null for non-partner-ads hosts', () => {
     const url = new URL('https://example.com/?htmlurl=https%3A%2F%2Fother.com')
 
-    expect(extractPartnerAds(url)).toBeNull()
+    expect(extractPartnerAds(url)).toBeUndefined()
   })
 })

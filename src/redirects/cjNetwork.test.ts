@@ -21,12 +21,12 @@ describe('extractCjNetwork', () => {
   it('should return null when url param is missing', () => {
     const url = new URL('https://www.tkqlhce.com/click-12345-67890')
 
-    expect(extractCjNetwork(url)).toBeNull()
+    expect(extractCjNetwork(url)).toBeUndefined()
   })
 
   it('should return null for non-CJ hosts', () => {
     const url = new URL('https://example.com/click?url=https%3A%2F%2Fother.com')
 
-    expect(extractCjNetwork(url)).toBeNull()
+    expect(extractCjNetwork(url)).toBeUndefined()
   })
 })

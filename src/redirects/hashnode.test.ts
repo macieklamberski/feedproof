@@ -13,18 +13,18 @@ describe('extractHashnode', () => {
   it('should return null for non-redirect Hashnode URLs', () => {
     const url = new URL('https://hashnode.com/community')
 
-    expect(extractHashnode(url)).toBeNull()
+    expect(extractHashnode(url)).toBeUndefined()
   })
 
   it('should return null when url param is missing', () => {
     const url = new URL('https://hashnode.com/util/redirect')
 
-    expect(extractHashnode(url)).toBeNull()
+    expect(extractHashnode(url)).toBeUndefined()
   })
 
   it('should return null for non-Hashnode hosts', () => {
     const url = new URL('https://example.com/util/redirect?url=https%3A%2F%2Fother.com')
 
-    expect(extractHashnode(url)).toBeNull()
+    expect(extractHashnode(url)).toBeUndefined()
   })
 })

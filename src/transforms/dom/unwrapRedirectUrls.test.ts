@@ -62,8 +62,10 @@ describe('unwrapRedirectUrls', () => {
     })
 
     it('should use the provided redirectExtractors', () => {
-      const customExtractor = (url: URL) => {
-        return url.hostname === 'my-shim.example' ? url.searchParams.get('to') : null
+      const customExtractor: RedirectExtractor = (url) => {
+        return url.hostname === 'my-shim.example'
+          ? (url.searchParams.get('to') ?? undefined)
+          : undefined
       }
       const customContext: TransformContext = { redirectExtractors: [customExtractor] }
       const html = '<a href="https://my-shim.example/r?to=https%3A%2F%2Ftarget.com">link</a>'
@@ -75,8 +77,9 @@ describe('unwrapRedirectUrls', () => {
 })
 
 describe('extractRedirectTarget', () => {
-  const matchEverything: RedirectExtractor = (url) => url.searchParams.get('target')
-  const matchNothing: RedirectExtractor = () => null
+  const matchEverything: RedirectExtractor = (url) =>
+    url.searchParams.get('target') ?? undefined
+  const matchNothing: RedirectExtractor = () => undefined
 
   it('should return target from first matching extractor', () => {
     const url = new URL('https://example.com/?target=https%3A%2F%2Fdest.com')
@@ -85,25 +88,25 @@ describe('extractRedirectTarget', () => {
     expect(result).toBe('https://dest.com')
   })
 
-  it('should fall through to next extractor when first returns null', () => {
+  it('should fall through to next extractor when first returns undefined', () => {
     const url = new URL('https://example.com/?target=https%3A%2F%2Fdest.com')
     const result = extractRedirectTarget(url, [matchNothing, matchEverything])
 
     expect(result).toBe('https://dest.com')
   })
 
-  it('should return null when no extractor matches', () => {
+  it('should return undefined when no extractor matches', () => {
     const url = new URL('https://example.com/page')
     const result = extractRedirectTarget(url, [matchNothing, matchNothing])
 
-    expect(result).toBeNull()
+    expect(result).toBeUndefined()
   })
 
   it('should return null for empty extractors array', () => {
     const url = new URL('https://example.com/page')
     const result = extractRedirectTarget(url, [])
 
-    expect(result).toBeNull()
+    expect(result).toBeUndefined()
   })
 
   it('should work with defaultRedirectExtractors', () => {

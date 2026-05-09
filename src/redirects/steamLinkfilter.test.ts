@@ -13,18 +13,18 @@ describe('extractSteamLinkfilter', () => {
   it('should return null when url param is missing', () => {
     const url = new URL('https://steamcommunity.com/linkfilter/?other=value')
 
-    expect(extractSteamLinkfilter(url)).toBeNull()
+    expect(extractSteamLinkfilter(url)).toBeUndefined()
   })
 
   it('should return null for non-linkfilter Steam paths', () => {
     const url = new URL('https://steamcommunity.com/profile?url=https%3A%2F%2Fexample.com')
 
-    expect(extractSteamLinkfilter(url)).toBeNull()
+    expect(extractSteamLinkfilter(url)).toBeUndefined()
   })
 
   it('should return null for non-Steam hosts', () => {
     const url = new URL('https://example.com/linkfilter/?url=https%3A%2F%2Fother.com')
 
-    expect(extractSteamLinkfilter(url)).toBeNull()
+    expect(extractSteamLinkfilter(url)).toBeUndefined()
   })
 })

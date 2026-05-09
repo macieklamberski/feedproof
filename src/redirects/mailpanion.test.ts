@@ -13,12 +13,12 @@ describe('extractMailpanion', () => {
   it('should return null when destination param is missing', () => {
     const url = new URL('https://mailpanion.com/?other=value')
 
-    expect(extractMailpanion(url)).toBeNull()
+    expect(extractMailpanion(url)).toBeUndefined()
   })
 
   it('should return null for non-Mailpanion hosts', () => {
     const url = new URL('https://example.com/?destination=https%3A%2F%2Fother.com')
 
-    expect(extractMailpanion(url)).toBeNull()
+    expect(extractMailpanion(url)).toBeUndefined()
   })
 })

@@ -11,18 +11,18 @@ describe('extractGitee', () => {
   it('should return null when target param is missing', () => {
     const url = new URL('https://gitee.com/link?other=value')
 
-    expect(extractGitee(url)).toBeNull()
+    expect(extractGitee(url)).toBeUndefined()
   })
 
   it('should return null for non-link Gitee paths', () => {
     const url = new URL('https://gitee.com/explore?target=https%3A%2F%2Fexample.com')
 
-    expect(extractGitee(url)).toBeNull()
+    expect(extractGitee(url)).toBeUndefined()
   })
 
   it('should return null for non-Gitee hosts', () => {
     const url = new URL('https://example.com/link?target=https%3A%2F%2Fother.com')
 
-    expect(extractGitee(url)).toBeNull()
+    expect(extractGitee(url)).toBeUndefined()
   })
 })

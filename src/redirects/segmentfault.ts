@@ -12,7 +12,7 @@ export const extractSegmentfault: RedirectExtractor = (url) => {
   const raw = baseExtractor(url)
 
   if (!raw) {
-    return null
+    return
   }
 
   try {
@@ -22,5 +22,5 @@ export const extractSegmentfault: RedirectExtractor = (url) => {
     }
   } catch {}
 
-  return null
+  return
 }

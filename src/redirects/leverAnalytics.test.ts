@@ -13,12 +13,12 @@ describe('extractLeverAnalytics', () => {
   it('should return null when dest param is missing', () => {
     const url = new URL('https://t.lever-analytics.com/email-link?other=value')
 
-    expect(extractLeverAnalytics(url)).toBeNull()
+    expect(extractLeverAnalytics(url)).toBeUndefined()
   })
 
   it('should return null for non-Lever hosts', () => {
     const url = new URL('https://example.com/email-link?dest=https%3A%2F%2Fother.com')
 
-    expect(extractLeverAnalytics(url)).toBeNull()
+    expect(extractLeverAnalytics(url)).toBeUndefined()
   })
 })

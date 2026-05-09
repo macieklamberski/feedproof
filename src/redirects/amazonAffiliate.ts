@@ -7,9 +7,9 @@ const amazonPathRegex = /^\/x\/c\/[^/]+\/(https?:\/\/.+)$/
 // The target URL is appended verbatim to the path after the click identifier.
 export const extractAmazonAffiliate: RedirectExtractor = (url) => {
   if (!amazonHostRegex.test(url.hostname)) {
-    return null
+    return
   }
 
   const match = url.pathname.match(amazonPathRegex)
-  return match?.[1] ?? null
+  return match?.[1]
 }

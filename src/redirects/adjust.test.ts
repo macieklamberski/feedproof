@@ -13,12 +13,12 @@ describe('extractAdjust', () => {
   it('should return null when redirect param is missing', () => {
     const url = new URL('https://app.adjust.com/abc123?campaign=launch')
 
-    expect(extractAdjust(url)).toBeNull()
+    expect(extractAdjust(url)).toBeUndefined()
   })
 
   it('should return null for non-Adjust hosts', () => {
     const url = new URL('https://example.com/abc123?redirect=https%3A%2F%2Fother.com')
 
-    expect(extractAdjust(url)).toBeNull()
+    expect(extractAdjust(url)).toBeUndefined()
   })
 })

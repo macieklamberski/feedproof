@@ -62,11 +62,11 @@ export const createParamExtractor = (config: ParamExtractorConfig): RedirectExtr
 
   return (url) => {
     if (!matchesHost(url.hostname)) {
-      return null
+      return
     }
 
     if (config.path && url.pathname !== config.path) {
-      return null
+      return
     }
 
     for (const param of config.params) {
@@ -76,7 +76,5 @@ export const createParamExtractor = (config: ParamExtractorConfig): RedirectExtr
         return value
       }
     }
-
-    return null
   }
 }
