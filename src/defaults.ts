@@ -127,9 +127,18 @@ export const defaultTrackingHosts = [
   'pixel.wp.com',
   'doubleclick.net',
   'google-analytics.com',
+  'list-manage.com', // Mailchimp opens.
+  'feedburner.com', // FeedBurner flare pixels (/~ff/).
+  'feedproxy.google.com', // FeedBurner-via-Google.
+  'feedblitz.com', // FeedBlitz pixels.
+  'mailerlite.com', // Newsletter platform.
+  'convertkit-mail.com', // Newsletter platform.
+  'beehiiv.com', // Newsletter platform.
+  'email.medium.com', // Medium newsletter pixels.
+  'stat-c.medium.com', // Medium reader-stat pixels.
 ]
 
-export const defaultTrackingPathSegments = ['pixel', 'beacon', 'track', 'count']
+export const defaultTrackingPathSegments = ['pixel', 'beacon', 'count']
 
 export const defaultRedirectExtractors: Array<RedirectExtractor> = [
   // Search engines.
