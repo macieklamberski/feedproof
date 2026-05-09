@@ -122,14 +122,23 @@ export const defaultEmbedResolvers: Array<EmbedResolver> = [youtubeEmbedResolver
 export const defaultLazySrcAttributes = ['data-src', 'data-original', 'data-lazy-src', 'data-url']
 
 export const defaultTrackingHosts = [
-  'feedsportal.com',
-  'stats.wordpress.com',
-  'pixel.wp.com',
-  'doubleclick.net',
-  'google-analytics.com',
+  'feedsportal.com', // Postmedia/Newsfutures feed-syndication pixels (/c/<id>/<…>.gif).
+  'stats.wordpress.com', // WordPress.com / Jetpack Stats pixels.
+  'pixel.wp.com', // WordPress.com / Jetpack Stats pixels.
+  'doubleclick.net', // Google ads tracking.
+  'google-analytics.com', // Google Analytics measurement pixels.
+  'list-manage.com', // Mailchimp opens.
+  'feedburner.com', // FeedBurner flare pixels (/~ff/).
+  'feedproxy.google.com', // FeedBurner-via-Google.
+  'feedblitz.com', // FeedBlitz pixels.
+  'mailerlite.com', // Newsletter platform.
+  'convertkit-mail.com', // Newsletter platform.
+  'beehiiv.com', // Newsletter platform.
+  'email.medium.com', // Medium newsletter pixels.
+  'stat-c.medium.com', // Medium reader-stat pixels.
 ]
 
-export const defaultTrackingPathSegments = ['pixel', 'beacon', 'track', 'count']
+export const defaultTrackingPathSegments = ['pixel', 'beacon', 'count']
 
 export const defaultRedirectExtractors: Array<RedirectExtractor> = [
   // Search engines.
