@@ -1,8 +1,8 @@
-import type { DomTransform, RedirectExtractor } from '../../types.js'
+import type { DomTransform, UrlUnwrapper } from '../../types.js'
 
 export const extractRedirectTarget = (
   url: URL,
-  extractors: ReadonlyArray<RedirectExtractor>,
+  extractors: ReadonlyArray<UrlUnwrapper>,
 ): string | undefined => {
   for (const extractor of extractors) {
     const target = extractor(url)
@@ -14,7 +14,7 @@ export const extractRedirectTarget = (
 }
 
 export const unwrapRedirectUrls: DomTransform = (context) => {
-  const extractors = context.redirectExtractors ?? []
+  const extractors = context.urlUnwrappers ?? []
 
   return (document) => {
     const anchors = document.querySelectorAll('a[href]')

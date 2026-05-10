@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../../common.js'
-import { defaultRedirectExtractors } from '../../defaults.js'
-import type { RedirectExtractor, TransformContext } from '../../types.js'
+import { defaultUrlUnwrappers } from '../../defaults.js'
+import type { TransformContext, UrlUnwrapper } from '../../types.js'
 import { extractRedirectTarget, unwrapRedirectUrls } from './unwrapRedirectUrls.js'
 
-const context: TransformContext = { redirectExtractors: defaultRedirectExtractors }
+const context: TransformContext = { urlUnwrappers: defaultUrlUnwrappers }
 
 describe('unwrapRedirectUrls', () => {
   it('should unwrap a redirect href via the configured extractors', () => {
@@ -50,8 +50,8 @@ describe('unwrapRedirectUrls', () => {
   })
 
   describe('overrides', () => {
-    it('should ignore default redirectExtractors when override is provided', () => {
-      const customContext: TransformContext = { redirectExtractors: [] }
+    it('should ignore default urlUnwrappers when override is provided', () => {
+      const customContext: TransformContext = { urlUnwrappers: [] }
       const html =
         '<a href="https://www.google.com/url?url=https%3A%2F%2Fexample.com%2Fpage">link</a>'
       const result = transformHtml(html, unwrapRedirectUrls(customContext))
@@ -61,13 +61,13 @@ describe('unwrapRedirectUrls', () => {
       )
     })
 
-    it('should use the provided redirectExtractors', () => {
-      const customExtractor: RedirectExtractor = (url) => {
+    it('should use the provided urlUnwrappers', () => {
+      const customExtractor: UrlUnwrapper = (url) => {
         return url.hostname === 'my-shim.example'
           ? (url.searchParams.get('to') ?? undefined)
           : undefined
       }
-      const customContext: TransformContext = { redirectExtractors: [customExtractor] }
+      const customContext: TransformContext = { urlUnwrappers: [customExtractor] }
       const html = '<a href="https://my-shim.example/r?to=https%3A%2F%2Ftarget.com">link</a>'
       const result = transformHtml(html, unwrapRedirectUrls(customContext))
 
@@ -77,9 +77,8 @@ describe('unwrapRedirectUrls', () => {
 })
 
 describe('extractRedirectTarget', () => {
-  const matchEverything: RedirectExtractor = (url) =>
-    url.searchParams.get('target') ?? undefined
-  const matchNothing: RedirectExtractor = () => undefined
+  const matchEverything: UrlUnwrapper = (url) => url.searchParams.get('target') ?? undefined
+  const matchNothing: UrlUnwrapper = () => undefined
 
   it('should return target from first matching extractor', () => {
     const url = new URL('https://example.com/?target=https%3A%2F%2Fdest.com')
@@ -109,9 +108,9 @@ describe('extractRedirectTarget', () => {
     expect(result).toBeUndefined()
   })
 
-  it('should work with defaultRedirectExtractors', () => {
+  it('should work with defaultUrlUnwrappers', () => {
     const url = new URL('https://www.google.com/url?url=https%3A%2F%2Fexample.com%2Fpage')
-    const result = extractRedirectTarget(url, defaultRedirectExtractors)
+    const result = extractRedirectTarget(url, defaultUrlUnwrappers)
 
     expect(result).toBe('https://example.com/page')
   })
