@@ -40,6 +40,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `fixLazyImages` | Move `data-src` / `data-original` to real `src` |
 | `resolveRelativeUrls` | Convert relative URLs to absolute using base URL |
 | `unwrapRedirectUrls` | Remove Google/Facebook/Outlook/etc. redirect wrappers |
+| `stripDeadAnchors` | Unwrap `<a>` with empty, `#`, or `javascript:` href |
 | `stripTrackingParams` | Remove UTM and other tracking parameters |
 | `removeTrackingPixels` | Strip 1×1 tracking pixel images |
 | `stripInterBlockBreaks` | Remove `<br>` tags between block elements |

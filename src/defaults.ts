@@ -73,6 +73,7 @@ import { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWit
 import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
 import { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
 import { stripComments } from './transforms/dom/stripComments.js'
+import { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBoundaryBreaks.js'
 import { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
@@ -104,6 +105,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   fixLazyImages,
   resolveRelativeUrls,
   unwrapRedirectUrls,
+  stripDeadAnchors,
   stripTrackingParams,
   removeTrackingPixels,
   stripInterBlockBreaks,
