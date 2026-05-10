@@ -22,7 +22,6 @@ import { extractGitee } from './redirects/gitee.js'
 import { extractGoogleRedirect } from './redirects/google.js'
 import { extractGoogleNewsRedirect } from './redirects/googleNews.js'
 import { extractGoogleNewsModern } from './redirects/googleNewsModern.js'
-import { extractGoogleTranslateRedirect } from './redirects/googleTranslate.js'
 import { extractHashnode } from './redirects/hashnode.js'
 import { extractIcptrack } from './redirects/icptrack.js'
 import { extractIdealoPartner } from './redirects/idealoPartner.js'
@@ -37,7 +36,6 @@ import { extractMailtrack } from './redirects/mailtrack.js'
 import { extractMedium } from './redirects/medium.js'
 import { extractMimecast } from './redirects/mimecast.js'
 import { extractMozillaOutgoing } from './redirects/mozillaOutgoing.js'
-import { extractNarrativ } from './redirects/narrativ.js'
 import { extractNicoMs } from './redirects/nicoMs.js'
 import { extractOutlookSafelinks } from './redirects/outlookSafelinks.js'
 import { extractPartnerAds } from './redirects/partnerAds.js'
@@ -58,14 +56,11 @@ import { extractSlack } from './redirects/slack.js'
 import { extractSmartredirect } from './redirects/smartredirect.js'
 import { extractSspai } from './redirects/sspai.js'
 import { extractSteamLinkfilter } from './redirects/steamLinkfilter.js'
-import { extractTelegramIv } from './redirects/telegramIv.js'
 import { extractTradedoubler } from './redirects/tradedoubler.js'
 import { extractTumblr } from './redirects/tumblr.js'
 import { extractValuecommerce } from './redirects/valuecommerce.js'
 import { extractViglink } from './redirects/viglink.js'
 import { extractVkAway } from './redirects/vkAway.js'
-import { extractWebArchive } from './redirects/webArchive.js'
-import { extractYandexTurbo } from './redirects/yandexTurbo.js'
 import { extractYouTubeRedirect } from './redirects/youtubeRedirect.js'
 import { extractZhihu } from './redirects/zhihu.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
@@ -167,7 +162,6 @@ export const defaultRedirectExtractors: Array<RedirectExtractor> = [
   extractGoogleRedirect,
   extractGoogleNewsRedirect,
   extractGoogleNewsModern,
-  extractGoogleTranslateRedirect,
   extractYouTubeRedirect,
 
   // Email and security gateways.
@@ -203,7 +197,6 @@ export const defaultRedirectExtractors: Array<RedirectExtractor> = [
   extractAdjust,
   extractGateSc,
   extractSmartredirect,
-  extractNarrativ,
   extractEffiliation,
   extractPartnerAds,
   extractIdealoPartner,
@@ -238,9 +231,6 @@ export const defaultRedirectExtractors: Array<RedirectExtractor> = [
   extractAmpCache,
   extractEmbedly,
   extractMozillaOutgoing,
-  extractWebArchive,
-  extractYandexTurbo,
-  extractTelegramIv,
 
   // Legacy aggregators.
   extractFeedsportal,

@@ -1,7 +1,17 @@
-import { createParamExtractor } from '../utils.js'
+import type { RedirectExtractor } from '../types.js'
 
-// Adjust deep-link tracker (app.adjust.com/<token>?redirect=<target>).
-export const extractAdjust = createParamExtractor({
-  hosts: 'app.adjust.com',
-  params: ['redirect'],
-})
+// Adjust deep-link tracker (app.adjust.com/<token>?redirect=<target>). The
+// `redirect` param sometimes contains a custom-scheme URI (e.g. `myapp://...`)
+// that's only meaningful inside the target app; only forward http(s) values.
+export const extractAdjust: RedirectExtractor = (url) => {
+  if (url.hostname !== 'app.adjust.com') {
+    return
+  }
+
+  const target = url.searchParams.get('redirect')
+  if (target?.startsWith('https://') !== true && target?.startsWith('http://') !== true) {
+    return
+  }
+
+  return target
+}

@@ -7,6 +7,9 @@ const dashRegex = /-/g
 // Yandex Turbo cached page (<source-host-with-dashes>.turbopages.org/<host>/s/<path>).
 // The subdomain encodes the original host, replacing `.` with `-`; the path
 // after `/s/` is the original path.
+// Not included in defaultRedirectExtractors: Turbo serves a stripped-down,
+// optimized rendering of the source page rather than the canonical content.
+// Opt in by passing a custom redirectExtractors array.
 export const extractYandexTurbo: RedirectExtractor = (url) => {
   if (!turbopagesHostRegex.test(url.hostname)) {
     return

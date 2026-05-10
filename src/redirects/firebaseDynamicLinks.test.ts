@@ -25,4 +25,12 @@ describe('extractFirebaseDynamicLinks', () => {
 
     expect(extractFirebaseDynamicLinks(url)).toBeUndefined()
   })
+
+  it('should prefer link over ofl when both are present', () => {
+    const url = new URL(
+      'https://example.page.link/?link=https%3A%2F%2Fexample.com%2Fcanonical&ofl=https%3A%2F%2Fexample.com%2Ffallback',
+    )
+
+    expect(extractFirebaseDynamicLinks(url)).toBe('https://example.com/canonical')
+  })
 })
