@@ -32,6 +32,7 @@ const result = transformContent('<p>Check <img data-src="photo.jpg"> and visit /
 | `decodeDoubleEncodedTags` | Decode `&lt;tag&gt;` back to `<tag>` in mixed content |
 | `unwrapWrappers` | Remove outer `<div>`, `<article>`, `<section>` wrappers |
 | `paragraphizePlainText` | Wrap plain text in `<p>` tags |
+| `stripDuplicateTitleHeading` | Remove first `<h1>`–`<h6>` matching article title |
 | `fixLazyImages` | Move `data-src` / `data-original` to real `src` |
 | `resolveRelativeUrls` | Convert relative URLs to absolute using base URL |
 | `unwrapRedirectUrls` | Remove Google/Facebook redirect wrappers |
