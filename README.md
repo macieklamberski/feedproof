@@ -27,17 +27,23 @@ const result = transformContent('<p>Check <img data-src="photo.jpg"> and visit /
 
 ## Transforms
 
+Inventory of every transform exported from the package. Most are enabled by default; pass a custom `stringTransforms` / `domTransforms` array via `transformContent` options to override.
+
 | Transform | Description |
 | --- | --- |
+| `stripOrphanedClosingTags` | Remove unmatched `</p>` / `</div>` close tags |
 | `decodeDoubleEncodedTags` | Decode `&lt;tag&gt;` back to `<tag>` in mixed content |
 | `unwrapWrappers` | Remove outer `<div>`, `<article>`, `<section>` wrappers |
 | `paragraphizePlainText` | Wrap plain text in `<p>` tags |
+| `stripEmptyTags` | Remove empty `<p>`, `<div>`, `<span>` and other tags |
+| `stripComments` | Remove HTML `<!-- comments -->` |
 | `fixLazyImages` | Move `data-src` / `data-original` to real `src` |
 | `resolveRelativeUrls` | Convert relative URLs to absolute using base URL |
-| `unwrapRedirectUrls` | Remove Google/Facebook redirect wrappers |
+| `unwrapRedirectUrls` | Remove Google/Facebook/Outlook/etc. redirect wrappers |
 | `stripTrackingParams` | Remove UTM and other tracking parameters |
 | `removeTrackingPixels` | Strip 1×1 tracking pixel images |
 | `stripInterBlockBreaks` | Remove `<br>` tags between block elements |
+| `stripParagraphBoundaryBreaks` | Remove `<br>` tags adjacent to paragraph boundaries |
 | `highlightCode` | Syntax-highlight `<code>` blocks with highlight.js |
 | `mergeConsecutiveOneLinerPres` | Merge consecutive single-line `<pre>` tags |
 | `replacePreLineBreaks` | Replace `<br>` with `\n` inside `<pre>` |
@@ -45,6 +51,7 @@ const result = transformContent('<p>Check <img data-src="photo.jpg"> and visit /
 | `linkifyUrls` | Wrap bare URLs in `<a>` tags |
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` to embed placeholders |
 | `injectEnclosureEmbedPlaceholders` | Add audio/video enclosures to content |
+| `simplifyFigures` | Unwrap `<figure>` when the figcaption is empty or redundant |
 
 ## Options
 
@@ -62,30 +69,3 @@ const result = transformContent(html, {
 ```
 
 The `stringTransforms`, `domTransforms`, and `finalStringTransforms` options each fully replace the corresponding default phase when provided. Every transform is also exported individually from `feedproof`, so you can compose any pipeline — list them explicitly to build from scratch, or spread `defaultDomTransforms` (etc.) from `feedproof/defaults` to extend or filter the defaults.
-
-## Individual Transforms
-
-Each transform is exported individually for selective use:
-
-```typescript
-import { transformHtml, resolveRelativeUrls } from 'feedproof'
-
-const result = transformHtml(html, resolveRelativeUrls({ baseUrl: 'https://example.com' }))
-```
-
-## Defaults
-
-All default constants are available for customization:
-
-```typescript
-import {
-  defaultDomTransforms,
-  defaultEmbedResolvers,
-  defaultFinalStringTransforms,
-  defaultLazySrcAttributes,
-  defaultRedirectExtractors,
-  defaultStringTransforms,
-  defaultTrackingHosts,
-  defaultTrackingPathSegments,
-} from 'feedproof/defaults'
-```
