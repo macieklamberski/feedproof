@@ -117,6 +117,9 @@ export const defaultDomTransforms: Array<DomTransform> = [
 
 export const defaultFinalStringTransforms: Array<StringTransform> = [stripEmptyTags]
 
+// Order matters when selectors overlap: each resolver runs in array order and
+// claimed iframes can't be re-matched. Place more specific selectors (e.g.
+// meta-providers like Embedly that wrap other providers) before broader ones.
 export const defaultEmbedResolvers: Array<EmbedResolver> = [youtubeEmbedResolver]
 
 export const defaultLazySrcAttributes = ['data-src', 'data-original', 'data-lazy-src', 'data-url']
