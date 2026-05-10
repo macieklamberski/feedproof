@@ -1,74 +1,5 @@
 import { resolveUrl } from 'feedcanon'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
-import { extractAceml } from './redirects/aceml.js'
-import { extractAdjust } from './redirects/adjust.js'
-import { extractAmazonAffiliate } from './redirects/amazonAffiliate.js'
-import { extractAmpCache } from './redirects/ampCache.js'
-import { extractAwin } from './redirects/awin.js'
-import { extractBingRedirect } from './redirects/bing.js'
-import { extractCjNetwork } from './redirects/cjNetwork.js'
-import { extractDigidip } from './redirects/digidip.js'
-import { extractDisqus } from './redirects/disqus.js'
-import { extractDouban } from './redirects/douban.js'
-import { extractDuckduckgoRedirect } from './redirects/duckduckgo.js'
-import { extractEbayRover } from './redirects/ebayRover.js'
-import { extractEffiliation } from './redirects/effiliation.js'
-import { extractEmbedly } from './redirects/embedly.js'
-import { extractFacebookShim } from './redirects/facebook.js'
-import { extractFeedsportal } from './redirects/feedsportal.js'
-import { extractFirebaseDynamicLinks } from './redirects/firebaseDynamicLinks.js'
-import { extractFlipboard } from './redirects/flipboard.js'
-import { extractGateSc } from './redirects/gateSc.js'
-import { extractGeoriot } from './redirects/georiot.js'
-import { extractGitee } from './redirects/gitee.js'
-import { extractGoogleRedirect } from './redirects/google.js'
-import { extractGoogleAmpViewer } from './redirects/googleAmpViewer.js'
-import { extractGoogleNewsRedirect } from './redirects/googleNews.js'
-import { extractGoogleNewsModern } from './redirects/googleNewsModern.js'
-import { extractGoogleScholarRedirect } from './redirects/googleScholar.js'
-import { extractHashnode } from './redirects/hashnode.js'
-import { extractIcptrack } from './redirects/icptrack.js'
-import { extractIdealoPartner } from './redirects/idealoPartner.js'
-import { extractInstagramShim } from './redirects/instagram.js'
-import { extractJianshuGo } from './redirects/jianshuGo.js'
-import { extractJuejin } from './redirects/juejin.js'
-import { extractLeverAnalytics } from './redirects/leverAnalytics.js'
-import { extractLinksynergy } from './redirects/linksynergy.js'
-import { extractMailchimp } from './redirects/mailchimp.js'
-import { extractMailpanion } from './redirects/mailpanion.js'
-import { extractMailpgn } from './redirects/mailpgn.js'
-import { extractMailtrack } from './redirects/mailtrack.js'
-import { extractMedium } from './redirects/medium.js'
-import { extractMimecast } from './redirects/mimecast.js'
-import { extractMozillaOutgoing } from './redirects/mozillaOutgoing.js'
-import { extractNicoMs } from './redirects/nicoMs.js'
-import { extractOutlookSafelinks } from './redirects/outlookSafelinks.js'
-import { extractPartnerAds } from './redirects/partnerAds.js'
-import { extractPocketRedirect } from './redirects/pocket.js'
-import { extractPostmark } from './redirects/postmark.js'
-import { extractProofpointV1 } from './redirects/proofpointV1.js'
-import { extractProofpointV2 } from './redirects/proofpointV2.js'
-import { extractProofpointV3 } from './redirects/proofpointV3.js'
-import { extractPxf } from './redirects/pxf.js'
-import { extractRecruitics } from './redirects/recruitics.js'
-import { extractRedditOut } from './redirects/redditOut.js'
-import { extractRedirectingat } from './redirects/redirectingat.js'
-import { extractSegmentfault } from './redirects/segmentfault.js'
-import { extractShareasale } from './redirects/shareasale.js'
-import { extractSjv } from './redirects/sjv.js'
-import { extractSkimlinks } from './redirects/skimlinks.js'
-import { extractSlack } from './redirects/slack.js'
-import { extractSmartredirect } from './redirects/smartredirect.js'
-import { extractSspai } from './redirects/sspai.js'
-import { extractSteamLinkfilter } from './redirects/steamLinkfilter.js'
-import { extractTradedoubler } from './redirects/tradedoubler.js'
-import { extractTumblr } from './redirects/tumblr.js'
-import { extractValuecommerce } from './redirects/valuecommerce.js'
-import { extractViglink } from './redirects/viglink.js'
-import { extractVkAway } from './redirects/vkAway.js'
-import { extractYahooSearchRedirect } from './redirects/yahooSearch.js'
-import { extractYouTubeRedirect } from './redirects/youtubeRedirect.js'
-import { extractZhihu } from './redirects/zhihu.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
 import { injectEnclosureEmbedPlaceholders } from './transforms/dom/injectEnclosureEmbedPlaceholders.js'
@@ -92,10 +23,79 @@ import { unwrapWrappers } from './transforms/string/unwrapWrappers.js'
 import type {
   DomTransform,
   EmbedResolver,
-  RedirectExtractor,
   ResolveUrlFn,
   StringTransform,
+  UrlUnwrapper,
 } from './types.js'
+import { unwrapAceml } from './unwraps/aceml.js'
+import { unwrapAdjust } from './unwraps/adjust.js'
+import { unwrapAmazonAffiliate } from './unwraps/amazonAffiliate.js'
+import { unwrapAmpCache } from './unwraps/ampCache.js'
+import { unwrapAwin } from './unwraps/awin.js'
+import { unwrapBingUrl } from './unwraps/bing.js'
+import { unwrapCjNetwork } from './unwraps/cjNetwork.js'
+import { unwrapDigidip } from './unwraps/digidip.js'
+import { unwrapDisqus } from './unwraps/disqus.js'
+import { unwrapDouban } from './unwraps/douban.js'
+import { unwrapDuckduckgoUrl } from './unwraps/duckduckgo.js'
+import { unwrapEbayRover } from './unwraps/ebayRover.js'
+import { unwrapEffiliation } from './unwraps/effiliation.js'
+import { unwrapEmbedly } from './unwraps/embedly.js'
+import { unwrapFacebookShim } from './unwraps/facebook.js'
+import { unwrapFeedsportal } from './unwraps/feedsportal.js'
+import { unwrapFirebaseDynamicLinks } from './unwraps/firebaseDynamicLinks.js'
+import { unwrapFlipboard } from './unwraps/flipboard.js'
+import { unwrapGateSc } from './unwraps/gateSc.js'
+import { unwrapGeoriot } from './unwraps/georiot.js'
+import { unwrapGitee } from './unwraps/gitee.js'
+import { unwrapGoogleUrl } from './unwraps/google.js'
+import { unwrapGoogleAmpViewer } from './unwraps/googleAmpViewer.js'
+import { unwrapGoogleNewsUrl } from './unwraps/googleNews.js'
+import { unwrapGoogleNewsModern } from './unwraps/googleNewsModern.js'
+import { unwrapGoogleScholarUrl } from './unwraps/googleScholar.js'
+import { unwrapHashnode } from './unwraps/hashnode.js'
+import { unwrapIcptrack } from './unwraps/icptrack.js'
+import { unwrapIdealoPartner } from './unwraps/idealoPartner.js'
+import { unwrapInstagramShim } from './unwraps/instagram.js'
+import { unwrapJianshuGo } from './unwraps/jianshuGo.js'
+import { unwrapJuejin } from './unwraps/juejin.js'
+import { unwrapLeverAnalytics } from './unwraps/leverAnalytics.js'
+import { unwrapLinksynergy } from './unwraps/linksynergy.js'
+import { unwrapMailchimp } from './unwraps/mailchimp.js'
+import { unwrapMailpanion } from './unwraps/mailpanion.js'
+import { unwrapMailpgn } from './unwraps/mailpgn.js'
+import { unwrapMailtrack } from './unwraps/mailtrack.js'
+import { unwrapMedium } from './unwraps/medium.js'
+import { unwrapMimecast } from './unwraps/mimecast.js'
+import { unwrapMozillaOutgoing } from './unwraps/mozillaOutgoing.js'
+import { unwrapNicoMs } from './unwraps/nicoMs.js'
+import { unwrapOutlookSafelinks } from './unwraps/outlookSafelinks.js'
+import { unwrapPartnerAds } from './unwraps/partnerAds.js'
+import { unwrapPocketUrl } from './unwraps/pocket.js'
+import { unwrapPostmark } from './unwraps/postmark.js'
+import { unwrapProofpointV1 } from './unwraps/proofpointV1.js'
+import { unwrapProofpointV2 } from './unwraps/proofpointV2.js'
+import { unwrapProofpointV3 } from './unwraps/proofpointV3.js'
+import { unwrapPxf } from './unwraps/pxf.js'
+import { unwrapRecruitics } from './unwraps/recruitics.js'
+import { unwrapRedditOut } from './unwraps/redditOut.js'
+import { unwrapRedirectingat } from './unwraps/redirectingat.js'
+import { unwrapSegmentfault } from './unwraps/segmentfault.js'
+import { unwrapShareasale } from './unwraps/shareasale.js'
+import { unwrapSjv } from './unwraps/sjv.js'
+import { unwrapSkimlinks } from './unwraps/skimlinks.js'
+import { unwrapSlack } from './unwraps/slack.js'
+import { unwrapSmartredirect } from './unwraps/smartredirect.js'
+import { unwrapSspai } from './unwraps/sspai.js'
+import { unwrapSteamLinkfilter } from './unwraps/steamLinkfilter.js'
+import { unwrapTradedoubler } from './unwraps/tradedoubler.js'
+import { unwrapTumblr } from './unwraps/tumblr.js'
+import { unwrapValuecommerce } from './unwraps/valuecommerce.js'
+import { unwrapViglink } from './unwraps/viglink.js'
+import { unwrapVkAway } from './unwraps/vkAway.js'
+import { unwrapYahooSearchUrl } from './unwraps/yahooSearch.js'
+import { unwrapYouTubeUrl } from './unwraps/youtube.js'
+import { unwrapZhihu } from './unwraps/zhihu.js'
 
 export const defaultStringTransforms: Array<StringTransform> = [
   stripOrphanedClosingTags,
@@ -163,87 +163,87 @@ export const defaultTrackingHosts = [
 
 export const defaultTrackingPathSegments = ['pixel', 'beacon', 'count']
 
-export const defaultRedirectExtractors: Array<RedirectExtractor> = [
+export const defaultUrlUnwrappers: Array<UrlUnwrapper> = [
   // Search engines.
-  extractBingRedirect,
-  extractDuckduckgoRedirect,
-  extractGoogleRedirect,
-  extractGoogleNewsRedirect,
-  extractGoogleNewsModern,
-  extractGoogleScholarRedirect,
-  extractGoogleAmpViewer,
-  extractYahooSearchRedirect,
-  extractYouTubeRedirect,
+  unwrapBingUrl,
+  unwrapDuckduckgoUrl,
+  unwrapGoogleUrl,
+  unwrapGoogleNewsUrl,
+  unwrapGoogleNewsModern,
+  unwrapGoogleScholarUrl,
+  unwrapGoogleAmpViewer,
+  unwrapYahooSearchUrl,
+  unwrapYouTubeUrl,
 
   // Email and security gateways.
-  extractOutlookSafelinks,
-  extractProofpointV1,
-  extractProofpointV2,
-  extractProofpointV3,
-  extractMimecast,
-  extractPostmark,
-  extractAceml,
-  extractIcptrack,
-  extractMailchimp,
-  extractMailtrack,
-  extractMailpanion,
-  extractMailpgn,
-  extractLeverAnalytics,
-  extractSlack,
+  unwrapOutlookSafelinks,
+  unwrapProofpointV1,
+  unwrapProofpointV2,
+  unwrapProofpointV3,
+  unwrapMimecast,
+  unwrapPostmark,
+  unwrapAceml,
+  unwrapIcptrack,
+  unwrapMailchimp,
+  unwrapMailtrack,
+  unwrapMailpanion,
+  unwrapMailpgn,
+  unwrapLeverAnalytics,
+  unwrapSlack,
 
   // Affiliate networks.
-  extractShareasale,
-  extractAwin,
-  extractLinksynergy,
-  extractSkimlinks,
-  extractRedirectingat,
-  extractTradedoubler,
-  extractCjNetwork,
-  extractValuecommerce,
-  extractViglink,
-  extractPxf,
-  extractSjv,
-  extractEbayRover,
-  extractAmazonAffiliate,
-  extractAdjust,
-  extractGateSc,
-  extractSmartredirect,
-  extractEffiliation,
-  extractPartnerAds,
-  extractIdealoPartner,
-  extractDigidip,
-  extractRecruitics,
-  extractGeoriot,
-  extractFirebaseDynamicLinks,
+  unwrapShareasale,
+  unwrapAwin,
+  unwrapLinksynergy,
+  unwrapSkimlinks,
+  unwrapRedirectingat,
+  unwrapTradedoubler,
+  unwrapCjNetwork,
+  unwrapValuecommerce,
+  unwrapViglink,
+  unwrapPxf,
+  unwrapSjv,
+  unwrapEbayRover,
+  unwrapAmazonAffiliate,
+  unwrapAdjust,
+  unwrapGateSc,
+  unwrapSmartredirect,
+  unwrapEffiliation,
+  unwrapPartnerAds,
+  unwrapIdealoPartner,
+  unwrapDigidip,
+  unwrapRecruitics,
+  unwrapGeoriot,
+  unwrapFirebaseDynamicLinks,
 
   // Social and community platforms.
-  extractFacebookShim,
-  extractInstagramShim,
-  extractPocketRedirect,
-  extractTumblr,
-  extractVkAway,
-  extractRedditOut,
-  extractDisqus,
-  extractSteamLinkfilter,
-  extractDouban,
-  extractNicoMs,
-  extractMedium,
-  extractFlipboard,
+  unwrapFacebookShim,
+  unwrapInstagramShim,
+  unwrapPocketUrl,
+  unwrapTumblr,
+  unwrapVkAway,
+  unwrapRedditOut,
+  unwrapDisqus,
+  unwrapSteamLinkfilter,
+  unwrapDouban,
+  unwrapNicoMs,
+  unwrapMedium,
+  unwrapFlipboard,
 
   // Developer and publishing platforms.
-  extractZhihu,
-  extractJuejin,
-  extractSspai,
-  extractJianshuGo,
-  extractSegmentfault,
-  extractGitee,
-  extractHashnode,
+  unwrapZhihu,
+  unwrapJuejin,
+  unwrapSspai,
+  unwrapJianshuGo,
+  unwrapSegmentfault,
+  unwrapGitee,
+  unwrapHashnode,
 
   // Cache and proxy services.
-  extractAmpCache,
-  extractEmbedly,
-  extractMozillaOutgoing,
+  unwrapAmpCache,
+  unwrapEmbedly,
+  unwrapMozillaOutgoing,
 
   // Legacy aggregators.
-  extractFeedsportal,
+  unwrapFeedsportal,
 ]

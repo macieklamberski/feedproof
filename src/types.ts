@@ -25,7 +25,7 @@ export type EmbedResolver = {
   extract: (element: Element) => EmbedResolverResult | undefined
 }
 
-export type RedirectExtractor = (url: URL) => string | undefined
+export type UrlUnwrapper = (url: URL) => string | undefined
 
 export type TransformContext = {
   baseUrl?: string
@@ -34,7 +34,7 @@ export type TransformContext = {
   lazySrcAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
-  redirectExtractors?: Array<RedirectExtractor>
+  urlUnwrappers?: Array<UrlUnwrapper>
   resolveUrlFn?: ResolveUrlFn
 }
 
@@ -49,7 +49,7 @@ export type TransformContentOptions = {
   lazySrcAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
-  redirectExtractors?: Array<RedirectExtractor>
+  urlUnwrappers?: Array<UrlUnwrapper>
   resolveUrlFn?: ResolveUrlFn
   stringTransforms?: Array<StringTransform>
   domTransforms?: Array<DomTransform>
