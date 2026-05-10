@@ -1,5 +1,14 @@
 import type { RedirectExtractor } from './types.js'
 
+export const isHttpUrl = (url: string): boolean => {
+  try {
+    const { protocol } = new URL(url)
+    return protocol === 'http:' || protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 // Priority: item link → site URL → feed URL. Item content is authored relative to the
 // item's page, so its link is the best base for resolving relative URLs in content.
 export const chooseBaseUrl = (
@@ -10,9 +19,8 @@ export const chooseBaseUrl = (
   const toHttpUrl = (url: string, base?: string): string | undefined => {
     try {
       const resolved = base ? new URL(url, base).href : url
-      const { protocol } = new URL(resolved)
 
-      if (protocol === 'http:' || protocol === 'https:') {
+      if (isHttpUrl(resolved)) {
         return resolved
       }
     } catch {}
