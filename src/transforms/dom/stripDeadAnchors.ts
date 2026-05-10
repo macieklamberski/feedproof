@@ -1,12 +1,12 @@
 import type { DomTransform } from '../../types.js'
 
+const javascriptSchemeRegex = /^javascript:/i
+
 // Some feeds carry anchors whose href has no navigation target — empty,
 // fragment-only, or javascript: pseudo-protocol left over from interactive
 // widgets. Once the surrounding script context is gone, the link looks
 // clickable but does nothing. This unwraps those anchors so their text
 // stays visible and any URLs inside become eligible for `linkifyUrls`.
-const javascriptSchemeRegex = /^javascript:/i
-
 export const stripDeadAnchors: DomTransform = () => {
   return (document) => {
     const anchors = document.querySelectorAll('a')
