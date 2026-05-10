@@ -5,10 +5,12 @@ import { extractAdjust } from './redirects/adjust.js'
 import { extractAmazonAffiliate } from './redirects/amazonAffiliate.js'
 import { extractAmpCache } from './redirects/ampCache.js'
 import { extractAwin } from './redirects/awin.js'
+import { extractBingRedirect } from './redirects/bing.js'
 import { extractCjNetwork } from './redirects/cjNetwork.js'
 import { extractDigidip } from './redirects/digidip.js'
 import { extractDisqus } from './redirects/disqus.js'
 import { extractDouban } from './redirects/douban.js'
+import { extractDuckduckgoRedirect } from './redirects/duckduckgo.js'
 import { extractEbayRover } from './redirects/ebayRover.js'
 import { extractEffiliation } from './redirects/effiliation.js'
 import { extractEmbedly } from './redirects/embedly.js'
@@ -20,11 +22,14 @@ import { extractGateSc } from './redirects/gateSc.js'
 import { extractGeoriot } from './redirects/georiot.js'
 import { extractGitee } from './redirects/gitee.js'
 import { extractGoogleRedirect } from './redirects/google.js'
+import { extractGoogleAmpViewer } from './redirects/googleAmpViewer.js'
 import { extractGoogleNewsRedirect } from './redirects/googleNews.js'
 import { extractGoogleNewsModern } from './redirects/googleNewsModern.js'
+import { extractGoogleScholarRedirect } from './redirects/googleScholar.js'
 import { extractHashnode } from './redirects/hashnode.js'
 import { extractIcptrack } from './redirects/icptrack.js'
 import { extractIdealoPartner } from './redirects/idealoPartner.js'
+import { extractInstagramShim } from './redirects/instagram.js'
 import { extractJianshuGo } from './redirects/jianshuGo.js'
 import { extractJuejin } from './redirects/juejin.js'
 import { extractLeverAnalytics } from './redirects/leverAnalytics.js'
@@ -61,6 +66,7 @@ import { extractTumblr } from './redirects/tumblr.js'
 import { extractValuecommerce } from './redirects/valuecommerce.js'
 import { extractViglink } from './redirects/viglink.js'
 import { extractVkAway } from './redirects/vkAway.js'
+import { extractYahooSearchRedirect } from './redirects/yahooSearch.js'
 import { extractYouTubeRedirect } from './redirects/youtubeRedirect.js'
 import { extractZhihu } from './redirects/zhihu.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
@@ -159,9 +165,14 @@ export const defaultTrackingPathSegments = ['pixel', 'beacon', 'count']
 
 export const defaultRedirectExtractors: Array<RedirectExtractor> = [
   // Search engines.
+  extractBingRedirect,
+  extractDuckduckgoRedirect,
   extractGoogleRedirect,
   extractGoogleNewsRedirect,
   extractGoogleNewsModern,
+  extractGoogleScholarRedirect,
+  extractGoogleAmpViewer,
+  extractYahooSearchRedirect,
   extractYouTubeRedirect,
 
   // Email and security gateways.
@@ -207,6 +218,7 @@ export const defaultRedirectExtractors: Array<RedirectExtractor> = [
 
   // Social and community platforms.
   extractFacebookShim,
+  extractInstagramShim,
   extractPocketRedirect,
   extractTumblr,
   extractVkAway,
