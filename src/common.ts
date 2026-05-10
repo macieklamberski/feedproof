@@ -1,5 +1,6 @@
 import { parseHTML } from 'linkedom'
 import type { EmbedResolverResult } from './types.js'
+import { isHttpUrl } from './utils.js'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
@@ -139,17 +140,25 @@ export const createEmbedPlaceholder = (
   const element = document.createElement('div')
 
   element.setAttribute('data-embed', metadata?.type ?? type)
-  element.setAttribute('data-embed-src', metadata?.src ?? src)
+
+  const candidateSrc = metadata?.src ?? src
+  const safeSrc = isHttpUrl(candidateSrc) ? candidateSrc : undefined
+
+  if (safeSrc) {
+    element.setAttribute('data-embed-src', safeSrc)
+  }
 
   if (metadata?.provider) {
     element.setAttribute('data-embed-provider', metadata.provider)
   }
 
-  if (metadata?.url) {
-    element.setAttribute('data-embed-url', metadata.url)
+  const safeUrl = metadata?.url && isHttpUrl(metadata.url) ? metadata.url : undefined
+
+  if (safeUrl) {
+    element.setAttribute('data-embed-url', safeUrl)
   }
 
-  if (metadata?.thumbnail) {
+  if (metadata?.thumbnail && isHttpUrl(metadata.thumbnail)) {
     element.setAttribute('data-embed-thumbnail', metadata.thumbnail)
   }
 
@@ -169,11 +178,14 @@ export const createEmbedPlaceholder = (
     element.setAttribute('data-embed-text', metadata.text)
   }
 
-  const fallbackUrl = metadata?.url ?? metadata?.src ?? src
-  const link = document.createElement('a')
-  link.setAttribute('href', fallbackUrl)
-  link.textContent = fallbackUrl
-  element.appendChild(link)
+  const fallbackUrl = safeUrl ?? safeSrc
+
+  if (fallbackUrl) {
+    const link = document.createElement('a')
+    link.setAttribute('href', fallbackUrl)
+    link.textContent = fallbackUrl
+    element.appendChild(link)
+  }
 
   return element
 }
