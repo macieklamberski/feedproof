@@ -180,6 +180,44 @@ describe('createEmbedPlaceholder fallback link', () => {
     expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
   })
 
+  it('should keep data-embed-thumbnail when thumbnail is a data:image png url', () => {
+    const document = parseFragment('')
+    const thumbnail = 'data:image/png;base64,iVBORw0KGgo='
+    const element = createEmbedPlaceholder(document, 'https://passed-src.example', 'iframe', {
+      thumbnail,
+    })
+
+    expect(element.getAttribute('data-embed-thumbnail')).toBe(thumbnail)
+  })
+
+  it('should keep data-embed-thumbnail when thumbnail is a data:image jpeg url', () => {
+    const document = parseFragment('')
+    const thumbnail = 'data:image/jpeg;base64,/9j/4AAQ='
+    const element = createEmbedPlaceholder(document, 'https://passed-src.example', 'iframe', {
+      thumbnail,
+    })
+
+    expect(element.getAttribute('data-embed-thumbnail')).toBe(thumbnail)
+  })
+
+  it('should drop data-embed-thumbnail when thumbnail is a data:image svg url', () => {
+    const document = parseFragment('')
+    const element = createEmbedPlaceholder(document, 'https://passed-src.example', 'iframe', {
+      thumbnail: 'data:image/svg+xml;utf8,<svg/>',
+    })
+
+    expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
+  })
+
+  it('should drop data-embed-thumbnail when thumbnail is a data:text/html url', () => {
+    const document = parseFragment('')
+    const element = createEmbedPlaceholder(document, 'https://passed-src.example', 'iframe', {
+      thumbnail: 'data:text/html,<script>1</script>',
+    })
+
+    expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
+  })
+
   it('should preserve provider, dimensions, author, text when src is unsafe', () => {
     const document = parseFragment('')
     const element = createEmbedPlaceholder(document, 'javascript:alert(1)', 'iframe', {
