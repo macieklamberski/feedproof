@@ -1,6 +1,7 @@
 import type { RedirectExtractor } from '../types.js'
 
 const v3PathRegex = /^\/v3\/__(.+)__;([^!]*)!/
+
 const v3HostSet = new Set(['urldefense.com', 'urldefense.proofpoint.com', 'urldefense.us'])
 
 // `**X` runs replace a fixed byte count: A=2, B=3, ... `_`=65.
