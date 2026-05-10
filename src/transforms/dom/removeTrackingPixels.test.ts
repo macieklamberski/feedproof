@@ -256,6 +256,34 @@ describe('removeTrackingPixels', () => {
       expect(result).not.toContain('stat-c.medium.com')
     })
 
+    it('should remove images from taboola.com', () => {
+      const html = '<img src="https://trc.taboola.com/123/log/3/click?article=abc">'
+      const result = transformHtml(html, removeTrackingPixels(context))
+
+      expect(result).not.toContain('taboola.com')
+    })
+
+    it('should remove images from scorecardresearch.com', () => {
+      const html = '<img src="https://b.scorecardresearch.com/p?c1=2&c2=12345">'
+      const result = transformHtml(html, removeTrackingPixels(context))
+
+      expect(result).not.toContain('scorecardresearch.com')
+    })
+
+    it('should remove images from googlesyndication.com', () => {
+      const html = '<img src="https://pagead2.googlesyndication.com/pagead/gen_204?id=trc">'
+      const result = transformHtml(html, removeTrackingPixels(context))
+
+      expect(result).not.toContain('googlesyndication.com')
+    })
+
+    it('should remove images from sentry.io beacons', () => {
+      const html = '<img src="https://o123.ingest.sentry.io/api/0/envelope/?sentry_key=abc">'
+      const result = transformHtml(html, removeTrackingPixels(context))
+
+      expect(result).not.toContain('sentry.io')
+    })
+
     it('should not remove images from look-alike hosts', () => {
       const html = '<img src="https://notfeedsportal.com/photo.jpg">'
       const result = transformHtml(html, removeTrackingPixels(context))

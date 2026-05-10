@@ -136,6 +136,16 @@ export const defaultTrackingHosts = [
   'beehiiv.com', // Newsletter platform.
   'email.medium.com', // Medium newsletter pixels.
   'stat-c.medium.com', // Medium reader-stat pixels.
+  'googlesyndication.com', // Google AdSense ad pixels.
+  'googletagmanager.com', // Google Tag Manager.
+  'amazon-adsystem.com', // Amazon ad serving pixels.
+  'taboola.com', // Content-recommendation widget pixels.
+  'outbrain.com', // Content-recommendation widget pixels.
+  'scorecardresearch.com', // Comscore audience-measurement pixels.
+  'quantserve.com', // Quantcast measurement pixels.
+  'chartbeat.com', // Chartbeat analytics pixels.
+  'moatads.com', // Oracle Moat viewability pixels.
+  'sentry.io', // Sentry error-monitoring beacons.
 ]
 
 export const defaultTrackingPathSegments = ['pixel', 'beacon', 'count']
