@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../../common.js'
-import { defaultLazySrcAttributes } from '../../defaults.js'
+import { defaultLazySrcAttributes, defaultLazySrcsetAttributes } from '../../defaults.js'
 import type { TransformContext } from '../../types.js'
 import { fixLazyImages } from './fixLazyImages.js'
 
-const context: TransformContext = { lazySrcAttributes: defaultLazySrcAttributes }
+const context: TransformContext = {
+  lazySrcAttributes: defaultLazySrcAttributes,
+  lazySrcsetAttributes: defaultLazySrcsetAttributes,
+}
 
 describe('fixLazyImages', () => {
   it('should move data-src to src', () => {
@@ -134,6 +137,14 @@ describe('fixLazyImages', () => {
 
     expect(result).toContain('src="photo.jpg"')
     expect(result).not.toContain('data-runner-src')
+  })
+
+  it('should move nitro-lazy-src to src', () => {
+    const html = '<img nitro-lazy-src="photo.jpg">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="photo.jpg"')
+    expect(result).not.toContain('nitro-lazy-src')
   })
 
   it('should move data-canonical-src to src', () => {
@@ -291,6 +302,41 @@ describe('fixLazyImages', () => {
     expect(result).toContain('<p>No images here</p>')
   })
 
+  describe('lazy srcset attributes', () => {
+    it('should move data-lazy-srcset to srcset', () => {
+      const html = '<img data-lazy-srcset="small.jpg 300w, large.jpg 600w">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).toContain('srcset="small.jpg 300w, large.jpg 600w"')
+      expect(result).not.toContain('data-lazy-srcset')
+    })
+
+    it('should move nitro-lazy-srcset to srcset', () => {
+      const html = '<img nitro-lazy-srcset="small.jpg 300w, large.jpg 600w">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).toContain('srcset="small.jpg 300w, large.jpg 600w"')
+      expect(result).not.toContain('nitro-lazy-srcset')
+    })
+
+    it('should move data-flickity-lazyload-srcset to srcset', () => {
+      const html = '<img data-flickity-lazyload-srcset="small.jpg 300w, large.jpg 600w">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).toContain('srcset="small.jpg 300w, large.jpg 600w"')
+      expect(result).not.toContain('data-flickity-lazyload-srcset')
+    })
+
+    it('should prefer data-srcset over data-lazy-srcset when both present', () => {
+      const html = '<img data-srcset="primary.jpg 300w" data-lazy-srcset="fallback.jpg 300w">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).toContain('srcset="primary.jpg 300w"')
+      expect(result).not.toContain('data-srcset')
+      expect(result).not.toContain('data-lazy-srcset')
+    })
+  })
+
   describe('overrides', () => {
     it('should ignore default lazySrcAttributes when override is provided', () => {
       const customContext: TransformContext = { lazySrcAttributes: ['data-img'] }
@@ -308,6 +354,23 @@ describe('fixLazyImages', () => {
 
       expect(result).toContain('src="photo.jpg"')
       expect(result).not.toContain('data-img')
+    })
+
+    it('should ignore default lazySrcsetAttributes when override is provided', () => {
+      const customContext: TransformContext = { lazySrcsetAttributes: ['data-custom-srcset'] }
+      const html = '<img data-srcset="small.jpg 300w, large.jpg 600w">'
+      const result = transformHtml(html, fixLazyImages(customContext))
+
+      expect(result).toBe(html)
+    })
+
+    it('should use the provided lazySrcsetAttributes', () => {
+      const customContext: TransformContext = { lazySrcsetAttributes: ['data-custom-srcset'] }
+      const html = '<img data-custom-srcset="small.jpg 300w, large.jpg 600w">'
+      const result = transformHtml(html, fixLazyImages(customContext))
+
+      expect(result).toContain('srcset="small.jpg 300w, large.jpg 600w"')
+      expect(result).not.toContain('data-custom-srcset')
     })
   })
 })

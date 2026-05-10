@@ -32,6 +32,7 @@ export type TransformContext = {
   enclosures?: Array<Enclosure>
   embedResolvers?: Array<EmbedResolver>
   lazySrcAttributes?: Array<string>
+  lazySrcsetAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
   urlUnwrappers?: Array<UrlUnwrapper>
@@ -47,6 +48,7 @@ export type TransformContentOptions = {
   enclosures?: Array<Enclosure>
   embedResolvers?: Array<EmbedResolver>
   lazySrcAttributes?: Array<string>
+  lazySrcsetAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
   urlUnwrappers?: Array<UrlUnwrapper>

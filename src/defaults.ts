@@ -147,8 +147,16 @@ export const defaultLazySrcAttributes = [
   'data-image-src', // Legacy Atlassian-style CMS — 4k hits.
   'data-canonical-src', // YouTube / retina-aware renderers — 2k hits, <0.1% of feeds.
   'data-img-url', // Amazon affiliate widgets / generic — 0.9k hits, <0.1% of feeds.
+  'nitro-lazy-src', // NitroPack — 222 hits, <0.01% of feeds. Non-`data-*` prefix.
   'data-orig', // Generic original-source variant — 27 hits, <0.01% of feeds.
   'data-runner-src', // Amazon affiliate / generic — 42 hits, <0.01% of feeds.
+]
+
+export const defaultLazySrcsetAttributes = [
+  'data-srcset', // lazysizes / vanilla-lazyload / lozad / bLazy / generic — 119k hits.
+  'data-lazy-srcset', // Jetpack Lazy Images / WP Rocket / BJ Lazy Load — 5k hits.
+  'nitro-lazy-srcset', // NitroPack — 109 hits, <0.01% of feeds. Non-`data-*` prefix.
+  'data-flickity-lazyload-srcset', // Flickity carousel — 63 hits, <0.01% of feeds.
 ]
 
 export const defaultTrackingHosts = [
