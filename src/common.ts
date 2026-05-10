@@ -2,7 +2,7 @@ import { parseHTML } from 'linkedom'
 import type { EmbedResolverResult } from './types.js'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
-export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3 } as const
+export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
 
 const base64SrcRegex = /((?:src|srcset|poster)=["'])data:[^"']*;base64,[^"']*(["'])/g
 
@@ -94,12 +94,20 @@ export const blockElements = new Set([
   'ul',
 ])
 
-export const isSkippable = (node: Node): boolean => {
-  const isWhitespaceText = node.nodeType === Node.TEXT_NODE && !(node.textContent ?? '').trim()
-  const isBr =
-    node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName.toLowerCase() === 'br'
+export const isWhitespaceText = (node: Node): boolean => {
+  return node.nodeType === Node.TEXT_NODE && !(node.textContent ?? '').trim()
+}
 
-  return isWhitespaceText || isBr
+export const isBr = (node: Node): boolean => {
+  return node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName.toLowerCase() === 'br'
+}
+
+export const isComment = (node: Node): boolean => {
+  return node.nodeType === Node.COMMENT_NODE
+}
+
+export const isSkippable = (node: Node): boolean => {
+  return isWhitespaceText(node) || isBr(node) || isComment(node)
 }
 
 export const isBlockElement = (node: Node): boolean => {
@@ -145,16 +153,20 @@ export const createEmbedPlaceholder = (
     element.setAttribute('data-embed-thumbnail', metadata.thumbnail)
   }
 
-  if (metadata?.autoload) {
-    element.setAttribute('data-embed-autoload', '')
-  }
-
   if (metadata?.width) {
     element.setAttribute('data-embed-width', String(metadata.width))
   }
 
   if (metadata?.height) {
     element.setAttribute('data-embed-height', String(metadata.height))
+  }
+
+  if (metadata?.author) {
+    element.setAttribute('data-embed-author', metadata.author)
+  }
+
+  if (metadata?.text) {
+    element.setAttribute('data-embed-text', metadata.text)
   }
 
   const fallbackUrl = metadata?.url ?? metadata?.src ?? src

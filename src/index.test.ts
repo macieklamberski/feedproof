@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { defaultDomTransforms, defaultStringTransforms } from './defaults.js'
 import { transformContent } from './index.js'
 
 const startsWithDiv = /^<div>/
@@ -37,10 +38,10 @@ describe('transformContent', () => {
     expect(result).not.toContain('pixel.gif')
   })
 
-  it('should allow disabling specific transforms', () => {
+  it('should allow overriding the dom transforms array', () => {
     const html = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
     const result = transformContent(html, {
-      transforms: { stripTrackingParams: false },
+      domTransforms: defaultDomTransforms.filter((t) => t.name !== 'stripTrackingParams'),
     })
 
     expect(result).toContain('utm_source')
@@ -68,15 +69,20 @@ describe('transformContent', () => {
     expect(result).toContain('youtube-nocookie.com')
   })
 
-  it('should allow custom resolveEmbed', () => {
+  it('should allow custom embedResolvers', () => {
     const html = '<iframe src="https://custom-player.example.com/video/123"></iframe>'
     const result = transformContent(html, {
-      resolveEmbed: (url) => {
-        if (url.includes('custom-player.example.com')) {
-          return { provider: 'custom', src: url }
-        }
-      },
-      embedDomains: ['custom-player.example.com'],
+      embedResolvers: [
+        {
+          selector: 'iframe[src]',
+          extract: (element) => {
+            const src = element.getAttribute('src') ?? ''
+            if (src.includes('custom-player.example.com')) {
+              return { provider: 'custom', src, type: 'iframe' }
+            }
+          },
+        },
+      ],
     })
 
     expect(result).toContain('data-embed-provider="custom"')
@@ -90,5 +96,29 @@ describe('transformContent', () => {
 
     expect(result).toContain('data-embed="audio"')
     expect(result).toContain('audio.mp3')
+  })
+
+  it('should remove paragraphs left empty after boundary br stripping', () => {
+    const html = '<p>Hello</p><p><br></p><p>World</p>'
+    const result = transformContent(html)
+
+    expect(result).toBe('<p>Hello</p><p>World</p>')
+  })
+
+  it('should preserve empty paragraphs when stripEmptyTags is removed from string phases', () => {
+    const html = '<p>Hello</p><p><br></p><p>World</p>'
+    const result = transformContent(html, {
+      stringTransforms: defaultStringTransforms.filter((t) => t.name !== 'stripEmptyTags'),
+      finalStringTransforms: [],
+    })
+
+    expect(result).toBe('<p>Hello</p><p></p><p>World</p>')
+  })
+
+  it('should preserve comments inside pre blocks through full pipeline', () => {
+    const html = '<pre>before <!-- preserved --> after</pre>'
+    const result = transformContent(html)
+
+    expect(result).toContain('<!-- preserved -->')
   })
 })
