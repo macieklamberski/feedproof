@@ -21,4 +21,10 @@ describe('extractAdjust', () => {
 
     expect(extractAdjust(url)).toBeUndefined()
   })
+
+  it('should return null when redirect is a custom-scheme URI', () => {
+    const url = new URL('https://app.adjust.com/abc123?redirect=myapp%3A%2F%2Fopen')
+
+    expect(extractAdjust(url)).toBeUndefined()
+  })
 })
