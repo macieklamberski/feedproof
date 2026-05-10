@@ -32,12 +32,12 @@ import { unwrapAdjust } from './unwraps/adjust.js'
 import { unwrapAmazonAffiliate } from './unwraps/amazonAffiliate.js'
 import { unwrapAmpCache } from './unwraps/ampCache.js'
 import { unwrapAwin } from './unwraps/awin.js'
-import { unwrapBingUrl } from './unwraps/bing.js'
+import { unwrapBing } from './unwraps/bing.js'
 import { unwrapCjNetwork } from './unwraps/cjNetwork.js'
 import { unwrapDigidip } from './unwraps/digidip.js'
 import { unwrapDisqus } from './unwraps/disqus.js'
 import { unwrapDouban } from './unwraps/douban.js'
-import { unwrapDuckduckgoUrl } from './unwraps/duckduckgo.js'
+import { unwrapDuckduckgo } from './unwraps/duckduckgo.js'
 import { unwrapEbayRover } from './unwraps/ebayRover.js'
 import { unwrapEffiliation } from './unwraps/effiliation.js'
 import { unwrapEmbedly } from './unwraps/embedly.js'
@@ -48,11 +48,11 @@ import { unwrapFlipboard } from './unwraps/flipboard.js'
 import { unwrapGateSc } from './unwraps/gateSc.js'
 import { unwrapGeoriot } from './unwraps/georiot.js'
 import { unwrapGitee } from './unwraps/gitee.js'
-import { unwrapGoogleUrl } from './unwraps/google.js'
+import { unwrapGoogle } from './unwraps/google.js'
 import { unwrapGoogleAmpViewer } from './unwraps/googleAmpViewer.js'
-import { unwrapGoogleNewsUrl } from './unwraps/googleNews.js'
+import { unwrapGoogleNews } from './unwraps/googleNews.js'
 import { unwrapGoogleNewsModern } from './unwraps/googleNewsModern.js'
-import { unwrapGoogleScholarUrl } from './unwraps/googleScholar.js'
+import { unwrapGoogleScholar } from './unwraps/googleScholar.js'
 import { unwrapHashnode } from './unwraps/hashnode.js'
 import { unwrapIcptrack } from './unwraps/icptrack.js'
 import { unwrapIdealoPartner } from './unwraps/idealoPartner.js'
@@ -71,7 +71,7 @@ import { unwrapMozillaOutgoing } from './unwraps/mozillaOutgoing.js'
 import { unwrapNicoMs } from './unwraps/nicoMs.js'
 import { unwrapOutlookSafelinks } from './unwraps/outlookSafelinks.js'
 import { unwrapPartnerAds } from './unwraps/partnerAds.js'
-import { unwrapPocketUrl } from './unwraps/pocket.js'
+import { unwrapPocket } from './unwraps/pocket.js'
 import { unwrapPostmark } from './unwraps/postmark.js'
 import { unwrapProofpointV1 } from './unwraps/proofpointV1.js'
 import { unwrapProofpointV2 } from './unwraps/proofpointV2.js'
@@ -93,8 +93,8 @@ import { unwrapTumblr } from './unwraps/tumblr.js'
 import { unwrapValuecommerce } from './unwraps/valuecommerce.js'
 import { unwrapViglink } from './unwraps/viglink.js'
 import { unwrapVkAway } from './unwraps/vkAway.js'
-import { unwrapYahooSearchUrl } from './unwraps/yahooSearch.js'
-import { unwrapYouTubeUrl } from './unwraps/youtube.js'
+import { unwrapYahooSearch } from './unwraps/yahooSearch.js'
+import { unwrapYouTube } from './unwraps/youtube.js'
 import { unwrapZhihu } from './unwraps/zhihu.js'
 
 export const defaultStringTransforms: Array<StringTransform> = [
@@ -165,15 +165,15 @@ export const defaultTrackingPathSegments = ['pixel', 'beacon', 'count']
 
 export const defaultUrlUnwrappers: Array<UrlUnwrapper> = [
   // Search engines.
-  unwrapBingUrl,
-  unwrapDuckduckgoUrl,
-  unwrapGoogleUrl,
-  unwrapGoogleNewsUrl,
+  unwrapBing,
+  unwrapDuckduckgo,
+  unwrapGoogle,
+  unwrapGoogleNews,
   unwrapGoogleNewsModern,
-  unwrapGoogleScholarUrl,
+  unwrapGoogleScholar,
   unwrapGoogleAmpViewer,
-  unwrapYahooSearchUrl,
-  unwrapYouTubeUrl,
+  unwrapYahooSearch,
+  unwrapYouTube,
 
   // Email and security gateways.
   unwrapOutlookSafelinks,
@@ -219,7 +219,7 @@ export const defaultUrlUnwrappers: Array<UrlUnwrapper> = [
   // Social and community platforms.
   unwrapFacebookShim,
   unwrapInstagramShim,
-  unwrapPocketUrl,
+  unwrapPocket,
   unwrapTumblr,
   unwrapVkAway,
   unwrapRedditOut,

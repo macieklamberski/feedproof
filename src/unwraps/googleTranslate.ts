@@ -6,7 +6,7 @@ const googleTranslateHostRegex = /^translate\.google\.(?:com|[a-z]{2,3}(?:\.[a-z
 // Not included in defaultUrlUnwrappers: translate.google.com renders the
 // target translated, so unwrapping discards the translation the user wanted.
 // Opt in by passing a custom urlUnwrappers array.
-export const unwrapGoogleTranslateUrl = createParamExtractor({
+export const unwrapGoogleTranslate = createParamExtractor({
   hosts: googleTranslateHostRegex,
   path: '/translate',
   params: ['u'],

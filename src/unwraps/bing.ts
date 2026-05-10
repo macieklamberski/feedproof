@@ -6,7 +6,7 @@ const bingPrefixRegex = /^a\d/
 // Bing search-result redirect (www.bing.com/ck/a?u=a1<base64url>). The `u`
 // parameter is a base64url-encoded URL prefixed by a two-byte version marker
 // (`a1`, `a2`, ...).
-export const unwrapBingUrl: UrlUnwrapper = (url) => {
+export const unwrapBing: UrlUnwrapper = (url) => {
   if (!bingHostRegex.test(url.hostname) || url.pathname !== '/ck/a') {
     return
   }
