@@ -132,6 +132,65 @@ describe('createEmbedPlaceholder fallback link', () => {
   })
 })
 
+describe('createEmbedPlaceholder thumbnail safety', () => {
+  it('should keep http thumbnail', () => {
+    const document = parseFragment('')
+    const thumbnail = 'https://cdn.example/thumb.jpg'
+    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
+      thumbnail,
+    })
+
+    expect(element.getAttribute('data-embed-thumbnail')).toBe(thumbnail)
+  })
+
+  it('should keep data:image/png thumbnail', () => {
+    const document = parseFragment('')
+    const thumbnail = 'data:image/png;base64,iVBORw0KGgo='
+    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
+      thumbnail,
+    })
+
+    expect(element.getAttribute('data-embed-thumbnail')).toBe(thumbnail)
+  })
+
+  it('should keep data:image/jpeg thumbnail', () => {
+    const document = parseFragment('')
+    const thumbnail = 'data:image/jpeg;base64,/9j/4AAQ='
+    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
+      thumbnail,
+    })
+
+    expect(element.getAttribute('data-embed-thumbnail')).toBe(thumbnail)
+  })
+
+  it('should drop javascript: thumbnail', () => {
+    const document = parseFragment('')
+    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
+      thumbnail: 'javascript:alert(1)',
+    })
+
+    expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
+  })
+
+  it('should drop data:image/svg+xml thumbnail', () => {
+    const document = parseFragment('')
+    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
+      thumbnail: 'data:image/svg+xml;utf8,<svg/>',
+    })
+
+    expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
+  })
+
+  it('should drop data:text/html thumbnail', () => {
+    const document = parseFragment('')
+    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
+      thumbnail: 'data:text/html,<script>1</script>',
+    })
+
+    expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
+  })
+})
+
 describe('applyDomTransforms base64 stripping', () => {
   it('should preserve small base64 images through dom transforms', () => {
     const value = '<p>Text</p><img src="data:image/png;base64,iVBORw0KGgo=">'

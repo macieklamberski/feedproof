@@ -1,9 +1,11 @@
 import { createEmbedPlaceholder } from '../../common.js'
+import { defaultResolveUrlFn } from '../../defaults.js'
 import type { DomTransform } from '../../types.js'
-import { coerceNumber, isHttpUrl } from '../../utils.js'
+import { coerceNumber } from '../../utils.js'
 
 export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
   const resolvers = context.embedResolvers ?? []
+  const resolveUrlFn = context.resolveUrlFn ?? defaultResolveUrlFn
 
   return (document) => {
     for (const resolver of resolvers) {
@@ -13,6 +15,14 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
         const metadata = resolver.extract(element)
 
         if (!metadata) {
+          continue
+        }
+
+        if (!resolveUrlFn(metadata.src, context.baseUrl)) {
+          continue
+        }
+
+        if (metadata.url && !resolveUrlFn(metadata.url, context.baseUrl)) {
           continue
         }
 
@@ -33,7 +43,7 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
     for (const iframe of document.querySelectorAll('iframe[src]')) {
       const src = iframe.getAttribute('src') ?? ''
 
-      if (!isHttpUrl(src)) {
+      if (!resolveUrlFn(src, context.baseUrl)) {
         continue
       }
 

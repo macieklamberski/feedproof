@@ -196,4 +196,56 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).toContain('data-embed="iframe"')
     expect(result).not.toContain('data-embed-provider')
   })
+
+  it('should skip resolver-claimed iframe when metadata.src is unsafe', () => {
+    const unsafeResolver: EmbedResolver = {
+      selector: 'iframe[src]',
+      extract: () => ({
+        provider: 'evil',
+        src: 'javascript:alert(1)',
+        type: 'iframe',
+      }),
+    }
+    const value = '<iframe src="https://example.com/x"></iframe>'
+    const result = transformHtml(
+      value,
+      replaceEmbedsWithPlaceholders({ embedResolvers: [unsafeResolver] }),
+    )
+
+    expect(result).not.toContain('data-embed-provider="evil"')
+    expect(result).not.toContain('javascript:')
+  })
+
+  it('should skip resolver-claimed iframe when metadata.url is unsafe', () => {
+    const unsafeResolver: EmbedResolver = {
+      selector: 'iframe[src]',
+      extract: () => ({
+        provider: 'evil',
+        src: 'https://example.com/x',
+        url: 'javascript:alert(1)',
+        type: 'iframe',
+      }),
+    }
+    const value = '<iframe src="https://example.com/x"></iframe>'
+    const result = transformHtml(
+      value,
+      replaceEmbedsWithPlaceholders({ embedResolvers: [unsafeResolver] }),
+    )
+
+    expect(result).not.toContain('data-embed-provider="evil"')
+    expect(result).not.toContain('javascript:')
+  })
+
+  it('should let consumer override resolveUrlFn to allow non-default schemes', () => {
+    const value = '<iframe src="custom-scheme://payload"></iframe>'
+    const result = transformHtml(
+      value,
+      replaceEmbedsWithPlaceholders({
+        embedResolvers: [],
+        resolveUrlFn: (url) => url,
+      }),
+    )
+
+    expect(result).toContain('data-embed-src="custom-scheme://payload"')
+  })
 })

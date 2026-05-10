@@ -1,3 +1,4 @@
+import { resolveUrl } from 'feedcanon'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { extractAceml } from './redirects/aceml.js'
 import { extractAdjust } from './redirects/adjust.js'
@@ -87,7 +88,13 @@ import { paragraphizePlainText } from './transforms/string/paragraphizePlainText
 import { stripEmptyTags } from './transforms/string/stripEmptyTags.js'
 import { stripOrphanedClosingTags } from './transforms/string/stripOrphanedClosingTags.js'
 import { unwrapWrappers } from './transforms/string/unwrapWrappers.js'
-import type { DomTransform, EmbedResolver, RedirectExtractor, StringTransform } from './types.js'
+import type {
+  DomTransform,
+  EmbedResolver,
+  RedirectExtractor,
+  ResolveUrlFn,
+  StringTransform,
+} from './types.js'
 
 export const defaultStringTransforms: Array<StringTransform> = [
   stripOrphanedClosingTags,
@@ -118,6 +125,8 @@ export const defaultDomTransforms: Array<DomTransform> = [
 export const defaultFinalStringTransforms: Array<StringTransform> = [stripEmptyTags]
 
 export const defaultEmbedResolvers: Array<EmbedResolver> = [youtubeEmbedResolver]
+
+export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
 
 export const defaultLazySrcAttributes = ['data-src', 'data-original', 'data-lazy-src', 'data-url']
 

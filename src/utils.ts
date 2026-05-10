@@ -1,13 +1,5 @@
+import { resolveUrl } from 'feedcanon'
 import type { RedirectExtractor } from './types.js'
-
-export const isHttpUrl = (url: string): boolean => {
-  try {
-    const { protocol } = new URL(url)
-    return protocol === 'http:' || protocol === 'https:'
-  } catch {
-    return false
-  }
-}
 
 // Priority: item link → site URL → feed URL. Item content is authored relative to the
 // item's page, so its link is the best base for resolving relative URLs in content.
@@ -16,29 +8,19 @@ export const chooseBaseUrl = (
   siteUrl: string | null | undefined,
   feedUrl: string,
 ): string | undefined => {
-  const toHttpUrl = (url: string, base?: string): string | undefined => {
-    try {
-      const resolved = base ? new URL(url, base).href : url
-
-      if (isHttpUrl(resolved)) {
-        return resolved
-      }
-    } catch {}
-  }
-
-  if (itemUrl && toHttpUrl(itemUrl)) {
+  if (itemUrl && resolveUrl(itemUrl)) {
     return itemUrl
   }
 
   if (siteUrl) {
-    const resolved = toHttpUrl(siteUrl, feedUrl)
+    const resolved = resolveUrl(siteUrl, feedUrl)
 
     if (resolved) {
       return resolved
     }
   }
 
-  return toHttpUrl(feedUrl)
+  return resolveUrl(feedUrl)
 }
 
 export const coerceNumber = (value: string | null): number | undefined => {
