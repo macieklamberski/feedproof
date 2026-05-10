@@ -96,12 +96,31 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).toContain('data-embed-text="Hello world"')
   })
 
-  it('should leave iframe untouched when no handler claims it', () => {
+  it('should wrap unknown iframe as generic placeholder without provider', () => {
     const value = '<iframe src="https://unknown-site.com/123"></iframe>'
     const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
-    expect(result).toContain('<iframe')
-    expect(result).not.toContain('data-embed')
+    expect(result).not.toContain('<iframe')
+    expect(result).toContain('data-embed="iframe"')
+    expect(result).toContain('data-embed-src="https://unknown-site.com/123"')
+    expect(result).not.toContain('data-embed-provider')
+  })
+
+  it('should preserve dimensions when wrapping unknown iframe', () => {
+    const value = '<iframe src="https://unknown-site.com/123" width="640" height="360"></iframe>'
+    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+
+    expect(result).toContain('data-embed-width="640"')
+    expect(result).toContain('data-embed-height="360"')
+  })
+
+  it('should include fallback link when wrapping unknown iframe', () => {
+    const value = '<iframe src="https://unknown-site.com/123"></iframe>'
+    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+
+    expect(result).toContain(
+      '<a href="https://unknown-site.com/123">https://unknown-site.com/123</a>',
+    )
   })
 
   it('should skip iframe without src attribute', () => {
@@ -109,14 +128,16 @@ describe('replaceEmbedsWithPlaceholders', () => {
     const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).not.toContain('data-embed')
+    expect(result).toContain('<iframe')
   })
 
-  it('should do nothing when embedResolvers is empty', () => {
-    const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+  it('should still wrap unknown iframes when embedResolvers is empty', () => {
+    const value = '<iframe src="https://unknown-site.com/123"></iframe>'
     const result = transformHtml(value, replaceEmbedsWithPlaceholders(withNoResolvers))
 
-    expect(result).toContain('<iframe')
-    expect(result).not.toContain('data-embed')
+    expect(result).not.toContain('<iframe')
+    expect(result).toContain('data-embed="iframe"')
+    expect(result).not.toContain('data-embed-provider')
   })
 
   it('should leave video elements untouched', () => {
@@ -135,8 +156,16 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).not.toContain('data-embed')
   })
 
-  it('should handle iframe with malformed src url gracefully', () => {
+  it('should skip iframe with malformed src url', () => {
     const value = '<iframe src="not-a-valid-url"></iframe>'
+    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+
+    expect(result).not.toContain('data-embed')
+    expect(result).toContain('<iframe')
+  })
+
+  it('should skip iframe with non-http(s) src', () => {
+    const value = '<iframe src="javascript:alert(1)"></iframe>'
     const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).not.toContain('data-embed')
@@ -159,11 +188,12 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).toContain('data-embed-provider="youtube"')
   })
 
-  it('should do nothing when context omits embedResolvers', () => {
-    const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+  it('should still wrap iframes when context omits embedResolvers', () => {
+    const value = '<iframe src="https://unknown-site.com/123"></iframe>'
     const result = transformHtml(value, replaceEmbedsWithPlaceholders({}))
 
-    expect(result).toContain('<iframe')
-    expect(result).not.toContain('data-embed')
+    expect(result).not.toContain('<iframe')
+    expect(result).toContain('data-embed="iframe"')
+    expect(result).not.toContain('data-embed-provider')
   })
 })

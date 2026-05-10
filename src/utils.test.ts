@@ -1,5 +1,45 @@
 import { describe, expect, it } from 'bun:test'
-import { chooseBaseUrl, createParamExtractor } from './utils.js'
+import { chooseBaseUrl, createParamExtractor, isHttpUrl } from './utils.js'
+
+const hostsRegex = /^(?:www\.)?example\.(?:com|co\.uk)$/
+
+describe('isHttpUrl', () => {
+  it('should return true for http url', () => {
+    expect(isHttpUrl('http://example.com')).toBe(true)
+  })
+
+  it('should return true for https url', () => {
+    expect(isHttpUrl('https://example.com/path?q=1')).toBe(true)
+  })
+
+  it('should return false for javascript scheme', () => {
+    expect(isHttpUrl('javascript:alert(1)')).toBe(false)
+  })
+
+  it('should return false for data url', () => {
+    expect(isHttpUrl('data:text/html,<script>alert(1)</script>')).toBe(false)
+  })
+
+  it('should return false for ftp scheme', () => {
+    expect(isHttpUrl('ftp://example.com/file')).toBe(false)
+  })
+
+  it('should return false for relative url', () => {
+    expect(isHttpUrl('/path/to/page')).toBe(false)
+  })
+
+  it('should return false for malformed url', () => {
+    expect(isHttpUrl('not-a-url')).toBe(false)
+  })
+
+  it('should return false for empty string', () => {
+    expect(isHttpUrl('')).toBe(false)
+  })
+
+  it('should be case-insensitive on scheme', () => {
+    expect(isHttpUrl('HTTPS://example.com')).toBe(true)
+  })
+})
 
 describe('chooseBaseUrl', () => {
   it('should prefer itemUrl when available', () => {
@@ -210,7 +250,7 @@ describe('createParamExtractor', () => {
 
   it('should extract param value when regex host matches', () => {
     const extractor = createParamExtractor({
-      hosts: /^(?:www\.)?example\.(?:com|co\.uk)$/,
+      hosts: hostsRegex,
       path: '/redirect',
       params: ['url'],
     })
@@ -223,7 +263,7 @@ describe('createParamExtractor', () => {
 
   it('should return null when regex host does not match', () => {
     const extractor = createParamExtractor({
-      hosts: /^(?:www\.)?example\.(?:com|co\.uk)$/,
+      hosts: hostsRegex,
       path: '/redirect',
       params: ['url'],
     })

@@ -1,15 +1,11 @@
 import { createEmbedPlaceholder } from '../../common.js'
 import type { DomTransform } from '../../types.js'
-import { coerceNumber } from '../../utils.js'
+import { coerceNumber, isHttpUrl } from '../../utils.js'
 
 export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
   const resolvers = context.embedResolvers ?? []
 
   return (document) => {
-    if (resolvers.length === 0) {
-      return
-    }
-
     for (const resolver of resolvers) {
       const elements = document.querySelectorAll(resolver.selector)
 
@@ -32,6 +28,19 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
 
         element.replaceWith(placeholder)
       }
+    }
+
+    for (const iframe of document.querySelectorAll('iframe[src]')) {
+      const src = iframe.getAttribute('src') ?? ''
+
+      if (!isHttpUrl(src)) {
+        continue
+      }
+
+      const width = coerceNumber(iframe.getAttribute('width'))
+      const height = coerceNumber(iframe.getAttribute('height'))
+
+      iframe.replaceWith(createEmbedPlaceholder(document, src, 'iframe', { width, height }))
     }
   }
 }
