@@ -88,6 +88,71 @@ describe('fixLazyImages', () => {
     expect(result).not.toContain('data-original')
   })
 
+  it('should move data-orig to src', () => {
+    const html = '<img data-orig="photo.jpg">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="photo.jpg"')
+    expect(result).not.toContain('data-orig')
+  })
+
+  it('should move data-orig-file to src', () => {
+    const html = '<img data-orig-file="photo.jpg">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="photo.jpg"')
+    expect(result).not.toContain('data-orig-file')
+  })
+
+  it('should move data-large-file to src', () => {
+    const html = '<img data-large-file="large.jpg">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="large.jpg"')
+    expect(result).not.toContain('data-large-file')
+  })
+
+  it('should move data-medium-file to src', () => {
+    const html = '<img data-medium-file="medium.jpg">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="medium.jpg"')
+    expect(result).not.toContain('data-medium-file')
+  })
+
+  it('should move data-img-url to src', () => {
+    const html = '<img data-img-url="photo.jpg">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="photo.jpg"')
+    expect(result).not.toContain('data-img-url')
+  })
+
+  it('should move data-runner-src to src', () => {
+    const html = '<img data-runner-src="photo.jpg">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="photo.jpg"')
+    expect(result).not.toContain('data-runner-src')
+  })
+
+  it('should move data-canonical-src to src', () => {
+    const html = '<img data-canonical-src="photo.jpg">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="photo.jpg"')
+    expect(result).not.toContain('data-canonical-src')
+  })
+
+  it('should prefer data-orig-file over data-large-file when both present', () => {
+    const html = '<img data-orig-file="orig.jpg" data-large-file="large.jpg">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="orig.jpg"')
+    expect(result).not.toContain('data-orig-file')
+    expect(result).not.toContain('data-large-file')
+  })
+
   it('should not extract noscript when sibling is img but noscript has no image', () => {
     const html = '<img src="x"><noscript>just text, no image tag</noscript>'
     const result = transformHtml(html, fixLazyImages(context))

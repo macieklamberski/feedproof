@@ -132,7 +132,19 @@ export const defaultEmbedResolvers: Array<EmbedResolver> = [youtubeEmbedResolver
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
 
-export const defaultLazySrcAttributes = ['data-src', 'data-original', 'data-lazy-src', 'data-url']
+export const defaultLazySrcAttributes = [
+  'data-src',
+  'data-original',
+  'data-lazy-src',
+  'data-url',
+  'data-orig',
+  'data-orig-file',
+  'data-large-file',
+  'data-medium-file',
+  'data-img-url',
+  'data-runner-src',
+  'data-canonical-src',
+]
 
 export const defaultTrackingHosts = [
   'feedsportal.com', // Postmedia/Newsfutures feed-syndication pixels (/c/<id>/<…>.gif).
