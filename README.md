@@ -45,6 +45,7 @@ const result = transformContent('<p>Check <img data-src="photo.jpg"> and visit /
 | `linkifyUrls` | Wrap bare URLs in `<a>` tags |
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` to embed placeholders |
 | `injectEnclosureEmbedPlaceholders` | Add audio/video enclosures to content |
+| `removeSubstackSubscribeWidget` | Remove Substack inline subscribe-widget elements |
 
 ## Options
 
