@@ -73,6 +73,7 @@ import { highlightCode } from './transforms/dom/highlightCode.js'
 import { injectEnclosureEmbedPlaceholders } from './transforms/dom/injectEnclosureEmbedPlaceholders.js'
 import { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 import { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
+import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 import { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
@@ -113,6 +114,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   removeTrackingPixels,
   stripInterBlockBreaks,
   stripParagraphBoundaryBreaks,
+  mergeFragmentedLists,
   highlightCode,
   mergeConsecutiveOneLinerPres,
   replacePreLineBreaks,

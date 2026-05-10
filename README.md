@@ -44,6 +44,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `removeTrackingPixels` | Strip 1×1 tracking pixel images |
 | `stripInterBlockBreaks` | Remove `<br>` tags between block elements |
 | `stripParagraphBoundaryBreaks` | Remove `<br>` tags adjacent to paragraph boundaries |
+| `mergeFragmentedLists` | Merge consecutive sibling `<ul>` / `<ol>` lists with matching attributes |
 | `highlightCode` | Syntax-highlight `<code>` blocks with highlight.js |
 | `mergeConsecutiveOneLinerPres` | Merge consecutive single-line `<pre>` tags |
 | `replacePreLineBreaks` | Replace `<br>` with `\n` inside `<pre>` |

@@ -137,6 +137,7 @@ export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js
 export { injectEnclosureEmbedPlaceholders } from './transforms/dom/injectEnclosureEmbedPlaceholders.js'
 export { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 export { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
+export { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 export { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 export { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 export { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
