@@ -161,4 +161,21 @@ describe('injectEnclosureEmbedPlaceholders', () => {
 
     expect(result).not.toContain('data-embed')
   })
+
+  it('should skip enclosure with javascript: url', () => {
+    const value = '<p>Content</p>'
+    const ctx = withEnclosures([{ url: 'javascript:alert(1)', medium: 'video' }])
+    const result = transformHtml(value, injectEnclosureEmbedPlaceholders(ctx))
+
+    expect(result).not.toContain('data-embed')
+    expect(result).not.toContain('javascript:')
+  })
+
+  it('should skip enclosure with data: url', () => {
+    const value = '<p>Content</p>'
+    const ctx = withEnclosures([{ url: 'data:text/html,<script>1</script>', medium: 'video' }])
+    const result = transformHtml(value, injectEnclosureEmbedPlaceholders(ctx))
+
+    expect(result).not.toContain('data-embed')
+  })
 })

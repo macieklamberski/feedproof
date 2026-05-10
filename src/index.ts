@@ -5,6 +5,7 @@ import {
   defaultFinalStringTransforms,
   defaultLazySrcAttributes,
   defaultRedirectExtractors,
+  defaultResolveUrlFn,
   defaultStringTransforms,
   defaultTrackingHosts,
   defaultTrackingPathSegments,
@@ -20,6 +21,7 @@ export const transformContent = (html: string, options: TransformContentOptions 
     trackingHosts: options.trackingHosts ?? defaultTrackingHosts,
     trackingPathSegments: options.trackingPathSegments ?? defaultTrackingPathSegments,
     redirectExtractors: options.redirectExtractors ?? defaultRedirectExtractors,
+    resolveUrlFn: options.resolveUrlFn ?? defaultResolveUrlFn,
   }
 
   const stringFns = options.stringTransforms ?? defaultStringTransforms
@@ -55,6 +57,7 @@ export {
   stripOversizedBase64Sources,
   transformHtml,
 } from './common.js'
+export { defaultResolveUrlFn } from './defaults.js'
 export {
   composeThumbnailUrl,
   extractVideoId,
@@ -155,6 +158,7 @@ export type {
   EmbedResolver,
   EmbedResolverResult,
   Enclosure,
+  ResolveUrlFn,
   StringTransform,
   TransformContentOptions,
   TransformContext,

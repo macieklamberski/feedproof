@@ -1,3 +1,4 @@
+import { resolveUrl } from 'feedcanon'
 import { parseHTML } from 'linkedom'
 import type { EmbedResolverResult } from './types.js'
 
@@ -5,6 +6,11 @@ import type { EmbedResolverResult } from './types.js'
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
 
 const base64SrcRegex = /((?:src|srcset|poster)=["'])data:[^"']*;base64,[^"']*(["'])/g
+const safeThumbnailDataUrlRegex = /^data:image\/(png|jpe?g|gif|webp|avif);/i
+
+const isSafeThumbnailUrl = (url: string): boolean => {
+  return resolveUrl(url) !== undefined || safeThumbnailDataUrlRegex.test(url)
+}
 
 export const stripOversizedBase64Sources = (html: string, maxSize: number): string => {
   return html.replace(base64SrcRegex, (match, prefix, suffix) => {
@@ -149,7 +155,7 @@ export const createEmbedPlaceholder = (
     element.setAttribute('data-embed-url', metadata.url)
   }
 
-  if (metadata?.thumbnail) {
+  if (metadata?.thumbnail && isSafeThumbnailUrl(metadata.thumbnail)) {
     element.setAttribute('data-embed-thumbnail', metadata.thumbnail)
   }
 

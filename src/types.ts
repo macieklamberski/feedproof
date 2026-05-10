@@ -1,8 +1,12 @@
+import type { DiscoverResolveUrlFn } from 'feedscout'
+
 export type Enclosure = {
   url: string
   type?: string
   medium?: string
 }
+
+export type ResolveUrlFn = DiscoverResolveUrlFn
 
 export type EmbedResolverResult = {
   provider: string
@@ -31,6 +35,7 @@ export type TransformContext = {
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
   redirectExtractors?: Array<RedirectExtractor>
+  resolveUrlFn?: ResolveUrlFn
 }
 
 export type DomTransform = (context: TransformContext) => (document: Document) => void
@@ -45,6 +50,7 @@ export type TransformContentOptions = {
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
   redirectExtractors?: Array<RedirectExtractor>
+  resolveUrlFn?: ResolveUrlFn
   stringTransforms?: Array<StringTransform>
   domTransforms?: Array<DomTransform>
   finalStringTransforms?: Array<StringTransform>
