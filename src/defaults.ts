@@ -133,17 +133,22 @@ export const defaultEmbedResolvers: Array<EmbedResolver> = [youtubeEmbedResolver
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
 
 export const defaultLazySrcAttributes = [
-  'data-src',
-  'data-original',
-  'data-lazy-src',
-  'data-url',
-  'data-orig',
-  'data-orig-file',
-  'data-large-file',
-  'data-medium-file',
-  'data-img-url',
-  'data-runner-src',
-  'data-canonical-src',
+  'data-src', // lazysizes / vanilla-lazyload / lozad / Drupal Blazy / a3 Lazy Load / Smush / EWWW / generic — 360k hits.
+  'data-original', // Legacy jquery_lazyload (tuupola v1) — 19k hits, large legacy footprint.
+  'data-lazy-src', // Jetpack Lazy Images / WP Rocket / BJ Lazy Load — 31k hits.
+  'data-url', // Generic, observed across multiple lazy-loaders — 343k hits.
+  'data-image', // Squarespace ImageLoader — 2M hits, the highest-volume real-world variant.
+  'data-orig-file', // WordPress unscaled original (Jetpack media library) — 1.75M hits.
+  'data-large-file', // WordPress responsive variant — 1.75M hits.
+  'data-medium-file', // WordPress responsive medium fallback — 1.67M hits.
+  'data-thumb', // WordPress thumbnail variant — 18k hits.
+  'data-thumb-src', // WordPress thumbnail src variant — 11k hits.
+  'data-original-src', // Legacy lazy-loaders / pika.page CDN — 9k hits.
+  'data-image-src', // Legacy Atlassian-style CMS — 4k hits.
+  'data-canonical-src', // YouTube / retina-aware renderers — 2k hits, <0.1% of feeds.
+  'data-img-url', // Amazon affiliate widgets / generic — 0.9k hits, <0.1% of feeds.
+  'data-orig', // Generic original-source variant — 27 hits, <0.01% of feeds.
+  'data-runner-src', // Amazon affiliate / generic — 42 hits, <0.01% of feeds.
 ]
 
 export const defaultTrackingHosts = [

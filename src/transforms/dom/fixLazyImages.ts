@@ -1,6 +1,15 @@
 import type { DomTransform } from '../../types.js'
 
 const imgPattern = /<img\s/i
+// A real URL contains at least one of `:` (scheme), `/` (path), or `.` (domain
+// or file extension). This rejects flag-style values like `"1"` / `"true"` /
+// `"loaded"` that some libraries (Slick, plugin status markers) park on
+// otherwise-lazy attribute names.
+const urlShapeRegex = /[:/.]/
+
+const isUrlShaped = (value: string): boolean => {
+  return urlShapeRegex.test(value) && !value.startsWith('{') && !value.startsWith('[')
+}
 
 export const fixLazyImages: DomTransform = (context) => {
   const lazySrcAttributes = context.lazySrcAttributes ?? []
@@ -15,7 +24,7 @@ export const fixLazyImages: DomTransform = (context) => {
       for (const attribute of lazySrcAttributes) {
         const value = image.getAttribute(attribute)
 
-        if (!resolved && value) {
+        if (!resolved && value && isUrlShaped(value)) {
           image.setAttribute('src', value)
           resolved = true
         }

@@ -153,6 +153,120 @@ describe('fixLazyImages', () => {
     expect(result).not.toContain('data-large-file')
   })
 
+  it('should move data-image to src', () => {
+    const html = '<img data-image="https://images.squarespace-cdn.com/photo.jpg">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="https://images.squarespace-cdn.com/photo.jpg"')
+    expect(result).not.toContain('data-image')
+  })
+
+  it('should move data-thumb to src', () => {
+    const html = '<img data-thumb="https://example.com/thumb.jpg">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="https://example.com/thumb.jpg"')
+    expect(result).not.toContain('data-thumb')
+  })
+
+  it('should move data-thumb-src to src', () => {
+    const html = '<img data-thumb-src="https://example.com/thumb.jpg">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="https://example.com/thumb.jpg"')
+    expect(result).not.toContain('data-thumb-src')
+  })
+
+  it('should move data-original-src to src', () => {
+    const html = '<img data-original-src="https://cdn.example.com/photo.jpg">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="https://cdn.example.com/photo.jpg"')
+    expect(result).not.toContain('data-original-src')
+  })
+
+  it('should move data-image-src to src', () => {
+    const html = '<img data-image-src="https://example.com/photo.png">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="https://example.com/photo.png"')
+    expect(result).not.toContain('data-image-src')
+  })
+
+  it('should prefer data-src over data-image when both present', () => {
+    const html = '<img data-src="real.jpg" data-image="fallback.jpg">'
+    const result = transformHtml(html, fixLazyImages(context))
+
+    expect(result).toContain('src="real.jpg"')
+    expect(result).not.toContain('data-src')
+    expect(result).not.toContain('data-image')
+  })
+
+  describe('URL-shape guard', () => {
+    it('should not promote a non-URL value like "left"', () => {
+      const html = '<img data-orig="left">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).not.toContain('src="left"')
+      expect(result).not.toContain('data-orig')
+    })
+
+    it('should not promote a numeric flag value like "1"', () => {
+      const html = '<img data-src="1">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).not.toContain('src="1"')
+      expect(result).not.toContain('data-src')
+    })
+
+    it('should not promote a boolean-string value like "true"', () => {
+      const html = '<img data-src="true">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).not.toContain('src="true"')
+      expect(result).not.toContain('data-src')
+    })
+
+    it('should not promote a JSON-object value', () => {
+      const html = '<img data-src=\'{"foo":"bar"}\'>'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).not.toContain('src=')
+      expect(result).not.toContain('data-src')
+    })
+
+    it('should not promote an empty string', () => {
+      const html = '<img data-src="">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).not.toContain('src=')
+      expect(result).not.toContain('data-src')
+    })
+
+    it('should fall through to a later attribute when an earlier one is non-URL', () => {
+      const html = '<img data-src="loaded" data-original="real.jpg">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).toContain('src="real.jpg"')
+      expect(result).not.toContain('data-src')
+      expect(result).not.toContain('data-original')
+    })
+
+    it('should accept a relative path with extension', () => {
+      const html = '<img data-src="photos/img.jpg">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).toContain('src="photos/img.jpg"')
+    })
+
+    it('should accept a data: URI', () => {
+      const html = '<img data-src="data:image/png;base64,iVBORw0KGgo">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).toContain('src="data:image/png;base64,iVBORw0KGgo"')
+    })
+  })
+
   it('should not extract noscript when sibling is img but noscript has no image', () => {
     const html = '<img src="x"><noscript>just text, no image tag</noscript>'
     const result = transformHtml(html, fixLazyImages(context))
