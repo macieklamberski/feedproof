@@ -10,18 +10,23 @@ export type EmbedResolverResult = {
   url?: string
   thumbnail?: string
   type?: 'video' | 'audio' | 'iframe'
-  autoload?: boolean
   width?: number
   height?: number
+  author?: string
+  text?: string
 }
 
-export type RedirectExtractor = (url: URL) => string | null
+export type EmbedResolver = {
+  selector: string
+  extract: (element: Element) => EmbedResolverResult | undefined
+}
+
+export type RedirectExtractor = (url: URL) => string | undefined
 
 export type TransformContext = {
   baseUrl?: string
   enclosures?: Array<Enclosure>
-  resolveEmbed?: (url: string) => EmbedResolverResult | undefined
-  embedDomains?: Array<string>
+  embedResolvers?: Array<EmbedResolver>
   lazySrcAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
@@ -33,38 +38,16 @@ export type DomTransform = (context: TransformContext) => (document: Document) =
 
 export type StringTransform = (context: TransformContext) => (html: string) => string
 
-export type TransformToggles = {
-  stripOrphanedClosingTags?: boolean
-  decodeDoubleEncodedTags?: boolean
-  unwrapWrappers?: boolean
-  paragraphizePlainText?: boolean
-  stripEmptyTags?: boolean
-  fixLazyImages?: boolean
-  resolveRelativeUrls?: boolean
-  unwrapRedirectUrls?: boolean
-  stripTrackingParams?: boolean
-  removeTrackingPixels?: boolean
-  stripDuplicateTitleHeading?: boolean
-  stripInterBlockBreaks?: boolean
-  simplifyFigures?: boolean
-  highlightCode?: boolean
-  mergeConsecutiveOneLinerPres?: boolean
-  replacePreLineBreaks?: boolean
-  trimPreWhitespace?: boolean
-  linkifyUrls?: boolean
-  replaceMediaWithEmbedPlaceholders?: boolean
-  injectEnclosureEmbedPlaceholders?: boolean
-}
-
 export type TransformContentOptions = {
   baseUrl?: string
   enclosures?: Array<Enclosure>
-  resolveEmbed?: (url: string) => EmbedResolverResult | undefined
-  embedDomains?: Array<string>
+  embedResolvers?: Array<EmbedResolver>
   lazySrcAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
   redirectExtractors?: Array<RedirectExtractor>
   articleTitle?: string
-  transforms?: TransformToggles
+  stringTransforms?: Array<StringTransform>
+  domTransforms?: Array<DomTransform>
+  finalStringTransforms?: Array<StringTransform>
 }
