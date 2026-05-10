@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { transformHtml } from '../common.js'
-import type { TransformContext } from '../types.js'
+import { transformHtml } from '../../common.js'
+import type { TransformContext } from '../../types.js'
 import { convertBreaksToParagraphs } from './convertBreaksToParagraphs.js'
 
 const context: TransformContext = {}

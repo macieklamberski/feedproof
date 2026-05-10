@@ -1,5 +1,5 @@
-import { isBlockElement, Node } from '../common.js'
-import type { DomTransform } from '../types.js'
+import { isBlockElement, Node } from '../../common.js'
+import type { DomTransform } from '../../types.js'
 
 const processContainers = [
   'body',
