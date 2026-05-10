@@ -147,6 +147,7 @@ export { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js
 export { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBoundaryBreaks.js'
 export { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
 export { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
+export { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 export { decodeDoubleEncodedTags } from './transforms/string/decodeDoubleEncodedTags.js'
 export { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'

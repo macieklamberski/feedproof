@@ -52,6 +52,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` to embed placeholders |
 | `injectEnclosureEmbedPlaceholders` | Add audio/video enclosures to content |
 | `simplifyFigures` | Unwrap `<figure>` when the figcaption is empty or redundant |
+| `unwrapDoublyNestedLists` | Unwrap `<ul>`/`<ol>` that wrap a single `<li>` containing a same-type list |
 
 ## Options
 
