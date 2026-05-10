@@ -1,16 +1,17 @@
 import type { RedirectExtractor } from '../types.js'
 
+const feedsportalPathRegex = /\/([0-9A-Za-z]{20,})\/story01\.htm$/
+
 // FeedSportal-encoded article links (<host>/<encoded-id>/story01.htm). The
 // id uses '0' as a digraph prefix; each '0X' (X = A-Z) decodes to a fixed
 // substitution. FeedSportal shut down around 2016 but archived feeds still
 // contain these wrappers.
-const ALPHABET: Record<string, string> = {
+const feedsportalAlphabet: Record<string, string> = {
   A: '0', B: '.', C: '/', D: '?', E: '-', F: '=', G: '&', H: ',',
   I: '_', J: '%', K: '+', L: 'http://', M: 'https://', N: '.com',
   O: '.co.uk', P: ';', Q: '|', R: ':', S: 'www.', T: '#', U: '$',
   V: '~', W: '!', X: '(', Y: ')', Z: 'Z',
 }
-const feedsportalPathRegex = /\/([0-9A-Za-z]{20,})\/story01\.htm$/
 
 export const extractFeedsportal: RedirectExtractor = (url) => {
   const match = url.pathname.match(feedsportalPathRegex)
@@ -25,7 +26,7 @@ export const extractFeedsportal: RedirectExtractor = (url) => {
         return chunk
       }
       const head = chunk[0]
-      const substitution = head ? ALPHABET[head] : undefined
+      const substitution = head ? feedsportalAlphabet[head] : undefined
       return substitution === undefined ? `0${chunk}` : substitution + chunk.slice(1)
     })
     .join('')
