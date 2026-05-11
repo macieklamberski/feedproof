@@ -335,6 +335,38 @@ describe('fixLazyImages', () => {
       expect(result).not.toContain('data-srcset')
       expect(result).not.toContain('data-lazy-srcset')
     })
+
+    it('should move data-tf-srcset to srcset', () => {
+      const html = '<img data-tf-srcset="a.jpg 150w, b.jpg 300w">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).toContain('srcset="a.jpg 150w, b.jpg 300w"')
+      expect(result).not.toContain('data-tf-srcset')
+    })
+
+    it('should move data-pswp-srcset to srcset', () => {
+      const html = '<img data-pswp-srcset="a.jpg 300w, b.jpg 150w">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).toContain('srcset="a.jpg 300w, b.jpg 150w"')
+      expect(result).not.toContain('data-pswp-srcset')
+    })
+
+    it('should skip non-URL srcset values like Cloudinary transform params', () => {
+      const html = '<img data-srcset="w_200,h_200 200w, w_400,h_400 400w">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).not.toContain('srcset=')
+      expect(result).not.toContain('data-srcset')
+    })
+
+    it('should skip empty srcset values and remove the attribute', () => {
+      const html = '<img data-image-srcset="">'
+      const result = transformHtml(html, fixLazyImages(context))
+
+      expect(result).not.toContain('srcset=')
+      expect(result).not.toContain('data-image-srcset')
+    })
   })
 
   describe('overrides', () => {

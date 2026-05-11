@@ -38,7 +38,7 @@ export const fixLazyImages: DomTransform = (context) => {
       for (const attribute of lazySrcsetAttributes) {
         const value = image.getAttribute(attribute)
 
-        if (!srcsetResolved && value) {
+        if (!srcsetResolved && value && isUrlShaped(value)) {
           image.setAttribute('srcset', value)
           srcsetResolved = true
         }

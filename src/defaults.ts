@@ -154,7 +154,18 @@ export const defaultLazySrcAttributes = [
 
 export const defaultLazySrcsetAttributes = [
   'data-srcset', // lazysizes / vanilla-lazyload / lozad / bLazy / generic — 119k hits.
+  'data-tf-srcset', // Avada / Fusion ThemeBuilder — 17k hits.
   'data-lazy-srcset', // Jetpack Lazy Images / WP Rocket / BJ Lazy Load — 5k hits.
+  'data-image-srcset', // Generic / Squarespace-style — 2.5k hits, often empty.
+  'data-modal-srcset', // Modal / lightbox component — 1.3k hits.
+  'data-splide-lazy-srcset', // Splide.js carousel — 922 hits.
+  'data-alt-srcset', // Generic alternate variant — 816 hits.
+  'fifu-data-srcset', // "Featured Image From URL" WP plugin — 682 hits, often empty.
+  'data-thumb-srcset', // WordPress thumbnail variant — 616 hits, often empty.
+  'data-vp-popup-img-srcset', // Visual Portfolio popup — 395 hits.
+  'data-original-srcset', // Legacy lazy-loaders — 220 hits, often empty.
+  'data-pswp-srcset', // PhotoSwipe lightbox — 196 hits.
+  'data-nectar-img-srcset', // Salient theme (Nectar) — 176 hits.
   'nitro-lazy-srcset', // NitroPack — 109 hits, <0.01% of feeds. Non-`data-*` prefix.
   'data-flickity-lazyload-srcset', // Flickity carousel — 63 hits, <0.01% of feeds.
 ]
