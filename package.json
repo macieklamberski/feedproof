@@ -1,6 +1,6 @@
 {
   "name": "feedproof",
-  "description": "Tidy up the HTML content in web feeds. Sweep away feed-specific quirks so content displays in its best possible form.",
+  "description": "Tidy up the HTML content in web feeds. Fix feed-specific quirks so content displays in its best possible form.",
   "repository": {
     "type": "git",
     "url": "https://github.com/macieklamberski/feedproof.git"

@@ -4,7 +4,7 @@
 [![npm version](https://img.shields.io/npm/v/feedproof.svg)](https://www.npmjs.com/package/feedproof)
 [![license](https://img.shields.io/npm/l/feedproof.svg)](https://github.com/macieklamberski/feedproof/blob/main/LICENSE)
 
-Tidy up the HTML content in web feeds. Sweep away feed-specific quirks so content displays in its best possible form.
+Tidy up the HTML content in web feeds. Fix feed-specific quirks so content displays in its best possible form.
 
 Feedproof takes raw feed item HTML and runs it through a pipeline that genuinely improves the output: fixing lazy-loaded images so they actually render, resolving relative URLs to absolute, stripping tracking parameters and pixels for privacy, highlighting code blocks, normalizing broken markup from common feed quirks, auto-linking bare URLs, and converting embeds into framework-agnostic placeholders. It ships with sensible defaults and built-in support for YouTube and other popular platforms.
 
