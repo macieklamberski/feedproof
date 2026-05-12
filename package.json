@@ -1,6 +1,6 @@
 {
   "name": "feedproof",
-  "description": "Improve, normalize, and privacy-harden HTML content from web feeds. Fix feed quirks, resolve URLs, strip tracking, highlight code, and ensure content displays in the best possible form.",
+  "description": "Fix feed quirks and normalize HTML content from web feeds. Resolve relative URLs, parse embeds into placeholders, strip tracking, highlight code, and ensure content displays in the best possible form.",
   "repository": {
     "type": "git",
     "url": "https://github.com/macieklamberski/feedproof.git"
