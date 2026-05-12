@@ -1,13 +1,26 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../../common.js'
-import { defaultTrackingHosts, defaultTrackingPathSegments } from '../../defaults.js'
+import {
+  defaultEmbedResolvers,
+  defaultLazySrcAttributes,
+  defaultResolveUrlFn,
+  defaultTrackingHosts,
+  defaultTrackingPathSegments,
+  defaultUrlUnwrappers,
+} from '../../defaults.js'
 import type { TransformContext } from '../../types.js'
 import { removeTrackingPixels } from './removeTrackingPixels.js'
 
-const context: TransformContext = {
+const baseContext: TransformContext = {
+  embedResolvers: defaultEmbedResolvers,
+  lazySrcAttributes: defaultLazySrcAttributes,
   trackingHosts: defaultTrackingHosts,
   trackingPathSegments: defaultTrackingPathSegments,
+  urlUnwrappers: defaultUrlUnwrappers,
+  resolveUrlFn: defaultResolveUrlFn,
 }
+
+const context: TransformContext = baseContext
 
 describe('removeTrackingPixels', () => {
   describe('size-based detection', () => {
@@ -397,7 +410,10 @@ describe('removeTrackingPixels', () => {
 
   describe('overrides', () => {
     it('should ignore default trackingHosts when override is provided', () => {
-      const customContext: TransformContext = { trackingHosts: ['my-tracker.example'] }
+      const customContext: TransformContext = {
+        ...baseContext,
+        trackingHosts: ['my-tracker.example'],
+      }
       const html = '<img src="https://stats.wordpress.com/b.gif">'
       const result = transformHtml(html, removeTrackingPixels(customContext))
 
@@ -405,7 +421,10 @@ describe('removeTrackingPixels', () => {
     })
 
     it('should use the provided trackingHosts', () => {
-      const customContext: TransformContext = { trackingHosts: ['my-tracker.example'] }
+      const customContext: TransformContext = {
+        ...baseContext,
+        trackingHosts: ['my-tracker.example'],
+      }
       const html = '<img src="https://my-tracker.example/p.gif">'
       const result = transformHtml(html, removeTrackingPixels(customContext))
 
@@ -413,7 +432,7 @@ describe('removeTrackingPixels', () => {
     })
 
     it('should ignore default trackingPathSegments when override is provided', () => {
-      const customContext: TransformContext = { trackingPathSegments: ['ping'] }
+      const customContext: TransformContext = { ...baseContext, trackingPathSegments: ['ping'] }
       const html = '<img src="https://example.com/pixel.gif">'
       const result = transformHtml(html, removeTrackingPixels(customContext))
 
@@ -421,7 +440,7 @@ describe('removeTrackingPixels', () => {
     })
 
     it('should use the provided trackingPathSegments', () => {
-      const customContext: TransformContext = { trackingPathSegments: ['ping'] }
+      const customContext: TransformContext = { ...baseContext, trackingPathSegments: ['ping'] }
       const html = '<img src="https://example.com/ping.gif">'
       const result = transformHtml(html, removeTrackingPixels(customContext))
 
@@ -429,7 +448,7 @@ describe('removeTrackingPixels', () => {
     })
 
     it('should disable path-based detection when trackingPathSegments is empty', () => {
-      const customContext: TransformContext = { trackingPathSegments: [] }
+      const customContext: TransformContext = { ...baseContext, trackingPathSegments: [] }
       const html = '<img src="https://example.com/pixel.gif">'
       const result = transformHtml(html, removeTrackingPixels(customContext))
 
@@ -438,6 +457,7 @@ describe('removeTrackingPixels', () => {
 
     it('should still apply size check when overrides are set', () => {
       const customContext: TransformContext = {
+        ...baseContext,
         trackingHosts: [],
         trackingPathSegments: [],
       }
@@ -449,6 +469,7 @@ describe('removeTrackingPixels', () => {
 
     it('should still apply hidden-style check when overrides are set', () => {
       const customContext: TransformContext = {
+        ...baseContext,
         trackingHosts: [],
         trackingPathSegments: [],
       }
@@ -459,7 +480,7 @@ describe('removeTrackingPixels', () => {
     })
 
     it('should escape special regex characters in trackingPathSegments', () => {
-      const customContext: TransformContext = { trackingPathSegments: ['p.x'] }
+      const customContext: TransformContext = { ...baseContext, trackingPathSegments: ['p.x'] }
       const html = '<img src="https://example.com/pax.gif">'
       const result = transformHtml(html, removeTrackingPixels(customContext))
 

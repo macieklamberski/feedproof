@@ -1,10 +1,26 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../../common.js'
-import { defaultUrlUnwrappers } from '../../defaults.js'
+import {
+  defaultEmbedResolvers,
+  defaultLazySrcAttributes,
+  defaultResolveUrlFn,
+  defaultTrackingHosts,
+  defaultTrackingPathSegments,
+  defaultUrlUnwrappers,
+} from '../../defaults.js'
 import type { TransformContext, UrlUnwrapper } from '../../types.js'
 import { extractRedirectTarget, unwrapRedirectUrls } from './unwrapRedirectUrls.js'
 
-const context: TransformContext = { urlUnwrappers: defaultUrlUnwrappers }
+const baseContext: TransformContext = {
+  embedResolvers: defaultEmbedResolvers,
+  lazySrcAttributes: defaultLazySrcAttributes,
+  trackingHosts: defaultTrackingHosts,
+  trackingPathSegments: defaultTrackingPathSegments,
+  urlUnwrappers: defaultUrlUnwrappers,
+  resolveUrlFn: defaultResolveUrlFn,
+}
+
+const context: TransformContext = baseContext
 
 describe('unwrapRedirectUrls', () => {
   it('should unwrap a redirect href via the configured extractors', () => {
@@ -51,7 +67,7 @@ describe('unwrapRedirectUrls', () => {
 
   describe('overrides', () => {
     it('should ignore default urlUnwrappers when override is provided', () => {
-      const customContext: TransformContext = { urlUnwrappers: [] }
+      const customContext: TransformContext = { ...baseContext, urlUnwrappers: [] }
       const html =
         '<a href="https://www.google.com/url?url=https%3A%2F%2Fexample.com%2Fpage">link</a>'
       const result = transformHtml(html, unwrapRedirectUrls(customContext))
@@ -67,7 +83,7 @@ describe('unwrapRedirectUrls', () => {
           ? (url.searchParams.get('to') ?? undefined)
           : undefined
       }
-      const customContext: TransformContext = { urlUnwrappers: [customExtractor] }
+      const customContext: TransformContext = { ...baseContext, urlUnwrappers: [customExtractor] }
       const html = '<a href="https://my-shim.example/r?to=https%3A%2F%2Ftarget.com">link</a>'
       const result = transformHtml(html, unwrapRedirectUrls(customContext))
 

@@ -30,12 +30,12 @@ export type UrlUnwrapper = (url: URL) => string | undefined
 export type TransformContext = {
   baseUrl?: string
   enclosures?: Array<Enclosure>
-  embedResolvers?: Array<EmbedResolver>
-  lazySrcAttributes?: Array<string>
-  trackingHosts?: Array<string>
-  trackingPathSegments?: Array<string>
-  urlUnwrappers?: Array<UrlUnwrapper>
-  resolveUrlFn?: ResolveUrlFn
+  embedResolvers: Array<EmbedResolver>
+  lazySrcAttributes: Array<string>
+  trackingHosts: Array<string>
+  trackingPathSegments: Array<string>
+  urlUnwrappers: Array<UrlUnwrapper>
+  resolveUrlFn: ResolveUrlFn
 }
 
 export type DomTransform = (context: TransformContext) => (document: Document) => void
