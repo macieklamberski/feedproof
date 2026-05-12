@@ -38,7 +38,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `stripComments` | Remove HTML `<!-- comments -->` |
 | `fixLazyImages` | Move `data-src` / `data-original` to real `src` |
 | `resolveRelativeUrls` | Convert relative URLs to absolute using base URL |
-| `unwrapRedirectUrls` | Remove Google/Facebook/Outlook/etc. redirect wrappers |
+| `unwrapRedirectUrls` | Remove Google/Bing/Facebook/etc. redirect wrappers |
 | `stripTrackingParams` | Remove UTM and other tracking parameters |
 | `removeTrackingPixels` | Strip 1×1 tracking pixel images |
 | `stripInterBlockBreaks` | Remove `<br>` tags between block elements |
