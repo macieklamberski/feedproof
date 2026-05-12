@@ -1,10 +1,26 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../../common.js'
-import { defaultLazySrcAttributes } from '../../defaults.js'
+import {
+  defaultEmbedResolvers,
+  defaultLazySrcAttributes,
+  defaultResolveUrlFn,
+  defaultTrackingHosts,
+  defaultTrackingPathSegments,
+  defaultUrlUnwrappers,
+} from '../../defaults.js'
 import type { TransformContext } from '../../types.js'
 import { fixLazyImages } from './fixLazyImages.js'
 
-const context: TransformContext = { lazySrcAttributes: defaultLazySrcAttributes }
+const baseContext: TransformContext = {
+  embedResolvers: defaultEmbedResolvers,
+  lazySrcAttributes: defaultLazySrcAttributes,
+  trackingHosts: defaultTrackingHosts,
+  trackingPathSegments: defaultTrackingPathSegments,
+  urlUnwrappers: defaultUrlUnwrappers,
+  resolveUrlFn: defaultResolveUrlFn,
+}
+
+const context: TransformContext = baseContext
 
 describe('fixLazyImages', () => {
   it('should move data-src to src', () => {
@@ -293,7 +309,7 @@ describe('fixLazyImages', () => {
 
   describe('overrides', () => {
     it('should ignore default lazySrcAttributes when override is provided', () => {
-      const customContext: TransformContext = { lazySrcAttributes: ['data-img'] }
+      const customContext: TransformContext = { ...baseContext, lazySrcAttributes: ['data-img'] }
       const html = '<img data-src="ignored.jpg">'
       const result = transformHtml(html, fixLazyImages(customContext))
 
@@ -302,7 +318,7 @@ describe('fixLazyImages', () => {
     })
 
     it('should use the provided lazySrcAttributes', () => {
-      const customContext: TransformContext = { lazySrcAttributes: ['data-img'] }
+      const customContext: TransformContext = { ...baseContext, lazySrcAttributes: ['data-img'] }
       const html = '<img data-img="photo.jpg">'
       const result = transformHtml(html, fixLazyImages(customContext))
 

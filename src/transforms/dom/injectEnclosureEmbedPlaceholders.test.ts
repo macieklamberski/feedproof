@@ -1,10 +1,25 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../../common.js'
+import {
+  defaultLazySrcAttributes,
+  defaultResolveUrlFn,
+  defaultTrackingHosts,
+  defaultTrackingPathSegments,
+  defaultUrlUnwrappers,
+} from '../../defaults.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
 import type { TransformContext } from '../../types.js'
 import { injectEnclosureEmbedPlaceholders } from './injectEnclosureEmbedPlaceholders.js'
 
-const context: TransformContext = { baseUrl: undefined }
+const context: TransformContext = {
+  baseUrl: undefined,
+  embedResolvers: [],
+  lazySrcAttributes: defaultLazySrcAttributes,
+  trackingHosts: defaultTrackingHosts,
+  trackingPathSegments: defaultTrackingPathSegments,
+  urlUnwrappers: defaultUrlUnwrappers,
+  resolveUrlFn: defaultResolveUrlFn,
+}
 
 const withResolver: TransformContext = {
   ...context,

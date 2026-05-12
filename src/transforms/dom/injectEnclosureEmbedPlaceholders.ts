@@ -1,5 +1,4 @@
 import { createEmbedPlaceholder } from '../../common.js'
-import { defaultResolveUrlFn } from '../../defaults.js'
 import type { DomTransform, EmbedResolver, EmbedResolverResult, Enclosure } from '../../types.js'
 
 const isAudioEnclosure = (enclosure: Enclosure): boolean => {
@@ -32,9 +31,6 @@ const resolveEnclosure = (
 }
 
 export const injectEnclosureEmbedPlaceholders: DomTransform = (context) => {
-  const resolvers = context.embedResolvers ?? []
-  const resolveUrlFn = context.resolveUrlFn ?? defaultResolveUrlFn
-
   return (document) => {
     if (!context.enclosures?.length) {
       return
@@ -47,11 +43,11 @@ export const injectEnclosureEmbedPlaceholders: DomTransform = (context) => {
         continue
       }
 
-      if (!resolveUrlFn(enclosure.url, context.baseUrl)) {
+      if (!context.resolveUrlFn(enclosure.url, context.baseUrl)) {
         continue
       }
 
-      const resolved = resolveEnclosure(enclosure.url, resolvers, document)
+      const resolved = resolveEnclosure(enclosure.url, context.embedResolvers, document)
 
       if (!resolved && !isAudioEnclosure(enclosure) && !isVideoEnclosure(enclosure)) {
         continue

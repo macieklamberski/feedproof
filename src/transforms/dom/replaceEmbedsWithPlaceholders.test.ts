@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../../common.js'
-import { defaultEmbedResolvers } from '../../defaults.js'
+import {
+  defaultEmbedResolvers,
+  defaultLazySrcAttributes,
+  defaultResolveUrlFn,
+  defaultTrackingHosts,
+  defaultTrackingPathSegments,
+  defaultUrlUnwrappers,
+} from '../../defaults.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
 import type { EmbedResolver, TransformContext } from '../../types.js'
 import { replaceEmbedsWithPlaceholders } from './replaceEmbedsWithPlaceholders.js'
@@ -14,11 +21,22 @@ const stubResolver: EmbedResolver = {
   }),
 }
 
+const baseContext: TransformContext = {
+  embedResolvers: [],
+  lazySrcAttributes: defaultLazySrcAttributes,
+  trackingHosts: defaultTrackingHosts,
+  trackingPathSegments: defaultTrackingPathSegments,
+  urlUnwrappers: defaultUrlUnwrappers,
+  resolveUrlFn: defaultResolveUrlFn,
+}
+
 const withResolvers: TransformContext = {
+  ...baseContext,
   embedResolvers: [youtubeEmbedResolver, stubResolver],
 }
 
 const withNoResolvers: TransformContext = {
+  ...baseContext,
   embedResolvers: [],
 }
 
@@ -89,7 +107,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
     const value = '<blockquote class="tweet">Tweet text</blockquote>'
     const result = transformHtml(
       value,
-      replaceEmbedsWithPlaceholders({ embedResolvers: [customResolver] }),
+      replaceEmbedsWithPlaceholders({ ...baseContext, embedResolvers: [customResolver] }),
     )
 
     expect(result).toContain('data-embed-author="@user"')
@@ -182,15 +200,15 @@ describe('replaceEmbedsWithPlaceholders', () => {
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     const result = transformHtml(
       value,
-      replaceEmbedsWithPlaceholders({ embedResolvers: defaultEmbedResolvers }),
+      replaceEmbedsWithPlaceholders({ ...baseContext, embedResolvers: defaultEmbedResolvers }),
     )
 
     expect(result).toContain('data-embed-provider="youtube"')
   })
 
-  it('should still wrap iframes when context omits embedResolvers', () => {
+  it('should still wrap iframes when embedResolvers is empty', () => {
     const value = '<iframe src="https://unknown-site.com/123"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders({}))
+    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withNoResolvers))
 
     expect(result).not.toContain('<iframe')
     expect(result).toContain('data-embed="iframe"')
@@ -209,7 +227,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
     const value = '<iframe src="https://example.com/x"></iframe>'
     const result = transformHtml(
       value,
-      replaceEmbedsWithPlaceholders({ embedResolvers: [unsafeResolver] }),
+      replaceEmbedsWithPlaceholders({ ...baseContext, embedResolvers: [unsafeResolver] }),
     )
 
     expect(result).not.toContain('data-embed-provider="evil"')
@@ -229,7 +247,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
     const value = '<iframe src="https://example.com/x"></iframe>'
     const result = transformHtml(
       value,
-      replaceEmbedsWithPlaceholders({ embedResolvers: [unsafeResolver] }),
+      replaceEmbedsWithPlaceholders({ ...baseContext, embedResolvers: [unsafeResolver] }),
     )
 
     expect(result).not.toContain('data-embed-provider="evil"')
@@ -241,6 +259,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
     const result = transformHtml(
       value,
       replaceEmbedsWithPlaceholders({
+        ...baseContext,
         embedResolvers: [],
         resolveUrlFn: (url) => url,
       }),

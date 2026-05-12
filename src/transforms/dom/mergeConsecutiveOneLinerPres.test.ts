@@ -1,10 +1,25 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms, transformHtml } from '../../common.js'
+import {
+  defaultEmbedResolvers,
+  defaultLazySrcAttributes,
+  defaultResolveUrlFn,
+  defaultTrackingHosts,
+  defaultTrackingPathSegments,
+  defaultUrlUnwrappers,
+} from '../../defaults.js'
 import type { TransformContext } from '../../types.js'
 import { mergeConsecutiveOneLinerPres } from './mergeConsecutiveOneLinerPres.js'
 import { replacePreLineBreaks } from './replacePreLineBreaks.js'
 
-const context: TransformContext = {}
+const context: TransformContext = {
+  embedResolvers: defaultEmbedResolvers,
+  lazySrcAttributes: defaultLazySrcAttributes,
+  trackingHosts: defaultTrackingHosts,
+  trackingPathSegments: defaultTrackingPathSegments,
+  urlUnwrappers: defaultUrlUnwrappers,
+  resolveUrlFn: defaultResolveUrlFn,
+}
 
 describe('mergeConsecutiveOneLinerPres', () => {
   const merge = (html: string) => {

@@ -12,8 +12,6 @@ const isUrlShaped = (value: string): boolean => {
 }
 
 export const fixLazyImages: DomTransform = (context) => {
-  const lazySrcAttributes = context.lazySrcAttributes ?? []
-
   return (document) => {
     // Move lazy-load data attributes to real src/srcset.
     const images = document.querySelectorAll('img')
@@ -21,7 +19,7 @@ export const fixLazyImages: DomTransform = (context) => {
     for (const image of images) {
       let resolved = false
 
-      for (const attribute of lazySrcAttributes) {
+      for (const attribute of context.lazySrcAttributes) {
         const value = image.getAttribute(attribute)
 
         if (!resolved && value && isUrlShaped(value)) {

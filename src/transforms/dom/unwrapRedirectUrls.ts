@@ -14,8 +14,6 @@ export const extractRedirectTarget = (
 }
 
 export const unwrapRedirectUrls: DomTransform = (context) => {
-  const extractors = context.urlUnwrappers ?? []
-
   return (document) => {
     const anchors = document.querySelectorAll('a[href]')
 
@@ -29,7 +27,7 @@ export const unwrapRedirectUrls: DomTransform = (context) => {
       try {
         const url = new URL(href)
 
-        for (const extractor of extractors) {
+        for (const extractor of context.urlUnwrappers) {
           const target = extractor(url)
 
           if (target) {
