@@ -1,12 +1,12 @@
 {
-  "name": "feedproof",
+  "name": "feedsweep",
   "description": "Tidy up the HTML content in web feeds. Fix feed-specific quirks so content displays in its best possible form.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/macieklamberski/feedproof.git"
+    "url": "https://github.com/macieklamberski/feedsweep.git"
   },
   "bugs": {
-    "url": "https://github.com/macieklamberski/feedproof/issues"
+    "url": "https://github.com/macieklamberski/feedsweep/issues"
   },
   "license": "MIT",
   "author": "Maciej Lamberski",

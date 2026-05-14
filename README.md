@@ -1,23 +1,23 @@
-# Feedproof
+# Feedsweep
 
-[![codecov](https://codecov.io/gh/macieklamberski/feedproof/branch/main/graph/badge.svg)](https://codecov.io/gh/macieklamberski/feedproof)
-[![npm version](https://img.shields.io/npm/v/feedproof.svg)](https://www.npmjs.com/package/feedproof)
-[![license](https://img.shields.io/npm/l/feedproof.svg)](https://github.com/macieklamberski/feedproof/blob/main/LICENSE)
+[![codecov](https://codecov.io/gh/macieklamberski/feedsweep/branch/main/graph/badge.svg)](https://codecov.io/gh/macieklamberski/feedsweep)
+[![npm version](https://img.shields.io/npm/v/feedsweep.svg)](https://www.npmjs.com/package/feedsweep)
+[![license](https://img.shields.io/npm/l/feedsweep.svg)](https://github.com/macieklamberski/feedsweep/blob/main/LICENSE)
 
 Tidy up the HTML content in web feeds. Fix feed-specific quirks so content displays in its best possible form.
 
-Feedproof takes raw feed item HTML and runs it through a pipeline that genuinely improves the output: fixing lazy-loaded images so they actually render, resolving relative URLs to absolute, stripping tracking parameters and pixels for privacy, highlighting code blocks, normalizing broken markup from common feed quirks, auto-linking bare URLs, and converting embeds into framework-agnostic placeholders. It ships with sensible defaults and built-in support for YouTube and other popular platforms.
+Feedsweep takes raw feed item HTML and runs it through a pipeline that genuinely improves the output: fixing lazy-loaded images so they actually render, resolving relative URLs to absolute, stripping tracking parameters and pixels for privacy, highlighting code blocks, normalizing broken markup from common feed quirks, auto-linking bare URLs, and converting embeds into framework-agnostic placeholders. It ships with sensible defaults and built-in support for YouTube and other popular platforms.
 
 ## Installation
 
 ```bash
-npm install feedproof
+npm install feedsweep
 ```
 
 ## Quick Start
 
 ```typescript
-import { transformContent } from 'feedproof'
+import { transformContent } from 'feedsweep'
 
 const result = transformContent('<p>Check <img data-src="photo.jpg"> and visit /about</p>', {
   baseUrl: 'https://example.com/post/1',
@@ -55,7 +55,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 ## Options
 
 ```typescript
-import { fixLazyImages, resolveRelativeUrls, transformContent } from 'feedproof'
+import { fixLazyImages, resolveRelativeUrls, transformContent } from 'feedsweep'
 
 const result = transformContent(html, {
   // Base URL for resolving relative URLs.
@@ -67,4 +67,4 @@ const result = transformContent(html, {
 })
 ```
 
-The `stringTransforms`, `domTransforms`, and `finalStringTransforms` options each fully replace the corresponding default phase when provided. Every transform is also exported individually from `feedproof`, so you can compose any pipeline — list them explicitly to build from scratch, or spread `defaultDomTransforms` (etc.) from `feedproof/defaults` to extend or filter the defaults.
+The `stringTransforms`, `domTransforms`, and `finalStringTransforms` options each fully replace the corresponding default phase when provided. Every transform is also exported individually from `feedsweep`, so you can compose any pipeline — list them explicitly to build from scratch, or spread `defaultDomTransforms` (etc.) from `feedsweep/defaults` to extend or filter the defaults.
