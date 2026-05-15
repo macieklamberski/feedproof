@@ -11,7 +11,7 @@ import { youtubeEmbedResolver } from '../../embeds/youtube.js'
 import type { TransformContext } from '../../types.js'
 import { injectEnclosures } from './injectEnclosures.js'
 
-const context: TransformContext = {
+const baseContext: TransformContext = {
   baseUrl: undefined,
   embedResolvers: [],
   lazySrcAttributes: defaultLazySrcAttributes,
@@ -22,7 +22,7 @@ const context: TransformContext = {
 }
 
 const withResolver: TransformContext = {
-  ...context,
+  ...baseContext,
   embedResolvers: [youtubeEmbedResolver],
 }
 
@@ -33,10 +33,16 @@ const withEnclosures = (
 }
 
 describe('injectEnclosures', () => {
-  it('should inject video enclosure as native video element', () => {
+  const transform = (html: string, context: TransformContext = baseContext) => {
+    return transformHtml(html, injectEnclosures(context))
+  }
+
+  it('should inject video enclosure as native video element', async () => {
     const value = '<p>Episode notes</p>'
-    const ctx = withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }])
-    const result = transformHtml(value, injectEnclosures(ctx))
+    const result = await transform(
+      value,
+      withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }]),
+    )
 
     expect(result).toContain('<video')
     expect(result).toContain('src="https://example.com/clip.mp4"')
@@ -44,20 +50,24 @@ describe('injectEnclosures', () => {
     expect(result).toContain('preload="none"')
   })
 
-  it('should inject enclosure before existing content', () => {
+  it('should inject enclosure before existing content', async () => {
     const value = '<p>Episode notes</p>'
-    const ctx = withEnclosures([{ url: 'https://example.com/episode.mp3', type: 'audio/mpeg' }])
-    const result = transformHtml(value, injectEnclosures(ctx))
+    const result = await transform(
+      value,
+      withEnclosures([{ url: 'https://example.com/episode.mp3', type: 'audio/mpeg' }]),
+    )
     const embedIndex = result.indexOf('<audio')
     const contentIndex = result.indexOf('Episode notes')
 
     expect(embedIndex).toBeLessThan(contentIndex)
   })
 
-  it('should inject audio enclosure as native audio element', () => {
+  it('should inject audio enclosure as native audio element', async () => {
     const value = '<p>Episode notes</p>'
-    const ctx = withEnclosures([{ url: 'https://example.com/episode.mp3', type: 'audio/mpeg' }])
-    const result = transformHtml(value, injectEnclosures(ctx))
+    const result = await transform(
+      value,
+      withEnclosures([{ url: 'https://example.com/episode.mp3', type: 'audio/mpeg' }]),
+    )
 
     expect(result).toContain('<audio')
     expect(result).toContain('src="https://example.com/episode.mp3"')
@@ -65,127 +75,143 @@ describe('injectEnclosures', () => {
     expect(result).toContain('preload="none"')
   })
 
-  it('should resolve video enclosure through embedResolver', () => {
+  it('should resolve video enclosure through embedResolver', async () => {
     const value = '<p>Episode notes</p>'
-    const ctx = withEnclosures([
-      { url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video' },
-    ])
-    const result = transformHtml(value, injectEnclosures(ctx))
+    const result = await transform(
+      value,
+      withEnclosures([{ url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video' }]),
+    )
 
     expect(result).toContain('data-embed-provider="youtube"')
     expect(result).toContain('data-embed-thumbnail=')
   })
 
-  it('should skip enclosures already present in content', () => {
+  it('should skip enclosures already present in content', async () => {
     const value = '<p>Content</p><video src="https://example.com/clip.mp4"></video>'
-    const ctx = withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }])
-    const result = transformHtml(value, injectEnclosures(ctx))
+    const result = await transform(
+      value,
+      withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }]),
+    )
     const matches = result.match(/example\.com\/clip\.mp4/g)
 
     expect(matches).toHaveLength(1)
   })
 
-  it('should skip image enclosures', () => {
+  it('should skip image enclosures', async () => {
     const value = '<p>Content</p>'
-    const ctx = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
-    const result = transformHtml(value, injectEnclosures(ctx))
+    const result = await transform(
+      value,
+      withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }]),
+    )
 
     expect(result).not.toContain('data-embed')
   })
 
-  it('should skip enclosures without type or medium', () => {
+  it('should skip enclosures without type or medium', async () => {
     const value = '<p>Content</p>'
-    const ctx = withEnclosures([{ url: 'https://example.com/file.bin' }])
-    const result = transformHtml(value, injectEnclosures(ctx))
+    const result = await transform(value, withEnclosures([{ url: 'https://example.com/file.bin' }]))
 
     expect(result).not.toContain('data-embed')
   })
 
-  it('should inject multiple enclosures', () => {
+  it('should inject multiple enclosures', async () => {
     const value = '<p>Content</p>'
-    const ctx = withEnclosures([
-      { url: 'https://example.com/episode.mp3', type: 'audio/mpeg' },
-      { url: 'https://example.com/clip.mp4', type: 'video/mp4' },
-    ])
-    const result = transformHtml(value, injectEnclosures(ctx))
+    const result = await transform(
+      value,
+      withEnclosures([
+        { url: 'https://example.com/episode.mp3', type: 'audio/mpeg' },
+        { url: 'https://example.com/clip.mp4', type: 'video/mp4' },
+      ]),
+    )
 
     expect(result).toContain('<audio')
     expect(result).toContain('<video')
   })
 
-  it('should detect audio by medium field', () => {
+  it('should detect audio by medium field', async () => {
     const value = '<p>Content</p>'
-    const ctx = withEnclosures([{ url: 'https://example.com/episode.mp3', medium: 'audio' }])
-    const result = transformHtml(value, injectEnclosures(ctx))
+    const result = await transform(
+      value,
+      withEnclosures([{ url: 'https://example.com/episode.mp3', medium: 'audio' }]),
+    )
 
     expect(result).toContain('<audio')
   })
 
-  it('should detect video by medium field', () => {
+  it('should detect video by medium field', async () => {
     const value = '<p>Content</p>'
-    const ctx = withEnclosures([{ url: 'https://example.com/clip.mp4', medium: 'video' }])
-    const result = transformHtml(value, injectEnclosures(ctx))
+    const result = await transform(
+      value,
+      withEnclosures([{ url: 'https://example.com/clip.mp4', medium: 'video' }]),
+    )
 
     expect(result).toContain('<video')
   })
 
-  it('should do nothing when no enclosures', () => {
-    const result = transformHtml('<p>Content</p>', injectEnclosures(context))
-
-    expect(result).not.toContain('data-embed')
-  })
-
-  it('should do nothing when enclosures is empty', () => {
-    const ctx = withEnclosures([])
-    const result = transformHtml('<p>Content</p>', injectEnclosures(ctx))
-
-    expect(result).not.toContain('data-embed')
-  })
-
-  it('should resolve enclosure with unrecognized type through resolver', () => {
+  it('should do nothing when no enclosures', async () => {
     const value = '<p>Content</p>'
-    const ctx = withEnclosures([
-      { url: 'https://www.youtube.com/v/dQw4w9WgXcQ', type: 'application/x-shockwave-flash' },
-    ])
-    const result = transformHtml(value, injectEnclosures(ctx))
+
+    expect(await transform(value)).not.toContain('data-embed')
+  })
+
+  it('should do nothing when enclosures is empty', async () => {
+    const value = '<p>Content</p>'
+
+    expect(await transform(value, withEnclosures([]))).not.toContain('data-embed')
+  })
+
+  it('should resolve enclosure with unrecognized type through resolver', async () => {
+    const value = '<p>Content</p>'
+    const result = await transform(
+      value,
+      withEnclosures([
+        { url: 'https://www.youtube.com/v/dQw4w9WgXcQ', type: 'application/x-shockwave-flash' },
+      ]),
+    )
 
     expect(result).toContain('data-embed="iframe"')
     expect(result).toContain('data-embed-provider="youtube"')
   })
 
-  it('should use resolver type over enclosure medium', () => {
+  it('should use resolver type over enclosure medium', async () => {
     const value = '<p>Content</p>'
-    const ctx = withEnclosures([
-      { url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video' },
-    ])
-    const result = transformHtml(value, injectEnclosures(ctx))
+    const result = await transform(
+      value,
+      withEnclosures([{ url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video' }]),
+    )
 
     expect(result).toContain('data-embed="iframe"')
   })
 
-  it('should skip enclosure with unrecognized type and no resolver match', () => {
+  it('should skip enclosure with unrecognized type and no resolver match', async () => {
     const value = '<p>Content</p>'
-    const ctx = withEnclosures([
-      { url: 'https://example.com/widget.swf', type: 'application/x-shockwave-flash' },
-    ])
-    const result = transformHtml(value, injectEnclosures(ctx))
+    const result = await transform(
+      value,
+      withEnclosures([
+        { url: 'https://example.com/widget.swf', type: 'application/x-shockwave-flash' },
+      ]),
+    )
 
     expect(result).not.toContain('data-embed')
   })
 
-  it('should skip enclosure with javascript: url', () => {
+  it('should skip enclosure with javascript: url', async () => {
     const value = '<p>Content</p>'
-    const ctx = withEnclosures([{ url: 'javascript:alert(1)', medium: 'video' }])
-    const result = transformHtml(value, injectEnclosures(ctx))
+    const result = await transform(
+      value,
+      withEnclosures([{ url: 'javascript:alert(1)', medium: 'video' }]),
+    )
 
     expect(result).not.toContain('data-embed')
     expect(result).not.toContain('javascript:')
   })
 
-  it('should skip enclosure with data: url', () => {
+  it('should skip enclosure with data: url', async () => {
     const value = '<p>Content</p>'
-    const ctx = withEnclosures([{ url: 'data:text/html,<script>1</script>', medium: 'video' }])
-    const result = transformHtml(value, injectEnclosures(ctx))
+    const result = await transform(
+      value,
+      withEnclosures([{ url: 'data:text/html,<script>1</script>', medium: 'video' }]),
+    )
 
     expect(result).not.toContain('data-embed')
   })

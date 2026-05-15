@@ -11,7 +11,7 @@ import {
 import type { TransformContext } from '../../types.js'
 import { replacePreLineBreaks } from './replacePreLineBreaks.js'
 
-const context: TransformContext = {
+const baseContext: TransformContext = {
   embedResolvers: defaultEmbedResolvers,
   lazySrcAttributes: defaultLazySrcAttributes,
   trackingHosts: defaultTrackingHosts,
@@ -21,42 +21,48 @@ const context: TransformContext = {
 }
 
 describe('replacePreLineBreaks', () => {
-  const replace = (html: string) => {
+  const transform = (html: string, context: TransformContext = baseContext) => {
     return transformHtml(html, replacePreLineBreaks(context))
   }
 
-  it('should replace br with newline inside pre', () => {
-    const result = replace('<pre>line 1<br>line 2</pre>')
+  it('should replace br with newline inside pre', async () => {
+    const value = '<pre>line 1<br>line 2</pre>'
+    const result = await transform(value)
 
     expect(result).toContain('<pre>line 1\nline 2</pre>')
   })
 
-  it('should replace self-closing br', () => {
-    const result = replace('<pre>line 1<br/>line 2</pre>')
+  it('should replace self-closing br', async () => {
+    const value = '<pre>line 1<br/>line 2</pre>'
+    const result = await transform(value)
 
     expect(result).toContain('<pre>line 1\nline 2</pre>')
   })
 
-  it('should replace br with space before slash', () => {
-    const result = replace('<pre>line 1<br />line 2</pre>')
+  it('should replace br with space before slash', async () => {
+    const value = '<pre>line 1<br />line 2</pre>'
+    const result = await transform(value)
 
     expect(result).toContain('<pre>line 1\nline 2</pre>')
   })
 
-  it('should replace multiple br tags', () => {
-    const result = replace('<pre>a<br>b<br>c</pre>')
+  it('should replace multiple br tags', async () => {
+    const value = '<pre>a<br>b<br>c</pre>'
+    const result = await transform(value)
 
     expect(result).toContain('<pre>a\nb\nc</pre>')
   })
 
-  it('should target code inside pre', () => {
-    const result = replace('<pre><code>a<br>b</code></pre>')
+  it('should target code inside pre', async () => {
+    const value = '<pre><code>a<br>b</code></pre>'
+    const result = await transform(value)
 
     expect(result).toContain('<code>a\nb</code>')
   })
 
-  it('should not affect br outside pre', () => {
-    const result = replace('<p>line 1<br>line 2</p>')
+  it('should not affect br outside pre', async () => {
+    const value = '<p>line 1<br>line 2</p>'
+    const result = await transform(value)
 
     expect(result).toContain('<br>')
   })
