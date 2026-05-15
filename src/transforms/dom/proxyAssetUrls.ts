@@ -85,6 +85,16 @@ export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
       proxySrcset(source, 'image', assetProxyFn)
     }
 
+    for (const track of document.querySelectorAll('track')) {
+      proxyAttribute(track, 'src', sourceTypeFromParent(track), assetProxyFn)
+    }
+
+    // SVG2 uses `href`; legacy SVG1 uses `xlink:href`. linkedom preserves either.
+    for (const image of document.querySelectorAll('image')) {
+      const attribute = image.hasAttribute('href') ? 'href' : 'xlink:href'
+      proxyAttribute(image, attribute, 'image', assetProxyFn)
+    }
+
     for (const element of document.querySelectorAll('[data-embed-thumbnail]')) {
       proxyAttribute(element, 'data-embed-thumbnail', 'image', assetProxyFn)
     }

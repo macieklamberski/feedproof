@@ -26,7 +26,7 @@ export const stripOversizedBase64Sources = (html: string, maxSize: number): stri
 // a toggle (WebReflection/linkedom#235, won't fix). Normalize once at parse time so every
 // transform reads attributes by canonical lowercase name. Per the HTML spec, the first
 // occurrence of a duplicate (case-folded) name wins.
-const normalizeAttributeCase = (document: Document): void => {
+export const normalizeAttributeCase = (document: Document): void => {
   for (const element of document.querySelectorAll('*')) {
     const original = Array.from(element.attributes).map((attribute) => ({
       name: attribute.name,

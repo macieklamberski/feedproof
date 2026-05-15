@@ -168,6 +168,44 @@ describe('proxyAssetUrls', () => {
     expect(seen).toEqual(['https://cdn.example.com/photo.jpg'])
   })
 
+  it('should rewrite SVG image href as image', async () => {
+    const value = '<svg><image href="https://cdn.example.com/photo.jpg"/></svg>'
+    const result = await transform(value, wrapProxy)
+
+    expect(result).toContain(
+      'href="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"',
+    )
+  })
+
+  it('should rewrite SVG image xlink:href as image', async () => {
+    const value = '<svg><image xlink:href="https://cdn.example.com/legacy.jpg"/></svg>'
+    const result = await transform(value, wrapProxy)
+
+    expect(result).toContain(
+      'xlink:href="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Flegacy.jpg"',
+    )
+  })
+
+  it('should rewrite track src using parent media type', async () => {
+    const value =
+      '<video><track src="https://cdn.example.com/captions.vtt" kind="subtitles"></video>'
+    const result = await transform(value, wrapProxy)
+
+    expect(result).toContain(
+      'src="https://proxy.example.com/?type=video&url=https%3A%2F%2Fcdn.example.com%2Fcaptions.vtt"',
+    )
+  })
+
+  it('should rewrite track src inside audio as audio', async () => {
+    const value =
+      '<audio><track src="https://cdn.example.com/chapters.vtt" kind="chapters"></audio>'
+    const result = await transform(value, wrapProxy)
+
+    expect(result).toContain(
+      'src="https://proxy.example.com/?type=audio&url=https%3A%2F%2Fcdn.example.com%2Fchapters.vtt"',
+    )
+  })
+
   it('should proxy uppercase attribute names via parseFragment normalization', async () => {
     const value = '<IMG SRC="https://cdn.example.com/photo.jpg">'
     const result = await transform(value, wrapProxy)
