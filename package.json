@@ -39,7 +39,7 @@
     "build": "tsdown src/index.ts src/defaults.ts --format esm --dts --clean --unbundle --no-fixed-extension"
   },
   "dependencies": {
-    "@wordpress/autop": "^4.45.0",
+    "@wordpress/autop": "^4.46.0",
     "highlight.js": "^11.11.1",
     "linkedom": "^0.18.12",
     "linkifyjs": "^4.3.2",
