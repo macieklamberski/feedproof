@@ -91,25 +91,49 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).toContain('data-embed="iframe"')
   })
 
-  it('should emit data-embed-author and data-embed-text when handler returns them', () => {
+  it('should emit data-embed-title, description, author, avatar and duration when handler returns them', () => {
     const customResolver: EmbedResolver = {
-      selector: 'blockquote.tweet',
-      extract: () => ({
-        provider: 'twitter',
-        src: 'https://platform.twitter.com/embed/Tweet.html?id=1',
-        url: 'https://twitter.com/user/status/1',
+      selector: 'iframe[src*="example.com"]',
+      extract: (element) => ({
+        provider: 'example',
+        src: element.getAttribute('src') ?? '',
+        title: 'Sample title',
+        description: 'Sample description',
         author: '@user',
-        text: 'Hello world',
+        avatar: 'https://example.com/avatar.jpg',
+        duration: 125,
       }),
     }
-    const value = '<blockquote class="tweet">Tweet text</blockquote>'
+    const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const result = transformHtml(
       value,
       replaceEmbedsWithPlaceholders({ ...baseContext, embedResolvers: [customResolver] }),
     )
 
+    expect(result).toContain('data-embed-title="Sample title"')
+    expect(result).toContain('data-embed-description="Sample description"')
     expect(result).toContain('data-embed-author="@user"')
-    expect(result).toContain('data-embed-text="Hello world"')
+    expect(result).toContain('data-embed-avatar="https://example.com/avatar.jpg"')
+    expect(result).toContain('data-embed-duration="125"')
+  })
+
+  it('should skip data-embed-avatar when avatar url is unsafe', () => {
+    const customResolver: EmbedResolver = {
+      selector: 'iframe[src*="example.com"]',
+      extract: (element) => ({
+        provider: 'example',
+        src: element.getAttribute('src') ?? '',
+        avatar: 'javascript:alert(1)',
+      }),
+    }
+    const value = '<iframe src="https://example.com/player/xyz"></iframe>'
+    const result = transformHtml(
+      value,
+      replaceEmbedsWithPlaceholders({ ...baseContext, embedResolvers: [customResolver] }),
+    )
+
+    expect(result).not.toContain('data-embed-avatar')
+    expect(result).not.toContain('javascript:')
   })
 
   it('should wrap unknown iframe as generic placeholder without provider', () => {
