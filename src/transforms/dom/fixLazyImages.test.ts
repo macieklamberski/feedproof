@@ -70,6 +70,8 @@ describe('fixLazyImages', () => {
     const result = await transform(value)
 
     expect(result).toContain('src="real.jpg"')
+    expect(result).not.toContain('<noscript')
+    expect(result).not.toContain('lazy.jpg')
   })
 
   it('should normalize attribute case on images extracted from noscript', async () => {
@@ -78,6 +80,7 @@ describe('fixLazyImages', () => {
 
     expect(result).toContain('src="real.jpg"')
     expect(result).not.toContain('SRC=')
+    expect(result).not.toContain('<noscript')
   })
 
   it('should not extract noscript when sibling is not an image', async () => {
