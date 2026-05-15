@@ -50,7 +50,7 @@ export const fixLazyImages: DomTransform = (context) => {
         continue
       }
 
-      const inner = noscript.textContent ?? ''
+      const inner = noscript.innerHTML
       const hasImage = imgPattern.test(inner)
 
       if (!hasImage) {
