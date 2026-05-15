@@ -49,7 +49,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `trimPreWhitespace` | Remove common leading indentation from `<pre>` |
 | `linkifyUrls` | Wrap bare URLs in `<a>` tags |
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` to embed placeholders |
-| `injectEnclosureEmbedPlaceholders` | Add audio/video enclosures to content |
+| `injectEnclosures` | Inject feed enclosures into content as native `<audio>`/`<video>` or iframe placeholders |
 | `simplifyFigures` | Unwrap `<figure>` when the figcaption is empty or redundant |
 
 ## Options

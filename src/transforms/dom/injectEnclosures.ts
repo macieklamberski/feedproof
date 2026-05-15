@@ -42,7 +42,7 @@ const createNativeMediaElement = (
   return element
 }
 
-export const injectEnclosureEmbedPlaceholders: DomTransform = (context) => {
+export const injectEnclosures: DomTransform = (context) => {
   return (document) => {
     if (!context.enclosures?.length) {
       return

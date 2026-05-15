@@ -2,7 +2,7 @@ import { resolveUrl } from 'feedcanon'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
-import { injectEnclosureEmbedPlaceholders } from './transforms/dom/injectEnclosureEmbedPlaceholders.js'
+import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
 import { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 import { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
 import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
@@ -120,7 +120,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   trimPreWhitespace,
   linkifyUrls,
   replaceEmbedsWithPlaceholders,
-  injectEnclosureEmbedPlaceholders,
+  injectEnclosures,
 ]
 
 export const defaultFinalStringTransforms: Array<StringTransform> = [stripEmptyTags]
