@@ -152,6 +152,22 @@ describe('proxyAssetUrls', () => {
     expect(result).toContain('src="https://cdn.example.com/photo.jpg"')
   })
 
+  it('should leave data: URIs untouched and never invoke assetProxyFn for them', async () => {
+    const seen: Array<string> = []
+    const recorder: AssetProxyFn = (url) => {
+      seen.push(url)
+      return `https://proxy.example.com/?url=${encodeURIComponent(url)}`
+    }
+    const value =
+      '<img src="data:image/png;base64,iVBORw0KGgo="><img srcset="data:image/png;base64,abc 1x, https://cdn.example.com/photo.jpg 2x">'
+    const result = await transform(value, recorder)
+
+    expect(result).toContain('src="data:image/png;base64,iVBORw0KGgo="')
+    expect(result).toContain('data:image/png;base64,abc 1x')
+    expect(result).toContain('https%3A%2F%2Fcdn.example.com%2Fphoto.jpg')
+    expect(seen).toEqual(['https://cdn.example.com/photo.jpg'])
+  })
+
   it('should pass the correct type for each asset kind', async () => {
     const seen: Array<string> = []
     const recorder: AssetProxyFn = (_, type) => {

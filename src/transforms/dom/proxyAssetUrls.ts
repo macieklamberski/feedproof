@@ -15,6 +15,10 @@ const sourceTypeFromParent = (element: Element): AssetType => {
   return 'image'
 }
 
+const isProxyableUrl = (url: string): boolean => {
+  return !url.startsWith('data:')
+}
+
 const proxyAttribute = (
   element: Element,
   attribute: string,
@@ -23,7 +27,7 @@ const proxyAttribute = (
 ): void => {
   const value = element.getAttribute(attribute)
 
-  if (!value) {
+  if (!value || !isProxyableUrl(value)) {
     return
   }
 
@@ -44,10 +48,16 @@ const proxySrcset = (element: Element, type: AssetType, assetProxyFn: AssetProxy
     return
   }
 
-  const rewritten = parseSrcset(srcset).map((entry) => ({
-    ...entry,
-    url: assetProxyFn(entry.url, type) ?? entry.url,
-  }))
+  const rewritten = parseSrcset(srcset).map((entry) => {
+    if (!isProxyableUrl(entry.url)) {
+      return entry
+    }
+
+    return {
+      ...entry,
+      url: assetProxyFn(entry.url, type) ?? entry.url,
+    }
+  })
 
   element.removeAttribute('srcSet')
   element.setAttribute('srcset', stringifySrcset(rewritten))
