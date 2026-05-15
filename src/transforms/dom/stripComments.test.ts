@@ -28,44 +28,51 @@ describe('stripComments', () => {
   describe('happy paths', () => {
     it('should remove a single comment', async () => {
       const value = '<!-- hidden -->'
+      const expected = ''
 
-      expect(await transform(value)).toBe('')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove multiple comments', async () => {
       const value = '<!-- one --><p>text</p><!-- two -->'
+      const expected = '<p>text</p>'
 
-      expect(await transform(value)).toBe('<p>text</p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove a comment between elements', async () => {
       const value = '<p>First</p><!-- separator --><p>Second</p>'
+      const expected = '<p>First</p><p>Second</p>'
 
-      expect(await transform(value)).toBe('<p>First</p><p>Second</p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove a comment containing newlines', async () => {
       const value = '<p>before</p><!--\n  multiline\n  body\n--><p>after</p>'
+      const expected = '<p>before</p><p>after</p>'
 
-      expect(await transform(value)).toBe('<p>before</p><p>after</p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove a conditional comment', async () => {
       const value = '<!--[if IE]><p>legacy</p><![endif]--><p>main</p>'
+      const expected = '<p>main</p>'
 
-      expect(await transform(value)).toBe('<p>main</p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove a comment inside a paragraph', async () => {
       const value = '<p>Hello <!-- inline --> world</p>'
+      const expected = '<p>Hello  world</p>'
 
-      expect(await transform(value)).toBe('<p>Hello  world</p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove an unterminated comment', async () => {
       const value = '<p>before</p><!-- unterminated'
+      const expected = '<p>before</p>'
 
-      expect(await transform(value)).toBe('<p>before</p>')
+      expect(await transform(value)).toBe(expected)
     })
   })
 
@@ -108,14 +115,16 @@ describe('stripComments', () => {
 
     it('should merge surrounding text when comment has no adjacent whitespace', async () => {
       const value = '<p>foo<!-- mid -->bar</p>'
+      const expected = '<p>foobar</p>'
 
-      expect(await transform(value)).toBe('<p>foobar</p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should handle empty string', async () => {
       const value = ''
+      const expected = ''
 
-      expect(await transform(value)).toBe('')
+      expect(await transform(value)).toBe(expected)
     })
   })
 })

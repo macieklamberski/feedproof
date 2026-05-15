@@ -101,15 +101,17 @@ describe('extractRedirectTarget', () => {
   it('should return target from first matching extractor', () => {
     const url = new URL('https://example.com/?target=https%3A%2F%2Fdest.com')
     const result = extractRedirectTarget(url, [matchEverything])
+    const expected = 'https://dest.com'
 
-    expect(result).toBe('https://dest.com')
+    expect(result).toBe(expected)
   })
 
   it('should fall through to next extractor when first returns undefined', () => {
     const url = new URL('https://example.com/?target=https%3A%2F%2Fdest.com')
     const result = extractRedirectTarget(url, [matchNothing, matchEverything])
+    const expected = 'https://dest.com'
 
-    expect(result).toBe('https://dest.com')
+    expect(result).toBe(expected)
   })
 
   it('should return undefined when no extractor matches', () => {
@@ -129,7 +131,8 @@ describe('extractRedirectTarget', () => {
   it('should work with defaultUrlUnwrappers', () => {
     const url = new URL('https://www.google.com/url?url=https%3A%2F%2Fexample.com%2Fpage')
     const result = extractRedirectTarget(url, defaultUrlUnwrappers)
+    const expected = 'https://example.com/page'
 
-    expect(result).toBe('https://example.com/page')
+    expect(result).toBe(expected)
   })
 })
