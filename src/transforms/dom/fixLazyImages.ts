@@ -46,7 +46,7 @@ export const fixLazyImages: DomTransform = (context) => {
     for (const noscript of noscripts) {
       const sibling = noscript.previousElementSibling
 
-      if (sibling?.tagName !== 'IMG') {
+      if (sibling?.tagName.toLowerCase() !== 'img') {
         continue
       }
 
