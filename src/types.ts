@@ -15,8 +15,11 @@ export type EmbedResolverResult = {
   thumbnail?: string
   width?: number
   height?: number
+  title?: string
+  description?: string
   author?: string
-  text?: string
+  avatar?: string
+  duration?: number
 }
 
 export type EmbedResolver = {

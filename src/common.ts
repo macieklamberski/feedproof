@@ -166,12 +166,24 @@ export const createEmbedPlaceholder = (
     element.setAttribute('data-embed-height', String(metadata.height))
   }
 
+  if (metadata?.title) {
+    element.setAttribute('data-embed-title', metadata.title)
+  }
+
+  if (metadata?.description) {
+    element.setAttribute('data-embed-description', metadata.description)
+  }
+
   if (metadata?.author) {
     element.setAttribute('data-embed-author', metadata.author)
   }
 
-  if (metadata?.text) {
-    element.setAttribute('data-embed-text', metadata.text)
+  if (metadata?.avatar && isSafeThumbnailUrl(metadata.avatar)) {
+    element.setAttribute('data-embed-avatar', metadata.avatar)
+  }
+
+  if (metadata?.duration) {
+    element.setAttribute('data-embed-duration', String(metadata.duration))
   }
 
   const fallbackUrl = metadata?.url ?? metadata?.src ?? src
