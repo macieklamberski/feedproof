@@ -49,6 +49,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `trimPreWhitespace` | Remove common leading indentation from `<pre>` |
 | `linkifyUrls` | Wrap bare URLs in `<a>` tags |
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` to embed placeholders |
+| `enrichEmbedPlaceholders` | Populate placeholder metadata (`title`, `description`, `duration`, etc.) via a caller-supplied async fn. Opt-in; not in defaults |
 | `injectEnclosures` | Inject feed enclosures into content as native `<audio>`/`<video>` or iframe placeholders |
 | `proxyAssetUrls` | Rewrite image, video, and audio URLs through a caller-supplied proxy |
 | `simplifyFigures` | Unwrap `<figure>` when the figcaption is empty or redundant |
@@ -65,8 +66,25 @@ const result = transformContent(html, {
   enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
   // Route image/video/audio URLs through a proxy. Return `undefined` to leave a URL untouched.
   assetProxyFn: (url, type) => `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`,
+  // Populate embed placeholder metadata from a remote source (e.g. YouTube oEmbed).
+  // Called once per `transformContent` with all embeds that have a provider+id.
+  enrichEmbedFn: async (embeds) => {
+    return new Map(embeds.map(({ provider, id }) => [`${provider}:${id}`, { title: '…' }]))
+  },
   // Run a custom DOM transform pipeline (omit to use defaults).
   domTransforms: [fixLazyImages, resolveRelativeUrls],
+})
+```
+
+`enrichEmbedFn` is consumed by the opt-in `enrichEmbedPlaceholders` transform, which is not part of the defaults. Compose it explicitly to enable enrichment:
+
+```typescript
+import { enrichEmbedPlaceholders, transformContent } from 'feedsweep'
+import { defaultDomTransforms } from 'feedsweep/defaults'
+
+transformContent(html, {
+  domTransforms: [...defaultDomTransforms, enrichEmbedPlaceholders],
+  enrichEmbedFn,
 })
 ```
 

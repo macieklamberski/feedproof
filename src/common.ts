@@ -183,6 +183,69 @@ export const unwrapOuterTag = (html: string, pattern: RegExp): string => {
   return result
 }
 
+export const applyEmbedMetadata = (
+  element: HTMLElement,
+  metadata: Partial<EmbedResolverResult>,
+  options?: { setIfMissing?: boolean },
+): void => {
+  const setIfMissing = options?.setIfMissing ?? false
+
+  const set = (name: string, value: string) => {
+    if (setIfMissing && element.hasAttribute(name)) {
+      return
+    }
+    element.setAttribute(name, value)
+  }
+
+  if (metadata.provider) {
+    set('data-embed-provider', metadata.provider)
+  }
+
+  if (metadata.id) {
+    set('data-embed-id', metadata.id)
+  }
+
+  if (metadata.src) {
+    set('data-embed-src', metadata.src)
+  }
+
+  if (metadata.url) {
+    set('data-embed-url', metadata.url)
+  }
+
+  if (metadata.thumbnail && isSafeThumbnailUrl(metadata.thumbnail)) {
+    set('data-embed-thumbnail', metadata.thumbnail)
+  }
+
+  if (metadata.width) {
+    set('data-embed-width', String(metadata.width))
+  }
+
+  if (metadata.height) {
+    set('data-embed-height', String(metadata.height))
+  }
+
+  if (metadata.title) {
+    set('data-embed-title', metadata.title)
+  }
+
+  if (metadata.description) {
+    set('data-embed-description', metadata.description)
+  }
+
+  if (metadata.author) {
+    set('data-embed-author', metadata.author)
+  }
+
+  if (metadata.avatar && isSafeThumbnailUrl(metadata.avatar)) {
+    set('data-embed-avatar', metadata.avatar)
+  }
+
+  if (metadata.duration) {
+    set('data-embed-duration', String(metadata.duration))
+  }
+}
+
 export const createEmbedPlaceholder = (
   document: Document,
   src: string,
@@ -193,44 +256,8 @@ export const createEmbedPlaceholder = (
   element.setAttribute('data-embed', 'iframe')
   element.setAttribute('data-embed-src', metadata?.src ?? src)
 
-  if (metadata?.provider) {
-    element.setAttribute('data-embed-provider', metadata.provider)
-  }
-
-  if (metadata?.url) {
-    element.setAttribute('data-embed-url', metadata.url)
-  }
-
-  if (metadata?.thumbnail && isSafeThumbnailUrl(metadata.thumbnail)) {
-    element.setAttribute('data-embed-thumbnail', metadata.thumbnail)
-  }
-
-  if (metadata?.width) {
-    element.setAttribute('data-embed-width', String(metadata.width))
-  }
-
-  if (metadata?.height) {
-    element.setAttribute('data-embed-height', String(metadata.height))
-  }
-
-  if (metadata?.title) {
-    element.setAttribute('data-embed-title', metadata.title)
-  }
-
-  if (metadata?.description) {
-    element.setAttribute('data-embed-description', metadata.description)
-  }
-
-  if (metadata?.author) {
-    element.setAttribute('data-embed-author', metadata.author)
-  }
-
-  if (metadata?.avatar && isSafeThumbnailUrl(metadata.avatar)) {
-    element.setAttribute('data-embed-avatar', metadata.avatar)
-  }
-
-  if (metadata?.duration) {
-    element.setAttribute('data-embed-duration', String(metadata.duration))
+  if (metadata) {
+    applyEmbedMetadata(element, metadata)
   }
 
   const fallbackUrl = metadata?.url ?? metadata?.src ?? src

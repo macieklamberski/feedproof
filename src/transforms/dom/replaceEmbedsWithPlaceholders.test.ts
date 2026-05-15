@@ -50,6 +50,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
 
     expect(result).toContain('data-embed="iframe"')
     expect(result).toContain('data-embed-provider="youtube"')
+    expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
     expect(result).toContain('data-embed-src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"')
     expect(result).toContain('data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
     expect(result).toContain(
