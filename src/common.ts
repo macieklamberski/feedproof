@@ -1,6 +1,6 @@
 import { resolveUrl } from 'feedcanon'
 import { parseHTML } from 'linkedom'
-import type { EmbedResolverResult } from './types.js'
+import type { EmbedResolverResult, MaybePromise } from './types.js'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
@@ -28,38 +28,41 @@ export const parseFragment = (html: string): Document => {
   return document
 }
 
-export const transformHtml = (html: string, transform: (document: Document) => void): string => {
+export const transformHtml = async (
+  html: string,
+  transform: (document: Document) => MaybePromise<void>,
+): Promise<string> => {
   const document = parseFragment(html)
 
-  transform(document)
+  await transform(document)
 
   return document.body.innerHTML
 }
 
-export const applyDomTransforms = (
+export const applyDomTransforms = async (
   html: string,
-  transforms: Array<(document: Document) => void>,
-): string => {
+  transforms: Array<(document: Document) => MaybePromise<void>>,
+): Promise<string> => {
   // Base64 images can be megabytes of text that bloat linkedom's DOM tree memory.
   // Strip oversized ones before DOM parsing to reduce memory usage.
   const stripped = stripOversizedBase64Sources(html, 50 * 1024)
   const document = parseFragment(stripped)
 
   for (const transform of transforms) {
-    transform(document)
+    await transform(document)
   }
 
   return document.body.innerHTML
 }
 
-export const applyStringTransforms = (
+export const applyStringTransforms = async (
   html: string,
-  transforms: Array<(html: string) => string>,
-): string => {
+  transforms: Array<(html: string) => MaybePromise<string>>,
+): Promise<string> => {
   let output = html
 
   for (const transform of transforms) {
-    output = transform(output)
+    output = await transform(output)
   }
 
   return output

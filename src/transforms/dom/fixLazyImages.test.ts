@@ -23,71 +23,71 @@ const baseContext: TransformContext = {
 const context: TransformContext = baseContext
 
 describe('fixLazyImages', () => {
-  it('should move data-src to src', () => {
+  it('should move data-src to src', async () => {
     const html = '<img data-src="photo.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="photo.jpg"')
     expect(result).not.toContain('data-src')
   })
 
-  it('should move data-original to src', () => {
+  it('should move data-original to src', async () => {
     const html = '<img data-original="photo.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="photo.jpg"')
     expect(result).not.toContain('data-original')
   })
 
-  it('should move data-lazy-src to src', () => {
+  it('should move data-lazy-src to src', async () => {
     const html = '<img data-lazy-src="photo.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="photo.jpg"')
     expect(result).not.toContain('data-lazy-src')
   })
 
-  it('should move data-url to src', () => {
+  it('should move data-url to src', async () => {
     const html = '<img data-url="photo.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="photo.jpg"')
     expect(result).not.toContain('data-url')
   })
 
-  it('should move data-srcset to srcset', () => {
+  it('should move data-srcset to srcset', async () => {
     const html = '<img data-srcset="small.jpg 300w, large.jpg 600w">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('srcset="small.jpg 300w, large.jpg 600w"')
     expect(result).not.toContain('data-srcset')
   })
 
-  it('should extract image from noscript when sibling is lazy placeholder', () => {
+  it('should extract image from noscript when sibling is lazy placeholder', async () => {
     const html = '<img data-src="lazy.jpg"><noscript><img src="real.jpg"></noscript>'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="real.jpg"')
   })
 
-  it('should not extract noscript when sibling is not an image', () => {
+  it('should not extract noscript when sibling is not an image', async () => {
     const html = '<div>text</div><noscript><img src="real.jpg"></noscript>'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('<noscript>')
   })
 
-  it('should not modify images without lazy attributes', () => {
+  it('should not modify images without lazy attributes', async () => {
     const html = '<img src="already-loaded.jpg" alt="photo">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="already-loaded.jpg"')
     expect(result).toContain('alt="photo"')
   })
 
-  it('should move both data-src and data-srcset on same image', () => {
+  it('should move both data-src and data-srcset on same image', async () => {
     const html = '<img data-src="photo.jpg" data-srcset="small.jpg 300w, large.jpg 600w">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="photo.jpg"')
     expect(result).toContain('srcset="small.jpg 300w, large.jpg 600w"')
@@ -95,123 +95,123 @@ describe('fixLazyImages', () => {
     expect(result).not.toContain('data-srcset')
   })
 
-  it('should prefer data-src over data-original when both present', () => {
+  it('should prefer data-src over data-original when both present', async () => {
     const html = '<img data-src="preferred.jpg" data-original="fallback.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="preferred.jpg"')
     expect(result).not.toContain('data-src')
     expect(result).not.toContain('data-original')
   })
 
-  it('should move data-orig to src', () => {
+  it('should move data-orig to src', async () => {
     const html = '<img data-orig="photo.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="photo.jpg"')
     expect(result).not.toContain('data-orig')
   })
 
-  it('should move data-orig-file to src', () => {
+  it('should move data-orig-file to src', async () => {
     const html = '<img data-orig-file="photo.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="photo.jpg"')
     expect(result).not.toContain('data-orig-file')
   })
 
-  it('should move data-large-file to src', () => {
+  it('should move data-large-file to src', async () => {
     const html = '<img data-large-file="large.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="large.jpg"')
     expect(result).not.toContain('data-large-file')
   })
 
-  it('should move data-medium-file to src', () => {
+  it('should move data-medium-file to src', async () => {
     const html = '<img data-medium-file="medium.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="medium.jpg"')
     expect(result).not.toContain('data-medium-file')
   })
 
-  it('should move data-img-url to src', () => {
+  it('should move data-img-url to src', async () => {
     const html = '<img data-img-url="photo.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="photo.jpg"')
     expect(result).not.toContain('data-img-url')
   })
 
-  it('should move data-runner-src to src', () => {
+  it('should move data-runner-src to src', async () => {
     const html = '<img data-runner-src="photo.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="photo.jpg"')
     expect(result).not.toContain('data-runner-src')
   })
 
-  it('should move data-canonical-src to src', () => {
+  it('should move data-canonical-src to src', async () => {
     const html = '<img data-canonical-src="photo.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="photo.jpg"')
     expect(result).not.toContain('data-canonical-src')
   })
 
-  it('should prefer data-orig-file over data-large-file when both present', () => {
+  it('should prefer data-orig-file over data-large-file when both present', async () => {
     const html = '<img data-orig-file="orig.jpg" data-large-file="large.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="orig.jpg"')
     expect(result).not.toContain('data-orig-file')
     expect(result).not.toContain('data-large-file')
   })
 
-  it('should move data-image to src', () => {
+  it('should move data-image to src', async () => {
     const html = '<img data-image="https://images.squarespace-cdn.com/photo.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="https://images.squarespace-cdn.com/photo.jpg"')
     expect(result).not.toContain('data-image')
   })
 
-  it('should move data-thumb to src', () => {
+  it('should move data-thumb to src', async () => {
     const html = '<img data-thumb="https://example.com/thumb.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="https://example.com/thumb.jpg"')
     expect(result).not.toContain('data-thumb')
   })
 
-  it('should move data-thumb-src to src', () => {
+  it('should move data-thumb-src to src', async () => {
     const html = '<img data-thumb-src="https://example.com/thumb.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="https://example.com/thumb.jpg"')
     expect(result).not.toContain('data-thumb-src')
   })
 
-  it('should move data-original-src to src', () => {
+  it('should move data-original-src to src', async () => {
     const html = '<img data-original-src="https://cdn.example.com/photo.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="https://cdn.example.com/photo.jpg"')
     expect(result).not.toContain('data-original-src')
   })
 
-  it('should move data-image-src to src', () => {
+  it('should move data-image-src to src', async () => {
     const html = '<img data-image-src="https://example.com/photo.png">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="https://example.com/photo.png"')
     expect(result).not.toContain('data-image-src')
   })
 
-  it('should prefer data-src over data-image when both present', () => {
+  it('should prefer data-src over data-image when both present', async () => {
     const html = '<img data-src="real.jpg" data-image="fallback.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="real.jpg"')
     expect(result).not.toContain('data-src')
@@ -219,108 +219,108 @@ describe('fixLazyImages', () => {
   })
 
   describe('URL-shape guard', () => {
-    it('should not promote a non-URL value like "left"', () => {
+    it('should not promote a non-URL value like "left"', async () => {
       const html = '<img data-orig="left">'
-      const result = transformHtml(html, fixLazyImages(context))
+      const result = await transformHtml(html, fixLazyImages(context))
 
       expect(result).not.toContain('src="left"')
       expect(result).not.toContain('data-orig')
     })
 
-    it('should not promote a numeric flag value like "1"', () => {
+    it('should not promote a numeric flag value like "1"', async () => {
       const html = '<img data-src="1">'
-      const result = transformHtml(html, fixLazyImages(context))
+      const result = await transformHtml(html, fixLazyImages(context))
 
       expect(result).not.toContain('src="1"')
       expect(result).not.toContain('data-src')
     })
 
-    it('should not promote a boolean-string value like "true"', () => {
+    it('should not promote a boolean-string value like "true"', async () => {
       const html = '<img data-src="true">'
-      const result = transformHtml(html, fixLazyImages(context))
+      const result = await transformHtml(html, fixLazyImages(context))
 
       expect(result).not.toContain('src="true"')
       expect(result).not.toContain('data-src')
     })
 
-    it('should not promote a JSON-object value', () => {
+    it('should not promote a JSON-object value', async () => {
       const html = '<img data-src=\'{"foo":"bar"}\'>'
-      const result = transformHtml(html, fixLazyImages(context))
+      const result = await transformHtml(html, fixLazyImages(context))
 
       expect(result).not.toContain('src=')
       expect(result).not.toContain('data-src')
     })
 
-    it('should not promote an empty string', () => {
+    it('should not promote an empty string', async () => {
       const html = '<img data-src="">'
-      const result = transformHtml(html, fixLazyImages(context))
+      const result = await transformHtml(html, fixLazyImages(context))
 
       expect(result).not.toContain('src=')
       expect(result).not.toContain('data-src')
     })
 
-    it('should fall through to a later attribute when an earlier one is non-URL', () => {
+    it('should fall through to a later attribute when an earlier one is non-URL', async () => {
       const html = '<img data-src="loaded" data-original="real.jpg">'
-      const result = transformHtml(html, fixLazyImages(context))
+      const result = await transformHtml(html, fixLazyImages(context))
 
       expect(result).toContain('src="real.jpg"')
       expect(result).not.toContain('data-src')
       expect(result).not.toContain('data-original')
     })
 
-    it('should accept a relative path with extension', () => {
+    it('should accept a relative path with extension', async () => {
       const html = '<img data-src="photos/img.jpg">'
-      const result = transformHtml(html, fixLazyImages(context))
+      const result = await transformHtml(html, fixLazyImages(context))
 
       expect(result).toContain('src="photos/img.jpg"')
     })
 
-    it('should accept a data: URI', () => {
+    it('should accept a data: URI', async () => {
       const html = '<img data-src="data:image/png;base64,iVBORw0KGgo">'
-      const result = transformHtml(html, fixLazyImages(context))
+      const result = await transformHtml(html, fixLazyImages(context))
 
       expect(result).toContain('src="data:image/png;base64,iVBORw0KGgo"')
     })
   })
 
-  it('should not extract noscript when sibling is img but noscript has no image', () => {
+  it('should not extract noscript when sibling is img but noscript has no image', async () => {
     const html = '<img src="x"><noscript>just text, no image tag</noscript>'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('<noscript>')
     expect(result).toContain('just text')
   })
 
-  it('should overwrite existing src with data-src', () => {
+  it('should overwrite existing src with data-src', async () => {
     const html = '<img src="placeholder.gif" data-src="real.jpg">'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('src="real.jpg"')
     expect(result).not.toContain('placeholder.gif')
     expect(result).not.toContain('data-src')
   })
 
-  it('should handle html with no images', () => {
+  it('should handle html with no images', async () => {
     const html = '<p>No images here</p>'
-    const result = transformHtml(html, fixLazyImages(context))
+    const result = await transformHtml(html, fixLazyImages(context))
 
     expect(result).toContain('<p>No images here</p>')
   })
 
   describe('overrides', () => {
-    it('should ignore default lazySrcAttributes when override is provided', () => {
+    it('should ignore default lazySrcAttributes when override is provided', async () => {
       const customContext: TransformContext = { ...baseContext, lazySrcAttributes: ['data-img'] }
       const html = '<img data-src="ignored.jpg">'
-      const result = transformHtml(html, fixLazyImages(customContext))
+      const result = await transformHtml(html, fixLazyImages(customContext))
 
       expect(result).toContain('data-src="ignored.jpg"')
       expect(result).not.toContain('<img src=')
     })
 
-    it('should use the provided lazySrcAttributes', () => {
+    it('should use the provided lazySrcAttributes', async () => {
       const customContext: TransformContext = { ...baseContext, lazySrcAttributes: ['data-img'] }
       const html = '<img data-img="photo.jpg">'
-      const result = transformHtml(html, fixLazyImages(customContext))
+      const result = await transformHtml(html, fixLazyImages(customContext))
 
       expect(result).toContain('src="photo.jpg"')
       expect(result).not.toContain('data-img')

@@ -1,5 +1,7 @@
 import type { DiscoverResolveUrlFn } from 'feedscout'
 
+export type MaybePromise<T> = T | Promise<T>
+
 export type Enclosure = {
   url: string
   type?: string
@@ -24,7 +26,7 @@ export type EmbedResolverResult = {
 
 export type EmbedResolver = {
   selector: string
-  extract: (element: Element) => EmbedResolverResult | undefined
+  extract: (element: Element) => MaybePromise<EmbedResolverResult | undefined>
 }
 
 export type UrlUnwrapper = (url: URL) => string | undefined
@@ -40,9 +42,9 @@ export type TransformContext = {
   resolveUrlFn: ResolveUrlFn
 }
 
-export type DomTransform = (context: TransformContext) => (document: Document) => void
+export type DomTransform = (context: TransformContext) => (document: Document) => MaybePromise<void>
 
-export type StringTransform = (context: TransformContext) => (html: string) => string
+export type StringTransform = (context: TransformContext) => (html: string) => MaybePromise<string>
 
 export type TransformContentOptions = {
   baseUrl?: string

@@ -3,12 +3,12 @@ import type { DomTransform } from '../../types.js'
 import { coerceNumber } from '../../utils.js'
 
 export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
-  return (document) => {
+  return async (document) => {
     for (const resolver of context.embedResolvers) {
       const elements = document.querySelectorAll(resolver.selector)
 
       for (const element of elements) {
-        const metadata = resolver.extract(element)
+        const metadata = await resolver.extract(element)
 
         if (!metadata) {
           continue

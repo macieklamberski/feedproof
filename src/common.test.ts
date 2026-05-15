@@ -8,15 +8,15 @@ import {
 } from './common.js'
 
 describe('transformHtml', () => {
-  it('should preserve content when transform is a no-op', () => {
+  it('should preserve content when transform is a no-op', async () => {
     const html = '<p>Hello world</p>'
 
-    expect(transformHtml(html, () => {})).toContain('<p>Hello world</p>')
+    expect(await transformHtml(html, () => {})).toContain('<p>Hello world</p>')
   })
 
-  it('should allow modifying the DOM', () => {
+  it('should allow modifying the DOM', async () => {
     const html = '<p><img data-src="img.jpg"></p>'
-    const result = transformHtml(html, (document) => {
+    const result = await transformHtml(html, (document) => {
       for (const image of document.querySelectorAll('img[data-src]')) {
         const dataSrc = image.getAttribute('data-src')
 
@@ -31,8 +31,8 @@ describe('transformHtml', () => {
     expect(result).not.toContain('data-src')
   })
 
-  it('should handle empty string', () => {
-    expect(transformHtml('', () => {})).toBeDefined()
+  it('should handle empty string', async () => {
+    expect(await transformHtml('', () => {})).toBeDefined()
   })
 })
 
@@ -190,16 +190,16 @@ describe('createEmbedPlaceholder thumbnail safety', () => {
 })
 
 describe('applyDomTransforms base64 stripping', () => {
-  it('should preserve small base64 images through dom transforms', () => {
+  it('should preserve small base64 images through dom transforms', async () => {
     const value = '<p>Text</p><img src="data:image/png;base64,iVBORw0KGgo=">'
 
-    expect(applyDomTransforms(value, [])).toContain('data:image/png;base64,iVBORw0KGgo=')
+    expect(await applyDomTransforms(value, [])).toContain('data:image/png;base64,iVBORw0KGgo=')
   })
 
-  it('should strip oversized base64 images during dom transforms', () => {
+  it('should strip oversized base64 images during dom transforms', async () => {
     const largeData = 'A'.repeat(100 * 1024)
     const value = `<p>Text</p><img src="data:image/png;base64,${largeData}">`
-    const result = applyDomTransforms(value, [])
+    const result = await applyDomTransforms(value, [])
 
     expect(result).toContain('<p>Text</p>')
     expect(result).not.toContain(largeData)

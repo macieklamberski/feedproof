@@ -40,9 +40,9 @@ const withNoResolvers: TransformContext = {
 }
 
 describe('replaceEmbedsWithPlaceholders', () => {
-  it('should replace iframe with rich-metadata placeholder when handler returns metadata', () => {
+  it('should replace iframe with rich-metadata placeholder when handler returns metadata', async () => {
     const value = '<p>Text</p><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).toContain('data-embed="iframe"')
     expect(result).toContain('data-embed-provider="youtube"')
@@ -54,44 +54,44 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).not.toContain('<iframe')
   })
 
-  it('should include fallback link with canonical url', () => {
+  it('should include fallback link with canonical url', async () => {
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).toContain('<a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">')
     expect(result).toContain('https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>')
   })
 
-  it('should preserve iframe dimensions as data attributes', () => {
+  it('should preserve iframe dimensions as data attributes', async () => {
     const value =
       '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" width="640" height="360"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).toContain('data-embed-width="640"')
     expect(result).toContain('data-embed-height="360"')
   })
 
-  it('should replace multiple embeds in same content', () => {
+  it('should replace multiple embeds in same content', async () => {
     const value =
       '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe><iframe src="https://example.com/player/xyz"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).not.toContain('<iframe')
     expect(result).toContain('data-embed-provider="youtube"')
     expect(result).toContain('data-embed-provider="example"')
   })
 
-  it('should preserve surrounding content when replacing media', () => {
+  it('should preserve surrounding content when replacing media', async () => {
     const value =
       '<p>Before</p><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe><p>After</p>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).toContain('Before')
     expect(result).toContain('After')
     expect(result).toContain('data-embed="iframe"')
   })
 
-  it('should emit data-embed-title, description, author, avatar and duration when handler returns them', () => {
+  it('should emit data-embed-title, description, author, avatar and duration when handler returns them', async () => {
     const customResolver: EmbedResolver = {
       selector: 'iframe[src*="example.com"]',
       extract: (element) => ({
@@ -105,7 +105,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
       }),
     }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
-    const result = transformHtml(
+    const result = await transformHtml(
       value,
       replaceEmbedsWithPlaceholders({ ...baseContext, embedResolvers: [customResolver] }),
     )
@@ -117,7 +117,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).toContain('data-embed-duration="125"')
   })
 
-  it('should skip data-embed-avatar when avatar url is unsafe', () => {
+  it('should skip data-embed-avatar when avatar url is unsafe', async () => {
     const customResolver: EmbedResolver = {
       selector: 'iframe[src*="example.com"]',
       extract: (element) => ({
@@ -127,7 +127,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
       }),
     }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
-    const result = transformHtml(
+    const result = await transformHtml(
       value,
       replaceEmbedsWithPlaceholders({ ...baseContext, embedResolvers: [customResolver] }),
     )
@@ -136,9 +136,9 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).not.toContain('javascript:')
   })
 
-  it('should wrap unknown iframe as generic placeholder without provider', () => {
+  it('should wrap unknown iframe as generic placeholder without provider', async () => {
     const value = '<iframe src="https://unknown-site.com/123"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).not.toContain('<iframe')
     expect(result).toContain('data-embed="iframe"')
@@ -146,81 +146,81 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).not.toContain('data-embed-provider')
   })
 
-  it('should preserve dimensions when wrapping unknown iframe', () => {
+  it('should preserve dimensions when wrapping unknown iframe', async () => {
     const value = '<iframe src="https://unknown-site.com/123" width="640" height="360"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).toContain('data-embed-width="640"')
     expect(result).toContain('data-embed-height="360"')
   })
 
-  it('should include fallback link when wrapping unknown iframe', () => {
+  it('should include fallback link when wrapping unknown iframe', async () => {
     const value = '<iframe src="https://unknown-site.com/123"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).toContain(
       '<a href="https://unknown-site.com/123">https://unknown-site.com/123</a>',
     )
   })
 
-  it('should skip iframe without src attribute', () => {
+  it('should skip iframe without src attribute', async () => {
     const value = '<iframe></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).not.toContain('data-embed')
     expect(result).toContain('<iframe')
   })
 
-  it('should still wrap unknown iframes when embedResolvers is empty', () => {
+  it('should still wrap unknown iframes when embedResolvers is empty', async () => {
     const value = '<iframe src="https://unknown-site.com/123"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withNoResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withNoResolvers))
 
     expect(result).not.toContain('<iframe')
     expect(result).toContain('data-embed="iframe"')
     expect(result).not.toContain('data-embed-provider')
   })
 
-  it('should leave video elements untouched', () => {
+  it('should leave video elements untouched', async () => {
     const value = '<video src="https://example.com/clip.mp4"></video>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).toContain('<video')
     expect(result).not.toContain('data-embed')
   })
 
-  it('should leave audio elements untouched', () => {
+  it('should leave audio elements untouched', async () => {
     const value = '<audio src="https://example.com/episode.mp3"></audio>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).toContain('<audio')
     expect(result).not.toContain('data-embed')
   })
 
-  it('should skip iframe with malformed src url', () => {
+  it('should skip iframe with malformed src url', async () => {
     const value = '<iframe src="not-a-valid-url"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).not.toContain('data-embed')
     expect(result).toContain('<iframe')
   })
 
-  it('should skip iframe with non-http(s) src', () => {
+  it('should skip iframe with non-http(s) src', async () => {
     const value = '<iframe src="javascript:alert(1)"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).not.toContain('data-embed')
   })
 
-  it('should fall through to next handler when first returns undefined', () => {
+  it('should fall through to next handler when first returns undefined', async () => {
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withResolvers))
 
     expect(result).toContain('data-embed-provider="example"')
   })
 
-  it('should resolve YouTube via defaultEmbedResolvers export', () => {
+  it('should resolve YouTube via defaultEmbedResolvers export', async () => {
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
-    const result = transformHtml(
+    const result = await transformHtml(
       value,
       replaceEmbedsWithPlaceholders({ ...baseContext, embedResolvers: defaultEmbedResolvers }),
     )
@@ -228,16 +228,16 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).toContain('data-embed-provider="youtube"')
   })
 
-  it('should still wrap iframes when embedResolvers is empty', () => {
+  it('should still wrap iframes when embedResolvers is empty', async () => {
     const value = '<iframe src="https://unknown-site.com/123"></iframe>'
-    const result = transformHtml(value, replaceEmbedsWithPlaceholders(withNoResolvers))
+    const result = await transformHtml(value, replaceEmbedsWithPlaceholders(withNoResolvers))
 
     expect(result).not.toContain('<iframe')
     expect(result).toContain('data-embed="iframe"')
     expect(result).not.toContain('data-embed-provider')
   })
 
-  it('should skip resolver-claimed iframe when metadata.src is unsafe', () => {
+  it('should skip resolver-claimed iframe when metadata.src is unsafe', async () => {
     const unsafeResolver: EmbedResolver = {
       selector: 'iframe[src]',
       extract: () => ({
@@ -246,7 +246,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
       }),
     }
     const value = '<iframe src="https://example.com/x"></iframe>'
-    const result = transformHtml(
+    const result = await transformHtml(
       value,
       replaceEmbedsWithPlaceholders({ ...baseContext, embedResolvers: [unsafeResolver] }),
     )
@@ -255,7 +255,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).not.toContain('javascript:')
   })
 
-  it('should skip resolver-claimed iframe when metadata.url is unsafe', () => {
+  it('should skip resolver-claimed iframe when metadata.url is unsafe', async () => {
     const unsafeResolver: EmbedResolver = {
       selector: 'iframe[src]',
       extract: () => ({
@@ -265,7 +265,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
       }),
     }
     const value = '<iframe src="https://example.com/x"></iframe>'
-    const result = transformHtml(
+    const result = await transformHtml(
       value,
       replaceEmbedsWithPlaceholders({ ...baseContext, embedResolvers: [unsafeResolver] }),
     )
@@ -274,9 +274,9 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).not.toContain('javascript:')
   })
 
-  it('should let consumer override resolveUrlFn to allow non-default schemes', () => {
+  it('should let consumer override resolveUrlFn to allow non-default schemes', async () => {
     const value = '<iframe src="custom-scheme://payload"></iframe>'
-    const result = transformHtml(
+    const result = await transformHtml(
       value,
       replaceEmbedsWithPlaceholders({
         ...baseContext,

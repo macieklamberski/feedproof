@@ -12,7 +12,10 @@ import {
 } from './defaults.js'
 import type { TransformContentOptions, TransformContext } from './types.js'
 
-export const transformContent = (html: string, options: TransformContentOptions = {}): string => {
+export const transformContent = async (
+  html: string,
+  options: TransformContentOptions = {},
+): Promise<string> => {
   const context: TransformContext = {
     baseUrl: options.baseUrl,
     enclosures: options.enclosures,
@@ -29,19 +32,19 @@ export const transformContent = (html: string, options: TransformContentOptions 
   const finalFns = options.finalStringTransforms ?? defaultFinalStringTransforms
 
   // Phase 1: String transforms.
-  const afterString = applyStringTransforms(
+  const afterString = await applyStringTransforms(
     html,
     stringFns.map((transform) => transform(context)),
   )
 
   // Phase 2: DOM transforms.
-  const afterDom = applyDomTransforms(
+  const afterDom = await applyDomTransforms(
     afterString,
     domFns.map((transform) => transform(context)),
   )
 
   // Phase 3: Final string transforms — cleans up empties produced by Phase 2.
-  const afterFinal = applyStringTransforms(
+  const afterFinal = await applyStringTransforms(
     afterDom,
     finalFns.map((transform) => transform(context)),
   )
@@ -90,6 +93,7 @@ export type {
   EmbedResolver,
   EmbedResolverResult,
   Enclosure,
+  MaybePromise,
   ResolveUrlFn,
   StringTransform,
   TransformContentOptions,

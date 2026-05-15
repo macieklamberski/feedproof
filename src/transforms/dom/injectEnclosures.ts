@@ -11,17 +11,17 @@ const isVideoEnclosure = (enclosure: Enclosure): boolean => {
 
 // Run resolvers against a synthesized iframe carrying the enclosure URL so that
 // iframe-shaped resolvers (YouTube etc.) can claim platform-specific enclosures.
-const resolveEnclosure = (
+const resolveEnclosure = async (
   url: string,
   resolvers: ReadonlyArray<EmbedResolver>,
   document: Document,
-): EmbedResolverResult | undefined => {
+): Promise<EmbedResolverResult | undefined> => {
   const probe = document.createElement('iframe')
   probe.setAttribute('src', url)
 
   for (const resolver of resolvers) {
     if (probe.matches(resolver.selector)) {
-      const metadata = resolver.extract(probe)
+      const metadata = await resolver.extract(probe)
 
       if (metadata) {
         return metadata
@@ -43,7 +43,7 @@ const createNativeMediaElement = (
 }
 
 export const injectEnclosures: DomTransform = (context) => {
-  return (document) => {
+  return async (document) => {
     if (!context.enclosures?.length) {
       return
     }
@@ -59,7 +59,7 @@ export const injectEnclosures: DomTransform = (context) => {
         continue
       }
 
-      const resolved = resolveEnclosure(enclosure.url, context.embedResolvers, document)
+      const resolved = await resolveEnclosure(enclosure.url, context.embedResolvers, document)
 
       if (resolved) {
         const placeholder = createEmbedPlaceholder(document, enclosure.url, resolved)

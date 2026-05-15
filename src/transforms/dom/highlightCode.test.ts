@@ -130,95 +130,95 @@ describe('detectLanguage', () => {
 })
 
 describe('highlightCode', () => {
-  it('should highlight code block with language-js class', () => {
+  it('should highlight code block with language-js class', async () => {
     const html = '<pre><code class="language-js">const x = 1</code></pre>'
-    const result = transformHtml(html, highlightCode(context))
+    const result = await transformHtml(html, highlightCode(context))
 
     expect(result).toContain('hljs-keyword')
     expect(result).toContain('hljs-number')
     expect(result).toContain('class="language-js hljs"')
   })
 
-  it('should highlight code block with lang-python class', () => {
+  it('should highlight code block with lang-python class', async () => {
     const html = '<pre><code class="lang-python">def hello():\n    print("hi")</code></pre>'
-    const result = transformHtml(html, highlightCode(context))
+    const result = await transformHtml(html, highlightCode(context))
 
     expect(result).toContain('hljs-keyword')
     expect(result).toContain('class="lang-python hljs"')
   })
 
-  it('should auto-detect language when no class is present', () => {
+  it('should auto-detect language when no class is present', async () => {
     const html = '<pre><code>function greet(name) {\n  return "Hello, " + name;\n}</code></pre>'
-    const result = transformHtml(html, highlightCode(context))
+    const result = await transformHtml(html, highlightCode(context))
 
     expect(result).toContain('hljs')
     expect(result).toContain('<span class="hljs-')
   })
 
-  it('should not touch inline code outside pre', () => {
+  it('should not touch inline code outside pre', async () => {
     const html = '<p>Use <code>const x = 1</code> to declare a variable</p>'
-    const result = transformHtml(html, highlightCode(context))
+    const result = await transformHtml(html, highlightCode(context))
 
     expect(result).not.toContain('hljs')
     expect(result).toContain('<code>const x = 1</code>')
   })
 
-  it('should not touch empty code blocks', () => {
+  it('should not touch empty code blocks', async () => {
     const html = '<pre><code></code></pre>'
-    const result = transformHtml(html, highlightCode(context))
+    const result = await transformHtml(html, highlightCode(context))
 
     expect(result).not.toContain('hljs')
   })
 
-  it('should not touch whitespace-only code blocks', () => {
+  it('should not touch whitespace-only code blocks', async () => {
     const html = '<pre><code>   \n  </code></pre>'
-    const result = transformHtml(html, highlightCode(context))
+    const result = await transformHtml(html, highlightCode(context))
 
     expect(result).not.toContain('hljs')
   })
 
-  it('should fall back to auto-detection for unsupported language', () => {
+  it('should fall back to auto-detection for unsupported language', async () => {
     const html = '<pre><code class="language-nonexistent">const x = 1</code></pre>'
-    const result = transformHtml(html, highlightCode(context))
+    const result = await transformHtml(html, highlightCode(context))
 
     expect(result).toContain('hljs')
     expect(result).toContain('<span class="hljs-')
   })
 
-  it('should not modify pre without code element', () => {
+  it('should not modify pre without code element', async () => {
     const html = '<pre>plain preformatted text</pre>'
-    const result = transformHtml(html, highlightCode(context))
+    const result = await transformHtml(html, highlightCode(context))
 
     expect(result).not.toContain('hljs')
     expect(result).toContain('plain preformatted text')
   })
 
-  it('should handle html with no code blocks', () => {
+  it('should handle html with no code blocks', async () => {
     const html = '<p>No code here</p>'
-    const result = transformHtml(html, highlightCode(context))
+    const result = await transformHtml(html, highlightCode(context))
 
     expect(result).toContain('<p>No code here</p>')
   })
 
-  it('should highlight Shiki code blocks using data-language on pre', () => {
+  it('should highlight Shiki code blocks using data-language on pre', async () => {
     const html = [
       '<pre class="astro-code" data-language="scss">',
       '<code><span class="line"><span>header</span><span> {</span></span>\n',
       '<span class="line"><span>  ul</span><span> {</span></span></code>',
       '</pre>',
     ].join('')
-    const result = transformHtml(html, highlightCode(context))
+    const result = await transformHtml(html, highlightCode(context))
 
     expect(result).toContain('hljs')
     expect(result).toContain('<span class="hljs-')
   })
 
-  it('should highlight multiple code blocks', () => {
+  it('should highlight multiple code blocks', async () => {
     const html = [
       '<pre><code class="language-js">const a = 1</code></pre>',
       '<pre><code class="language-python">x = 1</code></pre>',
     ].join('')
-    const result = transformHtml(html, highlightCode(context))
+    const result = await transformHtml(html, highlightCode(context))
 
     const matches = result.match(/class="[^"]*hljs"/g)
 

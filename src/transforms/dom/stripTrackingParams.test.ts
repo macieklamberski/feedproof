@@ -21,80 +21,80 @@ const context: TransformContext = {
 }
 
 describe('stripTrackingParams', () => {
-  it('should strip utm_source from links', () => {
+  it('should strip utm_source from links', async () => {
     const html = '<a href="https://example.com/page?utm_source=rss">link</a>'
-    const result = transformHtml(html, stripTrackingParams(context))
+    const result = await transformHtml(html, stripTrackingParams(context))
 
     expect(result).not.toContain('utm_source')
     expect(result).toContain('https://example.com/page')
   })
 
-  it('should strip multiple tracking params from a single link', () => {
+  it('should strip multiple tracking params from a single link', async () => {
     const html =
       '<a href="https://example.com/?utm_source=rss&utm_medium=feed&utm_campaign=post">link</a>'
-    const result = transformHtml(html, stripTrackingParams(context))
+    const result = await transformHtml(html, stripTrackingParams(context))
 
     expect(result).not.toContain('utm_source')
     expect(result).not.toContain('utm_medium')
     expect(result).not.toContain('utm_campaign')
   })
 
-  it('should preserve non-tracking query params', () => {
+  it('should preserve non-tracking query params', async () => {
     const html = '<a href="https://example.com/?id=123&utm_source=rss&page=2">link</a>'
-    const result = transformHtml(html, stripTrackingParams(context))
+    const result = await transformHtml(html, stripTrackingParams(context))
 
     expect(result).toContain('id=123')
     expect(result).toContain('page=2')
     expect(result).not.toContain('utm_source')
   })
 
-  it('should not modify links without tracking params', () => {
+  it('should not modify links without tracking params', async () => {
     const html = '<a href="https://example.com/page?id=42">link</a>'
-    const result = transformHtml(html, stripTrackingParams(context))
+    const result = await transformHtml(html, stripTrackingParams(context))
 
     expect(result).toContain('href="https://example.com/page?id=42"')
   })
 
-  it('should handle links with no query params', () => {
+  it('should handle links with no query params', async () => {
     const html = '<a href="https://example.com/page">link</a>'
-    const result = transformHtml(html, stripTrackingParams(context))
+    const result = await transformHtml(html, stripTrackingParams(context))
 
     expect(result).toContain('href="https://example.com/page"')
   })
 
-  it('should handle invalid URLs gracefully', () => {
+  it('should handle invalid URLs gracefully', async () => {
     const html = '<a href="not-a-valid-url">link</a>'
-    const result = transformHtml(html, stripTrackingParams(context))
+    const result = await transformHtml(html, stripTrackingParams(context))
 
     expect(result).toContain('href="not-a-valid-url"')
   })
 
-  it('should handle relative URLs gracefully', () => {
+  it('should handle relative URLs gracefully', async () => {
     const html = '<a href="/page?utm_source=rss">link</a>'
-    const result = transformHtml(html, stripTrackingParams(context))
+    const result = await transformHtml(html, stripTrackingParams(context))
 
     expect(result).toContain('href="/page?utm_source=rss"')
   })
 
-  it('should remove query string entirely when all params are tracking', () => {
+  it('should remove query string entirely when all params are tracking', async () => {
     const html = '<a href="https://example.com/?utm_source=rss&utm_medium=feed">link</a>'
-    const result = transformHtml(html, stripTrackingParams(context))
+    const result = await transformHtml(html, stripTrackingParams(context))
 
     expect(result).toContain('href="https://example.com/"')
     expect(result).not.toContain('utm_source')
     expect(result).not.toContain('utm_medium')
   })
 
-  it('should handle html with no links', () => {
+  it('should handle html with no links', async () => {
     const html = '<p>No links here</p>'
-    const result = transformHtml(html, stripTrackingParams(context))
+    const result = await transformHtml(html, stripTrackingParams(context))
 
     expect(result).toContain('<p>No links here</p>')
   })
 
-  it('should strip non-utm tracking params', () => {
+  it('should strip non-utm tracking params', async () => {
     const html = '<a href="https://example.com/?fbclid=abc&gclid=def&id=42">link</a>'
-    const result = transformHtml(html, stripTrackingParams(context))
+    const result = await transformHtml(html, stripTrackingParams(context))
 
     expect(result).toContain('href="https://example.com/?id=42"')
   })
