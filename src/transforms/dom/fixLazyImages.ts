@@ -1,3 +1,4 @@
+import { normalizeAttributeCase } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 const imgPattern = /<img\s/i
@@ -40,6 +41,7 @@ export const fixLazyImages: DomTransform = (context) => {
 
     // Extract images from noscript wrappers when sibling is a lazy placeholder.
     const noscripts = document.querySelectorAll('noscript')
+    let replacedNoscript = false
 
     for (const noscript of noscripts) {
       const sibling = noscript.previousElementSibling
@@ -48,7 +50,7 @@ export const fixLazyImages: DomTransform = (context) => {
         continue
       }
 
-      const inner = noscript.textContent ?? ''
+      const inner = noscript.innerHTML
       const hasImage = imgPattern.test(inner)
 
       if (!hasImage) {
@@ -57,6 +59,14 @@ export const fixLazyImages: DomTransform = (context) => {
 
       sibling.remove()
       noscript.outerHTML = inner
+      replacedNoscript = true
+    }
+
+    // `outerHTML =` re-parses raw HTML through linkedom, bypassing parseFragment's
+    // attribute-case normalization. Re-apply it so downstream transforms still see
+    // lowercase attribute names on the newly inserted nodes.
+    if (replacedNoscript) {
+      normalizeAttributeCase(document)
     }
   }
 }
