@@ -50,6 +50,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `linkifyUrls` | Wrap bare URLs in `<a>` tags |
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` to embed placeholders |
 | `injectEnclosures` | Inject feed enclosures into content as native `<audio>`/`<video>` or iframe placeholders |
+| `proxyAssetUrls` | Rewrite image, video, and audio URLs through a caller-supplied proxy |
 | `simplifyFigures` | Unwrap `<figure>` when the figcaption is empty or redundant |
 
 ## Options
@@ -62,6 +63,8 @@ const result = transformContent(html, {
   baseUrl: 'https://example.com/post/1',
   // Feed item enclosures (audio/video).
   enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
+  // Route image/video/audio URLs through a proxy. Return `undefined` to leave a URL untouched.
+  assetProxyFn: (url, type) => `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`,
   // Run a custom DOM transform pipeline (omit to use defaults).
   domTransforms: [fixLazyImages, resolveRelativeUrls],
 })
