@@ -76,16 +76,4 @@ const result = transformContent(html, {
 })
 ```
 
-`enrichEmbedFn` is consumed by the opt-in `enrichEmbedPlaceholders` transform, which is not part of the defaults. Compose it explicitly to enable enrichment:
-
-```typescript
-import { enrichEmbedPlaceholders, transformContent } from 'feedsweep'
-import { defaultDomTransforms } from 'feedsweep/defaults'
-
-transformContent(html, {
-  domTransforms: [...defaultDomTransforms, enrichEmbedPlaceholders],
-  enrichEmbedFn,
-})
-```
-
 The `stringTransforms`, `domTransforms`, and `finalStringTransforms` options each fully replace the corresponding default phase when provided. Every transform is also exported individually from `feedsweep`, so you can compose any pipeline — list them explicitly to build from scratch, or spread `defaultDomTransforms` (etc.) from `feedsweep/defaults` to extend or filter the defaults.
