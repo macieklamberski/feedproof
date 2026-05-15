@@ -11,7 +11,7 @@ import {
 import type { TransformContext } from '../../types.js'
 import { stripParagraphBoundaryBreaks } from './stripParagraphBoundaryBreaks.js'
 
-const context: TransformContext = {
+const baseContext: TransformContext = {
   embedResolvers: defaultEmbedResolvers,
   lazySrcAttributes: defaultLazySrcAttributes,
   trackingHosts: defaultTrackingHosts,
@@ -21,29 +21,39 @@ const context: TransformContext = {
 }
 
 describe('stripParagraphBoundaryBreaks', () => {
-  const transform = (html: string) => {
+  const transform = (html: string, context: TransformContext = baseContext) => {
     return transformHtml(html, stripParagraphBoundaryBreaks(context))
   }
 
   describe('happy paths', () => {
     it('should remove leading br from paragraph', async () => {
-      expect(await transform('<p><br>Text</p>')).toBe('<p>Text</p>')
+      const value = '<p><br>Text</p>'
+
+      expect(await transform(value)).toBe('<p>Text</p>')
     })
 
     it('should remove trailing br from paragraph', async () => {
-      expect(await transform('<p>Text<br></p>')).toBe('<p>Text</p>')
+      const value = '<p>Text<br></p>'
+
+      expect(await transform(value)).toBe('<p>Text</p>')
     })
 
     it('should remove both leading and trailing br', async () => {
-      expect(await transform('<p><br>Text<br></p>')).toBe('<p>Text</p>')
+      const value = '<p><br>Text<br></p>'
+
+      expect(await transform(value)).toBe('<p>Text</p>')
     })
 
     it('should remove multiple consecutive br at boundaries', async () => {
-      expect(await transform('<p><br><br>Text<br><br></p>')).toBe('<p>Text</p>')
+      const value = '<p><br><br>Text<br><br></p>'
+
+      expect(await transform(value)).toBe('<p>Text</p>')
     })
 
     it('should remove whitespace text nodes alongside boundary br', async () => {
-      expect(await transform('<p> <br>Text<br> </p>')).toBe('<p>Text</p>')
+      const value = '<p> <br>Text<br> </p>'
+
+      expect(await transform(value)).toBe('<p>Text</p>')
     })
 
     it('should preserve interior br', async () => {
@@ -53,9 +63,9 @@ describe('stripParagraphBoundaryBreaks', () => {
     })
 
     it('should process multiple paragraphs independently', async () => {
-      expect(await transform('<p><br>First<br></p><p><br>Second<br></p>')).toBe(
-        '<p>First</p><p>Second</p>',
-      )
+      const value = '<p><br>First<br></p><p><br>Second<br></p>'
+
+      expect(await transform(value)).toBe('<p>First</p><p>Second</p>')
     })
   })
 
@@ -67,7 +77,9 @@ describe('stripParagraphBoundaryBreaks', () => {
     })
 
     it('should empty paragraph with only br content', async () => {
-      expect(await transform('<p><br></p>')).toBe('<p></p>')
+      const value = '<p><br></p>'
+
+      expect(await transform(value)).toBe('<p></p>')
     })
 
     it('should not touch br outside paragraphs', async () => {
@@ -101,13 +113,14 @@ describe('stripParagraphBoundaryBreaks', () => {
     })
 
     it('should strip from p but leave sibling div untouched', async () => {
-      expect(await transform('<p><br>Para<br></p><div><br>Div<br></div>')).toBe(
-        '<p>Para</p><div><br>Div<br></div>',
-      )
+      const value = '<p><br>Para<br></p><div><br>Div<br></div>'
+
+      expect(await transform(value)).toBe('<p>Para</p><div><br>Div<br></div>')
     })
 
     it('should be idempotent', async () => {
-      const once = await transform('<p><br>Text<br></p>')
+      const value = '<p><br>Text<br></p>'
+      const once = await transform(value)
       const twice = await transform(once)
 
       expect(twice).toBe(once)
@@ -126,29 +139,33 @@ describe('stripParagraphBoundaryBreaks', () => {
     })
 
     it('should strip boundary br nested inside blockquote', async () => {
-      expect(await transform('<blockquote><p><br>Quoted<br></p></blockquote>')).toBe(
-        '<blockquote><p>Quoted</p></blockquote>',
-      )
+      const value = '<blockquote><p><br>Quoted<br></p></blockquote>'
+
+      expect(await transform(value)).toBe('<blockquote><p>Quoted</p></blockquote>')
     })
 
     it('should strip boundary br nested inside figure', async () => {
-      expect(await transform('<figure><p><br>Caption</p></figure>')).toBe(
-        '<figure><p>Caption</p></figure>',
-      )
+      const value = '<figure><p><br>Caption</p></figure>'
+
+      expect(await transform(value)).toBe('<figure><p>Caption</p></figure>')
     })
 
     it('should strip boundary br nested inside list item', async () => {
-      expect(await transform('<ul><li><p>Item<br></p></li></ul>')).toBe(
-        '<ul><li><p>Item</p></li></ul>',
-      )
+      const value = '<ul><li><p>Item<br></p></li></ul>'
+
+      expect(await transform(value)).toBe('<ul><li><p>Item</p></li></ul>')
     })
 
     it('should strip boundary br with adjacent comment', async () => {
-      expect(await transform('<p><!-- note --><br>Hi</p>')).toBe('<p>Hi</p>')
+      const value = '<p><!-- note --><br>Hi</p>'
+
+      expect(await transform(value)).toBe('<p>Hi</p>')
     })
 
     it('should strip trailing br with adjacent comment', async () => {
-      expect(await transform('<p>Hi<br><!-- note --></p>')).toBe('<p>Hi</p>')
+      const value = '<p>Hi<br><!-- note --></p>'
+
+      expect(await transform(value)).toBe('<p>Hi</p>')
     })
 
     it('should leave paragraph with only non-br skippables alone', async () => {

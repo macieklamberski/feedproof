@@ -11,7 +11,7 @@ import {
 import type { TransformContext } from '../../types.js'
 import { stripComments } from './stripComments.js'
 
-const context: TransformContext = {
+const baseContext: TransformContext = {
   embedResolvers: defaultEmbedResolvers,
   lazySrcAttributes: defaultLazySrcAttributes,
   trackingHosts: defaultTrackingHosts,
@@ -21,43 +21,51 @@ const context: TransformContext = {
 }
 
 describe('stripComments', () => {
-  const transform = (html: string) => {
+  const transform = (html: string, context: TransformContext = baseContext) => {
     return transformHtml(html, stripComments(context))
   }
 
   describe('happy paths', () => {
     it('should remove a single comment', async () => {
-      expect(await transform('<!-- hidden -->')).toBe('')
+      const value = '<!-- hidden -->'
+
+      expect(await transform(value)).toBe('')
     })
 
     it('should remove multiple comments', async () => {
-      expect(await transform('<!-- one --><p>text</p><!-- two -->')).toBe('<p>text</p>')
+      const value = '<!-- one --><p>text</p><!-- two -->'
+
+      expect(await transform(value)).toBe('<p>text</p>')
     })
 
     it('should remove a comment between elements', async () => {
-      expect(await transform('<p>First</p><!-- separator --><p>Second</p>')).toBe(
-        '<p>First</p><p>Second</p>',
-      )
+      const value = '<p>First</p><!-- separator --><p>Second</p>'
+
+      expect(await transform(value)).toBe('<p>First</p><p>Second</p>')
     })
 
     it('should remove a comment containing newlines', async () => {
-      expect(await transform('<p>before</p><!--\n  multiline\n  body\n--><p>after</p>')).toBe(
-        '<p>before</p><p>after</p>',
-      )
+      const value = '<p>before</p><!--\n  multiline\n  body\n--><p>after</p>'
+
+      expect(await transform(value)).toBe('<p>before</p><p>after</p>')
     })
 
     it('should remove a conditional comment', async () => {
-      expect(await transform('<!--[if IE]><p>legacy</p><![endif]--><p>main</p>')).toBe(
-        '<p>main</p>',
-      )
+      const value = '<!--[if IE]><p>legacy</p><![endif]--><p>main</p>'
+
+      expect(await transform(value)).toBe('<p>main</p>')
     })
 
     it('should remove a comment inside a paragraph', async () => {
-      expect(await transform('<p>Hello <!-- inline --> world</p>')).toBe('<p>Hello  world</p>')
+      const value = '<p>Hello <!-- inline --> world</p>'
+
+      expect(await transform(value)).toBe('<p>Hello  world</p>')
     })
 
     it('should remove an unterminated comment', async () => {
-      expect(await transform('<p>before</p><!-- unterminated')).toBe('<p>before</p>')
+      const value = '<p>before</p><!-- unterminated'
+
+      expect(await transform(value)).toBe('<p>before</p>')
     })
   })
 
@@ -99,11 +107,15 @@ describe('stripComments', () => {
     })
 
     it('should merge surrounding text when comment has no adjacent whitespace', async () => {
-      expect(await transform('<p>foo<!-- mid -->bar</p>')).toBe('<p>foobar</p>')
+      const value = '<p>foo<!-- mid -->bar</p>'
+
+      expect(await transform(value)).toBe('<p>foobar</p>')
     })
 
     it('should handle empty string', async () => {
-      expect(await transform('')).toBe('')
+      const value = ''
+
+      expect(await transform(value)).toBe('')
     })
   })
 })
