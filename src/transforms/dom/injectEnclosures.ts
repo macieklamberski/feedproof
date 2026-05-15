@@ -1,5 +1,11 @@
 import { createEmbedPlaceholder } from '../../common.js'
-import type { DomTransform, EmbedResolver, EmbedResolverResult, Enclosure } from '../../types.js'
+import type {
+  DomTransform,
+  EmbedResolver,
+  EmbedResolverResult,
+  Enclosure,
+  TransformContext,
+} from '../../types.js'
 
 const isAudioEnclosure = (enclosure: Enclosure): boolean => {
   return enclosure.medium === 'audio' || !!enclosure.type?.startsWith('audio/')
@@ -30,15 +36,35 @@ const resolveEnclosure = async (
   }
 }
 
+// TODO: render Enclosure `title` and `description` somehow. Neither <audio> nor <video>
+// have a native caption slot, and the chosen approach (figure/figcaption wrapper,
+// aria-label, data-* attributes, etc.) needs a separate design pass.
 const createNativeMediaElement = (
   document: Document,
   tagName: 'audio' | 'video',
-  url: string,
+  enclosure: Enclosure,
+  context: TransformContext,
 ): HTMLElement => {
   const element = document.createElement(tagName)
-  element.setAttribute('src', url)
+  element.setAttribute('src', enclosure.url)
   element.setAttribute('controls', '')
   element.setAttribute('preload', 'none')
+
+  if (tagName === 'video') {
+    if (enclosure.width) {
+      element.setAttribute('width', String(enclosure.width))
+    }
+
+    if (enclosure.height) {
+      element.setAttribute('height', String(enclosure.height))
+    }
+
+    const poster = enclosure.thumbnails?.[0]?.url
+    if (poster && context.resolveUrlFn(poster, context.baseUrl)) {
+      element.setAttribute('poster', poster)
+    }
+  }
+
   return element
 }
 
@@ -68,12 +94,12 @@ export const injectEnclosures: DomTransform = (context) => {
       }
 
       if (isAudioEnclosure(enclosure)) {
-        document.body.prepend(createNativeMediaElement(document, 'audio', enclosure.url))
+        document.body.prepend(createNativeMediaElement(document, 'audio', enclosure, context))
         continue
       }
 
       if (isVideoEnclosure(enclosure)) {
-        document.body.prepend(createNativeMediaElement(document, 'video', enclosure.url))
+        document.body.prepend(createNativeMediaElement(document, 'video', enclosure, context))
       }
     }
   }

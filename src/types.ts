@@ -2,10 +2,22 @@ import type { DiscoverResolveUrlFn } from 'feedscout'
 
 export type MaybePromise<T> = T | Promise<T>
 
+export type EnclosureThumbnail = {
+  url: string
+  width?: number
+  height?: number
+}
+
 export type Enclosure = {
   url: string
   type?: string
   medium?: string
+  width?: number
+  height?: number
+  duration?: number
+  title?: string
+  description?: string
+  thumbnails?: Array<EnclosureThumbnail>
 }
 
 export type ResolveUrlFn = DiscoverResolveUrlFn

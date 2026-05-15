@@ -8,7 +8,7 @@ import {
   defaultUrlUnwrappers,
 } from '../../defaults.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
-import type { TransformContext } from '../../types.js'
+import type { Enclosure, TransformContext } from '../../types.js'
 import { injectEnclosures } from './injectEnclosures.js'
 
 const baseContext: TransformContext = {
@@ -26,9 +26,7 @@ const withResolver: TransformContext = {
   embedResolvers: [youtubeEmbedResolver],
 }
 
-const withEnclosures = (
-  enclosures: Array<{ url: string; type?: string; medium?: string }>,
-): TransformContext => {
+const withEnclosures = (enclosures: Array<Enclosure>): TransformContext => {
   return { ...withResolver, enclosures }
 }
 
@@ -214,5 +212,88 @@ describe('injectEnclosures', () => {
     )
 
     expect(result).not.toContain('data-embed')
+  })
+
+  it('should emit width and height on video enclosure when provided', async () => {
+    const value = '<p>Content</p>'
+    const result = await transform(
+      value,
+      withEnclosures([
+        { url: 'https://example.com/clip.mp4', type: 'video/mp4', width: 1280, height: 720 },
+      ]),
+    )
+
+    expect(result).toContain('width="1280"')
+    expect(result).toContain('height="720"')
+  })
+
+  it('should emit poster on video enclosure from first thumbnail', async () => {
+    const value = '<p>Content</p>'
+    const result = await transform(
+      value,
+      withEnclosures([
+        {
+          url: 'https://example.com/clip.mp4',
+          type: 'video/mp4',
+          thumbnails: [
+            { url: 'https://example.com/poster-large.jpg', width: 1280, height: 720 },
+            { url: 'https://example.com/poster-small.jpg' },
+          ],
+        },
+      ]),
+    )
+
+    expect(result).toContain('poster="https://example.com/poster-large.jpg"')
+  })
+
+  it('should skip unsafe poster url', async () => {
+    const value = '<p>Content</p>'
+    const result = await transform(
+      value,
+      withEnclosures([
+        {
+          url: 'https://example.com/clip.mp4',
+          type: 'video/mp4',
+          thumbnails: [{ url: 'javascript:alert(1)' }],
+        },
+      ]),
+    )
+
+    expect(result).not.toContain('poster=')
+    expect(result).not.toContain('javascript:')
+  })
+
+  it('should not emit width, height, or poster on audio enclosure', async () => {
+    const value = '<p>Content</p>'
+    const result = await transform(
+      value,
+      withEnclosures([
+        {
+          url: 'https://example.com/episode.mp3',
+          type: 'audio/mpeg',
+          width: 1280,
+          height: 720,
+          thumbnails: [{ url: 'https://example.com/cover.jpg' }],
+        },
+      ]),
+    )
+
+    expect(result).toContain('<audio')
+    expect(result).not.toContain('width=')
+    expect(result).not.toContain('height=')
+    expect(result).not.toContain('poster=')
+  })
+
+  it('should not emit width or height on video enclosure when missing', async () => {
+    const value = '<p>Content</p>'
+    const result = await transform(
+      value,
+      withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }]),
+    )
+
+    expect(result).toContain('<video')
+    expect(result).not.toContain('width=')
+    expect(result).not.toContain('height=')
+    expect(result).not.toContain('poster=')
   })
 })
