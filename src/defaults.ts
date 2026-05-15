@@ -5,6 +5,7 @@ import { highlightCode } from './transforms/dom/highlightCode.js'
 import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
 import { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 import { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
+import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 import { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
@@ -121,6 +122,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   linkifyUrls,
   replaceEmbedsWithPlaceholders,
   injectEnclosures,
+  proxyAssetUrls,
 ]
 
 export const defaultFinalStringTransforms: Array<StringTransform> = [stripEmptyTags]

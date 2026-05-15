@@ -121,4 +121,27 @@ describe('transformContent', () => {
 
     expect(result).toContain('<!-- preserved -->')
   })
+
+  it('should proxy asset URLs through assetProxyFn in the default pipeline', async () => {
+    const html = '<p><img src="https://cdn.example.com/photo.jpg"></p>'
+    const result = await transformContent(html, {
+      assetProxyFn: (url, type) => `https://proxy.example.com/${type}/${encodeURIComponent(url)}`,
+    })
+
+    expect(result).toContain(
+      'src="https://proxy.example.com/image/https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"',
+    )
+  })
+
+  it('should proxy native enclosure media elements injected by injectEnclosures', async () => {
+    const html = '<p>Content</p>'
+    const result = await transformContent(html, {
+      enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
+      assetProxyFn: (url, type) => `https://proxy.example.com/${type}/${encodeURIComponent(url)}`,
+    })
+
+    expect(result).toContain(
+      'src="https://proxy.example.com/audio/https%3A%2F%2Fexample.com%2Faudio.mp3"',
+    )
+  })
 })
