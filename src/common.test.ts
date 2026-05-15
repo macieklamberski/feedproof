@@ -189,6 +189,51 @@ describe('createEmbedPlaceholder thumbnail safety', () => {
   })
 })
 
+describe('parseFragment attribute case normalization', () => {
+  it('should lowercase uppercase attribute names', () => {
+    const document = parseFragment('<img SRC="https://example.com/photo.jpg">')
+    const image = document.querySelector('img')
+
+    expect(image?.getAttribute('src')).toBe('https://example.com/photo.jpg')
+    expect(image?.hasAttribute('SRC')).toBe(false)
+  })
+
+  it('should lowercase mixed-case attribute names', () => {
+    const document = parseFragment('<img SrcSet="a.jpg 1x, b.jpg 2x" Data-Src="c.jpg">')
+    const image = document.querySelector('img')
+
+    expect(image?.getAttribute('srcset')).toBe('a.jpg 1x, b.jpg 2x')
+    expect(image?.getAttribute('data-src')).toBe('c.jpg')
+    expect(image?.hasAttribute('SrcSet')).toBe(false)
+    expect(image?.hasAttribute('Data-Src')).toBe(false)
+  })
+
+  it('should lowercase POSTER and SRC on video elements', () => {
+    const document = parseFragment(
+      '<video SRC="https://example.com/clip.mp4" POSTER="https://example.com/thumb.jpg"></video>',
+    )
+    const video = document.querySelector('video')
+
+    expect(video?.getAttribute('src')).toBe('https://example.com/clip.mp4')
+    expect(video?.getAttribute('poster')).toBe('https://example.com/thumb.jpg')
+  })
+
+  it('should keep the first occurrence when duplicates collide after lowercasing', () => {
+    const document = parseFragment('<img SRC="first.jpg" src="second.jpg">')
+    const image = document.querySelector('img')
+
+    expect(image?.getAttribute('src')).toBe('first.jpg')
+  })
+
+  it('should leave already-lowercase attributes untouched', () => {
+    const document = parseFragment('<a href="/about" class="nav">About</a>')
+    const anchor = document.querySelector('a')
+
+    expect(anchor?.getAttribute('href')).toBe('/about')
+    expect(anchor?.getAttribute('class')).toBe('nav')
+  })
+})
+
 describe('applyDomTransforms base64 stripping', () => {
   it('should preserve small base64 images through dom transforms', async () => {
     const value = '<p>Text</p><img src="data:image/png;base64,iVBORw0KGgo=">'

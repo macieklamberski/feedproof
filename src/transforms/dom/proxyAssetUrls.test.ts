@@ -168,6 +168,15 @@ describe('proxyAssetUrls', () => {
     expect(seen).toEqual(['https://cdn.example.com/photo.jpg'])
   })
 
+  it('should proxy uppercase attribute names via parseFragment normalization', async () => {
+    const value = '<IMG SRC="https://cdn.example.com/photo.jpg">'
+    const result = await transform(value, wrapProxy)
+
+    expect(result).toContain(
+      'src="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"',
+    )
+  })
+
   it('should pass the correct type for each asset kind', async () => {
     const seen: Array<string> = []
     const recorder: AssetProxyFn = (_, type) => {

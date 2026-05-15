@@ -39,10 +39,7 @@ const proxyAttribute = (
 }
 
 const proxySrcset = (element: Element, type: AssetType, assetProxyFn: AssetProxyFn): void => {
-  // React/Next.js SSR renders camelCase srcSet instead of lowercase srcset
-  // (https://github.com/facebook/react/issues/19799). Linkedom treats attributes as case-sensitive
-  // (https://github.com/WebReflection/linkedom/issues/235), so we read both casings.
-  const srcset = element.getAttribute('srcset') ?? element.getAttribute('srcSet')
+  const srcset = element.getAttribute('srcset')
 
   if (!srcset) {
     return
@@ -59,7 +56,6 @@ const proxySrcset = (element: Element, type: AssetType, assetProxyFn: AssetProxy
     }
   })
 
-  element.removeAttribute('srcSet')
   element.setAttribute('srcset', stringifySrcset(rewritten))
 }
 
