@@ -31,6 +31,10 @@ export type EmbedResolver = {
 
 export type UrlUnwrapper = (url: URL) => string | undefined
 
+export type AssetType = 'image' | 'video' | 'audio'
+
+export type AssetProxyFn = (url: string, type: AssetType) => string | undefined
+
 export type TransformContext = {
   baseUrl?: string
   enclosures?: Array<Enclosure>
@@ -40,6 +44,7 @@ export type TransformContext = {
   trackingPathSegments: Array<string>
   urlUnwrappers: Array<UrlUnwrapper>
   resolveUrlFn: ResolveUrlFn
+  assetProxyFn?: AssetProxyFn
 }
 
 export type DomTransform = (context: TransformContext) => (document: Document) => MaybePromise<void>
@@ -55,6 +60,7 @@ export type TransformContentOptions = {
   trackingPathSegments?: Array<string>
   urlUnwrappers?: Array<UrlUnwrapper>
   resolveUrlFn?: ResolveUrlFn
+  assetProxyFn?: AssetProxyFn
   stringTransforms?: Array<StringTransform>
   domTransforms?: Array<DomTransform>
   finalStringTransforms?: Array<StringTransform>
