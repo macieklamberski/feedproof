@@ -67,7 +67,6 @@ const result = transformContent(html, {
   // Route image/video/audio URLs through a proxy. Return `undefined` to leave a URL untouched.
   assetProxyFn: (url, type) => `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`,
   // Populate embed placeholder metadata from a remote source (e.g. YouTube oEmbed).
-  // Called once per `transformContent` with all embeds that have a provider+id.
   enrichEmbedFn: async (embeds) => {
     return new Map(embeds.map(({ provider, id }) => [`${provider}:${id}`, { title: '…' }]))
   },
