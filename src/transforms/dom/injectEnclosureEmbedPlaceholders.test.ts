@@ -33,40 +33,36 @@ const withEnclosures = (
 }
 
 describe('injectEnclosureEmbedPlaceholders', () => {
-  it('should inject video enclosure as embed placeholder', () => {
+  it('should inject video enclosure as native video element', () => {
     const value = '<p>Episode notes</p>'
     const ctx = withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }])
     const result = transformHtml(value, injectEnclosureEmbedPlaceholders(ctx))
 
-    expect(result).toContain('data-embed="video"')
-    expect(result).toContain('data-embed-src="https://example.com/clip.mp4"')
-  })
-
-  it('should include fallback link in injected enclosure placeholder', () => {
-    const value = '<p>Episode notes</p>'
-    const ctx = withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }])
-    const result = transformHtml(value, injectEnclosureEmbedPlaceholders(ctx))
-
-    expect(result).toContain('<a href="https://example.com/clip.mp4">')
+    expect(result).toContain('<video')
+    expect(result).toContain('src="https://example.com/clip.mp4"')
+    expect(result).toContain(' controls')
+    expect(result).toContain('preload="none"')
   })
 
   it('should inject enclosure before existing content', () => {
     const value = '<p>Episode notes</p>'
     const ctx = withEnclosures([{ url: 'https://example.com/episode.mp3', type: 'audio/mpeg' }])
     const result = transformHtml(value, injectEnclosureEmbedPlaceholders(ctx))
-    const embedIndex = result.indexOf('data-embed=')
+    const embedIndex = result.indexOf('<audio')
     const contentIndex = result.indexOf('Episode notes')
 
     expect(embedIndex).toBeLessThan(contentIndex)
   })
 
-  it('should inject audio enclosure as embed placeholder', () => {
+  it('should inject audio enclosure as native audio element', () => {
     const value = '<p>Episode notes</p>'
     const ctx = withEnclosures([{ url: 'https://example.com/episode.mp3', type: 'audio/mpeg' }])
     const result = transformHtml(value, injectEnclosureEmbedPlaceholders(ctx))
 
-    expect(result).toContain('data-embed="audio"')
-    expect(result).toContain('data-embed-src="https://example.com/episode.mp3"')
+    expect(result).toContain('<audio')
+    expect(result).toContain('src="https://example.com/episode.mp3"')
+    expect(result).toContain(' controls')
+    expect(result).toContain('preload="none"')
   })
 
   it('should resolve video enclosure through embedResolver', () => {
@@ -113,8 +109,8 @@ describe('injectEnclosureEmbedPlaceholders', () => {
     ])
     const result = transformHtml(value, injectEnclosureEmbedPlaceholders(ctx))
 
-    expect(result).toContain('data-embed="audio"')
-    expect(result).toContain('data-embed="video"')
+    expect(result).toContain('<audio')
+    expect(result).toContain('<video')
   })
 
   it('should detect audio by medium field', () => {
@@ -122,7 +118,7 @@ describe('injectEnclosureEmbedPlaceholders', () => {
     const ctx = withEnclosures([{ url: 'https://example.com/episode.mp3', medium: 'audio' }])
     const result = transformHtml(value, injectEnclosureEmbedPlaceholders(ctx))
 
-    expect(result).toContain('data-embed="audio"')
+    expect(result).toContain('<audio')
   })
 
   it('should detect video by medium field', () => {
@@ -130,7 +126,7 @@ describe('injectEnclosureEmbedPlaceholders', () => {
     const ctx = withEnclosures([{ url: 'https://example.com/clip.mp4', medium: 'video' }])
     const result = transformHtml(value, injectEnclosureEmbedPlaceholders(ctx))
 
-    expect(result).toContain('data-embed="video"')
+    expect(result).toContain('<video')
   })
 
   it('should do nothing when no enclosures', () => {
