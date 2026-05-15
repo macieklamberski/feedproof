@@ -23,18 +23,23 @@ const baseContext: TransformContext = {
 const context: TransformContext = baseContext
 
 describe('unwrapRedirectUrls', () => {
+  const transform = (html: string) => {
+    return transformHtml(html, unwrapRedirectUrls(context))
+  }
+
   it('should unwrap a redirect href via the configured extractors', async () => {
-    const html =
-      '<a href="https://www.google.com/url?url=https%3A%2F%2Fexample.com%2Fpage">link</a>'
-    const result = await transformHtml(html, unwrapRedirectUrls(context))
+    const result = await transform(
+      '<a href="https://www.google.com/url?url=https%3A%2F%2Fexample.com%2Fpage">link</a>',
+    )
 
     expect(result).toContain('href="https://example.com/page"')
     expect(result).not.toContain('google.com')
   })
 
   it('should leave non-redirect links untouched', async () => {
-    const html = '<a href="https://example.com/page?url=https%3A%2F%2Fother.com">link</a>'
-    const result = await transformHtml(html, unwrapRedirectUrls(context))
+    const result = await transform(
+      '<a href="https://example.com/page?url=https%3A%2F%2Fother.com">link</a>',
+    )
 
     expect(result).toContain('href="https://example.com/page?url=https%3A%2F%2Fother.com"')
   })
@@ -44,7 +49,7 @@ describe('unwrapRedirectUrls', () => {
       '<a href="https://www.google.com/url?url=https%3A%2F%2Fexample.com">redirect</a>',
       '<a href="https://example.com/normal">normal</a>',
     ].join('')
-    const result = await transformHtml(html, unwrapRedirectUrls(context))
+    const result = await transform(html)
 
     expect(result).toContain('href="https://example.com"')
     expect(result).toContain('href="https://example.com/normal"')
@@ -52,15 +57,13 @@ describe('unwrapRedirectUrls', () => {
   })
 
   it('should handle invalid URLs gracefully', async () => {
-    const html = '<a href="not-a-valid-url">link</a>'
-    const result = await transformHtml(html, unwrapRedirectUrls(context))
+    const result = await transform('<a href="not-a-valid-url">link</a>')
 
     expect(result).toContain('href="not-a-valid-url"')
   })
 
   it('should handle links without href', async () => {
-    const html = '<a name="anchor">link</a>'
-    const result = await transformHtml(html, unwrapRedirectUrls(context))
+    const result = await transform('<a name="anchor">link</a>')
 
     expect(result).toContain('<a name="anchor">')
   })

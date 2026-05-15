@@ -21,7 +21,9 @@ const context: TransformContext = {
 }
 
 describe('simplifyFigures', () => {
-  const simplify = simplifyFigures(context)
+  const transform = (html: string) => {
+    return transformHtml(html, simplifyFigures(context))
+  }
 
   it('should unwrap p containing a single img', async () => {
     const html = `
@@ -29,7 +31,7 @@ describe('simplifyFigures', () => {
         <p><img src="photo.jpg"></p>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).not.toContain('<p>')
     expect(result).toContain('<img src="photo.jpg">')
@@ -41,7 +43,7 @@ describe('simplifyFigures', () => {
         <p> <img src="photo.jpg"> </p>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).not.toContain('<p>')
     expect(result).toContain('<img src="photo.jpg">')
@@ -58,7 +60,7 @@ describe('simplifyFigures', () => {
         </p>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).not.toContain('<p>')
     expect(result).toContain('<picture>')
@@ -70,7 +72,7 @@ describe('simplifyFigures', () => {
         <p><video src="clip.mp4"></video></p>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).not.toContain('<p>')
     expect(result).toContain('<video src="clip.mp4">')
@@ -82,7 +84,7 @@ describe('simplifyFigures', () => {
         <p><audio src="song.mp3"></audio></p>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).not.toContain('<p>')
     expect(result).toContain('<audio src="song.mp3">')
@@ -94,7 +96,7 @@ describe('simplifyFigures', () => {
         <span><img src="photo.jpg"></span>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).not.toContain('<span>')
     expect(result).toContain('<img src="photo.jpg">')
@@ -106,7 +108,7 @@ describe('simplifyFigures', () => {
         <div><img src="photo.jpg"></div>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).not.toContain('<div>')
     expect(result).toContain('<img src="photo.jpg">')
@@ -120,7 +122,7 @@ describe('simplifyFigures', () => {
         </div>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).not.toContain('<div>')
     expect(result).not.toContain('<p>')
@@ -135,7 +137,7 @@ describe('simplifyFigures', () => {
         </div>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).not.toContain('<div>')
     expect(result).toContain('<img src="photo.jpg">')
@@ -151,7 +153,7 @@ describe('simplifyFigures', () => {
         </div>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).not.toContain('<div>')
     expect(result).toContain('<img src="photo.jpg">')
@@ -165,7 +167,7 @@ describe('simplifyFigures', () => {
         </div>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).not.toContain('<div')
     expect(result).toContain('<img src="photo.jpg">')
@@ -179,7 +181,7 @@ describe('simplifyFigures', () => {
         <figcaption>Gallery</figcaption>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).not.toContain('<p>')
     expect(result).toContain('<img src="a.jpg">')
@@ -196,7 +198,7 @@ describe('simplifyFigures', () => {
         </figcaption>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).toContain('<figcaption><span>Caption</span></figcaption>')
     expect(result).not.toContain('<figcaption><div>')
@@ -208,7 +210,7 @@ describe('simplifyFigures', () => {
         <p>Caption: <img src="photo.jpg"></p>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).toContain('<p>Caption: <img src="photo.jpg"></p>')
   })
@@ -219,7 +221,7 @@ describe('simplifyFigures', () => {
         <div><p>Text paragraph</p></div>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).toContain('<div>')
     expect(result).toContain('<p>Text paragraph</p>')
@@ -231,7 +233,7 @@ describe('simplifyFigures', () => {
         <a href="https://example.com"><img src="photo.jpg"></a>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).toContain('<a href="https://example.com"><img src="photo.jpg"></a>')
   })
@@ -245,14 +247,14 @@ describe('simplifyFigures', () => {
         <figcaption>Caption</figcaption>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).toContain('<div>')
     expect(result).toContain('<a href="https://example.com"><img src="photo.jpg"></a>')
   })
 
   it('should not touch p or div outside figure', async () => {
-    const result = await transformHtml('<p><img src="photo.jpg"></p>', simplify)
+    const result = await transform('<p><img src="photo.jpg"></p>')
 
     expect(result).toContain('<p><img src="photo.jpg"></p>')
   })
@@ -264,7 +266,7 @@ describe('simplifyFigures', () => {
         <figcaption><p>Caption text</p></figcaption>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).toContain('<figcaption><p>Caption text</p></figcaption>')
   })
@@ -276,19 +278,19 @@ describe('simplifyFigures', () => {
         <figcaption>Text<div>More</div></figcaption>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).toContain('<figcaption>Text<div>More</div></figcaption>')
   })
 
   it('should handle figure with no children', async () => {
-    const result = await transformHtml('<figure></figure>', simplify)
+    const result = await transform('<figure></figure>')
 
     expect(result).toContain('<figure></figure>')
   })
 
   it('should handle html with no figures', async () => {
-    const result = await transformHtml('<p>No figures here</p>', simplify)
+    const result = await transform('<p>No figures here</p>')
 
     expect(result).toContain('<p>No figures here</p>')
   })
@@ -302,7 +304,7 @@ describe('simplifyFigures', () => {
         <div><img src="b.jpg"></div>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).not.toContain('<p>')
     expect(result).not.toContain('<div>')
@@ -321,7 +323,7 @@ describe('simplifyFigures', () => {
         </figcaption>
       </figure>
     `
-    const result = await transformHtml(html, simplify)
+    const result = await transform(html)
 
     expect(result).not.toContain('<div>')
     expect(result).not.toContain('<p>')

@@ -33,6 +33,10 @@ const withEnclosures = (
 }
 
 describe('injectEnclosures', () => {
+  const transform = (html: string) => {
+    return transformHtml(html, injectEnclosures(context))
+  }
+
   it('should inject video enclosure as native video element', async () => {
     const value = '<p>Episode notes</p>'
     const ctx = withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }])
@@ -130,7 +134,7 @@ describe('injectEnclosures', () => {
   })
 
   it('should do nothing when no enclosures', async () => {
-    const result = await transformHtml('<p>Content</p>', injectEnclosures(context))
+    const result = await transform('<p>Content</p>')
 
     expect(result).not.toContain('data-embed')
   })
