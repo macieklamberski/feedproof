@@ -66,7 +66,7 @@ export {
 } from './embeds/youtube.js'
 export { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js'
-export { injectEnclosureEmbedPlaceholders } from './transforms/dom/injectEnclosureEmbedPlaceholders.js'
+export { injectEnclosures } from './transforms/dom/injectEnclosures.js'
 export { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 export { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
 export { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'

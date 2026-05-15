@@ -30,7 +30,19 @@ const resolveEnclosure = (
   }
 }
 
-export const injectEnclosureEmbedPlaceholders: DomTransform = (context) => {
+const createNativeMediaElement = (
+  document: Document,
+  tagName: 'audio' | 'video',
+  url: string,
+): HTMLElement => {
+  const element = document.createElement(tagName)
+  element.setAttribute('src', url)
+  element.setAttribute('controls', '')
+  element.setAttribute('preload', 'none')
+  return element
+}
+
+export const injectEnclosures: DomTransform = (context) => {
   return (document) => {
     if (!context.enclosures?.length) {
       return
@@ -49,14 +61,20 @@ export const injectEnclosureEmbedPlaceholders: DomTransform = (context) => {
 
       const resolved = resolveEnclosure(enclosure.url, context.embedResolvers, document)
 
-      if (!resolved && !isAudioEnclosure(enclosure) && !isVideoEnclosure(enclosure)) {
+      if (resolved) {
+        const placeholder = createEmbedPlaceholder(document, enclosure.url, resolved)
+        document.body.prepend(placeholder)
         continue
       }
 
-      const type = resolved?.type ?? (isAudioEnclosure(enclosure) ? 'audio' : 'video')
-      const placeholder = createEmbedPlaceholder(document, enclosure.url, type, resolved)
+      if (isAudioEnclosure(enclosure)) {
+        document.body.prepend(createNativeMediaElement(document, 'audio', enclosure.url))
+        continue
+      }
 
-      document.body.prepend(placeholder)
+      if (isVideoEnclosure(enclosure)) {
+        document.body.prepend(createNativeMediaElement(document, 'video', enclosure.url))
+      }
     }
   }
 }

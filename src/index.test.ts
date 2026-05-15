@@ -78,7 +78,7 @@ describe('transformContent', () => {
           extract: (element) => {
             const src = element.getAttribute('src') ?? ''
             if (src.includes('custom-player.example.com')) {
-              return { provider: 'custom', src, type: 'iframe' }
+              return { provider: 'custom', src }
             }
           },
         },
@@ -88,13 +88,13 @@ describe('transformContent', () => {
     expect(result).toContain('data-embed-provider="custom"')
   })
 
-  it('should inject enclosure embed placeholders', () => {
+  it('should inject audio/video enclosures as native media elements', () => {
     const html = '<p>Content</p>'
     const result = transformContent(html, {
       enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
     })
 
-    expect(result).toContain('data-embed="audio"')
+    expect(result).toContain('<audio')
     expect(result).toContain('audio.mp3')
   })
 

@@ -103,11 +103,10 @@ describe('stripOversizedBase64Sources', () => {
 describe('createEmbedPlaceholder fallback link', () => {
   it('should use metadata.url when present', () => {
     const document = parseFragment('')
-    const element = createEmbedPlaceholder(document, 'https://embed.example/abc', 'iframe', {
+    const element = createEmbedPlaceholder(document, 'https://embed.example/abc', {
       provider: 'custom',
       src: 'https://embed.example/abc',
       url: 'https://canonical.example/abc',
-      type: 'iframe',
     })
 
     expect(element.querySelector('a')?.getAttribute('href')).toBe('https://canonical.example/abc')
@@ -115,10 +114,9 @@ describe('createEmbedPlaceholder fallback link', () => {
 
   it('should fall back to metadata.src when url is absent', () => {
     const document = parseFragment('')
-    const element = createEmbedPlaceholder(document, 'https://passed-src.example', 'iframe', {
+    const element = createEmbedPlaceholder(document, 'https://passed-src.example', {
       provider: 'custom',
       src: 'https://embed.example/abc',
-      type: 'iframe',
     })
 
     expect(element.querySelector('a')?.getAttribute('href')).toBe('https://embed.example/abc')
@@ -126,7 +124,7 @@ describe('createEmbedPlaceholder fallback link', () => {
 
   it('should fall back to src argument when metadata is omitted', () => {
     const document = parseFragment('')
-    const element = createEmbedPlaceholder(document, 'https://passed-src.example', 'iframe')
+    const element = createEmbedPlaceholder(document, 'https://passed-src.example')
 
     expect(element.querySelector('a')?.getAttribute('href')).toBe('https://passed-src.example')
   })
@@ -136,7 +134,7 @@ describe('createEmbedPlaceholder thumbnail safety', () => {
   it('should keep http thumbnail', () => {
     const document = parseFragment('')
     const thumbnail = 'https://cdn.example/thumb.jpg'
-    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
+    const element = createEmbedPlaceholder(document, 'https://embed.example', {
       thumbnail,
     })
 
@@ -146,7 +144,7 @@ describe('createEmbedPlaceholder thumbnail safety', () => {
   it('should keep data:image/png thumbnail', () => {
     const document = parseFragment('')
     const thumbnail = 'data:image/png;base64,iVBORw0KGgo='
-    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
+    const element = createEmbedPlaceholder(document, 'https://embed.example', {
       thumbnail,
     })
 
@@ -156,7 +154,7 @@ describe('createEmbedPlaceholder thumbnail safety', () => {
   it('should keep data:image/jpeg thumbnail', () => {
     const document = parseFragment('')
     const thumbnail = 'data:image/jpeg;base64,/9j/4AAQ='
-    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
+    const element = createEmbedPlaceholder(document, 'https://embed.example', {
       thumbnail,
     })
 
@@ -165,7 +163,7 @@ describe('createEmbedPlaceholder thumbnail safety', () => {
 
   it('should drop javascript: thumbnail', () => {
     const document = parseFragment('')
-    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
+    const element = createEmbedPlaceholder(document, 'https://embed.example', {
       thumbnail: 'javascript:alert(1)',
     })
 
@@ -174,7 +172,7 @@ describe('createEmbedPlaceholder thumbnail safety', () => {
 
   it('should drop data:image/svg+xml thumbnail', () => {
     const document = parseFragment('')
-    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
+    const element = createEmbedPlaceholder(document, 'https://embed.example', {
       thumbnail: 'data:image/svg+xml;utf8,<svg/>',
     })
 
@@ -183,7 +181,7 @@ describe('createEmbedPlaceholder thumbnail safety', () => {
 
   it('should drop data:text/html thumbnail', () => {
     const document = parseFragment('')
-    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
+    const element = createEmbedPlaceholder(document, 'https://embed.example', {
       thumbnail: 'data:text/html,<script>1</script>',
     })
 

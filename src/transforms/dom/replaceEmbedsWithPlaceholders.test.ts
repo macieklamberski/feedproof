@@ -17,7 +17,6 @@ const stubResolver: EmbedResolver = {
   extract: (element) => ({
     provider: 'example',
     src: element.getAttribute('src') ?? '',
-    type: 'iframe',
   }),
 }
 
@@ -101,7 +100,6 @@ describe('replaceEmbedsWithPlaceholders', () => {
         url: 'https://twitter.com/user/status/1',
         author: '@user',
         text: 'Hello world',
-        type: 'iframe',
       }),
     }
     const value = '<blockquote class="tweet">Tweet text</blockquote>'
@@ -221,7 +219,6 @@ describe('replaceEmbedsWithPlaceholders', () => {
       extract: () => ({
         provider: 'evil',
         src: 'javascript:alert(1)',
-        type: 'iframe',
       }),
     }
     const value = '<iframe src="https://example.com/x"></iframe>'
@@ -241,7 +238,6 @@ describe('replaceEmbedsWithPlaceholders', () => {
         provider: 'evil',
         src: 'https://example.com/x',
         url: 'javascript:alert(1)',
-        type: 'iframe',
       }),
     }
     const value = '<iframe src="https://example.com/x"></iframe>'
