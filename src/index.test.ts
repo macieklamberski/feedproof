@@ -78,7 +78,7 @@ describe('transformContent', () => {
           extract: (element) => {
             const src = element.getAttribute('src') ?? ''
             if (src.includes('custom-player.example.com')) {
-              return { provider: 'custom', src, type: 'iframe' }
+              return { provider: 'custom', src }
             }
           },
         },

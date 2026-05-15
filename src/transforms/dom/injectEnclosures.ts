@@ -62,12 +62,7 @@ export const injectEnclosures: DomTransform = (context) => {
       const resolved = resolveEnclosure(enclosure.url, context.embedResolvers, document)
 
       if (resolved) {
-        const placeholder = createEmbedPlaceholder(
-          document,
-          enclosure.url,
-          resolved.type ?? 'iframe',
-          resolved,
-        )
+        const placeholder = createEmbedPlaceholder(document, enclosure.url, resolved)
         document.body.prepend(placeholder)
         continue
       }

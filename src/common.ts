@@ -139,12 +139,11 @@ export const unwrapOuterTag = (html: string, pattern: RegExp): string => {
 export const createEmbedPlaceholder = (
   document: Document,
   src: string,
-  type: 'video' | 'audio' | 'iframe',
   metadata?: Partial<EmbedResolverResult>,
 ): HTMLElement => {
   const element = document.createElement('div')
 
-  element.setAttribute('data-embed', metadata?.type ?? type)
+  element.setAttribute('data-embed', 'iframe')
   element.setAttribute('data-embed-src', metadata?.src ?? src)
 
   if (metadata?.provider) {

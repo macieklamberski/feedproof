@@ -13,7 +13,6 @@ export type EmbedResolverResult = {
   src: string
   url?: string
   thumbnail?: string
-  type?: 'video' | 'audio' | 'iframe'
   width?: number
   height?: number
   author?: string
