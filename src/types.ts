@@ -1,9 +1,23 @@
 import type { DiscoverResolveUrlFn } from 'feedscout'
 
+export type MaybePromise<T> = T | Promise<T>
+
+export type EnclosureThumbnail = {
+  url: string
+  width?: number
+  height?: number
+}
+
 export type Enclosure = {
   url: string
   type?: string
   medium?: string
+  width?: number
+  height?: number
+  duration?: number
+  title?: string
+  description?: string
+  thumbnails?: Array<EnclosureThumbnail>
 }
 
 export type ResolveUrlFn = DiscoverResolveUrlFn
@@ -13,35 +27,42 @@ export type EmbedResolverResult = {
   src: string
   url?: string
   thumbnail?: string
-  type?: 'video' | 'audio' | 'iframe'
   width?: number
   height?: number
+  title?: string
+  description?: string
   author?: string
-  text?: string
+  avatar?: string
+  duration?: number
 }
 
 export type EmbedResolver = {
   selector: string
-  extract: (element: Element) => EmbedResolverResult | undefined
+  extract: (element: Element) => MaybePromise<EmbedResolverResult | undefined>
 }
 
 export type UrlUnwrapper = (url: URL) => string | undefined
 
+export type AssetType = 'image' | 'video' | 'audio'
+
+export type AssetProxyFn = (url: string, type: AssetType) => string | undefined
+
 export type TransformContext = {
   baseUrl?: string
   enclosures?: Array<Enclosure>
-  embedResolvers?: Array<EmbedResolver>
-  lazySrcAttributes?: Array<string>
-  lazySrcsetAttributes?: Array<string>
-  trackingHosts?: Array<string>
-  trackingPathSegments?: Array<string>
-  urlUnwrappers?: Array<UrlUnwrapper>
-  resolveUrlFn?: ResolveUrlFn
+  embedResolvers: Array<EmbedResolver>
+  lazySrcAttributes: Array<string>
+  lazySrcsetAttributes: Array<string>
+  trackingHosts: Array<string>
+  trackingPathSegments: Array<string>
+  urlUnwrappers: Array<UrlUnwrapper>
+  resolveUrlFn: ResolveUrlFn
+  assetProxyFn?: AssetProxyFn
 }
 
-export type DomTransform = (context: TransformContext) => (document: Document) => void
+export type DomTransform = (context: TransformContext) => (document: Document) => MaybePromise<void>
 
-export type StringTransform = (context: TransformContext) => (html: string) => string
+export type StringTransform = (context: TransformContext) => (html: string) => MaybePromise<string>
 
 export type TransformContentOptions = {
   baseUrl?: string
@@ -53,6 +74,7 @@ export type TransformContentOptions = {
   trackingPathSegments?: Array<string>
   urlUnwrappers?: Array<UrlUnwrapper>
   resolveUrlFn?: ResolveUrlFn
+  assetProxyFn?: AssetProxyFn
   stringTransforms?: Array<StringTransform>
   domTransforms?: Array<DomTransform>
   finalStringTransforms?: Array<StringTransform>

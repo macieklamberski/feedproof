@@ -13,7 +13,10 @@ import {
 } from './defaults.js'
 import type { TransformContentOptions, TransformContext } from './types.js'
 
-export const transformContent = (html: string, options: TransformContentOptions = {}): string => {
+export const transformContent = async (
+  html: string,
+  options: TransformContentOptions = {},
+): Promise<string> => {
   const context: TransformContext = {
     baseUrl: options.baseUrl,
     enclosures: options.enclosures,
@@ -24,6 +27,7 @@ export const transformContent = (html: string, options: TransformContentOptions 
     trackingPathSegments: options.trackingPathSegments ?? defaultTrackingPathSegments,
     urlUnwrappers: options.urlUnwrappers ?? defaultUrlUnwrappers,
     resolveUrlFn: options.resolveUrlFn ?? defaultResolveUrlFn,
+    assetProxyFn: options.assetProxyFn,
   }
 
   const stringFns = options.stringTransforms ?? defaultStringTransforms
@@ -31,19 +35,19 @@ export const transformContent = (html: string, options: TransformContentOptions 
   const finalFns = options.finalStringTransforms ?? defaultFinalStringTransforms
 
   // Phase 1: String transforms.
-  const afterString = applyStringTransforms(
+  const afterString = await applyStringTransforms(
     html,
     stringFns.map((transform) => transform(context)),
   )
 
   // Phase 2: DOM transforms.
-  const afterDom = applyDomTransforms(
+  const afterDom = await applyDomTransforms(
     afterString,
     domFns.map((transform) => transform(context)),
   )
 
   // Phase 3: Final string transforms — cleans up empties produced by Phase 2.
-  const afterFinal = applyStringTransforms(
+  const afterFinal = await applyStringTransforms(
     afterDom,
     finalFns.map((transform) => transform(context)),
   )
@@ -68,9 +72,10 @@ export {
 } from './embeds/youtube.js'
 export { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js'
-export { injectEnclosureEmbedPlaceholders } from './transforms/dom/injectEnclosureEmbedPlaceholders.js'
+export { injectEnclosures } from './transforms/dom/injectEnclosures.js'
 export { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 export { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
+export { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 export { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 export { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 export { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
@@ -88,10 +93,13 @@ export { stripEmptyTags } from './transforms/string/stripEmptyTags.js'
 export { stripOrphanedClosingTags } from './transforms/string/stripOrphanedClosingTags.js'
 export { unwrapWrappers } from './transforms/string/unwrapWrappers.js'
 export type {
+  AssetProxyFn,
+  AssetType,
   DomTransform,
   EmbedResolver,
   EmbedResolverResult,
   Enclosure,
+  MaybePromise,
   ResolveUrlFn,
   StringTransform,
   TransformContentOptions,

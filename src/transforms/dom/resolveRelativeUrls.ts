@@ -56,14 +56,10 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
       }
     }
 
-    // React/Next.js SSR renders camelCase srcSet instead of lowercase srcset
-    // (https://github.com/facebook/react/issues/19799). Linkedom treats attributes as case-sensitive
-    // (https://github.com/WebReflection/linkedom/issues/235), so querySelectorAll('[srcset]') won't
-    // match. We iterate img/source and check both casings manually.
-    const elements = document.querySelectorAll('img, source')
+    const elements = document.querySelectorAll('img[srcset], source[srcset]')
 
     for (const element of elements) {
-      const srcset = element.getAttribute('srcset') ?? element.getAttribute('srcSet')
+      const srcset = element.getAttribute('srcset')
 
       if (!srcset) {
         continue
@@ -74,8 +70,6 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
         url: resolveUrl(entry.url, baseUrl) ?? entry.url,
       }))
 
-      // Normalize to lowercase and remove camelCase variant.
-      element.removeAttribute('srcSet')
       element.setAttribute('srcset', stringifySrcset(resolved))
     }
   }

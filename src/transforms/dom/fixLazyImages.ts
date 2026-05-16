@@ -1,3 +1,4 @@
+import { normalizeAttributeCase } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 const imgPattern = /<img\s/i
@@ -12,9 +13,6 @@ const isUrlShaped = (value: string): boolean => {
 }
 
 export const fixLazyImages: DomTransform = (context) => {
-  const lazySrcAttributes = context.lazySrcAttributes ?? []
-  const lazySrcsetAttributes = context.lazySrcsetAttributes ?? []
-
   return (document) => {
     // Move lazy-load data attributes to real src/srcset.
     const images = document.querySelectorAll('img')
@@ -22,7 +20,7 @@ export const fixLazyImages: DomTransform = (context) => {
     for (const image of images) {
       let srcResolved = false
 
-      for (const attribute of lazySrcAttributes) {
+      for (const attribute of context.lazySrcAttributes) {
         const value = image.getAttribute(attribute)
 
         if (!srcResolved && value && isUrlShaped(value)) {
@@ -35,7 +33,7 @@ export const fixLazyImages: DomTransform = (context) => {
 
       let srcsetResolved = false
 
-      for (const attribute of lazySrcsetAttributes) {
+      for (const attribute of context.lazySrcsetAttributes) {
         const value = image.getAttribute(attribute)
 
         if (!srcsetResolved && value && isUrlShaped(value)) {
@@ -49,15 +47,16 @@ export const fixLazyImages: DomTransform = (context) => {
 
     // Extract images from noscript wrappers when sibling is a lazy placeholder.
     const noscripts = document.querySelectorAll('noscript')
+    let replacedNoscript = false
 
     for (const noscript of noscripts) {
       const sibling = noscript.previousElementSibling
 
-      if (sibling?.tagName !== 'IMG') {
+      if (sibling?.tagName.toLowerCase() !== 'img') {
         continue
       }
 
-      const inner = noscript.textContent ?? ''
+      const inner = noscript.innerHTML
       const hasImage = imgPattern.test(inner)
 
       if (!hasImage) {
@@ -66,6 +65,14 @@ export const fixLazyImages: DomTransform = (context) => {
 
       sibling.remove()
       noscript.outerHTML = inner
+      replacedNoscript = true
+    }
+
+    // `outerHTML =` re-parses raw HTML through linkedom, bypassing parseFragment's
+    // attribute-case normalization. Re-apply it so downstream transforms still see
+    // lowercase attribute names on the newly inserted nodes.
+    if (replacedNoscript) {
+      normalizeAttributeCase(document)
     }
   }
 }
