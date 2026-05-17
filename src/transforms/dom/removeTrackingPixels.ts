@@ -91,8 +91,8 @@ const isPixelSized = (image: Element): boolean => {
 }
 
 export const removeTrackingPixels: DomTransform = (context) => {
-  const hosts = new Set(context.trackingHosts ?? [])
-  const pathRegex = buildPathRegex(context.trackingPathSegments ?? [])
+  const hosts = new Set(context.trackingHosts)
+  const pathRegex = buildPathRegex(context.trackingPathSegments)
 
   return (document) => {
     const images = document.querySelectorAll('img')

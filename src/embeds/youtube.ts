@@ -42,10 +42,10 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
 
   return {
     provider: 'youtube',
+    id: videoId,
     src: `https://www.youtube-nocookie.com/embed/${videoId}`,
     url: `https://www.youtube.com/watch?v=${videoId}`,
     thumbnail: composeThumbnailUrl(videoId),
-    type: 'iframe',
   }
 }
 
