@@ -32,6 +32,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | --- | --- |
 | `decodeDoubleEncodedTags` | Decode `&lt;tag&gt;` back to `<tag>` in mixed content |
 | `stripOrphanedClosingTags` | Remove unmatched `</p>` / `</div>` close tags |
+| `stripDeadAnchors` | Unwrap `<a>` with empty, `#`, or `javascript:` href |
 | `fixLazyImages` | Move `data-src` / `data-original` to real `src` |
 | `mergeConsecutiveOneLinerPres` | Merge consecutive single-line `<pre>` tags |
 | `replacePreLineBreaks` | Replace `<br>` with `\n` inside `<pre>` |

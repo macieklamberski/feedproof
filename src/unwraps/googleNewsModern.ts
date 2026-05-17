@@ -1,6 +1,14 @@
 import { isHostOf } from 'feedscout/utils'
 import type { UrlUnwrapper } from '../types.js'
 
+const articleIdRegex = /^\/(?:rss\/)?articles\/([\w-]+)/
+const base64UrlMinusRegex = /-/g
+const base64UrlUnderscoreRegex = /_/g
+// Protobuf framing around the destination URL: 0x08 0x13 + length-prefixed
+// string, terminated by 0xd2 0x01. Control bytes are part of the protocol.
+// biome-ignore lint/suspicious/noControlCharactersInRegex: protobuf framing bytes
+const protobufFramingRegex = /\x08\x13".+?(https?:\/\/[^\xd2]+)\xd2\x01/
+
 // Google News modern article URLs (news.google.com/articles/<base64> or
 // /rss/articles/<base64>). The article id is a base64url-encoded protobuf
 // containing the destination URL between known framing bytes. Some ids
@@ -11,14 +19,14 @@ export const unwrapGoogleNewsModern: UrlUnwrapper = (url) => {
     return
   }
 
-  const match = url.pathname.match(/^\/(?:rss\/)?articles\/([\w-]+)/)
+  const match = url.pathname.match(articleIdRegex)
   if (!match) {
     return
   }
 
-  const padded = match[1].replace(/-/g, '+').replace(/_/g, '/')
+  const padded = match[1].replace(base64UrlMinusRegex, '+').replace(base64UrlUnderscoreRegex, '/')
   const decoded = Buffer.from(padded, 'base64').toString('latin1')
-  const inner = decoded.match(/\x08\x13".+?(https?:\/\/[^\xd2]+)\xd2\x01/)
+  const inner = decoded.match(protobufFramingRegex)
 
   return inner?.[1]
 }

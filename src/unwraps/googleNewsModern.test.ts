@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { unwrapGoogleNewsModern } from './googleNewsModern.js'
 
+const base64PlusRegex = /\+/g
+const base64SlashRegex = /\//g
+const base64PaddingRegex = /=+$/
+
 const buildArticleId = (sourceUrl: string): string => {
   const urlBytes = Buffer.from(sourceUrl, 'utf8')
   const payload = Buffer.concat([
@@ -8,7 +12,11 @@ const buildArticleId = (sourceUrl: string): string => {
     urlBytes,
     Buffer.from([0xd2, 0x01, 0x00]),
   ])
-  return payload.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  return payload
+    .toString('base64')
+    .replace(base64PlusRegex, '-')
+    .replace(base64SlashRegex, '_')
+    .replace(base64PaddingRegex, '')
 }
 
 describe('unwrapGoogleNewsModern', () => {
@@ -29,9 +37,9 @@ describe('unwrapGoogleNewsModern', () => {
   it('should return null when the id lacks framing bytes', () => {
     const id = Buffer.from('hello world', 'utf8')
       .toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '')
+      .replace(base64PlusRegex, '-')
+      .replace(base64SlashRegex, '_')
+      .replace(base64PaddingRegex, '')
     const url = new URL(`https://news.google.com/articles/${id}`)
 
     expect(unwrapGoogleNewsModern(url)).toBeUndefined()
