@@ -31,16 +31,15 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | Transform | Description |
 | --- | --- |
 | `decodeDoubleEncodedTags` | Decode `&lt;tag&gt;` back to `<tag>` in mixed content |
-| `stripOrphanedClosingTags` | Remove unmatched `</p>` / `</div>` close tags |
-| `stripDeadAnchors` | Unwrap `<a>` with empty, `#`, or `javascript:` href |
-| `stripDuplicateTitleHeading` | Remove first `<h1>`–`<h6>` matching article title |
 | `fixLazyImages` | Move `data-src` / `data-original` to real `src` |
 | `mergeConsecutiveOneLinerPres` | Merge consecutive single-line `<pre>` tags |
 | `replacePreLineBreaks` | Replace `<br>` with `\n` inside `<pre>` |
 | `stripInterBlockBreaks` | Remove `<br>` tags between block elements |
 | `stripParagraphBoundaryBreaks` | Remove `<br>` tags adjacent to paragraph boundaries |
+| `stripDuplicateTitleHeading` | Remove first `<h1>`–`<h6>` matching article title |
 | `simplifyFigures` | Unwrap `<figure>` when the figcaption is empty or redundant |
 | `unwrapRedirectUrls` | Remove Google/Bing/Facebook/etc. redirect wrappers |
+| `stripDeadAnchors` | Unwrap `<a>` with empty, `#`, or `javascript:` href |
 | `removeTrackingPixels` | Strip 1×1 tracking pixel images |
 | `stripTrackingParams` | Remove UTM and other tracking parameters |
 | `convertBreaksToParagraphs` | Convert `<br><br>` runs into semantic `<p>` blocks |
@@ -55,6 +54,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `linkifyUrls` | Wrap bare URLs in `<a>` tags |
 | `trimPreWhitespace` | Remove common leading indentation from `<pre>` |
 | `highlightCode` | Syntax-highlight `<code>` blocks with highlight.js |
+| `stripOrphanedClosingTags` | Remove unmatched `</p>` / `</div>` close tags |
 | `stripEmptyTags` | Remove empty `<p>`, `<div>`, `<span>` and other tags |
 | `stripComments` | Remove HTML `<!-- comments -->` |
 
