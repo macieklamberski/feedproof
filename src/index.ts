@@ -28,6 +28,7 @@ export const transformContent = async (
     urlUnwrappers: options.urlUnwrappers ?? defaultUrlUnwrappers,
     resolveUrlFn: options.resolveUrlFn ?? defaultResolveUrlFn,
     assetProxyFn: options.assetProxyFn,
+    enrichEmbedFn: options.enrichEmbedFn,
   }
 
   const stringFns = options.stringTransforms ?? defaultStringTransforms
@@ -57,6 +58,7 @@ export const transformContent = async (
 
 export {
   applyDomTransforms,
+  applyEmbedMetadata,
   applyStringTransforms,
   createEmbedPlaceholder,
   parseFragment,
@@ -70,6 +72,7 @@ export {
   youtubeEmbedResolver,
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
+export { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 export { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js'
 export { injectEnclosures } from './transforms/dom/injectEnclosures.js'
@@ -99,6 +102,7 @@ export type {
   EmbedResolver,
   EmbedResolverResult,
   Enclosure,
+  EnrichEmbedFn,
   MaybePromise,
   ResolveUrlFn,
   StringTransform,

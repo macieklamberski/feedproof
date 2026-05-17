@@ -24,6 +24,7 @@ export type ResolveUrlFn = DiscoverResolveUrlFn
 
 export type EmbedResolverResult = {
   provider: string
+  id?: string
   src: string
   url?: string
   thumbnail?: string
@@ -35,6 +36,10 @@ export type EmbedResolverResult = {
   avatar?: string
   duration?: number
 }
+
+export type EnrichEmbedFn = (
+  embeds: Array<{ provider: string; id: string }>,
+) => MaybePromise<Map<string, Partial<EmbedResolverResult>>>
 
 export type EmbedResolver = {
   selector: string
@@ -58,6 +63,7 @@ export type TransformContext = {
   urlUnwrappers: Array<UrlUnwrapper>
   resolveUrlFn: ResolveUrlFn
   assetProxyFn?: AssetProxyFn
+  enrichEmbedFn?: EnrichEmbedFn
 }
 
 export type DomTransform = (context: TransformContext) => (document: Document) => MaybePromise<void>
@@ -75,6 +81,7 @@ export type TransformContentOptions = {
   urlUnwrappers?: Array<UrlUnwrapper>
   resolveUrlFn?: ResolveUrlFn
   assetProxyFn?: AssetProxyFn
+  enrichEmbedFn?: EnrichEmbedFn
   stringTransforms?: Array<StringTransform>
   domTransforms?: Array<DomTransform>
   finalStringTransforms?: Array<StringTransform>
