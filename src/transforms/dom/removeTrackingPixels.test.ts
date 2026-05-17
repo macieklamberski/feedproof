@@ -3,6 +3,7 @@ import { transformHtml } from '../../common.js'
 import {
   defaultEmbedResolvers,
   defaultLazySrcAttributes,
+  defaultLazySrcsetAttributes,
   defaultResolveUrlFn,
   defaultTrackingHosts,
   defaultTrackingPathSegments,
@@ -14,6 +15,7 @@ import { removeTrackingPixels } from './removeTrackingPixels.js'
 const baseContext: TransformContext = {
   embedResolvers: defaultEmbedResolvers,
   lazySrcAttributes: defaultLazySrcAttributes,
+  lazySrcsetAttributes: defaultLazySrcsetAttributes,
   trackingHosts: defaultTrackingHosts,
   trackingPathSegments: defaultTrackingPathSegments,
   urlUnwrappers: defaultUrlUnwrappers,

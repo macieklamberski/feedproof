@@ -3,6 +3,7 @@ import { applyDomTransforms, transformHtml } from '../../common.js'
 import {
   defaultEmbedResolvers,
   defaultLazySrcAttributes,
+  defaultLazySrcsetAttributes,
   defaultResolveUrlFn,
   defaultTrackingHosts,
   defaultTrackingPathSegments,
@@ -15,6 +16,7 @@ import { replacePreLineBreaks } from './replacePreLineBreaks.js'
 const baseContext: TransformContext = {
   embedResolvers: defaultEmbedResolvers,
   lazySrcAttributes: defaultLazySrcAttributes,
+  lazySrcsetAttributes: defaultLazySrcsetAttributes,
   trackingHosts: defaultTrackingHosts,
   trackingPathSegments: defaultTrackingPathSegments,
   urlUnwrappers: defaultUrlUnwrappers,

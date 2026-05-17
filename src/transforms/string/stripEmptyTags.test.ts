@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import {
   defaultEmbedResolvers,
   defaultLazySrcAttributes,
+  defaultLazySrcsetAttributes,
   defaultResolveUrlFn,
   defaultTrackingHosts,
   defaultTrackingPathSegments,
@@ -13,6 +14,7 @@ import { stripEmptyTags } from './stripEmptyTags.js'
 const context: TransformContext = {
   embedResolvers: defaultEmbedResolvers,
   lazySrcAttributes: defaultLazySrcAttributes,
+  lazySrcsetAttributes: defaultLazySrcsetAttributes,
   trackingHosts: defaultTrackingHosts,
   trackingPathSegments: defaultTrackingPathSegments,
   urlUnwrappers: defaultUrlUnwrappers,
