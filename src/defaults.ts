@@ -1,82 +1,17 @@
+import { resolveUrl } from 'feedcanon'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
-import { extractAceml } from './redirects/aceml.js'
-import { extractAdjust } from './redirects/adjust.js'
-import { extractAmazonAffiliate } from './redirects/amazonAffiliate.js'
-import { extractAmpCache } from './redirects/ampCache.js'
-import { extractAwin } from './redirects/awin.js'
-import { extractCjNetwork } from './redirects/cjNetwork.js'
-import { extractDigidip } from './redirects/digidip.js'
-import { extractDisqus } from './redirects/disqus.js'
-import { extractDouban } from './redirects/douban.js'
-import { extractEbayRover } from './redirects/ebayRover.js'
-import { extractEffiliation } from './redirects/effiliation.js'
-import { extractEmbedly } from './redirects/embedly.js'
-import { extractFacebookShim } from './redirects/facebook.js'
-import { extractFeedsportal } from './redirects/feedsportal.js'
-import { extractFirebaseDynamicLinks } from './redirects/firebaseDynamicLinks.js'
-import { extractFlipboard } from './redirects/flipboard.js'
-import { extractGateSc } from './redirects/gateSc.js'
-import { extractGeoriot } from './redirects/georiot.js'
-import { extractGitee } from './redirects/gitee.js'
-import { extractGoogleRedirect } from './redirects/google.js'
-import { extractGoogleNewsRedirect } from './redirects/googleNews.js'
-import { extractGoogleNewsModern } from './redirects/googleNewsModern.js'
-import { extractGoogleTranslateRedirect } from './redirects/googleTranslate.js'
-import { extractHashnode } from './redirects/hashnode.js'
-import { extractIcptrack } from './redirects/icptrack.js'
-import { extractIdealoPartner } from './redirects/idealoPartner.js'
-import { extractJianshuGo } from './redirects/jianshuGo.js'
-import { extractJuejin } from './redirects/juejin.js'
-import { extractLeverAnalytics } from './redirects/leverAnalytics.js'
-import { extractLinksynergy } from './redirects/linksynergy.js'
-import { extractMailchimp } from './redirects/mailchimp.js'
-import { extractMailpanion } from './redirects/mailpanion.js'
-import { extractMailpgn } from './redirects/mailpgn.js'
-import { extractMailtrack } from './redirects/mailtrack.js'
-import { extractMedium } from './redirects/medium.js'
-import { extractMimecast } from './redirects/mimecast.js'
-import { extractMozillaOutgoing } from './redirects/mozillaOutgoing.js'
-import { extractNarrativ } from './redirects/narrativ.js'
-import { extractNicoMs } from './redirects/nicoMs.js'
-import { extractOutlookSafelinks } from './redirects/outlookSafelinks.js'
-import { extractPartnerAds } from './redirects/partnerAds.js'
-import { extractPocketRedirect } from './redirects/pocket.js'
-import { extractPostmark } from './redirects/postmark.js'
-import { extractProofpointV1 } from './redirects/proofpointV1.js'
-import { extractProofpointV2 } from './redirects/proofpointV2.js'
-import { extractProofpointV3 } from './redirects/proofpointV3.js'
-import { extractPxf } from './redirects/pxf.js'
-import { extractRecruitics } from './redirects/recruitics.js'
-import { extractRedditOut } from './redirects/redditOut.js'
-import { extractRedirectingat } from './redirects/redirectingat.js'
-import { extractSegmentfault } from './redirects/segmentfault.js'
-import { extractShareasale } from './redirects/shareasale.js'
-import { extractSjv } from './redirects/sjv.js'
-import { extractSkimlinks } from './redirects/skimlinks.js'
-import { extractSlack } from './redirects/slack.js'
-import { extractSmartredirect } from './redirects/smartredirect.js'
-import { extractSspai } from './redirects/sspai.js'
-import { extractSteamLinkfilter } from './redirects/steamLinkfilter.js'
-import { extractTelegramIv } from './redirects/telegramIv.js'
-import { extractTradedoubler } from './redirects/tradedoubler.js'
-import { extractTumblr } from './redirects/tumblr.js'
-import { extractValuecommerce } from './redirects/valuecommerce.js'
-import { extractViglink } from './redirects/viglink.js'
-import { extractVkAway } from './redirects/vkAway.js'
-import { extractWebArchive } from './redirects/webArchive.js'
-import { extractYandexTurbo } from './redirects/yandexTurbo.js'
-import { extractYouTubeRedirect } from './redirects/youtubeRedirect.js'
-import { extractZhihu } from './redirects/zhihu.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
-import { injectEnclosureEmbedPlaceholders } from './transforms/dom/injectEnclosureEmbedPlaceholders.js'
+import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
 import { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 import { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
+import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 import { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
 import { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
 import { stripComments } from './transforms/dom/stripComments.js'
+import { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
 import { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBoundaryBreaks.js'
@@ -88,7 +23,82 @@ import { paragraphizePlainText } from './transforms/string/paragraphizePlainText
 import { stripEmptyTags } from './transforms/string/stripEmptyTags.js'
 import { stripOrphanedClosingTags } from './transforms/string/stripOrphanedClosingTags.js'
 import { unwrapWrappers } from './transforms/string/unwrapWrappers.js'
-import type { DomTransform, EmbedResolver, RedirectExtractor, StringTransform } from './types.js'
+import type {
+  DomTransform,
+  EmbedResolver,
+  ResolveUrlFn,
+  StringTransform,
+  UrlUnwrapper,
+} from './types.js'
+// import { unwrapAceml } from './unwraps/aceml.js'
+// import { unwrapAdjust } from './unwraps/adjust.js'
+// import { unwrapAmazonAffiliate } from './unwraps/amazonAffiliate.js'
+// import { unwrapAmpCache } from './unwraps/ampCache.js'
+// import { unwrapAwin } from './unwraps/awin.js'
+import { unwrapBing } from './unwraps/bing.js'
+// import { unwrapCjNetwork } from './unwraps/cjNetwork.js'
+// import { unwrapDigidip } from './unwraps/digidip.js'
+// import { unwrapDisqus } from './unwraps/disqus.js'
+// import { unwrapDouban } from './unwraps/douban.js'
+// import { unwrapDuckduckgo } from './unwraps/duckduckgo.js'
+// import { unwrapEbayRover } from './unwraps/ebayRover.js'
+// import { unwrapEffiliation } from './unwraps/effiliation.js'
+// import { unwrapEmbedly } from './unwraps/embedly.js'
+import { unwrapFacebookShim } from './unwraps/facebook.js'
+// import { unwrapFeedsportal } from './unwraps/feedsportal.js'
+// import { unwrapFirebaseDynamicLinks } from './unwraps/firebaseDynamicLinks.js'
+// import { unwrapFlipboard } from './unwraps/flipboard.js'
+// import { unwrapGateSc } from './unwraps/gateSc.js'
+// import { unwrapGeoriot } from './unwraps/georiot.js'
+// import { unwrapGitee } from './unwraps/gitee.js'
+import { unwrapGoogle } from './unwraps/google.js'
+import { unwrapGoogleAmpViewer } from './unwraps/googleAmpViewer.js'
+import { unwrapGoogleNews } from './unwraps/googleNews.js'
+import { unwrapGoogleNewsModern } from './unwraps/googleNewsModern.js'
+import { unwrapGoogleScholar } from './unwraps/googleScholar.js'
+// import { unwrapHashnode } from './unwraps/hashnode.js'
+// import { unwrapIcptrack } from './unwraps/icptrack.js'
+// import { unwrapIdealoPartner } from './unwraps/idealoPartner.js'
+import { unwrapInstagramShim } from './unwraps/instagram.js'
+// import { unwrapJianshuGo } from './unwraps/jianshuGo.js'
+// import { unwrapJuejin } from './unwraps/juejin.js'
+// import { unwrapLeverAnalytics } from './unwraps/leverAnalytics.js'
+// import { unwrapLinksynergy } from './unwraps/linksynergy.js'
+// import { unwrapMailchimp } from './unwraps/mailchimp.js'
+// import { unwrapMailpanion } from './unwraps/mailpanion.js'
+// import { unwrapMailpgn } from './unwraps/mailpgn.js'
+// import { unwrapMailtrack } from './unwraps/mailtrack.js'
+// import { unwrapMedium } from './unwraps/medium.js'
+// import { unwrapMimecast } from './unwraps/mimecast.js'
+// import { unwrapMozillaOutgoing } from './unwraps/mozillaOutgoing.js'
+// import { unwrapNicoMs } from './unwraps/nicoMs.js'
+// import { unwrapOutlookSafelinks } from './unwraps/outlookSafelinks.js'
+// import { unwrapPartnerAds } from './unwraps/partnerAds.js'
+// import { unwrapPocket } from './unwraps/pocket.js'
+// import { unwrapPostmark } from './unwraps/postmark.js'
+// import { unwrapProofpointV1 } from './unwraps/proofpointV1.js'
+// import { unwrapProofpointV2 } from './unwraps/proofpointV2.js'
+// import { unwrapProofpointV3 } from './unwraps/proofpointV3.js'
+// import { unwrapPxf } from './unwraps/pxf.js'
+// import { unwrapRecruitics } from './unwraps/recruitics.js'
+import { unwrapRedditOut } from './unwraps/redditOut.js'
+// import { unwrapRedirectingat } from './unwraps/redirectingat.js'
+// import { unwrapSegmentfault } from './unwraps/segmentfault.js'
+// import { unwrapShareasale } from './unwraps/shareasale.js'
+// import { unwrapSjv } from './unwraps/sjv.js'
+// import { unwrapSkimlinks } from './unwraps/skimlinks.js'
+// import { unwrapSlack } from './unwraps/slack.js'
+// import { unwrapSmartredirect } from './unwraps/smartredirect.js'
+// import { unwrapSspai } from './unwraps/sspai.js'
+// import { unwrapSteamLinkfilter } from './unwraps/steamLinkfilter.js'
+// import { unwrapTradedoubler } from './unwraps/tradedoubler.js'
+// import { unwrapTumblr } from './unwraps/tumblr.js'
+// import { unwrapValuecommerce } from './unwraps/valuecommerce.js'
+// import { unwrapViglink } from './unwraps/viglink.js'
+import { unwrapVkAway } from './unwraps/vkAway.js'
+import { unwrapYahooSearch } from './unwraps/yahooSearch.js'
+import { unwrapYouTube } from './unwraps/youtube.js'
+// import { unwrapZhihu } from './unwraps/zhihu.js'
 
 export const defaultStringTransforms: Array<StringTransform> = [
   stripOrphanedClosingTags,
@@ -104,6 +114,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   fixLazyImages,
   resolveRelativeUrls,
   unwrapRedirectUrls,
+  stripDeadAnchors,
   stripTrackingParams,
   removeTrackingPixels,
   stripInterBlockBreaks,
@@ -114,7 +125,8 @@ export const defaultDomTransforms: Array<DomTransform> = [
   trimPreWhitespace,
   linkifyUrls,
   replaceEmbedsWithPlaceholders,
-  injectEnclosureEmbedPlaceholders,
+  injectEnclosures,
+  proxyAssetUrls,
 ]
 
 export const defaultFinalStringTransforms: Array<StringTransform> = [stripEmptyTags]
@@ -124,7 +136,45 @@ export const defaultFinalStringTransforms: Array<StringTransform> = [stripEmptyT
 // meta-providers like Embedly that wrap other providers) before broader ones.
 export const defaultEmbedResolvers: Array<EmbedResolver> = [youtubeEmbedResolver]
 
-export const defaultLazySrcAttributes = ['data-src', 'data-original', 'data-lazy-src', 'data-url']
+export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
+
+export const defaultLazySrcAttributes = [
+  'data-src', // lazysizes / vanilla-lazyload / lozad / Drupal Blazy / a3 Lazy Load / Smush / EWWW / generic — 360k hits.
+  'data-original', // Legacy jquery_lazyload (tuupola v1) — 19k hits, large legacy footprint.
+  'data-lazy-src', // Jetpack Lazy Images / WP Rocket / BJ Lazy Load — 31k hits.
+  'data-url', // Generic, observed across multiple lazy-loaders — 343k hits.
+  'data-image', // Squarespace ImageLoader — 2M hits, the highest-volume real-world variant.
+  'data-orig-file', // WordPress unscaled original (Jetpack media library) — 1.75M hits.
+  'data-large-file', // WordPress responsive variant — 1.75M hits.
+  'data-medium-file', // WordPress responsive medium fallback — 1.67M hits.
+  'data-thumb', // WordPress thumbnail variant — 18k hits.
+  'data-thumb-src', // WordPress thumbnail src variant — 11k hits.
+  'data-original-src', // Legacy lazy-loaders / pika.page CDN — 9k hits.
+  'data-image-src', // Legacy Atlassian-style CMS — 4k hits.
+  'data-canonical-src', // YouTube / retina-aware renderers — 2k hits, <0.1% of feeds.
+  'data-img-url', // Amazon affiliate widgets / generic — 0.9k hits, <0.1% of feeds.
+  'nitro-lazy-src', // NitroPack — 222 hits, <0.01% of feeds. Non-`data-*` prefix.
+  'data-orig', // Generic original-source variant — 27 hits, <0.01% of feeds.
+  'data-runner-src', // Amazon affiliate / generic — 42 hits, <0.01% of feeds.
+]
+
+export const defaultLazySrcsetAttributes = [
+  'data-srcset', // lazysizes / vanilla-lazyload / lozad / bLazy / generic — 119k hits.
+  'data-tf-srcset', // Avada / Fusion ThemeBuilder — 17k hits.
+  'data-lazy-srcset', // Jetpack Lazy Images / WP Rocket / BJ Lazy Load — 5k hits.
+  'data-image-srcset', // Generic / Squarespace-style — 2.5k hits, often empty.
+  'data-modal-srcset', // Modal / lightbox component — 1.3k hits.
+  'data-splide-lazy-srcset', // Splide.js carousel — 922 hits.
+  'data-alt-srcset', // Generic alternate variant — 816 hits.
+  'fifu-data-srcset', // "Featured Image From URL" WP plugin — 682 hits, often empty.
+  'data-thumb-srcset', // WordPress thumbnail variant — 616 hits, often empty.
+  'data-vp-popup-img-srcset', // Visual Portfolio popup — 395 hits.
+  'data-original-srcset', // Legacy lazy-loaders — 220 hits, often empty.
+  'data-pswp-srcset', // PhotoSwipe lightbox — 196 hits.
+  'data-nectar-img-srcset', // Salient theme (Nectar) — 176 hits.
+  'nitro-lazy-srcset', // NitroPack — 109 hits, <0.01% of feeds. Non-`data-*` prefix.
+  'data-flickity-lazyload-srcset', // Flickity carousel — 63 hits, <0.01% of feeds.
+]
 
 export const defaultTrackingHosts = [
   'feedsportal.com', // Postmedia/Newsfutures feed-syndication pixels (/c/<id>/<…>.gif).
@@ -155,86 +205,87 @@ export const defaultTrackingHosts = [
 
 export const defaultTrackingPathSegments = ['pixel', 'beacon', 'count']
 
-export const defaultRedirectExtractors: Array<RedirectExtractor> = [
+export const defaultUrlUnwrappers: Array<UrlUnwrapper> = [
   // Search engines.
-  extractGoogleRedirect,
-  extractGoogleNewsRedirect,
-  extractGoogleNewsModern,
-  extractGoogleTranslateRedirect,
-  extractYouTubeRedirect,
+  unwrapBing,
+  // unwrapDuckduckgo,
+  unwrapGoogle,
+  unwrapGoogleNews,
+  unwrapGoogleNewsModern,
+  unwrapGoogleScholar,
+  unwrapGoogleAmpViewer,
+  unwrapYahooSearch,
+  unwrapYouTube,
 
   // Email and security gateways.
-  extractOutlookSafelinks,
-  extractProofpointV1,
-  extractProofpointV2,
-  extractProofpointV3,
-  extractMimecast,
-  extractPostmark,
-  extractAceml,
-  extractIcptrack,
-  extractMailchimp,
-  extractMailtrack,
-  extractMailpanion,
-  extractMailpgn,
-  extractLeverAnalytics,
-  extractSlack,
+  // unwrapOutlookSafelinks,
+  // unwrapProofpointV1,
+  // unwrapProofpointV2,
+  // unwrapProofpointV3,
+  // unwrapMimecast,
+  // unwrapPostmark,
+  // unwrapAceml,
+  // unwrapIcptrack,
+  // unwrapMailchimp,
+  // unwrapMailtrack,
+  // unwrapMailpanion,
+  // unwrapMailpgn,
+  // unwrapLeverAnalytics,
+  // unwrapSlack,
 
   // Affiliate networks.
-  extractShareasale,
-  extractAwin,
-  extractLinksynergy,
-  extractSkimlinks,
-  extractRedirectingat,
-  extractTradedoubler,
-  extractCjNetwork,
-  extractValuecommerce,
-  extractViglink,
-  extractPxf,
-  extractSjv,
-  extractEbayRover,
-  extractAmazonAffiliate,
-  extractAdjust,
-  extractGateSc,
-  extractSmartredirect,
-  extractNarrativ,
-  extractEffiliation,
-  extractPartnerAds,
-  extractIdealoPartner,
-  extractDigidip,
-  extractRecruitics,
-  extractGeoriot,
-  extractFirebaseDynamicLinks,
+  // unwrapShareasale,
+  // unwrapAwin,
+  // unwrapLinksynergy,
+  // unwrapSkimlinks,
+  // unwrapRedirectingat,
+  // unwrapTradedoubler,
+  // unwrapCjNetwork,
+  // unwrapValuecommerce,
+  // unwrapViglink,
+  // unwrapPxf,
+  // unwrapSjv,
+  // unwrapEbayRover,
+  // unwrapAmazonAffiliate,
+  // unwrapAdjust,
+  // unwrapGateSc,
+  // unwrapSmartredirect,
+  // unwrapEffiliation,
+  // unwrapPartnerAds,
+  // unwrapIdealoPartner,
+  // unwrapDigidip,
+  // unwrapRecruitics,
+  // unwrapGeoriot,
+  // unwrapFirebaseDynamicLinks,
 
   // Social and community platforms.
-  extractFacebookShim,
-  extractPocketRedirect,
-  extractTumblr,
-  extractVkAway,
-  extractRedditOut,
-  extractDisqus,
-  extractSteamLinkfilter,
-  extractDouban,
-  extractNicoMs,
-  extractMedium,
-  extractFlipboard,
+  unwrapFacebookShim,
+  unwrapInstagramShim,
+  // unwrapPocket,
+  // unwrapTumblr,
+  unwrapVkAway,
+  unwrapRedditOut,
+  // unwrapDisqus,
+  // unwrapSteamLinkfilter,
+  // unwrapDouban,
+  // unwrapNicoMs,
+  // unwrapMedium,
+  // unwrapFlipboard,
 
   // Developer and publishing platforms.
-  extractZhihu,
-  extractJuejin,
-  extractSspai,
-  extractJianshuGo,
-  extractSegmentfault,
-  extractGitee,
-  extractHashnode,
+  // unwrapZhihu,
+  // unwrapJuejin,
+  // unwrapSspai,
+  // unwrapJianshuGo,
+  // unwrapSegmentfault,
+  // unwrapGitee,
+  // unwrapHashnode,
 
   // Cache and proxy services.
-  extractAmpCache,
-  extractEmbedly,
-  extractMozillaOutgoing,
-  extractWebArchive,
-  extractYandexTurbo,
-  extractTelegramIv,
+  // unwrapAmpCache,
+  // unwrapEmbedly,
+  // unwrapMozillaOutgoing,
 
   // Legacy aggregators.
-  extractFeedsportal,
+  // unwrapFeedsportal,
 ]

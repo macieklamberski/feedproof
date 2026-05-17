@@ -1,12 +1,12 @@
 {
-  "name": "feedproof",
-  "description": "Improve, normalize, and privacy-harden HTML content from web feeds. Fix feed quirks, resolve URLs, strip tracking, highlight code, and ensure content displays in the best possible form.",
+  "name": "feedsweep",
+  "description": "Tidy up the HTML content in web feeds. Fix feed-specific quirks so content displays in its best possible form.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/macieklamberski/feedproof.git"
+    "url": "https://github.com/macieklamberski/feedsweep.git"
   },
   "bugs": {
-    "url": "https://github.com/macieklamberski/feedproof/issues"
+    "url": "https://github.com/macieklamberski/feedsweep/issues"
   },
   "license": "MIT",
   "author": "Maciej Lamberski",
@@ -39,7 +39,7 @@
     "build": "tsdown src/index.ts src/defaults.ts --format esm --dts --clean --unbundle --no-fixed-extension"
   },
   "dependencies": {
-    "@wordpress/autop": "^4.45.0",
+    "@wordpress/autop": "^4.46.0",
     "highlight.js": "^11.11.1",
     "linkedom": "^0.18.12",
     "linkifyjs": "^4.3.2",

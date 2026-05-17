@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'bun:test'
 import { chooseBaseUrl, createParamExtractor } from './utils.js'
 
+const hostsRegex = /^(?:www\.)?example\.(?:com|co\.uk)$/
+
 describe('chooseBaseUrl', () => {
   it('should prefer itemUrl when available', () => {
     const value = chooseBaseUrl(
@@ -210,7 +212,7 @@ describe('createParamExtractor', () => {
 
   it('should extract param value when regex host matches', () => {
     const extractor = createParamExtractor({
-      hosts: /^(?:www\.)?example\.(?:com|co\.uk)$/,
+      hosts: hostsRegex,
       path: '/redirect',
       params: ['url'],
     })
@@ -223,7 +225,7 @@ describe('createParamExtractor', () => {
 
   it('should return null when regex host does not match', () => {
     const extractor = createParamExtractor({
-      hosts: /^(?:www\.)?example\.(?:com|co\.uk)$/,
+      hosts: hostsRegex,
       path: '/redirect',
       params: ['url'],
     })
