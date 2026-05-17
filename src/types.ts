@@ -64,6 +64,7 @@ export type TransformContext = {
   resolveUrlFn: ResolveUrlFn
   assetProxyFn?: AssetProxyFn
   enrichEmbedFn?: EnrichEmbedFn
+  articleTitle?: string
 }
 
 export type DomTransform = (context: TransformContext) => (document: Document) => MaybePromise<void>
@@ -82,6 +83,7 @@ export type TransformContentOptions = {
   resolveUrlFn?: ResolveUrlFn
   assetProxyFn?: AssetProxyFn
   enrichEmbedFn?: EnrichEmbedFn
+  articleTitle?: string
   stringTransforms?: Array<StringTransform>
   domTransforms?: Array<DomTransform>
   finalStringTransforms?: Array<StringTransform>
