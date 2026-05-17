@@ -30,28 +30,28 @@ Inventory of every transform exported from the package. Most are enabled by defa
 
 | Transform | Description |
 | --- | --- |
-| `stripOrphanedClosingTags` | Remove unmatched `</p>` / `</div>` close tags |
 | `decodeDoubleEncodedTags` | Decode `&lt;tag&gt;` back to `<tag>` in mixed content |
-| `unwrapWrappers` | Remove outer `<div>`, `<article>`, `<section>` wrappers |
-| `paragraphizePlainText` | Wrap plain text in `<p>` tags |
-| `stripEmptyTags` | Remove empty `<p>`, `<div>`, `<span>` and other tags |
-| `stripComments` | Remove HTML `<!-- comments -->` |
+| `stripOrphanedClosingTags` | Remove unmatched `</p>` / `</div>` close tags |
 | `fixLazyImages` | Move `data-src` / `data-original` to real `src` |
-| `resolveRelativeUrls` | Convert relative URLs to absolute using base URL |
-| `unwrapRedirectUrls` | Remove Google/Bing/Facebook/etc. redirect wrappers |
-| `stripTrackingParams` | Remove UTM and other tracking parameters |
-| `removeTrackingPixels` | Strip 1×1 tracking pixel images |
-| `stripInterBlockBreaks` | Remove `<br>` tags between block elements |
-| `stripParagraphBoundaryBreaks` | Remove `<br>` tags adjacent to paragraph boundaries |
-| `highlightCode` | Syntax-highlight `<code>` blocks with highlight.js |
 | `mergeConsecutiveOneLinerPres` | Merge consecutive single-line `<pre>` tags |
 | `replacePreLineBreaks` | Replace `<br>` with `\n` inside `<pre>` |
-| `trimPreWhitespace` | Remove common leading indentation from `<pre>` |
-| `linkifyUrls` | Wrap bare URLs in `<a>` tags |
-| `replaceEmbedsWithPlaceholders` | Convert `<iframe>` to embed placeholders |
-| `injectEnclosures` | Inject feed enclosures into content as native `<audio>`/`<video>` or iframe placeholders |
-| `proxyAssetUrls` | Rewrite image, video, and audio URLs through a caller-supplied proxy |
+| `stripInterBlockBreaks` | Remove `<br>` tags between block elements |
+| `stripParagraphBoundaryBreaks` | Remove `<br>` tags adjacent to paragraph boundaries |
 | `simplifyFigures` | Unwrap `<figure>` when the figcaption is empty or redundant |
+| `unwrapRedirectUrls` | Remove Google/Bing/Facebook/etc. redirect wrappers |
+| `removeTrackingPixels` | Strip 1×1 tracking pixel images |
+| `stripTrackingParams` | Remove UTM and other tracking parameters |
+| `injectEnclosures` | Inject feed enclosures into content as native `<audio>`/`<video>` or iframe placeholders |
+| `replaceEmbedsWithPlaceholders` | Convert `<iframe>` to embed placeholders |
+| `proxyAssetUrls` | Rewrite image, video, and audio URLs through a caller-supplied proxy |
+| `resolveRelativeUrls` | Convert relative URLs to absolute using base URL |
+| `unwrapWrappers` | Remove outer `<div>`, `<article>`, `<section>` wrappers |
+| `paragraphizePlainText` | Wrap plain text in `<p>` tags |
+| `linkifyUrls` | Wrap bare URLs in `<a>` tags |
+| `trimPreWhitespace` | Remove common leading indentation from `<pre>` |
+| `highlightCode` | Syntax-highlight `<code>` blocks with highlight.js |
+| `stripEmptyTags` | Remove empty `<p>`, `<div>`, `<span>` and other tags |
+| `stripComments` | Remove HTML `<!-- comments -->` |
 
 ## Options
 
