@@ -4,24 +4,30 @@ import {
   defaultEmbedResolvers,
   defaultFinalStringTransforms,
   defaultLazySrcAttributes,
-  defaultRedirectExtractors,
+  defaultLazySrcsetAttributes,
   defaultResolveUrlFn,
   defaultStringTransforms,
   defaultTrackingHosts,
   defaultTrackingPathSegments,
+  defaultUrlUnwrappers,
 } from './defaults.js'
 import type { TransformContentOptions, TransformContext } from './types.js'
 
-export const transformContent = (html: string, options: TransformContentOptions = {}): string => {
+export const transformContent = async (
+  html: string,
+  options: TransformContentOptions = {},
+): Promise<string> => {
   const context: TransformContext = {
     baseUrl: options.baseUrl,
     enclosures: options.enclosures,
     embedResolvers: options.embedResolvers ?? defaultEmbedResolvers,
     lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,
+    lazySrcsetAttributes: options.lazySrcsetAttributes ?? defaultLazySrcsetAttributes,
     trackingHosts: options.trackingHosts ?? defaultTrackingHosts,
     trackingPathSegments: options.trackingPathSegments ?? defaultTrackingPathSegments,
-    redirectExtractors: options.redirectExtractors ?? defaultRedirectExtractors,
+    urlUnwrappers: options.urlUnwrappers ?? defaultUrlUnwrappers,
     resolveUrlFn: options.resolveUrlFn ?? defaultResolveUrlFn,
+    assetProxyFn: options.assetProxyFn,
   }
 
   const stringFns = options.stringTransforms ?? defaultStringTransforms
@@ -29,19 +35,19 @@ export const transformContent = (html: string, options: TransformContentOptions 
   const finalFns = options.finalStringTransforms ?? defaultFinalStringTransforms
 
   // Phase 1: String transforms.
-  const afterString = applyStringTransforms(
+  const afterString = await applyStringTransforms(
     html,
     stringFns.map((transform) => transform(context)),
   )
 
   // Phase 2: DOM transforms.
-  const afterDom = applyDomTransforms(
+  const afterDom = await applyDomTransforms(
     afterString,
     domFns.map((transform) => transform(context)),
   )
 
   // Phase 3: Final string transforms — cleans up empties produced by Phase 2.
-  const afterFinal = applyStringTransforms(
+  const afterFinal = await applyStringTransforms(
     afterDom,
     finalFns.map((transform) => transform(context)),
   )
@@ -64,79 +70,12 @@ export {
   youtubeEmbedResolver,
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
-export { extractAceml } from './redirects/aceml.js'
-export { extractAdjust } from './redirects/adjust.js'
-export { extractAmazonAffiliate } from './redirects/amazonAffiliate.js'
-export { extractAmpCache } from './redirects/ampCache.js'
-export { extractAwin } from './redirects/awin.js'
-export { extractCjNetwork } from './redirects/cjNetwork.js'
-export { extractDigidip } from './redirects/digidip.js'
-export { extractDisqus } from './redirects/disqus.js'
-export { extractDouban } from './redirects/douban.js'
-export { extractEbayRover } from './redirects/ebayRover.js'
-export { extractEffiliation } from './redirects/effiliation.js'
-export { extractEmbedly } from './redirects/embedly.js'
-export { extractFacebookShim } from './redirects/facebook.js'
-export { extractFeedsportal } from './redirects/feedsportal.js'
-export { extractFirebaseDynamicLinks } from './redirects/firebaseDynamicLinks.js'
-export { extractFlipboard } from './redirects/flipboard.js'
-export { extractGateSc } from './redirects/gateSc.js'
-export { extractGeoriot } from './redirects/georiot.js'
-export { extractGitee } from './redirects/gitee.js'
-export { extractGoogleRedirect } from './redirects/google.js'
-export { extractGoogleNewsRedirect } from './redirects/googleNews.js'
-export { extractGoogleNewsModern } from './redirects/googleNewsModern.js'
-export { extractGoogleTranslateRedirect } from './redirects/googleTranslate.js'
-export { extractHashnode } from './redirects/hashnode.js'
-export { extractIcptrack } from './redirects/icptrack.js'
-export { extractIdealoPartner } from './redirects/idealoPartner.js'
-export { extractJianshuGo } from './redirects/jianshuGo.js'
-export { extractJuejin } from './redirects/juejin.js'
-export { extractLeverAnalytics } from './redirects/leverAnalytics.js'
-export { extractLinksynergy } from './redirects/linksynergy.js'
-export { extractMailchimp } from './redirects/mailchimp.js'
-export { extractMailpanion } from './redirects/mailpanion.js'
-export { extractMailpgn } from './redirects/mailpgn.js'
-export { extractMailtrack } from './redirects/mailtrack.js'
-export { extractMedium } from './redirects/medium.js'
-export { extractMimecast } from './redirects/mimecast.js'
-export { extractMozillaOutgoing } from './redirects/mozillaOutgoing.js'
-export { extractNarrativ } from './redirects/narrativ.js'
-export { extractNicoMs } from './redirects/nicoMs.js'
-export { extractOutlookSafelinks } from './redirects/outlookSafelinks.js'
-export { extractPartnerAds } from './redirects/partnerAds.js'
-export { extractPocketRedirect } from './redirects/pocket.js'
-export { extractPostmark } from './redirects/postmark.js'
-export { extractProofpointV1 } from './redirects/proofpointV1.js'
-export { extractProofpointV2 } from './redirects/proofpointV2.js'
-export { extractProofpointV3 } from './redirects/proofpointV3.js'
-export { extractPxf } from './redirects/pxf.js'
-export { extractRecruitics } from './redirects/recruitics.js'
-export { extractRedditOut } from './redirects/redditOut.js'
-export { extractRedirectingat } from './redirects/redirectingat.js'
-export { extractSegmentfault } from './redirects/segmentfault.js'
-export { extractShareasale } from './redirects/shareasale.js'
-export { extractSjv } from './redirects/sjv.js'
-export { extractSkimlinks } from './redirects/skimlinks.js'
-export { extractSlack } from './redirects/slack.js'
-export { extractSmartredirect } from './redirects/smartredirect.js'
-export { extractSspai } from './redirects/sspai.js'
-export { extractSteamLinkfilter } from './redirects/steamLinkfilter.js'
-export { extractTelegramIv } from './redirects/telegramIv.js'
-export { extractTradedoubler } from './redirects/tradedoubler.js'
-export { extractTumblr } from './redirects/tumblr.js'
-export { extractValuecommerce } from './redirects/valuecommerce.js'
-export { extractViglink } from './redirects/viglink.js'
-export { extractVkAway } from './redirects/vkAway.js'
-export { extractWebArchive } from './redirects/webArchive.js'
-export { extractYandexTurbo } from './redirects/yandexTurbo.js'
-export { extractYouTubeRedirect } from './redirects/youtubeRedirect.js'
-export { extractZhihu } from './redirects/zhihu.js'
 export { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js'
-export { injectEnclosureEmbedPlaceholders } from './transforms/dom/injectEnclosureEmbedPlaceholders.js'
+export { injectEnclosures } from './transforms/dom/injectEnclosures.js'
 export { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 export { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
+export { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 export { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 export { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 export { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
@@ -155,14 +94,91 @@ export { stripEmptyTags } from './transforms/string/stripEmptyTags.js'
 export { stripOrphanedClosingTags } from './transforms/string/stripOrphanedClosingTags.js'
 export { unwrapWrappers } from './transforms/string/unwrapWrappers.js'
 export type {
+  AssetProxyFn,
+  AssetType,
   DomTransform,
   EmbedResolver,
   EmbedResolverResult,
   Enclosure,
+  MaybePromise,
   ResolveUrlFn,
   StringTransform,
   TransformContentOptions,
   TransformContext,
 } from './types.js'
+export { unwrapAceml } from './unwraps/aceml.js'
+export { unwrapAdjust } from './unwraps/adjust.js'
+export { unwrapAmazonAffiliate } from './unwraps/amazonAffiliate.js'
+export { unwrapAmpCache } from './unwraps/ampCache.js'
+export { unwrapAwin } from './unwraps/awin.js'
+export { unwrapBing } from './unwraps/bing.js'
+export { unwrapCjNetwork } from './unwraps/cjNetwork.js'
+export { unwrapDigidip } from './unwraps/digidip.js'
+export { unwrapDisqus } from './unwraps/disqus.js'
+export { unwrapDouban } from './unwraps/douban.js'
+export { unwrapDuckduckgo } from './unwraps/duckduckgo.js'
+export { unwrapEbayRover } from './unwraps/ebayRover.js'
+export { unwrapEffiliation } from './unwraps/effiliation.js'
+export { unwrapEmbedly } from './unwraps/embedly.js'
+export { unwrapFacebookShim } from './unwraps/facebook.js'
+export { unwrapFeedsportal } from './unwraps/feedsportal.js'
+export { unwrapFirebaseDynamicLinks } from './unwraps/firebaseDynamicLinks.js'
+export { unwrapFlipboard } from './unwraps/flipboard.js'
+export { unwrapGateSc } from './unwraps/gateSc.js'
+export { unwrapGeoriot } from './unwraps/georiot.js'
+export { unwrapGitee } from './unwraps/gitee.js'
+export { unwrapGoogle } from './unwraps/google.js'
+export { unwrapGoogleAmpViewer } from './unwraps/googleAmpViewer.js'
+export { unwrapGoogleNews } from './unwraps/googleNews.js'
+export { unwrapGoogleNewsModern } from './unwraps/googleNewsModern.js'
+export { unwrapGoogleScholar } from './unwraps/googleScholar.js'
+export { unwrapGoogleTranslate } from './unwraps/googleTranslate.js'
+export { unwrapHashnode } from './unwraps/hashnode.js'
+export { unwrapIcptrack } from './unwraps/icptrack.js'
+export { unwrapIdealoPartner } from './unwraps/idealoPartner.js'
+export { unwrapInstagramShim } from './unwraps/instagram.js'
+export { unwrapJianshuGo } from './unwraps/jianshuGo.js'
+export { unwrapJuejin } from './unwraps/juejin.js'
+export { unwrapLeverAnalytics } from './unwraps/leverAnalytics.js'
+export { unwrapLinksynergy } from './unwraps/linksynergy.js'
+export { unwrapMailchimp } from './unwraps/mailchimp.js'
+export { unwrapMailpanion } from './unwraps/mailpanion.js'
+export { unwrapMailpgn } from './unwraps/mailpgn.js'
+export { unwrapMailtrack } from './unwraps/mailtrack.js'
+export { unwrapMedium } from './unwraps/medium.js'
+export { unwrapMimecast } from './unwraps/mimecast.js'
+export { unwrapMozillaOutgoing } from './unwraps/mozillaOutgoing.js'
+export { unwrapNarrativ } from './unwraps/narrativ.js'
+export { unwrapNicoMs } from './unwraps/nicoMs.js'
+export { unwrapOutlookSafelinks } from './unwraps/outlookSafelinks.js'
+export { unwrapPartnerAds } from './unwraps/partnerAds.js'
+export { unwrapPocket } from './unwraps/pocket.js'
+export { unwrapPostmark } from './unwraps/postmark.js'
+export { unwrapProofpointV1 } from './unwraps/proofpointV1.js'
+export { unwrapProofpointV2 } from './unwraps/proofpointV2.js'
+export { unwrapProofpointV3 } from './unwraps/proofpointV3.js'
+export { unwrapPxf } from './unwraps/pxf.js'
+export { unwrapRecruitics } from './unwraps/recruitics.js'
+export { unwrapRedditOut } from './unwraps/redditOut.js'
+export { unwrapRedirectingat } from './unwraps/redirectingat.js'
+export { unwrapSegmentfault } from './unwraps/segmentfault.js'
+export { unwrapShareasale } from './unwraps/shareasale.js'
+export { unwrapSjv } from './unwraps/sjv.js'
+export { unwrapSkimlinks } from './unwraps/skimlinks.js'
+export { unwrapSlack } from './unwraps/slack.js'
+export { unwrapSmartredirect } from './unwraps/smartredirect.js'
+export { unwrapSspai } from './unwraps/sspai.js'
+export { unwrapSteamLinkfilter } from './unwraps/steamLinkfilter.js'
+export { unwrapTelegramIv } from './unwraps/telegramIv.js'
+export { unwrapTradedoubler } from './unwraps/tradedoubler.js'
+export { unwrapTumblr } from './unwraps/tumblr.js'
+export { unwrapValuecommerce } from './unwraps/valuecommerce.js'
+export { unwrapViglink } from './unwraps/viglink.js'
+export { unwrapVkAway } from './unwraps/vkAway.js'
+export { unwrapWebArchive } from './unwraps/webArchive.js'
+export { unwrapYahooSearch } from './unwraps/yahooSearch.js'
+export { unwrapYandexTurbo } from './unwraps/yandexTurbo.js'
+export { unwrapYouTube } from './unwraps/youtube.js'
+export { unwrapZhihu } from './unwraps/zhihu.js'
 export type { ParamExtractorConfig } from './utils.js'
 export { chooseBaseUrl, coerceNumber, createParamExtractor } from './utils.js'

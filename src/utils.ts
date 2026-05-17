@@ -1,5 +1,5 @@
 import { resolveUrl } from 'feedcanon'
-import type { RedirectExtractor } from './types.js'
+import type { UrlUnwrapper } from './types.js'
 
 // Priority: item link → site URL → feed URL. Item content is authored relative to the
 // item's page, so its link is the best base for resolving relative URLs in content.
@@ -39,7 +39,7 @@ export type ParamExtractorConfig = {
   params: Array<string>
 }
 
-export const createParamExtractor = (config: ParamExtractorConfig): RedirectExtractor => {
+export const createParamExtractor = (config: ParamExtractorConfig): UrlUnwrapper => {
   const matchesHost = (host: string): boolean => {
     if (config.hosts instanceof RegExp) {
       return config.hosts.test(host)

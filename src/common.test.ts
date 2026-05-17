@@ -8,15 +8,15 @@ import {
 } from './common.js'
 
 describe('transformHtml', () => {
-  it('should preserve content when transform is a no-op', () => {
+  it('should preserve content when transform is a no-op', async () => {
     const html = '<p>Hello world</p>'
 
-    expect(transformHtml(html, () => {})).toContain('<p>Hello world</p>')
+    expect(await transformHtml(html, () => {})).toContain('<p>Hello world</p>')
   })
 
-  it('should allow modifying the DOM', () => {
+  it('should allow modifying the DOM', async () => {
     const html = '<p><img data-src="img.jpg"></p>'
-    const result = transformHtml(html, (document) => {
+    const result = await transformHtml(html, (document) => {
       for (const image of document.querySelectorAll('img[data-src]')) {
         const dataSrc = image.getAttribute('data-src')
 
@@ -31,8 +31,8 @@ describe('transformHtml', () => {
     expect(result).not.toContain('data-src')
   })
 
-  it('should handle empty string', () => {
-    expect(transformHtml('', () => {})).toBeDefined()
+  it('should handle empty string', async () => {
+    expect(await transformHtml('', () => {})).toBeDefined()
   })
 })
 
@@ -100,110 +100,159 @@ describe('stripOversizedBase64Sources', () => {
   })
 })
 
-describe('createEmbedPlaceholder fallback link', () => {
-  it('should use metadata.url when present', () => {
-    const document = parseFragment('')
-    const element = createEmbedPlaceholder(document, 'https://embed.example/abc', 'iframe', {
-      provider: 'custom',
-      src: 'https://embed.example/abc',
-      url: 'https://canonical.example/abc',
-      type: 'iframe',
+describe('createEmbedPlaceholder', () => {
+  describe('fallback link', () => {
+    it('should use metadata.url when present', () => {
+      const document = parseFragment('')
+      const element = createEmbedPlaceholder(document, 'https://embed.example/abc', {
+        provider: 'custom',
+        src: 'https://embed.example/abc',
+        url: 'https://canonical.example/abc',
+      })
+
+      expect(element.querySelector('a')?.getAttribute('href')).toBe('https://canonical.example/abc')
     })
 
-    expect(element.querySelector('a')?.getAttribute('href')).toBe('https://canonical.example/abc')
-  })
+    it('should fall back to metadata.src when url is absent', () => {
+      const document = parseFragment('')
+      const element = createEmbedPlaceholder(document, 'https://passed-src.example', {
+        provider: 'custom',
+        src: 'https://embed.example/abc',
+      })
 
-  it('should fall back to metadata.src when url is absent', () => {
-    const document = parseFragment('')
-    const element = createEmbedPlaceholder(document, 'https://passed-src.example', 'iframe', {
-      provider: 'custom',
-      src: 'https://embed.example/abc',
-      type: 'iframe',
+      expect(element.querySelector('a')?.getAttribute('href')).toBe('https://embed.example/abc')
     })
 
-    expect(element.querySelector('a')?.getAttribute('href')).toBe('https://embed.example/abc')
+    it('should fall back to src argument when metadata is omitted', () => {
+      const document = parseFragment('')
+      const element = createEmbedPlaceholder(document, 'https://passed-src.example')
+
+      expect(element.querySelector('a')?.getAttribute('href')).toBe('https://passed-src.example')
+    })
   })
 
-  it('should fall back to src argument when metadata is omitted', () => {
-    const document = parseFragment('')
-    const element = createEmbedPlaceholder(document, 'https://passed-src.example', 'iframe')
+  describe('thumbnail safety', () => {
+    it('should keep http thumbnail', () => {
+      const document = parseFragment('')
+      const thumbnail = 'https://cdn.example/thumb.jpg'
+      const element = createEmbedPlaceholder(document, 'https://embed.example', {
+        thumbnail,
+      })
 
-    expect(element.querySelector('a')?.getAttribute('href')).toBe('https://passed-src.example')
+      expect(element.getAttribute('data-embed-thumbnail')).toBe(thumbnail)
+    })
+
+    it('should keep data:image/png thumbnail', () => {
+      const document = parseFragment('')
+      const thumbnail = 'data:image/png;base64,iVBORw0KGgo='
+      const element = createEmbedPlaceholder(document, 'https://embed.example', {
+        thumbnail,
+      })
+
+      expect(element.getAttribute('data-embed-thumbnail')).toBe(thumbnail)
+    })
+
+    it('should keep data:image/jpeg thumbnail', () => {
+      const document = parseFragment('')
+      const thumbnail = 'data:image/jpeg;base64,/9j/4AAQ='
+      const element = createEmbedPlaceholder(document, 'https://embed.example', {
+        thumbnail,
+      })
+
+      expect(element.getAttribute('data-embed-thumbnail')).toBe(thumbnail)
+    })
+
+    it('should drop javascript: thumbnail', () => {
+      const document = parseFragment('')
+      const element = createEmbedPlaceholder(document, 'https://embed.example', {
+        thumbnail: 'javascript:alert(1)',
+      })
+
+      expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
+    })
+
+    it('should drop data:image/svg+xml thumbnail', () => {
+      const document = parseFragment('')
+      const element = createEmbedPlaceholder(document, 'https://embed.example', {
+        thumbnail: 'data:image/svg+xml;utf8,<svg/>',
+      })
+
+      expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
+    })
+
+    it('should drop data:text/html thumbnail', () => {
+      const document = parseFragment('')
+      const element = createEmbedPlaceholder(document, 'https://embed.example', {
+        thumbnail: 'data:text/html,<script>1</script>',
+      })
+
+      expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
+    })
   })
 })
 
-describe('createEmbedPlaceholder thumbnail safety', () => {
-  it('should keep http thumbnail', () => {
-    const document = parseFragment('')
-    const thumbnail = 'https://cdn.example/thumb.jpg'
-    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
-      thumbnail,
+describe('parseFragment', () => {
+  describe('attribute case normalization', () => {
+    it('should lowercase uppercase attribute names', () => {
+      const document = parseFragment('<img SRC="https://example.com/photo.jpg">')
+      const image = document.querySelector('img')
+
+      expect(image?.getAttribute('src')).toBe('https://example.com/photo.jpg')
+      expect(image?.hasAttribute('SRC')).toBe(false)
     })
 
-    expect(element.getAttribute('data-embed-thumbnail')).toBe(thumbnail)
-  })
+    it('should lowercase mixed-case attribute names', () => {
+      const document = parseFragment('<img SrcSet="a.jpg 1x, b.jpg 2x" Data-Src="c.jpg">')
+      const image = document.querySelector('img')
 
-  it('should keep data:image/png thumbnail', () => {
-    const document = parseFragment('')
-    const thumbnail = 'data:image/png;base64,iVBORw0KGgo='
-    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
-      thumbnail,
+      expect(image?.getAttribute('srcset')).toBe('a.jpg 1x, b.jpg 2x')
+      expect(image?.getAttribute('data-src')).toBe('c.jpg')
+      expect(image?.hasAttribute('SrcSet')).toBe(false)
+      expect(image?.hasAttribute('Data-Src')).toBe(false)
     })
 
-    expect(element.getAttribute('data-embed-thumbnail')).toBe(thumbnail)
-  })
+    it('should lowercase POSTER and SRC on video elements', () => {
+      const document = parseFragment(
+        '<video SRC="https://example.com/clip.mp4" POSTER="https://example.com/thumb.jpg"></video>',
+      )
+      const video = document.querySelector('video')
 
-  it('should keep data:image/jpeg thumbnail', () => {
-    const document = parseFragment('')
-    const thumbnail = 'data:image/jpeg;base64,/9j/4AAQ='
-    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
-      thumbnail,
+      expect(video?.getAttribute('src')).toBe('https://example.com/clip.mp4')
+      expect(video?.getAttribute('poster')).toBe('https://example.com/thumb.jpg')
     })
 
-    expect(element.getAttribute('data-embed-thumbnail')).toBe(thumbnail)
-  })
+    it('should keep the first occurrence when duplicates collide after lowercasing', () => {
+      const document = parseFragment('<img SRC="first.jpg" src="second.jpg">')
+      const image = document.querySelector('img')
 
-  it('should drop javascript: thumbnail', () => {
-    const document = parseFragment('')
-    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
-      thumbnail: 'javascript:alert(1)',
+      expect(image?.getAttribute('src')).toBe('first.jpg')
     })
 
-    expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
-  })
+    it('should leave already-lowercase attributes untouched', () => {
+      const document = parseFragment('<a href="/about" class="nav">About</a>')
+      const anchor = document.querySelector('a')
 
-  it('should drop data:image/svg+xml thumbnail', () => {
-    const document = parseFragment('')
-    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
-      thumbnail: 'data:image/svg+xml;utf8,<svg/>',
+      expect(anchor?.getAttribute('href')).toBe('/about')
+      expect(anchor?.getAttribute('class')).toBe('nav')
     })
-
-    expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
-  })
-
-  it('should drop data:text/html thumbnail', () => {
-    const document = parseFragment('')
-    const element = createEmbedPlaceholder(document, 'https://embed.example', 'iframe', {
-      thumbnail: 'data:text/html,<script>1</script>',
-    })
-
-    expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
   })
 })
 
-describe('applyDomTransforms base64 stripping', () => {
-  it('should preserve small base64 images through dom transforms', () => {
-    const value = '<p>Text</p><img src="data:image/png;base64,iVBORw0KGgo=">'
+describe('applyDomTransforms', () => {
+  describe('base64 stripping', () => {
+    it('should preserve small base64 images through dom transforms', async () => {
+      const value = '<p>Text</p><img src="data:image/png;base64,iVBORw0KGgo=">'
 
-    expect(applyDomTransforms(value, [])).toContain('data:image/png;base64,iVBORw0KGgo=')
-  })
+      expect(await applyDomTransforms(value, [])).toContain('data:image/png;base64,iVBORw0KGgo=')
+    })
 
-  it('should strip oversized base64 images during dom transforms', () => {
-    const largeData = 'A'.repeat(100 * 1024)
-    const value = `<p>Text</p><img src="data:image/png;base64,${largeData}">`
-    const result = applyDomTransforms(value, [])
+    it('should strip oversized base64 images during dom transforms', async () => {
+      const largeData = 'A'.repeat(100 * 1024)
+      const value = `<p>Text</p><img src="data:image/png;base64,${largeData}">`
+      const result = await applyDomTransforms(value, [])
 
-    expect(result).toContain('<p>Text</p>')
-    expect(result).not.toContain(largeData)
+      expect(result).toContain('<p>Text</p>')
+      expect(result).not.toContain(largeData)
+    })
   })
 })

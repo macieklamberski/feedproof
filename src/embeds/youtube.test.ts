@@ -139,7 +139,6 @@ describe('youtubeResolveEmbed', () => {
       src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
-      type: 'iframe',
     }
 
     expect(youtubeResolveEmbed('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toEqual(expected)
@@ -151,7 +150,6 @@ describe('youtubeResolveEmbed', () => {
       src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
-      type: 'iframe',
     }
 
     expect(youtubeResolveEmbed('https://www.youtube.com/embed/dQw4w9WgXcQ')).toEqual(expected)
@@ -163,7 +161,6 @@ describe('youtubeResolveEmbed', () => {
       src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
-      type: 'iframe',
     }
 
     expect(youtubeResolveEmbed('https://youtu.be/dQw4w9WgXcQ')).toEqual(expected)
@@ -175,7 +172,6 @@ describe('youtubeResolveEmbed', () => {
       src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
-      type: 'iframe',
     }
 
     expect(youtubeResolveEmbed('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')).toEqual(
@@ -210,7 +206,6 @@ describe('youtubeEmbedResolver', () => {
       src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
-      type: 'iframe',
     }
 
     expect(result).toEqual(expected)
@@ -224,7 +219,6 @@ describe('youtubeEmbedResolver', () => {
       src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
-      type: 'iframe',
     }
 
     expect(result).toEqual(expected)
