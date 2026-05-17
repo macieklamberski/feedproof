@@ -1,5 +1,6 @@
 import { resolveUrl } from 'feedcanon'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
+import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
 import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
@@ -13,10 +14,12 @@ import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
 import { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
 import { stripComments } from './transforms/dom/stripComments.js'
 import { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
+import { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBoundaryBreaks.js'
 import { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
+import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 import { unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 import { decodeDoubleEncodedTags } from './transforms/string/decodeDoubleEncodedTags.js'
 import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
@@ -110,12 +113,15 @@ export const defaultStringTransforms: Array<StringTransform> = [
 
 export const defaultDomTransforms: Array<DomTransform> = [
   stripComments,
+  unwrapDoublyNestedLists,
+  stripDuplicateTitleHeading,
   fixLazyImages,
   resolveRelativeUrls,
   unwrapRedirectUrls,
   stripDeadAnchors,
   stripTrackingParams,
   removeTrackingPixels,
+  convertBreaksToParagraphs,
   stripInterBlockBreaks,
   stripParagraphBoundaryBreaks,
   mergeFragmentedLists,
