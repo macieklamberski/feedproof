@@ -3,6 +3,7 @@ import { transformHtml } from '../../common.js'
 import {
   defaultEmbedResolvers,
   defaultLazySrcAttributes,
+  defaultLazySrcsetAttributes,
   defaultResolveUrlFn,
   defaultTrackingHosts,
   defaultTrackingPathSegments,
@@ -19,6 +20,7 @@ const baseContext = (assetProxyFn?: AssetProxyFn): TransformContext => {
   return {
     embedResolvers: defaultEmbedResolvers,
     lazySrcAttributes: defaultLazySrcAttributes,
+    lazySrcsetAttributes: defaultLazySrcsetAttributes,
     trackingHosts: defaultTrackingHosts,
     trackingPathSegments: defaultTrackingPathSegments,
     urlUnwrappers: defaultUrlUnwrappers,

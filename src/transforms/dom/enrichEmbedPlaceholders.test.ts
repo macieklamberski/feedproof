@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { transformHtml } from '../../common.js'
 import {
   defaultLazySrcAttributes,
+  defaultLazySrcsetAttributes,
   defaultResolveUrlFn,
   defaultTrackingHosts,
   defaultTrackingPathSegments,
@@ -13,6 +14,7 @@ import { enrichEmbedPlaceholders } from './enrichEmbedPlaceholders.js'
 const baseContext: TransformContext = {
   embedResolvers: [],
   lazySrcAttributes: defaultLazySrcAttributes,
+  lazySrcsetAttributes: defaultLazySrcsetAttributes,
   trackingHosts: defaultTrackingHosts,
   trackingPathSegments: defaultTrackingPathSegments,
   urlUnwrappers: defaultUrlUnwrappers,

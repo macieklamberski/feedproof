@@ -18,24 +18,30 @@ export const fixLazyImages: DomTransform = (context) => {
     const images = document.querySelectorAll('img')
 
     for (const image of images) {
-      let resolved = false
+      let srcResolved = false
 
       for (const attribute of context.lazySrcAttributes) {
         const value = image.getAttribute(attribute)
 
-        if (!resolved && value && isUrlShaped(value)) {
+        if (!srcResolved && value && isUrlShaped(value)) {
           image.setAttribute('src', value)
-          resolved = true
+          srcResolved = true
         }
 
         image.removeAttribute(attribute)
       }
 
-      const dataSrcset = image.getAttribute('data-srcset')
+      let srcsetResolved = false
 
-      if (dataSrcset) {
-        image.setAttribute('srcset', dataSrcset)
-        image.removeAttribute('data-srcset')
+      for (const attribute of context.lazySrcsetAttributes) {
+        const value = image.getAttribute(attribute)
+
+        if (!srcsetResolved && value && isUrlShaped(value)) {
+          image.setAttribute('srcset', value)
+          srcsetResolved = true
+        }
+
+        image.removeAttribute(attribute)
       }
     }
 
