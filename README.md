@@ -48,6 +48,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `proxyAssetUrls` | Rewrite image, video, and audio URLs through a caller-supplied proxy |
 | `resolveRelativeUrls` | Convert relative URLs to absolute using base URL |
 | `unwrapWrappers` | Remove outer `<div>`, `<article>`, `<section>` wrappers |
+| `unwrapDoublyNestedLists` | Unwrap `<ul>`/`<ol>` that wrap a single `<li>` containing a same-type list |
 | `paragraphizePlainText` | Wrap plain text in `<p>` tags |
 | `linkifyUrls` | Wrap bare URLs in `<a>` tags |
 | `trimPreWhitespace` | Remove common leading indentation from `<pre>` |

@@ -16,6 +16,7 @@ import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js
 import { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBoundaryBreaks.js'
 import { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
+import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 import { unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 import { decodeDoubleEncodedTags } from './transforms/string/decodeDoubleEncodedTags.js'
 import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
@@ -109,6 +110,7 @@ export const defaultStringTransforms: Array<StringTransform> = [
 
 export const defaultDomTransforms: Array<DomTransform> = [
   stripComments,
+  unwrapDoublyNestedLists,
   fixLazyImages,
   resolveRelativeUrls,
   unwrapRedirectUrls,

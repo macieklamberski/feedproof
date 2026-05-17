@@ -22,8 +22,7 @@ export const stripDeadAnchors: DomTransform = () => {
 
       const trimmed = href.trim()
 
-      const isDead =
-        trimmed === '' || trimmed === '#' || javascriptSchemeRegex.test(trimmed)
+      const isDead = trimmed === '' || trimmed === '#' || javascriptSchemeRegex.test(trimmed)
 
       if (!isDead) {
         continue
