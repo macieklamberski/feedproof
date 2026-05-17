@@ -80,6 +80,7 @@ export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js
 export { injectEnclosures } from './transforms/dom/injectEnclosures.js'
 export { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 export { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
+export { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 export { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 export { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 export { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'

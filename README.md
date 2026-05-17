@@ -50,6 +50,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `resolveRelativeUrls` | Convert relative URLs to absolute using base URL |
 | `unwrapWrappers` | Remove outer `<div>`, `<article>`, `<section>` wrappers |
 | `unwrapDoublyNestedLists` | Unwrap `<ul>`/`<ol>` that wrap a single `<li>` containing a same-type list |
+| `mergeFragmentedLists` | Merge consecutive sibling `<ul>` / `<ol>` lists with matching attributes |
 | `paragraphizePlainText` | Wrap plain text in `<p>` tags |
 | `linkifyUrls` | Wrap bare URLs in `<a>` tags |
 | `trimPreWhitespace` | Remove common leading indentation from `<pre>` |
