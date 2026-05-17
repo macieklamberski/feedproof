@@ -29,6 +29,7 @@ export const transformContent = async (
     resolveUrlFn: options.resolveUrlFn ?? defaultResolveUrlFn,
     assetProxyFn: options.assetProxyFn,
     enrichEmbedFn: options.enrichEmbedFn,
+    articleTitle: options.articleTitle,
   }
 
   const stringFns = options.stringTransforms ?? defaultStringTransforms
@@ -87,6 +88,7 @@ export { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
 export { simplifyFigures } from './transforms/dom/simplifyFigures.js'
 export { stripComments } from './transforms/dom/stripComments.js'
 export { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
+export { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 export { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 export { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBoundaryBreaks.js'
 export { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'

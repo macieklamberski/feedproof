@@ -13,6 +13,7 @@ import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
 import { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
 import { stripComments } from './transforms/dom/stripComments.js'
 import { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
+import { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBoundaryBreaks.js'
 import { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
@@ -112,6 +113,7 @@ export const defaultStringTransforms: Array<StringTransform> = [
 export const defaultDomTransforms: Array<DomTransform> = [
   stripComments,
   unwrapDoublyNestedLists,
+  stripDuplicateTitleHeading,
   fixLazyImages,
   resolveRelativeUrls,
   unwrapRedirectUrls,
