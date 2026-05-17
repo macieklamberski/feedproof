@@ -130,11 +130,34 @@ describe('resolveRelativeUrls', () => {
     expect(result).toContain('href="javascript:void(0)"')
   })
 
-  it('should resolve fragment-only URLs against base', async () => {
+  it('should preserve fragment-only hrefs (in-article anchors)', async () => {
     const value = '<a href="#section">jump</a>'
     const result = await transform(value)
 
-    expect(result).toContain('href="https://example.com/#section"')
+    expect(result).toContain('href="#section"')
+    expect(result).not.toContain('https://example.com/#section')
+  })
+
+  it('should preserve fragment-only href even when no matching target exists', async () => {
+    const value = '<a href="#missing">jump</a>'
+    const result = await transform(value)
+
+    expect(result).toContain('href="#missing"')
+  })
+
+  it('should preserve fragment-only href alongside an id target', async () => {
+    const value = '<a href="#section">jump</a><h2 id="section">Section</h2>'
+    const result = await transform(value)
+
+    expect(result).toContain('href="#section"')
+    expect(result).toContain('<h2 id="section">')
+  })
+
+  it('should still resolve hrefs that combine a path with a fragment', async () => {
+    const value = '<a href="/page#section">jump</a>'
+    const result = await transform(value)
+
+    expect(result).toContain('href="https://example.com/page#section"')
   })
 
   it('should handle protocol-relative URLs', async () => {

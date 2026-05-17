@@ -17,6 +17,13 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
         continue
       }
 
+      // Preserve fragment-only hrefs so in-article anchors (e.g. ToC entries
+      // pointing at headings in the same article) keep scrolling locally
+      // instead of navigating to the origin page.
+      if (href.startsWith('#')) {
+        continue
+      }
+
       const resolved = resolveUrl(href, baseUrl)
 
       if (resolved) {
