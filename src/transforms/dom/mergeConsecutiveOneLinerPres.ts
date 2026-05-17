@@ -34,7 +34,7 @@ export const mergeConsecutiveOneLinerPres: DomTransform = () => {
           continue
         }
 
-        if ((sibling as Element).tagName !== 'PRE') {
+        if ((sibling as Element).tagName.toLowerCase() !== 'pre') {
           break
         }
 
