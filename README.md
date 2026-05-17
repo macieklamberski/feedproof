@@ -42,6 +42,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `unwrapRedirectUrls` | Remove Google/Bing/Facebook/etc. redirect wrappers |
 | `removeTrackingPixels` | Strip 1×1 tracking pixel images |
 | `stripTrackingParams` | Remove UTM and other tracking parameters |
+| `convertBreaksToParagraphs` | Convert `<br><br>` runs into semantic `<p>` blocks |
 | `injectEnclosures` | Inject feed enclosures into content as native `<audio>`/`<video>` or iframe placeholders |
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` to embed placeholders |
 | `enrichEmbedPlaceholders` | Populate placeholder metadata (`title`, `description`, `duration`, etc.) via a caller-supplied async fn. Opt-in; not in defaults |

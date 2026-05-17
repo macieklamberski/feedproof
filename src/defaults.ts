@@ -1,5 +1,6 @@
 import { resolveUrl } from 'feedcanon'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
+import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
 import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
@@ -117,6 +118,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   stripDeadAnchors,
   stripTrackingParams,
   removeTrackingPixels,
+  convertBreaksToParagraphs,
   stripInterBlockBreaks,
   stripParagraphBoundaryBreaks,
   highlightCode,

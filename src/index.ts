@@ -72,6 +72,7 @@ export {
   youtubeEmbedResolver,
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
+export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 export { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 export { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js'
