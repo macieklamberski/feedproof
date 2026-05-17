@@ -1,8 +1,25 @@
 import { describe, expect, it } from 'bun:test'
+import {
+  defaultEmbedResolvers,
+  defaultLazySrcAttributes,
+  defaultLazySrcsetAttributes,
+  defaultResolveUrlFn,
+  defaultTrackingHosts,
+  defaultTrackingPathSegments,
+  defaultUrlUnwrappers,
+} from '../../defaults.js'
 import type { TransformContext } from '../../types.js'
 import { paragraphizePlainText } from './paragraphizePlainText.js'
 
-const context: TransformContext = {}
+const context: TransformContext = {
+  embedResolvers: defaultEmbedResolvers,
+  lazySrcAttributes: defaultLazySrcAttributes,
+  lazySrcsetAttributes: defaultLazySrcsetAttributes,
+  trackingHosts: defaultTrackingHosts,
+  trackingPathSegments: defaultTrackingPathSegments,
+  urlUnwrappers: defaultUrlUnwrappers,
+  resolveUrlFn: defaultResolveUrlFn,
+}
 
 describe('paragraphizePlainText', () => {
   const paragraphize = paragraphizePlainText(context)
