@@ -59,8 +59,12 @@ export const mergeFragmentedLists: DomTransform = () => {
         continue
       }
 
-      // Move children of every later list into the first, dropping any
-      // whitespace or comment nodes that were sitting between fragments.
+      // Move children of every later list into the first. Inter-fragment
+      // whitespace gets moved INTO the target between absorbed items so it
+      // keeps acting as a textContent boundary — dropping it would fuse the
+      // last item of one fragment with the first of the next (`Rich and
+      // Regular` + `Confronting My Own…` → `RegularConfronting My Own…`).
+      // Comments are dropped: they're noise and don't contribute to text.
       const target = run[0]
 
       for (const extra of run.slice(1)) {
@@ -69,8 +73,10 @@ export const mergeFragmentedLists: DomTransform = () => {
         while (between && between !== extra) {
           const next = between.nextSibling
 
-          if (isWhitespaceText(between) || isComment(between)) {
+          if (isComment(between)) {
             between.parentNode?.removeChild(between)
+          } else if (isWhitespaceText(between)) {
+            target.appendChild(between)
           }
 
           between = next
