@@ -142,5 +142,29 @@ describe('stripDuplicateTitleHeading', () => {
 
       expect(twice).toBe(once)
     })
+
+    it('should skip removal when the heading contains a nested heading', async () => {
+      // linkedom and other browser-aligned parsers don't auto-close one
+      // heading when another starts inside it, so this construct is left
+      // verbatim. Removing the outer would also remove the inner. Refuse.
+      const value = '<h2><h1>Same Title</h1></h2><p>Body.</p>'
+      const context: TransformContext = { ...baseContext, articleTitle: 'Same Title' }
+
+      expect(await transform(value, context)).toBe(value)
+    })
+
+    it('should skip removal when the heading contains an img', async () => {
+      const value = '<h1>Logo<img src="logo.png"></h1><p>Body.</p>'
+      const context: TransformContext = { ...baseContext, articleTitle: 'Logo' }
+
+      expect(await transform(value, context)).toBe(value)
+    })
+
+    it('should skip removal when the heading contains a video', async () => {
+      const value = '<h1>Title<video src="x.mp4"></video></h1><p>Body.</p>'
+      const context: TransformContext = { ...baseContext, articleTitle: 'Title' }
+
+      expect(await transform(value, context)).toBe(value)
+    })
   })
 })
