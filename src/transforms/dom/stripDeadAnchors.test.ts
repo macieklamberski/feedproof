@@ -141,4 +141,24 @@ describe('stripDeadAnchors', () => {
 
     expect(await transform(value)).toContain('<a href="#!/path">spa link</a>')
   })
+
+  it('should preserve anchor with id even when href is dead', async () => {
+    // The anchor is a fragment target referenced elsewhere — unwrapping it
+    // would break all in-page navigation pointing at #section1.
+    const value = '<a id="section1" href="#"></a><p>body</p>'
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should preserve anchor with name attribute even when href is dead', async () => {
+    const value = '<a name="footnote1" href="javascript:void(0)">F1</a>'
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should still unwrap anchor with id when href is alive (id is irrelevant)', async () => {
+    const value = '<a id="x" href="https://example.com">live</a>'
+
+    expect(await transform(value)).toBe(value)
+  })
 })
