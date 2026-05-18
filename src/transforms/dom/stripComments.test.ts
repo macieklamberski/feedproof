@@ -168,5 +168,27 @@ describe('stripComments', () => {
 
       expect(result).toBe('<div class="x"><p>nested</p><img src="a.jpg"></div>')
     })
+
+    it('should unwrap CDATA whose body contains an internal --> (split comment)', async () => {
+      // The HTML5 parser closes the outer comment at the first internal `-->`,
+      // splitting the wrapper into a comment + trailing text. Reconstruct the
+      // original source by walking forward and unwrap once.
+      const value = '<!--[CDATA[<p>before</p><!--StartFragment--><p>after</p>]]-->'
+      const result = await transform(value)
+
+      expect(result).toContain('<p>before</p>')
+      expect(result).toContain('<p>after</p>')
+      expect(result).not.toContain('[CDATA[')
+      expect(result).not.toContain(']]')
+    })
+
+    it('should unwrap CDATA whose body contains multiple internal --> markers', async () => {
+      const value = '<!--[CDATA[<p>x</p><!--A--><p>y</p><!--B--><p>z</p>]]-->'
+      const result = await transform(value)
+
+      expect(result).toContain('<p>x</p>')
+      expect(result).toContain('<p>y</p>')
+      expect(result).toContain('<p>z</p>')
+    })
   })
 })

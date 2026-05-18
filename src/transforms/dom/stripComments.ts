@@ -3,11 +3,21 @@ import type { DomTransform } from '../../types.js'
 
 const codeBlockTags = new Set(['pre', 'code'])
 
-// CDATA-shaped comment: data is `[CDATA[ ... ]]` (with optional whitespace).
-// Feeds sometimes wrap entire articles in `<!--[CDATA[ ... ]]-->`, which
-// HTML5 parsers convert into a single bogus comment node. Removing such a
-// "comment" would erase the article, so unwrap its content instead.
+// CDATA-shaped comment captured in one node: `[CDATA[ ... ]]` (with optional
+// whitespace). Feeds sometimes wrap entire articles in `<!--[CDATA[ ... ]]-->`,
+// which HTML5 parses as a single bogus comment. Removing it would erase the
+// article — unwrap its content instead.
 const cdataCommentPattern = /^\s*\[CDATA\[([\s\S]*?)\]\]\s*$/
+
+// Split-CDATA detection: the wrapper's article body contained an internal
+// `-->` (Mermaid arrows, Word's `<!--StartFragment-->`, CSS comments, …), so
+// the HTML5 parser terminated the comment at that first `-->` and left the
+// rest of the wrapper as following siblings. The first node's data starts
+// with `[CDATA[` but doesn't end with `]]`.
+const cdataStartPattern = /^\s*\[CDATA\[/
+const cdataEndPattern = /\]\]\s*-->/
+const cdataOuterStartPattern = /^<!--\s*\[CDATA\[/
+const cdataOuterEndPattern = /\]\]\s*-->[\s\S]*$/
 
 // Removes HTML comments from feed content. Comments are typically authoring
 // noise (editor scaffolding, tracking markers, conditional-comment leftovers)
@@ -24,6 +34,11 @@ export const stripComments: DomTransform = () => {
       const children = Array.from(node.childNodes)
 
       for (const child of children) {
+        // Skip nodes already detached by a sibling unwrap.
+        if (!child.parentNode) {
+          continue
+        }
+
         if (child.nodeType === Node.COMMENT_NODE) {
           if (inCodeBlock) {
             continue
@@ -33,14 +48,32 @@ export const stripComments: DomTransform = () => {
           const cdataMatch = cdataCommentPattern.exec(data)
 
           if (cdataMatch) {
-            const parent = child.parentNode
+            unwrapInner(child, cdataMatch[1])
+            child.remove()
+            continue
+          }
 
-            if (parent) {
-              const innerDoc = parseFragment(cdataMatch[1])
-              const innerNodes = Array.from(innerDoc.body.childNodes)
+          // Split CDATA: a `[CDATA[` opener with no closing `]]` means the
+          // wrapper's article content contained an internal `-->` that
+          // closed the outer comment prematurely. Walk forward through
+          // siblings to reconstruct the original wrapper source.
+          if (cdataStartPattern.test(data)) {
+            const consumed: Array<Node> = []
+            let raw = `<!--${data}-->`
+            let cursor: Node | null = child.nextSibling
+            while (cursor && !cdataEndPattern.test(raw)) {
+              consumed.push(cursor)
+              raw += serializeNode(cursor)
+              cursor = cursor.nextSibling
+            }
 
-              for (const innerChild of innerNodes) {
-                parent.insertBefore(innerChild, child)
+            if (cdataEndPattern.test(raw)) {
+              const inner = raw
+                .replace(cdataOuterStartPattern, '')
+                .replace(cdataOuterEndPattern, '')
+              unwrapInner(child, inner)
+              for (const c of consumed) {
+                c.parentNode?.removeChild(c)
               }
             }
           }
@@ -57,5 +90,30 @@ export const stripComments: DomTransform = () => {
     }
 
     visit(document.body, false)
+  }
+}
+
+const serializeNode = (node: Node): string => {
+  if (node.nodeType === Node.COMMENT_NODE) {
+    return `<!--${(node as Comment).data ?? ''}-->`
+  }
+  if (node.nodeType === Node.TEXT_NODE) {
+    return node.textContent ?? ''
+  }
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    return (node as Element).outerHTML
+  }
+  return ''
+}
+
+const unwrapInner = (anchor: Node, inner: string): void => {
+  const parent = anchor.parentNode
+  if (!parent) {
+    return
+  }
+  const innerDoc = parseFragment(inner)
+  const innerNodes = Array.from(innerDoc.body.childNodes)
+  for (const innerChild of innerNodes) {
+    parent.insertBefore(innerChild, anchor)
   }
 }
