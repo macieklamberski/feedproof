@@ -51,9 +51,16 @@ describe('unwrapDoublyNestedLists', () => {
       expect(await transform(value)).toBe(expected)
     })
 
-    it('should unwrap when whitespace surrounds the inner list', async () => {
+    it('should unwrap and keep whitespace text nodes around the inner list', async () => {
       const value = '<ul><li>\n  <ul><li>A</li></ul>\n</li></ul>'
-      const expected = '<ul><li>A</li></ul>'
+      const expected = '\n  <ul><li>A</li></ul>\n'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should preserve nbsp text in the wrapper li as a separator', async () => {
+      const value = '<ul><li>\u00A0<ul><li>A</li></ul></li></ul>'
+      const expected = '&#160;<ul><li>A</li></ul>'
 
       expect(await transform(value)).toBe(expected)
     })
@@ -89,9 +96,9 @@ describe('unwrapDoublyNestedLists', () => {
     it('should drop the outer list class and id', async () => {
       const value =
         '<ul class="outer" id="o"><li><ul class="inner" id="i"><li>A</li></ul></li></ul>'
-      const result = await transform(value)
+      const expected = '<ul class="inner" id="i"><li>A</li></ul>'
 
-      expect(result).toBe('<ul class="inner" id="i"><li>A</li></ul>')
+      expect(await transform(value)).toBe(expected)
     })
   })
 

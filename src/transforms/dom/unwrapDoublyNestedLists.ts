@@ -34,7 +34,15 @@ export const unwrapDoublyNestedLists: DomTransform = () => {
         continue
       }
 
-      outer.replaceWith(inner as Element)
+      // Replace the outer list with the inner one PLUS the wrapper's text
+      // children (whitespace and `&nbsp;`). Those text nodes contributed
+      // visible word-separator spacing in the original `body.textContent`;
+      // dropping them would fuse adjacent words. Comments and `<br>` siblings
+      // are intentionally dropped — they don't contribute to textContent.
+      const replacement = [...wrapper.childNodes].filter(
+        (node) => node === inner || node.nodeType === Node.TEXT_NODE,
+      )
+      outer.replaceWith(...replacement)
     }
   }
 }
