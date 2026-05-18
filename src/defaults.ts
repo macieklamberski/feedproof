@@ -1,6 +1,7 @@
 import { resolveUrl } from 'feedcanon'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
+import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
 import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
@@ -21,7 +22,6 @@ import { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 import { unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
-import { decodeDoubleEncodedTags } from './transforms/string/decodeDoubleEncodedTags.js'
 import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
 import { stripEmptyTags } from './transforms/string/stripEmptyTags.js'
 import { unwrapWrappers } from './transforms/string/unwrapWrappers.js'
@@ -103,13 +103,13 @@ import { unwrapYouTube } from './unwraps/youtube.js'
 // import { unwrapZhihu } from './unwraps/zhihu.js'
 
 export const defaultStringTransforms: Array<StringTransform> = [
-  decodeDoubleEncodedTags,
   unwrapWrappers,
   paragraphizePlainText,
   stripEmptyTags,
 ]
 
 export const defaultDomTransforms: Array<DomTransform> = [
+  decodeDoubleEncodedTags,
   stripComments,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
