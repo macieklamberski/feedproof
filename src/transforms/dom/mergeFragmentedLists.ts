@@ -1,4 +1,4 @@
-import { Node, isComment, isWhitespaceText } from '../../common.js'
+import { isComment, isWhitespaceText, Node } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 // Some feeds emit each list item as its own one-item <ul>/<ol> instead of one
@@ -12,6 +12,13 @@ export const mergeFragmentedLists: DomTransform = () => {
     for (const list of lists) {
       // Skip if a previous iteration already absorbed this list.
       if (!list.parentNode) {
+        continue
+      }
+
+      // Refuse to merge if the list is malformed — contains direct text or
+      // non-<li> children. Merging would fuse adjacent text without a
+      // separator and visibly change the rendered output.
+      if (!hasOnlyListItemChildren(list)) {
         continue
       }
 
@@ -37,6 +44,10 @@ export const mergeFragmentedLists: DomTransform = () => {
         }
 
         if (!attributesEqual(list, candidate)) {
+          break
+        }
+
+        if (!hasOnlyListItemChildren(candidate)) {
           break
         }
 
@@ -75,14 +86,28 @@ export const mergeFragmentedLists: DomTransform = () => {
   }
 }
 
+const hasOnlyListItemChildren = (list: Element): boolean => {
+  for (let child = list.firstChild; child; child = child.nextSibling) {
+    if (isWhitespaceText(child) || isComment(child)) {
+      continue
+    }
+
+    const isElement = child.nodeType === Node.ELEMENT_NODE
+    const isLi = isElement && (child as Element).tagName.toLowerCase() === 'li'
+
+    if (!isLi) {
+      return false
+    }
+  }
+  return true
+}
+
 const attributesEqual = (a: Element, b: Element): boolean => {
   if (a.attributes.length !== b.attributes.length) {
     return false
   }
 
-  for (let index = 0; index < a.attributes.length; index++) {
-    const attribute = a.attributes[index]
-
+  for (const attribute of a.attributes) {
     if (b.getAttribute(attribute.name) !== attribute.value) {
       return false
     }
