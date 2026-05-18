@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { defaultDomTransforms, defaultStringTransforms } from './defaults.js'
+import { defaultDomTransforms } from './defaults.js'
 import { transformContent } from './index.js'
 
 const startsWithDiv = /^<div>/
@@ -105,11 +105,10 @@ describe('transformContent', () => {
     expect(result).toBe('<p>Hello</p><p>World</p>')
   })
 
-  it('should preserve empty paragraphs when stripEmptyTags is removed from string phases', async () => {
+  it('should preserve empty paragraphs when stripEmptyTags is removed from the pipeline', async () => {
     const html = '<p>Hello</p><p><br></p><p>World</p>'
     const result = await transformContent(html, {
-      stringTransforms: defaultStringTransforms.filter((t) => t.name !== 'stripEmptyTags'),
-      finalStringTransforms: [],
+      domTransforms: defaultDomTransforms.filter((t) => t.name !== 'stripEmptyTags'),
     })
 
     expect(result).toBe('<p>Hello</p><p></p><p>World</p>')
