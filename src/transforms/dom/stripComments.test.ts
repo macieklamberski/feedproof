@@ -129,4 +129,44 @@ describe('stripComments', () => {
       expect(await transform(value)).toBe(expected)
     })
   })
+
+  describe('CDATA-shaped comments', () => {
+    it('should unwrap a comment shaped like <!--[CDATA[ ... ]]--> into HTML', async () => {
+      const result = await transform('<!--[CDATA[<p>real article</p>]]-->')
+
+      expect(result).toBe('<p>real article</p>')
+    })
+
+    it('should unwrap with surrounding whitespace inside the wrapper', async () => {
+      const result = await transform('<!-- [CDATA[ <p>article</p> ]] -->')
+
+      expect(result.trim()).toBe('<p>article</p>')
+    })
+
+    it('should unwrap a CDATA-shaped comment alongside real content', async () => {
+      const result = await transform('<h1>title</h1><!--[CDATA[<p>body</p>]]-->')
+
+      expect(result).toBe('<h1>title</h1><p>body</p>')
+    })
+
+    it('should not unwrap regular comments that lack the CDATA shape', async () => {
+      const result = await transform('<p>foo</p><!-- this is not CDATA -->')
+
+      expect(result).toBe('<p>foo</p>')
+    })
+
+    it('should preserve a CDATA-shaped comment inside <pre>', async () => {
+      const value = '<pre><!--[CDATA[example]]--></pre>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should unwrap nested HTML inside CDATA-shaped comment correctly', async () => {
+      const result = await transform(
+        '<!--[CDATA[<div class="x"><p>nested</p><img src="a.jpg"></div>]]-->',
+      )
+
+      expect(result).toBe('<div class="x"><p>nested</p><img src="a.jpg"></div>')
+    })
+  })
 })
