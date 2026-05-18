@@ -57,4 +57,22 @@ describe('unwrapGoogle', () => {
 
     expect(unwrapGoogle(url)).toBe('https://example.com/page')
   })
+
+  it('should extract target from maps.google.com subdomain', () => {
+    const url = new URL('https://maps.google.com/url?q=https%3A%2F%2Fexample.com%2Fpage')
+
+    expect(unwrapGoogle(url)).toBe('https://example.com/page')
+  })
+
+  it('should extract target from images.google.com subdomain', () => {
+    const url = new URL('https://images.google.com/url?q=https%3A%2F%2Fexample.com%2Fpage')
+
+    expect(unwrapGoogle(url)).toBe('https://example.com/page')
+  })
+
+  it('should extract target from clients1.google.com subdomain', () => {
+    const url = new URL('https://clients1.google.com/url?q=https%3A%2F%2Fexample.com%2Fpage')
+
+    expect(unwrapGoogle(url)).toBe('https://example.com/page')
+  })
 })
