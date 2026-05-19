@@ -105,7 +105,6 @@ import { unwrapYouTube } from './unwraps/youtube.js'
 export const defaultStringTransforms: Array<StringTransform> = [paragraphizePlainText]
 
 export const defaultDomTransforms: Array<DomTransform> = [
-  unwrapWrappers,
   decodeDoubleEncodedTags,
   stripComments,
   unwrapDoublyNestedLists,
@@ -128,6 +127,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   replaceEmbedsWithPlaceholders,
   injectEnclosures,
   proxyAssetUrls,
+  unwrapWrappers,
   stripEmptyTags,
 ]
 

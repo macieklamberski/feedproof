@@ -1,54 +1,55 @@
-import { Node } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 const wrapperTags = new Set(['div', 'article', 'section', 'main', 'header', 'footer'])
 
-// Strips outermost `<div>` / `<article>` / `<section>` / `<main>` / `<header>`
-// / `<footer>` wrappers when the body has exactly one significant child of
-// that kind. Loops so chains like `<div><article><div>…</div></article></div>`
-// collapse fully.
+const hasEmbedAttribute = (element: Element): boolean => {
+  for (const attribute of element.attributes) {
+    if (attribute.name.startsWith('data-embed')) {
+      return true
+    }
+  }
+  return false
+}
+
+// Removes purely presentational container tags (`<div>` / `<article>` /
+// `<section>` / `<main>` / `<header>` / `<footer>`) anywhere in the document.
+// Children are hoisted in place, preserving any text-node siblings.
 //
-// DOM-based so attribute values with embedded `>` characters (Substack's
-// `data-attrs` JSON, Tailwind `[&:has(...)>*]` selectors, escaped HTML in
-// Divi `data-et-mu`) don't confuse a regex into mis-locating the tag close
-// and dropping the body content.
+// Subsumes the old body-level wrapper unwrap, the figure media-wrapper
+// unwrap, the figcaption div unwrap, and Substack-style `<a><div><picture>`
+// nesting. Reader apps render content with their own typography, so the
+// classes/styles on these containers are not load-bearing.
+//
+// Pipeline placement: runs AFTER merge transforms (`mergeFragmentedLists`,
+// `mergeConsecutiveOneLinerPres`) so unwrapping doesn't expose new adjacent
+// siblings for those transforms to merge — preserving author-intended
+// separation between e.g. two lists that lived in separate divs.
+//
+// Containers carrying `data-embed-*` attributes (feedsweep's own embed
+// placeholders) are always preserved. Iterates in post-order so deeply
+// nested wrappers collapse in a single pass.
 export const unwrapWrappers: DomTransform = () => {
   return (document) => {
-    let changed = true
+    const candidates = [...document.body.querySelectorAll([...wrapperTags].join(','))]
 
-    while (changed) {
-      changed = false
+    for (let i = candidates.length - 1; i >= 0; i--) {
+      const element = candidates[i]
 
-      const significant = [...document.body.childNodes].filter((node) => {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          return true
-        }
-        if (node.nodeType === Node.TEXT_NODE) {
-          return (node as Text).data.trim().length > 0
-        }
-        return false
-      })
-
-      if (significant.length !== 1) {
-        break
+      if (!element.parentNode) {
+        continue
       }
 
-      const wrapper = significant[0]
-
-      if (wrapper.nodeType !== Node.ELEMENT_NODE) {
-        break
+      if (hasEmbedAttribute(element)) {
+        continue
       }
 
-      if (!wrapperTags.has((wrapper as Element).tagName.toLowerCase())) {
-        break
+      const parent = element.parentNode
+
+      while (element.firstChild) {
+        parent.insertBefore(element.firstChild, element)
       }
 
-      while (wrapper.firstChild) {
-        document.body.insertBefore(wrapper.firstChild, wrapper)
-      }
-
-      ;(wrapper as Element).remove()
-      changed = true
+      element.remove()
     }
   }
 }

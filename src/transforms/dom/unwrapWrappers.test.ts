@@ -73,10 +73,14 @@ describe('unwrapWrappers', () => {
     expect(await transform(value)).toBe(expected)
   })
 
-  it('should preserve wrapper with siblings', async () => {
+  it('should unwrap sibling wrappers independently', async () => {
+    // The transform is positioned AFTER list/pre merges in the default
+    // pipeline, so unwrapping sibling wrappers does not cascade into merging
+    // the now-adjacent inner elements.
     const value = '<div><p>First</p></div><div><p>Second</p></div>'
+    const expected = '<p>First</p><p>Second</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should not unwrap non-wrapper tags', async () => {
@@ -92,10 +96,11 @@ describe('unwrapWrappers', () => {
     expect(await transform(value)).toBe(expected)
   })
 
-  it('should not unwrap when wrapper has significant text sibling', async () => {
+  it('should unwrap a wrapper even when it has text siblings', async () => {
     const value = 'lead text<div><p>Content</p></div>'
+    const expected = 'lead text<p>Content</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should remove empty wrapper entirely', async () => {
@@ -120,5 +125,42 @@ describe('unwrapWrappers', () => {
     const expected = '<!-- preserved --><p>Content</p>'
 
     expect(await transform(value)).toBe(expected)
+  })
+
+  it('should unwrap a div wrapper inside <figure> around media', async () => {
+    const value = '<figure><div><img src="x.jpg"></div></figure>'
+    const expected = '<figure><img src="x.jpg"></figure>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should collapse deeply nested div wrappers inside <figure>', async () => {
+    const value = '<figure><div><div><img src="x.jpg"></div></div></figure>'
+    const expected = '<figure><img src="x.jpg"></figure>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should unwrap a div inside <figcaption>', async () => {
+    const value = '<figure><img src="x.jpg"><figcaption><div>caption</div></figcaption></figure>'
+    const expected = '<figure><img src="x.jpg"><figcaption>caption</figcaption></figure>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should unwrap a div between an anchor and its sole media child (Substack)', async () => {
+    const value =
+      '<figure><a href="x"><div><picture></picture></div></a><figcaption>cap</figcaption></figure>'
+    const expected =
+      '<figure><a href="x"><picture></picture></a><figcaption>cap</figcaption></figure>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should preserve a div carrying data-embed attributes', async () => {
+    const value =
+      '<div data-embed="iframe" data-embed-src="https://example.com/x"><a href="https://example.com/x">https://example.com/x</a></div>'
+
+    expect(await transform(value)).toBe(value)
   })
 })
