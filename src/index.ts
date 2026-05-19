@@ -99,7 +99,6 @@ export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/dom/unwr
 export { decodeDoubleEncodedTags } from './transforms/string/decodeDoubleEncodedTags.js'
 export { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
 export { stripEmptyTags } from './transforms/string/stripEmptyTags.js'
-export { stripOrphanedClosingTags } from './transforms/string/stripOrphanedClosingTags.js'
 export { unwrapWrappers } from './transforms/string/unwrapWrappers.js'
 export type {
   AssetProxyFn,

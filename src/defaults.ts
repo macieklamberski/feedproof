@@ -24,7 +24,6 @@ import { unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 import { decodeDoubleEncodedTags } from './transforms/string/decodeDoubleEncodedTags.js'
 import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
 import { stripEmptyTags } from './transforms/string/stripEmptyTags.js'
-import { stripOrphanedClosingTags } from './transforms/string/stripOrphanedClosingTags.js'
 import { unwrapWrappers } from './transforms/string/unwrapWrappers.js'
 import type {
   DomTransform,
@@ -104,7 +103,6 @@ import { unwrapYouTube } from './unwraps/youtube.js'
 // import { unwrapZhihu } from './unwraps/zhihu.js'
 
 export const defaultStringTransforms: Array<StringTransform> = [
-  stripOrphanedClosingTags,
   decodeDoubleEncodedTags,
   unwrapWrappers,
   paragraphizePlainText,
