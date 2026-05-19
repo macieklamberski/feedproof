@@ -25,6 +25,7 @@ import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedList
 import { unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 import { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
+import { unwrapCdataComments } from './transforms/string/unwrapCdataComments.js'
 import type {
   DomTransform,
   EmbedResolver,
@@ -102,7 +103,10 @@ import { unwrapYahooSearch } from './unwraps/yahooSearch.js'
 import { unwrapYouTube } from './unwraps/youtube.js'
 // import { unwrapZhihu } from './unwraps/zhihu.js'
 
-export const defaultStringTransforms: Array<StringTransform> = [paragraphizePlainText]
+export const defaultStringTransforms: Array<StringTransform> = [
+  unwrapCdataComments,
+  paragraphizePlainText,
+]
 
 export const defaultDomTransforms: Array<DomTransform> = [
   decodeDoubleEncodedTags,
