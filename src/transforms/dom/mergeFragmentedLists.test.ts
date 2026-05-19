@@ -45,10 +45,15 @@ describe('mergeFragmentedLists', () => {
     expect(result).toBe('<ol><li>a</li><li>b</li></ol>')
   })
 
-  it('should ignore whitespace-only text nodes between siblings', async () => {
-    const result = await transform('<ul><li>a</li></ul> \n <ul><li>b</li></ul>')
+  it('should move inter-fragment whitespace inside the merged list as a separator', async () => {
+    // Whitespace between fragments gets moved INTO the merged list between
+    // absorbed items so it keeps acting as a textContent boundary — without
+    // it the last `<li>` of one fragment fuses with the first `<li>` of the
+    // next on textContent extraction.
+    const value = '<ul><li>a</li></ul> \n <ul><li>b</li></ul>'
+    const expected = '<ul><li>a</li> \n <li>b</li></ul>'
 
-    expect(result).toBe('<ul><li>a</li><li>b</li></ul>')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should merge across HTML comments and remove them', async () => {
@@ -66,54 +71,46 @@ describe('mergeFragmentedLists', () => {
   })
 
   it('should not merge ul followed by ol', async () => {
-    const result = await transform('<ul><li>a</li></ul><ol><li>b</li></ol>')
+    const value = '<ul><li>a</li></ul><ol><li>b</li></ol>'
 
-    expect(result).toContain('<ul><li>a</li></ul>')
-    expect(result).toContain('<ol><li>b</li></ol>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not merge when class attributes differ', async () => {
-    const result = await transform('<ul class="a"><li>x</li></ul><ul class="b"><li>y</li></ul>')
+    const value = '<ul class="a"><li>x</li></ul><ul class="b"><li>y</li></ul>'
 
-    expect(result).toContain('<ul class="a"><li>x</li></ul>')
-    expect(result).toContain('<ul class="b"><li>y</li></ul>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not merge ol when start attribute differs', async () => {
-    const result = await transform('<ol><li>a</li></ol><ol start="3"><li>b</li></ol>')
+    const value = '<ol><li>a</li></ol><ol start="3"><li>b</li></ol>'
 
-    expect(result).toContain('<ol><li>a</li></ol>')
-    expect(result).toContain('<ol start="3"><li>b</li></ol>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not merge ol when reversed attribute differs', async () => {
-    const result = await transform('<ol><li>a</li></ol><ol reversed=""><li>b</li></ol>')
+    const value = '<ol><li>a</li></ol><ol reversed=""><li>b</li></ol>'
+    const expected = '<ol><li>a</li></ol><ol reversed><li>b</li></ol>'
 
-    expect(result).toContain('<ol><li>a</li></ol>')
-    expect(result).toContain('reversed')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should not merge when separated by a paragraph', async () => {
-    const result = await transform('<ul><li>a</li></ul><p>break</p><ul><li>b</li></ul>')
+    const value = '<ul><li>a</li></ul><p>break</p><ul><li>b</li></ul>'
 
-    expect(result).toContain('<ul><li>a</li></ul>')
-    expect(result).toContain('<p>break</p>')
-    expect(result).toContain('<ul><li>b</li></ul>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not merge when separated by non-whitespace text', async () => {
-    const result = await transform('<ul><li>a</li></ul>between<ul><li>b</li></ul>')
+    const value = '<ul><li>a</li></ul>between<ul><li>b</li></ul>'
 
-    expect(result).toContain('<ul><li>a</li></ul>')
-    expect(result).toContain('between')
-    expect(result).toContain('<ul><li>b</li></ul>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not merge when separated by a br', async () => {
-    const result = await transform('<ul><li>a</li></ul><br><ul><li>b</li></ul>')
+    const value = '<ul><li>a</li></ul><br><ul><li>b</li></ul>'
 
-    expect(result).toContain('<ul><li>a</li></ul>')
-    expect(result).toContain('<ul><li>b</li></ul>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should leave a single standalone list untouched', async () => {
@@ -123,32 +120,25 @@ describe('mergeFragmentedLists', () => {
   })
 
   it('should merge multiple independent runs in one pass', async () => {
-    const result = await transform(
-      '<ul><li>a</li></ul><ul><li>b</li></ul><p>gap</p><ul><li>c</li></ul><ul><li>d</li></ul>',
-    )
+    const value =
+      '<ul><li>a</li></ul><ul><li>b</li></ul><p>gap</p><ul><li>c</li></ul><ul><li>d</li></ul>'
+    const expected = '<ul><li>a</li><li>b</li></ul><p>gap</p><ul><li>c</li><li>d</li></ul>'
 
-    expect(result).toContain('<ul><li>a</li><li>b</li></ul>')
-    expect(result).toContain('<p>gap</p>')
-    expect(result).toContain('<ul><li>c</li><li>d</li></ul>')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should preserve surrounding content', async () => {
-    const result = await transform(
-      '<p>before</p><ul><li>a</li></ul><ul><li>b</li></ul><p>after</p>',
-    )
+    const value = '<p>before</p><ul><li>a</li></ul><ul><li>b</li></ul><p>after</p>'
+    const expected = '<p>before</p><ul><li>a</li><li>b</li></ul><p>after</p>'
 
-    expect(result).toContain('<p>before</p>')
-    expect(result).toContain('<ul><li>a</li><li>b</li></ul>')
-    expect(result).toContain('<p>after</p>')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should leave nested lists inside li untouched', async () => {
-    const result = await transform(
-      '<ul><li>outer<ul><li>nested</li></ul></li></ul><ul><li>sibling</li></ul>',
-    )
+    const value = '<ul><li>outer<ul><li>nested</li></ul></li></ul><ul><li>sibling</li></ul>'
+    const expected = '<ul><li>outer<ul><li>nested</li></ul></li><li>sibling</li></ul>'
 
-    expect(result).toContain('<li>outer<ul><li>nested</li></ul></li>')
-    expect(result).toContain('<li>sibling</li>')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should not merge lists that contain direct text instead of <li>', async () => {
@@ -161,6 +151,16 @@ describe('mergeFragmentedLists', () => {
     const value = '<ul><li>a</li></ul><ul>orphan text</ul><ul><li>c</li></ul>'
 
     expect(await transform(value)).toBe(value)
+  })
+
+  it('should preserve text content separator between merged fragments', async () => {
+    // The newline that originally separated `foo` and `bar` in textContent
+    // ends up between the two `<li>`s inside the merged list, so the
+    // textContent stays `foo\nbar` instead of fusing into `foobar`.
+    const value = '<ul><li>foo</li></ul>\n<ul><li>bar</li></ul>'
+    const expected = '<ul><li>foo</li>\n<li>bar</li></ul>'
+
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should not merge when a list contains a non-li element child', async () => {
