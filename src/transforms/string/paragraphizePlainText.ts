@@ -1,7 +1,9 @@
 import { autop } from '@wordpress/autop'
 import type { StringTransform } from '../../types.js'
 
-const hasHtmlRegex = /<[a-z][a-z0-9]*[\s>]/i
+// Matches `<tag>`, `<tag …>`, `<tag />` AND `<tag/>` (XHTML self-close without
+// a space before the slash, common in podcast feeds for `<br/>`).
+const hasHtmlRegex = /<[a-z][a-z0-9]*[\s/>]/i
 
 export const paragraphizePlainText: StringTransform = () => {
   return (html) => {

@@ -64,6 +64,23 @@ describe('paragraphizePlainText', () => {
     expect(result).toBe(value)
   })
 
+  it('should not autop content containing XHTML-style <br/> (no space)', () => {
+    // Podcast feeds commonly emit `<br/>` separators without a space. The
+    // regex must treat this as HTML so autop doesn't wrap & re-serialize it,
+    // which inserts paragraph-boundary whitespace not present in the source.
+    const value = 'Episode 1: intro<br/>Episode 2: deep dive<br/>End'
+    const result = paragraphize(value)
+
+    expect(result).toBe(value)
+  })
+
+  it('should not autop content containing <br /> (with space)', () => {
+    const value = 'Line one<br />Line two'
+    const result = paragraphize(value)
+
+    expect(result).toBe(value)
+  })
+
   it('should handle empty string', () => {
     const result = paragraphize('')
 
