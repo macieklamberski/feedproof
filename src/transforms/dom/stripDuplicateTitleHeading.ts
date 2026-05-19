@@ -10,7 +10,11 @@ export const stripDuplicateTitleHeading: DomTransform = (context) => {
       return
     }
 
-    const heading = document.querySelector('h1, h2, h3, h4, h5, h6')
+    // Skip past leading empty headings (e.g. foster-parented <h*> debris
+    // before a <table>) so they don't mask the real article heading.
+    const heading = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).find(
+      (candidate) => (candidate.textContent ?? '').trim().length > 0,
+    )
 
     if (!heading) {
       return

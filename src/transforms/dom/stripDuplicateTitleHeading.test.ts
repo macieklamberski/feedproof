@@ -166,5 +166,23 @@ describe('stripDuplicateTitleHeading', () => {
 
       expect(await transform(value, context)).toBe(value)
     })
+
+    it('should skip past leading empty heading to find the real matching one', async () => {
+      // Mirrors the foster-parenting case where an orphan </h*> close tag
+      // makes the parser inject an empty heading before the article body.
+      const value = '<h1></h1><h1>Breaking News Today</h1><p>Body.</p>'
+      const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today' }
+      const expected = '<h1></h1><p>Body.</p>'
+
+      expect(await transform(value, context)).toBe(expected)
+    })
+
+    it('should skip past leading whitespace-only heading', async () => {
+      const value = '<h1>   </h1><h1>Breaking News Today</h1><p>Body.</p>'
+      const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today' }
+      const expected = '<h1>   </h1><p>Body.</p>'
+
+      expect(await transform(value, context)).toBe(expected)
+    })
   })
 })
