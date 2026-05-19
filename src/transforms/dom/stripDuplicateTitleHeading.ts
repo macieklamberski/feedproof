@@ -16,8 +16,24 @@ export const stripDuplicateTitleHeading: DomTransform = (context) => {
       return
     }
 
-    if (normalize(heading.textContent ?? '') === title) {
-      heading.remove()
+    if (normalize(heading.textContent ?? '') !== title) {
+      return
     }
+
+    // Skip when the heading contains a nested heading (parsers like linkedom
+    // don't auto-close outer headings, so `<h2><h1>x</h1></h2>` keeps both).
+    // Removing the outer would drop the inner too.
+    if (heading.querySelector('h1, h2, h3, h4, h5, h6')) {
+      return
+    }
+
+    // Skip when the heading contains a media element (the matching text might
+    // be accompanying alt-shaped caption, not the only content). Removing
+    // the heading would silently delete the embedded image / iframe / video.
+    if (heading.querySelector('img, picture, video, audio, iframe, svg')) {
+      return
+    }
+
+    heading.remove()
   }
 }
