@@ -28,6 +28,14 @@ export const stripDeadAnchors: DomTransform = () => {
         continue
       }
 
+      // Even with a dead href, anchors carrying `id` or `name` are still
+      // navigation targets — other elements link to them via `#fragment` or
+      // ARIA attributes (`aria-controls`, `aria-labelledby`). Unwrapping
+      // destroys the target and breaks all those references.
+      if (anchor.hasAttribute('id') || anchor.hasAttribute('name')) {
+        continue
+      }
+
       const parent = anchor.parentNode
 
       if (!parent) {
