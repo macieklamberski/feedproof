@@ -90,6 +90,7 @@ export { simplifyFigures } from './transforms/dom/simplifyFigures.js'
 export { stripComments } from './transforms/dom/stripComments.js'
 export { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
 export { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
+export { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
 export { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 export { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBoundaryBreaks.js'
 export { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
@@ -98,7 +99,6 @@ export { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedList
 export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 export { decodeDoubleEncodedTags } from './transforms/string/decodeDoubleEncodedTags.js'
 export { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
-export { stripEmptyTags } from './transforms/string/stripEmptyTags.js'
 export { unwrapWrappers } from './transforms/string/unwrapWrappers.js'
 export type {
   AssetProxyFn,

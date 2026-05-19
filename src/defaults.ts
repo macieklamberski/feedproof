@@ -15,6 +15,7 @@ import { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
 import { stripComments } from './transforms/dom/stripComments.js'
 import { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
 import { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
+import { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBoundaryBreaks.js'
 import { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
@@ -23,7 +24,6 @@ import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedList
 import { unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 import { decodeDoubleEncodedTags } from './transforms/string/decodeDoubleEncodedTags.js'
 import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
-import { stripEmptyTags } from './transforms/string/stripEmptyTags.js'
 import { unwrapWrappers } from './transforms/string/unwrapWrappers.js'
 import type {
   DomTransform,
@@ -106,7 +106,6 @@ export const defaultStringTransforms: Array<StringTransform> = [
   decodeDoubleEncodedTags,
   unwrapWrappers,
   paragraphizePlainText,
-  stripEmptyTags,
 ]
 
 export const defaultDomTransforms: Array<DomTransform> = [
@@ -131,9 +130,10 @@ export const defaultDomTransforms: Array<DomTransform> = [
   replaceEmbedsWithPlaceholders,
   injectEnclosures,
   proxyAssetUrls,
+  stripEmptyTags,
 ]
 
-export const defaultFinalStringTransforms: Array<StringTransform> = [stripEmptyTags]
+export const defaultFinalStringTransforms: Array<StringTransform> = []
 
 // Order matters when selectors overlap: each resolver runs in array order and
 // claimed iframes can't be re-matched. Place more specific selectors (e.g.
