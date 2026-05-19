@@ -99,6 +99,7 @@ export { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedList
 export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 export { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 export { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
+export { unwrapCdataComments } from './transforms/string/unwrapCdataComments.js'
 export type {
   AssetProxyFn,
   AssetType,

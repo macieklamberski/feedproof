@@ -58,6 +58,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `stripOrphanedClosingTags` | Remove unmatched `</p>` / `</div>` close tags |
 | `stripEmptyTags` | Remove empty `<p>`, `<div>`, `<span>` and other tags |
 | `stripComments` | Remove HTML `<!-- comments -->` |
+| `unwrapCdataComments` | Strip malformed `<!--[CDATA[ … ]]-->` wrappers before parsing so the wrapped article reaches the DOM as real HTML |
 
 ## Options
 
