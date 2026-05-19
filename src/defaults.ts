@@ -205,9 +205,10 @@ export const defaultTrackingHosts = [
   'chartbeat.com', // Chartbeat analytics pixels.
   'moatads.com', // Oracle Moat viewability pixels.
   'sentry.io', // Sentry error-monitoring beacons.
+  'hubspot.com', // HubSpot __ptq.gif open-pixels.
 ]
 
-export const defaultTrackingPathSegments = ['pixel', 'beacon', 'count']
+export const defaultTrackingPathSegments = ['pixel', 'beacon', 'count', 'impression']
 
 export const defaultUrlUnwrappers: Array<UrlUnwrapper> = [
   // Search engines.
