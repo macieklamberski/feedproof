@@ -33,10 +33,13 @@ describe('simplifyFigures', () => {
         <p><img src="photo.jpg"></p>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <img src="photo.jpg">
+      </figure>
+    `
 
-    expect(result).not.toContain('<p>')
-    expect(result).toContain('<img src="photo.jpg">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should unwrap p containing img with whitespace', async () => {
@@ -45,10 +48,13 @@ describe('simplifyFigures', () => {
         <p> <img src="photo.jpg"> </p>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <img src="photo.jpg">
+      </figure>
+    `
 
-    expect(result).not.toContain('<p>')
-    expect(result).toContain('<img src="photo.jpg">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should unwrap p containing picture element', async () => {
@@ -62,10 +68,16 @@ describe('simplifyFigures', () => {
         </p>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <picture>
+            <source srcset="img.webp">
+            <img src="img.jpg">
+          </picture>
+      </figure>
+    `
 
-    expect(result).not.toContain('<p>')
-    expect(result).toContain('<picture>')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should unwrap p containing video element', async () => {
@@ -74,10 +86,13 @@ describe('simplifyFigures', () => {
         <p><video src="clip.mp4"></video></p>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <video src="clip.mp4"></video>
+      </figure>
+    `
 
-    expect(result).not.toContain('<p>')
-    expect(result).toContain('<video src="clip.mp4">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should unwrap p containing audio element', async () => {
@@ -86,10 +101,13 @@ describe('simplifyFigures', () => {
         <p><audio src="song.mp3"></audio></p>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <audio src="song.mp3"></audio>
+      </figure>
+    `
 
-    expect(result).not.toContain('<p>')
-    expect(result).toContain('<audio src="song.mp3">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should unwrap span containing only media', async () => {
@@ -98,10 +116,13 @@ describe('simplifyFigures', () => {
         <span><img src="photo.jpg"></span>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <img src="photo.jpg">
+      </figure>
+    `
 
-    expect(result).not.toContain('<span>')
-    expect(result).toContain('<img src="photo.jpg">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should unwrap div containing only media', async () => {
@@ -110,10 +131,13 @@ describe('simplifyFigures', () => {
         <div><img src="photo.jpg"></div>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <img src="photo.jpg">
+      </figure>
+    `
 
-    expect(result).not.toContain('<div>')
-    expect(result).toContain('<img src="photo.jpg">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should unwrap nested div > p > img', async () => {
@@ -124,11 +148,13 @@ describe('simplifyFigures', () => {
         </div>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <img src="photo.jpg">
+      </figure>
+    `
 
-    expect(result).not.toContain('<div>')
-    expect(result).not.toContain('<p>')
-    expect(result).toContain('<img src="photo.jpg">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should unwrap deeply nested div > div > img', async () => {
@@ -139,10 +165,13 @@ describe('simplifyFigures', () => {
         </div>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <img src="photo.jpg">
+      </figure>
+    `
 
-    expect(result).not.toContain('<div>')
-    expect(result).toContain('<img src="photo.jpg">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should unwrap triple nested div > div > div > img', async () => {
@@ -155,10 +184,13 @@ describe('simplifyFigures', () => {
         </div>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <img src="photo.jpg">
+      </figure>
+    `
 
-    expect(result).not.toContain('<div>')
-    expect(result).toContain('<img src="photo.jpg">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should unwrap div with attributes containing only media', async () => {
@@ -169,10 +201,13 @@ describe('simplifyFigures', () => {
         </div>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <img src="photo.jpg">
+      </figure>
+    `
 
-    expect(result).not.toContain('<div')
-    expect(result).toContain('<img src="photo.jpg">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should unwrap multiple media-only p wrappers', async () => {
@@ -183,12 +218,15 @@ describe('simplifyFigures', () => {
         <figcaption>Gallery</figcaption>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <img src="a.jpg">
+        <img src="b.jpg">
+        <figcaption>Gallery</figcaption>
+      </figure>
+    `
 
-    expect(result).not.toContain('<p>')
-    expect(result).toContain('<img src="a.jpg">')
-    expect(result).toContain('<img src="b.jpg">')
-    expect(result).toContain('<figcaption>Gallery</figcaption>')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should unwrap div inside figcaption when sole child', async () => {
@@ -200,10 +238,16 @@ describe('simplifyFigures', () => {
         </figcaption>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <img src="photo.jpg">
+        <figcaption>
+          <span>Caption</span>
+        </figcaption>
+      </figure>
+    `
 
-    expect(result).toContain('<figcaption><span>Caption</span></figcaption>')
-    expect(result).not.toContain('<figcaption><div>')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should preserve p with text and img', async () => {
@@ -212,9 +256,8 @@ describe('simplifyFigures', () => {
         <p>Caption: <img src="photo.jpg"></p>
       </figure>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('<p>Caption: <img src="photo.jpg"></p>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should preserve div with non-media children', async () => {
@@ -223,10 +266,8 @@ describe('simplifyFigures', () => {
         <div><p>Text paragraph</p></div>
       </figure>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('<div>')
-    expect(result).toContain('<p>Text paragraph</p>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should preserve link wrapping an image inside figure', async () => {
@@ -235,9 +276,8 @@ describe('simplifyFigures', () => {
         <a href="https://example.com"><img src="photo.jpg"></a>
       </figure>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('<a href="https://example.com"><img src="photo.jpg"></a>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should preserve link inside div wrapping an image', async () => {
@@ -249,17 +289,14 @@ describe('simplifyFigures', () => {
         <figcaption>Caption</figcaption>
       </figure>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('<div>')
-    expect(result).toContain('<a href="https://example.com"><img src="photo.jpg"></a>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not touch p or div outside figure', async () => {
     const value = '<p><img src="photo.jpg"></p>'
-    const result = await transform(value)
 
-    expect(result).toContain('<p><img src="photo.jpg"></p>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not touch text content inside figcaption', async () => {
@@ -269,9 +306,8 @@ describe('simplifyFigures', () => {
         <figcaption><p>Caption text</p></figcaption>
       </figure>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('<figcaption><p>Caption text</p></figcaption>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should preserve figcaption div when text siblings exist', async () => {
@@ -281,23 +317,20 @@ describe('simplifyFigures', () => {
         <figcaption>Text<div>More</div></figcaption>
       </figure>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('<figcaption>Text<div>More</div></figcaption>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should handle figure with no children', async () => {
     const value = '<figure></figure>'
-    const result = await transform(value)
 
-    expect(result).toContain('<figure></figure>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should handle html with no figures', async () => {
     const value = '<p>No figures here</p>'
-    const result = await transform(value)
 
-    expect(result).toContain('<p>No figures here</p>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should handle multiple figures independently', async () => {
@@ -309,12 +342,16 @@ describe('simplifyFigures', () => {
         <div><img src="b.jpg"></div>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <img src="a.jpg">
+      </figure>
+      <figure>
+        <img src="b.jpg">
+      </figure>
+    `
 
-    expect(result).not.toContain('<p>')
-    expect(result).not.toContain('<div>')
-    expect(result).toContain('<img src="a.jpg">')
-    expect(result).toContain('<img src="b.jpg">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should handle the full example from requirements', async () => {
@@ -328,11 +365,15 @@ describe('simplifyFigures', () => {
         </figcaption>
       </figure>
     `
-    const result = await transform(value)
+    const expected = `
+      <figure>
+        <img src="photo.jpg" alt="" height="720" width="1280">
+        <figcaption>
+          <span>2019's <em>Parasite</em></span>
+        </figcaption>
+      </figure>
+    `
 
-    expect(result).not.toContain('<div>')
-    expect(result).not.toContain('<p>')
-    expect(result).toContain('<img src="photo.jpg"')
-    expect(result).toContain("<span>2019's <em>Parasite</em></span>")
+    expect(await transform(value)).toBe(expected)
   })
 })

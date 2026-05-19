@@ -44,7 +44,16 @@ export const simplifyFigures: DomTransform = () => {
         )
 
         if (!hasText) {
-          caption.innerHTML = elements[0].innerHTML
+          // Move the wrapper div's children inline before the div, then
+          // remove the div. This preserves any whitespace text nodes around
+          // the div (e.g. `<figcaption><div>x</div> </figcaption>`'s trailing
+          // space) which previously contributed a textContent boundary;
+          // `caption.innerHTML = …` would overwrite them.
+          const div = elements[0]
+          while (div.firstChild) {
+            caption.insertBefore(div.firstChild, div)
+          }
+          div.remove()
         }
       }
     }
