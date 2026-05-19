@@ -8,13 +8,13 @@ describe('unwrapGateSc', () => {
     expect(unwrapGateSc(url)).toBe('https://example.com/article')
   })
 
-  it('should return null when url param is missing', () => {
+  it('should return undefined when url param is missing', () => {
     const url = new URL('https://gate.sc/?other=value')
 
     expect(unwrapGateSc(url)).toBeUndefined()
   })
 
-  it('should return null for non-gate.sc hosts', () => {
+  it('should return undefined for non-gate.sc hosts', () => {
     const url = new URL('https://example.com/?url=https%3A%2F%2Fother.com')
 
     expect(unwrapGateSc(url)).toBeUndefined()

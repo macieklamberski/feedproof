@@ -10,20 +10,20 @@ describe('unwrapSegmentfault', () => {
     expect(unwrapSegmentfault(url)).toBe(target)
   })
 
-  it('should return null when the decoded value is not http(s)', () => {
+  it('should return undefined when the decoded value is not http(s)', () => {
     const encoded = Buffer.from('not-a-url').toString('base64')
     const url = new URL(`https://link.segmentfault.com/?enc=${encodeURIComponent(encoded)}`)
 
     expect(unwrapSegmentfault(url)).toBeUndefined()
   })
 
-  it('should return null when enc param is missing', () => {
+  it('should return undefined when enc param is missing', () => {
     const url = new URL('https://link.segmentfault.com/?other=value')
 
     expect(unwrapSegmentfault(url)).toBeUndefined()
   })
 
-  it('should return null for non-Segmentfault hosts', () => {
+  it('should return undefined for non-Segmentfault hosts', () => {
     const url = new URL('https://example.com/?enc=abc')
 
     expect(unwrapSegmentfault(url)).toBeUndefined()

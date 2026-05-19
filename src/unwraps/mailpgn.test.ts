@@ -8,13 +8,13 @@ describe('unwrapMailpgn', () => {
     expect(unwrapMailpgn(url)).toBe('https://example.com/campaign')
   })
 
-  it('should return null when fl param is missing', () => {
+  it('should return undefined when fl param is missing', () => {
     const url = new URL('https://t.mailpgn.com/l/?other=value')
 
     expect(unwrapMailpgn(url)).toBeUndefined()
   })
 
-  it('should return null for non-mailpgn hosts', () => {
+  it('should return undefined for non-mailpgn hosts', () => {
     const url = new URL('https://example.com/l/?fl=https%3A%2F%2Fother.com')
 
     expect(unwrapMailpgn(url)).toBeUndefined()

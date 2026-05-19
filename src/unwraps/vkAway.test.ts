@@ -8,19 +8,19 @@ describe('unwrapVkAway', () => {
     expect(unwrapVkAway(url)).toBe('https://example.com/page')
   })
 
-  it('should return null when to param is missing', () => {
+  it('should return undefined when to param is missing', () => {
     const url = new URL('https://vk.com/away.php?utf=1')
 
     expect(unwrapVkAway(url)).toBeUndefined()
   })
 
-  it('should return null for non-away VK paths', () => {
+  it('should return undefined for non-away VK paths', () => {
     const url = new URL('https://vk.com/profile?to=https%3A%2F%2Fexample.com')
 
     expect(unwrapVkAway(url)).toBeUndefined()
   })
 
-  it('should return null for non-VK hosts', () => {
+  it('should return undefined for non-VK hosts', () => {
     const url = new URL('https://example.com/away.php?to=https%3A%2F%2Fother.com')
 
     expect(unwrapVkAway(url)).toBeUndefined()

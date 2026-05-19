@@ -10,19 +10,19 @@ describe('unwrapYahooSearch', () => {
     expect(unwrapYahooSearch(url)).toBe('https://example.com/article')
   })
 
-  it('should return null for paths without RU= segment', () => {
+  it('should return undefined for paths without RU= segment', () => {
     const url = new URL('https://r.search.yahoo.com/search?p=test')
 
     expect(unwrapYahooSearch(url)).toBeUndefined()
   })
 
-  it('should return null when RK= terminator is missing', () => {
+  it('should return undefined when RK= terminator is missing', () => {
     const url = new URL('https://r.search.yahoo.com/_ylt=AAA/RU=https%3A%2F%2Fexample.com')
 
     expect(unwrapYahooSearch(url)).toBeUndefined()
   })
 
-  it('should return null for non-Yahoo hosts', () => {
+  it('should return undefined for non-Yahoo hosts', () => {
     const url = new URL(
       'https://example.com/_ylt=AAA/RU=https%3A%2F%2Fexample.com%2Fpage/RK=0/RS=BBB-',
     )

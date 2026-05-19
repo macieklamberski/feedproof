@@ -8,13 +8,13 @@ describe('unwrapDigidip', () => {
     expect(unwrapDigidip(url)).toBe('https://example.com/product')
   })
 
-  it('should return null when url param is missing', () => {
+  it('should return undefined when url param is missing', () => {
     const url = new URL('https://example.digidip.net/visit?other=value')
 
     expect(unwrapDigidip(url)).toBeUndefined()
   })
 
-  it('should return null for non-digidip hosts', () => {
+  it('should return undefined for non-digidip hosts', () => {
     const url = new URL('https://example.com/?url=https%3A%2F%2Fother.com')
 
     expect(unwrapDigidip(url)).toBeUndefined()

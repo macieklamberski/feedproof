@@ -26,19 +26,19 @@ describe('unwrapGoogleScholar', () => {
     expect(unwrapGoogleScholar(url)).toBe('https://cite.com/paper.pdf')
   })
 
-  it('should return null when url param is missing', () => {
+  it('should return undefined when url param is missing', () => {
     const url = new URL('https://scholar.google.com/scholar_url?hl=en')
 
     expect(unwrapGoogleScholar(url)).toBeUndefined()
   })
 
-  it('should return null for non-/scholar_url paths', () => {
+  it('should return undefined for non-/scholar_url paths', () => {
     const url = new URL('https://scholar.google.com/scholar?q=test')
 
     expect(unwrapGoogleScholar(url)).toBeUndefined()
   })
 
-  it('should return null for non-Scholar hosts', () => {
+  it('should return undefined for non-Scholar hosts', () => {
     const url = new URL('https://www.google.com/scholar_url?url=https%3A%2F%2Fcite.com%2Fpaper.pdf')
 
     expect(unwrapGoogleScholar(url)).toBeUndefined()

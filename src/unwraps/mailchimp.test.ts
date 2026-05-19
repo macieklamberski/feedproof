@@ -18,19 +18,19 @@ describe('unwrapMailchimp', () => {
     expect(unwrapMailchimp(url)).toBe('https://example.com/other')
   })
 
-  it('should return null when url param is missing', () => {
+  it('should return undefined when url param is missing', () => {
     const url = new URL('https://list.mailchimp.com/mctx/clicks?xid=abc')
 
     expect(unwrapMailchimp(url)).toBeUndefined()
   })
 
-  it('should return null for non-clicks paths', () => {
+  it('should return undefined for non-clicks paths', () => {
     const url = new URL('https://list.mailchimp.com/clicks?url=https%3A%2F%2Fexample.com')
 
     expect(unwrapMailchimp(url)).toBeUndefined()
   })
 
-  it('should return null for non-Mailchimp hosts', () => {
+  it('should return undefined for non-Mailchimp hosts', () => {
     const url = new URL('https://example.com/mctx/clicks?url=https%3A%2F%2Fother.com')
 
     expect(unwrapMailchimp(url)).toBeUndefined()

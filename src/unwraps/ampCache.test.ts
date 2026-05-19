@@ -24,7 +24,7 @@ describe('unwrapAmpCache', () => {
     expect(unwrapAmpCache(url)).toBe('http://www.bbc.co.uk/news/amp/technology-40932487')
   })
 
-  it('should return null for non-/c/ paths on the same host', () => {
+  it('should return undefined for non-/c/ paths on the same host', () => {
     const imageUrl = new URL('https://cdn.ampproject.org/i/s/example.com/image.jpg')
     const videoUrl = new URL('https://cdn.ampproject.org/v/s/example.com/video.mp4')
 
@@ -32,7 +32,7 @@ describe('unwrapAmpCache', () => {
     expect(unwrapAmpCache(videoUrl)).toBeUndefined()
   })
 
-  it('should return null for non-AMP cache hosts', () => {
+  it('should return undefined for non-AMP cache hosts', () => {
     const url = new URL('https://example.com/c/s/other.com/article')
 
     expect(unwrapAmpCache(url)).toBeUndefined()

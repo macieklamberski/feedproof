@@ -26,13 +26,13 @@ describe('unwrapNicoMs', () => {
     expect(unwrapNicoMs(url)).toBe('https://seiga.nicovideo.jp/seiga/im9999999')
   })
 
-  it('should return null for an unrecognised prefix', () => {
+  it('should return undefined for an unrecognised prefix', () => {
     const url = new URL('https://nico.ms/xx12345')
 
     expect(unwrapNicoMs(url)).toBeUndefined()
   })
 
-  it('should return null for non-nico.ms hosts', () => {
+  it('should return undefined for non-nico.ms hosts', () => {
     const url = new URL('https://example.com/sm12345')
 
     expect(unwrapNicoMs(url)).toBeUndefined()

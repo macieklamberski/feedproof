@@ -8,13 +8,13 @@ describe('unwrapJuejin', () => {
     expect(unwrapJuejin(url)).toBe('https://example.com/post')
   })
 
-  it('should return null when target param is missing', () => {
+  it('should return undefined when target param is missing', () => {
     const url = new URL('https://link.juejin.cn/?other=value')
 
     expect(unwrapJuejin(url)).toBeUndefined()
   })
 
-  it('should return null for non-Juejin hosts', () => {
+  it('should return undefined for non-Juejin hosts', () => {
     const url = new URL('https://example.com/?target=https%3A%2F%2Fother.com')
 
     expect(unwrapJuejin(url)).toBeUndefined()

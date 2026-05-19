@@ -14,13 +14,13 @@ describe('unwrapFirebaseDynamicLinks', () => {
     expect(unwrapFirebaseDynamicLinks(url)).toBe('https://example.com/page')
   })
 
-  it('should return null when ofl param is missing', () => {
+  it('should return undefined when ofl param is missing', () => {
     const url = new URL('https://example.page.link/?other=value')
 
     expect(unwrapFirebaseDynamicLinks(url)).toBeUndefined()
   })
 
-  it('should return null for non page.link hosts', () => {
+  it('should return undefined for non page.link hosts', () => {
     const url = new URL('https://example.com/?ofl=https%3A%2F%2Fother.com')
 
     expect(unwrapFirebaseDynamicLinks(url)).toBeUndefined()

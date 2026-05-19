@@ -62,6 +62,7 @@ export {
   applyEmbedMetadata,
   applyStringTransforms,
   createEmbedPlaceholder,
+  expandSvgSelfClose,
   parseFragment,
   stripOversizedBase64Sources,
   transformHtml,

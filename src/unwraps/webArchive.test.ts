@@ -18,19 +18,19 @@ describe('unwrapWebArchive', () => {
     expect(unwrapWebArchive(url)).toBe('https://example.com/page')
   })
 
-  it('should return null when timestamp has wrong digit count', () => {
+  it('should return undefined when timestamp has wrong digit count', () => {
     const url = new URL('https://web.archive.org/web/2024/https%3A%2F%2Fexample.com')
 
     expect(unwrapWebArchive(url)).toBeUndefined()
   })
 
-  it('should return null for non-archive.org hosts', () => {
+  it('should return undefined for non-archive.org hosts', () => {
     const url = new URL('https://example.com/web/20240101120000/https%3A%2F%2Fother.com')
 
     expect(unwrapWebArchive(url)).toBeUndefined()
   })
 
-  it('should return null when encoded URL has malformed percent escapes', () => {
+  it('should return undefined when encoded URL has malformed percent escapes', () => {
     const url = new URL('https://web.archive.org/web/20240101120000/bad%ZZ')
 
     expect(unwrapWebArchive(url)).toBeUndefined()

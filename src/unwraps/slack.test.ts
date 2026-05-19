@@ -8,19 +8,19 @@ describe('unwrapSlack', () => {
     expect(unwrapSlack(url)).toBe('https://example.com/article')
   })
 
-  it('should return null when url param is missing', () => {
+  it('should return undefined when url param is missing', () => {
     const url = new URL('https://slack-redir.net/link?other=value')
 
     expect(unwrapSlack(url)).toBeUndefined()
   })
 
-  it('should return null for non-link Slack paths', () => {
+  it('should return undefined for non-link Slack paths', () => {
     const url = new URL('https://slack-redir.net/redirect?url=https%3A%2F%2Fexample.com')
 
     expect(unwrapSlack(url)).toBeUndefined()
   })
 
-  it('should return null for non-Slack hosts', () => {
+  it('should return undefined for non-Slack hosts', () => {
     const url = new URL('https://example.com/link?url=https%3A%2F%2Fother.com')
 
     expect(unwrapSlack(url)).toBeUndefined()

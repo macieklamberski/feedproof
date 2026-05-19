@@ -16,13 +16,13 @@ describe('unwrapEmbedly', () => {
     expect(unwrapEmbedly(url)).toBe('https://example.com/video')
   })
 
-  it('should return null when src param is missing', () => {
+  it('should return undefined when src param is missing', () => {
     const url = new URL('https://cdn.embedly.com/widgets/media.html?other=value')
 
     expect(unwrapEmbedly(url)).toBeUndefined()
   })
 
-  it('should return null for non-Embedly hosts', () => {
+  it('should return undefined for non-Embedly hosts', () => {
     const url = new URL('https://example.com/widgets/media.html?src=https%3A%2F%2Fother.com')
 
     expect(unwrapEmbedly(url)).toBeUndefined()

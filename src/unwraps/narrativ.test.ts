@@ -18,13 +18,13 @@ describe('unwrapNarrativ', () => {
     expect(unwrapNarrativ(url)).toBe('https://example.com/item')
   })
 
-  it('should return null when url param is missing', () => {
+  it('should return undefined when url param is missing', () => {
     const url = new URL('https://narrativ.com/api/v0/client_redirect?other=value')
 
     expect(unwrapNarrativ(url)).toBeUndefined()
   })
 
-  it('should return null for non-Narrativ hosts', () => {
+  it('should return undefined for non-Narrativ hosts', () => {
     const url = new URL('https://example.com/?url=https%3A%2F%2Fother.com')
 
     expect(unwrapNarrativ(url)).toBeUndefined()

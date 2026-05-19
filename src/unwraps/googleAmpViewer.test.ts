@@ -32,13 +32,13 @@ describe('unwrapGoogleAmpViewer', () => {
     expect(unwrapGoogleAmpViewer(url)).toBe('https://example.com/section/sub/article')
   })
 
-  it('should return null for non-/amp/ paths', () => {
+  it('should return undefined for non-/amp/ paths', () => {
     const url = new URL('https://www.google.com/search?q=test')
 
     expect(unwrapGoogleAmpViewer(url)).toBeUndefined()
   })
 
-  it('should return null for non-Google hosts', () => {
+  it('should return undefined for non-Google hosts', () => {
     const url = new URL('https://example.com/amp/s/example.com/article')
 
     expect(unwrapGoogleAmpViewer(url)).toBeUndefined()

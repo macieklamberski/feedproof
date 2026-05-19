@@ -10,19 +10,19 @@ describe('unwrapHashnode', () => {
     expect(unwrapHashnode(url)).toBe('https://example.com/article')
   })
 
-  it('should return null for non-redirect Hashnode URLs', () => {
+  it('should return undefined for non-redirect Hashnode URLs', () => {
     const url = new URL('https://hashnode.com/community')
 
     expect(unwrapHashnode(url)).toBeUndefined()
   })
 
-  it('should return null when url param is missing', () => {
+  it('should return undefined when url param is missing', () => {
     const url = new URL('https://hashnode.com/util/redirect')
 
     expect(unwrapHashnode(url)).toBeUndefined()
   })
 
-  it('should return null for non-Hashnode hosts', () => {
+  it('should return undefined for non-Hashnode hosts', () => {
     const url = new URL('https://example.com/util/redirect?url=https%3A%2F%2Fother.com')
 
     expect(unwrapHashnode(url)).toBeUndefined()

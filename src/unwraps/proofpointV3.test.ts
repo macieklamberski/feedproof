@@ -40,26 +40,26 @@ describe('unwrapProofpointV3', () => {
     expect(unwrapProofpointV3(url)).toBe('https://www.example.com/path?q=hello')
   })
 
-  it('should return null for non-v3 paths', () => {
+  it('should return undefined for non-v3 paths', () => {
     const url = new URL('https://urldefense.com/v2/url?u=https-3A__example.com_path')
 
     expect(unwrapProofpointV3(url)).toBeUndefined()
   })
 
-  it('should return null for non-Proofpoint hosts', () => {
+  it('should return undefined for non-Proofpoint hosts', () => {
     const url = new URL('https://example.com/v3/__https://other.com__;!!abc!def$')
 
     expect(unwrapProofpointV3(url)).toBeUndefined()
   })
 
-  it('should return null when replacements run out for a `*` marker', () => {
+  it('should return undefined when replacements run out for a `*` marker', () => {
     // Two `*` markers but only one replacement char ('Iw' = '#').
     const url = new URL('https://urldefense.com/v3/__http://example.com/*foo*bar__;Iw!!abc!def$')
 
     expect(unwrapProofpointV3(url)).toBeUndefined()
   })
 
-  it('should return null when replacements run out inside a `**X` run', () => {
+  it('should return undefined when replacements run out inside a `**X` run', () => {
     // `**E` = 6 bytes, but replacement b64 'Iw' = '#' is only 1 byte.
     const url = new URL('https://urldefense.com/v3/__http://example.com/**Etest__;Iw!!abc!def$')
 

@@ -22,19 +22,19 @@ describe('unwrapGoogle', () => {
     expect(unwrapGoogle(url)).toBe('https://real.com')
   })
 
-  it('should return null for non-redirect Google URLs', () => {
+  it('should return undefined for non-redirect Google URLs', () => {
     const url = new URL('https://www.google.com/search?q=test')
 
     expect(unwrapGoogle(url)).toBeUndefined()
   })
 
-  it('should return null when target param is missing', () => {
+  it('should return undefined when target param is missing', () => {
     const url = new URL('https://www.google.com/url?sa=t&source=web')
 
     expect(unwrapGoogle(url)).toBeUndefined()
   })
 
-  it('should return null for non-Google hosts', () => {
+  it('should return undefined for non-Google hosts', () => {
     const url = new URL('https://example.com/url?url=https%3A%2F%2Fother.com')
 
     expect(unwrapGoogle(url)).toBeUndefined()

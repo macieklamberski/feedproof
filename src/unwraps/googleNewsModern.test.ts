@@ -34,7 +34,7 @@ describe('unwrapGoogleNewsModern', () => {
     expect(unwrapGoogleNewsModern(url)).toBe('https://example.com/article')
   })
 
-  it('should return null when the id lacks framing bytes', () => {
+  it('should return undefined when the id lacks framing bytes', () => {
     const id = Buffer.from('hello world', 'utf8')
       .toString('base64')
       .replace(base64PlusRegex, '-')
@@ -45,20 +45,20 @@ describe('unwrapGoogleNewsModern', () => {
     expect(unwrapGoogleNewsModern(url)).toBeUndefined()
   })
 
-  it('should return null for non-articles paths', () => {
+  it('should return undefined for non-articles paths', () => {
     const url = new URL('https://news.google.com/foryou')
 
     expect(unwrapGoogleNewsModern(url)).toBeUndefined()
   })
 
-  it('should return null for non-Google-News hosts', () => {
+  it('should return undefined for non-Google-News hosts', () => {
     const id = buildArticleId('https://example.com/article')
     const url = new URL(`https://example.com/articles/${id}`)
 
     expect(unwrapGoogleNewsModern(url)).toBeUndefined()
   })
 
-  it('should return null for malformed base64 ids', () => {
+  it('should return undefined for malformed base64 ids', () => {
     const url = new URL('https://news.google.com/articles/not-valid-base64')
 
     expect(unwrapGoogleNewsModern(url)).toBeUndefined()

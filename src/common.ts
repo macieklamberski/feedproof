@@ -73,7 +73,7 @@ export const normalizeAttributeCase = (document: Document): void => {
 const svgRegionRegex = /<svg\b[^>]*>[\s\S]*?<\/svg>/gi
 const svgSelfCloseRegex = /<([a-z][a-z0-9-]*)((?:\s[^>]*)?)\s*\/>/gi
 
-const expandSvgSelfClose = (html: string): string => {
+export const expandSvgSelfClose = (html: string): string => {
   return html.replace(svgRegionRegex, (svgBlock) => {
     return svgBlock.replace(svgSelfCloseRegex, '<$1$2></$1>')
   })

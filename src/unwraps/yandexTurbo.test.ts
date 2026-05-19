@@ -14,13 +14,13 @@ describe('unwrapYandexTurbo', () => {
     expect(unwrapYandexTurbo(url)).toBe('https://news.example.com/path')
   })
 
-  it('should return null when path lacks the /s/ marker', () => {
+  it('should return undefined when path lacks the /s/ marker', () => {
     const url = new URL('https://example-com.turbopages.org/example.com/no-marker/path')
 
     expect(unwrapYandexTurbo(url)).toBeUndefined()
   })
 
-  it('should return null for non-turbopages hosts', () => {
+  it('should return undefined for non-turbopages hosts', () => {
     const url = new URL('https://example.com/host/s/path')
 
     expect(unwrapYandexTurbo(url)).toBeUndefined()

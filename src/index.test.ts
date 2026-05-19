@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { defaultDomTransforms } from './defaults.js'
 import { transformContent } from './index.js'
+import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 
 const startsWithDiv = /^<div>/
 
@@ -142,5 +143,54 @@ describe('transformContent', () => {
     expect(result).toContain(
       'src="https://proxy.example.com/audio/https%3A%2F%2Fexample.com%2Faudio.mp3"',
     )
+  })
+
+  // enrichEmbedPlaceholders is opt-in; default pipeline does not include it.
+  it('should enrich embed placeholders with metadata from enrichEmbedFn when opted in', async () => {
+    const html =
+      '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" width="560" height="315"></iframe>'
+    const result = await transformContent(html, {
+      domTransforms: [...defaultDomTransforms, enrichEmbedPlaceholders],
+      enrichEmbedFn: (embeds) => {
+        return new Map(
+          embeds.map(({ provider, id }) => [
+            `${provider}:${id}`,
+            { title: `Title for ${id}`, author: 'Test Channel', duration: 213 },
+          ]),
+        )
+      },
+    })
+
+    expect(result).toContain('data-embed-title="Title for dQw4w9WgXcQ"')
+    expect(result).toContain('data-embed-author="Test Channel"')
+    expect(result).toContain('data-embed-duration="213"')
+  })
+
+  it('should leave embed placeholders unenriched when enrichEmbedFn returns an empty map', async () => {
+    const html = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+    const result = await transformContent(html, {
+      domTransforms: [...defaultDomTransforms, enrichEmbedPlaceholders],
+      enrichEmbedFn: () => new Map(),
+    })
+
+    expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
+    expect(result).not.toContain('data-embed-title')
+    expect(result).not.toContain('data-embed-author')
+    expect(result).not.toContain('data-embed-duration')
+  })
+
+  it('should leave embed placeholders unenriched when enrichEmbedPlaceholders is not in the pipeline', async () => {
+    const html = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+    let called = false
+    const result = await transformContent(html, {
+      enrichEmbedFn: () => {
+        called = true
+        return new Map([['youtube:dQw4w9WgXcQ', { title: 'Unused' }]])
+      },
+    })
+
+    expect(called).toBe(false)
+    expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
+    expect(result).not.toContain('data-embed-title')
   })
 })

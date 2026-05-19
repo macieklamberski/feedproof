@@ -8,13 +8,13 @@ describe('unwrapZhihu', () => {
     expect(unwrapZhihu(url)).toBe('https://example.com/article')
   })
 
-  it('should return null when target param is missing', () => {
+  it('should return undefined when target param is missing', () => {
     const url = new URL('https://link.zhihu.com/?other=value')
 
     expect(unwrapZhihu(url)).toBeUndefined()
   })
 
-  it('should return null for non-Zhihu hosts', () => {
+  it('should return undefined for non-Zhihu hosts', () => {
     const url = new URL('https://example.com/?target=https%3A%2F%2Fother.com')
 
     expect(unwrapZhihu(url)).toBeUndefined()

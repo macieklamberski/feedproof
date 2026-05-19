@@ -22,7 +22,7 @@ describe('unwrapAceml', () => {
     expect(unwrapAceml(url)).toBe(target)
   })
 
-  it('should return null when the decoded value is not http(s)', () => {
+  it('should return undefined when the decoded value is not http(s)', () => {
     const encoded = Buffer.from('not-a-url').toString('base64')
     const url = new URL(
       `https://abc.acemlna.com/Prod/link-tracker?redirectUrl=${encodeURIComponent(encoded)}`,
@@ -31,19 +31,19 @@ describe('unwrapAceml', () => {
     expect(unwrapAceml(url)).toBeUndefined()
   })
 
-  it('should return null when redirectUrl is missing', () => {
+  it('should return undefined when redirectUrl is missing', () => {
     const url = new URL('https://abc.acemlna.com/Prod/link-tracker?notrack=1')
 
     expect(unwrapAceml(url)).toBeUndefined()
   })
 
-  it('should return null for non-tracker paths', () => {
+  it('should return undefined for non-tracker paths', () => {
     const url = new URL('https://abc.acemlna.com/redirect?redirectUrl=abc')
 
     expect(unwrapAceml(url)).toBeUndefined()
   })
 
-  it('should return null for non-ACEML hosts', () => {
+  it('should return undefined for non-ACEML hosts', () => {
     const url = new URL('https://example.com/Prod/link-tracker?redirectUrl=abc')
 
     expect(unwrapAceml(url)).toBeUndefined()

@@ -8,19 +8,19 @@ describe('unwrapDuckduckgo', () => {
     expect(unwrapDuckduckgo(url)).toBe('https://example.com/page')
   })
 
-  it('should return null when uddg param is missing', () => {
+  it('should return undefined when uddg param is missing', () => {
     const url = new URL('https://duckduckgo.com/l/?other=value')
 
     expect(unwrapDuckduckgo(url)).toBeUndefined()
   })
 
-  it('should return null for paths other than /l/', () => {
+  it('should return undefined for paths other than /l/', () => {
     const url = new URL('https://duckduckgo.com/?uddg=https%3A%2F%2Fexample.com')
 
     expect(unwrapDuckduckgo(url)).toBeUndefined()
   })
 
-  it('should return null for non-DuckDuckGo hosts', () => {
+  it('should return undefined for non-DuckDuckGo hosts', () => {
     const url = new URL('https://example.com/l/?uddg=https%3A%2F%2Fother.com')
 
     expect(unwrapDuckduckgo(url)).toBeUndefined()

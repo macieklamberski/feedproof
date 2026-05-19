@@ -20,25 +20,25 @@ describe('unwrapPostmark', () => {
     expect(unwrapPostmark(url)).toBe('example.com/other')
   })
 
-  it('should return null for an unrecognised version prefix', () => {
+  it('should return undefined for an unrecognised version prefix', () => {
     const url = new URL('https://click.pstmrk.it/4s/example.com%2Farticle/abc/def')
 
     expect(unwrapPostmark(url)).toBeUndefined()
   })
 
-  it('should return null when path has too few segments', () => {
+  it('should return undefined when path has too few segments', () => {
     const url = new URL('https://click.pstmrk.it/3s/example.com%2Farticle')
 
     expect(unwrapPostmark(url)).toBeUndefined()
   })
 
-  it('should return null for non-Postmark hosts', () => {
+  it('should return undefined for non-Postmark hosts', () => {
     const url = new URL('https://example.com/3s/other.com/abc/def')
 
     expect(unwrapPostmark(url)).toBeUndefined()
   })
 
-  it('should return null when the encoded path segment is malformed', () => {
+  it('should return undefined when the encoded path segment is malformed', () => {
     // `%ZZ` is not a valid percent escape and breaks decodeURIComponent.
     const url = new URL('https://click.pstmrk.it/3s/bad%ZZ/abc/def')
 

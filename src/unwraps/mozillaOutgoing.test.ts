@@ -20,20 +20,20 @@ describe('unwrapMozillaOutgoing', () => {
     expect(unwrapMozillaOutgoing(url)).toBe('https://example.com/page')
   })
 
-  it('should return null for non-Mozilla hosts', () => {
+  it('should return undefined for non-Mozilla hosts', () => {
     const sha = 'c'.repeat(64)
     const url = new URL(`https://example.com/v1/${sha}/https%3A%2F%2Fother.com`)
 
     expect(unwrapMozillaOutgoing(url)).toBeUndefined()
   })
 
-  it('should return null when path lacks /v1/<sha256>/ prefix', () => {
+  it('should return undefined when path lacks /v1/<sha256>/ prefix', () => {
     const url = new URL('https://outgoing.prod.mozaws.net/other?url=https%3A%2F%2Fexample.com')
 
     expect(unwrapMozillaOutgoing(url)).toBeUndefined()
   })
 
-  it('should return null when encoded target has malformed percent escapes', () => {
+  it('should return undefined when encoded target has malformed percent escapes', () => {
     const sha = 'd'.repeat(64)
     const url = new URL(`https://outgoing.prod.mozaws.net/v1/${sha}/bad%ZZ`)
 

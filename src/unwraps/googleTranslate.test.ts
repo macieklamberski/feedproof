@@ -10,19 +10,19 @@ describe('unwrapGoogleTranslate', () => {
     expect(unwrapGoogleTranslate(url)).toBe('https://example.com/page')
   })
 
-  it('should return null for non-redirect Translate URLs', () => {
+  it('should return undefined for non-redirect Translate URLs', () => {
     const url = new URL('https://translate.google.com/about')
 
     expect(unwrapGoogleTranslate(url)).toBeUndefined()
   })
 
-  it('should return null when u param is missing', () => {
+  it('should return undefined when u param is missing', () => {
     const url = new URL('https://translate.google.com/translate?sl=fr&tl=en')
 
     expect(unwrapGoogleTranslate(url)).toBeUndefined()
   })
 
-  it('should return null for non-Translate hosts', () => {
+  it('should return undefined for non-Translate hosts', () => {
     const url = new URL('https://www.google.com/translate?u=https%3A%2F%2Fexample.com')
 
     expect(unwrapGoogleTranslate(url)).toBeUndefined()

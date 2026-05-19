@@ -18,13 +18,13 @@ describe('unwrapEbayRover', () => {
     expect(unwrapEbayRover(url)).toBe('https://www.ebay.co.uk/itm/456')
   })
 
-  it('should return null when mpre param is missing', () => {
+  it('should return undefined when mpre param is missing', () => {
     const url = new URL('https://rover.ebay.com/rover/1/711-53200-19255-0/1?campid=12345')
 
     expect(unwrapEbayRover(url)).toBeUndefined()
   })
 
-  it('should return null for non-rover hosts', () => {
+  it('should return undefined for non-rover hosts', () => {
     const url = new URL('https://example.com/?mpre=https%3A%2F%2Fother.com')
 
     expect(unwrapEbayRover(url)).toBeUndefined()

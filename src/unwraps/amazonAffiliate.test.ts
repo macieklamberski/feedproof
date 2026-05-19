@@ -16,13 +16,13 @@ describe('unwrapAmazonAffiliate', () => {
     expect(unwrapAmazonAffiliate(url)).toBe('http://example.com/page')
   })
 
-  it('should return null when the path lacks an embedded URL', () => {
+  it('should return undefined when the path lacks an embedded URL', () => {
     const url = new URL('https://aax-us-east.amazon-adsystem.com/x/c/abc123/')
 
     expect(unwrapAmazonAffiliate(url)).toBeUndefined()
   })
 
-  it('should return null for non-tracker paths', () => {
+  it('should return undefined for non-tracker paths', () => {
     const url = new URL(
       'https://aax-us-east.amazon-adsystem.com/aap/?id=abc&dest=https%3A%2F%2Fexample.com',
     )
@@ -30,7 +30,7 @@ describe('unwrapAmazonAffiliate', () => {
     expect(unwrapAmazonAffiliate(url)).toBeUndefined()
   })
 
-  it('should return null for non-Amazon hosts', () => {
+  it('should return undefined for non-Amazon hosts', () => {
     const url = new URL('https://example.com/x/c/abc/https://other.com/dp/X')
 
     expect(unwrapAmazonAffiliate(url)).toBeUndefined()

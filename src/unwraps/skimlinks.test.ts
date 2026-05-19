@@ -10,13 +10,13 @@ describe('unwrapSkimlinks', () => {
     expect(unwrapSkimlinks(url)).toBe('https://example.com/product')
   })
 
-  it('should return null when url param is missing', () => {
+  it('should return undefined when url param is missing', () => {
     const url = new URL('https://go.skimresources.com/?id=12345&xs=1')
 
     expect(unwrapSkimlinks(url)).toBeUndefined()
   })
 
-  it('should return null for non-Skimlinks hosts', () => {
+  it('should return undefined for non-Skimlinks hosts', () => {
     const url = new URL('https://example.com/?url=https%3A%2F%2Fother.com')
 
     expect(unwrapSkimlinks(url)).toBeUndefined()

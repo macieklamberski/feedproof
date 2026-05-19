@@ -8,19 +8,19 @@ describe('unwrapTelegramIv', () => {
     expect(unwrapTelegramIv(url)).toBe('https://example.com/article')
   })
 
-  it('should return null for non-iv Telegram paths', () => {
+  it('should return undefined for non-iv Telegram paths', () => {
     const url = new URL('https://t.me/channelname')
 
     expect(unwrapTelegramIv(url)).toBeUndefined()
   })
 
-  it('should return null when url param is missing', () => {
+  it('should return undefined when url param is missing', () => {
     const url = new URL('https://t.me/iv?rhash=abc123')
 
     expect(unwrapTelegramIv(url)).toBeUndefined()
   })
 
-  it('should return null for non-Telegram hosts', () => {
+  it('should return undefined for non-Telegram hosts', () => {
     const url = new URL('https://example.com/iv?url=https%3A%2F%2Fother.com')
 
     expect(unwrapTelegramIv(url)).toBeUndefined()

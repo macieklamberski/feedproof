@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { chooseBaseUrl, createParamExtractor } from './utils.js'
+import { chooseBaseUrl, coerceNumber, createParamExtractor } from './utils.js'
 
 const hostsRegex = /^(?:www\.)?example\.(?:com|co\.uk)$/
 
@@ -232,5 +232,45 @@ describe('createParamExtractor', () => {
     const url = new URL('https://other.com/redirect?url=https%3A%2F%2Ftarget.com')
 
     expect(extractor(url)).toBeUndefined()
+  })
+})
+
+describe('coerceNumber', () => {
+  it('should parse integer string to number', () => {
+    expect(coerceNumber('42')).toBe(42)
+  })
+
+  it('should parse float string to number', () => {
+    expect(coerceNumber('1.5')).toBe(1.5)
+  })
+
+  it('should parse negative string to number', () => {
+    expect(coerceNumber('-1')).toBe(-1)
+  })
+
+  it('should parse zero string to number', () => {
+    expect(coerceNumber('0')).toBe(0)
+  })
+
+  it('should return undefined for null input', () => {
+    expect(coerceNumber(null)).toBeUndefined()
+  })
+
+  it('should return undefined for non-numeric string', () => {
+    expect(coerceNumber('abc')).toBeUndefined()
+  })
+
+  // Empty string coerces to 0 via Number(''). Pinned so a future refactor that
+  // switches to a stricter parser must update this test deliberately.
+  it('should return 0 for empty string', () => {
+    expect(coerceNumber('')).toBe(0)
+  })
+
+  it('should parse string with surrounding whitespace', () => {
+    expect(coerceNumber('  42  ')).toBe(42)
+  })
+
+  it('should return undefined for partially numeric string', () => {
+    expect(coerceNumber('42abc')).toBeUndefined()
   })
 })

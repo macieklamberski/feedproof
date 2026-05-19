@@ -10,13 +10,13 @@ describe('unwrapMailpanion', () => {
     expect(unwrapMailpanion(url)).toBe('https://example.com/newsletter')
   })
 
-  it('should return null when destination param is missing', () => {
+  it('should return undefined when destination param is missing', () => {
     const url = new URL('https://mailpanion.com/?other=value')
 
     expect(unwrapMailpanion(url)).toBeUndefined()
   })
 
-  it('should return null for non-Mailpanion hosts', () => {
+  it('should return undefined for non-Mailpanion hosts', () => {
     const url = new URL('https://example.com/?destination=https%3A%2F%2Fother.com')
 
     expect(unwrapMailpanion(url)).toBeUndefined()

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import {
   applyDomTransforms,
   createEmbedPlaceholder,
+  expandSvgSelfClose,
   parseFragment,
   stripOversizedBase64Sources,
   transformHtml,
@@ -235,6 +236,73 @@ describe('parseFragment', () => {
       expect(anchor?.getAttribute('href')).toBe('/about')
       expect(anchor?.getAttribute('class')).toBe('nav')
     })
+  })
+})
+
+describe('expandSvgSelfClose', () => {
+  it('should expand self-closing tags inside svg', () => {
+    const value = '<svg><title /><path d="M0 0" /></svg>'
+    const expected = '<svg><title ></title><path d="M0 0" ></path></svg>'
+
+    expect(expandSvgSelfClose(value)).toBe(expected)
+  })
+
+  it('should preserve self-closing tags outside svg regions', () => {
+    const value = '<p><br /><img src="a.png" /></p>'
+
+    expect(expandSvgSelfClose(value)).toBe(value)
+  })
+
+  // The regex captures `\s[^>]*` greedily for attributes, so a trailing space
+  // before `/>` stays inside the open tag. Cosmetic only — produces valid HTML.
+  it('should only expand inside the svg region when mixed with non-svg', () => {
+    const value = '<p><br /></p><svg><circle r="5" /></svg><img src="a.png" />'
+    const expected = '<p><br /></p><svg><circle r="5" ></circle></svg><img src="a.png" />'
+
+    expect(expandSvgSelfClose(value)).toBe(expected)
+  })
+
+  it('should expand multiple self-closing tags within a single svg', () => {
+    const value = '<svg><title /><desc /><path d="M0 0" /></svg>'
+    const expected = '<svg><title ></title><desc ></desc><path d="M0 0" ></path></svg>'
+
+    expect(expandSvgSelfClose(value)).toBe(expected)
+  })
+
+  it('should handle nested svg regions independently', () => {
+    const value = '<svg><circle r="5" /></svg><div><svg><rect width="1" /></svg></div>'
+    const expected =
+      '<svg><circle r="5" ></circle></svg><div><svg><rect width="1" ></rect></svg></div>'
+
+    expect(expandSvgSelfClose(value)).toBe(expected)
+  })
+
+  it('should handle svg with attributes', () => {
+    const value = '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M0 0" /></svg>'
+    const expected = '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M0 0" ></path></svg>'
+
+    expect(expandSvgSelfClose(value)).toBe(expected)
+  })
+
+  it('should return empty string unchanged', () => {
+    expect(expandSvgSelfClose('')).toBe('')
+  })
+
+  it('should return input unchanged when no svg present', () => {
+    const value = '<p>Hello world</p>'
+
+    expect(expandSvgSelfClose(value)).toBe(value)
+  })
+
+  it('should fix linkedom svg nesting via parseFragment', () => {
+    // Without expansion, linkedom parses `<path />` as a child of `<title>`
+    // because the self-close on a non-void HTML element is ignored. With
+    // expansion, path is a sibling of title.
+    const document = parseFragment('<svg><title /><path d="M0 0" /></svg>')
+    const svg = document.querySelector('svg')
+    const path = svg?.querySelector('path')
+
+    expect(path?.parentElement?.tagName.toLowerCase()).toBe('svg')
   })
 })
 

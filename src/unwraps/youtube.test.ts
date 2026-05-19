@@ -10,19 +10,19 @@ describe('unwrapYouTube', () => {
     expect(unwrapYouTube(url)).toBe('https://example.com/story')
   })
 
-  it('should return null when q param is missing', () => {
+  it('should return undefined when q param is missing', () => {
     const url = new URL('https://www.youtube.com/redirect?event=video_description')
 
     expect(unwrapYouTube(url)).toBeUndefined()
   })
 
-  it('should return null for non-redirect YouTube paths', () => {
+  it('should return undefined for non-redirect YouTube paths', () => {
     const url = new URL('https://www.youtube.com/watch?q=https%3A%2F%2Fexample.com')
 
     expect(unwrapYouTube(url)).toBeUndefined()
   })
 
-  it('should return null for non-YouTube hosts', () => {
+  it('should return undefined for non-YouTube hosts', () => {
     const url = new URL('https://example.com/redirect?q=https%3A%2F%2Fother.com')
 
     expect(unwrapYouTube(url)).toBeUndefined()

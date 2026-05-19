@@ -8,19 +8,19 @@ describe('unwrapGitee', () => {
     expect(unwrapGitee(url)).toBe('https://example.com/repo')
   })
 
-  it('should return null when target param is missing', () => {
+  it('should return undefined when target param is missing', () => {
     const url = new URL('https://gitee.com/link?other=value')
 
     expect(unwrapGitee(url)).toBeUndefined()
   })
 
-  it('should return null for non-link Gitee paths', () => {
+  it('should return undefined for non-link Gitee paths', () => {
     const url = new URL('https://gitee.com/explore?target=https%3A%2F%2Fexample.com')
 
     expect(unwrapGitee(url)).toBeUndefined()
   })
 
-  it('should return null for non-Gitee hosts', () => {
+  it('should return undefined for non-Gitee hosts', () => {
     const url = new URL('https://example.com/link?target=https%3A%2F%2Fother.com')
 
     expect(unwrapGitee(url)).toBeUndefined()

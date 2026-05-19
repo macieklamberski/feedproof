@@ -10,19 +10,19 @@ describe('unwrapAdjust', () => {
     expect(unwrapAdjust(url)).toBe('https://example.com/app')
   })
 
-  it('should return null when redirect param is missing', () => {
+  it('should return undefined when redirect param is missing', () => {
     const url = new URL('https://app.adjust.com/abc123?campaign=launch')
 
     expect(unwrapAdjust(url)).toBeUndefined()
   })
 
-  it('should return null for non-Adjust hosts', () => {
+  it('should return undefined for non-Adjust hosts', () => {
     const url = new URL('https://example.com/abc123?redirect=https%3A%2F%2Fother.com')
 
     expect(unwrapAdjust(url)).toBeUndefined()
   })
 
-  it('should return null when redirect is a custom-scheme URI', () => {
+  it('should return undefined when redirect is a custom-scheme URI', () => {
     const url = new URL('https://app.adjust.com/abc123?redirect=myapp%3A%2F%2Fopen')
 
     expect(unwrapAdjust(url)).toBeUndefined()

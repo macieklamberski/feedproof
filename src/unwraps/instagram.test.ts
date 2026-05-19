@@ -14,13 +14,13 @@ describe('unwrapInstagramShim', () => {
     expect(unwrapInstagramShim(url)).toBe('https://example.com/page')
   })
 
-  it('should return null when u param is missing', () => {
+  it('should return undefined when u param is missing', () => {
     const url = new URL('https://l.instagram.com/?e=ABC')
 
     expect(unwrapInstagramShim(url)).toBeUndefined()
   })
 
-  it('should return null for non-Instagram hosts', () => {
+  it('should return undefined for non-Instagram hosts', () => {
     const url = new URL('https://example.com/?u=https%3A%2F%2Fother.com')
 
     expect(unwrapInstagramShim(url)).toBeUndefined()

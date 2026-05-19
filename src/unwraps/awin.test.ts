@@ -18,13 +18,13 @@ describe('unwrapAwin', () => {
     expect(unwrapAwin(url)).toBe('https://example.com/other')
   })
 
-  it('should return null when both ued and p are missing', () => {
+  it('should return undefined when both ued and p are missing', () => {
     const url = new URL('https://www.awin1.com/cread.php?awinmid=1234&awinaffid=5678')
 
     expect(unwrapAwin(url)).toBeUndefined()
   })
 
-  it('should return null for non-Awin hosts', () => {
+  it('should return undefined for non-Awin hosts', () => {
     const url = new URL('https://example.com/cread.php?ued=https%3A%2F%2Fother.com')
 
     expect(unwrapAwin(url)).toBeUndefined()

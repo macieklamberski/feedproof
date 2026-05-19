@@ -8,19 +8,19 @@ describe('unwrapSspai', () => {
     expect(unwrapSspai(url)).toBe('https://example.com/article')
   })
 
-  it('should return null when target param is missing', () => {
+  it('should return undefined when target param is missing', () => {
     const url = new URL('https://sspai.com/link?other=value')
 
     expect(unwrapSspai(url)).toBeUndefined()
   })
 
-  it('should return null for non-link Sspai paths', () => {
+  it('should return undefined for non-link Sspai paths', () => {
     const url = new URL('https://sspai.com/post?target=https%3A%2F%2Fexample.com')
 
     expect(unwrapSspai(url)).toBeUndefined()
   })
 
-  it('should return null for non-Sspai hosts', () => {
+  it('should return undefined for non-Sspai hosts', () => {
     const url = new URL('https://example.com/link?target=https%3A%2F%2Fother.com')
 
     expect(unwrapSspai(url)).toBeUndefined()

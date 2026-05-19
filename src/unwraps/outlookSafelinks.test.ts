@@ -18,13 +18,13 @@ describe('unwrapOutlookSafelinks', () => {
     expect(unwrapOutlookSafelinks(url)).toBe('https://example.com/story')
   })
 
-  it('should return null when url param is missing', () => {
+  it('should return undefined when url param is missing', () => {
     const url = new URL('https://nam06.safelinks.protection.outlook.com/?data=foo')
 
     expect(unwrapOutlookSafelinks(url)).toBeUndefined()
   })
 
-  it('should return null for non-Outlook hosts', () => {
+  it('should return undefined for non-Outlook hosts', () => {
     const url = new URL('https://example.com/?url=https%3A%2F%2Fother.com')
 
     expect(unwrapOutlookSafelinks(url)).toBeUndefined()

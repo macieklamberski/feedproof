@@ -8,13 +8,13 @@ describe('unwrapGeoriot', () => {
     expect(unwrapGeoriot(url)).toBe('https://example.com/product')
   })
 
-  it('should return null when GR_URL param is missing', () => {
+  it('should return undefined when GR_URL param is missing', () => {
     const url = new URL('https://target.georiot.com/?other=value')
 
     expect(unwrapGeoriot(url)).toBeUndefined()
   })
 
-  it('should return null for non-georiot hosts', () => {
+  it('should return undefined for non-georiot hosts', () => {
     const url = new URL('https://example.com/?GR_URL=https%3A%2F%2Fother.com')
 
     expect(unwrapGeoriot(url)).toBeUndefined()

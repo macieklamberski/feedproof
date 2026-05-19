@@ -14,13 +14,13 @@ describe('unwrapSjv', () => {
     expect(unwrapSjv(url)).toBe('https://example.com/item')
   })
 
-  it('should return null when u param is missing', () => {
+  it('should return undefined when u param is missing', () => {
     const url = new URL('https://merchant.sjv.io/?subId1=abc')
 
     expect(unwrapSjv(url)).toBeUndefined()
   })
 
-  it('should return null for non-sjv hosts', () => {
+  it('should return undefined for non-sjv hosts', () => {
     const url = new URL('https://example.com/?u=https%3A%2F%2Fother.com')
 
     expect(unwrapSjv(url)).toBeUndefined()

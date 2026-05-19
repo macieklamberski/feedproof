@@ -18,25 +18,25 @@ describe('unwrapProofpointV1', () => {
     expect(unwrapProofpointV1(url)).toBe('https://example.com/search?q=hello')
   })
 
-  it('should return null when u param is missing', () => {
+  it('should return undefined when u param is missing', () => {
     const url = new URL('https://urldefense.proofpoint.com/v1/url?k=key')
 
     expect(unwrapProofpointV1(url)).toBeUndefined()
   })
 
-  it('should return null for non-v1 paths', () => {
+  it('should return undefined for non-v1 paths', () => {
     const url = new URL('https://urldefense.proofpoint.com/v2/url?u=https://example.com_path')
 
     expect(unwrapProofpointV1(url)).toBeUndefined()
   })
 
-  it('should return null for non-Proofpoint hosts', () => {
+  it('should return undefined for non-Proofpoint hosts', () => {
     const url = new URL('https://example.com/v1/url?u=https://other.com_path')
 
     expect(unwrapProofpointV1(url)).toBeUndefined()
   })
 
-  it('should return null when decoded URL has malformed percent escapes', () => {
+  it('should return undefined when decoded URL has malformed percent escapes', () => {
     // `-Z` becomes `%Z` after substitution, which decodeURIComponent rejects.
     const url = new URL('https://urldefense.proofpoint.com/v1/url?u=https-Zbroken')
 

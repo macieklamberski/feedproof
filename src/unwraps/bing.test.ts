@@ -26,31 +26,31 @@ describe('unwrapBing', () => {
     expect(unwrapBing(url)).toBe('https://example.com/page')
   })
 
-  it('should return null when prefix is missing', () => {
+  it('should return undefined when prefix is missing', () => {
     const url = new URL('https://www.bing.com/ck/a?u=aHR0cHM6Ly9leGFtcGxlLmNvbS9wYWdl')
 
     expect(unwrapBing(url)).toBeUndefined()
   })
 
-  it('should return null when decoded value is not http(s)', () => {
+  it('should return undefined when decoded value is not http(s)', () => {
     const url = new URL('https://www.bing.com/ck/a?u=a1bm90LWEtdXJs')
 
     expect(unwrapBing(url)).toBeUndefined()
   })
 
-  it('should return null when u param is missing', () => {
+  it('should return undefined when u param is missing', () => {
     const url = new URL('https://www.bing.com/ck/a?other=value')
 
     expect(unwrapBing(url)).toBeUndefined()
   })
 
-  it('should return null for non-/ck/a paths', () => {
+  it('should return undefined for non-/ck/a paths', () => {
     const url = new URL('https://www.bing.com/search?q=test')
 
     expect(unwrapBing(url)).toBeUndefined()
   })
 
-  it('should return null for non-Bing hosts', () => {
+  it('should return undefined for non-Bing hosts', () => {
     const url = new URL('https://example.com/ck/a?u=a1aHR0cHM6Ly9leGFtcGxlLmNvbS9wYWdl')
 
     expect(unwrapBing(url)).toBeUndefined()

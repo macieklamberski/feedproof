@@ -18,13 +18,13 @@ describe('unwrapCjNetwork', () => {
     expect(unwrapCjNetwork(url)).toBe('https://example.com/item')
   })
 
-  it('should return null when url param is missing', () => {
+  it('should return undefined when url param is missing', () => {
     const url = new URL('https://www.tkqlhce.com/click-12345-67890')
 
     expect(unwrapCjNetwork(url)).toBeUndefined()
   })
 
-  it('should return null for non-CJ hosts', () => {
+  it('should return undefined for non-CJ hosts', () => {
     const url = new URL('https://example.com/click?url=https%3A%2F%2Fother.com')
 
     expect(unwrapCjNetwork(url)).toBeUndefined()

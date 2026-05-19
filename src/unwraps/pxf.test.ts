@@ -14,13 +14,13 @@ describe('unwrapPxf', () => {
     expect(unwrapPxf(url)).toBe('https://example.com/item')
   })
 
-  it('should return null when u param is missing', () => {
+  it('should return undefined when u param is missing', () => {
     const url = new URL('https://merchant.pxf.io/?subId1=abc')
 
     expect(unwrapPxf(url)).toBeUndefined()
   })
 
-  it('should return null for non-pxf hosts', () => {
+  it('should return undefined for non-pxf hosts', () => {
     const url = new URL('https://example.com/?u=https%3A%2F%2Fother.com')
 
     expect(unwrapPxf(url)).toBeUndefined()
