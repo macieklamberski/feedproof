@@ -23,8 +23,8 @@ import { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 import { unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
+import { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
-import { unwrapWrappers } from './transforms/string/unwrapWrappers.js'
 import type {
   DomTransform,
   EmbedResolver,
@@ -102,12 +102,10 @@ import { unwrapYahooSearch } from './unwraps/yahooSearch.js'
 import { unwrapYouTube } from './unwraps/youtube.js'
 // import { unwrapZhihu } from './unwraps/zhihu.js'
 
-export const defaultStringTransforms: Array<StringTransform> = [
-  unwrapWrappers,
-  paragraphizePlainText,
-]
+export const defaultStringTransforms: Array<StringTransform> = [paragraphizePlainText]
 
 export const defaultDomTransforms: Array<DomTransform> = [
+  unwrapWrappers,
   decodeDoubleEncodedTags,
   stripComments,
   unwrapDoublyNestedLists,

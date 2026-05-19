@@ -98,8 +98,8 @@ export { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
 export { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 export { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
+export { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 export { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
-export { unwrapWrappers } from './transforms/string/unwrapWrappers.js'
 export type {
   AssetProxyFn,
   AssetType,
