@@ -135,4 +135,15 @@ describe('trimPreWhitespace', () => {
 
     expect(result).toContain('<p>No code here</p>')
   })
+
+  it('should not stack extra entity encoding when no trimming is needed', async () => {
+    // <pre><code><xmp>…</xmp></code></pre> has nothing to trim; the transform
+    // must skip the innerHTML write so linkedom doesn't double-escape the
+    // raw-text entities inside <xmp> a second time.
+    const value = '<pre><code><xmp>&lt;p&gt;Hi&lt;/p&gt;</xmp></code></pre>'
+    const result = await transform(value)
+    const baseline = await transformHtml(value, () => {})
+
+    expect(result).toBe(baseline)
+  })
 })

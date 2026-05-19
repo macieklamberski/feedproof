@@ -12,7 +12,8 @@ export const trimPreWhitespace: DomTransform = () => {
 
     for (const pre of pres) {
       const target = pre.querySelector('code') ?? pre
-      const trimmed = target.innerHTML
+      const original = target.innerHTML
+      const trimmed = original
         .replace(trailingWhitespaceRegex, '')
         .replace(leadingBlankLinesRegex, '')
       const lines = trimmed.split('\n')
@@ -23,11 +24,15 @@ export const trimPreWhitespace: DomTransform = () => {
         .map((line) => line.match(leadingIndentRegex)?.[1].length ?? 0)
 
       const common = Math.min(...indents)
+      const result = common > 0 ? lines.map((line) => line.slice(common)).join('\n') : trimmed
 
-      if (common > 0) {
-        target.innerHTML = lines.map((line) => line.slice(common)).join('\n')
-      } else {
-        target.innerHTML = trimmed
+      // Skip the innerHTML write when the content hasn't changed. The write
+      // is not free: it triggers a parse + serialize round-trip that, for
+      // <pre> containing <xmp> or other raw-text quirks of linkedom, can
+      // re-escape entities and corrupt code samples. Most fires of this
+      // transform produce no actual change, so skipping is a big win.
+      if (result !== original) {
+        target.innerHTML = result
       }
     }
   }
