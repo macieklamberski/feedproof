@@ -151,6 +151,24 @@ describe('mergeFragmentedLists', () => {
     expect(result).toContain('<li>sibling</li>')
   })
 
+  it('should not merge lists that contain direct text instead of <li>', async () => {
+    const value = '<ul>Item one</ul><ul>Item two</ul>'
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should not merge when one list contains direct text alongside valid lists', async () => {
+    const value = '<ul><li>a</li></ul><ul>orphan text</ul><ul><li>c</li></ul>'
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should not merge when a list contains a non-li element child', async () => {
+    const value = '<ul><p>oops</p></ul><ul><li>valid</li></ul>'
+
+    expect(await transform(value)).toBe(value)
+  })
+
   it('should handle the Dwell-style three-fragment case', async () => {
     const result = await transform(
       '<div><ul><li>first item</li></ul><ul><li>second item</li></ul><ul><li>third item</li></ul></div>',
