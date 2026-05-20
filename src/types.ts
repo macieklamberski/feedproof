@@ -86,5 +86,4 @@ export type TransformContentOptions = {
   articleTitle?: string
   stringTransforms?: Array<StringTransform>
   domTransforms?: Array<DomTransform>
-  finalStringTransforms?: Array<StringTransform>
 }
