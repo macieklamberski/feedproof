@@ -135,8 +135,6 @@ export const defaultDomTransforms: Array<DomTransform> = [
   stripEmptyTags,
 ]
 
-export const defaultFinalStringTransforms: Array<StringTransform> = []
-
 // Order matters when selectors overlap: each resolver runs in array order and
 // claimed iframes can't be re-matched. Place more specific selectors (e.g.
 // meta-providers like Embedly that wrap other providers) before broader ones.

@@ -2,7 +2,6 @@ import { applyDomTransforms, applyStringTransforms } from './common.js'
 import {
   defaultDomTransforms,
   defaultEmbedResolvers,
-  defaultFinalStringTransforms,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
   defaultResolveUrlFn,
@@ -34,27 +33,18 @@ export const transformContent = async (
 
   const stringFns = options.stringTransforms ?? defaultStringTransforms
   const domFns = options.domTransforms ?? defaultDomTransforms
-  const finalFns = options.finalStringTransforms ?? defaultFinalStringTransforms
 
-  // Phase 1: String transforms.
   const afterString = await applyStringTransforms(
     html,
     stringFns.map((transform) => transform(context)),
   )
 
-  // Phase 2: DOM transforms.
   const afterDom = await applyDomTransforms(
     afterString,
     domFns.map((transform) => transform(context)),
   )
 
-  // Phase 3: Final string transforms — cleans up empties produced by Phase 2.
-  const afterFinal = await applyStringTransforms(
-    afterDom,
-    finalFns.map((transform) => transform(context)),
-  )
-
-  return afterFinal
+  return afterDom
 }
 
 export {
