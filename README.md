@@ -19,7 +19,7 @@ npm install feedsweep
 ```typescript
 import { transformContent } from 'feedsweep'
 
-const result = transformContent('<p>Check <img data-src="photo.jpg"> and visit /about</p>', {
+const result = await transformContent('<p>Check <img data-src="photo.jpg"> and visit /about</p>', {
   baseUrl: 'https://example.com/post/1',
 })
 ```
@@ -37,7 +37,6 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `stripInterBlockBreaks` | Remove `<br>` tags between block elements |
 | `stripParagraphBoundaryBreaks` | Remove `<br>` tags adjacent to paragraph boundaries |
 | `stripDuplicateTitleHeading` | Remove first `<h1>`–`<h6>` matching article title |
-| `simplifyFigures` | Unwrap `<figure>` when the figcaption is empty or redundant |
 | `unwrapRedirectUrls` | Remove Google/Bing/Facebook/etc. redirect wrappers |
 | `stripDeadAnchors` | Unwrap `<a>` with empty, `#`, or `javascript:` href |
 | `removeTrackingPixels` | Strip 1×1 tracking pixel images |
@@ -55,7 +54,6 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `linkifyUrls` | Wrap bare URLs in `<a>` tags |
 | `trimPreWhitespace` | Remove common leading indentation from `<pre>` |
 | `highlightCode` | Syntax-highlight `<code>` blocks with highlight.js |
-| `stripOrphanedClosingTags` | Remove unmatched `</p>` / `</div>` close tags |
 | `stripEmptyTags` | Remove empty `<p>`, `<div>`, `<span>` and other tags |
 | `stripComments` | Remove HTML `<!-- comments -->` |
 | `unwrapCdataComments` | Strip malformed `<!--[CDATA[ … ]]-->` wrappers before parsing so the wrapped article reaches the DOM as real HTML |
