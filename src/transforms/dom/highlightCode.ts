@@ -37,13 +37,24 @@ export const highlightCode: DomTransform = () => {
         continue
       }
 
-      const text = code.textContent ?? ''
+      const language = detectLanguage(pre, code)
 
-      if (!text.trim()) {
+      // Auto-detection is the hot path; skip blocks that already carry
+      // highlight markup (Shiki/Prism/Pygments) when we have no language
+      // hint to re-highlight against — running highlightAuto would just
+      // destroy the existing structure for marginal benefit. Checking
+      // `children.length` before reading `textContent` avoids the string
+      // allocation for the (often large) blocks we end up skipping.
+      if (!language && code.children.length > 0) {
         continue
       }
 
-      const language = detectLanguage(pre, code)
+      const text = code.textContent
+
+      if (!text?.trim()) {
+        continue
+      }
+
       const result =
         language && hljs.getLanguage(language)
           ? hljs.highlight(text, { language })

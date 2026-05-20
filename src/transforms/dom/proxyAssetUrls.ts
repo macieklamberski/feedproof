@@ -2,13 +2,13 @@ import { parseSrcset, stringifySrcset } from 'srcset'
 import type { AssetProxyFn, AssetType, DomTransform } from '../../types.js'
 
 const sourceTypeFromParent = (element: Element): AssetType => {
-  const parent = element.parentElement?.tagName
+  const parent = element.parentElement?.localName
 
-  if (parent === 'VIDEO') {
+  if (parent === 'video') {
     return 'video'
   }
 
-  if (parent === 'AUDIO') {
+  if (parent === 'audio') {
     return 'audio'
   }
 
@@ -60,47 +60,55 @@ const proxySrcset = (element: Element, type: AssetType, assetProxyFn: AssetProxy
 }
 
 export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
+  if (!assetProxyFn) {
+    return () => {}
+  }
+
   return (document) => {
-    if (!assetProxyFn) {
-      return
-    }
+    const elements = document.querySelectorAll(
+      'img, video, audio, source, track, image, [data-embed-thumbnail], [data-embed-avatar]',
+    )
 
-    for (const image of document.querySelectorAll('img')) {
-      proxyAttribute(image, 'src', 'image', assetProxyFn)
-      proxySrcset(image, 'image', assetProxyFn)
-    }
+    for (const element of elements) {
+      switch (element.localName) {
+        case 'img': {
+          proxyAttribute(element, 'src', 'image', assetProxyFn)
+          proxySrcset(element, 'image', assetProxyFn)
+          break
+        }
+        case 'video': {
+          proxyAttribute(element, 'src', 'video', assetProxyFn)
+          proxyAttribute(element, 'poster', 'image', assetProxyFn)
+          break
+        }
+        case 'audio': {
+          proxyAttribute(element, 'src', 'audio', assetProxyFn)
+          break
+        }
+        case 'source': {
+          proxyAttribute(element, 'src', sourceTypeFromParent(element), assetProxyFn)
+          proxySrcset(element, 'image', assetProxyFn)
+          break
+        }
+        case 'track': {
+          proxyAttribute(element, 'src', sourceTypeFromParent(element), assetProxyFn)
+          break
+        }
+        // SVG2 uses `href`; legacy SVG1 uses `xlink:href`.
+        case 'image': {
+          const attribute = element.hasAttribute('href') ? 'href' : 'xlink:href'
+          proxyAttribute(element, attribute, 'image', assetProxyFn)
+          break
+        }
+      }
 
-    for (const video of document.querySelectorAll('video')) {
-      proxyAttribute(video, 'src', 'video', assetProxyFn)
-      proxyAttribute(video, 'poster', 'image', assetProxyFn)
-    }
+      if (element.hasAttribute('data-embed-thumbnail')) {
+        proxyAttribute(element, 'data-embed-thumbnail', 'image', assetProxyFn)
+      }
 
-    for (const audio of document.querySelectorAll('audio')) {
-      proxyAttribute(audio, 'src', 'audio', assetProxyFn)
-    }
-
-    for (const source of document.querySelectorAll('source')) {
-      const type = sourceTypeFromParent(source)
-      proxyAttribute(source, 'src', type, assetProxyFn)
-      proxySrcset(source, 'image', assetProxyFn)
-    }
-
-    for (const track of document.querySelectorAll('track')) {
-      proxyAttribute(track, 'src', sourceTypeFromParent(track), assetProxyFn)
-    }
-
-    // SVG2 uses `href`; legacy SVG1 uses `xlink:href`. linkedom preserves either.
-    for (const image of document.querySelectorAll('image')) {
-      const attribute = image.hasAttribute('href') ? 'href' : 'xlink:href'
-      proxyAttribute(image, attribute, 'image', assetProxyFn)
-    }
-
-    for (const element of document.querySelectorAll('[data-embed-thumbnail]')) {
-      proxyAttribute(element, 'data-embed-thumbnail', 'image', assetProxyFn)
-    }
-
-    for (const element of document.querySelectorAll('[data-embed-avatar]')) {
-      proxyAttribute(element, 'data-embed-avatar', 'image', assetProxyFn)
+      if (element.hasAttribute('data-embed-avatar')) {
+        proxyAttribute(element, 'data-embed-avatar', 'image', assetProxyFn)
+      }
     }
   }
 }

@@ -1,93 +1,107 @@
-import { isBlockElement, Node } from '../../common.js'
+import {
+  hasAncestorWithTagName,
+  isBlockElement,
+  isBr,
+  isWhitespaceText,
+  Node,
+} from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-const processContainers = [
-  'body',
-  'div',
-  'blockquote',
-  'td',
-  'li',
-  'article',
-  'section',
-  'main',
-  'header',
-  'footer',
-  'aside',
-]
+const processContainersSelector =
+  'body, div, blockquote, td, li, article, section, main, header, footer, aside'
 
-const isBr = (node: Node): boolean =>
-  node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName.toLowerCase() === 'br'
+const preOrCodeTags = new Set(['pre', 'code'])
 
-const isWhitespaceText = (node: Node): boolean =>
-  node.nodeType === Node.TEXT_NODE && !(node.textContent ?? '').trim()
-
-const hasContent = (chunk: ReadonlyArray<Node>): boolean =>
-  chunk.some(
-    (node) =>
-      node.nodeType === Node.ELEMENT_NODE ||
-      (node.nodeType === Node.TEXT_NODE && (node.textContent ?? '').trim() !== ''),
-  )
-
-const isInsidePreOrCode = (element: Element): boolean => {
-  let current = element.parentElement
-
-  while (current) {
-    const tag = current.tagName.toLowerCase()
-
-    if (tag === 'pre' || tag === 'code') {
-      return true
-    }
-
-    current = current.parentElement
-  }
-
-  return false
+type Chunk = {
+  start: number
+  end: number
+  hasContent: boolean
+  hasBlock: boolean
 }
 
 export const convertBreaksToParagraphs: DomTransform = () => {
   return (document) => {
-    for (const container of document.querySelectorAll(processContainers.join(','))) {
-      if (isInsidePreOrCode(container)) {
+    for (const container of document.querySelectorAll(processContainersSelector)) {
+      // Fast skip: containers with no direct <br> child can never produce a paragraph split.
+      let hasBr = false
+
+      for (let node = container.firstChild; node; node = node.nextSibling) {
+        if (isBr(node)) {
+          hasBr = true
+          break
+        }
+      }
+
+      if (!hasBr) {
         continue
       }
 
-      const children = [...container.childNodes]
-      const chunks: Array<Array<Node>> = [[]]
+      if (hasAncestorWithTagName(container, preOrCodeTags)) {
+        continue
+      }
 
+      const children: Array<Node> = []
+
+      for (let node = container.firstChild; node; node = node.nextSibling) {
+        children.push(node)
+      }
+
+      const childCount = children.length
+      const chunks: Array<Chunk> = []
+      let current: Chunk = { start: 0, end: 0, hasContent: false, hasBlock: false }
       let i = 0
 
-      while (i < children.length) {
+      while (i < childCount) {
         const child = children[i]
 
         if (isBr(child)) {
+          // Look ahead through consecutive <br>s and whitespace-only text.
           let brCount = 1
           let j = i + 1
 
-          while (j < children.length) {
+          while (j < childCount) {
             const next = children[j]
 
             if (isBr(next)) {
               brCount++
-              j++
-            } else if (isWhitespaceText(next)) {
-              j++
-            } else {
+            } else if (!isWhitespaceText(next)) {
               break
             }
+
+            j++
           }
 
           if (brCount >= 2) {
-            chunks.push([])
+            current.end = i
+            chunks.push(current)
+            current = { start: j, end: j, hasContent: false, hasBlock: false }
             i = j
           } else {
-            chunks[chunks.length - 1].push(child)
+            // Single <br>: stays inside the current chunk as a real node.
+            current.hasContent = true
             i++
           }
         } else {
-          chunks[chunks.length - 1].push(child)
+          const nodeType = child.nodeType
+
+          if (nodeType === Node.ELEMENT_NODE) {
+            current.hasContent = true
+
+            if (isBlockElement(child)) {
+              current.hasBlock = true
+            }
+          } else if (nodeType === Node.TEXT_NODE) {
+            if (!current.hasContent && child.textContent?.trim()) {
+              current.hasContent = true
+            }
+          }
+
           i++
         }
       }
+
+      current.end = childCount
+      chunks.push(current)
 
       if (chunks.length < 2) {
         continue
@@ -96,32 +110,26 @@ export const convertBreaksToParagraphs: DomTransform = () => {
       const newChildren: Array<Node> = []
 
       for (const chunk of chunks) {
-        if (!hasContent(chunk)) {
+        if (!chunk.hasContent) {
           continue
         }
 
-        const containsBlock = chunk.some(isBlockElement)
-
-        if (containsBlock) {
-          newChildren.push(...chunk)
+        if (chunk.hasBlock) {
+          for (let k = chunk.start; k < chunk.end; k++) {
+            newChildren.push(children[k])
+          }
         } else {
           const paragraph = document.createElement('p')
 
-          for (const node of chunk) {
-            paragraph.appendChild(node)
+          for (let k = chunk.start; k < chunk.end; k++) {
+            paragraph.appendChild(children[k])
           }
 
           newChildren.push(paragraph)
         }
       }
 
-      while (container.firstChild) {
-        container.removeChild(container.firstChild)
-      }
-
-      for (const node of newChildren) {
-        container.appendChild(node)
-      }
+      container.replaceChildren(...newChildren)
     }
   }
 }

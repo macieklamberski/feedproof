@@ -6,31 +6,51 @@ export const stripParagraphBoundaryBreaks: DomTransform = () => {
     const paragraphs = document.querySelectorAll('p')
 
     for (const paragraph of paragraphs) {
-      const leading: Array<ChildNode> = []
       let cursor = paragraph.firstChild
+      let leadingHasBr = false
+      let leadingEnd: ChildNode | null = null
 
       while (cursor && isSkippable(cursor)) {
-        leading.push(cursor)
+        if (!leadingHasBr && isBr(cursor)) {
+          leadingHasBr = true
+        }
+        leadingEnd = cursor
         cursor = cursor.nextSibling
       }
 
-      if (leading.some(isBr)) {
-        for (const node of leading) {
+      if (leadingHasBr) {
+        let node = paragraph.firstChild
+        while (node) {
+          const next = node.nextSibling
           node.remove()
+          if (node === leadingEnd) {
+            break
+          }
+          node = next
         }
       }
 
-      const trailing: Array<ChildNode> = []
       cursor = paragraph.lastChild
+      let trailingHasBr = false
+      let trailingEnd: ChildNode | null = null
 
       while (cursor && isSkippable(cursor)) {
-        trailing.push(cursor)
+        if (!trailingHasBr && isBr(cursor)) {
+          trailingHasBr = true
+        }
+        trailingEnd = cursor
         cursor = cursor.previousSibling
       }
 
-      if (trailing.some(isBr)) {
-        for (const node of trailing) {
+      if (trailingHasBr) {
+        let node = paragraph.lastChild
+        while (node) {
+          const prev = node.previousSibling
           node.remove()
+          if (node === trailingEnd) {
+            break
+          }
+          node = prev
         }
       }
     }

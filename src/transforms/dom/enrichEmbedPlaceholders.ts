@@ -2,38 +2,43 @@ import { applyEmbedMetadata } from '../../common.js'
 import type { DomTransform, EmbedResolverResult } from '../../types.js'
 
 export const enrichEmbedPlaceholders: DomTransform = (context) => {
+  const enrichEmbedFn = context.enrichEmbedFn
+
+  if (!enrichEmbedFn) {
+    return () => {}
+  }
+
   return async (document) => {
-    if (!context.enrichEmbedFn) {
+    const placeholders = document.querySelectorAll('[data-embed-provider][data-embed-id]')
+    const count = placeholders.length
+
+    if (!count) {
       return
     }
 
-    const placeholders = Array.from(
-      document.querySelectorAll('[data-embed-provider][data-embed-id]'),
-    )
+    const embeds: Array<{ provider: string; id: string }> = new Array(count)
+    for (let i = 0; i < count; i++) {
+      const element = placeholders[i]
 
-    if (!placeholders.length) {
-      return
+      embeds[i] = {
+        provider: element.getAttribute('data-embed-provider') ?? '',
+        id: element.getAttribute('data-embed-id') ?? '',
+      }
     }
-
-    const embeds = placeholders.map((element) => ({
-      provider: element.getAttribute('data-embed-provider') ?? '',
-      id: element.getAttribute('data-embed-id') ?? '',
-    }))
 
     let enriched: Map<string, Partial<EmbedResolverResult>>
     try {
-      enriched = await context.enrichEmbedFn(embeds)
+      enriched = await enrichEmbedFn(embeds)
     } catch {
       return
     }
 
-    for (const element of placeholders) {
-      const provider = element.getAttribute('data-embed-provider')
-      const id = element.getAttribute('data-embed-id')
-      const data = enriched.get(`${provider}:${id}`)
+    for (let i = 0; i < count; i++) {
+      const embed = embeds[i]
+      const data = enriched.get(`${embed.provider}:${embed.id}`)
 
       if (data) {
-        applyEmbedMetadata(element as HTMLElement, data, { setIfMissing: true })
+        applyEmbedMetadata(placeholders[i] as HTMLElement, data, { setIfMissing: true })
       }
     }
   }

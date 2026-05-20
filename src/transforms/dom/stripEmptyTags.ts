@@ -23,17 +23,12 @@ const preserveWhenEmpty = new Set([
   'wbr',
 ])
 
-// Removes elements that have no non-whitespace text and no element children,
-// looping implicitly via post-order traversal so nested empties collapse in
-// one pass. Whitespace-only elements collapse to a single space text node so
-// inline word boundaries survive. Media/void elements are kept regardless.
-//
-// Raw-text elements (`<script>`, `<style>`, `<textarea>`) and comments are
-// handled by the parser — their bodies are a single text node or COMMENT_NODE,
-// so the empty-check never mistakes tag-shaped text inside them for markup.
+// Removes elements with no non-whitespace text and no element children.
+// Whitespace-only elements collapse to a single space text node so inline
+// word boundaries survive. Reverse iteration handles nested empties in one pass.
 export const stripEmptyTags: DomTransform = () => {
   return (document) => {
-    const all = [...document.body.querySelectorAll('*')]
+    const all = document.body.querySelectorAll('*')
 
     for (let i = all.length - 1; i >= 0; i--) {
       const element = all[i]
@@ -42,28 +37,31 @@ export const stripEmptyTags: DomTransform = () => {
         continue
       }
 
-      const tagName = element.tagName.toLowerCase()
+      const tagName = element.localName
 
       if (preserveWhenEmpty.has(tagName)) {
         continue
       }
 
-      // Custom elements (Web Components) always have a hyphen in their name.
-      // Treat them like media/void elements — emptiness is meaningful
-      // (typically a JS-target host), so leave them alone.
+      // Custom elements (Web Components) — emptiness is meaningful.
       if (tagName.includes('-')) {
         continue
       }
 
+      const childNodes = element.childNodes
+      const childCount = childNodes.length
       let hasContent = false
 
-      for (const child of element.childNodes) {
-        if (child.nodeType === Node.ELEMENT_NODE) {
+      for (let j = 0; j < childCount; j++) {
+        const child = childNodes[j]
+        const nodeType = child.nodeType
+
+        if (nodeType === Node.ELEMENT_NODE) {
           hasContent = true
           break
         }
 
-        if (child.nodeType === Node.TEXT_NODE && (child as Text).data.trim().length > 0) {
+        if (nodeType === Node.TEXT_NODE && (child as Text).data.trim().length > 0) {
           hasContent = true
           break
         }
@@ -73,7 +71,7 @@ export const stripEmptyTags: DomTransform = () => {
         continue
       }
 
-      if (element.childNodes.length > 0) {
+      if (childCount > 0) {
         element.replaceWith(' ')
       } else {
         element.remove()

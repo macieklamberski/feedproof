@@ -1,7 +1,6 @@
+import { getDimensions } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*(?:;|$)/i
-const styleHeightRegex = /(?:^|;)\s*height\s*:\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*(?:;|$)/i
 const styleDisplayNoneRegex = /(?:^|;)\s*display\s*:\s*none/i
 const styleVisibilityHiddenRegex = /(?:^|;)\s*visibility\s*:\s*hidden/i
 const styleOpacityZeroRegex = /(?:^|;)\s*opacity\s*:\s*0(?:\.0+)?\s*(?:;|$)/i
@@ -23,10 +22,17 @@ const buildPathRegex = (segments: ReadonlyArray<string>): RegExp | null => {
 const isTrackingUrl = (src: string, hosts: Set<string>, pathRegex: RegExp | null): boolean => {
   try {
     const url = new URL(src, 'http://placeholder/')
+    const hostname = url.hostname
 
-    for (const host of hosts) {
-      if (url.hostname === host || url.hostname.endsWith(`.${host}`)) {
+    if (hosts.size > 0) {
+      if (hosts.has(hostname)) {
         return true
+      }
+
+      for (const host of hosts) {
+        if (hostname.endsWith(`.${host}`)) {
+          return true
+        }
       }
     }
 
@@ -36,38 +42,19 @@ const isTrackingUrl = (src: string, hosts: Set<string>, pathRegex: RegExp | null
   }
 }
 
-const getDimension = (image: Element, prop: 'width' | 'height'): number | undefined => {
-  const attribute = image.getAttribute(prop)
-
-  if (attribute !== null) {
-    const value = Number(attribute)
-
-    if (Number.isFinite(value)) {
-      return value
-    }
-  }
-
-  const style = image.getAttribute('style')
-
-  if (style) {
-    const regex = prop === 'width' ? styleWidthRegex : styleHeightRegex
-    const match = style.match(regex)
-
-    if (match) {
-      // Regex requires `[0-9]*\.?[0-9]+`, so Number() is always finite here.
-      return Number(match[1])
-    }
-  }
-
-  return
+const isPixelDimension = (value: number | undefined): boolean => {
+  return value !== undefined && value <= pixelDimensionLimit
 }
 
-const isHiddenImage = (image: Element): boolean => {
+const isPixelSized = (image: Element): boolean => {
+  const { width, height } = getDimensions(image)
+  return isPixelDimension(width) || isPixelDimension(height)
+}
+
+const isHiddenImage = (image: Element, style: string | null): boolean => {
   if (image.hasAttribute('hidden')) {
     return true
   }
-
-  const style = image.getAttribute('style')
 
   if (!style) {
     return false
@@ -80,29 +67,26 @@ const isHiddenImage = (image: Element): boolean => {
   )
 }
 
-const isPixelSized = (image: Element): boolean => {
-  const width = getDimension(image, 'width')
-  const height = getDimension(image, 'height')
-
-  return (
-    (width !== undefined && width <= pixelDimensionLimit) ||
-    (height !== undefined && height <= pixelDimensionLimit)
-  )
-}
-
 export const removeTrackingPixels: DomTransform = (context) => {
   const hosts = new Set(context.trackingHosts)
   const pathRegex = buildPathRegex(context.trackingPathSegments)
+  const hasUrlChecks = hosts.size > 0 || pathRegex !== null
 
   return (document) => {
     const images = document.querySelectorAll('img')
 
     for (const image of images) {
-      const src = image.getAttribute('src')
-      const trackingSrc = src ? isTrackingUrl(src, hosts, pathRegex) : false
-
-      if (isPixelSized(image) || isHiddenImage(image) || trackingSrc) {
+      if (isPixelSized(image) || isHiddenImage(image, image.getAttribute('style'))) {
         image.remove()
+        continue
+      }
+
+      if (hasUrlChecks) {
+        const src = image.getAttribute('src')
+
+        if (src && isTrackingUrl(src, hosts, pathRegex)) {
+          image.remove()
+        }
       }
     }
   }

@@ -1,51 +1,69 @@
-import { createEmbedPlaceholder } from '../../common.js'
+import { createEmbedPlaceholder, getDimensions } from '../../common.js'
 import type { DomTransform } from '../../types.js'
-import { coerceNumber } from '../../utils.js'
 
 export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
-  return async (document) => {
-    for (const resolver of context.embedResolvers) {
-      const elements = document.querySelectorAll(resolver.selector)
+  const { embedResolvers, resolveUrlFn, baseUrl } = context
 
-      for (const element of elements) {
+  return async (document) => {
+    const iframeSnapshot = document.getElementsByTagName('iframe') as unknown as Array<Element>
+    const hasIframes = iframeSnapshot.length > 0
+
+    for (const resolver of embedResolvers) {
+      if (!hasIframes && resolver.selector.startsWith('iframe')) {
+        continue
+      }
+
+      for (const element of document.querySelectorAll(resolver.selector)) {
         const metadata = await resolver.extract(element)
 
         if (!metadata) {
           continue
         }
 
-        if (!context.resolveUrlFn(metadata.src, context.baseUrl)) {
+        if (!resolveUrlFn(metadata.src, baseUrl)) {
           continue
         }
 
-        if (metadata.url && !context.resolveUrlFn(metadata.url, context.baseUrl)) {
+        if (metadata.url && !resolveUrlFn(metadata.url, baseUrl)) {
           continue
         }
 
-        const width = coerceNumber(element.getAttribute('width')) ?? metadata.width
-        const height = coerceNumber(element.getAttribute('height')) ?? metadata.height
+        const { width, height } = getDimensions(element)
 
-        const placeholder = createEmbedPlaceholder(document, metadata.src, {
-          ...metadata,
-          width,
-          height,
-        })
+        const placeholderMetadata =
+          width === undefined && height === undefined
+            ? metadata
+            : {
+                ...metadata,
+                width: width ?? metadata.width,
+                height: height ?? metadata.height,
+              }
 
-        element.replaceWith(placeholder)
+        element.replaceWith(createEmbedPlaceholder(document, metadata.src, placeholderMetadata))
       }
     }
 
-    for (const iframe of document.querySelectorAll('iframe[src]')) {
-      const src = iframe.getAttribute('src') ?? ''
+    if (!hasIframes) {
+      return
+    }
 
-      if (!context.resolveUrlFn(src, context.baseUrl)) {
+    // Resolvers may have detached some iframes — skip those (parentNode null).
+    for (const iframe of iframeSnapshot) {
+      if (!iframe.parentNode) {
         continue
       }
 
-      const width = coerceNumber(iframe.getAttribute('width'))
-      const height = coerceNumber(iframe.getAttribute('height'))
+      const src = iframe.getAttribute('src')
 
-      iframe.replaceWith(createEmbedPlaceholder(document, src, { width, height }))
+      if (!src) {
+        continue
+      }
+
+      if (!resolveUrlFn(src, baseUrl)) {
+        continue
+      }
+
+      iframe.replaceWith(createEmbedPlaceholder(document, src, getDimensions(iframe)))
     }
   }
 }

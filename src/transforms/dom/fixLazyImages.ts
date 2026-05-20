@@ -2,10 +2,8 @@ import { normalizeAttributeCase } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 const imgPattern = /<img\s/i
-// A real URL contains at least one of `:` (scheme), `/` (path), or `.` (domain
-// or file extension). This rejects flag-style values like `"1"` / `"true"` /
-// `"loaded"` that some libraries (Slick, plugin status markers) park on
-// otherwise-lazy attribute names.
+// Rejects flag-style values like `"1"` / `"true"` / `"loaded"` that some
+// libraries park on otherwise-lazy attribute names.
 const urlShapeRegex = /[:/.]/
 
 const isUrlShaped = (value: string): boolean => {
@@ -13,35 +11,67 @@ const isUrlShaped = (value: string): boolean => {
 }
 
 export const fixLazyImages: DomTransform = (context) => {
+  const lazySrcSet = new Set(context.lazySrcAttributes)
+  const lazySrcsetSet = new Set(context.lazySrcsetAttributes)
+  const { lazySrcAttributes, lazySrcsetAttributes } = context
+
   return (document) => {
-    // Move lazy-load data attributes to real src/srcset.
     const images = document.querySelectorAll('img')
 
     for (const image of images) {
-      let srcResolved = false
+      let hasSrcCandidate = false
+      let hasSrcsetCandidate = false
 
-      for (const attribute of context.lazySrcAttributes) {
-        const value = image.getAttribute(attribute)
-
-        if (!srcResolved && value && isUrlShaped(value)) {
-          image.setAttribute('src', value)
-          srcResolved = true
+      for (const name of image.getAttributeNames()) {
+        if (!hasSrcCandidate && lazySrcSet.has(name)) {
+          hasSrcCandidate = true
         }
 
-        image.removeAttribute(attribute)
+        if (!hasSrcsetCandidate && lazySrcsetSet.has(name)) {
+          hasSrcsetCandidate = true
+        }
+
+        if (hasSrcCandidate && hasSrcsetCandidate) {
+          break
+        }
       }
 
-      let srcsetResolved = false
+      if (hasSrcCandidate) {
+        let srcResolved = false
 
-      for (const attribute of context.lazySrcsetAttributes) {
-        const value = image.getAttribute(attribute)
+        for (const attribute of lazySrcAttributes) {
+          const value = image.getAttribute(attribute)
 
-        if (!srcsetResolved && value && isUrlShaped(value)) {
-          image.setAttribute('srcset', value)
-          srcsetResolved = true
+          if (value === null) {
+            continue
+          }
+
+          if (!srcResolved && value && isUrlShaped(value)) {
+            image.setAttribute('src', value)
+            srcResolved = true
+          }
+
+          image.removeAttribute(attribute)
         }
+      }
 
-        image.removeAttribute(attribute)
+      if (hasSrcsetCandidate) {
+        let srcsetResolved = false
+
+        for (const attribute of lazySrcsetAttributes) {
+          const value = image.getAttribute(attribute)
+
+          if (value === null) {
+            continue
+          }
+
+          if (!srcsetResolved && value && isUrlShaped(value)) {
+            image.setAttribute('srcset', value)
+            srcsetResolved = true
+          }
+
+          image.removeAttribute(attribute)
+        }
       }
     }
 
@@ -52,14 +82,13 @@ export const fixLazyImages: DomTransform = (context) => {
     for (const noscript of noscripts) {
       const sibling = noscript.previousElementSibling
 
-      if (sibling?.tagName.toLowerCase() !== 'img') {
+      if (sibling?.localName !== 'img') {
         continue
       }
 
       const inner = noscript.innerHTML
-      const hasImage = imgPattern.test(inner)
 
-      if (!hasImage) {
+      if (!imgPattern.test(inner)) {
         continue
       }
 
@@ -68,9 +97,7 @@ export const fixLazyImages: DomTransform = (context) => {
       replacedNoscript = true
     }
 
-    // `outerHTML =` re-parses raw HTML through linkedom, bypassing parseFragment's
-    // attribute-case normalization. Re-apply it so downstream transforms still see
-    // lowercase attribute names on the newly inserted nodes.
+    // outerHTML= bypasses parseFragment's attribute-case normalization.
     if (replacedNoscript) {
       normalizeAttributeCase(document)
     }

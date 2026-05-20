@@ -1,4 +1,4 @@
-import { isSkippable, Node } from '../../common.js'
+import { Node } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 export const unwrapDoublyNestedLists: DomTransform = () => {
@@ -6,43 +6,63 @@ export const unwrapDoublyNestedLists: DomTransform = () => {
     const lists = document.querySelectorAll('ul, ol')
 
     for (const outer of lists) {
-      const childElements = [...outer.children]
-
-      if (childElements.length !== 1) {
+      const wrapper = outer.firstElementChild
+      if (wrapper === null || wrapper.nextElementSibling !== null) {
+        continue
+      }
+      if (wrapper.localName !== 'li') {
         continue
       }
 
-      const wrapper = childElements[0]
+      const outerTag = outer.localName
+      let inner: Element | null = null
+      let elementDisqualified = false
 
-      if (wrapper.tagName.toLowerCase() !== 'li') {
+      for (
+        let element = wrapper.firstElementChild;
+        element !== null;
+        element = element.nextElementSibling
+      ) {
+        const localName = element.localName
+        if (localName === 'br') {
+          continue
+        }
+        if (inner !== null || localName !== outerTag) {
+          elementDisqualified = true
+          break
+        }
+        inner = element
+      }
+
+      if (elementDisqualified || inner === null) {
         continue
       }
 
-      const significant = [...wrapper.childNodes].filter((node) => !isSkippable(node))
+      // Non-whitespace text in the wrapper would fuse adjacent words on unwrap.
+      let textDisqualified = false
+      for (let node = wrapper.firstChild; node !== null; node = node.nextSibling) {
+        if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
+          textDisqualified = true
+          break
+        }
+      }
 
-      if (significant.length !== 1) {
+      if (textDisqualified) {
         continue
       }
 
-      const inner = significant[0]
-
-      if (inner.nodeType !== Node.ELEMENT_NODE) {
+      const parent = outer.parentNode
+      if (parent === null) {
         continue
       }
-
-      if ((inner as Element).tagName !== outer.tagName) {
-        continue
+      for (let node = wrapper.firstChild; node !== null; ) {
+        const next = node.nextSibling
+        if (node.nodeType === Node.TEXT_NODE || node === inner) {
+          parent.insertBefore(node, outer)
+        }
+        node = next
       }
-
-      // Replace the outer list with the inner one PLUS the wrapper's text
-      // children (whitespace and `&nbsp;`). Those text nodes contributed
-      // visible word-separator spacing in the original `body.textContent`;
-      // dropping them would fuse adjacent words. Comments and `<br>` siblings
-      // are intentionally dropped — they don't contribute to textContent.
-      const replacement = [...wrapper.childNodes].filter(
-        (node) => node === inner || node.nodeType === Node.TEXT_NODE,
-      )
-      outer.replaceWith(...replacement)
+      outer.remove()
     }
   }
 }

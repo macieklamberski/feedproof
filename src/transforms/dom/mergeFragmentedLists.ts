@@ -1,48 +1,32 @@
-import { isComment, isWhitespaceText, Node } from '../../common.js'
+import { isWhitespaceText, Node } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-// Some feeds emit each list item as its own one-item <ul>/<ol> instead of one
-// list with N items, breaking screen-reader semantics and visual spacing. This
-// merges runs of consecutive sibling lists that share the same tag and the
-// same attribute set into the first list of the run.
+// Some feeds emit each list item as its own one-item <ul>/<ol>. Merges runs
+// of consecutive sibling lists sharing tag and attribute set into the first.
 export const mergeFragmentedLists: DomTransform = () => {
   return (document) => {
     const lists = document.querySelectorAll('ul, ol')
 
     for (const list of lists) {
-      // Skip if a previous iteration already absorbed this list.
       if (!list.parentNode) {
         continue
       }
 
-      // Refuse to merge if the list is malformed — contains direct text or
-      // non-<li> children. Merging would fuse adjacent text without a
-      // separator and visibly change the rendered output.
+      const localName = list.localName
+      const firstCandidate = nextMergeableSibling(list, localName)
+
+      if (!firstCandidate) {
+        continue
+      }
+
       if (!hasOnlyListItemChildren(list)) {
         continue
       }
 
-      // Collect a run of mergeable sibling lists, treating only whitespace text
-      // and HTML comments as skippable separators.
       const run: Array<Element> = [list]
-      let sibling = list.nextSibling
+      let candidate: Element | undefined = firstCandidate
 
-      while (sibling) {
-        if (isWhitespaceText(sibling) || isComment(sibling)) {
-          sibling = sibling.nextSibling
-          continue
-        }
-
-        if (sibling.nodeType !== Node.ELEMENT_NODE) {
-          break
-        }
-
-        const candidate = sibling as Element
-
-        if (candidate.tagName !== list.tagName) {
-          break
-        }
-
+      while (candidate) {
         if (!attributesEqual(list, candidate)) {
           break
         }
@@ -52,30 +36,29 @@ export const mergeFragmentedLists: DomTransform = () => {
         }
 
         run.push(candidate)
-        sibling = candidate.nextSibling
+        candidate = nextMergeableSibling(candidate, localName)
       }
 
       if (run.length < 2) {
         continue
       }
 
-      // Move children of every later list into the first. Inter-fragment
-      // whitespace gets moved INTO the target between absorbed items so it
-      // keeps acting as a textContent boundary — dropping it would fuse the
-      // last item of one fragment with the first of the next (`Rich and
-      // Regular` + `Confronting My Own…` → `RegularConfronting My Own…`).
-      // Comments are dropped: they're noise and don't contribute to text.
+      // Whitespace between fragments moves INTO the target so it keeps acting
+      // as a textContent boundary; without it, the last item of one fragment
+      // would fuse with the first item of the next.
       const target = run[0]
 
-      for (const extra of run.slice(1)) {
+      for (let index = 1; index < run.length; index++) {
+        const extra = run[index]
         let between = target.nextSibling
 
         while (between && between !== extra) {
           const next = between.nextSibling
+          const type = between.nodeType
 
-          if (isComment(between)) {
+          if (type === Node.COMMENT_NODE) {
             between.parentNode?.removeChild(between)
-          } else if (isWhitespaceText(between)) {
+          } else if (type === Node.TEXT_NODE) {
             target.appendChild(between)
           }
 
@@ -92,16 +75,52 @@ export const mergeFragmentedLists: DomTransform = () => {
   }
 }
 
-const hasOnlyListItemChildren = (list: Element): boolean => {
-  for (let child = list.firstChild; child; child = child.nextSibling) {
-    if (isWhitespaceText(child) || isComment(child)) {
+const nextMergeableSibling = (from: Element, localName: string): Element | undefined => {
+  let sibling = from.nextSibling
+
+  while (sibling) {
+    const type = sibling.nodeType
+
+    if (type === Node.ELEMENT_NODE) {
+      return (sibling as Element).localName === localName ? (sibling as Element) : undefined
+    }
+
+    if (type === Node.TEXT_NODE) {
+      if (!isWhitespaceText(sibling)) {
+        return
+      }
+      sibling = sibling.nextSibling
       continue
     }
 
-    const isElement = child.nodeType === Node.ELEMENT_NODE
-    const isLi = isElement && (child as Element).tagName.toLowerCase() === 'li'
+    if (type === Node.COMMENT_NODE) {
+      sibling = sibling.nextSibling
+      continue
+    }
 
-    if (!isLi) {
+    return
+  }
+}
+
+const hasOnlyListItemChildren = (list: Element): boolean => {
+  for (let child = list.firstChild; child; child = child.nextSibling) {
+    const type = child.nodeType
+
+    if (type === Node.ELEMENT_NODE) {
+      if ((child as Element).localName !== 'li') {
+        return false
+      }
+      continue
+    }
+
+    if (type === Node.TEXT_NODE) {
+      if (!isWhitespaceText(child)) {
+        return false
+      }
+      continue
+    }
+
+    if (type !== Node.COMMENT_NODE) {
       return false
     }
   }
@@ -109,11 +128,26 @@ const hasOnlyListItemChildren = (list: Element): boolean => {
 }
 
 const attributesEqual = (a: Element, b: Element): boolean => {
-  if (a.attributes.length !== b.attributes.length) {
+  const aHas = a.hasAttributes()
+
+  if (aHas !== b.hasAttributes()) {
     return false
   }
 
-  for (const attribute of a.attributes) {
+  if (!aHas) {
+    return true
+  }
+
+  const attributes = a.attributes
+  const length = attributes.length
+
+  if (length !== b.getAttributeNames().length) {
+    return false
+  }
+
+  for (let index = 0; index < length; index++) {
+    const attribute = attributes[index]
+
     if (b.getAttribute(attribute.name) !== attribute.value) {
       return false
     }

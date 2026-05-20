@@ -7,6 +7,8 @@ import type {
   TransformContext,
 } from '../../types.js'
 
+const existingMediaSelector = 'audio[src], video[src], iframe[src], source[src], [data-embed-src]'
+
 const isAudioEnclosure = (enclosure: Enclosure): boolean => {
   return enclosure.medium === 'audio' || !!enclosure.type?.startsWith('audio/')
 }
@@ -34,6 +36,23 @@ const resolveEnclosure = async (
       }
     }
   }
+}
+
+// Collect URLs already referenced by media elements so we don't double-inject.
+// Querying the DOM is both cheaper and more precise than substring-matching
+// the serialized HTML (which would also match URLs appearing in prose).
+const collectExistingMediaUrls = (document: Document): Set<string> => {
+  const urls = new Set<string>()
+
+  for (const element of document.querySelectorAll(existingMediaSelector)) {
+    const src = element.getAttribute('src') ?? element.getAttribute('data-embed-src')
+
+    if (src) {
+      urls.add(src)
+    }
+  }
+
+  return urls
 }
 
 // TODO: render Enclosure `title` and `description` somehow. Neither <audio> nor <video>
@@ -69,15 +88,17 @@ const createNativeMediaElement = (
 }
 
 export const injectEnclosures: DomTransform = (context) => {
+  if (!context.enclosures?.length) {
+    return () => {}
+  }
+
+  const enclosures = context.enclosures
+
   return async (document) => {
-    if (!context.enclosures?.length) {
-      return
-    }
+    const existingUrls = collectExistingMediaUrls(document)
 
-    const html = document.toString()
-
-    for (const enclosure of context.enclosures) {
-      if (html.includes(enclosure.url)) {
+    for (const enclosure of enclosures) {
+      if (existingUrls.has(enclosure.url)) {
         continue
       }
 
@@ -88,18 +109,20 @@ export const injectEnclosures: DomTransform = (context) => {
       const resolved = await resolveEnclosure(enclosure.url, context.embedResolvers, document)
 
       if (resolved) {
-        const placeholder = createEmbedPlaceholder(document, enclosure.url, resolved)
-        document.body.prepend(placeholder)
+        document.body.prepend(createEmbedPlaceholder(document, enclosure.url, resolved))
+        existingUrls.add(enclosure.url)
         continue
       }
 
       if (isAudioEnclosure(enclosure)) {
         document.body.prepend(createNativeMediaElement(document, 'audio', enclosure, context))
+        existingUrls.add(enclosure.url)
         continue
       }
 
       if (isVideoEnclosure(enclosure)) {
         document.body.prepend(createNativeMediaElement(document, 'video', enclosure, context))
+        existingUrls.add(enclosure.url)
       }
     }
   }

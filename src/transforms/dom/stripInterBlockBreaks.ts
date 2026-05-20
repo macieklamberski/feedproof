@@ -1,28 +1,67 @@
-import { isBlockElement, isSkippable } from '../../common.js'
+import { isBlockElement, isBr, isSkippable } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 export const stripInterBlockBreaks: DomTransform = () => {
   return (document) => {
     const brs = document.querySelectorAll('br')
 
+    // Group by parent so each parent walks its children once, avoiding O(n²)
+    // re-walks when many <br>s sit between the same boundaries.
+    const parents = new Set<Node>()
+
     for (const br of brs) {
-      let previous = br.previousSibling
+      const parent = br.parentNode
 
-      while (previous && isSkippable(previous)) {
-        previous = previous.previousSibling
+      if (parent) {
+        parents.add(parent)
+      }
+    }
+
+    for (const parent of parents) {
+      let runBrs: Array<ChildNode> | null = null
+      let previousBoundary: Node | null = null
+
+      let child = parent.firstChild
+
+      while (child !== null) {
+        const nextChild = child.nextSibling
+
+        if (isSkippable(child)) {
+          if (isBr(child)) {
+            if (runBrs === null) {
+              runBrs = [child]
+            } else {
+              runBrs.push(child)
+            }
+          }
+        } else {
+          if (runBrs !== null) {
+            const previousIsBlock = !previousBoundary || isBlockElement(previousBoundary)
+            const nextIsBlock = isBlockElement(child)
+
+            if (previousIsBlock && nextIsBlock) {
+              for (const br of runBrs) {
+                br.remove()
+              }
+            }
+
+            runBrs = null
+          }
+
+          previousBoundary = child
+        }
+
+        child = nextChild
       }
 
-      let next = br.nextSibling
+      if (runBrs !== null) {
+        const previousIsBlock = !previousBoundary || isBlockElement(previousBoundary)
 
-      while (next && isSkippable(next)) {
-        next = next.nextSibling
-      }
-
-      const previousIsBlock = !previous || isBlockElement(previous)
-      const nextIsBlock = !next || isBlockElement(next)
-
-      if (previousIsBlock && nextIsBlock) {
-        br.remove()
+        if (previousIsBlock) {
+          for (const br of runBrs) {
+            br.remove()
+          }
+        }
       }
     }
   }

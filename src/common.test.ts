@@ -3,6 +3,8 @@ import {
   applyDomTransforms,
   createEmbedPlaceholder,
   expandSvgSelfClose,
+  getDimensions,
+  hasAncestorWithTagName,
   parseFragment,
   stripOversizedBase64Sources,
   transformHtml,
@@ -303,6 +305,133 @@ describe('expandSvgSelfClose', () => {
     const path = svg?.querySelector('path')
 
     expect(path?.parentElement?.tagName.toLowerCase()).toBe('svg')
+  })
+})
+
+describe('getDimensions', () => {
+  it('should return both dimensions from attributes', () => {
+    const document = parseFragment('<img width="320" height="240">')
+    const image = document.querySelector('img') as Element
+
+    expect(getDimensions(image)).toEqual({ width: 320, height: 240 })
+  })
+
+  it('should return only width when only width attribute is set', () => {
+    const document = parseFragment('<img width="100">')
+    const image = document.querySelector('img') as Element
+
+    expect(getDimensions(image)).toEqual({ width: 100, height: undefined })
+  })
+
+  it('should read px-suffixed dimensions from style when attributes are missing', () => {
+    const document = parseFragment('<img style="width: 50px; height: 25px">')
+    const image = document.querySelector('img') as Element
+
+    expect(getDimensions(image)).toEqual({ width: 50, height: 25 })
+  })
+
+  it('should read unitless dimensions from style', () => {
+    const document = parseFragment('<img style="width: 10; height: 5">')
+    const image = document.querySelector('img') as Element
+
+    expect(getDimensions(image)).toEqual({ width: 10, height: 5 })
+  })
+
+  it('should ignore em / rem / % units in style', () => {
+    const document = parseFragment('<img style="width: 1.5em; height: 100%">')
+    const image = document.querySelector('img') as Element
+
+    expect(getDimensions(image)).toEqual({ width: undefined, height: undefined })
+  })
+
+  it('should fall back to style when attribute is non-numeric', () => {
+    const document = parseFragment('<img width="auto" style="width: 200px">')
+    const image = document.querySelector('img') as Element
+
+    expect(getDimensions(image).width).toBe(200)
+  })
+
+  it('should prefer attribute over style when both are present', () => {
+    const document = parseFragment('<img width="100" style="width: 999px">')
+    const image = document.querySelector('img') as Element
+
+    expect(getDimensions(image).width).toBe(100)
+  })
+
+  it('should return both undefined for an element with neither', () => {
+    const document = parseFragment('<img>')
+    const image = document.querySelector('img') as Element
+
+    expect(getDimensions(image)).toEqual({ width: undefined, height: undefined })
+  })
+
+  it('should extract the correct property from multi-property style', () => {
+    const document = parseFragment('<img style="color: red; width: 10px; height: 20px">')
+    const image = document.querySelector('img') as Element
+
+    expect(getDimensions(image)).toEqual({ width: 10, height: 20 })
+  })
+
+  it('should parse decimal dimensions from style', () => {
+    const document = parseFragment('<img style="width: 1.5px; height: 2.5">')
+    const image = document.querySelector('img') as Element
+
+    expect(getDimensions(image)).toEqual({ width: 1.5, height: 2.5 })
+  })
+})
+
+describe('hasAncestorWithTagName', () => {
+  const tagSet = new Set(['pre', 'code'])
+
+  it('should return true when direct parent matches', () => {
+    const document = parseFragment('<pre><span>x</span></pre>')
+    const span = document.querySelector('span') as Element
+
+    expect(hasAncestorWithTagName(span, tagSet)).toBe(true)
+  })
+
+  it('should return true when a deeply nested ancestor matches', () => {
+    const document = parseFragment('<pre><div><section><span>x</span></section></div></pre>')
+    const span = document.querySelector('span') as Element
+
+    expect(hasAncestorWithTagName(span, tagSet)).toBe(true)
+  })
+
+  it('should return false when no ancestor matches', () => {
+    const document = parseFragment('<div><p><span>x</span></p></div>')
+    const span = document.querySelector('span') as Element
+
+    expect(hasAncestorWithTagName(span, tagSet)).toBe(false)
+  })
+
+  it('should return false when node has no parent', () => {
+    const document = parseFragment('')
+    const orphan = document.createElement('span')
+
+    expect(hasAncestorWithTagName(orphan, tagSet)).toBe(false)
+  })
+
+  it('should return false for an empty Set', () => {
+    const document = parseFragment('<pre><span>x</span></pre>')
+    const span = document.querySelector('span') as Element
+
+    expect(hasAncestorWithTagName(span, new Set())).toBe(false)
+  })
+
+  it('should stop walking at the stopAt boundary', () => {
+    const document = parseFragment('<pre><div><span>x</span></div></pre>')
+    const span = document.querySelector('span') as Element
+    const div = document.querySelector('div') as Element
+
+    expect(hasAncestorWithTagName(span, tagSet, div)).toBe(false)
+  })
+
+  it('should not check the stopAt boundary itself', () => {
+    const document = parseFragment('<pre><span>x</span></pre>')
+    const span = document.querySelector('span') as Element
+    const pre = document.querySelector('pre') as Element
+
+    expect(hasAncestorWithTagName(span, tagSet, pre)).toBe(false)
   })
 })
 

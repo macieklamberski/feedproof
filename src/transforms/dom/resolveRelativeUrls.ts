@@ -2,82 +2,87 @@ import { resolveUrl } from 'feedcanon'
 import { parseSrcset, stringifySrcset } from 'srcset'
 import type { DomTransform } from '../../types.js'
 
+// Protocol-relative URLs (`//host/path`) are intentionally excluded so they
+// get upgraded to the base URL's scheme.
+const absoluteOrOpaqueUrl = /^(?:https?:|data:|mailto:|tel:|javascript:)/i
+
+// `, ` (comma + whitespace) only — preserves URL-internal commas (Substack
+// CDN transforms etc.) which aren't followed by whitespace.
+const srcsetSeparator = /,\s+/
+
 export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
   return (document) => {
     if (!baseUrl) {
       return
     }
 
-    const anchors = document.querySelectorAll('a[href]')
-
-    for (const anchor of anchors) {
-      const href = anchor.getAttribute('href')
-
-      if (!href) {
-        continue
-      }
-
-      // Preserve fragment-only hrefs so in-article anchors (e.g. ToC entries
-      // pointing at headings in the same article) keep scrolling locally
-      // instead of navigating to the origin page.
-      if (href.startsWith('#')) {
-        continue
-      }
-
-      const resolved = resolveUrl(href, baseUrl)
-
-      if (resolved) {
-        anchor.setAttribute('href', resolved)
-      }
-    }
-
-    const elementsWithSrc = document.querySelectorAll('[src]')
-
-    for (const element of elementsWithSrc) {
-      const src = element.getAttribute('src')
-
-      if (!src) {
-        continue
-      }
-
-      const resolved = resolveUrl(src, baseUrl)
-
-      if (resolved) {
-        element.setAttribute('src', resolved)
-      }
-    }
-
-    const videos = document.querySelectorAll('video[poster]')
-
-    for (const video of videos) {
-      const poster = video.getAttribute('poster')
-
-      if (!poster) {
-        continue
-      }
-
-      const resolved = resolveUrl(poster, baseUrl)
-
-      if (resolved) {
-        video.setAttribute('poster', resolved)
-      }
-    }
-
-    const elements = document.querySelectorAll('img[srcset], source[srcset]')
+    const elements = document.querySelectorAll(
+      'a[href], [src], video[poster], img[srcset], source[srcset]',
+    )
 
     for (const element of elements) {
-      const srcset = element.getAttribute('srcset')
+      const localName = element.localName
 
-      if (!srcset) {
-        continue
+      if (localName === 'a') {
+        const href = element.getAttribute('href')
+
+        // Preserve fragment-only hrefs so in-article anchors keep scrolling locally.
+        if (href && !href.startsWith('#') && !absoluteOrOpaqueUrl.test(href)) {
+          const resolved = resolveUrl(href, baseUrl)
+
+          if (resolved) {
+            element.setAttribute('href', resolved)
+          }
+        }
       }
 
-      const resolved = parseSrcset(srcset).map((entry) => ({
-        ...entry,
-        url: resolveUrl(entry.url, baseUrl) ?? entry.url,
-      }))
+      const src = element.getAttribute('src')
 
-      element.setAttribute('srcset', stringifySrcset(resolved))
+      if (src && !absoluteOrOpaqueUrl.test(src)) {
+        const resolved = resolveUrl(src, baseUrl)
+
+        if (resolved) {
+          element.setAttribute('src', resolved)
+        }
+      }
+
+      if (localName === 'video') {
+        const poster = element.getAttribute('poster')
+
+        if (poster && !absoluteOrOpaqueUrl.test(poster)) {
+          const resolved = resolveUrl(poster, baseUrl)
+
+          if (resolved) {
+            element.setAttribute('poster', resolved)
+          }
+        }
+      }
+
+      if (localName === 'img' || localName === 'source') {
+        const srcset = element.getAttribute('srcset')
+
+        if (srcset) {
+          let needsResolution = false
+          const candidates = srcset.split(srcsetSeparator)
+
+          for (const candidate of candidates) {
+            const trimmed = candidate.trimStart()
+            if (trimmed && !absoluteOrOpaqueUrl.test(trimmed)) {
+              needsResolution = true
+              break
+            }
+          }
+
+          if (needsResolution) {
+            const resolved = parseSrcset(srcset).map((entry) => ({
+              ...entry,
+              url: resolveUrl(entry.url, baseUrl) ?? entry.url,
+            }))
+
+            element.setAttribute('srcset', stringifySrcset(resolved))
+          }
+        }
+      }
     }
   }
 }

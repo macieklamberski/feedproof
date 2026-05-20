@@ -1,6 +1,8 @@
 import { defaultStrippedParams } from 'feedcanon'
 import type { DomTransform } from '../../types.js'
 
+const strippedParamSet = new Set<string>(defaultStrippedParams)
+
 export const stripTrackingParams: DomTransform = () => {
   return (document) => {
     const anchors = document.querySelectorAll('a[href]')
@@ -8,22 +10,24 @@ export const stripTrackingParams: DomTransform = () => {
     for (const anchor of anchors) {
       const href = anchor.getAttribute('href')
 
-      if (!href) {
+      if (!href || href.indexOf('?') === -1) {
         continue
       }
 
       try {
         const url = new URL(href)
-        let changed = false
+        const toDelete: Array<string> = []
 
-        for (const param of defaultStrippedParams) {
-          if (url.searchParams.has(param)) {
-            url.searchParams.delete(param)
-            changed = true
+        for (const key of url.searchParams.keys()) {
+          if (strippedParamSet.has(key)) {
+            toDelete.push(key)
           }
         }
 
-        if (changed) {
+        if (toDelete.length > 0) {
+          for (const key of toDelete) {
+            url.searchParams.delete(key)
+          }
           anchor.setAttribute('href', url.toString())
         }
       } catch {}

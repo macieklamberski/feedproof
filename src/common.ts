@@ -1,9 +1,13 @@
 import { resolveUrl } from 'feedcanon'
 import { parseHTML } from 'linkedom'
 import type { EmbedResolverResult, MaybePromise } from './types.js'
+import { coerceNumber } from './utils.js'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
+
+// NodeFilter is not globally available in Bun; mirror the DOM-spec constants.
+export const NodeFilter = { SHOW_ELEMENT: 0x1, SHOW_TEXT: 0x4, SHOW_COMMENT: 0x80 } as const
 
 const base64SrcRegex = /((?:src|srcset|poster)=["'])data:[^"']*;base64,[^"']*(["'])/g
 const safeThumbnailDataUrlRegex = /^data:image\/(png|jpe?g|gif|webp|avif);/i
@@ -165,11 +169,11 @@ export const blockElements = new Set([
 ])
 
 export const isWhitespaceText = (node: Node): boolean => {
-  return node.nodeType === Node.TEXT_NODE && !(node.textContent ?? '').trim()
+  return node.nodeType === Node.TEXT_NODE && !node.textContent?.trim()
 }
 
 export const isBr = (node: Node): boolean => {
-  return node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName.toLowerCase() === 'br'
+  return node.nodeType === Node.ELEMENT_NODE && (node as Element).localName === 'br'
 }
 
 export const isComment = (node: Node): boolean => {
@@ -181,23 +185,49 @@ export const isSkippable = (node: Node): boolean => {
 }
 
 export const isBlockElement = (node: Node): boolean => {
-  return (
-    node.nodeType === Node.ELEMENT_NODE &&
-    blockElements.has((node as Element).tagName.toLowerCase())
-  )
+  return node.nodeType === Node.ELEMENT_NODE && blockElements.has((node as Element).localName)
 }
 
-// Strips outermost matching wrapper tags, looping until stable.
-export const unwrapOuterTag = (html: string, pattern: RegExp): string => {
-  let result = html.trim()
-  let match = pattern.exec(result)
+export const hasAncestorWithTagName = (node: Node, tagSet: Set<string>, stopAt?: Node): boolean => {
+  let ancestor = node.parentNode as Element | null
 
-  while (match) {
-    result = match[3].trim()
-    match = pattern.exec(result)
+  while (ancestor !== null && ancestor !== stopAt) {
+    if (ancestor.nodeType === Node.ELEMENT_NODE && tagSet.has(ancestor.localName)) {
+      return true
+    }
+    ancestor = ancestor.parentNode as Element | null
   }
 
-  return result
+  return false
+}
+
+// Matches `<prop>: <number>[px];` — px is optional, other units (em/rem/%) don't match.
+const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*(?:;|$)/i
+const styleHeightRegex = /(?:^|;)\s*height\s*:\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*(?:;|$)/i
+
+export const getDimensions = (element: Element): { width?: number; height?: number } => {
+  const width = coerceNumber(element.getAttribute('width'))
+  const height = coerceNumber(element.getAttribute('height'))
+
+  if (width !== undefined && height !== undefined) {
+    return { width, height }
+  }
+
+  const style = element.getAttribute('style')
+
+  if (!style) {
+    return { width, height }
+  }
+
+  const fromStyle = (regex: RegExp): number | undefined => {
+    const match = regex.exec(style)
+    return match ? coerceNumber(match[1]) : undefined
+  }
+
+  return {
+    width: width ?? fromStyle(styleWidthRegex),
+    height: height ?? fromStyle(styleHeightRegex),
+  }
 }
 
 export const applyEmbedMetadata = (
