@@ -28,42 +28,6 @@ const result = await transformContent('<p>Check <img data-src="photo.jpg"> and v
 })
 ```
 
-## DOM library
-
-Feedsweep is parser-agnostic. You provide `parseHtmlFn` — a function that turns an HTML string into a `Document`. Use any DOM library that produces a standards-compliant `Document`.
-
-```typescript
-// linkedom (recommended default)
-import { transformContent } from 'feedsweep'
-import { parseHtml } from 'feedsweep/linkedom'
-
-await transformContent(html, { parseHtmlFn: parseHtml, baseUrl })
-
-// jsdom
-import { transformContent } from 'feedsweep'
-import { JSDOM } from 'jsdom'
-
-await transformContent(html, {
-  parseHtmlFn: (raw) => new JSDOM(`<!doctype html><body>${raw}</body>`).window.document,
-  baseUrl,
-})
-
-// happy-dom
-import { transformContent } from 'feedsweep'
-import { Window } from 'happy-dom'
-
-await transformContent(html, {
-  parseHtmlFn: (raw) => {
-    const window = new Window()
-    window.document.body.innerHTML = raw
-    return window.document
-  },
-  baseUrl,
-})
-```
-
-The bundled `feedsweep/linkedom` parser bakes in two workarounds for linkedom-specific spec violations (attribute case-folding and SVG XML mode). jsdom and happy-dom do not need them.
-
 ## Transforms
 
 Inventory of every transform exported from the package. Most are enabled by default; pass a custom `stringTransforms` / `domTransforms` array via `transformContent` options to override.
@@ -124,3 +88,39 @@ const result = transformContent(html, {
 ```
 
 The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. Every transform is also exported individually from `feedsweep`, so you can compose any pipeline — list them explicitly to build from scratch, or spread `defaultDomTransforms` (etc.) from `feedsweep/defaults` to extend or filter the defaults.
+
+## DOM library
+
+Feedsweep is parser-agnostic. You provide `parseHtmlFn` — a function that turns an HTML string into a `Document`. Use any DOM library that produces a standards-compliant `Document`.
+
+```typescript
+// linkedom (recommended default)
+import { transformContent } from 'feedsweep'
+import { parseHtml } from 'feedsweep/linkedom'
+
+await transformContent(html, { parseHtmlFn: parseHtml, baseUrl })
+
+// jsdom
+import { transformContent } from 'feedsweep'
+import { JSDOM } from 'jsdom'
+
+await transformContent(html, {
+  parseHtmlFn: (raw) => new JSDOM(`<!doctype html><body>${raw}</body>`).window.document,
+  baseUrl,
+})
+
+// happy-dom
+import { transformContent } from 'feedsweep'
+import { Window } from 'happy-dom'
+
+await transformContent(html, {
+  parseHtmlFn: (raw) => {
+    const window = new Window()
+    window.document.body.innerHTML = raw
+    return window.document
+  },
+  baseUrl,
+})
+```
+
+The bundled `feedsweep/linkedom` parser bakes in two workarounds for linkedom-specific spec violations (attribute case-folding and SVG XML mode). jsdom and happy-dom do not need them.
