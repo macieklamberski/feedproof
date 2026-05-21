@@ -14,7 +14,7 @@ import type { TransformContentOptions, TransformContext } from './types.js'
 
 export const transformContent = async (
   html: string,
-  options: TransformContentOptions = {},
+  options: TransformContentOptions,
 ): Promise<string> => {
   const context: TransformContext = {
     baseUrl: options.baseUrl,
@@ -39,8 +39,9 @@ export const transformContent = async (
     stringFns.map((transform) => transform(context)),
   )
 
+  const document = await options.parseHtmlFn(afterString)
   const afterDom = await applyDomTransforms(
-    afterString,
+    document,
     domFns.map((transform) => transform(context)),
   )
 
@@ -52,10 +53,6 @@ export {
   applyEmbedMetadata,
   applyStringTransforms,
   createEmbedPlaceholder,
-  expandSvgSelfClose,
-  parseFragment,
-  stripOversizedBase64Sources,
-  transformHtml,
 } from './common.js'
 export { defaultResolveUrlFn } from './defaults.js'
 export {
@@ -90,6 +87,7 @@ export { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedList
 export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 export { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 export { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
+export { stripOversizedBase64Sources } from './transforms/string/stripOversizedBase64Sources.js'
 export { unwrapCdataComments } from './transforms/string/unwrapCdataComments.js'
 export type {
   AssetProxyFn,
@@ -100,6 +98,7 @@ export type {
   Enclosure,
   EnrichEmbedFn,
   MaybePromise,
+  ParseHtmlFn,
   ResolveUrlFn,
   StringTransform,
   TransformContentOptions,

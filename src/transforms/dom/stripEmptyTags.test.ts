@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { transformHtml } from '../../common.js'
+import { applyDomTransforms } from '../../common.js'
 import {
   defaultEmbedResolvers,
   defaultLazySrcAttributes,
@@ -9,6 +9,7 @@ import {
   defaultTrackingPathSegments,
   defaultUrlUnwrappers,
 } from '../../defaults.js'
+import { parseHtml } from '../../parsers/linkedom.js'
 import type { TransformContext } from '../../types.js'
 import { stripEmptyTags } from './stripEmptyTags.js'
 
@@ -24,7 +25,7 @@ const baseContext: TransformContext = {
 
 describe('stripEmptyTags', () => {
   const transform = (html: string, context: TransformContext = baseContext) => {
-    return transformHtml(html, stripEmptyTags(context))
+    return applyDomTransforms(parseHtml(html), [stripEmptyTags(context)])
   }
 
   it('should strip empty div', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { transformHtml } from '../../common.js'
+import { applyDomTransforms } from '../../common.js'
 import {
   defaultEmbedResolvers,
   defaultLazySrcAttributes,
@@ -9,6 +9,7 @@ import {
   defaultTrackingPathSegments,
   defaultUrlUnwrappers,
 } from '../../defaults.js'
+import { parseHtml } from '../../parsers/linkedom.js'
 import type { TransformContext } from '../../types.js'
 import { trimPreWhitespace } from './trimPreWhitespace.js'
 
@@ -25,7 +26,7 @@ const trailingNewlineBeforeCode = /\n<\/code>/
 
 describe('trimPreWhitespace', () => {
   const transform = (html: string, context: TransformContext = baseContext) => {
-    return transformHtml(html, trimPreWhitespace(context))
+    return applyDomTransforms(parseHtml(html), [trimPreWhitespace(context)])
   }
 
   it('should trim trailing newlines from code inside pre', async () => {
@@ -142,7 +143,7 @@ describe('trimPreWhitespace', () => {
     // raw-text entities inside <xmp> a second time.
     const value = '<pre><code><xmp>&lt;p&gt;Hi&lt;/p&gt;</xmp></code></pre>'
     const result = await transform(value)
-    const baseline = await transformHtml(value, () => {})
+    const baseline = await applyDomTransforms(parseHtml(value), [() => {}])
 
     expect(result).toBe(baseline)
   })

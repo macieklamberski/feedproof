@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { defaultDomTransforms } from './defaults.js'
 import { transformContent } from './index.js'
+import { parseHtml } from './parsers/linkedom.js'
 import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 
 const startsWithDiv = /^<div>/
@@ -8,7 +9,10 @@ const startsWithDiv = /^<div>/
 describe('transformContent', () => {
   it('should apply all default transforms', async () => {
     const html = '<div><p>Hello <img data-src="photo.jpg"></p></div>'
-    const result = await transformContent(html, { baseUrl: 'https://example.com' })
+    const result = await transformContent(html, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com',
+    })
 
     // unwrapWrappers should remove the outer div.
     expect(result).not.toMatch(startsWithDiv)
@@ -19,14 +23,17 @@ describe('transformContent', () => {
 
   it('should resolve relative URLs when baseUrl is provided', async () => {
     const html = '<p><a href="/about">About</a></p>'
-    const result = await transformContent(html, { baseUrl: 'https://example.com/post/1' })
+    const result = await transformContent(html, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post/1',
+    })
 
     expect(result).toContain('href="https://example.com/about"')
   })
 
   it('should strip tracking parameters', async () => {
     const html = '<p><a href="https://example.com?utm_source=feed&id=1">Link</a></p>'
-    const result = await transformContent(html)
+    const result = await transformContent(html, { parseHtmlFn: parseHtml })
 
     expect(result).not.toContain('utm_source')
     expect(result).toContain('id=1')
@@ -34,7 +41,7 @@ describe('transformContent', () => {
 
   it('should remove tracking pixels', async () => {
     const html = '<p>Text</p><img width="1" height="1" src="https://track.example.com/pixel.gif">'
-    const result = await transformContent(html)
+    const result = await transformContent(html, { parseHtmlFn: parseHtml })
 
     expect(result).not.toContain('pixel.gif')
   })
@@ -42,6 +49,7 @@ describe('transformContent', () => {
   it('should allow overriding the dom transforms array', async () => {
     const html = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
     const result = await transformContent(html, {
+      parseHtmlFn: parseHtml,
       domTransforms: defaultDomTransforms.filter((t) => t.name !== 'stripTrackingParams'),
     })
 
@@ -49,13 +57,13 @@ describe('transformContent', () => {
   })
 
   it('should handle empty string', async () => {
-    const result = await transformContent('')
+    const result = await transformContent('', { parseHtmlFn: parseHtml })
 
     expect(result).toBeDefined()
   })
 
   it('should handle plain text by wrapping in paragraphs', async () => {
-    const result = await transformContent('Hello world')
+    const result = await transformContent('Hello world', { parseHtmlFn: parseHtml })
 
     expect(result).toContain('<p>Hello world</p>')
   })
@@ -63,7 +71,7 @@ describe('transformContent', () => {
   it('should use built-in YouTube embed resolver', async () => {
     const html =
       '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcB" width="560" height="315"></iframe>'
-    const result = await transformContent(html)
+    const result = await transformContent(html, { parseHtmlFn: parseHtml })
 
     expect(result).toContain('data-embed="iframe"')
     expect(result).toContain('data-embed-provider="youtube"')
@@ -73,6 +81,7 @@ describe('transformContent', () => {
   it('should allow custom embedResolvers', async () => {
     const html = '<iframe src="https://custom-player.example.com/video/123"></iframe>'
     const result = await transformContent(html, {
+      parseHtmlFn: parseHtml,
       embedResolvers: [
         {
           selector: 'iframe[src]',
@@ -92,6 +101,7 @@ describe('transformContent', () => {
   it('should inject audio/video enclosures as native media elements', async () => {
     const html = '<p>Content</p>'
     const result = await transformContent(html, {
+      parseHtmlFn: parseHtml,
       enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
     })
 
@@ -101,7 +111,7 @@ describe('transformContent', () => {
 
   it('should remove paragraphs left empty after boundary br stripping', async () => {
     const html = '<p>Hello</p><p><br></p><p>World</p>'
-    const result = await transformContent(html)
+    const result = await transformContent(html, { parseHtmlFn: parseHtml })
 
     expect(result).toBe('<p>Hello</p><p>World</p>')
   })
@@ -109,6 +119,7 @@ describe('transformContent', () => {
   it('should preserve empty paragraphs when stripEmptyTags is removed from the pipeline', async () => {
     const html = '<p>Hello</p><p><br></p><p>World</p>'
     const result = await transformContent(html, {
+      parseHtmlFn: parseHtml,
       domTransforms: defaultDomTransforms.filter((t) => t.name !== 'stripEmptyTags'),
     })
 
@@ -117,7 +128,7 @@ describe('transformContent', () => {
 
   it('should preserve comments inside pre blocks through full pipeline', async () => {
     const html = '<pre>before <!-- preserved --> after</pre>'
-    const result = await transformContent(html)
+    const result = await transformContent(html, { parseHtmlFn: parseHtml })
 
     expect(result).toContain('<!-- preserved -->')
   })
@@ -125,6 +136,7 @@ describe('transformContent', () => {
   it('should proxy asset URLs through assetProxyFn in the default pipeline', async () => {
     const html = '<p><img src="https://cdn.example.com/photo.jpg"></p>'
     const result = await transformContent(html, {
+      parseHtmlFn: parseHtml,
       assetProxyFn: (url, type) => `https://proxy.example.com/${type}/${encodeURIComponent(url)}`,
     })
 
@@ -136,6 +148,7 @@ describe('transformContent', () => {
   it('should proxy native enclosure media elements injected by injectEnclosures', async () => {
     const html = '<p>Content</p>'
     const result = await transformContent(html, {
+      parseHtmlFn: parseHtml,
       enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
       assetProxyFn: (url, type) => `https://proxy.example.com/${type}/${encodeURIComponent(url)}`,
     })
@@ -150,6 +163,7 @@ describe('transformContent', () => {
     const html =
       '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" width="560" height="315"></iframe>'
     const result = await transformContent(html, {
+      parseHtmlFn: parseHtml,
       domTransforms: [...defaultDomTransforms, enrichEmbedPlaceholders],
       enrichEmbedFn: (embeds) => {
         return new Map(
@@ -169,6 +183,7 @@ describe('transformContent', () => {
   it('should leave embed placeholders unenriched when enrichEmbedFn returns an empty map', async () => {
     const html = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     const result = await transformContent(html, {
+      parseHtmlFn: parseHtml,
       domTransforms: [...defaultDomTransforms, enrichEmbedPlaceholders],
       enrichEmbedFn: () => new Map(),
     })
@@ -183,6 +198,7 @@ describe('transformContent', () => {
     const html = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     let called = false
     const result = await transformContent(html, {
+      parseHtmlFn: parseHtml,
       enrichEmbedFn: () => {
         called = true
         return new Map([['youtube:dQw4w9WgXcQ', { title: 'Unused' }]])

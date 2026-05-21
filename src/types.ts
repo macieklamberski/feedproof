@@ -71,7 +71,10 @@ export type DomTransform = (context: TransformContext) => (document: Document) =
 
 export type StringTransform = (context: TransformContext) => (html: string) => MaybePromise<string>
 
+export type ParseHtmlFn = (html: string) => MaybePromise<Document>
+
 export type TransformContentOptions = {
+  parseHtmlFn: ParseHtmlFn
   baseUrl?: string
   enclosures?: Array<Enclosure>
   embedResolvers?: Array<EmbedResolver>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { transformHtml } from '../../common.js'
+import { applyDomTransforms } from '../../common.js'
 import {
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
@@ -9,6 +9,7 @@ import {
   defaultUrlUnwrappers,
 } from '../../defaults.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
+import { parseHtml } from '../../parsers/linkedom.js'
 import type { Enclosure, TransformContext } from '../../types.js'
 import { injectEnclosures } from './injectEnclosures.js'
 
@@ -34,7 +35,7 @@ const withEnclosures = (enclosures: Array<Enclosure>): TransformContext => {
 
 describe('injectEnclosures', () => {
   const transform = (html: string, context: TransformContext = baseContext) => {
-    return transformHtml(html, injectEnclosures(context))
+    return applyDomTransforms(parseHtml(html), [injectEnclosures(context)])
   }
 
   it('should inject video enclosure as native video element', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { transformHtml } from '../../common.js'
+import { applyDomTransforms } from '../../common.js'
 import {
   defaultEmbedResolvers,
   defaultLazySrcAttributes,
@@ -9,6 +9,7 @@ import {
   defaultTrackingPathSegments,
   defaultUrlUnwrappers,
 } from '../../defaults.js'
+import { parseHtml } from '../../parsers/linkedom.js'
 import type { TransformContext } from '../../types.js'
 import { stripParagraphBoundaryBreaks } from './stripParagraphBoundaryBreaks.js'
 
@@ -24,7 +25,7 @@ const baseContext: TransformContext = {
 
 describe('stripParagraphBoundaryBreaks', () => {
   const transform = (html: string, context: TransformContext = baseContext) => {
-    return transformHtml(html, stripParagraphBoundaryBreaks(context))
+    return applyDomTransforms(parseHtml(html), [stripParagraphBoundaryBreaks(context)])
   }
 
   describe('happy paths', () => {

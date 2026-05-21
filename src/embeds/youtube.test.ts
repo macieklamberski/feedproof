@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { parseFragment } from '../common.js'
+import { parseHtml } from '../parsers/linkedom.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   composeThumbnailUrl,
@@ -199,7 +199,7 @@ describe('composeThumbnailUrl', () => {
 
 describe('youtubeEmbedResolver', () => {
   const firstMatch = (html: string): Element | undefined => {
-    return parseFragment(html).querySelector(youtubeEmbedResolver.selector) ?? undefined
+    return parseHtml(html).querySelector(youtubeEmbedResolver.selector) ?? undefined
   }
 
   it('should extract metadata from a youtube iframe', () => {

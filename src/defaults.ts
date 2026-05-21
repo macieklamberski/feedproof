@@ -25,6 +25,7 @@ import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedList
 import { unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 import { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
+import { stripOversizedBase64Sources } from './transforms/string/stripOversizedBase64Sources.js'
 import { unwrapCdataComments } from './transforms/string/unwrapCdataComments.js'
 import type {
   DomTransform,
@@ -104,6 +105,7 @@ import { unwrapYouTube } from './unwraps/youtube.js'
 // import { unwrapZhihu } from './unwraps/zhihu.js'
 
 export const defaultStringTransforms: Array<StringTransform> = [
+  stripOversizedBase64Sources,
   unwrapCdataComments,
   paragraphizePlainText,
 ]

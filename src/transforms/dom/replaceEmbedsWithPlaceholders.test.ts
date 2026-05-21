@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { transformHtml } from '../../common.js'
+import { applyDomTransforms } from '../../common.js'
 import {
   defaultEmbedResolvers,
   defaultLazySrcAttributes,
@@ -10,6 +10,7 @@ import {
   defaultUrlUnwrappers,
 } from '../../defaults.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
+import { parseHtml } from '../../parsers/linkedom.js'
 import type { EmbedResolver, TransformContext } from '../../types.js'
 import { replaceEmbedsWithPlaceholders } from './replaceEmbedsWithPlaceholders.js'
 
@@ -43,7 +44,7 @@ const withNoResolvers: TransformContext = {
 
 describe('replaceEmbedsWithPlaceholders', () => {
   const transform = (html: string, context: TransformContext = withResolvers) => {
-    return transformHtml(html, replaceEmbedsWithPlaceholders(context))
+    return applyDomTransforms(parseHtml(html), [replaceEmbedsWithPlaceholders(context)])
   }
 
   it('should replace iframe with rich-metadata placeholder when handler returns metadata', async () => {

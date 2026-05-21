@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { applyDomTransforms, transformHtml } from '../../common.js'
+import { applyDomTransforms } from '../../common.js'
 import {
   defaultEmbedResolvers,
   defaultLazySrcAttributes,
@@ -9,6 +9,7 @@ import {
   defaultTrackingPathSegments,
   defaultUrlUnwrappers,
 } from '../../defaults.js'
+import { parseHtml } from '../../parsers/linkedom.js'
 import type { TransformContext } from '../../types.js'
 import { mergeConsecutiveOneLinerPres } from './mergeConsecutiveOneLinerPres.js'
 import { replacePreLineBreaks } from './replacePreLineBreaks.js'
@@ -25,7 +26,7 @@ const baseContext: TransformContext = {
 
 describe('mergeConsecutiveOneLinerPres', () => {
   const transform = (html: string, context: TransformContext = baseContext) => {
-    return transformHtml(html, mergeConsecutiveOneLinerPres(context))
+    return applyDomTransforms(parseHtml(html), [mergeConsecutiveOneLinerPres(context)])
   }
 
   it('should merge consecutive single-line pre blocks', async () => {
@@ -77,7 +78,7 @@ describe('mergeConsecutiveOneLinerPres', () => {
     const transforms = [mergeConsecutiveOneLinerPres, replacePreLineBreaks].map((fn) => {
       return fn(baseContext)
     })
-    const result = await applyDomTransforms(value, transforms)
+    const result = await applyDomTransforms(parseHtml(value), transforms)
 
     expect(result).toContain('<pre>line 1\nline 2\nline 3</pre>')
   })

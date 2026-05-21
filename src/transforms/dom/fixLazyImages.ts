@@ -97,7 +97,7 @@ export const fixLazyImages: DomTransform = (context) => {
       replacedNoscript = true
     }
 
-    // outerHTML= bypasses parseFragment's attribute-case normalization.
+    // outerHTML= bypasses parseHtml's attribute-case normalization.
     if (replacedNoscript) {
       normalizeAttributeCase(document)
     }
