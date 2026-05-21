@@ -1,5 +1,4 @@
 import { resolveUrl } from 'feedcanon'
-import { parseHTML } from 'linkedom'
 import type { EmbedResolverResult, MaybePromise } from './types.js'
 import { coerceNumber } from './utils.js'
 
@@ -9,110 +8,16 @@ export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
 // NodeFilter is not globally available in Bun; mirror the DOM-spec constants.
 export const NodeFilter = { SHOW_ELEMENT: 0x1, SHOW_TEXT: 0x4, SHOW_COMMENT: 0x80 } as const
 
-const base64SrcRegex = /((?:src|srcset|poster)=["'])data:[^"']*;base64,[^"']*(["'])/g
 const safeThumbnailDataUrlRegex = /^data:image\/(png|jpe?g|gif|webp|avif);/i
 
 const isSafeThumbnailUrl = (url: string): boolean => {
   return resolveUrl(url) !== undefined || safeThumbnailDataUrlRegex.test(url)
 }
 
-export const stripOversizedBase64Sources = (html: string, maxSize: number): string => {
-  return html.replace(base64SrcRegex, (match, prefix, suffix) => {
-    if (match.length < maxSize) {
-      return match
-    }
-
-    return `${prefix}${suffix}`
-  })
-}
-
-// Linkedom hard-codes `lowerCaseAttributeNames: false` and the maintainer declined to expose
-// a toggle (WebReflection/linkedom#235, won't fix). Normalize once at parse time so every
-// transform reads attributes by canonical lowercase name. Per the HTML spec, the first
-// occurrence of a duplicate (case-folded) name wins.
-export const normalizeAttributeCase = (document: Document): void => {
-  for (const element of document.querySelectorAll('*')) {
-    const original = Array.from(element.attributes).map((attribute) => ({
-      name: attribute.name,
-      value: attribute.value,
-    }))
-    const final = new Map<string, string>()
-    let needsRewrite = false
-
-    for (const { name, value } of original) {
-      const lower = name.toLowerCase()
-
-      if (lower !== name) {
-        needsRewrite = true
-      }
-
-      if (final.has(lower)) {
-        needsRewrite = true
-        continue
-      }
-
-      final.set(lower, value)
-    }
-
-    if (!needsRewrite) {
-      continue
-    }
-
-    for (const { name } of original) {
-      element.removeAttribute(name)
-    }
-
-    for (const [name, value] of final) {
-      element.setAttribute(name, value)
-    }
-  }
-}
-
-// Linkedom (#326) doesn't switch to XML mode for SVG subtrees when parsing
-// HTML, so `<svg><title /><path…></svg>` is parsed as `<svg><title><path…/>
-// </title></svg>` — the `<path>` becomes a CHILD of `<title>` because the
-// self-close on a non-void HTML element is ignored. We pre-process the source
-// to expand any `<tag />` inside `<svg>…</svg>` into `<tag></tag>` so the
-// parser produces the structure SVG actually has.
-const svgRegionRegex = /<svg\b[^>]*>[\s\S]*?<\/svg>/gi
-const svgSelfCloseRegex = /<([a-z][a-z0-9-]*)((?:\s[^>]*)?)\s*\/>/gi
-
-export const expandSvgSelfClose = (html: string): string => {
-  return html.replace(svgRegionRegex, (svgBlock) => {
-    return svgBlock.replace(svgSelfCloseRegex, '<$1$2></$1>')
-  })
-}
-
-export const parseFragment = (html: string): Document => {
-  const { document } = parseHTML(
-    `<!doctype html><html><head></head><body>${expandSvgSelfClose(html)}</body></html>`,
-  )
-
-  normalizeAttributeCase(document)
-
-  return document
-}
-
-export const transformHtml = async (
-  html: string,
-  transform: (document: Document) => MaybePromise<void>,
-): Promise<string> => {
-  const document = parseFragment(html)
-
-  await transform(document)
-
-  return document.body.innerHTML
-}
-
 export const applyDomTransforms = async (
-  html: string,
+  document: Document,
   transforms: Array<(document: Document) => MaybePromise<void>>,
 ): Promise<string> => {
-  // Base64 images can be megabytes of text that bloat linkedom's DOM tree memory.
-  // Strip oversized ones before DOM parsing to reduce memory usage.
-  const stripped = stripOversizedBase64Sources(html, 50 * 1024)
-  const document = parseFragment(stripped)
-
   for (const transform of transforms) {
     await transform(document)
   }

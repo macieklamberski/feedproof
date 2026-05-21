@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { transformHtml } from '../../common.js'
+import { applyDomTransforms } from '../../common.js'
 import {
   defaultEmbedResolvers,
   defaultLazySrcAttributes,
@@ -9,6 +9,7 @@ import {
   defaultTrackingPathSegments,
   defaultUrlUnwrappers,
 } from '../../defaults.js'
+import { parseHtml } from '../../parsers/linkedom.js'
 import type { AssetProxyFn, TransformContext } from '../../types.js'
 import { proxyAssetUrls } from './proxyAssetUrls.js'
 
@@ -31,7 +32,7 @@ const baseContext = (assetProxyFn?: AssetProxyFn): TransformContext => {
 
 describe('proxyAssetUrls', () => {
   const transform = (html: string, assetProxyFn?: AssetProxyFn) => {
-    return transformHtml(html, proxyAssetUrls(baseContext(assetProxyFn)))
+    return applyDomTransforms(parseHtml(html), [proxyAssetUrls(baseContext(assetProxyFn))])
   }
 
   it('should be a no-op when assetProxyFn is unset', async () => {
@@ -208,7 +209,7 @@ describe('proxyAssetUrls', () => {
     )
   })
 
-  it('should proxy uppercase attribute names via parseFragment normalization', async () => {
+  it('should proxy uppercase attribute names via parseHtml normalization', async () => {
     const value = '<IMG SRC="https://cdn.example.com/photo.jpg">'
     const result = await transform(value, wrapProxy)
 

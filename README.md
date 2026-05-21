@@ -11,18 +11,58 @@ Feedsweep takes raw feed item HTML and runs it through a pipeline that genuinely
 ## Installation
 
 ```bash
-npm install feedsweep
+npm install feedsweep linkedom
 ```
+
+`linkedom` is an optional peer dependency. You only need it if you use the bundled `parseHtml` helper — see [DOM library](#dom-library) for jsdom / happy-dom / browser-native alternatives.
 
 ## Quick Start
 
 ```typescript
 import { transformContent } from 'feedsweep'
+import { parseHtml } from 'feedsweep/linkedom'
 
 const result = await transformContent('<p>Check <img data-src="photo.jpg"> and visit /about</p>', {
+  parseHtmlFn: parseHtml,
   baseUrl: 'https://example.com/post/1',
 })
 ```
+
+## DOM library
+
+Feedsweep is parser-agnostic. You provide `parseHtmlFn` — a function that turns an HTML string into a `Document`. Use any DOM library that produces a standards-compliant `Document`.
+
+```typescript
+// linkedom (recommended default)
+import { transformContent } from 'feedsweep'
+import { parseHtml } from 'feedsweep/linkedom'
+
+await transformContent(html, { parseHtmlFn: parseHtml, baseUrl })
+
+// jsdom
+import { transformContent } from 'feedsweep'
+import { JSDOM } from 'jsdom'
+
+await transformContent(html, {
+  parseHtmlFn: (raw) => new JSDOM(`<!doctype html><body>${raw}</body>`).window.document,
+  baseUrl,
+})
+
+// happy-dom
+import { transformContent } from 'feedsweep'
+import { Window } from 'happy-dom'
+
+await transformContent(html, {
+  parseHtmlFn: (raw) => {
+    const window = new Window()
+    window.document.body.innerHTML = raw
+    return window.document
+  },
+  baseUrl,
+})
+```
+
+The bundled `feedsweep/linkedom` parser bakes in two workarounds for linkedom-specific spec violations (attribute case-folding and SVG XML mode). jsdom and happy-dom do not need them.
 
 ## Transforms
 
@@ -51,6 +91,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `unwrapDoublyNestedLists` | Unwrap `<ul>`/`<ol>` that wrap a single `<li>` containing a same-type list |
 | `mergeFragmentedLists` | Merge consecutive sibling `<ul>` / `<ol>` lists with matching attributes |
 | `paragraphizePlainText` | Wrap plain text in `<p>` tags |
+| `stripOversizedBase64Sources` | Drop base64 `src`/`srcset`/`poster` payloads larger than 50 KB before parsing |
 | `linkifyUrls` | Wrap bare URLs in `<a>` tags |
 | `trimPreWhitespace` | Remove common leading indentation from `<pre>` |
 | `highlightCode` | Syntax-highlight `<code>` blocks with highlight.js |
@@ -62,8 +103,11 @@ Inventory of every transform exported from the package. Most are enabled by defa
 
 ```typescript
 import { fixLazyImages, resolveRelativeUrls, transformContent } from 'feedsweep'
+import { parseHtml } from 'feedsweep/linkedom'
 
 const result = transformContent(html, {
+  // Required: function that turns an HTML string into a `Document`. See "DOM library".
+  parseHtmlFn: parseHtml,
   // Base URL for resolving relative URLs.
   baseUrl: 'https://example.com/post/1',
   // Feed item enclosures (audio/video).

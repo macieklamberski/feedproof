@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { parseHTML } from 'linkedom'
-import { transformHtml } from '../../common.js'
+import { applyDomTransforms } from '../../common.js'
 import {
   defaultEmbedResolvers,
   defaultLazySrcAttributes,
@@ -10,6 +10,7 @@ import {
   defaultTrackingPathSegments,
   defaultUrlUnwrappers,
 } from '../../defaults.js'
+import { parseHtml } from '../../parsers/linkedom.js'
 import type { TransformContext } from '../../types.js'
 import { detectLanguage, highlightCode } from './highlightCode.js'
 
@@ -133,7 +134,7 @@ describe('detectLanguage', () => {
 
 describe('highlightCode', () => {
   const transform = (html: string, context: TransformContext = baseContext) => {
-    return transformHtml(html, highlightCode(context))
+    return applyDomTransforms(parseHtml(html), [highlightCode(context)])
   }
 
   it('should highlight code block with language-js class', async () => {
