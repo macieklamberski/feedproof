@@ -4,7 +4,6 @@ import {
   createEmbedPlaceholder,
   getDimensions,
   hasAncestorWithTagName,
-  normalizeAttributeCase,
 } from './common.js'
 import { parseHtml } from './parsers/linkedom.js'
 
@@ -39,30 +38,6 @@ describe('applyDomTransforms', () => {
     ]
 
     expect(await applyDomTransforms(document, transforms)).toBe('<p data-async="yes">Hello</p>')
-  })
-})
-
-describe('normalizeAttributeCase', () => {
-  it('should lowercase uppercase attribute names', () => {
-    const document = parseHtml('<img SRC="https://example.com/photo.jpg">')
-
-    normalizeAttributeCase(document)
-
-    const image = document.querySelector('img')
-
-    expect(image?.getAttribute('src')).toBe('https://example.com/photo.jpg')
-    expect(image?.hasAttribute('SRC')).toBe(false)
-  })
-
-  it('should leave already-lowercase attributes untouched', () => {
-    const document = parseHtml('<a href="/about" class="nav">About</a>')
-
-    normalizeAttributeCase(document)
-
-    const anchor = document.querySelector('a')
-
-    expect(anchor?.getAttribute('href')).toBe('/about')
-    expect(anchor?.getAttribute('class')).toBe('nav')
   })
 })
 

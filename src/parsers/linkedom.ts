@@ -1,5 +1,46 @@
 import { parseHTML } from 'linkedom'
-import { normalizeAttributeCase } from '../common.js'
+
+// Linkedom hard-codes `lowerCaseAttributeNames: false` and the maintainer declined to expose
+// a toggle (WebReflection/linkedom#235, won't fix). Normalize once at parse time so every
+// transform reads attributes by canonical lowercase name. Per the HTML spec, the first
+// occurrence of a duplicate (case-folded) name wins.
+const normalizeAttributeCase = (document: Document): void => {
+  for (const element of document.querySelectorAll('*')) {
+    const original = Array.from(element.attributes).map((attribute) => ({
+      name: attribute.name,
+      value: attribute.value,
+    }))
+    const final = new Map<string, string>()
+    let needsRewrite = false
+
+    for (const { name, value } of original) {
+      const lower = name.toLowerCase()
+
+      if (lower !== name) {
+        needsRewrite = true
+      }
+
+      if (final.has(lower)) {
+        needsRewrite = true
+        continue
+      }
+
+      final.set(lower, value)
+    }
+
+    if (!needsRewrite) {
+      continue
+    }
+
+    for (const { name } of original) {
+      element.removeAttribute(name)
+    }
+
+    for (const [name, value] of final) {
+      element.setAttribute(name, value)
+    }
+  }
+}
 
 // Linkedom (#326) doesn't switch to XML mode for SVG subtrees when parsing
 // HTML, so `<svg><title /><path…></svg>` is parsed as `<svg><title><path…/>

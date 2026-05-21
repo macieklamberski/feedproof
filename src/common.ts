@@ -14,49 +14,6 @@ const isSafeThumbnailUrl = (url: string): boolean => {
   return resolveUrl(url) !== undefined || safeThumbnailDataUrlRegex.test(url)
 }
 
-// Lowercase every attribute name on every element. A no-op for spec-compliant
-// HTML parsers (jsdom, happy-dom), but required for linkedom which preserves
-// source case (WebReflection/linkedom#235). Also applied after `outerHTML=`
-// replacements that bypass the parser's case folding. Per the HTML spec, the
-// first occurrence of a duplicate (case-folded) name wins.
-export const normalizeAttributeCase = (document: Document): void => {
-  for (const element of document.querySelectorAll('*')) {
-    const original = Array.from(element.attributes).map((attribute) => ({
-      name: attribute.name,
-      value: attribute.value,
-    }))
-    const final = new Map<string, string>()
-    let needsRewrite = false
-
-    for (const { name, value } of original) {
-      const lower = name.toLowerCase()
-
-      if (lower !== name) {
-        needsRewrite = true
-      }
-
-      if (final.has(lower)) {
-        needsRewrite = true
-        continue
-      }
-
-      final.set(lower, value)
-    }
-
-    if (!needsRewrite) {
-      continue
-    }
-
-    for (const { name } of original) {
-      element.removeAttribute(name)
-    }
-
-    for (const [name, value] of final) {
-      element.setAttribute(name, value)
-    }
-  }
-}
-
 export const applyDomTransforms = async (
   document: Document,
   transforms: Array<(document: Document) => MaybePromise<void>>,
