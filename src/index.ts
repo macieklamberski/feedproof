@@ -2,6 +2,7 @@ import { applyDomTransforms, applyStringTransforms } from './common.js'
 import {
   defaultDomTransforms,
   defaultEmbedResolvers,
+  defaultEmojiImageHosts,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
   defaultResolveUrlFn,
@@ -24,6 +25,7 @@ export const transformContent = async (
     lazySrcsetAttributes: options.lazySrcsetAttributes ?? defaultLazySrcsetAttributes,
     trackingHosts: options.trackingHosts ?? defaultTrackingHosts,
     trackingPathSegments: options.trackingPathSegments ?? defaultTrackingPathSegments,
+    emojiImageHosts: options.emojiImageHosts ?? defaultEmojiImageHosts,
     urlUnwrappers: options.urlUnwrappers ?? defaultUrlUnwrappers,
     resolveUrlFn: options.resolveUrlFn ?? defaultResolveUrlFn,
     assetProxyFn: options.assetProxyFn,
@@ -84,6 +86,7 @@ export { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBou
 export { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
 export { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 export { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
+export { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 export { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 export { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
