@@ -1,16 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import {
-  defaultEmbedResolvers,
-  defaultLazySrcAttributes,
-  defaultLazySrcsetAttributes,
-  defaultResolveUrlFn,
-  defaultTrackingHosts,
-  defaultTrackingPathSegments,
-  defaultUrlUnwrappers,
-} from '../../defaults.js'
+import { defaultEmbedResolvers } from '../../defaults.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
 import { parseHtml } from '../../parsers/linkedom.js'
+import { baseContext } from '../../tests.js'
 import type { EmbedResolver, TransformContext } from '../../types.js'
 import { replaceEmbedsWithPlaceholders } from './replaceEmbedsWithPlaceholders.js'
 
@@ -20,16 +13,6 @@ const stubResolver: EmbedResolver = {
     provider: 'example',
     src: element.getAttribute('src') ?? '',
   }),
-}
-
-const baseContext: TransformContext = {
-  embedResolvers: [],
-  lazySrcAttributes: defaultLazySrcAttributes,
-  lazySrcsetAttributes: defaultLazySrcsetAttributes,
-  trackingHosts: defaultTrackingHosts,
-  trackingPathSegments: defaultTrackingPathSegments,
-  urlUnwrappers: defaultUrlUnwrappers,
-  resolveUrlFn: defaultResolveUrlFn,
 }
 
 const withResolvers: TransformContext = {

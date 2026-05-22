@@ -1,26 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import {
-  defaultLazySrcAttributes,
-  defaultLazySrcsetAttributes,
-  defaultResolveUrlFn,
-  defaultTrackingHosts,
-  defaultTrackingPathSegments,
-  defaultUrlUnwrappers,
-} from '../../defaults.js'
 import { parseHtml } from '../../parsers/linkedom.js'
+import { baseContext } from '../../tests.js'
 import type { EmbedResolverResult, EnrichEmbedFn, TransformContext } from '../../types.js'
 import { enrichEmbedPlaceholders } from './enrichEmbedPlaceholders.js'
-
-const baseContext: TransformContext = {
-  embedResolvers: [],
-  lazySrcAttributes: defaultLazySrcAttributes,
-  lazySrcsetAttributes: defaultLazySrcsetAttributes,
-  trackingHosts: defaultTrackingHosts,
-  trackingPathSegments: defaultTrackingPathSegments,
-  urlUnwrappers: defaultUrlUnwrappers,
-  resolveUrlFn: defaultResolveUrlFn,
-}
 
 const withFn = (enrichEmbedFn: EnrichEmbedFn): TransformContext => {
   return { ...baseContext, enrichEmbedFn }

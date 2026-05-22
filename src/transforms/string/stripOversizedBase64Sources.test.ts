@@ -1,25 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import {
-  defaultEmbedResolvers,
-  defaultLazySrcAttributes,
-  defaultLazySrcsetAttributes,
-  defaultResolveUrlFn,
-  defaultTrackingHosts,
-  defaultTrackingPathSegments,
-  defaultUrlUnwrappers,
-} from '../../defaults.js'
-import type { TransformContext } from '../../types.js'
+import { baseContext } from '../../tests.js'
 import { stripOversizedBase64Sources } from './stripOversizedBase64Sources.js'
-
-const baseContext: TransformContext = {
-  embedResolvers: defaultEmbedResolvers,
-  lazySrcAttributes: defaultLazySrcAttributes,
-  lazySrcsetAttributes: defaultLazySrcsetAttributes,
-  trackingHosts: defaultTrackingHosts,
-  trackingPathSegments: defaultTrackingPathSegments,
-  urlUnwrappers: defaultUrlUnwrappers,
-  resolveUrlFn: defaultResolveUrlFn,
-}
 
 describe('stripOversizedBase64Sources', () => {
   const transform = stripOversizedBase64Sources(baseContext)

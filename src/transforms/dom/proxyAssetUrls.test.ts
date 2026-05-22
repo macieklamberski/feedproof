@@ -1,15 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import {
-  defaultEmbedResolvers,
-  defaultLazySrcAttributes,
-  defaultLazySrcsetAttributes,
-  defaultResolveUrlFn,
-  defaultTrackingHosts,
-  defaultTrackingPathSegments,
-  defaultUrlUnwrappers,
-} from '../../defaults.js'
 import { parseHtml } from '../../parsers/linkedom.js'
+import { baseContext as defaultContext } from '../../tests.js'
 import type { AssetProxyFn, TransformContext } from '../../types.js'
 import { proxyAssetUrls } from './proxyAssetUrls.js'
 
@@ -18,16 +10,7 @@ const wrapProxy: AssetProxyFn = (url, type) => {
 }
 
 const baseContext = (assetProxyFn?: AssetProxyFn): TransformContext => {
-  return {
-    embedResolvers: defaultEmbedResolvers,
-    lazySrcAttributes: defaultLazySrcAttributes,
-    lazySrcsetAttributes: defaultLazySrcsetAttributes,
-    trackingHosts: defaultTrackingHosts,
-    trackingPathSegments: defaultTrackingPathSegments,
-    urlUnwrappers: defaultUrlUnwrappers,
-    resolveUrlFn: defaultResolveUrlFn,
-    assetProxyFn,
-  }
+  return { ...defaultContext, assetProxyFn }
 }
 
 describe('proxyAssetUrls', () => {

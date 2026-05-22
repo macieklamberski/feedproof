@@ -1,28 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { parseHTML } from 'linkedom'
 import { applyDomTransforms } from '../../common.js'
-import {
-  defaultEmbedResolvers,
-  defaultLazySrcAttributes,
-  defaultLazySrcsetAttributes,
-  defaultResolveUrlFn,
-  defaultTrackingHosts,
-  defaultTrackingPathSegments,
-  defaultUrlUnwrappers,
-} from '../../defaults.js'
 import { parseHtml } from '../../parsers/linkedom.js'
+import { baseContext } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { detectLanguage, highlightCode } from './highlightCode.js'
-
-const baseContext: TransformContext = {
-  embedResolvers: defaultEmbedResolvers,
-  lazySrcAttributes: defaultLazySrcAttributes,
-  lazySrcsetAttributes: defaultLazySrcsetAttributes,
-  trackingHosts: defaultTrackingHosts,
-  trackingPathSegments: defaultTrackingPathSegments,
-  urlUnwrappers: defaultUrlUnwrappers,
-  resolveUrlFn: defaultResolveUrlFn,
-}
 
 describe('detectLanguage', () => {
   const createElement = (html: string): { pre: Element; code: Element | null } => {
