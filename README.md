@@ -43,6 +43,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `stripDuplicateTitleHeading` | Remove first `<h1>`–`<h6>` matching article title |
 | `unwrapRedirectUrls` | Remove Google/Bing/Facebook/etc. redirect wrappers |
 | `stripDeadAnchors` | Unwrap `<a>` with empty, `#`, or `javascript:` href |
+| `stripInertElements` | Remove elements that render as nothing in a feed reader — Substack `.image-link-expand` controls and Drupal `<drupal-render-placeholder>` tags by default, plus any caller-supplied selector |
 | `removeTrackingPixels` | Strip 1×1 tracking pixel images |
 | `unwrapEmojiImages` | Replace WordPress/Facebook/Twitter/GitHub emoji `<img>` tags with their alt-text glyph |
 | `stripTrackingParams` | Remove UTM and other tracking parameters |

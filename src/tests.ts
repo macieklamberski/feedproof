@@ -1,6 +1,7 @@
 import {
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
+  defaultInertSelectors,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
   defaultResolveUrlFn,
@@ -13,6 +14,7 @@ import type { TransformContext } from './types.js'
 export const baseContext: TransformContext = {
   embedResolvers: defaultEmbedResolvers,
   emojiImageHosts: defaultEmojiImageHosts,
+  inertSelectors: defaultInertSelectors,
   lazySrcAttributes: defaultLazySrcAttributes,
   lazySrcsetAttributes: defaultLazySrcsetAttributes,
   trackingHosts: defaultTrackingHosts,

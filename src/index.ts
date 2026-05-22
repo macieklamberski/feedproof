@@ -3,6 +3,7 @@ import {
   defaultDomTransforms,
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
+  defaultInertSelectors,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
   defaultResolveUrlFn,
@@ -26,6 +27,7 @@ export const transformContent = async (
     trackingHosts: options.trackingHosts ?? defaultTrackingHosts,
     trackingPathSegments: options.trackingPathSegments ?? defaultTrackingPathSegments,
     emojiImageHosts: options.emojiImageHosts ?? defaultEmojiImageHosts,
+    inertSelectors: options.inertSelectors ?? defaultInertSelectors,
     urlUnwrappers: options.urlUnwrappers ?? defaultUrlUnwrappers,
     resolveUrlFn: options.resolveUrlFn ?? defaultResolveUrlFn,
     assetProxyFn: options.assetProxyFn,
@@ -81,6 +83,7 @@ export { stripComments } from './transforms/dom/stripComments.js'
 export { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
 export { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 export { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
+export { stripInertElements } from './transforms/dom/stripInertElements.js'
 export { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 export { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBoundaryBreaks.js'
 export { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'

@@ -61,6 +61,7 @@ export type TransformContext = {
   trackingHosts: Array<string>
   trackingPathSegments: Array<string>
   emojiImageHosts: Array<string>
+  inertSelectors: Array<string>
   urlUnwrappers: Array<UrlUnwrapper>
   resolveUrlFn: ResolveUrlFn
   assetProxyFn?: AssetProxyFn
@@ -84,6 +85,7 @@ export type TransformContentOptions = {
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
   emojiImageHosts?: Array<string>
+  inertSelectors?: Array<string>
   urlUnwrappers?: Array<UrlUnwrapper>
   resolveUrlFn?: ResolveUrlFn
   assetProxyFn?: AssetProxyFn
