@@ -64,7 +64,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `stripEmptyTags` | Remove empty `<p>`, `<div>`, `<span>` and other tags |
 | `stripComments` | Remove HTML `<!-- comments -->` |
 | `unwrapCdataComments` | Strip malformed `<!--[CDATA[ … ]]-->` wrappers before parsing so the wrapped article reaches the DOM as real HTML |
-| `stripXmlInvalidChars` | Strip XML-1.0-invalid control characters (`U+0000`–`U+0008`, `U+000B`–`U+000C`, `U+000E`–`U+001F`, `U+007F`–`U+009F`) before parsing |
+| `stripControlChars` | Strip rendering-hostile control characters (NUL, BEL, ESC, DEL, C1 range) before parsing. Preserves tab / LF / CR |
 
 ## Options
 

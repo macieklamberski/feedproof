@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import { baseContext } from '../../tests.js'
-import { stripXmlInvalidChars } from './stripXmlInvalidChars.js'
+import { stripControlChars } from './stripControlChars.js'
 
-describe('stripXmlInvalidChars', () => {
-  const transform = stripXmlInvalidChars(baseContext)
+describe('stripControlChars', () => {
+  const transform = stripControlChars(baseContext)
 
   it('should strip NUL byte', () => {
     expect(transform('<p>before\x00after</p>')).toBe('<p>beforeafter</p>')

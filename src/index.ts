@@ -93,8 +93,8 @@ export { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 export { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 export { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
+export { stripControlChars } from './transforms/string/stripControlChars.js'
 export { stripOversizedBase64Sources } from './transforms/string/stripOversizedBase64Sources.js'
-export { stripXmlInvalidChars } from './transforms/string/stripXmlInvalidChars.js'
 export { unwrapCdataComments } from './transforms/string/unwrapCdataComments.js'
 export type {
   AssetProxyFn,
