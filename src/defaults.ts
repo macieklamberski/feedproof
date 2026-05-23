@@ -17,6 +17,7 @@ import { stripComments } from './transforms/dom/stripComments.js'
 import { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
 import { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 import { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
+import { stripInertElements } from './transforms/dom/stripInertElements.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBoundaryBreaks.js'
 import { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
@@ -117,6 +118,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
   fixLazyImages,
+  stripInertElements,
   resolveRelativeUrls,
   unwrapRedirectUrls,
   stripDeadAnchors,
@@ -220,6 +222,11 @@ export const defaultEmojiImageHosts = [
   'fbcdn.net/images/emoji.php/', // Facebook embedded posts — 3,983 feeds (0.15%).
   'abs.twimg.com/emoji/', // Twitter / X embedded tweets — 195 feeds.
   'githubassets.com/images/icons/emoji/', // GitHub README scrapings — 43 feeds.
+]
+
+export const defaultInertSelectors = [
+  '.image-link-expand', // Substack restack/zoom buttons next to images — 16,419 feeds (0.6%).
+  'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets — 3,201 feeds (0.1%).
 ]
 
 export const defaultUrlUnwrappers: Array<UrlUnwrapper> = [
