@@ -41,6 +41,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `stripInterBlockBreaks` | Remove `<br>` tags between block elements |
 | `stripParagraphBoundaryBreaks` | Remove `<br>` tags adjacent to paragraph boundaries |
 | `stripDuplicateTitleHeading` | Remove first `<h1>`–`<h6>` matching article title |
+| `demoteHeadings` | Shift every heading down by one level (`<h1>`→`<h2>`, …, `<h5>`→`<h6>`) when the body contains an `<h1>`, so it sits below the reader's own page title |
 | `unwrapRedirectUrls` | Remove Google/Bing/Facebook/etc. redirect wrappers |
 | `stripDeadAnchors` | Unwrap `<a>` with empty, `#`, or `javascript:` href |
 | `stripInertElements` | Remove elements that render as nothing in a feed reader — Substack `.image-link-expand` controls and Drupal `<drupal-render-placeholder>` tags by default, plus any caller-supplied selector |
