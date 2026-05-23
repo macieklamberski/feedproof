@@ -1,9 +1,8 @@
 import type { DomTransform } from '../../types.js'
 
-// Strips elements that render as nothing and do nothing once the surrounding
-// runtime is gone — platform leftovers like lazy-render markers and dead
-// control wrappers, where the JS that would have populated or handled them
-// isn't present in a feed-reader context.
+// Strips elements that have no place in a static rendering of feed content —
+// dead JS placeholders, control wrappers detached from their runtime, and
+// platform-injected widgets (subscribe forms, social CTAs) that read as noise.
 export const stripInertElements: DomTransform = ({ inertSelectors }) => {
   const selector = inertSelectors.join(',')
 

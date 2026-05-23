@@ -230,6 +230,7 @@ export const defaultEmojiImageHosts = [
 
 export const defaultInertSelectors = [
   '.image-link-expand', // Substack restack/zoom buttons next to images — 16,419 feeds (0.6%).
+  '[data-component-name="SubscribeWidget"]', // Substack inline newsletter signup widget.
   'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets — 3,201 feeds (0.1%).
 ]
 
