@@ -44,6 +44,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `unwrapRedirectUrls` | Remove Google/Bing/Facebook/etc. redirect wrappers |
 | `stripDeadAnchors` | Unwrap `<a>` with empty, `#`, or `javascript:` href |
 | `removeTrackingPixels` | Strip 1×1 tracking pixel images |
+| `unwrapEmojiImages` | Replace WordPress/Facebook/Twitter/GitHub emoji `<img>` tags with their alt-text glyph |
 | `stripTrackingParams` | Remove UTM and other tracking parameters |
 | `convertBreaksToParagraphs` | Convert `<br><br>` runs into semantic `<p>` blocks |
 | `injectEnclosures` | Inject feed enclosures into content as native `<audio>`/`<video>` or iframe placeholders |

@@ -22,6 +22,7 @@ import { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBou
 import { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
+import { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 import { unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 import { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
@@ -121,6 +122,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   stripDeadAnchors,
   stripTrackingParams,
   removeTrackingPixels,
+  unwrapEmojiImages,
   convertBreaksToParagraphs,
   stripInterBlockBreaks,
   stripParagraphBoundaryBreaks,
@@ -211,6 +213,14 @@ export const defaultTrackingHosts = [
 ]
 
 export const defaultTrackingPathSegments = ['pixel', 'beacon', 'count', 'impression']
+
+export const defaultEmojiImageHosts = [
+  's.w.org/images/core/emoji/', // WordPress core wp-emoji-release output — 56,859 feeds (2.10%).
+  's0.wp.com/wp-content/mu-plugins/wpcom-smileys/', // WordPress.com (Twemoji assets) — 11,043 feeds (0.41%).
+  'fbcdn.net/images/emoji.php/', // Facebook embedded posts — 3,983 feeds (0.15%).
+  'abs.twimg.com/emoji/', // Twitter / X embedded tweets — 195 feeds.
+  'githubassets.com/images/icons/emoji/', // GitHub README scrapings — 43 feeds.
+]
 
 export const defaultUrlUnwrappers: Array<UrlUnwrapper> = [
   // Search engines.

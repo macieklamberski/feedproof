@@ -60,6 +60,7 @@ export type TransformContext = {
   lazySrcsetAttributes: Array<string>
   trackingHosts: Array<string>
   trackingPathSegments: Array<string>
+  emojiImageHosts: Array<string>
   urlUnwrappers: Array<UrlUnwrapper>
   resolveUrlFn: ResolveUrlFn
   assetProxyFn?: AssetProxyFn
@@ -82,6 +83,7 @@ export type TransformContentOptions = {
   lazySrcsetAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
+  emojiImageHosts?: Array<string>
   urlUnwrappers?: Array<UrlUnwrapper>
   resolveUrlFn?: ResolveUrlFn
   assetProxyFn?: AssetProxyFn
