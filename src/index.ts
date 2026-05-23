@@ -94,6 +94,7 @@ export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/dom/unwr
 export { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 export { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
 export { stripOversizedBase64Sources } from './transforms/string/stripOversizedBase64Sources.js'
+export { stripXmlInvalidChars } from './transforms/string/stripXmlInvalidChars.js'
 export { unwrapCdataComments } from './transforms/string/unwrapCdataComments.js'
 export type {
   AssetProxyFn,
