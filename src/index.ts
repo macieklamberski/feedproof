@@ -67,6 +67,7 @@ export {
 } from './embeds/youtube.js'
 export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
+export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 export { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 export { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js'

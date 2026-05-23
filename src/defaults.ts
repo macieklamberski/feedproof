@@ -2,6 +2,7 @@ import { resolveUrl } from 'feedcanon'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
+import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
 import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
@@ -119,6 +120,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   stripComments,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
+  demoteHeadings,
   fixLazyImages,
   stripInertElements,
   resolveRelativeUrls,
