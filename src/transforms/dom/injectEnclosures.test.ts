@@ -1,28 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import {
-  defaultLazySrcAttributes,
-  defaultLazySrcsetAttributes,
-  defaultResolveUrlFn,
-  defaultTrackingHosts,
-  defaultTrackingPathSegments,
-  defaultUrlUnwrappers,
-} from '../../defaults.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
 import { parseHtml } from '../../parsers/linkedom.js'
+import { baseContext } from '../../tests.js'
 import type { Enclosure, TransformContext } from '../../types.js'
 import { injectEnclosures } from './injectEnclosures.js'
-
-const baseContext: TransformContext = {
-  baseUrl: undefined,
-  embedResolvers: [],
-  lazySrcAttributes: defaultLazySrcAttributes,
-  lazySrcsetAttributes: defaultLazySrcsetAttributes,
-  trackingHosts: defaultTrackingHosts,
-  trackingPathSegments: defaultTrackingPathSegments,
-  urlUnwrappers: defaultUrlUnwrappers,
-  resolveUrlFn: defaultResolveUrlFn,
-}
 
 const withResolver: TransformContext = {
   ...baseContext,

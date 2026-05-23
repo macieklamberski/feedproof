@@ -1,28 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import {
-  defaultEmbedResolvers,
-  defaultLazySrcAttributes,
-  defaultLazySrcsetAttributes,
-  defaultResolveUrlFn,
-  defaultTrackingHosts,
-  defaultTrackingPathSegments,
-  defaultUrlUnwrappers,
-} from '../../defaults.js'
 import { parseHtml } from '../../parsers/linkedom.js'
+import { baseContext as defaultContext } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { resolveRelativeUrls } from './resolveRelativeUrls.js'
 
-const baseContext: TransformContext = {
-  embedResolvers: defaultEmbedResolvers,
-  lazySrcAttributes: defaultLazySrcAttributes,
-  lazySrcsetAttributes: defaultLazySrcsetAttributes,
-  trackingHosts: defaultTrackingHosts,
-  trackingPathSegments: defaultTrackingPathSegments,
-  urlUnwrappers: defaultUrlUnwrappers,
-  resolveUrlFn: defaultResolveUrlFn,
-  baseUrl: 'https://example.com',
-}
+const baseContext: TransformContext = { ...defaultContext, baseUrl: 'https://example.com' }
 
 describe('resolveRelativeUrls', () => {
   const transform = (html: string, context: TransformContext = baseContext) => {

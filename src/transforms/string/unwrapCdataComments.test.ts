@@ -1,28 +1,9 @@
 import { describe, expect, it } from 'bun:test'
-import {
-  defaultEmbedResolvers,
-  defaultLazySrcAttributes,
-  defaultLazySrcsetAttributes,
-  defaultResolveUrlFn,
-  defaultTrackingHosts,
-  defaultTrackingPathSegments,
-  defaultUrlUnwrappers,
-} from '../../defaults.js'
-import type { TransformContext } from '../../types.js'
+import { baseContext } from '../../tests.js'
 import { unwrapCdataComments } from './unwrapCdataComments.js'
 
-const context: TransformContext = {
-  embedResolvers: defaultEmbedResolvers,
-  lazySrcAttributes: defaultLazySrcAttributes,
-  lazySrcsetAttributes: defaultLazySrcsetAttributes,
-  trackingHosts: defaultTrackingHosts,
-  trackingPathSegments: defaultTrackingPathSegments,
-  urlUnwrappers: defaultUrlUnwrappers,
-  resolveUrlFn: defaultResolveUrlFn,
-}
-
 describe('unwrapCdataComments', () => {
-  const transform = unwrapCdataComments(context)
+  const transform = unwrapCdataComments(baseContext)
 
   it('should unwrap a basic CDATA wrapper', () => {
     expect(transform('<!--[CDATA[<p>article</p>]]-->')).toBe('<p>article</p>')

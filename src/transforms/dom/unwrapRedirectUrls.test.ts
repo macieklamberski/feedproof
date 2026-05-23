@@ -1,27 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import {
-  defaultEmbedResolvers,
-  defaultLazySrcAttributes,
-  defaultLazySrcsetAttributes,
-  defaultResolveUrlFn,
-  defaultTrackingHosts,
-  defaultTrackingPathSegments,
-  defaultUrlUnwrappers,
-} from '../../defaults.js'
+import { defaultUrlUnwrappers } from '../../defaults.js'
 import { parseHtml } from '../../parsers/linkedom.js'
+import { baseContext } from '../../tests.js'
 import type { TransformContext, UrlUnwrapper } from '../../types.js'
 import { extractRedirectTarget, unwrapRedirectUrls } from './unwrapRedirectUrls.js'
-
-const baseContext: TransformContext = {
-  embedResolvers: defaultEmbedResolvers,
-  lazySrcAttributes: defaultLazySrcAttributes,
-  lazySrcsetAttributes: defaultLazySrcsetAttributes,
-  trackingHosts: defaultTrackingHosts,
-  trackingPathSegments: defaultTrackingPathSegments,
-  urlUnwrappers: defaultUrlUnwrappers,
-  resolveUrlFn: defaultResolveUrlFn,
-}
 
 describe('unwrapRedirectUrls', () => {
   const transform = (html: string, context: TransformContext = baseContext) => {
