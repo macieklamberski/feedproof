@@ -130,6 +130,66 @@ describe('createEmbedPlaceholder', () => {
       expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
     })
   })
+
+  describe('http protocol upgrade', () => {
+    it('should upgrade http:// src argument in data-embed-src', () => {
+      const document = parseHtml('')
+      const element = createEmbedPlaceholder(document, 'http://self-hosted.example/player')
+
+      expect(element.getAttribute('data-embed-src')).toBe('https://self-hosted.example/player')
+    })
+
+    it('should upgrade http:// metadata.src in data-embed-src', () => {
+      const document = parseHtml('')
+      const element = createEmbedPlaceholder(document, 'https://passed-src.example', {
+        src: 'http://embed.example/abc',
+      })
+
+      expect(element.getAttribute('data-embed-src')).toBe('https://embed.example/abc')
+    })
+
+    it('should upgrade http:// in the fallback anchor href', () => {
+      const document = parseHtml('')
+      const element = createEmbedPlaceholder(document, 'http://self-hosted.example/player')
+
+      expect(element.querySelector('a')?.getAttribute('href')).toBe(
+        'https://self-hosted.example/player',
+      )
+    })
+
+    it('should leave https:// URLs unchanged', () => {
+      const document = parseHtml('')
+      const element = createEmbedPlaceholder(document, 'https://embed.example/abc')
+
+      expect(element.getAttribute('data-embed-src')).toBe('https://embed.example/abc')
+    })
+
+    it('should leave protocol-relative URLs unchanged', () => {
+      const document = parseHtml('')
+      const element = createEmbedPlaceholder(document, '//embed.example/abc')
+
+      expect(element.getAttribute('data-embed-src')).toBe('//embed.example/abc')
+    })
+
+    it('should be case-insensitive on the protocol', () => {
+      const document = parseHtml('')
+      const element = createEmbedPlaceholder(document, 'HTTP://embed.example/abc')
+
+      expect(element.getAttribute('data-embed-src')).toBe('https://embed.example/abc')
+    })
+
+    it('should only touch the leading protocol, not occurrences later in the URL', () => {
+      const document = parseHtml('')
+      const element = createEmbedPlaceholder(
+        document,
+        'http://proxy.example/?target=http://other.example/page',
+      )
+
+      expect(element.getAttribute('data-embed-src')).toBe(
+        'https://proxy.example/?target=http://other.example/page',
+      )
+    })
+  })
 })
 
 describe('getDimensions', () => {

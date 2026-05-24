@@ -1,4 +1,4 @@
-import { resolveUrl } from 'feedcanon'
+import { resolveUrl, upgradeProtocol } from 'feedcanon'
 import type { EmbedResolverResult, MaybePromise } from './types.js'
 import { coerceNumber } from './utils.js'
 
@@ -158,11 +158,11 @@ export const applyEmbedMetadata = (
   }
 
   if (metadata.src) {
-    set('data-embed-src', metadata.src)
+    set('data-embed-src', upgradeProtocol(metadata.src))
   }
 
   if (metadata.url) {
-    set('data-embed-url', metadata.url)
+    set('data-embed-url', upgradeProtocol(metadata.url))
   }
 
   if (metadata.thumbnail && isSafeThumbnailUrl(metadata.thumbnail)) {
@@ -206,13 +206,13 @@ export const createEmbedPlaceholder = (
   const element = document.createElement('div')
 
   element.setAttribute('data-embed', 'iframe')
-  element.setAttribute('data-embed-src', metadata?.src ?? src)
+  element.setAttribute('data-embed-src', upgradeProtocol(metadata?.src ?? src))
 
   if (metadata) {
     applyEmbedMetadata(element, metadata)
   }
 
-  const fallbackUrl = metadata?.url ?? metadata?.src ?? src
+  const fallbackUrl = upgradeProtocol(metadata?.url ?? metadata?.src ?? src)
   const link = document.createElement('a')
   link.setAttribute('href', fallbackUrl)
   link.textContent = fallbackUrl
