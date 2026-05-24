@@ -95,6 +95,54 @@ describe('stripInertElements', () => {
       expect(await transform(value)).toBe(value)
     })
 
+    it('should remove Google AdSense ins slot', async () => {
+      const value =
+        '<p>Before</p><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-x" data-ad-slot="123"></ins><p>After</p>'
+      const expected = '<p>Before</p><p>After</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should remove Substack cross-publication promo wrap', async () => {
+      const value =
+        '<p>Body</p><div class="embedded-publication-wrap" data-attrs="{}"><a href="https://other.substack.com">Other Newsletter</a></div>'
+      const expected = '<p>Body</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should remove YARPP related-posts widget', async () => {
+      const value =
+        '<p>Body</p><div class="yarpp yarpp-related yarpp-related-rss yarpp-template-list"><h3>Related</h3><ol><li><a href="/a">A</a></li></ol></div>'
+      const expected = '<p>Body</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should remove ShareThis and Sharedaddy share-button blocks', async () => {
+      const value =
+        '<p>Body</p><div class="sharethis-inline-share-buttons"></div><div class="sharedaddy sd-sharing-enabled"></div>'
+      const expected = '<p>Body</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should remove WordPress Gutenberg author bio block', async () => {
+      const value =
+        '<p>Body</p><div class="wp-block-post-author"><div class="wp-block-post-author__avatar"><img src="x"></div><div class="wp-block-post-author__content"><p>Jane</p></div></div>'
+      const expected = '<p>Body</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should remove Mailchimp hidden preheader span', async () => {
+      const value =
+        '<span class="mcnPreviewText" style="display:none">Preview text</span><p>Body</p>'
+      const expected = '<p>Body</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
     it('should remove Drupal render placeholder for comment links', async () => {
       const value =
         '<article>body<drupal-render-placeholder callback="comment.lazy_builders:renderLinks" arguments="0=node:1"></drupal-render-placeholder></article>'

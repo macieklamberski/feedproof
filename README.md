@@ -44,7 +44,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `demoteHeadings` | Shift every heading down by one level (`<h1>`→`<h2>`, …, `<h5>`→`<h6>`) when the body contains an `<h1>`, so it sits below the reader's own page title |
 | `unwrapRedirectUrls` | Remove Google/Bing/Facebook/etc. redirect wrappers |
 | `stripDeadAnchors` | Unwrap `<a>` with empty, `#`, or `javascript:` href |
-| `stripInertElements` | Remove platform widgets and dead placeholders — Substack image controls and subscribe widgets, Ghost / Jetpack / Mailchimp / ConvertKit / Beehiiv / Buttondown / Squarespace subscribe forms, Drupal `<drupal-render-placeholder>` tags, plus any caller-supplied selector |
+| `stripInertElements` | Remove platform chrome and dead placeholders — subscribe widgets, share buttons, related-posts widgets, ad slots (AdSense / AdThrive), author bio blocks, email preheaders, Substack image controls, and Drupal `<drupal-render-placeholder>` tags. Pass `inertSelectors` to extend or replace |
 | `removeTrackingPixels` | Strip 1×1 tracking pixel images |
 | `unwrapEmojiImages` | Replace WordPress/Facebook/Twitter/GitHub emoji `<img>` tags with their alt-text glyph |
 | `stripTrackingParams` | Remove UTM and other tracking parameters |
