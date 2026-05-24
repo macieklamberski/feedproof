@@ -10,7 +10,7 @@ export const NodeFilter = { SHOW_ELEMENT: 0x1, SHOW_TEXT: 0x4, SHOW_COMMENT: 0x8
 
 const safeThumbnailDataUrlRegex = /^data:image\/(png|jpe?g|gif|webp|avif);/i
 
-const isSafeThumbnailUrl = (url: string): boolean => {
+export const isSafeThumbnailUrl = (url: string): boolean => {
   return resolveUrl(url) !== undefined || safeThumbnailDataUrlRegex.test(url)
 }
 
@@ -217,6 +217,29 @@ export const createEmbedPlaceholder = (
   link.setAttribute('href', fallbackUrl)
   link.textContent = fallbackUrl
   element.appendChild(link)
+
+  return element
+}
+
+export const createWidgetPlaceholder = (
+  document: Document,
+  kind: string,
+  provider: string,
+  fields: Record<string, string | undefined>,
+  fallback: HTMLElement,
+): HTMLElement => {
+  const element = document.createElement('div')
+
+  element.setAttribute('data-widget-kind', kind)
+  element.setAttribute('data-widget-provider', provider)
+
+  for (const [key, value] of Object.entries(fields)) {
+    if (value) {
+      element.setAttribute(`data-widget-${key}`, value)
+    }
+  }
+
+  element.appendChild(fallback)
 
   return element
 }
