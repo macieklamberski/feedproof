@@ -113,4 +113,84 @@ describe('mergeConsecutiveOneLinerPres', () => {
 
     expect(result).toContain('<pre>line 1\n  line 2</pre>')
   })
+
+  describe('preservedPreClasses', () => {
+    it('should skip a run where a pre has wp-block-verse', async () => {
+      const value =
+        '<pre class="wp-block-verse">stanza 1</pre><pre class="wp-block-verse">stanza 2</pre>'
+      const result = await transform(value)
+
+      expect(result).toContain('<pre class="wp-block-verse">stanza 1</pre>')
+      expect(result).toContain('<pre class="wp-block-verse">stanza 2</pre>')
+    })
+
+    it('should skip a run where a pre has wp-block-preformatted', async () => {
+      const value =
+        '<pre class="wp-block-preformatted">Intro ____9</pre>' +
+        '<pre class="wp-block-preformatted">Chapter 1 ____23</pre>'
+      const result = await transform(value)
+
+      expect(result).toContain('<pre class="wp-block-preformatted">Intro ____9</pre>')
+      expect(result).toContain('<pre class="wp-block-preformatted">Chapter 1 ____23</pre>')
+    })
+
+    it('should skip when the preserved class is one of several tokens', async () => {
+      const value =
+        '<pre class="wp-block-verse has-text-align-center">line 1</pre>' +
+        '<pre class="wp-block-verse has-text-align-center">line 2</pre>'
+      const result = await transform(value)
+
+      expect(result).toContain('wp-block-verse has-text-align-center">line 1</pre>')
+      expect(result).toContain('wp-block-verse has-text-align-center">line 2</pre>')
+    })
+
+    it('should skip when only one pre in the run carries the preserved class', async () => {
+      const value = '<pre>line 1</pre><pre class="wp-block-verse">line 2</pre><pre>line 3</pre>'
+      const result = await transform(value)
+
+      expect(result).toContain('<pre>line 1</pre>')
+      expect(result).toContain('<pre class="wp-block-verse">line 2</pre>')
+      expect(result).toContain('<pre>line 3</pre>')
+    })
+
+    it('should still merge wp-block-code (not in the preserve list)', async () => {
+      const value =
+        '<pre class="wp-block-code">SHOW GRANTS</pre>' +
+        '<pre class="wp-block-code">FOR user_or_role</pre>'
+      const result = await transform(value)
+
+      expect(result).toContain('<pre class="wp-block-code">SHOW GRANTS\nFOR user_or_role</pre>')
+    })
+
+    it('should still merge when neither pre carries any class', async () => {
+      const value = '<pre>line 1</pre><pre>line 2</pre>'
+      const result = await transform(value)
+
+      expect(result).toContain('<pre>line 1\nline 2</pre>')
+    })
+
+    it('should accept a custom preservedPreClasses list', async () => {
+      const value = '<pre class="my-marker">first</pre><pre class="my-marker">second</pre>'
+      const customContext: TransformContext = {
+        ...baseContext,
+        preservedPreClasses: ['my-marker'],
+      }
+      const result = await transform(value, customContext)
+
+      expect(result).toContain('<pre class="my-marker">first</pre>')
+      expect(result).toContain('<pre class="my-marker">second</pre>')
+    })
+
+    it('should merge wp-block-verse when the preserve list is empty', async () => {
+      const value =
+        '<pre class="wp-block-verse">line 1</pre><pre class="wp-block-verse">line 2</pre>'
+      const customContext: TransformContext = {
+        ...baseContext,
+        preservedPreClasses: [],
+      }
+      const result = await transform(value, customContext)
+
+      expect(result).toContain('<pre class="wp-block-verse">line 1\nline 2</pre>')
+    })
+  })
 })
