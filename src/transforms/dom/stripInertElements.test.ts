@@ -56,6 +56,45 @@ describe('stripInertElements', () => {
       expect(await transform(value)).toBe(value)
     })
 
+    it('should remove Substack subscription-widget-wrap-editor paywall block', async () => {
+      const value =
+        '<p>Preview</p><div class="subscription-widget-wrap-editor"><div class="subscription-widget"><h2>Keep reading with a 7-day free trial</h2></div></div>'
+      const expected = '<p>Preview</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should remove Ghost kg-signup-card', async () => {
+      const value =
+        '<article><p>Body</p><div class="kg-card kg-signup-card" data-lexical-signup-form><h2>Subscribe</h2></div></article>'
+      const expected = '<article><p>Body</p></article>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should remove Beehiiv embed iframe by src host', async () => {
+      const value =
+        '<p>Before</p><iframe src="https://embeds.beehiiv.com/72773897-9d0c" width="100%" height="320"></iframe><p>After</p>'
+      const expected = '<p>Before</p><p>After</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should remove Buttondown form by action host', async () => {
+      const value =
+        '<p>Before</p><form action="https://buttondown.email/api/emails/embed-subscribe/foo" method="post"><input name="email"></form><p>After</p>'
+      const expected = '<p>Before</p><p>After</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should leave unrelated iframes and forms untouched', async () => {
+      const value =
+        '<iframe src="https://example.com/embed"></iframe><form action="/search"><input name="q"></form>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
     it('should remove Drupal render placeholder for comment links', async () => {
       const value =
         '<article>body<drupal-render-placeholder callback="comment.lazy_builders:renderLinks" arguments="0=node:1"></drupal-render-placeholder></article>'
