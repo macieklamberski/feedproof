@@ -5,8 +5,27 @@ import type { DomTransform } from '../../types.js'
 // consecutive single-line <pre> siblings into one <pre> joined by newlines.
 const trailingBrRegex = /<br\s*\/?>\s*$/i
 const surroundingNewlinesRegex = /^\n+|\n+$/g
+const classTokenSeparator = /\s+/
 
-export const mergeConsecutiveOneLinerPres: DomTransform = () => {
+export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses }) => {
+  const preservedSet = new Set(preservedPreClasses)
+
+  const isPreserved = (element: Element): boolean => {
+    const classAttribute = element.getAttribute('class')
+
+    if (!classAttribute) {
+      return false
+    }
+
+    for (const token of classAttribute.split(classTokenSeparator)) {
+      if (preservedSet.has(token)) {
+        return true
+      }
+    }
+
+    return false
+  }
+
   return (document) => {
     const pres = document.querySelectorAll('pre')
 
@@ -43,6 +62,13 @@ export const mergeConsecutiveOneLinerPres: DomTransform = () => {
       }
 
       if (run.length < 2) {
+        continue
+      }
+
+      // Skip runs that contain a <pre> marked as author-distinct content
+      // (poetry stanzas, scriptural verses, leader-dotted ToCs) — those
+      // are meant to render as separate blocks even when single-line.
+      if (run.some(isPreserved)) {
         continue
       }
 

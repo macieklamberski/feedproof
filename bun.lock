@@ -17,7 +17,7 @@
         "tsdown": "^0.22.0",
       },
       "peerDependencies": {
-        "feedcanon": "2.0.0-next.4",
+        "feedcanon": "^2.0.0-next.4",
         "feedscout": "^2.0.0-next.2",
         "linkedom": "^0.18.12",
       },

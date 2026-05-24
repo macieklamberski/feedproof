@@ -228,6 +228,18 @@ export const defaultEmojiImageHosts = [
   'githubassets.com/images/icons/emoji/', // GitHub README scrapings — 43 feeds.
 ]
 
+// CSS class tokens that mark a <pre> as author-chosen distinct content
+// (poetry stanzas, scriptural verses, leader-dotted tables of contents).
+// `mergeConsecutiveOneLinerPres` skips any run where at least one <pre>
+// carries one of these tokens. Curated from a corpus scan: of all
+// matching runs, `wp-block-verse` and `wp-block-preformatted` dominate
+// the false-positive cases (split poems, ToCs), while `wp-block-code`
+// stays out — fragmented code blocks are the merge's intended target.
+export const defaultPreservedPreClasses = [
+  'wp-block-verse', // WordPress Gutenberg Verse block — poems, lyrics, scripture stanzas.
+  'wp-block-preformatted', // WordPress Gutenberg Preformatted block — author-chosen distinct blocks (ToCs, quotes, numbered headings).
+]
+
 export const defaultInertSelectors = [
   '.image-link-expand', // Substack restack/zoom buttons next to images — 16,419 feeds (0.6%).
   '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget — 11,366 feeds (0.42%).
