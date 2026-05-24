@@ -37,6 +37,26 @@ describe('stripControlChars', () => {
     expect(transform('<p>before\x85\x9fafter</p>')).toBe('<p>beforeafter</p>')
   })
 
+  it('should strip BMP noncharacter block (U+FDD0-U+FDEF)', () => {
+    expect(transform('<p>before﷐﷕﷯after</p>')).toBe('<p>beforeafter</p>')
+  })
+
+  it('should strip BMP noncharacters U+FFFE and U+FFFF', () => {
+    expect(transform('<p>before￾￿after</p>')).toBe('<p>beforeafter</p>')
+  })
+
+  it('should strip astral noncharacters', () => {
+    expect(transform('<p>before\u{1FFFE}\u{2FFFF}\u{10FFFE}\u{10FFFF}after</p>')).toBe(
+      '<p>beforeafter</p>',
+    )
+  })
+
+  it('should preserve characters adjacent to noncharacter ranges', () => {
+    const value = '<p>﷏ﷰ�\u{1FFFD}\u{10FFFD}</p>'
+
+    expect(transform(value)).toBe(value)
+  })
+
   it('should preserve tab (U+0009)', () => {
     const value = '<p>tab\there</p>'
 
