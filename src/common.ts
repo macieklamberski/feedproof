@@ -10,8 +10,18 @@ export const NodeFilter = { SHOW_ELEMENT: 0x1, SHOW_TEXT: 0x4, SHOW_COMMENT: 0x8
 
 const safeThumbnailDataUrlRegex = /^data:image\/(png|jpe?g|gif|webp|avif);/i
 
+const httpProtocolRegex = /^http:\/\//i
+
 const isSafeThumbnailUrl = (url: string): boolean => {
   return resolveUrl(url) !== undefined || safeThumbnailDataUrlRegex.test(url)
+}
+
+// Consumers reify `data-embed-src` into an iframe on click; on an https://
+// host an http:// src would trip mixed-content blocking. Embed resolvers
+// already return https:// URLs, so this only matters for the fallback path
+// where an unresolved iframe's original src is copied through verbatim.
+const upgradeHttpProtocol = (url: string): string => {
+  return url.replace(httpProtocolRegex, 'https://')
 }
 
 export const applyDomTransforms = async (
@@ -158,11 +168,11 @@ export const applyEmbedMetadata = (
   }
 
   if (metadata.src) {
-    set('data-embed-src', metadata.src)
+    set('data-embed-src', upgradeHttpProtocol(metadata.src))
   }
 
   if (metadata.url) {
-    set('data-embed-url', metadata.url)
+    set('data-embed-url', upgradeHttpProtocol(metadata.url))
   }
 
   if (metadata.thumbnail && isSafeThumbnailUrl(metadata.thumbnail)) {
@@ -206,13 +216,13 @@ export const createEmbedPlaceholder = (
   const element = document.createElement('div')
 
   element.setAttribute('data-embed', 'iframe')
-  element.setAttribute('data-embed-src', metadata?.src ?? src)
+  element.setAttribute('data-embed-src', upgradeHttpProtocol(metadata?.src ?? src))
 
   if (metadata) {
     applyEmbedMetadata(element, metadata)
   }
 
-  const fallbackUrl = metadata?.url ?? metadata?.src ?? src
+  const fallbackUrl = upgradeHttpProtocol(metadata?.url ?? metadata?.src ?? src)
   const link = document.createElement('a')
   link.setAttribute('href', fallbackUrl)
   link.textContent = fallbackUrl
