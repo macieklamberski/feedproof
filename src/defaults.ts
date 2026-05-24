@@ -233,12 +233,24 @@ export const defaultInertSelectors = [
   '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget — 11,366 feeds (0.42%).
   '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA — 11,275 feeds (0.42%).
   'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets — 3,201 feeds (0.1%).
+  '.adsbygoogle', // Google AdSense ad slot — 1,515 feeds (0.056%).
+  '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 766 feeds (0.028%).
+  '.yarpp-related', // YARPP related-posts widget (WordPress) — 672 feeds (0.025%).
+  '.sharethis-inline-share-buttons', // ShareThis inline share buttons — 643 feeds (0.024%).
+  '.sharedaddy', // Jetpack Sharedaddy share buttons — 428 feeds (0.016%).
   '.wp-block-jetpack-subscriptions', // Jetpack Gutenberg subscribe block — 353 feeds (0.013%).
+  '.wp-block-post-author', // WordPress Gutenberg author bio block — 353 feeds (0.013%).
   '.kg-signup-card', // Ghost (Koenig) signup card — 323 feeds (0.012%).
   '.mc4wp-form', // Mailchimp for WordPress plugin form — 311 feeds (0.012%).
   '.formkit-form', // ConvertKit / Kit subscribe form — 241 feeds (0.009%).
+  '.mcnPreviewText', // Mailchimp hidden email preheader text — 137 feeds (0.005%).
+  '.saboxplugin-wrap', // Simple Author Box WordPress plugin — 120 feeds (0.004%).
+  '.addtoany_share_save_container', // AddToAny share buttons (WordPress) — 97 feeds (0.004%).
   'iframe[src*="embeds.beehiiv.com"]', // Beehiiv embed iframe — 81 feeds (0.003%).
+  '.jp-relatedposts', // Jetpack related-posts carousel — 74 feeds (0.003%).
+  '.adthrive-ad', // AdThrive (Raptive) ad slot — 72 feeds (0.003%).
   '.jetpack_subscription_widget', // Jetpack legacy sidebar subscribe widget — 69 feeds (0.003%).
+  '.crp_related', // Contextual Related Posts WordPress plugin — 61 feeds (0.002%).
   'form[action*="buttondown.email"]', // Buttondown embed-subscribe form — 21 feeds (<0.001%).
   '.sqs-block-newsletter', // Squarespace newsletter block — 11 feeds (<0.001%).
 ]
