@@ -35,6 +35,27 @@ describe('stripInertElements', () => {
       expect(await transform(value)).toBe(expected)
     })
 
+    it('should remove Substack SubscribeWidget with nested form controls', async () => {
+      const value =
+        '<p>Hello</p><div data-component-name="SubscribeWidget"><input type="email"><button>Subscribe</button></div><p>World</p>'
+      const expected = '<p>Hello</p><p>World</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should remove SubscribeWidget regardless of the host tag', async () => {
+      const value = '<section data-component-name="SubscribeWidget">Inner</section><p>After</p>'
+      const expected = '<p>After</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should not match elements with a different data-component-name', async () => {
+      const value = '<div data-component-name="ShareWidget">Share</div>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
     it('should remove Drupal render placeholder for comment links', async () => {
       const value =
         '<article>body<drupal-render-placeholder callback="comment.lazy_builders:renderLinks" arguments="0=node:1"></drupal-render-placeholder></article>'
