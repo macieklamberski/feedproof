@@ -230,8 +230,17 @@ export const defaultEmojiImageHosts = [
 
 export const defaultInertSelectors = [
   '.image-link-expand', // Substack restack/zoom buttons next to images — 16,419 feeds (0.6%).
-  '[data-component-name="SubscribeWidget"]', // Substack inline newsletter signup widget.
+  '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget — 11,366 feeds (0.42%).
+  '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA — 11,275 feeds (0.42%).
   'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets — 3,201 feeds (0.1%).
+  '.wp-block-jetpack-subscriptions', // Jetpack Gutenberg subscribe block — 353 feeds (0.013%).
+  '.kg-signup-card', // Ghost (Koenig) signup card — 323 feeds (0.012%).
+  '.mc4wp-form', // Mailchimp for WordPress plugin form — 311 feeds (0.012%).
+  '.formkit-form', // ConvertKit / Kit subscribe form — 241 feeds (0.009%).
+  'iframe[src*="embeds.beehiiv.com"]', // Beehiiv embed iframe — 81 feeds (0.003%).
+  '.jetpack_subscription_widget', // Jetpack legacy sidebar subscribe widget — 69 feeds (0.003%).
+  'form[action*="buttondown.email"]', // Buttondown embed-subscribe form — 21 feeds (<0.001%).
+  '.sqs-block-newsletter', // Squarespace newsletter block — 11 feeds (<0.001%).
 ]
 
 export const defaultUrlUnwrappers: Array<UrlUnwrapper> = [
