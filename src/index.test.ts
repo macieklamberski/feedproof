@@ -209,4 +209,37 @@ describe('transformContent', () => {
     expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
     expect(result).not.toContain('data-embed-title')
   })
+
+  it('should preserve ghost bookmark widget placeholders through unwrapWrappers', async () => {
+    const html = [
+      '<figure class="kg-card kg-bookmark-card">',
+      '<a class="kg-bookmark-container" href="https://example.com/post">',
+      '<div class="kg-bookmark-content">',
+      '<div class="kg-bookmark-title">Post title</div>',
+      '<div class="kg-bookmark-description">Preview text</div>',
+      '<div class="kg-bookmark-metadata">',
+      '<img class="kg-bookmark-icon" src="https://example.com/favicon.ico" alt="">',
+      '<span class="kg-bookmark-author">Author name</span>',
+      '<span class="kg-bookmark-publisher">Publisher name</span>',
+      '</div>',
+      '</div>',
+      '<div class="kg-bookmark-thumbnail"><img src="https://example.com/og-image.jpg" alt=""></div>',
+      '</a>',
+      '</figure>',
+    ].join('')
+    const result = await transformContent(html, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('data-widget-kind="bookmark"')
+    expect(result).toContain('data-widget-provider="ghost"')
+    expect(result).toContain('data-widget-url="https://example.com/post"')
+    expect(result).toContain('data-widget-title="Post title"')
+    expect(result).toContain('data-widget-description="Preview text"')
+    expect(result).toContain('data-widget-author="Author name"')
+    expect(result).toContain('data-widget-publisher="Publisher name"')
+    expect(result).toContain('data-widget-icon="https://example.com/favicon.ico"')
+    expect(result).toContain('data-widget-thumbnail="https://example.com/og-image.jpg"')
+    expect(result).toContain('<a href="https://example.com/post">Post title</a>')
+    expect(result).not.toContain('kg-bookmark')
+    expect(result).not.toContain('<figure')
+  })
 })

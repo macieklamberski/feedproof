@@ -1,11 +1,10 @@
+import { upgradeProtocol } from 'feedcanon'
 import { createWidgetPlaceholder, isSafeThumbnailUrl } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-const cardSelector = 'figure.kg-bookmark-card, .kg-bookmark-card'
-
 export const convertGhostBookmarkCards: DomTransform = () => {
   return (document) => {
-    for (const card of document.querySelectorAll(cardSelector)) {
+    for (const card of document.querySelectorAll('.kg-bookmark-card')) {
       const link = card.querySelector('a.kg-bookmark-container')
       const href = link?.getAttribute('href')
       const title = card.querySelector('.kg-bookmark-title')?.textContent?.trim()
@@ -14,25 +13,27 @@ export const convertGhostBookmarkCards: DomTransform = () => {
         continue
       }
 
+      const url = upgradeProtocol(href)
       const description = card.querySelector('.kg-bookmark-description')?.textContent?.trim()
       const author = card.querySelector('.kg-bookmark-author')?.textContent?.trim()
       const publisher = card.querySelector('.kg-bookmark-publisher')?.textContent?.trim()
 
       const iconSrc = card.querySelector('img.kg-bookmark-icon')?.getAttribute('src')
-      const icon = iconSrc && isSafeThumbnailUrl(iconSrc) ? iconSrc : undefined
+      const icon = iconSrc && isSafeThumbnailUrl(iconSrc) ? upgradeProtocol(iconSrc) : undefined
 
       const thumbnailSrc = card.querySelector('.kg-bookmark-thumbnail img')?.getAttribute('src')
-      const thumbnail = thumbnailSrc && isSafeThumbnailUrl(thumbnailSrc) ? thumbnailSrc : undefined
+      const thumbnail =
+        thumbnailSrc && isSafeThumbnailUrl(thumbnailSrc) ? upgradeProtocol(thumbnailSrc) : undefined
 
       const fallback = document.createElement('a')
-      fallback.setAttribute('href', href)
+      fallback.setAttribute('href', url)
       fallback.textContent = title
 
       const placeholder = createWidgetPlaceholder(
         document,
         'bookmark',
         'ghost',
-        { url: href, title, description, author, publisher, icon, thumbnail },
+        { url, title, description, author, publisher, icon, thumbnail },
         fallback,
       )
 

@@ -218,5 +218,20 @@ describe('convertGhostBookmarkCards', () => {
       expect(result).not.toContain('data-widget-thumbnail')
       expect(result).toContain('data-widget-title="Post title"')
     })
+
+    it('should upgrade http urls to https for url, icon, and thumbnail', async () => {
+      const value = makeCard({
+        href: 'http://example.com/post',
+        title: 'Post title',
+        icon: 'http://example.com/favicon.ico',
+        thumbnail: 'http://example.com/thumb.jpg',
+      })
+      const result = await transform(value)
+
+      expect(result).toContain('data-widget-url="https://example.com/post"')
+      expect(result).toContain('data-widget-icon="https://example.com/favicon.ico"')
+      expect(result).toContain('data-widget-thumbnail="https://example.com/thumb.jpg"')
+      expect(result).toContain('<a href="https://example.com/post">')
+    })
   })
 })
