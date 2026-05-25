@@ -1,5 +1,5 @@
 import { resolveUrl, upgradeProtocol } from 'feedcanon'
-import type { EmbedResolverResult, MaybePromise } from './types.js'
+import type { BookmarkResolverResult, EmbedResolverResult, MaybePromise } from './types.js'
 import { coerceNumber } from './utils.js'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
@@ -221,17 +221,24 @@ export const createEmbedPlaceholder = (
   return element
 }
 
-export const createWidgetPlaceholder = (
+export const createBookmarkPlaceholder = (
   document: Document,
-  kind: string,
-  provider: string,
-  fields: Record<string, string | undefined>,
-  fallback: HTMLElement,
+  result: BookmarkResolverResult,
 ): HTMLElement => {
-  const element = document.createElement('div')
+  const { provider, title, url, icon, thumbnail, ...rest } = result
+  const safeUrl = upgradeProtocol(url)
 
-  element.setAttribute('data-widget-kind', kind)
+  const element = document.createElement('div')
+  element.setAttribute('data-widget-kind', 'bookmark')
   element.setAttribute('data-widget-provider', provider)
+
+  const fields: Record<string, string | undefined> = {
+    ...rest,
+    url: safeUrl,
+    title,
+    icon: icon && isSafeThumbnailUrl(icon) ? upgradeProtocol(icon) : undefined,
+    thumbnail: thumbnail && isSafeThumbnailUrl(thumbnail) ? upgradeProtocol(thumbnail) : undefined,
+  }
 
   for (const [key, value] of Object.entries(fields)) {
     if (value) {
@@ -239,7 +246,10 @@ export const createWidgetPlaceholder = (
     }
   }
 
-  element.appendChild(fallback)
+  const link = document.createElement('a')
+  link.setAttribute('href', safeUrl)
+  link.textContent = title
+  element.appendChild(link)
 
   return element
 }

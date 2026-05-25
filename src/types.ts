@@ -46,6 +46,22 @@ export type EmbedResolver = {
   extract: (element: Element) => MaybePromise<EmbedResolverResult | undefined>
 }
 
+export type BookmarkResolverResult = {
+  provider: string
+  url: string
+  title: string
+  description?: string
+  author?: string
+  publisher?: string
+  icon?: string
+  thumbnail?: string
+}
+
+export type BookmarkResolver = {
+  selector: string
+  extract: (element: Element) => MaybePromise<BookmarkResolverResult | undefined>
+}
+
 export type UrlUnwrapper = (url: URL) => string | undefined
 
 export type AssetType = 'image' | 'video' | 'audio'
@@ -56,6 +72,7 @@ export type TransformContext = {
   baseUrl?: string
   enclosures?: Array<Enclosure>
   embedResolvers: Array<EmbedResolver>
+  bookmarkResolvers: Array<BookmarkResolver>
   lazySrcAttributes: Array<string>
   lazySrcsetAttributes: Array<string>
   trackingHosts: Array<string>
@@ -81,6 +98,7 @@ export type TransformContentOptions = {
   baseUrl?: string
   enclosures?: Array<Enclosure>
   embedResolvers?: Array<EmbedResolver>
+  bookmarkResolvers?: Array<BookmarkResolver>
   lazySrcAttributes?: Array<string>
   lazySrcsetAttributes?: Array<string>
   trackingHosts?: Array<string>

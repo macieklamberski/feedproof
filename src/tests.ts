@@ -1,4 +1,5 @@
 import {
+  defaultBookmarkResolvers,
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
   defaultInertSelectors,
@@ -14,6 +15,7 @@ import type { TransformContext } from './types.js'
 
 export const baseContext: TransformContext = {
   embedResolvers: defaultEmbedResolvers,
+  bookmarkResolvers: defaultBookmarkResolvers,
   emojiImageHosts: defaultEmojiImageHosts,
   inertSelectors: defaultInertSelectors,
   preservedPreClasses: defaultPreservedPreClasses,

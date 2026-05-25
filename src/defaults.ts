@@ -1,8 +1,9 @@
 import { resolveUrl } from 'feedcanon'
+import { ghostBookmarkResolver } from './bookmarks/ghost.js'
+import { substackBookmarkResolver } from './bookmarks/substack.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
+import { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
-import { convertGhostBookmarkCards } from './transforms/dom/convertGhostBookmarkCards.js'
-import { convertSubstackPublicationCards } from './transforms/dom/convertSubstackPublicationCards.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
@@ -34,6 +35,7 @@ import { stripControlChars } from './transforms/string/stripControlChars.js'
 import { stripOversizedBase64Sources } from './transforms/string/stripOversizedBase64Sources.js'
 import { unwrapCdataComments } from './transforms/string/unwrapCdataComments.js'
 import type {
+  BookmarkResolver,
   DomTransform,
   EmbedResolver,
   ResolveUrlFn,
@@ -129,8 +131,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   unwrapRedirectUrls,
   stripDeadAnchors,
   stripTrackingParams,
-  convertGhostBookmarkCards,
-  convertSubstackPublicationCards,
+  convertBookmarkCards,
   removeTrackingPixels,
   unwrapEmojiImages,
   convertBreaksToParagraphs,
@@ -153,6 +154,11 @@ export const defaultDomTransforms: Array<DomTransform> = [
 // claimed iframes can't be re-matched. Place more specific selectors (e.g.
 // meta-providers like Embedly that wrap other providers) before broader ones.
 export const defaultEmbedResolvers: Array<EmbedResolver> = [youtubeEmbedResolver]
+
+export const defaultBookmarkResolvers: Array<BookmarkResolver> = [
+  ghostBookmarkResolver,
+  substackBookmarkResolver,
+]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
 

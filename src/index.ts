@@ -1,5 +1,6 @@
 import { applyDomTransforms, applyStringTransforms } from './common.js'
 import {
+  defaultBookmarkResolvers,
   defaultDomTransforms,
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
@@ -23,6 +24,7 @@ export const transformContent = async (
     baseUrl: options.baseUrl,
     enclosures: options.enclosures,
     embedResolvers: options.embedResolvers ?? defaultEmbedResolvers,
+    bookmarkResolvers: options.bookmarkResolvers ?? defaultBookmarkResolvers,
     lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,
     lazySrcsetAttributes: options.lazySrcsetAttributes ?? defaultLazySrcsetAttributes,
     trackingHosts: options.trackingHosts ?? defaultTrackingHosts,
@@ -54,12 +56,14 @@ export const transformContent = async (
   return afterDom
 }
 
+export { ghostBookmarkResolver } from './bookmarks/ghost.js'
+export { substackBookmarkResolver } from './bookmarks/substack.js'
 export {
   applyDomTransforms,
   applyEmbedMetadata,
   applyStringTransforms,
+  createBookmarkPlaceholder,
   createEmbedPlaceholder,
-  createWidgetPlaceholder,
   isSafeThumbnailUrl,
 } from './common.js'
 export { defaultResolveUrlFn } from './defaults.js'
@@ -69,9 +73,8 @@ export {
   youtubeEmbedResolver,
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
+export { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
-export { convertGhostBookmarkCards } from './transforms/dom/convertGhostBookmarkCards.js'
-export { convertSubstackPublicationCards } from './transforms/dom/convertSubstackPublicationCards.js'
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 export { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
@@ -106,6 +109,8 @@ export { unwrapCdataComments } from './transforms/string/unwrapCdataComments.js'
 export type {
   AssetProxyFn,
   AssetType,
+  BookmarkResolver,
+  BookmarkResolverResult,
   DomTransform,
   EmbedResolver,
   EmbedResolverResult,
