@@ -60,11 +60,13 @@ export { ghostBookmarkResolver } from './bookmarks/ghost.js'
 export { substackBookmarkResolver } from './bookmarks/substack.js'
 export {
   applyDomTransforms,
-  applyEmbedMetadata,
   applyStringTransforms,
   createBookmarkPlaceholder,
   createEmbedPlaceholder,
+  createPlaceholder,
   isSafeThumbnailUrl,
+  normalizeEmbedFields,
+  updateEmbedPlaceholder,
 } from './common.js'
 export { defaultResolveUrlFn } from './defaults.js'
 export {

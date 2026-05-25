@@ -2,8 +2,10 @@ import { describe, expect, it } from 'bun:test'
 import {
   applyDomTransforms,
   createEmbedPlaceholder,
+  createPlaceholder,
   getDimensions,
   hasAncestorWithTagName,
+  normalizeEmbedFields,
 } from './common.js'
 import { parseHtml } from './parsers/linkedom.js'
 
@@ -72,74 +74,15 @@ describe('createEmbedPlaceholder', () => {
     })
   })
 
-  describe('thumbnail safety', () => {
-    it('should keep http thumbnail', () => {
-      const document = parseHtml('')
-      const thumbnail = 'https://cdn.example/thumb.jpg'
-      const element = createEmbedPlaceholder(document, 'https://embed.example', {
-        thumbnail,
-      })
-
-      expect(element.getAttribute('data-embed-thumbnail')).toBe(thumbnail)
-    })
-
-    it('should keep data:image/png thumbnail', () => {
-      const document = parseHtml('')
-      const thumbnail = 'data:image/png;base64,iVBORw0KGgo='
-      const element = createEmbedPlaceholder(document, 'https://embed.example', {
-        thumbnail,
-      })
-
-      expect(element.getAttribute('data-embed-thumbnail')).toBe(thumbnail)
-    })
-
-    it('should keep data:image/jpeg thumbnail', () => {
-      const document = parseHtml('')
-      const thumbnail = 'data:image/jpeg;base64,/9j/4AAQ='
-      const element = createEmbedPlaceholder(document, 'https://embed.example', {
-        thumbnail,
-      })
-
-      expect(element.getAttribute('data-embed-thumbnail')).toBe(thumbnail)
-    })
-
-    it('should drop javascript: thumbnail', () => {
-      const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'https://embed.example', {
-        thumbnail: 'javascript:alert(1)',
-      })
-
-      expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
-    })
-
-    it('should drop data:image/svg+xml thumbnail', () => {
-      const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'https://embed.example', {
-        thumbnail: 'data:image/svg+xml;utf8,<svg/>',
-      })
-
-      expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
-    })
-
-    it('should drop data:text/html thumbnail', () => {
-      const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'https://embed.example', {
-        thumbnail: 'data:text/html,<script>1</script>',
-      })
-
-      expect(element.getAttribute('data-embed-thumbnail')).toBeNull()
-    })
-  })
-
-  describe('http protocol upgrade', () => {
-    it('should upgrade http:// src argument in data-embed-src', () => {
+  describe('src wiring', () => {
+    it('should write the src argument as data-embed-src', () => {
       const document = parseHtml('')
       const element = createEmbedPlaceholder(document, 'http://self-hosted.example/player')
 
       expect(element.getAttribute('data-embed-src')).toBe('https://self-hosted.example/player')
     })
 
-    it('should upgrade http:// metadata.src in data-embed-src', () => {
+    it('should let metadata.src override the src argument', () => {
       const document = parseHtml('')
       const element = createEmbedPlaceholder(document, 'https://passed-src.example', {
         src: 'http://embed.example/abc',
@@ -156,38 +99,145 @@ describe('createEmbedPlaceholder', () => {
         'https://self-hosted.example/player',
       )
     })
+  })
+})
 
-    it('should leave https:// URLs unchanged', () => {
-      const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'https://embed.example/abc')
+describe('normalizeEmbedFields', () => {
+  describe('src and url protocol upgrade', () => {
+    it('should upgrade http:// to https://', () => {
+      const fields = normalizeEmbedFields({
+        src: 'http://embed.example/abc',
+        url: 'http://page.example/x',
+      })
 
-      expect(element.getAttribute('data-embed-src')).toBe('https://embed.example/abc')
+      expect(fields.src).toBe('https://embed.example/abc')
+      expect(fields.url).toBe('https://page.example/x')
+    })
+
+    it('should leave https:// unchanged', () => {
+      expect(normalizeEmbedFields({ src: 'https://embed.example/abc' }).src).toBe(
+        'https://embed.example/abc',
+      )
     })
 
     it('should leave protocol-relative URLs unchanged', () => {
-      const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, '//embed.example/abc')
-
-      expect(element.getAttribute('data-embed-src')).toBe('//embed.example/abc')
+      expect(normalizeEmbedFields({ src: '//embed.example/abc' }).src).toBe('//embed.example/abc')
     })
 
     it('should be case-insensitive on the protocol', () => {
-      const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'HTTP://embed.example/abc')
-
-      expect(element.getAttribute('data-embed-src')).toBe('https://embed.example/abc')
+      expect(normalizeEmbedFields({ src: 'HTTP://embed.example/abc' }).src).toBe(
+        'https://embed.example/abc',
+      )
     })
 
     it('should only touch the leading protocol, not occurrences later in the URL', () => {
-      const document = parseHtml('')
-      const element = createEmbedPlaceholder(
-        document,
-        'http://proxy.example/?target=http://other.example/page',
-      )
+      expect(
+        normalizeEmbedFields({ src: 'http://proxy.example/?target=http://other.example/page' }).src,
+      ).toBe('https://proxy.example/?target=http://other.example/page')
+    })
+  })
 
-      expect(element.getAttribute('data-embed-src')).toBe(
-        'https://proxy.example/?target=http://other.example/page',
-      )
+  describe('thumbnail and avatar safety', () => {
+    it('should keep a safe http thumbnail and avatar without upgrading them', () => {
+      const fields = normalizeEmbedFields({
+        thumbnail: 'http://cdn.example/thumb.jpg',
+        avatar: 'http://cdn.example/avatar.jpg',
+      })
+
+      expect(fields.thumbnail).toBe('http://cdn.example/thumb.jpg')
+      expect(fields.avatar).toBe('http://cdn.example/avatar.jpg')
+    })
+
+    it('should keep data:image thumbnails', () => {
+      expect(
+        normalizeEmbedFields({ thumbnail: 'data:image/png;base64,iVBORw0KGgo=' }).thumbnail,
+      ).toBe('data:image/png;base64,iVBORw0KGgo=')
+    })
+
+    it('should drop javascript: thumbnails', () => {
+      expect(normalizeEmbedFields({ thumbnail: 'javascript:alert(1)' }).thumbnail).toBeUndefined()
+    })
+
+    it('should drop data:image/svg+xml thumbnails', () => {
+      expect(
+        normalizeEmbedFields({ thumbnail: 'data:image/svg+xml;utf8,<svg/>' }).thumbnail,
+      ).toBeUndefined()
+    })
+
+    it('should drop unsafe avatars', () => {
+      expect(
+        normalizeEmbedFields({ avatar: 'data:text/html,<script>1</script>' }).avatar,
+      ).toBeUndefined()
+    })
+  })
+
+  describe('numeric coercion', () => {
+    it('should stringify width, height and duration', () => {
+      const fields = normalizeEmbedFields({ width: 640, height: 360, duration: 125 })
+
+      expect(fields.width).toBe('640')
+      expect(fields.height).toBe('360')
+      expect(fields.duration).toBe('125')
+    })
+  })
+
+  describe('shape', () => {
+    it('should pass text fields through unchanged', () => {
+      expect(
+        normalizeEmbedFields({
+          provider: 'youtube',
+          id: 'abc',
+          title: 'Title',
+          description: 'Desc',
+          author: 'Author',
+        }),
+      ).toMatchObject({
+        provider: 'youtube',
+        id: 'abc',
+        title: 'Title',
+        description: 'Desc',
+        author: 'Author',
+      })
+    })
+
+    it('should leave absent fields undefined', () => {
+      const fields = normalizeEmbedFields({ src: 'https://embed.example' })
+
+      expect(fields.title).toBeUndefined()
+      expect(fields.thumbnail).toBeUndefined()
+      expect(fields.width).toBeUndefined()
+    })
+
+    it('should return fields in a stable key order', () => {
+      const fields = normalizeEmbedFields({
+        provider: 'p',
+        id: 'i',
+        src: 's',
+        url: 'u',
+        thumbnail: 'https://cdn.example/t.jpg',
+        width: 1,
+        height: 2,
+        title: 't',
+        description: 'd',
+        author: 'a',
+        avatar: 'https://cdn.example/a.jpg',
+        duration: 3,
+      })
+
+      expect(Object.keys(fields)).toEqual([
+        'src',
+        'provider',
+        'id',
+        'url',
+        'thumbnail',
+        'width',
+        'height',
+        'title',
+        'description',
+        'author',
+        'avatar',
+        'duration',
+      ])
     })
   })
 })
@@ -316,5 +366,106 @@ describe('hasAncestorWithTagName', () => {
     const pre = document.querySelector('pre') as Element
 
     expect(hasAncestorWithTagName(span, tagSet, pre)).toBe(false)
+  })
+})
+
+describe('createPlaceholder', () => {
+  it('should create an empty div for an empty field record', () => {
+    const document = parseHtml('<div></div>')
+    const element = createPlaceholder(document, 'embed', {})
+
+    expect(element.tagName.toLowerCase()).toBe('div')
+    expect(element.attributes.length).toBe(0)
+    expect(element.outerHTML).toBe('<div></div>')
+  })
+
+  it('should write a data-{type}-{key} attribute for every non-empty field', () => {
+    const document = parseHtml('<div></div>')
+    const element = createPlaceholder(document, 'embed', {
+      provider: 'youtube',
+      id: 'abc123',
+      src: 'https://www.youtube.com/embed/abc123',
+      width: '560',
+      height: '315',
+    })
+
+    expect(element.getAttribute('data-embed-provider')).toBe('youtube')
+    expect(element.getAttribute('data-embed-id')).toBe('abc123')
+    expect(element.getAttribute('data-embed-src')).toBe('https://www.youtube.com/embed/abc123')
+    expect(element.getAttribute('data-embed-width')).toBe('560')
+    expect(element.getAttribute('data-embed-height')).toBe('315')
+  })
+
+  it('should prefix attributes with the bookmark type', () => {
+    const document = parseHtml('<div></div>')
+    const element = createPlaceholder(document, 'bookmark', {
+      provider: 'ghost',
+      url: 'https://example.com',
+      title: 'Title',
+    })
+
+    expect(element.getAttribute('data-bookmark-provider')).toBe('ghost')
+    expect(element.getAttribute('data-bookmark-url')).toBe('https://example.com')
+    expect(element.getAttribute('data-bookmark-title')).toBe('Title')
+  })
+
+  it('should skip undefined fields', () => {
+    const document = parseHtml('<div></div>')
+    const element = createPlaceholder(document, 'embed', {
+      provider: 'youtube',
+      title: undefined,
+      author: undefined,
+    })
+
+    expect(element.getAttribute('data-embed-provider')).toBe('youtube')
+    expect(element.hasAttribute('data-embed-title')).toBe(false)
+    expect(element.hasAttribute('data-embed-author')).toBe(false)
+  })
+
+  it('should skip empty-string fields', () => {
+    const document = parseHtml('<div></div>')
+    const element = createPlaceholder(document, 'embed', {
+      provider: 'youtube',
+      description: '',
+      author: '',
+    })
+
+    expect(element.getAttribute('data-embed-provider')).toBe('youtube')
+    expect(element.hasAttribute('data-embed-description')).toBe(false)
+    expect(element.hasAttribute('data-embed-author')).toBe(false)
+  })
+
+  it('should write only the non-empty fields when some are absent', () => {
+    const document = parseHtml('<div></div>')
+    const element = createPlaceholder(document, 'bookmark', {
+      provider: 'ghost',
+      url: 'https://example.com',
+      title: '',
+      icon: undefined,
+      thumbnail: 'https://example.com/t.jpg',
+    })
+
+    expect(element.attributes.length).toBe(3)
+    expect(element.hasAttribute('data-bookmark-title')).toBe(false)
+    expect(element.hasAttribute('data-bookmark-icon')).toBe(false)
+    expect(element.getAttribute('data-bookmark-thumbnail')).toBe('https://example.com/t.jpg')
+  })
+
+  it('should preserve values containing reserved characters verbatim', () => {
+    const document = parseHtml('<div></div>')
+    const value = 'https://example.com/p?a=1&b="2"&c=<x>'
+    const element = createPlaceholder(document, 'bookmark', { url: value })
+
+    expect(element.getAttribute('data-bookmark-url')).toBe(value)
+  })
+
+  it('should skip falsy non-string values such as null', () => {
+    const document = parseHtml('<div></div>')
+    const fields: Record<string, string | undefined> = { provider: 'youtube' }
+    ;(fields as Record<string, unknown>).id = null
+    const element = createPlaceholder(document, 'embed', fields)
+
+    expect(element.getAttribute('data-embed-provider')).toBe('youtube')
+    expect(element.hasAttribute('data-embed-id')).toBe(false)
   })
 })

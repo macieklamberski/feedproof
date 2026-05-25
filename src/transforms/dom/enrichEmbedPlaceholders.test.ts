@@ -83,20 +83,6 @@ describe('enrichEmbedPlaceholders', () => {
     expect(result).not.toContain('Enrichment Title')
   })
 
-  it('should skip unsafe thumbnail and avatar urls', async () => {
-    const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
-    const fn: EnrichEmbedFn = () => {
-      return new Map([
-        ['youtube:abc', { thumbnail: 'javascript:alert(1)', avatar: 'javascript:alert(2)' }],
-      ])
-    }
-    const result = await transform(value, withFn(fn))
-
-    expect(result).not.toContain('data-embed-thumbnail')
-    expect(result).not.toContain('data-embed-avatar')
-    expect(result).not.toContain('javascript:')
-  })
-
   it('should swallow exceptions thrown by enrichEmbedFn', async () => {
     const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
     const fn: EnrichEmbedFn = () => {
