@@ -1,6 +1,19 @@
 import { parseSrcset, stringifySrcset } from 'srcset'
 import type { AssetProxyFn, AssetType, DomTransform } from '../../types.js'
 
+const proxyableSelectors = [
+  'img',
+  'video',
+  'audio',
+  'source',
+  'track',
+  'image',
+  '[data-embed-thumbnail]',
+  '[data-embed-avatar]',
+  '[data-widget-icon]',
+  '[data-widget-thumbnail]',
+]
+
 const sourceTypeFromParent = (element: Element): AssetType => {
   const parent = element.parentElement?.localName
 
@@ -65,9 +78,7 @@ export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
   }
 
   return (document) => {
-    const elements = document.querySelectorAll(
-      'img, video, audio, source, track, image, [data-embed-thumbnail], [data-embed-avatar]',
-    )
+    const elements = document.querySelectorAll(proxyableSelectors.join(', '))
 
     for (const element of elements) {
       switch (element.localName) {
@@ -108,6 +119,14 @@ export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
 
       if (element.hasAttribute('data-embed-avatar')) {
         proxyAttribute(element, 'data-embed-avatar', 'image', assetProxyFn)
+      }
+
+      if (element.hasAttribute('data-widget-icon')) {
+        proxyAttribute(element, 'data-widget-icon', 'image', assetProxyFn)
+      }
+
+      if (element.hasAttribute('data-widget-thumbnail')) {
+        proxyAttribute(element, 'data-widget-thumbnail', 'image', assetProxyFn)
       }
     }
   }

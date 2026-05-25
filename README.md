@@ -51,6 +51,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `convertBreaksToParagraphs` | Convert `<br><br>` runs into semantic `<p>` blocks |
 | `injectEnclosures` | Inject feed enclosures into content as native `<audio>`/`<video>` or iframe placeholders |
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` to embed placeholders |
+| `convertGhostBookmarkCards` | Convert Ghost CMS `kg-bookmark-card` figures into `data-widget-kind="bookmark"` placeholders, preserving title, description, author, publisher, icon, and thumbnail |
 | `enrichEmbedPlaceholders` | Populate placeholder metadata (`title`, `description`, `duration`, etc.) via a caller-supplied async fn. Opt-in; not in defaults |
 | `proxyAssetUrls` | Rewrite image, video, and audio URLs through a caller-supplied proxy |
 | `resolveRelativeUrls` | Convert relative URLs to absolute using base URL |

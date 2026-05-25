@@ -130,6 +130,35 @@ describe('proxyAssetUrls', () => {
     )
   })
 
+  it('should rewrite data-widget-icon as image', async () => {
+    const value =
+      '<div data-widget-kind="bookmark" data-widget-icon="https://cdn.example.com/favicon.ico"></div>'
+    const result = await transform(value, wrapProxy)
+
+    expect(result).toContain(
+      'data-widget-icon="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Ffavicon.ico"',
+    )
+  })
+
+  it('should rewrite data-widget-thumbnail as image', async () => {
+    const value =
+      '<div data-widget-kind="bookmark" data-widget-thumbnail="https://cdn.example.com/thumb.jpg"></div>'
+    const result = await transform(value, wrapProxy)
+
+    expect(result).toContain(
+      'data-widget-thumbnail="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fthumb.jpg"',
+    )
+  })
+
+  it('should not rewrite data-widget-url (navigation, not asset)', async () => {
+    const value =
+      '<div data-widget-kind="bookmark" data-widget-url="https://example.com/post"></div>'
+    const result = await transform(value, wrapProxy)
+
+    expect(result).toContain('data-widget-url="https://example.com/post"')
+    expect(result).not.toContain('proxy.example.com')
+  })
+
   it('should leave attributes unchanged when assetProxyFn returns undefined', async () => {
     const skip: AssetProxyFn = () => undefined
     const value = '<img src="https://cdn.example.com/photo.jpg">'

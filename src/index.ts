@@ -59,6 +59,8 @@ export {
   applyEmbedMetadata,
   applyStringTransforms,
   createEmbedPlaceholder,
+  createWidgetPlaceholder,
+  isSafeThumbnailUrl,
 } from './common.js'
 export { defaultResolveUrlFn } from './defaults.js'
 export {
@@ -68,6 +70,7 @@ export {
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
 export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
+export { convertGhostBookmarkCards } from './transforms/dom/convertGhostBookmarkCards.js'
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 export { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
