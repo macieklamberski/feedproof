@@ -71,6 +71,7 @@ export {
 } from './embeds/youtube.js'
 export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 export { convertGhostBookmarkCards } from './transforms/dom/convertGhostBookmarkCards.js'
+export { convertSubstackPublicationCards } from './transforms/dom/convertSubstackPublicationCards.js'
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 export { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
