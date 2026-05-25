@@ -111,8 +111,7 @@ describe('proxyAssetUrls', () => {
   })
 
   it('should rewrite data-embed-thumbnail as image', async () => {
-    const value =
-      '<div data-embed="iframe" data-embed-thumbnail="https://cdn.example.com/thumb.jpg"></div>'
+    const value = '<div data-embed-thumbnail="https://cdn.example.com/thumb.jpg"></div>'
     const result = await transform(value, wrapProxy)
 
     expect(result).toContain(
@@ -121,8 +120,7 @@ describe('proxyAssetUrls', () => {
   })
 
   it('should rewrite data-embed-avatar as image', async () => {
-    const value =
-      '<div data-embed="iframe" data-embed-avatar="https://cdn.example.com/avatar.jpg"></div>'
+    const value = '<div data-embed-avatar="https://cdn.example.com/avatar.jpg"></div>'
     const result = await transform(value, wrapProxy)
 
     expect(result).toContain(
@@ -131,8 +129,7 @@ describe('proxyAssetUrls', () => {
   })
 
   it('should rewrite data-bookmark-icon as image', async () => {
-    const value =
-      '<div data-bookmark="" data-bookmark-icon="https://cdn.example.com/favicon.ico"></div>'
+    const value = '<div data-bookmark-icon="https://cdn.example.com/favicon.ico"></div>'
     const result = await transform(value, wrapProxy)
 
     expect(result).toContain(
@@ -141,8 +138,7 @@ describe('proxyAssetUrls', () => {
   })
 
   it('should rewrite data-bookmark-thumbnail as image', async () => {
-    const value =
-      '<div data-bookmark="" data-bookmark-thumbnail="https://cdn.example.com/thumb.jpg"></div>'
+    const value = '<div data-bookmark-thumbnail="https://cdn.example.com/thumb.jpg"></div>'
     const result = await transform(value, wrapProxy)
 
     expect(result).toContain(
@@ -151,7 +147,7 @@ describe('proxyAssetUrls', () => {
   })
 
   it('should not rewrite data-bookmark-url (navigation, not asset)', async () => {
-    const value = '<div data-bookmark="" data-bookmark-url="https://example.com/post"></div>'
+    const value = '<div data-bookmark-url="https://example.com/post"></div>'
     const result = await transform(value, wrapProxy)
 
     expect(result).toContain('data-bookmark-url="https://example.com/post"')

@@ -142,14 +142,14 @@ describe('unwrapWrappers', () => {
 
   it('should preserve a div carrying data-embed attributes', async () => {
     const value =
-      '<div data-embed="iframe" data-embed-src="https://example.com/x"><a href="https://example.com/x">https://example.com/x</a></div>'
+      '<div data-embed-src="https://example.com/x"><a href="https://example.com/x">https://example.com/x</a></div>'
 
     expect(await transform(value)).toBe(value)
   })
 
   it('should preserve a div carrying data-bookmark attributes', async () => {
     const value =
-      '<div data-bookmark="" data-bookmark-provider="ghost" data-bookmark-url="https://example.com/x"><a href="https://example.com/x">Title</a></div>'
+      '<div data-bookmark-provider="ghost" data-bookmark-url="https://example.com/x"><a href="https://example.com/x">Title</a></div>'
 
     expect(await transform(value)).toBe(value)
   })
