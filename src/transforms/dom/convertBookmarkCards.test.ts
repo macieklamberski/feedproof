@@ -39,10 +39,10 @@ describe('convertBookmarkCards', () => {
         [cardResolver],
       )
 
-      expect(result).toContain('data-widget-kind="bookmark"')
-      expect(result).toContain('data-widget-provider="stub"')
-      expect(result).toContain('data-widget-url="https://example.com"')
-      expect(result).toContain('data-widget-title="Title"')
+      expect(result).toContain('data-bookmark=""')
+      expect(result).toContain('data-bookmark-provider="stub"')
+      expect(result).toContain('data-bookmark-url="https://example.com"')
+      expect(result).toContain('data-bookmark-title="Title"')
       expect(result).toContain('<a href="https://example.com">Title</a>')
       expect(result).not.toContain('class="card"')
     })
@@ -55,7 +55,7 @@ describe('convertBookmarkCards', () => {
 
       expect(result).not.toContain('<ul')
       expect(result).not.toContain('<li')
-      expect((result.match(/data-widget-kind="bookmark"/g) ?? []).length).toBe(2)
+      expect((result.match(/data-bookmark=""/g) ?? []).length).toBe(2)
     })
 
     it('should run each resolver in the registry', async () => {
@@ -78,8 +78,8 @@ describe('convertBookmarkCards', () => {
         [resolverA, resolverB],
       )
 
-      expect(result).toContain('data-widget-provider="a"')
-      expect(result).toContain('data-widget-provider="b"')
+      expect(result).toContain('data-bookmark-provider="a"')
+      expect(result).toContain('data-bookmark-provider="b"')
     })
   })
 
@@ -90,8 +90,8 @@ describe('convertBookmarkCards', () => {
         [cardResolver],
       )
 
-      expect(result).toContain('data-widget-url="https://example.com/p"')
-      expect(result).toContain('data-widget-icon="https://example.com/i.ico"')
+      expect(result).toContain('data-bookmark-url="https://example.com/p"')
+      expect(result).toContain('data-bookmark-icon="https://example.com/i.ico"')
       expect(result).toContain('<a href="https://example.com/p">')
     })
 
@@ -101,9 +101,9 @@ describe('convertBookmarkCards', () => {
         [cardResolver],
       )
 
-      expect(result).not.toContain('data-widget-icon')
-      expect(result).not.toContain('data-widget-thumbnail')
-      expect(result).toContain('data-widget-title="T"')
+      expect(result).not.toContain('data-bookmark-icon')
+      expect(result).not.toContain('data-bookmark-thumbnail')
+      expect(result).toContain('data-bookmark-title="T"')
     })
   })
 
@@ -117,7 +117,7 @@ describe('convertBookmarkCards', () => {
     it('should skip elements when the resolver returns undefined', async () => {
       const result = await transform('<div class="card"></div>', [cardResolver])
 
-      expect(result).not.toContain('data-widget-kind')
+      expect(result).not.toContain('data-bookmark')
       expect(result).toContain('class="card"')
     })
   })

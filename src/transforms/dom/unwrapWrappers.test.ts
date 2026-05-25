@@ -147,9 +147,9 @@ describe('unwrapWrappers', () => {
     expect(await transform(value)).toBe(value)
   })
 
-  it('should preserve a div carrying data-widget attributes', async () => {
+  it('should preserve a div carrying data-bookmark attributes', async () => {
     const value =
-      '<div data-widget-kind="bookmark-card" data-widget-provider="ghost" data-widget-url="https://example.com/x"><a href="https://example.com/x">Title</a></div>'
+      '<div data-bookmark="" data-bookmark-provider="ghost" data-bookmark-url="https://example.com/x"><a href="https://example.com/x">Title</a></div>'
 
     expect(await transform(value)).toBe(value)
   })
