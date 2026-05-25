@@ -2,6 +2,7 @@ import { resolveUrl } from 'feedcanon'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { convertGhostBookmarkCards } from './transforms/dom/convertGhostBookmarkCards.js'
+import { convertSubstackPublicationCards } from './transforms/dom/convertSubstackPublicationCards.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
@@ -129,6 +130,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   stripDeadAnchors,
   stripTrackingParams,
   convertGhostBookmarkCards,
+  convertSubstackPublicationCards,
   removeTrackingPixels,
   unwrapEmojiImages,
   convertBreaksToParagraphs,
