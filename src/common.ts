@@ -229,8 +229,8 @@ export const createBookmarkPlaceholder = (
   const safeUrl = upgradeProtocol(url)
 
   const element = document.createElement('div')
-  element.setAttribute('data-widget-kind', 'bookmark')
-  element.setAttribute('data-widget-provider', provider)
+  element.setAttribute('data-bookmark', '')
+  element.setAttribute('data-bookmark-provider', provider)
 
   const fields: Record<string, string | undefined> = {
     ...rest,
@@ -242,7 +242,7 @@ export const createBookmarkPlaceholder = (
 
   for (const [key, value] of Object.entries(fields)) {
     if (value) {
-      element.setAttribute(`data-widget-${key}`, value)
+      element.setAttribute(`data-bookmark-${key}`, value)
     }
   }
 

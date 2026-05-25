@@ -130,32 +130,31 @@ describe('proxyAssetUrls', () => {
     )
   })
 
-  it('should rewrite data-widget-icon as image', async () => {
+  it('should rewrite data-bookmark-icon as image', async () => {
     const value =
-      '<div data-widget-kind="bookmark" data-widget-icon="https://cdn.example.com/favicon.ico"></div>'
+      '<div data-bookmark="" data-bookmark-icon="https://cdn.example.com/favicon.ico"></div>'
     const result = await transform(value, wrapProxy)
 
     expect(result).toContain(
-      'data-widget-icon="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Ffavicon.ico"',
+      'data-bookmark-icon="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Ffavicon.ico"',
     )
   })
 
-  it('should rewrite data-widget-thumbnail as image', async () => {
+  it('should rewrite data-bookmark-thumbnail as image', async () => {
     const value =
-      '<div data-widget-kind="bookmark" data-widget-thumbnail="https://cdn.example.com/thumb.jpg"></div>'
+      '<div data-bookmark="" data-bookmark-thumbnail="https://cdn.example.com/thumb.jpg"></div>'
     const result = await transform(value, wrapProxy)
 
     expect(result).toContain(
-      'data-widget-thumbnail="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fthumb.jpg"',
+      'data-bookmark-thumbnail="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fthumb.jpg"',
     )
   })
 
-  it('should not rewrite data-widget-url (navigation, not asset)', async () => {
-    const value =
-      '<div data-widget-kind="bookmark" data-widget-url="https://example.com/post"></div>'
+  it('should not rewrite data-bookmark-url (navigation, not asset)', async () => {
+    const value = '<div data-bookmark="" data-bookmark-url="https://example.com/post"></div>'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain('data-widget-url="https://example.com/post"')
+    expect(result).toContain('data-bookmark-url="https://example.com/post"')
     expect(result).not.toContain('proxy.example.com')
   })
 
