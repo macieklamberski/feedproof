@@ -135,66 +135,55 @@ export const getDimensions = (element: Element): { width?: number; height?: numb
   }
 }
 
-export const applyEmbedMetadata = (
+export const createPlaceholder = <Type extends object>(
+  document: Document,
+  type: string,
+  fields: Type,
+): HTMLElement => {
+  const element = document.createElement('div')
+
+  for (const [key, value] of Object.entries(fields)) {
+    if (value) {
+      element.setAttribute(`data-${type}-${key}`, value)
+    }
+  }
+
+  return element
+}
+
+// Maps embed metadata to its `data-embed-*` field record. Key order is the
+// attribute write order, so it's kept stable. Shared by embed creation and
+// enrichment so the per-field rules live in one place.
+export const normalizeEmbedFields = (
+  metadata: Partial<EmbedResolverResult>,
+): Record<string, string | undefined> => {
+  return {
+    src: metadata.src ? upgradeProtocol(metadata.src) : undefined,
+    provider: metadata.provider,
+    id: metadata.id,
+    url: metadata.url ? upgradeProtocol(metadata.url) : undefined,
+    thumbnail:
+      metadata.thumbnail && isSafeThumbnailUrl(metadata.thumbnail) ? metadata.thumbnail : undefined,
+    width: metadata.width ? String(metadata.width) : undefined,
+    height: metadata.height ? String(metadata.height) : undefined,
+    title: metadata.title,
+    description: metadata.description,
+    author: metadata.author,
+    avatar: metadata.avatar && isSafeThumbnailUrl(metadata.avatar) ? metadata.avatar : undefined,
+    duration: metadata.duration ? String(metadata.duration) : undefined,
+  }
+}
+
+export const updateEmbedPlaceholder = (
   element: HTMLElement,
   metadata: Partial<EmbedResolverResult>,
-  options?: { setIfMissing?: boolean },
 ): void => {
-  const setIfMissing = options?.setIfMissing ?? false
+  for (const [key, value] of Object.entries(normalizeEmbedFields(metadata))) {
+    const name = `data-embed-${key}`
 
-  const set = (name: string, value: string) => {
-    if (setIfMissing && element.hasAttribute(name)) {
-      return
+    if (value && !element.hasAttribute(name)) {
+      element.setAttribute(name, value)
     }
-    element.setAttribute(name, value)
-  }
-
-  if (metadata.provider) {
-    set('data-embed-provider', metadata.provider)
-  }
-
-  if (metadata.id) {
-    set('data-embed-id', metadata.id)
-  }
-
-  if (metadata.src) {
-    set('data-embed-src', upgradeProtocol(metadata.src))
-  }
-
-  if (metadata.url) {
-    set('data-embed-url', upgradeProtocol(metadata.url))
-  }
-
-  if (metadata.thumbnail && isSafeThumbnailUrl(metadata.thumbnail)) {
-    set('data-embed-thumbnail', metadata.thumbnail)
-  }
-
-  if (metadata.width) {
-    set('data-embed-width', String(metadata.width))
-  }
-
-  if (metadata.height) {
-    set('data-embed-height', String(metadata.height))
-  }
-
-  if (metadata.title) {
-    set('data-embed-title', metadata.title)
-  }
-
-  if (metadata.description) {
-    set('data-embed-description', metadata.description)
-  }
-
-  if (metadata.author) {
-    set('data-embed-author', metadata.author)
-  }
-
-  if (metadata.avatar && isSafeThumbnailUrl(metadata.avatar)) {
-    set('data-embed-avatar', metadata.avatar)
-  }
-
-  if (metadata.duration) {
-    set('data-embed-duration', String(metadata.duration))
   }
 }
 
@@ -203,13 +192,11 @@ export const createEmbedPlaceholder = (
   src: string,
   metadata?: Partial<EmbedResolverResult>,
 ): HTMLElement => {
-  const element = document.createElement('div')
-
-  element.setAttribute('data-embed-src', upgradeProtocol(metadata?.src ?? src))
-
-  if (metadata) {
-    applyEmbedMetadata(element, metadata)
-  }
+  const element = createPlaceholder(
+    document,
+    'embed',
+    normalizeEmbedFields({ ...metadata, src: metadata?.src ?? src }),
+  )
 
   const fallbackUrl = upgradeProtocol(metadata?.url ?? metadata?.src ?? src)
   const link = document.createElement('a')
@@ -227,22 +214,14 @@ export const createBookmarkPlaceholder = (
   const { provider, title, url, icon, thumbnail, ...rest } = result
   const safeUrl = upgradeProtocol(url)
 
-  const element = document.createElement('div')
-  element.setAttribute('data-bookmark-provider', provider)
-
-  const fields: Record<string, string | undefined> = {
+  const element = createPlaceholder(document, 'bookmark', {
+    provider,
     ...rest,
     url: safeUrl,
     title,
     icon: icon && isSafeThumbnailUrl(icon) ? upgradeProtocol(icon) : undefined,
     thumbnail: thumbnail && isSafeThumbnailUrl(thumbnail) ? upgradeProtocol(thumbnail) : undefined,
-  }
-
-  for (const [key, value] of Object.entries(fields)) {
-    if (value) {
-      element.setAttribute(`data-bookmark-${key}`, value)
-    }
-  }
+  })
 
   const link = document.createElement('a')
   link.setAttribute('href', safeUrl)

@@ -1,4 +1,4 @@
-import { applyEmbedMetadata } from '../../common.js'
+import { updateEmbedPlaceholder } from '../../common.js'
 import type { DomTransform, EmbedResolverResult } from '../../types.js'
 
 export const enrichEmbedPlaceholders: DomTransform = (context) => {
@@ -38,7 +38,7 @@ export const enrichEmbedPlaceholders: DomTransform = (context) => {
       const data = enriched.get(`${embed.provider}:${embed.id}`)
 
       if (data) {
-        applyEmbedMetadata(placeholders[i] as HTMLElement, data, { setIfMissing: true })
+        updateEmbedPlaceholder(placeholders[i] as HTMLElement, data)
       }
     }
   }
