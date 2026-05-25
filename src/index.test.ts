@@ -73,7 +73,7 @@ describe('transformContent', () => {
       '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcB" width="560" height="315"></iframe>'
     const result = await transformContent(html, { parseHtmlFn: parseHtml })
 
-    expect(result).toContain('data-embed="iframe"')
+    expect(result).toContain('data-embed-src=')
     expect(result).toContain('data-embed-provider="youtube"')
     expect(result).toContain('youtube-nocookie.com')
   })
@@ -229,7 +229,6 @@ describe('transformContent', () => {
     ].join('')
     const result = await transformContent(html, { parseHtmlFn: parseHtml })
 
-    expect(result).toContain('data-bookmark=""')
     expect(result).toContain('data-bookmark-provider="ghost"')
     expect(result).toContain('data-bookmark-url="https://example.com/post"')
     expect(result).toContain('data-bookmark-title="Post title"')

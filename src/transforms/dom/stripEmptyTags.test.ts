@@ -153,7 +153,7 @@ describe('stripEmptyTags', () => {
     // The anchor child makes the div non-empty; data-embed attributes are not
     // special-cased here, they just survive because their host element does.
     const value =
-      '<div data-embed="iframe" data-embed-src="https://example.com/embed"><a href="https://example.com/embed">https://example.com/embed</a></div>'
+      '<div data-embed-src="https://example.com/embed"><a href="https://example.com/embed">https://example.com/embed</a></div>'
 
     expect(await transform(value)).toBe(value)
   })

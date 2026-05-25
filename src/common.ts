@@ -205,7 +205,6 @@ export const createEmbedPlaceholder = (
 ): HTMLElement => {
   const element = document.createElement('div')
 
-  element.setAttribute('data-embed', 'iframe')
   element.setAttribute('data-embed-src', upgradeProtocol(metadata?.src ?? src))
 
   if (metadata) {
@@ -229,7 +228,6 @@ export const createBookmarkPlaceholder = (
   const safeUrl = upgradeProtocol(url)
 
   const element = document.createElement('div')
-  element.setAttribute('data-bookmark', '')
   element.setAttribute('data-bookmark-provider', provider)
 
   const fields: Record<string, string | undefined> = {

@@ -15,14 +15,13 @@ describe('enrichEmbedPlaceholders', () => {
   }
 
   it('should be a no-op when enrichEmbedFn is not provided', async () => {
-    const value =
-      '<div data-embed="iframe" data-embed-provider="youtube" data-embed-id="abc"></div>'
+    const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
 
     expect(await transform(value)).toBe(value)
   })
 
   it('should not call enrichEmbedFn when no placeholders have provider and id', async () => {
-    const value = '<p>No embeds here</p><div data-embed="iframe"></div>'
+    const value = '<p>No embeds here</p><div></div>'
     let called = false
     const fn: EnrichEmbedFn = () => {
       called = true
@@ -36,8 +35,8 @@ describe('enrichEmbedPlaceholders', () => {
 
   it('should call enrichEmbedFn once with all collected placeholders', async () => {
     const value =
-      '<div data-embed="iframe" data-embed-provider="youtube" data-embed-id="abc"></div>' +
-      '<div data-embed="iframe" data-embed-provider="vimeo" data-embed-id="123"></div>'
+      '<div data-embed-provider="youtube" data-embed-id="abc"></div>' +
+      '<div data-embed-provider="vimeo" data-embed-id="123"></div>'
     const calls: Array<Array<{ provider: string; id: string }>> = []
     const fn: EnrichEmbedFn = (embeds) => {
       calls.push(embeds)
@@ -54,8 +53,7 @@ describe('enrichEmbedPlaceholders', () => {
   })
 
   it('should write returned fields as data-embed-* attributes', async () => {
-    const value =
-      '<div data-embed="iframe" data-embed-provider="youtube" data-embed-id="abc"></div>'
+    const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
     const fn: EnrichEmbedFn = () => {
       const data: Partial<EmbedResolverResult> = {
         title: 'Sample Title',
@@ -75,7 +73,7 @@ describe('enrichEmbedPlaceholders', () => {
 
   it('should not overwrite existing data-embed-* attributes', async () => {
     const value =
-      '<div data-embed="iframe" data-embed-provider="youtube" data-embed-id="abc" data-embed-title="Resolver Title"></div>'
+      '<div data-embed-provider="youtube" data-embed-id="abc" data-embed-title="Resolver Title"></div>'
     const fn: EnrichEmbedFn = () => {
       return new Map([['youtube:abc', { title: 'Enrichment Title' }]])
     }
@@ -86,8 +84,7 @@ describe('enrichEmbedPlaceholders', () => {
   })
 
   it('should skip unsafe thumbnail and avatar urls', async () => {
-    const value =
-      '<div data-embed="iframe" data-embed-provider="youtube" data-embed-id="abc"></div>'
+    const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
     const fn: EnrichEmbedFn = () => {
       return new Map([
         ['youtube:abc', { thumbnail: 'javascript:alert(1)', avatar: 'javascript:alert(2)' }],
@@ -101,8 +98,7 @@ describe('enrichEmbedPlaceholders', () => {
   })
 
   it('should swallow exceptions thrown by enrichEmbedFn', async () => {
-    const value =
-      '<div data-embed="iframe" data-embed-provider="youtube" data-embed-id="abc"></div>'
+    const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
     const fn: EnrichEmbedFn = () => {
       throw new Error('boom')
     }
@@ -113,8 +109,8 @@ describe('enrichEmbedPlaceholders', () => {
 
   it('should silently skip placeholders missing from the returned map', async () => {
     const value =
-      '<div data-embed="iframe" data-embed-provider="youtube" data-embed-id="known"></div>' +
-      '<div data-embed="iframe" data-embed-provider="youtube" data-embed-id="unknown"></div>'
+      '<div data-embed-provider="youtube" data-embed-id="known"></div>' +
+      '<div data-embed-provider="youtube" data-embed-id="unknown"></div>'
     const fn: EnrichEmbedFn = () => {
       return new Map([['youtube:known', { title: 'Found' }]])
     }
@@ -128,8 +124,7 @@ describe('enrichEmbedPlaceholders', () => {
   })
 
   it('should accept async (Promise-returning) enrichEmbedFn', async () => {
-    const value =
-      '<div data-embed="iframe" data-embed-provider="youtube" data-embed-id="abc"></div>'
+    const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
     const fn: EnrichEmbedFn = async (embeds) => {
       await new Promise((resolve) => setTimeout(resolve, 1))
       return new Map(embeds.map((e) => [`${e.provider}:${e.id}`, { title: `t-${e.id}` }]))

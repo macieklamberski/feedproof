@@ -152,7 +152,7 @@ describe('injectEnclosures', () => {
       ]),
     )
 
-    expect(result).toContain('data-embed="iframe"')
+    expect(result).toContain('data-embed-src=')
     expect(result).toContain('data-embed-provider="youtube"')
   })
 
@@ -163,7 +163,7 @@ describe('injectEnclosures', () => {
       withEnclosures([{ url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video' }]),
     )
 
-    expect(result).toContain('data-embed="iframe"')
+    expect(result).toContain('data-embed-src=')
   })
 
   it('should skip enclosure with unrecognized type and no resolver match', async () => {

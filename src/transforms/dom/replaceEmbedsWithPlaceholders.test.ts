@@ -34,7 +34,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
     const value = '<p>Text</p><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     const result = await transform(value)
 
-    expect(result).toContain('data-embed="iframe"')
+    expect(result).toContain('data-embed-src=')
     expect(result).toContain('data-embed-provider="youtube"')
     expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
     expect(result).toContain('data-embed-src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"')
@@ -79,7 +79,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
 
     expect(result).toContain('Before')
     expect(result).toContain('After')
-    expect(result).toContain('data-embed="iframe"')
+    expect(result).toContain('data-embed-src=')
   })
 
   it('should emit data-embed-title, description, author, avatar and duration when handler returns them', async () => {
@@ -128,7 +128,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
     const result = await transform(value)
 
     expect(result).not.toContain('<iframe')
-    expect(result).toContain('data-embed="iframe"')
+    expect(result).toContain('data-embed-src=')
     expect(result).toContain('data-embed-src="https://unknown-site.com/123"')
     expect(result).not.toContain('data-embed-provider')
   })
@@ -163,7 +163,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
     const result = await transform(value, withNoResolvers)
 
     expect(result).not.toContain('<iframe')
-    expect(result).toContain('data-embed="iframe"')
+    expect(result).toContain('data-embed-src=')
     expect(result).not.toContain('data-embed-provider')
   })
 
@@ -221,7 +221,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
     const result = await transform(value, withNoResolvers)
 
     expect(result).not.toContain('<iframe')
-    expect(result).toContain('data-embed="iframe"')
+    expect(result).toContain('data-embed-src=')
     expect(result).not.toContain('data-embed-provider')
   })
 

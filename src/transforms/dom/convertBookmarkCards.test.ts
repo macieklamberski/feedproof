@@ -39,7 +39,6 @@ describe('convertBookmarkCards', () => {
         [cardResolver],
       )
 
-      expect(result).toContain('data-bookmark=""')
       expect(result).toContain('data-bookmark-provider="stub"')
       expect(result).toContain('data-bookmark-url="https://example.com"')
       expect(result).toContain('data-bookmark-title="Title"')
@@ -55,7 +54,7 @@ describe('convertBookmarkCards', () => {
 
       expect(result).not.toContain('<ul')
       expect(result).not.toContain('<li')
-      expect((result.match(/data-bookmark=""/g) ?? []).length).toBe(2)
+      expect((result.match(/data-bookmark-provider="/g) ?? []).length).toBe(2)
     })
 
     it('should run each resolver in the registry', async () => {
