@@ -1,7 +1,6 @@
-import { describe, expect, it } from 'bun:test'
+import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext as defaultContext } from '../../tests.js'
+import { baseContext as defaultContext, describeForEachParser } from '../../tests.js'
 import type { AssetProxyFn, TransformContext } from '../../types.js'
 import { proxyAssetUrls } from './proxyAssetUrls.js'
 
@@ -13,7 +12,7 @@ const baseContext = (assetProxyFn?: AssetProxyFn): TransformContext => {
   return { ...defaultContext, assetProxyFn }
 }
 
-describe('proxyAssetUrls', () => {
+describeForEachParser('proxyAssetUrls', (parseHtml) => {
   const transform = (html: string, assetProxyFn?: AssetProxyFn) => {
     return applyDomTransforms(parseHtml(html), [proxyAssetUrls(baseContext(assetProxyFn))])
   }
@@ -29,7 +28,7 @@ describe('proxyAssetUrls', () => {
     const value = '<img src="https://cdn.example.com/photo.jpg">'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain(
+    expect(result).toContainHtml(
       'src="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"',
     )
   })
@@ -75,29 +74,29 @@ describe('proxyAssetUrls', () => {
       '<video src="https://cdn.example.com/clip.mp4" poster="https://cdn.example.com/thumb.jpg"></video>'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain('src="https://proxy.example.com/?type=video&url=')
-    expect(result).toContain('poster="https://proxy.example.com/?type=image&url=')
+    expect(result).toContainHtml('src="https://proxy.example.com/?type=video&url=')
+    expect(result).toContainHtml('poster="https://proxy.example.com/?type=image&url=')
   })
 
   it('should rewrite audio src as audio', async () => {
     const value = '<audio src="https://cdn.example.com/clip.mp3"></audio>'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain('src="https://proxy.example.com/?type=audio&url=')
+    expect(result).toContainHtml('src="https://proxy.example.com/?type=audio&url=')
   })
 
   it('should rewrite source inside video as video', async () => {
     const value = '<video><source src="https://cdn.example.com/clip.mp4"></video>'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain('src="https://proxy.example.com/?type=video&url=')
+    expect(result).toContainHtml('src="https://proxy.example.com/?type=video&url=')
   })
 
   it('should rewrite source inside audio as audio', async () => {
     const value = '<audio><source src="https://cdn.example.com/clip.mp3"></audio>'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain('src="https://proxy.example.com/?type=audio&url=')
+    expect(result).toContainHtml('src="https://proxy.example.com/?type=audio&url=')
   })
 
   it('should rewrite source inside picture as image', async () => {
@@ -114,7 +113,7 @@ describe('proxyAssetUrls', () => {
     const value = '<div data-embed-thumbnail="https://cdn.example.com/thumb.jpg"></div>'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain(
+    expect(result).toContainHtml(
       'data-embed-thumbnail="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fthumb.jpg"',
     )
   })
@@ -123,7 +122,7 @@ describe('proxyAssetUrls', () => {
     const value = '<div data-embed-avatar="https://cdn.example.com/avatar.jpg"></div>'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain(
+    expect(result).toContainHtml(
       'data-embed-avatar="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Favatar.jpg"',
     )
   })
@@ -132,7 +131,7 @@ describe('proxyAssetUrls', () => {
     const value = '<div data-bookmark-icon="https://cdn.example.com/favicon.ico"></div>'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain(
+    expect(result).toContainHtml(
       'data-bookmark-icon="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Ffavicon.ico"',
     )
   })
@@ -141,7 +140,7 @@ describe('proxyAssetUrls', () => {
     const value = '<div data-bookmark-thumbnail="https://cdn.example.com/thumb.jpg"></div>'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain(
+    expect(result).toContainHtml(
       'data-bookmark-thumbnail="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fthumb.jpg"',
     )
   })
@@ -182,7 +181,7 @@ describe('proxyAssetUrls', () => {
     const value = '<svg><image href="https://cdn.example.com/photo.jpg"/></svg>'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain(
+    expect(result).toContainHtml(
       'href="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"',
     )
   })
@@ -191,7 +190,7 @@ describe('proxyAssetUrls', () => {
     const value = '<svg><image xlink:href="https://cdn.example.com/legacy.jpg"/></svg>'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain(
+    expect(result).toContainHtml(
       'xlink:href="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Flegacy.jpg"',
     )
   })
@@ -201,7 +200,7 @@ describe('proxyAssetUrls', () => {
       '<video><track src="https://cdn.example.com/captions.vtt" kind="subtitles"></video>'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain(
+    expect(result).toContainHtml(
       'src="https://proxy.example.com/?type=video&url=https%3A%2F%2Fcdn.example.com%2Fcaptions.vtt"',
     )
   })
@@ -211,7 +210,7 @@ describe('proxyAssetUrls', () => {
       '<audio><track src="https://cdn.example.com/chapters.vtt" kind="chapters"></audio>'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain(
+    expect(result).toContainHtml(
       'src="https://proxy.example.com/?type=audio&url=https%3A%2F%2Fcdn.example.com%2Fchapters.vtt"',
     )
   })
@@ -220,7 +219,7 @@ describe('proxyAssetUrls', () => {
     const value = '<IMG SRC="https://cdn.example.com/photo.jpg">'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain(
+    expect(result).toContainHtml(
       'src="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"',
     )
   })

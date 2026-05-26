@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { unwrapDoublyNestedLists } from './unwrapDoublyNestedLists.js'
 
-describe('unwrapDoublyNestedLists', () => {
+describeForEachParser('unwrapDoublyNestedLists', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(html), [unwrapDoublyNestedLists(context)])
   }
@@ -45,7 +44,7 @@ describe('unwrapDoublyNestedLists', () => {
       const value = '<ul><li>\u00A0<ul><li>A</li></ul></li></ul>'
       const expected = '&#160;<ul><li>A</li></ul>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should unwrap when a comment sits beside the inner list', async () => {

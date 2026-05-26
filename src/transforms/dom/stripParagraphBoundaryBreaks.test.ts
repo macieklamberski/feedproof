@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { stripParagraphBoundaryBreaks } from './stripParagraphBoundaryBreaks.js'
 
-describe('stripParagraphBoundaryBreaks', () => {
+describeForEachParser('stripParagraphBoundaryBreaks', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(html), [stripParagraphBoundaryBreaks(context)])
   }

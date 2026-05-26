@@ -1,12 +1,12 @@
-import { describe, expect, it } from 'bun:test'
+import { expect, it } from 'bun:test'
 import { defaultDomTransforms } from './defaults.js'
 import { transformContent } from './index.js'
-import { parseHtml } from './parsers/linkedom.js'
+import { describeForEachParser } from './tests.js'
 import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 
 const startsWithDiv = /^<div>/
 
-describe('transformContent', () => {
+describeForEachParser('transformContent', (parseHtml) => {
   it('should apply all default transforms', async () => {
     const html = '<div><p>Hello <img data-src="photo.jpg"></p></div>'
     const result = await transformContent(html, {

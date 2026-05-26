@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import type { BookmarkResolver, TransformContext } from '../../types.js'
 import { convertBookmarkCards } from './convertBookmarkCards.js'
 
@@ -26,12 +25,12 @@ const cardResolver: BookmarkResolver = {
   },
 }
 
-const transform = (html: string, bookmarkResolvers: Array<BookmarkResolver>) => {
-  const context: TransformContext = { ...baseContext, bookmarkResolvers }
-  return applyDomTransforms(parseHtml(html), [convertBookmarkCards(context)])
-}
+describeForEachParser('convertBookmarkCards', (parseHtml) => {
+  const transform = (html: string, bookmarkResolvers: Array<BookmarkResolver>) => {
+    const context: TransformContext = { ...baseContext, bookmarkResolvers }
+    return applyDomTransforms(parseHtml(html), [convertBookmarkCards(context)])
+  }
 
-describe('convertBookmarkCards', () => {
   describe('happy paths', () => {
     it('should replace a matched element with a bookmark placeholder', async () => {
       const result = await transform(

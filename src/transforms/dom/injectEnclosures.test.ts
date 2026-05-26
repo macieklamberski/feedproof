@@ -1,8 +1,7 @@
-import { describe, expect, it } from 'bun:test'
+import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import type { Enclosure, TransformContext } from '../../types.js'
 import { injectEnclosures } from './injectEnclosures.js'
 
@@ -15,7 +14,7 @@ const withEnclosures = (enclosures: Array<Enclosure>): TransformContext => {
   return { ...withResolver, enclosures }
 }
 
-describe('injectEnclosures', () => {
+describeForEachParser('injectEnclosures', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(html), [injectEnclosures(context)])
   }

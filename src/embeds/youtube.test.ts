@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { parseHtml } from '../parsers/linkedom.js'
+import { describeForEachParser } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   composeThumbnailUrl,
@@ -197,7 +197,7 @@ describe('composeThumbnailUrl', () => {
   })
 })
 
-describe('youtubeEmbedResolver', () => {
+describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
   const firstMatch = (html: string): Element | undefined => {
     return parseHtml(html).querySelector(youtubeEmbedResolver.selector) ?? undefined
   }

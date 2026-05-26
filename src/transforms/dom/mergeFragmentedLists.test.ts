@@ -1,11 +1,10 @@
-import { describe, expect, it } from 'bun:test'
+import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { mergeFragmentedLists } from './mergeFragmentedLists.js'
 
-describe('mergeFragmentedLists', () => {
+describeForEachParser('mergeFragmentedLists', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(html), [mergeFragmentedLists(context)])
   }
@@ -75,7 +74,7 @@ describe('mergeFragmentedLists', () => {
     const value = '<ol><li>a</li></ol><ol reversed=""><li>b</li></ol>'
     const expected = '<ol><li>a</li></ol><ol reversed><li>b</li></ol>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not merge when separated by a paragraph', async () => {

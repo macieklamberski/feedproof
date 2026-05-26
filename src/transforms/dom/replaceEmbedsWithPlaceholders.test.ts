@@ -1,9 +1,8 @@
-import { describe, expect, it } from 'bun:test'
+import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
 import { defaultEmbedResolvers } from '../../defaults.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import type { EmbedResolver, TransformContext } from '../../types.js'
 import { replaceEmbedsWithPlaceholders } from './replaceEmbedsWithPlaceholders.js'
 
@@ -25,7 +24,7 @@ const withNoResolvers: TransformContext = {
   embedResolvers: [],
 }
 
-describe('replaceEmbedsWithPlaceholders', () => {
+describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
   const transform = (html: string, context: TransformContext = withResolvers) => {
     return applyDomTransforms(parseHtml(html), [replaceEmbedsWithPlaceholders(context)])
   }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { parseHtml } from '../parsers/linkedom.js'
+import { describeForEachParser } from '../tests.js'
 import type { BookmarkResolverResult } from '../types.js'
 import { ghostBookmarkResolver } from './ghost.js'
 
@@ -64,12 +64,12 @@ const makeCard = (
   ].join('')
 }
 
-const extract = async (html: string): Promise<BookmarkResolverResult | undefined> => {
-  const element = parseHtml(html).querySelector(ghostBookmarkResolver.selector)
-  return element ? await ghostBookmarkResolver.extract(element) : undefined
-}
+describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
+  const extract = async (html: string): Promise<BookmarkResolverResult | undefined> => {
+    const element = parseHtml(html).querySelector(ghostBookmarkResolver.selector)
+    return element ? await ghostBookmarkResolver.extract(element) : undefined
+  }
 
-describe('ghostBookmarkResolver', () => {
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {
       const value = makeCard({
