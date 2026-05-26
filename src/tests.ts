@@ -45,17 +45,19 @@ const parsers: Record<string, ParseHtml> = {
 
 // A bare `bun test` exercises every suite under all parsers; `DOM_LIBRARY` narrows
 // to one for focused debugging.
-const selectedLibrary = process.env.DOM_LIBRARY
+export const selectParsers = (selected: string | undefined): Array<[string, ParseHtml]> => {
+  if (selected !== undefined && !(selected in parsers)) {
+    throw new Error(
+      `Unknown DOM_LIBRARY "${selected}". Expected one of: ${Object.keys(parsers).join(', ')}.`,
+    )
+  }
 
-if (selectedLibrary !== undefined && !(selectedLibrary in parsers)) {
-  throw new Error(
-    `Unknown DOM_LIBRARY "${selectedLibrary}". Expected one of: ${Object.keys(parsers).join(', ')}.`,
-  )
+  return Object.entries(parsers).filter(([library]) => {
+    return selected === undefined || library === selected
+  })
 }
 
-const activeParsers = Object.entries(parsers).filter(([library]) => {
-  return selectedLibrary === undefined || library === selectedLibrary
-})
+const activeParsers = selectParsers(process.env.DOM_LIBRARY)
 
 export const describeForEachParser = (name: string, fn: (parseHtml: ParseHtml) => void): void => {
   for (const [library, parseHtml] of activeParsers) {
@@ -65,12 +67,12 @@ export const describeForEachParser = (name: string, fn: (parseHtml: ParseHtml) =
   }
 }
 
-// Normalize serialized HTML to a canonical form so output can be compared across
-// parsers: parsers agree on the DOM but differ in how they render it back to a
-// string (entity escaping `&` vs `&amp;`, boolean attributes `controls` vs
-// `controls=""`, attribute order). Parsing once and sorting attributes collapses
-// those differences while leaving genuine DOM differences intact.
-const canonicalizeHtml = (html: string): string => {
+// Normalize serialized HTML so output can be compared across parsers: parsers
+// agree on the DOM but differ in how they render it back to a string (entity
+// escaping `&` vs `&amp;`, boolean attributes `controls` vs `controls=""`,
+// attribute order). Parsing once and sorting attributes collapses those
+// differences while leaving genuine DOM differences intact.
+const normalizeHtml = (html: string): string => {
   const document = parseWithLinkedom(html)
 
   for (const element of document.querySelectorAll('*')) {
@@ -91,27 +93,31 @@ const canonicalizeHtml = (html: string): string => {
 }
 
 const toEqualHtml = (received: unknown, expected: string) => {
-  const canonicalReceived = canonicalizeHtml(received as string)
-  const canonicalExpected = canonicalizeHtml(expected)
-  const pass = canonicalReceived === canonicalExpected
+  const normalizedReceived = normalizeHtml(received as string)
+  const normalizedExpected = normalizeHtml(expected)
+  const pass = normalizedReceived === normalizedExpected
 
   return {
     pass,
     message: () =>
-      `expected HTML to ${pass ? 'not ' : ''}equal after canonicalization\n  received: ${canonicalReceived}\n  expected: ${canonicalExpected}`,
+      pass
+        ? `expected HTML not to equal\n  received: ${normalizedReceived}\n  expected: ${normalizedExpected}`
+        : `expected HTML to equal\n  received: ${normalizedReceived}\n  expected: ${normalizedExpected}`,
   }
 }
 
 // Substring assertions written in linkedom's serialization (literal `&`) match
-// any parser's output once the received HTML is canonicalized.
+// any parser's output once the received HTML is normalized.
 const toContainHtml = (received: unknown, substring: string) => {
-  const canonicalReceived = canonicalizeHtml(received as string)
-  const pass = canonicalReceived.includes(substring)
+  const normalizedReceived = normalizeHtml(received as string)
+  const pass = normalizedReceived.includes(substring)
 
   return {
     pass,
     message: () =>
-      `expected canonicalized HTML to ${pass ? 'not ' : ''}contain substring\n  received: ${canonicalReceived}\n  substring: ${substring}`,
+      pass
+        ? `expected HTML not to contain substring\n  received: ${normalizedReceived}\n  substring: ${substring}`
+        : `expected HTML to contain substring\n  received: ${normalizedReceived}\n  substring: ${substring}`,
   }
 }
 
