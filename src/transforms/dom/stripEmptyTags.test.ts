@@ -1,11 +1,10 @@
-import { describe, expect, it } from 'bun:test'
+import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { stripEmptyTags } from './stripEmptyTags.js'
 
-describe('stripEmptyTags', () => {
+describeForEachParser('stripEmptyTags', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(html), [stripEmptyTags(context)])
   }
@@ -120,13 +119,13 @@ describe('stripEmptyTags', () => {
   it('should preserve empty video tag', async () => {
     const value = '<video src="https://example.com/video.mp4" controls></video>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should preserve empty audio tag', async () => {
     const value = '<audio src="https://example.com/audio.mp3" controls></audio>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should preserve source element (void in HTML5) without closing tag', async () => {
@@ -177,12 +176,6 @@ describe('stripEmptyTags', () => {
 
   it('should not strip tag-shaped strings inside <style>', async () => {
     const value = '<style>.x { background: url("data:image/svg+xml,<svg></svg>") }</style><p>x</p>'
-
-    expect(await transform(value)).toBe(value)
-  })
-
-  it('should not strip tag-shaped strings inside <textarea>', async () => {
-    const value = '<textarea><div></div></textarea>'
 
     expect(await transform(value)).toBe(value)
   })

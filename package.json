@@ -40,7 +40,10 @@
   ],
   "scripts": {
     "prepare": "lefthook install",
-    "build": "tsdown src/index.ts src/defaults.ts src/parsers/linkedom.ts --format esm --dts --clean --unbundle --no-fixed-extension"
+    "build": "tsdown src/index.ts src/defaults.ts src/parsers/linkedom.ts --format esm --dts --clean --unbundle --no-fixed-extension",
+    "test": "bun test",
+    "test:linkedom": "DOM_LIBRARY=linkedom bun test",
+    "test:jsdom": "DOM_LIBRARY=jsdom bun test"
   },
   "dependencies": {
     "@wordpress/autop": "^4.46.0",
@@ -60,6 +63,8 @@
   },
   "devDependencies": {
     "@types/bun": "^1.3.13",
+    "@types/jsdom": "^28.0.3",
+    "jsdom": "^29.1.1",
     "kvalita": "^1.13.0",
     "linkedom": "^0.18.12",
     "tsdown": "^0.22.0"

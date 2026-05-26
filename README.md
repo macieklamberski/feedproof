@@ -96,7 +96,7 @@ The `stringTransforms` and `domTransforms` options each fully replace the corres
 
 ## DOM library
 
-Feedsweep is parser-agnostic. You provide `parseHtmlFn` — a function that turns an HTML string into a `Document`. Use any DOM library that produces a standards-compliant `Document`.
+Feedsweep is parser-agnostic. You provide `parseHtmlFn` — a function that turns an HTML string into a `Document`. Use any DOM library that produces a standards-compliant `Document`. The test suite runs the full pipeline against both linkedom and jsdom.
 
 ```typescript
 // linkedom (recommended default)

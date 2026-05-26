@@ -1,7 +1,6 @@
-import { describe, expect, it } from 'bun:test'
+import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import type { EmbedResolverResult, EnrichEmbedFn, TransformContext } from '../../types.js'
 import { enrichEmbedPlaceholders } from './enrichEmbedPlaceholders.js'
 
@@ -9,7 +8,7 @@ const withFn = (enrichEmbedFn: EnrichEmbedFn): TransformContext => {
   return { ...baseContext, enrichEmbedFn }
 }
 
-describe('enrichEmbedPlaceholders', () => {
+describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(html), [enrichEmbedPlaceholders(context)])
   }

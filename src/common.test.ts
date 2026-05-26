@@ -7,9 +7,9 @@ import {
   hasAncestorWithTagName,
   normalizeEmbedFields,
 } from './common.js'
-import { parseHtml } from './parsers/linkedom.js'
+import { describeForEachParser } from './tests.js'
 
-describe('applyDomTransforms', () => {
+describeForEachParser('applyDomTransforms', (parseHtml) => {
   it('should return body innerHTML when given no transforms', async () => {
     const document = parseHtml('<p>Hello</p>')
 
@@ -43,7 +43,7 @@ describe('applyDomTransforms', () => {
   })
 })
 
-describe('createEmbedPlaceholder', () => {
+describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
   describe('fallback link', () => {
     it('should use metadata.url when present', () => {
       const document = parseHtml('')
@@ -242,7 +242,7 @@ describe('normalizeEmbedFields', () => {
   })
 })
 
-describe('getDimensions', () => {
+describeForEachParser('getDimensions', (parseHtml) => {
   it('should return both dimensions from attributes', () => {
     const document = parseHtml('<img width="320" height="240">')
     const image = document.querySelector('img') as Element
@@ -314,7 +314,7 @@ describe('getDimensions', () => {
   })
 })
 
-describe('hasAncestorWithTagName', () => {
+describeForEachParser('hasAncestorWithTagName', (parseHtml) => {
   const tagSet = new Set(['pre', 'code'])
 
   it('should return true when direct parent matches', () => {
@@ -369,7 +369,7 @@ describe('hasAncestorWithTagName', () => {
   })
 })
 
-describe('createPlaceholder', () => {
+describeForEachParser('createPlaceholder', (parseHtml) => {
   it('should create an empty div for an empty field record', () => {
     const document = parseHtml('<div></div>')
     const element = createPlaceholder(document, 'embed', {})

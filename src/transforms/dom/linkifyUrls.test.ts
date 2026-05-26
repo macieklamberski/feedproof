@@ -1,11 +1,10 @@
-import { describe, expect, it } from 'bun:test'
+import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { linkifyUrls } from './linkifyUrls.js'
 
-describe('linkifyUrls', () => {
+describeForEachParser('linkifyUrls', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(html), [linkifyUrls(context)])
   }
@@ -29,7 +28,7 @@ describe('linkifyUrls', () => {
     const value = '<p>See https://example.com/path?key=value&other=1#hash for details</p>'
     const result = await transform(value)
 
-    expect(result).toContain('href="https://example.com/path?key=value&other=1#hash"')
+    expect(result).toContainHtml('href="https://example.com/path?key=value&other=1#hash"')
   })
 
   it('should link multiple URLs in one paragraph', async () => {

@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
 import { defaultUrlUnwrappers } from '../../defaults.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext, UrlUnwrapper } from '../../types.js'
 import { extractRedirectTarget, unwrapRedirectUrls } from './unwrapRedirectUrls.js'
 
-describe('unwrapRedirectUrls', () => {
+describeForEachParser('unwrapRedirectUrls', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(html), [unwrapRedirectUrls(context)])
   }

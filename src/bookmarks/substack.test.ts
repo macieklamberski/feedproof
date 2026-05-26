@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { parseHtml } from '../parsers/linkedom.js'
+import { describeForEachParser } from '../tests.js'
 import type { BookmarkResolverResult } from '../types.js'
 import { substackBookmarkResolver } from './substack.js'
 
@@ -35,12 +35,12 @@ const makeCard = (
   return `<div class="embedded-publication-wrap" data-attrs="${encoded}"></div>`
 }
 
-const extract = async (html: string): Promise<BookmarkResolverResult | undefined> => {
-  const element = parseHtml(html).querySelector(substackBookmarkResolver.selector)
-  return element ? await substackBookmarkResolver.extract(element) : undefined
-}
+describeForEachParser('substackBookmarkResolver', (parseHtml) => {
+  const extract = async (html: string): Promise<BookmarkResolverResult | undefined> => {
+    const element = parseHtml(html).querySelector(substackBookmarkResolver.selector)
+    return element ? await substackBookmarkResolver.extract(element) : undefined
+  }
 
-describe('substackBookmarkResolver', () => {
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {
       const value = makeCard({

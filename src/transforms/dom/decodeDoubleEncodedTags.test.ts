@@ -1,11 +1,10 @@
-import { describe, expect, it } from 'bun:test'
+import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { decodeDoubleEncodedTags } from './decodeDoubleEncodedTags.js'
 
-describe('decodeDoubleEncodedTags', () => {
+describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(html), [decodeDoubleEncodedTags(context)])
   }

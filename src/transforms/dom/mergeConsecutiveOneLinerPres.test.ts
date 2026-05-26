@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { mergeConsecutiveOneLinerPres } from './mergeConsecutiveOneLinerPres.js'
 import { replacePreLineBreaks } from './replacePreLineBreaks.js'
 
-describe('mergeConsecutiveOneLinerPres', () => {
+describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(html), [mergeConsecutiveOneLinerPres(context)])
   }

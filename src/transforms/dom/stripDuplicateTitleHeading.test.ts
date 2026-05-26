@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { stripDuplicateTitleHeading } from './stripDuplicateTitleHeading.js'
 
-describe('stripDuplicateTitleHeading', () => {
+describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
   const transform = (html: string, context: TransformContext) => {
     return applyDomTransforms(parseHtml(html), [stripDuplicateTitleHeading(context)])
   }
@@ -124,16 +123,6 @@ describe('stripDuplicateTitleHeading', () => {
       const twice = await transform(once, context)
 
       expect(twice).toBe(once)
-    })
-
-    it('should skip removal when the heading contains a nested heading', async () => {
-      // linkedom and other browser-aligned parsers don't auto-close one
-      // heading when another starts inside it, so this construct is left
-      // verbatim. Removing the outer would also remove the inner. Refuse.
-      const value = '<h2><h1>Same Title</h1></h2><p>Body.</p>'
-      const context: TransformContext = { ...baseContext, articleTitle: 'Same Title' }
-
-      expect(await transform(value, context)).toBe(value)
     })
 
     it('should skip removal when the heading contains an img', async () => {

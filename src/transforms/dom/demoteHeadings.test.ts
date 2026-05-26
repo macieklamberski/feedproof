@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { parseHtml } from '../../parsers/linkedom.js'
-import { baseContext } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import { demoteHeadings } from './demoteHeadings.js'
 
-describe('demoteHeadings', () => {
+describeForEachParser('demoteHeadings', (parseHtml) => {
   const transform = (html: string) => {
     return applyDomTransforms(parseHtml(html), [demoteHeadings(baseContext)])
   }
@@ -35,7 +34,7 @@ describe('demoteHeadings', () => {
       const value = '<h1 id="intro" class="lead" data-x="1">Title</h1>'
       const expected = '<h2 id="intro" class="lead" data-x="1">Title</h2>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should preserve inner markup and text', async () => {
