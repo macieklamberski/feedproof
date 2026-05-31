@@ -192,4 +192,12 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
       expect(result).toContain('<pre class="wp-block-verse">line 1\nline 2</pre>')
     })
   })
+
+  it('should be idempotent', async () => {
+    const value = '<pre>line 1</pre><pre>line 2</pre><pre>line 3</pre>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

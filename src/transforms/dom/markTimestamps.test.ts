@@ -149,4 +149,12 @@ describeForEachParser('markTimestamps', (parseHtml) => {
 
     expect(result.match(/data-timestamp/g)).toHaveLength(1)
   })
+
+  it('should be idempotent', async () => {
+    const value = '<p>01:21 - Intro</p>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

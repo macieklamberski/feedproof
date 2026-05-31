@@ -118,4 +118,21 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
 
     expect(result).toContain('data-embed-title="t-abc"')
   })
+
+  it('should be idempotent', async () => {
+    const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
+    const fn: EnrichEmbedFn = () => {
+      const data: Partial<EmbedResolverResult> = {
+        title: 'Sample Title',
+        description: 'Sample description',
+        author: 'channel name',
+        duration: 125,
+      }
+      return new Map([['youtube:abc', data]])
+    }
+    const once = await transform(value, withFn(fn))
+    const twice = await transform(once, withFn(fn))
+
+    expect(twice).toBe(once)
+  })
 })

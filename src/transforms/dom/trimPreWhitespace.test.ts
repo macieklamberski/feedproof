@@ -129,4 +129,12 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
 
     expect(result).toBe(baseline)
   })
+
+  it('should be idempotent', async () => {
+    const value = '<pre><code>const x = 1\n\n</code></pre>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

@@ -110,5 +110,13 @@ describeForEachParser('stripComments', (parseHtml) => {
 
       expect(await transform(value)).toBe(expected)
     })
+
+    it('should be idempotent', async () => {
+      const value = '<!-- one --><p>text</p><!-- two -->'
+      const once = await transform(value)
+      const twice = await transform(once)
+
+      expect(twice).toBe(once)
+    })
   })
 })

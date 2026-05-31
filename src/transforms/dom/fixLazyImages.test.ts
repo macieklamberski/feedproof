@@ -422,4 +422,12 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
       expect(result).not.toContain('data-custom-srcset')
     })
   })
+
+  it('should be idempotent', async () => {
+    const value = '<img data-src="photo.jpg">'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

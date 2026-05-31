@@ -199,4 +199,12 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     expect(result).not.toContain('https://example.com/c_limit')
     expect(result).not.toContain('https://example.com/f_webp')
   })
+
+  it('should be idempotent', async () => {
+    const value = '<a href="/page">link</a>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

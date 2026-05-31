@@ -77,6 +77,15 @@ describeForEachParser('unwrapRedirectUrls', (parseHtml) => {
       expect(result).toContain('href="https://target.com"')
     })
   })
+
+  it('should be idempotent', async () => {
+    const value =
+      '<a href="https://www.google.com/url?url=https%3A%2F%2Fexample.com%2Fpage">link</a>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })
 
 describe('extractRedirectTarget', () => {

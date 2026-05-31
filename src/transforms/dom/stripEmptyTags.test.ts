@@ -243,4 +243,12 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
 
     expect(await transform(value)).toBe(value)
   })
+
+  it('should be idempotent', async () => {
+    const value = '<div></div><p>Keep</p><div></div>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

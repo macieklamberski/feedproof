@@ -156,5 +156,13 @@ describeForEachParser('unwrapDoublyNestedLists', (parseHtml) => {
 
       expect(await transform(value)).toBe(value)
     })
+
+    it('should be idempotent', async () => {
+      const value = '<ul><li><ul><li><ul><li>A</li><li>B</li></ul></li></ul></li></ul>'
+      const once = await transform(value)
+      const twice = await transform(once)
+
+      expect(twice).toBe(once)
+    })
   })
 })

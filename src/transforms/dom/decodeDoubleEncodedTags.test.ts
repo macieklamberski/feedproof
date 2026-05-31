@@ -141,4 +141,12 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
 
     expect(await transform(value)).toBe(expected)
   })
+
+  it('should be idempotent', async () => {
+    const value = '<p>Build &lt;a href="/products" target="_blank"&gt;eight products&lt;/a&gt;.</p>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

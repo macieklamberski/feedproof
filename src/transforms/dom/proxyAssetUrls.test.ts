@@ -8,6 +8,16 @@ const wrapProxy: AssetProxyFn = (url, type) => {
   return `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`
 }
 
+// proxyAssetUrls is idempotent only when assetProxyFn is — this one skips
+// already-proxied URLs so re-running the transform is a no-op.
+const idempotentProxy: AssetProxyFn = (url, type) => {
+  if (url.startsWith('https://proxy.example.com/')) {
+    return url
+  }
+
+  return wrapProxy(url, type)
+}
+
 const baseContext = (assetProxyFn?: AssetProxyFn): TransformContext => {
   return { ...defaultContext, assetProxyFn }
 }
@@ -239,5 +249,13 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     await transform(value, recorder)
 
     expect(seen).toEqual(['image', 'video', 'image', 'audio'])
+  })
+
+  it('should be idempotent given an idempotent assetProxyFn', async () => {
+    const value = '<img src="https://cdn.example.com/photo.jpg">'
+    const once = await transform(value, idempotentProxy)
+    const twice = await transform(once, idempotentProxy)
+
+    expect(twice).toBe(once)
   })
 })

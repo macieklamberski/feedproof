@@ -67,4 +67,12 @@ describe('paragraphizePlainText', () => {
 
     expect(result).toBe('')
   })
+
+  it('should be idempotent', async () => {
+    const value = 'First paragraph\n\nSecond paragraph'
+    const once = await paragraphize(value)
+    const twice = await paragraphize(once)
+
+    expect(twice).toBe(once)
+  })
 })

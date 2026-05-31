@@ -82,4 +82,12 @@ describeForEachParser('stripInterBlockBreaks', (parseHtml) => {
 
     expect(await transform(value)).toBe(expected)
   })
+
+  it('should be idempotent', async () => {
+    const value = '<p>First</p><br><p>Second</p>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

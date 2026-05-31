@@ -118,5 +118,13 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
       expect(result).not.toContain('data-bookmark')
       expect(result).toContain('class="card"')
     })
+
+    it('should be idempotent', async () => {
+      const value = '<div class="card" data-url="https://example.com" data-title="Title"></div>'
+      const once = await transform(value, [cardResolver])
+      const twice = await transform(once, [cardResolver])
+
+      expect(twice).toBe(once)
+    })
   })
 })

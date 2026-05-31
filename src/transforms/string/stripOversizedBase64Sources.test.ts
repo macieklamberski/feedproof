@@ -65,4 +65,13 @@ describe('stripOversizedBase64Sources', () => {
 
     expect(await transform(value)).toBe("<img src=''>")
   })
+
+  it('should be idempotent', async () => {
+    const largeData = 'A'.repeat(60 * 1024)
+    const value = `<img src="data:image/png;base64,${largeData}">`
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })
