@@ -81,6 +81,26 @@ describeForEachParser('stripBoundaryBreaks', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
+    it('should strip leading br before the first list item in ul', async () => {
+      const value = '<ul><br><li>Item</li></ul>'
+      const expected = '<ul><li>Item</li></ul>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should strip trailing br after the last list item in ol', async () => {
+      const value = '<ol><li>Item</li><br></ol>'
+      const expected = '<ol><li>Item</li></ol>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should preserve br between list items', async () => {
+      const value = '<ul><li>One</li><br><li>Two</li></ul>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
     it('should strip boundary br from heading', async () => {
       const value = '<h2><br>Heading<br></h2>'
       const expected = '<h2>Heading</h2>'

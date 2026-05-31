@@ -15,6 +15,8 @@ const boundaryBreakSelectors = [
   'div',
   'blockquote',
   'li',
+  'ul',
+  'ol',
   'figcaption',
   'section',
 ]
