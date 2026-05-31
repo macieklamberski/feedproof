@@ -2,11 +2,11 @@ import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
-import { stripParagraphBoundaryBreaks } from './stripParagraphBoundaryBreaks.js'
+import { stripBoundaryBreaks } from './stripBoundaryBreaks.js'
 
-describeForEachParser('stripParagraphBoundaryBreaks', (parseHtml) => {
+describeForEachParser('stripBoundaryBreaks', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripParagraphBoundaryBreaks(context)])
+    return applyDomTransforms(parseHtml(html), [stripBoundaryBreaks(context)])
   }
 
   describe('happy paths', () => {
@@ -59,6 +59,84 @@ describeForEachParser('stripParagraphBoundaryBreaks', (parseHtml) => {
     })
   })
 
+  describe('block elements', () => {
+    it('should strip boundary br from div', async () => {
+      const value = '<div><br>Text<br></div>'
+      const expected = '<div>Text</div>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should strip boundary br from blockquote', async () => {
+      const value = '<blockquote><br>Quote<br></blockquote>'
+      const expected = '<blockquote>Quote</blockquote>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should strip boundary br from list item', async () => {
+      const value = '<ul><li><br>Item<br></li></ul>'
+      const expected = '<ul><li>Item</li></ul>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should strip boundary br from heading', async () => {
+      const value = '<h2><br>Heading<br></h2>'
+      const expected = '<h2>Heading</h2>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should strip boundary br from figcaption', async () => {
+      const value = '<figure><figcaption><br>Caption<br></figcaption></figure>'
+      const expected = '<figure><figcaption>Caption</figcaption></figure>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should strip boundary br from section', async () => {
+      const value = '<section><br>Content<br></section>'
+      const expected = '<section>Content</section>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should strip from both p and sibling div', async () => {
+      const value = '<p><br>Para<br></p><div><br>Div<br></div>'
+      const expected = '<p>Para</p><div>Div</div>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+  })
+
+  describe('exclusions', () => {
+    it('should not strip boundary br from table cells', async () => {
+      const value =
+        '<table><tbody><tr><td><br>Cell<br></td><th><br>Head<br></th></tr></tbody></table>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should not strip boundary br from definition list terms', async () => {
+      const value = '<dl><dt><br>Term<br></dt><dd><br>Definition<br></dd></dl>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should not strip boundary br from pre', async () => {
+      const value = '<pre><br>code<br></pre>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should not touch br between sibling blocks', async () => {
+      const value = '<p>Text</p><br><div>Block</div>'
+
+      expect(await transform(value)).toBe(value)
+    })
+  })
+
   describe('edge cases', () => {
     it('should leave paragraph unchanged when it has no br', async () => {
       const value = '<p>Just text</p>'
@@ -73,45 +151,15 @@ describeForEachParser('stripParagraphBoundaryBreaks', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
-    it('should not touch br outside paragraphs', async () => {
-      const value = '<p>Text</p><br><div>Block</div>'
-
-      expect(await transform(value)).toBe(value)
-    })
-
-    it('should not strip boundary br from div', async () => {
-      const value = '<div><br>Text<br></div>'
-
-      expect(await transform(value)).toBe(value)
-    })
-
-    it('should not strip boundary br from blockquote', async () => {
-      const value = '<blockquote><br>Quote<br></blockquote>'
-
-      expect(await transform(value)).toBe(value)
-    })
-
-    it('should not strip boundary br from li', async () => {
-      const value = '<ul><li><br>Item<br></li></ul>'
-
-      expect(await transform(value)).toBe(value)
-    })
-
-    it('should not strip boundary br from heading', async () => {
-      const value = '<h2><br>Heading<br></h2>'
-
-      expect(await transform(value)).toBe(value)
-    })
-
-    it('should strip from p but leave sibling div untouched', async () => {
-      const value = '<p><br>Para<br></p><div><br>Div<br></div>'
-      const expected = '<p>Para</p><div><br>Div<br></div>'
+    it('should empty div with only br content', async () => {
+      const value = '<div><br></div>'
+      const expected = '<div></div>'
 
       expect(await transform(value)).toBe(expected)
     })
 
     it('should be idempotent', async () => {
-      const value = '<p><br>Text<br></p>'
+      const value = '<div><br>Text<br></div>'
       const once = await transform(value)
       const twice = await transform(once)
 

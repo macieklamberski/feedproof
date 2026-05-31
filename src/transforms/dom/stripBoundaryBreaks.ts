@@ -1,12 +1,30 @@
 import { isBr, isSkippable } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-export const stripParagraphBoundaryBreaks: DomTransform = () => {
-  return (document) => {
-    const paragraphs = document.querySelectorAll('p')
+// Flow-content blocks where a boundary <br> is redundant. Structural
+// members (td, th, dt, dd) are omitted: emptying one (e.g. <td><br></td>)
+// lets stripEmptyTags delete it, misaligning tables / breaking dl pairs.
+const boundaryBreakSelectors = [
+  'p',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'div',
+  'blockquote',
+  'li',
+  'figcaption',
+  'section',
+]
 
-    for (const paragraph of paragraphs) {
-      let cursor = paragraph.firstChild
+export const stripBoundaryBreaks: DomTransform = () => {
+  return (document) => {
+    const elements = document.querySelectorAll(boundaryBreakSelectors.join(', '))
+
+    for (const element of elements) {
+      let cursor = element.firstChild
       let leadingHasBr = false
       let leadingEnd: ChildNode | null = null
 
@@ -19,7 +37,7 @@ export const stripParagraphBoundaryBreaks: DomTransform = () => {
       }
 
       if (leadingHasBr) {
-        let node = paragraph.firstChild
+        let node = element.firstChild
         while (node) {
           const next = node.nextSibling
           node.remove()
@@ -30,7 +48,7 @@ export const stripParagraphBoundaryBreaks: DomTransform = () => {
         }
       }
 
-      cursor = paragraph.lastChild
+      cursor = element.lastChild
       let trailingHasBr = false
       let trailingEnd: ChildNode | null = null
 
@@ -43,7 +61,7 @@ export const stripParagraphBoundaryBreaks: DomTransform = () => {
       }
 
       if (trailingHasBr) {
-        let node = paragraph.lastChild
+        let node = element.lastChild
         while (node) {
           const prev = node.previousSibling
           node.remove()
