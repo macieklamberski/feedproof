@@ -75,7 +75,7 @@ describe('transformContent', () => {
 
     expect(result).toContain('data-embed-src=')
     expect(result).toContain('data-embed-provider="youtube"')
-    expect(result).toContain('youtube-nocookie.com')
+    expect(result).toContain('youtube.com/embed')
   })
 
   it('should allow custom embedResolvers', async () => {

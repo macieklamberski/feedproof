@@ -137,7 +137,7 @@ describe('youtubeResolveEmbed', () => {
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
-      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
@@ -149,7 +149,7 @@ describe('youtubeResolveEmbed', () => {
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
-      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
@@ -161,7 +161,7 @@ describe('youtubeResolveEmbed', () => {
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
-      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
@@ -173,7 +173,7 @@ describe('youtubeResolveEmbed', () => {
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
-      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
@@ -208,7 +208,7 @@ describe('youtubeEmbedResolver', () => {
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
-      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
@@ -222,7 +222,7 @@ describe('youtubeEmbedResolver', () => {
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
-      src: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }

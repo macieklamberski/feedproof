@@ -37,7 +37,7 @@ describe('replaceEmbedsWithPlaceholders', () => {
     expect(result).toContain('data-embed-src=')
     expect(result).toContain('data-embed-provider="youtube"')
     expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
-    expect(result).toContain('data-embed-src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"')
+    expect(result).toContain('data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
     expect(result).toContain('data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
     expect(result).toContain(
       'data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"',
