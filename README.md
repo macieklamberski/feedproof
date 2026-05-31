@@ -39,7 +39,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `mergeConsecutiveOneLinerPres` | Merge consecutive single-line `<pre>` tags |
 | `replacePreLineBreaks` | Replace `<br>` with `\n` inside `<pre>` |
 | `stripInterBlockBreaks` | Remove `<br>` tags between block elements |
-| `stripParagraphBoundaryBreaks` | Remove `<br>` tags adjacent to paragraph boundaries |
+| `stripBoundaryBreaks` | Remove `<br>` tags adjacent to block-element boundaries (paragraphs, headings, divs, list items, blockquotes, …) |
 | `stripDuplicateTitleHeading` | Remove first `<h1>`–`<h6>` matching article title |
 | `demoteHeadings` | Shift every heading down by one level (`<h1>`→`<h2>`, …, `<h5>`→`<h6>`) when the body contains an `<h1>`, so it sits below the reader's own page title |
 | `unwrapRedirectUrls` | Remove Google/Bing/Facebook/etc. redirect wrappers |

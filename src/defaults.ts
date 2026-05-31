@@ -18,13 +18,13 @@ import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 import { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
 import { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
+import { stripBoundaryBreaks } from './transforms/dom/stripBoundaryBreaks.js'
 import { stripComments } from './transforms/dom/stripComments.js'
 import { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
 import { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 import { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
 import { stripInertElements } from './transforms/dom/stripInertElements.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
-import { stripParagraphBoundaryBreaks } from './transforms/dom/stripParagraphBoundaryBreaks.js'
 import { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
@@ -137,7 +137,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   unwrapEmojiImages,
   convertBreaksToParagraphs,
   stripInterBlockBreaks,
-  stripParagraphBoundaryBreaks,
+  stripBoundaryBreaks,
   mergeFragmentedLists,
   highlightCode,
   mergeConsecutiveOneLinerPres,
