@@ -29,6 +29,7 @@ import { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 import { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
+import { unwrapHeadingBold } from './transforms/dom/unwrapHeadingBold.js'
 import { unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 import { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 import { wrapTablesForScroll } from './transforms/dom/wrapTablesForScroll.js'
@@ -127,6 +128,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
   demoteHeadings,
+  unwrapHeadingBold,
   fixLazyImages,
   stripInertElements,
   resolveRelativeUrls,

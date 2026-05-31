@@ -42,6 +42,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `stripBoundaryBreaks` | Remove `<br>` tags adjacent to block-element boundaries (paragraphs, headings, divs, list items, blockquotes, …) |
 | `stripDuplicateTitleHeading` | Remove first `<h1>`–`<h6>` matching article title |
 | `demoteHeadings` | Shift every heading down by one level (`<h1>`→`<h2>`, …, `<h5>`→`<h6>`) when the body contains an `<h1>`, so it sits below the reader's own page title |
+| `unwrapHeadingBold` | Unwrap `<b>`/`<strong>` that wraps the entire content of a heading (redundant — headings are already bold) |
 | `unwrapRedirectUrls` | Remove Google/Bing/Facebook/etc. redirect wrappers |
 | `stripDeadAnchors` | Unwrap `<a>` with empty, `#`, or `javascript:` href |
 | `stripInertElements` | Remove platform chrome and dead placeholders — subscribe widgets, share buttons, related-posts widgets, ad slots (AdSense / AdThrive), author bio blocks, email preheaders, Substack image controls, and Drupal `<drupal-render-placeholder>` tags. Pass `inertSelectors` to extend or replace |
