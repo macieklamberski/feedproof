@@ -1,4 +1,4 @@
-import { Node } from '../../common.js'
+import { isElement, isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 const preserveWhenEmpty = new Set([
@@ -54,14 +54,13 @@ export const stripEmptyTags: DomTransform = () => {
 
       for (let j = 0; j < childCount; j++) {
         const child = childNodes[j]
-        const nodeType = child.nodeType
 
-        if (nodeType === Node.ELEMENT_NODE) {
+        if (isElement(child)) {
           hasContent = true
           break
         }
 
-        if (nodeType === Node.TEXT_NODE && (child as Text).data.trim().length > 0) {
+        if (isText(child) && child.data.trim().length > 0) {
           hasContent = true
           break
         }

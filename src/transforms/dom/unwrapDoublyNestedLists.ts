@@ -1,4 +1,4 @@
-import { Node } from '../../common.js'
+import { isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 export const unwrapDoublyNestedLists: DomTransform = () => {
@@ -41,7 +41,7 @@ export const unwrapDoublyNestedLists: DomTransform = () => {
       // Non-whitespace text in the wrapper would fuse adjacent words on unwrap.
       let textDisqualified = false
       for (let node = wrapper.firstChild; node !== null; node = node.nextSibling) {
-        if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
+        if (isText(node) && node.textContent?.trim()) {
           textDisqualified = true
           break
         }
@@ -57,7 +57,7 @@ export const unwrapDoublyNestedLists: DomTransform = () => {
       }
       for (let node = wrapper.firstChild; node !== null; ) {
         const next = node.nextSibling
-        if (node.nodeType === Node.TEXT_NODE || node === inner) {
+        if (isText(node) || node === inner) {
           parent.insertBefore(node, outer)
         }
         node = next

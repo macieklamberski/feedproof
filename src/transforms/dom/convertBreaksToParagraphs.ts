@@ -2,8 +2,9 @@ import {
   hasAncestorWithTagName,
   isBlockElement,
   isBr,
+  isElement,
+  isText,
   isWhitespaceText,
-  Node,
 } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
@@ -82,15 +83,13 @@ export const convertBreaksToParagraphs: DomTransform = () => {
             i++
           }
         } else {
-          const nodeType = child.nodeType
-
-          if (nodeType === Node.ELEMENT_NODE) {
+          if (isElement(child)) {
             current.hasContent = true
 
             if (isBlockElement(child)) {
               current.hasBlock = true
             }
-          } else if (nodeType === Node.TEXT_NODE) {
+          } else if (isText(child)) {
             if (!current.hasContent && child.textContent?.trim()) {
               current.hasContent = true
             }

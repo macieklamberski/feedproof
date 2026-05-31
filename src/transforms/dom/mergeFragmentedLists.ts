@@ -1,4 +1,4 @@
-import { isWhitespaceText, Node } from '../../common.js'
+import { isComment, isElement, isText, isWhitespaceText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 // Some feeds emit each list item as its own one-item <ul>/<ol>. Merges runs
@@ -54,11 +54,10 @@ export const mergeFragmentedLists: DomTransform = () => {
 
         while (between && between !== extra) {
           const next = between.nextSibling
-          const type = between.nodeType
 
-          if (type === Node.COMMENT_NODE) {
+          if (isComment(between)) {
             between.parentNode?.removeChild(between)
-          } else if (type === Node.TEXT_NODE) {
+          } else if (isText(between)) {
             target.appendChild(between)
           }
 
@@ -79,13 +78,11 @@ const nextMergeableSibling = (from: Element, localName: string): Element | undef
   let sibling = from.nextSibling
 
   while (sibling) {
-    const type = sibling.nodeType
-
-    if (type === Node.ELEMENT_NODE) {
-      return (sibling as Element).localName === localName ? (sibling as Element) : undefined
+    if (isElement(sibling)) {
+      return sibling.localName === localName ? sibling : undefined
     }
 
-    if (type === Node.TEXT_NODE) {
+    if (isText(sibling)) {
       if (!isWhitespaceText(sibling)) {
         return
       }
@@ -93,7 +90,7 @@ const nextMergeableSibling = (from: Element, localName: string): Element | undef
       continue
     }
 
-    if (type === Node.COMMENT_NODE) {
+    if (isComment(sibling)) {
       sibling = sibling.nextSibling
       continue
     }
@@ -104,23 +101,21 @@ const nextMergeableSibling = (from: Element, localName: string): Element | undef
 
 const hasOnlyListItemChildren = (list: Element): boolean => {
   for (let child = list.firstChild; child; child = child.nextSibling) {
-    const type = child.nodeType
-
-    if (type === Node.ELEMENT_NODE) {
-      if ((child as Element).localName !== 'li') {
+    if (isElement(child)) {
+      if (child.localName !== 'li') {
         return false
       }
       continue
     }
 
-    if (type === Node.TEXT_NODE) {
+    if (isText(child)) {
       if (!isWhitespaceText(child)) {
         return false
       }
       continue
     }
 
-    if (type !== Node.COMMENT_NODE) {
+    if (!isComment(child)) {
       return false
     }
   }
