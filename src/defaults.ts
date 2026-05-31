@@ -10,6 +10,7 @@ import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
 import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
 import { linkifyUrls } from './transforms/dom/linkifyUrls.js'
+import { markTimestamps } from './transforms/dom/markTimestamps.js'
 import { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
 import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
@@ -143,6 +144,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   replacePreLineBreaks,
   trimPreWhitespace,
   linkifyUrls,
+  markTimestamps,
   replaceEmbedsWithPlaceholders,
   injectEnclosures,
   proxyAssetUrls,
