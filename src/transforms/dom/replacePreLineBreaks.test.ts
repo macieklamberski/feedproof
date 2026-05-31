@@ -62,4 +62,12 @@ describeForEachParser('replacePreLineBreaks', (parseHtml) => {
 
     expect(result).toBe(baseline)
   })
+
+  it('should be idempotent', async () => {
+    const value = '<pre>line 1<br>line 2</pre>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

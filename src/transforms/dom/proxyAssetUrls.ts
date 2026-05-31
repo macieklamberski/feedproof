@@ -72,6 +72,10 @@ const proxySrcset = (element: Element, type: AssetType, assetProxyFn: AssetProxy
   element.setAttribute('srcset', stringifySrcset(rewritten))
 }
 
+// Rewrites asset URLs through the caller's `assetProxyFn`. The function must be
+// idempotent (return an already-proxied URL unchanged): this transform applies
+// it to every matching URL on each run and does not detect already-proxied
+// URLs, so a wrapping proxy that double-encodes would not be idempotent.
 export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
   if (!assetProxyFn) {
     return () => {}

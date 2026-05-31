@@ -143,4 +143,12 @@ describeForEachParser('stripDeadAnchors', (parseHtml) => {
 
     expect(await transform(value)).toBe(value)
   })
+
+  it('should be idempotent', async () => {
+    const value = '<p><a href="">click me</a></p>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

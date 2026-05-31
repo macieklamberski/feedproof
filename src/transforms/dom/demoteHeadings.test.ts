@@ -78,4 +78,12 @@ describeForEachParser('demoteHeadings', (parseHtml) => {
       expect(await transform(value)).toBe(value)
     })
   })
+
+  it('should be idempotent', async () => {
+    const value = '<h1>Section</h1><p>Body</p>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

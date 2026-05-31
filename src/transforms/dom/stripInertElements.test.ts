@@ -199,6 +199,15 @@ describeForEachParser('stripInertElements', (parseHtml) => {
 
       expect(await transform(value)).toBe(value)
     })
+
+    it('should be idempotent', async () => {
+      const value =
+        '<picture><img src="x.jpg"></picture><div class="image-link-expand"><button><svg></svg></button></div>'
+      const once = await transform(value)
+      const twice = await transform(once)
+
+      expect(twice).toBe(once)
+    })
   })
 
   describe('with caller-supplied selectors', () => {

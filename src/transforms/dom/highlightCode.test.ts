@@ -211,4 +211,12 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
     expect(matches).toHaveLength(2)
   })
+
+  it('should be idempotent', async () => {
+    const value = '<pre><code class="language-js">const x = 1</code></pre>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

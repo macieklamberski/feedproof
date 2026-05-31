@@ -144,4 +144,12 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
 
     expect(result).not.toContain('<a')
   })
+
+  it('should be idempotent', async () => {
+    const value = '<p>Visit https://example.com for more</p>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

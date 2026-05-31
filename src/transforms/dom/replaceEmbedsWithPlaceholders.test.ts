@@ -268,4 +268,12 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
 
     expect(result).toContain('data-embed-src="custom-scheme://payload"')
   })
+
+  it('should be idempotent', async () => {
+    const value = '<p>Text</p><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

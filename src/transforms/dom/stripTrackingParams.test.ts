@@ -86,4 +86,12 @@ describeForEachParser('stripTrackingParams', (parseHtml) => {
 
     expect(result).toContain('href="https://example.com/?id=42"')
   })
+
+  it('should be idempotent', async () => {
+    const value = '<a href="https://example.com/page?utm_source=rss">link</a>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

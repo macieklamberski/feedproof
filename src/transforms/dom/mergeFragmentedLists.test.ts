@@ -169,4 +169,12 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
 
     expect(await transform(value)).toBe(expected)
   })
+
+  it('should be idempotent', async () => {
+    const value = '<ul><li>a</li></ul><ul><li>b</li></ul>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

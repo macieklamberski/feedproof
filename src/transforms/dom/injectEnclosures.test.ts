@@ -280,4 +280,15 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     expect(result).not.toContain('height=')
     expect(result).not.toContain('poster=')
   })
+
+  it('should be idempotent', async () => {
+    const value = '<p>Episode notes</p>'
+    const enclosures: Array<Enclosure> = [
+      { url: 'https://example.com/clip.mp4', type: 'video/mp4' },
+    ]
+    const once = await transform(value, withEnclosures(enclosures))
+    const twice = await transform(once, withEnclosures(enclosures))
+
+    expect(twice).toBe(once)
+  })
 })

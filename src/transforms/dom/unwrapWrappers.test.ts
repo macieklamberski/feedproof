@@ -158,4 +158,12 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
 
     expect(await transform(value)).toBe(value)
   })
+
+  it('should be idempotent', async () => {
+    const value = '<div><article><p>Content</p></article></div>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

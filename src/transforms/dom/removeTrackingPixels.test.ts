@@ -473,4 +473,12 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
       expect(result).toContain('pax.gif')
     })
   })
+
+  it('should be idempotent', async () => {
+    const value = '<p>Text</p><img src="tracker.gif" width="1" height="1">'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })
