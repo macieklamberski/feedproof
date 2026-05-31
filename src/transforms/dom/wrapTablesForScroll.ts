@@ -7,7 +7,7 @@ const tableTags = new Set(['table'])
 // a stable hook to make wide tables scroll horizontally instead of stretching
 // the layout. Tables nested in another table's cell are skipped. Idempotent via
 // the existing-wrapper check.
-export const wrapTables: DomTransform = () => {
+export const wrapTablesForScroll: DomTransform = () => {
   return (document) => {
     const tables = document.querySelectorAll('table')
 
