@@ -61,6 +61,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `paragraphizePlainText` | Wrap plain text in `<p>` tags |
 | `stripOversizedBase64Sources` | Drop base64 `src`/`srcset`/`poster` payloads larger than 50 KB before parsing |
 | `linkifyUrls` | Wrap bare URLs in `<a>` tags |
+| `markTimestamps` | Wrap line-leading timestamps (`MM:SS` / `HH:MM:SS`) in `<span data-timestamp="seconds">` so a player can be seeked to that point |
 | `trimPreWhitespace` | Remove common leading indentation from `<pre>` |
 | `highlightCode` | Syntax-highlight `<code>` blocks with highlight.js |
 | `stripEmptyTags` | Remove empty `<p>`, `<div>`, `<span>` and other tags |
