@@ -1,4 +1,4 @@
-import { Node } from '../../common.js'
+import { isElement, isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 const timestampIgnoreTags = new Set(['a', 'pre', 'code', 'kbd', 'samp', 'var', 'script', 'style'])
@@ -53,9 +53,9 @@ const shouldSkipElement = (element: Element): boolean => {
 
 const collectTextNodes = (node: Node, result: Array<Node> = []): Array<Node> => {
   for (const child of node.childNodes) {
-    if (child.nodeType === Node.TEXT_NODE) {
+    if (isText(child)) {
       result.push(child)
-    } else if (child.nodeType === Node.ELEMENT_NODE && !shouldSkipElement(child as Element)) {
+    } else if (isElement(child) && !shouldSkipElement(child)) {
       collectTextNodes(child, result)
     }
   }

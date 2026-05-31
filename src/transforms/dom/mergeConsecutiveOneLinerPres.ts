@@ -1,3 +1,4 @@
+import { isElement, isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 // Feeds like Medium wrap each code line in its own <pre>, which renders as
@@ -40,11 +41,11 @@ export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses
       let sibling = pre.nextSibling
 
       while (sibling) {
-        if (sibling.nodeType !== 1 && sibling.nodeType !== 3) {
+        if (!isElement(sibling) && !isText(sibling)) {
           break
         }
 
-        if (sibling.nodeType === 3) {
+        if (isText(sibling)) {
           if (sibling.textContent?.trim() !== '') {
             break
           }
@@ -53,11 +54,11 @@ export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses
           continue
         }
 
-        if ((sibling as Element).tagName.toLowerCase() !== 'pre') {
+        if (sibling.tagName.toLowerCase() !== 'pre') {
           break
         }
 
-        run.push(sibling as Element)
+        run.push(sibling)
         sibling = sibling.nextSibling
       }
 

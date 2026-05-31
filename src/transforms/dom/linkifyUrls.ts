@@ -1,25 +1,19 @@
 import { find as linkifyFind } from 'linkifyjs'
-import { Node } from '../../common.js'
+import { isElement, isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 const urlProtocolRegex = /^https?:\/\//i
 const linkifyIgnoreTags = new Set(['a', 'pre', 'code', 'kbd', 'samp', 'var', 'script', 'style'])
 
 const collectTextNodes = (node: Node, result: Array<Node> = []): Array<Node> => {
-  if (
-    node.nodeType === Node.ELEMENT_NODE &&
-    linkifyIgnoreTags.has((node as Element).tagName.toLowerCase())
-  ) {
+  if (isElement(node) && linkifyIgnoreTags.has(node.tagName.toLowerCase())) {
     return result
   }
 
   for (const child of node.childNodes) {
-    if (child.nodeType === Node.TEXT_NODE) {
+    if (isText(child)) {
       result.push(child)
-    } else if (
-      child.nodeType === Node.ELEMENT_NODE &&
-      !linkifyIgnoreTags.has((child as Element).tagName.toLowerCase())
-    ) {
+    } else if (isElement(child) && !linkifyIgnoreTags.has(child.tagName.toLowerCase())) {
       collectTextNodes(child, result)
     }
   }

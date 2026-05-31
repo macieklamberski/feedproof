@@ -73,16 +73,24 @@ export const blockElements = new Set([
   'ul',
 ])
 
+export const isElement = (node: Node | null | undefined): node is Element => {
+  return node?.nodeType === Node.ELEMENT_NODE
+}
+
+export const isText = (node: Node | null | undefined): node is Text => {
+  return node?.nodeType === Node.TEXT_NODE
+}
+
+export const isComment = (node: Node | null | undefined): node is Comment => {
+  return node?.nodeType === Node.COMMENT_NODE
+}
+
 export const isWhitespaceText = (node: Node): boolean => {
-  return node.nodeType === Node.TEXT_NODE && !node.textContent?.trim()
+  return isText(node) && !node.textContent?.trim()
 }
 
 export const isBr = (node: Node): boolean => {
-  return node.nodeType === Node.ELEMENT_NODE && (node as Element).localName === 'br'
-}
-
-export const isComment = (node: Node): boolean => {
-  return node.nodeType === Node.COMMENT_NODE
+  return isElement(node) && node.localName === 'br'
 }
 
 export const isSkippable = (node: Node): boolean => {
@@ -90,14 +98,14 @@ export const isSkippable = (node: Node): boolean => {
 }
 
 export const isBlockElement = (node: Node): boolean => {
-  return node.nodeType === Node.ELEMENT_NODE && blockElements.has((node as Element).localName)
+  return isElement(node) && blockElements.has(node.localName)
 }
 
 export const hasAncestorWithTagName = (node: Node, tagSet: Set<string>, stopAt?: Node): boolean => {
   let ancestor = node.parentNode as Element | null
 
   while (ancestor !== null && ancestor !== stopAt) {
-    if (ancestor.nodeType === Node.ELEMENT_NODE && tagSet.has(ancestor.localName)) {
+    if (isElement(ancestor) && tagSet.has(ancestor.localName)) {
       return true
     }
     ancestor = ancestor.parentNode as Element | null

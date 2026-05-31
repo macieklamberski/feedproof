@@ -1,4 +1,4 @@
-import { hasAncestorWithTagName, NodeFilter } from '../../common.js'
+import { hasAncestorWithTagName, isText, NodeFilter } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 // Elements whose body is literal text — entity-decoded angle brackets here
@@ -27,14 +27,17 @@ export const decodeDoubleEncodedTags: DomTransform = () => {
     let tempDiv: HTMLDivElement | null = null
 
     for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
-      const text = node as unknown as Text
-      const data = text.data
+      if (!isText(node)) {
+        continue
+      }
+
+      const data = node.data
 
       if (!data.includes('<') || !tagInTextRegex.test(data)) {
         continue
       }
 
-      if (hasAncestorWithTagName(text, opaqueTags)) {
+      if (hasAncestorWithTagName(node, opaqueTags)) {
         continue
       }
 
@@ -42,7 +45,7 @@ export const decodeDoubleEncodedTags: DomTransform = () => {
         tempDiv = document.createElement('div')
       }
       tempDiv.innerHTML = data
-      text.replaceWith(...tempDiv.childNodes)
+      node.replaceWith(...tempDiv.childNodes)
     }
   }
 }
