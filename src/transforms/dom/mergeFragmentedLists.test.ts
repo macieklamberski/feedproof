@@ -44,6 +44,13 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
     expect(result).toBe('<ul><li>a</li><li>b</li></ul>')
   })
 
+  it('should merge despite a comment nested inside a fragment', async () => {
+    const value = '<ul><!-- x --><li>a</li></ul><ul><li>b</li></ul>'
+    const expected = '<ul><!-- x --><li>a</li><li>b</li></ul>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
   it('should merge when both lists carry the same class', async () => {
     const result = await transform(
       '<ul class="bullets"><li>a</li></ul><ul class="bullets"><li>b</li></ul>',
