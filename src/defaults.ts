@@ -31,6 +31,7 @@ import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedList
 import { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 import { unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 import { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
+import { wrapTables } from './transforms/dom/wrapTables.js'
 import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
 import { stripControlChars } from './transforms/string/stripControlChars.js'
 import { stripOversizedBase64Sources } from './transforms/string/stripOversizedBase64Sources.js'
@@ -150,6 +151,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   proxyAssetUrls,
   unwrapWrappers,
   stripEmptyTags,
+  wrapTables,
 ]
 
 // Order matters when selectors overlap: each resolver runs in array order and

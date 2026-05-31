@@ -57,6 +57,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `resolveRelativeUrls` | Convert relative URLs to absolute using base URL |
 | `unwrapWrappers` | Remove outer `<div>`, `<article>`, `<section>` wrappers |
 | `unwrapDoublyNestedLists` | Unwrap `<ul>`/`<ol>` that wrap a single `<li>` containing a same-type list |
+| `wrapTables` | Wrap each top-level `<table>` in a `<div data-table>` as a horizontal-scroll container |
 | `mergeFragmentedLists` | Merge consecutive sibling `<ul>` / `<ol>` lists with matching attributes |
 | `paragraphizePlainText` | Wrap plain text in `<p>` tags |
 | `stripOversizedBase64Sources` | Drop base64 `src`/`srcset`/`poster` payloads larger than 50 KB before parsing |

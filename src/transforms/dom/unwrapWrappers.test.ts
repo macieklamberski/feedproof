@@ -152,4 +152,10 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
 
     expect(await transform(value)).toBe(value)
   })
+
+  it('should preserve a div carrying a data-table attribute', async () => {
+    const value = '<div data-table=""><table><tbody><tr><td>Cell</td></tr></tbody></table></div>'
+
+    expect(await transform(value)).toBe(value)
+  })
 })

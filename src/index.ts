@@ -105,6 +105,7 @@ export { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedList
 export { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 export { extractRedirectTarget, unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 export { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
+export { wrapTables } from './transforms/dom/wrapTables.js'
 export { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
 export { stripControlChars } from './transforms/string/stripControlChars.js'
 export { stripOversizedBase64Sources } from './transforms/string/stripOversizedBase64Sources.js'
