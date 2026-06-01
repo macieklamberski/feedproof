@@ -274,5 +274,24 @@ describeForEachParser('stripBoundaryBreaks', (parseHtml) => {
 
       expect(await transform(value)).toBe(value)
     })
+
+    it('should preserve a wrapper-edge br when text follows the wrapper', async () => {
+      const value = '<p>Something <span>one<br></span> more</p>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should preserve a wrapper-edge br when another element follows the wrapper', async () => {
+      const value = '<p><em>one<br></em><span>tail</span></p>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should strip the same wrapper-edge br once the wrapper is at the block edge', async () => {
+      const value = '<p>Something <span>one<br></span></p>'
+      const expected = '<p>Something <span>one</span></p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
   })
 })
