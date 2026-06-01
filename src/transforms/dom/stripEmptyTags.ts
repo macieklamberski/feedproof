@@ -53,14 +53,6 @@ export const stripEmptyTags: DomTransform = () => {
         continue
       }
 
-      // Empty elements carrying an id or name are in-page anchor / ARIA targets
-      // (`<a name="x">`, `<span id="x">`, …); other content links to them via
-      // `#fragment` or `aria-*`. Removing them breaks that navigation, so keep
-      // them even when empty. Mirrors the guard in stripDeadAnchors.
-      if (element.hasAttribute('id') || element.hasAttribute('name')) {
-        continue
-      }
-
       const childNodes = element.childNodes
       const childCount = childNodes.length
       let hasContent = false
@@ -80,6 +72,21 @@ export const stripEmptyTags: DomTransform = () => {
       }
 
       if (hasContent) {
+        continue
+      }
+
+      // Elements carrying an id or name are in-page anchor / ARIA targets
+      // (`<a name="x">`, `<span id="x">`, …); other content links to them via
+      // `#fragment` or `aria-*`, so the element must survive even when empty.
+      // Normalize its whitespace the same way a non-target would be disposed of,
+      // but keep the element: drop it for a block (whitespace is never a word
+      // boundary there) and collapse it to a single space for inline/structural
+      // (preserves word boundaries). A completely empty target is left as-is.
+      if (element.hasAttribute('id') || element.hasAttribute('name')) {
+        if (childCount > 0) {
+          element.textContent = isBlockElement(element) && !structuralTags.has(tagName) ? '' : ' '
+        }
+
         continue
       }
 
