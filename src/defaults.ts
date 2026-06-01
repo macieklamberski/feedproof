@@ -32,6 +32,7 @@ import { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 import { unwrapHeadingBold } from './transforms/dom/unwrapHeadingBold.js'
 import { unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 import { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
+import { wrapBareInlineInParagraphs } from './transforms/dom/wrapBareInlineInParagraphs.js'
 import { wrapTablesForScroll } from './transforms/dom/wrapTablesForScroll.js'
 import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
 import { stripControlChars } from './transforms/string/stripControlChars.js'
@@ -139,6 +140,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   removeTrackingPixels,
   unwrapEmojiImages,
   convertBreaksToParagraphs,
+  wrapBareInlineInParagraphs,
   stripInterBlockBreaks,
   stripBoundaryBreaks,
   mergeFragmentedLists,
