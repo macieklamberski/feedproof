@@ -286,8 +286,36 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
       expect(await transform(value)).toBe(value)
     })
 
-    it('should preserve a whitespace-only block element carrying an id', async () => {
+    it('should empty a whitespace-only block target', async () => {
       const value = '<div id="mark">   </div>'
+      const expected = '<div id="mark"></div>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should collapse a whitespace-only inline target to a single space', async () => {
+      const value = '<span id="mark">   </span>'
+      const expected = '<span id="mark"> </span>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should preserve the word boundary of an inline target between words', async () => {
+      const value = 'word<span id="x">  \n  </span>word'
+      const expected = 'word<span id="x"> </span>word'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should collapse a whitespace-only table-cell target to a single space', async () => {
+      const value = '<table><tbody><tr><td id="x">  </td><td>y</td></tr></tbody></table>'
+      const expected = '<table><tbody><tr><td id="x"> </td><td>y</td></tr></tbody></table>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should leave a target with real content unchanged', async () => {
+      const value = '<h2 id="x">Real</h2>'
 
       expect(await transform(value)).toBe(value)
     })
@@ -303,6 +331,14 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
       const expected = '<p>before</p><p>after</p>'
 
       expect(await transform(value)).toBe(expected)
+    })
+
+    it('should be idempotent on whitespace-only targets', async () => {
+      const value = '<div id="a">  </div><span id="b">  </span>'
+      const once = await transform(value)
+      const twice = await transform(once)
+
+      expect(twice).toBe(once)
     })
   })
 })
