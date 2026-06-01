@@ -53,6 +53,14 @@ export const stripEmptyTags: DomTransform = () => {
         continue
       }
 
+      // Empty elements carrying an id or name are in-page anchor / ARIA targets
+      // (`<a name="x">`, `<span id="x">`, …); other content links to them via
+      // `#fragment` or `aria-*`. Removing them breaks that navigation, so keep
+      // them even when empty. Mirrors the guard in stripDeadAnchors.
+      if (element.hasAttribute('id') || element.hasAttribute('name')) {
+        continue
+      }
+
       const childNodes = element.childNodes
       const childCount = childNodes.length
       let hasContent = false

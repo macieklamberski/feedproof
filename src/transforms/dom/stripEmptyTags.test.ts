@@ -1,4 +1,4 @@
-import { expect, it } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
@@ -259,5 +259,50 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
     const twice = await transform(once)
 
     expect(twice).toBe(once)
+  })
+
+  describe('anchor targets', () => {
+    it('should preserve an empty named anchor', async () => {
+      const value = '<a name="section"></a>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should preserve an empty anchor with an id', async () => {
+      const value = '<a id="section"></a>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should preserve an empty span carrying an id', async () => {
+      const value = '<span id="mark"></span>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should preserve an empty block element carrying an id', async () => {
+      const value = '<div id="mark"></div>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should preserve a whitespace-only block element carrying an id', async () => {
+      const value = '<div id="mark">   </div>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should keep an anchor target between content so in-page links resolve', async () => {
+      const value = '<p>before</p><a name="section"></a><p>after</p>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should still strip an empty element without id or name', async () => {
+      const value = '<p>before</p><span></span><p>after</p>'
+      const expected = '<p>before</p><p>after</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
   })
 })
