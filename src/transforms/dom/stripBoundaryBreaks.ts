@@ -1,4 +1,4 @@
-import { isBr, isSkippable } from '../../common.js'
+import { isBlockElement, isBr, isComment, isElement, isWhitespaceText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 // Flow-content blocks where a boundary <br> is redundant. Structural
@@ -21,58 +21,85 @@ const boundaryBreakSelectors = [
   'section',
 ]
 
+const isInlineWrapper = (node: Node): boolean => {
+  return isElement(node) && !isBlockElement(node) && !isBr(node)
+}
+
+// True when only whitespace/comments/<br> remain, so the wrapper carries no
+// visible content and the boundary walk can treat it as transparent.
+const isVisuallyEmpty = (node: Node): boolean => {
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    if (isWhitespaceText(child) || isComment(child) || isBr(child)) {
+      continue
+    }
+
+    return false
+  }
+
+  return true
+}
+
+// Strip boundary <br>s from one edge of `container`, descending through inline
+// wrappers. A buffered run of skippables (whitespace, comments, <br>) is removed
+// only when it actually contained a <br> — so whitespace alone is left intact.
+const stripEdge = (container: Node, trailing: boolean): void => {
+  let node = trailing ? container.lastChild : container.firstChild
+  let sawBr = false
+  let pending: Array<ChildNode> = []
+
+  const removePending = () => {
+    if (sawBr) {
+      for (const item of pending) {
+        item.remove()
+      }
+    }
+  }
+
+  while (node) {
+    const next = trailing ? node.previousSibling : node.nextSibling
+
+    if (isWhitespaceText(node) || isComment(node)) {
+      pending.push(node)
+      node = next
+      continue
+    }
+
+    if (isBr(node)) {
+      sawBr = true
+      pending.push(node)
+      node = next
+      continue
+    }
+
+    if (isInlineWrapper(node)) {
+      removePending()
+      pending = []
+      sawBr = false
+      stripEdge(node, trailing)
+
+      // An emptied wrapper is transparent — keep walking outward past it.
+      if (isVisuallyEmpty(node)) {
+        node = next
+        continue
+      }
+
+      return
+    }
+
+    // Real content (non-whitespace text or a block element): stop here.
+    removePending()
+    return
+  }
+
+  // Reached the edge: the whole container is skippable.
+  removePending()
+}
+
 export const stripBoundaryBreaks: DomTransform = () => {
   return (document) => {
-    const elements = document.querySelectorAll(boundaryBreakSelectors.join(', '))
-
-    for (const element of elements) {
-      let cursor = element.firstChild
-      let leadingHasBr = false
-      let leadingEnd: ChildNode | null = null
-
-      while (cursor && isSkippable(cursor)) {
-        if (!leadingHasBr && isBr(cursor)) {
-          leadingHasBr = true
-        }
-        leadingEnd = cursor
-        cursor = cursor.nextSibling
-      }
-
-      if (leadingHasBr) {
-        let node = element.firstChild
-        while (node) {
-          const next = node.nextSibling
-          node.remove()
-          if (node === leadingEnd) {
-            break
-          }
-          node = next
-        }
-      }
-
-      cursor = element.lastChild
-      let trailingHasBr = false
-      let trailingEnd: ChildNode | null = null
-
-      while (cursor && isSkippable(cursor)) {
-        if (!trailingHasBr && isBr(cursor)) {
-          trailingHasBr = true
-        }
-        trailingEnd = cursor
-        cursor = cursor.previousSibling
-      }
-
-      if (trailingHasBr) {
-        let node = element.lastChild
-        while (node) {
-          const prev = node.previousSibling
-          node.remove()
-          if (node === trailingEnd) {
-            break
-          }
-          node = prev
-        }
-      }
+    for (const element of document.querySelectorAll(boundaryBreakSelectors.join(', '))) {
+      stripEdge(element, false)
+      stripEdge(element, true)
     }
   }
 }

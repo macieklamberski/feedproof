@@ -239,4 +239,40 @@ describeForEachParser('stripBoundaryBreaks', (parseHtml) => {
       expect(await transform(value)).toBe(value)
     })
   })
+
+  describe('nested inline wrappers', () => {
+    it('should strip a trailing br nested inside an inline element', async () => {
+      const value = '<p>x<em>y<br></em></p>'
+      const expected = '<p>x<em>y</em></p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should strip both a direct trailing br and one nested inside an inline element', async () => {
+      const value = '<p>x<em>y<br></em><br></p>'
+      const expected = '<p>x<em>y</em></p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should strip a trailing br through deeply nested inline wrappers', async () => {
+      const value = '<p><strong><em>y<br></em></strong></p>'
+      const expected = '<p><strong><em>y</em></strong></p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should strip a leading br nested inside an inline element', async () => {
+      const value = '<p><em><br>lead</em>tail</p>'
+      const expected = '<p><em>lead</em>tail</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should preserve an interior br inside an inline element', async () => {
+      const value = '<p>keep<em>mid<br>line</em>end</p>'
+
+      expect(await transform(value)).toBe(value)
+    })
+  })
 })
