@@ -32,24 +32,33 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
     expect(await transform('<td></td>')).toBe('')
   })
 
-  it('should replace whitespace-only tags with a space', async () => {
-    expect(await transform('<div>   </div>')).toBe(' ')
+  it('should remove whitespace-only block elements', async () => {
+    expect(await transform('<div>   </div>')).toBe('')
   })
 
-  it('should replace tags with only newlines with a space', async () => {
-    expect(await transform('<div>\n</div>')).toBe(' ')
+  it('should remove block elements with only newlines', async () => {
+    expect(await transform('<div>\n</div>')).toBe('')
   })
 
-  it('should replace tags containing non-breaking space with a space', async () => {
+  it('should remove block elements containing only a non-breaking space', async () => {
+    // After DOM parse `&nbsp;` is the U+00A0 character, which JS treats as
+    // whitespace. A whitespace-only block (a spacer) is dropped entirely.
+    expect(await transform('<p>&nbsp;</p>')).toBe('')
+  })
+
+  it('should collapse whitespace-only inline elements to a space', async () => {
     expect(await transform('<span>\u00A0</span>')).toBe(' ')
   })
 
-  it('should replace tags containing entity-encoded nbsp with a space', async () => {
-    // After DOM parse `&nbsp;` is the U+00A0 character, which JS treats as
-    // whitespace. Old string-level code happened to preserve the entity form
-    // (it never saw the decoded character); the DOM version is consistent
-    // between entity and character forms.
-    expect(await transform('<p>&nbsp;</p>')).toBe(' ')
+  it('should preserve inline word boundaries via the collapsed space', async () => {
+    expect(await transform('a<span> </span>b')).toBe('a b')
+  })
+
+  it('should not drop whitespace-only table cells', async () => {
+    const value = '<table><tbody><tr><td>   </td><td>x</td></tr></tbody></table>'
+    const expected = '<table><tbody><tr> <td>x</td></tr></tbody></table>'
+
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should strip tags with attributes but no content', async () => {

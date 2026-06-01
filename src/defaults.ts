@@ -153,8 +153,8 @@ export const defaultDomTransforms: Array<DomTransform> = [
   replaceEmbedsWithPlaceholders,
   injectEnclosures,
   proxyAssetUrls,
-  unwrapWrappers,
   stripEmptyTags,
+  unwrapWrappers,
   wrapTablesForScroll,
 ]
 

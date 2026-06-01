@@ -1,5 +1,9 @@
-import { isElement, isText } from '../../common.js'
+import { isBlockElement, isElement, isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+
+// Block members whose removal would break table layout / definition-list pairs;
+// these keep the collapse-to-space behaviour instead of being dropped.
+const structuralTags = new Set(['td', 'th', 'tr', 'dt', 'dd'])
 
 const preserveWhenEmpty = new Set([
   // Elements whose emptiness is meaningful (carry semantics via src etc.).
@@ -23,9 +27,10 @@ const preserveWhenEmpty = new Set([
   'wbr',
 ])
 
-// Removes elements with no non-whitespace text and no element children.
-// Whitespace-only elements collapse to a single space text node so inline
-// word boundaries survive. Reverse iteration handles nested empties in one pass.
+// Removes elements with no non-whitespace text and no element children. A
+// whitespace-only block (e.g. a `<div>&nbsp;</div>` spacer) is removed; a
+// whitespace-only inline element collapses to a single space so word boundaries
+// survive. Reverse iteration handles nested empties in one pass.
 export const stripEmptyTags: DomTransform = () => {
   return (document) => {
     const all = document.body.querySelectorAll('*')
@@ -70,10 +75,12 @@ export const stripEmptyTags: DomTransform = () => {
         continue
       }
 
-      if (childCount > 0) {
-        element.replaceWith(' ')
-      } else {
+      if (childCount === 0) {
         element.remove()
+      } else if (isBlockElement(element) && !structuralTags.has(tagName)) {
+        element.remove()
+      } else {
+        element.replaceWith(' ')
       }
     }
   }
