@@ -50,6 +50,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `unwrapEmojiImages` | Replace WordPress/Facebook/Twitter/GitHub emoji `<img>` tags with their alt-text glyph |
 | `stripTrackingParams` | Remove UTM and other tracking parameters |
 | `convertBreaksToParagraphs` | Convert `<br><br>` runs into semantic `<p>` blocks |
+| `wrapBareInlineInParagraphs` | Wrap bare inline runs (delimited by block-level children) in semantic `<p>` blocks |
 | `injectEnclosures` | Inject feed enclosures into content as native `<audio>`/`<video>` or iframe placeholders |
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` to embed placeholders |
 | `convertBookmarkCards` | Convert link-preview cards into `data-bookmark-*` placeholders via a registry of per-provider `BookmarkResolver`s (`defaultBookmarkResolvers`: Ghost `kg-bookmark-card`, Substack `embedded-publication-wrap`). Extend via `bookmarkResolvers` |
