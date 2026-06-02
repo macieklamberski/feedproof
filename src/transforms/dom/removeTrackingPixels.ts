@@ -46,15 +46,47 @@ const isPixelDimension = (value: number | undefined): boolean => {
   return value !== undefined && value <= pixelDimensionLimit
 }
 
-const isPixelSized = (image: Element): boolean => {
-  const { width, height } = getDimensions(image)
-  return isPixelDimension(width) || isPixelDimension(height)
+const isPixelSized = (dimensions: { width?: number; height?: number }): boolean => {
+  return isPixelDimension(dimensions.width) || isPixelDimension(dimensions.height)
 }
 
-const isHiddenImage = (image: Element, style: string | null): boolean => {
+// Raster sources signal a real content image (tracking pixels are GIF/script
+// beacons), so we never strip them on the size heuristic. `.gif` is excluded —
+// it is the dominant spacer/pixel format.
+const rasterExtensionRegex = /\.(?:jpe?g|png|webp|avif)(?:$|[?#])/i
+const rasterFormatQueryRegex = /[?&](?:format|fm|output)=(?:jpe?g|png|webp|avif)\b/i
+
+// A `0×0` image still fires its request, so trackers do use it and dimension
+// alone can't clear an image. But `0`/unset is the dominant lazy-load
+// *placeholder* convention (real size set client-side), and at `0×0` a raster
+// `src` is overwhelmingly real content — corpus `0×0` beacons are script/`.gif`
+// endpoints, not raster files. A non-empty `srcset` is a content signal at any
+// size. The hidden-style and tracking-host checks still apply regardless.
+const hasContentImageSignal = (
+  image: Element,
+  dimensions: { width?: number; height?: number },
+): boolean => {
+  const srcset = image.getAttribute('srcset')
+
+  if (srcset && srcset.trim().length > 0) {
+    return true
+  }
+
+  if (dimensions.width !== 0 && dimensions.height !== 0) {
+    return false
+  }
+
+  const src = image.getAttribute('src')
+
+  return !!src && (rasterExtensionRegex.test(src) || rasterFormatQueryRegex.test(src))
+}
+
+const isHiddenImage = (image: Element): boolean => {
   if (image.hasAttribute('hidden')) {
     return true
   }
+
+  const style = image.getAttribute('style')
 
   if (!style) {
     return false
@@ -76,7 +108,14 @@ export const removeTrackingPixels: DomTransform = (context) => {
     const images = document.querySelectorAll('img')
 
     for (const image of images) {
-      if (isPixelSized(image) || isHiddenImage(image, image.getAttribute('style'))) {
+      if (isHiddenImage(image)) {
+        image.remove()
+        continue
+      }
+
+      const dimensions = getDimensions(image)
+
+      if (isPixelSized(dimensions) && !hasContentImageSignal(image, dimensions)) {
         image.remove()
         continue
       }
