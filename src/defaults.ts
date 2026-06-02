@@ -234,6 +234,30 @@ export const defaultTrackingHosts = [
   'moatads.com', // Oracle Moat viewability pixels.
   'sentry.io', // Sentry error-monitoring beacons.
   'hubspot.com', // HubSpot __ptq.gif open-pixels.
+  'follow.it', // follow.it RSS view pixels (api.follow.it/track-rss-*).
+  'pheedo.com', // Pheedo feed-ad tracker (/feeds/tracker.php).
+  'statcounter.com', // StatCounter analytics pixels (c.statcounter.com/counter.php).
+  'gigya.com', // Gigya/SAP Wildfire IMP pixels (counters.gigya.com).
+  'counter.theconversation.com', // The Conversation article counters (/content/<id>/count.gif).
+  'rt.prnewswire.com', // PR Newswire release tracking (rt.gif).
+  'assoc-amazon.com', // Amazon Associates link pixels (/e/ir?).
+  'assoc-amazon.jp', // Amazon Associates link pixels (JP).
+  'assoc-amazon.co.uk', // Amazon Associates link pixels (UK).
+  'assoc-amazon.de', // Amazon Associates link pixels (DE).
+  'assoc-amazon.fr', // Amazon Associates link pixels (FR).
+  'linksynergy.com', // Rakuten Advertising (LinkSynergy) affiliate pixels.
+  'pxf.io', // Impact Radius affiliate pixels.
+  'valuecommerce.com', // ValueCommerce (JP) affiliate impression pixels.
+  'a8.net', // A8.net (JP) affiliate pixels.
+  'moshimo.com', // Moshimo Affiliate (JP) impression pixels.
+  'accesstrade.net', // AccessTrade (JP) affiliate pixels.
+  'rentracks.jp', // Rentracks (JP) affiliate pixels (/adx/p.gifx).
+  'felmat.net', // felmat (JP) affiliate pixels (/fmimp/).
+  'afi-b.com', // affiliate-B (JP) lead pixels (/lead/).
+  'affiliate-b.com', // affiliate-B (JP) affiliate pixels.
+  'evyy.net', // ValueCommerce/LinkShare (evyy) affiliate pixels.
+  'flexlinkspro.com', // FlexOffers affiliate pixels (/i.ashx).
+  'postaffiliatepro.com', // Post Affiliate Pro tracking pixels.
 ]
 
 export const defaultTrackingPathSegments = ['pixel', 'beacon', 'count', 'impression']

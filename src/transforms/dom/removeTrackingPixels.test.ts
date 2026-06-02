@@ -283,6 +283,41 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
       expect(result).not.toContain('sentry.io')
     })
 
+    it('should remove images from assoc-amazon.com', async () => {
+      const value = '<img src="https://www.assoc-amazon.com/e/ir?t=tag&l=as2&o=1&a=B001">'
+      const result = await transform(value)
+
+      expect(result).not.toContain('assoc-amazon.com')
+    })
+
+    it('should remove images from statcounter.com', async () => {
+      const value = '<img src="https://c.statcounter.com/counter.php?sc_project=123">'
+      const result = await transform(value)
+
+      expect(result).not.toContain('statcounter.com')
+    })
+
+    it('should remove images from a8.net affiliate pixels', async () => {
+      const value = '<img src="https://www12.a8.net/0.gif?a=1&p=2">'
+      const result = await transform(value)
+
+      expect(result).not.toContain('a8.net')
+    })
+
+    it('should remove The Conversation counter subdomain only', async () => {
+      const value = '<img src="https://counter.theconversation.com/content/82899/count.gif">'
+      const result = await transform(value)
+
+      expect(result).not.toContain('counter.theconversation.com')
+    })
+
+    it('should not remove The Conversation content images on other subdomains', async () => {
+      const value = '<img src="https://images.theconversation.com/files/1/photo.jpg" alt="Photo">'
+      const result = await transform(value)
+
+      expect(result).toContain('images.theconversation.com')
+    })
+
     it('should not remove images from look-alike hosts', async () => {
       const value = '<img src="https://notfeedsportal.com/photo.jpg">'
       const result = await transform(value)
