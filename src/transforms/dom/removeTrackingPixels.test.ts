@@ -39,11 +39,11 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
       expect(result).not.toContain('icon.png')
     })
 
-    it('should remove image when only width=0 is set', async () => {
-      const value = '<img src="icon.png" width="0">'
+    it('should remove image when only width=0 is set and src is not a real image', async () => {
+      const value = '<img src="https://example.com/track?id=1" width="0">'
       const result = await transform(value)
 
-      expect(result).not.toContain('icon.png')
+      expect(result).not.toContain('<img')
     })
 
     it('should not remove normal-sized images', async () => {
@@ -65,6 +65,67 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
       const result = await transform(value)
 
       expect(result).toContain('src="small.png"')
+    })
+  })
+
+  describe('content-image guard', () => {
+    it('should keep a 0x0 image whose src is a real raster file', async () => {
+      const value = '<img src="https://i.insider.com/abc.jpg" width="0" height="0" alt="Photo">'
+      const result = await transform(value)
+
+      expect(result).toContain('abc.jpg')
+    })
+
+    it('should keep a 0x0 image whose src carries a raster format query', async () => {
+      const value =
+        '<img src="https://i.insider.com/abc?width=1300&format=jpeg" width="0" height="0">'
+      const result = await transform(value)
+
+      expect(result).toContain('format=jpeg')
+    })
+
+    it('should keep a tiny image that declares a srcset at any size', async () => {
+      const value = '<img src="placeholder.gif" srcset="real.jpg 800w" width="1" height="1">'
+      const result = await transform(value)
+
+      expect(result).toContain('real.jpg')
+    })
+
+    it('should still remove a 0x0 beacon whose src is not a real image', async () => {
+      const value =
+        '<img src="https://stat.example.com/piwik.php?idsite=1&rec=1" width="0" height="0">'
+      const result = await transform(value)
+
+      expect(result).not.toContain('<img')
+    })
+
+    it('should still remove a 0x0 gif spacer', async () => {
+      const value = '<img src="spacer.gif" width="0" height="0">'
+      const result = await transform(value)
+
+      expect(result).not.toContain('spacer.gif')
+    })
+
+    it('should still remove a 1x1 raster pixel without a srcset', async () => {
+      const value = '<img src="https://example.com/p.png" width="1" height="1">'
+      const result = await transform(value)
+
+      expect(result).not.toContain('p.png')
+    })
+
+    it('should still remove a hidden image even with a real raster src', async () => {
+      const value =
+        '<img src="https://example.com/photo.jpg" style="display:none" width="0" height="0">'
+      const result = await transform(value)
+
+      expect(result).not.toContain('photo.jpg')
+    })
+
+    it('should still remove a tracking-host image even with a real raster src', async () => {
+      const value = '<img src="https://stats.wordpress.com/b.png" width="0" height="0">'
+      const result = await transform(value)
+
+      expect(result).not.toContain('stats.wordpress.com')
     })
   })
 

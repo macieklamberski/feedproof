@@ -46,7 +46,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `unwrapRedirectUrls` | Remove Google/Bing/Facebook/etc. redirect wrappers |
 | `stripDeadAnchors` | Unwrap `<a>` with empty, `#`, or `javascript:` href |
 | `stripInertElements` | Remove platform chrome and dead placeholders — subscribe widgets, share buttons, related-posts widgets, ad slots (AdSense / AdThrive), author bio blocks, email preheaders, Substack image controls, and Drupal `<drupal-render-placeholder>` tags. Pass `inertSelectors` to extend or replace |
-| `removeTrackingPixels` | Strip 1×1 tracking pixel images |
+| `removeTrackingPixels` | Strip 1×1 tracking pixel images, preserving real images that declare `0×0` placeholder dimensions or a `srcset` |
 | `unwrapEmojiImages` | Replace WordPress/Facebook/Twitter/GitHub emoji `<img>` tags with their alt-text glyph |
 | `stripTrackingParams` | Remove UTM and other tracking parameters |
 | `convertBreaksToParagraphs` | Convert `<br><br>` runs into semantic `<p>` blocks |
