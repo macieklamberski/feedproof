@@ -1,3 +1,4 @@
+import { isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 // Trims trailing whitespace and removes common leading indentation from <pre> blocks.
@@ -8,31 +9,72 @@ const leadingIndentRegex = /^([^\S\n]+)/
 
 export const trimPreWhitespace: DomTransform = () => {
   return (document) => {
-    const pres = document.querySelectorAll('pre')
-
-    for (const pre of pres) {
+    for (const pre of document.querySelectorAll('pre')) {
       const target = pre.querySelector('code') ?? pre
       const original = target.innerHTML
       const trimmed = original
         .replace(trailingWhitespaceRegex, '')
         .replace(leadingBlankLinesRegex, '')
-      const lines = trimmed.split('\n')
 
-      // Find the smallest non-zero indentation across all non-empty lines.
-      const indents = lines
-        .filter((line) => line.trim().length > 0)
-        .map((line) => line.match(leadingIndentRegex)?.[1].length ?? 0)
+      // Smallest indentation across non-empty lines, computed in a single pass
+      // that bails at column zero — the common case once highlighting has
+      // wrapped lines in <span>s. Avoids the intermediate arrays and the
+      // `Math.min(...indents)` spread, which overflows the stack on blocks
+      // with very many lines.
+      let common = Number.POSITIVE_INFINITY
 
-      const common = Math.min(...indents)
-      const result = common > 0 ? lines.map((line) => line.slice(common)).join('\n') : trimmed
+      for (const line of trimmed.split('\n')) {
+        if (line.trim().length === 0) {
+          continue
+        }
 
-      // Skip the innerHTML write when the content hasn't changed. The write
-      // is not free: it triggers a parse + serialize round-trip that, for
-      // <pre> containing <xmp> or other raw-text quirks of linkedom, can
-      // re-escape entities and corrupt code samples. Most fires of this
-      // transform produce no actual change, so skipping is a big win.
-      if (result !== original) {
-        target.innerHTML = result
+        const indent = line.match(leadingIndentRegex)?.[1].length ?? 0
+
+        if (indent < common) {
+          common = indent
+        }
+
+        if (common === 0) {
+          break
+        }
+      }
+
+      // De-indentation rewrites every line, so fall back to the innerHTML
+      // round-trip. This is rare: highlighted code starts lines with <span>,
+      // so the common indent is usually zero.
+      if (common > 0 && common !== Number.POSITIVE_INFINITY) {
+        const result = trimmed
+          .split('\n')
+          .map((line) => line.slice(common))
+          .join('\n')
+
+        if (result !== original) {
+          target.innerHTML = result
+        }
+
+        continue
+      }
+
+      if (trimmed === original) {
+        continue
+      }
+
+      // Only leading/trailing whitespace changed, which lives in the boundary
+      // text nodes. Edit those in place instead of writing innerHTML: the write
+      // triggers a parse + serialize round-trip that, for <pre> containing
+      // <xmp> or other raw-text quirks of linkedom, can re-escape entities and
+      // corrupt code samples — and the round-trip dominates the cost on large
+      // blocks.
+      const lastChild = target.lastChild
+
+      if (isText(lastChild)) {
+        lastChild.data = lastChild.data.replace(trailingWhitespaceRegex, '')
+      }
+
+      const firstChild = target.firstChild
+
+      if (isText(firstChild)) {
+        firstChild.data = firstChild.data.replace(leadingBlankLinesRegex, '')
       }
     }
   }

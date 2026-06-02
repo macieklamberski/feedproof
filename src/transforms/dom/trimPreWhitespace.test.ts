@@ -130,6 +130,21 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
     expect(result).toBe(baseline)
   })
 
+  it('should trim trailing whitespace and dedent together', async () => {
+    const value = '<pre><code>    line 1\n    line 2  \n</code></pre>'
+    const result = await transform(value)
+
+    expect(result).toContain('<code>line 1\nline 2</code>')
+  })
+
+  it('should handle blocks with very many lines without overflowing the stack', async () => {
+    const lines = Array.from({ length: 200000 }, () => '  x').join('\n')
+    const value = `<pre><code>${lines}\n</code></pre>`
+    const result = await transform(value)
+
+    expect(result).toContain('<code>x\nx')
+  })
+
   it('should be idempotent', async () => {
     const value = '<pre><code>const x = 1\n\n</code></pre>'
     const once = await transform(value)
