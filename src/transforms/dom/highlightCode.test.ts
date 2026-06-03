@@ -94,6 +94,56 @@ describe('detectLanguage', () => {
     expect(detectLanguage(pre, code)).toBe('js')
   })
 
+  it('should detect Pandoc sourceCode language', () => {
+    const { pre, code } = createElement(
+      '<pre class="sourceCode haskell"><code class="sourceCode haskell">x</code></pre>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('haskell')
+  })
+
+  it('should ignore Pandoc structural classes when reading sourceCode language', () => {
+    const { pre, code } = createElement(
+      '<pre><code class="sourceCode numberLines python">x</code></pre>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('python')
+  })
+
+  it('should not detect a language from a sourceCode class with no language token', () => {
+    const { pre, code } = createElement('<pre><code class="sourceCode numberLines">x</code></pre>')
+
+    expect(detectLanguage(pre, code)).toBeUndefined()
+  })
+
+  it('should detect SyntaxHighlighter brush language', () => {
+    const { pre, code } = createElement(
+      '<pre class="brush: php; gutter: false"><code>x</code></pre>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('php')
+  })
+
+  it('should detect Crayon lang: language', () => {
+    const { pre, code } = createElement('<pre class="lang:ruby decode:true"><code>x</code></pre>')
+
+    expect(detectLanguage(pre, code)).toBe('ruby')
+  })
+
+  it('should detect Crayon lang_ language', () => {
+    const { pre, code } = createElement('<pre class="lang_scala"><code>x</code></pre>')
+
+    expect(detectLanguage(pre, code)).toBe('scala')
+  })
+
+  it('should prefer language-* class over Pandoc sourceCode', () => {
+    const { pre, code } = createElement(
+      '<pre><code class="sourceCode python language-js">x</code></pre>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('js')
+  })
+
   it('should return undefined when no language hint is present', () => {
     const { pre, code } = createElement('<pre><code>x</code></pre>')
 
@@ -210,6 +260,22 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const matches = result.match(/class="[^"]*hljs"/g)
 
     expect(matches).toHaveLength(2)
+  })
+
+  it('should highlight a registered extra language (haskell)', async () => {
+    const value = '<pre><code class="language-haskell">main = putStrLn "hello"</code></pre>'
+    const result = await transform(value)
+
+    expect(result).toContain('class="language-haskell hljs"')
+    expect(result).toContain('<span class="hljs-')
+  })
+
+  it('should highlight Pandoc sourceCode blocks', async () => {
+    const value =
+      '<pre class="sourceCode python"><code class="sourceCode python">def f():\n    return 1</code></pre>'
+    const result = await transform(value)
+
+    expect(result).toContain('hljs-keyword')
   })
 
   it('should be idempotent', async () => {
