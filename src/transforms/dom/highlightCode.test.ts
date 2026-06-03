@@ -185,12 +185,12 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(result).toContain('class="lang-python hljs"')
   })
 
-  it('should auto-detect language when no class is present', async () => {
+  it('should leave unlabeled code blocks as plain text', async () => {
     const value = '<pre><code>function greet(name) {\n  return "Hello, " + name;\n}</code></pre>'
     const result = await transform(value)
 
-    expect(result).toContain('hljs')
-    expect(result).toContain('<span class="hljs-')
+    expect(result).not.toContain('hljs')
+    expect(result).toContain('function greet(name)')
   })
 
   it('should not touch inline code outside pre', async () => {
@@ -215,12 +215,42 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(result).not.toContain('hljs')
   })
 
-  it('should fall back to auto-detection for unsupported language', async () => {
+  it('should leave a block with an unknown language as plain text', async () => {
     const value = '<pre><code class="language-nonexistent">const x = 1</code></pre>'
     const result = await transform(value)
 
-    expect(result).toContain('hljs')
-    expect(result).toContain('<span class="hljs-')
+    expect(result).not.toContain('hljs')
+    expect(result).toContain('const x = 1')
+  })
+
+  it('should leave a lang-auto block as plain text', async () => {
+    const value = '<pre><code class="lang-auto">System: Host: laptop arch: x86_64</code></pre>'
+    const result = await transform(value)
+
+    expect(result).not.toContain('hljs')
+  })
+
+  it('should highlight registered aliases', async () => {
+    const aliases = [
+      '<pre><code class="language-markup"><div>hi</div></code></pre>',
+      '<pre><code class="language-mysql">SELECT 1</code></pre>',
+      '<pre><code class="language-python3">def f():\n    return 1</code></pre>',
+      '<pre><code class="language-objective-c">int x = 1;</code></pre>',
+      '<pre><code class="language-shell-session">$ ls -la</code></pre>',
+      '<pre><code class="language-emacs-lisp">(defun foo () 1)</code></pre>',
+      '<pre><code class="language-clike">int x = 1;</code></pre>',
+      '<pre><code class="language-racket">(define x 1)</code></pre>',
+      '<pre><code class="language-jsonc">{"a": 1}</code></pre>',
+      '<pre><code class="language-vb">Dim x = 1</code></pre>',
+      '<pre><code class="language-fish">echo hi</code></pre>',
+      '<pre><code class="language-psql">SELECT 1</code></pre>',
+      '<pre><code class="language-asm">mov eax, 1</code></pre>',
+      '<pre><code class="language-arduino">void setup() {}</code></pre>',
+    ]
+
+    for (const value of aliases) {
+      expect(await transform(value)).toContain('hljs')
+    }
   })
 
   it('should not modify pre without code element', async () => {
