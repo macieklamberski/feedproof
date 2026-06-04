@@ -185,12 +185,11 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(result).toContain('class="lang-python hljs"')
   })
 
-  it('should leave unlabeled code blocks as plain text', async () => {
+  it('should auto-detect and highlight an unlabeled code block', async () => {
     const value = '<pre><code>function greet(name) {\n  return "Hello, " + name;\n}</code></pre>'
     const result = await transform(value)
 
-    expect(result).not.toContain('hljs')
-    expect(result).toContain('function greet(name)')
+    expect(result).toContain('hljs')
   })
 
   it('should not touch inline code outside pre', async () => {
@@ -215,16 +214,59 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(result).not.toContain('hljs')
   })
 
-  it('should leave a block with an unknown language as plain text', async () => {
-    const value = '<pre><code class="language-nonexistent">const x = 1</code></pre>'
+  it('should fall back to auto-detection when the declared language is unknown', async () => {
+    const value =
+      '<pre><code class="language-nonexistent">function add(a, b) {\n  return a + b;\n}</code></pre>'
     const result = await transform(value)
 
-    expect(result).not.toContain('hljs')
-    expect(result).toContain('const x = 1')
+    expect(result).toContain('hljs')
   })
 
   it('should leave a lang-auto block as plain text', async () => {
     const value = '<pre><code class="lang-auto">System: Host: laptop arch: x86_64</code></pre>'
+    const result = await transform(value)
+
+    expect(result).not.toContain('hljs')
+  })
+
+  it('should auto-detect HTML in an unlabeled block', async () => {
+    const value =
+      '<pre><code>&lt;div class="card"&gt;&lt;span&gt;hi&lt;/span&gt;&lt;/div&gt;</code></pre>'
+    const result = await transform(value)
+
+    expect(result).toContain('hljs')
+  })
+
+  it('should highlight a CSS block that has braces', async () => {
+    const value = '<pre><code>.btn { color: red; padding: 4px; }</code></pre>'
+    const result = await transform(value)
+
+    expect(result).toContain('hljs')
+  })
+
+  it('should not highlight prose that loosely resembles code', async () => {
+    const value = '<pre><code>Note: this matters; really, it does. See also: the docs.</code></pre>'
+    const result = await transform(value)
+
+    expect(result).not.toContain('hljs')
+  })
+
+  it('should not highlight key-value output that resembles YAML', async () => {
+    const value = '<pre><code>Status: ok\nName: test\nValue: 42</code></pre>'
+    const result = await transform(value)
+
+    expect(result).not.toContain('hljs')
+  })
+
+  it('should not highlight a CSS-looking sentence without braces', async () => {
+    const value = '<pre><code>color: the role it plays; size: how big it feels.</code></pre>'
+    const result = await transform(value)
+
+    expect(result).not.toContain('hljs')
+  })
+
+  it('should not highlight a trivial one-liner below the relevance floor', async () => {
+    const value = '<pre><code>const x = 1</code></pre>'
     const result = await transform(value)
 
     expect(result).not.toContain('hljs')
