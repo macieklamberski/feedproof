@@ -5,7 +5,7 @@
     "": {
       "name": "feedsweep",
       "dependencies": {
-        "@wordpress/autop": "^4.47.0",
+        "@wordpress/autop": "^4.48.0",
         "highlight.js": "^11.11.1",
         "linkifyjs": "^4.3.2",
         "srcset": "^5.0.3",
@@ -247,7 +247,7 @@
 
     "@types/tough-cookie": ["@types/tough-cookie@4.0.5", "", {}, "sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA=="],
 
-    "@wordpress/autop": ["@wordpress/autop@4.47.0", "", {}, "sha512-2r/Fq6TeRV7ytsRfppJozKVaqY2jPGue2dwvthgo8/LruHOGuSBSFz67wmgI+0WUXPqq2+DjQ5mL0+416sxNMA=="],
+    "@wordpress/autop": ["@wordpress/autop@4.48.0", "", {}, "sha512-Fn0WzWJjwIFxSfF9RqB3L1XbKudWLGHc4DMTAN4KAfyVl+86FszP85UYJq28EWIMblPO4V1roNXt6ZbShmGsOw=="],
 
     "agent-base": ["agent-base@9.0.0", "", {}, "sha512-TQf59BsZnytt8GdJKLPfUZ54g/iaUL2OWDSFCCvMOhsHduDQxO8xC4PNeyIkVcA5KwL2phPSv0douC0fgWzmnA=="],
 
