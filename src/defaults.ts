@@ -7,6 +7,7 @@ import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParag
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
+import { flattenPictureElements } from './transforms/dom/flattenPictureElements.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
 import { hoistFigcaptionFromAnchor } from './transforms/dom/hoistFigcaptionFromAnchor.js'
 import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
@@ -131,6 +132,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   stripDuplicateTitleHeading,
   demoteHeadings,
   unwrapHeadingBold,
+  flattenPictureElements,
   fixLazyImages,
   hoistFigcaptionFromAnchor,
   stripInertElements,
