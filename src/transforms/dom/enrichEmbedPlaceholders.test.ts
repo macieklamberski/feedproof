@@ -33,9 +33,10 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
   })
 
   it('should call enrichEmbedFn once with all collected placeholders', async () => {
-    const value =
-      '<div data-embed-provider="youtube" data-embed-id="abc"></div>' +
-      '<div data-embed-provider="vimeo" data-embed-id="123"></div>'
+    const value = `
+      <div data-embed-provider="youtube" data-embed-id="abc"></div>
+      <div data-embed-provider="vimeo" data-embed-id="123"></div>
+    `
     const calls: Array<Array<{ provider: string; id: string }>> = []
     const fn: EnrichEmbedFn = (embeds) => {
       calls.push(embeds)
@@ -93,9 +94,10 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
   })
 
   it('should silently skip placeholders missing from the returned map', async () => {
-    const value =
-      '<div data-embed-provider="youtube" data-embed-id="known"></div>' +
-      '<div data-embed-provider="youtube" data-embed-id="unknown"></div>'
+    const value = `
+      <div data-embed-provider="youtube" data-embed-id="known"></div>
+      <div data-embed-provider="youtube" data-embed-id="unknown"></div>
+    `
     const fn: EnrichEmbedFn = () => {
       return new Map([['youtube:known', { title: 'Found' }]])
     }

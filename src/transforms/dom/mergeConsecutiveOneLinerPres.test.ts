@@ -124,9 +124,10 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
     })
 
     it('should skip a run where a pre has wp-block-preformatted', async () => {
-      const value =
-        '<pre class="wp-block-preformatted">Intro ____9</pre>' +
-        '<pre class="wp-block-preformatted">Chapter 1 ____23</pre>'
+      const value = `
+        <pre class="wp-block-preformatted">Intro ____9</pre>
+        <pre class="wp-block-preformatted">Chapter 1 ____23</pre>
+      `
       const result = await transform(value)
 
       expect(result).toContain('<pre class="wp-block-preformatted">Intro ____9</pre>')
@@ -134,9 +135,10 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
     })
 
     it('should skip when the preserved class is one of several tokens', async () => {
-      const value =
-        '<pre class="wp-block-verse has-text-align-center">line 1</pre>' +
-        '<pre class="wp-block-verse has-text-align-center">line 2</pre>'
+      const value = `
+        <pre class="wp-block-verse has-text-align-center">line 1</pre>
+        <pre class="wp-block-verse has-text-align-center">line 2</pre>
+      `
       const result = await transform(value)
 
       expect(result).toContain('wp-block-verse has-text-align-center">line 1</pre>')
@@ -153,9 +155,10 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
     })
 
     it('should still merge wp-block-code (not in the preserve list)', async () => {
-      const value =
-        '<pre class="wp-block-code">SHOW GRANTS</pre>' +
-        '<pre class="wp-block-code">FOR user_or_role</pre>'
+      const value = `
+        <pre class="wp-block-code">SHOW GRANTS</pre>
+        <pre class="wp-block-code">FOR user_or_role</pre>
+      `
       const result = await transform(value)
 
       expect(result).toContain('<pre class="wp-block-code">SHOW GRANTS\nFOR user_or_role</pre>')
