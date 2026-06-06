@@ -102,6 +102,62 @@ describeForEachParser('markTimestamps', (parseHtml) => {
     expect(result).toContain('data-timestamp="0"')
   })
 
+  it('should wrap a line-ending MM:SS timestamp', async () => {
+    const value = '<p>Intro – 0:00</p>'
+    const result = await transform(value)
+
+    expect(result).toContain('<span data-timestamp="0">0:00</span>')
+    expect(result).toContain('Intro – ')
+  })
+
+  it('should wrap a line-ending HH:MM:SS timestamp', async () => {
+    const value = '<p>Deep dive – 1:14:30</p>'
+    const result = await transform(value)
+
+    expect(result).toContain('<span data-timestamp="4470">1:14:30</span>')
+  })
+
+  it('should wrap line-ending timestamps on br-split lines', async () => {
+    const value = '<p>Intro – 0:00<br>Outro – 2:48</p>'
+    const result = await transform(value)
+
+    expect(result.match(/data-timestamp/g)).toHaveLength(2)
+    expect(result).toContain('data-timestamp="0"')
+    expect(result).toContain('data-timestamp="168"')
+  })
+
+  it('should wrap line-ending timestamps on newline-split lines within one text node', async () => {
+    const value = '<p>Intro – 0:00\nOutro – 11:23</p>'
+    const result = await transform(value)
+
+    expect(result.match(/data-timestamp/g)).toHaveLength(2)
+    expect(result).toContain('data-timestamp="683"')
+  })
+
+  it('should wrap a line-ending timestamp without a separator', async () => {
+    const value = '<p>Final Thoughts 11:23</p>'
+    const result = await transform(value)
+
+    expect(result).toContain('data-timestamp="683"')
+  })
+
+  it('should keep trailing whitespace outside the span', async () => {
+    const value = '<p>Intro – 0:00 \nOutro – 0:24</p>'
+    const result = await transform(value)
+
+    expect(result.match(/data-timestamp/g)).toHaveLength(2)
+    expect(result).toContain('<span data-timestamp="0">0:00</span>')
+  })
+
+  it('should wrap both leading and trailing timestamps on one line', async () => {
+    const value = '<p>0:00 - 2:48</p>'
+    const result = await transform(value)
+
+    expect(result.match(/data-timestamp/g)).toHaveLength(2)
+    expect(result).toContain('data-timestamp="0"')
+    expect(result).toContain('data-timestamp="168"')
+  })
+
   it('should not wrap a timestamp in the middle of a line', async () => {
     const value = '<p>We met at 12:30 today</p>'
     const result = await transform(value)
@@ -152,6 +208,14 @@ describeForEachParser('markTimestamps', (parseHtml) => {
 
   it('should be idempotent', async () => {
     const value = '<p>01:21 - Intro</p>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
+
+  it('should be idempotent for line-ending timestamps', async () => {
+    const value = '<p>Intro – 0:00</p>'
     const once = await transform(value)
     const twice = await transform(once)
 

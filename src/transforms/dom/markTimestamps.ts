@@ -3,11 +3,16 @@ import type { DomTransform } from '../../types.js'
 
 const timestampIgnoreTags = new Set(['a', 'pre', 'code', 'kbd', 'samp', 'var', 'script', 'style'])
 
-// Matches a timestamp only when it starts a line (optionally after leading
-// whitespace): MM:SS or HH:MM:SS, with the seconds always two digits. Anchoring
-// to the line start avoids turning incidental "12:30" mentions in prose into
-// markers.
-const lineLeadingTimestampRegex = /(^|\n)([ \t]*)((?:\d{1,2}:)?\d{1,2}:\d{2})/gm
+// Matches a timestamp anchored to a line boundary — either starting the line
+// (optionally after leading whitespace) or ending it (optionally before
+// trailing whitespace): MM:SS or HH:MM:SS, with the seconds always two digits.
+// Anchoring to a boundary avoids turning incidental "12:30" mentions in the
+// middle of prose into markers.
+const timestampToken = '(?:\\d{1,2}:)?\\d{1,2}:\\d{2}'
+const lineBoundaryTimestampRegex = new RegExp(
+  `(?<=(?:^|\\n)[ \\t]*)${timestampToken}|${timestampToken}(?=[ \\t]*(?:\\n|$))`,
+  'gm',
+)
 
 const numericPartRegex = /^\d+$/
 
@@ -63,9 +68,10 @@ const collectTextNodes = (node: Node, result: Array<Node> = []): Array<Node> => 
   return result
 }
 
-// Wraps line-leading YouTube-style timestamps (e.g. "01:21 - Title") in a span
-// carrying the time in seconds, so the reader can later seek a player to that
-// point. The visible text is left as-is; only the seconds attribute is added.
+// Wraps line-boundary YouTube-style timestamps (e.g. "01:21 - Title" or
+// "Title - 01:21") in a span carrying the time in seconds, so the reader can
+// later seek a player to that point. The visible text is left as-is; only the
+// seconds attribute is added.
 export const markTimestamps: DomTransform = () => {
   return (document) => {
     // Walk from document (not documentElement) so linkedom fragment siblings are
@@ -85,15 +91,15 @@ export const markTimestamps: DomTransform = () => {
       const parts: Array<Node> = []
       let lastIndex = 0
 
-      for (const match of text.matchAll(lineLeadingTimestampRegex)) {
-        const [, lineStart, leading, token] = match
+      for (const match of text.matchAll(lineBoundaryTimestampRegex)) {
+        const token = match[0]
         const seconds = parseTimestampSeconds(token)
 
         if (seconds === undefined) {
           continue
         }
 
-        const tokenStart = (match.index ?? 0) + lineStart.length + leading.length
+        const tokenStart = match.index ?? 0
 
         if (tokenStart > lastIndex) {
           parts.push(document.createTextNode(text.slice(lastIndex, tokenStart)))
