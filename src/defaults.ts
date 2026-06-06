@@ -8,6 +8,7 @@ import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTag
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
+import { hoistFigcaptionFromAnchor } from './transforms/dom/hoistFigcaptionFromAnchor.js'
 import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
 import { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 import { markTimestamps } from './transforms/dom/markTimestamps.js'
@@ -131,6 +132,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   demoteHeadings,
   unwrapHeadingBold,
   fixLazyImages,
+  hoistFigcaptionFromAnchor,
   stripInertElements,
   resolveRelativeUrls,
   unwrapRedirectUrls,
