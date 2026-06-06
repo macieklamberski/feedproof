@@ -36,6 +36,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | --- | --- |
 | `decodeDoubleEncodedTags` | Decode `&lt;tag&gt;` back to `<tag>` in mixed content |
 | `fixLazyImages` | Move `data-src` / `data-original` to real `src` |
+| `flattenPictureElements` | Collapse `<picture>` to a single `<img>`, promoting the best modern-format (AVIF/WebP) source |
 | `hoistFigcaptionFromAnchor` | Move a `<figcaption>` out of a figure's click-through `<a>` so the caption is no longer part of the link |
 | `mergeConsecutiveOneLinerPres` | Merge consecutive single-line `<pre>` tags |
 | `replacePreLineBreaks` | Replace `<br>` with `\n` inside `<pre>` |

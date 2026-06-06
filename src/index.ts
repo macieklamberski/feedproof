@@ -81,6 +81,7 @@ export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTag
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 export { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 export { fixLazyImages } from './transforms/dom/fixLazyImages.js'
+export { flattenPictureElements } from './transforms/dom/flattenPictureElements.js'
 export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js'
 export { hoistFigcaptionFromAnchor } from './transforms/dom/hoistFigcaptionFromAnchor.js'
 export { injectEnclosures } from './transforms/dom/injectEnclosures.js'
