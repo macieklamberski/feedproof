@@ -46,9 +46,10 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
     })
 
     it('should emit sibling placeholders for multiple matches without a list wrapper', async () => {
-      const html =
-        '<div class="card" data-url="https://e.com/1" data-title="One"></div>' +
-        '<div class="card" data-url="https://e.com/2" data-title="Two"></div>'
+      const html = `
+        <div class="card" data-url="https://e.com/1" data-title="One"></div>
+        <div class="card" data-url="https://e.com/2" data-title="Two"></div>
+      `
       const result = await transform(html, [cardResolver])
 
       expect(result).not.toContain('<ul')
