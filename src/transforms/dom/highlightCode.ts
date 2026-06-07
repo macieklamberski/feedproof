@@ -278,8 +278,10 @@ export const highlightCode: DomTransform = () => {
 
     // Some editors emit a block of code as a standalone <code> with no <pre>
     // wrapper, the language hint on the <code> itself. Highlight those too, but
-    // only when they carry a registered hint and span multiple lines — enough to
-    // tell block code from the far more common inline <code>, with no guessing.
+    // only when they carry a registered hint and span multiple lines. The
+    // multi-line check is load-bearing: Markdown processors (e.g. Jekyll/Rouge)
+    // tag inline <code> in prose with class="language-*" too, so the hint alone
+    // is not a block-vs-inline signal — the newline is.
     for (const code of document.querySelectorAll('code')) {
       if (hasAncestorWithTagName(code, preTag)) {
         continue
