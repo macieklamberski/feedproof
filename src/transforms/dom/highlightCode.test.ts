@@ -295,12 +295,54 @@ describeForEachParser('highlightCode', (parseHtml) => {
     }
   })
 
-  it('should not modify pre without code element', async () => {
+  it('should highlight a bare pre (no code child) with a data-language hint', async () => {
+    const value = [
+      '<pre data-language="bash">curl -X POST https://api.example.com/posts \\',
+      '  -H "Authorization: Bearer TOKEN" \\',
+      `  -d '{"title":"hi"}'</pre>`,
+    ].join('\n')
+    const result = await transform(value)
+
+    expect(result).toContain('hljs')
+    expect(result).toContain('<span class="hljs-')
+  })
+
+  it('should highlight a bare pre with a language-* class', async () => {
+    const value = '<pre class="language-js">const x = 1</pre>'
+    const result = await transform(value)
+
+    expect(result).toContain('hljs-keyword')
+    expect(result).toContain('class="language-js hljs"')
+  })
+
+  it('should not highlight a bare pre without a language hint', async () => {
     const value = '<pre>plain preformatted text</pre>'
     const result = await transform(value)
 
     expect(result).not.toContain('hljs')
     expect(result).toContain('plain preformatted text')
+  })
+
+  it('should not auto-detect a bare pre: unlabeled code stays plain', async () => {
+    const value = '<pre>function greet(name) {\n  return "Hello, " + name;\n}</pre>'
+    const result = await transform(value)
+
+    expect(result).not.toContain('hljs')
+  })
+
+  it('should not highlight a bare pre with an unsupported language hint', async () => {
+    const value = '<pre data-language="nonexistent">some content here</pre>'
+    const result = await transform(value)
+
+    expect(result).not.toContain('hljs')
+  })
+
+  it('should be idempotent on a bare pre', async () => {
+    const value = '<pre class="language-js">const x = 1</pre>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
   })
 
   it('should handle html with no code blocks', async () => {

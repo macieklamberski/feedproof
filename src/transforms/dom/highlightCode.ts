@@ -229,26 +229,28 @@ export const highlightCode: DomTransform = () => {
     const pres = document.querySelectorAll('pre')
 
     for (const pre of pres) {
+      // A <pre> usually wraps a <code>, but some editors put the code directly in
+      // the <pre> with the language hint on the <pre> itself. Highlight the <code>
+      // when present, otherwise the <pre> itself.
       const code = pre.querySelector('code')
+      const target = code ?? pre
 
-      if (!code) {
-        continue
-      }
-
-      const text = code.textContent
+      const text = target.textContent
 
       if (!text?.trim()) {
         continue
       }
 
       // A declared, registered language wins outright (full grammar set, including
-      // the registered extras). Otherwise fall back to subset auto-detection.
+      // the registered extras). Otherwise fall back to subset auto-detection — but
+      // only for a <pre><code>: a bare <pre> is as often plain preformatted text
+      // as code, so it is highlighted only when it carries an explicit hint.
       const declared = detectLanguage(pre, code)
       let highlighted: string | undefined
 
       if (declared && hljs.getLanguage(declared)) {
         highlighted = hljs.highlight(text, { language: declared }).value
-      } else {
+      } else if (code) {
         const auto = hljs.highlightAuto(text, autoDetectLanguages)
         const signature = auto.language ? autoDetectSignatures[auto.language] : undefined
 
@@ -267,8 +269,8 @@ export const highlightCode: DomTransform = () => {
         continue
       }
 
-      code.innerHTML = highlighted
-      code.classList.add('hljs')
+      target.innerHTML = highlighted
+      target.classList.add('hljs')
     }
   }
 }
