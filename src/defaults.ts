@@ -41,6 +41,7 @@ import { paragraphizePlainText } from './transforms/string/paragraphizePlainText
 import { stripControlChars } from './transforms/string/stripControlChars.js'
 import { stripOversizedBase64Sources } from './transforms/string/stripOversizedBase64Sources.js'
 import { unwrapCdataComments } from './transforms/string/unwrapCdataComments.js'
+import { unwrapCdataMarkers } from './transforms/string/unwrapCdataMarkers.js'
 import type {
   BookmarkResolver,
   DomTransform,
@@ -123,6 +124,7 @@ export const defaultStringTransforms: Array<StringTransform> = [
   stripControlChars,
   stripOversizedBase64Sources,
   unwrapCdataComments,
+  unwrapCdataMarkers,
   paragraphizePlainText,
 ]
 

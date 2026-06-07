@@ -114,6 +114,7 @@ export { paragraphizePlainText } from './transforms/string/paragraphizePlainText
 export { stripControlChars } from './transforms/string/stripControlChars.js'
 export { stripOversizedBase64Sources } from './transforms/string/stripOversizedBase64Sources.js'
 export { unwrapCdataComments } from './transforms/string/unwrapCdataComments.js'
+export { unwrapCdataMarkers } from './transforms/string/unwrapCdataMarkers.js'
 export type {
   AssetProxyFn,
   AssetType,
