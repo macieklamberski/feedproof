@@ -27,6 +27,7 @@ import { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitle
 import { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
 import { stripInertElements } from './transforms/dom/stripInertElements.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
+import { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
 import { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
@@ -145,6 +146,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   unwrapEmojiImages,
   convertBreaksToParagraphs,
   wrapBareInlineInParagraphs,
+  stripLeadingIndentation,
   stripInterBlockBreaks,
   stripBoundaryBreaks,
   mergeFragmentedLists,
