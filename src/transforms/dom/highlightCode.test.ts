@@ -345,6 +345,48 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(twice).toBe(once)
   })
 
+  it('should highlight a standalone multi-line code (no pre) with a data-language hint', async () => {
+    const value = [
+      '<div><code data-language="bash">curl -X POST https://api.example.com/posts \\',
+      '  -H "Authorization: Bearer TOKEN"</code></div>',
+    ].join('\n')
+    const result = await transform(value)
+
+    expect(result).toContain('hljs')
+    expect(result).toContain('<span class="hljs-')
+  })
+
+  it('should highlight a standalone multi-line code with a language-* class', async () => {
+    const value = '<code class="language-python">def hello():\n    print("hi")</code>'
+    const result = await transform(value)
+
+    expect(result).toContain('hljs-keyword')
+    expect(result).toContain('class="language-python hljs"')
+  })
+
+  it('should not highlight a hinted single-line inline code', async () => {
+    const value = '<p>Use <code class="language-js">const x = 1</code> to declare</p>'
+    const result = await transform(value)
+
+    expect(result).not.toContain('hljs')
+    expect(result).toContain('<code class="language-js">const x = 1</code>')
+  })
+
+  it('should not highlight a standalone multi-line code without a hint', async () => {
+    const value = '<code>function greet(name) {\n  return "Hello, " + name;\n}</code>'
+    const result = await transform(value)
+
+    expect(result).not.toContain('hljs')
+  })
+
+  it('should be idempotent on a standalone code', async () => {
+    const value = '<code class="language-python">def hello():\n    print("hi")</code>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
+
   it('should handle html with no code blocks', async () => {
     const value = '<p>No code here</p>'
     const result = await transform(value)

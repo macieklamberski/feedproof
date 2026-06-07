@@ -37,6 +37,7 @@ import twig from 'highlight.js/lib/languages/twig'
 import verilog from 'highlight.js/lib/languages/verilog'
 import vim from 'highlight.js/lib/languages/vim'
 import x86asm from 'highlight.js/lib/languages/x86asm'
+import { hasAncestorWithTagName } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 // Languages absent from highlight.js's common build but common in feed code
@@ -123,7 +124,7 @@ const whitespacePattern = /\s+/
 // Pandoc emits class="sourceCode LANG"; these tokens are structural, not the language.
 const pandocStructuralClasses = new Set(['sourceCode', 'numberLines'])
 
-export const detectLanguage = (pre: Element, code: Element | null): string | undefined => {
+export const detectLanguage = (pre: Element | null, code: Element | null): string | undefined => {
   // Check language-* / lang-* class on <code>, then <pre>.
   for (const element of [code, pre]) {
     const match = element?.className.match(languagePattern)?.[1]
@@ -224,6 +225,8 @@ const autoDetectSignatures: Record<string, RegExp> = {
 // `const x = 1` stay plain).
 const minAutoDetectRelevance = 2
 
+const preTag = new Set(['pre'])
+
 export const highlightCode: DomTransform = () => {
   return (document) => {
     const pres = document.querySelectorAll('pre')
@@ -271,6 +274,33 @@ export const highlightCode: DomTransform = () => {
 
       target.innerHTML = highlighted
       target.classList.add('hljs')
+    }
+
+    // Some editors emit a block of code as a standalone <code> with no <pre>
+    // wrapper, the language hint on the <code> itself. Highlight those too, but
+    // only when they carry a registered hint and span multiple lines. The
+    // multi-line check is load-bearing: Markdown processors (e.g. Jekyll/Rouge)
+    // tag inline <code> in prose with class="language-*" too, so the hint alone
+    // is not a block-vs-inline signal — the newline is.
+    for (const code of document.querySelectorAll('code')) {
+      if (hasAncestorWithTagName(code, preTag)) {
+        continue
+      }
+
+      const text = code.textContent
+
+      if (!text?.includes('\n')) {
+        continue
+      }
+
+      const declared = detectLanguage(null, code)
+
+      if (!declared || !hljs.getLanguage(declared)) {
+        continue
+      }
+
+      code.innerHTML = hljs.highlight(text, { language: declared }).value
+      code.classList.add('hljs')
     }
   }
 }
