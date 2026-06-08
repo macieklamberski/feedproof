@@ -2,7 +2,7 @@ import type { DomTransform } from '../../types.js'
 
 const wrapperTags = new Set(['div', 'article', 'section', 'main', 'header', 'footer'])
 
-const preservedPrefixes = ['data-embed', 'data-bookmark', 'data-table']
+const preservedPrefixes = ['data-embed', 'data-bookmark', 'data-table', 'data-pre']
 
 const hasPreservedAttribute = (element: Element): boolean => {
   const attributes = element.attributes
@@ -18,9 +18,9 @@ const hasPreservedAttribute = (element: Element): boolean => {
 }
 
 // Removes purely presentational container tags. Children are hoisted in place.
-// Containers carrying `data-embed-*`, `data-bookmark-*`, or `data-table`
-// attributes (feedsweep's own markers) are preserved. Must run AFTER merge
-// transforms so unwrapping doesn't expose new adjacent siblings for those to merge.
+// Containers carrying `data-embed-*`, `data-bookmark-*`, `data-table`, or
+// `data-pre` attributes (feedsweep's own markers) are preserved. Must run AFTER
+// merge transforms so unwrapping doesn't expose new adjacent siblings for those to merge.
 export const unwrapWrappers: DomTransform = () => {
   return (document) => {
     const candidates = document.body.querySelectorAll('*')
