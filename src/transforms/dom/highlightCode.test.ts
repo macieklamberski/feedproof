@@ -403,6 +403,20 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(result).toContain('<code>config.set("x", 1)</code>')
   })
 
+  it('should not promote a pretty-printed single-word inline code', async () => {
+    const value = '<p>I used <code>\n  mdp\n </code> for slides</p>'
+    const result = await transform(value)
+
+    expect(result).not.toContain('<pre>')
+  })
+
+  it('should not promote a single content line padded with blank lines', async () => {
+    const value = '<p>run <code>\n\n\n  npm install\n </code> first</p>'
+    const result = await transform(value)
+
+    expect(result).not.toContain('<pre>')
+  })
+
   it('should be idempotent on a standalone code', async () => {
     const value = '<code class="language-python">def hello():\n    print("hi")</code>'
     const once = await transform(value)

@@ -232,16 +232,19 @@ export const highlightCode: DomTransform = () => {
     // Some editors emit a block of code as a standalone <code> with no <pre> wrapper.
     // Promote those to <pre><code> first so the loop below treats them like any other
     // block: highlighted by a declared hint or by subset auto-detection, and rendered
-    // as a block (a loose <code> renders inline, collapsing the newlines). The
-    // multi-line check is the block-vs-inline signal: Markdown processors (e.g.
-    // Jekyll/Rouge) tag inline <code> in prose with class="language-*" too, so the hint
-    // is not reliable — the newline is.
+    // as a block (a loose <code> renders inline, collapsing the newlines). The signal
+    // is two or more non-empty lines, not just any newline: feeds often pretty-print
+    // their HTML, wrapping an inline <code>word</code> as `<code>\n  word\n </code>`,
+    // so a lone newline does not mean block. A single content line stays inline.
     for (const code of document.querySelectorAll('code')) {
       if (hasAncestorWithTagName(code, preTag)) {
         continue
       }
 
-      if (!code.textContent?.includes('\n')) {
+      const rawContentLines = (code.textContent ?? '').split('\n')
+      const nonEmptyContentLines = rawContentLines.filter((line) => line.trim())
+
+      if (nonEmptyContentLines.length < 2) {
         continue
       }
 
