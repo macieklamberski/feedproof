@@ -46,6 +46,16 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(result).not.toContain('pixel.gif')
   })
 
+  it('should normalize a standalone code block to a scrollable pre, not a paragraph', async () => {
+    const html = '<code>function greet(name) {\n  return name\n}</code>'
+    const result = await transformContent(html, { parseHtmlFn: parseHtml })
+
+    // highlightCode promotes the bare block to <pre><code> before wrapBareInlineInParagraphs
+    // runs, so it ends up as a scrollable code block, not a <pre> nested inside a <p>.
+    expect(result).toContain('<div data-pre=""><pre><code')
+    expect(result).not.toContain('<p>')
+  })
+
   it('should allow overriding the dom transforms array', async () => {
     const html = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
     const result = await transformContent(html, {

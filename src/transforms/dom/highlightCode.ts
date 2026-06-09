@@ -229,9 +229,34 @@ const preTag = new Set(['pre'])
 
 export const highlightCode: DomTransform = () => {
   return (document) => {
-    const pres = document.querySelectorAll('pre')
+    // Some editors emit a block of code as a standalone <code> with no <pre> wrapper.
+    // Promote those to <pre><code> first so the loop below treats them like any other
+    // block: highlighted by a declared hint or by subset auto-detection, and rendered
+    // as a block (a loose <code> renders inline, collapsing the newlines). The
+    // multi-line check is the block-vs-inline signal: Markdown processors (e.g.
+    // Jekyll/Rouge) tag inline <code> in prose with class="language-*" too, so the hint
+    // is not reliable — the newline is.
+    for (const code of document.querySelectorAll('code')) {
+      if (hasAncestorWithTagName(code, preTag)) {
+        continue
+      }
 
-    for (const pre of pres) {
+      if (!code.textContent?.includes('\n')) {
+        continue
+      }
+
+      const parent = code.parentNode
+
+      if (!parent) {
+        continue
+      }
+
+      const pre = document.createElement('pre')
+      parent.insertBefore(pre, code)
+      pre.appendChild(code)
+    }
+
+    for (const pre of document.querySelectorAll('pre')) {
       // A <pre> usually wraps a <code>, but some editors put the code directly in
       // the <pre> with the language hint on the <pre> itself. Highlight the <code>
       // when present, otherwise the <pre> itself.
@@ -274,33 +299,6 @@ export const highlightCode: DomTransform = () => {
 
       target.innerHTML = highlighted
       target.classList.add('hljs')
-    }
-
-    // Some editors emit a block of code as a standalone <code> with no <pre>
-    // wrapper, the language hint on the <code> itself. Highlight those too, but
-    // only when they carry a registered hint and span multiple lines. The
-    // multi-line check is load-bearing: Markdown processors (e.g. Jekyll/Rouge)
-    // tag inline <code> in prose with class="language-*" too, so the hint alone
-    // is not a block-vs-inline signal — the newline is.
-    for (const code of document.querySelectorAll('code')) {
-      if (hasAncestorWithTagName(code, preTag)) {
-        continue
-      }
-
-      const text = code.textContent
-
-      if (!text?.includes('\n')) {
-        continue
-      }
-
-      const declared = detectLanguage(null, code)
-
-      if (!declared || !hljs.getLanguage(declared)) {
-        continue
-      }
-
-      code.innerHTML = hljs.highlight(text, { language: declared }).value
-      code.classList.add('hljs')
     }
   }
 }

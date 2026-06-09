@@ -148,12 +148,15 @@ export const defaultDomTransforms: Array<DomTransform> = [
   removeTrackingPixels,
   unwrapEmojiImages,
   convertBreaksToParagraphs,
+  // Runs before wrapBareInlineInParagraphs so a promoted standalone code block is a
+  // <pre> (block) by the time bare inline runs are wrapped, avoiding a <pre> nested
+  // inside a <p>. None of the strip/merge passes below touch <pre>/<code> internals.
+  highlightCode,
   wrapBareInlineInParagraphs,
   stripLeadingIndentation,
   stripInterBlockBreaks,
   stripBoundaryBreaks,
   mergeFragmentedLists,
-  highlightCode,
   mergeConsecutiveOneLinerPres,
   replacePreLineBreaks,
   trimPreWhitespace,
