@@ -372,11 +372,35 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(result).toContain('<code class="language-js">const x = 1</code>')
   })
 
-  it('should not highlight a standalone multi-line code without a hint', async () => {
+  it('should wrap a highlighted standalone code in a pre', async () => {
+    const value = '<code class="language-python">def hello():\n    print("hi")</code>'
+    const result = await transform(value)
+
+    expect(result).toContain('<pre><code class="language-python hljs">')
+  })
+
+  it('should promote and auto-detect an unhinted multi-line standalone code', async () => {
     const value = '<code>function greet(name) {\n  return "Hello, " + name;\n}</code>'
     const result = await transform(value)
 
+    expect(result).toContain('<pre><code')
+    expect(result).toContain('hljs')
+  })
+
+  it('should promote an unhinted multi-line standalone code even without highlighting', async () => {
+    const value = '<code>the quick brown fox\njumps over the lazy dog</code>'
+    const result = await transform(value)
+
+    expect(result).toContain('<pre><code')
     expect(result).not.toContain('hljs')
+  })
+
+  it('should not promote a single-line standalone code', async () => {
+    const value = '<p>see <code>config.set("x", 1)</code> here</p>'
+    const result = await transform(value)
+
+    expect(result).not.toContain('<pre>')
+    expect(result).toContain('<code>config.set("x", 1)</code>')
   })
 
   it('should be idempotent on a standalone code', async () => {
