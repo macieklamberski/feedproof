@@ -52,8 +52,8 @@
     "srcset": "^5.0.3"
   },
   "peerDependencies": {
-    "feedcanon": "^2.0.0-next.4",
-    "feedscout": "^2.0.0-next.2",
+    "feedcanon": "^2.0.0-beta.1",
+    "feedscout": "^2.0.0-beta.1",
     "linkedom": "^0.18.12"
   },
   "peerDependenciesMeta": {
