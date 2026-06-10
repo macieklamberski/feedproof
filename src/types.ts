@@ -62,7 +62,7 @@ export type BookmarkResolver = {
   extract: (element: Element) => MaybePromise<BookmarkResolverResult | undefined>
 }
 
-export type UrlUnwrapper = (url: URL) => string | undefined
+export type CleanUrlFn = (url: string) => string
 
 export type AssetType = 'image' | 'video' | 'audio'
 
@@ -80,8 +80,8 @@ export type TransformContext = {
   emojiImageHosts: Array<string>
   inertSelectors: Array<string>
   preservedPreClasses: Array<string>
-  urlUnwrappers: Array<UrlUnwrapper>
   resolveUrlFn: ResolveUrlFn
+  cleanUrlFn?: CleanUrlFn
   assetProxyFn?: AssetProxyFn
   enrichEmbedFn?: EnrichEmbedFn
   articleTitle?: string
@@ -106,8 +106,8 @@ export type TransformContentOptions = {
   emojiImageHosts?: Array<string>
   inertSelectors?: Array<string>
   preservedPreClasses?: Array<string>
-  urlUnwrappers?: Array<UrlUnwrapper>
   resolveUrlFn?: ResolveUrlFn
+  cleanUrlFn?: CleanUrlFn
   assetProxyFn?: AssetProxyFn
   enrichEmbedFn?: EnrichEmbedFn
   articleTitle?: string

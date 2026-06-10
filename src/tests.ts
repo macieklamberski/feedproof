@@ -11,7 +11,6 @@ import {
   defaultResolveUrlFn,
   defaultTrackingHosts,
   defaultTrackingPathSegments,
-  defaultUrlUnwrappers,
 } from './defaults.js'
 import { parseHtml as parseWithLinkedom } from './parsers/linkedom.js'
 import type { TransformContext } from './types.js'
@@ -30,7 +29,7 @@ export const baseContext: TransformContext = {
   lazySrcsetAttributes: defaultLazySrcsetAttributes,
   trackingHosts: defaultTrackingHosts,
   trackingPathSegments: defaultTrackingPathSegments,
-  urlUnwrappers: defaultUrlUnwrappers,
+
   resolveUrlFn: defaultResolveUrlFn,
 }
 

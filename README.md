@@ -6,7 +6,7 @@
 
 Tidy up the HTML content in web feeds. Fix feed-specific quirks so content displays in its best possible form.
 
-Feedsweep takes raw feed item HTML and runs it through a pipeline that genuinely improves the output: fixing lazy-loaded images so they actually render, resolving relative URLs to absolute, stripping tracking parameters and pixels for privacy, highlighting code blocks, normalizing broken markup from common feed quirks, auto-linking bare URLs, and converting embeds into framework-agnostic placeholders. It ships with sensible defaults and built-in support for YouTube and other popular platforms.
+Feedsweep takes raw feed item HTML and runs it through a pipeline that genuinely improves the output: fixing lazy-loaded images so they actually render, resolving relative URLs to absolute, stripping tracking pixels for privacy (plus tracking params and redirect wrappers via the cleanUrlFn option), highlighting code blocks, normalizing broken markup from common feed quirks, auto-linking bare URLs, and converting embeds into framework-agnostic placeholders. It ships with sensible defaults and built-in support for YouTube and other popular platforms.
 
 ## Installation
 
@@ -45,12 +45,11 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `stripDuplicateTitleHeading` | Remove first `<h1>`–`<h6>` matching article title |
 | `demoteHeadings` | Shift every heading down by one level (`<h1>`→`<h2>`, …, `<h5>`→`<h6>`) when the body contains an `<h1>`, so it sits below the reader's own page title |
 | `unwrapHeadingBold` | Unwrap `<b>`/`<strong>` that wraps the entire content of a heading (redundant — headings are already bold) |
-| `unwrapRedirectUrls` | Remove Google/Bing/Facebook/etc. redirect wrappers |
+| `cleanAnchorUrls` | Rewrite anchor hrefs with the `cleanUrlFn` option: unwrapping redirect wrappers and stripping tracking params is delegated to a function like urlpurify's `cleanUrl`. No-op when the option is absent |
 | `stripDeadAnchors` | Unwrap `<a>` with empty, `#`, or `javascript:` href |
 | `stripInertElements` | Remove platform chrome and dead placeholders — subscribe widgets, share buttons, related-posts widgets, ad slots (AdSense / AdThrive), author bio blocks, email preheaders, Substack image controls, and Drupal `<drupal-render-placeholder>` tags. Pass `inertSelectors` to extend or replace |
 | `removeTrackingPixels` | Strip 1×1 tracking pixel images, preserving real images that declare `0×0` placeholder dimensions or a `srcset` |
 | `unwrapEmojiImages` | Replace WordPress/Facebook/Twitter/GitHub emoji `<img>` tags with their alt-text glyph |
-| `stripTrackingParams` | Remove UTM and other tracking parameters |
 | `convertBreaksToParagraphs` | Convert `<br><br>` runs into semantic `<p>` blocks |
 | `wrapBareInlineInParagraphs` | Wrap bare inline runs (delimited by block-level children) in semantic `<p>` blocks |
 | `injectEnclosures` | Inject feed enclosures into content as native `<audio>`/`<video>` or iframe placeholders |
@@ -80,12 +79,15 @@ Inventory of every transform exported from the package. Most are enabled by defa
 ```typescript
 import { fixLazyImages, resolveRelativeUrls, transformContent } from 'feedsweep'
 import { parseHtml } from 'feedsweep/linkedom'
+import { cleanUrl } from 'urlpurify'
 
 const result = transformContent(html, {
   // Required: function that turns an HTML string into a `Document`. See "DOM library".
   parseHtmlFn: parseHtml,
   // Base URL for resolving relative URLs.
   baseUrl: 'https://example.com/post/1',
+  // Rewrite anchor hrefs: unwrap redirects and strip tracking params.
+  cleanUrlFn: cleanUrl,
   // Feed item enclosures (audio/video).
   enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
   // Route image/video/audio URLs through a proxy. Return `undefined` to leave a URL untouched.
