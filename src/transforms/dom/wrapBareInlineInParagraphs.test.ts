@@ -111,13 +111,81 @@ describeForEachParser('wrapBareInlineInParagraphs', (parseHtml) => {
     })
   })
 
-  describe('skipped contexts', () => {
-    it('should not wrap inside figure', async () => {
-      const value = '<figure><div>caption</div></figure>'
+  describe('figures', () => {
+    it('should wrap a caption div inside a figure', async () => {
+      const value = '<figure><img src="x.jpg"><div>A long caption text</div></figure>'
+      const expected = '<figure><img src="x.jpg"><div><p>A long caption text</p></div></figure>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should wrap bare text after an image', async () => {
+      const value = '<figure><img src="x.jpg">Photo: Jane Doe</figure>'
+      const expected = '<figure><img src="x.jpg"><p>Photo: Jane Doe</p></figure>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should wrap bare text between an image and a figcaption', async () => {
+      const value = '<figure><img src="x.jpg">Description<figcaption>Credit</figcaption></figure>'
+      const expected =
+        '<figure><img src="x.jpg"><p>Description</p><figcaption>Credit</figcaption></figure>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should keep a linked image out of the wrapped paragraph', async () => {
+      const value = '<figure><a href="https://example.com"><img src="x.jpg"></a>Caption</figure>'
+      const expected =
+        '<figure><a href="https://example.com"><img src="x.jpg"></a><p>Caption</p></figure>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should leave a media-only figure untouched', async () => {
+      const value = '<figure><img src="x.jpg"></figure>'
 
       expect(await transform(value)).toBe(value)
     })
 
+    it('should leave a quote figure untouched', async () => {
+      const value = '<figure><blockquote>quote</blockquote><figcaption>Author</figcaption></figure>'
+
+      expect(await transform(value)).toBe(value)
+    })
+  })
+
+  describe('media boundaries', () => {
+    it('should split a leading image from the following text', async () => {
+      const value = '<img src="x.jpg">In this monthly issue, we take a closer look.'
+      const expected = '<img src="x.jpg"><p>In this monthly issue, we take a closer look.</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should split a trailing image from the preceding text', async () => {
+      const value = '<div>Some intro text<img src="x.jpg"></div>'
+      const expected = '<div><p>Some intro text</p><img src="x.jpg"></div>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should keep an inline image surrounded by text inside the paragraph', async () => {
+      const value = '<div>before <img src="smiley.gif"> after</div>'
+      const expected = '<div><p>before <img src="smiley.gif"> after</p></div>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should keep a comment at the run edge out of the wrapped paragraph', async () => {
+      const value = '<div><!-- note -->text<img src="x.jpg"></div>'
+      const expected = '<div><!-- note --><p>text</p><img src="x.jpg"></div>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+  })
+
+  describe('skipped contexts', () => {
     it('should not wrap inside figcaption', async () => {
       const value = '<figure><figcaption><div>caption</div></figcaption></figure>'
 
@@ -125,9 +193,10 @@ describeForEachParser('wrapBareInlineInParagraphs', (parseHtml) => {
     })
 
     it('should not wrap a div inside an anchor', async () => {
-      const value = '<figure><a href="https://example.com"><div>link</div></a></figure>'
+      const value = '<div><a href="https://example.com"><div>link</div></a></div>'
+      const expected = '<div><p><a href="https://example.com"><div>link</div></a></p></div>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should not wrap inside pre or code', async () => {
@@ -165,6 +234,14 @@ describeForEachParser('wrapBareInlineInParagraphs', (parseHtml) => {
 
     it('should be idempotent', async () => {
       const value = '<div>intro<p>para</p>outro</div>'
+      const once = await transform(value)
+      const twice = await transform(once)
+
+      expect(twice).toBe(once)
+    })
+
+    it('should be idempotent for figures', async () => {
+      const value = '<figure><img src="x.jpg">Description<figcaption>Credit</figcaption></figure>'
       const once = await transform(value)
       const twice = await transform(once)
 
