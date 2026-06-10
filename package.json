@@ -46,7 +46,6 @@
     "test:jsdom": "DOM_LIBRARY=jsdom bun test"
   },
   "dependencies": {
-    "@wordpress/autop": "^4.48.0",
     "highlight.js": "^11.11.1",
     "linkifyjs": "^4.3.2",
     "srcset": "^5.0.3"
