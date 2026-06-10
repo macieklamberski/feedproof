@@ -68,6 +68,87 @@ describe('paragraphizePlainText', () => {
     expect(result).toBe('')
   })
 
+  // Exact-output fixtures pinned to @wordpress/autop behavior on plain text,
+  // captured before the dependency was inlined.
+  describe('autop-compatible output', () => {
+    it('should wrap a single chunk', () => {
+      const value = 'Hello world'
+      const expected = '<p>Hello world</p>\n'
+
+      expect(paragraphize(value)).toBe(expected)
+    })
+
+    it('should split paragraphs and break lines', () => {
+      const value = 'Multi\n\nMid\nLine\n\nLast'
+      const expected = '<p>Multi</p>\n<p>Mid<br />\nLine</p>\n<p>Last</p>\n'
+
+      expect(paragraphize(value)).toBe(expected)
+    })
+
+    it('should normalize Windows and bare carriage returns', () => {
+      const value = 'A\r\nB\r\n\r\nC'
+      const expected = '<p>A<br />\nB</p>\n<p>C</p>\n'
+
+      expect(paragraphize(value)).toBe(expected)
+    })
+
+    it('should collapse runs of blank lines into one paragraph break', () => {
+      const value = 'One\n\n\n\nTwo'
+      const expected = '<p>One</p>\n<p>Two</p>\n'
+
+      expect(paragraphize(value)).toBe(expected)
+    })
+
+    it('should drop whitespace-only chunks', () => {
+      const value = 'Leading\n\n   \n\nTrailing\n'
+      const expected = '<p>Leading</p>\n<p>Trailing</p>\n'
+
+      expect(paragraphize(value)).toBe(expected)
+    })
+
+    it('should return an empty string for whitespace-only input', () => {
+      const value = '  \n \n  '
+      const expected = ''
+
+      expect(paragraphize(value)).toBe(expected)
+    })
+
+    it('should consume whitespace before a line break', () => {
+      const value = 'Line one \nLine two'
+      const expected = '<p>Line one<br />\nLine two</p>\n'
+
+      expect(paragraphize(value)).toBe(expected)
+    })
+
+    it('should keep whitespace after a line break', () => {
+      const value = 'Line one\n  Line two'
+      const expected = '<p>Line one<br />\n  Line two</p>\n'
+
+      expect(paragraphize(value)).toBe(expected)
+    })
+
+    it('should not break on trailing newline and whitespace', () => {
+      const value = 'X\n\nTrailing \n '
+      const expected = '<p>X</p>\n<p>Trailing </p>\n'
+
+      expect(paragraphize(value)).toBe(expected)
+    })
+
+    it('should not break on a single trailing newline', () => {
+      const value = 'Solo\n'
+      const expected = '<p>Solo</p>\n'
+
+      expect(paragraphize(value)).toBe(expected)
+    })
+
+    it('should leave lone angle brackets untouched', () => {
+      const value = 'a < b and c > d'
+      const expected = '<p>a < b and c > d</p>\n'
+
+      expect(paragraphize(value)).toBe(expected)
+    })
+  })
+
   it('should be idempotent', async () => {
     const value = 'First paragraph\n\nSecond paragraph'
     const once = await paragraphize(value)
