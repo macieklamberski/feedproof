@@ -2,6 +2,7 @@ import { resolveUrl } from 'feedcanon'
 import { ghostBookmarkResolver } from './bookmarks/ghost.js'
 import { substackBookmarkResolver } from './bookmarks/substack.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
+import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
 import { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
@@ -28,12 +29,10 @@ import { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
 import { stripInertElements } from './transforms/dom/stripInertElements.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
-import { stripTrackingParams } from './transforms/dom/stripTrackingParams.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 import { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 import { unwrapHeadingBold } from './transforms/dom/unwrapHeadingBold.js'
-import { unwrapRedirectUrls } from './transforms/dom/unwrapRedirectUrls.js'
 import { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 import { wrapBareInlineInParagraphs } from './transforms/dom/wrapBareInlineInParagraphs.js'
 import { wrapPresForScroll } from './transforms/dom/wrapPresForScroll.js'
@@ -49,77 +48,7 @@ import type {
   EmbedResolver,
   ResolveUrlFn,
   StringTransform,
-  UrlUnwrapper,
 } from './types.js'
-// import { unwrapAceml } from './unwraps/aceml.js'
-// import { unwrapAdjust } from './unwraps/adjust.js'
-// import { unwrapAmazonAffiliate } from './unwraps/amazonAffiliate.js'
-// import { unwrapAmpCache } from './unwraps/ampCache.js'
-// import { unwrapAwin } from './unwraps/awin.js'
-import { unwrapBing } from './unwraps/bing.js'
-// import { unwrapCjNetwork } from './unwraps/cjNetwork.js'
-// import { unwrapDigidip } from './unwraps/digidip.js'
-// import { unwrapDisqus } from './unwraps/disqus.js'
-// import { unwrapDouban } from './unwraps/douban.js'
-// import { unwrapDuckduckgo } from './unwraps/duckduckgo.js'
-// import { unwrapEbayRover } from './unwraps/ebayRover.js'
-// import { unwrapEffiliation } from './unwraps/effiliation.js'
-// import { unwrapEmbedly } from './unwraps/embedly.js'
-import { unwrapFacebookShim } from './unwraps/facebook.js'
-// import { unwrapFeedsportal } from './unwraps/feedsportal.js'
-// import { unwrapFirebaseDynamicLinks } from './unwraps/firebaseDynamicLinks.js'
-// import { unwrapFlipboard } from './unwraps/flipboard.js'
-// import { unwrapGateSc } from './unwraps/gateSc.js'
-// import { unwrapGeoriot } from './unwraps/georiot.js'
-// import { unwrapGitee } from './unwraps/gitee.js'
-import { unwrapGoogle } from './unwraps/google.js'
-import { unwrapGoogleAmpViewer } from './unwraps/googleAmpViewer.js'
-import { unwrapGoogleNews } from './unwraps/googleNews.js'
-import { unwrapGoogleNewsModern } from './unwraps/googleNewsModern.js'
-import { unwrapGoogleScholar } from './unwraps/googleScholar.js'
-// import { unwrapHashnode } from './unwraps/hashnode.js'
-// import { unwrapIcptrack } from './unwraps/icptrack.js'
-// import { unwrapIdealoPartner } from './unwraps/idealoPartner.js'
-import { unwrapInstagramShim } from './unwraps/instagram.js'
-// import { unwrapJianshuGo } from './unwraps/jianshuGo.js'
-// import { unwrapJuejin } from './unwraps/juejin.js'
-// import { unwrapLeverAnalytics } from './unwraps/leverAnalytics.js'
-// import { unwrapLinksynergy } from './unwraps/linksynergy.js'
-// import { unwrapMailchimp } from './unwraps/mailchimp.js'
-// import { unwrapMailpanion } from './unwraps/mailpanion.js'
-// import { unwrapMailpgn } from './unwraps/mailpgn.js'
-// import { unwrapMailtrack } from './unwraps/mailtrack.js'
-// import { unwrapMedium } from './unwraps/medium.js'
-// import { unwrapMimecast } from './unwraps/mimecast.js'
-// import { unwrapMozillaOutgoing } from './unwraps/mozillaOutgoing.js'
-// import { unwrapNicoMs } from './unwraps/nicoMs.js'
-// import { unwrapOutlookSafelinks } from './unwraps/outlookSafelinks.js'
-// import { unwrapPartnerAds } from './unwraps/partnerAds.js'
-// import { unwrapPocket } from './unwraps/pocket.js'
-// import { unwrapPostmark } from './unwraps/postmark.js'
-// import { unwrapProofpointV1 } from './unwraps/proofpointV1.js'
-// import { unwrapProofpointV2 } from './unwraps/proofpointV2.js'
-// import { unwrapProofpointV3 } from './unwraps/proofpointV3.js'
-// import { unwrapPxf } from './unwraps/pxf.js'
-// import { unwrapRecruitics } from './unwraps/recruitics.js'
-import { unwrapRedditOut } from './unwraps/redditOut.js'
-// import { unwrapRedirectingat } from './unwraps/redirectingat.js'
-// import { unwrapSegmentfault } from './unwraps/segmentfault.js'
-// import { unwrapShareasale } from './unwraps/shareasale.js'
-// import { unwrapSjv } from './unwraps/sjv.js'
-// import { unwrapSkimlinks } from './unwraps/skimlinks.js'
-// import { unwrapSlack } from './unwraps/slack.js'
-// import { unwrapSmartredirect } from './unwraps/smartredirect.js'
-// import { unwrapSspai } from './unwraps/sspai.js'
-// import { unwrapSteamLinkfilter } from './unwraps/steamLinkfilter.js'
-// import { unwrapTradedoubler } from './unwraps/tradedoubler.js'
-// import { unwrapTumblr } from './unwraps/tumblr.js'
-// import { unwrapValuecommerce } from './unwraps/valuecommerce.js'
-// import { unwrapViglink } from './unwraps/viglink.js'
-import { unwrapVkAway } from './unwraps/vkAway.js'
-import { unwrapYahooSearch } from './unwraps/yahooSearch.js'
-import { unwrapYouTube } from './unwraps/youtube.js'
-// import { unwrapZhihu } from './unwraps/zhihu.js'
 
 export const defaultStringTransforms: Array<StringTransform> = [
   stripControlChars,
@@ -141,9 +70,8 @@ export const defaultDomTransforms: Array<DomTransform> = [
   hoistFigcaptionFromAnchor,
   stripInertElements,
   resolveRelativeUrls,
-  unwrapRedirectUrls,
+  cleanAnchorUrls,
   stripDeadAnchors,
-  stripTrackingParams,
   convertBookmarkCards,
   removeTrackingPixels,
   unwrapEmojiImages,
@@ -320,89 +248,4 @@ export const defaultInertSelectors = [
   '.crp_related', // Contextual Related Posts WordPress plugin — 61 feeds (0.002%).
   'form[action*="buttondown.email"]', // Buttondown embed-subscribe form — 21 feeds (<0.001%).
   '.sqs-block-newsletter', // Squarespace newsletter block — 11 feeds (<0.001%).
-]
-
-export const defaultUrlUnwrappers: Array<UrlUnwrapper> = [
-  // Search engines.
-  unwrapBing,
-  // unwrapDuckduckgo,
-  unwrapGoogle,
-  unwrapGoogleNews,
-  unwrapGoogleNewsModern,
-  unwrapGoogleScholar,
-  unwrapGoogleAmpViewer,
-  unwrapYahooSearch,
-  unwrapYouTube,
-
-  // Email and security gateways.
-  // unwrapOutlookSafelinks,
-  // unwrapProofpointV1,
-  // unwrapProofpointV2,
-  // unwrapProofpointV3,
-  // unwrapMimecast,
-  // unwrapPostmark,
-  // unwrapAceml,
-  // unwrapIcptrack,
-  // unwrapMailchimp,
-  // unwrapMailtrack,
-  // unwrapMailpanion,
-  // unwrapMailpgn,
-  // unwrapLeverAnalytics,
-  // unwrapSlack,
-
-  // Affiliate networks.
-  // unwrapShareasale,
-  // unwrapAwin,
-  // unwrapLinksynergy,
-  // unwrapSkimlinks,
-  // unwrapRedirectingat,
-  // unwrapTradedoubler,
-  // unwrapCjNetwork,
-  // unwrapValuecommerce,
-  // unwrapViglink,
-  // unwrapPxf,
-  // unwrapSjv,
-  // unwrapEbayRover,
-  // unwrapAmazonAffiliate,
-  // unwrapAdjust,
-  // unwrapGateSc,
-  // unwrapSmartredirect,
-  // unwrapEffiliation,
-  // unwrapPartnerAds,
-  // unwrapIdealoPartner,
-  // unwrapDigidip,
-  // unwrapRecruitics,
-  // unwrapGeoriot,
-  // unwrapFirebaseDynamicLinks,
-
-  // Social and community platforms.
-  unwrapFacebookShim,
-  unwrapInstagramShim,
-  // unwrapPocket,
-  // unwrapTumblr,
-  unwrapVkAway,
-  unwrapRedditOut,
-  // unwrapDisqus,
-  // unwrapSteamLinkfilter,
-  // unwrapDouban,
-  // unwrapNicoMs,
-  // unwrapMedium,
-  // unwrapFlipboard,
-
-  // Developer and publishing platforms.
-  // unwrapZhihu,
-  // unwrapJuejin,
-  // unwrapSspai,
-  // unwrapJianshuGo,
-  // unwrapSegmentfault,
-  // unwrapGitee,
-  // unwrapHashnode,
-
-  // Cache and proxy services.
-  // unwrapAmpCache,
-  // unwrapEmbedly,
-  // unwrapMozillaOutgoing,
-
-  // Legacy aggregators.
-  // unwrapFeedsportal,
 ]

@@ -31,9 +31,16 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(result).toContain('href="https://example.com/about"')
   })
 
-  it('should strip tracking parameters', async () => {
+  it('should strip tracking parameters via cleanUrlFn', async () => {
     const html = '<p><a href="https://example.com?utm_source=feed&id=1">Link</a></p>'
-    const result = await transformContent(html, { parseHtmlFn: parseHtml })
+    const result = await transformContent(html, {
+      parseHtmlFn: parseHtml,
+      cleanUrlFn: (url) => {
+        const parsed = new URL(url)
+        parsed.searchParams.delete('utm_source')
+        return parsed.toString()
+      },
+    })
 
     expect(result).not.toContain('utm_source')
     expect(result).toContain('id=1')
@@ -56,11 +63,22 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(result).not.toContain('<p>')
   })
 
+  it('should clean anchor urls with the provided cleanUrlFn', async () => {
+    const html = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
+    const result = await transformContent(html, {
+      parseHtmlFn: parseHtml,
+      cleanUrlFn: (url) => url.split('?')[0],
+    })
+
+    expect(result).not.toContain('utm_source')
+  })
+
   it('should allow overriding the dom transforms array', async () => {
     const html = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
     const result = await transformContent(html, {
       parseHtmlFn: parseHtml,
-      domTransforms: defaultDomTransforms.filter((t) => t.name !== 'stripTrackingParams'),
+      cleanUrlFn: (url) => url.split('?')[0],
+      domTransforms: defaultDomTransforms.filter((t) => t.name !== 'cleanAnchorUrls'),
     })
 
     expect(result).toContain('utm_source')
