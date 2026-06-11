@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { selectParsers } from './tests.js'
+import { parseHtml } from './parsers/linkedom.js'
+import { html, queryElement, selectParsers } from './tests.js'
 
 describe('selectParsers', () => {
   it('should return every parser when no library is selected', () => {
@@ -10,8 +11,72 @@ describe('selectParsers', () => {
     expect(selectParsers('jsdom').map(([name]) => name)).toEqual(['jsdom'])
   })
 
+  it('should narrow to the linkedom library', () => {
+    expect(selectParsers('linkedom').map(([name]) => name)).toEqual(['linkedom'])
+  })
+
   it('should throw on an unknown library', () => {
-    expect(() => selectParsers('bogus')).toThrow('Unknown DOM_LIBRARY "bogus"')
+    const throwing = () => selectParsers('bogus')
+
+    expect(throwing).toThrow('Unknown DOM_LIBRARY "bogus"')
+  })
+})
+
+describe('queryElement', () => {
+  it('should return the element matching the selector', () => {
+    const document = parseHtml('<p><img src="photo.jpg"></p>')
+
+    expect(queryElement(document, 'img').getAttribute('src')).toBe('photo.jpg')
+  })
+
+  it('should throw when no element matches', () => {
+    const document = parseHtml('<p>No media here</p>')
+    const throwing = () => queryElement(document, 'video')
+
+    expect(throwing).toThrow('No element matches selector "video".')
+  })
+})
+
+describe('html', () => {
+  it('should join lines with nothing at tag boundaries', () => {
+    const value = html`
+      <ul><li>a</li></ul>
+      <ol><li>b</li></ol>
+    `
+
+    expect(value).toBe('<ul><li>a</li></ul><ol><li>b</li></ol>')
+  })
+
+  it('should join attribute lines with a space and glue a standalone closing bracket', () => {
+    const value = html`
+      <div
+        class="card"
+        id="post"
+      >
+        <span>text</span>
+      </div>
+    `
+
+    expect(value).toBe('<div class="card" id="post"><span>text</span></div>')
+  })
+
+  it('should join a standalone self-closing bracket with a space', () => {
+    const value = html`
+      <img
+        src="photo.jpg"
+      />
+    `
+
+    expect(value).toBe('<img src="photo.jpg" />')
+  })
+
+  it('should interpolate values', () => {
+    const source = 'photo.jpg'
+    const value = html`
+      <img src="${source}">
+    `
+
+    expect(value).toBe('<img src="photo.jpg">')
   })
 })
 
@@ -20,12 +85,24 @@ describe('toEqualHtml', () => {
     expect('<img src="u?a=1&b=2">').toEqualHtml('<img src="u?a=1&amp;b=2">')
   })
 
+  it('should pass when only the attribute order differs', () => {
+    expect('<img src="photo.jpg" alt="Photo">').toEqualHtml('<img alt="Photo" src="photo.jpg">')
+  })
+
+  it('should pass when a boolean attribute is serialized with an empty value', () => {
+    expect('<video controls></video>').toEqualHtml('<video controls=""></video>')
+  })
+
   it('should fail with a diff when the DOM differs', () => {
-    expect(() => expect('<p>a</p>').toEqualHtml('<p>b</p>')).toThrow('to equal')
+    const throwing = () => expect('<p>a</p>').toEqualHtml('<p>b</p>')
+
+    expect(throwing).toThrow('to equal')
   })
 
   it('should fail under .not when the HTML is equal', () => {
-    expect(() => expect('<p>a</p>').not.toEqualHtml('<p>a</p>')).toThrow('to equal')
+    const throwing = () => expect('<p>a</p>').not.toEqualHtml('<p>a</p>')
+
+    expect(throwing).toThrow('to equal')
   })
 })
 
@@ -35,10 +112,14 @@ describe('toContainHtml', () => {
   })
 
   it('should fail when the substring is absent', () => {
-    expect(() => expect('<p>a</p>').toContainHtml('<span>')).toThrow('contain substring')
+    const throwing = () => expect('<p>a</p>').toContainHtml('<span>')
+
+    expect(throwing).toThrow('contain substring')
   })
 
   it('should fail under .not when the substring is present', () => {
-    expect(() => expect('<p>a</p>').not.toContainHtml('<p>a</p>')).toThrow('contain substring')
+    const throwing = () => expect('<p>a</p>').not.toContainHtml('<p>a</p>')
+
+    expect(throwing).toThrow('contain substring')
   })
 })

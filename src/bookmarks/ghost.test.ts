@@ -81,7 +81,6 @@ describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
         publisher: 'Publisher name',
         thumbnail: 'https://example.com/og-image.jpg',
       })
-      const result = await extract(value)
       const expected: BookmarkResolverResult = {
         provider: 'ghost',
         url: 'https://example.com/post',
@@ -93,31 +92,59 @@ describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
         thumbnail: 'https://example.com/og-image.jpg',
       }
 
-      expect(result).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave optional fields undefined when only title and href are present', async () => {
-      const result = await extract(
-        makeCard({ href: 'https://example.com/post', title: 'Post title' }),
-      )
+      const value = makeCard({ href: 'https://example.com/post', title: 'Post title' })
+      const expected: BookmarkResolverResult = {
+        provider: 'ghost',
+        url: 'https://example.com/post',
+        title: 'Post title',
+        description: undefined,
+        author: undefined,
+        publisher: undefined,
+        icon: undefined,
+        thumbnail: undefined,
+      }
 
-      expect(result?.provider).toBe('ghost')
-      expect(result?.url).toBe('https://example.com/post')
-      expect(result?.title).toBe('Post title')
-      expect(result?.description).toBeUndefined()
-      expect(result?.author).toBeUndefined()
-      expect(result?.publisher).toBeUndefined()
-      expect(result?.icon).toBeUndefined()
-      expect(result?.thumbnail).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should return raw url and icon (hygiene is applied by the placeholder builder)', async () => {
-      const result = await extract(
-        makeCard({ href: 'http://example.com/post', title: 'T', icon: 'http://example.com/i.ico' }),
-      )
+      const value = makeCard({
+        href: 'http://example.com/post',
+        title: 'T',
+        icon: 'http://example.com/i.ico',
+      })
+      const expected: BookmarkResolverResult = {
+        provider: 'ghost',
+        url: 'http://example.com/post',
+        title: 'T',
+        icon: 'http://example.com/i.ico',
+      }
 
-      expect(result?.url).toBe('http://example.com/post')
-      expect(result?.icon).toBe('http://example.com/i.ico')
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should trim whitespace around extracted text fields', async () => {
+      const value = makeCard({
+        href: 'https://example.com/post',
+        title: '  Post title  ',
+        description: ' Preview text ',
+        author: ' Author name ',
+        publisher: ' Publisher name ',
+      })
+      const expected: BookmarkResolverResult = {
+        provider: 'ghost',
+        url: 'https://example.com/post',
+        title: 'Post title',
+        description: 'Preview text',
+        author: 'Author name',
+        publisher: 'Publisher name',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -128,6 +155,16 @@ describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
 
     it('should return undefined when title is missing', async () => {
       expect(await extract(makeCard({ href: 'https://example.com/post' }))).toBeUndefined()
+    })
+
+    it('should return undefined when title is whitespace-only', async () => {
+      const value = makeCard({ href: 'https://example.com/post', title: '   ' })
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when href is empty', async () => {
+      expect(await extract(makeCard({ href: '', title: 'Post title' }))).toBeUndefined()
     })
 
     it('should return undefined when no bookmark card is present', async () => {

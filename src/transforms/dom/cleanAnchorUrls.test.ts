@@ -54,4 +54,19 @@ describeForEachParser('cleanAnchorUrls', (parseHtml) => {
 
     expect(result).toContain('<a id="top">anchor</a>')
   })
+
+  it.todo('should surface errors when cleanUrlFn throws', () => {
+    // cleanUrlFn throwing mid-document currently propagates out of the transform and rejects the
+    // whole pipeline. Whether it should propagate or skip the offending anchor is an open design
+    // question, so the contract is not pinned yet.
+  })
+
+  it('should be idempotent', async () => {
+    const value = '<a href="https://example.com/page?utm_source=feed">link</a>'
+    const context = { ...baseContext, cleanUrlFn: stripQueryFn }
+    const once = await transform(value, context)
+    const twice = await transform(once, context)
+
+    expect(twice).toBe(once)
+  })
 })

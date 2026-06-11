@@ -11,44 +11,53 @@ describeForEachParser('replacePreLineBreaks', (parseHtml) => {
 
   it('should replace br with newline inside pre', async () => {
     const value = '<pre>line 1<br>line 2</pre>'
-    const result = await transform(value)
+    const expected = '<pre>line 1\nline 2</pre>'
 
-    expect(result).toContain('<pre>line 1\nline 2</pre>')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should replace self-closing br', async () => {
     const value = '<pre>line 1<br/>line 2</pre>'
-    const result = await transform(value)
+    const expected = '<pre>line 1\nline 2</pre>'
 
-    expect(result).toContain('<pre>line 1\nline 2</pre>')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should replace br with space before slash', async () => {
     const value = '<pre>line 1<br />line 2</pre>'
-    const result = await transform(value)
+    const expected = '<pre>line 1\nline 2</pre>'
 
-    expect(result).toContain('<pre>line 1\nline 2</pre>')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should replace multiple br tags', async () => {
     const value = '<pre>a<br>b<br>c</pre>'
-    const result = await transform(value)
+    const expected = '<pre>a\nb\nc</pre>'
 
-    expect(result).toContain('<pre>a\nb\nc</pre>')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should target code inside pre', async () => {
     const value = '<pre><code>a<br>b</code></pre>'
-    const result = await transform(value)
+    const expected = '<pre><code>a\nb</code></pre>'
 
-    expect(result).toContain('<code>a\nb</code>')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not affect br outside pre', async () => {
     const value = '<p>line 1<br>line 2</p>'
-    const result = await transform(value)
 
-    expect(result).toContain('<br>')
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
+  it('should not modify content without pre elements', async () => {
+    const value = '<p>plain paragraph</p>'
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should handle empty input', async () => {
+    expect(await transform('')).toBe('')
   })
 
   it('should not stack extra entity encoding inside xmp', async () => {

@@ -162,6 +162,12 @@ describeForEachParser('convertBreaksToParagraphs', (parseHtml) => {
       expect(await transform(value)).toBe(value)
     })
 
+    it('should not touch a loose container nested inside <pre>', async () => {
+      const value = '<pre><div>a<br><br>b</div></pre>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
     it('should empty a container with only <br>s', async () => {
       const value = '<div><br><br><br></div>'
       const expected = '<div></div>'

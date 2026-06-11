@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { stripEmptyTags } from './stripEmptyTags.js'
 
@@ -61,6 +61,34 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
     expect(await transform(value)).toBe(expected)
   })
 
+  it('should collapse whitespace-only table header cells to a space', async () => {
+    const value = '<table><tbody><tr><th>   </th><td>x</td></tr></tbody></table>'
+    const expected = '<table><tbody><tr> <td>x</td></tr></tbody></table>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should collapse whitespace-only table rows to a space', async () => {
+    const value = '<table><tbody><tr>   </tr><tr><td>x</td></tr></tbody></table>'
+    const expected = '<table><tbody> <tr><td>x</td></tr></tbody></table>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should collapse whitespace-only definition terms to a space', async () => {
+    const value = '<dl><dt>   </dt><dd>Definition</dd></dl>'
+    const expected = '<dl> <dd>Definition</dd></dl>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should collapse whitespace-only definition descriptions to a space', async () => {
+    const value = '<dl><dt>Term</dt><dd>   </dd></dl>'
+    const expected = '<dl><dt>Term</dt> </dl>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
   it('should strip tags with attributes but no content', async () => {
     expect(await transform('<div class="wrapper"></div>')).toBe('')
   })
@@ -74,11 +102,23 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
   })
 
   it('should strip multiple empty tags', async () => {
-    expect(await transform('<div></div><p></p><span></span>')).toBe('')
+    expect(
+      await transform(html`
+      <div></div>
+      <p></p>
+      <span></span>
+    `),
+    ).toBe('')
   })
 
   it('should strip empty tags around content', async () => {
-    expect(await transform('<div></div><p>Keep</p><div></div>')).toBe('<p>Keep</p>')
+    expect(
+      await transform(html`
+      <div></div>
+      <p>Keep</p>
+      <div></div>
+    `),
+    ).toBe('<p>Keep</p>')
   })
 
   it('should preserve tags with text content', async () => {
@@ -151,7 +191,10 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
   })
 
   it('should strip empty div but preserve adjacent iframe', async () => {
-    const value = '<div></div><iframe src="https://example.com/embed"></iframe>'
+    const value = html`
+      <div></div>
+      <iframe src="https://example.com/embed"></iframe>
+    `
     const expected = '<iframe src="https://example.com/embed"></iframe>'
 
     expect(await transform(value)).toBe(expected)
@@ -160,17 +203,27 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
   it('should preserve div with anchor child regardless of data-* attributes', async () => {
     // The anchor child makes the div non-empty; data-embed attributes are not
     // special-cased here, they just survive because their host element does.
-    const value =
-      '<div data-embed-src="https://example.com/embed"><a href="https://example.com/embed">https://example.com/embed</a></div>'
+    const value = html`
+      <div data-embed-src="https://example.com/embed">
+        <a href="https://example.com/embed">https://example.com/embed</a>
+      </div>
+    `
 
     expect(await transform(value)).toBe(value)
   })
 
   it('should strip empty sibling and preserve div with anchor child', async () => {
-    const value =
-      '<p></p><div data-embed="audio" data-embed-src="https://example.com/episode.mp3"><a href="https://example.com/episode.mp3">https://example.com/episode.mp3</a></div>'
-    const expected =
-      '<div data-embed="audio" data-embed-src="https://example.com/episode.mp3"><a href="https://example.com/episode.mp3">https://example.com/episode.mp3</a></div>'
+    const value = html`
+      <p></p>
+      <div data-embed="audio" data-embed-src="https://example.com/episode.mp3">
+        <a href="https://example.com/episode.mp3">https://example.com/episode.mp3</a>
+      </div>
+    `
+    const expected = html`
+      <div data-embed="audio" data-embed-src="https://example.com/episode.mp3">
+        <a href="https://example.com/episode.mp3">https://example.com/episode.mp3</a>
+      </div>
+    `
 
     expect(await transform(value)).toBe(expected)
   })
@@ -178,13 +231,20 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
   it('should not strip tag-shaped strings inside <script>', async () => {
     // <script> is a raw-text element — its body is one text node, not parsed
     // elements. The empty-tag walk skips it naturally without explicit guards.
-    const value = '<p>before</p><script>document.write("<div></div>")</script><p>after</p>'
+    const value = html`
+      <p>before</p>
+      <script>document.write("<div></div>")</script>
+      <p>after</p>
+    `
 
     expect(await transform(value)).toBe(value)
   })
 
   it('should not strip tag-shaped strings inside <style>', async () => {
-    const value = '<style>.x { background: url("data:image/svg+xml,<svg></svg>") }</style><p>x</p>'
+    const value = html`
+      <style>.x { background: url("data:image/svg+xml,<svg></svg>") }</style>
+      <p>x</p>
+    `
 
     expect(await transform(value)).toBe(value)
   })
@@ -196,8 +256,15 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
   })
 
   it('should strip truly empty <textarea> (not in preserve set)', async () => {
-    const value = '<p>a</p><textarea></textarea><p>b</p>'
-    const expected = '<p>a</p><p>b</p>'
+    const value = html`
+      <p>a</p>
+      <textarea></textarea>
+      <p>b</p>
+    `
+    const expected = html`
+      <p>a</p>
+      <p>b</p>
+    `
 
     expect(await transform(value)).toBe(expected)
   })
@@ -228,8 +295,16 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
   })
 
   it('should normalize <hr></hr> by dropping the redundant close tag', async () => {
-    const value = '<p>a</p><hr></hr><p>b</p>'
-    const expected = '<p>a</p><hr><p>b</p>'
+    const value = html`
+      <p>a</p>
+      <hr></hr>
+      <p>b</p>
+    `
+    const expected = html`
+      <p>a</p>
+      <hr>
+      <p>b</p>
+    `
 
     expect(await transform(value)).toBe(expected)
   })
@@ -248,13 +323,21 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
   })
 
   it('should preserve empty custom elements between regular content', async () => {
-    const value = '<p>before</p><app-embed data-id="42"></app-embed><p>after</p>'
+    const value = html`
+      <p>before</p>
+      <app-embed data-id="42"></app-embed>
+      <p>after</p>
+    `
 
     expect(await transform(value)).toBe(value)
   })
 
   it('should be idempotent', async () => {
-    const value = '<div></div><p>Keep</p><div></div>'
+    const value = html`
+      <div></div>
+      <p>Keep</p>
+      <div></div>
+    `
     const once = await transform(value)
     const twice = await transform(once)
 
@@ -293,14 +376,25 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
     })
 
     it('should keep an anchor target between content so in-page links resolve', async () => {
-      const value = '<p>before</p><a name="section"></a><p>after</p>'
+      const value = html`
+        <p>before</p>
+        <a name="section"></a>
+        <p>after</p>
+      `
 
       expect(await transform(value)).toBe(value)
     })
 
     it('should still strip an empty element without id or name', async () => {
-      const value = '<p>before</p><span></span><p>after</p>'
-      const expected = '<p>before</p><p>after</p>'
+      const value = html`
+        <p>before</p>
+        <span></span>
+        <p>after</p>
+      `
+      const expected = html`
+        <p>before</p>
+        <p>after</p>
+      `
 
       expect(await transform(value)).toBe(expected)
     })

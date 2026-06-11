@@ -1,6 +1,6 @@
 import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext as defaultContext, describeForEachParser } from '../../tests.js'
+import { baseContext as defaultContext, describeForEachParser, html } from '../../tests.js'
 import type { AssetProxyFn, TransformContext } from '../../types.js'
 import { proxyAssetUrls } from './proxyAssetUrls.js'
 
@@ -29,23 +29,25 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
 
   it('should be a no-op when assetProxyFn is unset', async () => {
     const value = '<img src="https://cdn.example.com/photo.jpg">'
-    const result = await transform(value)
 
-    expect(result).toBe(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should rewrite img src as image', async () => {
     const value = '<img src="https://cdn.example.com/photo.jpg">'
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <img
+        src="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"
+      >
+    `
 
-    expect(result).toContainHtml(
-      'src="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"',
-    )
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should rewrite every entry in img srcset as image', async () => {
-    const value =
-      '<img srcset="https://cdn.example.com/small.jpg 300w, https://cdn.example.com/large.jpg 600w">'
+    const value = html`
+      <img srcset="https://cdn.example.com/small.jpg 300w, https://cdn.example.com/large.jpg 600w">
+    `
     const result = await transform(value, wrapProxy)
 
     expect(result).toContain('type=image')
@@ -80,8 +82,13 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
   })
 
   it('should rewrite video src as video and poster as image', async () => {
-    const value =
-      '<video src="https://cdn.example.com/clip.mp4" poster="https://cdn.example.com/thumb.jpg"></video>'
+    const value = html`
+      <video
+        src="https://cdn.example.com/clip.mp4"
+        poster="https://cdn.example.com/thumb.jpg"
+      >
+      </video>
+    `
     const result = await transform(value, wrapProxy)
 
     expect(result).toContainHtml('src="https://proxy.example.com/?type=video&url=')
@@ -90,28 +97,62 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
 
   it('should rewrite audio src as audio', async () => {
     const value = '<audio src="https://cdn.example.com/clip.mp3"></audio>'
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <audio
+        src="https://proxy.example.com/?type=audio&url=https%3A%2F%2Fcdn.example.com%2Fclip.mp3"
+      >
+      </audio>
+    `
 
-    expect(result).toContainHtml('src="https://proxy.example.com/?type=audio&url=')
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should rewrite source inside video as video', async () => {
     const value = '<video><source src="https://cdn.example.com/clip.mp4"></video>'
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <video>
+        <source
+          src="https://proxy.example.com/?type=video&url=https%3A%2F%2Fcdn.example.com%2Fclip.mp4"
+        >
+      </video>
+    `
 
-    expect(result).toContainHtml('src="https://proxy.example.com/?type=video&url=')
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should rewrite source inside audio as audio', async () => {
     const value = '<audio><source src="https://cdn.example.com/clip.mp3"></audio>'
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <audio>
+        <source
+          src="https://proxy.example.com/?type=audio&url=https%3A%2F%2Fcdn.example.com%2Fclip.mp3"
+        >
+      </audio>
+    `
 
-    expect(result).toContainHtml('src="https://proxy.example.com/?type=audio&url=')
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
+  })
+
+  it('should rewrite source outside video and audio as image', async () => {
+    const value = '<div><source src="https://cdn.example.com/photo.jpg"></div>'
+    const expected = html`
+      <div>
+        <source
+          src="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"
+        >
+      </div>
+    `
+
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should rewrite source inside picture as image', async () => {
-    const value =
-      '<picture><source srcset="https://cdn.example.com/photo.webp"><img src="https://cdn.example.com/photo.jpg"></picture>'
+    const value = html`
+      <picture>
+        <source srcset="https://cdn.example.com/photo.webp">
+        <img src="https://cdn.example.com/photo.jpg">
+      </picture>
+    `
     const result = await transform(value, wrapProxy)
 
     expect(result).toContain('type=image')
@@ -121,38 +162,38 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
 
   it('should rewrite data-embed-thumbnail as image', async () => {
     const value = '<div data-embed-thumbnail="https://cdn.example.com/thumb.jpg"></div>'
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <div data-embed-thumbnail="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fthumb.jpg"></div>
+    `
 
-    expect(result).toContainHtml(
-      'data-embed-thumbnail="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fthumb.jpg"',
-    )
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should rewrite data-embed-avatar as image', async () => {
     const value = '<div data-embed-avatar="https://cdn.example.com/avatar.jpg"></div>'
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <div data-embed-avatar="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Favatar.jpg"></div>
+    `
 
-    expect(result).toContainHtml(
-      'data-embed-avatar="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Favatar.jpg"',
-    )
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should rewrite data-bookmark-icon as image', async () => {
     const value = '<div data-bookmark-icon="https://cdn.example.com/favicon.ico"></div>'
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <div data-bookmark-icon="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Ffavicon.ico"></div>
+    `
 
-    expect(result).toContainHtml(
-      'data-bookmark-icon="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Ffavicon.ico"',
-    )
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should rewrite data-bookmark-thumbnail as image', async () => {
     const value = '<div data-bookmark-thumbnail="https://cdn.example.com/thumb.jpg"></div>'
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <div data-bookmark-thumbnail="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fthumb.jpg"></div>
+    `
 
-    expect(result).toContainHtml(
-      'data-bookmark-thumbnail="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fthumb.jpg"',
-    )
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should not rewrite data-bookmark-url (navigation, not asset)', async () => {
@@ -166,9 +207,8 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
   it('should leave attributes unchanged when assetProxyFn returns undefined', async () => {
     const skip: AssetProxyFn = () => undefined
     const value = '<img src="https://cdn.example.com/photo.jpg">'
-    const result = await transform(value, skip)
 
-    expect(result).toContain('src="https://cdn.example.com/photo.jpg"')
+    expect(await transform(value, skip)).toEqualHtml(value)
   })
 
   it('should leave data: URIs untouched and never invoke assetProxyFn for them', async () => {
@@ -177,8 +217,10 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
       seen.push(url)
       return `https://proxy.example.com/?url=${encodeURIComponent(url)}`
     }
-    const value =
-      '<img src="data:image/png;base64,iVBORw0KGgo="><img srcset="data:image/png;base64,abc 1x, https://cdn.example.com/photo.jpg 2x">'
+    const value = html`
+      <img src="data:image/png;base64,iVBORw0KGgo=">
+      <img srcset="data:image/png;base64,abc 1x, https://cdn.example.com/photo.jpg 2x">
+    `
     const result = await transform(value, recorder)
 
     expect(result).toContain('src="data:image/png;base64,iVBORw0KGgo="')
@@ -189,49 +231,72 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
 
   it('should rewrite SVG image href as image', async () => {
     const value = '<svg><image href="https://cdn.example.com/photo.jpg"/></svg>'
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <svg>
+        <image
+          href="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"
+        />
+      </svg>
+    `
 
-    expect(result).toContainHtml(
-      'href="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"',
-    )
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should rewrite SVG image xlink:href as image', async () => {
     const value = '<svg><image xlink:href="https://cdn.example.com/legacy.jpg"/></svg>'
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <svg>
+        <image xlink:href="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Flegacy.jpg" />
+      </svg>
+    `
 
-    expect(result).toContainHtml(
-      'xlink:href="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Flegacy.jpg"',
-    )
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should rewrite track src using parent media type', async () => {
     const value =
       '<video><track src="https://cdn.example.com/captions.vtt" kind="subtitles"></video>'
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <video>
+        <track src="https://proxy.example.com/?type=video&url=https%3A%2F%2Fcdn.example.com%2Fcaptions.vtt" kind="subtitles">
+      </video>
+    `
 
-    expect(result).toContainHtml(
-      'src="https://proxy.example.com/?type=video&url=https%3A%2F%2Fcdn.example.com%2Fcaptions.vtt"',
-    )
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should rewrite track src inside audio as audio', async () => {
     const value =
       '<audio><track src="https://cdn.example.com/chapters.vtt" kind="chapters"></audio>'
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <audio>
+        <track src="https://proxy.example.com/?type=audio&url=https%3A%2F%2Fcdn.example.com%2Fchapters.vtt" kind="chapters">
+      </audio>
+    `
 
-    expect(result).toContainHtml(
-      'src="https://proxy.example.com/?type=audio&url=https%3A%2F%2Fcdn.example.com%2Fchapters.vtt"',
-    )
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
+  })
+
+  it('should rewrite track src outside video and audio as image', async () => {
+    const value = '<div><track src="https://cdn.example.com/captions.vtt" kind="subtitles"></div>'
+    const expected = html`
+      <div>
+        <track src="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fcaptions.vtt" kind="subtitles">
+      </div>
+    `
+
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should proxy uppercase attribute names via parseHtml normalization', async () => {
     const value = '<IMG SRC="https://cdn.example.com/photo.jpg">'
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <img
+        src="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"
+      >
+    `
 
-    expect(result).toContainHtml(
-      'src="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"',
-    )
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should pass the correct type for each asset kind', async () => {
@@ -241,9 +306,13 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
       return
     }
 
-    const value = `
+    const value = html`
       <img src="https://cdn.example.com/photo.jpg">
-      <video src="https://cdn.example.com/clip.mp4" poster="https://cdn.example.com/thumb.jpg"></video>
+      <video
+        src="https://cdn.example.com/clip.mp4"
+        poster="https://cdn.example.com/thumb.jpg"
+      >
+      </video>
       <audio src="https://cdn.example.com/clip.mp3"></audio>
     `
     await transform(value, recorder)

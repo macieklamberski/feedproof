@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { BookmarkResolver, TransformContext } from '../../types.js'
 import { convertBookmarkCards } from './convertBookmarkCards.js'
 
@@ -46,11 +46,11 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
     })
 
     it('should emit sibling placeholders for multiple matches without a list wrapper', async () => {
-      const html = `
-        <div class="card" data-url="https://e.com/1" data-title="One"></div>
-        <div class="card" data-url="https://e.com/2" data-title="Two"></div>
+      const value = html`
+        <div class="card" data-url="https://example.com/1" data-title="One"></div>
+        <div class="card" data-url="https://example.com/2" data-title="Two"></div>
       `
-      const result = await transform(html, [cardResolver])
+      const result = await transform(value, [cardResolver])
 
       expect(result).not.toContain('<ul')
       expect(result).not.toContain('<li')
@@ -72,20 +72,65 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
           return url ? { provider: 'b', url, title: 'B' } : undefined
         },
       }
-      const result = await transform(
-        '<div class="a" data-url="https://a.com"></div><div class="b" data-url="https://b.com"></div>',
-        [resolverA, resolverB],
-      )
+      const value = html`
+        <div class="a" data-url="https://example.org"></div>
+        <div class="b" data-url="https://example.net"></div>
+      `
+      const expected = html`
+        <div
+          data-bookmark-provider="a"
+          data-bookmark-url="https://example.org"
+          data-bookmark-title="A"
+        >
+          <a href="https://example.org">A</a>
+        </div>
+        <div
+          data-bookmark-provider="b"
+          data-bookmark-url="https://example.net"
+          data-bookmark-title="B"
+        >
+          <a href="https://example.net">B</a>
+        </div>
+      `
 
-      expect(result).toContain('data-bookmark-provider="a"')
-      expect(result).toContain('data-bookmark-provider="b"')
+      expect(await transform(value, [resolverA, resolverB])).toEqualHtml(expected)
+    })
+
+    it('should support a resolver with a promise-returning extract', async () => {
+      const asyncResolver: BookmarkResolver = {
+        selector: '.card',
+        extract: (element) => {
+          const url = element.getAttribute('data-url')
+          return Promise.resolve(url ? { provider: 'async', url, title: 'Async title' } : undefined)
+        },
+      }
+      const value = '<div class="card" data-url="https://example.com/post"></div>'
+      const expected = html`
+        <div
+          data-bookmark-provider="async"
+          data-bookmark-url="https://example.com/post"
+          data-bookmark-title="Async title"
+        >
+          <a href="https://example.com/post">Async title</a>
+        </div>
+      `
+
+      expect(await transform(value, [asyncResolver])).toEqualHtml(expected)
     })
   })
 
   describe('hygiene (via createBookmarkPlaceholder)', () => {
     it('should upgrade http urls to https for url and icon', async () => {
       const result = await transform(
-        '<div class="card" data-url="http://example.com/p" data-title="T" data-icon="http://example.com/i.ico"></div>',
+        html`
+          <div
+            class="card"
+            data-url="http://example.com/p"
+            data-title="T"
+            data-icon="http://example.com/i.ico"
+          >
+          </div>
+        `,
         [cardResolver],
       )
 
@@ -96,7 +141,16 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
 
     it('should drop unsafe icon and thumbnail urls but keep the rest of the placeholder', async () => {
       const result = await transform(
-        '<div class="card" data-url="https://example.com" data-title="T" data-icon="javascript:alert(1)" data-thumbnail="javascript:alert(2)"></div>',
+        html`
+          <div
+            class="card"
+            data-url="https://example.com"
+            data-title="T"
+            data-icon="javascript:alert(1)"
+            data-thumbnail="javascript:alert(2)"
+          >
+          </div>
+        `,
         [cardResolver],
       )
 
@@ -118,6 +172,12 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
 
       expect(result).not.toContain('data-bookmark')
       expect(result).toContain('class="card"')
+    })
+
+    it.todo('should surface errors when a resolver extract throws', () => {
+      // An extract that throws currently rejects the whole transform run. Whether the error should
+      // propagate or the element should be skipped is an open design question, so the contract is
+      // not pinned yet.
     })
 
     it('should be idempotent', async () => {

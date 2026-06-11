@@ -1,13 +1,52 @@
 import { describe, expect, it } from 'bun:test'
 import {
   applyDomTransforms,
+  applyStringTransforms,
+  createBookmarkPlaceholder,
   createEmbedPlaceholder,
   createPlaceholder,
   getDimensions,
   hasAncestorWithTagName,
+  isSafeThumbnailUrl,
   normalizeEmbedFields,
+  updateEmbedPlaceholder,
 } from './common.js'
-import { describeForEachParser } from './tests.js'
+import { describeForEachParser, html, queryElement } from './tests.js'
+import type { BookmarkResolverResult } from './types.js'
+
+describe('isSafeThumbnailUrl', () => {
+  it('should accept an absolute https url', () => {
+    expect(isSafeThumbnailUrl('https://cdn.example.com/thumb.jpg')).toBe(true)
+  })
+
+  it('should accept an absolute http url', () => {
+    expect(isSafeThumbnailUrl('http://cdn.example.com/thumb.jpg')).toBe(true)
+  })
+
+  it('should accept a data:image/png url', () => {
+    expect(isSafeThumbnailUrl('data:image/png;base64,iVBORw0KGgo=')).toBe(true)
+  })
+
+  it('should reject a data:image/svg+xml url', () => {
+    expect(isSafeThumbnailUrl('data:image/svg+xml;utf8,<svg/>')).toBe(false)
+  })
+
+  it('should reject a data:text/html url', () => {
+    expect(isSafeThumbnailUrl('data:text/html,<script>1</script>')).toBe(false)
+  })
+
+  it('should reject a javascript: url', () => {
+    expect(isSafeThumbnailUrl('javascript:alert(1)')).toBe(false)
+  })
+
+  it('should reject a relative url', () => {
+    expect(isSafeThumbnailUrl('/thumb.jpg')).toBe(false)
+  })
+
+  it('should reject an empty string', () => {
+    expect(isSafeThumbnailUrl('')).toBe(false)
+  })
+})
 
 describeForEachParser('applyDomTransforms', (parseHtml) => {
   it('should return body innerHTML when given no transforms', async () => {
@@ -40,6 +79,31 @@ describeForEachParser('applyDomTransforms', (parseHtml) => {
     ]
 
     expect(await applyDomTransforms(document, transforms)).toBe('<p data-async="yes">Hello</p>')
+  })
+
+  it.todo('should propagate an error thrown by a transform', () => {
+    // A transform that throws should reject the applyDomTransforms promise and
+    // prevent later transforms in the array from running.
+  })
+})
+
+describe('applyStringTransforms', () => {
+  it('should return the input unchanged when given no transforms', async () => {
+    expect(await applyStringTransforms('<p>Hello</p>', [])).toBe('<p>Hello</p>')
+  })
+
+  it('should pipe the output of each transform into the next in order', async () => {
+    const transforms = [
+      (html: string) => `${html}<p>first</p>`,
+      async (html: string) => `${html}<p>second</p>`,
+    ]
+    const expected = html`
+      <p>Hello</p>
+      <p>first</p>
+      <p>second</p>
+    `
+
+    expect(await applyStringTransforms('<p>Hello</p>', transforms)).toBe(expected)
   })
 })
 
@@ -100,18 +164,69 @@ describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
       )
     })
   })
+
+  it.todo('should write the full metadata as data-embed-* attributes', () => {
+    // Pass every EmbedResolverResult field and assert the complete placeholder
+    // markup: all data-embed-* attributes plus the fallback anchor.
+  })
+
+  it.todo('should drop an unsafe thumbnail passed through this entry point', () => {
+    // metadata.thumbnail = 'javascript:alert(1)' must not become a
+    // data-embed-thumbnail attribute on the placeholder.
+  })
+})
+
+describeForEachParser('updateEmbedPlaceholder', (parseHtml) => {
+  it('should write normalized metadata as data-embed-* attributes', () => {
+    const document = parseHtml('')
+    const element = document.createElement('div')
+
+    updateEmbedPlaceholder(element, {
+      src: 'http://embed.example/abc',
+      title: 'Video title',
+      duration: 125,
+    })
+
+    const expected = html`
+      <div
+        data-embed-src="https://embed.example/abc"
+        data-embed-title="Video title"
+        data-embed-duration="125"
+      >
+      </div>
+    `
+
+    expect(element.outerHTML).toEqualHtml(expected)
+  })
+
+  it('should not overwrite attributes already present on the element', () => {
+    const document = parseHtml('')
+    const element = document.createElement('div')
+    element.setAttribute('data-embed-title', 'Original title')
+
+    updateEmbedPlaceholder(element, { title: 'Replacement title', author: 'Channel name' })
+
+    const expected = html`
+      <div data-embed-title="Original title" data-embed-author="Channel name"></div>
+    `
+
+    expect(element.outerHTML).toEqualHtml(expected)
+  })
 })
 
 describe('normalizeEmbedFields', () => {
   describe('src and url protocol upgrade', () => {
     it('should upgrade http:// to https://', () => {
-      const fields = normalizeEmbedFields({
+      const value = {
         src: 'http://embed.example/abc',
         url: 'http://page.example/x',
-      })
+      }
+      const expected: Record<string, string | undefined> = {
+        src: 'https://embed.example/abc',
+        url: 'https://page.example/x',
+      }
 
-      expect(fields.src).toBe('https://embed.example/abc')
-      expect(fields.url).toBe('https://page.example/x')
+      expect(normalizeEmbedFields(value)).toEqual(expected)
     })
 
     it('should leave https:// unchanged', () => {
@@ -139,13 +254,16 @@ describe('normalizeEmbedFields', () => {
 
   describe('thumbnail and avatar safety', () => {
     it('should keep a safe http thumbnail and avatar without upgrading them', () => {
-      const fields = normalizeEmbedFields({
+      const value = {
         thumbnail: 'http://cdn.example/thumb.jpg',
         avatar: 'http://cdn.example/avatar.jpg',
-      })
+      }
+      const expected: Record<string, string | undefined> = {
+        thumbnail: 'http://cdn.example/thumb.jpg',
+        avatar: 'http://cdn.example/avatar.jpg',
+      }
 
-      expect(fields.thumbnail).toBe('http://cdn.example/thumb.jpg')
-      expect(fields.avatar).toBe('http://cdn.example/avatar.jpg')
+      expect(normalizeEmbedFields(value)).toEqual(expected)
     })
 
     it('should keep data:image thumbnails', () => {
@@ -173,39 +291,48 @@ describe('normalizeEmbedFields', () => {
 
   describe('numeric coercion', () => {
     it('should stringify width, height and duration', () => {
-      const fields = normalizeEmbedFields({ width: 640, height: 360, duration: 125 })
+      const value = { width: 640, height: 360, duration: 125 }
+      const expected: Record<string, string | undefined> = {
+        width: '640',
+        height: '360',
+        duration: '125',
+      }
 
-      expect(fields.width).toBe('640')
-      expect(fields.height).toBe('360')
-      expect(fields.duration).toBe('125')
+      expect(normalizeEmbedFields(value)).toEqual(expected)
+    })
+
+    it.todo('should drop zero width, height and duration', () => {
+      // Zero is falsy in normalizeEmbedFields, so width/height/duration of 0 are
+      // emitted as undefined rather than the string '0'.
     })
   })
 
   describe('shape', () => {
     it('should pass text fields through unchanged', () => {
-      expect(
-        normalizeEmbedFields({
-          provider: 'youtube',
-          id: 'abc',
-          title: 'Title',
-          description: 'Desc',
-          author: 'Author',
-        }),
-      ).toMatchObject({
+      const value = {
         provider: 'youtube',
         id: 'abc',
         title: 'Title',
         description: 'Desc',
         author: 'Author',
-      })
+      }
+      const expected: Record<string, string | undefined> = {
+        provider: 'youtube',
+        id: 'abc',
+        title: 'Title',
+        description: 'Desc',
+        author: 'Author',
+      }
+
+      expect(normalizeEmbedFields(value)).toEqual(expected)
     })
 
     it('should leave absent fields undefined', () => {
-      const fields = normalizeEmbedFields({ src: 'https://embed.example' })
+      const expected: Record<string, string | undefined> = {
+        src: 'https://embed.example',
+      }
 
-      expect(fields.title).toBeUndefined()
-      expect(fields.thumbnail).toBeUndefined()
-      expect(fields.width).toBeUndefined()
+      expect(normalizeEmbedFields({ src: 'https://embed.example' })).toEqual(expected)
     })
 
     it('should return fields in a stable key order', () => {
@@ -245,70 +372,70 @@ describe('normalizeEmbedFields', () => {
 describeForEachParser('getDimensions', (parseHtml) => {
   it('should return both dimensions from attributes', () => {
     const document = parseHtml('<img width="320" height="240">')
-    const image = document.querySelector('img') as Element
+    const image = queryElement(document, 'img')
 
     expect(getDimensions(image)).toEqual({ width: 320, height: 240 })
   })
 
   it('should return only width when only width attribute is set', () => {
     const document = parseHtml('<img width="100">')
-    const image = document.querySelector('img') as Element
+    const image = queryElement(document, 'img')
 
     expect(getDimensions(image)).toEqual({ width: 100, height: undefined })
   })
 
   it('should read px-suffixed dimensions from style when attributes are missing', () => {
     const document = parseHtml('<img style="width: 50px; height: 25px">')
-    const image = document.querySelector('img') as Element
+    const image = queryElement(document, 'img')
 
     expect(getDimensions(image)).toEqual({ width: 50, height: 25 })
   })
 
   it('should read unitless dimensions from style', () => {
     const document = parseHtml('<img style="width: 10; height: 5">')
-    const image = document.querySelector('img') as Element
+    const image = queryElement(document, 'img')
 
     expect(getDimensions(image)).toEqual({ width: 10, height: 5 })
   })
 
   it('should ignore em / rem / % units in style', () => {
     const document = parseHtml('<img style="width: 1.5em; height: 100%">')
-    const image = document.querySelector('img') as Element
+    const image = queryElement(document, 'img')
 
     expect(getDimensions(image)).toEqual({ width: undefined, height: undefined })
   })
 
   it('should fall back to style when attribute is non-numeric', () => {
     const document = parseHtml('<img width="auto" style="width: 200px">')
-    const image = document.querySelector('img') as Element
+    const image = queryElement(document, 'img')
 
-    expect(getDimensions(image).width).toBe(200)
+    expect(getDimensions(image)).toEqual({ width: 200, height: undefined })
   })
 
   it('should prefer attribute over style when both are present', () => {
     const document = parseHtml('<img width="100" style="width: 999px">')
-    const image = document.querySelector('img') as Element
+    const image = queryElement(document, 'img')
 
-    expect(getDimensions(image).width).toBe(100)
+    expect(getDimensions(image)).toEqual({ width: 100, height: undefined })
   })
 
   it('should return both undefined for an element with neither', () => {
     const document = parseHtml('<img>')
-    const image = document.querySelector('img') as Element
+    const image = queryElement(document, 'img')
 
     expect(getDimensions(image)).toEqual({ width: undefined, height: undefined })
   })
 
   it('should extract the correct property from multi-property style', () => {
     const document = parseHtml('<img style="color: red; width: 10px; height: 20px">')
-    const image = document.querySelector('img') as Element
+    const image = queryElement(document, 'img')
 
     expect(getDimensions(image)).toEqual({ width: 10, height: 20 })
   })
 
   it('should parse decimal dimensions from style', () => {
     const document = parseHtml('<img style="width: 1.5px; height: 2.5">')
-    const image = document.querySelector('img') as Element
+    const image = queryElement(document, 'img')
 
     expect(getDimensions(image)).toEqual({ width: 1.5, height: 2.5 })
   })
@@ -319,21 +446,21 @@ describeForEachParser('hasAncestorWithTagName', (parseHtml) => {
 
   it('should return true when direct parent matches', () => {
     const document = parseHtml('<pre><span>x</span></pre>')
-    const span = document.querySelector('span') as Element
+    const span = queryElement(document, 'span')
 
     expect(hasAncestorWithTagName(span, tagSet)).toBe(true)
   })
 
   it('should return true when a deeply nested ancestor matches', () => {
     const document = parseHtml('<pre><div><section><span>x</span></section></div></pre>')
-    const span = document.querySelector('span') as Element
+    const span = queryElement(document, 'span')
 
     expect(hasAncestorWithTagName(span, tagSet)).toBe(true)
   })
 
   it('should return false when no ancestor matches', () => {
     const document = parseHtml('<div><p><span>x</span></p></div>')
-    const span = document.querySelector('span') as Element
+    const span = queryElement(document, 'span')
 
     expect(hasAncestorWithTagName(span, tagSet)).toBe(false)
   })
@@ -347,23 +474,23 @@ describeForEachParser('hasAncestorWithTagName', (parseHtml) => {
 
   it('should return false for an empty Set', () => {
     const document = parseHtml('<pre><span>x</span></pre>')
-    const span = document.querySelector('span') as Element
+    const span = queryElement(document, 'span')
 
     expect(hasAncestorWithTagName(span, new Set())).toBe(false)
   })
 
   it('should stop walking at the stopAt boundary', () => {
     const document = parseHtml('<pre><div><span>x</span></div></pre>')
-    const span = document.querySelector('span') as Element
-    const div = document.querySelector('div') as Element
+    const span = queryElement(document, 'span')
+    const div = queryElement(document, 'div')
 
     expect(hasAncestorWithTagName(span, tagSet, div)).toBe(false)
   })
 
   it('should not check the stopAt boundary itself', () => {
     const document = parseHtml('<pre><span>x</span></pre>')
-    const span = document.querySelector('span') as Element
-    const pre = document.querySelector('pre') as Element
+    const span = queryElement(document, 'span')
+    const pre = queryElement(document, 'pre')
 
     expect(hasAncestorWithTagName(span, tagSet, pre)).toBe(false)
   })
@@ -462,10 +589,92 @@ describeForEachParser('createPlaceholder', (parseHtml) => {
   it('should skip falsy non-string values such as null', () => {
     const document = parseHtml('<div></div>')
     const fields: Record<string, string | undefined> = { provider: 'youtube' }
-    ;(fields as Record<string, unknown>).id = null
+    // @ts-expect-error: This is for testing purposes.
+    fields.id = null
     const element = createPlaceholder(document, 'embed', fields)
 
     expect(element.getAttribute('data-embed-provider')).toBe('youtube')
     expect(element.hasAttribute('data-embed-id')).toBe(false)
+  })
+})
+
+describeForEachParser('createBookmarkPlaceholder', (parseHtml) => {
+  it('should write all fields and append a link labelled with the title', () => {
+    const document = parseHtml('')
+    const value: BookmarkResolverResult = {
+      provider: 'ghost',
+      url: 'https://example.com/post',
+      title: 'Post title',
+      description: 'Preview text',
+      author: 'Author name',
+      publisher: 'Publisher name',
+      icon: 'https://example.com/favicon.ico',
+      thumbnail: 'https://example.com/og-image.jpg',
+    }
+    const element = createBookmarkPlaceholder(document, value)
+    const expected = html`
+      <div
+        data-bookmark-provider="ghost"
+        data-bookmark-description="Preview text"
+        data-bookmark-author="Author name"
+        data-bookmark-publisher="Publisher name"
+        data-bookmark-url="https://example.com/post"
+        data-bookmark-title="Post title"
+        data-bookmark-icon="https://example.com/favicon.ico"
+        data-bookmark-thumbnail="https://example.com/og-image.jpg"
+      >
+        <a href="https://example.com/post">Post title</a>
+      </div>
+    `
+
+    expect(element.outerHTML).toEqualHtml(expected)
+  })
+
+  it('should upgrade http:// in url, icon and thumbnail', () => {
+    const document = parseHtml('')
+    const value: BookmarkResolverResult = {
+      provider: 'ghost',
+      url: 'http://example.com/post',
+      title: 'Post title',
+      icon: 'http://example.com/favicon.ico',
+      thumbnail: 'http://example.com/og-image.jpg',
+    }
+    const element = createBookmarkPlaceholder(document, value)
+    const expected = html`
+      <div
+        data-bookmark-provider="ghost"
+        data-bookmark-url="https://example.com/post"
+        data-bookmark-title="Post title"
+        data-bookmark-icon="https://example.com/favicon.ico"
+        data-bookmark-thumbnail="https://example.com/og-image.jpg"
+      >
+        <a href="https://example.com/post">Post title</a>
+      </div>
+    `
+
+    expect(element.outerHTML).toEqualHtml(expected)
+  })
+
+  it('should drop unsafe icon and thumbnail urls', () => {
+    const document = parseHtml('')
+    const value: BookmarkResolverResult = {
+      provider: 'ghost',
+      url: 'https://example.com/post',
+      title: 'Post title',
+      icon: 'javascript:alert(1)',
+      thumbnail: 'data:image/svg+xml;utf8,<svg/>',
+    }
+    const element = createBookmarkPlaceholder(document, value)
+    const expected = html`
+      <div
+        data-bookmark-provider="ghost"
+        data-bookmark-url="https://example.com/post"
+        data-bookmark-title="Post title"
+      >
+        <a href="https://example.com/post">Post title</a>
+      </div>
+    `
+
+    expect(element.outerHTML).toEqualHtml(expected)
   })
 })

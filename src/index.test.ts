@@ -1,272 +1,422 @@
 import { expect, it } from 'bun:test'
 import { defaultDomTransforms } from './defaults.js'
 import { transformContent } from './index.js'
-import { describeForEachParser } from './tests.js'
+import { describeForEachParser, html } from './tests.js'
 import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
-
-const startsWithDiv = /^<div>/
 
 describeForEachParser('transformContent', (parseHtml) => {
   it('should apply all default transforms', async () => {
-    const html = '<div><p>Hello <img data-src="photo.jpg"></p></div>'
-    const result = await transformContent(html, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://example.com',
-    })
+    const value = '<div><p>Hello <img data-src="photo.jpg"></p></div>'
+    // unwrapWrappers removes the outer div, fixLazyImages resolves data-src to src, and
+    // resolveRelativeUrls makes it absolute.
+    const expected = '<p>Hello <img src="https://example.com/photo.jpg"></p>'
 
-    // unwrapWrappers should remove the outer div.
-    expect(result).not.toMatch(startsWithDiv)
-    // fixLazyImages should resolve data-src to src, and resolveRelativeUrls makes it absolute.
-    expect(result).toContain('src="https://example.com/photo.jpg"')
-    expect(result).not.toContain('data-src')
+    expect(
+      await transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com' }),
+    ).toBe(expected)
   })
 
   it('should resolve relative URLs when baseUrl is provided', async () => {
-    const html = '<p><a href="/about">About</a></p>'
-    const result = await transformContent(html, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://example.com/post/1',
-    })
+    const value = '<p><a href="/about">About</a></p>'
+    const expected = '<p><a href="https://example.com/about">About</a></p>'
 
-    expect(result).toContain('href="https://example.com/about"')
+    expect(
+      await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/post/1',
+      }),
+    ).toBe(expected)
   })
 
   it('should strip tracking parameters via cleanUrlFn', async () => {
-    const html = '<p><a href="https://example.com?utm_source=feed&id=1">Link</a></p>'
-    const result = await transformContent(html, {
-      parseHtmlFn: parseHtml,
-      cleanUrlFn: (url) => {
-        const parsed = new URL(url)
-        parsed.searchParams.delete('utm_source')
-        return parsed.toString()
-      },
-    })
+    const value = '<p><a href="https://example.com?utm_source=feed&id=1">Link</a></p>'
+    const expected = '<p><a href="https://example.com/?id=1">Link</a></p>'
 
-    expect(result).not.toContain('utm_source')
-    expect(result).toContain('id=1')
+    expect(
+      await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        cleanUrlFn: (url) => {
+          const parsed = new URL(url)
+          parsed.searchParams.delete('utm_source')
+          return parsed.toString()
+        },
+      }),
+    ).toBe(expected)
   })
 
   it('should remove tracking pixels', async () => {
-    const html = '<p>Text</p><img width="1" height="1" src="https://track.example.com/pixel.gif">'
-    const result = await transformContent(html, { parseHtmlFn: parseHtml })
+    const value = html`
+      <p>Text</p>
+      <img width="1" height="1" src="https://track.example.com/pixel.gif">
+    `
+    const expected = '<p>Text</p>'
 
-    expect(result).not.toContain('pixel.gif')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it('should normalize a standalone code block to a scrollable pre, not a paragraph', async () => {
-    const html = '<code>function greet(name) {\n  return name\n}</code>'
-    const result = await transformContent(html, { parseHtmlFn: parseHtml })
-
+    const value = '<code>function greet(name) {\n  return name\n}</code>'
     // highlightCode promotes the bare block to <pre><code> before wrapBareInlineInParagraphs
     // runs, so it ends up as a scrollable code block, not a <pre> nested inside a <p>.
-    expect(result).toContain('<div data-pre=""><pre><code')
-    expect(result).not.toContain('<p>')
+    const expected =
+      '<div data-pre=""><pre><code class="hljs"><span class="hljs-keyword">function</span> <span class="hljs-title function_">greet</span>(<span class="hljs-params">name</span>) {\n  <span class="hljs-keyword">return</span> name\n}</code></pre></div>'
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it('should clean anchor urls with the provided cleanUrlFn', async () => {
-    const html = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
-    const result = await transformContent(html, {
-      parseHtmlFn: parseHtml,
-      cleanUrlFn: (url) => url.split('?')[0],
-    })
+    const value = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
+    const expected = '<p><a href="https://example.com">Link</a></p>'
 
-    expect(result).not.toContain('utm_source')
+    expect(
+      await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        cleanUrlFn: (url) => url.split('?')[0],
+      }),
+    ).toBe(expected)
   })
 
   it('should allow overriding the dom transforms array', async () => {
-    const html = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
-    const result = await transformContent(html, {
-      parseHtmlFn: parseHtml,
-      cleanUrlFn: (url) => url.split('?')[0],
-      domTransforms: defaultDomTransforms.filter((t) => t.name !== 'cleanAnchorUrls'),
-    })
+    const value = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
+    const expected = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
 
-    expect(result).toContain('utm_source')
+    expect(
+      await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        cleanUrlFn: (url) => url.split('?')[0],
+        domTransforms: defaultDomTransforms.filter((t) => t.name !== 'cleanAnchorUrls'),
+      }),
+    ).toBe(expected)
   })
 
   it('should handle empty string', async () => {
-    const result = await transformContent('', { parseHtmlFn: parseHtml })
-
-    expect(result).toBeDefined()
+    expect(await transformContent('', { parseHtmlFn: parseHtml })).toBe('')
   })
 
   it('should handle plain text by wrapping in paragraphs', async () => {
-    const result = await transformContent('Hello world', { parseHtmlFn: parseHtml })
+    const expected = '<p>Hello world</p>\n'
 
-    expect(result).toContain('<p>Hello world</p>')
+    expect(await transformContent('Hello world', { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it('should use built-in YouTube embed resolver', async () => {
-    const html =
-      '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcB" width="560" height="315"></iframe>'
-    const result = await transformContent(html, { parseHtmlFn: parseHtml })
+    const value = html`
+      <iframe
+        src="https://www.youtube.com/embed/dQw4w9WgXcB"
+        width="560"
+        height="315"
+      >
+      </iframe>
+    `
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcB"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcB"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcB"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcB/hqdefault.jpg"
+        data-embed-width="560"
+        data-embed-height="315"
+      >
+        <a
+          href="https://www.youtube.com/watch?v=dQw4w9WgXcB"
+        >https://www.youtube.com/watch?v=dQw4w9WgXcB</a>
+      </div>
+    `
 
-    expect(result).toContain('data-embed-src=')
-    expect(result).toContain('data-embed-provider="youtube"')
-    expect(result).toContain('youtube.com/embed')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
   it('should allow custom embedResolvers', async () => {
-    const html = '<iframe src="https://custom-player.example.com/video/123"></iframe>'
-    const result = await transformContent(html, {
-      parseHtmlFn: parseHtml,
-      embedResolvers: [
-        {
-          selector: 'iframe[src]',
-          extract: (element) => {
-            const src = element.getAttribute('src') ?? ''
-            if (src.includes('custom-player.example.com')) {
-              return { provider: 'custom', src }
-            }
-          },
-        },
-      ],
-    })
+    const value = '<iframe src="https://custom-player.example.com/video/123"></iframe>'
+    const expected = html`
+      <div
+        data-embed-provider="custom"
+        data-embed-src="https://custom-player.example.com/video/123"
+      >
+        <a
+          href="https://custom-player.example.com/video/123"
+        >https://custom-player.example.com/video/123</a>
+      </div>
+    `
 
-    expect(result).toContain('data-embed-provider="custom"')
+    expect(
+      await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        embedResolvers: [
+          {
+            selector: 'iframe[src]',
+            extract: (element) => {
+              const src = element.getAttribute('src') ?? ''
+              if (src.includes('custom-player.example.com')) {
+                return { provider: 'custom', src }
+              }
+            },
+          },
+        ],
+      }),
+    ).toEqualHtml(expected)
   })
 
   it('should inject audio/video enclosures as native media elements', async () => {
-    const html = '<p>Content</p>'
-    const result = await transformContent(html, {
-      parseHtmlFn: parseHtml,
-      enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
-    })
+    const value = '<p>Content</p>'
+    const expected = html`
+      <audio src="https://example.com/audio.mp3" controls preload="none"></audio>
+      <p>Content</p>
+    `
 
-    expect(result).toContain('<audio')
-    expect(result).toContain('audio.mp3')
+    expect(
+      await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
+      }),
+    ).toEqualHtml(expected)
   })
 
   it('should remove paragraphs left empty after boundary br stripping', async () => {
-    const html = '<p>Hello</p><p><br></p><p>World</p>'
-    const result = await transformContent(html, { parseHtmlFn: parseHtml })
+    const value = html`
+      <p>Hello</p>
+      <p><br></p>
+      <p>World</p>
+    `
+    const expected = html`
+      <p>Hello</p>
+      <p>World</p>
+    `
 
-    expect(result).toBe('<p>Hello</p><p>World</p>')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it('should preserve empty paragraphs when stripEmptyTags is removed from the pipeline', async () => {
-    const html = '<p>Hello</p><p><br></p><p>World</p>'
-    const result = await transformContent(html, {
-      parseHtmlFn: parseHtml,
-      domTransforms: defaultDomTransforms.filter((t) => t.name !== 'stripEmptyTags'),
-    })
+    const value = html`
+      <p>Hello</p>
+      <p><br></p>
+      <p>World</p>
+    `
+    const expected = html`
+      <p>Hello</p>
+      <p></p>
+      <p>World</p>
+    `
 
-    expect(result).toBe('<p>Hello</p><p></p><p>World</p>')
+    expect(
+      await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        domTransforms: defaultDomTransforms.filter((t) => t.name !== 'stripEmptyTags'),
+      }),
+    ).toBe(expected)
   })
 
   it('should preserve comments inside pre blocks through full pipeline', async () => {
-    const html = '<pre>before <!-- preserved --> after</pre>'
-    const result = await transformContent(html, { parseHtmlFn: parseHtml })
+    const value = '<pre>before <!-- preserved --> after</pre>'
+    const expected = '<div data-pre=""><pre>before <!-- preserved --> after</pre></div>'
 
-    expect(result).toContain('<!-- preserved -->')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it('should proxy asset URLs through assetProxyFn in the default pipeline', async () => {
-    const html = '<p><img src="https://cdn.example.com/photo.jpg"></p>'
-    const result = await transformContent(html, {
-      parseHtmlFn: parseHtml,
-      assetProxyFn: (url, type) => `https://proxy.example.com/${type}/${encodeURIComponent(url)}`,
-    })
+    const value = '<p><img src="https://cdn.example.com/photo.jpg"></p>'
+    const expected =
+      '<p><img src="https://proxy.example.com/image/https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"></p>'
 
-    expect(result).toContain(
-      'src="https://proxy.example.com/image/https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"',
-    )
+    expect(
+      await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        assetProxyFn: (url, type) => `https://proxy.example.com/${type}/${encodeURIComponent(url)}`,
+      }),
+    ).toBe(expected)
   })
 
   it('should proxy native enclosure media elements injected by injectEnclosures', async () => {
-    const html = '<p>Content</p>'
-    const result = await transformContent(html, {
-      parseHtmlFn: parseHtml,
-      enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
-      assetProxyFn: (url, type) => `https://proxy.example.com/${type}/${encodeURIComponent(url)}`,
-    })
+    const value = '<p>Content</p>'
+    const expected = html`
+      <audio
+        src="https://proxy.example.com/audio/https%3A%2F%2Fexample.com%2Faudio.mp3"
+        controls
+        preload="none"
+      >
+      </audio>
+      <p>Content</p>
+    `
 
-    expect(result).toContain(
-      'src="https://proxy.example.com/audio/https%3A%2F%2Fexample.com%2Faudio.mp3"',
-    )
+    expect(
+      await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
+        assetProxyFn: (url, type) => `https://proxy.example.com/${type}/${encodeURIComponent(url)}`,
+      }),
+    ).toEqualHtml(expected)
   })
 
   // enrichEmbedPlaceholders is opt-in; default pipeline does not include it.
   it('should enrich embed placeholders with metadata from enrichEmbedFn when opted in', async () => {
-    const html =
-      '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" width="560" height="315"></iframe>'
-    const result = await transformContent(html, {
-      parseHtmlFn: parseHtml,
-      domTransforms: [...defaultDomTransforms, enrichEmbedPlaceholders],
-      enrichEmbedFn: (embeds) => {
-        return new Map(
-          embeds.map(({ provider, id }) => [
-            `${provider}:${id}`,
-            { title: `Title for ${id}`, author: 'Test Channel', duration: 213 },
-          ]),
-        )
-      },
-    })
+    const value = html`
+      <iframe
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        width="560"
+        height="315"
+      >
+      </iframe>
+    `
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-width="560"
+        data-embed-height="315"
+        data-embed-title="Title for dQw4w9WgXcQ"
+        data-embed-author="Test Channel"
+        data-embed-duration="213"
+      >
+        <a
+          href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        >https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
+      </div>
+    `
 
-    expect(result).toContain('data-embed-title="Title for dQw4w9WgXcQ"')
-    expect(result).toContain('data-embed-author="Test Channel"')
-    expect(result).toContain('data-embed-duration="213"')
+    expect(
+      await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        domTransforms: [...defaultDomTransforms, enrichEmbedPlaceholders],
+        enrichEmbedFn: (embeds) => {
+          return new Map(
+            embeds.map(({ provider, id }) => [
+              `${provider}:${id}`,
+              { title: `Title for ${id}`, author: 'Test Channel', duration: 213 },
+            ]),
+          )
+        },
+      }),
+    ).toEqualHtml(expected)
   })
 
   it('should leave embed placeholders unenriched when enrichEmbedFn returns an empty map', async () => {
-    const html = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
-    const result = await transformContent(html, {
-      parseHtmlFn: parseHtml,
-      domTransforms: [...defaultDomTransforms, enrichEmbedPlaceholders],
-      enrichEmbedFn: () => new Map(),
-    })
+    const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+      >
+        <a
+          href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        >https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
+      </div>
+    `
 
-    expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
-    expect(result).not.toContain('data-embed-title')
-    expect(result).not.toContain('data-embed-author')
-    expect(result).not.toContain('data-embed-duration')
+    expect(
+      await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        domTransforms: [...defaultDomTransforms, enrichEmbedPlaceholders],
+        enrichEmbedFn: () => new Map(),
+      }),
+    ).toEqualHtml(expected)
   })
 
   it('should leave embed placeholders unenriched when enrichEmbedPlaceholders is not in the pipeline', async () => {
-    const html = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+    const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     let called = false
-    const result = await transformContent(html, {
+    const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       enrichEmbedFn: () => {
         called = true
         return new Map([['youtube:dQw4w9WgXcQ', { title: 'Unused' }]])
       },
     })
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+      >
+        <a
+          href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        >https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
+      </div>
+    `
 
     expect(called).toBe(false)
-    expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
-    expect(result).not.toContain('data-embed-title')
+    expect(result).toEqualHtml(expected)
   })
 
   it('should preserve ghost bookmark widget placeholders through unwrapWrappers', async () => {
-    const html = [
-      '<figure class="kg-card kg-bookmark-card">',
-      '<a class="kg-bookmark-container" href="https://example.com/post">',
-      '<div class="kg-bookmark-content">',
-      '<div class="kg-bookmark-title">Post title</div>',
-      '<div class="kg-bookmark-description">Preview text</div>',
-      '<div class="kg-bookmark-metadata">',
-      '<img class="kg-bookmark-icon" src="https://example.com/favicon.ico" alt="">',
-      '<span class="kg-bookmark-author">Author name</span>',
-      '<span class="kg-bookmark-publisher">Publisher name</span>',
-      '</div>',
-      '</div>',
-      '<div class="kg-bookmark-thumbnail"><img src="https://example.com/og-image.jpg" alt=""></div>',
-      '</a>',
-      '</figure>',
-    ].join('')
-    const result = await transformContent(html, { parseHtmlFn: parseHtml })
+    const value = html`
+      <figure class="kg-card kg-bookmark-card">
+        <a class="kg-bookmark-container" href="https://example.com/post">
+          <div class="kg-bookmark-content">
+            <div class="kg-bookmark-title">Post title</div>
+            <div class="kg-bookmark-description">Preview text</div>
+            <div class="kg-bookmark-metadata">
+              <img class="kg-bookmark-icon" src="https://example.com/favicon.ico" alt="">
+              <span class="kg-bookmark-author">Author name</span>
+              <span class="kg-bookmark-publisher">Publisher name</span>
+            </div>
+          </div>
+          <div class="kg-bookmark-thumbnail">
+            <img src="https://example.com/og-image.jpg" alt="">
+          </div>
+        </a>
+      </figure>
+    `
+    const expected = html`
+      <div
+        data-bookmark-provider="ghost"
+        data-bookmark-url="https://example.com/post"
+        data-bookmark-title="Post title"
+        data-bookmark-description="Preview text"
+        data-bookmark-author="Author name"
+        data-bookmark-publisher="Publisher name"
+        data-bookmark-icon="https://example.com/favicon.ico"
+        data-bookmark-thumbnail="https://example.com/og-image.jpg"
+      >
+        <p><a href="https://example.com/post">Post title</a></p>
+      </div>
+    `
 
-    expect(result).toContain('data-bookmark-provider="ghost"')
-    expect(result).toContain('data-bookmark-url="https://example.com/post"')
-    expect(result).toContain('data-bookmark-title="Post title"')
-    expect(result).toContain('data-bookmark-description="Preview text"')
-    expect(result).toContain('data-bookmark-author="Author name"')
-    expect(result).toContain('data-bookmark-publisher="Publisher name"')
-    expect(result).toContain('data-bookmark-icon="https://example.com/favicon.ico"')
-    expect(result).toContain('data-bookmark-thumbnail="https://example.com/og-image.jpg"')
-    expect(result).toContain('<a href="https://example.com/post">Post title</a>')
-    expect(result).not.toContain('kg-bookmark')
-    expect(result).not.toContain('<figure')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
+  it.todo('should preserve substack publication embeds through the full pipeline', () => {
+    // An .embedded-publication-wrap card with a data-attrs JSON blob should come
+    // out of the default pipeline as a data-bookmark-provider="substack" placeholder.
+  })
+
+  it.todo('should propagate an error thrown by a dom transform', () => {
+    // A custom domTransforms entry that throws should reject the transformContent promise.
+  })
+
+  it.todo('should propagate an error thrown by parseHtmlFn', () => {
+    // A rejecting parseHtmlFn should reject transformContent before any dom transform runs.
+  })
+
+  it.todo('should be idempotent when run over its own output', () => {
+    // Running transformContent twice over representative input (paragraphs, lazy
+    // images, embeds) should produce the same output as running it once.
+  })
+
+  it.todo('should allow overriding the string transforms array', () => {
+    // With stringTransforms: [], a CDATA comment wrapper that the default
+    // unwrapCdataComments would unwrap should survive into the DOM stage.
+  })
+
+  it.todo('should use a custom resolveUrlFn when resolving relative URLs', () => {
+    // A resolveUrlFn override should control how relative hrefs resolve against baseUrl.
+  })
+
+  it.todo('should allow custom bookmarkResolvers', () => {
+    // A custom resolver matching bespoke card markup should replace the card with
+    // a data-bookmark-* placeholder, like the built-in ghost resolver does.
+  })
+
+  it.todo('should strip a duplicated leading heading when articleTitle matches', () => {
+    // With articleTitle equal to the first heading text, stripDuplicateTitleHeading
+    // should remove that heading from the output.
   })
 })

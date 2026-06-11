@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { unwrapHeadingBold } from './unwrapHeadingBold.js'
 
@@ -25,8 +25,14 @@ describeForEachParser('unwrapHeadingBold', (parseHtml) => {
     })
 
     it('should unwrap across heading levels', async () => {
-      const value = '<h1><strong>One</strong></h1><h4><b>Four</b></h4>'
-      const expected = '<h1>One</h1><h4>Four</h4>'
+      const value = html`
+        <h1><strong>One</strong></h1>
+        <h4><b>Four</b></h4>
+      `
+      const expected = html`
+        <h1>One</h1>
+        <h4>Four</h4>
+      `
 
       expect(await transform(value)).toBe(expected)
     })
@@ -41,6 +47,13 @@ describeForEachParser('unwrapHeadingBold', (parseHtml) => {
     it('should ignore surrounding whitespace', async () => {
       const value = '<h2> <strong>Title</strong> </h2>'
       const expected = '<h2> Title </h2>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should ignore a comment sibling of the bold wrapper', async () => {
+      const value = '<h2><!-- anchor --><strong>Title</strong></h2>'
+      const expected = '<h2><!-- anchor -->Title</h2>'
 
       expect(await transform(value)).toBe(expected)
     })
@@ -98,6 +111,10 @@ describeForEachParser('unwrapHeadingBold', (parseHtml) => {
       const value = '<h2></h2>'
 
       expect(await transform(value)).toBe(value)
+    })
+
+    it('should handle empty input', async () => {
+      expect(await transform('')).toBe('')
     })
   })
 })

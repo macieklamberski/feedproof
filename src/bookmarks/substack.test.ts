@@ -64,16 +64,35 @@ describeForEachParser('substackBookmarkResolver', (parseHtml) => {
     })
 
     it('should leave optional fields undefined when only name and base_url are present', async () => {
-      const result = await extract(
-        makeCard({ name: 'The Reader', baseUrl: 'https://thereader.substack.com' }),
-      )
+      const value = makeCard({ name: 'The Reader', baseUrl: 'https://thereader.substack.com' })
+      const expected: BookmarkResolverResult = {
+        provider: 'substack',
+        url: 'https://thereader.substack.com',
+        title: 'The Reader',
+        description: undefined,
+        author: undefined,
+        icon: undefined,
+      }
 
-      expect(result?.provider).toBe('substack')
-      expect(result?.url).toBe('https://thereader.substack.com')
-      expect(result?.title).toBe('The Reader')
-      expect(result?.description).toBeUndefined()
-      expect(result?.author).toBeUndefined()
-      expect(result?.icon).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should trim whitespace around name, hero_text and author_name', async () => {
+      const value = makeCard({
+        name: '  The Reader  ',
+        baseUrl: 'https://thereader.substack.com',
+        heroText: ' A newsletter about things. ',
+        authorName: ' Author name ',
+      })
+      const expected: BookmarkResolverResult = {
+        provider: 'substack',
+        url: 'https://thereader.substack.com',
+        title: 'The Reader',
+        description: 'A newsletter about things.',
+        author: 'Author name',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -84,6 +103,16 @@ describeForEachParser('substackBookmarkResolver', (parseHtml) => {
 
     it('should return undefined when name is missing', async () => {
       expect(await extract(makeCard({ baseUrl: 'https://thereader.substack.com' }))).toBeUndefined()
+    })
+
+    it('should return undefined when name is whitespace-only', async () => {
+      const value = makeCard({ name: '   ', baseUrl: 'https://thereader.substack.com' })
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when data-attrs is valid JSON but not an object', async () => {
+      expect(await extract(makeCard({ rawDataAttrs: '"The Reader"' }))).toBeUndefined()
     })
 
     it('should return undefined when data-attrs is malformed json', async () => {

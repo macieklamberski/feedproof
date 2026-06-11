@@ -1,6 +1,6 @@
 import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { flattenPictureElements } from './flattenPictureElements.js'
 
@@ -10,10 +10,19 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
   }
 
   it('should promote a webp source onto the inner img', async () => {
-    const value = `
+    const value = html`
       <picture>
-        <source type="image/webp" srcset="https://example.com/a-650.webp 650w, https://example.com/a-1400.webp 1400w">
-        <img src="https://example.com/a-650.jpeg" srcset="https://example.com/a-650.jpeg 650w, https://example.com/a-1400.jpeg 1400w" alt="photo" width="1400" height="1023">
+        <source
+          type="image/webp"
+          srcset="https://example.com/a-650.webp 650w, https://example.com/a-1400.webp 1400w"
+        >
+        <img
+          src="https://example.com/a-650.jpeg"
+          srcset="https://example.com/a-650.jpeg 650w, https://example.com/a-1400.jpeg 1400w"
+          alt="photo"
+          width="1400"
+          height="1023"
+        >
       </picture>
     `
     const result = await transform(value)
@@ -29,7 +38,7 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
   })
 
   it('should prefer an avif source over a webp source', async () => {
-    const value = `
+    const value = html`
       <picture>
         <source type="image/avif" srcset="https://example.com/a.avif 1000w">
         <source type="image/webp" srcset="https://example.com/a.webp 1000w">
@@ -44,9 +53,13 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
   })
 
   it('should not promote an art-direction source carrying a media attribute', async () => {
-    const value = `
+    const value = html`
       <picture>
-        <source type="image/webp" media="(max-width: 600px)" srcset="https://example.com/small.webp 600w">
+        <source
+          type="image/webp"
+          media="(max-width: 600px)"
+          srcset="https://example.com/small.webp 600w"
+        >
         <img src="https://example.com/a.jpeg" alt="photo">
       </picture>
     `
@@ -59,7 +72,7 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
   })
 
   it('should lift the inner img unchanged when there is no modern source', async () => {
-    const value = `
+    const value = html`
       <picture>
         <img src="https://example.com/a.jpeg" alt="photo" width="800" height="600">
       </picture>
@@ -74,10 +87,15 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
   })
 
   it('should drop a stale sizes attribute when promoting', async () => {
-    const value = `
+    const value = html`
       <picture>
         <source type="image/webp" srcset="https://example.com/a.webp 1000w">
-        <img src="https://example.com/a.jpeg" srcset="https://example.com/a.jpeg 1000w" sizes="auto" alt="photo">
+        <img
+          src="https://example.com/a.jpeg"
+          srcset="https://example.com/a.jpeg 1000w"
+          sizes="auto"
+          alt="photo"
+        >
       </picture>
     `
     const result = await transform(value)
@@ -93,9 +111,12 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
   })
 
   it('should synthesize an img when the picture has no img fallback', async () => {
-    const value = `
+    const value = html`
       <picture>
-        <source type="image/webp" srcset="https://example.com/a-650.webp 650w, https://example.com/a-1400.webp 1400w">
+        <source
+          type="image/webp"
+          srcset="https://example.com/a-650.webp 650w, https://example.com/a-1400.webp 1400w"
+        >
       </picture>
     `
     const result = await transform(value)
@@ -108,7 +129,7 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
   })
 
   it('should drop a picture that has no img and no usable source', async () => {
-    const value = `
+    const value = html`
       <picture>
         <source type="image/webp">
       </picture>
@@ -121,7 +142,7 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
   })
 
   it('should drop a picture whose only source has an empty srcset', async () => {
-    const value = `
+    const value = html`
       <picture>
         <source srcset=",">
       </picture>
@@ -133,7 +154,7 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
   })
 
   it('should give a src-less img a src from its own srcset', async () => {
-    const value = `
+    const value = html`
       <picture>
         <img srcset="https://example.com/a-400.jpg 400w, https://example.com/a-800.jpg 800w">
       </picture>
@@ -145,7 +166,7 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
   })
 
   it('should flatten multiple pictures in one document', async () => {
-    const value = `
+    const value = html`
       <picture>
         <source type="image/webp" srcset="https://example.com/a.webp 1000w">
         <img src="https://example.com/a.jpeg" alt="a">
@@ -163,7 +184,7 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
   })
 
   it('should fall back to a valid source when the preferred one has an empty srcset', async () => {
-    const value = `
+    const value = html`
       <picture>
         <source type="image/webp" srcset="   ">
         <source srcset="https://example.com/ok.jpg 800w">
@@ -176,9 +197,12 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
   })
 
   it('should keep a real sizes attribute when promoting', async () => {
-    const value = `
+    const value = html`
       <picture>
-        <source type="image/webp" srcset="https://example.com/a.webp 400w, https://example.com/b.webp 800w">
+        <source
+          type="image/webp"
+          srcset="https://example.com/a.webp 400w, https://example.com/b.webp 800w"
+        >
         <img src="https://example.com/a.jpg" srcset="https://example.com/a.jpg 400w" sizes="50vw">
       </picture>
     `
@@ -189,7 +213,7 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
   })
 
   it('should be idempotent', async () => {
-    const value = `
+    const value = html`
       <picture>
         <source type="image/webp" srcset="https://example.com/a.webp 1000w">
         <img src="https://example.com/a.jpeg" alt="photo">

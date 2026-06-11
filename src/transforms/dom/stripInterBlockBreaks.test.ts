@@ -1,6 +1,6 @@
 import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { stripInterBlockBreaks } from './stripInterBlockBreaks.js'
 
@@ -10,28 +10,50 @@ describeForEachParser('stripInterBlockBreaks', (parseHtml) => {
   }
 
   it('should remove br between two block elements', async () => {
-    const value = '<p>First</p><br><p>Second</p>'
-    const expected = '<p>First</p><p>Second</p>'
+    const value = html`
+      <p>First</p>
+      <br>
+      <p>Second</p>
+    `
+    const expected = html`
+      <p>First</p>
+      <p>Second</p>
+    `
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should remove multiple consecutive br between blocks', async () => {
-    const value = '<p>First</p><br><br><br><p>Second</p>'
-    const expected = '<p>First</p><p>Second</p>'
+    const value = html`
+      <p>First</p>
+      <br>
+      <br>
+      <br>
+      <p>Second</p>
+    `
+    const expected = html`
+      <p>First</p>
+      <p>Second</p>
+    `
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should remove br before first block element', async () => {
-    const value = '<br><p>Content</p>'
+    const value = html`
+      <br>
+      <p>Content</p>
+    `
     const expected = '<p>Content</p>'
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should remove br after last block element', async () => {
-    const value = '<p>Content</p><br>'
+    const value = html`
+      <p>Content</p>
+      <br>
+    `
     const expected = '<p>Content</p>'
 
     expect(await transform(value)).toBe(expected)
@@ -44,7 +66,23 @@ describeForEachParser('stripInterBlockBreaks', (parseHtml) => {
   })
 
   it('should preserve br between inline elements at top level', async () => {
-    const value = '<span>One</span><br><span>Two</span>'
+    const value = html`
+      <span>One</span>
+      <br>
+      <span>Two</span>
+    `
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should preserve br between a block and following bare text', async () => {
+    const value = '<p>First</p><br>trailing text'
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should preserve br between bare text and a following block', async () => {
+    const value = 'leading text<br><p>Second</p>'
 
     expect(await transform(value)).toBe(value)
   })
@@ -57,34 +95,67 @@ describeForEachParser('stripInterBlockBreaks', (parseHtml) => {
   })
 
   it('should remove br between different block elements', async () => {
-    const value = '<p>Text</p><br><blockquote>Quote</blockquote>'
-    const expected = '<p>Text</p><blockquote>Quote</blockquote>'
+    const value = html`
+      <p>Text</p>
+      <br>
+      <blockquote>Quote</blockquote>
+    `
+    const expected = html`
+      <p>Text</p>
+      <blockquote>Quote</blockquote>
+    `
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should not modify content without br', async () => {
-    const value = '<p>First</p><p>Second</p>'
+    const value = html`
+      <p>First</p>
+      <p>Second</p>
+    `
 
     expect(await transform(value)).toBe(value)
   })
 
   it('should remove br between blocks separated by comments', async () => {
-    const value = '<p>First</p><!--x--><br><!--y--><p>Second</p>'
-    const expected = '<p>First</p><!--x--><!--y--><p>Second</p>'
+    const value = html`
+      <p>First</p>
+      <!--x-->
+      <br>
+      <!--y-->
+      <p>Second</p>
+    `
+    const expected = html`
+      <p>First</p>
+      <!--x-->
+      <!--y-->
+      <p>Second</p>
+    `
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should remove br before first block when preceded by a comment', async () => {
-    const value = '<!--x--><br><p>Content</p>'
+    const value = html`
+      <!--x-->
+      <br>
+      <p>Content</p>
+    `
     const expected = '<!--x--><p>Content</p>'
 
     expect(await transform(value)).toBe(expected)
   })
 
+  it('should handle empty input', async () => {
+    expect(await transform('')).toBe('')
+  })
+
   it('should be idempotent', async () => {
-    const value = '<p>First</p><br><p>Second</p>'
+    const value = html`
+      <p>First</p>
+      <br>
+      <p>Second</p>
+    `
     const once = await transform(value)
     const twice = await transform(once)
 

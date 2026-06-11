@@ -1,6 +1,6 @@
 import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { EmbedResolverResult, EnrichEmbedFn, TransformContext } from '../../types.js'
 import { enrichEmbedPlaceholders } from './enrichEmbedPlaceholders.js'
 
@@ -20,7 +20,10 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
   })
 
   it('should not call enrichEmbedFn when no placeholders have provider and id', async () => {
-    const value = '<p>No embeds here</p><div></div>'
+    const value = html`
+      <p>No embeds here</p>
+      <div></div>
+    `
     let called = false
     const fn: EnrichEmbedFn = () => {
       called = true
@@ -33,7 +36,7 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
   })
 
   it('should call enrichEmbedFn once with all collected placeholders', async () => {
-    const value = `
+    const value = html`
       <div data-embed-provider="youtube" data-embed-id="abc"></div>
       <div data-embed-provider="vimeo" data-embed-id="123"></div>
     `
@@ -72,8 +75,14 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
   })
 
   it('should not overwrite existing data-embed-* attributes', async () => {
-    const value =
-      '<div data-embed-provider="youtube" data-embed-id="abc" data-embed-title="Resolver Title"></div>'
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-title="Resolver Title"
+      >
+      </div>
+    `
     const fn: EnrichEmbedFn = () => {
       return new Map([['youtube:abc', { title: 'Enrichment Title' }]])
     }
@@ -94,7 +103,7 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
   })
 
   it('should silently skip placeholders missing from the returned map', async () => {
-    const value = `
+    const value = html`
       <div data-embed-provider="youtube" data-embed-id="known"></div>
       <div data-embed-provider="youtube" data-embed-id="unknown"></div>
     `

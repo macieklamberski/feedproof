@@ -1,6 +1,6 @@
 import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { linkifyUrls } from './linkifyUrls.js'
 
@@ -19,43 +19,59 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
 
   it('should link bare http URL', async () => {
     const value = '<p>Visit http://example.com for more</p>'
-    const result = await transform(value)
+    const expected = html`
+      <p>Visit <a href="http://example.com">http://example.com</a> for more</p>
+    `
 
-    expect(result).toContain('<a href="http://example.com"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should link URL with path and query', async () => {
     const value = '<p>See https://example.com/path?key=value&other=1#hash for details</p>'
-    const result = await transform(value)
+    const expected = html`
+      <p>See
+        <a
+          href="https://example.com/path?key=value&other=1#hash"
+        >https://example.com/path?key=value&amp;other=1#hash</a>
+        for details</p>
+    `
 
-    expect(result).toContainHtml('href="https://example.com/path?key=value&other=1#hash"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should link multiple URLs in one paragraph', async () => {
-    const value = '<p>See https://one.com and https://two.com</p>'
-    const result = await transform(value)
+    const value = '<p>See https://example.com and https://example.org</p>'
+    const expected = html`
+      <p>See <a href="https://example.com">https://example.com</a>
+        and <a href="https://example.org">https://example.org</a></p>
+    `
 
-    expect(result.match(/<a /g)).toHaveLength(2)
-    expect(result).toContain('href="https://one.com"')
-    expect(result).toContain('href="https://two.com"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should link URLs across multiple paragraphs', async () => {
-    const value = '<p>See https://one.com</p><p>And https://two.com</p>'
-    const result = await transform(value)
+    const value = html`
+      <p>See https://example.com</p>
+      <p>And https://example.org</p>
+    `
+    const expected = html`
+      <p>See <a href="https://example.com">https://example.com</a></p>
+      <p>And <a href="https://example.org">https://example.org</a></p>
+    `
 
-    expect(result.match(/<a /g)).toHaveLength(2)
-    expect(result).toContain('href="https://one.com"')
-    expect(result).toContain('href="https://two.com"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should link bare URL while preserving existing links', async () => {
-    const value = '<p><a href="https://linked.com">linked</a> and https://bare.com</p>'
-    const result = await transform(value)
+    const value = '<p><a href="https://example.com">linked</a> and https://example.org</p>'
+    const expected = html`
+      <p>
+        <a href="https://example.com">linked</a>
+        and <a href="https://example.org">https://example.org</a>
+      </p>
+    `
 
-    expect(result.match(/<a /g)).toHaveLength(2)
-    expect(result).toContain('href="https://linked.com"')
-    expect(result).toContain('href="https://bare.com"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should preserve surrounding text when linkifying', async () => {
@@ -67,24 +83,30 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
   })
 
   it('should link URL in deeply nested content', async () => {
-    const value = '<div><section><p><em>See https://deep.com here</em></p></section></div>'
-    const result = await transform(value)
+    const value = '<div><section><p><em>See https://example.com here</em></p></section></div>'
+    const expected = html`
+      <div>
+        <section>
+          <p><em>See <a href="https://example.com">https://example.com</a> here</em></p>
+        </section>
+      </div>
+    `
 
-    expect(result).toContain('href="https://deep.com"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should handle URL at start of text node', async () => {
     const value = '<p>https://example.com is a URL</p>'
-    const result = await transform(value)
+    const expected = '<p><a href="https://example.com">https://example.com</a> is a URL</p>'
 
-    expect(result).toContain('<a href="https://example.com"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should handle URL at end of text node', async () => {
     const value = '<p>Visit https://example.com</p>'
-    const result = await transform(value)
+    const expected = '<p>Visit <a href="https://example.com">https://example.com</a></p>'
 
-    expect(result).toContain('href="https://example.com"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not double-link already linked URL', async () => {
@@ -96,53 +118,53 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
 
   it('should not link protocol-less URL', async () => {
     const value = '<p>Visit example.com for more</p>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('<a')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not link email address', async () => {
     const value = '<p>Contact user@example.com</p>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('<a')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
-  for (const tag of ['pre', 'code', 'kbd', 'samp', 'var']) {
-    it(`should not link URL inside ${tag} tag`, async () => {
-      const value = `<${tag}>https://example.com</${tag}>`
-      const result = await transform(value)
+  const unlinkableTags: Array<string> = ['pre', 'code', 'kbd', 'samp', 'var', 'script']
 
-      expect(result).not.toContain('<a')
-    })
-  }
+  it.each(unlinkableTags)('should not link URL inside %s tag', async (tag) => {
+    const value = `<${tag}>https://example.com</${tag}>`
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
+  it('should not link URL inside style tag', async () => {
+    // Valid CSS (a comment) so jsdom's stylesheet parser stays quiet.
+    const value = '<style>/*\nhttps://example.com\n*/</style>'
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
 
   it('should not link URL inside nested code within pre', async () => {
     const value = '<pre><code>const url = "https://example.com"</code></pre>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('<a')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not modify html with no URLs', async () => {
     const value = '<p>No links here</p>'
-    const result = await transform(value)
 
-    expect(result).toContain('<p>No links here</p>')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should handle whitespace-only text nodes', async () => {
     const value = '<p>   </p>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('<a')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should handle empty content', async () => {
     const value = ''
-    const result = await transform(value)
 
-    expect(result).not.toContain('<a')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should be idempotent', async () => {
