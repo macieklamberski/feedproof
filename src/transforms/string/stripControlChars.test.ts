@@ -25,6 +25,10 @@ describe('stripControlChars', () => {
     expect(transform('<p>before\x0cafter</p>')).toBe('<p>beforeafter</p>')
   })
 
+  it('should strip ESC (U+001B)', () => {
+    expect(transform('<p>before\x1bafter</p>')).toBe('<p>beforeafter</p>')
+  })
+
   it('should strip U+001F (US)', () => {
     expect(transform('<p>before\x1fafter</p>')).toBe('<p>beforeafter</p>')
   })

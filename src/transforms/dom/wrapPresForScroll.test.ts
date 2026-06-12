@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { wrapPresForScroll } from './wrapPresForScroll.js'
 
@@ -18,8 +18,14 @@ describeForEachParser('wrapPresForScroll', (parseHtml) => {
     })
 
     it('should wrap multiple sibling pres independently', async () => {
-      const value = '<pre>A</pre><pre>B</pre>'
-      const expected = '<div data-pre=""><pre>A</pre></div><div data-pre=""><pre>B</pre></div>'
+      const value = html`
+        <pre>A</pre>
+        <pre>B</pre>
+      `
+      const expected = html`
+        <div data-pre=""><pre>A</pre></div>
+        <div data-pre=""><pre>B</pre></div>
+      `
 
       expect(await transform(value)).toBe(expected)
     })
@@ -32,8 +38,16 @@ describeForEachParser('wrapPresForScroll', (parseHtml) => {
     })
 
     it('should keep surrounding content intact', async () => {
-      const value = '<p>Before</p><pre>code</pre><p>After</p>'
-      const expected = '<p>Before</p><div data-pre=""><pre>code</pre></div><p>After</p>'
+      const value = html`
+        <p>Before</p>
+        <pre>code</pre>
+        <p>After</p>
+      `
+      const expected = html`
+        <p>Before</p>
+        <div data-pre=""><pre>code</pre></div>
+        <p>After</p>
+      `
 
       expect(await transform(value)).toBe(expected)
     })

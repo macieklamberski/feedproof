@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import { demoteHeadings } from './demoteHeadings.js'
 
 describeForEachParser('demoteHeadings', (parseHtml) => {
@@ -10,22 +10,48 @@ describeForEachParser('demoteHeadings', (parseHtml) => {
 
   describe('triggered when body contains <h1>', () => {
     it('should demote a lone <h1> to <h2>', async () => {
-      const value = '<h1>Section</h1><p>Body</p>'
-      const expected = '<h2>Section</h2><p>Body</p>'
+      const value = html`
+        <h1>Section</h1>
+        <p>Body</p>
+      `
+      const expected = html`
+        <h2>Section</h2>
+        <p>Body</p>
+      `
 
       expect(await transform(value)).toBe(expected)
     })
 
     it('should shift every heading level down by one', async () => {
-      const value = '<h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><p>Body</p>'
-      const expected = '<h2>One</h2><h3>Two</h3><h4>Three</h4><h5>Four</h5><h6>Five</h6><p>Body</p>'
+      const value = html`
+        <h1>One</h1>
+        <h2>Two</h2>
+        <h3>Three</h3>
+        <h4>Four</h4>
+        <h5>Five</h5>
+        <p>Body</p>
+      `
+      const expected = html`
+        <h2>One</h2>
+        <h3>Two</h3>
+        <h4>Three</h4>
+        <h5>Four</h5>
+        <h6>Five</h6>
+        <p>Body</p>
+      `
 
       expect(await transform(value)).toBe(expected)
     })
 
     it('should leave <h6> as <h6>', async () => {
-      const value = '<h1>Top</h1><h6>Bottom</h6>'
-      const expected = '<h2>Top</h2><h6>Bottom</h6>'
+      const value = html`
+        <h1>Top</h1>
+        <h6>Bottom</h6>
+      `
+      const expected = html`
+        <h2>Top</h2>
+        <h6>Bottom</h6>
+      `
 
       expect(await transform(value)).toBe(expected)
     })
@@ -45,8 +71,18 @@ describeForEachParser('demoteHeadings', (parseHtml) => {
     })
 
     it('should demote every heading even when multiple <h1>s appear', async () => {
-      const value = '<h1>First</h1><p>Body</p><h1>Second</h1><h2>Sub</h2>'
-      const expected = '<h2>First</h2><p>Body</p><h2>Second</h2><h3>Sub</h3>'
+      const value = html`
+        <h1>First</h1>
+        <p>Body</p>
+        <h1>Second</h1>
+        <h2>Sub</h2>
+      `
+      const expected = html`
+        <h2>First</h2>
+        <p>Body</p>
+        <h2>Second</h2>
+        <h3>Sub</h3>
+      `
 
       expect(await transform(value)).toBe(expected)
     })
@@ -61,13 +97,20 @@ describeForEachParser('demoteHeadings', (parseHtml) => {
 
   describe('skipped when body has no <h1>', () => {
     it('should leave <h2>-rooted hierarchy untouched', async () => {
-      const value = '<h2>Top</h2><h3>Sub</h3><p>Body</p>'
+      const value = html`
+        <h2>Top</h2>
+        <h3>Sub</h3>
+        <p>Body</p>
+      `
 
       expect(await transform(value)).toBe(value)
     })
 
     it('should leave a body with no headings untouched', async () => {
-      const value = '<p>Just text</p><p>More text</p>'
+      const value = html`
+        <p>Just text</p>
+        <p>More text</p>
+      `
 
       expect(await transform(value)).toBe(value)
     })
@@ -80,7 +123,10 @@ describeForEachParser('demoteHeadings', (parseHtml) => {
   })
 
   it('should be idempotent', async () => {
-    const value = '<h1>Section</h1><p>Body</p>'
+    const value = html`
+      <h1>Section</h1>
+      <p>Body</p>
+    `
     const once = await transform(value)
     const twice = await transform(once)
 

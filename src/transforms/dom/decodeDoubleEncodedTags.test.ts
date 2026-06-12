@@ -1,6 +1,6 @@
 import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { decodeDoubleEncodedTags } from './decodeDoubleEncodedTags.js'
 
@@ -56,8 +56,10 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
   })
 
   it('should handle multiple encoded tags in one line', async () => {
-    const value =
-      '<li>Visit &lt;a href="https://youtube.com"&gt;YouTube&lt;/a&gt;, &lt;a href="https://x.com"&gt;X&lt;/a&gt;.</li>'
+    const value = html`
+      <li>Visit &lt;a href="https://youtube.com"&gt;YouTube&lt;/a&gt;,
+      &lt;a href="https://x.com"&gt;X&lt;/a&gt;.</li>
+    `
     const expected =
       '<li>Visit <a href="https://youtube.com">YouTube</a>, <a href="https://x.com">X</a>.</li>'
 
@@ -94,15 +96,29 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
   })
 
   it('should decode tags outside code but preserve tags inside code', async () => {
-    const value = '<p>&lt;b&gt;bold&lt;/b&gt;</p><code>&lt;img&gt;</code>'
-    const expected = '<p><b>bold</b></p><code>&lt;img&gt;</code>'
+    const value = html`
+      <p>&lt;b&gt;bold&lt;/b&gt;</p>
+      <code>&lt;img&gt;</code>
+    `
+    const expected = html`
+      <p><b>bold</b></p>
+      <code>&lt;img&gt;</code>
+    `
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should handle multiple code blocks with encoded tags between them', async () => {
-    const value = '<code>&lt;a&gt;</code><p>&lt;b&gt;text&lt;/b&gt;</p><code>&lt;div&gt;</code>'
-    const expected = '<code>&lt;a&gt;</code><p><b>text</b></p><code>&lt;div&gt;</code>'
+    const value = html`
+      <code>&lt;a&gt;</code>
+      <p>&lt;b&gt;text&lt;/b&gt;</p>
+      <code>&lt;div&gt;</code>
+    `
+    const expected = html`
+      <code>&lt;a&gt;</code>
+      <p><b>text</b></p>
+      <code>&lt;div&gt;</code>
+    `
 
     expect(await transform(value)).toBe(expected)
   })
@@ -110,25 +126,37 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
   it('should not decode entity-encoded tags inside <script>', async () => {
     // <script> is a raw-text element — its body is one text node, not parsed
     // elements. The element-aware walk skips it without explicit guards.
-    const value = '<p>x</p><script>htmlString.replace(/&lt;/g, "<")</script>'
+    const value = html`
+      <p>x</p>
+      <script>htmlString.replace(/&lt;/g, "<")</script>
+    `
 
     expect(await transform(value)).toBe(value)
   })
 
   it('should not decode entity-encoded tags inside <style>', async () => {
-    const value = '<p>x</p><style>.x:before { content: "&lt;br&gt;" }</style>'
+    const value = html`
+      <p>x</p>
+      <style>.x:before { content: "&lt;br&gt;" }</style>
+    `
 
     expect(await transform(value)).toBe(value)
   })
 
   it('should not decode entity-encoded tags inside <textarea>', async () => {
-    const value = '<p>x</p><textarea>&lt;tag&gt;example to copy&lt;/tag&gt;</textarea>'
+    const value = html`
+      <p>x</p>
+      <textarea>&lt;tag&gt;example to copy&lt;/tag&gt;</textarea>
+    `
 
     expect(await transform(value)).toBe(value)
   })
 
   it('should not decode entity-encoded tags inside <noscript>', async () => {
-    const value = '<p>x</p><noscript>&lt;b&gt;fallback&lt;/b&gt;</noscript>'
+    const value = html`
+      <p>x</p>
+      <noscript>&lt;b&gt;fallback&lt;/b&gt;</noscript>
+    `
 
     expect(await transform(value)).toBe(value)
   })

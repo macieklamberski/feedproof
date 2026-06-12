@@ -9,36 +9,32 @@ describeForEachParser('stripLeadingIndentation', (parseHtml) => {
     return applyDomTransforms(parseHtml(html), [stripLeadingIndentation(context)])
   }
 
-  const noop = (html: string) => {
-    return applyDomTransforms(parseHtml(html), [() => {}])
-  }
-
   it('should strip a leading nbsp run from a paragraph', async () => {
     const value = '<p>&nbsp;&nbsp;&nbsp;Lorem ipsum</p>'
-    const result = await transform(value)
+    const expected = '<p>Lorem ipsum</p>'
 
-    expect(result).toContain('<p>Lorem ipsum</p>')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should strip a leading run inside an inline wrapper', async () => {
     const value = '<p><span>&nbsp;&nbsp;Lorem ipsum</span></p>'
-    const result = await transform(value)
+    const expected = '<p><span>Lorem ipsum</span></p>'
 
-    expect(result).toContain('<p><span>Lorem ipsum</span></p>')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should strip a run mixing nbsp and regular spaces', async () => {
     const value = '<p>&nbsp; &nbsp; &nbsp;Lorem ipsum</p>'
-    const result = await transform(value)
+    const expected = '<p>Lorem ipsum</p>'
 
-    expect(result).toContain('<p>Lorem ipsum</p>')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should strip other fixed-width spaces (em space, ideographic space)', async () => {
     const value = '<p>&emsp;&#12288;Lorem ipsum</p>'
-    const result = await transform(value)
+    const expected = '<p>Lorem ipsum</p>'
 
-    expect(result).toContain('<p>Lorem ipsum</p>')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should apply to divs, headings, list items, blockquotes and definitions', async () => {
@@ -53,44 +49,51 @@ describeForEachParser('stripLeadingIndentation', (parseHtml) => {
 
   it('should not cross a nested block when a div wraps child blocks', async () => {
     const value = '<div><p>&nbsp;&nbsp;Lorem ipsum</p></div>'
-    const result = await transform(value)
+    const expected = '<div><p>Lorem ipsum</p></div>'
 
-    expect(result).toContain('<div><p>Lorem ipsum</p></div>')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave purely collapsible leading whitespace untouched', async () => {
     const value = '<p>   \n\tLorem ipsum</p>'
-    const result = await transform(value)
 
-    expect(result).toBe(await noop(value))
+    expect(await transform(value)).toBe(value)
   })
 
   it('should preserve non-leading nbsp', async () => {
     const value = '<p>Lorem&nbsp;ipsum</p>'
-    const result = await transform(value)
 
-    expect(result).toBe(await noop(value))
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not strip when a leading void element precedes the text', async () => {
     const value = '<p><img src="x.png">&nbsp;Lorem ipsum</p>'
-    const result = await transform(value)
 
-    expect(result).toBe(await noop(value))
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should handle a nested block once without crossing its boundary', async () => {
     const value = '<blockquote><p>&nbsp;&nbsp;Lorem ipsum</p></blockquote>'
-    const result = await transform(value)
+    const expected = '<blockquote><p>Lorem ipsum</p></blockquote>'
 
-    expect(result).toContain('<blockquote><p>Lorem ipsum</p></blockquote>')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a paragraph without leading whitespace unchanged', async () => {
     const value = '<p>Lorem ipsum</p>'
-    const result = await transform(value)
 
-    expect(result).toBe(await noop(value))
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should strip the whole run from an all-whitespace block', async () => {
+    const value = '<p>&nbsp;&nbsp;</p>'
+    const expected = '<p></p>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should handle empty input', async () => {
+    expect(await transform('')).toBe('')
   })
 
   it('should be idempotent', async () => {

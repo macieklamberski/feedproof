@@ -1,6 +1,6 @@
 import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { stripDeadAnchors } from './stripDeadAnchors.js'
 
@@ -127,7 +127,10 @@ describeForEachParser('stripDeadAnchors', (parseHtml) => {
   it('should preserve anchor with id even when href is dead', async () => {
     // The anchor is a fragment target referenced elsewhere — unwrapping it
     // would break all in-page navigation pointing at #section1.
-    const value = '<a id="section1" href="#"></a><p>body</p>'
+    const value = html`
+      <a id="section1" href="#"></a>
+      <p>body</p>
+    `
 
     expect(await transform(value)).toBe(value)
   })

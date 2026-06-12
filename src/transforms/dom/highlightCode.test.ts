@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'bun:test'
 import { parseHTML } from 'linkedom'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, queryElement } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { detectLanguage, highlightCode } from './highlightCode.js'
 
 describe('detectLanguage', () => {
   const createElement = (html: string): { pre: Element; code: Element | null } => {
     const { document } = parseHTML(`<!doctype html><html><body>${html}</body></html>`)
-    const pre = document.querySelector('pre') as Element
+    const pre = queryElement(document, 'pre')
     const code = pre.querySelector('code')
 
     return { pre, code }
@@ -187,9 +187,8 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
   it('should auto-detect and highlight an unlabeled code block', async () => {
     const value = '<pre><code>function greet(name) {\n  return "Hello, " + name;\n}</code></pre>'
-    const result = await transform(value)
 
-    expect(result).toContain('hljs')
+    expect(await transform(value)).toContain('hljs')
   })
 
   it('should not touch inline code outside pre', async () => {
@@ -202,97 +201,85 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
   it('should not touch empty code blocks', async () => {
     const value = '<pre><code></code></pre>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('hljs')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not touch whitespace-only code blocks', async () => {
     const value = '<pre><code>   \n  </code></pre>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('hljs')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should fall back to auto-detection when the declared language is unknown', async () => {
     const value =
       '<pre><code class="language-nonexistent">function add(a, b) {\n  return a + b;\n}</code></pre>'
-    const result = await transform(value)
 
-    expect(result).toContain('hljs')
+    expect(await transform(value)).toContain('hljs')
   })
 
   it('should leave a lang-auto block as plain text', async () => {
     const value = '<pre><code class="lang-auto">System: Host: laptop arch: x86_64</code></pre>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('hljs')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should auto-detect HTML in an unlabeled block', async () => {
     const value =
       '<pre><code>&lt;div class="card"&gt;&lt;span&gt;hi&lt;/span&gt;&lt;/div&gt;</code></pre>'
-    const result = await transform(value)
 
-    expect(result).toContain('hljs')
+    expect(await transform(value)).toContain('hljs')
   })
 
   it('should highlight a CSS block that has braces', async () => {
     const value = '<pre><code>.btn { color: red; padding: 4px; }</code></pre>'
-    const result = await transform(value)
 
-    expect(result).toContain('hljs')
+    expect(await transform(value)).toContain('hljs')
   })
 
   it('should not highlight prose that loosely resembles code', async () => {
     const value = '<pre><code>Note: this matters; really, it does. See also: the docs.</code></pre>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('hljs')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not highlight key-value output that resembles YAML', async () => {
     const value = '<pre><code>Status: ok\nName: test\nValue: 42</code></pre>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('hljs')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not highlight a CSS-looking sentence without braces', async () => {
     const value = '<pre><code>color: the role it plays; size: how big it feels.</code></pre>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('hljs')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not highlight a trivial one-liner below the relevance floor', async () => {
     const value = '<pre><code>const x = 1</code></pre>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('hljs')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
-  it('should highlight registered aliases', async () => {
-    const aliases = [
-      '<pre><code class="language-markup"><div>hi</div></code></pre>',
-      '<pre><code class="language-mysql">SELECT 1</code></pre>',
-      '<pre><code class="language-python3">def f():\n    return 1</code></pre>',
-      '<pre><code class="language-objective-c">int x = 1;</code></pre>',
-      '<pre><code class="language-shell-session">$ ls -la</code></pre>',
-      '<pre><code class="language-emacs-lisp">(defun foo () 1)</code></pre>',
-      '<pre><code class="language-clike">int x = 1;</code></pre>',
-      '<pre><code class="language-racket">(define x 1)</code></pre>',
-      '<pre><code class="language-jsonc">{"a": 1}</code></pre>',
-      '<pre><code class="language-vb">Dim x = 1</code></pre>',
-      '<pre><code class="language-fish">echo hi</code></pre>',
-      '<pre><code class="language-psql">SELECT 1</code></pre>',
-      '<pre><code class="language-asm">mov eax, 1</code></pre>',
-      '<pre><code class="language-arduino">void setup() {}</code></pre>',
-    ]
+  const aliasFixtures: Array<[string, string]> = [
+    ['markup', '<pre><code class="language-markup"><div>hi</div></code></pre>'],
+    ['mysql', '<pre><code class="language-mysql">SELECT 1</code></pre>'],
+    ['python3', '<pre><code class="language-python3">def f():\n    return 1</code></pre>'],
+    ['objective-c', '<pre><code class="language-objective-c">int x = 1;</code></pre>'],
+    ['shell-session', '<pre><code class="language-shell-session">$ ls -la</code></pre>'],
+    ['emacs-lisp', '<pre><code class="language-emacs-lisp">(defun foo () 1)</code></pre>'],
+    ['clike', '<pre><code class="language-clike">int x = 1;</code></pre>'],
+    ['racket', '<pre><code class="language-racket">(define x 1)</code></pre>'],
+    ['jsonc', '<pre><code class="language-jsonc">{"a": 1}</code></pre>'],
+    ['vb', '<pre><code class="language-vb">Dim x = 1</code></pre>'],
+    ['fish', '<pre><code class="language-fish">echo hi</code></pre>'],
+    ['psql', '<pre><code class="language-psql">SELECT 1</code></pre>'],
+    ['asm', '<pre><code class="language-asm">mov eax, 1</code></pre>'],
+    ['arduino', '<pre><code class="language-arduino">void setup() {}</code></pre>'],
+  ]
 
-    for (const value of aliases) {
-      expect(await transform(value)).toContain('hljs')
-    }
+  it.each(aliasFixtures)('should highlight registered alias %s', async (_alias, value) => {
+    expect(await transform(value)).toContain('hljs')
   })
 
   it('should highlight a bare pre (no code child) with a data-language hint', async () => {
@@ -325,16 +312,14 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
   it('should not auto-detect a bare pre: unlabeled code stays plain', async () => {
     const value = '<pre>function greet(name) {\n  return "Hello, " + name;\n}</pre>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('hljs')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not highlight a bare pre with an unsupported language hint', async () => {
     const value = '<pre data-language="nonexistent">some content here</pre>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('hljs')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should be idempotent on a bare pre', async () => {
@@ -374,9 +359,8 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
   it('should wrap a highlighted standalone code in a pre', async () => {
     const value = '<code class="language-python">def hello():\n    print("hi")</code>'
-    const result = await transform(value)
 
-    expect(result).toContain('<pre><code class="language-python hljs">')
+    expect(await transform(value)).toContain('<pre><code class="language-python hljs">')
   })
 
   it('should promote and auto-detect an unhinted multi-line standalone code', async () => {
@@ -405,16 +389,14 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
   it('should not promote a pretty-printed single-word inline code', async () => {
     const value = '<p>I used <code>\n  mdp\n </code> for slides</p>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('<pre>')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not promote a single content line padded with blank lines', async () => {
     const value = '<p>run <code>\n\n\n  npm install\n </code> first</p>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('<pre>')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should be idempotent on a standalone code', async () => {
@@ -427,9 +409,8 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
   it('should handle html with no code blocks', async () => {
     const value = '<p>No code here</p>'
-    const result = await transform(value)
 
-    expect(result).toContain('<p>No code here</p>')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should highlight Shiki code blocks using data-language on pre', async () => {
@@ -467,9 +448,8 @@ describeForEachParser('highlightCode', (parseHtml) => {
   it('should highlight Pandoc sourceCode blocks', async () => {
     const value =
       '<pre class="sourceCode python"><code class="sourceCode python">def f():\n    return 1</code></pre>'
-    const result = await transform(value)
 
-    expect(result).toContain('hljs-keyword')
+    expect(await transform(value)).toContain('hljs-keyword')
   })
 
   it('should be idempotent', async () => {

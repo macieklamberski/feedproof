@@ -98,6 +98,31 @@ describe('chooseBaseUrl', () => {
 
     expect(value).toBe(expected)
   })
+
+  it('should fall back to siteUrl when itemUrl is an empty string', () => {
+    const value = chooseBaseUrl('', 'https://example.com', 'https://example.com/feed.xml')
+    const expected = 'https://example.com/'
+
+    expect(value).toBe(expected)
+  })
+
+  it('should fall back to feedUrl when siteUrl is an empty string', () => {
+    const value = chooseBaseUrl(null, '', 'https://example.com/feed.xml')
+    const expected = 'https://example.com/feed.xml'
+
+    expect(value).toBe(expected)
+  })
+
+  it('should return undefined when all inputs are empty strings', () => {
+    expect(chooseBaseUrl('', '', '')).toBeUndefined()
+  })
+
+  it('should fall back to siteUrl when itemUrl is relative', () => {
+    const value = chooseBaseUrl('/post/1', 'https://example.com', 'https://example.com/feed.xml')
+    const expected = 'https://example.com/'
+
+    expect(value).toBe(expected)
+  })
 })
 
 describe('coerceNumber', () => {
@@ -137,5 +162,19 @@ describe('coerceNumber', () => {
 
   it('should return undefined for partially numeric string', () => {
     expect(coerceNumber('42abc')).toBeUndefined()
+  })
+
+  it('should parse scientific notation string', () => {
+    expect(coerceNumber('1e3')).toBe(1000)
+  })
+
+  it('should parse hexadecimal string', () => {
+    expect(coerceNumber('0x10')).toBe(16)
+  })
+
+  // Number('Infinity') is not NaN, so Infinity flows through the guard. Pinned so
+  // a future finiteness check must update this test deliberately.
+  it('should return Infinity for the string Infinity', () => {
+    expect(coerceNumber('Infinity')).toBe(Number.POSITIVE_INFINITY)
   })
 })

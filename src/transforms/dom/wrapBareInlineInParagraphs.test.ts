@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { wrapBareInlineInParagraphs } from './wrapBareInlineInParagraphs.js'
 
@@ -63,7 +63,7 @@ describeForEachParser('wrapBareInlineInParagraphs', (parseHtml) => {
     })
   })
 
-  describe('aligned li / td / blockquote', () => {
+  describe('aligned li / td / blockquote / aside', () => {
     it('should leave a plain list item untouched', async () => {
       const value = '<ul><li>x</li><li>y</li></ul>'
 
@@ -106,6 +106,19 @@ describeForEachParser('wrapBareInlineInParagraphs', (parseHtml) => {
     it('should wrap div paragraphs inside a blockquote', async () => {
       const value = '<blockquote><div>q1</div><div>q2</div></blockquote>'
       const expected = '<blockquote><div><p>q1</p></div><div><p>q2</p></div></blockquote>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should leave a single-run aside untouched', async () => {
+      const value = '<aside>Editor note</aside>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should wrap stray inline text beside a block inside an aside', async () => {
+      const value = '<aside>intro<p>x</p></aside>'
+      const expected = '<aside><p>intro</p><p>x</p></aside>'
 
       expect(await transform(value)).toBe(expected)
     })
@@ -158,7 +171,10 @@ describeForEachParser('wrapBareInlineInParagraphs', (parseHtml) => {
   describe('media boundaries', () => {
     it('should split a leading image from the following text', async () => {
       const value = '<img src="x.jpg">In this monthly issue, we take a closer look.'
-      const expected = '<img src="x.jpg"><p>In this monthly issue, we take a closer look.</p>'
+      const expected = html`
+        <img src="x.jpg">
+        <p>In this monthly issue, we take a closer look.</p>
+      `
 
       expect(await transform(value)).toBe(expected)
     })
@@ -205,6 +221,35 @@ describeForEachParser('wrapBareInlineInParagraphs', (parseHtml) => {
         '<pre><code><div>x</div></code></pre>',
       )
     })
+
+    it('should not wrap inside a heading', async () => {
+      const value = '<h2><div>subtitle</div></h2>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should not wrap inside a picture', async () => {
+      const value = '<ul><li><picture><div>fallback text</div></picture></li></ul>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should not wrap inside a table caption', async () => {
+      const value = html`
+        <table>
+          <caption><div>Quarterly results</div></caption>
+          <tbody><tr><td>1</td></tr></tbody>
+        </table>
+      `
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should not wrap inside a summary', async () => {
+      const value = '<details><summary><div>More info</div></summary><p>Details</p></details>'
+
+      expect(await transform(value)).toBe(value)
+    })
   })
 
   describe('edge cases', () => {
@@ -230,6 +275,10 @@ describeForEachParser('wrapBareInlineInParagraphs', (parseHtml) => {
       const value = '<div><p>text</p></div>'
 
       expect(await transform(value)).toBe(value)
+    })
+
+    it('should handle empty input', async () => {
+      expect(await transform('')).toBe('')
     })
 
     it('should be idempotent', async () => {

@@ -66,6 +66,54 @@ export const describeForEachParser = (name: string, fn: (parseHtml: ParseHtml) =
   }
 }
 
+// Looks up an element that the fixture guarantees to exist, failing loudly instead of returning
+// null (which would otherwise need a cast or optional chaining in every assertion).
+export const queryElement = (document: Document, selector: string): Element => {
+  const element = document.querySelector(selector)
+
+  if (!element) {
+    throw new Error(`No element matches selector "${selector}".`)
+  }
+
+  return element
+}
+
+// Lets long HTML fixtures be written multi-line and indented while producing the exact compact
+// string. Each line is trimmed; lines are joined with nothing where a tag ends and the next begins
+// (> meets <) or where a line starts with the closing > of a multi-attribute tag, and with a single
+// space otherwise. Long tags therefore break one attribute per line with the closing > on its own
+// line (a standalone /> joins with a space, matching the ` />` form). Whitespace that matters to
+// the assertion must stay inside a line. Built from the cooked template strings, not String.raw:
+// Bun transpiles non-ASCII source characters into \u escapes, and the raw strings would contain
+// those escapes as literal text.
+export const html = (strings: TemplateStringsArray, ...values: Array<unknown>): string => {
+  let joined = strings[0] ?? ''
+
+  for (const [index, value] of values.entries()) {
+    joined += `${value}${strings[index + 1] ?? ''}`
+  }
+
+  const lines = joined
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line !== '')
+
+  let result = ''
+
+  for (const line of lines) {
+    const isTagBoundary = result.endsWith('>') && line.startsWith('<')
+    const isClosingBracket = line.startsWith('>')
+
+    if (result === '' || isTagBoundary || isClosingBracket) {
+      result += line
+    } else {
+      result += ` ${line}`
+    }
+  }
+
+  return result
+}
+
 // Normalize serialized HTML so output can be compared across parsers: parsers
 // agree on the DOM but differ in how they render it back to a string (entity
 // escaping `&` vs `&amp;`, boolean attributes `controls` vs `controls=""`,

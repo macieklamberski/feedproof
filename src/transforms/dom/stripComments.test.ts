@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { stripComments } from './stripComments.js'
 
@@ -25,15 +25,25 @@ describeForEachParser('stripComments', (parseHtml) => {
     })
 
     it('should remove a comment between elements', async () => {
-      const value = '<p>First</p><!-- separator --><p>Second</p>'
-      const expected = '<p>First</p><p>Second</p>'
+      const value = html`
+        <p>First</p>
+        <!-- separator -->
+        <p>Second</p>
+      `
+      const expected = html`
+        <p>First</p>
+        <p>Second</p>
+      `
 
       expect(await transform(value)).toBe(expected)
     })
 
     it('should remove a comment containing newlines', async () => {
       const value = '<p>before</p><!--\n  multiline\n  body\n--><p>after</p>'
-      const expected = '<p>before</p><p>after</p>'
+      const expected = html`
+        <p>before</p>
+        <p>after</p>
+      `
 
       expect(await transform(value)).toBe(expected)
     })
@@ -98,8 +108,8 @@ describeForEachParser('stripComments', (parseHtml) => {
     })
 
     it('should merge surrounding text when comment has no adjacent whitespace', async () => {
-      const value = '<p>foo<!-- mid -->bar</p>'
-      const expected = '<p>foobar</p>'
+      const value = '<p>data<!-- mid -->base</p>'
+      const expected = '<p>database</p>'
 
       expect(await transform(value)).toBe(expected)
     })

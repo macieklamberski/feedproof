@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { baseContext } from '../../tests.js'
+import { baseContext, html } from '../../tests.js'
 import { unwrapCdataComments } from './unwrapCdataComments.js'
 
 describe('unwrapCdataComments', () => {
@@ -14,11 +14,18 @@ describe('unwrapCdataComments', () => {
   })
 
   it('should unwrap alongside real content', () => {
-    expect(transform('<h1>title</h1><!--[CDATA[<p>body</p>]]-->')).toBe('<h1>title</h1><p>body</p>')
+    expect(transform('<h1>title</h1><!--[CDATA[<p>body</p>]]-->')).toBe(html`
+      <h1>title</h1>
+      <p>body</p>
+    `)
   })
 
   it('should leave regular HTML comments alone', () => {
-    const value = '<p>foo</p><!-- not CDATA --><p>bar</p>'
+    const value = html`
+      <p>First paragraph</p>
+      <!-- not CDATA -->
+      <p>Second paragraph</p>
+    `
 
     expect(transform(value)).toBe(value)
   })
@@ -29,25 +36,50 @@ describe('unwrapCdataComments', () => {
     expect(transform(value)).toBe(value)
   })
 
+  // The wrapper regex matches uppercase CDATA only, so a lowercase [cdata[ shape
+  // passes through. Pinned so making it case-insensitive must update this test deliberately.
+  it('should leave a lowercase [cdata[ wrapper alone', () => {
+    const value = '<!--[cdata[<p>article</p>]]-->'
+
+    expect(transform(value)).toBe(value)
+  })
+
   it('should unwrap split-CDATA where the article contains internal -->', () => {
     // The non-greedy regex matches up to the FIRST `]]-->` regardless of
     // intermediate `<!--…-->` sequences. At the string level there's no
     // parser to confuse with internal `-->` boundaries.
     const value = '<!--[CDATA[<p>before</p><!--StartFragment--><p>after</p>]]-->'
-    const expected = '<p>before</p><!--StartFragment--><p>after</p>'
+    const expected = html`
+      <p>before</p>
+      <!--StartFragment-->
+      <p>after</p>
+    `
 
     expect(transform(value)).toBe(expected)
   })
 
   it('should unwrap CDATA with multiple internal --> markers', () => {
-    const value = '<!--[CDATA[<p>x</p><!--A--><p>y</p><!--B--><p>z</p>]]-->'
-    const expected = '<p>x</p><!--A--><p>y</p><!--B--><p>z</p>'
+    const value =
+      '<!--[CDATA[<p>one</p><!--StartFragment--><p>two</p><!--EndFragment--><p>three</p>]]-->'
+    const expected = html`
+      <p>one</p>
+      <!--StartFragment-->
+      <p>two</p>
+      <!--EndFragment-->
+      <p>three</p>
+    `
 
     expect(transform(value)).toBe(expected)
   })
 
   it('should unwrap multiple CDATA wrappers in one pass', () => {
-    expect(transform('<!--[CDATA[A]]--><!--[CDATA[B]]-->')).toBe('AB')
+    const value = '<!--[CDATA[<p>intro</p>]]--><!--[CDATA[<p>outro</p>]]-->'
+    const expected = html`
+      <p>intro</p>
+      <p>outro</p>
+    `
+
+    expect(transform(value)).toBe(expected)
   })
 
   it('should unwrap a CDATA wrapper inside an attribute value', () => {
@@ -81,5 +113,11 @@ describe('unwrapCdataComments', () => {
     const value = '<p>plain content</p>'
 
     expect(await transform(await transform(value))).toBe(value)
+  })
+
+  it('should be idempotent after unwrapping a wrapper', async () => {
+    const once = await transform('<!--[CDATA[<p>article</p>]]-->')
+
+    expect(await transform(once)).toBe(once)
   })
 })

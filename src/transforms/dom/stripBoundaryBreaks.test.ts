@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { stripBoundaryBreaks } from './stripBoundaryBreaks.js'
 
@@ -52,8 +52,14 @@ describeForEachParser('stripBoundaryBreaks', (parseHtml) => {
     })
 
     it('should process multiple paragraphs independently', async () => {
-      const value = '<p><br>First<br></p><p><br>Second<br></p>'
-      const expected = '<p>First</p><p>Second</p>'
+      const value = html`
+        <p><br>First<br></p>
+        <p><br>Second<br></p>
+      `
+      const expected = html`
+        <p>First</p>
+        <p>Second</p>
+      `
 
       expect(await transform(value)).toBe(expected)
     })
@@ -123,8 +129,14 @@ describeForEachParser('stripBoundaryBreaks', (parseHtml) => {
     })
 
     it('should strip from both p and sibling div', async () => {
-      const value = '<p><br>Para<br></p><div><br>Div<br></div>'
-      const expected = '<p>Para</p><div>Div</div>'
+      const value = html`
+        <p><br>Para<br></p>
+        <div><br>Div<br></div>
+      `
+      const expected = html`
+        <p>Para</p>
+        <div>Div</div>
+      `
 
       expect(await transform(value)).toBe(expected)
     })
@@ -151,7 +163,11 @@ describeForEachParser('stripBoundaryBreaks', (parseHtml) => {
     })
 
     it('should not touch br between sibling blocks', async () => {
-      const value = '<p>Text</p><br><div>Block</div>'
+      const value = html`
+        <p>Text</p>
+        <br>
+        <div>Block</div>
+      `
 
       expect(await transform(value)).toBe(value)
     })

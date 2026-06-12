@@ -22,19 +22,19 @@ describe('unwrapCdataMarkers', () => {
   })
 
   it('should leave a mid-content marker alone', () => {
-    const value = 'Here is an example: <![CDATA[foo]]> in XML.'
+    const value = 'Here is an example: <![CDATA[raw text]]> in XML.'
 
     expect(transform(value)).toBe(value)
   })
 
   it('should leave a wrapper that does not span the whole value alone', () => {
-    const value = '<![CDATA[foo]]><p>more</p>'
+    const value = '<![CDATA[Lead paragraph]]><p>more</p>'
 
     expect(transform(value)).toBe(value)
   })
 
   it('should leave multiple blocks alone', () => {
-    const value = '<![CDATA[a]]>b<![CDATA[c]]>'
+    const value = '<![CDATA[first part]]>middle<![CDATA[last part]]>'
 
     expect(transform(value)).toBe(value)
   })

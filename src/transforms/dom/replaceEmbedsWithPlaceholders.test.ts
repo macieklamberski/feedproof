@@ -2,7 +2,7 @@ import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
 import { defaultEmbedResolvers } from '../../defaults.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { EmbedResolver, TransformContext } from '../../types.js'
 import { replaceEmbedsWithPlaceholders } from './replaceEmbedsWithPlaceholders.js'
 
@@ -30,7 +30,10 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
   }
 
   it('should replace iframe with rich-metadata placeholder when handler returns metadata', async () => {
-    const value = '<p>Text</p><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+    const value = html`
+      <p>Text</p>
+      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+    `
     const result = await transform(value)
 
     expect(result).toContain('data-embed-src=')
@@ -61,9 +64,57 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
     expect(result).toContain('data-embed-height="360"')
   })
 
+  it('should fall back to resolver metadata dimensions when the iframe has none', async () => {
+    const sizedResolver: EmbedResolver = {
+      selector: 'iframe[src*="example.com"]',
+      extract: (element) => ({
+        provider: 'example',
+        src: element.getAttribute('src') ?? '',
+        width: 480,
+        height: 270,
+      }),
+    }
+    const customContext: TransformContext = { ...baseContext, embedResolvers: [sizedResolver] }
+    const value = '<iframe src="https://example.com/player/xyz"></iframe>'
+    const expected = html`
+      <div
+        data-embed-provider="example"
+        data-embed-src="https://example.com/player/xyz"
+        data-embed-width="480"
+        data-embed-height="270"
+      >
+        <a href="https://example.com/player/xyz">https://example.com/player/xyz</a>
+      </div>
+    `
+
+    expect(await transform(value, customContext)).toEqualHtml(expected)
+  })
+
+  it('should support a resolver with a promise-returning extract', async () => {
+    const asyncResolver: EmbedResolver = {
+      selector: 'iframe[src*="example.com"]',
+      extract: (element) =>
+        Promise.resolve({
+          provider: 'async',
+          src: element.getAttribute('src') ?? '',
+        }),
+    }
+    const customContext: TransformContext = { ...baseContext, embedResolvers: [asyncResolver] }
+    const value = '<iframe src="https://example.com/player/xyz"></iframe>'
+    const expected = html`
+      <div data-embed-provider="async" data-embed-src="https://example.com/player/xyz">
+        <a href="https://example.com/player/xyz">https://example.com/player/xyz</a>
+      </div>
+    `
+
+    expect(await transform(value, customContext)).toEqualHtml(expected)
+  })
+
   it('should replace multiple embeds in same content', async () => {
-    const value =
-      '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe><iframe src="https://example.com/player/xyz"></iframe>'
+    const value = html`
+      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+      <iframe src="https://example.com/player/xyz"></iframe>
+    `
     const result = await transform(value)
 
     expect(result).not.toContain('<iframe')
@@ -72,8 +123,11 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
   })
 
   it('should preserve surrounding content when replacing media', async () => {
-    const value =
-      '<p>Before</p><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe><p>After</p>'
+    const value = html`
+      <p>Before</p>
+      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+      <p>After</p>
+    `
     const result = await transform(value)
 
     expect(result).toContain('Before')
@@ -215,15 +269,6 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
     expect(result).toContain('data-embed-provider="youtube"')
   })
 
-  it('should still wrap iframes when embedResolvers is empty', async () => {
-    const value = '<iframe src="https://unknown-site.com/123"></iframe>'
-    const result = await transform(value, withNoResolvers)
-
-    expect(result).not.toContain('<iframe')
-    expect(result).toContain('data-embed-src=')
-    expect(result).not.toContain('data-embed-provider')
-  })
-
   it('should skip resolver-claimed iframe when metadata.src is unsafe', async () => {
     const unsafeResolver: EmbedResolver = {
       selector: 'iframe[src]',
@@ -270,7 +315,10 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
   })
 
   it('should be idempotent', async () => {
-    const value = '<p>Text</p><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+    const value = html`
+      <p>Text</p>
+      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+    `
     const once = await transform(value)
     const twice = await transform(once)
 

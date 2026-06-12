@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { fixLazyImages } from './fixLazyImages.js'
 
@@ -50,7 +50,10 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
   })
 
   it('should extract image from noscript when sibling is lazy placeholder', async () => {
-    const value = '<img data-src="lazy.jpg"><noscript><img src="real.jpg"></noscript>'
+    const value = html`
+      <img data-src="lazy.jpg">
+      <noscript><img src="real.jpg"></noscript>
+    `
     const result = await transform(value)
 
     expect(result).toContain('src="real.jpg"')
@@ -59,7 +62,10 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
   })
 
   it('should normalize attribute case on images extracted from noscript', async () => {
-    const value = '<img data-src="lazy.jpg"><noscript><IMG SRC="real.jpg"></noscript>'
+    const value = html`
+      <img data-src="lazy.jpg">
+      <noscript><IMG SRC="real.jpg"></noscript>
+    `
     const result = await transform(value)
 
     expect(result).toContain('src="real.jpg"')
@@ -68,10 +74,19 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
   })
 
   it('should not extract noscript when sibling is not an image', async () => {
-    const value = '<div>text</div><noscript><img src="real.jpg"></noscript>'
+    const value = html`
+      <div>text</div>
+      <noscript><img src="real.jpg"></noscript>
+    `
     const result = await transform(value)
 
     expect(result).toContain('<noscript>')
+  })
+
+  it('should not extract noscript when it is the first child with no preceding sibling', async () => {
+    const value = '<noscript><img src="real.jpg"></noscript>'
+
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not modify images without lazy attributes', async () => {
@@ -249,11 +264,10 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
     })
 
     it('should not promote a JSON-object value', async () => {
-      const value = '<img data-src=\'{"foo":"bar"}\'>'
-      const result = await transform(value)
+      const value = '<img data-src=\'{"standard":"photo.jpg","retina":"photo@2x.jpg"}\'>'
+      const expected = '<img>'
 
-      expect(result).not.toContain('src=')
-      expect(result).not.toContain('data-src')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should not promote an empty string', async () => {
@@ -289,7 +303,10 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
   })
 
   it('should not extract noscript when sibling is img but noscript has no image', async () => {
-    const value = '<img src="x"><noscript>just text, no image tag</noscript>'
+    const value = html`
+      <img src="x">
+      <noscript>just text, no image tag</noscript>
+    `
     const result = await transform(value)
 
     expect(result).toContain('<noscript>')

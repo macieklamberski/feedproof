@@ -1,7 +1,7 @@
 import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { Enclosure, TransformContext } from '../../types.js'
 import { injectEnclosures } from './injectEnclosures.js'
 
@@ -69,7 +69,10 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
   })
 
   it('should skip enclosures already present in content', async () => {
-    const value = '<p>Content</p><video src="https://example.com/clip.mp4"></video>'
+    const value = html`
+      <p>Content</p>
+      <video src="https://example.com/clip.mp4"></video>
+    `
     const result = await transform(
       value,
       withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }]),
@@ -81,19 +84,16 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
 
   it('should skip image enclosures', async () => {
     const value = '<p>Content</p>'
-    const result = await transform(
-      value,
-      withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }]),
-    )
+    const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
 
-    expect(result).not.toContain('data-embed')
+    expect(await transform(value, context)).toEqualHtml(value)
   })
 
   it('should skip enclosures without type or medium', async () => {
     const value = '<p>Content</p>'
-    const result = await transform(value, withEnclosures([{ url: 'https://example.com/file.bin' }]))
+    const context = withEnclosures([{ url: 'https://example.com/file.bin' }])
 
-    expect(result).not.toContain('data-embed')
+    expect(await transform(value, context)).toEqualHtml(value)
   })
 
   it('should inject multiple enclosures', async () => {
@@ -112,22 +112,24 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
 
   it('should detect audio by medium field', async () => {
     const value = '<p>Content</p>'
-    const result = await transform(
-      value,
-      withEnclosures([{ url: 'https://example.com/episode.mp3', medium: 'audio' }]),
-    )
+    const context = withEnclosures([{ url: 'https://example.com/episode.mp3', medium: 'audio' }])
+    const expected = html`
+      <audio src="https://example.com/episode.mp3" controls preload="none"></audio>
+      <p>Content</p>
+    `
 
-    expect(result).toContain('<audio')
+    expect(await transform(value, context)).toEqualHtml(expected)
   })
 
   it('should detect video by medium field', async () => {
     const value = '<p>Content</p>'
-    const result = await transform(
-      value,
-      withEnclosures([{ url: 'https://example.com/clip.mp4', medium: 'video' }]),
-    )
+    const context = withEnclosures([{ url: 'https://example.com/clip.mp4', medium: 'video' }])
+    const expected = html`
+      <video src="https://example.com/clip.mp4" controls preload="none"></video>
+      <p>Content</p>
+    `
 
-    expect(result).toContain('<video')
+    expect(await transform(value, context)).toEqualHtml(expected)
   })
 
   it('should do nothing when no enclosures', async () => {
@@ -157,24 +159,34 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
 
   it('should use resolver type over enclosure medium', async () => {
     const value = '<p>Content</p>'
-    const result = await transform(
-      value,
-      withEnclosures([{ url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video' }]),
-    )
+    const context = withEnclosures([
+      { url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video' },
+    ])
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+      >
+        <a
+          href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        >https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
+      </div>
+      <p>Content</p>
+    `
 
-    expect(result).toContain('data-embed-src=')
+    expect(await transform(value, context)).toEqualHtml(expected)
   })
 
   it('should skip enclosure with unrecognized type and no resolver match', async () => {
     const value = '<p>Content</p>'
-    const result = await transform(
-      value,
-      withEnclosures([
-        { url: 'https://example.com/widget.swf', type: 'application/x-shockwave-flash' },
-      ]),
-    )
+    const context = withEnclosures([
+      { url: 'https://example.com/widget.swf', type: 'application/x-shockwave-flash' },
+    ])
 
-    expect(result).not.toContain('data-embed')
+    expect(await transform(value, context)).toEqualHtml(value)
   })
 
   it('should skip enclosure with javascript: url', async () => {
@@ -190,12 +202,30 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
 
   it('should skip enclosure with data: url', async () => {
     const value = '<p>Content</p>'
-    const result = await transform(
-      value,
-      withEnclosures([{ url: 'data:text/html,<script>1</script>', medium: 'video' }]),
-    )
+    const context = withEnclosures([{ url: 'data:text/html,<script>1</script>', medium: 'video' }])
 
-    expect(result).not.toContain('data-embed')
+    expect(await transform(value, context)).toEqualHtml(value)
+  })
+
+  it('should inject a relative enclosure url when baseUrl resolves it', async () => {
+    const value = '<p>Content</p>'
+    const context = {
+      ...withEnclosures([{ url: '/clip.mp4', type: 'video/mp4' }]),
+      baseUrl: 'https://example.com',
+    }
+    const expected = html`
+      <video src="/clip.mp4" controls preload="none"></video>
+      <p>Content</p>
+    `
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
+  it('should skip a relative enclosure url when baseUrl is missing', async () => {
+    const value = '<p>Content</p>'
+    const context = withEnclosures([{ url: '/clip.mp4', type: 'video/mp4' }])
+
+    expect(await transform(value, context)).toEqualHtml(value)
   })
 
   it('should emit width and height on video enclosure when provided', async () => {
@@ -213,21 +243,41 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
 
   it('should emit poster on video enclosure from first thumbnail', async () => {
     const value = '<p>Content</p>'
-    const result = await transform(
-      value,
-      withEnclosures([
-        {
-          url: 'https://example.com/clip.mp4',
-          type: 'video/mp4',
-          thumbnails: [
-            { url: 'https://example.com/poster-large.jpg', width: 1280, height: 720 },
-            { url: 'https://example.com/poster-small.jpg' },
-          ],
-        },
-      ]),
-    )
+    const context = withEnclosures([
+      {
+        url: 'https://example.com/clip.mp4',
+        type: 'video/mp4',
+        thumbnails: [
+          { url: 'https://example.com/poster-large.jpg', width: 1280, height: 720 },
+          { url: 'https://example.com/poster-small.jpg' },
+        ],
+      },
+    ])
+    const expected = html`
+      <video
+        src="https://example.com/clip.mp4"
+        controls
+        preload="none"
+        poster="https://example.com/poster-large.jpg"
+      >
+      </video>
+      <p>Content</p>
+    `
 
-    expect(result).toContain('poster="https://example.com/poster-large.jpg"')
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
+  it('should not emit poster when thumbnails is an empty array', async () => {
+    const value = '<p>Content</p>'
+    const context = withEnclosures([
+      { url: 'https://example.com/clip.mp4', type: 'video/mp4', thumbnails: [] },
+    ])
+    const expected = html`
+      <video src="https://example.com/clip.mp4" controls preload="none"></video>
+      <p>Content</p>
+    `
+
+    expect(await transform(value, context)).toEqualHtml(expected)
   })
 
   it('should skip unsafe poster url', async () => {

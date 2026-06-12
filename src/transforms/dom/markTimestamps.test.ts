@@ -73,9 +73,9 @@ describeForEachParser('markTimestamps', (parseHtml) => {
 
   it('should compute seconds from minutes and seconds', async () => {
     const value = '<p>14:00 - Chapter</p>'
-    const result = await transform(value)
+    const expected = '<p><span data-timestamp="840">14:00</span> - Chapter</p>'
 
-    expect(result).toContain('data-timestamp="840"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should wrap timestamps on br-split lines', async () => {
@@ -97,9 +97,9 @@ describeForEachParser('markTimestamps', (parseHtml) => {
 
   it('should match a timestamp after leading whitespace', async () => {
     const value = '<p>  00:00 - Intro</p>'
-    const result = await transform(value)
+    const expected = '<p>  <span data-timestamp="0">00:00</span> - Intro</p>'
 
-    expect(result).toContain('data-timestamp="0"')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should wrap a line-ending MM:SS timestamp', async () => {
@@ -112,9 +112,9 @@ describeForEachParser('markTimestamps', (parseHtml) => {
 
   it('should wrap a line-ending HH:MM:SS timestamp', async () => {
     const value = '<p>Deep dive – 1:14:30</p>'
-    const result = await transform(value)
+    const expected = '<p>Deep dive – <span data-timestamp="4470">1:14:30</span></p>'
 
-    expect(result).toContain('<span data-timestamp="4470">1:14:30</span>')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should wrap line-ending timestamps on br-split lines', async () => {
@@ -136,9 +136,9 @@ describeForEachParser('markTimestamps', (parseHtml) => {
 
   it('should wrap a line-ending timestamp without a separator', async () => {
     const value = '<p>Final Thoughts 11:23</p>'
-    const result = await transform(value)
+    const expected = '<p>Final Thoughts <span data-timestamp="683">11:23</span></p>'
 
-    expect(result).toContain('data-timestamp="683"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should keep trailing whitespace outside the span', async () => {
@@ -160,33 +160,36 @@ describeForEachParser('markTimestamps', (parseHtml) => {
 
   it('should not wrap a timestamp in the middle of a line', async () => {
     const value = '<p>We met at 12:30 today</p>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('data-timestamp')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not wrap an out-of-range seconds value', async () => {
     const value = '<p>12:99 - nope</p>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('data-timestamp')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not wrap an out-of-range minutes value in HH:MM:SS', async () => {
     const value = '<p>1:99:30 - nope</p>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('data-timestamp')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
-  for (const tag of ['a', 'pre', 'code', 'kbd', 'samp', 'var']) {
-    it(`should not wrap a timestamp inside ${tag} tag`, async () => {
-      const value = `<${tag}>00:00 - Intro</${tag}>`
-      const result = await transform(value)
+  const unwrappableTags: Array<string> = ['a', 'pre', 'code', 'kbd', 'samp', 'var', 'script']
 
-      expect(result).not.toContain('data-timestamp')
-    })
-  }
+  it.each(unwrappableTags)('should not wrap a timestamp inside %s tag', async (tag) => {
+    const value = `<${tag}>00:00 - Intro</${tag}>`
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
+  it('should not wrap a timestamp inside style tag', async () => {
+    // Valid CSS (a comment) so jsdom's stylesheet parser stays quiet.
+    const value = '<style>/*\n00:00 - Intro\n*/</style>'
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
 
   it('should not modify content without timestamps', async () => {
     const value = '<p>No times here</p>'

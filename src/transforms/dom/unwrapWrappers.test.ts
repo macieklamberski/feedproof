@@ -1,6 +1,6 @@
 import { expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { unwrapWrappers } from './unwrapWrappers.js'
 
@@ -26,6 +26,19 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
   it('should unwrap section and main wrappers', async () => {
     const value = '<section><main><p>Content</p></main></section>'
     const expected = '<p>Content</p>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should unwrap header and footer wrappers', async () => {
+    const value = html`
+      <header><p>Intro</p></header>
+      <footer><p>Outro</p></footer>
+    `
+    const expected = html`
+      <p>Intro</p>
+      <p>Outro</p>
+    `
 
     expect(await transform(value)).toBe(expected)
   })
@@ -59,8 +72,14 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
     // The transform is positioned AFTER list/pre merges in the default
     // pipeline, so unwrapping sibling wrappers does not cascade into merging
     // the now-adjacent inner elements.
-    const value = '<div><p>First</p></div><div><p>Second</p></div>'
-    const expected = '<p>First</p><p>Second</p>'
+    const value = html`
+      <div><p>First</p></div>
+      <div><p>Second</p></div>
+    `
+    const expected = html`
+      <p>First</p>
+      <p>Second</p>
+    `
 
     expect(await transform(value)).toBe(expected)
   })
@@ -140,21 +159,33 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
   })
 
   it('should preserve a div carrying data-embed attributes', async () => {
-    const value =
-      '<div data-embed-src="https://example.com/x"><a href="https://example.com/x">https://example.com/x</a></div>'
+    const value = html`
+      <div data-embed-src="https://example.com/x">
+        <a href="https://example.com/x">https://example.com/x</a>
+      </div>
+    `
 
     expect(await transform(value)).toBe(value)
   })
 
   it('should preserve a div carrying data-bookmark attributes', async () => {
-    const value =
-      '<div data-bookmark-provider="ghost" data-bookmark-url="https://example.com/x"><a href="https://example.com/x">Title</a></div>'
+    const value = html`
+      <div data-bookmark-provider="ghost" data-bookmark-url="https://example.com/x">
+        <a href="https://example.com/x">Title</a>
+      </div>
+    `
 
     expect(await transform(value)).toBe(value)
   })
 
   it('should preserve a div carrying a data-table attribute', async () => {
     const value = '<div data-table=""><table><tbody><tr><td>Cell</td></tr></tbody></table></div>'
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should preserve a div carrying a data-pre attribute', async () => {
+    const value = '<div data-pre=""><pre>const x = 1</pre></div>'
 
     expect(await transform(value)).toBe(value)
   })

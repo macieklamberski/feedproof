@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { unwrapEmojiImages } from './unwrapEmojiImages.js'
 
@@ -11,15 +11,26 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
   describe('wp-smiley class', () => {
     it('should replace wp-smiley image with alt emoji', async () => {
-      const value =
-        '<p>Hello <img src="https://s.w.org/images/core/emoji/17.0.2/72x72/1f609.png" alt="😉" class="wp-smiley"></p>'
+      const value = html`
+        <p>Hello
+        <img
+          src="https://s.w.org/images/core/emoji/17.0.2/72x72/1f609.png"
+          alt="😉"
+          class="wp-smiley"
+        >
+        </p>
+      `
       const expected = '<p>Hello 😉</p>'
 
       expect(await transform(value)).toBe(expected)
     })
 
     it('should replace multiple wp-smiley images in the same paragraph', async () => {
-      const value = '<p><img alt="😉" class="wp-smiley"> and <img alt="😊" class="wp-smiley"></p>'
+      const value = html`
+        <p>
+          <img alt="😉" class="wp-smiley"> and <img alt="😊" class="wp-smiley">
+        </p>
+      `
       const expected = '<p>😉 and 😊</p>'
 
       expect(await transform(value)).toBe(expected)
@@ -56,8 +67,17 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
   describe('emoji class (newer WP variant + Discourse)', () => {
     it('should replace newer WP variant with class="emoji"', async () => {
-      const value =
-        '<p><img class="emoji" role="img" draggable="false" src="https://s.w.org/images/core/emoji/16.0.1/svg/1f914.svg" alt="🤔"></p>'
+      const value = html`
+        <p>
+          <img
+            class="emoji"
+            role="img"
+            draggable="false"
+            src="https://s.w.org/images/core/emoji/16.0.1/svg/1f914.svg"
+            alt="🤔"
+          >
+        </p>
+      `
       const expected = '<p>🤔</p>'
 
       expect(await transform(value)).toBe(expected)
@@ -86,16 +106,31 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
 
     it('should replace WordPress.com wpcom-smileys image', async () => {
-      const value =
-        '<p><img src="https://s0.wp.com/wp-content/mu-plugins/wpcom-smileys/twemoji/2/72x72/1f642.png" alt="🙂"></p>'
+      const value = html`
+        <p>
+          <img
+            src="https://s0.wp.com/wp-content/mu-plugins/wpcom-smileys/twemoji/2/72x72/1f642.png"
+            alt="🙂"
+          >
+        </p>
+      `
       const expected = '<p>🙂</p>'
 
       expect(await transform(value)).toBe(expected)
     })
 
     it('should replace Facebook emoji image', async () => {
-      const value =
-        '<p><img height="16" width="16" alt="🙂" referrerpolicy="origin-when-cross-origin" src="https://static.xx.fbcdn.net/images/emoji.php/v9/t4c/1/16/1f642.png"></p>'
+      const value = html`
+        <p>
+          <img
+            height="16"
+            width="16"
+            alt="🙂"
+            referrerpolicy="origin-when-cross-origin"
+            src="https://static.xx.fbcdn.net/images/emoji.php/v9/t4c/1/16/1f642.png"
+          >
+        </p>
+      `
       const expected = '<p>🙂</p>'
 
       expect(await transform(value)).toBe(expected)
@@ -109,8 +144,14 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
 
     it('should replace GitHub gemoji image when alt is the emoji glyph', async () => {
-      const value =
-        '<p><img src="https://github.githubassets.com/images/icons/emoji/unicode/1f680.png" alt="🚀"></p>'
+      const value = html`
+        <p>
+          <img
+            src="https://github.githubassets.com/images/icons/emoji/unicode/1f680.png"
+            alt="🚀"
+          >
+        </p>
+      `
       const expected = '<p>🚀</p>'
 
       expect(await transform(value)).toBe(expected)
@@ -122,6 +163,14 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         '<p><img src="https://s.w.org/images/core/emoji/13.1.0/svg/1f680.svg" alt="🚀"></p>'
 
       expect(await transform(value, context)).toBe(value)
+    })
+
+    it('should replace images from a caller-added custom host', async () => {
+      const context: TransformContext = { ...baseContext, emojiImageHosts: ['cdn.example.com'] }
+      const value = '<p><img src="https://cdn.example.com/emoji/1f389.png" alt="🎉"></p>'
+      const expected = '<p>🎉</p>'
+
+      expect(await transform(value, context)).toBe(expected)
     })
   })
 
@@ -139,8 +188,15 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
 
     it('should leave image untouched when alt is a "?" fallback', async () => {
-      const value =
-        '<p><img src="https://s.w.org/images/core/emoji/2.4/72x72/1f642.png" class="size_orig" alt="?"></p>'
+      const value = html`
+        <p>
+          <img
+            src="https://s.w.org/images/core/emoji/2.4/72x72/1f642.png"
+            class="size_orig"
+            alt="?"
+          >
+        </p>
+      `
 
       expect(await transform(value)).toBe(value)
     })
@@ -175,8 +231,15 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
   })
 
   it('should be idempotent', async () => {
-    const value =
-      '<p>Hello <img src="https://s.w.org/images/core/emoji/17.0.2/72x72/1f609.png" alt="😉" class="wp-smiley"></p>'
+    const value = html`
+      <p>Hello
+        <img
+          src="https://s.w.org/images/core/emoji/17.0.2/72x72/1f609.png"
+          alt="😉"
+          class="wp-smiley"
+        >
+      </p>
+    `
     const once = await transform(value)
     const twice = await transform(once)
 
