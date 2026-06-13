@@ -303,7 +303,6 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     const seen: Array<string> = []
     const recorder: AssetProxyFn = (_, type) => {
       seen.push(type)
-      return
     }
 
     const value = html`
