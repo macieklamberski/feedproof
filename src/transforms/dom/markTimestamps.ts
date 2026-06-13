@@ -46,8 +46,6 @@ export const parseTimestampSeconds = (timestamp: string): number | undefined => 
 
     return hours * 3600 + minutes * 60 + seconds
   }
-
-  return
 }
 
 const shouldSkipElement = (element: Element): boolean => {

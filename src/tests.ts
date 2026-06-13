@@ -173,7 +173,7 @@ expect.extend({ toEqualHtml, toContainHtml })
 declare module 'bun:test' {
   // biome-ignore lint/style/useConsistentTypeDefinitions: Declaration merging into the Matchers type requires an interface.
   interface Matchers<T> {
-    toEqualHtml(expected: string): T
-    toContainHtml(substring: string): T
+    toEqualHtml: (expected: string) => T
+    toContainHtml: (substring: string) => T
   }
 }
