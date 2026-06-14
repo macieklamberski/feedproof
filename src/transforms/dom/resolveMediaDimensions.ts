@@ -1,13 +1,20 @@
-import { getDimensions } from '../../common.js'
+import { getDimensions, pixelDimensionLimit } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-// Both dimensions, only when each resolves to a positive number. getDimensions
-// reads width/height attributes then numeric `width:`/`height:` in inline style,
-// so `max-*`/`auto`/`%` never qualify.
-const positiveDimensions = (element: Element): { width: number; height: number } | undefined => {
+// Both dimensions, only when each is above the tracking-pixel threshold (a real
+// content image is never that small, and a promoted pixel-sized value would let
+// removeTrackingPixels read it as a tracker). getDimensions reads width/height
+// attributes then numeric `width:`/`height:` in inline style, so `max-*`/`auto`/`%`
+// never qualify.
+const promotableDimensions = (element: Element): { width: number; height: number } | undefined => {
   const { width, height } = getDimensions(element)
 
-  if (width !== undefined && height !== undefined && width > 0 && height > 0) {
+  if (
+    width !== undefined &&
+    height !== undefined &&
+    width > pixelDimensionLimit &&
+    height > pixelDimensionLimit
+  ) {
     return { width, height }
   }
 }
@@ -16,14 +23,14 @@ const positiveDimensions = (element: Element): { width: number; height: number }
 // itself. First <source> carrying both dimensions wins, else the <picture> element.
 const pictureDimensions = (picture: Element): { width: number; height: number } | undefined => {
   for (const source of picture.querySelectorAll('source')) {
-    const dimensions = positiveDimensions(source)
+    const dimensions = promotableDimensions(source)
 
     if (dimensions) {
       return dimensions
     }
   }
 
-  return positiveDimensions(picture)
+  return promotableDimensions(picture)
 }
 
 // Backfills width/height attributes on media that declares its size only in inline
@@ -40,7 +47,7 @@ export const resolveMediaDimensions: DomTransform = () => {
         continue
       }
 
-      let dimensions = positiveDimensions(element)
+      let dimensions = promotableDimensions(element)
 
       if (
         !dimensions &&
