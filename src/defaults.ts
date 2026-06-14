@@ -21,6 +21,7 @@ import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 import { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
+import { resolveMediaDimensions } from './transforms/dom/resolveMediaDimensions.js'
 import { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
 import { stripBoundaryBreaks } from './transforms/dom/stripBoundaryBreaks.js'
 import { stripComments } from './transforms/dom/stripComments.js'
@@ -68,6 +69,7 @@ export const defaultDomTransforms: Array<DomTransform> = [
   // Runs before flattenPictureElements and unwrapWrappers so an alignment signal on
   // a soon-dissolved <picture> or wrapper <div> is relocated onto the surviving media.
   canonicalizeAlignment,
+  resolveMediaDimensions,
   flattenPictureElements,
   fixLazyImages,
   hoistFigcaptionFromAnchor,
