@@ -8,6 +8,14 @@ const trailingBrRegex = /<br\s*\/?>\s*$/i
 const surroundingNewlinesRegex = /^\n+|\n+$/g
 const classTokenSeparator = /\s+/
 
+// Read from a sole <code> child so consecutive <pre><code> lines merge into one
+// block rather than a stack of <code> elements.
+const contentElement = (element: Element): Element => {
+  const children = element.children
+
+  return children.length === 1 && children[0].localName === 'code' ? children[0] : element
+}
+
 export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses }) => {
   const preservedSet = new Set(preservedPreClasses)
 
@@ -76,7 +84,9 @@ export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses
       // Only merge if every <pre> in the run is a single line.
       // Strip only surrounding newlines (not spaces) since whitespace is meaningful in <pre>.
       const isSingleLine = (element: Element) => {
-        return !element.innerHTML.replace(surroundingNewlinesRegex, '').includes('\n')
+        return !contentElement(element)
+          .innerHTML.replace(surroundingNewlinesRegex, '')
+          .includes('\n')
       }
 
       if (!run.every(isSingleLine)) {
@@ -85,11 +95,15 @@ export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses
 
       const merged = run
         .map((element) =>
-          element.innerHTML.replace(surroundingNewlinesRegex, '').replace(trailingBrRegex, ''),
+          contentElement(element)
+            .innerHTML.replace(surroundingNewlinesRegex, '')
+            .replace(trailingBrRegex, ''),
         )
         .join('\n')
 
-      pre.innerHTML = merged
+      // Write into the first <pre>'s <code> (when present) so a merged run of
+      // <pre><code> lines stays a single <pre><code> instead of losing the <code>.
+      contentElement(pre).innerHTML = merged
 
       for (const element of run.slice(1)) {
         element.remove()

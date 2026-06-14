@@ -299,7 +299,9 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const result = await transform(value)
 
     expect(result).toContain('hljs-keyword')
-    expect(result).toContain('class="language-js hljs"')
+    // The content is wrapped in a <code> and the hljs class moves onto it.
+    expect(result).toContain('<code class="hljs">')
+    expect(result).toContain('class="language-js"')
   })
 
   it('should not highlight a bare pre without a language hint', async () => {
@@ -312,14 +314,18 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
   it('should not auto-detect a bare pre: unlabeled code stays plain', async () => {
     const value = '<pre>function greet(name) {\n  return "Hello, " + name;\n}</pre>'
+    const result = await transform(value)
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(result).not.toContain('hljs')
+    expect(result).toContain('function greet(name)')
   })
 
   it('should not highlight a bare pre with an unsupported language hint', async () => {
     const value = '<pre data-language="nonexistent">some content here</pre>'
+    const result = await transform(value)
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(result).not.toContain('hljs')
+    expect(result).toContain('some content here')
   })
 
   it('should be idempotent on a bare pre', async () => {
@@ -359,15 +365,19 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
   it('should wrap a highlighted standalone code in a pre', async () => {
     const value = '<code class="language-python">def hello():\n    print("hi")</code>'
+    const result = await transform(value)
 
-    expect(await transform(value)).toContain('<pre><code class="language-python hljs">')
+    // The <pre> now carries data-pre-* language attributes, so assert the pieces.
+    expect(result.startsWith('<pre')).toBe(true)
+    expect(result).toContain('<code class="language-python hljs">')
   })
 
   it('should promote and auto-detect an unhinted multi-line standalone code', async () => {
     const value = '<code>function greet(name) {\n  return "Hello, " + name;\n}</code>'
     const result = await transform(value)
 
-    expect(result).toContain('<pre><code')
+    expect(result.startsWith('<pre')).toBe(true)
+    expect(result).toContain('<code')
     expect(result).toContain('hljs')
   })
 
@@ -458,5 +468,77 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const twice = await transform(once)
 
     expect(twice).toBe(once)
+  })
+
+  describe('language attributes', () => {
+    it('should expose a declared language on the pre as data-pre-* attributes', async () => {
+      const value = '<pre data-language="bash">npm install my-package</pre>'
+      const result = await transform(value)
+
+      expect(result).toContain('data-pre-language="bash"')
+      expect(result).toContain('data-pre-label="Bash"')
+      expect(result).not.toContain('data-pre-guessed')
+    })
+
+    it('should resolve the label from a language-* class on the code', async () => {
+      const value = '<pre><code class="language-js">const x = 1</code></pre>'
+      const result = await transform(value)
+
+      expect(result).toContain('data-pre-language="js"')
+      expect(result).toContain('data-pre-label="JavaScript"')
+    })
+
+    it('should mark an auto-detected language with data-pre-guessed', async () => {
+      const value = '<pre><code>function greet(name) {\n  return "Hello, " + name;\n}</code></pre>'
+      const result = await transform(value)
+
+      expect(result).toContain('data-pre-language="javascript"')
+      expect(result).toContain('data-pre-guessed')
+    })
+
+    it('should label from the highlight.js display name', async () => {
+      const value = '<pre><code class="language-crystal">puts "hi"</code></pre>'
+      const result = await transform(value)
+
+      expect(result).toContain('data-pre-language="crystal"')
+      expect(result).toContain('data-pre-label="Crystal"')
+    })
+
+    it('should override messy highlight.js names', async () => {
+      const value = '<pre data-language="php">echo 1;</pre>'
+      const result = await transform(value)
+
+      expect(result).toContain('data-pre-language="php"')
+      expect(result).toContain('data-pre-label="PHP"')
+    })
+
+    it('should not add data-pre-* attributes to a block left unhighlighted', async () => {
+      const value =
+        '<pre><code>Note: this matters; really, it does. See also: the docs.</code></pre>'
+
+      expect(await transform(value)).not.toContain('data-pre')
+    })
+  })
+
+  describe('pre>code structure', () => {
+    it('should wrap a bare pre content in a code', async () => {
+      const value = '<pre>plain preformatted text</pre>'
+
+      expect(await transform(value)).toBe('<pre><code>plain preformatted text</code></pre>')
+    })
+
+    it('should leave a pre whose only child is a code unchanged', async () => {
+      const value = '<pre><code>plain text</code></pre>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should move the in-place hljs class onto the new code', async () => {
+      const value = '<pre data-language="bash">npm i</pre>'
+      const result = await transform(value)
+
+      expect(result).toContain('<code class="hljs">')
+      expect(result).not.toContain('<pre class="hljs"')
+    })
   })
 })
