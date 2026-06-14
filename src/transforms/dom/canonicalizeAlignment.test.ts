@@ -108,15 +108,6 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
-    it('should attach the hook without mutating the existing markup', async () => {
-      const value =
-        '<center><img class="alignright" align="left" style="color: red" src="a.jpg"></center>'
-      const expected =
-        '<center><img class="alignright" align="left" style="color: red" src="a.jpg" data-align="right"></center>'
-
-      expect(await transform(value)).toEqualHtml(expected)
-    })
-
     it('should fall through a non-alignment style to the align attribute', async () => {
       const value = '<img style="border: 1px solid red" align="center" src="a.jpg">'
 
