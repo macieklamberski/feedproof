@@ -37,10 +37,11 @@ const attrDirections = new Map<string, Direction>([
   ['right', 'right'],
 ])
 
-// Bare directional classes, honored only on a media element itself (see
-// getOwnDirection), where `center`/`left`/`right` unambiguously mean "align this
-// media" — e.g. <img class="center">. On generic wrappers these usually denote
-// layout (a centered column, a float utility), so they are not read there.
+// Bare directional classes. Honored on a media element or a media-primary wrapper
+// of it — never a standalone text block — where `center`/`left`/`right` unambiguously
+// mean "align this media" (e.g. <img class="center">, <div class="center"><img></div>).
+// resolve() only feeds getOwnDirection media-context elements, so the media-primary
+// gate already prevents reading these off layout containers.
 const bareClassDirections = new Map<string, Direction>([
   ['center', 'center'],
   ['left', 'left'],
@@ -95,13 +96,11 @@ const getOwnDirection = (element: Element): Direction | 'none' | undefined => {
       }
     }
 
-    if (mediaTags.has(element.localName)) {
-      for (const token of tokens) {
-        const direction = bareClassDirections.get(token)
+    for (const token of tokens) {
+      const direction = bareClassDirections.get(token)
 
-        if (direction) {
-          return direction
-        }
+      if (direction) {
+        return direction
       }
     }
   }
