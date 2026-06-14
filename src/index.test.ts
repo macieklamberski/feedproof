@@ -59,9 +59,10 @@ describeForEachParser('transformContent', (parseHtml) => {
     // highlightCode promotes the bare block to <pre><code> before wrapBareInlineInParagraphs
     // runs, so it ends up as a scrollable code block, not a <pre> nested inside a <p>.
     const expected =
-      '<div data-pre=""><pre><code class="hljs"><span class="hljs-keyword">function</span> <span class="hljs-title function_">greet</span>(<span class="hljs-params">name</span>) {\n  <span class="hljs-keyword">return</span> name\n}</code></pre></div>'
+      '<pre data-pre-language="javascript" data-pre-label="JavaScript" data-pre-guessed=""><code class="hljs"><span class="hljs-keyword">function</span> <span class="hljs-title function_">greet</span>(<span class="hljs-params">name</span>) {\n  <span class="hljs-keyword">return</span> name\n}</code></pre>'
 
-    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
+    // toEqualHtml so the data-pre-* attribute order is normalized across parsers.
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
   it('should clean anchor urls with the provided cleanUrlFn', async () => {
@@ -209,7 +210,7 @@ describeForEachParser('transformContent', (parseHtml) => {
 
   it('should preserve comments inside pre blocks through full pipeline', async () => {
     const value = '<pre>before <!-- preserved --> after</pre>'
-    const expected = '<div data-pre=""><pre>before <!-- preserved --> after</pre></div>'
+    const expected = '<pre><code>before <!-- preserved --> after</code></pre>'
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })

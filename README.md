@@ -67,7 +67,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `linkifyUrls` | Wrap bare URLs in `<a>` tags |
 | `markTimestamps` | Wrap line-leading timestamps (`MM:SS` / `HH:MM:SS`) in `<span data-timestamp="seconds">` so a player can be seeked to that point |
 | `trimPreWhitespace` | Remove common leading indentation from `<pre>` |
-| `highlightCode` | Syntax-highlight `<code>` blocks with highlight.js. A declared language uses the full grammar set; a block with no hint is auto-detected against a curated common-language subset, gated by per-language structural signatures and a relevance floor so prose/output is not mis-colored |
+| `highlightCode` | Syntax-highlight code blocks with highlight.js (declared or auto-detected), wrap each as `<pre><code>`, and expose the language on the `<pre>` via `data-pre-*` for a badge |
 | `stripEmptyTags` | Remove empty `<p>`, `<div>`, `<span>` and other tags |
 | `stripComments` | Remove HTML `<!-- comments -->` |
 | `unwrapCdataComments` | Strip malformed `<!--[CDATA[ … ]]-->` wrappers before parsing so the wrapped article reaches the DOM as real HTML |
