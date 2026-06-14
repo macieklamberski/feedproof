@@ -117,6 +117,20 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
 
       expect(await transform(value)).toEqualHtml(expected)
     })
+
+    it('should read a bare center class on an image', async () => {
+      const value = '<a href="x.jpg"><img class="center" src="a.jpg"></a>'
+      const expected = '<a href="x.jpg"><img class="center" src="a.jpg" data-align="center"></a>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should read a bare left class on an image', async () => {
+      const value = '<img class="left" src="a.jpg">'
+      const expected = '<img class="left" src="a.jpg" data-align="left">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
   })
 
   describe('edge cases', () => {
@@ -146,6 +160,12 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
 
     it('should not stamp an alignnone image', async () => {
       const value = '<img class="alignnone" src="a.jpg">'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should ignore a bare directional class on a non-media wrapper', async () => {
+      const value = '<div class="center"><img src="a.jpg"></div>'
 
       expect(await transform(value)).toBe(value)
     })
