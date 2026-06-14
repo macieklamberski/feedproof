@@ -165,9 +165,9 @@ type Resolution = {
 const resolve = (media: Element): Resolution | undefined => {
   const carriers: Array<Element> = []
   let target: Element = media
-  let node: Element = media
+  let node: Element | null = media
 
-  while (true) {
+  while (node) {
     carriers.push(node)
 
     const direction = getOwnDirection(node)
@@ -180,17 +180,15 @@ const resolve = (media: Element): Resolution | undefined => {
       return { target, direction, carriers }
     }
 
-    const parent = node.parentElement
+    const parent: Element | null = node.parentElement
 
-    if (!parent) {
-      return
-    }
-
-    if (structuralWrapperTags.has(parent.localName)) {
+    if (parent && structuralWrapperTags.has(parent.localName)) {
       if (parent.localName === 'figure') {
         target = parent
       }
-    } else if (!(genericWrapperTags.has(parent.localName) && isMediaPrimary(parent, node))) {
+    } else if (
+      !(parent && genericWrapperTags.has(parent.localName) && isMediaPrimary(parent, node))
+    ) {
       return
     }
 
@@ -233,11 +231,7 @@ const neutralize = (element: Element): void => {
 const unwrap = (element: Element): void => {
   const parent = element.parentNode
 
-  if (!parent) {
-    return
-  }
-
-  while (element.firstChild) {
+  while (parent && element.firstChild) {
     parent.insertBefore(element.firstChild, element)
   }
 

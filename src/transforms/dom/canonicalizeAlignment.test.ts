@@ -118,6 +118,13 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
+    it('should fall through a non-alignment style to the align attribute', async () => {
+      const value = '<img style="border: 1px solid red" align="center" src="a.jpg">'
+      const expected = '<img style="border: 1px solid red" src="a.jpg" data-align="center">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
     it('should read a bare center class on an image', async () => {
       const value = '<a href="x.jpg"><img class="center" src="a.jpg"></a>'
       const expected = '<a href="x.jpg"><img class="center" src="a.jpg" data-align="center"></a>'
