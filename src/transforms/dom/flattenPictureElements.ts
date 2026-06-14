@@ -1,4 +1,5 @@
 import { parseSrcset } from 'srcset'
+import { getDimensions } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 // Prefer AVIF, then WebP. Other source types are not worth promoting over the
@@ -58,6 +59,31 @@ const firstSourceWithSrcset = (picture: Element): Element | undefined => {
   }
 }
 
+// Carry dimensions onto the flattened <img> when it has none of its own, from the
+// promoted <source> first (most specific to the rendition we keep), then the
+// <picture> element — both of which feeds use to declare the image's size and
+// which would otherwise be discarded on collapse. getDimensions also reads inline
+// style, so style-only sizes migrate as attributes. Both must be positive.
+const carryDimensions = (image: Element, source: Element | undefined, picture: Element): void => {
+  if (image.hasAttribute('width') || image.hasAttribute('height')) {
+    return
+  }
+
+  for (const element of [source, picture]) {
+    if (!element) {
+      continue
+    }
+
+    const { width, height } = getDimensions(element)
+
+    if (width !== undefined && height !== undefined && width > 0 && height > 0) {
+      image.setAttribute('width', String(Math.round(width)))
+      image.setAttribute('height', String(Math.round(height)))
+      return
+    }
+  }
+}
+
 // Collapse each <picture> to a single <img>. When a modern format-only <source>
 // (AVIF/WebP, no media query) is present, its srcset is promoted onto the img so
 // the lighter format survives; the publisher's WebP/AVIF is the whole point of
@@ -97,6 +123,7 @@ export const flattenPictureElements: DomTransform = () => {
           existing.removeAttribute('sizes')
         }
 
+        carryDimensions(existing, modern, picture)
         picture.replaceWith(existing)
         continue
       }
@@ -114,6 +141,7 @@ export const flattenPictureElements: DomTransform = () => {
       const image = document.createElement('img')
       image.setAttribute('src', url)
       image.setAttribute('srcset', srcset)
+      carryDimensions(image, source, picture)
       picture.replaceWith(image)
     }
   }

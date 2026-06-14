@@ -212,9 +212,75 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
     expect(result).toContain('src="https://example.com/b.webp"')
   })
 
+  it('should carry width/height attributes from the picture onto a dimensionless img', async () => {
+    const value = html`
+      <picture width="277" height="530">
+        <source type="image/webp" srcset="https://example.com/a.webp 1000w">
+        <img src="https://example.com/a.jpeg" alt="photo">
+      </picture>
+    `
+    const result = await transform(value)
+
+    expect(result).toContain('width="277"')
+    expect(result).toContain('height="530"')
+  })
+
+  it('should carry style dimensions from the picture down as attributes', async () => {
+    const value = html`
+      <picture style="width:277px;height:530px">
+        <source type="image/webp" srcset="https://example.com/a.webp 1000w">
+        <img src="https://example.com/a.jpeg" alt="photo">
+      </picture>
+    `
+    const result = await transform(value)
+
+    expect(result).toContain('width="277"')
+    expect(result).toContain('height="530"')
+  })
+
+  it('should prefer dimensions from the promoted source over the picture', async () => {
+    const value = html`
+      <picture width="100" height="100">
+        <source type="image/webp" srcset="https://example.com/a.webp 1000w" width="800" height="600">
+        <img src="https://example.com/a.jpeg" alt="photo">
+      </picture>
+    `
+    const result = await transform(value)
+
+    expect(result).toContain('width="800"')
+    expect(result).toContain('height="600"')
+  })
+
+  it('should not overwrite dimensions already on the img', async () => {
+    const value = html`
+      <picture width="100" height="100">
+        <source type="image/webp" srcset="https://example.com/a.webp 1000w">
+        <img src="https://example.com/a.jpeg" width="640" height="480" alt="photo">
+      </picture>
+    `
+    const result = await transform(value)
+
+    expect(result).toContain('width="640"')
+    expect(result).toContain('height="480"')
+    expect(result).not.toContain('width="100"')
+  })
+
+  it('should not carry a partial or non-positive picture dimension', async () => {
+    const value = html`
+      <picture width="277">
+        <source type="image/webp" srcset="https://example.com/a.webp 1000w">
+        <img src="https://example.com/a.jpeg" alt="photo">
+      </picture>
+    `
+    const result = await transform(value)
+
+    expect(result).not.toContain('width="277"')
+    expect(result).not.toContain('height=')
+  })
+
   it('should be idempotent', async () => {
     const value = html`
-      <picture>
+      <picture width="277" height="530">
         <source type="image/webp" srcset="https://example.com/a.webp 1000w">
         <img src="https://example.com/a.jpeg" alt="photo">
       </picture>
