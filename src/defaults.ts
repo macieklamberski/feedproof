@@ -2,6 +2,7 @@ import { resolveUrl } from 'feedcanon'
 import { ghostBookmarkResolver } from './bookmarks/ghost.js'
 import { substackBookmarkResolver } from './bookmarks/substack.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
+import { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
 import { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
@@ -64,6 +65,9 @@ export const defaultDomTransforms: Array<DomTransform> = [
   stripDuplicateTitleHeading,
   demoteHeadings,
   unwrapHeadingBold,
+  // Runs before flattenPictureElements and unwrapWrappers so an alignment signal on
+  // a soon-dissolved <picture> or wrapper <div> is relocated onto the surviving media.
+  canonicalizeAlignment,
   flattenPictureElements,
   fixLazyImages,
   hoistFigcaptionFromAnchor,

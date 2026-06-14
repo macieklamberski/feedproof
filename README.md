@@ -38,6 +38,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `fixLazyImages` | Move `data-src` / `data-original` to real `src` |
 | `flattenPictureElements` | Collapse `<picture>` to a single `<img>`, promoting the best modern-format (AVIF/WebP) source |
 | `hoistFigcaptionFromAnchor` | Move a `<figcaption>` out of a figure's click-through `<a>` so the caption is no longer part of the link |
+| `canonicalizeAlignment` | Normalize explicit media alignment (alignment classes, `align` attribute, `<center>`, `text-align`) into a single `data-align` hook on the image/video/iframe |
 | `mergeConsecutiveOneLinerPres` | Merge consecutive single-line `<pre>` tags |
 | `replacePreLineBreaks` | Replace `<br>` with `\n` inside `<pre>` |
 | `stripInterBlockBreaks` | Remove `<br>` tags between block elements |
