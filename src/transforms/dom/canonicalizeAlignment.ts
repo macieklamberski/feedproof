@@ -37,6 +37,16 @@ const attrDirections = new Map<string, Direction>([
   ['right', 'right'],
 ])
 
+// Bare directional classes, honored only on a media element itself (see
+// getOwnDirection), where `center`/`left`/`right` unambiguously mean "align this
+// media" — e.g. <img class="center">. On generic wrappers these usually denote
+// layout (a centered column, a float utility), so they are not read there.
+const bareClassDirections = new Map<string, Direction>([
+  ['center', 'center'],
+  ['left', 'left'],
+  ['right', 'right'],
+])
+
 const whitespaceRegex = /\s+/
 const textAlignRegex = /(?:^|;)\s*text-align\s*:\s*(center|left|right)\b/i
 const autoMarginRegex = /(?:^|;)\s*margin\s*:\s*(?:0\s+)?auto\b/i
@@ -75,11 +85,23 @@ const getOwnDirection = (element: Element): Direction | 'none' | undefined => {
   const className = element.getAttribute('class')
 
   if (className) {
-    for (const token of className.split(whitespaceRegex)) {
+    const tokens = className.split(whitespaceRegex)
+
+    for (const token of tokens) {
       const direction = classDirections.get(token)
 
       if (direction) {
         return direction
+      }
+    }
+
+    if (mediaTags.has(element.localName)) {
+      for (const token of tokens) {
+        const direction = bareClassDirections.get(token)
+
+        if (direction) {
+          return direction
+        }
       }
     }
   }
