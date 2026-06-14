@@ -35,7 +35,6 @@ import { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 import { unwrapHeadingBold } from './transforms/dom/unwrapHeadingBold.js'
 import { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 import { wrapBareInlineInParagraphs } from './transforms/dom/wrapBareInlineInParagraphs.js'
-import { wrapPresForScroll } from './transforms/dom/wrapPresForScroll.js'
 import { wrapTablesForScroll } from './transforms/dom/wrapTablesForScroll.js'
 import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
 import { stripControlChars } from './transforms/string/stripControlChars.js'
@@ -96,7 +95,6 @@ export const defaultDomTransforms: Array<DomTransform> = [
   stripEmptyTags,
   unwrapWrappers,
   wrapTablesForScroll,
-  wrapPresForScroll,
 ]
 
 // Order matters when selectors overlap: each resolver runs in array order and

@@ -227,6 +227,23 @@ const minAutoDetectRelevance = 2
 
 const preTag = new Set(['pre'])
 
+// highlight.js carries a display name per grammar (getLanguage(token).name) that
+// is clean for almost every language. A few come back as comma-lists or lowercase,
+// so override those by token; everything else uses the hljs name, falling back to
+// the raw token.
+const languageLabelOverrides: Record<string, string> = {
+  html: 'HTML',
+  markup: 'HTML',
+  xml: 'XML',
+  php: 'PHP',
+  ini: 'INI',
+  toml: 'TOML',
+}
+
+const labelForLanguage = (language: string): string => {
+  return languageLabelOverrides[language] ?? hljs.getLanguage(language)?.name ?? language
+}
+
 export const highlightCode: DomTransform = () => {
   return (document) => {
     // Some editors emit a block of code as a standalone <code> with no <pre> wrapper.
@@ -278,9 +295,12 @@ export const highlightCode: DomTransform = () => {
       // as code, so it is highlighted only when it carries an explicit hint.
       const declared = detectLanguage(pre, code)
       let highlighted: string | undefined
+      let language: string | undefined
+      let isGuessed = false
 
       if (declared && hljs.getLanguage(declared)) {
         highlighted = hljs.highlight(text, { language: declared }).value
+        language = declared
       } else if (code) {
         const auto = hljs.highlightAuto(text, autoDetectLanguages)
         const signature = auto.language ? autoDetectSignatures[auto.language] : undefined
@@ -293,6 +313,8 @@ export const highlightCode: DomTransform = () => {
           (!signature || signature.test(text))
         ) {
           highlighted = auto.value
+          language = auto.language
+          isGuessed = true
         }
       }
 
@@ -302,6 +324,48 @@ export const highlightCode: DomTransform = () => {
 
       target.innerHTML = highlighted
       target.classList.add('hljs')
+
+      // Expose the resolved language for a frontend badge. The attributes stay on
+      // the <pre> (kept as a static container by the wrapping pass below), so a
+      // badge anchored to it stays put while the inner <code> scrolls.
+      // data-pre-guessed marks a language we auto-detected rather than declared.
+      if (language) {
+        pre.setAttribute('data-pre-language', language)
+        pre.setAttribute('data-pre-label', labelForLanguage(language))
+
+        if (isGuessed) {
+          pre.setAttribute('data-pre-guessed', '')
+        }
+      }
+    }
+
+    // Give every code block one structure: <pre><code>. The <pre> stays a static
+    // container (a stable anchor for the language badge) and the inner <code> is
+    // what scrolls. A <pre> whose only child is already a <code> is left as is.
+    // A bare <pre> highlighted in place carries the hljs class, which moves onto
+    // the new <code> so the theme styles the element holding the token spans.
+    const presToWrap = Array.from(document.querySelectorAll('pre')).filter(
+      (pre) => pre.children.length !== 1 || pre.children[0].localName !== 'code',
+    )
+
+    for (const pre of presToWrap) {
+      const code = document.createElement('code')
+
+      while (pre.firstChild) {
+        code.appendChild(pre.firstChild)
+      }
+
+      if (pre.classList.contains('hljs')) {
+        pre.classList.remove('hljs')
+        code.classList.add('hljs')
+
+        // Drop a now-empty class attribute so parsers do not serialize class="".
+        if (pre.classList.length === 0) {
+          pre.removeAttribute('class')
+        }
+      }
+
+      pre.appendChild(code)
     }
   }
 }

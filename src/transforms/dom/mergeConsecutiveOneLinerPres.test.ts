@@ -21,6 +21,26 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
     expect(result).toContain('<pre>line 1\nline 2\nline 3</pre>')
   })
 
+  it('should merge pre>code lines into one block, keeping a single code', async () => {
+    const value = html`
+      <pre><code>line 1</code></pre>
+      <pre><code>line 2</code></pre>
+    `
+    const result = await transform(value)
+
+    expect(result).toContain('<pre><code>line 1\nline 2</code></pre>')
+  })
+
+  it('should keep inline markup inside a merged code line', async () => {
+    const value = html`
+      <pre><code>a <b>x</b></code></pre>
+      <pre><code>b</code></pre>
+    `
+    const result = await transform(value)
+
+    expect(result).toContain('<pre><code>a <b>x</b>\nb</code></pre>')
+  })
+
   it('should strip trailing br tags from merged lines', async () => {
     const value = html`
       <pre>line 1<br></pre>
