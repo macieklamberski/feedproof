@@ -7,7 +7,8 @@ import type {
   TransformContext,
 } from '../../types.js'
 
-const existingMediaSelector = 'audio[src], video[src], iframe[src], source[src], [data-embed-src]'
+const existingMediaSelector =
+  'audio[src], video[src], iframe[src], source[src], img[src], [data-embed-src]'
 
 const isAudioEnclosure = (enclosure: Enclosure): boolean => {
   return enclosure.medium === 'audio' || !!enclosure.type?.startsWith('audio/')
@@ -15,6 +16,10 @@ const isAudioEnclosure = (enclosure: Enclosure): boolean => {
 
 const isVideoEnclosure = (enclosure: Enclosure): boolean => {
   return enclosure.medium === 'video' || !!enclosure.type?.startsWith('video/')
+}
+
+const isImageEnclosure = (enclosure: Enclosure): boolean => {
+  return enclosure.medium === 'image' || !!enclosure.type?.startsWith('image/')
 }
 
 // Run resolvers against a synthesized iframe carrying the enclosure URL so that
@@ -87,6 +92,25 @@ const createNativeMediaElement = (
   return element
 }
 
+const createImageElement = (document: Document, enclosure: Enclosure): HTMLElement => {
+  const element = document.createElement('img')
+  element.setAttribute('src', enclosure.url)
+
+  if (enclosure.width) {
+    element.setAttribute('width', String(enclosure.width))
+  }
+
+  if (enclosure.height) {
+    element.setAttribute('height', String(enclosure.height))
+  }
+
+  if (enclosure.title) {
+    element.setAttribute('alt', enclosure.title)
+  }
+
+  return element
+}
+
 export const injectEnclosures: DomTransform = (context) => {
   if (!context.enclosures?.length) {
     return () => {}
@@ -122,6 +146,12 @@ export const injectEnclosures: DomTransform = (context) => {
 
       if (isVideoEnclosure(enclosure)) {
         document.body.prepend(createNativeMediaElement(document, 'video', enclosure, context))
+        existingUrls.add(enclosure.url)
+        continue
+      }
+
+      if (isImageEnclosure(enclosure)) {
+        document.body.prepend(createImageElement(document, enclosure))
         existingUrls.add(enclosure.url)
       }
     }
