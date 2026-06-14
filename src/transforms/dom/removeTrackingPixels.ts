@@ -1,11 +1,9 @@
-import { getDimensions } from '../../common.js'
+import { getDimensions, pixelDimensionLimit } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 const styleDisplayNoneRegex = /(?:^|;)\s*display\s*:\s*none/i
 const styleVisibilityHiddenRegex = /(?:^|;)\s*visibility\s*:\s*hidden/i
 const styleOpacityZeroRegex = /(?:^|;)\s*opacity\s*:\s*0(?:\.0+)?\s*(?:;|$)/i
-
-const pixelDimensionLimit = 2
 
 // `[./]` anchors require the segment to terminate with `.` (file extension) or `/`
 // (path boundary) to avoid false positives on words like `tracker` or `counter`.

@@ -143,6 +143,11 @@ export const getDimensions = (element: Element): { width?: number; height?: numb
   }
 }
 
+// A width or height at or below this many pixels marks a tracking pixel, not real
+// content. removeTrackingPixels strips images at or below it; resolveMediaDimensions
+// won't promote a dimension at or below it.
+export const pixelDimensionLimit = 2
+
 export const createPlaceholder = <Type extends object>(
   document: Document,
   type: string,

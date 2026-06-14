@@ -187,6 +187,12 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(value)
     })
 
+    it('should not promote tracking-pixel-sized dimensions', async () => {
+      const value = '<img src="photo.jpg" style="width:2px;height:2px">'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
     it('should ignore width/height appearing inside the src URL', async () => {
       const value = '<img src="https://example.com/a.jpg?width=430&height=300">'
 
