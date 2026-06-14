@@ -19,6 +19,35 @@ const promotableDimensions = (element: Element): { width: number; height: number
   }
 }
 
+// Dimensions encoded in the image URL: a filename or path `800x600`, `?w=&h=` /
+// `?width=&height=`, or `s=WxH`. This is the intrinsic size of that rendition, a
+// safer source than an inline-style display box. A `data:` placeholder (a lazy
+// image not yet resolved) carries no size and is skipped.
+const urlPairPattern = /(?:^|[/_=-])(\d{2,5})x(\d{2,5})(?=[._\-&)?]|$)/gi
+const urlQueryWidth = /[?&](?:w|width)=(\d{2,5})\b/i
+const urlQueryHeight = /[?&](?:h|height)=(\d{2,5})\b/i
+
+const urlDimensions = (src: string | null): { width: number; height: number } | undefined => {
+  if (!src || src.startsWith('data:')) {
+    return
+  }
+
+  // Explicit w/h query params win; otherwise the last WxH pair in the path or
+  // filename (the rendition size sits after any path digits).
+  let width = Number(urlQueryWidth.exec(src)?.[1])
+  let height = Number(urlQueryHeight.exec(src)?.[1])
+
+  if (!(width > pixelDimensionLimit && height > pixelDimensionLimit)) {
+    const pair = [...src.matchAll(urlPairPattern)].at(-1)
+    width = Number(pair?.[1])
+    height = Number(pair?.[2])
+  }
+
+  if (width > pixelDimensionLimit && height > pixelDimensionLimit) {
+    return { width, height }
+  }
+}
+
 // An <img> often declares its size on the wrapping <picture>/<source> rather than
 // itself. First <source> carrying both dimensions wins, else the <picture> element.
 const pictureDimensions = (picture: Element): { width: number; height: number } | undefined => {
@@ -33,13 +62,16 @@ const pictureDimensions = (picture: Element): { width: number; height: number } 
   return promotableDimensions(picture)
 }
 
-// Backfills width/height attributes on media that declares its size only in inline
-// style, or — for an <img> in a <picture> — on the wrapping picture/source. The
-// width/height attributes drive the browser's `aspect-ratio: auto w/h`, so space is
-// reserved and the ratio survives under reader CSS like `img { height: auto }`.
-// Runs before flattenPictureElements so the picture/source carriers still exist.
-// Images that fixLazyImages later lifts out of a <noscript> are not seen here, but
-// those carry their own width/height, so nothing is lost in practice.
+// Backfills width/height attributes on media that lacks them, from (in order) the
+// element's own inline style, a size encoded in its src URL, or — for an <img> in a
+// <picture> — the wrapping picture/source. The width/height attributes drive the
+// browser's `aspect-ratio: auto w/h`, so space is reserved and the ratio survives
+// under reader CSS like `img { height: auto }`.
+// Runs before flattenPictureElements so the picture/source carriers still exist. Two
+// small ordering gaps: an <img> fixLazyImages later lifts out of a <noscript>, and a
+// lazy image whose real URL is still in data-src (the src here is a placeholder), are
+// not reached. Noscript imgs carry their own width/height and the lazy-URL tail is
+// minor, so little is lost in practice.
 export const resolveMediaDimensions: DomTransform = () => {
   return (document) => {
     for (const element of document.querySelectorAll('img, video')) {
@@ -48,6 +80,10 @@ export const resolveMediaDimensions: DomTransform = () => {
       }
 
       let dimensions = promotableDimensions(element)
+
+      if (!dimensions) {
+        dimensions = urlDimensions(element.getAttribute('src'))
+      }
 
       if (
         !dimensions &&
