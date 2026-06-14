@@ -54,14 +54,6 @@ const autoMarginRegex = /(?:^|;)\s*margin\s*:\s*(?:0\s+)?auto\b/i
 const autoMarginLeftRegex = /(?:^|;)\s*margin-left\s*:\s*auto\b/i
 const autoMarginRightRegex = /(?:^|;)\s*margin-right\s*:\s*auto\b/i
 
-// Style declarations this transform consumes, stripped once the hook is stamped so
-// the inert data-align is the single source of truth.
-const consumedStyleRegexes = [
-  /^text-align\s*:/i,
-  /^margin\s*:\s*(?:0\s+)?auto\b/i,
-  /^margin-(?:left|right)\s*:\s*auto\b/i,
-]
-
 const getStyleDirection = (style: string, isImage: boolean): Direction | undefined => {
   const match = textAlignRegex.exec(style)
 
@@ -156,20 +148,16 @@ const isMediaPrimary = (wrapper: Element, inner: Element): boolean => {
 type Resolution = {
   target: Element // Where the hook lands: the wrapping <figure>, else the media.
   direction: Direction
-  carriers: Array<Element> // Elements whose live signals are neutralized.
 }
 
 // Climbs from a media element through its structural and media-primary wrappers,
 // returning the first concrete alignment found (innermost wins). A terminal
 // `alignnone` or no signal yields undefined.
 const resolve = (media: Element): Resolution | undefined => {
-  const carriers: Array<Element> = []
   let target: Element = media
   let node: Element | null = media
 
   while (node) {
-    carriers.push(node)
-
     const direction = getOwnDirection(node)
 
     if (direction === 'none') {
@@ -177,7 +165,7 @@ const resolve = (media: Element): Resolution | undefined => {
     }
 
     if (direction) {
-      return { target, direction, carriers }
+      return { target, direction }
     }
 
     const parent: Element | null = node.parentElement
@@ -196,60 +184,16 @@ const resolve = (media: Element): Resolution | undefined => {
   }
 }
 
-const stripConsumedStyles = (element: Element): void => {
-  const style = element.getAttribute('style')
-
-  if (!style) {
-    return
-  }
-
-  const kept = style
-    .split(';')
-    .map((declaration) => declaration.trim())
-    .filter(
-      (declaration) =>
-        declaration !== '' && !consumedStyleRegexes.some((regex) => regex.test(declaration)),
-    )
-
-  if (kept.length > 0) {
-    element.setAttribute('style', kept.join('; '))
-  } else {
-    element.removeAttribute('style')
-  }
-}
-
-const neutralize = (element: Element): void => {
-  const align = element.getAttribute('align')
-
-  if (align && attrDirections.has(align.toLowerCase())) {
-    element.removeAttribute('align')
-  }
-
-  stripConsumedStyles(element)
-}
-
-const unwrap = (element: Element): void => {
-  const parent = element.parentNode
-
-  while (parent && element.firstChild) {
-    parent.insertBefore(element.firstChild, element)
-  }
-
-  element.remove()
-}
-
 // Canonicalizes explicit media alignment (WordPress align* classes, deprecated
 // align attribute, <center>, inline text-align, image auto-margins) into a single
-// inert data-align="center|left|right" hook on the media (or its <figure>). Text
-// alignment on prose is left untouched. Runs before flattenPictureElements and
-// unwrapWrappers so a signal on a soon-dissolved <picture>/<div> is relocated onto
-// the surviving media. WP align* classes are kept; live carriers are neutralized so
-// data-align is authoritative. Idempotent: a media element already carrying
-// data-align is skipped.
+// data-align="center|left|right" hook on the media (or its <figure>). Purely
+// additive: it only attaches the hook and never mutates the existing markup, so
+// native rendering keeps working until a renderer adopts data-align. Text alignment
+// on prose is left untouched. Runs before flattenPictureElements and unwrapWrappers
+// so a signal on a soon-dissolved <picture>/<div> lands on the surviving media.
+// Idempotent: a media element already carrying data-align is skipped.
 export const canonicalizeAlignment: DomTransform = () => {
   return (document) => {
-    const resolutions: Array<Resolution> = []
-
     for (const media of document.querySelectorAll('img, video, audio, iframe')) {
       if (media.hasAttribute('data-align')) {
         continue
@@ -257,29 +201,9 @@ export const canonicalizeAlignment: DomTransform = () => {
 
       const resolution = resolve(media)
 
-      if (resolution) {
-        resolutions.push(resolution)
+      if (resolution && !resolution.target.hasAttribute('data-align')) {
+        resolution.target.setAttribute('data-align', resolution.direction)
       }
-    }
-
-    const centersToUnwrap = new Set<Element>()
-
-    for (const { target, direction, carriers } of resolutions) {
-      if (!target.hasAttribute('data-align')) {
-        target.setAttribute('data-align', direction)
-      }
-
-      for (const carrier of carriers) {
-        neutralize(carrier)
-
-        if (carrier.localName === 'center') {
-          centersToUnwrap.add(carrier)
-        }
-      }
-    }
-
-    for (const center of centersToUnwrap) {
-      unwrap(center)
     }
   }
 }

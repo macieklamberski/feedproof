@@ -33,18 +33,16 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
-    it('should read the deprecated align attribute and remove it', async () => {
+    it('should read the deprecated align attribute', async () => {
       const value = '<img align="center" src="a.jpg">'
-      const expected = '<img src="a.jpg" data-align="center">'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toContainHtml('data-align="center"')
     })
 
     it('should center an image with auto horizontal margins', async () => {
       const value = '<img style="margin: 0 auto" src="a.jpg">'
-      const expected = '<img src="a.jpg" data-align="center">'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toContainHtml('data-align="center"')
     })
 
     it('should stamp the figure and keep its caption when the figure carries the signal', async () => {
@@ -71,16 +69,15 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
-    it('should read a media-primary paragraph text-align and strip it', async () => {
+    it('should read a media-primary paragraph text-align', async () => {
       const value = '<p style="text-align: center"><img src="a.jpg"></p>'
-      const expected = '<p><img src="a.jpg" data-align="center"></p>'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toContainHtml('data-align="center"')
     })
 
-    it('should unwrap a center wrapping an image and stamp the image', async () => {
+    it('should read a center wrapping an image, leaving the center in place', async () => {
       const value = '<center><img src="a.jpg"></center>'
-      const expected = '<img src="a.jpg" data-align="center">'
+      const expected = '<center><img src="a.jpg" data-align="center"></center>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
@@ -111,18 +108,19 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
-    it('should keep other style declarations when stripping text-align', async () => {
-      const value = '<img style="text-align: center; border: 1px solid red" src="a.jpg">'
-      const expected = '<img style="border: 1px solid red" src="a.jpg" data-align="center">'
+    it('should attach the hook without mutating the existing markup', async () => {
+      const value =
+        '<center><img class="alignright" align="left" style="color: red" src="a.jpg"></center>'
+      const expected =
+        '<center><img class="alignright" align="left" style="color: red" src="a.jpg" data-align="right"></center>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should fall through a non-alignment style to the align attribute', async () => {
       const value = '<img style="border: 1px solid red" align="center" src="a.jpg">'
-      const expected = '<img style="border: 1px solid red" src="a.jpg" data-align="center">'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toContainHtml('data-align="center"')
     })
 
     it('should read a bare center class on an image', async () => {
@@ -192,17 +190,14 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
 
     it('should let the class win over a conflicting inline text-align', async () => {
       const value = '<img class="alignright" style="text-align: center" src="a.jpg">'
-      const expected = '<img class="alignright" src="a.jpg" data-align="right">'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toContainHtml('data-align="right"')
     })
 
     it('should keep an image own direction over its parent picture', async () => {
       const value = '<picture class="aligncenter"><img class="alignright" src="a.jpg"></picture>'
-      const expected =
-        '<picture class="aligncenter"><img class="alignright" src="a.jpg" data-align="right"></picture>'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toContainHtml('data-align="right"')
     })
 
     it('should leave a media element that already carries data-align unchanged', async () => {
