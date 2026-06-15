@@ -37,7 +37,13 @@ import twig from 'highlight.js/lib/languages/twig'
 import verilog from 'highlight.js/lib/languages/verilog'
 import vim from 'highlight.js/lib/languages/vim'
 import x86asm from 'highlight.js/lib/languages/x86asm'
-import { hasAncestorWithTagName, isElement, isText } from '../../common.js'
+import {
+  hasAncestorWithTagName,
+  isElement,
+  isJsonLike,
+  isParseableJson,
+  isText,
+} from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 // Languages absent from highlight.js's common build but common in feed code
@@ -433,6 +439,13 @@ export const highlightCode: DomTransform = () => {
       if (declared && hljs.getLanguage(declared)) {
         highlighted = hljs.highlight(text, { language: declared }).value
         language = declared
+      } else if (code && isJsonLike(text) && isParseableJson(text)) {
+        // Valid JSON is shaped like CSS to the auto-detector ({ key: value } with
+        // colons), its single most common false positive. Settle it structurally:
+        // an unlabeled block that actually parses as JSON is highlighted as JSON.
+        // Lenient dialects (jsonc, json5) fail JSON.parse and fall through to auto-detection.
+        highlighted = hljs.highlight(text, { language: 'json' }).value
+        language = 'json'
       } else if (code) {
         const auto = hljs.highlightAuto(text, autoDetectLanguages)
         const signature = auto.language ? autoDetectSignatures[auto.language] : undefined
