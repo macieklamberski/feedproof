@@ -154,6 +154,88 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
     })
   })
 
+  describe('inheritance from src URL', () => {
+    it('should read dimensions from a filename suffix', async () => {
+      const value = '<img src="https://example.com/photo-800x600.jpg">'
+      const expected = '<img src="https://example.com/photo-800x600.jpg" width="800" height="600">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should read dimensions from width/height query params', async () => {
+      const value = '<img src="https://example.com/p.jpg?width=800&height=600">'
+      const expected =
+        '<img src="https://example.com/p.jpg?width=800&height=600" width="800" height="600">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should read dimensions from w/h query params', async () => {
+      const value = '<img src="https://example.com/p.png?w=696&h=566">'
+      const expected = '<img src="https://example.com/p.png?w=696&h=566" width="696" height="566">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should read dimensions from an s=WxH param', async () => {
+      const value = '<img src="https://example.com/p.jpg?s=612x612&w=0">'
+      const expected =
+        '<img src="https://example.com/p.jpg?s=612x612&w=0" width="612" height="612">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should prefer own style dimensions over the URL', async () => {
+      const value =
+        '<img src="https://example.com/photo-800x600.jpg" style="width:300px;height:200px">'
+      const expected =
+        '<img src="https://example.com/photo-800x600.jpg" style="width:300px;height:200px" width="300" height="200">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should prefer URL dimensions over the wrapping picture', async () => {
+      const value = html`
+        <picture width="100" height="100">
+          <source type="image/webp" srcset="https://example.com/a.webp 1000w">
+          <img src="https://example.com/photo-800x600.jpg">
+        </picture>
+      `
+      const expected = html`
+        <picture width="100" height="100">
+          <source type="image/webp" srcset="https://example.com/a.webp 1000w">
+          <img src="https://example.com/photo-800x600.jpg" width="800" height="600">
+        </picture>
+      `
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should not read dimensions from a data: placeholder src', async () => {
+      const value = '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should not promote a tracking-pixel-sized URL', async () => {
+      const value = '<img src="https://example.com/spacer-1x1.gif">'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should not promote when the URL has a width but no height', async () => {
+      const value = '<img src="https://example.com/p.jpg?w=800">'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should leave an image whose URL has no size', async () => {
+      const value = '<img src="https://example.com/plain.jpg">'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+  })
+
   describe('left unchanged', () => {
     it('should not touch an element that already has both attributes', async () => {
       const value =
@@ -189,12 +271,6 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
 
     it('should not promote tracking-pixel-sized dimensions', async () => {
       const value = '<img src="photo.jpg" style="width:2px;height:2px">'
-
-      expect(await transform(value)).toEqualHtml(value)
-    })
-
-    it('should ignore width/height appearing inside the src URL', async () => {
-      const value = '<img src="https://example.com/a.jpg?width=430&height=300">'
 
       expect(await transform(value)).toEqualHtml(value)
     })

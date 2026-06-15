@@ -51,7 +51,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `stripInertElements` | Remove platform chrome and dead placeholders — subscribe widgets, share buttons, related-posts widgets, ad slots (AdSense / AdThrive), author bio blocks, email preheaders, Substack image controls, and Drupal `<drupal-render-placeholder>` tags. Pass `inertSelectors` to extend or replace |
 | `removeTrackingPixels` | Strip 1×1 tracking pixel images, preserving real images that declare `0×0` placeholder dimensions or a `srcset` |
 | `unwrapEmojiImages` | Replace WordPress/Facebook/Twitter/GitHub emoji `<img>` tags with their alt-text glyph |
-| `resolveMediaDimensions` | Backfill `width`/`height` attributes on `<img>`/`<video>` from their own inline-style size, or — for an `<img>` in a `<picture>` — from the wrapping picture/source, so the aspect ratio survives when `style` is dropped |
+| `resolveMediaDimensions` | Backfill `width`/`height` attributes on `<img>`/`<video>` from their own inline-style size, a size encoded in the `src` URL (e.g. `-800x600.jpg`, `?w=&h=`), or — for an `<img>` in a `<picture>` — from the wrapping picture/source, so the aspect ratio survives when `style` is dropped |
 | `convertBreaksToParagraphs` | Convert `<br><br>` runs into semantic `<p>` blocks |
 | `wrapBareInlineInParagraphs` | Wrap bare inline runs (delimited by block-level children) in semantic `<p>` blocks |
 | `injectEnclosures` | Inject feed enclosures into content as native `<audio>`/`<video>` or iframe placeholders |
