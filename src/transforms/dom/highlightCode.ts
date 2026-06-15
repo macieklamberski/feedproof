@@ -133,6 +133,12 @@ const maxLanguageAncestorDepth = 3
 // a whitespace-free name ending in an extension yields the language token (the
 // last extension, so paths like .vscode/settings.json resolve to json).
 const filenamePattern = /^\S+\.(\w+)$/
+// GitHub/Linguist wrapper class: highlight-source-LANG / highlight-text-LANG (the
+// source-/text- prefix is signal enough to trust a one-letter LANG like -c).
+const githubLanguagePattern = /^highlight-(?:source|text)-([a-z0-9+#]+)/
+// Sphinx/RST wrapper class: bare highlight-LANG. Require 2+ chars so one-letter
+// classes (highlight-c, highlight-r) that are really CSS utilities don't match.
+const sphinxLanguagePattern = /^highlight-([a-z][a-z0-9+#]+)$/
 
 // Catalog of the code-highlighter / platform conventions detectLanguage recognizes
 // (prevalences measured against the real-feed corpus). In priority order it reads:
@@ -146,6 +152,7 @@ const filenamePattern = /^\S+\.(\w+)$/
 //   5. class="lang:LANG" / lang_LANG — Crayon (WordPress).
 //   6. <figure><figcaption>file.ext</figcaption> filename — Expressive Code (Astro).
 //   7. class="highlight LANG" (LANG resolving to a grammar) — Forem/dev.to, Pygments.
+//   8. highlight-source-LANG / highlight-LANG wrapper class — GitHub/Linguist, Sphinx.
 // An unlabeled <pre><code> falls back to the gated subset auto-detection below.
 export const detectLanguage = (pre: Element | null, code: Element | null): string | undefined => {
   // Check language-* / lang-* class on <code>, then <pre>, then the pre's
@@ -239,6 +246,24 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
       const language = tokens.find((token) => token !== 'highlight' && hljs.getLanguage(token))
 
       if (language) {
+        return language
+      }
+    }
+  }
+
+  // GitHub/Linguist (<div class="highlight highlight-source-LANG">) and Sphinx/RST
+  // (<div class="highlight-LANG">) name the language in a wrapper class. Accept it
+  // only when it resolves to a grammar. The bare Sphinx form also needs a 2+ char
+  // token, since one-letter classes (highlight-c, highlight-r) collide with CSS
+  // utilities; GitHub's source-/text- prefix is signal enough to skip that guard.
+  for (const element of candidates) {
+    const tokens = element?.className.split(whitespacePattern) ?? []
+
+    for (const token of tokens) {
+      const language =
+        token.match(githubLanguagePattern)?.[1] ?? token.match(sphinxLanguagePattern)?.[1]
+
+      if (language && hljs.getLanguage(language)) {
         return language
       }
     }
