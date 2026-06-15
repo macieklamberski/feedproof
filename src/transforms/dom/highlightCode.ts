@@ -117,7 +117,10 @@ for (const [languageName, aliases] of Object.entries(languageAliases)) {
 }
 
 const languagePattern = /(?:language|lang)-(\S+)/
-const languageAttributes = ['data-language', 'data-lang']
+// data-language/-lang cover most editors and renderers; data-enlighter-language is
+// EnlighterJS (WordPress). EnlighterJS's "generic" value maps to no grammar, so such
+// a block stays plain — which is the intent (it means "no specific language").
+const languageAttributes = ['data-language', 'data-lang', 'data-enlighter-language']
 const brushPattern = /brush:\s*([\w#+-]+)/
 const crayonPattern = /\blang[:_]([\w#+-]+)/
 const whitespacePattern = /\s+/
@@ -127,6 +130,17 @@ const pandocStructuralClasses = new Set(['sourceCode', 'numberLines'])
 // ancestor div, not on the pre/code. Look at most this many levels up.
 const maxLanguageAncestorDepth = 3
 
+// Catalog of the code-highlighter / platform conventions detectLanguage recognizes
+// (prevalences measured against the real-feed corpus). In priority order it reads:
+//   1. language-X / lang-X class on <code>/<pre>, or on a wrapping ancestor — Prism,
+//      highlight.js, Ghost, Hugo Chroma, Jekyll/Rouge, and most Markdown renderers
+//      (by far the most common).
+//   2. data-language / data-lang — Shiki, Astro, Hugo Chroma, Discourse, Docusaurus;
+//      data-enlighter-language — EnlighterJS (WordPress).
+//   3. class="sourceCode LANG" — Pandoc.
+//   4. class="brush: LANG" — SyntaxHighlighter Evolved (WordPress).
+//   5. class="lang:LANG" / lang_LANG — Crayon (WordPress).
+// An unlabeled <pre><code> falls back to the gated subset auto-detection below.
 export const detectLanguage = (pre: Element | null, code: Element | null): string | undefined => {
   // Check language-* / lang-* class on <code>, then <pre>, then the pre's
   // wrapping ancestors — Jekyll/Rouge puts the class on an outer div:
@@ -151,7 +165,8 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
     }
   }
 
-  // Check data-language / data-lang on <pre>, then <code>.
+  // Check data-language / data-lang (and EnlighterJS's data-enlighter-language) on
+  // <pre>, then <code>.
   for (const element of [pre, code]) {
     for (const attribute of languageAttributes) {
       const value = element?.getAttribute(attribute)

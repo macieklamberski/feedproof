@@ -211,6 +211,22 @@ describe('detectLanguage', () => {
 
     expect(detectLanguage(pre, code)).toBeUndefined()
   })
+
+  it('should detect language from EnlighterJS data-enlighter-language', () => {
+    const { pre, code } = createElement(
+      '<pre class="EnlighterJSRAW" data-enlighter-language="ruby">x</pre>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('ruby')
+  })
+
+  it('should prefer data-language over data-enlighter-language', () => {
+    const { pre, code } = createElement(
+      '<pre data-language="js" data-enlighter-language="python">x</pre>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('js')
+  })
 })
 
 describeForEachParser('highlightCode', (parseHtml) => {
@@ -554,6 +570,26 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const twice = await transform(once)
 
     expect(twice).toBe(once)
+  })
+
+  it('should highlight an EnlighterJS bare pre via data-enlighter-language', async () => {
+    const value =
+      '<pre class="EnlighterJSRAW" data-enlighter-language="python">def f():\n    return 1</pre>'
+    const result = await transform(value)
+
+    expect(result).toContain('hljs-keyword')
+    expect(result).toContain('data-pre-language="python"')
+    expect(result).toContain('data-pre-label="Python"')
+    expect(result).not.toContain('data-pre-guessed')
+  })
+
+  it('should leave an EnlighterJS "generic" block as plain text', async () => {
+    const value =
+      '<pre class="EnlighterJSRAW" data-enlighter-language="generic">some plain text here</pre>'
+    const result = await transform(value)
+
+    expect(result).not.toContain('hljs')
+    expect(result).toContain('some plain text here')
   })
 
   it('should be idempotent', async () => {
