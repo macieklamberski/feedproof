@@ -82,6 +82,21 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     expect(matches).toHaveLength(1)
   })
 
+  it('should skip enclosure matching an inline source after cleanUrlFn strips its query', async () => {
+    const value = html`
+      <p>Content</p>
+      <video><source src="https://example.com/clip.mp4?_=2"></video>
+    `
+    const context: TransformContext = {
+      ...withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }]),
+      cleanUrlFn: (url) => url.split('?')[0],
+    }
+    const result = await transform(value, context)
+    const matches = result.match(/example\.com\/clip\.mp4/g)
+
+    expect(matches).toHaveLength(1)
+  })
+
   it('should inject image enclosure as img element', async () => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
