@@ -16,350 +16,380 @@ describe('detectLanguage', () => {
     return { pre, code }
   }
 
-  it('should detect language from language-* class on code', () => {
-    const { pre, code } = createElement('<pre><code class="language-js">x</code></pre>')
+  describe('language-* / lang-* class', () => {
+    it('should detect language from language-* class on code', () => {
+      const { pre, code } = createElement('<pre><code class="language-js">x</code></pre>')
 
-    expect(detectLanguage(pre, code)).toBe('js')
+      expect(detectLanguage(pre, code)).toBe('js')
+    })
+
+    it('should detect language from lang-* class on code', () => {
+      const { pre, code } = createElement('<pre><code class="lang-python">x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBe('python')
+    })
+
+    it('should detect language from language-* class on pre', () => {
+      const { pre, code } = createElement('<pre class="language-css"><code>x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBe('css')
+    })
+
+    it('should detect language from lang-* class on pre', () => {
+      const { pre, code } = createElement('<pre class="lang-ruby"><code>x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBe('ruby')
+    })
   })
 
-  it('should detect language from lang-* class on code', () => {
-    const { pre, code } = createElement('<pre><code class="lang-python">x</code></pre>')
+  describe('data-language / data-lang attributes', () => {
+    it('should detect language from data-language on pre', () => {
+      const { pre, code } = createElement('<pre data-language="scss"><code>x</code></pre>')
 
-    expect(detectLanguage(pre, code)).toBe('python')
+      expect(detectLanguage(pre, code)).toBe('scss')
+    })
+
+    it('should detect language from data-language on code', () => {
+      const { pre, code } = createElement('<pre><code data-language="go">x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBe('go')
+    })
+
+    it('should detect language from data-lang on pre', () => {
+      const { pre, code } = createElement('<pre data-lang="rust"><code>x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBe('rust')
+    })
+
+    it('should detect language from data-lang on code', () => {
+      const { pre, code } = createElement('<pre><code data-lang="swift">x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBe('swift')
+    })
   })
 
-  it('should detect language from language-* class on pre', () => {
-    const { pre, code } = createElement('<pre class="language-css"><code>x</code></pre>')
+  describe('EnlighterJS data-enlighter-language', () => {
+    it('should detect language from data-enlighter-language', () => {
+      const { pre, code } = createElement(
+        '<pre class="EnlighterJSRAW" data-enlighter-language="ruby">x</pre>',
+      )
 
-    expect(detectLanguage(pre, code)).toBe('css')
+      expect(detectLanguage(pre, code)).toBe('ruby')
+    })
+
+    it('should prefer data-language over data-enlighter-language', () => {
+      const { pre, code } = createElement(
+        '<pre data-language="js" data-enlighter-language="python">x</pre>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('js')
+    })
   })
 
-  it('should detect language from lang-* class on pre', () => {
-    const { pre, code } = createElement('<pre class="lang-ruby"><code>x</code></pre>')
+  describe('Pandoc sourceCode', () => {
+    it('should detect Pandoc sourceCode language', () => {
+      const { pre, code } = createElement(
+        '<pre class="sourceCode haskell"><code class="sourceCode haskell">x</code></pre>',
+      )
 
-    expect(detectLanguage(pre, code)).toBe('ruby')
+      expect(detectLanguage(pre, code)).toBe('haskell')
+    })
+
+    it('should ignore Pandoc structural classes when reading sourceCode language', () => {
+      const { pre, code } = createElement(
+        '<pre><code class="sourceCode numberLines python">x</code></pre>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('python')
+    })
+
+    it('should not detect a language from a sourceCode class with no language token', () => {
+      const { pre, code } = createElement(
+        '<pre><code class="sourceCode numberLines">x</code></pre>',
+      )
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
   })
 
-  it('should detect language from data-language on pre', () => {
-    const { pre, code } = createElement('<pre data-language="scss"><code>x</code></pre>')
+  describe('SyntaxHighlighter Evolved brush', () => {
+    it('should detect SyntaxHighlighter brush language', () => {
+      const { pre, code } = createElement(
+        '<pre class="brush: php; gutter: false"><code>x</code></pre>',
+      )
 
-    expect(detectLanguage(pre, code)).toBe('scss')
+      expect(detectLanguage(pre, code)).toBe('php')
+    })
   })
 
-  it('should detect language from data-language on code', () => {
-    const { pre, code } = createElement('<pre><code data-language="go">x</code></pre>')
+  describe('Crayon', () => {
+    it('should detect Crayon lang: language', () => {
+      const { pre, code } = createElement('<pre class="lang:ruby decode:true"><code>x</code></pre>')
 
-    expect(detectLanguage(pre, code)).toBe('go')
+      expect(detectLanguage(pre, code)).toBe('ruby')
+    })
+
+    it('should detect Crayon lang_ language', () => {
+      const { pre, code } = createElement('<pre class="lang_scala"><code>x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBe('scala')
+    })
   })
 
-  it('should detect language from data-lang on pre', () => {
-    const { pre, code } = createElement('<pre data-lang="rust"><code>x</code></pre>')
+  describe('Rouge wrapping ancestor', () => {
+    it('should detect language-* from the immediate parent wrapper', () => {
+      const { pre, code } = createElement(
+        '<div class="language-rb highlighter-rouge"><pre><code>x</code></pre></div>',
+      )
 
-    expect(detectLanguage(pre, code)).toBe('rust')
+      expect(detectLanguage(pre, code)).toBe('rb')
+    })
+
+    it('should detect lang-* from an ancestor wrapper', () => {
+      const { pre, code } = createElement(
+        '<div class="lang-go"><div><pre><code>x</code></pre></div></div>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('go')
+    })
+
+    it('should detect language-* two levels up (full Rouge nesting)', () => {
+      const { pre, code } = createElement(
+        '<div class="language-rb highlighter-rouge"><div class="highlight"><pre class="highlight"><code>x</code></pre></div></div>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('rb')
+    })
+
+    it('should not detect a language-* beyond the ancestor depth bound', () => {
+      const { pre, code } = createElement(
+        '<div class="language-rb"><div><div><div><pre><code>x</code></pre></div></div></div></div>',
+      )
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
+
+    it('should prefer a class on code over an ancestor language-*', () => {
+      const { pre, code } = createElement(
+        '<div class="language-python highlighter-rouge"><pre><code class="language-js">x</code></pre></div>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('js')
+    })
+
+    it('should not detect a language from a wrapper marker class alone', () => {
+      const { pre, code } = createElement(
+        '<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>x</code></pre></div></div>',
+      )
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
   })
 
-  it('should detect language from data-lang on code', () => {
-    const { pre, code } = createElement('<pre><code data-lang="swift">x</code></pre>')
+  describe('Expressive Code figcaption', () => {
+    it('should detect the language from a figcaption filename', () => {
+      const { pre, code } = createElement(
+        '<figure><figcaption><span>biome.json</span></figcaption><pre><code>x</code></pre></figure>',
+      )
 
-    expect(detectLanguage(pre, code)).toBe('swift')
+      expect(detectLanguage(pre, code)).toBe('json')
+    })
+
+    it('should read the last extension of a path in the figcaption', () => {
+      const { pre, code } = createElement(
+        '<figure><figcaption>.vscode/settings.json</figcaption><pre><code>x</code></pre></figure>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('json')
+    })
+
+    it('should ignore a figcaption that is not a filename', () => {
+      const { pre, code } = createElement(
+        '<figure><figcaption>See the configuration below</figcaption><pre><code>x</code></pre></figure>',
+      )
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
+
+    it('should ignore an extensionless dotfile in the figcaption', () => {
+      const { pre, code } = createElement(
+        '<figure><figcaption>.gitignore</figcaption><pre><code>x</code></pre></figure>',
+      )
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
+
+    it('should ignore an empty figcaption', () => {
+      const { pre, code } = createElement(
+        '<figure><figcaption></figcaption><pre><code>x</code></pre></figure>',
+      )
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
+
+    it('should prefer an explicit class over a figcaption filename', () => {
+      const { pre, code } = createElement(
+        '<figure><figcaption>biome.json</figcaption><pre><code class="language-yaml">x</code></pre></figure>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('yaml')
+    })
   })
 
-  it('should prefer class on code over class on pre', () => {
-    const { pre, code } = createElement(
-      '<pre class="language-python"><code class="language-js">x</code></pre>',
-    )
+  describe('Forem highlight class', () => {
+    it('should detect a class="highlight LANG" language on the pre', () => {
+      const { pre, code } = createElement('<pre class="highlight shell"><code>x</code></pre>')
 
-    expect(detectLanguage(pre, code)).toBe('js')
+      expect(detectLanguage(pre, code)).toBe('shell')
+    })
+
+    it('should detect a class="highlight LANG" language on a wrapping div', () => {
+      const { pre, code } = createElement(
+        '<div class="highlight js"><pre><code>x</code></pre></div>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('js')
+    })
+
+    it('should ignore a highlight class whose sibling token is not a language', () => {
+      const { pre, code } = createElement('<pre class="highlight selected"><code>x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
+
+    it('should ignore a bare highlight class with no language token', () => {
+      const { pre, code } = createElement('<pre class="highlight"><code>x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
+
+    it('should prefer an explicit class over a highlight LANG token', () => {
+      const { pre, code } = createElement(
+        '<pre class="highlight shell"><code class="language-js">x</code></pre>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('js')
+    })
   })
 
-  it('should prefer class on code over data-language on pre', () => {
-    const { pre, code } = createElement(
-      '<pre data-language="python"><code class="language-js">x</code></pre>',
-    )
+  describe('GitHub / Sphinx wrapper class', () => {
+    it('should detect a GitHub highlight-source-LANG wrapper class', () => {
+      const { pre, code } = createElement(
+        '<div class="highlight highlight-source-ruby"><pre><code>x</code></pre></div>',
+      )
 
-    expect(detectLanguage(pre, code)).toBe('js')
+      expect(detectLanguage(pre, code)).toBe('ruby')
+    })
+
+    it('should detect a GitHub highlight-text-LANG wrapper class', () => {
+      const { pre, code } = createElement(
+        '<div class="highlight highlight-text-html-basic"><pre><code>x</code></pre></div>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('html')
+    })
+
+    it('should keep a one-letter GitHub source language', () => {
+      const { pre, code } = createElement(
+        '<div class="highlight highlight-source-c"><pre><code>x</code></pre></div>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('c')
+    })
+
+    it('should detect a Sphinx highlight-LANG wrapper class', () => {
+      const { pre, code } = createElement(
+        '<div class="highlight-python notranslate"><div class="highlight"><pre><code>x</code></pre></div></div>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('python')
+    })
+
+    it('should ignore a one-letter Sphinx highlight-LANG to avoid CSS collisions', () => {
+      const { pre, code } = createElement(
+        '<div class="highlight-c"><pre><code>x</code></pre></div>',
+      )
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
+
+    it('should ignore a highlight-LANG whose token is not a language', () => {
+      const { pre, code } = createElement(
+        '<div class="highlight-line"><pre><code>x</code></pre></div>',
+      )
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
+
+    it('should prefer an explicit class over a highlight-source-LANG wrapper', () => {
+      const { pre, code } = createElement(
+        '<div class="highlight highlight-source-ruby"><pre><code class="language-js">x</code></pre></div>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('js')
+    })
   })
 
-  it('should prefer class on pre over data-language on pre', () => {
-    const { pre, code } = createElement(
-      '<pre class="language-js" data-language="python"><code>x</code></pre>',
-    )
+  describe('precedence between styles', () => {
+    it('should prefer class on code over class on pre', () => {
+      const { pre, code } = createElement(
+        '<pre class="language-python"><code class="language-js">x</code></pre>',
+      )
 
-    expect(detectLanguage(pre, code)).toBe('js')
+      expect(detectLanguage(pre, code)).toBe('js')
+    })
+
+    it('should prefer class on code over data-language on pre', () => {
+      const { pre, code } = createElement(
+        '<pre data-language="python"><code class="language-js">x</code></pre>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('js')
+    })
+
+    it('should prefer class on pre over data-language on pre', () => {
+      const { pre, code } = createElement(
+        '<pre class="language-js" data-language="python"><code>x</code></pre>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('js')
+    })
+
+    it('should prefer data-language over data-lang on same element', () => {
+      const { pre, code } = createElement(
+        '<pre data-language="js" data-lang="python"><code>x</code></pre>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('js')
+    })
+
+    it('should prefer language-* class over Pandoc sourceCode', () => {
+      const { pre, code } = createElement(
+        '<pre><code class="sourceCode python language-js">x</code></pre>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('js')
+    })
   })
 
-  it('should prefer data-language over data-lang on same element', () => {
-    const { pre, code } = createElement(
-      '<pre data-language="js" data-lang="python"><code>x</code></pre>',
-    )
+  describe('no usable hint', () => {
+    it('should return undefined when no language hint is present', () => {
+      const { pre, code } = createElement('<pre><code>x</code></pre>')
 
-    expect(detectLanguage(pre, code)).toBe('js')
-  })
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
 
-  it('should detect Pandoc sourceCode language', () => {
-    const { pre, code } = createElement(
-      '<pre class="sourceCode haskell"><code class="sourceCode haskell">x</code></pre>',
-    )
+    it('should handle null code element', () => {
+      const { pre } = createElement('<pre class="language-js"><code>x</code></pre>')
 
-    expect(detectLanguage(pre, code)).toBe('haskell')
-  })
+      expect(detectLanguage(pre, null)).toBe('js')
+    })
 
-  it('should ignore Pandoc structural classes when reading sourceCode language', () => {
-    const { pre, code } = createElement(
-      '<pre><code class="sourceCode numberLines python">x</code></pre>',
-    )
+    it('should handle null code element with data-language', () => {
+      const { pre } = createElement('<pre data-language="js"><code>x</code></pre>')
 
-    expect(detectLanguage(pre, code)).toBe('python')
-  })
-
-  it('should not detect a language from a sourceCode class with no language token', () => {
-    const { pre, code } = createElement('<pre><code class="sourceCode numberLines">x</code></pre>')
-
-    expect(detectLanguage(pre, code)).toBeUndefined()
-  })
-
-  it('should detect SyntaxHighlighter brush language', () => {
-    const { pre, code } = createElement(
-      '<pre class="brush: php; gutter: false"><code>x</code></pre>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('php')
-  })
-
-  it('should detect Crayon lang: language', () => {
-    const { pre, code } = createElement('<pre class="lang:ruby decode:true"><code>x</code></pre>')
-
-    expect(detectLanguage(pre, code)).toBe('ruby')
-  })
-
-  it('should detect Crayon lang_ language', () => {
-    const { pre, code } = createElement('<pre class="lang_scala"><code>x</code></pre>')
-
-    expect(detectLanguage(pre, code)).toBe('scala')
-  })
-
-  it('should prefer language-* class over Pandoc sourceCode', () => {
-    const { pre, code } = createElement(
-      '<pre><code class="sourceCode python language-js">x</code></pre>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('js')
-  })
-
-  it('should return undefined when no language hint is present', () => {
-    const { pre, code } = createElement('<pre><code>x</code></pre>')
-
-    expect(detectLanguage(pre, code)).toBeUndefined()
-  })
-
-  it('should handle null code element', () => {
-    const { pre } = createElement('<pre class="language-js"><code>x</code></pre>')
-
-    expect(detectLanguage(pre, null)).toBe('js')
-  })
-
-  it('should handle null code element with data-language', () => {
-    const { pre } = createElement('<pre data-language="js"><code>x</code></pre>')
-
-    expect(detectLanguage(pre, null)).toBe('js')
-  })
-
-  it('should detect language-* from the immediate parent wrapper', () => {
-    const { pre, code } = createElement(
-      '<div class="language-rb highlighter-rouge"><pre><code>x</code></pre></div>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('rb')
-  })
-
-  it('should detect lang-* from an ancestor wrapper', () => {
-    const { pre, code } = createElement(
-      '<div class="lang-go"><div><pre><code>x</code></pre></div></div>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('go')
-  })
-
-  it('should detect language-* two levels up (full Rouge nesting)', () => {
-    const { pre, code } = createElement(
-      '<div class="language-rb highlighter-rouge"><div class="highlight"><pre class="highlight"><code>x</code></pre></div></div>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('rb')
-  })
-
-  it('should not detect a language-* beyond the ancestor depth bound', () => {
-    const { pre, code } = createElement(
-      '<div class="language-rb"><div><div><div><pre><code>x</code></pre></div></div></div></div>',
-    )
-
-    expect(detectLanguage(pre, code)).toBeUndefined()
-  })
-
-  it('should prefer a class on code over an ancestor language-*', () => {
-    const { pre, code } = createElement(
-      '<div class="language-python highlighter-rouge"><pre><code class="language-js">x</code></pre></div>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('js')
-  })
-
-  it('should not detect a language from a wrapper marker class alone', () => {
-    const { pre, code } = createElement(
-      '<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>x</code></pre></div></div>',
-    )
-
-    expect(detectLanguage(pre, code)).toBeUndefined()
-  })
-
-  it('should detect language from EnlighterJS data-enlighter-language', () => {
-    const { pre, code } = createElement(
-      '<pre class="EnlighterJSRAW" data-enlighter-language="ruby">x</pre>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('ruby')
-  })
-
-  it('should prefer data-language over data-enlighter-language', () => {
-    const { pre, code } = createElement(
-      '<pre data-language="js" data-enlighter-language="python">x</pre>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('js')
-  })
-
-  it('should detect the language from an Expressive Code figcaption filename', () => {
-    const { pre, code } = createElement(
-      '<figure><figcaption><span>biome.json</span></figcaption><pre><code>x</code></pre></figure>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('json')
-  })
-
-  it('should read the last extension of a path in the figcaption', () => {
-    const { pre, code } = createElement(
-      '<figure><figcaption>.vscode/settings.json</figcaption><pre><code>x</code></pre></figure>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('json')
-  })
-
-  it('should ignore a figcaption that is not a filename', () => {
-    const { pre, code } = createElement(
-      '<figure><figcaption>See the configuration below</figcaption><pre><code>x</code></pre></figure>',
-    )
-
-    expect(detectLanguage(pre, code)).toBeUndefined()
-  })
-
-  it('should ignore an extensionless dotfile in the figcaption', () => {
-    const { pre, code } = createElement(
-      '<figure><figcaption>.gitignore</figcaption><pre><code>x</code></pre></figure>',
-    )
-
-    expect(detectLanguage(pre, code)).toBeUndefined()
-  })
-
-  it('should ignore an empty figcaption', () => {
-    const { pre, code } = createElement(
-      '<figure><figcaption></figcaption><pre><code>x</code></pre></figure>',
-    )
-
-    expect(detectLanguage(pre, code)).toBeUndefined()
-  })
-
-  it('should prefer an explicit class over a figcaption filename', () => {
-    const { pre, code } = createElement(
-      '<figure><figcaption>biome.json</figcaption><pre><code class="language-yaml">x</code></pre></figure>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('yaml')
-  })
-
-  it('should detect a Forem class="highlight LANG" language on the pre', () => {
-    const { pre, code } = createElement('<pre class="highlight shell"><code>x</code></pre>')
-
-    expect(detectLanguage(pre, code)).toBe('shell')
-  })
-
-  it('should detect a Forem class="highlight LANG" language on a wrapping div', () => {
-    const { pre, code } = createElement('<div class="highlight js"><pre><code>x</code></pre></div>')
-
-    expect(detectLanguage(pre, code)).toBe('js')
-  })
-
-  it('should ignore a highlight class whose sibling token is not a language', () => {
-    const { pre, code } = createElement('<pre class="highlight selected"><code>x</code></pre>')
-
-    expect(detectLanguage(pre, code)).toBeUndefined()
-  })
-
-  it('should ignore a bare highlight class with no language token', () => {
-    const { pre, code } = createElement('<pre class="highlight"><code>x</code></pre>')
-
-    expect(detectLanguage(pre, code)).toBeUndefined()
-  })
-
-  it('should prefer an explicit class over a highlight LANG token', () => {
-    const { pre, code } = createElement(
-      '<pre class="highlight shell"><code class="language-js">x</code></pre>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('js')
-  })
-
-  it('should detect a GitHub highlight-source-LANG wrapper class', () => {
-    const { pre, code } = createElement(
-      '<div class="highlight highlight-source-ruby"><pre><code>x</code></pre></div>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('ruby')
-  })
-
-  it('should detect a GitHub highlight-text-LANG wrapper class', () => {
-    const { pre, code } = createElement(
-      '<div class="highlight highlight-text-html-basic"><pre><code>x</code></pre></div>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('html')
-  })
-
-  it('should keep a one-letter GitHub source language', () => {
-    const { pre, code } = createElement(
-      '<div class="highlight highlight-source-c"><pre><code>x</code></pre></div>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('c')
-  })
-
-  it('should detect a Sphinx highlight-LANG wrapper class', () => {
-    const { pre, code } = createElement(
-      '<div class="highlight-python notranslate"><div class="highlight"><pre><code>x</code></pre></div></div>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('python')
-  })
-
-  it('should ignore a one-letter Sphinx highlight-LANG to avoid CSS collisions', () => {
-    const { pre, code } = createElement('<div class="highlight-c"><pre><code>x</code></pre></div>')
-
-    expect(detectLanguage(pre, code)).toBeUndefined()
-  })
-
-  it('should ignore a highlight-LANG whose token is not a language', () => {
-    const { pre, code } = createElement(
-      '<div class="highlight-line"><pre><code>x</code></pre></div>',
-    )
-
-    expect(detectLanguage(pre, code)).toBeUndefined()
-  })
-
-  it('should prefer an explicit class over a highlight-source-LANG wrapper', () => {
-    const { pre, code } = createElement(
-      '<div class="highlight highlight-source-ruby"><pre><code class="language-js">x</code></pre></div>',
-    )
-
-    expect(detectLanguage(pre, code)).toBe('js')
+      expect(detectLanguage(pre, null)).toBe('js')
+    })
   })
 })
 
