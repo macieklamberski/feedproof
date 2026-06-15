@@ -147,6 +147,28 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
 
       expect(await transform(value)).toEqualHtml(value)
     })
+
+    it('should leave an absolute link untouched when the base URL does not resolve', async () => {
+      const value = '<h2><a href="https://example.com/post#intro">Intro</a></h2>'
+      const context: TransformContext = {
+        ...baseContext,
+        baseUrl: 'not-a-url',
+        resolveUrlFn: (_url, base) => (base === undefined ? undefined : 'https://example.com/post'),
+      }
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    it('should leave an absolute link untouched when resolution yields an invalid URL', async () => {
+      const value = '<h2><a href="https://example.com/post#intro">Intro</a></h2>'
+      const context: TransformContext = {
+        ...baseContext,
+        baseUrl: 'https://example.com/post',
+        resolveUrlFn: () => '::',
+      }
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
   })
 
   describe('multiple anchors in one heading', () => {
