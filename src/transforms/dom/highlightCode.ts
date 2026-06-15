@@ -145,6 +145,7 @@ const filenamePattern = /^\S+\.(\w+)$/
 //   4. class="brush: LANG" — SyntaxHighlighter Evolved (WordPress).
 //   5. class="lang:LANG" / lang_LANG — Crayon (WordPress).
 //   6. <figure><figcaption>file.ext</figcaption> filename — Expressive Code (Astro).
+//   7. class="highlight LANG" (LANG resolving to a grammar) — Forem/dev.to, Pygments.
 // An unlabeled <pre><code> falls back to the gated subset auto-detection below.
 export const detectLanguage = (pre: Element | null, code: Element | null): string | undefined => {
   // Check language-* / lang-* class on <code>, then <pre>, then the pre's
@@ -224,6 +225,22 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
 
     if (extension) {
       return extension
+    }
+  }
+
+  // Forem/dev.to and Pygments-style wrappers: class="highlight LANG" on the <pre>
+  // or a wrapping div, where LANG is a bare class token. Accept it only when a
+  // sibling token resolves to a grammar — that guard rejects the non-language
+  // tokens these classes also carry (e.g. "highlight selected", "highlight line").
+  for (const element of candidates) {
+    const tokens = element?.className.split(whitespacePattern) ?? []
+
+    if (tokens.includes('highlight')) {
+      const language = tokens.find((token) => token !== 'highlight' && hljs.getLanguage(token))
+
+      if (language) {
+        return language
+      }
     }
   }
 }
