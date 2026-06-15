@@ -24,6 +24,13 @@ const footnoteClassRegex = /footnote/i
 const bracketedNumberRegex = /^\[\d+\]$/
 const whitespaceRegex = /\s+/
 
+// Accordion / collapse / tab controls (WPBakery, jQuery UI, Bootstrap, …) wrap
+// the heading in an `<a href="#panel">` whose fragment is the slugified title —
+// so it slug-matches a permalink, but it's an interactive toggle. Detected by
+// the control's class (on the anchor or heading) or its ARIA / toggle attributes.
+const interactiveClassRegex = /accordion|collaps|toggl|panel-title|panel-heading|tta-panel/i
+const interactiveAttrRegex = /toggle|accordion|collapse/i
+
 // An anchor child is a decorative permalink marker — to be dropped rather than
 // kept as heading text — when its text is empty, a lone glyph, or the inline
 // `#fragment` form some generators render (e.g. `<span class="anchor">#intro</span>`).
@@ -116,6 +123,18 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
           hasAncestorWithTagName(anchor, supTags, heading)
 
         if (isFootnote) {
+          continue
+        }
+
+        const isInteractive =
+          interactiveClassRegex.test(className) ||
+          interactiveClassRegex.test(heading.getAttribute('class') ?? '') ||
+          anchor.getAttribute('role') === 'button' ||
+          anchor.hasAttribute('aria-expanded') ||
+          anchor.hasAttribute('aria-controls') ||
+          anchor.getAttributeNames().some((name) => interactiveAttrRegex.test(name))
+
+        if (isInteractive) {
           continue
         }
 

@@ -139,6 +139,26 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
 
       expect(await transform(value)).toEqualHtml(value)
     })
+
+    it('should leave an accordion control even when its fragment matches the title', async () => {
+      const value =
+        '<h3 class="wpb_accordion_header ui-accordion-header"><a href="#what-is-x">What is X</a></h3>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should leave a WPBakery tab control (data-vc-accordion attribute)', async () => {
+      const value =
+        '<h4 class="vc_tta-panel-title"><a href="#manifesto" data-vc-accordion>Manifesto</a></h4>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should leave a disclosure button (role + aria-expanded)', async () => {
+      const value = '<h4><a href="#section" role="button" aria-expanded="false">Section</a></h4>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
   })
 
   describe('baseUrl handling', () => {
