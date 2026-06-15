@@ -129,6 +129,10 @@ const pandocStructuralClasses = new Set(['sourceCode', 'numberLines'])
 // Jekyll/Rouge and similar wrap the block, putting the language-* class on an
 // ancestor div, not on the pre/code. Look at most this many levels up.
 const maxLanguageAncestorDepth = 3
+// Expressive Code (Astro/Starlight) titles its blocks with the source filename;
+// a whitespace-free name ending in an extension yields the language token (the
+// last extension, so paths like .vscode/settings.json resolve to json).
+const filenamePattern = /^\S+\.(\w+)$/
 
 // Catalog of the code-highlighter / platform conventions detectLanguage recognizes
 // (prevalences measured against the real-feed corpus). In priority order it reads:
@@ -140,6 +144,7 @@ const maxLanguageAncestorDepth = 3
 //   3. class="sourceCode LANG" — Pandoc.
 //   4. class="brush: LANG" — SyntaxHighlighter Evolved (WordPress).
 //   5. class="lang:LANG" / lang_LANG — Crayon (WordPress).
+//   6. <figure><figcaption>file.ext</figcaption> filename — Expressive Code (Astro).
 // An unlabeled <pre><code> falls back to the gated subset auto-detection below.
 export const detectLanguage = (pre: Element | null, code: Element | null): string | undefined => {
   // Check language-* / lang-* class on <code>, then <pre>, then the pre's
@@ -205,6 +210,20 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
 
     if (match) {
       return match
+    }
+  }
+
+  // Expressive Code: <figure><figcaption>FILENAME</figcaption><pre>… — no class or
+  // data-language survives into the feed, so infer the language from the title's
+  // file extension. Resolution (incl. js->javascript, yml->yaml) is left to the caller.
+  const figure = pre?.parentNode
+
+  if (isElement(figure) && figure.localName === 'figure') {
+    const figcaption = figure.querySelector('figcaption')
+    const extension = figcaption?.textContent?.trim().match(filenamePattern)?.[1]
+
+    if (extension) {
+      return extension
     }
   }
 }
