@@ -275,6 +275,38 @@ describe('detectLanguage', () => {
 
     expect(detectLanguage(pre, code)).toBe('yaml')
   })
+
+  it('should detect a Forem class="highlight LANG" language on the pre', () => {
+    const { pre, code } = createElement('<pre class="highlight shell"><code>x</code></pre>')
+
+    expect(detectLanguage(pre, code)).toBe('shell')
+  })
+
+  it('should detect a Forem class="highlight LANG" language on a wrapping div', () => {
+    const { pre, code } = createElement('<div class="highlight js"><pre><code>x</code></pre></div>')
+
+    expect(detectLanguage(pre, code)).toBe('js')
+  })
+
+  it('should ignore a highlight class whose sibling token is not a language', () => {
+    const { pre, code } = createElement('<pre class="highlight selected"><code>x</code></pre>')
+
+    expect(detectLanguage(pre, code)).toBeUndefined()
+  })
+
+  it('should ignore a bare highlight class with no language token', () => {
+    const { pre, code } = createElement('<pre class="highlight"><code>x</code></pre>')
+
+    expect(detectLanguage(pre, code)).toBeUndefined()
+  })
+
+  it('should prefer an explicit class over a highlight LANG token', () => {
+    const { pre, code } = createElement(
+      '<pre class="highlight shell"><code class="language-js">x</code></pre>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('js')
+  })
 })
 
 describeForEachParser('highlightCode', (parseHtml) => {
@@ -658,6 +690,24 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
     expect(result).not.toContain('hljs')
     expect(result).toContain('some plain text here')
+  })
+
+  it('should highlight a Forem class="highlight LANG" block', async () => {
+    const value = '<pre class="highlight ruby"><code>def hello\n  puts "hi"\nend</code></pre>'
+    const result = await transform(value)
+
+    expect(result).toContain('hljs-keyword')
+    expect(result).toContain('data-pre-language="ruby"')
+    expect(result).toContain('data-pre-label="Ruby"')
+    expect(result).not.toContain('data-pre-guessed')
+  })
+
+  it('should be idempotent on a Forem class="highlight LANG" block', async () => {
+    const value = '<pre class="highlight ruby"><code>def hello\n  puts "hi"\nend</code></pre>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
   })
 
   it('should be idempotent', async () => {
