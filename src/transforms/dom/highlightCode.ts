@@ -123,10 +123,27 @@ const crayonPattern = /\blang[:_]([\w#+-]+)/
 const whitespacePattern = /\s+/
 // Pandoc emits class="sourceCode LANG"; these tokens are structural, not the language.
 const pandocStructuralClasses = new Set(['sourceCode', 'numberLines'])
+// Jekyll/Rouge and similar wrap the block, putting the language-* class on an
+// ancestor div, not on the pre/code. Look at most this many levels up.
+const maxLanguageAncestorDepth = 3
 
 export const detectLanguage = (pre: Element | null, code: Element | null): string | undefined => {
-  // Check language-* / lang-* class on <code>, then <pre>.
-  for (const element of [code, pre]) {
+  // Check language-* / lang-* class on <code>, then <pre>, then the pre's
+  // wrapping ancestors — Jekyll/Rouge puts the class on an outer div:
+  // <div class="language-rb highlighter-rouge"><div class="highlight"><pre>…
+  const candidates: Array<Element | null> = [code, pre]
+
+  for (
+    let ancestor = pre?.parentNode ?? null, depth = 0;
+    ancestor && depth < maxLanguageAncestorDepth;
+    ancestor = ancestor.parentNode, depth++
+  ) {
+    if (isElement(ancestor)) {
+      candidates.push(ancestor)
+    }
+  }
+
+  for (const element of candidates) {
     const match = element?.className.match(languagePattern)?.[1]
 
     if (match) {
