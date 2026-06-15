@@ -71,9 +71,9 @@ const isSamePage = (
     const base = new URL(resolvedBase)
 
     return target.origin === base.origin && target.pathname === base.pathname
-  } catch {
-    return false
-  }
+  } catch {}
+
+  return false
 }
 
 // Headings carry in-page permalinks ("anchors") in many shapes: the whole
