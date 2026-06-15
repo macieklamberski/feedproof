@@ -318,6 +318,12 @@ const autoDetectSignatures: Record<string, RegExp> = {
 // `const x = 1` stay plain).
 const minAutoDetectRelevance = 2
 
+// highlight.js resolves these to its "Plain text" grammar, which only escapes the
+// text — no tokens, no real language. A block declared as one of them is left
+// untouched rather than badged "Plain text", which says nothing a code block does
+// not already convey.
+const plaintextLanguages = new Set(['plaintext', 'text', 'txt'])
+
 const preTag = new Set(['pre'])
 
 // highlight.js carries a display name per grammar (getLanguage(token).name) that
@@ -426,6 +432,12 @@ export const highlightCode: DomTransform = () => {
       // only for a <pre><code>: a bare <pre> is as often plain preformatted text
       // as code, so it is highlighted only when it carries an explicit hint.
       const declared = detectLanguage(pre, code)
+
+      // A block explicitly marked as plain text is just text — leave it untouched.
+      if (declared && plaintextLanguages.has(declared.toLowerCase())) {
+        continue
+      }
+
       let highlighted: string | undefined
       let language: string | undefined
       let isGuessed = false

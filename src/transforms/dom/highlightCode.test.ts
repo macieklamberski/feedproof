@@ -870,6 +870,15 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
       expect(await transform(value)).not.toContain('data-pre')
     })
+
+    it('should leave a block declared as plain text unlabeled', async () => {
+      const value = '<pre><code class="language-text">just some plain text</code></pre>'
+      const result = await transform(value)
+
+      expect(result).not.toContain('data-pre')
+      expect(result).not.toContain('hljs')
+      expect(result).toContain('just some plain text')
+    })
   })
 
   describe('pre>code structure', () => {
