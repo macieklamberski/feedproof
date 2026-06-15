@@ -74,6 +74,7 @@ export {
   youtubeEmbedResolver,
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
+export { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 export { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
 export { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
@@ -93,6 +94,7 @@ export { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 export { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 export { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 export { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
+export { resolveMediaDimensions } from './transforms/dom/resolveMediaDimensions.js'
 export { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
 export { stripBoundaryBreaks } from './transforms/dom/stripBoundaryBreaks.js'
 export { stripComments } from './transforms/dom/stripComments.js'
@@ -101,6 +103,7 @@ export { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitle
 export { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
 export { stripInertElements } from './transforms/dom/stripInertElements.js'
 export { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
+export { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
 export { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 export { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 export { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
