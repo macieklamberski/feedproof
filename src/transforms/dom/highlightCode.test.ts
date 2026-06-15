@@ -307,6 +307,60 @@ describe('detectLanguage', () => {
 
     expect(detectLanguage(pre, code)).toBe('js')
   })
+
+  it('should detect a GitHub highlight-source-LANG wrapper class', () => {
+    const { pre, code } = createElement(
+      '<div class="highlight highlight-source-ruby"><pre><code>x</code></pre></div>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('ruby')
+  })
+
+  it('should detect a GitHub highlight-text-LANG wrapper class', () => {
+    const { pre, code } = createElement(
+      '<div class="highlight highlight-text-html-basic"><pre><code>x</code></pre></div>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('html')
+  })
+
+  it('should keep a one-letter GitHub source language', () => {
+    const { pre, code } = createElement(
+      '<div class="highlight highlight-source-c"><pre><code>x</code></pre></div>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('c')
+  })
+
+  it('should detect a Sphinx highlight-LANG wrapper class', () => {
+    const { pre, code } = createElement(
+      '<div class="highlight-python notranslate"><div class="highlight"><pre><code>x</code></pre></div></div>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('python')
+  })
+
+  it('should ignore a one-letter Sphinx highlight-LANG to avoid CSS collisions', () => {
+    const { pre, code } = createElement('<div class="highlight-c"><pre><code>x</code></pre></div>')
+
+    expect(detectLanguage(pre, code)).toBeUndefined()
+  })
+
+  it('should ignore a highlight-LANG whose token is not a language', () => {
+    const { pre, code } = createElement(
+      '<div class="highlight-line"><pre><code>x</code></pre></div>',
+    )
+
+    expect(detectLanguage(pre, code)).toBeUndefined()
+  })
+
+  it('should prefer an explicit class over a highlight-source-LANG wrapper', () => {
+    const { pre, code } = createElement(
+      '<div class="highlight highlight-source-ruby"><pre><code class="language-js">x</code></pre></div>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('js')
+  })
 })
 
 describeForEachParser('highlightCode', (parseHtml) => {
@@ -704,6 +758,26 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
   it('should be idempotent on a Forem class="highlight LANG" block', async () => {
     const value = '<pre class="highlight ruby"><code>def hello\n  puts "hi"\nend</code></pre>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
+
+  it('should highlight a GitHub highlight-source-LANG block', async () => {
+    const value =
+      '<div class="highlight highlight-source-ruby"><pre><code>def hello\n  puts "hi"\nend</code></pre></div>'
+    const result = await transform(value)
+
+    expect(result).toContain('hljs-keyword')
+    expect(result).toContain('data-pre-language="ruby"')
+    expect(result).toContain('data-pre-label="Ruby"')
+    expect(result).not.toContain('data-pre-guessed')
+  })
+
+  it('should be idempotent on a GitHub highlight-source-LANG block', async () => {
+    const value =
+      '<div class="highlight highlight-source-ruby"><pre><code>def hello\n  puts "hi"\nend</code></pre></div>'
     const once = await transform(value)
     const twice = await transform(once)
 
