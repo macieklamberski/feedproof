@@ -37,6 +37,14 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
+    it('should mark a GitHub octicon anchor (empty text, svg glyph)', async () => {
+      const value =
+        '<h2 id="intro"><a class="anchor" aria-hidden="true" href="#intro"><svg class="octicon octicon-link"></svg></a>Intro</h2>'
+      const expected = '<h2 id="intro"><a name="intro" href="#intro"></a>Intro</h2>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
     it('should mark an empty generator anchor (headerlink) without a glyph', async () => {
       const value =
         '<h2 id="the-sample"><a href="#the-sample" class="headerlink" title="The Sample"></a>The Sample</h2>'

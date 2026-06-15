@@ -123,19 +123,16 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
         const hasKnownClass = className
           .split(whitespaceRegex)
           .some((token) => permalinkClasses.has(token))
-        const hasOcticon = anchor.querySelector('svg[class*="octicon"]') !== null
 
         // Symbol-only and generator-class anchors are self-evident permalinks. A
         // plain text link qualifies only when it points back at its own heading
         // (fragment matches the heading's id or text slug) and is same-page.
+        const fragmentSlug = slugify(fragment)
         const slugMatch =
-          (headingId !== null && slugify(headingId) === slugify(fragment)) ||
-          (headingSlug !== '' && headingSlug === slugify(fragment))
+          (headingId !== null && slugify(headingId) === fragmentSlug) ||
+          (headingSlug !== '' && headingSlug === fragmentSlug)
         const qualifies =
-          isSymbolOnly ||
-          hasKnownClass ||
-          hasOcticon ||
-          (slugMatch && isSamePage(href, baseUrl, resolveUrlFn))
+          isSymbolOnly || hasKnownClass || (slugMatch && isSamePage(href, baseUrl, resolveUrlFn))
 
         if (!qualifies) {
           continue
