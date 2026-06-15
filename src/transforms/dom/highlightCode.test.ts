@@ -5,6 +5,8 @@ import { baseContext, describeForEachParser, queryElement } from '../../tests.js
 import type { TransformContext } from '../../types.js'
 import { detectLanguage, highlightCode } from './highlightCode.js'
 
+const lineBreakBeforeConst = /;\s*\n\s*<span class="hljs-keyword">const/
+
 describe('detectLanguage', () => {
   const createElement = (html: string): { pre: Element; code: Element | null } => {
     const { document } = parseHTML(`<!doctype html><html><body>${html}</body></html>`)
@@ -189,6 +191,32 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const value = '<pre><code>function greet(name) {\n  return "Hello, " + name;\n}</code></pre>'
 
     expect(await transform(value)).toContain('hljs')
+  })
+
+  it('should keep line breaks when each line is wrapped in a block element', async () => {
+    const value =
+      '<pre><code class="language-js"><div>const x = 1;</div><div>const y = 2;</div></code></pre>'
+    const result = await transform(value)
+
+    expect(result).toContain('hljs-keyword')
+    expect(result).toMatch(lineBreakBeforeConst)
+  })
+
+  it('should collapse nested block wrappers to a single line break', async () => {
+    const value =
+      '<pre><code class="language-js"><div><div>const x = 1;</div></div><div><div>const y = 2;</div></div></code></pre>'
+    const result = await transform(value)
+
+    expect(result).toMatch(lineBreakBeforeConst)
+    expect(result).not.toContain('\n\n')
+  })
+
+  it('should promote a block-wrapped standalone code element to a highlighted block', async () => {
+    const value = '<code class="language-js"><div>const x = 1;</div><div>const y = 2;</div></code>'
+    const result = await transform(value)
+
+    expect(result).toContain('<pre')
+    expect(result).toMatch(lineBreakBeforeConst)
   })
 
   it('should not touch inline code outside pre', async () => {

@@ -37,7 +37,7 @@ import twig from 'highlight.js/lib/languages/twig'
 import verilog from 'highlight.js/lib/languages/verilog'
 import vim from 'highlight.js/lib/languages/vim'
 import x86asm from 'highlight.js/lib/languages/x86asm'
-import { hasAncestorWithTagName } from '../../common.js'
+import { hasAncestorWithTagName, isElement, isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 // Languages absent from highlight.js's common build but common in feed code
@@ -244,6 +244,45 @@ const labelForLanguage = (language: string): string => {
   return languageLabelOverrides[language] ?? hljs.getLanguage(language)?.name ?? language
 }
 
+// Block-level elements that some highlighters and editors use to lay out one
+// code line each, with no newline character between them.
+const blockLineWrappers = new Set(['div', 'p', 'li', 'tr'])
+
+// Read a code block to text, treating those block-level line wrappers as line
+// breaks. Reading textContent alone would flatten every wrapped line onto one
+// row, because textContent just concatenates without honoring the layout. A
+// break is added when a wrapper opens, skipped when the text is empty (so there
+// is no leading break) or already ends with one (so nested wrappers like
+// <div><div>line</div></div> and blank spacer lines collapse back to a single
+// break). Blocks that carry real newlines, and inline highlighters, are
+// unaffected: with no wrappers to open, the result equals textContent.
+const getCodeBlockText = (target: Element): string => {
+  let text = ''
+
+  const walk = (node: Node): void => {
+    for (let child = node.firstChild; child; child = child.nextSibling) {
+      if (isText(child)) {
+        text += child.nodeValue ?? ''
+        continue
+      }
+
+      if (!isElement(child)) {
+        continue
+      }
+
+      if (blockLineWrappers.has(child.localName) && text && !text.endsWith('\n')) {
+        text += '\n'
+      }
+
+      walk(child)
+    }
+  }
+
+  walk(target)
+
+  return text
+}
+
 export const highlightCode: DomTransform = () => {
   return (document) => {
     // Some editors emit a block of code as a standalone <code> with no <pre> wrapper.
@@ -258,7 +297,7 @@ export const highlightCode: DomTransform = () => {
         continue
       }
 
-      const rawContentLines = (code.textContent ?? '').split('\n')
+      const rawContentLines = getCodeBlockText(code).split('\n')
       const nonEmptyContentLines = rawContentLines.filter((line) => line.trim())
 
       if (nonEmptyContentLines.length < 2) {
@@ -283,9 +322,9 @@ export const highlightCode: DomTransform = () => {
       const code = pre.querySelector('code')
       const target = code ?? pre
 
-      const text = target.textContent
+      const text = getCodeBlockText(target)
 
-      if (!text?.trim()) {
+      if (!text.trim()) {
         continue
       }
 
