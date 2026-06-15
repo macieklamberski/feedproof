@@ -17,6 +17,7 @@ import { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 import { markTimestamps } from './transforms/dom/markTimestamps.js'
 import { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
 import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
+import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 import { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
@@ -80,6 +81,9 @@ export const defaultDomTransforms: Array<DomTransform> = [
   stripInertElements,
   resolveRelativeUrls,
   cleanAnchorUrls,
+  // Runs after cleanAnchorUrls so the href it inspects is already cleaned/resolved,
+  // and before stripDeadAnchors so a `#`-only permalink isn't unwrapped first.
+  normalizeAnchoredHeadings,
   stripDeadAnchors,
   convertBookmarkCards,
   removeTrackingPixels,
