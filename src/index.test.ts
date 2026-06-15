@@ -384,6 +384,73 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
+  it('should dimension a lazy image from its resolved URL', async () => {
+    const value = '<p><img data-src="https://example.com/photo-1024x768.jpg"></p>'
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/',
+    })
+
+    expect(result).toContain('src="https://example.com/photo-1024x768.jpg"')
+    expect(result).toContain('width="1024"')
+    expect(result).toContain('height="768"')
+  })
+
+  it('should let a picture modern source win over a lazy data-src', async () => {
+    const value = html`
+      <p>
+        <picture>
+          <source type="image/webp" srcset="https://example.com/a-800x600.webp">
+          <img data-src="https://example.com/a.jpg">
+        </picture>
+      </p>
+    `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/',
+    })
+
+    expect(result).toContain('src="https://example.com/a-800x600.webp"')
+    expect(result).not.toContain('a.jpg')
+  })
+
+  it('should dimension an image surfaced from a noscript fallback', async () => {
+    const value = html`
+      <p>
+        <img src="https://example.com/placeholder.gif">
+        <noscript><img src="https://example.com/real-1024x768.jpg"></noscript>
+      </p>
+    `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/',
+    })
+
+    expect(result).toContain('src="https://example.com/real-1024x768.jpg"')
+    expect(result).toContain('width="1024"')
+    expect(result).toContain('height="768"')
+    expect(result).not.toContain('placeholder.gif')
+  })
+
+  it('should carry picture dimensions onto the flattened image', async () => {
+    const value = html`
+      <p>
+        <picture width="277" height="530">
+          <source type="image/webp" srcset="https://example.com/a.webp 1000w">
+          <img src="https://example.com/a.jpg">
+        </picture>
+      </p>
+    `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/',
+    })
+
+    expect(result).toContain('width="277"')
+    expect(result).toContain('height="530"')
+    expect(result).toContain('src="https://example.com/a.webp"')
+  })
+
   it.todo('should preserve substack publication embeds through the full pipeline', () => {
     // An .embedded-publication-wrap card with a data-attrs JSON blob should come
     // out of the default pipeline as a data-bookmark-provider="substack" placeholder.

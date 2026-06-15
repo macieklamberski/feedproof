@@ -67,11 +67,9 @@ const pictureDimensions = (picture: Element): { width: number; height: number } 
 // <picture> — the wrapping picture/source. The width/height attributes drive the
 // browser's `aspect-ratio: auto w/h`, so space is reserved and the ratio survives
 // under reader CSS like `img { height: auto }`.
-// Runs before flattenPictureElements so the picture/source carriers still exist. Two
-// small ordering gaps: an <img> fixLazyImages later lifts out of a <noscript>, and a
-// lazy image whose real URL is still in data-src (the src here is a placeholder), are
-// not reached. Noscript imgs carry their own width/height and the lazy-URL tail is
-// minor, so little is lost in practice.
+// Runs after fixLazyImages, so a lazy image's real URL is already in src and is read
+// like any other, and before flattenPictureElements, so the picture/source carriers it
+// reads still exist.
 export const resolveMediaDimensions: DomTransform = () => {
   return (document) => {
     for (const element of document.querySelectorAll('img, video')) {
