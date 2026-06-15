@@ -34,47 +34,48 @@ Inventory of every transform exported from the package. Most are enabled by defa
 
 | Transform | Description |
 | --- | --- |
-| `decodeDoubleEncodedTags` | Decode `&lt;tag&gt;` back to `<tag>` in mixed content |
-| `fixLazyImages` | Move `data-src` / `data-original` to real `src` |
-| `flattenPictureElements` | Collapse `<picture>` to a single `<img>`, promoting the best modern-format (AVIF/WebP) source |
-| `hoistFigcaptionFromAnchor` | Move a `<figcaption>` out of a figure's click-through `<a>` so the caption is no longer part of the link |
-| `canonicalizeAlignment` | Normalize explicit media alignment (alignment classes, `align` attribute, `<center>`, `text-align`) into a single `data-align` hook on the image/video/iframe |
-| `mergeConsecutiveOneLinerPres` | Merge consecutive single-line `<pre>` tags |
-| `replacePreLineBreaks` | Replace `<br>` with `\n` inside `<pre>` |
-| `stripInterBlockBreaks` | Remove `<br>` tags between block elements |
-| `stripBoundaryBreaks` | Remove `<br>` tags adjacent to block-element boundaries (paragraphs, headings, divs, list items, blockquotes, …) |
-| `stripDuplicateTitleHeading` | Remove first `<h1>`–`<h6>` matching article title |
-| `demoteHeadings` | Shift every heading down by one level (`<h1>`→`<h2>`, …, `<h5>`→`<h6>`) when the body contains an `<h1>`, so it sits below the reader's own page title |
-| `unwrapHeadingBold` | Unwrap `<b>`/`<strong>` that wraps the entire content of a heading (redundant — headings are already bold) |
-| `cleanAnchorUrls` | Rewrite anchor hrefs with the `cleanUrlFn` option: unwrapping redirect wrappers and stripping tracking params is delegated to a function like urlpurify's `cleanUrl`. No-op when the option is absent |
-| `stripDeadAnchors` | Unwrap `<a>` with empty, `#`, or `javascript:` href |
-| `stripInertElements` | Remove platform chrome and dead placeholders — subscribe widgets, share buttons, related-posts widgets, ad slots (AdSense / AdThrive), author bio blocks, email preheaders, Substack image controls, and Drupal `<drupal-render-placeholder>` tags. Pass `inertSelectors` to extend or replace |
-| `removeTrackingPixels` | Strip 1×1 tracking pixel images, preserving real images that declare `0×0` placeholder dimensions or a `srcset` |
-| `unwrapEmojiImages` | Replace WordPress/Facebook/Twitter/GitHub emoji `<img>` tags with their alt-text glyph |
-| `resolveMediaDimensions` | Backfill `width`/`height` attributes on `<img>`/`<video>` from their own inline-style size, a size encoded in the `src` URL (e.g. `-800x600.jpg`, `?w=&h=`), or — for an `<img>` in a `<picture>` — from the wrapping picture/source, so the aspect ratio survives when `style` is dropped |
-| `convertBreaksToParagraphs` | Convert `<br><br>` runs into semantic `<p>` blocks |
-| `wrapBareInlineInParagraphs` | Wrap bare inline runs (delimited by block-level children) in semantic `<p>` blocks |
-| `injectEnclosures` | Inject feed enclosures into content as native `<audio>`/`<video>` or iframe placeholders |
-| `replaceEmbedsWithPlaceholders` | Convert `<iframe>` to embed placeholders |
-| `convertBookmarkCards` | Convert link-preview cards into `data-bookmark-*` placeholders via a registry of per-provider `BookmarkResolver`s (`defaultBookmarkResolvers`: Ghost `kg-bookmark-card`, Substack `embedded-publication-wrap`). Extend via `bookmarkResolvers` |
-| `enrichEmbedPlaceholders` | Populate placeholder metadata (`title`, `description`, `duration`, etc.) via a caller-supplied async fn. Opt-in; not in defaults |
-| `proxyAssetUrls` | Rewrite image, video, and audio URLs through a caller-supplied proxy |
-| `resolveRelativeUrls` | Convert relative URLs to absolute using base URL |
-| `unwrapWrappers` | Remove outer `<div>`, `<article>`, `<section>` wrappers |
-| `unwrapDoublyNestedLists` | Unwrap `<ul>`/`<ol>` that wrap a single `<li>` containing a same-type list |
-| `wrapTablesForScroll` | Wrap each top-level `<table>` in a `<div data-table>` as a horizontal-scroll container |
-| `mergeFragmentedLists` | Merge consecutive sibling `<ul>` / `<ol>` lists with matching attributes |
-| `paragraphizePlainText` | Wrap plain text in `<p>` tags |
-| `stripOversizedBase64Sources` | Drop base64 `src`/`srcset`/`poster` payloads larger than 50 KB before parsing |
-| `linkifyUrls` | Wrap bare URLs in `<a>` tags |
-| `markTimestamps` | Wrap line-leading timestamps (`MM:SS` / `HH:MM:SS`) in `<span data-timestamp="seconds">` so a player can be seeked to that point |
-| `trimPreWhitespace` | Remove common leading indentation from `<pre>` |
-| `highlightCode` | Syntax-highlight code blocks with highlight.js (declared or auto-detected), wrap each as `<pre><code>`, and expose the language on the `<pre>` via `data-pre-*` for a badge |
-| `stripEmptyTags` | Remove empty `<p>`, `<div>`, `<span>` and other tags |
-| `stripComments` | Remove HTML `<!-- comments -->` |
-| `unwrapCdataComments` | Strip malformed `<!--[CDATA[ … ]]-->` wrappers before parsing so the wrapped article reaches the DOM as real HTML |
-| `unwrapCdataMarkers` | Strip a literal `<![CDATA[ … ]]>` wrapper (from entity-escaped CDATA markers) when it spans the whole value, so the content is not erased as a bogus comment. Leaves mid-content markers intact |
-| `stripControlChars` | Strip rendering-hostile control characters (NUL, BEL, ESC, DEL, C1 range) before parsing. Preserves tab / LF / CR |
+| `decodeDoubleEncodedTags` | Decode double-escaped tags (`&lt;tag&gt;`) back to real HTML |
+| `fixLazyImages` | Promote lazy-loaded `data-src` / `data-original` to real `src` |
+| `flattenPictureElements` | Collapse `<picture>` to one `<img>`, keeping the best modern-format source |
+| `hoistFigcaptionFromAnchor` | Move a `<figcaption>` out of the figure's click-through link |
+| `canonicalizeAlignment` | Normalize media alignment into a single `data-align` hook |
+| `mergeConsecutiveOneLinerPres` | Merge consecutive single-line `<pre>` blocks into one |
+| `replacePreLineBreaks` | Replace `<br>` with newlines inside `<pre>` |
+| `stripInterBlockBreaks` | Remove stray `<br>` tags between block elements |
+| `stripBoundaryBreaks` | Remove `<br>` tags at block boundaries |
+| `stripDuplicateTitleHeading` | Remove a leading heading that repeats the article title |
+| `demoteHeadings` | Shift headings down a level so they sit below the reader's page title |
+| `unwrapHeadingBold` | Unwrap redundant bold wrapping a whole heading |
+| `cleanAnchorUrls` | Clean anchor hrefs (redirects, tracking params) via the `cleanUrlFn` option |
+| `stripDeadAnchors` | Unwrap links with empty, `#`, or `javascript:` hrefs |
+| `stripInertElements` | Strip non-content chrome — subscribe/share/related widgets, ads, author bios |
+| `removeTrackingPixels` | Strip 1×1 tracking pixels, keeping real images |
+| `unwrapEmojiImages` | Replace emoji `<img>` tags with their alt-text glyph |
+| `resolveMediaDimensions` | Backfill `width`/`height` on media so aspect ratio survives style stripping |
+| `convertBreaksToParagraphs` | Convert `<br><br>` runs into real `<p>` blocks |
+| `wrapBareInlineInParagraphs` | Wrap loose inline content in `<p>` blocks |
+| `injectEnclosures` | Inject feed enclosures as native media or embed placeholders |
+| `replaceEmbedsWithPlaceholders` | Convert `<iframe>` embeds into placeholders |
+| `convertBookmarkCards` | Convert link-preview cards into `data-bookmark-*` placeholders |
+| `enrichEmbedPlaceholders` | Fill placeholder metadata via a caller-supplied async fn (opt-in) |
+| `proxyAssetUrls` | Rewrite media URLs through a caller-supplied proxy |
+| `resolveRelativeUrls` | Resolve relative URLs to absolute against the base URL |
+| `unwrapWrappers` | Remove redundant outer `<div>` / `<article>` / `<section>` wrappers |
+| `unwrapDoublyNestedLists` | Unwrap a list that only wraps a single same-type list |
+| `wrapTablesForScroll` | Wrap tables in a horizontal-scroll container |
+| `mergeFragmentedLists` | Merge consecutive sibling lists of the same type |
+| `paragraphizePlainText` | Wrap bare plain text in `<p>` tags |
+| `stripOversizedBase64Sources` | Drop oversized inline base64 media sources before parsing |
+| `linkifyUrls` | Wrap bare URLs in links |
+| `markTimestamps` | Wrap line-leading timestamps for player seeking |
+| `stripLeadingIndentation` | Strip fake leading indentation (nbsp / fixed-width spaces) from block text |
+| `trimPreWhitespace` | Remove shared leading indentation from `<pre>` blocks |
+| `highlightCode` | Syntax-highlight code blocks and expose the language for a badge |
+| `stripEmptyTags` | Remove empty elements |
+| `stripComments` | Remove HTML comments |
+| `unwrapCdataComments` | Unwrap malformed `<!--[CDATA[ … ]]-->` wrappers before parsing |
+| `unwrapCdataMarkers` | Unwrap a whole-value `<![CDATA[ … ]]>` marker so content isn't dropped |
+| `stripControlChars` | Strip rendering-hostile control characters before parsing |
 
 ## Options
 
