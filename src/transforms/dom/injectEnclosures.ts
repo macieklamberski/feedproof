@@ -1,5 +1,6 @@
 import { createEmbedPlaceholder } from '../../common.js'
 import type {
+  CleanUrlFn,
   DomTransform,
   EmbedResolver,
   EmbedResolverResult,
@@ -43,17 +44,24 @@ const resolveEnclosure = async (
   }
 }
 
+// Normalize a media URL before comparing it for dedup. Running it through the
+// consumer's cleanUrlFn means a tracking or cache-buster query (e.g. ?_=2) on an
+// inline source no longer hides a matching enclosure, so we don't double-inject it.
+const normalizeMediaUrl = (url: string, cleanUrlFn?: CleanUrlFn): string => {
+  return cleanUrlFn ? cleanUrlFn(url) : url
+}
+
 // Collect URLs already referenced by media elements so we don't double-inject.
 // Querying the DOM is both cheaper and more precise than substring-matching
 // the serialized HTML (which would also match URLs appearing in prose).
-const collectExistingMediaUrls = (document: Document): Set<string> => {
+const collectExistingMediaUrls = (document: Document, cleanUrlFn?: CleanUrlFn): Set<string> => {
   const urls = new Set<string>()
 
   for (const element of document.querySelectorAll(existingMediaSelector)) {
     const src = element.getAttribute('src') ?? element.getAttribute('data-embed-src')
 
     if (src) {
-      urls.add(src)
+      urls.add(normalizeMediaUrl(src, cleanUrlFn))
     }
   }
 
@@ -119,10 +127,12 @@ export const injectEnclosures: DomTransform = (context) => {
   const enclosures = context.enclosures
 
   return async (document) => {
-    const existingUrls = collectExistingMediaUrls(document)
+    const existingUrls = collectExistingMediaUrls(document, context.cleanUrlFn)
 
     for (const enclosure of enclosures) {
-      if (existingUrls.has(enclosure.url)) {
+      const normalizedUrl = normalizeMediaUrl(enclosure.url, context.cleanUrlFn)
+
+      if (existingUrls.has(normalizedUrl)) {
         continue
       }
 
@@ -134,25 +144,25 @@ export const injectEnclosures: DomTransform = (context) => {
 
       if (resolved) {
         document.body.prepend(createEmbedPlaceholder(document, enclosure.url, resolved))
-        existingUrls.add(enclosure.url)
+        existingUrls.add(normalizedUrl)
         continue
       }
 
       if (isAudioEnclosure(enclosure)) {
         document.body.prepend(createNativeMediaElement(document, 'audio', enclosure, context))
-        existingUrls.add(enclosure.url)
+        existingUrls.add(normalizedUrl)
         continue
       }
 
       if (isVideoEnclosure(enclosure)) {
         document.body.prepend(createNativeMediaElement(document, 'video', enclosure, context))
-        existingUrls.add(enclosure.url)
+        existingUrls.add(normalizedUrl)
         continue
       }
 
       if (isImageEnclosure(enclosure)) {
         document.body.prepend(createImageElement(document, enclosure))
-        existingUrls.add(enclosure.url)
+        existingUrls.add(normalizedUrl)
       }
     }
   }
