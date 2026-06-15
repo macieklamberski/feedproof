@@ -493,6 +493,40 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(await transform(value)).toContain('hljs')
   })
 
+  it('should highlight an unlabeled JSON block as JSON', async () => {
+    const value = '<pre><code>{\n  "linter": true,\n  "rules": ["a", "b"]\n}</code></pre>'
+    const result = await transform(value)
+
+    expect(result).toContain('hljs')
+    expect(result).toContain('data-pre-language="json"')
+    expect(result).toContain('data-pre-label="JSON"')
+    expect(result).not.toContain('data-pre-guessed')
+  })
+
+  it('should not force JSON on a JSON-shaped CSS rule body', async () => {
+    const value = '<pre><code>{ color: red; padding: 4px; }</code></pre>'
+
+    expect(await transform(value)).not.toContain('data-pre-language="json"')
+  })
+
+  it('should leave a JSONC block with comments to auto-detection, not the JSON branch', async () => {
+    const value = '<pre><code>{\n  // a comment\n  "linter": true\n}</code></pre>'
+    const result = await transform(value)
+
+    // JSON.parse fails on the comment, so the deterministic JSON branch is skipped.
+    // Auto-detection may still label it JSON, but only as a guess — never the
+    // certain (un-guessed) result the JSON branch produces.
+    expect(result).toContain('data-pre-guessed')
+  })
+
+  it('should be idempotent on an unlabeled JSON block', async () => {
+    const value = '<pre><code>{\n  "linter": true,\n  "rules": ["a", "b"]\n}</code></pre>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
+
   it('should not highlight prose that loosely resembles code', async () => {
     const value = '<pre><code>Note: this matters; really, it does. See also: the docs.</code></pre>'
 

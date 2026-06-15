@@ -101,6 +101,33 @@ export const isBlockElement = (node: Node): boolean => {
   return isElement(node) && blockElements.has(node.localName)
 }
 
+// JSON shape + parseability predicates. Candidates to move to the shared toolbox
+// package later (the same helpers live in other projects).
+const jsonObjectStartPattern = /^\s*\{/
+const jsonObjectEndPattern = /\}\s*$/
+const jsonArrayStartPattern = /^\s*\[/
+const jsonArrayEndPattern = /\]\s*$/
+
+export const isJsonLike = (value: string): boolean => {
+  if (value.length < 2) {
+    return false
+  }
+
+  return (
+    (jsonObjectStartPattern.test(value) && jsonObjectEndPattern.test(value)) ||
+    (jsonArrayStartPattern.test(value) && jsonArrayEndPattern.test(value))
+  )
+}
+
+export const isParseableJson = (value: string): boolean => {
+  try {
+    JSON.parse(value)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export const hasAncestorWithTagName = (node: Node, tagSet: Set<string>, stopAt?: Node): boolean => {
   let ancestor = node.parentNode as Element | null
 
