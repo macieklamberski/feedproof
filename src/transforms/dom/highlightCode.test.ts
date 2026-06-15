@@ -227,6 +227,54 @@ describe('detectLanguage', () => {
 
     expect(detectLanguage(pre, code)).toBe('js')
   })
+
+  it('should detect the language from an Expressive Code figcaption filename', () => {
+    const { pre, code } = createElement(
+      '<figure><figcaption><span>biome.json</span></figcaption><pre><code>x</code></pre></figure>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('json')
+  })
+
+  it('should read the last extension of a path in the figcaption', () => {
+    const { pre, code } = createElement(
+      '<figure><figcaption>.vscode/settings.json</figcaption><pre><code>x</code></pre></figure>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('json')
+  })
+
+  it('should ignore a figcaption that is not a filename', () => {
+    const { pre, code } = createElement(
+      '<figure><figcaption>See the configuration below</figcaption><pre><code>x</code></pre></figure>',
+    )
+
+    expect(detectLanguage(pre, code)).toBeUndefined()
+  })
+
+  it('should ignore an extensionless dotfile in the figcaption', () => {
+    const { pre, code } = createElement(
+      '<figure><figcaption>.gitignore</figcaption><pre><code>x</code></pre></figure>',
+    )
+
+    expect(detectLanguage(pre, code)).toBeUndefined()
+  })
+
+  it('should ignore an empty figcaption', () => {
+    const { pre, code } = createElement(
+      '<figure><figcaption></figcaption><pre><code>x</code></pre></figure>',
+    )
+
+    expect(detectLanguage(pre, code)).toBeUndefined()
+  })
+
+  it('should prefer an explicit class over a figcaption filename', () => {
+    const { pre, code } = createElement(
+      '<figure><figcaption>biome.json</figcaption><pre><code class="language-yaml">x</code></pre></figure>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('yaml')
+  })
 })
 
 describeForEachParser('highlightCode', (parseHtml) => {
@@ -566,6 +614,26 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
   it('should be idempotent on a Jekyll/Rouge block', async () => {
     const value = `<div class="language-rb highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def hello\n  puts "hi"\nend</code></pre></div></div>`
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
+
+  it('should highlight an Expressive Code block via its figcaption filename', async () => {
+    const value =
+      '<figure><figcaption><span>biome.json</span></figcaption><pre><code>{\n  "linter": true\n}</code></pre></figure>'
+    const result = await transform(value)
+
+    expect(result).toContain('hljs')
+    expect(result).toContain('data-pre-language="json"')
+    expect(result).toContain('data-pre-label="JSON"')
+    expect(result).not.toContain('data-pre-guessed')
+  })
+
+  it('should be idempotent on an Expressive Code block', async () => {
+    const value =
+      '<figure><figcaption><span>biome.json</span></figcaption><pre><code>{\n  "linter": true\n}</code></pre></figure>'
     const once = await transform(value)
     const twice = await transform(once)
 
