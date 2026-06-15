@@ -69,9 +69,13 @@ export const defaultDomTransforms: Array<DomTransform> = [
   // Runs before flattenPictureElements and unwrapWrappers so an alignment signal on
   // a soon-dissolved <picture> or wrapper <div> is relocated onto the surviving media.
   canonicalizeAlignment,
+  // fixLazyImages resolves the real src before resolveMediaDimensions reads a size from
+  // the URL; resolveMediaDimensions runs before flattenPictureElements dissolves the
+  // <picture> it reads dimensions from. flattenPictureElements last also lets its modern
+  // <source> win over a lazy data-src.
+  fixLazyImages,
   resolveMediaDimensions,
   flattenPictureElements,
-  fixLazyImages,
   hoistFigcaptionFromAnchor,
   stripInertElements,
   resolveRelativeUrls,
