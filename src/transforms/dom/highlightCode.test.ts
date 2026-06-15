@@ -163,6 +163,54 @@ describe('detectLanguage', () => {
 
     expect(detectLanguage(pre, null)).toBe('js')
   })
+
+  it('should detect language-* from the immediate parent wrapper', () => {
+    const { pre, code } = createElement(
+      '<div class="language-rb highlighter-rouge"><pre><code>x</code></pre></div>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('rb')
+  })
+
+  it('should detect lang-* from an ancestor wrapper', () => {
+    const { pre, code } = createElement(
+      '<div class="lang-go"><div><pre><code>x</code></pre></div></div>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('go')
+  })
+
+  it('should detect language-* two levels up (full Rouge nesting)', () => {
+    const { pre, code } = createElement(
+      '<div class="language-rb highlighter-rouge"><div class="highlight"><pre class="highlight"><code>x</code></pre></div></div>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('rb')
+  })
+
+  it('should not detect a language-* beyond the ancestor depth bound', () => {
+    const { pre, code } = createElement(
+      '<div class="language-rb"><div><div><div><pre><code>x</code></pre></div></div></div></div>',
+    )
+
+    expect(detectLanguage(pre, code)).toBeUndefined()
+  })
+
+  it('should prefer a class on code over an ancestor language-*', () => {
+    const { pre, code } = createElement(
+      '<div class="language-python highlighter-rouge"><pre><code class="language-js">x</code></pre></div>',
+    )
+
+    expect(detectLanguage(pre, code)).toBe('js')
+  })
+
+  it('should not detect a language from a wrapper marker class alone', () => {
+    const { pre, code } = createElement(
+      '<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>x</code></pre></div></div>',
+    )
+
+    expect(detectLanguage(pre, code)).toBeUndefined()
+  })
 })
 
 describeForEachParser('highlightCode', (parseHtml) => {
@@ -488,6 +536,24 @@ describeForEachParser('highlightCode', (parseHtml) => {
       '<pre class="sourceCode python"><code class="sourceCode python">def f():\n    return 1</code></pre>'
 
     expect(await transform(value)).toContain('hljs-keyword')
+  })
+
+  it('should highlight a Jekyll/Rouge block via the language class on the wrapper', async () => {
+    const value = `<div class="language-rb highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def hello\n  puts "hi"\nend</code></pre></div></div>`
+    const result = await transform(value)
+
+    expect(result).toContain('hljs-keyword')
+    expect(result).toContain('data-pre-language="rb"')
+    expect(result).toContain('data-pre-label="Ruby"')
+    expect(result).not.toContain('data-pre-guessed')
+  })
+
+  it('should be idempotent on a Jekyll/Rouge block', async () => {
+    const value = `<div class="language-rb highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def hello\n  puts "hi"\nend</code></pre></div></div>`
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
   })
 
   it('should be idempotent', async () => {
