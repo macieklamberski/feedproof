@@ -94,6 +94,7 @@ export { markTimestamps, parseTimestampSeconds } from './transforms/dom/markTime
 export { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
 export { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 export { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
+export { normalizeFootnotes } from './transforms/dom/normalizeFootnotes.js'
 export { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 export { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 export { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'

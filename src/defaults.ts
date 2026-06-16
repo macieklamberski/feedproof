@@ -19,6 +19,7 @@ import { markTimestamps } from './transforms/dom/markTimestamps.js'
 import { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
 import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
+import { normalizeFootnotes } from './transforms/dom/normalizeFootnotes.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 import { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
@@ -90,6 +91,10 @@ export const defaultDomTransforms: Array<DomTransform> = [
   // Runs after cleanAnchorUrls so the href it inspects is already cleaned/resolved,
   // and before stripDeadAnchors so a `#`-only permalink isn't unwrapped first.
   normalizeAnchoredHeadings,
+  // Runs after the anchor transforms (hrefs already localized) so footnote
+  // reference/definition targets can be relocated onto surviving `<a name>`s, and
+  // before stripEmptyTags which preserves those empty name anchors.
+  normalizeFootnotes,
   stripDeadAnchors,
   convertBookmarkCards,
   removeTrackingPixels,
