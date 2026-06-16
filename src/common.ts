@@ -1,5 +1,10 @@
 import { resolveUrl, upgradeProtocol } from 'feedcanon'
-import type { BookmarkResolverResult, EmbedResolverResult, MaybePromise } from './types.js'
+import type {
+  BookmarkResolverResult,
+  EmbedResolverResult,
+  MaybePromise,
+  ResolveUrlFn,
+} from './types.js'
 import { coerceNumber } from './utils.js'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
@@ -269,4 +274,38 @@ export const createBookmarkPlaceholder = (
   element.appendChild(link)
 
   return element
+}
+
+// Whether an anchor href points at the same page as the post. A bare `#fragment`
+// is inherently same-page; an absolute href counts only when it resolves to the
+// same origin and path as `baseUrl` — guarding against a fragment that points to
+// (or coincidentally matches) a section on a different page.
+export const isSamePage = (
+  href: string,
+  baseUrl: string | undefined,
+  resolveUrlFn: ResolveUrlFn,
+): boolean => {
+  if (href.startsWith('#')) {
+    return true
+  }
+
+  if (!baseUrl) {
+    return false
+  }
+
+  const resolvedHref = resolveUrlFn(href, baseUrl)
+  const resolvedBase = resolveUrlFn(baseUrl, undefined)
+
+  if (!resolvedHref || !resolvedBase) {
+    return false
+  }
+
+  try {
+    const target = new URL(resolvedHref)
+    const base = new URL(resolvedBase)
+
+    return target.origin === base.origin && target.pathname === base.pathname
+  } catch {}
+
+  return false
 }

@@ -1,5 +1,5 @@
-import { hasAncestorWithTagName } from '../../common.js'
-import type { DomTransform, ResolveUrlFn } from '../../types.js'
+import { hasAncestorWithTagName, isSamePage } from '../../common.js'
+import type { DomTransform } from '../../types.js'
 
 const headingSelector = 'h1, h2, h3, h4, h5, h6'
 const supTags = new Set(['sup'])
@@ -48,39 +48,6 @@ const slugify = (value: string): string => {
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, '-')
     .replace(/^-+|-+$/g, '')
-}
-
-// A bare `#fragment` is inherently same-page. An absolute href counts only when
-// it resolves to the same origin and path as the post — guarding against a
-// fragment that coincidentally slug-matches a section on a different page.
-const isSamePage = (
-  href: string,
-  baseUrl: string | undefined,
-  resolveUrlFn: ResolveUrlFn,
-): boolean => {
-  if (href.startsWith('#')) {
-    return true
-  }
-
-  if (!baseUrl) {
-    return false
-  }
-
-  const resolvedHref = resolveUrlFn(href, baseUrl)
-  const resolvedBase = resolveUrlFn(baseUrl, undefined)
-
-  if (!resolvedHref || !resolvedBase) {
-    return false
-  }
-
-  try {
-    const target = new URL(resolvedHref)
-    const base = new URL(resolvedBase)
-
-    return target.origin === base.origin && target.pathname === base.pathname
-  } catch {}
-
-  return false
 }
 
 // Headings carry in-page permalinks ("anchors") in many shapes: the whole
