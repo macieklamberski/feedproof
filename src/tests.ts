@@ -4,6 +4,7 @@ import {
   defaultBookmarkResolvers,
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
+  defaultHighlightFn,
   defaultInertSelectors,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
@@ -31,6 +32,7 @@ export const baseContext: TransformContext = {
   trackingPathSegments: defaultTrackingPathSegments,
 
   resolveUrlFn: defaultResolveUrlFn,
+  highlightFn: defaultHighlightFn,
 }
 
 const parseWithJsdom: ParseHtml = (html) => {

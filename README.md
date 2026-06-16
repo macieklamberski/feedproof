@@ -70,7 +70,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `markTimestamps` | Wrap line-leading timestamps for player seeking |
 | `stripLeadingIndentation` | Strip fake leading indentation (nbsp / fixed-width spaces) from block text |
 | `trimPreWhitespace` | Remove shared leading indentation from `<pre>` blocks |
-| `highlightCode` | Syntax-highlight code blocks and expose the language for a badge |
+| `highlightCode` | Syntax-highlight code blocks that declare a language and expose the language for a badge |
 | `stripEmptyTags` | Remove empty elements |
 | `stripComments` | Remove HTML comments |
 | `unwrapCdataComments` | Unwrap malformed `<!--[CDATA[ … ]]-->` wrappers before parsing |
@@ -99,10 +99,14 @@ const result = transformContent(html, {
   enrichEmbedFn: async (embeds) => {
     return new Map(embeds.map(({ provider, id }) => [`${provider}:${id}`, { title: '…' }]))
   },
+  // Swap the code highlighter (defaults to highlight.js; may be async).
+  highlightFn: (text, language) => myHighlighter.highlight(text, language),
   // Run a custom DOM transform pipeline (omit to use defaults).
   domTransforms: [fixLazyImages, resolveRelativeUrls],
 })
 ```
+
+Code blocks are highlighted only when they declare a language (`language-*` class, `data-language`, Pandoc/Rouge/Expressive Code/etc.); unlabeled blocks are left plain rather than guessed at. The default highlighter is highlight.js (exported as `defaultHighlightFn` / `hljsHighlightFn`); replace it with `highlightFn`.
 
 The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. Every transform is also exported individually from `feedsweep`, so you can compose any pipeline — list them explicitly to build from scratch, or spread `defaultDomTransforms` (etc.) from `feedsweep/defaults` to extend or filter the defaults.
 
