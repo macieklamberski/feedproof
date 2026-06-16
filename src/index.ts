@@ -97,6 +97,7 @@ export { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWit
 export { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
 export { resolveMediaDimensions } from './transforms/dom/resolveMediaDimensions.js'
 export { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
+export { shortenSamePageLinkFragments } from './transforms/dom/shortenSamePageLinkFragments.js'
 export { stripBoundaryBreaks } from './transforms/dom/stripBoundaryBreaks.js'
 export { stripComments } from './transforms/dom/stripComments.js'
 export { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'

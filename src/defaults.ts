@@ -24,6 +24,7 @@ import { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWit
 import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
 import { resolveMediaDimensions } from './transforms/dom/resolveMediaDimensions.js'
 import { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
+import { shortenSamePageLinkFragments } from './transforms/dom/shortenSamePageLinkFragments.js'
 import { stripBoundaryBreaks } from './transforms/dom/stripBoundaryBreaks.js'
 import { stripComments } from './transforms/dom/stripComments.js'
 import { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
@@ -81,6 +82,10 @@ export const defaultDomTransforms: Array<DomTransform> = [
   stripInertElements,
   resolveRelativeUrls,
   cleanAnchorUrls,
+  // Runs after resolveRelativeUrls/cleanAnchorUrls so hrefs are absolute and cleaned,
+  // and before normalizeAnchoredHeadings so heading permalinks are already bare
+  // `#fragment` when the canonical `<a name>` is built.
+  shortenSamePageLinkFragments,
   // Runs after cleanAnchorUrls so the href it inspects is already cleaned/resolved,
   // and before stripDeadAnchors so a `#`-only permalink isn't unwrapped first.
   normalizeAnchoredHeadings,
