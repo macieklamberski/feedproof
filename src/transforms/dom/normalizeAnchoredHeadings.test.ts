@@ -15,50 +15,48 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
   }
 
   describe('symbol-only permalinks', () => {
-    it('should strip a trailing "#" glyph and mark the anchor', async () => {
+    it('should strip a trailing "#" glyph and set the heading id', async () => {
       const value = '<h2>The system<a href="#the-system">#</a></h2>'
-      const expected = '<h2><a name="the-system" href="#the-system"></a>The system</h2>'
+      const expected = '<h2 id="the-system">The system</h2>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
 
-    it('should strip a pilcrow glyph and drop decorative attributes', async () => {
+    it('should strip a pilcrow glyph and keep the existing id', async () => {
       const value = '<h2 id="s">Section<a href="#s" class="headerlink" title="Permalink">¶</a></h2>'
-      const expected = '<h2 id="s"><a name="s" href="#s"></a>Section</h2>'
+      const expected = '<h2 id="s">Section</h2>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should treat a zero-width-space anchor body as empty', async () => {
       const value = '<h2 id="whats-new">What\'s New<a href="#whats-new" class="hash-link">​</a></h2>'
-      const expected =
-        '<h2 id="whats-new"><a name="whats-new" href="#whats-new"></a>What\'s New</h2>'
+      const expected = '<h2 id="whats-new">What\'s New</h2>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
 
-    it('should mark a GitHub octicon anchor (empty text, svg glyph)', async () => {
+    it('should remove a GitHub octicon anchor (empty text, svg glyph)', async () => {
       const value =
         '<h2 id="intro"><a class="anchor" aria-hidden="true" href="#intro"><svg class="octicon octicon-link"></svg></a>Intro</h2>'
-      const expected = '<h2 id="intro"><a name="intro" href="#intro"></a>Intro</h2>'
+      const expected = '<h2 id="intro">Intro</h2>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
 
-    it('should mark an empty generator anchor (headerlink) without a glyph', async () => {
+    it('should remove an empty generator anchor (headerlink) and keep the id', async () => {
       const value =
         '<h2 id="the-sample"><a href="#the-sample" class="headerlink" title="The Sample"></a>The Sample</h2>'
-      const expected =
-        '<h2 id="the-sample"><a name="the-sample" href="#the-sample"></a>The Sample</h2>'
+      const expected = '<h2 id="the-sample">The Sample</h2>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
   describe('whole-heading links', () => {
-    it('should unwrap a bare-fragment heading link, keeping the text', async () => {
+    it('should unwrap a bare-fragment heading link and set the id', async () => {
       const value = '<h2><a href="#json-api">JSON API</a></h2>'
-      const expected = '<h2><a name="json-api" href="#json-api"></a>JSON API</h2>'
+      const expected = '<h2 id="json-api">JSON API</h2>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
@@ -66,8 +64,7 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
     it('should normalize an absolute same-page link when baseUrl matches', async () => {
       const value =
         '<h2><a href="https://thu-le.com/blog/how-i-track-my-finances#the-system" target="_blank" rel="noopener">The system</a></h2>'
-      const expected =
-        '<h2><a name="the-system" href="https://thu-le.com/blog/how-i-track-my-finances#the-system"></a>The system</h2>'
+      const expected = '<h2 id="the-system">The system</h2>'
 
       expect(await transform(value, samePageContext)).toEqualHtml(expected)
     })
@@ -81,7 +78,7 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
 
     it('should preserve surrounding markup when promoting the text out', async () => {
       const value = '<h3><strong><a href="#setup">Setup</a></strong></h3>'
-      const expected = '<h3><a name="setup" href="#setup"></a><strong>Setup</strong></h3>'
+      const expected = '<h3 id="setup"><strong>Setup</strong></h3>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
@@ -89,7 +86,7 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
     it('should drop an inline #fragment glyph span and keep the title', async () => {
       const value =
         '<h2 id="utility"><a href="#utility">Utility<span class="anchor">#utility</span></a></h2>'
-      const expected = '<h2 id="utility"><a name="utility" href="#utility"></a>Utility</h2>'
+      const expected = '<h2 id="utility">Utility</h2>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
@@ -97,7 +94,7 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
     it('should treat an anchor holding only a #fragment glyph as symbol-only', async () => {
       const value =
         '<h2 id="intro">Intro<a href="#intro"><span class="anchor">#intro</span></a></h2>'
-      const expected = '<h2 id="intro"><a name="intro" href="#intro"></a>Intro</h2>'
+      const expected = '<h2 id="intro">Intro</h2>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
@@ -164,7 +161,7 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
   describe('baseUrl handling', () => {
     it('should normalize a bare-fragment link without a baseUrl', async () => {
       const value = '<h2><a href="#the-system">The system</a></h2>'
-      const expected = '<h2><a name="the-system" href="#the-system"></a>The system</h2>'
+      const expected = '<h2 id="the-system">The system</h2>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
@@ -200,11 +197,10 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
   })
 
   describe('multiple anchors in one heading', () => {
-    it('should normalize the permalink and leave a real content link', async () => {
+    it('should set the id from the permalink and leave a real content link', async () => {
       const value =
         '<h2><a href="https://example.com/x">External</a> <a href="#section" class="headerlink"></a></h2>'
-      const expected =
-        '<h2><a name="section" href="#section"></a><a href="https://example.com/x">External</a> </h2>'
+      const expected = '<h2 id="section"><a href="https://example.com/x">External</a> </h2>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
