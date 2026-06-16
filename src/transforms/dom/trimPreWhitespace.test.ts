@@ -102,6 +102,31 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(value)
   })
 
+  it('should dedent indentation that sits inside per-line wrapper spans', async () => {
+    const value =
+      '<pre><code><span class="line">  a</span>\n<span class="line">    b</span></code></pre>'
+    const expected =
+      '<pre><code><span class="line">a</span>\n<span class="line">  b</span></code></pre>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should ignore an empty line span when computing the common indentation', async () => {
+    const value =
+      '<pre><code><span class="line"></span>\n<span class="line">  a</span>\n<span class="line">    b</span></code></pre>'
+    const expected =
+      '<pre><code><span class="line"></span>\n<span class="line">a</span>\n<span class="line">  b</span></code></pre>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should dedent common non-breaking-space indentation', async () => {
+    const value = '<pre><code>&nbsp;&nbsp;a\n&nbsp;&nbsp;&nbsp;&nbsp;b</code></pre>'
+    const expected = '<pre><code>a\n&nbsp;&nbsp;b</code></pre>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
   it('should ignore empty lines when computing common indentation', async () => {
     const value = '<pre>    line 1\n\n    line 2</pre>'
     const expected = '<pre>line 1\n\nline 2</pre>'

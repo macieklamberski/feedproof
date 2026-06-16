@@ -496,13 +496,21 @@ export const highlightCode: DomTransform = () => {
       }
     }
 
-    // Give every code block one structure: <pre><code>. The <pre> stays a static
-    // container (a stable anchor for the language badge) and the inner <code> is
-    // what scrolls. A <pre> whose only child is already a <code> is left as is.
-    // A bare <pre> highlighted in place carries the hljs class, which moves onto
-    // the new <code> so the theme styles the element holding the token spans.
+    // Give a bare code block the <pre><code> structure: the <pre> stays a static
+    // container (a stable anchor for the language badge) and the new <code> is
+    // what scrolls. A bare <pre> highlighted in place carries the hljs class,
+    // which moves onto the new <code> so the theme styles the element holding the
+    // token spans.
+    //
+    // Only wrap a <pre> that has no <code> at all. A <pre> that already contains
+    // one must be left as is: wrapping it would nest <code> inside <code>, which
+    // defeats trimPreWhitespace (its first line would start with a <code> tag, so
+    // the common indent reads as zero and the block is never de-indented). This
+    // covers Pygments' stray leading empty <span> (<pre><span></span><code>…) and
+    // code buried under wrapper <div>s alike; the empty <span> is dropped later by
+    // stripEmptyTags.
     const presToWrap = Array.from(document.querySelectorAll('pre')).filter(
-      (pre) => pre.children.length !== 1 || pre.children[0].localName !== 'code',
+      (pre) => !pre.querySelector('code'),
     )
 
     for (const pre of presToWrap) {
