@@ -52,10 +52,10 @@ const slugify = (value: string): string => {
 
 // Headings carry in-page permalinks ("anchors") in many shapes: the whole
 // heading wrapped in a `#fragment` link, a trailing `#`/`¶` glyph, a generator's
-// empty `headerlink`/`hash-link` anchor, and so on. This collapses every shape
-// to one canonical markup — an empty leading `<a name="fragment">` whose href is
-// left untouched — so the heading text reads as plain text and the downstream
-// reader can render a single consistent permalink marker.
+// empty `headerlink`/`hash-link` anchor, and so on. This collapses every shape to
+// a plain heading carrying the fragment on its own `id` (the scroll target), with
+// the permalink anchor removed — so the reader renders one consistent permalink
+// affordance and the heading text is plain.
 export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn }) => {
   return (document) => {
     const headings = document.querySelectorAll(headingSelector)
@@ -130,14 +130,10 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
           continue
         }
 
-        // Drop a decorative glyph, but keep real link text by promoting it out of
-        // the anchor (the heading text becomes plain). Inline glyph markers among
-        // that text (a `#fragment` span, a lone symbol) are dropped too.
-        if (isSymbolOnly) {
-          while (anchor.firstChild) {
-            anchor.firstChild.remove()
-          }
-        } else {
+        // A decorative-glyph anchor is removed whole; a whole-heading link keeps its
+        // real text by promoting it out (inline glyph markers dropped) before the
+        // now-empty anchor goes.
+        if (!isSymbolOnly) {
           while (anchor.firstChild) {
             const child = anchor.firstChild
 
@@ -149,20 +145,12 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
           }
         }
 
-        for (const attributeName of anchor.getAttributeNames()) {
-          if (attributeName !== 'href') {
-            anchor.removeAttribute(attributeName)
-          }
-        }
+        anchor.remove()
 
-        // `name` carries the in-page target (verbatim from the fragment); the href
-        // is preserved for a later URL-normalization pass to shorten.
-        anchor.setAttribute('name', fragment)
-
-        // Move the now-empty anchor to the heading's front so it sits at the top of
-        // a wrapped heading when used as the scroll target.
-        if (heading.firstChild !== anchor) {
-          heading.insertBefore(anchor, heading.firstChild)
+        // The fragment target rides on the heading's own `id` (the scroll target),
+        // unless a generator already set one. The downstream reader keeps the id.
+        if (!heading.hasAttribute('id')) {
+          heading.setAttribute('id', fragment)
         }
       }
     }
