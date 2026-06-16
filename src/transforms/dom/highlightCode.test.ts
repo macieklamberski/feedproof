@@ -928,6 +928,34 @@ describeForEachParser('highlightCode', (parseHtml) => {
       expect(await transform(value)).toBe(value)
     })
 
+    it('should not nest the code when a Pygments empty span precedes it', async () => {
+      const value = '<pre><span></span><code>plain text</code></pre>'
+
+      // The existing <code> is left in place (stripEmptyTags drops the empty span
+      // later); the point is that it is not wrapped in a second <code>.
+      const result = await transform(value)
+
+      expect(result).not.toContain('<code><code>')
+      expect(result).toBe(value)
+    })
+
+    it('should not nest the code when it is buried under wrapper divs', async () => {
+      const value = '<pre><div class="hl"><code>plain text</code></div></pre>'
+
+      const result = await transform(value)
+
+      expect(result).not.toContain('<code><code>')
+      expect(result).toBe(value)
+    })
+
+    it('should wrap a pre with no code child, keeping empty line spans', async () => {
+      const value = '<pre><span class="line"></span><br><span class="line">x = 1</span></pre>'
+
+      expect(await transform(value)).toBe(
+        '<pre><code><span class="line"></span><br><span class="line">x = 1</span></code></pre>',
+      )
+    })
+
     it('should move the in-place hljs class onto the new code', async () => {
       const value = '<pre data-language="bash">npm i</pre>'
       const result = await transform(value)
