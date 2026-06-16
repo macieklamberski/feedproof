@@ -2,6 +2,7 @@ import { resolveUrl } from 'feedcanon'
 import { ghostBookmarkResolver } from './bookmarks/ghost.js'
 import { substackBookmarkResolver } from './bookmarks/substack.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
+import { hljsHighlightFn } from './highlighters/hljs.js'
 import { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
 import { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
@@ -118,6 +119,9 @@ export const defaultBookmarkResolvers: Array<BookmarkResolver> = [
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
+
+// Default code highlighter: highlight.js. Swap it via the highlightFn option.
+export const defaultHighlightFn = hljsHighlightFn
 
 export const defaultLazySrcAttributes = [
   'data-src', // lazysizes / vanilla-lazyload / lozad / Drupal Blazy / a3 Lazy Load / Smush / EWWW / generic — 360k hits.

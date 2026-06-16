@@ -58,10 +58,9 @@ describeForEachParser('transformContent', (parseHtml) => {
     const value = '<code>function greet(name) {\n  return name\n}</code>'
     // highlightCode promotes the bare block to <pre><code> before wrapBareInlineInParagraphs
     // runs, so it ends up as a scrollable code block, not a <pre> nested inside a <p>.
-    const expected =
-      '<pre data-pre-language="javascript" data-pre-label="JavaScript" data-pre-guessed=""><code class="hljs"><span class="hljs-keyword">function</span> <span class="hljs-title function_">greet</span>(<span class="hljs-params">name</span>) {\n  <span class="hljs-keyword">return</span> name\n}</code></pre>'
+    // It is unlabeled and not JSON, so it stays plain (no highlighting, no badge).
+    const expected = '<pre><code>function greet(name) {\n  return name\n}</code></pre>'
 
-    // toEqualHtml so the data-pre-* attribute order is normalized across parsers.
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 

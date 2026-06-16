@@ -1,42 +1,3 @@
-import type { LanguageFn } from 'highlight.js'
-import hljs from 'highlight.js/lib/common'
-import applescript from 'highlight.js/lib/languages/applescript'
-import arduino from 'highlight.js/lib/languages/arduino'
-import awk from 'highlight.js/lib/languages/awk'
-import clojure from 'highlight.js/lib/languages/clojure'
-import cmake from 'highlight.js/lib/languages/cmake'
-import crystal from 'highlight.js/lib/languages/crystal'
-import dart from 'highlight.js/lib/languages/dart'
-import delphi from 'highlight.js/lib/languages/delphi'
-import dockerfile from 'highlight.js/lib/languages/dockerfile'
-import elixir from 'highlight.js/lib/languages/elixir'
-import elm from 'highlight.js/lib/languages/elm'
-import erlang from 'highlight.js/lib/languages/erlang'
-import fsharp from 'highlight.js/lib/languages/fsharp'
-import gherkin from 'highlight.js/lib/languages/gherkin'
-import glsl from 'highlight.js/lib/languages/glsl'
-import groovy from 'highlight.js/lib/languages/groovy'
-import haskell from 'highlight.js/lib/languages/haskell'
-import haxe from 'highlight.js/lib/languages/haxe'
-import http from 'highlight.js/lib/languages/http'
-import julia from 'highlight.js/lib/languages/julia'
-import latex from 'highlight.js/lib/languages/latex'
-import lisp from 'highlight.js/lib/languages/lisp'
-import matlab from 'highlight.js/lib/languages/matlab'
-import nginx from 'highlight.js/lib/languages/nginx'
-import nix from 'highlight.js/lib/languages/nix'
-import ocaml from 'highlight.js/lib/languages/ocaml'
-import pgsql from 'highlight.js/lib/languages/pgsql'
-import powershell from 'highlight.js/lib/languages/powershell'
-import prolog from 'highlight.js/lib/languages/prolog'
-import puppet from 'highlight.js/lib/languages/puppet'
-import scala from 'highlight.js/lib/languages/scala'
-import scheme from 'highlight.js/lib/languages/scheme'
-import stata from 'highlight.js/lib/languages/stata'
-import twig from 'highlight.js/lib/languages/twig'
-import verilog from 'highlight.js/lib/languages/verilog'
-import vim from 'highlight.js/lib/languages/vim'
-import x86asm from 'highlight.js/lib/languages/x86asm'
 import {
   hasAncestorWithTagName,
   isElement,
@@ -45,81 +6,18 @@ import {
   isText,
 } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+// Token -> display-label map for the languages feedsweep recognizes (canonical
+// names plus common aliases). Read from here so detecting and labelling a code
+// block needs no highlight.js import — the only place that touches hljs is the
+// highlighter itself. Hand-maintained: add a token when adding a grammar.
+import labels from './highlightCode.json' with { type: 'json' }
 
-// Languages absent from highlight.js's common build but common in feed code
-// blocks (ranked by real-corpus hint frequency). Registering them lets an
-// explicit class/attribute hint resolve to a grammar; a block with no match is
-// left as plain text. Built-in aliases (hs->haskell, clj->clojure, ...) come
-// along for free.
-// Mathematica is deliberately left out for now: its grammar is ~148 KB (a
-// built-in symbol table), too heavy for the ~0.006% of blocks that declare it.
-const extraLanguages: Record<string, LanguageFn> = {
-  applescript,
-  arduino,
-  awk,
-  clojure,
-  cmake,
-  crystal,
-  dart,
-  delphi,
-  dockerfile,
-  elixir,
-  elm,
-  erlang,
-  fsharp,
-  gherkin,
-  glsl,
-  groovy,
-  haskell,
-  haxe,
-  http,
-  julia,
-  latex,
-  lisp,
-  matlab,
-  nginx,
-  nix,
-  ocaml,
-  pgsql,
-  powershell,
-  prolog,
-  puppet,
-  scala,
-  scheme,
-  stata,
-  twig,
-  verilog,
-  vim,
-  x86asm,
-}
+// The languages feedsweep recognizes, keyed by token (and alias). Used both to
+// disambiguate the wrapper-class detection paths below and to label the badge.
+const supportedLabels = labels as Record<string, string>
 
-for (const [name, grammar] of Object.entries(extraLanguages)) {
-  hljs.registerLanguage(name, grammar)
-}
-
-// Popular hint tokens highlight.js does not resolve on its own, mapped to an
-// already-registered grammar (frequencies from the real-feed corpus). Tokens it
-// already aliases (console, objc, golang, cs, jsx, yml, sh, ...) need nothing.
-// A few are dialect approximations to the nearest grammar (emacs-lisp/elisp and
-// cl -> lisp, racket -> scheme, fish/tcsh/csh -> bash, terminal -> shell).
-const languageAliases: Record<string, Array<string>> = {
-  bash: ['fish', 'tcsh', 'csh'],
-  c: ['clike'],
-  json: ['jsonc', 'json5', 'jsonl'],
-  lisp: ['emacs-lisp', 'elisp', 'cl', 'common-lisp', 'common_lisp', 'commonlisp'],
-  objectivec: ['objective-c'],
-  pgsql: ['psql'],
-  python: ['python3', 'py3'],
-  scheme: ['racket'],
-  shell: ['shell-session', 'shell-script', 'shellscript', 'terminal'],
-  sql: ['mysql', 'tsql', 'plsql'],
-  vbnet: ['vb', 'visualbasic'],
-  x86asm: ['asm', 'nasm', 'assembly'],
-  xml: ['markup'],
-}
-
-for (const [languageName, aliases] of Object.entries(languageAliases)) {
-  hljs.registerAliases(aliases, { languageName })
+const isSupportedLanguage = (token: string): boolean => {
+  return supportedLabels[token.toLowerCase()] !== undefined
 }
 
 const languagePattern = /(?:language|lang)-(\S+)/
@@ -159,7 +57,8 @@ const sphinxLanguagePattern = /^highlight-([a-z][a-z0-9+#]+)$/
 //   6. <figure><figcaption>file.ext</figcaption> filename — Expressive Code (Astro).
 //   7. class="highlight LANG" (LANG resolving to a grammar) — Forem/dev.to, Pygments.
 //   8. highlight-source-LANG / highlight-LANG wrapper class — GitHub/Linguist, Sphinx.
-// An unlabeled <pre><code> falls back to the gated subset auto-detection below.
+// An unlabeled <pre><code> is highlighted only when it parses as JSON; anything
+// else stays plain (no relevance-based language guessing).
 export const detectLanguage = (pre: Element | null, code: Element | null): string | undefined => {
   // Check language-* / lang-* class on <code>, then <pre>, then the pre's
   // wrapping ancestors — Jekyll/Rouge puts the class on an outer div:
@@ -249,7 +148,7 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
     const tokens = element?.className.split(whitespacePattern) ?? []
 
     if (tokens.includes('highlight')) {
-      const language = tokens.find((token) => token !== 'highlight' && hljs.getLanguage(token))
+      const language = tokens.find((token) => token !== 'highlight' && isSupportedLanguage(token))
 
       if (language) {
         return language
@@ -269,60 +168,12 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
       const language =
         token.match(githubLanguagePattern)?.[1] ?? token.match(sphinxLanguagePattern)?.[1]
 
-      if (language && hljs.getLanguage(language)) {
+      if (language && isSupportedLanguage(language)) {
         return language
       }
     }
   }
 }
-
-// Subset highlight.js auto-detection considers for blocks with no usable language
-// hint (e.g. Smashing Magazine declares none). Ranked by per-feed frequency in the
-// real corpus; restricting the subset keeps auto-detection cheap and stops it from
-// guessing exotic grammars. All are in highlight.js's common build.
-const autoDetectLanguages = [
-  'bash',
-  'python',
-  'xml',
-  'javascript',
-  'cpp',
-  'java',
-  'json',
-  'c',
-  'css',
-  'ruby',
-  'go',
-  'ini',
-  'typescript',
-  'sql',
-  'csharp',
-  'rust',
-  'php',
-  'markdown',
-  'diff',
-]
-
-// Some grammars match loosely enough to win on plain prose/output (corpus-measured
-// false-positive rates: css 38%, sql 18%, csharp 12%, python 8%, bash 6%, rust 5%).
-// When auto-detection picks one of these, accept it only if a structural signature
-// of the language is present — this collapses those false positives to ~0-2% while
-// keeping real code. Languages absent here (html, php, json, ts, ...) are
-// distinctive enough to trust unguarded.
-const autoDetectSignatures: Record<string, RegExp> = {
-  css: /\{[^{}]*[:;][^{}]*\}/,
-  sql: /\b(?:select|insert|update|delete|create|alter|drop)\b[\s\S]*\b(?:from|into|table|set|values|where|join)\b/i,
-  csharp: /\b(?:using|namespace|public|private|protected|class|void|static|var|new|string)\b/,
-  python: /(?:^|\n)\s*(?:def|class|import|from|print|return|if|elif|for|while|with|try)\b/,
-  bash: /(?:^|\n)\s*(?:\$|#!|sudo|apt|yum|brew|cd|ls|cat|echo|grep|curl|wget|git|npm|yarn|cp|mv|rm|mkdir|export|chmod|source|sed|awk)\b|\|\s*\w|&&/,
-  rust: /\b(?:fn|let|mut|impl|use|pub|struct|enum|match|trait)\b/,
-}
-
-// highlight.js says its relevance value is not a usable confidence score
-// (highlightjs/highlight.js#568) — but a result at the floor value of 1 means "no
-// real signal, this language won by default", which is how ungated grammars creep
-// onto prose. Requiring >= 2 drops those weak wins (cost: trivial one-liners like
-// `const x = 1` stay plain).
-const minAutoDetectRelevance = 2
 
 // highlight.js resolves these to its "Plain text" grammar, which only escapes the
 // text — no tokens, no real language. A block declared as one of them is left
@@ -332,21 +183,12 @@ const plaintextLanguages = new Set(['plaintext', 'text', 'txt'])
 
 const preTag = new Set(['pre'])
 
-// highlight.js carries a display name per grammar (getLanguage(token).name) that
-// is clean for almost every language. A few come back as comma-lists or lowercase,
-// so override those by token; everything else uses the hljs name, falling back to
-// the raw token.
-const languageLabelOverrides: Record<string, string> = {
-  html: 'HTML',
-  markup: 'HTML',
-  xml: 'XML',
-  php: 'PHP',
-  ini: 'INI',
-  toml: 'TOML',
-}
-
+// Resolve a declared token to its badge label (case-insensitive, since hints
+// arrive in any case like `language-Rust`). A token the map does not cover falls
+// back to its capitalized form.
 const labelForLanguage = (language: string): string => {
-  return languageLabelOverrides[language] ?? hljs.getLanguage(language)?.name ?? language
+  const key = language.toLowerCase()
+  return supportedLabels[key] ?? key.charAt(0).toUpperCase() + key.slice(1)
 }
 
 // Block-level elements that some highlighters and editors use to lay out one
@@ -388,12 +230,12 @@ const getCodeBlockText = (target: Element): string => {
   return text
 }
 
-export const highlightCode: DomTransform = () => {
-  return (document) => {
+export const highlightCode: DomTransform = ({ highlightFn }) => {
+  return async (document) => {
     // Some editors emit a block of code as a standalone <code> with no <pre> wrapper.
     // Promote those to <pre><code> first so the loop below treats them like any other
-    // block: highlighted by a declared hint or by subset auto-detection, and rendered
-    // as a block (a loose <code> renders inline, collapsing the newlines). The signal
+    // block: highlighted by a declared hint (or detected JSON), and rendered as a
+    // block (a loose <code> renders inline, collapsing the newlines). The signal
     // is two or more non-empty lines, not just any newline: feeds often pretty-print
     // their HTML, wrapping an inline <code>word</code> as `<code>\n  word\n </code>`,
     // so a lone newline does not mean block. A single content line stays inline.
@@ -433,10 +275,13 @@ export const highlightCode: DomTransform = () => {
         continue
       }
 
-      // A declared, registered language wins outright (full grammar set, including
-      // the registered extras). Otherwise fall back to subset auto-detection — but
-      // only for a <pre><code>: a bare <pre> is as often plain preformatted text
-      // as code, so it is highlighted only when it carries an explicit hint.
+      // A code block is highlighted only when its language is known: declared via a
+      // hint (language-* class, data-language, etc.), or detected as JSON. JSON is
+      // the one detection kept because it is deterministic — the text actually parses
+      // as JSON — unlike relevance-based auto-detection, which mostly guesses wrong on
+      // short feed snippets. An unlabeled non-JSON block stays plain. The JSON check
+      // is limited to a <pre><code> (a bare <pre> is as often plain preformatted text
+      // as code).
       const declared = detectLanguage(pre, code)
 
       // A block explicitly marked as plain text is just text — leave it untouched.
@@ -444,37 +289,22 @@ export const highlightCode: DomTransform = () => {
         continue
       }
 
-      let highlighted: string | undefined
       let language: string | undefined
-      let isGuessed = false
 
-      if (declared && hljs.getLanguage(declared)) {
-        highlighted = hljs.highlight(text, { language: declared }).value
+      if (declared) {
         language = declared
       } else if (code && isJsonLike(text) && isParseableJson(text)) {
-        // Valid JSON is shaped like CSS to the auto-detector ({ key: value } with
-        // colons), its single most common false positive. Settle it structurally:
-        // an unlabeled block that actually parses as JSON is highlighted as JSON.
-        // Lenient dialects (jsonc, json5) fail JSON.parse and fall through to auto-detection.
-        highlighted = hljs.highlight(text, { language: 'json' }).value
         language = 'json'
-      } else if (code) {
-        const auto = hljs.highlightAuto(text, autoDetectLanguages)
-        const signature = auto.language ? autoDetectSignatures[auto.language] : undefined
-
-        // Accept the guess unless it is a weak default win or a loose grammar that
-        // fails its structural signature.
-        if (
-          auto.language &&
-          auto.relevance >= minAutoDetectRelevance &&
-          (!signature || signature.test(text))
-        ) {
-          highlighted = auto.value
-          language = auto.language
-          isGuessed = true
-        }
       }
 
+      if (language === undefined) {
+        continue
+      }
+
+      const highlighted = await highlightFn(text, language)
+
+      // The highlighter does not know this language — leave the block plain, with
+      // no badge.
       if (highlighted === undefined) {
         continue
       }
@@ -485,15 +315,8 @@ export const highlightCode: DomTransform = () => {
       // Expose the resolved language for a frontend badge. The attributes stay on
       // the <pre> (kept as a static container by the wrapping pass below), so a
       // badge anchored to it stays put while the inner <code> scrolls.
-      // data-pre-guessed marks a language we auto-detected rather than declared.
-      if (language) {
-        pre.setAttribute('data-pre-language', language)
-        pre.setAttribute('data-pre-label', labelForLanguage(language))
-
-        if (isGuessed) {
-          pre.setAttribute('data-pre-guessed', '')
-        }
-      }
+      pre.setAttribute('data-pre-language', language)
+      pre.setAttribute('data-pre-label', labelForLanguage(language))
     }
 
     // Give a bare code block the <pre><code> structure: the <pre> stays a static

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { parseHTML } from 'linkedom'
 import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser, queryElement } from '../../tests.js'
-import type { TransformContext } from '../../types.js'
+import type { HighlightFn, TransformContext } from '../../types.js'
 import { detectLanguage, highlightCode } from './highlightCode.js'
 
 const lineBreakBeforeConst = /;\s*\n\s*<span class="hljs-keyword">const/
@@ -415,10 +415,10 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(result).toContain('class="lang-python hljs"')
   })
 
-  it('should auto-detect and highlight an unlabeled code block', async () => {
+  it('should leave an unlabeled non-JSON block plain', async () => {
     const value = '<pre><code>function greet(name) {\n  return "Hello, " + name;\n}</code></pre>'
 
-    expect(await transform(value)).toContain('hljs')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should keep line breaks when each line is wrapped in a block element', async () => {
@@ -467,30 +467,17 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(value)
   })
 
-  it('should fall back to auto-detection when the declared language is unknown', async () => {
+  it('should leave a block with an unknown declared language plain', async () => {
     const value =
       '<pre><code class="language-nonexistent">function add(a, b) {\n  return a + b;\n}</code></pre>'
 
-    expect(await transform(value)).toContain('hljs')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a lang-auto block as plain text', async () => {
     const value = '<pre><code class="lang-auto">System: Host: laptop arch: x86_64</code></pre>'
 
     expect(await transform(value)).toEqualHtml(value)
-  })
-
-  it('should auto-detect HTML in an unlabeled block', async () => {
-    const value =
-      '<pre><code>&lt;div class="card"&gt;&lt;span&gt;hi&lt;/span&gt;&lt;/div&gt;</code></pre>'
-
-    expect(await transform(value)).toContain('hljs')
-  })
-
-  it('should highlight a CSS block that has braces', async () => {
-    const value = '<pre><code>.btn { color: red; padding: 4px; }</code></pre>'
-
-    expect(await transform(value)).toContain('hljs')
   })
 
   it('should highlight an unlabeled JSON block as JSON', async () => {
@@ -509,14 +496,12 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(await transform(value)).not.toContain('data-pre-language="json"')
   })
 
-  it('should leave a JSONC block with comments to auto-detection, not the JSON branch', async () => {
+  it('should leave a JSONC block with comments plain (it fails JSON.parse)', async () => {
     const value = '<pre><code>{\n  // a comment\n  "linter": true\n}</code></pre>'
-    const result = await transform(value)
 
     // JSON.parse fails on the comment, so the deterministic JSON branch is skipped.
-    // Auto-detection may still label it JSON, but only as a guess — never the
-    // certain (un-guessed) result the JSON branch produces.
-    expect(result).toContain('data-pre-guessed')
+    // With no auto-detection fallback, the block stays plain.
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should be idempotent on an unlabeled JSON block', async () => {
@@ -527,25 +512,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(twice).toBe(once)
   })
 
-  it('should not highlight prose that loosely resembles code', async () => {
-    const value = '<pre><code>Note: this matters; really, it does. See also: the docs.</code></pre>'
-
-    expect(await transform(value)).toEqualHtml(value)
-  })
-
-  it('should not highlight key-value output that resembles YAML', async () => {
-    const value = '<pre><code>Status: ok\nName: test\nValue: 42</code></pre>'
-
-    expect(await transform(value)).toEqualHtml(value)
-  })
-
-  it('should not highlight a CSS-looking sentence without braces', async () => {
-    const value = '<pre><code>color: the role it plays; size: how big it feels.</code></pre>'
-
-    expect(await transform(value)).toEqualHtml(value)
-  })
-
-  it('should not highlight a trivial one-liner below the relevance floor', async () => {
+  it('should leave a trivial unlabeled one-liner plain', async () => {
     const value = '<pre><code>const x = 1</code></pre>'
 
     expect(await transform(value)).toEqualHtml(value)
@@ -602,7 +569,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(result).toContain('plain preformatted text')
   })
 
-  it('should not auto-detect a bare pre: unlabeled code stays plain', async () => {
+  it('should leave an unlabeled bare pre plain', async () => {
     const value = '<pre>function greet(name) {\n  return "Hello, " + name;\n}</pre>'
     const result = await transform(value)
 
@@ -660,15 +627,6 @@ describeForEachParser('highlightCode', (parseHtml) => {
     // The <pre> now carries data-pre-* language attributes, so assert the pieces.
     expect(result.startsWith('<pre')).toBe(true)
     expect(result).toContain('<code class="language-python hljs">')
-  })
-
-  it('should promote and auto-detect an unhinted multi-line standalone code', async () => {
-    const value = '<code>function greet(name) {\n  return "Hello, " + name;\n}</code>'
-    const result = await transform(value)
-
-    expect(result.startsWith('<pre')).toBe(true)
-    expect(result).toContain('<code')
-    expect(result).toContain('hljs')
   })
 
   it('should promote an unhinted multi-line standalone code even without highlighting', async () => {
@@ -874,14 +832,6 @@ describeForEachParser('highlightCode', (parseHtml) => {
       expect(result).toContain('data-pre-label="JavaScript"')
     })
 
-    it('should mark an auto-detected language with data-pre-guessed', async () => {
-      const value = '<pre><code>function greet(name) {\n  return "Hello, " + name;\n}</code></pre>'
-      const result = await transform(value)
-
-      expect(result).toContain('data-pre-language="javascript"')
-      expect(result).toContain('data-pre-guessed')
-    })
-
     it('should label from the highlight.js display name', async () => {
       const value = '<pre><code class="language-crystal">puts "hi"</code></pre>'
       const result = await transform(value)
@@ -912,6 +862,35 @@ describeForEachParser('highlightCode', (parseHtml) => {
       expect(result).not.toContain('data-pre')
       expect(result).not.toContain('hljs')
       expect(result).toContain('just some plain text')
+    })
+  })
+
+  describe('custom highlightFn', () => {
+    it('should use a custom highlightFn from the context instead of hljs', async () => {
+      const highlightFn: HighlightFn = (text, language) =>
+        `<span class="custom-${language}">${text}</span>`
+      const value = '<pre><code class="language-js">const x = 1</code></pre>'
+      const result = await transform(value, { ...baseContext, highlightFn })
+
+      expect(result).toContain('<span class="custom-js">const x = 1</span>')
+      expect(result).toContain('data-pre-language="js"')
+      expect(result).not.toContain('hljs-keyword')
+    })
+
+    it('should leave a block plain when the custom highlightFn returns undefined', async () => {
+      const highlightFn: HighlightFn = () => undefined
+      const value = '<pre><code class="language-js">const x = 1</code></pre>'
+      const result = await transform(value, { ...baseContext, highlightFn })
+
+      expect(result).toBe(value)
+    })
+
+    it('should support an async highlightFn', async () => {
+      const highlightFn: HighlightFn = async (text) => `<i>${text}</i>`
+      const value = '<pre><code class="language-js">const x = 1</code></pre>'
+      const result = await transform(value, { ...baseContext, highlightFn })
+
+      expect(result).toContain('<i>const x = 1</i>')
     })
   })
 

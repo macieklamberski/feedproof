@@ -4,6 +4,7 @@ import {
   defaultDomTransforms,
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
+  defaultHighlightFn,
   defaultInertSelectors,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
@@ -35,6 +36,7 @@ export const transformContent = async (
     cleanUrlFn: options.cleanUrlFn,
     assetProxyFn: options.assetProxyFn,
     enrichEmbedFn: options.enrichEmbedFn,
+    highlightFn: options.highlightFn ?? defaultHighlightFn,
     articleTitle: options.articleTitle,
   }
 
@@ -67,13 +69,14 @@ export {
   normalizeEmbedFields,
   updateEmbedPlaceholder,
 } from './common.js'
-export { defaultResolveUrlFn } from './defaults.js'
+export { defaultHighlightFn, defaultResolveUrlFn } from './defaults.js'
 export {
   composeThumbnailUrl,
   extractVideoId,
   youtubeEmbedResolver,
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
+export { hljsHighlightFn } from './highlighters/hljs.js'
 export { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 export { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
 export { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
@@ -127,6 +130,7 @@ export type {
   EmbedResolverResult,
   Enclosure,
   EnrichEmbedFn,
+  HighlightFn,
   MaybePromise,
   ParseHtmlFn,
   ResolveUrlFn,

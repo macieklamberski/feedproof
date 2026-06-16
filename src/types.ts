@@ -68,6 +68,11 @@ export type AssetType = 'image' | 'video' | 'audio'
 
 export type AssetProxyFn = (url: string, type: AssetType) => string | undefined
 
+// Highlights a code block's text for a known language, returning the highlighted
+// inner HTML, or undefined when the highlighter does not know the language (the
+// block then stays plain). Async so consumers can plug in an async highlighter.
+export type HighlightFn = (text: string, language: string) => MaybePromise<string | undefined>
+
 export type TransformContext = {
   baseUrl?: string
   enclosures?: Array<Enclosure>
@@ -84,6 +89,7 @@ export type TransformContext = {
   cleanUrlFn?: CleanUrlFn
   assetProxyFn?: AssetProxyFn
   enrichEmbedFn?: EnrichEmbedFn
+  highlightFn: HighlightFn
   articleTitle?: string
 }
 
@@ -110,6 +116,7 @@ export type TransformContentOptions = {
   cleanUrlFn?: CleanUrlFn
   assetProxyFn?: AssetProxyFn
   enrichEmbedFn?: EnrichEmbedFn
+  highlightFn?: HighlightFn
   articleTitle?: string
   stringTransforms?: Array<StringTransform>
   domTransforms?: Array<DomTransform>
