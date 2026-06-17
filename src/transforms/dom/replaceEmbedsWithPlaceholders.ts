@@ -1,6 +1,46 @@
 import { createEmbedPlaceholder, getDimensions } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
+// The dominant responsive-embed shape puts the aspect ratio on a wrapper
+// (`padding-bottom:56.25%`) with the iframe itself at `width="100%"` or unsized.
+const paddingRatioRegex = /padding-(?:bottom|top):\s*([\d.]+)%/i
+
+// When the iframe carries no usable dimensions, derive an aspect ratio from an
+// ancestor wrapper's padding hack so the placeholder can still reserve space.
+// The 100×N pair encodes the ratio (N% of the width), not absolute pixels.
+const getWrapperAspect = (element: Element): { width?: number; height?: number } => {
+  let current = element.parentElement
+  let depth = 0
+
+  while (current && depth < 3) {
+    const style = current.getAttribute('style')
+    const match = style ? paddingRatioRegex.exec(style) : null
+
+    if (match) {
+      const percent = Number(match[1])
+
+      if (percent > 0 && percent < 1000) {
+        return { width: 100, height: Math.round(percent) }
+      }
+    }
+
+    current = current.parentElement
+    depth++
+  }
+
+  return {}
+}
+
+const getEmbedDimensions = (element: Element): { width?: number; height?: number } => {
+  const dimensions = getDimensions(element)
+
+  if (dimensions.width === undefined && dimensions.height === undefined) {
+    return getWrapperAspect(element)
+  }
+
+  return dimensions
+}
+
 export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
   const { embedResolvers, resolveUrlFn, baseUrl } = context
 
@@ -28,7 +68,7 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
           continue
         }
 
-        const { width, height } = getDimensions(element)
+        const { width, height } = getEmbedDimensions(element)
 
         const placeholderMetadata =
           width === undefined && height === undefined
@@ -63,7 +103,7 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
         continue
       }
 
-      iframe.replaceWith(createEmbedPlaceholder(document, src, getDimensions(iframe)))
+      iframe.replaceWith(createEmbedPlaceholder(document, src, getEmbedDimensions(iframe)))
     }
   }
 }
