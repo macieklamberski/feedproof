@@ -6,6 +6,7 @@ import {
   defaultEmojiImageHosts,
   defaultHighlightFn,
   defaultInertSelectors,
+  defaultLazyIframeAttributes,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
   defaultPreservedPreClasses,
@@ -28,6 +29,7 @@ export const baseContext: TransformContext = {
   preservedPreClasses: defaultPreservedPreClasses,
   lazySrcAttributes: defaultLazySrcAttributes,
   lazySrcsetAttributes: defaultLazySrcsetAttributes,
+  lazyIframeAttributes: defaultLazyIframeAttributes,
   trackingHosts: defaultTrackingHosts,
   trackingPathSegments: defaultTrackingPathSegments,
 

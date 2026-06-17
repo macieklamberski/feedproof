@@ -1,4 +1,4 @@
-import { expect, it } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
 import { defaultEmbedResolvers } from '../../defaults.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
@@ -323,5 +323,38 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
     const twice = await transform(once)
 
     expect(twice).toBe(once)
+  })
+
+  describe('non-iframe and lazy carriers', () => {
+    it('should recover a lazy iframe src from a data attribute', async () => {
+      const value = '<iframe src="about:blank" data-src="https://example.com/embed/x"></iframe>'
+      const result = await transform(value, withNoResolvers)
+
+      expect(result).toContain('data-embed-src="https://example.com/embed/x"')
+      expect(result).not.toContain('<iframe')
+    })
+
+    it('should replace an <object data> carrier with a placeholder', async () => {
+      const value = '<object data="https://example.com/v/x"></object>'
+      const result = await transform(value, withNoResolvers)
+
+      expect(result).toContain('data-embed-src="https://example.com/v/x"')
+      expect(result).not.toContain('<object')
+    })
+
+    it('should replace an <embed src> carrier with a placeholder', async () => {
+      const value = '<embed src="https://example.com/e/x">'
+      const result = await transform(value, withNoResolvers)
+
+      expect(result).toContain('data-embed-src="https://example.com/e/x"')
+      expect(result).not.toContain('<embed')
+    })
+
+    it('should leave an empty iframe with no recoverable content', async () => {
+      const value = '<iframe src="about:blank"></iframe>'
+      const result = await transform(value, withNoResolvers)
+
+      expect(result).toContain('<iframe')
+    })
   })
 })

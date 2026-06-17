@@ -157,6 +157,19 @@ export const defaultLazySrcAttributes = [
   'data-runner-src', // Amazon affiliate / generic — 42 hits, <0.01% of feeds.
 ]
 
+// Attributes that hold a lazy/consent-gated iframe src (the real embed URL) when the
+// `src` itself is empty or `about:blank`. Counts from a 1/16 corpus iframe-tag sample.
+export const defaultLazyIframeAttributes = [
+  'data-lazy-src', // Generic lazy loaders.
+  'data-src', // Generic lazy loaders.
+  'data-litespeed-src', // LiteSpeed Cache.
+  'data-mce-src', // TinyMCE editor output.
+  'data-original-src', // Generic lazy loaders.
+  'data-opt-src', // Image/embed optimizers.
+  'src-consent', // GDPR/cookie-consent wrappers (e.g. Borlabs) holding the real src.
+  'consent-original-src', // Consent wrappers.
+]
+
 export const defaultLazySrcsetAttributes = [
   'data-srcset', // lazysizes / vanilla-lazyload / lozad / bLazy / generic — 119k hits.
   'data-tf-srcset', // Avada / Fusion ThemeBuilder — 17k hits.

@@ -1,12 +1,45 @@
 import { createEmbedPlaceholder, getElementDimensions } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
+// A real, loadable src — not empty or the `about:blank` lazy placeholder.
+const isUsableSrc = (src: string | null): src is string => {
+  const trimmed = src?.trim()
+  return !!trimmed && trimmed !== 'about:blank'
+}
+
+// Rejects flag-style values; a real URL carries a `:`, `/`, or `.`.
+const urlShapeRegex = /[:/.]/
+
+// Promote a lazy/consent-gated iframe src (the real embed URL parked in a data-*
+// attribute) into `src` when the src itself is empty or `about:blank`.
+const recoverLazyIframeSrc = (iframe: Element, attributes: ReadonlyArray<string>): void => {
+  if (isUsableSrc(iframe.getAttribute('src'))) {
+    return
+  }
+
+  for (const attribute of attributes) {
+    const value = iframe.getAttribute(attribute)
+
+    if (value && urlShapeRegex.test(value)) {
+      iframe.setAttribute('src', value)
+      return
+    }
+  }
+}
+
 export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
-  const { embedResolvers, resolveUrlFn, baseUrl } = context
+  const { embedResolvers, resolveUrlFn, baseUrl, lazyIframeAttributes } = context
 
   return async (document) => {
     const iframeSnapshot = document.getElementsByTagName('iframe') as unknown as Array<Element>
     const hasIframes = iframeSnapshot.length > 0
+
+    // Promote lazy/consent srcs first so both the resolvers and the fallback see them.
+    if (hasIframes) {
+      for (const iframe of iframeSnapshot) {
+        recoverLazyIframeSrc(iframe, lazyIframeAttributes)
+      }
+    }
 
     for (const resolver of embedResolvers) {
       if (!hasIframes && resolver.selector.startsWith('iframe')) {
@@ -43,27 +76,30 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
       }
     }
 
-    if (!hasIframes) {
-      return
+    // Generic iframe fallback. Resolvers may have detached some iframes (parentNode null).
+    if (hasIframes) {
+      for (const iframe of iframeSnapshot) {
+        if (!iframe.parentNode) {
+          continue
+        }
+
+        const src = iframe.getAttribute('src')
+
+        if (isUsableSrc(src) && resolveUrlFn(src, baseUrl)) {
+          iframe.replaceWith(createEmbedPlaceholder(document, src, getElementDimensions(iframe)))
+        }
+      }
     }
 
-    // Resolvers may have detached some iframes — skip those (parentNode null).
-    for (const iframe of iframeSnapshot) {
-      if (!iframe.parentNode) {
-        continue
+    // Legacy <object data> / <embed src> carriers — the iframe-only paths above miss
+    // them. Replace with a provider-less placeholder when the URL resolves.
+    for (const element of document.querySelectorAll('object[data], embed[src]')) {
+      const url =
+        element.localName === 'object' ? element.getAttribute('data') : element.getAttribute('src')
+
+      if (url && resolveUrlFn(url, baseUrl)) {
+        element.replaceWith(createEmbedPlaceholder(document, url, getElementDimensions(element)))
       }
-
-      const src = iframe.getAttribute('src')
-
-      if (!src) {
-        continue
-      }
-
-      if (!resolveUrlFn(src, baseUrl)) {
-        continue
-      }
-
-      iframe.replaceWith(createEmbedPlaceholder(document, src, getElementDimensions(iframe)))
     }
   }
 }
