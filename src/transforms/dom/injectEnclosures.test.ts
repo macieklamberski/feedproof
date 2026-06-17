@@ -146,6 +146,17 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     expect(matches).toHaveLength(1)
   })
 
+  it('should skip an enclosure whose url is nested in an inline player iframe', async () => {
+    const value = html`
+      <p>Content</p>
+      <iframe src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fexample.com%2Fep.mp3&color=ff5500"></iframe>
+    `
+    const context = withEnclosures([{ url: 'https://example.com/ep.mp3', type: 'audio/mpeg' }])
+    const result = await transform(value, context)
+
+    expect(result).not.toContain('<audio')
+  })
+
   it('should inject both image and audio enclosures', async () => {
     const value = '<p>Content</p>'
     const result = await transform(

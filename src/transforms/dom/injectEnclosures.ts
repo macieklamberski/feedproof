@@ -51,6 +51,16 @@ const normalizeMediaUrl = (url: string, cleanUrlFn?: CleanUrlFn): string => {
   return cleanUrlFn ? cleanUrlFn(url) : url
 }
 
+// Inline players (SoundCloud, Apple Podcasts, generic oEmbed proxies) carry the
+// real media file in a `url`/`u` query param rather than as the iframe src itself.
+// Pull it out so an enclosure pointing at that same file isn't injected again.
+const extractNestedMediaUrl = (src: string): string | undefined => {
+  try {
+    const params = new URL(src, 'https://feedsweep.invalid').searchParams
+    return params.get('url') ?? params.get('u') ?? undefined
+  } catch {}
+}
+
 // Collect URLs already referenced by media elements so we don't double-inject.
 // Querying the DOM is both cheaper and more precise than substring-matching
 // the serialized HTML (which would also match URLs appearing in prose).
@@ -62,6 +72,12 @@ const collectExistingMediaUrls = (document: Document, cleanUrlFn?: CleanUrlFn): 
 
     if (src) {
       urls.add(normalizeMediaUrl(src, cleanUrlFn))
+
+      const nested = extractNestedMediaUrl(src)
+
+      if (nested) {
+        urls.add(normalizeMediaUrl(nested, cleanUrlFn))
+      }
     }
   }
 
