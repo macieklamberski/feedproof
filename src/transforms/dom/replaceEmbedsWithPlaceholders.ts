@@ -7,6 +7,8 @@ import type { DomTransform } from '../../types.js'
 
 // A real, loadable src — not empty or the `about:blank` lazy placeholder. fixLazyIframes
 // has already promoted any lazy/consent-gated src into `src` by the time this runs.
+// Possible cleanup: this overlaps with resolveUrlFn (called right after in the fallback).
+// If resolveUrlFn rejected empty/`about:blank` placeholders, this guard could fold into it.
 const isUsableSrc = (src: string | null): src is string => {
   const trimmed = src?.trim()
   return !!trimmed && trimmed !== 'about:blank'
