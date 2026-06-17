@@ -539,6 +539,15 @@ describeForEachParser('getWrapperAspectRatio', (parseHtml) => {
     expect(getWrapperAspectRatio(iframe, 0)).toBeUndefined()
     expect(getWrapperAspectRatio(iframe, 1)).toBe(2)
   })
+
+  it('should not read a wrapper that holds the element plus siblings', () => {
+    const document = parseHtml(
+      '<div style="aspect-ratio:16/9"><iframe></iframe><p>caption</p></div>',
+    )
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+  })
 })
 
 describeForEachParser('hasAncestorWithTagName', (parseHtml) => {

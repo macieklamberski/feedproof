@@ -228,8 +228,10 @@ export const getElementAspectRatio = (element: Element): number | undefined => {
 
 // Walks the element and its ancestors (the element plus up to `maxDepth` levels) and returns the
 // first aspect ratio any of them declares — for an element whose own dimensions are unknown but
-// which sits in a responsive wrapper. Call getElementAspectRatio directly when only the element
-// itself matters (e.g. an image with its own `aspect-ratio`).
+// which sits in a responsive wrapper. Only ascends into a parent that wraps this element alone:
+// a parent with other element children sizes the whole group, so its ratio isn't this element's.
+// Call getElementAspectRatio directly when only the element itself matters (e.g. an image with
+// its own `aspect-ratio`).
 export const getWrapperAspectRatio = (
   element: Element,
   maxDepth = maxWrapperAncestorDepth,
@@ -244,7 +246,13 @@ export const getWrapperAspectRatio = (
       return ratio
     }
 
-    current = current.parentElement
+    const parent: Element | null = current.parentElement
+
+    if (!parent || parent.children.length > 1) {
+      break
+    }
+
+    current = parent
     depth++
   }
 }
