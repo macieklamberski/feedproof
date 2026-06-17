@@ -23,9 +23,9 @@ const promotableDimensions = (element: Element): { width: number; height: number
 // `?width=&height=`, or `s=WxH`. This is the intrinsic size of that rendition, a
 // safer source than an inline-style display box. A `data:` placeholder (a lazy
 // image not yet resolved) carries no size and is skipped.
-const urlPairPattern = /(?:^|[/_=-])(\d{2,5})x(\d{2,5})(?=[._\-&)?]|$)/gi
-const urlQueryWidth = /[?&](?:w|width)=(\d{2,5})\b/i
-const urlQueryHeight = /[?&](?:h|height)=(\d{2,5})\b/i
+const urlPairRegex = /(?:^|[/_=-])(\d{2,5})x(\d{2,5})(?=[._\-&)?]|$)/gi
+const urlQueryWidthRegex = /[?&](?:w|width)=(\d{2,5})\b/i
+const urlQueryHeightRegex = /[?&](?:h|height)=(\d{2,5})\b/i
 
 const urlDimensions = (src: string | null): { width: number; height: number } | undefined => {
   if (!src || src.startsWith('data:')) {
@@ -34,11 +34,11 @@ const urlDimensions = (src: string | null): { width: number; height: number } | 
 
   // Explicit w/h query params win; otherwise the last WxH pair in the path or
   // filename (the rendition size sits after any path digits).
-  let width = Number(urlQueryWidth.exec(src)?.[1])
-  let height = Number(urlQueryHeight.exec(src)?.[1])
+  let width = Number(urlQueryWidthRegex.exec(src)?.[1])
+  let height = Number(urlQueryHeightRegex.exec(src)?.[1])
 
   if (!(width > pixelDimensionLimit && height > pixelDimensionLimit)) {
-    const pair = [...src.matchAll(urlPairPattern)].at(-1)
+    const pair = [...src.matchAll(urlPairRegex)].at(-1)
     width = Number(pair?.[1])
     height = Number(pair?.[2])
   }

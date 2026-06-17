@@ -5,7 +5,7 @@ import { baseContext, describeForEachParser, queryElement } from '../../tests.js
 import type { HighlightFn, TransformContext } from '../../types.js'
 import { detectLanguage, highlightCode } from './highlightCode.js'
 
-const lineBreakBeforeConst = /;\s*\n\s*<span class="hljs-keyword">const/
+const lineBreakBeforeConstRegex = /;\s*\n\s*<span class="hljs-keyword">const/
 
 describe('detectLanguage', () => {
   const createElement = (html: string): { pre: Element; code: Element | null } => {
@@ -427,7 +427,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const result = await transform(value)
 
     expect(result).toContain('hljs-keyword')
-    expect(result).toMatch(lineBreakBeforeConst)
+    expect(result).toMatch(lineBreakBeforeConstRegex)
   })
 
   it('should collapse nested block wrappers to a single line break', async () => {
@@ -435,7 +435,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
       '<pre><code class="language-js"><div><div>const x = 1;</div></div><div><div>const y = 2;</div></div></code></pre>'
     const result = await transform(value)
 
-    expect(result).toMatch(lineBreakBeforeConst)
+    expect(result).toMatch(lineBreakBeforeConstRegex)
     expect(result).not.toContain('\n\n')
   })
 
@@ -444,7 +444,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const result = await transform(value)
 
     expect(result).toContain('<pre')
-    expect(result).toMatch(lineBreakBeforeConst)
+    expect(result).toMatch(lineBreakBeforeConstRegex)
   })
 
   it('should not touch inline code outside pre', async () => {

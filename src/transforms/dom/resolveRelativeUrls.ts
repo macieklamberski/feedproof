@@ -4,11 +4,11 @@ import type { DomTransform } from '../../types.js'
 
 // Protocol-relative URLs (`//host/path`) are intentionally excluded so they
 // get upgraded to the base URL's scheme.
-const absoluteOrOpaqueUrl = /^(?:https?:|data:|mailto:|tel:|javascript:)/i
+const absoluteOrOpaqueUrlRegex = /^(?:https?:|data:|mailto:|tel:|javascript:)/i
 
 // `, ` (comma + whitespace) only — preserves URL-internal commas (Substack
 // CDN transforms etc.) which aren't followed by whitespace.
-const srcsetSeparator = /,\s+/
+const srcsetSeparatorRegex = /,\s+/
 
 export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
   return (document) => {
@@ -27,7 +27,7 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
         const href = element.getAttribute('href')
 
         // Preserve fragment-only hrefs so in-article anchors keep scrolling locally.
-        if (href && !href.startsWith('#') && !absoluteOrOpaqueUrl.test(href)) {
+        if (href && !href.startsWith('#') && !absoluteOrOpaqueUrlRegex.test(href)) {
           const resolved = resolveUrl(href, baseUrl)
 
           if (resolved) {
@@ -38,7 +38,7 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
 
       const src = element.getAttribute('src')
 
-      if (src && !absoluteOrOpaqueUrl.test(src)) {
+      if (src && !absoluteOrOpaqueUrlRegex.test(src)) {
         const resolved = resolveUrl(src, baseUrl)
 
         if (resolved) {
@@ -49,7 +49,7 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
       if (localName === 'video') {
         const poster = element.getAttribute('poster')
 
-        if (poster && !absoluteOrOpaqueUrl.test(poster)) {
+        if (poster && !absoluteOrOpaqueUrlRegex.test(poster)) {
           const resolved = resolveUrl(poster, baseUrl)
 
           if (resolved) {
@@ -63,11 +63,11 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
 
         if (srcset) {
           let needsResolution = false
-          const candidates = srcset.split(srcsetSeparator)
+          const candidates = srcset.split(srcsetSeparatorRegex)
 
           for (const candidate of candidates) {
             const trimmed = candidate.trimStart()
-            if (trimmed && !absoluteOrOpaqueUrl.test(trimmed)) {
+            if (trimmed && !absoluteOrOpaqueUrlRegex.test(trimmed)) {
               needsResolution = true
               break
             }
