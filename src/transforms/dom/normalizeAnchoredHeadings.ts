@@ -53,9 +53,10 @@ const slugify = (value: string): string => {
 // Headings carry in-page permalinks ("anchors") in many shapes: the whole
 // heading wrapped in a `#fragment` link, a trailing `#`/`¶` glyph, a generator's
 // empty `headerlink`/`hash-link` anchor, and so on. This collapses every shape to
-// a plain heading carrying the fragment on its own `id` (the scroll target), with
-// the permalink anchor removed — so the reader renders one consistent permalink
-// affordance and the heading text is plain.
+// one canonical affordance: plain heading text plus a single empty, self-referential
+// anchor (`<a id="fragment" href="#fragment">`) as the heading's first child — the
+// fragment rides on the anchor's `id` (the scroll target), so the reader can paint a
+// clickable permalink glyph (e.g. `::before { content: '#' }`) without any script.
 export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn }) => {
   return (document) => {
     const headings = document.querySelectorAll(headingSelector)
@@ -64,6 +65,7 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
       const headingId = heading.getAttribute('id')
       const headingSlug = slugify(heading.textContent ?? '')
       const anchors = heading.querySelectorAll('a[href]')
+      let permalinkFragment: string | null = null
 
       for (const anchor of anchors) {
         const href = anchor.getAttribute('href') ?? ''
@@ -147,12 +149,27 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
 
         anchor.remove()
 
-        // The fragment target rides on the heading's own `id` (the scroll target),
-        // unless a generator already set one. The downstream reader keeps the id.
-        if (!heading.hasAttribute('id')) {
-          heading.setAttribute('id', fragment)
+        // Target the heading's own id when a generator set one, else the anchor's
+        // fragment. The single canonical permalink is inserted after the loop.
+        if (permalinkFragment === null) {
+          permalinkFragment = headingId ?? fragment
         }
       }
+
+      if (permalinkFragment === null) {
+        continue
+      }
+
+      // The id rides on the anchor, not the heading, so the empty anchor survives
+      // empty-element stripping without creating a duplicate target.
+      if (heading.getAttribute('id') === permalinkFragment) {
+        heading.removeAttribute('id')
+      }
+
+      const permalink = document.createElement('a')
+      permalink.setAttribute('id', permalinkFragment)
+      permalink.setAttribute('href', `#${permalinkFragment}`)
+      heading.insertBefore(permalink, heading.firstChild)
     }
   }
 }
