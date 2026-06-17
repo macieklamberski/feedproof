@@ -262,6 +262,23 @@ export const getWrapperAspectRatio = (
 // won't promote a dimension at or below it.
 export const pixelDimensionLimit = 2
 
+const styleDisplayNoneRegex = /(?:^|;)\s*display\s*:\s*none/i
+const styleVisibilityHiddenRegex = /(?:^|;)\s*visibility\s*:\s*hidden/i
+
+// An element hidden from view: the `hidden` attribute, inline `display:none`, or
+// inline `visibility:hidden`. These are unambiguous. Other "hidden" signals are
+// overloaded and stay with their callers — `opacity:0` is usually a fade-in and
+// `0×0` is the lazy-placeholder convention, both handled in removeTrackingPixels.
+export const isElementHidden = (element: Element): boolean => {
+  if (element.hasAttribute('hidden')) {
+    return true
+  }
+
+  const style = element.getAttribute('style')
+
+  return !!style && (styleDisplayNoneRegex.test(style) || styleVisibilityHiddenRegex.test(style))
+}
+
 export const createPlaceholder = <Type extends object>(
   document: Document,
   type: string,

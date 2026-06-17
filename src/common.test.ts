@@ -9,6 +9,7 @@ import {
   getElementDimensions,
   getWrapperAspectRatio,
   hasAncestorWithTagName,
+  isElementHidden,
   isJsonLike,
   isParseableJson,
   isSafeThumbnailUrl,
@@ -442,6 +443,57 @@ describeForEachParser('getElementDimensions', (parseHtml) => {
     const image = queryElement(document, 'img')
 
     expect(getElementDimensions(image)).toEqual({ width: 1.5, height: 2.5 })
+  })
+})
+
+describeForEachParser('isElementHidden', (parseHtml) => {
+  it('should return true for the hidden attribute', () => {
+    const document = parseHtml('<div hidden>x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(true)
+  })
+
+  it('should return true for inline display:none', () => {
+    const document = parseHtml('<div style="display: none">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(true)
+  })
+
+  it('should return true for inline visibility:hidden', () => {
+    const document = parseHtml('<div style="visibility: hidden">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(true)
+  })
+
+  it('should match display:none among other declarations', () => {
+    const document = parseHtml('<div style="color: red; display: none">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(true)
+  })
+
+  it('should not treat opacity:0 as hidden', () => {
+    const document = parseHtml('<div style="opacity: 0">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(false)
+  })
+
+  it('should not treat a 0×0 size as hidden', () => {
+    const document = parseHtml('<div style="width: 0; height: 0">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(false)
+  })
+
+  it('should return false for a visible element', () => {
+    const document = parseHtml('<div style="color: red">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(false)
   })
 })
 
