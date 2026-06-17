@@ -21,12 +21,11 @@ const permalinkClasses = new Set([
   'permalink', // Generic permalink markup.
 ])
 
-// Single-glyph permalink markers: hash, pilcrow, section sign, fleuron, link
-// emoji, zero-width space. An anchor whose visible content is only one of these
-// (or empty, or a run of hashes like "##"/"###") is a decorative permalink, not
-// real link text.
-const permalinkGlyphs = new Set(['#', '¶', '§', '❡', '\u{1f517}', '​'])
-const hashRunRegex = /^#+$/
+// Decorative permalink markers: a run of one or more glyph characters — hash (so
+// "#"/"##"/"###" by heading level), pilcrow, section sign, fleuron, link emoji, or
+// zero-width space. An anchor whose visible content is only these (or empty) is a
+// permalink, not real link text.
+const permalinkLabelRegex = /^[#¶§❡\u{1f517}​]+$/u
 
 const footnoteClassRegex = /footnote/i
 const bracketedNumberRegex = /^\[\d+\]$/
@@ -45,12 +44,7 @@ const interactiveAttrRegex = /toggle|accordion|collapse/i
 const isGlyphMarker = (text: string, fragment: string): boolean => {
   const trimmed = text.trim()
 
-  return (
-    trimmed === '' ||
-    hashRunRegex.test(trimmed) ||
-    permalinkGlyphs.has(trimmed) ||
-    trimmed === `#${fragment}`
-  )
+  return trimmed === '' || permalinkLabelRegex.test(trimmed) || trimmed === `#${fragment}`
 }
 
 // Lowercases and collapses runs of non-alphanumerics (Unicode-aware, so CJK and
