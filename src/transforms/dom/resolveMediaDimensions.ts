@@ -1,13 +1,13 @@
-import { getDimensions, pixelDimensionLimit } from '../../common.js'
+import { getElementDimensions, pixelDimensionLimit } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 // Both dimensions, only when each is above the tracking-pixel threshold (a real
 // content image is never that small, and a promoted pixel-sized value would let
-// removeTrackingPixels read it as a tracker). getDimensions reads width/height
+// removeTrackingPixels read it as a tracker). getElementDimensions reads width/height
 // attributes then numeric `width:`/`height:` in inline style, so `max-*`/`auto`/`%`
 // never qualify.
 const promotableDimensions = (element: Element): { width: number; height: number } | undefined => {
-  const { width, height } = getDimensions(element)
+  const { width, height } = getElementDimensions(element)
 
   if (
     width !== undefined &&

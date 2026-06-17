@@ -150,7 +150,7 @@ export const hasAncestorWithTagName = (node: Node, tagSet: Set<string>, stopAt?:
 const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*(?:;|$)/i
 const styleHeightRegex = /(?:^|;)\s*height\s*:\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*(?:;|$)/i
 
-export const getDimensions = (element: Element): { width?: number; height?: number } => {
+export const getElementDimensions = (element: Element): { width?: number; height?: number } => {
   const width = coerceNumber(element.getAttribute('width'))
   const height = coerceNumber(element.getAttribute('height'))
 
