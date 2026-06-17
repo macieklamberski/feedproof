@@ -1,64 +1,18 @@
-import { createEmbedPlaceholder, getDimensions } from '../../common.js'
+import { createEmbedPlaceholder, getDimensions, getWrapperAspectRatio } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-// WordPress's responsive embed wraps the iframe in a figure carrying the ratio as
-// a class (`wp-embed-aspect-16-9`), styled by an external stylesheet feedsweep never
-// sees. The class itself encodes the ratio, so read it directly.
-const aspectClassRegex = /wp-embed-aspect-(\d+)-(\d+)/
-
-// The other common responsive shape puts the ratio in an inline padding hack
-// (`padding-bottom:56.25%`) with the iframe itself at `width="100%"` or unsized.
-// Parsed off the raw `style` attribute rather than the CSSOM `style` API: linkedom's
-// getPropertyValue returns `undefined` (not "") for unset properties, and both parsers
-// drop declarations whose property name isn't lowercase — a case-insensitive regex
-// matches those, and this mirrors getDimensions, which also reads getAttribute('style').
-const paddingRatioRegex = /padding-(?:bottom|top):\s*([\d.]+)%/i
-
-// How many ancestors up to look for a responsive wrapper (figure > div > iframe).
-const maxWrapperAncestorDepth = 3
-
-// When the iframe carries no usable dimensions, derive an aspect ratio from an
-// ancestor wrapper (aspect class or padding hack) so the placeholder can still
-// reserve space. The returned pair encodes the ratio, not absolute pixels.
-const getWrapperAspect = (element: Element): { width?: number; height?: number } => {
-  let current = element.parentElement
-  let depth = 0
-
-  while (current && depth < maxWrapperAncestorDepth) {
-    const aspectMatch = aspectClassRegex.exec(current.getAttribute('class') ?? '')
-
-    if (aspectMatch) {
-      const width = Number(aspectMatch[1])
-      const height = Number(aspectMatch[2])
-
-      if (width > 0 && height > 0) {
-        return { width, height }
-      }
-    }
-
-    const style = current.getAttribute('style')
-    const paddingMatch = style ? paddingRatioRegex.exec(style) : null
-
-    if (paddingMatch) {
-      const percent = Number(paddingMatch[1])
-
-      if (percent > 0 && percent < 1000) {
-        return { width: 100, height: Math.round(percent) }
-      }
-    }
-
-    current = current.parentElement
-    depth++
-  }
-
-  return {}
-}
-
+// When the iframe carries no usable dimensions, fall back to a responsive wrapper's
+// aspect ratio so the placeholder can still reserve space. The 100×N pair encodes the
+// ratio, not absolute pixels.
 const getEmbedDimensions = (element: Element): { width?: number; height?: number } => {
   const dimensions = getDimensions(element)
 
   if (dimensions.width === undefined && dimensions.height === undefined) {
-    return getWrapperAspect(element)
+    const ratio = getWrapperAspectRatio(element)
+
+    if (ratio !== undefined) {
+      return { width: 100, height: Math.round(100 / ratio) }
+    }
   }
 
   return dimensions

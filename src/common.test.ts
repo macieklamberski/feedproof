@@ -6,6 +6,7 @@ import {
   createEmbedPlaceholder,
   createPlaceholder,
   getDimensions,
+  getWrapperAspectRatio,
   hasAncestorWithTagName,
   isJsonLike,
   isParseableJson,
@@ -440,6 +441,49 @@ describeForEachParser('getDimensions', (parseHtml) => {
     const image = queryElement(document, 'img')
 
     expect(getDimensions(image)).toEqual({ width: 1.5, height: 2.5 })
+  })
+})
+
+describeForEachParser('getWrapperAspectRatio', (parseHtml) => {
+  it('should read the ratio from a wp-embed-aspect class on an ancestor', () => {
+    const document = parseHtml(
+      '<figure class="wp-block-embed wp-embed-aspect-4-3"><div class="wp-block-embed__wrapper"><iframe></iframe></div></figure>',
+    )
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeCloseTo(4 / 3)
+  })
+
+  it('should read the ratio from an inline padding hack on an ancestor', () => {
+    const document = parseHtml('<div style="padding-bottom:50%"><iframe></iframe></div>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBe(2)
+  })
+
+  it('should return undefined when no ancestor carries an aspect signal', () => {
+    const document = parseHtml('<p><iframe></iframe></p>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+  })
+
+  it('should return undefined for out-of-range wrapper values', () => {
+    const document = parseHtml(
+      '<figure class="wp-embed-aspect-0-0"><div style="padding-bottom:0%"><iframe></iframe></div></figure>',
+    )
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+  })
+
+  it('should not look beyond the ancestor depth limit', () => {
+    const document = parseHtml(
+      '<div style="padding-bottom:50%"><div><div><div><iframe></iframe></div></div></div></div>',
+    )
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
   })
 })
 

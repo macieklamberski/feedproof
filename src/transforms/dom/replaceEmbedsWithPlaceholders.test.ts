@@ -78,8 +78,9 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
       '<figure class="wp-block-embed wp-embed-aspect-16-9"><div class="wp-block-embed__wrapper"><iframe src="https://example.com/embed/xyz"></iframe></div></figure>'
     const result = await transform(value, withNoResolvers)
 
-    expect(result).toContain('data-embed-width="16"')
-    expect(result).toContain('data-embed-height="9"')
+    // 16:9 encoded as a 100×N ratio (100 / (16/9) = 56.25 -> 56).
+    expect(result).toContain('data-embed-width="100"')
+    expect(result).toContain('data-embed-height="56"')
   })
 
   it('should not recover aspect from out-of-range wrapper values', async () => {
