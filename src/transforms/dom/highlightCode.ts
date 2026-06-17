@@ -230,8 +230,35 @@ const getCodeBlockText = (target: Element): string => {
   return text
 }
 
+// Line-number gutters: Rouge/Pygments/Chroma render code in a two-column table
+// (numbers | code), and Chroma/Prism also emit per-line number spans. Either way
+// the digits get treated as a separate code block or walked into the highlighted
+// text. Drop them before highlighting: keep only the code column's <pre>, and remove
+// inline per-line number spans.
+const gutterTableSelector = 'table.rouge-table, table.highlighttable, table.lntable'
+const gutterLineSpanSelector = 'span.line-numbers-rows, span.ln, span.lnt'
+
+const stripCodeGutters = (document: Document): void => {
+  for (const table of document.querySelectorAll(gutterTableSelector)) {
+    const pres = table.querySelectorAll('pre')
+    // The gutter is the left column; the code is the last <pre>. Replace the whole
+    // table with it, dropping the gutter column and the table scaffolding.
+    const codePre = pres[pres.length - 1]
+
+    if (codePre) {
+      table.replaceWith(codePre)
+    }
+  }
+
+  for (const span of document.querySelectorAll(gutterLineSpanSelector)) {
+    span.remove()
+  }
+}
+
 export const highlightCode: DomTransform = ({ highlightFn }) => {
   return async (document) => {
+    stripCodeGutters(document)
+
     // Some editors emit a block of code as a standalone <code> with no <pre> wrapper.
     // Promote those to <pre><code> first so the loop below treats them like any other
     // block: highlighted by a declared hint (or detected JSON), and rendered as a
