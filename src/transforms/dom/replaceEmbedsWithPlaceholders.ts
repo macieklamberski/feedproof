@@ -1,5 +1,26 @@
-import { createEmbedPlaceholder, getElementDimensions } from '../../common.js'
+import {
+  createEmbedPlaceholder,
+  getElementDimensions,
+  getWrapperAspectRatio,
+} from '../../common.js'
 import type { DomTransform } from '../../types.js'
+
+// When the iframe carries no usable dimensions, fall back to a responsive wrapper's
+// aspect ratio so the placeholder can still reserve space. The 100×N pair encodes the
+// ratio, not absolute pixels.
+const getEmbedDimensions = (element: Element): { width?: number; height?: number } => {
+  const dimensions = getElementDimensions(element)
+
+  if (dimensions.width === undefined && dimensions.height === undefined) {
+    const ratio = getWrapperAspectRatio(element)
+
+    if (ratio !== undefined) {
+      return { width: 100, height: Math.round(100 / ratio) }
+    }
+  }
+
+  return dimensions
+}
 
 export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
   const { embedResolvers, resolveUrlFn, baseUrl } = context
@@ -28,7 +49,7 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
           continue
         }
 
-        const { width, height } = getElementDimensions(element)
+        const { width, height } = getEmbedDimensions(element)
 
         const placeholderMetadata =
           width === undefined && height === undefined
@@ -63,7 +84,7 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
         continue
       }
 
-      iframe.replaceWith(createEmbedPlaceholder(document, src, getElementDimensions(iframe)))
+      iframe.replaceWith(createEmbedPlaceholder(document, src, getEmbedDimensions(iframe)))
     }
   }
 }
