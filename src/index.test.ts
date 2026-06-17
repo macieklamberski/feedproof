@@ -7,13 +7,13 @@ import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholder
 describeForEachParser('transformContent', (parseHtml) => {
   it('should apply all default transforms', async () => {
     const value = '<div><p>Hello <img data-src="photo.jpg"></p></div>'
-    // unwrapWrappers removes the outer div, fixLazyImages resolves data-src to src, and
-    // resolveRelativeUrls makes it absolute.
-    const expected = '<p>Hello <img src="https://example.com/photo.jpg"></p>'
+    // unwrapWrappers removes the outer div, fixLazyImages resolves data-src to src (keeping
+    // the original attribute), and resolveRelativeUrls makes the src absolute.
+    const expected = '<p>Hello <img data-src="photo.jpg" src="https://example.com/photo.jpg"></p>'
 
     expect(
       await transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com' }),
-    ).toBe(expected)
+    ).toEqualHtml(expected)
   })
 
   it('should resolve relative URLs when baseUrl is provided', async () => {
@@ -410,7 +410,8 @@ describeForEachParser('transformContent', (parseHtml) => {
     })
 
     expect(result).toContain('src="https://example.com/a-800x600.webp"')
-    expect(result).not.toContain('a.jpg')
+    // The superseded data-src is left in place (fixLazyImages no longer strips it).
+    expect(result).toContain('data-src="https://example.com/a.jpg"')
   })
 
   it('should dimension an image surfaced from a noscript fallback', async () => {
