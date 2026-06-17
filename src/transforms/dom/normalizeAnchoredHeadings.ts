@@ -26,7 +26,6 @@ const permalinkClasses = new Set([
 // zero-width space. An anchor whose visible content is only these (or empty) is a
 // permalink, not real link text.
 const permalinkLabelRegex = /^[#¶§❡\u{1f517}​]+$/u
-
 const footnoteClassRegex = /footnote/i
 const bracketedNumberRegex = /^\[\d+\]$/
 const whitespaceRegex = /\s+/
