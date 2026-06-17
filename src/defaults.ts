@@ -15,7 +15,6 @@ import { highlightCode } from './transforms/dom/highlightCode.js'
 import { hoistFigcaptionFromAnchor } from './transforms/dom/hoistFigcaptionFromAnchor.js'
 import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
 import { linkifyUrls } from './transforms/dom/linkifyUrls.js'
-import { linkOrphanFootnotes } from './transforms/dom/linkOrphanFootnotes.js'
 import { markTimestamps } from './transforms/dom/markTimestamps.js'
 import { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
 import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
@@ -88,15 +87,11 @@ export const defaultDomTransforms: Array<DomTransform> = [
   cleanAnchorUrls,
   // Runs after resolveRelativeUrls/cleanAnchorUrls so hrefs are absolute and cleaned,
   // and before normalizeAnchoredHeadings so heading permalinks are already bare
-  // `#fragment` when the heading id is set.
+  // `#fragment` when the canonical `<a name>` is built.
   shortenSamePageLinkFragments,
   // Runs after cleanAnchorUrls so the href it inspects is already cleaned/resolved,
   // and before stripDeadAnchors so a `#`-only permalink isn't unwrapped first.
   normalizeAnchoredHeadings,
-  // Runs after shortenSamePageLinkFragments (footnote refs are now bare `#fragment`)
-  // so an orphan ref — one whose definition was truncated out of the feed — can be
-  // re-pointed at the source article.
-  linkOrphanFootnotes,
   stripDeadAnchors,
   convertBookmarkCards,
   removeTrackingPixels,

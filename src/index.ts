@@ -90,7 +90,6 @@ export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js
 export { hoistFigcaptionFromAnchor } from './transforms/dom/hoistFigcaptionFromAnchor.js'
 export { injectEnclosures } from './transforms/dom/injectEnclosures.js'
 export { linkifyUrls } from './transforms/dom/linkifyUrls.js'
-export { linkOrphanFootnotes } from './transforms/dom/linkOrphanFootnotes.js'
 export { markTimestamps, parseTimestampSeconds } from './transforms/dom/markTimestamps.js'
 export { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
 export { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
