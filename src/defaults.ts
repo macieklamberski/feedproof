@@ -32,6 +32,7 @@ import { stripComments } from './transforms/dom/stripComments.js'
 import { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
 import { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 import { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
+import { stripHiddenElements } from './transforms/dom/stripHiddenElements.js'
 import { stripInertElements } from './transforms/dom/stripInertElements.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
@@ -66,6 +67,7 @@ export const defaultStringTransforms: Array<StringTransform> = [
 export const defaultDomTransforms: Array<DomTransform> = [
   decodeDoubleEncodedTags,
   stripComments,
+  stripHiddenElements,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
   demoteHeadings,

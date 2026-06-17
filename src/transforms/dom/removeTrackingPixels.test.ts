@@ -104,9 +104,9 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
       expect(await transform(value)).toEqualHtml('')
     })
 
-    it('should still remove a hidden image even with a real raster src', async () => {
+    it('should still remove an opacity:0 image even with a real raster src', async () => {
       const value =
-        '<img src="https://example.com/photo.jpg" style="display:none" width="0" height="0">'
+        '<img src="https://example.com/photo.jpg" style="opacity:0" width="0" height="0">'
 
       expect(await transform(value)).toEqualHtml('')
     })
@@ -162,25 +162,9 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
     })
   })
 
-  describe('hidden-style detection', () => {
-    it('should remove img with hidden attribute', async () => {
-      const value = '<img src="ghost.gif" hidden>'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove img with style display:none', async () => {
-      const value = '<img src="invis.gif" style="display:none">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove img with style visibility:hidden', async () => {
-      const value = '<img src="invis.gif" style="visibility:hidden">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
+  describe('opacity-beacon detection', () => {
+    // display:none / visibility:hidden / [hidden] images are removed upstream by
+    // stripHiddenElements (see its tests); removeTrackingPixels owns opacity:0.
     it('should remove img with style opacity:0', async () => {
       const value = '<img src="invis.gif" style="opacity:0">'
 
@@ -482,13 +466,13 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
       expect(await transform(value, customContext)).toEqualHtml('')
     })
 
-    it('should still apply hidden-style check when overrides are set', async () => {
+    it('should still apply the opacity check when overrides are set', async () => {
       const customContext: TransformContext = {
         ...baseContext,
         trackingHosts: [],
         trackingPathSegments: [],
       }
-      const value = '<img src="https://example.com/p.gif" style="display:none">'
+      const value = '<img src="https://example.com/p.gif" style="opacity:0">'
 
       expect(await transform(value, customContext)).toEqualHtml('')
     })

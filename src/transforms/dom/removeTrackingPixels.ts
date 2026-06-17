@@ -1,8 +1,6 @@
 import { getElementDimensions, pixelDimensionLimit } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-const styleDisplayNoneRegex = /(?:^|;)\s*display\s*:\s*none/i
-const styleVisibilityHiddenRegex = /(?:^|;)\s*visibility\s*:\s*hidden/i
 const styleOpacityZeroRegex = /(?:^|;)\s*opacity\s*:\s*0(?:\.0+)?\s*(?:;|$)/i
 
 // `[./]` anchors require the segment to terminate with `.` (file extension) or `/`
@@ -79,22 +77,14 @@ const hasContentImageSignal = (
   return !!src && (rasterExtensionRegex.test(src) || rasterFormatQueryRegex.test(src))
 }
 
-const isHiddenImage = (image: Element): boolean => {
-  if (image.hasAttribute('hidden')) {
-    return true
-  }
-
+// An `opacity:0` image is a tracking-beacon trick. Images hidden via
+// `display:none`/`visibility:hidden`/`[hidden]` are already removed upstream by
+// stripHiddenElements; opacity stays here because a generic `opacity:0` is often a
+// fade-in animation, so it's only treated as hidden for images.
+const hasZeroOpacity = (image: Element): boolean => {
   const style = image.getAttribute('style')
 
-  if (!style) {
-    return false
-  }
-
-  return (
-    styleDisplayNoneRegex.test(style) ||
-    styleVisibilityHiddenRegex.test(style) ||
-    styleOpacityZeroRegex.test(style)
-  )
+  return !!style && styleOpacityZeroRegex.test(style)
 }
 
 export const removeTrackingPixels: DomTransform = (context) => {
@@ -106,7 +96,7 @@ export const removeTrackingPixels: DomTransform = (context) => {
     const images = document.querySelectorAll('img')
 
     for (const image of images) {
-      if (isHiddenImage(image)) {
+      if (hasZeroOpacity(image)) {
         image.remove()
         continue
       }
