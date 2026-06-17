@@ -162,9 +162,28 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
     })
   })
 
-  describe('opacity-beacon detection', () => {
-    // display:none / visibility:hidden / [hidden] images are removed upstream by
-    // stripHiddenElements (see its tests); removeTrackingPixels owns opacity:0.
+  describe('hidden-image detection', () => {
+    // stripHiddenElements removes these upstream in the default pipeline, but
+    // removeTrackingPixels rechecks via the shared isElementHidden so it stays
+    // correct when composed on its own. opacity:0 is image-specific and stays here.
+    it('should remove an image hidden via display:none', async () => {
+      const value = '<img src="invis.gif" style="display:none">'
+
+      expect(await transform(value)).toEqualHtml('')
+    })
+
+    it('should remove an image hidden via visibility:hidden', async () => {
+      const value = '<img src="invis.gif" style="visibility:hidden">'
+
+      expect(await transform(value)).toEqualHtml('')
+    })
+
+    it('should remove an image carrying the hidden attribute', async () => {
+      const value = '<img src="invis.gif" hidden>'
+
+      expect(await transform(value)).toEqualHtml('')
+    })
+
     it('should remove img with style opacity:0', async () => {
       const value = '<img src="invis.gif" style="opacity:0">'
 
