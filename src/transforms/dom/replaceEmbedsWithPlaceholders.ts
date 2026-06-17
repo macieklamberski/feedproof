@@ -1,4 +1,4 @@
-import { createEmbedPlaceholder, getDimensions } from '../../common.js'
+import { createEmbedPlaceholder, getElementDimensions } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
@@ -28,7 +28,7 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
           continue
         }
 
-        const { width, height } = getDimensions(element)
+        const { width, height } = getElementDimensions(element)
 
         const placeholderMetadata =
           width === undefined && height === undefined
@@ -63,7 +63,7 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
         continue
       }
 
-      iframe.replaceWith(createEmbedPlaceholder(document, src, getDimensions(iframe)))
+      iframe.replaceWith(createEmbedPlaceholder(document, src, getElementDimensions(iframe)))
     }
   }
 }

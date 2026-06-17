@@ -5,7 +5,7 @@ import {
   createBookmarkPlaceholder,
   createEmbedPlaceholder,
   createPlaceholder,
-  getDimensions,
+  getElementDimensions,
   hasAncestorWithTagName,
   isJsonLike,
   isParseableJson,
@@ -371,75 +371,75 @@ describe('normalizeEmbedFields', () => {
   })
 })
 
-describeForEachParser('getDimensions', (parseHtml) => {
+describeForEachParser('getElementDimensions', (parseHtml) => {
   it('should return both dimensions from attributes', () => {
     const document = parseHtml('<img width="320" height="240">')
     const image = queryElement(document, 'img')
 
-    expect(getDimensions(image)).toEqual({ width: 320, height: 240 })
+    expect(getElementDimensions(image)).toEqual({ width: 320, height: 240 })
   })
 
   it('should return only width when only width attribute is set', () => {
     const document = parseHtml('<img width="100">')
     const image = queryElement(document, 'img')
 
-    expect(getDimensions(image)).toEqual({ width: 100, height: undefined })
+    expect(getElementDimensions(image)).toEqual({ width: 100, height: undefined })
   })
 
   it('should read px-suffixed dimensions from style when attributes are missing', () => {
     const document = parseHtml('<img style="width: 50px; height: 25px">')
     const image = queryElement(document, 'img')
 
-    expect(getDimensions(image)).toEqual({ width: 50, height: 25 })
+    expect(getElementDimensions(image)).toEqual({ width: 50, height: 25 })
   })
 
   it('should read unitless dimensions from style', () => {
     const document = parseHtml('<img style="width: 10; height: 5">')
     const image = queryElement(document, 'img')
 
-    expect(getDimensions(image)).toEqual({ width: 10, height: 5 })
+    expect(getElementDimensions(image)).toEqual({ width: 10, height: 5 })
   })
 
   it('should ignore em / rem / % units in style', () => {
     const document = parseHtml('<img style="width: 1.5em; height: 100%">')
     const image = queryElement(document, 'img')
 
-    expect(getDimensions(image)).toEqual({ width: undefined, height: undefined })
+    expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
   })
 
   it('should fall back to style when attribute is non-numeric', () => {
     const document = parseHtml('<img width="auto" style="width: 200px">')
     const image = queryElement(document, 'img')
 
-    expect(getDimensions(image)).toEqual({ width: 200, height: undefined })
+    expect(getElementDimensions(image)).toEqual({ width: 200, height: undefined })
   })
 
   it('should prefer attribute over style when both are present', () => {
     const document = parseHtml('<img width="100" style="width: 999px">')
     const image = queryElement(document, 'img')
 
-    expect(getDimensions(image)).toEqual({ width: 100, height: undefined })
+    expect(getElementDimensions(image)).toEqual({ width: 100, height: undefined })
   })
 
   it('should return both undefined for an element with neither', () => {
     const document = parseHtml('<img>')
     const image = queryElement(document, 'img')
 
-    expect(getDimensions(image)).toEqual({ width: undefined, height: undefined })
+    expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
   })
 
   it('should extract the correct property from multi-property style', () => {
     const document = parseHtml('<img style="color: red; width: 10px; height: 20px">')
     const image = queryElement(document, 'img')
 
-    expect(getDimensions(image)).toEqual({ width: 10, height: 20 })
+    expect(getElementDimensions(image)).toEqual({ width: 10, height: 20 })
   })
 
   it('should parse decimal dimensions from style', () => {
     const document = parseHtml('<img style="width: 1.5px; height: 2.5">')
     const image = queryElement(document, 'img')
 
-    expect(getDimensions(image)).toEqual({ width: 1.5, height: 2.5 })
+    expect(getElementDimensions(image)).toEqual({ width: 1.5, height: 2.5 })
   })
 })
 
