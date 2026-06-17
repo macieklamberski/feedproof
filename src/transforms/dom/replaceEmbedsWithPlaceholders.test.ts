@@ -73,6 +73,15 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
     expect(result).toContain('data-embed-height="56"')
   })
 
+  it('should not recover aspect from an out-of-range padding wrapper', async () => {
+    const value =
+      '<div style="padding-bottom:0%"><iframe src="https://example.com/embed/xyz"></iframe></div>'
+    const result = await transform(value, withNoResolvers)
+
+    expect(result).not.toContain('data-embed-width')
+    expect(result).not.toContain('data-embed-height')
+  })
+
   it('should fall back to resolver metadata dimensions when the iframe has none', async () => {
     const sizedResolver: EmbedResolver = {
       selector: 'iframe[src*="example.com"]',

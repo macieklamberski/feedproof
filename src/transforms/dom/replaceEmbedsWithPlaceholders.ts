@@ -3,6 +3,10 @@ import type { DomTransform } from '../../types.js'
 
 // The dominant responsive-embed shape puts the aspect ratio on a wrapper
 // (`padding-bottom:56.25%`) with the iframe itself at `width="100%"` or unsized.
+// Parsed off the raw `style` attribute rather than the CSSOM `style` API: linkedom's
+// getPropertyValue returns `undefined` (not "") for unset properties, and both parsers
+// drop declarations whose property name isn't lowercase — a case-insensitive regex
+// matches those, and this mirrors getDimensions, which also reads getAttribute('style').
 const paddingRatioRegex = /padding-(?:bottom|top):\s*([\d.]+)%/i
 
 // When the iframe carries no usable dimensions, derive an aspect ratio from an
