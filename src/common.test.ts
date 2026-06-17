@@ -473,6 +473,13 @@ describeForEachParser('getElementAspectRatio', (parseHtml) => {
 
     expect(getElementAspectRatio(iframe)).toBeUndefined()
   })
+
+  it('should return undefined for an out-of-range aspect-ratio value', () => {
+    const document = parseHtml('<div style="aspect-ratio: 0 / 0"></div>')
+    const div = queryElement(document, 'div')
+
+    expect(getElementAspectRatio(div)).toBeUndefined()
+  })
 })
 
 describeForEachParser('getWrapperAspectRatio', (parseHtml) => {
