@@ -175,6 +175,88 @@ export const getElementDimensions = (element: Element): { width?: number; height
   }
 }
 
+// How many ancestors above the element to also check for a responsive wrapper.
+const maxWrapperAncestorDepth = 3
+// Modern CSS: `aspect-ratio: 16 / 9` (or a single number, the width-to-height ratio).
+const aspectRatioRegex = /aspect-ratio:\s*(?:auto\s+)?([\d.]+)(?:\s*\/\s*([\d.]+))?/i
+// WordPress responsive embeds carry the ratio as a class (`wp-embed-aspect-16-9`),
+// styled by an external stylesheet feedsweep never sees; the class itself encodes it.
+const aspectClassRegex = /wp-embed-aspect-(\d+)-(\d+)/
+// The legacy shape is the inline padding hack (`padding-bottom:56.25%`). All three are read
+// off the raw `style`/`class` attributes, not the CSSOM `style` API: linkedom's getPropertyValue
+// returns `undefined` (not "") for unset properties, and both parsers drop declarations whose
+// property name isn't lowercase — a case-insensitive regex matches those, mirroring getElementDimensions.
+const paddingRatioRegex = /padding-(?:bottom|top):\s*([\d.]+)%/i
+
+// The width-to-height aspect ratio (e.g. 16/9 ≈ 1.78) a single element declares — via the
+// `aspect-ratio` property, a `wp-embed-aspect-*` class, or the padding hack — or undefined.
+export const getElementAspectRatio = (element: Element): number | undefined => {
+  const style = element.getAttribute('style') ?? ''
+
+  const ratioMatch = aspectRatioRegex.exec(style)
+
+  if (ratioMatch) {
+    const width = Number(ratioMatch[1])
+    const height = ratioMatch[2] === undefined ? 1 : Number(ratioMatch[2])
+
+    if (width > 0 && height > 0) {
+      return width / height
+    }
+  }
+
+  const classMatch = aspectClassRegex.exec(element.getAttribute('class') ?? '')
+
+  if (classMatch) {
+    const width = Number(classMatch[1])
+    const height = Number(classMatch[2])
+
+    if (width > 0 && height > 0) {
+      return width / height
+    }
+  }
+
+  const paddingMatch = paddingRatioRegex.exec(style)
+
+  if (paddingMatch) {
+    const percent = Number(paddingMatch[1])
+
+    if (percent > 0 && percent < 1000) {
+      return 100 / percent
+    }
+  }
+}
+
+// Walks the element and its ancestors (the element plus up to `maxDepth` levels) and returns the
+// first aspect ratio any of them declares — for an element whose own dimensions are unknown but
+// which sits in a responsive wrapper. Only ascends into a parent that wraps this element alone:
+// a parent with other element children sizes the whole group, so its ratio isn't this element's.
+// Call getElementAspectRatio directly when only the element itself matters (e.g. an image with
+// its own `aspect-ratio`).
+export const getWrapperAspectRatio = (
+  element: Element,
+  maxDepth = maxWrapperAncestorDepth,
+): number | undefined => {
+  let current: Element | null = element
+  let depth = 0
+
+  while (current && depth <= maxDepth) {
+    const ratio = getElementAspectRatio(current)
+
+    if (ratio !== undefined) {
+      return ratio
+    }
+
+    const parent: Element | null = current.parentElement
+
+    if (!parent || parent.children.length > 1) {
+      break
+    }
+
+    current = parent
+    depth++
+  }
+}
+
 // A width or height at or below this many pixels marks a tracking pixel, not real
 // content. removeTrackingPixels strips images at or below it; resolveMediaDimensions
 // won't promote a dimension at or below it.

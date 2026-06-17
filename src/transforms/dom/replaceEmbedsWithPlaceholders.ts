@@ -1,4 +1,8 @@
-import { createEmbedPlaceholder, getElementDimensions } from '../../common.js'
+import {
+  createEmbedPlaceholder,
+  getElementDimensions,
+  getWrapperAspectRatio,
+} from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 // A real, loadable src — not empty or the `about:blank` lazy placeholder.
@@ -25,6 +29,23 @@ const recoverLazyIframeSrc = (iframe: Element, attributes: ReadonlyArray<string>
       return
     }
   }
+}
+
+// When the iframe carries no usable dimensions, fall back to a responsive wrapper's
+// aspect ratio so the placeholder can still reserve space. The 100×N pair encodes the
+// ratio, not absolute pixels.
+const getEmbedDimensions = (element: Element): { width?: number; height?: number } => {
+  const dimensions = getElementDimensions(element)
+
+  if (dimensions.width === undefined && dimensions.height === undefined) {
+    const ratio = getWrapperAspectRatio(element)
+
+    if (ratio !== undefined) {
+      return { width: 100, height: Math.round(100 / ratio) }
+    }
+  }
+
+  return dimensions
 }
 
 export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
@@ -61,7 +82,7 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
           continue
         }
 
-        const { width, height } = getElementDimensions(element)
+        const { width, height } = getEmbedDimensions(element)
 
         const placeholderMetadata =
           width === undefined && height === undefined
@@ -86,7 +107,7 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
         const src = iframe.getAttribute('src')
 
         if (isUsableSrc(src) && resolveUrlFn(src, baseUrl)) {
-          iframe.replaceWith(createEmbedPlaceholder(document, src, getElementDimensions(iframe)))
+          iframe.replaceWith(createEmbedPlaceholder(document, src, getEmbedDimensions(iframe)))
         }
       }
     }
@@ -98,7 +119,7 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
         element.localName === 'object' ? element.getAttribute('data') : element.getAttribute('src')
 
       if (url && resolveUrlFn(url, baseUrl)) {
-        element.replaceWith(createEmbedPlaceholder(document, url, getElementDimensions(element)))
+        element.replaceWith(createEmbedPlaceholder(document, url, getEmbedDimensions(element)))
       }
     }
   }
