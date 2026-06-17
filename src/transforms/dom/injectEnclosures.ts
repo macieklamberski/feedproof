@@ -128,6 +128,7 @@ export const injectEnclosures: DomTransform = (context) => {
 
   return async (document) => {
     const existingUrls = collectExistingMediaUrls(document, context.cleanUrlFn)
+    const created: Array<HTMLElement> = []
 
     for (const enclosure of enclosures) {
       const normalizedUrl = normalizeMediaUrl(enclosure.url, context.cleanUrlFn)
@@ -143,27 +144,33 @@ export const injectEnclosures: DomTransform = (context) => {
       const resolved = await resolveEnclosure(enclosure.url, context.embedResolvers, document)
 
       if (resolved) {
-        document.body.prepend(createEmbedPlaceholder(document, enclosure.url, resolved))
+        created.push(createEmbedPlaceholder(document, enclosure.url, resolved))
         existingUrls.add(normalizedUrl)
         continue
       }
 
       if (isAudioEnclosure(enclosure)) {
-        document.body.prepend(createNativeMediaElement(document, 'audio', enclosure, context))
+        created.push(createNativeMediaElement(document, 'audio', enclosure, context))
         existingUrls.add(normalizedUrl)
         continue
       }
 
       if (isVideoEnclosure(enclosure)) {
-        document.body.prepend(createNativeMediaElement(document, 'video', enclosure, context))
+        created.push(createNativeMediaElement(document, 'video', enclosure, context))
         existingUrls.add(normalizedUrl)
         continue
       }
 
       if (isImageEnclosure(enclosure)) {
-        document.body.prepend(createImageElement(document, enclosure))
+        created.push(createImageElement(document, enclosure))
         existingUrls.add(normalizedUrl)
       }
+    }
+
+    // Prepend ahead of the existing content while preserving enclosure order; a
+    // per-item prepend would reverse the order of multi-enclosure items.
+    for (let index = created.length - 1; index >= 0; index--) {
+      document.body.prepend(created[index])
     }
   }
 }

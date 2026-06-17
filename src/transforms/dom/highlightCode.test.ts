@@ -5,9 +5,9 @@ import { baseContext, describeForEachParser, queryElement } from '../../tests.js
 import type { HighlightFn, TransformContext } from '../../types.js'
 import { detectLanguage, highlightCode } from './highlightCode.js'
 
-const lineBreakBeforeConst = /;\s*\n\s*<span class="hljs-keyword">const/
-const insAfterNewline = /;\s*\n\s*<ins>/
-const commentSwallowsNextLine = /hljs-comment">[^<]*const y/
+const lineBreakBeforeConstRegex = /;\s*\n\s*<span class="hljs-keyword">const/
+const insAfterNewlineRegex = /;\s*\n\s*<ins>/
+const commentSwallowsNextLineRegex = /hljs-comment">[^<]*const y/
 
 describe('detectLanguage', () => {
   const createElement = (html: string): { pre: Element; code: Element | null } => {
@@ -429,7 +429,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const result = await transform(value)
 
     expect(result).toContain('hljs-keyword')
-    expect(result).toMatch(lineBreakBeforeConst)
+    expect(result).toMatch(lineBreakBeforeConstRegex)
   })
 
   it('should collapse nested block wrappers to a single line break', async () => {
@@ -437,7 +437,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
       '<pre><code class="language-js"><div><div>const x = 1;</div></div><div><div>const y = 2;</div></div></code></pre>'
     const result = await transform(value)
 
-    expect(result).toMatch(lineBreakBeforeConst)
+    expect(result).toMatch(lineBreakBeforeConstRegex)
     expect(result).not.toContain('\n\n')
   })
 
@@ -457,7 +457,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
     expect(result).not.toContain('<div>')
     expect(result).toContain('<ins>')
-    expect(result).toMatch(insAfterNewline)
+    expect(result).toMatch(insAfterNewlineRegex)
   })
 
   it('should not let a line comment in a diff block swallow the next line', async () => {
@@ -466,7 +466,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const result = await transform(value)
 
     // The // comment must close at its line break, not run on and color `const y`.
-    expect(result).not.toMatch(commentSwallowsNextLine)
+    expect(result).not.toMatch(commentSwallowsNextLineRegex)
     expect(result).toContain('<ins>')
   })
 
@@ -524,7 +524,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const result = await transform(value)
 
     expect(result).toContain('<pre')
-    expect(result).toMatch(lineBreakBeforeConst)
+    expect(result).toMatch(lineBreakBeforeConstRegex)
   })
 
   it('should not touch inline code outside pre', async () => {

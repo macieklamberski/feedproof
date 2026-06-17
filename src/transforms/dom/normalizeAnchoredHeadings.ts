@@ -10,16 +10,22 @@ const supTags = new Set(['sup'])
 const permalinkClasses = new Set([
   'headerlink', // Sphinx / Python-Markdown / MkDocs.
   'header-anchor', // markdown-it-anchor (VuePress / VitePress / Eleventy).
+  'heading-anchor', // Various themes.
+  'heading-link', // Various themes.
+  'heading-mark', // Hexo and similar Markdown themes.
   'hash-link', // Docusaurus.
   'anchorjs-link', // AnchorJS.
   'zola-anchor', // Zola.
+  'o-heading-link', // Eleventy themes.
+  'wiki-anchor', // Redmine.
+  'permalink', // Generic permalink markup.
 ])
 
-// Single-glyph permalink markers: hash, pilcrow, section sign, fleuron, link
-// emoji, zero-width space. An anchor whose visible content is only one of these
-// (or empty) is a decorative permalink, not real link text.
-const permalinkGlyphs = new Set(['#', '¶', '§', '❡', '\u{1f517}', '​'])
-
+// Decorative permalink markers: a run of one or more glyph characters — hash (so
+// "#"/"##"/"###" by heading level), pilcrow, section sign, fleuron, link emoji, or
+// zero-width space. An anchor whose visible content is only these (or empty) is a
+// permalink, not real link text.
+const permalinkLabelRegex = /^[#¶§❡\u{1f517}​]+$/u
 const footnoteClassRegex = /footnote/i
 const bracketedNumberRegex = /^\[\d+\]$/
 const whitespaceRegex = /\s+/
@@ -37,7 +43,7 @@ const interactiveAttrRegex = /toggle|accordion|collapse/i
 const isGlyphMarker = (text: string, fragment: string): boolean => {
   const trimmed = text.trim()
 
-  return trimmed === '' || permalinkGlyphs.has(trimmed) || trimmed === `#${fragment}`
+  return trimmed === '' || permalinkLabelRegex.test(trimmed) || trimmed === `#${fragment}`
 }
 
 // Lowercases and collapses runs of non-alphanumerics (Unicode-aware, so CJK and
@@ -52,10 +58,12 @@ const slugify = (value: string): string => {
 
 // Headings carry in-page permalinks ("anchors") in many shapes: the whole
 // heading wrapped in a `#fragment` link, a trailing `#`/`¶` glyph, a generator's
-// empty `headerlink`/`hash-link` anchor, and so on. This collapses every shape
-// to one canonical markup — an empty leading `<a name="fragment">` whose href is
-// left untouched — so the heading text reads as plain text and the downstream
-// reader can render a single consistent permalink marker.
+// empty `headerlink`/`hash-link` anchor, a bare `<a name>`/`<a id>` scroll target,
+// and so on. This collapses every shape to
+// one canonical affordance: plain heading text plus a single empty, self-referential
+// anchor (`<a id="fragment" href="#fragment">`) as the heading's first child — the
+// fragment rides on the anchor's `id` (the scroll target), so the reader can paint a
+// clickable permalink glyph (e.g. `::before { content: '#' }`) without any script.
 export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn }) => {
   return (document) => {
     const headings = document.querySelectorAll(headingSelector)
@@ -63,23 +71,36 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
     for (const heading of headings) {
       const headingId = heading.getAttribute('id')
       const headingSlug = slugify(heading.textContent ?? '')
-      const anchors = heading.querySelectorAll('a[href]')
+      const anchors = heading.querySelectorAll('a')
+      let permalinkFragment: string | null = null
 
       for (const anchor of anchors) {
-        const href = anchor.getAttribute('href') ?? ''
-        const hashIndex = href.indexOf('#')
+        const href = anchor.getAttribute('href')
+        const hashIndex = href?.indexOf('#') ?? -1
+        const visible = (anchor.textContent ?? '').trim()
 
-        if (hashIndex === -1) {
+        // An anchor contributes a permalink in two shapes: a `#fragment` link, or a bare
+        // in-page target (`<a name>` / empty `<a id>` with no href). The bare target is
+        // taken only when empty, so a named anchor wrapping real heading text is untouched.
+        const isBareTarget =
+          href === null &&
+          visible === '' &&
+          (anchor.hasAttribute('name') || anchor.hasAttribute('id'))
+
+        let fragment: string
+
+        if (hashIndex !== -1) {
+          fragment = (href as string).slice(hashIndex + 1)
+        } else if (isBareTarget) {
+          fragment = anchor.getAttribute('name') ?? anchor.getAttribute('id') ?? ''
+        } else {
           continue
         }
-
-        const fragment = href.slice(hashIndex + 1)
 
         if (fragment === '') {
           continue
         }
 
-        const visible = (anchor.textContent ?? '').trim()
         const className = anchor.getAttribute('class') ?? ''
 
         // Footnote references inside headings (sup-wrapped, footnote-classed, or a
@@ -108,7 +129,7 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
         const isSymbolOnly = isGlyphMarker(visible, fragment)
         const hasKnownClass = className
           .split(whitespaceRegex)
-          .some((token) => permalinkClasses.has(token))
+          .some((token) => permalinkClasses.has(token.toLowerCase()))
 
         // Symbol-only and generator-class anchors are self-evident permalinks. A
         // plain text link qualifies only when it points back at its own heading
@@ -118,7 +139,9 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
           (headingId !== null && slugify(headingId) === fragmentSlug) ||
           (headingSlug !== '' && headingSlug === fragmentSlug)
         const qualifies =
-          isSymbolOnly || hasKnownClass || (slugMatch && isSamePage(href, baseUrl, resolveUrlFn))
+          isSymbolOnly ||
+          hasKnownClass ||
+          (slugMatch && isSamePage(href ?? '', baseUrl, resolveUrlFn))
 
         if (!qualifies) {
           continue
@@ -130,14 +153,13 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
           continue
         }
 
-        // Drop a decorative glyph, but keep real link text by promoting it out of
-        // the anchor (the heading text becomes plain). Inline glyph markers among
-        // that text (a `#fragment` span, a lone symbol) are dropped too.
-        if (isSymbolOnly) {
-          while (anchor.firstChild) {
-            anchor.firstChild.remove()
-          }
-        } else {
+        // A decorative permalink — a glyph, or a marker sitting beside the real heading
+        // text (e.g. a labelled `permalink`/`heading-link` anchor) — is removed whole. An
+        // anchor that wraps the entire heading keeps its text by promoting it out (inline
+        // glyph markers dropped) before the now-empty anchor goes.
+        const wrapsHeading = (heading.textContent ?? '').trim() === visible
+
+        if (!isSymbolOnly && wrapsHeading) {
           while (anchor.firstChild) {
             const child = anchor.firstChild
 
@@ -149,22 +171,30 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
           }
         }
 
-        for (const attributeName of anchor.getAttributeNames()) {
-          if (attributeName !== 'href') {
-            anchor.removeAttribute(attributeName)
-          }
-        }
+        anchor.remove()
 
-        // `name` carries the in-page target (verbatim from the fragment); the href
-        // is preserved for a later URL-normalization pass to shorten.
-        anchor.setAttribute('name', fragment)
-
-        // Move the now-empty anchor to the heading's front so it sits at the top of
-        // a wrapped heading when used as the scroll target.
-        if (heading.firstChild !== anchor) {
-          heading.insertBefore(anchor, heading.firstChild)
+        // Target the heading's own id when a generator set one, else the anchor's
+        // fragment. A bare target keeps its own name/id — that is what existing links
+        // already point at. The single canonical permalink is inserted after the loop.
+        if (permalinkFragment === null) {
+          permalinkFragment = isBareTarget ? fragment : (headingId ?? fragment)
         }
       }
+
+      if (permalinkFragment === null) {
+        continue
+      }
+
+      // The id rides on the anchor, not the heading, so the empty anchor survives
+      // empty-element stripping without creating a duplicate target.
+      if (heading.getAttribute('id') === permalinkFragment) {
+        heading.removeAttribute('id')
+      }
+
+      const permalink = document.createElement('a')
+      permalink.setAttribute('id', permalinkFragment)
+      permalink.setAttribute('href', `#${permalinkFragment}`)
+      heading.insertBefore(permalink, heading.firstChild)
     }
   }
 }

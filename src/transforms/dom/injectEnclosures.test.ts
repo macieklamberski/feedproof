@@ -119,15 +119,15 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     expect(await transform(value, context)).toEqualHtml(expected)
   })
 
-  it('should inject multiple image enclosures as stacked images', async () => {
+  it('should inject multiple image enclosures as stacked images in order', async () => {
     const value = '<p>Content</p>'
     const context = withEnclosures([
       { url: 'https://example.com/one.jpg', type: 'image/jpeg' },
       { url: 'https://example.com/two.jpg', type: 'image/jpeg' },
     ])
     const expected = html`
-      <img src="https://example.com/two.jpg">
       <img src="https://example.com/one.jpg">
+      <img src="https://example.com/two.jpg">
       <p>Content</p>
     `
 

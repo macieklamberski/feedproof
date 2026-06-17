@@ -20,14 +20,14 @@ const isSupportedLanguage = (token: string): boolean => {
   return supportedLabels[token.toLowerCase()] !== undefined
 }
 
-const languagePattern = /(?:language|lang)-(\S+)/
+const languageRegex = /(?:language|lang)-(\S+)/
 // data-language/-lang cover most editors and renderers; data-enlighter-language is
 // EnlighterJS (WordPress). EnlighterJS's "generic" value maps to no grammar, so such
 // a block stays plain — which is the intent (it means "no specific language").
 const languageAttributes = ['data-language', 'data-lang', 'data-enlighter-language']
-const brushPattern = /brush:\s*([\w#+-]+)/
-const crayonPattern = /\blang[:_]([\w#+-]+)/
-const whitespacePattern = /\s+/
+const brushRegex = /brush:\s*([\w#+-]+)/
+const crayonRegex = /\blang[:_]([\w#+-]+)/
+const whitespaceRegex = /\s+/
 // Pandoc emits class="sourceCode LANG"; these tokens are structural, not the language.
 const pandocStructuralClasses = new Set(['sourceCode', 'numberLines'])
 // Jekyll/Rouge and similar wrap the block, putting the language-* class on an
@@ -36,13 +36,13 @@ const maxLanguageAncestorDepth = 3
 // Expressive Code (Astro/Starlight) titles its blocks with the source filename;
 // a whitespace-free name ending in an extension yields the language token (the
 // last extension, so paths like .vscode/settings.json resolve to json).
-const filenamePattern = /^\S+\.(\w+)$/
+const filenameRegex = /^\S+\.(\w+)$/
 // GitHub/Linguist wrapper class: highlight-source-LANG / highlight-text-LANG (the
 // source-/text- prefix is signal enough to trust a one-letter LANG like -c).
-const githubLanguagePattern = /^highlight-(?:source|text)-([a-z0-9+#]+)/
+const githubLanguageRegex = /^highlight-(?:source|text)-([a-z0-9+#]+)/
 // Sphinx/RST wrapper class: bare highlight-LANG. Require 2+ chars so one-letter
 // classes (highlight-c, highlight-r) that are really CSS utilities don't match.
-const sphinxLanguagePattern = /^highlight-([a-z][a-z0-9+#]+)$/
+const sphinxLanguageRegex = /^highlight-([a-z][a-z0-9+#]+)$/
 
 // Catalog of the code-highlighter / platform conventions detectLanguage recognizes
 // (prevalences measured against the real-feed corpus). In priority order it reads:
@@ -76,7 +76,7 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
   }
 
   for (const element of candidates) {
-    const match = element?.className.match(languagePattern)?.[1]
+    const match = element?.className.match(languageRegex)?.[1]
 
     if (match) {
       return match
@@ -97,7 +97,7 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
 
   // Pandoc: class="sourceCode LANG" — the language is the sibling class token.
   for (const element of [code, pre]) {
-    const tokens = element?.className.split(whitespacePattern) ?? []
+    const tokens = element?.className.split(whitespaceRegex) ?? []
 
     if (tokens.includes('sourceCode')) {
       const language = tokens.find((token) => token && !pandocStructuralClasses.has(token))
@@ -110,7 +110,7 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
 
   // WordPress SyntaxHighlighter Evolved: class="brush: LANG; ...".
   for (const element of [pre, code]) {
-    const match = element?.className.match(brushPattern)?.[1]
+    const match = element?.className.match(brushRegex)?.[1]
 
     if (match) {
       return match
@@ -119,7 +119,7 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
 
   // Crayon: class="lang:LANG" or "lang_LANG".
   for (const element of [pre, code]) {
-    const match = element?.className.match(crayonPattern)?.[1]
+    const match = element?.className.match(crayonRegex)?.[1]
 
     if (match) {
       return match
@@ -133,7 +133,7 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
 
   if (isElement(figure) && figure.localName === 'figure') {
     const figcaption = figure.querySelector('figcaption')
-    const extension = figcaption?.textContent?.trim().match(filenamePattern)?.[1]
+    const extension = figcaption?.textContent?.trim().match(filenameRegex)?.[1]
 
     if (extension) {
       return extension
@@ -145,7 +145,7 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
   // sibling token resolves to a grammar — that guard rejects the non-language
   // tokens these classes also carry (e.g. "highlight selected", "highlight line").
   for (const element of candidates) {
-    const tokens = element?.className.split(whitespacePattern) ?? []
+    const tokens = element?.className.split(whitespaceRegex) ?? []
 
     if (tokens.includes('highlight')) {
       const language = tokens.find((token) => token !== 'highlight' && isSupportedLanguage(token))
@@ -162,11 +162,11 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
   // token, since one-letter classes (highlight-c, highlight-r) collide with CSS
   // utilities; GitHub's source-/text- prefix is signal enough to skip that guard.
   for (const element of candidates) {
-    const tokens = element?.className.split(whitespacePattern) ?? []
+    const tokens = element?.className.split(whitespaceRegex) ?? []
 
     for (const token of tokens) {
       const language =
-        token.match(githubLanguagePattern)?.[1] ?? token.match(sphinxLanguagePattern)?.[1]
+        token.match(githubLanguageRegex)?.[1] ?? token.match(sphinxLanguageRegex)?.[1]
 
       if (language && isSupportedLanguage(language)) {
         return language
