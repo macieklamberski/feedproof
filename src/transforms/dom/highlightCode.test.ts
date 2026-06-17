@@ -427,6 +427,24 @@ describeForEachParser('highlightCode', (parseHtml) => {
       expect(result).not.toContain('class="ln"')
       expect(result).toContain('echo hi')
     })
+
+    it('should drop a gutter table with no recognized class (structural)', async () => {
+      const value =
+        '<table><tbody><tr><td><pre>1\n2</pre></td><td><pre><code class="language-js">const a = 1\nconst b = 2</code></pre></td></tr></tbody></table>'
+      const result = await transform(value)
+
+      expect(result).not.toContain('<table')
+      expect(result).toContain('data-pre-language')
+      expect(result).toContain('const')
+    })
+
+    it('should leave a real data table untouched', async () => {
+      const value =
+        '<table><tbody><tr><td>1</td><td>Apple</td></tr><tr><td>2</td><td>Banana</td></tr></tbody></table>'
+      const result = await transform(value)
+
+      expect(result).toBe(value)
+    })
   })
 
   it('should highlight code block with language-js class', async () => {
