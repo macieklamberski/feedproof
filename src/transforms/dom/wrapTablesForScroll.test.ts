@@ -103,6 +103,24 @@ describeForEachParser('wrapTablesForScroll', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
+    it('should reuse an existing table-responsive wrapper instead of nesting', async () => {
+      const value =
+        '<div class="table-responsive"><table><tbody><tr><td>Cell</td></tr></tbody></table></div>'
+      const expected =
+        '<div class="table-responsive" data-table=""><table><tbody><tr><td>Cell</td></tr></tbody></table></div>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should reuse a Gutenberg wp-block-table figure as the wrapper', async () => {
+      const value =
+        '<figure class="wp-block-table"><table><tbody><tr><td>Cell</td></tr></tbody></table></figure>'
+      const expected =
+        '<figure class="wp-block-table" data-table=""><table><tbody><tr><td>Cell</td></tr></tbody></table></figure>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
     it('should wrap only the outer table when tables are nested', async () => {
       const value = html`
         <table><tbody><tr><td><table><tbody><tr><td>Inner</td></tr></tbody></table></td></tr>
