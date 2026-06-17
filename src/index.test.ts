@@ -16,6 +16,17 @@ describeForEachParser('transformContent', (parseHtml) => {
     ).toBe(expected)
   })
 
+  it('should merge list fragments separated by an empty paragraph', async () => {
+    // stripEmptyTags removes the empty <p> before mergeFragmentedLists runs, so the
+    // fragments become adjacent and merge into one list.
+    const value = '<ul><li>a</li></ul><p></p><ul><li>b</li></ul>'
+    const expected = '<ul><li>a</li><li>b</li></ul>'
+
+    expect(
+      await transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com' }),
+    ).toBe(expected)
+  })
+
   it('should resolve relative URLs when baseUrl is provided', async () => {
     const value = '<p><a href="/about">About</a></p>'
     const expected = '<p><a href="https://example.com/about">About</a></p>'

@@ -108,7 +108,6 @@ export const defaultDomTransforms: Array<DomTransform> = [
   stripLeadingIndentation,
   stripInterBlockBreaks,
   stripBoundaryBreaks,
-  mergeFragmentedLists,
   mergeConsecutiveOneLinerPres,
   replacePreLineBreaks,
   trimPreWhitespace,
@@ -118,6 +117,10 @@ export const defaultDomTransforms: Array<DomTransform> = [
   injectEnclosures,
   proxyAssetUrls,
   stripEmptyTags,
+  // After stripEmptyTags so empty separators (e.g. `<p></p>`) between list fragments
+  // are already gone — the fragments become adjacent and mergeable — and before
+  // unwrapWrappers, which must run after merges.
+  mergeFragmentedLists,
   unwrapWrappers,
   wrapTablesForScroll,
 ]
