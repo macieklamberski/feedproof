@@ -254,10 +254,11 @@ const isLineNumberText = (text: string): boolean => {
   return lines.length > 0 && lines.every((line) => integerLineRegex.test(line))
 }
 
-// Inline per-line number spans (Chroma `.ln`/`.lnt`, Prism `.line-numbers-rows`).
+// Inline per-line number spans (Chroma `.ln`/`.lnt`, Prism `.line-numbers-rows`,
+// Pygments `linenos=inline` `.lineno`).
 // Class-based on purpose: a bare numeric span can't be told from a real number token
 // in highlighted code, so structural detection would corrupt the code.
-const gutterLineSpanSelector = 'span.line-numbers-rows, span.ln, span.lnt'
+const gutterLineSpanSelector = 'span.line-numbers-rows, span.ln, span.lnt, span.lineno'
 
 const stripCodeGutters = (document: Document): void => {
   for (const table of document.querySelectorAll('table')) {

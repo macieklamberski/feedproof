@@ -428,6 +428,16 @@ describeForEachParser('highlightCode', (parseHtml) => {
       expect(result).toContain('echo hi')
     })
 
+    it('should remove inline per-line number spans (Pygments .lineno)', async () => {
+      const value =
+        '<pre><span class="lineno">1</span>echo hi\n<span class="lineno">2</span>echo bye</pre>'
+      const result = await transform(value)
+
+      expect(result).not.toContain('class="lineno"')
+      expect(result).toContain('echo hi')
+      expect(result).toContain('echo bye')
+    })
+
     it('should drop a gutter table with no recognized class (structural)', async () => {
       const value =
         '<table><tbody><tr><td><pre>1\n2</pre></td><td><pre><code class="language-js">const a = 1\nconst b = 2</code></pre></td></tr></tbody></table>'
