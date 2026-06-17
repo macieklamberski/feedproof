@@ -10,15 +10,23 @@ const supTags = new Set(['sup'])
 const permalinkClasses = new Set([
   'headerlink', // Sphinx / Python-Markdown / MkDocs.
   'header-anchor', // markdown-it-anchor (VuePress / VitePress / Eleventy).
+  'heading-anchor', // Various themes.
+  'heading-link', // Various themes.
+  'heading-mark', // Hexo and similar Markdown themes.
   'hash-link', // Docusaurus.
   'anchorjs-link', // AnchorJS.
   'zola-anchor', // Zola.
+  'o-heading-link', // Eleventy themes.
+  'wiki-anchor', // Redmine.
+  'permalink', // Generic permalink markup.
 ])
 
 // Single-glyph permalink markers: hash, pilcrow, section sign, fleuron, link
 // emoji, zero-width space. An anchor whose visible content is only one of these
-// (or empty) is a decorative permalink, not real link text.
+// (or empty, or a run of hashes like "##"/"###") is a decorative permalink, not
+// real link text.
 const permalinkGlyphs = new Set(['#', '¶', '§', '❡', '\u{1f517}', '​'])
+const hashRunRegex = /^#+$/
 
 const footnoteClassRegex = /footnote/i
 const bracketedNumberRegex = /^\[\d+\]$/
@@ -37,7 +45,12 @@ const interactiveAttrRegex = /toggle|accordion|collapse/i
 const isGlyphMarker = (text: string, fragment: string): boolean => {
   const trimmed = text.trim()
 
-  return trimmed === '' || permalinkGlyphs.has(trimmed) || trimmed === `#${fragment}`
+  return (
+    trimmed === '' ||
+    hashRunRegex.test(trimmed) ||
+    permalinkGlyphs.has(trimmed) ||
+    trimmed === `#${fragment}`
+  )
 }
 
 // Lowercases and collapses runs of non-alphanumerics (Unicode-aware, so CJK and
@@ -110,7 +123,7 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
         const isSymbolOnly = isGlyphMarker(visible, fragment)
         const hasKnownClass = className
           .split(whitespaceRegex)
-          .some((token) => permalinkClasses.has(token))
+          .some((token) => permalinkClasses.has(token.toLowerCase()))
 
         // Symbol-only and generator-class anchors are self-evident permalinks. A
         // plain text link qualifies only when it points back at its own heading
@@ -132,10 +145,13 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
           continue
         }
 
-        // A decorative-glyph anchor is removed whole; a whole-heading link keeps its
-        // real text by promoting it out (inline glyph markers dropped) before the
-        // now-empty anchor goes.
-        if (!isSymbolOnly) {
+        // A decorative permalink — a glyph, or a marker sitting beside the real heading
+        // text (e.g. a labelled `permalink`/`heading-link` anchor) — is removed whole. An
+        // anchor that wraps the entire heading keeps its text by promoting it out (inline
+        // glyph markers dropped) before the now-empty anchor goes.
+        const wrapsHeading = (heading.textContent ?? '').trim() === visible
+
+        if (!isSymbolOnly && wrapsHeading) {
           while (anchor.firstChild) {
             const child = anchor.firstChild
 

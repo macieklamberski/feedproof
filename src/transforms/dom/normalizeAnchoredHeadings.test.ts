@@ -51,6 +51,68 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
 
       expect(await transform(value)).toEqualHtml(expected)
     })
+
+    it('should treat a run of hashes ("##") as a permalink glyph', async () => {
+      const value = '<h2>Alternatives<a href="#alternatives" class="anchor">##</a></h2>'
+      const expected = '<h2><a id="alternatives" href="#alternatives"></a>Alternatives</h2>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+  })
+
+  describe('generator permalink classes', () => {
+    const cases: Array<[string, string, string]> = [
+      [
+        'heading-anchor',
+        '<h2>In summary<a href="#in-summary" class="heading-anchor">#</a></h2>',
+        '<h2><a id="in-summary" href="#in-summary"></a>In summary</h2>',
+      ],
+      [
+        'heading-link',
+        '<h2>Applications<a href="#applications" class="heading-link"></a></h2>',
+        '<h2><a id="applications" href="#applications"></a>Applications</h2>',
+      ],
+      [
+        'heading-mark',
+        '<h1><a href="#install" class="heading-mark"></a>Install</h1>',
+        '<h1><a id="install" href="#install"></a>Install</h1>',
+      ],
+      [
+        'o-heading-link',
+        '<h2>Images<a class="o-heading-link" href="#images">#</a></h2>',
+        '<h2><a id="images" href="#images"></a>Images</h2>',
+      ],
+      [
+        'wiki-anchor',
+        '<h2>Changes<a class="wiki-anchor" href="#changes">¶</a></h2>',
+        '<h2><a id="changes" href="#changes"></a>Changes</h2>',
+      ],
+      [
+        'permalink',
+        '<h2>The Budget<a class="permalink" href="#the-budget">#</a></h2>',
+        '<h2><a id="the-budget" href="#the-budget"></a>The Budget</h2>',
+      ],
+    ]
+
+    for (const [name, value, expected] of cases) {
+      it(`should normalize a "${name}" permalink anchor`, async () => {
+        expect(await transform(value)).toEqualHtml(expected)
+      })
+    }
+
+    it('should match a permalink class case-insensitively', async () => {
+      const value = '<h2><a href="#setup" class="Heading-Link"></a>Setup</h2>'
+      const expected = '<h2><a id="setup" href="#setup"></a>Setup</h2>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should drop a labelled permalink marker without leaking its text into the heading', async () => {
+      const value = '<h2>Section<a class="permalink" href="#totally-different">link</a></h2>'
+      const expected = '<h2><a id="totally-different" href="#totally-different"></a>Section</h2>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
   })
 
   describe('whole-heading links', () => {
