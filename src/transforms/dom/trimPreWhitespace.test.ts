@@ -4,7 +4,7 @@ import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { trimPreWhitespace } from './trimPreWhitespace.js'
 
-const trailingNewlineBeforeCode = /\n<\/code>/
+const trailingNewlineBeforeCodeRegex = /\n<\/code>/
 
 describeForEachParser('trimPreWhitespace', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
@@ -72,7 +72,7 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
     const result = await transform(value)
 
     expect(result).toContain('<span class="hljs-keyword">const</span> x = 1</code>')
-    expect(result).not.toMatch(trailingNewlineBeforeCode)
+    expect(result).not.toMatch(trailingNewlineBeforeCodeRegex)
   })
 
   it('should dedent common leading indentation', async () => {
