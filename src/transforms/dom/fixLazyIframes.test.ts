@@ -26,9 +26,8 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
   it('should not overwrite a usable src', async () => {
     const value =
       '<iframe src="https://example.com/real" data-src="https://example.com/lazy"></iframe>'
-    const result = await transform(value)
 
-    expect(result).toContain('src="https://example.com/real"')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave an empty iframe with no recoverable attribute', async () => {
