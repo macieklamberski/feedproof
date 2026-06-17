@@ -5,8 +5,11 @@ import {
   createBookmarkPlaceholder,
   createEmbedPlaceholder,
   createPlaceholder,
+  getElementAspectRatio,
   getElementDimensions,
+  getWrapperAspectRatio,
   hasAncestorWithTagName,
+  isElementHidden,
   isJsonLike,
   isParseableJson,
   isSafeThumbnailUrl,
@@ -440,6 +443,169 @@ describeForEachParser('getElementDimensions', (parseHtml) => {
     const image = queryElement(document, 'img')
 
     expect(getElementDimensions(image)).toEqual({ width: 1.5, height: 2.5 })
+  })
+})
+
+describeForEachParser('isElementHidden', (parseHtml) => {
+  it('should return true for the hidden attribute', () => {
+    const document = parseHtml('<div hidden>x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(true)
+  })
+
+  it('should return true for inline display:none', () => {
+    const document = parseHtml('<div style="display: none">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(true)
+  })
+
+  it('should return true for inline visibility:hidden', () => {
+    const document = parseHtml('<div style="visibility: hidden">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(true)
+  })
+
+  it('should match display:none among other declarations', () => {
+    const document = parseHtml('<div style="color: red; display: none">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(true)
+  })
+
+  it('should not treat opacity:0 as hidden', () => {
+    const document = parseHtml('<div style="opacity: 0">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(false)
+  })
+
+  it('should not treat a 0×0 size as hidden', () => {
+    const document = parseHtml('<div style="width: 0; height: 0">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(false)
+  })
+
+  it('should return false for a visible element', () => {
+    const document = parseHtml('<div style="color: red">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(false)
+  })
+})
+
+describeForEachParser('getElementAspectRatio', (parseHtml) => {
+  it('should read the aspect-ratio property from the element itself', () => {
+    const document = parseHtml('<iframe style="aspect-ratio: 21 / 9"></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getElementAspectRatio(iframe)).toBeCloseTo(21 / 9)
+  })
+
+  it('should read a wp-embed-aspect class from the element itself', () => {
+    const document = parseHtml('<figure class="wp-embed-aspect-4-3"></figure>')
+    const figure = queryElement(document, 'figure')
+
+    expect(getElementAspectRatio(figure)).toBeCloseTo(4 / 3)
+  })
+
+  it('should read a padding hack from the element itself', () => {
+    const document = parseHtml('<div style="padding-bottom:25%"></div>')
+    const div = queryElement(document, 'div')
+
+    expect(getElementAspectRatio(div)).toBe(4)
+  })
+
+  it('should return undefined when the element declares no ratio', () => {
+    const document = parseHtml('<iframe></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getElementAspectRatio(iframe)).toBeUndefined()
+  })
+
+  it('should return undefined for an out-of-range aspect-ratio value', () => {
+    const document = parseHtml('<div style="aspect-ratio: 0 / 0"></div>')
+    const div = queryElement(document, 'div')
+
+    expect(getElementAspectRatio(div)).toBeUndefined()
+  })
+})
+
+describeForEachParser('getWrapperAspectRatio', (parseHtml) => {
+  it('should read the ratio from a wp-embed-aspect class on an ancestor', () => {
+    const document = parseHtml(
+      '<figure class="wp-block-embed wp-embed-aspect-4-3"><div class="wp-block-embed__wrapper"><iframe></iframe></div></figure>',
+    )
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeCloseTo(4 / 3)
+  })
+
+  it('should read the ratio from an inline aspect-ratio property', () => {
+    const document = parseHtml('<div style="aspect-ratio: 16 / 9"><iframe></iframe></div>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeCloseTo(16 / 9)
+  })
+
+  it('should read a single-number aspect-ratio as width over height', () => {
+    const document = parseHtml('<div style="aspect-ratio: 1.5"><iframe></iframe></div>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBe(1.5)
+  })
+
+  it('should read the ratio from an inline padding hack on an ancestor', () => {
+    const document = parseHtml('<div style="padding-bottom:50%"><iframe></iframe></div>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBe(2)
+  })
+
+  it('should return undefined when no ancestor carries an aspect signal', () => {
+    const document = parseHtml('<p><iframe></iframe></p>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+  })
+
+  it('should return undefined for out-of-range wrapper values', () => {
+    const document = parseHtml(
+      '<figure class="wp-embed-aspect-0-0"><div style="padding-bottom:0%"><iframe></iframe></div></figure>',
+    )
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+  })
+
+  it('should not look beyond the ancestor depth limit', () => {
+    const document = parseHtml(
+      '<div style="padding-bottom:50%"><div><div><div><iframe></iframe></div></div></div></div>',
+    )
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+  })
+
+  it('should honor a custom maxDepth argument', () => {
+    const document = parseHtml('<div style="padding-bottom:50%"><iframe></iframe></div>')
+    const iframe = queryElement(document, 'iframe')
+
+    // maxDepth 0 checks only the element itself; the wrapper is one level up.
+    expect(getWrapperAspectRatio(iframe, 0)).toBeUndefined()
+    expect(getWrapperAspectRatio(iframe, 1)).toBe(2)
+  })
+
+  it('should not read a wrapper that holds the element plus siblings', () => {
+    const document = parseHtml(
+      '<div style="aspect-ratio:16/9"><iframe></iframe><p>caption</p></div>',
+    )
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
   })
 })
 
