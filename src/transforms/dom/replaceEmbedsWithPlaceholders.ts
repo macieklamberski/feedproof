@@ -5,30 +5,11 @@ import {
 } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-// A real, loadable src — not empty or the `about:blank` lazy placeholder.
+// A real, loadable src — not empty or the `about:blank` lazy placeholder. fixLazyIframes
+// has already promoted any lazy/consent-gated src into `src` by the time this runs.
 const isUsableSrc = (src: string | null): src is string => {
   const trimmed = src?.trim()
   return !!trimmed && trimmed !== 'about:blank'
-}
-
-// Rejects flag-style values; a real URL carries a `:`, `/`, or `.`.
-const urlShapeRegex = /[:/.]/
-
-// Promote a lazy/consent-gated iframe src (the real embed URL parked in a data-*
-// attribute) into `src` when the src itself is empty or `about:blank`.
-const recoverLazyIframeSrc = (iframe: Element, attributes: ReadonlyArray<string>): void => {
-  if (isUsableSrc(iframe.getAttribute('src'))) {
-    return
-  }
-
-  for (const attribute of attributes) {
-    const value = iframe.getAttribute(attribute)
-
-    if (value && urlShapeRegex.test(value)) {
-      iframe.setAttribute('src', value)
-      return
-    }
-  }
 }
 
 // When the iframe carries no usable dimensions, fall back to a responsive wrapper's
@@ -49,18 +30,11 @@ const getEmbedDimensions = (element: Element): { width?: number; height?: number
 }
 
 export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
-  const { embedResolvers, resolveUrlFn, baseUrl, lazyIframeAttributes } = context
+  const { embedResolvers, resolveUrlFn, baseUrl } = context
 
   return async (document) => {
     const iframeSnapshot = document.getElementsByTagName('iframe') as unknown as Array<Element>
     const hasIframes = iframeSnapshot.length > 0
-
-    // Promote lazy/consent srcs first so both the resolvers and the fallback see them.
-    if (hasIframes) {
-      for (const iframe of iframeSnapshot) {
-        recoverLazyIframeSrc(iframe, lazyIframeAttributes)
-      }
-    }
 
     for (const resolver of embedResolvers) {
       if (!hasIframes && resolver.selector.startsWith('iframe')) {

@@ -353,15 +353,7 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
     expect(twice).toBe(once)
   })
 
-  describe('non-iframe and lazy carriers', () => {
-    it('should recover a lazy iframe src from a data attribute', async () => {
-      const value = '<iframe src="about:blank" data-src="https://example.com/embed/x"></iframe>'
-      const result = await transform(value, withNoResolvers)
-
-      expect(result).toContain('data-embed-src="https://example.com/embed/x"')
-      expect(result).not.toContain('<iframe')
-    })
-
+  describe('non-iframe carriers', () => {
     it('should replace an <object data> carrier with a placeholder', async () => {
       const value = '<object data="https://example.com/v/x"></object>'
       const result = await transform(value, withNoResolvers)

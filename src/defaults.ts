@@ -9,6 +9,7 @@ import { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
+import { fixLazyIframes } from './transforms/dom/fixLazyIframes.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { flattenPictureElements } from './transforms/dom/flattenPictureElements.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
@@ -114,6 +115,9 @@ export const defaultDomTransforms: Array<DomTransform> = [
   trimPreWhitespace,
   linkifyUrls,
   markTimestamps,
+  // Promotes lazy/consent-gated iframe srcs into `src` so replaceEmbedsWithPlaceholders
+  // sees a resolvable iframe. Mirrors fixLazyImages for <img>.
+  fixLazyIframes,
   replaceEmbedsWithPlaceholders,
   injectEnclosures,
   proxyAssetUrls,
