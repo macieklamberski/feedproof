@@ -5,15 +5,6 @@ import {
 } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-// A real, loadable src — not empty or the `about:blank` lazy placeholder. fixLazyIframes
-// has already promoted any lazy/consent-gated src into `src` by the time this runs.
-// Possible cleanup: this overlaps with resolveUrlFn (called right after in the fallback).
-// If resolveUrlFn rejected empty/`about:blank` placeholders, this guard could fold into it.
-const isUsableSrc = (src: string | null): src is string => {
-  const trimmed = src?.trim()
-  return !!trimmed && trimmed !== 'about:blank'
-}
-
 // When the iframe carries no usable dimensions, fall back to a responsive wrapper's
 // aspect ratio so the placeholder can still reserve space. The 100×N pair encodes the
 // ratio, not absolute pixels.
@@ -82,7 +73,9 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
 
         const src = iframe.getAttribute('src')
 
-        if (isUsableSrc(src) && resolveUrlFn(src, baseUrl)) {
+        // resolveUrlFn rejects `about:blank`; the trim drops empty/whitespace placeholders
+        // (which would otherwise resolve to the base URL).
+        if (src?.trim() && resolveUrlFn(src, baseUrl)) {
           iframe.replaceWith(createEmbedPlaceholder(document, src, getEmbedDimensions(iframe)))
         }
       }
