@@ -1,7 +1,12 @@
 import { createEmbedPlaceholder, getDimensions } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-// The dominant responsive-embed shape puts the aspect ratio on a wrapper
+// WordPress's responsive embed wraps the iframe in a figure carrying the ratio as
+// a class (`wp-embed-aspect-16-9`), styled by an external stylesheet feedsweep never
+// sees. The class itself encodes the ratio, so read it directly.
+const aspectClassRegex = /wp-embed-aspect-(\d+)-(\d+)/
+
+// The other common responsive shape puts the ratio in an inline padding hack
 // (`padding-bottom:56.25%`) with the iframe itself at `width="100%"` or unsized.
 // Parsed off the raw `style` attribute rather than the CSSOM `style` API: linkedom's
 // getPropertyValue returns `undefined` (not "") for unset properties, and both parsers
@@ -10,18 +15,29 @@ import type { DomTransform } from '../../types.js'
 const paddingRatioRegex = /padding-(?:bottom|top):\s*([\d.]+)%/i
 
 // When the iframe carries no usable dimensions, derive an aspect ratio from an
-// ancestor wrapper's padding hack so the placeholder can still reserve space.
-// The 100×N pair encodes the ratio (N% of the width), not absolute pixels.
+// ancestor wrapper (aspect class or padding hack) so the placeholder can still
+// reserve space. The returned pair encodes the ratio, not absolute pixels.
 const getWrapperAspect = (element: Element): { width?: number; height?: number } => {
   let current = element.parentElement
   let depth = 0
 
   while (current && depth < 3) {
-    const style = current.getAttribute('style')
-    const match = style ? paddingRatioRegex.exec(style) : null
+    const aspectMatch = aspectClassRegex.exec(current.getAttribute('class') ?? '')
 
-    if (match) {
-      const percent = Number(match[1])
+    if (aspectMatch) {
+      const width = Number(aspectMatch[1])
+      const height = Number(aspectMatch[2])
+
+      if (width > 0 && height > 0) {
+        return { width, height }
+      }
+    }
+
+    const style = current.getAttribute('style')
+    const paddingMatch = style ? paddingRatioRegex.exec(style) : null
+
+    if (paddingMatch) {
+      const percent = Number(paddingMatch[1])
 
       if (percent > 0 && percent < 1000) {
         return { width: 100, height: Math.round(percent) }

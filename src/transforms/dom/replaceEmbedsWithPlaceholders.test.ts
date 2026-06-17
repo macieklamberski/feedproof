@@ -73,9 +73,18 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
     expect(result).toContain('data-embed-height="56"')
   })
 
-  it('should not recover aspect from an out-of-range padding wrapper', async () => {
+  it('should recover aspect from a wp-embed-aspect class on an ancestor', async () => {
     const value =
-      '<div style="padding-bottom:0%"><iframe src="https://example.com/embed/xyz"></iframe></div>'
+      '<figure class="wp-block-embed wp-embed-aspect-16-9"><div class="wp-block-embed__wrapper"><iframe src="https://example.com/embed/xyz"></iframe></div></figure>'
+    const result = await transform(value, withNoResolvers)
+
+    expect(result).toContain('data-embed-width="16"')
+    expect(result).toContain('data-embed-height="9"')
+  })
+
+  it('should not recover aspect from out-of-range wrapper values', async () => {
+    const value =
+      '<figure class="wp-embed-aspect-0-0"><div style="padding-bottom:0%"><iframe src="https://example.com/embed/xyz"></iframe></div></figure>'
     const result = await transform(value, withNoResolvers)
 
     expect(result).not.toContain('data-embed-width')
