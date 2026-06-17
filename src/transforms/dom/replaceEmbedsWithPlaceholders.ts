@@ -1,11 +1,15 @@
-import { createEmbedPlaceholder, getDimensions, getWrapperAspectRatio } from '../../common.js'
+import {
+  createEmbedPlaceholder,
+  getElementDimensions,
+  getWrapperAspectRatio,
+} from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 // When the iframe carries no usable dimensions, fall back to a responsive wrapper's
 // aspect ratio so the placeholder can still reserve space. The 100×N pair encodes the
 // ratio, not absolute pixels.
 const getEmbedDimensions = (element: Element): { width?: number; height?: number } => {
-  const dimensions = getDimensions(element)
+  const dimensions = getElementDimensions(element)
 
   if (dimensions.width === undefined && dimensions.height === undefined) {
     const ratio = getWrapperAspectRatio(element)

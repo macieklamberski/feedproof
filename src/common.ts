@@ -108,10 +108,10 @@ export const isBlockElement = (node: Node): boolean => {
 
 // JSON shape + parseability predicates. Candidates to move to the shared toolbox
 // package later (the same helpers live in other projects).
-const jsonObjectStartPattern = /^\s*\{/
-const jsonObjectEndPattern = /\}\s*$/
-const jsonArrayStartPattern = /^\s*\[/
-const jsonArrayEndPattern = /\]\s*$/
+const jsonObjectStartRegex = /^\s*\{/
+const jsonObjectEndRegex = /\}\s*$/
+const jsonArrayStartRegex = /^\s*\[/
+const jsonArrayEndRegex = /\]\s*$/
 
 export const isJsonLike = (value: string): boolean => {
   if (value.length < 2) {
@@ -119,8 +119,8 @@ export const isJsonLike = (value: string): boolean => {
   }
 
   return (
-    (jsonObjectStartPattern.test(value) && jsonObjectEndPattern.test(value)) ||
-    (jsonArrayStartPattern.test(value) && jsonArrayEndPattern.test(value))
+    (jsonObjectStartRegex.test(value) && jsonObjectEndRegex.test(value)) ||
+    (jsonArrayStartRegex.test(value) && jsonArrayEndRegex.test(value))
   )
 }
 
@@ -150,7 +150,7 @@ export const hasAncestorWithTagName = (node: Node, tagSet: Set<string>, stopAt?:
 const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*(?:;|$)/i
 const styleHeightRegex = /(?:^|;)\s*height\s*:\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*(?:;|$)/i
 
-export const getDimensions = (element: Element): { width?: number; height?: number } => {
+export const getElementDimensions = (element: Element): { width?: number; height?: number } => {
   const width = coerceNumber(element.getAttribute('width'))
   const height = coerceNumber(element.getAttribute('height'))
 
@@ -185,7 +185,7 @@ const aspectClassRegex = /wp-embed-aspect-(\d+)-(\d+)/
 // The legacy shape is the inline padding hack (`padding-bottom:56.25%`). All three are read
 // off the raw `style`/`class` attributes, not the CSSOM `style` API: linkedom's getPropertyValue
 // returns `undefined` (not "") for unset properties, and both parsers drop declarations whose
-// property name isn't lowercase — a case-insensitive regex matches those, mirroring getDimensions.
+// property name isn't lowercase — a case-insensitive regex matches those, mirroring getElementDimensions.
 const paddingRatioRegex = /padding-(?:bottom|top):\s*([\d.]+)%/i
 
 // The width-to-height aspect ratio (e.g. 16/9 ≈ 1.78) a single element declares — via the

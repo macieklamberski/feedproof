@@ -6,7 +6,7 @@ import type { DomTransform } from '../../types.js'
 // consecutive single-line <pre> siblings into one <pre> joined by newlines.
 const trailingBrRegex = /<br\s*\/?>\s*$/i
 const surroundingNewlinesRegex = /^\n+|\n+$/g
-const classTokenSeparator = /\s+/
+const classTokenSeparatorRegex = /\s+/
 
 // Read from a sole <code> child so consecutive <pre><code> lines merge into one
 // block rather than a stack of <code> elements.
@@ -26,7 +26,7 @@ export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses
       return false
     }
 
-    for (const token of classAttribute.split(classTokenSeparator)) {
+    for (const token of classAttribute.split(classTokenSeparatorRegex)) {
       if (preservedSet.has(token)) {
         return true
       }

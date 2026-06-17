@@ -1,4 +1,4 @@
-import { getDimensions, pixelDimensionLimit } from '../../common.js'
+import { getElementDimensions, pixelDimensionLimit } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 const styleDisplayNoneRegex = /(?:^|;)\s*display\s*:\s*none/i
@@ -111,7 +111,7 @@ export const removeTrackingPixels: DomTransform = (context) => {
         continue
       }
 
-      const dimensions = getDimensions(image)
+      const dimensions = getElementDimensions(image)
 
       if (isPixelSized(dimensions) && !hasContentImageSignal(image, dimensions)) {
         image.remove()
