@@ -2,7 +2,7 @@ import { createBookmarkPlaceholder } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 export const convertBookmarkCards: DomTransform = (context) => {
-  const { bookmarkResolvers } = context
+  const { bookmarkResolvers, resolveUrlFn, baseUrl } = context
 
   return async (document) => {
     for (const resolver of bookmarkResolvers) {
@@ -10,6 +10,12 @@ export const convertBookmarkCards: DomTransform = (context) => {
         const result = await resolver.extract(element)
 
         if (!result) {
+          continue
+        }
+
+        // Mirror the embed path: skip cards whose URL is unsafe or unresolvable
+        // (e.g. javascript:/data:) so a hostile href never reaches the placeholder.
+        if (!resolveUrlFn(result.url, baseUrl)) {
           continue
         }
 

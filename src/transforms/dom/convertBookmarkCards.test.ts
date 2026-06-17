@@ -158,6 +158,16 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
       expect(result).not.toContain('data-bookmark-thumbnail')
       expect(result).toContain('data-bookmark-title="T"')
     })
+
+    it('should skip a card whose url is unsafe', async () => {
+      const result = await transform(
+        '<div class="card" data-url="javascript:alert(1)" data-title="T"></div>',
+        [cardResolver],
+      )
+
+      expect(result).not.toContain('data-bookmark')
+      expect(result).toContain('class="card"')
+    })
   })
 
   describe('edge cases', () => {
