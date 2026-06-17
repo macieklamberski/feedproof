@@ -6,6 +6,7 @@ import {
   createEmbedPlaceholder,
   createPlaceholder,
   getDimensions,
+  getElementAspectRatio,
   getWrapperAspectRatio,
   hasAncestorWithTagName,
   isJsonLike,
@@ -444,6 +445,36 @@ describeForEachParser('getDimensions', (parseHtml) => {
   })
 })
 
+describeForEachParser('getElementAspectRatio', (parseHtml) => {
+  it('should read the aspect-ratio property from the element itself', () => {
+    const document = parseHtml('<iframe style="aspect-ratio: 21 / 9"></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getElementAspectRatio(iframe)).toBeCloseTo(21 / 9)
+  })
+
+  it('should read a wp-embed-aspect class from the element itself', () => {
+    const document = parseHtml('<figure class="wp-embed-aspect-4-3"></figure>')
+    const figure = queryElement(document, 'figure')
+
+    expect(getElementAspectRatio(figure)).toBeCloseTo(4 / 3)
+  })
+
+  it('should read a padding hack from the element itself', () => {
+    const document = parseHtml('<div style="padding-bottom:25%"></div>')
+    const div = queryElement(document, 'div')
+
+    expect(getElementAspectRatio(div)).toBe(4)
+  })
+
+  it('should return undefined when the element declares no ratio', () => {
+    const document = parseHtml('<iframe></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getElementAspectRatio(iframe)).toBeUndefined()
+  })
+})
+
 describeForEachParser('getWrapperAspectRatio', (parseHtml) => {
   it('should read the ratio from a wp-embed-aspect class on an ancestor', () => {
     const document = parseHtml(
@@ -452,6 +483,20 @@ describeForEachParser('getWrapperAspectRatio', (parseHtml) => {
     const iframe = queryElement(document, 'iframe')
 
     expect(getWrapperAspectRatio(iframe)).toBeCloseTo(4 / 3)
+  })
+
+  it('should read the ratio from an inline aspect-ratio property', () => {
+    const document = parseHtml('<div style="aspect-ratio: 16 / 9"><iframe></iframe></div>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeCloseTo(16 / 9)
+  })
+
+  it('should read a single-number aspect-ratio as width over height', () => {
+    const document = parseHtml('<div style="aspect-ratio: 1.5"><iframe></iframe></div>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBe(1.5)
   })
 
   it('should read the ratio from an inline padding hack on an ancestor', () => {
@@ -484,6 +529,15 @@ describeForEachParser('getWrapperAspectRatio', (parseHtml) => {
     const iframe = queryElement(document, 'iframe')
 
     expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+  })
+
+  it('should honor a custom maxDepth argument', () => {
+    const document = parseHtml('<div style="padding-bottom:50%"><iframe></iframe></div>')
+    const iframe = queryElement(document, 'iframe')
+
+    // maxDepth 0 checks only the element itself; the wrapper is one level up.
+    expect(getWrapperAspectRatio(iframe, 0)).toBeUndefined()
+    expect(getWrapperAspectRatio(iframe, 1)).toBe(2)
   })
 })
 

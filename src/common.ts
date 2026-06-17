@@ -175,45 +175,73 @@ export const getDimensions = (element: Element): { width?: number; height?: numb
   }
 }
 
-// How many ancestors up to look for a responsive wrapper (e.g. figure > div > iframe).
+// How many ancestors above the element to also check for a responsive wrapper.
 const maxWrapperAncestorDepth = 3
+// Modern CSS: `aspect-ratio: 16 / 9` (or a single number, the width-to-height ratio).
+const aspectRatioRegex = /aspect-ratio:\s*(?:auto\s+)?([\d.]+)(?:\s*\/\s*([\d.]+))?/i
 // WordPress responsive embeds carry the ratio as a class (`wp-embed-aspect-16-9`),
 // styled by an external stylesheet feedsweep never sees; the class itself encodes it.
 const aspectClassRegex = /wp-embed-aspect-(\d+)-(\d+)/
-// The other common shape is the inline padding hack (`padding-bottom:56.25%`). Read off
-// the raw `style` attribute, not the CSSOM `style` API: linkedom's getPropertyValue returns
-// `undefined` (not "") for unset properties, and both parsers drop declarations whose property
-// name isn't lowercase — a case-insensitive regex matches those, mirroring getDimensions.
+// The legacy shape is the inline padding hack (`padding-bottom:56.25%`). All three are read
+// off the raw `style`/`class` attributes, not the CSSOM `style` API: linkedom's getPropertyValue
+// returns `undefined` (not "") for unset properties, and both parsers drop declarations whose
+// property name isn't lowercase — a case-insensitive regex matches those, mirroring getDimensions.
 const paddingRatioRegex = /padding-(?:bottom|top):\s*([\d.]+)%/i
 
-// The width-to-height aspect ratio (e.g. 16/9 ≈ 1.78) declared by a responsive wrapper around
-// `element`, or undefined when no ancestor within `maxWrapperAncestorDepth` carries one. Lets a
-// caller reserve space for an element whose own dimensions are unknown.
-export const getWrapperAspectRatio = (element: Element): number | undefined => {
-  let current = element.parentElement
+// The width-to-height aspect ratio (e.g. 16/9 ≈ 1.78) a single element declares — via the
+// `aspect-ratio` property, a `wp-embed-aspect-*` class, or the padding hack — or undefined.
+export const getElementAspectRatio = (element: Element): number | undefined => {
+  const style = element.getAttribute('style') ?? ''
+
+  const ratioMatch = aspectRatioRegex.exec(style)
+
+  if (ratioMatch) {
+    const width = Number(ratioMatch[1])
+    const height = ratioMatch[2] === undefined ? 1 : Number(ratioMatch[2])
+
+    if (width > 0 && height > 0) {
+      return width / height
+    }
+  }
+
+  const classMatch = aspectClassRegex.exec(element.getAttribute('class') ?? '')
+
+  if (classMatch) {
+    const width = Number(classMatch[1])
+    const height = Number(classMatch[2])
+
+    if (width > 0 && height > 0) {
+      return width / height
+    }
+  }
+
+  const paddingMatch = paddingRatioRegex.exec(style)
+
+  if (paddingMatch) {
+    const percent = Number(paddingMatch[1])
+
+    if (percent > 0 && percent < 1000) {
+      return 100 / percent
+    }
+  }
+}
+
+// Walks the element and its ancestors (the element plus up to `maxDepth` levels) and returns the
+// first aspect ratio any of them declares — for an element whose own dimensions are unknown but
+// which sits in a responsive wrapper. Call getElementAspectRatio directly when only the element
+// itself matters (e.g. an image with its own `aspect-ratio`).
+export const getWrapperAspectRatio = (
+  element: Element,
+  maxDepth = maxWrapperAncestorDepth,
+): number | undefined => {
+  let current: Element | null = element
   let depth = 0
 
-  while (current && depth < maxWrapperAncestorDepth) {
-    const aspectMatch = aspectClassRegex.exec(current.getAttribute('class') ?? '')
+  while (current && depth <= maxDepth) {
+    const ratio = getElementAspectRatio(current)
 
-    if (aspectMatch) {
-      const width = Number(aspectMatch[1])
-      const height = Number(aspectMatch[2])
-
-      if (width > 0 && height > 0) {
-        return width / height
-      }
-    }
-
-    const style = current.getAttribute('style')
-    const paddingMatch = style ? paddingRatioRegex.exec(style) : null
-
-    if (paddingMatch) {
-      const percent = Number(paddingMatch[1])
-
-      if (percent > 0 && percent < 1000) {
-        return 100 / percent
-      }
+    if (ratio !== undefined) {
+      return ratio
     }
 
     current = current.parentElement
