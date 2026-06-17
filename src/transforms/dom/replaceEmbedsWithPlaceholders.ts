@@ -14,6 +14,9 @@ const aspectClassRegex = /wp-embed-aspect-(\d+)-(\d+)/
 // matches those, and this mirrors getDimensions, which also reads getAttribute('style').
 const paddingRatioRegex = /padding-(?:bottom|top):\s*([\d.]+)%/i
 
+// How many ancestors up to look for a responsive wrapper (figure > div > iframe).
+const maxWrapperAncestorDepth = 3
+
 // When the iframe carries no usable dimensions, derive an aspect ratio from an
 // ancestor wrapper (aspect class or padding hack) so the placeholder can still
 // reserve space. The returned pair encodes the ratio, not absolute pixels.
@@ -21,7 +24,7 @@ const getWrapperAspect = (element: Element): { width?: number; height?: number }
   let current = element.parentElement
   let depth = 0
 
-  while (current && depth < 3) {
+  while (current && depth < maxWrapperAncestorDepth) {
     const aspectMatch = aspectClassRegex.exec(current.getAttribute('class') ?? '')
 
     if (aspectMatch) {
