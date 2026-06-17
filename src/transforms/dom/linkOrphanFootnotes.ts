@@ -10,13 +10,18 @@ const footnoteFragmentRegex =
   /^(?:fn(?:ref)?[:._-]?\d|user-content-fn|_ftn|footnote|cite[-_]?note|sdfootnote)/i
 const footnoteClassRegex = /footnote|reversefootnote/i
 const footnoteRoleRegex = /doc-noteref|doc-backlink/i
+// Hand-rolled footnotes (Medium/Wix/Squarespace) often mark the reference with a
+// lone symbol — `*`, `†`, `‡`, `§` — carrying no `<sup>`, footnote class, or
+// footnote-shaped fragment, so the other signals miss them.
+const footnoteGlyphRegex = /^[*†‡§]$/
 
 const isFootnoteRef = (anchor: Element, fragment: string): boolean => {
   return (
     footnoteFragmentRegex.test(fragment) ||
     hasAncestorWithTagName(anchor, supTags) ||
     footnoteClassRegex.test(anchor.getAttribute('class') ?? '') ||
-    footnoteRoleRegex.test(anchor.getAttribute('role') ?? '')
+    footnoteRoleRegex.test(anchor.getAttribute('role') ?? '') ||
+    footnoteGlyphRegex.test(anchor.textContent?.trim() ?? '')
   )
 }
 

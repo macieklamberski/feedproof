@@ -27,6 +27,13 @@ describeForEachParser('linkOrphanFootnotes', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
+    it('should re-point a lone-symbol hand-rolled orphan ref', async () => {
+      const value = '<p>Claim.<a href="#note-star">*</a></p>'
+      const expected = '<p>Claim.<a href="https://example.com/post#note-star">*</a></p>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
     it('should leave an orphan ref untouched when no baseUrl is set', async () => {
       const value = '<p>Claim.<sup><a href="#fn1">1</a></sup></p>'
 
