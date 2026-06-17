@@ -108,10 +108,10 @@ export const isBlockElement = (node: Node): boolean => {
 
 // JSON shape + parseability predicates. Candidates to move to the shared toolbox
 // package later (the same helpers live in other projects).
-const jsonObjectStartPattern = /^\s*\{/
-const jsonObjectEndPattern = /\}\s*$/
-const jsonArrayStartPattern = /^\s*\[/
-const jsonArrayEndPattern = /\]\s*$/
+const jsonObjectStartRegex = /^\s*\{/
+const jsonObjectEndRegex = /\}\s*$/
+const jsonArrayStartRegex = /^\s*\[/
+const jsonArrayEndRegex = /\]\s*$/
 
 export const isJsonLike = (value: string): boolean => {
   if (value.length < 2) {
@@ -119,8 +119,8 @@ export const isJsonLike = (value: string): boolean => {
   }
 
   return (
-    (jsonObjectStartPattern.test(value) && jsonObjectEndPattern.test(value)) ||
-    (jsonArrayStartPattern.test(value) && jsonArrayEndPattern.test(value))
+    (jsonObjectStartRegex.test(value) && jsonObjectEndRegex.test(value)) ||
+    (jsonArrayStartRegex.test(value) && jsonArrayEndRegex.test(value))
   )
 }
 

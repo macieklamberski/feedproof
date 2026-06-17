@@ -1,6 +1,6 @@
 import type { DomTransform } from '../../types.js'
 
-const imgPattern = /<img\s/i
+const imgRegex = /<img\s/i
 // Rejects flag-style values like `"1"` / `"true"` / `"loaded"` that some
 // libraries park on otherwise-lazy attribute names.
 const urlShapeRegex = /[:/.]/
@@ -86,7 +86,7 @@ export const fixLazyImages: DomTransform = (context) => {
 
       const inner = noscript.innerHTML
 
-      if (!imgPattern.test(inner)) {
+      if (!imgRegex.test(inner)) {
         continue
       }
 
