@@ -162,6 +162,42 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
     })
   })
 
+  describe('bare in-page targets', () => {
+    it('should turn a bare <a name> target into a clickable permalink', async () => {
+      const value = '<h2><a name="the-setup"></a>The Setup</h2>'
+      const expected = '<h2><a id="the-setup" href="#the-setup"></a>The Setup</h2>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should turn an empty <a id> target into a clickable permalink', async () => {
+      const value = '<h3>Notes<a id="notes"></a></h3>'
+      const expected = '<h3><a id="notes" href="#notes"></a>Notes</h3>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should keep the bare target fragment even when the heading has its own id', async () => {
+      const value = '<h2 id="section-2"><a name="legacy-anchor"></a>Section</h2>'
+      const expected =
+        '<h2 id="section-2"><a id="legacy-anchor" href="#legacy-anchor"></a>Section</h2>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should leave a named anchor that wraps real heading text', async () => {
+      const value = '<h2><a name="x">Real heading text</a></h2>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should leave a plain content link with no fragment', async () => {
+      const value = '<h2><a href="https://example.com/post">Headline</a></h2>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+  })
+
   describe('excluded anchors', () => {
     it('should leave a footnote reference wrapped in <sup>', async () => {
       const value = '<h2>Title<sup><a href="#fn1">1</a></sup></h2>'

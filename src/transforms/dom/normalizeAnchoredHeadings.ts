@@ -65,7 +65,8 @@ const slugify = (value: string): string => {
 
 // Headings carry in-page permalinks ("anchors") in many shapes: the whole
 // heading wrapped in a `#fragment` link, a trailing `#`/`¶` glyph, a generator's
-// empty `headerlink`/`hash-link` anchor, and so on. This collapses every shape to
+// empty `headerlink`/`hash-link` anchor, a bare `<a name>`/`<a id>` scroll target,
+// and so on. This collapses every shape to
 // one canonical affordance: plain heading text plus a single empty, self-referential
 // anchor (`<a id="fragment" href="#fragment">`) as the heading's first child — the
 // fragment rides on the anchor's `id` (the scroll target), so the reader can paint a
@@ -77,24 +78,36 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
     for (const heading of headings) {
       const headingId = heading.getAttribute('id')
       const headingSlug = slugify(heading.textContent ?? '')
-      const anchors = heading.querySelectorAll('a[href]')
+      const anchors = heading.querySelectorAll('a')
       let permalinkFragment: string | null = null
 
       for (const anchor of anchors) {
-        const href = anchor.getAttribute('href') ?? ''
-        const hashIndex = href.indexOf('#')
+        const href = anchor.getAttribute('href')
+        const hashIndex = href?.indexOf('#') ?? -1
+        const visible = (anchor.textContent ?? '').trim()
 
-        if (hashIndex === -1) {
+        // An anchor contributes a permalink in two shapes: a `#fragment` link, or a bare
+        // in-page target (`<a name>` / empty `<a id>` with no href). The bare target is
+        // taken only when empty, so a named anchor wrapping real heading text is untouched.
+        const isBareTarget =
+          href === null &&
+          visible === '' &&
+          (anchor.hasAttribute('name') || anchor.hasAttribute('id'))
+
+        let fragment: string
+
+        if (hashIndex !== -1) {
+          fragment = (href as string).slice(hashIndex + 1)
+        } else if (isBareTarget) {
+          fragment = anchor.getAttribute('name') ?? anchor.getAttribute('id') ?? ''
+        } else {
           continue
         }
-
-        const fragment = href.slice(hashIndex + 1)
 
         if (fragment === '') {
           continue
         }
 
-        const visible = (anchor.textContent ?? '').trim()
         const className = anchor.getAttribute('class') ?? ''
 
         // Footnote references inside headings (sup-wrapped, footnote-classed, or a
@@ -133,7 +146,9 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
           (headingId !== null && slugify(headingId) === fragmentSlug) ||
           (headingSlug !== '' && headingSlug === fragmentSlug)
         const qualifies =
-          isSymbolOnly || hasKnownClass || (slugMatch && isSamePage(href, baseUrl, resolveUrlFn))
+          isSymbolOnly ||
+          hasKnownClass ||
+          (slugMatch && isSamePage(href ?? '', baseUrl, resolveUrlFn))
 
         if (!qualifies) {
           continue
@@ -166,9 +181,10 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
         anchor.remove()
 
         // Target the heading's own id when a generator set one, else the anchor's
-        // fragment. The single canonical permalink is inserted after the loop.
+        // fragment. A bare target keeps its own name/id — that is what existing links
+        // already point at. The single canonical permalink is inserted after the loop.
         if (permalinkFragment === null) {
-          permalinkFragment = headingId ?? fragment
+          permalinkFragment = isBareTarget ? fragment : (headingId ?? fragment)
         }
       }
 
