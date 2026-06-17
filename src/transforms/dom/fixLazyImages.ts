@@ -35,41 +35,26 @@ export const fixLazyImages: DomTransform = (context) => {
         }
       }
 
+      // Promote the real src/srcset but keep the original lazy attributes in place.
       if (hasSrcCandidate) {
-        let srcResolved = false
-
         for (const attribute of lazySrcAttributes) {
           const value = image.getAttribute(attribute)
 
-          if (value === null) {
-            continue
-          }
-
-          if (!srcResolved && value && isUrlShaped(value)) {
+          if (value && isUrlShaped(value)) {
             image.setAttribute('src', value)
-            srcResolved = true
+            break
           }
-
-          image.removeAttribute(attribute)
         }
       }
 
       if (hasSrcsetCandidate) {
-        let srcsetResolved = false
-
         for (const attribute of lazySrcsetAttributes) {
           const value = image.getAttribute(attribute)
 
-          if (value === null) {
-            continue
-          }
-
-          if (!srcsetResolved && value && isUrlShaped(value)) {
+          if (value && isUrlShaped(value)) {
             image.setAttribute('srcset', value)
-            srcsetResolved = true
+            break
           }
-
-          image.removeAttribute(attribute)
         }
       }
     }
