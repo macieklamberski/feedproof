@@ -96,9 +96,7 @@ const result = transformContent(html, {
   enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
   // Route image/video/audio URLs through a proxy. Return `undefined` to leave a URL untouched.
   assetProxyFn: (url, type) => `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`,
-  // Extra URL safety policy (e.g. SSRF or a scheme allowlist). Return `false` to neutralize a URL
-  // to an inert sentinel. A dangerous-scheme floor (javascript:/vbscript:/data:text/html) always
-  // applies regardless. `type` is 'media' or 'link'.
+  // Extra URL safety policy (e.g. SSRF/allowlist); return `false` to neutralize. A dangerous-scheme floor always applies.
   isSafeUrlFn: (url, type) => isSafe(url, type),
   // Populate embed placeholder metadata from a remote source (e.g. YouTube oEmbed).
   enrichEmbedFn: async (embeds) => {
