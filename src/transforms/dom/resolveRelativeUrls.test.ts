@@ -18,6 +18,17 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  it('should resolve through the configured resolveUrlFn', async () => {
+    const context: TransformContext = {
+      ...baseContext,
+      resolveUrlFn: (url) => `https://custom.test${url}`,
+    }
+    const value = '<a href="/page">link</a>'
+    const expected = '<a href="https://custom.test/page">link</a>'
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
   it('should resolve relative src on images', async () => {
     const value = '<img src="/images/photo.jpg">'
     const expected = '<img src="https://example.com/images/photo.jpg">'
