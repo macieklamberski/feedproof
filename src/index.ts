@@ -37,6 +37,7 @@ export const transformContent = async (
     resolveUrlFn: options.resolveUrlFn ?? defaultResolveUrlFn,
     cleanUrlFn: options.cleanUrlFn,
     assetProxyFn: options.assetProxyFn,
+    isSafeUrlFn: options.isSafeUrlFn,
     enrichEmbedFn: options.enrichEmbedFn,
     highlightFn: options.highlightFn ?? defaultHighlightFn,
     articleTitle: options.articleTitle,
@@ -67,7 +68,6 @@ export {
   createBookmarkPlaceholder,
   createEmbedPlaceholder,
   createPlaceholder,
-  isSafeThumbnailUrl,
   normalizeEmbedFields,
   updateEmbedPlaceholder,
 } from './common.js'
@@ -96,6 +96,7 @@ export { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 export { markTimestamps, parseTimestampSeconds } from './transforms/dom/markTimestamps.js'
 export { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
 export { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
+export { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 export { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 export { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 export { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
@@ -136,11 +137,13 @@ export type {
   Enclosure,
   EnrichEmbedFn,
   HighlightFn,
+  IsSafeUrlFn,
   MaybePromise,
   ParseHtmlFn,
   ResolveUrlFn,
   StringTransform,
   TransformContentOptions,
   TransformContext,
+  UrlRole,
 } from './types.js'
 export { chooseBaseUrl, coerceNumber } from './utils.js'

@@ -58,6 +58,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` embeds into placeholders |
 | `convertBookmarkCards` | Convert link-preview cards into `data-bookmark-*` placeholders |
 | `enrichEmbedPlaceholders` | Fill placeholder metadata via a caller-supplied async fn (opt-in) |
+| `neutralizeUnsafeUrls` | Replace dangerous-scheme URLs (and any the `isSafeUrlFn` option rejects) with an inert sentinel, keeping the element |
 | `proxyAssetUrls` | Rewrite media URLs through a caller-supplied proxy |
 | `resolveRelativeUrls` | Resolve relative URLs to absolute against the base URL |
 | `unwrapWrappers` | Remove redundant outer `<div>` / `<article>` / `<section>` wrappers |
@@ -95,6 +96,8 @@ const result = transformContent(html, {
   enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
   // Route image/video/audio URLs through a proxy. Return `undefined` to leave a URL untouched.
   assetProxyFn: (url, type) => `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`,
+  // Extra URL safety policy (e.g. SSRF/allowlist); return `false` to neutralize. A dangerous-scheme floor always applies.
+  isSafeUrlFn: (url, type) => isSafe(url, type),
   // Populate embed placeholder metadata from a remote source (e.g. YouTube oEmbed).
   enrichEmbedFn: async (embeds) => {
     return new Map(embeds.map(({ provider, id }) => [`${provider}:${id}`, { title: '…' }]))

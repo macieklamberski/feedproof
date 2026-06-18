@@ -1,4 +1,3 @@
-import { resolveUrl, upgradeProtocol } from 'feedcanon'
 import type {
   BookmarkResolverResult,
   EmbedResolverResult,
@@ -12,12 +11,6 @@ export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
 
 // NodeFilter is not globally available in Bun; mirror the DOM-spec constants.
 export const NodeFilter = { SHOW_ELEMENT: 0x1, SHOW_TEXT: 0x4, SHOW_COMMENT: 0x80 } as const
-
-const safeThumbnailDataUrlRegex = /^data:image\/(png|jpe?g|gif|webp|avif);/i
-
-export const isSafeThumbnailUrl = (url: string): boolean => {
-  return resolveUrl(url) !== undefined || safeThumbnailDataUrlRegex.test(url)
-}
 
 export const applyDomTransforms = async (
   document: Document,
@@ -295,6 +288,28 @@ export const createPlaceholder = <Type extends object>(
   return element
 }
 
+// Matches any URL that already carries a scheme (the URL-spec scheme grammar) — i.e.
+// already absolute, so resolution must leave it byte-identical. Protocol-relative URLs
+// (`//host/path`) have no scheme and are intentionally not matched, so they resolve to
+// the base URL's scheme. Shared with resolveRelativeUrls so both treat URLs identically.
+export const absoluteUrlRegex = /^[a-z][a-z0-9+.-]*:/i
+
+// Resolves a relative URL against the base URL, keeping the original otherwise —
+// an already-absolute/opaque URL, or a relative one that can't be resolved (no
+// base). Mirrors resolveRelativeUrls' per-URL contract, so placeholder URLs are
+// treated identically to content URLs without normalizing or dropping them.
+export const resolveOrKeepUrl = (
+  url: string | undefined,
+  resolveUrlFn: ResolveUrlFn,
+  baseUrl: string | undefined,
+): string | undefined => {
+  if (!url || absoluteUrlRegex.test(url)) {
+    return url || undefined
+  }
+
+  return resolveUrlFn(url, baseUrl) ?? url
+}
+
 // Maps embed metadata to its `data-embed-*` field record. Key order is the
 // attribute write order, so it's kept stable. Shared by embed creation and
 // enrichment so the per-field rules live in one place.
@@ -302,18 +317,17 @@ export const normalizeEmbedFields = (
   metadata: Partial<EmbedResolverResult>,
 ): Record<string, string | undefined> => {
   return {
-    src: metadata.src ? upgradeProtocol(metadata.src) : undefined,
+    src: metadata.src,
     provider: metadata.provider,
     id: metadata.id,
-    url: metadata.url ? upgradeProtocol(metadata.url) : undefined,
-    thumbnail:
-      metadata.thumbnail && isSafeThumbnailUrl(metadata.thumbnail) ? metadata.thumbnail : undefined,
+    url: metadata.url,
+    thumbnail: metadata.thumbnail,
     width: metadata.width ? String(metadata.width) : undefined,
     height: metadata.height ? String(metadata.height) : undefined,
     title: metadata.title,
     description: metadata.description,
     author: metadata.author,
-    avatar: metadata.avatar && isSafeThumbnailUrl(metadata.avatar) ? metadata.avatar : undefined,
+    avatar: metadata.avatar,
     duration: metadata.duration ? String(metadata.duration) : undefined,
   }
 }
@@ -342,7 +356,7 @@ export const createEmbedPlaceholder = (
     normalizeEmbedFields({ ...metadata, src: metadata?.src ?? src }),
   )
 
-  const fallbackUrl = upgradeProtocol(metadata?.url ?? metadata?.src ?? src)
+  const fallbackUrl = metadata?.url ?? metadata?.src ?? src
   const link = document.createElement('a')
   link.setAttribute('href', fallbackUrl)
   link.textContent = fallbackUrl
@@ -356,19 +370,18 @@ export const createBookmarkPlaceholder = (
   result: BookmarkResolverResult,
 ): HTMLElement => {
   const { provider, title, url, icon, thumbnail, ...rest } = result
-  const safeUrl = upgradeProtocol(url)
 
   const element = createPlaceholder(document, 'bookmark', {
     provider,
     ...rest,
-    url: safeUrl,
+    url,
     title,
-    icon: icon && isSafeThumbnailUrl(icon) ? upgradeProtocol(icon) : undefined,
-    thumbnail: thumbnail && isSafeThumbnailUrl(thumbnail) ? upgradeProtocol(thumbnail) : undefined,
+    icon,
+    thumbnail,
   })
 
   const link = document.createElement('a')
-  link.setAttribute('href', safeUrl)
+  link.setAttribute('href', url)
   link.textContent = title
   element.appendChild(link)
 

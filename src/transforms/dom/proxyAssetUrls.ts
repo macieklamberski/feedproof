@@ -29,7 +29,7 @@ const sourceTypeFromParent = (element: Element): AssetType => {
 }
 
 const isProxyableUrl = (url: string): boolean => {
-  return !url.startsWith('data:')
+  return !url.startsWith('data:') && url !== 'about:blank'
 }
 
 const proxyAttribute = (

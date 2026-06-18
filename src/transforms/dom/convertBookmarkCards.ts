@@ -1,8 +1,8 @@
-import { createBookmarkPlaceholder } from '../../common.js'
+import { createBookmarkPlaceholder, resolveOrKeepUrl } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 export const convertBookmarkCards: DomTransform = (context) => {
-  const { bookmarkResolvers } = context
+  const { bookmarkResolvers, resolveUrlFn, baseUrl } = context
 
   return async (document) => {
     for (const resolver of bookmarkResolvers) {
@@ -13,7 +13,14 @@ export const convertBookmarkCards: DomTransform = (context) => {
           continue
         }
 
-        element.replaceWith(createBookmarkPlaceholder(document, result))
+        const resolved = {
+          ...result,
+          url: resolveOrKeepUrl(result.url, resolveUrlFn, baseUrl) ?? result.url,
+          icon: resolveOrKeepUrl(result.icon, resolveUrlFn, baseUrl),
+          thumbnail: resolveOrKeepUrl(result.thumbnail, resolveUrlFn, baseUrl),
+        }
+
+        element.replaceWith(createBookmarkPlaceholder(document, resolved))
       }
     }
   }

@@ -19,6 +19,7 @@ import { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 import { markTimestamps } from './transforms/dom/markTimestamps.js'
 import { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
 import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
+import { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
@@ -117,6 +118,10 @@ export const defaultDomTransforms: Array<DomTransform> = [
   fixLazyIframes,
   replaceEmbedsWithPlaceholders,
   injectEnclosures,
+  // Neutralizes unsafe URLs (dangerous-scheme floor + optional isSafeUrlFn) after embeds
+  // and bookmarks are placeholdered, so it covers their data-* URLs, and before
+  // proxyAssetUrls so the proxy never sees an unsafe URL.
+  neutralizeUnsafeUrls,
   proxyAssetUrls,
   stripEmptyTags,
   unwrapWrappers,

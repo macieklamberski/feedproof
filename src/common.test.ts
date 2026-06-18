@@ -12,44 +12,52 @@ import {
   isElementHidden,
   isJsonLike,
   isParseableJson,
-  isSafeThumbnailUrl,
   normalizeEmbedFields,
+  resolveOrKeepUrl,
   updateEmbedPlaceholder,
 } from './common.js'
-import { describeForEachParser, html, queryElement } from './tests.js'
+import { baseContext, describeForEachParser, html, queryElement } from './tests.js'
 import type { BookmarkResolverResult } from './types.js'
 
-describe('isSafeThumbnailUrl', () => {
-  it('should accept an absolute https url', () => {
-    expect(isSafeThumbnailUrl('https://cdn.example.com/thumb.jpg')).toBe(true)
+describe('resolveOrKeepUrl', () => {
+  const { resolveUrlFn } = baseContext
+
+  it('should resolve a relative url against the base', () => {
+    expect(resolveOrKeepUrl('/img.jpg', resolveUrlFn, 'https://example.com/post/')).toBe(
+      'https://example.com/img.jpg',
+    )
   })
 
-  it('should accept an absolute http url', () => {
-    expect(isSafeThumbnailUrl('http://cdn.example.com/thumb.jpg')).toBe(true)
+  it('should resolve a protocol-relative url to the base scheme', () => {
+    expect(resolveOrKeepUrl('//cdn.example/a.jpg', resolveUrlFn, 'https://example.com')).toBe(
+      'https://cdn.example/a.jpg',
+    )
   })
 
-  it('should accept a data:image/png url', () => {
-    expect(isSafeThumbnailUrl('data:image/png;base64,iVBORw0KGgo=')).toBe(true)
+  it('should keep an absolute url unchanged', () => {
+    expect(resolveOrKeepUrl('https://cdn.example/a.jpg', resolveUrlFn, 'https://example.com')).toBe(
+      'https://cdn.example/a.jpg',
+    )
   })
 
-  it('should reject a data:image/svg+xml url', () => {
-    expect(isSafeThumbnailUrl('data:image/svg+xml;utf8,<svg/>')).toBe(false)
+  it('should keep a data: url unchanged', () => {
+    expect(resolveOrKeepUrl('data:image/png;base64,AAA', resolveUrlFn, 'https://example.com')).toBe(
+      'data:image/png;base64,AAA',
+    )
   })
 
-  it('should reject a data:text/html url', () => {
-    expect(isSafeThumbnailUrl('data:text/html,<script>1</script>')).toBe(false)
+  it('should keep a non-http scheme url unchanged', () => {
+    expect(resolveOrKeepUrl('ftp://files.example/a.zip', resolveUrlFn, 'https://example.com')).toBe(
+      'ftp://files.example/a.zip',
+    )
   })
 
-  it('should reject a javascript: url', () => {
-    expect(isSafeThumbnailUrl('javascript:alert(1)')).toBe(false)
+  it('should keep a relative url when there is no base', () => {
+    expect(resolveOrKeepUrl('/img.jpg', resolveUrlFn, undefined)).toBe('/img.jpg')
   })
 
-  it('should reject a relative url', () => {
-    expect(isSafeThumbnailUrl('/thumb.jpg')).toBe(false)
-  })
-
-  it('should reject an empty string', () => {
-    expect(isSafeThumbnailUrl('')).toBe(false)
+  it('should return undefined for an undefined url', () => {
+    expect(resolveOrKeepUrl(undefined, resolveUrlFn, 'https://example.com')).toBeUndefined()
   })
 })
 
@@ -146,7 +154,7 @@ describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
   describe('src wiring', () => {
     it('should write the src argument as data-embed-src', () => {
       const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'http://self-hosted.example/player')
+      const element = createEmbedPlaceholder(document, 'https://self-hosted.example/player')
 
       expect(element.getAttribute('data-embed-src')).toBe('https://self-hosted.example/player')
     })
@@ -154,30 +162,16 @@ describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
     it('should let metadata.src override the src argument', () => {
       const document = parseHtml('')
       const element = createEmbedPlaceholder(document, 'https://passed-src.example', {
-        src: 'http://embed.example/abc',
+        src: 'https://embed.example/abc',
       })
 
       expect(element.getAttribute('data-embed-src')).toBe('https://embed.example/abc')
-    })
-
-    it('should upgrade http:// in the fallback anchor href', () => {
-      const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'http://self-hosted.example/player')
-
-      expect(element.querySelector('a')?.getAttribute('href')).toBe(
-        'https://self-hosted.example/player',
-      )
     })
   })
 
   it.todo('should write the full metadata as data-embed-* attributes', () => {
     // Pass every EmbedResolverResult field and assert the complete placeholder
     // markup: all data-embed-* attributes plus the fallback anchor.
-  })
-
-  it.todo('should drop an unsafe thumbnail passed through this entry point', () => {
-    // metadata.thumbnail = 'javascript:alert(1)' must not become a
-    // data-embed-thumbnail attribute on the placeholder.
   })
 })
 
@@ -187,7 +181,7 @@ describeForEachParser('updateEmbedPlaceholder', (parseHtml) => {
     const element = document.createElement('div')
 
     updateEmbedPlaceholder(element, {
-      src: 'http://embed.example/abc',
+      src: 'https://embed.example/abc',
       title: 'Video title',
       duration: 125,
     })
@@ -220,45 +214,23 @@ describeForEachParser('updateEmbedPlaceholder', (parseHtml) => {
 })
 
 describe('normalizeEmbedFields', () => {
-  describe('src and url protocol upgrade', () => {
-    it('should upgrade http:// to https://', () => {
+  describe('src and url passthrough', () => {
+    it('should pass src and url through without changing the protocol', () => {
       const value = {
         src: 'http://embed.example/abc',
         url: 'http://page.example/x',
       }
       const expected: Record<string, string | undefined> = {
-        src: 'https://embed.example/abc',
-        url: 'https://page.example/x',
+        src: 'http://embed.example/abc',
+        url: 'http://page.example/x',
       }
 
       expect(normalizeEmbedFields(value)).toEqual(expected)
     })
-
-    it('should leave https:// unchanged', () => {
-      expect(normalizeEmbedFields({ src: 'https://embed.example/abc' }).src).toBe(
-        'https://embed.example/abc',
-      )
-    })
-
-    it('should leave protocol-relative URLs unchanged', () => {
-      expect(normalizeEmbedFields({ src: '//embed.example/abc' }).src).toBe('//embed.example/abc')
-    })
-
-    it('should be case-insensitive on the protocol', () => {
-      expect(normalizeEmbedFields({ src: 'HTTP://embed.example/abc' }).src).toBe(
-        'https://embed.example/abc',
-      )
-    })
-
-    it('should only touch the leading protocol, not occurrences later in the URL', () => {
-      expect(
-        normalizeEmbedFields({ src: 'http://proxy.example/?target=http://other.example/page' }).src,
-      ).toBe('https://proxy.example/?target=http://other.example/page')
-    })
   })
 
-  describe('thumbnail and avatar safety', () => {
-    it('should keep a safe http thumbnail and avatar without upgrading them', () => {
+  describe('thumbnail and avatar passthrough', () => {
+    it('should pass thumbnail and avatar through unchanged', () => {
       const value = {
         thumbnail: 'http://cdn.example/thumb.jpg',
         avatar: 'http://cdn.example/avatar.jpg',
@@ -277,20 +249,15 @@ describe('normalizeEmbedFields', () => {
       ).toBe('data:image/png;base64,iVBORw0KGgo=')
     })
 
-    it('should drop javascript: thumbnails', () => {
-      expect(normalizeEmbedFields({ thumbnail: 'javascript:alert(1)' }).thumbnail).toBeUndefined()
-    })
-
-    it('should drop data:image/svg+xml thumbnails', () => {
-      expect(
-        normalizeEmbedFields({ thumbnail: 'data:image/svg+xml;utf8,<svg/>' }).thumbnail,
-      ).toBeUndefined()
-    })
-
-    it('should drop unsafe avatars', () => {
-      expect(
-        normalizeEmbedFields({ avatar: 'data:text/html,<script>1</script>' }).avatar,
-      ).toBeUndefined()
+    // Safety is neutralizeUnsafeUrls' job (see its tests); normalizeEmbedFields only
+    // normalizes, so unsafe URLs pass through here unchanged.
+    it('should pass unsafe thumbnail and avatar urls through unchanged', () => {
+      expect(normalizeEmbedFields({ thumbnail: 'javascript:alert(1)' }).thumbnail).toBe(
+        'javascript:alert(1)',
+      )
+      expect(normalizeEmbedFields({ avatar: 'data:text/html,<script>1</script>' }).avatar).toBe(
+        'data:text/html,<script>1</script>',
+      )
     })
   })
 
@@ -798,7 +765,7 @@ describeForEachParser('createBookmarkPlaceholder', (parseHtml) => {
     expect(element.outerHTML).toEqualHtml(expected)
   })
 
-  it('should upgrade http:// in url, icon and thumbnail', () => {
+  it('should pass http url, icon and thumbnail through without changing the protocol', () => {
     const document = parseHtml('')
     const value: BookmarkResolverResult = {
       provider: 'ghost',
@@ -811,19 +778,21 @@ describeForEachParser('createBookmarkPlaceholder', (parseHtml) => {
     const expected = html`
       <div
         data-bookmark-provider="ghost"
-        data-bookmark-url="https://example.com/post"
+        data-bookmark-url="http://example.com/post"
         data-bookmark-title="Post title"
-        data-bookmark-icon="https://example.com/favicon.ico"
-        data-bookmark-thumbnail="https://example.com/og-image.jpg"
+        data-bookmark-icon="http://example.com/favicon.ico"
+        data-bookmark-thumbnail="http://example.com/og-image.jpg"
       >
-        <a href="https://example.com/post">Post title</a>
+        <a href="http://example.com/post">Post title</a>
       </div>
     `
 
     expect(element.outerHTML).toEqualHtml(expected)
   })
 
-  it('should drop unsafe icon and thumbnail urls', () => {
+  // Safety is neutralizeUnsafeUrls' job (see its tests); the placeholder emits the
+  // icon/thumbnail as-is and the later pass neutralizes any unsafe URL.
+  it('should pass unsafe icon and thumbnail urls through unchanged', () => {
     const document = parseHtml('')
     const value: BookmarkResolverResult = {
       provider: 'ghost',
@@ -838,6 +807,8 @@ describeForEachParser('createBookmarkPlaceholder', (parseHtml) => {
         data-bookmark-provider="ghost"
         data-bookmark-url="https://example.com/post"
         data-bookmark-title="Post title"
+        data-bookmark-icon="javascript:alert(1)"
+        data-bookmark-thumbnail="data:image/svg+xml;utf8,<svg/>"
       >
         <a href="https://example.com/post">Post title</a>
       </div>
