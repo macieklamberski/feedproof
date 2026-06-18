@@ -3,6 +3,7 @@ import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { fixLazyImages } from './fixLazyImages.js'
+import { flattenPictureElements } from './flattenPictureElements.js'
 
 describeForEachParser('fixLazyImages', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
@@ -394,6 +395,39 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
       const result = await transform(value, customContext)
 
       expect(result).toContain('srcset="small.jpg 300w, large.jpg 600w"')
+    })
+  })
+
+  describe('source elements', () => {
+    it('should promote lazy srcset on a source element', async () => {
+      const value = '<picture><source data-srcset="photo.avif" type="image/avif"></picture>'
+      const result = await transform(value)
+
+      expect(result).toContain('srcset="photo.avif"')
+    })
+
+    it('should promote lazy src on a source element', async () => {
+      const value = '<video><source data-src="clip.mp4"></video>'
+      const result = await transform(value)
+
+      expect(result).toContain('src="clip.mp4"')
+    })
+
+    it('should keep the modern source through picture flattening', async () => {
+      const value = html`
+        <picture>
+          <source data-srcset="photo.avif" type="image/avif">
+          <img src="photo.jpg">
+        </picture>
+      `
+      const result = await applyDomTransforms(parseHtml(value), [
+        fixLazyImages(baseContext),
+        flattenPictureElements(baseContext),
+      ])
+
+      // Without the lazy-source promotion, flatten drops the empty-srcset source and
+      // this would be src="photo.jpg" with no srcset.
+      expect(result).toContain('srcset="photo.avif"')
     })
   })
 
