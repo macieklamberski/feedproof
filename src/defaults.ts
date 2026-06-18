@@ -9,6 +9,7 @@ import { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
+import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 import { fixLazyIframes } from './transforms/dom/fixLazyIframes.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { flattenPictureElements } from './transforms/dom/flattenPictureElements.js'
@@ -118,6 +119,10 @@ export const defaultDomTransforms: Array<DomTransform> = [
   fixLazyIframes,
   replaceEmbedsWithPlaceholders,
   injectEnclosures,
+  // Fills embed placeholder metadata via the caller's enrichEmbedFn. No-ops when that
+  // option is unset. Runs after placeholders exist and before neutralize/proxy so any
+  // enriched URLs are still neutralized and proxied.
+  enrichEmbedPlaceholders,
   // Neutralizes unsafe URLs (dangerous-scheme floor + optional isSafeUrlFn) after embeds
   // and bookmarks are placeholdered, so it covers their data-* URLs, and before
   // proxyAssetUrls so the proxy never sees an unsafe URL.
