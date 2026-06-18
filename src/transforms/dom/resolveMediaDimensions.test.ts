@@ -276,6 +276,26 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
     })
   })
 
+  describe('inheritance from srcset URL', () => {
+    it('should read dimensions from the widest srcset candidate when there is no src', async () => {
+      const value =
+        '<img srcset="https://example.com/p-400x300.jpg 400w, https://example.com/p-800x600.jpg 800w">'
+      const expected =
+        '<img srcset="https://example.com/p-400x300.jpg 400w, https://example.com/p-800x600.jpg 800w" width="800" height="600">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should prefer src dimensions over srcset', async () => {
+      const value =
+        '<img src="https://example.com/p-300x200.jpg" srcset="https://example.com/p-800x600.jpg 800w">'
+      const expected =
+        '<img src="https://example.com/p-300x200.jpg" srcset="https://example.com/p-800x600.jpg 800w" width="300" height="200">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+  })
+
   it('should be idempotent', async () => {
     const value = '<img src="photo.jpg" style="width:300px;height:200px">'
     const once = await transform(value)
