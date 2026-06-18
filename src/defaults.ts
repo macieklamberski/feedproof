@@ -171,6 +171,7 @@ export const defaultLazySrcAttributes = [
 export const defaultLazyIframeAttributes = [
   'data-lazy-src', // Generic lazy loaders.
   'data-src', // Generic lazy loaders.
+  'data-url', // Generic lazy loaders — 20 feeds carry it on empty-src iframes.
   'data-litespeed-src', // LiteSpeed Cache.
   'data-mce-src', // TinyMCE editor output.
   'data-original-src', // Generic lazy loaders.
