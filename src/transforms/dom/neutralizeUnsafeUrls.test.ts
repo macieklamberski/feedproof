@@ -168,6 +168,41 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
     })
   })
 
+  describe('svg image', () => {
+    it('should neutralize a javascript: href on an svg image', async () => {
+      const result = await transform('<svg><image href="javascript:alert(1)"></image></svg>')
+
+      expect(result).toContain('about:blank')
+      expect(result).not.toContain('javascript:')
+    })
+
+    it('should neutralize a javascript: xlink:href on an svg image', async () => {
+      const result = await transform('<svg><image xlink:href="javascript:alert(1)"></image></svg>')
+
+      expect(result).toContain('about:blank')
+      expect(result).not.toContain('javascript:')
+    })
+
+    it('should neutralize an svg image the policy rejects', async () => {
+      const context: TransformContext = {
+        ...baseContext,
+        isSafeUrlFn: (url) => !url.includes('evil.test'),
+      }
+      const result = await transform(
+        '<svg><image href="https://evil.test/a.png"></image></svg>',
+        context,
+      )
+
+      expect(result).toContain('about:blank')
+    })
+
+    it('should keep a safe svg image href', async () => {
+      const result = await transform('<svg><image href="https://ok.test/a.png"></image></svg>')
+
+      expect(result).toContain('https://ok.test/a.png')
+    })
+  })
+
   it('should be idempotent', async () => {
     const value = '<a href="javascript:alert(1)">x</a><img src="javascript:alert(1)">'
     const once = await transform(value)

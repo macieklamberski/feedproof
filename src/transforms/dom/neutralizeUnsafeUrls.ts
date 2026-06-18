@@ -92,5 +92,13 @@ export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
     for (const element of document.querySelectorAll(srcsetSelector)) {
       neutralizeSrcset(element, isSafeUrlFn)
     }
+
+    // SVG <image> carries its URL on href (SVG2) or xlink:href (SVG1); proxyAssetUrls
+    // rewrites it, so it must be neutralized here too. The colon in xlink:href can't go
+    // in a CSS attribute selector, so match the tag and pick the attribute in JS.
+    for (const element of document.querySelectorAll('image')) {
+      const attribute = element.hasAttribute('href') ? 'href' : 'xlink:href'
+      neutralizeAttribute(element, attribute, 'media', isSafeUrlFn)
+    }
   }
 }
