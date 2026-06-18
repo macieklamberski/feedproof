@@ -271,4 +271,12 @@ export const defaultInertSelectors = [
   '.crp_related', // Contextual Related Posts WordPress plugin — 61 feeds (0.002%).
   'form[action*="buttondown.email"]', // Buttondown embed-subscribe form — 21 feeds (<0.001%).
   '.sqs-block-newsletter', // Squarespace newsletter block — 11 feeds (<0.001%).
+  // Anchor-scoped so a "read-more"/"continue-reading" *wrapper* (which can hold real
+  // content) is never deleted — only the truncation link itself. The class appears on
+  // 11,475 feeds (0.42%); the anchor subset is smaller but the safe one to strip.
+  'a[class*="read-more"]', // "Read more" excerpt-truncation links.
+  'a[class*="continue-reading"]', // "Continue reading" excerpt-truncation links.
+  '[class*="social-share"]', // Generic social-share button cluster — part of 1,212 feeds (0.045%).
+  '[class*="share-buttons"]', // Generic social-share button cluster.
+  '.feedflare', // FeedBurner share footer ("Share on X / Email this") — 220 feeds (0.008%).
 ]

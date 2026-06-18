@@ -10,6 +10,30 @@ describeForEachParser('stripInertElements', (parseHtml) => {
   }
 
   describe('with default selectors', () => {
+    it('should remove a read-more truncation link', async () => {
+      const value = '<p>Excerpt</p><a class="read-more-link" href="/post">Read more</a>'
+
+      expect(await transform(value)).toBe('<p>Excerpt</p>')
+    })
+
+    it('should keep a read-more wrapper that holds real content (anchor-scoped)', async () => {
+      const value = '<div class="read-more-section"><p>Body</p></div>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should remove a social-share button cluster', async () => {
+      const value = '<p>Body</p><div class="social-share"><a href="/x">X</a></div>'
+
+      expect(await transform(value)).toBe('<p>Body</p>')
+    })
+
+    it('should remove a FeedBurner feedflare footer', async () => {
+      const value = '<p>Body</p><div class="feedflare"><a href="/ff">Share</a></div>'
+
+      expect(await transform(value)).toBe('<p>Body</p>')
+    })
+
     it('should remove Substack image-link-expand sibling of picture', async () => {
       const value = html`
         <picture><img src="x.jpg"></picture>
