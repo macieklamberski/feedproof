@@ -230,8 +230,71 @@ const getCodeBlockText = (target: Element): string => {
   return text
 }
 
+// Line-number gutters: Rouge/Pygments/Chroma (and others) render code in a two-column
+// table (numbers | code), and Chroma/Prism also emit per-line number spans. Either way
+// the digits get treated as a separate code block or walked into the highlighted text.
+// Drop them before highlighting: keep only the code column's <pre>, and remove inline
+// per-line number spans.
+
+const integerLineRegex = /^\d+$/
+
+// A node is a line-number gutter when every non-empty line of its text is just an
+// integer. Detected structurally (not by class) so any highlighter's table is covered.
+const isLineNumberText = (text: string): boolean => {
+  const lines = text.split('\n').reduce<Array<string>>((accumulator, line) => {
+    const trimmed = line.trim()
+
+    if (trimmed) {
+      accumulator.push(trimmed)
+    }
+
+    return accumulator
+  }, [])
+
+  return lines.length > 0 && lines.every((line) => integerLineRegex.test(line))
+}
+
+// Inline per-line number spans (Chroma `.ln`/`.lnt`, Prism `.line-numbers-rows`,
+// Pygments `linenos=inline` `.lineno`).
+// Class-based on purpose: a bare numeric span can't be told from a real number token
+// in highlighted code, so structural detection would corrupt the code.
+const gutterLineSpanSelector = 'span.line-numbers-rows, span.ln, span.lnt, span.lineno'
+
+const stripCodeGutters = (document: Document): void => {
+  for (const table of document.querySelectorAll('table')) {
+    const pres = Array.from(table.querySelectorAll('pre'))
+
+    if (pres.length === 0) {
+      continue
+    }
+
+    // Only a code table with a line-number cell — never a data table.
+    const cells = table.querySelectorAll('td, th, pre')
+    const hasGutter = Array.from(cells).some((cell) => isLineNumberText(cell.textContent ?? ''))
+
+    if (!hasGutter) {
+      continue
+    }
+
+    // The code <pre> is the largest one that isn't itself the line-number column.
+    const codePre = pres
+      .filter((pre) => !isLineNumberText(pre.textContent ?? ''))
+      .sort((a, b) => (b.textContent?.length ?? 0) - (a.textContent?.length ?? 0))[0]
+
+    if (codePre) {
+      table.replaceWith(codePre)
+    }
+  }
+
+  for (const span of document.querySelectorAll(gutterLineSpanSelector)) {
+    span.remove()
+  }
+}
+
 export const highlightCode: DomTransform = ({ highlightFn }) => {
   return async (document) => {
+    stripCodeGutters(document)
+
     // Some editors emit a block of code as a standalone <code> with no <pre> wrapper.
     // Promote those to <pre><code> first so the loop below treats them like any other
     // block: highlighted by a declared hint (or detected JSON), and rendered as a
