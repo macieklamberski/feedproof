@@ -227,6 +227,18 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     expect(result).not.toContain('https://example.com/f_webp')
   })
 
+  it('should resolve a relative href on an svg image', async () => {
+    const result = await transform('<svg><image href="/img.png"></image></svg>')
+
+    expect(result).toContain('https://example.com/img.png')
+  })
+
+  it('should resolve a relative xlink:href on an svg image', async () => {
+    const result = await transform('<svg><image xlink:href="/img.png"></image></svg>')
+
+    expect(result).toContain('https://example.com/img.png')
+  })
+
   it('should be idempotent', async () => {
     const value = '<a href="/page">link</a>'
     const once = await transform(value)

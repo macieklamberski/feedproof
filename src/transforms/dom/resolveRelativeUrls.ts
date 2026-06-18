@@ -13,7 +13,7 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => 
     }
 
     const elements = document.querySelectorAll(
-      'a[href], [src], video[poster], img[srcset], source[srcset]',
+      'a[href], [src], video[poster], img[srcset], source[srcset], image',
     )
 
     for (const element of elements) {
@@ -50,6 +50,20 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => 
 
           if (resolved) {
             element.setAttribute('poster', resolved)
+          }
+        }
+      }
+
+      // SVG <image> carries its URL on href (SVG2) or xlink:href (SVG1).
+      if (localName === 'image') {
+        const attribute = element.hasAttribute('href') ? 'href' : 'xlink:href'
+        const href = element.getAttribute(attribute)
+
+        if (href && !absoluteUrlRegex.test(href)) {
+          const resolved = resolveUrlFn(href, baseUrl)
+
+          if (resolved) {
+            element.setAttribute(attribute, resolved)
           }
         }
       }
