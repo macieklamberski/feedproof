@@ -425,8 +425,6 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
         flattenPictureElements(baseContext),
       ])
 
-      // Without the lazy-source promotion, flatten drops the empty-srcset source and
-      // this would be src="photo.jpg" with no srcset.
       expect(result).toContain('srcset="photo.avif"')
     })
   })
