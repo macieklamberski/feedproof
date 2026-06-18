@@ -288,10 +288,11 @@ export const createPlaceholder = <Type extends object>(
   return element
 }
 
-// Already-absolute or opaque URLs are left untouched. Protocol-relative URLs
-// (`//host/path`) are intentionally excluded so they get resolved to the base
-// URL's scheme. Shared with resolveRelativeUrls so both treat URLs identically.
-export const absoluteOrOpaqueUrlRegex = /^(?:https?:|data:|mailto:|tel:|javascript:)/i
+// Matches any URL that already carries a scheme (the URL-spec scheme grammar) — i.e.
+// already absolute, so resolution must leave it byte-identical. Protocol-relative URLs
+// (`//host/path`) have no scheme and are intentionally not matched, so they resolve to
+// the base URL's scheme. Shared with resolveRelativeUrls so both treat URLs identically.
+export const absoluteUrlRegex = /^[a-z][a-z0-9+.-]*:/i
 
 // Resolves a relative URL against the base URL, keeping the original otherwise —
 // an already-absolute/opaque URL, or a relative one that can't be resolved (no
@@ -302,7 +303,7 @@ export const resolveOrKeepUrl = (
   resolveUrlFn: ResolveUrlFn,
   baseUrl: string | undefined,
 ): string | undefined => {
-  if (!url || absoluteOrOpaqueUrlRegex.test(url)) {
+  if (!url || absoluteUrlRegex.test(url)) {
     return url || undefined
   }
 

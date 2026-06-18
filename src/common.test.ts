@@ -46,6 +46,12 @@ describe('resolveOrKeepUrl', () => {
     )
   })
 
+  it('should keep a non-http scheme url unchanged', () => {
+    expect(resolveOrKeepUrl('ftp://files.example/a.zip', resolveUrlFn, 'https://example.com')).toBe(
+      'ftp://files.example/a.zip',
+    )
+  })
+
   it('should keep a relative url when there is no base', () => {
     expect(resolveOrKeepUrl('/img.jpg', resolveUrlFn, undefined)).toBe('/img.jpg')
   })
