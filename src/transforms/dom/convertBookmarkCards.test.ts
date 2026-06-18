@@ -120,7 +120,7 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
   })
 
   describe('hygiene (via createBookmarkPlaceholder)', () => {
-    it('should upgrade http urls to https for url and icon', async () => {
+    it('should pass http urls through without changing the protocol', async () => {
       const result = await transform(
         html`
           <div
@@ -134,9 +134,9 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
         [cardResolver],
       )
 
-      expect(result).toContain('data-bookmark-url="https://example.com/p"')
-      expect(result).toContain('data-bookmark-icon="https://example.com/i.ico"')
-      expect(result).toContain('<a href="https://example.com/p">')
+      expect(result).toContain('data-bookmark-url="http://example.com/p"')
+      expect(result).toContain('data-bookmark-icon="http://example.com/i.ico"')
+      expect(result).toContain('<a href="http://example.com/p">')
     })
 
     // URL safety is neutralizeUnsafeUrls' job (see its tests); this transform only
