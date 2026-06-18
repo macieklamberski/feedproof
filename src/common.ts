@@ -288,6 +288,28 @@ export const createPlaceholder = <Type extends object>(
   return element
 }
 
+// Matches any URL that already carries a scheme (the URL-spec scheme grammar) — i.e.
+// already absolute, so resolution must leave it byte-identical. Protocol-relative URLs
+// (`//host/path`) have no scheme and are intentionally not matched, so they resolve to
+// the base URL's scheme. Shared with resolveRelativeUrls so both treat URLs identically.
+export const absoluteUrlRegex = /^[a-z][a-z0-9+.-]*:/i
+
+// Resolves a relative URL against the base URL, keeping the original otherwise —
+// an already-absolute/opaque URL, or a relative one that can't be resolved (no
+// base). Mirrors resolveRelativeUrls' per-URL contract, so placeholder URLs are
+// treated identically to content URLs without normalizing or dropping them.
+export const resolveOrKeepUrl = (
+  url: string | undefined,
+  resolveUrlFn: ResolveUrlFn,
+  baseUrl: string | undefined,
+): string | undefined => {
+  if (!url || absoluteUrlRegex.test(url)) {
+    return url || undefined
+  }
+
+  return resolveUrlFn(url, baseUrl) ?? url
+}
+
 // Maps embed metadata to its `data-embed-*` field record. Key order is the
 // attribute write order, so it's kept stable. Shared by embed creation and
 // enrichment so the per-field rules live in one place.

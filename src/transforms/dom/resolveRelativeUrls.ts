@@ -1,16 +1,12 @@
-import { resolveUrl } from 'feedcanon'
 import { parseSrcset, stringifySrcset } from 'srcset'
+import { absoluteUrlRegex } from '../../common.js'
 import type { DomTransform } from '../../types.js'
-
-// Protocol-relative URLs (`//host/path`) are intentionally excluded so they
-// get upgraded to the base URL's scheme.
-const absoluteOrOpaqueUrlRegex = /^(?:https?:|data:|mailto:|tel:|javascript:)/i
 
 // `, ` (comma + whitespace) only — preserves URL-internal commas (Substack
 // CDN transforms etc.) which aren't followed by whitespace.
 const srcsetSeparatorRegex = /,\s+/
 
-export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
+export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => {
   return (document) => {
     if (!baseUrl) {
       return
@@ -27,8 +23,8 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
         const href = element.getAttribute('href')
 
         // Preserve fragment-only hrefs so in-article anchors keep scrolling locally.
-        if (href && !href.startsWith('#') && !absoluteOrOpaqueUrlRegex.test(href)) {
-          const resolved = resolveUrl(href, baseUrl)
+        if (href && !href.startsWith('#') && !absoluteUrlRegex.test(href)) {
+          const resolved = resolveUrlFn(href, baseUrl)
 
           if (resolved) {
             element.setAttribute('href', resolved)
@@ -38,8 +34,8 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
 
       const src = element.getAttribute('src')
 
-      if (src && !absoluteOrOpaqueUrlRegex.test(src)) {
-        const resolved = resolveUrl(src, baseUrl)
+      if (src && !absoluteUrlRegex.test(src)) {
+        const resolved = resolveUrlFn(src, baseUrl)
 
         if (resolved) {
           element.setAttribute('src', resolved)
@@ -49,8 +45,8 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
       if (localName === 'video') {
         const poster = element.getAttribute('poster')
 
-        if (poster && !absoluteOrOpaqueUrlRegex.test(poster)) {
-          const resolved = resolveUrl(poster, baseUrl)
+        if (poster && !absoluteUrlRegex.test(poster)) {
+          const resolved = resolveUrlFn(poster, baseUrl)
 
           if (resolved) {
             element.setAttribute('poster', resolved)
@@ -67,7 +63,7 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
 
           for (const candidate of candidates) {
             const trimmed = candidate.trimStart()
-            if (trimmed && !absoluteOrOpaqueUrlRegex.test(trimmed)) {
+            if (trimmed && !absoluteUrlRegex.test(trimmed)) {
               needsResolution = true
               break
             }
@@ -76,7 +72,7 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl }) => {
           if (needsResolution) {
             const resolved = parseSrcset(srcset).map((entry) => ({
               ...entry,
-              url: resolveUrl(entry.url, baseUrl) ?? entry.url,
+              url: resolveUrlFn(entry.url, baseUrl) ?? entry.url,
             }))
 
             element.setAttribute('srcset', stringifySrcset(resolved))

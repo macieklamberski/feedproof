@@ -13,10 +13,53 @@ import {
   isJsonLike,
   isParseableJson,
   normalizeEmbedFields,
+  resolveOrKeepUrl,
   updateEmbedPlaceholder,
 } from './common.js'
-import { describeForEachParser, html, queryElement } from './tests.js'
+import { baseContext, describeForEachParser, html, queryElement } from './tests.js'
 import type { BookmarkResolverResult } from './types.js'
+
+describe('resolveOrKeepUrl', () => {
+  const { resolveUrlFn } = baseContext
+
+  it('should resolve a relative url against the base', () => {
+    expect(resolveOrKeepUrl('/img.jpg', resolveUrlFn, 'https://example.com/post/')).toBe(
+      'https://example.com/img.jpg',
+    )
+  })
+
+  it('should resolve a protocol-relative url to the base scheme', () => {
+    expect(resolveOrKeepUrl('//cdn.example/a.jpg', resolveUrlFn, 'https://example.com')).toBe(
+      'https://cdn.example/a.jpg',
+    )
+  })
+
+  it('should keep an absolute url unchanged', () => {
+    expect(resolveOrKeepUrl('https://cdn.example/a.jpg', resolveUrlFn, 'https://example.com')).toBe(
+      'https://cdn.example/a.jpg',
+    )
+  })
+
+  it('should keep a data: url unchanged', () => {
+    expect(resolveOrKeepUrl('data:image/png;base64,AAA', resolveUrlFn, 'https://example.com')).toBe(
+      'data:image/png;base64,AAA',
+    )
+  })
+
+  it('should keep a non-http scheme url unchanged', () => {
+    expect(resolveOrKeepUrl('ftp://files.example/a.zip', resolveUrlFn, 'https://example.com')).toBe(
+      'ftp://files.example/a.zip',
+    )
+  })
+
+  it('should keep a relative url when there is no base', () => {
+    expect(resolveOrKeepUrl('/img.jpg', resolveUrlFn, undefined)).toBe('/img.jpg')
+  })
+
+  it('should return undefined for an undefined url', () => {
+    expect(resolveOrKeepUrl(undefined, resolveUrlFn, 'https://example.com')).toBeUndefined()
+  })
+})
 
 describeForEachParser('applyDomTransforms', (parseHtml) => {
   it('should return body innerHTML when given no transforms', async () => {

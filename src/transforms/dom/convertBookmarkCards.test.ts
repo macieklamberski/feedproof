@@ -139,6 +139,23 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
       expect(result).toContain('<a href="http://example.com/p">')
     })
 
+    it('should resolve relative url, icon and thumbnail against the base url', async () => {
+      const context: TransformContext = {
+        ...baseContext,
+        bookmarkResolvers: [cardResolver],
+        baseUrl: 'https://example.com/post/',
+      }
+      const value = html`
+        <div class="card" data-url="/p" data-title="T" data-icon="/i.ico" data-thumbnail="/t.jpg">
+        </div>
+      `
+      const result = await applyDomTransforms(parseHtml(value), [convertBookmarkCards(context)])
+
+      expect(result).toContain('data-bookmark-url="https://example.com/p"')
+      expect(result).toContain('data-bookmark-icon="https://example.com/i.ico"')
+      expect(result).toContain('data-bookmark-thumbnail="https://example.com/t.jpg"')
+    })
+
     // URL safety is neutralizeUnsafeUrls' job (see its tests); this transform only
     // emits the placeholder, so unsafe icon/thumbnail urls pass through here unchanged.
     it('should pass unsafe icon and thumbnail urls through unchanged', async () => {
