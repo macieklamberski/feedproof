@@ -131,6 +131,12 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
 
       expect(await transform(value)).toBe('<img srcset="about:blank">')
     })
+
+    it('should leave an empty srcset untouched', async () => {
+      const value = '<img srcset="">'
+
+      expect(await transform(value)).toBe(value)
+    })
   })
 
   describe('coverage', () => {
