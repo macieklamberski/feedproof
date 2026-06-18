@@ -15,13 +15,15 @@ export const fixLazyImages: DomTransform = (context) => {
   const { lazySrcAttributes, lazySrcsetAttributes } = context
 
   return (document) => {
-    const images = document.querySelectorAll('img')
+    // <source> is included so lazy srcset on <picture><source> is promoted before
+    // flattenPictureElements reads it — otherwise the modern AVIF/WebP source is dropped.
+    const elements = document.querySelectorAll('img, source')
 
-    for (const image of images) {
+    for (const element of elements) {
       let hasSrcCandidate = false
       let hasSrcsetCandidate = false
 
-      for (const name of image.getAttributeNames()) {
+      for (const name of element.getAttributeNames()) {
         if (!hasSrcCandidate && lazySrcSet.has(name)) {
           hasSrcCandidate = true
         }
@@ -38,10 +40,10 @@ export const fixLazyImages: DomTransform = (context) => {
       // Promote the real src/srcset but keep the original lazy attributes in place.
       if (hasSrcCandidate) {
         for (const attribute of lazySrcAttributes) {
-          const value = image.getAttribute(attribute)
+          const value = element.getAttribute(attribute)
 
           if (value && isUrlShaped(value)) {
-            image.setAttribute('src', value)
+            element.setAttribute('src', value)
             break
           }
         }
@@ -49,10 +51,10 @@ export const fixLazyImages: DomTransform = (context) => {
 
       if (hasSrcsetCandidate) {
         for (const attribute of lazySrcsetAttributes) {
-          const value = image.getAttribute(attribute)
+          const value = element.getAttribute(attribute)
 
           if (value && isUrlShaped(value)) {
-            image.setAttribute('srcset', value)
+            element.setAttribute('srcset', value)
             break
           }
         }
