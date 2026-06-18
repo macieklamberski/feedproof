@@ -6,6 +6,7 @@ import {
   defaultEmojiImageHosts,
   defaultHighlightFn,
   defaultInertSelectors,
+  defaultLazyIframeAttributes,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
   defaultPreservedPreClasses,
@@ -27,6 +28,7 @@ export const transformContent = async (
     bookmarkResolvers: options.bookmarkResolvers ?? defaultBookmarkResolvers,
     lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,
     lazySrcsetAttributes: options.lazySrcsetAttributes ?? defaultLazySrcsetAttributes,
+    lazyIframeAttributes: options.lazyIframeAttributes ?? defaultLazyIframeAttributes,
     trackingHosts: options.trackingHosts ?? defaultTrackingHosts,
     trackingPathSegments: options.trackingPathSegments ?? defaultTrackingPathSegments,
     emojiImageHosts: options.emojiImageHosts ?? defaultEmojiImageHosts,
@@ -84,6 +86,7 @@ export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParag
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 export { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
+export { fixLazyIframes } from './transforms/dom/fixLazyIframes.js'
 export { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 export { flattenPictureElements } from './transforms/dom/flattenPictureElements.js'
 export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js'

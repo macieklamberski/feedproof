@@ -9,6 +9,7 @@ import { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
+import { fixLazyIframes } from './transforms/dom/fixLazyIframes.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { flattenPictureElements } from './transforms/dom/flattenPictureElements.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
@@ -111,6 +112,9 @@ export const defaultDomTransforms: Array<DomTransform> = [
   trimPreWhitespace,
   linkifyUrls,
   markTimestamps,
+  // Promotes lazy/consent-gated iframe srcs into `src` so replaceEmbedsWithPlaceholders
+  // sees a resolvable iframe. Mirrors fixLazyImages for <img>.
+  fixLazyIframes,
   replaceEmbedsWithPlaceholders,
   injectEnclosures,
   proxyAssetUrls,
@@ -152,6 +156,31 @@ export const defaultLazySrcAttributes = [
   'nitro-lazy-src', // NitroPack — 222 hits, <0.01% of feeds. Non-`data-*` prefix.
   'data-orig', // Generic original-source variant — 27 hits, <0.01% of feeds.
   'data-runner-src', // Amazon affiliate / generic — 42 hits, <0.01% of feeds.
+  'fifu-data-src', // "Featured Image From URL" WP plugin — 2.1k hits, <0.01% of feeds.
+  'data-cfsrc', // Cloudflare Mirage edge rewrite — 641 hits, <0.01% of feeds.
+  'data-echo', // echo.js lazy-loader — 901 hits, <0.01% of feeds.
+  'data-opt-src', // Optimole image CDN — 390 hits, <0.01% of feeds.
+  'data-normal', // Future plc / generic CDN lazy-loader — 294 hits, <0.01% of feeds.
+]
+
+// Attributes that hold a lazy/consent-gated iframe src (the real embed URL) when the
+// `src` itself is empty or `about:blank`. Counts from a 1/16 corpus iframe-tag sample.
+export const defaultLazyIframeAttributes = [
+  'data-lazy-src', // Generic lazy loaders.
+  'data-src', // Generic lazy loaders.
+  'data-url', // Generic lazy loaders — 20 feeds carry it on empty-src iframes.
+  'data-litespeed-src', // LiteSpeed Cache.
+  'data-mce-src', // TinyMCE editor output.
+  'data-original-src', // Generic lazy loaders.
+  'data-opt-src', // Image/embed optimizers.
+  'src-consent', // GDPR/cookie-consent wrappers (e.g. Borlabs) holding the real src.
+  'consent-original-src', // Consent wrappers.
+  'consent-original-src-_', // Real Cookie Banner rendered form (trailing `-_`) — 167 feeds.
+  'consent-click-original-src-_', // Real Cookie Banner click-to-load variant — 142 feeds.
+  'data-privacy-src', // Privacy/lazy-video plugins (data-privacy-type="youtube") — 69 feeds.
+  'data-ep-src', // Embed Privacy — 54 feeds.
+  'data-cookieblock-src', // Cookiebot consent gate — 26 feeds.
+  'data-src-cmplz', // Complianz consent gate — 20 feeds.
 ]
 
 export const defaultLazySrcsetAttributes = [

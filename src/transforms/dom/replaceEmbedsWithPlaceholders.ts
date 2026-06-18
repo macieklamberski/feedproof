@@ -64,27 +64,32 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
       }
     }
 
-    if (!hasIframes) {
-      return
+    // Generic iframe fallback. Resolvers may have detached some iframes (parentNode null).
+    if (hasIframes) {
+      for (const iframe of iframeSnapshot) {
+        if (!iframe.parentNode) {
+          continue
+        }
+
+        const src = iframe.getAttribute('src')
+
+        // resolveUrlFn rejects `about:blank`; the trim drops empty/whitespace placeholders
+        // (which would otherwise resolve to the base URL).
+        if (src?.trim() && resolveUrlFn(src, baseUrl)) {
+          iframe.replaceWith(createEmbedPlaceholder(document, src, getEmbedDimensions(iframe)))
+        }
+      }
     }
 
-    // Resolvers may have detached some iframes — skip those (parentNode null).
-    for (const iframe of iframeSnapshot) {
-      if (!iframe.parentNode) {
-        continue
+    // Legacy <object data> / <embed src> carriers — the iframe-only paths above miss
+    // them. Replace with a provider-less placeholder when the URL resolves.
+    for (const element of document.querySelectorAll('object[data], embed[src]')) {
+      const url =
+        element.localName === 'object' ? element.getAttribute('data') : element.getAttribute('src')
+
+      if (url && resolveUrlFn(url, baseUrl)) {
+        element.replaceWith(createEmbedPlaceholder(document, url, getEmbedDimensions(element)))
       }
-
-      const src = iframe.getAttribute('src')
-
-      if (!src) {
-        continue
-      }
-
-      if (!resolveUrlFn(src, baseUrl)) {
-        continue
-      }
-
-      iframe.replaceWith(createEmbedPlaceholder(document, src, getEmbedDimensions(iframe)))
     }
   }
 }

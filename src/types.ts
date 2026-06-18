@@ -80,6 +80,7 @@ export type TransformContext = {
   bookmarkResolvers: Array<BookmarkResolver>
   lazySrcAttributes: Array<string>
   lazySrcsetAttributes: Array<string>
+  lazyIframeAttributes: Array<string>
   trackingHosts: Array<string>
   trackingPathSegments: Array<string>
   emojiImageHosts: Array<string>
@@ -107,6 +108,7 @@ export type TransformContentOptions = {
   bookmarkResolvers?: Array<BookmarkResolver>
   lazySrcAttributes?: Array<string>
   lazySrcsetAttributes?: Array<string>
+  lazyIframeAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
   emojiImageHosts?: Array<string>
