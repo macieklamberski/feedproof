@@ -1,4 +1,3 @@
-import { upgradeProtocol } from 'feedcanon'
 import type {
   BookmarkResolverResult,
   EmbedResolverResult,
@@ -296,10 +295,10 @@ export const normalizeEmbedFields = (
   metadata: Partial<EmbedResolverResult>,
 ): Record<string, string | undefined> => {
   return {
-    src: metadata.src ? upgradeProtocol(metadata.src) : undefined,
+    src: metadata.src,
     provider: metadata.provider,
     id: metadata.id,
-    url: metadata.url ? upgradeProtocol(metadata.url) : undefined,
+    url: metadata.url,
     thumbnail: metadata.thumbnail,
     width: metadata.width ? String(metadata.width) : undefined,
     height: metadata.height ? String(metadata.height) : undefined,
@@ -335,7 +334,7 @@ export const createEmbedPlaceholder = (
     normalizeEmbedFields({ ...metadata, src: metadata?.src ?? src }),
   )
 
-  const fallbackUrl = upgradeProtocol(metadata?.url ?? metadata?.src ?? src)
+  const fallbackUrl = metadata?.url ?? metadata?.src ?? src
   const link = document.createElement('a')
   link.setAttribute('href', fallbackUrl)
   link.textContent = fallbackUrl
@@ -349,19 +348,18 @@ export const createBookmarkPlaceholder = (
   result: BookmarkResolverResult,
 ): HTMLElement => {
   const { provider, title, url, icon, thumbnail, ...rest } = result
-  const safeUrl = upgradeProtocol(url)
 
   const element = createPlaceholder(document, 'bookmark', {
     provider,
     ...rest,
-    url: safeUrl,
+    url,
     title,
-    icon: icon ? upgradeProtocol(icon) : undefined,
-    thumbnail: thumbnail ? upgradeProtocol(thumbnail) : undefined,
+    icon,
+    thumbnail,
   })
 
   const link = document.createElement('a')
-  link.setAttribute('href', safeUrl)
+  link.setAttribute('href', url)
   link.textContent = title
   element.appendChild(link)
 
