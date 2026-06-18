@@ -282,11 +282,13 @@ const stripCodeGutters = (document: Document): void => {
       .sort((a, b) => (b.textContent?.length ?? 0) - (a.textContent?.length ?? 0))[0]
 
     if (codePre) {
+      codePre.setAttribute('data-pre-numbered', '')
       table.replaceWith(codePre)
     }
   }
 
   for (const span of document.querySelectorAll(gutterLineSpanSelector)) {
+    span.closest('pre')?.setAttribute('data-pre-numbered', '')
     span.remove()
   }
 }
