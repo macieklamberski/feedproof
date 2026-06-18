@@ -1,4 +1,4 @@
-import { createEmbedPlaceholder } from '../../common.js'
+import { createEmbedPlaceholder, resolveOrKeepUrl } from '../../common.js'
 import type {
   CleanUrlFn,
   DomTransform,
@@ -78,7 +78,8 @@ const createNativeMediaElement = (
   context: TransformContext,
 ): HTMLElement => {
   const element = document.createElement(tagName)
-  element.setAttribute('src', enclosure.url)
+  const src = resolveOrKeepUrl(enclosure.url, context.resolveUrlFn, context.baseUrl)
+  element.setAttribute('src', src)
   element.setAttribute('controls', '')
   element.setAttribute('preload', 'none')
 
@@ -91,8 +92,12 @@ const createNativeMediaElement = (
       element.setAttribute('height', String(enclosure.height))
     }
 
-    const poster = enclosure.thumbnails?.[0]?.url
-    if (poster && context.resolveUrlFn(poster, context.baseUrl)) {
+    const poster = resolveOrKeepUrl(
+      enclosure.thumbnails?.[0]?.url,
+      context.resolveUrlFn,
+      context.baseUrl,
+    )
+    if (poster) {
       element.setAttribute('poster', poster)
     }
   }
@@ -100,9 +105,14 @@ const createNativeMediaElement = (
   return element
 }
 
-const createImageElement = (document: Document, enclosure: Enclosure): HTMLElement => {
+const createImageElement = (
+  document: Document,
+  enclosure: Enclosure,
+  context: TransformContext,
+): HTMLElement => {
   const element = document.createElement('img')
-  element.setAttribute('src', enclosure.url)
+  const src = resolveOrKeepUrl(enclosure.url, context.resolveUrlFn, context.baseUrl)
+  element.setAttribute('src', src)
 
   if (enclosure.width) {
     element.setAttribute('width', String(enclosure.width))
@@ -144,7 +154,8 @@ export const injectEnclosures: DomTransform = (context) => {
       const resolved = await resolveEnclosure(enclosure.url, context.embedResolvers, document)
 
       if (resolved) {
-        created.push(createEmbedPlaceholder(document, enclosure.url, resolved))
+        const src = resolveOrKeepUrl(enclosure.url, context.resolveUrlFn, context.baseUrl)
+        created.push(createEmbedPlaceholder(document, src, resolved))
         existingUrls.add(normalizedUrl)
         continue
       }
@@ -162,7 +173,7 @@ export const injectEnclosures: DomTransform = (context) => {
       }
 
       if (isImageEnclosure(enclosure)) {
-        created.push(createImageElement(document, enclosure))
+        created.push(createImageElement(document, enclosure, context))
         existingUrls.add(normalizedUrl)
       }
     }
