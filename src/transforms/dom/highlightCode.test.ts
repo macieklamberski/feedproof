@@ -408,6 +408,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
       expect(result).not.toContain('class="gutter"')
       expect(result).not.toContain('class="lineno"')
       expect(result).toContain('data-pre-language="ruby"')
+      expect(result).toContain('data-pre-numbered=""')
     })
 
     it('should drop a Pygments highlighttable gutter', async () => {
@@ -426,6 +427,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
 
       expect(result).not.toContain('class="ln"')
       expect(result).toContain('echo hi')
+      expect(result).toContain('data-pre-numbered=""')
     })
 
     it('should remove inline per-line number spans (Pygments .lineno)', async () => {
@@ -454,6 +456,13 @@ describeForEachParser('highlightCode', (parseHtml) => {
       const result = await transform(value)
 
       expect(result).toBe(value)
+    })
+
+    it('should not mark a plain code block without a gutter', async () => {
+      const value = '<pre><code class="language-js">const x = 1</code></pre>'
+      const result = await transform(value)
+
+      expect(result).not.toContain('data-pre-numbered')
     })
   })
 
