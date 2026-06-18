@@ -57,7 +57,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `injectEnclosures` | Inject feed enclosures as native media or embed placeholders |
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` embeds into placeholders |
 | `convertBookmarkCards` | Convert link-preview cards into `data-bookmark-*` placeholders |
-| `enrichEmbedPlaceholders` | Fill placeholder metadata via a caller-supplied async fn (opt-in) |
+| `enrichEmbedPlaceholders` | Fill placeholder metadata via the caller's `enrichEmbedFn` (no-op unless set) |
 | `neutralizeUnsafeUrls` | Replace dangerous-scheme URLs (and any the `isSafeUrlFn` option rejects) with an inert sentinel, keeping the element |
 | `proxyAssetUrls` | Rewrite media URLs through a caller-supplied proxy |
 | `resolveRelativeUrls` | Resolve relative URLs to absolute against the base URL |

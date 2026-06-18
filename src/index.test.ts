@@ -249,7 +249,7 @@ describeForEachParser('transformContent', (parseHtml) => {
   })
 
   // enrichEmbedPlaceholders is opt-in; default pipeline does not include it.
-  it('should enrich embed placeholders with metadata from enrichEmbedFn when opted in', async () => {
+  it('should enrich embed placeholders with metadata from enrichEmbedFn', async () => {
     const value = html`
       <iframe
         src="https://www.youtube.com/embed/dQw4w9WgXcQ"
@@ -280,7 +280,6 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(
       await transformContent(value, {
         parseHtmlFn: parseHtml,
-        domTransforms: [...defaultDomTransforms, enrichEmbedPlaceholders],
         enrichEmbedFn: (embeds) => {
           return new Map(
             embeds.map(({ provider, id }) => [
@@ -312,17 +311,19 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(
       await transformContent(value, {
         parseHtmlFn: parseHtml,
-        domTransforms: [...defaultDomTransforms, enrichEmbedPlaceholders],
         enrichEmbedFn: () => new Map(),
       }),
     ).toEqualHtml(expected)
   })
 
-  it('should leave embed placeholders unenriched when enrichEmbedPlaceholders is not in the pipeline', async () => {
+  it('should not enrich when enrichEmbedPlaceholders is removed from the pipeline', async () => {
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     let called = false
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
+      domTransforms: defaultDomTransforms.filter(
+        (transform) => transform !== enrichEmbedPlaceholders,
+      ),
       enrichEmbedFn: () => {
         called = true
         return new Map([['youtube:dQw4w9WgXcQ', { title: 'Unused' }]])
