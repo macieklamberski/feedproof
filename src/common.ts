@@ -298,17 +298,25 @@ export const absoluteUrlRegex = /^[a-z][a-z0-9+.-]*:/i
 // an already-absolute/opaque URL, or a relative one that can't be resolved (no
 // base). Mirrors resolveRelativeUrls' per-URL contract, so placeholder URLs are
 // treated identically to content URLs without normalizing or dropping them.
-export const resolveOrKeepUrl = (
-  url: string | undefined,
-  resolveUrlFn: ResolveUrlFn,
-  baseUrl: string | undefined,
-): string | undefined => {
+// Overloaded so a definite URL returns a string (no undefined fallback needed at the
+// call site); only a possibly-undefined input widens the result. The cast is needed
+// because the body's `string | undefined` doesn't satisfy the string-returning signature.
+type ResolveOrKeepUrl = {
+  (url: string, resolveUrlFn: ResolveUrlFn, baseUrl: string | undefined): string
+  (
+    url: string | undefined,
+    resolveUrlFn: ResolveUrlFn,
+    baseUrl: string | undefined,
+  ): string | undefined
+}
+
+export const resolveOrKeepUrl: ResolveOrKeepUrl = ((url, resolveUrlFn, baseUrl) => {
   if (!url || absoluteUrlRegex.test(url)) {
     return url || undefined
   }
 
   return resolveUrlFn(url, baseUrl) ?? url
-}
+}) as ResolveOrKeepUrl
 
 // Maps embed metadata to its `data-embed-*` field record. Key order is the
 // attribute write order, so it's kept stable. Shared by embed creation and

@@ -13,7 +13,7 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => 
     }
 
     const elements = document.querySelectorAll(
-      'a[href], [src], video[poster], img[srcset], source[srcset], image',
+      'a[href], [src], video[poster], img[srcset], source[srcset], object[data], image',
     )
 
     for (const element of elements) {
@@ -50,6 +50,18 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => 
 
           if (resolved) {
             element.setAttribute('poster', resolved)
+          }
+        }
+      }
+
+      if (localName === 'object') {
+        const data = element.getAttribute('data')
+
+        if (data && !absoluteUrlRegex.test(data)) {
+          const resolved = resolveUrlFn(data, baseUrl)
+
+          if (resolved) {
+            element.setAttribute('data', resolved)
           }
         }
       }

@@ -43,6 +43,13 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  it('should resolve relative data on object elements', async () => {
+    const value = '<object data="/player.swf"></object>'
+    const expected = '<object data="https://example.com/player.swf"></object>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
   it('should resolve relative src on audio elements', async () => {
     const value = '<audio src="/audio.mp3"></audio>'
     const expected = '<audio src="https://example.com/audio.mp3"></audio>'
