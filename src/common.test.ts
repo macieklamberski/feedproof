@@ -217,15 +217,15 @@ describe('normalizeEmbedFields', () => {
     })
   })
 
-  describe('thumbnail and avatar normalization', () => {
-    it('should upgrade http thumbnail and avatar to https', () => {
+  describe('thumbnail and avatar passthrough', () => {
+    it('should pass thumbnail and avatar through unchanged', () => {
       const value = {
         thumbnail: 'http://cdn.example/thumb.jpg',
         avatar: 'http://cdn.example/avatar.jpg',
       }
       const expected: Record<string, string | undefined> = {
-        thumbnail: 'https://cdn.example/thumb.jpg',
-        avatar: 'https://cdn.example/avatar.jpg',
+        thumbnail: 'http://cdn.example/thumb.jpg',
+        avatar: 'http://cdn.example/avatar.jpg',
       }
 
       expect(normalizeEmbedFields(value)).toEqual(expected)

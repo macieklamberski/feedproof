@@ -300,13 +300,13 @@ export const normalizeEmbedFields = (
     provider: metadata.provider,
     id: metadata.id,
     url: metadata.url ? upgradeProtocol(metadata.url) : undefined,
-    thumbnail: metadata.thumbnail ? upgradeProtocol(metadata.thumbnail) : undefined,
+    thumbnail: metadata.thumbnail,
     width: metadata.width ? String(metadata.width) : undefined,
     height: metadata.height ? String(metadata.height) : undefined,
     title: metadata.title,
     description: metadata.description,
     author: metadata.author,
-    avatar: metadata.avatar ? upgradeProtocol(metadata.avatar) : undefined,
+    avatar: metadata.avatar,
     duration: metadata.duration ? String(metadata.duration) : undefined,
   }
 }
