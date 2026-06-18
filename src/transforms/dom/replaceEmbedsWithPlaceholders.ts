@@ -2,6 +2,7 @@ import {
   createEmbedPlaceholder,
   getElementDimensions,
   getWrapperAspectRatio,
+  resolveOrKeepUrl,
 } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
@@ -41,26 +42,35 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
           continue
         }
 
-        if (!resolveUrlFn(metadata.src, baseUrl)) {
+        const resolvedSrc = resolveUrlFn(metadata.src, baseUrl)
+
+        if (!resolvedSrc) {
           continue
         }
 
-        if (metadata.url && !resolveUrlFn(metadata.url, baseUrl)) {
-          continue
+        let resolvedUrl: string | undefined
+
+        if (metadata.url) {
+          resolvedUrl = resolveUrlFn(metadata.url, baseUrl)
+
+          if (!resolvedUrl) {
+            continue
+          }
         }
 
         const { width, height } = getEmbedDimensions(element)
 
-        const placeholderMetadata =
-          width === undefined && height === undefined
-            ? metadata
-            : {
-                ...metadata,
-                width: width ?? metadata.width,
-                height: height ?? metadata.height,
-              }
+        const placeholderMetadata = {
+          ...metadata,
+          src: resolvedSrc,
+          url: resolvedUrl,
+          thumbnail: resolveOrKeepUrl(metadata.thumbnail, resolveUrlFn, baseUrl),
+          avatar: resolveOrKeepUrl(metadata.avatar, resolveUrlFn, baseUrl),
+          width: width ?? metadata.width,
+          height: height ?? metadata.height,
+        }
 
-        element.replaceWith(createEmbedPlaceholder(document, metadata.src, placeholderMetadata))
+        element.replaceWith(createEmbedPlaceholder(document, resolvedSrc, placeholderMetadata))
       }
     }
 
@@ -75,8 +85,10 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
 
         // resolveUrlFn rejects `about:blank`; the trim drops empty/whitespace placeholders
         // (which would otherwise resolve to the base URL).
-        if (src?.trim() && resolveUrlFn(src, baseUrl)) {
-          iframe.replaceWith(createEmbedPlaceholder(document, src, getEmbedDimensions(iframe)))
+        const resolved = src?.trim() ? resolveUrlFn(src, baseUrl) : undefined
+
+        if (resolved) {
+          iframe.replaceWith(createEmbedPlaceholder(document, resolved, getEmbedDimensions(iframe)))
         }
       }
     }
@@ -86,9 +98,10 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
     for (const element of document.querySelectorAll('object[data], embed[src]')) {
       const url =
         element.localName === 'object' ? element.getAttribute('data') : element.getAttribute('src')
+      const resolved = url ? resolveUrlFn(url, baseUrl) : undefined
 
-      if (url && resolveUrlFn(url, baseUrl)) {
-        element.replaceWith(createEmbedPlaceholder(document, url, getEmbedDimensions(element)))
+      if (resolved) {
+        element.replaceWith(createEmbedPlaceholder(document, resolved, getEmbedDimensions(element)))
       }
     }
   }

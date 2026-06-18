@@ -1,10 +1,7 @@
 import { resolveUrl } from 'feedcanon'
 import { parseSrcset, stringifySrcset } from 'srcset'
+import { absoluteOrOpaqueUrlRegex } from '../../common.js'
 import type { DomTransform } from '../../types.js'
-
-// Protocol-relative URLs (`//host/path`) are intentionally excluded so they
-// get upgraded to the base URL's scheme.
-const absoluteOrOpaqueUrlRegex = /^(?:https?:|data:|mailto:|tel:|javascript:)/i
 
 // `, ` (comma + whitespace) only — preserves URL-internal commas (Substack
 // CDN transforms etc.) which aren't followed by whitespace.
