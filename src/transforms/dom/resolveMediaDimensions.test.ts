@@ -294,6 +294,21 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
 
       expect(await transform(value)).toEqualHtml(expected)
     })
+
+    it('should pick the widest candidate regardless of order', async () => {
+      const value =
+        '<img srcset="https://example.com/p-800x600.jpg 800w, https://example.com/p-400x300.jpg 400w">'
+      const result = await transform(value)
+
+      expect(result).toContain('width="800"')
+      expect(result).toContain('height="600"')
+    })
+
+    it('should leave dimensions unset for an unparseable srcset', async () => {
+      const value = '<img srcset=" ">'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
   })
 
   it('should be idempotent', async () => {
