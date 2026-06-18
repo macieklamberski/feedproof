@@ -187,7 +187,9 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
     expect(result).toContain('data-embed-duration="125"')
   })
 
-  it('should skip data-embed-avatar when avatar url is unsafe', async () => {
+  // URL safety is neutralizeUnsafeUrls' job (see its tests); this transform only
+  // emits the placeholder, so an unsafe avatar passes through here unchanged.
+  it('should pass an unsafe avatar url through unchanged', async () => {
     const customResolver: EmbedResolver = {
       selector: 'iframe[src*="example.com"]',
       extract: (element) => ({
@@ -200,8 +202,7 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const result = await transform(value, customContext)
 
-    expect(result).not.toContain('data-embed-avatar')
-    expect(result).not.toContain('javascript:')
+    expect(result).toContain('data-embed-avatar="javascript:alert(1)"')
   })
 
   it('should wrap unknown iframe as generic placeholder without provider', async () => {

@@ -139,7 +139,9 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
       expect(result).toContain('<a href="https://example.com/p">')
     })
 
-    it('should drop unsafe icon and thumbnail urls but keep the rest of the placeholder', async () => {
+    // URL safety is neutralizeUnsafeUrls' job (see its tests); this transform only
+    // emits the placeholder, so unsafe icon/thumbnail urls pass through here unchanged.
+    it('should pass unsafe icon and thumbnail urls through unchanged', async () => {
       const result = await transform(
         html`
           <div
@@ -154,8 +156,8 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
         [cardResolver],
       )
 
-      expect(result).not.toContain('data-bookmark-icon')
-      expect(result).not.toContain('data-bookmark-thumbnail')
+      expect(result).toContain('data-bookmark-icon="javascript:alert(1)"')
+      expect(result).toContain('data-bookmark-thumbnail="javascript:alert(2)"')
       expect(result).toContain('data-bookmark-title="T"')
     })
   })

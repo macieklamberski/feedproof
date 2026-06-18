@@ -12,46 +12,11 @@ import {
   isElementHidden,
   isJsonLike,
   isParseableJson,
-  isSafeThumbnailUrl,
   normalizeEmbedFields,
   updateEmbedPlaceholder,
 } from './common.js'
 import { describeForEachParser, html, queryElement } from './tests.js'
 import type { BookmarkResolverResult } from './types.js'
-
-describe('isSafeThumbnailUrl', () => {
-  it('should accept an absolute https url', () => {
-    expect(isSafeThumbnailUrl('https://cdn.example.com/thumb.jpg')).toBe(true)
-  })
-
-  it('should accept an absolute http url', () => {
-    expect(isSafeThumbnailUrl('http://cdn.example.com/thumb.jpg')).toBe(true)
-  })
-
-  it('should accept a data:image/png url', () => {
-    expect(isSafeThumbnailUrl('data:image/png;base64,iVBORw0KGgo=')).toBe(true)
-  })
-
-  it('should reject a data:image/svg+xml url', () => {
-    expect(isSafeThumbnailUrl('data:image/svg+xml;utf8,<svg/>')).toBe(false)
-  })
-
-  it('should reject a data:text/html url', () => {
-    expect(isSafeThumbnailUrl('data:text/html,<script>1</script>')).toBe(false)
-  })
-
-  it('should reject a javascript: url', () => {
-    expect(isSafeThumbnailUrl('javascript:alert(1)')).toBe(false)
-  })
-
-  it('should reject a relative url', () => {
-    expect(isSafeThumbnailUrl('/thumb.jpg')).toBe(false)
-  })
-
-  it('should reject an empty string', () => {
-    expect(isSafeThumbnailUrl('')).toBe(false)
-  })
-})
 
 describeForEachParser('applyDomTransforms', (parseHtml) => {
   it('should return body innerHTML when given no transforms', async () => {
@@ -174,11 +139,6 @@ describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
     // Pass every EmbedResolverResult field and assert the complete placeholder
     // markup: all data-embed-* attributes plus the fallback anchor.
   })
-
-  it.todo('should drop an unsafe thumbnail passed through this entry point', () => {
-    // metadata.thumbnail = 'javascript:alert(1)' must not become a
-    // data-embed-thumbnail attribute on the placeholder.
-  })
 })
 
 describeForEachParser('updateEmbedPlaceholder', (parseHtml) => {
@@ -257,15 +217,15 @@ describe('normalizeEmbedFields', () => {
     })
   })
 
-  describe('thumbnail and avatar safety', () => {
-    it('should keep a safe http thumbnail and avatar without upgrading them', () => {
+  describe('thumbnail and avatar normalization', () => {
+    it('should upgrade http thumbnail and avatar to https', () => {
       const value = {
         thumbnail: 'http://cdn.example/thumb.jpg',
         avatar: 'http://cdn.example/avatar.jpg',
       }
       const expected: Record<string, string | undefined> = {
-        thumbnail: 'http://cdn.example/thumb.jpg',
-        avatar: 'http://cdn.example/avatar.jpg',
+        thumbnail: 'https://cdn.example/thumb.jpg',
+        avatar: 'https://cdn.example/avatar.jpg',
       }
 
       expect(normalizeEmbedFields(value)).toEqual(expected)
@@ -277,20 +237,15 @@ describe('normalizeEmbedFields', () => {
       ).toBe('data:image/png;base64,iVBORw0KGgo=')
     })
 
-    it('should drop javascript: thumbnails', () => {
-      expect(normalizeEmbedFields({ thumbnail: 'javascript:alert(1)' }).thumbnail).toBeUndefined()
-    })
-
-    it('should drop data:image/svg+xml thumbnails', () => {
-      expect(
-        normalizeEmbedFields({ thumbnail: 'data:image/svg+xml;utf8,<svg/>' }).thumbnail,
-      ).toBeUndefined()
-    })
-
-    it('should drop unsafe avatars', () => {
-      expect(
-        normalizeEmbedFields({ avatar: 'data:text/html,<script>1</script>' }).avatar,
-      ).toBeUndefined()
+    // Safety is neutralizeUnsafeUrls' job (see its tests); normalizeEmbedFields only
+    // normalizes, so unsafe URLs pass through here unchanged.
+    it('should pass unsafe thumbnail and avatar urls through unchanged', () => {
+      expect(normalizeEmbedFields({ thumbnail: 'javascript:alert(1)' }).thumbnail).toBe(
+        'javascript:alert(1)',
+      )
+      expect(normalizeEmbedFields({ avatar: 'data:text/html,<script>1</script>' }).avatar).toBe(
+        'data:text/html,<script>1</script>',
+      )
     })
   })
 
@@ -823,7 +778,9 @@ describeForEachParser('createBookmarkPlaceholder', (parseHtml) => {
     expect(element.outerHTML).toEqualHtml(expected)
   })
 
-  it('should drop unsafe icon and thumbnail urls', () => {
+  // Safety is neutralizeUnsafeUrls' job (see its tests); the placeholder emits the
+  // icon/thumbnail as-is and the later pass neutralizes any unsafe URL.
+  it('should pass unsafe icon and thumbnail urls through unchanged', () => {
     const document = parseHtml('')
     const value: BookmarkResolverResult = {
       provider: 'ghost',
@@ -838,6 +795,8 @@ describeForEachParser('createBookmarkPlaceholder', (parseHtml) => {
         data-bookmark-provider="ghost"
         data-bookmark-url="https://example.com/post"
         data-bookmark-title="Post title"
+        data-bookmark-icon="javascript:alert(1)"
+        data-bookmark-thumbnail="data:image/svg+xml;utf8,<svg/>"
       >
         <a href="https://example.com/post">Post title</a>
       </div>

@@ -1,4 +1,4 @@
-import { resolveUrl, upgradeProtocol } from 'feedcanon'
+import { upgradeProtocol } from 'feedcanon'
 import type {
   BookmarkResolverResult,
   EmbedResolverResult,
@@ -12,12 +12,6 @@ export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
 
 // NodeFilter is not globally available in Bun; mirror the DOM-spec constants.
 export const NodeFilter = { SHOW_ELEMENT: 0x1, SHOW_TEXT: 0x4, SHOW_COMMENT: 0x80 } as const
-
-const safeThumbnailDataUrlRegex = /^data:image\/(png|jpe?g|gif|webp|avif);/i
-
-export const isSafeThumbnailUrl = (url: string): boolean => {
-  return resolveUrl(url) !== undefined || safeThumbnailDataUrlRegex.test(url)
-}
 
 export const applyDomTransforms = async (
   document: Document,
@@ -306,14 +300,13 @@ export const normalizeEmbedFields = (
     provider: metadata.provider,
     id: metadata.id,
     url: metadata.url ? upgradeProtocol(metadata.url) : undefined,
-    thumbnail:
-      metadata.thumbnail && isSafeThumbnailUrl(metadata.thumbnail) ? metadata.thumbnail : undefined,
+    thumbnail: metadata.thumbnail ? upgradeProtocol(metadata.thumbnail) : undefined,
     width: metadata.width ? String(metadata.width) : undefined,
     height: metadata.height ? String(metadata.height) : undefined,
     title: metadata.title,
     description: metadata.description,
     author: metadata.author,
-    avatar: metadata.avatar && isSafeThumbnailUrl(metadata.avatar) ? metadata.avatar : undefined,
+    avatar: metadata.avatar ? upgradeProtocol(metadata.avatar) : undefined,
     duration: metadata.duration ? String(metadata.duration) : undefined,
   }
 }
@@ -363,8 +356,8 @@ export const createBookmarkPlaceholder = (
     ...rest,
     url: safeUrl,
     title,
-    icon: icon && isSafeThumbnailUrl(icon) ? upgradeProtocol(icon) : undefined,
-    thumbnail: thumbnail && isSafeThumbnailUrl(thumbnail) ? upgradeProtocol(thumbnail) : undefined,
+    icon: icon ? upgradeProtocol(icon) : undefined,
+    thumbnail: thumbnail ? upgradeProtocol(thumbnail) : undefined,
   })
 
   const link = document.createElement('a')
