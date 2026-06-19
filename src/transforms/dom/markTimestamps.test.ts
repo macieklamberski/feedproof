@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
+import { parseHtml } from '../../parsers/linkedom.js'
 import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { markTimestamps, parseTimestampSeconds } from './markTimestamps.js'
@@ -223,5 +224,22 @@ describeForEachParser('markTimestamps', (parseHtml) => {
     const twice = await transform(once)
 
     expect(twice).toBe(once)
+  })
+
+  it('should stay linear on a long whitespace run after a colon', async () => {
+    const value = `<p>:${' '.repeat(80000)}</p>`
+
+    expect(await transform(value)).not.toContain('data-timestamp')
+  })
+})
+
+// linkedom only: jsdom's serializer is itself superlinear in nesting depth, so it
+// can't round-trip a document this deep regardless of the transform.
+describe('markTimestamps with deep nesting', () => {
+  it('should not overflow the stack on a deeply nested document', async () => {
+    const value = `${'<div>'.repeat(20000)}01:23${'</div>'.repeat(20000)}`
+    const result = await applyDomTransforms(parseHtml(value), [markTimestamps(baseContext)])
+
+    expect(result).toContain('data-timestamp="83"')
   })
 })
