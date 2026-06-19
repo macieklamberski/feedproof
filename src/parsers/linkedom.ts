@@ -57,12 +57,62 @@ const expandSvgSelfClose = (html: string): string => {
   })
 }
 
+// Linkedom serializes attribute values verbatim except for `"` — it does not escape `&`
+// (WebReflection/linkedom, won't-fix). A DOM attribute value is already decoded, so a value
+// like `?id=1&copy=2` serializes unchanged and a spec-compliant downstream parser then reads
+// `&copy` as `©`, corrupting the URL. Text-node serialization is correct, and other parsers
+// (jsdom, browsers) escape attributes per spec, so the fix is scoped to linkedom's
+// `body.innerHTML` — the serialization path transformContent reads. The escape runs around
+// serialization and restores the DOM, so reading innerHTML is side-effect-free and repeatable.
+const ampersandRegex = /&/g
+
+const findInnerHtmlGetter = (node: object): (() => string) => {
+  for (let proto = Object.getPrototypeOf(node); proto; proto = Object.getPrototypeOf(proto)) {
+    const descriptor = Object.getOwnPropertyDescriptor(proto, 'innerHTML')
+
+    if (descriptor?.get) {
+      return descriptor.get
+    }
+  }
+
+  throw new Error('Linkedom body element exposes no innerHTML getter to wrap.')
+}
+
+const fixAttributeSerialization = (body: HTMLElement): void => {
+  const getInnerHtml = findInnerHtmlGetter(body)
+
+  Object.defineProperty(body, 'innerHTML', {
+    configurable: true,
+    get(): string {
+      const restore: Array<[Element, string, string]> = []
+
+      for (const element of body.querySelectorAll('*')) {
+        for (const attribute of Array.from(element.attributes)) {
+          if (attribute.value.includes('&')) {
+            restore.push([element, attribute.name, attribute.value])
+            element.setAttribute(attribute.name, attribute.value.replace(ampersandRegex, '&amp;'))
+          }
+        }
+      }
+
+      const serialized = getInnerHtml.call(this)
+
+      for (const [element, name, value] of restore) {
+        element.setAttribute(name, value)
+      }
+
+      return serialized
+    },
+  })
+}
+
 export const parseHtml = (html: string): Document => {
   const { document } = parseHTML(
     `<!doctype html><html><head></head><body>${expandSvgSelfClose(html)}</body></html>`,
   )
 
   normalizeAttributeCase(document)
+  fixAttributeSerialization(document.body)
 
   return document
 }

@@ -108,7 +108,7 @@ describe('toEqualHtml', () => {
 
 describe('toContainHtml', () => {
   it('should pass when the substring is present after normalization', () => {
-    expect('<img src="u?a=1&b=2">').toContainHtml('src="u?a=1&b=2"')
+    expect('<img src="u?a=1&b=2">').toContainHtml('src="u?a=1&amp;b=2"')
   })
 
   it('should fail when the substring is absent', () => {

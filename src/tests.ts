@@ -157,8 +157,9 @@ const toEqualHtml = (received: unknown, expected: string) => {
   }
 }
 
-// Substring assertions written in linkedom's serialization (literal `&`) match
-// any parser's output once the received HTML is normalized.
+// Substring assertions are written in normalized serialization (attribute `&` escaped
+// to `&amp;`, matching the spec and every parser) and match once the received HTML is
+// normalized.
 const toContainHtml = (received: unknown, substring: string) => {
   const normalizedReceived = normalizeHtml(received as string)
   const pass = normalizedReceived.includes(substring)

@@ -91,8 +91,8 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     `
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContainHtml('src="https://proxy.example.com/?type=video&url=')
-    expect(result).toContainHtml('poster="https://proxy.example.com/?type=image&url=')
+    expect(result).toContainHtml('src="https://proxy.example.com/?type=video&amp;url=')
+    expect(result).toContainHtml('poster="https://proxy.example.com/?type=image&amp;url=')
   })
 
   it('should rewrite audio src as audio', async () => {

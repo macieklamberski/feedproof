@@ -110,6 +110,35 @@ describe('parseHtml', () => {
     })
   })
 
+  describe('attribute serialization', () => {
+    it('should escape ampersands in attribute values', () => {
+      const document = parseHtml('<a href="?id=1&copy=2">link</a>')
+
+      expect(document.body.innerHTML).toBe('<a href="?id=1&amp;copy=2">link</a>')
+    })
+
+    it('should escape ampersands introduced by transforms', () => {
+      const document = parseHtml('<a>link</a>')
+      queryElement(document, 'a').setAttribute('href', '?a=1&b=2')
+
+      expect(document.body.innerHTML).toBe('<a href="?a=1&amp;b=2">link</a>')
+    })
+
+    it('should keep text-node entities escaped exactly once', () => {
+      const document = parseHtml('<p>a &amp; b</p>')
+
+      expect(document.body.innerHTML).toBe('<p>a &amp; b</p>')
+    })
+
+    it('should serialize the same value on repeated reads', () => {
+      const document = parseHtml('<a href="?a=1&b=2">link</a>')
+      const first = document.body.innerHTML
+      const second = document.body.innerHTML
+
+      expect(second).toBe(first)
+    })
+  })
+
   describe('empty input', () => {
     it('should return a document with an empty body', () => {
       const document = parseHtml('')
