@@ -70,6 +70,34 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
 
       expect(await transform(value)).toBe(value)
     })
+
+    it('should neutralize a data:image/svg+xml link', async () => {
+      const value = '<a href="data:image/svg+xml;base64,PHN2Zy8+">x</a>'
+
+      expect(await transform(value)).toBe('<a href="#unsafe-link">x</a>')
+    })
+
+    it('should neutralize a javascript: xlink:href on an svg anchor', async () => {
+      const result = await transform(
+        '<svg><a xlink:href="javascript:alert(1)"><text>x</text></a></svg>',
+      )
+
+      expect(result).toContain('#unsafe-link')
+      expect(result).not.toContain('javascript:')
+    })
+
+    it('should neutralize a javascript: href on an svg anchor', async () => {
+      const result = await transform('<svg><a href="javascript:alert(1)"><text>x</text></a></svg>')
+
+      expect(result).toContain('#unsafe-link')
+      expect(result).not.toContain('javascript:')
+    })
+
+    it('should neutralize a javascript: formaction', async () => {
+      const value = '<button formaction="javascript:alert(1)">go</button>'
+
+      expect(await transform(value)).toBe('<button formaction="#unsafe-link">go</button>')
+    })
   })
 
   describe('with a caller isSafeUrlFn', () => {
