@@ -2,13 +2,9 @@ import htmlTags from 'html-tags'
 import { hasAncestorWithTagName, isText, NodeFilter } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-// Standard HTML elements (from html-tags) we materialize from escaped text. `pre`/`code` are
-// excluded so an escaped code sample stays visible as text rather than becoming live elements
-// a consumer's sanitizer can't un-render.
-// TODO: ideally an encoded `<pre>`/`<code>` would decode into a real code block while keeping
-// its contents escaped (rendering the sample as code), but that needs an escape-level-aware
-// partial decode; for now such a fragment is left entirely as text.
-const decodableTags = new Set<string>(htmlTags.filter((tag) => tag !== 'pre' && tag !== 'code'))
+// Standard HTML elements (from html-tags) we materialize from escaped text. Non-HTML names
+// (`<dependency>`, `<dupa>`) are absent, so config/XML fragments are left as text.
+const decodableTags = new Set<string>(htmlTags)
 
 // Real elements whose entity-escaped contents are intentional text (a tutorial showing
 // `<img>`), so their descendants are left untouched.
@@ -18,9 +14,10 @@ const tagNameRegex = /<\/?([a-zA-Z][\w-]*)/g
 const openTagRegex = /<[a-zA-Z]/g
 
 // True when the text node is itself an escaped HTML fragment: bounded by tags (a markup
-// block, not prose that merely mentions a tag), with real structure (a closing tag or 2+
-// opening tags, never a lone `<video>`/`<img>`), built only from decodable HTML elements
-// (so `<dependency>`, `<dupa>`, and code blocks are left as text).
+// block, not prose that merely mentions a tag), with real structure (an opening tag plus a
+// close, or 2+ opening tags — never a lone `<video>` nor a stray `</code>`, which would
+// decode to nothing), built only from known HTML elements (so `<dependency>`, `<dupa>`, and
+// other non-HTML markup are left as text).
 const isEscapedHtmlFragment = (data: string): boolean => {
   const trimmed = data.trim()
 
@@ -28,7 +25,9 @@ const isEscapedHtmlFragment = (data: string): boolean => {
     return false
   }
 
-  if (!trimmed.includes('</') && (trimmed.match(openTagRegex)?.length ?? 0) < 2) {
+  const openCount = trimmed.match(openTagRegex)?.length ?? 0
+
+  if (openCount === 0 || (!trimmed.includes('</') && openCount < 2)) {
     return false
   }
 
@@ -69,6 +68,19 @@ export const decodeDoubleEncodedTags: DomTransform = () => {
       }
 
       tempDiv.innerHTML = node.data
+
+      // An escaped `<pre>`/`<code>` is a code sample: decode the wrapper into a real code block,
+      // but re-escape its contents so the sample's tags show as text rather than render as markup.
+      for (const element of tempDiv.querySelectorAll('code')) {
+        element.textContent = element.innerHTML
+      }
+
+      for (const element of tempDiv.querySelectorAll('pre')) {
+        if (!element.querySelector('code')) {
+          element.textContent = element.innerHTML
+        }
+      }
+
       node.replaceWith(...tempDiv.childNodes)
     }
   }
