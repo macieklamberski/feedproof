@@ -100,9 +100,13 @@ export const defaultDomTransforms: Array<DomTransform> = [
   removeTrackingPixels,
   unwrapEmojiImages,
   convertBreaksToParagraphs,
+  // Runs before highlightCode and the merge passes so they see real newlines. Prism
+  // and Eleventy feeds separate code lines with <br> instead of \n; without this they
+  // highlight as a single line and adjacent blocks get wrongly merged.
+  replacePreLineBreaks,
   // Runs before wrapBareInlineInParagraphs so a promoted standalone code block is a
   // <pre> (block) by the time bare inline runs are wrapped, avoiding a <pre> nested
-  // inside a <p>. None of the strip/merge passes below touch <pre>/<code> internals.
+  // inside a <p>.
   highlightCode,
   wrapBareInlineInParagraphs,
   stripLeadingIndentation,
@@ -110,7 +114,6 @@ export const defaultDomTransforms: Array<DomTransform> = [
   stripBoundaryBreaks,
   mergeFragmentedLists,
   mergeConsecutiveOneLinerPres,
-  replacePreLineBreaks,
   trimPreWhitespace,
   linkifyUrls,
   markTimestamps,

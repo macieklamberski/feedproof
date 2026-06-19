@@ -4,6 +4,8 @@ import { transformContent } from './index.js'
 import { describeForEachParser, html } from './tests.js'
 import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 
+const lineBreakAfterBraceRegex = /\{\n\s+/
+
 describeForEachParser('transformContent', (parseHtml) => {
   it('should apply all default transforms', async () => {
     const value = '<div><p>Hello <img data-src="photo.jpg"></p></div>'
@@ -62,6 +64,22 @@ describeForEachParser('transformContent', (parseHtml) => {
     const expected = '<pre><code>function greet(name) {\n  return name\n}</code></pre>'
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
+  it('should keep <br>-delimited code lines multi-line and not merge adjacent blocks', async () => {
+    // Prism/Eleventy feeds separate code lines with <br> inside <pre>, not \n.
+    // replacePreLineBreaks must run before highlightCode so the lines survive
+    // highlighting and the two blocks are not collapsed into a single merged pre.
+    const value = [
+      '<pre class="language-html"><code class="language-html"><span class="highlight-line">&lt;div&gt;Hi&lt;/div&gt;</span></code></pre>',
+      '<pre class="language-css"><code class="language-css"><span class="highlight-line">.error {</span><br /><span class="highlight-line">  content: "x";</span><br /><span class="highlight-line">}</span></code></pre>',
+    ].join('\n')
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect((result.match(/<pre /g) ?? []).length).toBe(2)
+    expect(result).toContain('data-pre-label="HTML"')
+    expect(result).toContain('data-pre-label="CSS"')
+    expect(result).toMatch(lineBreakAfterBraceRegex)
   })
 
   it('should clean anchor urls with the provided cleanUrlFn', async () => {
