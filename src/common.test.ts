@@ -731,6 +731,18 @@ describeForEachParser('createPlaceholder', (parseHtml) => {
     expect(element.getAttribute('data-bookmark-url')).toBe(value)
   })
 
+  it('should skip a field key that is not a valid attribute name', () => {
+    const document = parseHtml('<div></div>')
+    const element = createPlaceholder(document, 'bookmark', {
+      provider: 'custom',
+      'evil"><img src=x onerror=alert(1)>': 'x',
+    })
+
+    expect(element.getAttribute('data-bookmark-provider')).toBe('custom')
+    expect(element.attributes.length).toBe(1)
+    expect(element.outerHTML).not.toContain('<img')
+  })
+
   it('should skip falsy non-string values such as null', () => {
     const document = parseHtml('<div></div>')
     const fields: Record<string, string | undefined> = { provider: 'youtube' }
@@ -825,6 +837,22 @@ describeForEachParser('createBookmarkPlaceholder', (parseHtml) => {
     `
 
     expect(element.outerHTML).toEqualHtml(expected)
+  })
+
+  // A custom resolver could return extra keys beyond the typed fields; those keys become
+  // attribute names, so a key carrying markup must not survive into the placeholder.
+  it('should drop a resolver-supplied key that is not a valid attribute name', () => {
+    const document = parseHtml('')
+    const value = {
+      provider: 'custom',
+      url: 'https://example.com/post',
+      title: 'Post title',
+      'x"><img src=x onerror=alert(1)>': 'y',
+    } as BookmarkResolverResult
+    const element = createBookmarkPlaceholder(document, value)
+
+    expect(element.outerHTML).not.toContain('<img')
+    expect(element.getAttribute('data-bookmark-provider')).toBe('custom')
   })
 })
 

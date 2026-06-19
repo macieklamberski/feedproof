@@ -276,6 +276,11 @@ export const isElementHidden = (element: Element): boolean => {
   return !!style && (styleDisplayNoneRegex.test(style) || styleVisibilityHiddenRegex.test(style))
 }
 
+// Field keys become attribute names, so any key carrying quotes or angle brackets — e.g. a
+// custom resolver forwarding untrusted data into the field record — would serialize as live
+// markup. Restrict keys to a valid data-* suffix; values are safe through setAttribute.
+const safeFieldKeyRegex = /^[a-zA-Z0-9_-]+$/
+
 export const createPlaceholder = <Type extends object>(
   document: Document,
   type: string,
@@ -284,7 +289,7 @@ export const createPlaceholder = <Type extends object>(
   const element = document.createElement('div')
 
   for (const [key, value] of Object.entries(fields)) {
-    if (value) {
+    if (value && safeFieldKeyRegex.test(key)) {
       element.setAttribute(`data-${type}-${key}`, value)
     }
   }
