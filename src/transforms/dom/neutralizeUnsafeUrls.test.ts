@@ -161,6 +161,25 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
       expect(await transform(value, context)).toBe(expected)
     })
 
+    it('should neutralize unsafe embed and bookmark target urls with the link sentinel', async () => {
+      const value = html`
+        <div data-embed-url="javascript:alert(1)"></div>
+        <div data-bookmark-url="javascript:alert(1)"></div>
+      `
+      const expected = html`
+        <div data-embed-url="#unsafe-link"></div>
+        <div data-bookmark-url="#unsafe-link"></div>
+      `
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should leave a safe embed target url untouched', async () => {
+      const value = '<div data-embed-url="https://example.com/watch"></div>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
     it('should leave a document with no url attributes untouched', async () => {
       const value = '<p>text</p>'
 
