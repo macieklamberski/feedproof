@@ -147,9 +147,17 @@ const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*
 const styleHeightRegex =
   /(?:^|;)\s*height\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
 
+// An empty or whitespace-only width/height attribute (`width=""`, common in editor output)
+// is not a declared dimension. coerceNumber reads it as 0 (Number('') === 0), which would
+// collapse media to a zero box and read as a tracking pixel; treat it as absent instead.
+const dimensionAttribute = (element: Element, name: string): number | undefined => {
+  const value = element.getAttribute(name)?.trim()
+  return value ? coerceNumber(value) : undefined
+}
+
 export const getElementDimensions = (element: Element): { width?: number; height?: number } => {
-  const width = coerceNumber(element.getAttribute('width'))
-  const height = coerceNumber(element.getAttribute('height'))
+  const width = dimensionAttribute(element, 'width')
+  const height = dimensionAttribute(element, 'height')
 
   if (width !== undefined && height !== undefined) {
     return { width, height }
