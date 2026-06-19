@@ -86,6 +86,14 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     expect(result).toContain('https://example.com/large.jpg 600w')
   })
 
+  it('should resolve a relative srcset entry following an absolute one with no space', async () => {
+    const value = '<img srcset="https://cdn.com/a.jpg 100w,/rel/b.jpg 200w">'
+    const result = await transform(value)
+
+    expect(result).toContain('https://cdn.com/a.jpg 100w')
+    expect(result).toContain('https://example.com/rel/b.jpg 200w')
+  })
+
   it('should resolve srcset entries on source elements', async () => {
     const value = '<picture><source srcset="/small.webp 300w"><img src="/photo.jpg"></picture>'
     const expected = html`

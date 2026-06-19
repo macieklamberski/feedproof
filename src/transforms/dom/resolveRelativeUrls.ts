@@ -2,10 +2,6 @@ import { parseSrcset, stringifySrcset } from 'srcset'
 import { absoluteUrlRegex } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-// `, ` (comma + whitespace) only — preserves URL-internal commas (Substack
-// CDN transforms etc.) which aren't followed by whitespace.
-const srcsetSeparatorRegex = /,\s+/
-
 export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => {
   return (document) => {
     if (!baseUrl) {
@@ -84,19 +80,10 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => 
         const srcset = element.getAttribute('srcset')
 
         if (srcset) {
-          let needsResolution = false
-          const candidates = srcset.split(srcsetSeparatorRegex)
+          const entries = parseSrcset(srcset)
 
-          for (const candidate of candidates) {
-            const trimmed = candidate.trimStart()
-            if (trimmed && !absoluteUrlRegex.test(trimmed)) {
-              needsResolution = true
-              break
-            }
-          }
-
-          if (needsResolution) {
-            const resolved = parseSrcset(srcset).map((entry) => ({
+          if (entries.some((entry) => !absoluteUrlRegex.test(entry.url))) {
+            const resolved = entries.map((entry) => ({
               ...entry,
               url: resolveUrlFn(entry.url, baseUrl) ?? entry.url,
             }))
