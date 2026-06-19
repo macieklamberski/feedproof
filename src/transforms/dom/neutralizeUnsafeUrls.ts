@@ -8,9 +8,17 @@ const sentinels: Record<UrlRole, string> = {
   media: 'about:blank',
 }
 
-// Browsers strip ASCII whitespace (tab/newline/CR/space) from a URL before parsing it,
-// so `java\tscript:` and a leading newline are real evasion vectors — strip them first.
-const urlWhitespaceRegex = /\s+/g
+// Browsers strip leading C0 control characters and ASCII whitespace from a URL before reading
+// its scheme, so `\x01javascript:` and `java\tscript:` both resolve to `javascript:` and run.
+// `\s` catches the whitespace cases but misses the other C0 controls (`\x01`-`\x08`, `\x0e`-`\x1f`),
+// so strip the whole C0 range first. The floor must hold on its own — a DOM-only pipeline has no
+// stripControlChars upstream — so it can't depend on `\s` alone.
+// Built via new RegExp so the control-char escapes live in strings, mirroring stripControlChars.
+const urlIgnorableRanges = [
+  '\\s', // ASCII + Unicode whitespace.
+  '\\x00-\\x1F', // C0 controls (NUL etc.) that `\\s` misses.
+]
+const urlIgnorableCharsRegex = new RegExp(`[${urlIgnorableRanges.join('')}]+`, 'g')
 // The dangerous-scheme floor: schemes that execute or render markup. Always enforced,
 // regardless of isSafeUrlFn — the scheme floor, not consumer policy.
 const dangerousSchemeRegex = /^(?:javascript:|vbscript:|data:text\/html)/i
@@ -19,7 +27,7 @@ const dangerousSchemeRegex = /^(?:javascript:|vbscript:|data:text\/html)/i
 const dangerousLinkSchemeRegex = /^data:image\/svg\+xml/i
 
 const hasDangerousScheme = (url: string, role: UrlRole): boolean => {
-  const normalized = url.replace(urlWhitespaceRegex, '').toLowerCase()
+  const normalized = url.replace(urlIgnorableCharsRegex, '').toLowerCase()
 
   return (
     dangerousSchemeRegex.test(normalized) ||
