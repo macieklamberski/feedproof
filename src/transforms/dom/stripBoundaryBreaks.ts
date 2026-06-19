@@ -39,10 +39,20 @@ const isVisuallyEmpty = (node: Node): boolean => {
   return true
 }
 
+// Caps the descent into nested edge wrappers. Real content never nests inline
+// wrappers anywhere near this deep; the bound keeps a pathologically nested
+// document from overflowing the call stack (the deepest wrappers simply keep
+// their boundary <br>s, which is invisible).
+const maxEdgeWrapperDepth = 200
+
 // Strip boundary <br>s from one edge of `container`, descending through inline
 // wrappers. A buffered run of skippables (whitespace, comments, <br>) is removed
 // only when it actually contained a <br> — so whitespace alone is left intact.
-const stripEdge = (container: Node, trailing: boolean): void => {
+const stripEdge = (container: Node, trailing: boolean, depth = 0): void => {
+  if (depth > maxEdgeWrapperDepth) {
+    return
+  }
+
   let node = trailing ? container.lastChild : container.firstChild
   let sawBr = false
   let pending: Array<ChildNode> = []
@@ -75,7 +85,7 @@ const stripEdge = (container: Node, trailing: boolean): void => {
       removePending()
       pending = []
       sawBr = false
-      stripEdge(node, trailing)
+      stripEdge(node, trailing, depth + 1)
 
       // An emptied wrapper is transparent — keep walking outward past it.
       if (isVisuallyEmpty(node)) {

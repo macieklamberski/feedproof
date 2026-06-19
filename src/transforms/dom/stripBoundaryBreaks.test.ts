@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
+import { parseHtml } from '../../parsers/linkedom.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { stripBoundaryBreaks } from './stripBoundaryBreaks.js'
@@ -309,5 +310,16 @@ describeForEachParser('stripBoundaryBreaks', (parseHtml) => {
 
       expect(await transform(value)).toBe(expected)
     })
+  })
+})
+
+// linkedom only: jsdom's serializer is itself superlinear in nesting depth, so it
+// can't round-trip a document this deep regardless of the transform.
+describe('stripBoundaryBreaks with deep nesting', () => {
+  it('should not overflow the stack on deeply nested edge wrappers', async () => {
+    const value = `<p>${'<span>'.repeat(20000)}<br>${'</span>'.repeat(20000)}</p>`
+    const result = await applyDomTransforms(parseHtml(value), [stripBoundaryBreaks(baseContext)])
+
+    expect(result).toContain('<br>')
   })
 })
