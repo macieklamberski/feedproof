@@ -12,15 +12,23 @@ const sentinels: Record<UrlRole, string> = {
 // so `java\tscript:` and a leading newline are real evasion vectors — strip them first.
 const urlWhitespaceRegex = /\s+/g
 // The dangerous-scheme floor: schemes that execute or render markup. Always enforced,
-// regardless of isSafeUrlFn — this is "never emit XSS", not consumer policy.
+// regardless of isSafeUrlFn — the scheme floor, not consumer policy.
 const dangerousSchemeRegex = /^(?:javascript:|vbscript:|data:text\/html)/i
+// An SVG data-URL executes when navigated to, but is inert as an image source, so it is
+// rejected only for the link role.
+const dangerousLinkSchemeRegex = /^data:image\/svg\+xml/i
 
-const hasDangerousScheme = (url: string): boolean => {
-  return dangerousSchemeRegex.test(url.replace(urlWhitespaceRegex, '').toLowerCase())
+const hasDangerousScheme = (url: string, role: UrlRole): boolean => {
+  const normalized = url.replace(urlWhitespaceRegex, '').toLowerCase()
+
+  return (
+    dangerousSchemeRegex.test(normalized) ||
+    (role === 'link' && dangerousLinkSchemeRegex.test(normalized))
+  )
 }
 
 const isUnsafe = (url: string, role: UrlRole, isSafeUrlFn: IsSafeUrlFn | undefined): boolean => {
-  if (hasDangerousScheme(url)) {
+  if (hasDangerousScheme(url, role)) {
     return true
   }
 
@@ -55,9 +63,9 @@ const neutralizeSrcset = (element: Element, isSafeUrlFn: IsSafeUrlFn | undefined
 }
 
 const linkAttributeSelectors: Array<[string, string]> = [
-  ['a[href]', 'href'],
   ['[data-embed-url]', 'data-embed-url'],
   ['[data-bookmark-url]', 'data-bookmark-url'],
+  ['[formaction]', 'formaction'],
 ]
 const mediaAttributeSelectors: Array<[string, string]> = [
   ['img[src]', 'src'],
@@ -76,6 +84,13 @@ const mediaAttributeSelectors: Array<[string, string]> = [
   ['[data-bookmark-thumbnail]', 'data-bookmark-thumbnail'],
 ]
 const srcsetSelector = 'img[srcset], source[srcset]'
+// Anchors (link) and SVG <image> (media) carry their URL on href (SVG2) or xlink:href
+// (SVG1). The colon in xlink:href can't go in a CSS attribute selector, so they match by
+// tag and pick the attribute in JS rather than sitting in the selector tables above.
+const hrefRoleSelectors: Array<[string, UrlRole]> = [
+  ['a', 'link'],
+  ['image', 'media'],
+]
 
 // Replaces unsafe URLs with an inert, role-appropriate sentinel while keeping the
 // element. Enforces a hardcoded dangerous-scheme floor (javascript:/vbscript:/data:text/html)
@@ -99,12 +114,11 @@ export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
       neutralizeSrcset(element, isSafeUrlFn)
     }
 
-    // SVG <image> carries its URL on href (SVG2) or xlink:href (SVG1); proxyAssetUrls
-    // rewrites it, so it must be neutralized here too. The colon in xlink:href can't go
-    // in a CSS attribute selector, so match the tag and pick the attribute in JS.
-    for (const element of document.querySelectorAll('image')) {
-      const attribute = element.hasAttribute('href') ? 'href' : 'xlink:href'
-      neutralizeAttribute(element, attribute, 'media', isSafeUrlFn)
+    for (const [selector, role] of hrefRoleSelectors) {
+      for (const element of document.querySelectorAll(selector)) {
+        const attribute = element.hasAttribute('href') ? 'href' : 'xlink:href'
+        neutralizeAttribute(element, attribute, role, isSafeUrlFn)
+      }
     }
   }
 }
