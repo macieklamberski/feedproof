@@ -141,6 +141,13 @@ export const injectEnclosures: DomTransform = (context) => {
     const created: Array<HTMLElement> = []
 
     for (const enclosure of enclosures) {
+      // Enclosures come from untrusted feed data, which doesn't honor the required-`url`
+      // type. A missing or non-string url would throw in cleanUrlFn/resolveUrlFn and abort
+      // the whole transform, so skip it before any URL handling.
+      if (typeof enclosure.url !== 'string' || enclosure.url === '') {
+        continue
+      }
+
       const normalizedUrl = normalizeMediaUrl(enclosure.url, context.cleanUrlFn)
 
       if (existingUrls.has(normalizedUrl)) {
