@@ -140,8 +140,12 @@ export const hasAncestorWithTagName = (node: Node, tagSet: Set<string>, stopAt?:
 }
 
 // Matches `<prop>: <number>[px];` — px is optional, other units (em/rem/%) don't match.
-const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*(?:;|$)/i
-const styleHeightRegex = /(?:^|;)\s*height\s*:\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*(?:;|$)/i
+// The numeric group gives each digit a single parse (`[0-9]+(?:\.[0-9]+)?|\.[0-9]+`, not
+// `[0-9]*\.?[0-9]+`): the ambiguous form backtracks quadratically on a long digit run
+// followed by a non-terminator, which `style` (an unbounded untrusted attribute) can carry.
+const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
+const styleHeightRegex =
+  /(?:^|;)\s*height\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
 
 export const getElementDimensions = (element: Element): { width?: number; height?: number } => {
   const width = coerceNumber(element.getAttribute('width'))
