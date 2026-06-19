@@ -57,13 +57,16 @@ const expandSvgSelfClose = (html: string): string => {
   })
 }
 
-// Linkedom serializes attribute values verbatim except for `"` — it does not escape `&`
-// (WebReflection/linkedom, won't-fix). A DOM attribute value is already decoded, so a value
-// like `?id=1&copy=2` serializes unchanged and a spec-compliant downstream parser then reads
-// `&copy` as `©`, corrupting the URL. Text-node serialization is correct, and other parsers
-// (jsdom, browsers) escape attributes per spec, so the fix is scoped to linkedom's
-// `body.innerHTML` — the serialization path transformContent reads. The escape runs around
-// serialization and restores the DOM, so reading innerHTML is side-effect-free and repeatable.
+// linkedom intentionally skips entity escaping for HTML-document attribute values — its
+// serializer only runs escape() in XML mode (interface/attr.js gates it behind the non-HTML
+// MIME flag), so an HTML attribute emits `&` verbatim. A DOM value is already decoded, so a
+// value containing `&copy;` (e.g. from a double-encoded `&amp;copy;` source) serializes
+// unchanged and a spec parser then reads it back as `©`, silently corrupting it. A conforming-
+// escaping fix is open but stalled upstream (WebReflection/linkedom#304). Text-node
+// serialization is correct, and jsdom/browsers escape attributes per spec, so the fix is
+// scoped to linkedom's `body.innerHTML` — the path transformContent reads. The escape runs
+// around serialization and restores the DOM, so reading innerHTML is side-effect-free and
+// repeatable.
 const ampersandRegex = /&/g
 
 const findInnerHtmlGetter = (node: object): (() => string) => {
