@@ -384,6 +384,20 @@ describeForEachParser('getElementDimensions', (parseHtml) => {
     expect(getElementDimensions(image)).toEqual({ width: 200, height: undefined })
   })
 
+  it('should treat an empty attribute as absent rather than zero', () => {
+    const document = parseHtml('<img width="" height="">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
+  })
+
+  it('should fall back to style when the attribute is empty', () => {
+    const document = parseHtml('<img width="" style="width: 300px; height: 200px">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 300, height: 200 })
+  })
+
   it('should prefer attribute over style when both are present', () => {
     const document = parseHtml('<img width="100" style="width: 999px">')
     const image = queryElement(document, 'img')
