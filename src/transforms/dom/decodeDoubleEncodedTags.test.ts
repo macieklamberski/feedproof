@@ -60,6 +60,12 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(value)
     })
 
+    it('should not decode a stray closing tag', async () => {
+      const value = '<div>&lt;/pre&gt;</div>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
     it('should not decode non-HTML markup', async () => {
       const value =
         '&lt;dependency&gt;&lt;groupId&gt;org.example&lt;/groupId&gt;&lt;/dependency&gt;'
@@ -69,12 +75,6 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
 
     it('should not decode an unknown tag name', async () => {
       const value = '&lt;widget&gt;content&lt;/widget&gt;'
-
-      expect(await transform(value)).toEqualHtml(value)
-    })
-
-    it('should not decode an escaped code block', async () => {
-      const value = '&lt;pre&gt;&lt;code&gt;const x = 1&lt;/code&gt;&lt;/pre&gt;'
 
       expect(await transform(value)).toEqualHtml(value)
     })
@@ -117,6 +117,37 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(
         '<p><b>bold</b></p><code>&lt;b&gt;code&lt;/b&gt;</code>',
       )
+    })
+  })
+
+  describe('decodes code blocks but keeps their contents as text', () => {
+    it('should decode an escaped pre>code wrapper and re-escape its contents', async () => {
+      const value =
+        '&lt;pre&gt;&lt;code&gt;&lt;div class="x"&gt;hi&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;'
+
+      expect(await transform(value)).toEqualHtml(
+        '<pre><code>&lt;div class="x"&gt;hi&lt;/div&gt;</code></pre>',
+      )
+    })
+
+    it('should re-escape the contents of an escaped pre without a code child', async () => {
+      const value = '&lt;pre&gt;&lt;span&gt;x&lt;/span&gt;&lt;/pre&gt;'
+
+      expect(await transform(value)).toEqualHtml('<pre>&lt;span&gt;x&lt;/span&gt;</pre>')
+    })
+
+    it('should re-escape the contents of inline code in a fragment', async () => {
+      const value = '&lt;p&gt;use &lt;code&gt;&lt;b&gt;x&lt;/b&gt;&lt;/code&gt;&lt;/p&gt;'
+
+      expect(await transform(value)).toEqualHtml('<p>use <code>&lt;b&gt;x&lt;/b&gt;</code></p>')
+    })
+
+    it('should be idempotent for a code block', async () => {
+      const value = '&lt;pre&gt;&lt;code&gt;&lt;div&gt;hi&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;'
+      const once = await transform(value)
+      const twice = await transform(once)
+
+      expect(twice).toBe(once)
     })
   })
 
