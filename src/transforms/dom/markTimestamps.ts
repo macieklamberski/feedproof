@@ -9,9 +9,13 @@ const timestampIgnoreTags = new Set(['a', 'pre', 'code', 'kbd', 'samp', 'var', '
 // Anchoring to a boundary avoids turning incidental "12:30" mentions in the
 // middle of prose into markers.
 const timestampToken = '(?:\\d{1,2}:)?\\d{1,2}:\\d{2}'
+// The token is captured in one of two groups: at a line start (optional whitespace
+// prefix consumed ahead of it) or before a line end (trailing whitespace in a zero-width
+// lookahead). The prefix is consumed, not matched in a variable-length lookbehind, so a
+// long whitespace run is scanned once rather than re-scanned per position.
 const lineBoundaryTimestampRegex = new RegExp(
-  `(?<=(?:^|\\n)[ \\t]*)${timestampToken}|${timestampToken}(?=[ \\t]*(?:\\n|$))`,
-  'gm',
+  `(?:^|\\n)[ \\t]*(${timestampToken})|(${timestampToken})(?=[ \\t]*(?:\\n|$))`,
+  'g',
 )
 
 const numericPartRegex = /^\d+$/
@@ -54,12 +58,28 @@ const shouldSkipElement = (element: Element): boolean => {
   )
 }
 
-const collectTextNodes = (node: Node, result: Array<Node> = []): Array<Node> => {
-  for (const child of node.childNodes) {
-    if (isText(child)) {
-      result.push(child)
-    } else if (isElement(child) && !shouldSkipElement(child)) {
-      collectTextNodes(child, result)
+// Iterative depth-first walk (an explicit stack rather than recursion) so a deeply
+// nested document can't overflow the call stack. Children are pushed in reverse so
+// they pop in document order. A skippable element prunes its whole subtree.
+const collectTextNodes = (root: Node): Array<Node> => {
+  const result: Array<Node> = []
+  const stack: Array<Node> = [root]
+
+  while (stack.length > 0) {
+    const node = stack.pop() as Node
+
+    if (isText(node)) {
+      result.push(node)
+      continue
+    }
+
+    if (isElement(node) && shouldSkipElement(node)) {
+      continue
+    }
+
+    const children = node.childNodes
+    for (let index = children.length - 1; index >= 0; index--) {
+      stack.push(children[index])
     }
   }
 
@@ -90,14 +110,21 @@ export const markTimestamps: DomTransform = () => {
       let lastIndex = 0
 
       for (const match of text.matchAll(lineBoundaryTimestampRegex)) {
-        const token = match[0]
+        const token = match[1] ?? match[2]
+
+        if (!token) {
+          continue
+        }
+
         const seconds = parseTimestampSeconds(token)
 
         if (seconds === undefined) {
           continue
         }
 
-        const tokenStart = match.index ?? 0
+        // The line-start branch consumes a whitespace prefix, so the token sits at
+        // the end of the overall match; derive its offset from the match end.
+        const tokenStart = (match.index ?? 0) + match[0].length - token.length
 
         if (tokenStart > lastIndex) {
           parts.push(document.createTextNode(text.slice(lastIndex, tokenStart)))
