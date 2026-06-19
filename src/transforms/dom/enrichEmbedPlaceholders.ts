@@ -1,5 +1,5 @@
 import { updateEmbedPlaceholder } from '../../common.js'
-import type { DomTransform, EmbedResolverResult } from '../../types.js'
+import type { DomTransform } from '../../types.js'
 
 export const enrichEmbedPlaceholders: DomTransform = (context) => {
   const enrichEmbedFn = context.enrichEmbedFn
@@ -26,12 +26,7 @@ export const enrichEmbedPlaceholders: DomTransform = (context) => {
       }
     }
 
-    let enriched: Map<string, Partial<EmbedResolverResult>>
-    try {
-      enriched = await enrichEmbedFn(embeds)
-    } catch {
-      return
-    }
+    const enriched = await enrichEmbedFn(embeds)
 
     for (let i = 0; i < count; i++) {
       const embed = embeds[i]

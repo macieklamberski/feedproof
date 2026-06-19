@@ -92,14 +92,13 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     expect(result).not.toContain('Enrichment Title')
   })
 
-  it('should swallow exceptions thrown by enrichEmbedFn', async () => {
+  it('should propagate an exception thrown by enrichEmbedFn', async () => {
     const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
     const fn: EnrichEmbedFn = () => {
       throw new Error('boom')
     }
-    const result = await transform(value, withFn(fn))
 
-    expect(result).toBe(value)
+    await expect(transform(value, withFn(fn))).rejects.toThrow('boom')
   })
 
   it('should silently skip placeholders missing from the returned map', async () => {

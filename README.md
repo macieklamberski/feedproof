@@ -109,6 +109,8 @@ const result = transformContent(html, {
 })
 ```
 
+All caller-provided functions (`parseHtmlFn`, `resolveUrlFn`, `cleanUrlFn`, `assetProxyFn`, `isSafeUrlFn`, `enrichEmbedFn`, `highlightFn`, and resolver extracts) must not throw — an exception is not caught and rejects the `transformContent` promise.
+
 Code blocks are highlighted only when they declare a language (`language-*` class, `data-language`, Pandoc/Rouge/Expressive Code/etc.); unlabeled blocks are left plain rather than guessed at. The default highlighter is highlight.js (exported as `defaultHighlightFn` / `hljsHighlightFn`); replace it with `highlightFn`.
 
 The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. Every transform is also exported individually from `feedsweep`, so you can compose any pipeline — list them explicitly to build from scratch, or spread `defaultDomTransforms` (etc.) from `feedsweep/defaults` to extend or filter the defaults.
