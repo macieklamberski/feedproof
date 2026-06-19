@@ -54,7 +54,11 @@ const neutralizeSrcset = (element: Element, isSafeUrlFn: IsSafeUrlFn | undefined
   element.setAttribute('srcset', safe.length > 0 ? stringifySrcset(safe) : sentinels.media)
 }
 
-const linkSelector = 'a[href]'
+const linkAttributeSelectors: Array<[string, string]> = [
+  ['a[href]', 'href'],
+  ['[data-embed-url]', 'data-embed-url'],
+  ['[data-bookmark-url]', 'data-bookmark-url'],
+]
 const mediaAttributeSelectors: Array<[string, string]> = [
   ['img[src]', 'src'],
   ['video[src]', 'src'],
@@ -79,8 +83,10 @@ const srcsetSelector = 'img[srcset], source[srcset]'
 // resolved and embeds/bookmarks are placeholdered, and before proxyAssetUrls.
 export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
   return (document) => {
-    for (const element of document.querySelectorAll(linkSelector)) {
-      neutralizeAttribute(element, 'href', 'link', isSafeUrlFn)
+    for (const [selector, attribute] of linkAttributeSelectors) {
+      for (const element of document.querySelectorAll(selector)) {
+        neutralizeAttribute(element, attribute, 'link', isSafeUrlFn)
+      }
     }
 
     for (const [selector, attribute] of mediaAttributeSelectors) {
