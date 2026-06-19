@@ -398,6 +398,16 @@ describeForEachParser('getElementDimensions', (parseHtml) => {
     expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
   })
 
+  it('should not backtrack quadratically on a long invalid numeric style value', () => {
+    // A long digit run followed by a non-terminator made the old `[0-9]*\.?[0-9]+`
+    // form take seconds; this completes instantly and matches nothing.
+    const value = `width:${'9'.repeat(50000)}${'a'.repeat(50000)}`
+    const document = parseHtml(`<img style="${value}">`)
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
+  })
+
   it('should extract the correct property from multi-property style', () => {
     const document = parseHtml('<img style="color: red; width: 10px; height: 20px">')
     const image = queryElement(document, 'img')
