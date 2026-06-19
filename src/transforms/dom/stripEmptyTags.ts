@@ -1,8 +1,8 @@
 import { isBlockElement, isElement, isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-// Block members whose removal would break table layout / definition-list pairs;
-// these keep the collapse-to-space behaviour instead of being dropped.
+// Structural cells and definition terms whose slot must survive even when empty,
+// so table columns and definition-list pairs stay aligned. Never dropped or collapsed.
 const structuralTags = new Set(['td', 'th', 'tr', 'dt', 'dd'])
 
 const preserveWhenEmpty = new Set([
@@ -61,6 +61,12 @@ export const stripEmptyTags: DomTransform = () => {
         continue
       }
 
+      // Structural cells/terms keep their slot even when empty, so table columns
+      // and definition-list pairs stay aligned.
+      if (structuralTags.has(tagName)) {
+        continue
+      }
+
       const childNodes = element.childNodes
       const childCount = childNodes.length
       let hasContent = false
@@ -85,7 +91,7 @@ export const stripEmptyTags: DomTransform = () => {
 
       if (childCount === 0) {
         element.remove()
-      } else if (isBlockElement(element) && !structuralTags.has(tagName)) {
+      } else if (isBlockElement(element)) {
         element.remove()
       } else {
         element.replaceWith(' ')
