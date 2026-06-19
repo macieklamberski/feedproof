@@ -53,24 +53,41 @@ const urlPairRegex = /(?:^|[/_=-])(\d{2,5})x(\d{2,5})(?=[._\-&)?]|$)/gi
 const urlQueryWidthRegex = /[?&](?:w|width)=(\d{2,5})\b/i
 const urlQueryHeightRegex = /[?&](?:h|height)=(\d{2,5})\b/i
 
+// The largest-area WxH pair in the URL. A rendition URL can carry several
+// (`photo_1920x1080_thumb_150x150.jpg`); the intrinsic size is the biggest one, not the
+// last — a thumbnail token often sits after the full-size dimensions.
+const largestDimensionPair = (src: string): { width: number; height: number } | undefined => {
+  let largest: { width: number; height: number } | undefined
+
+  for (const match of src.matchAll(urlPairRegex)) {
+    const width = Number(match[1])
+    const height = Number(match[2])
+
+    if (!largest || width * height > largest.width * largest.height) {
+      largest = { width, height }
+    }
+  }
+
+  return largest
+}
+
 const urlDimensions = (src: string | null): { width: number; height: number } | undefined => {
   if (!src || src.startsWith('data:')) {
     return
   }
 
-  // Explicit w/h query params win; otherwise the last WxH pair in the path or
-  // filename (the rendition size sits after any path digits).
-  let width = Number(urlQueryWidthRegex.exec(src)?.[1])
-  let height = Number(urlQueryHeightRegex.exec(src)?.[1])
+  // Explicit w/h query params win.
+  const queryWidth = Number(urlQueryWidthRegex.exec(src)?.[1])
+  const queryHeight = Number(urlQueryHeightRegex.exec(src)?.[1])
 
-  if (!(width > pixelDimensionLimit && height > pixelDimensionLimit)) {
-    const pair = [...src.matchAll(urlPairRegex)].at(-1)
-    width = Number(pair?.[1])
-    height = Number(pair?.[2])
+  if (queryWidth > pixelDimensionLimit && queryHeight > pixelDimensionLimit) {
+    return { width: queryWidth, height: queryHeight }
   }
 
-  if (width > pixelDimensionLimit && height > pixelDimensionLimit) {
-    return { width, height }
+  const pair = largestDimensionPair(src)
+
+  if (pair && pair.width > pixelDimensionLimit && pair.height > pixelDimensionLimit) {
+    return pair
   }
 }
 

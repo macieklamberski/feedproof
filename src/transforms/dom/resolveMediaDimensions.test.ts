@@ -185,6 +185,14 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
+    it('should pick the largest pair when the URL carries a thumbnail token too', async () => {
+      const value = '<img src="https://example.com/photo_1920x1080_thumb_150x150.jpg">'
+      const expected =
+        '<img src="https://example.com/photo_1920x1080_thumb_150x150.jpg" width="1920" height="1080">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
     it('should prefer own style dimensions over the URL', async () => {
       const value =
         '<img src="https://example.com/photo-800x600.jpg" style="width:300px;height:200px">'
