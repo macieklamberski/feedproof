@@ -26,10 +26,14 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
     expect(await transform('<h3></h3>')).toBe('')
   })
 
-  it('should strip empty table elements', async () => {
+  it('should strip an empty table', async () => {
     expect(await transform('<table></table>')).toBe('')
-    expect(await transform('<tr></tr>')).toBe('')
-    expect(await transform('<td></td>')).toBe('')
+  })
+
+  it('should keep an empty cell so table columns stay aligned', async () => {
+    const value = '<table><tbody><tr><td></td><td>x</td></tr></tbody></table>'
+
+    expect(await transform(value)).toBe(value)
   })
 
   it('should remove whitespace-only block elements', async () => {
@@ -54,39 +58,34 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
     expect(await transform('a<span> </span>b')).toBe('a b')
   })
 
-  it('should not drop whitespace-only table cells', async () => {
+  it('should keep a whitespace-only table cell', async () => {
     const value = '<table><tbody><tr><td>   </td><td>x</td></tr></tbody></table>'
-    const expected = '<table><tbody><tr> <td>x</td></tr></tbody></table>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toBe(value)
   })
 
-  it('should collapse whitespace-only table header cells to a space', async () => {
+  it('should keep a whitespace-only table header cell', async () => {
     const value = '<table><tbody><tr><th>   </th><td>x</td></tr></tbody></table>'
-    const expected = '<table><tbody><tr> <td>x</td></tr></tbody></table>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toBe(value)
   })
 
-  it('should collapse whitespace-only table rows to a space', async () => {
+  it('should keep a whitespace-only table row', async () => {
     const value = '<table><tbody><tr>   </tr><tr><td>x</td></tr></tbody></table>'
-    const expected = '<table><tbody> <tr><td>x</td></tr></tbody></table>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toBe(value)
   })
 
-  it('should collapse whitespace-only definition terms to a space', async () => {
+  it('should keep a whitespace-only definition term', async () => {
     const value = '<dl><dt>   </dt><dd>Definition</dd></dl>'
-    const expected = '<dl> <dd>Definition</dd></dl>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toBe(value)
   })
 
-  it('should collapse whitespace-only definition descriptions to a space', async () => {
+  it('should keep a whitespace-only definition description', async () => {
     const value = '<dl><dt>Term</dt><dd>   </dd></dl>'
-    const expected = '<dl><dt>Term</dt> </dl>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should strip tags with attributes but no content', async () => {
