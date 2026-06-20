@@ -42,6 +42,7 @@ import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 import { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 import { unwrapHeadingBold } from './transforms/dom/unwrapHeadingBold.js'
+import { unwrapNestedCodeWrappers } from './transforms/dom/unwrapNestedCodeWrappers.js'
 import { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 import { wrapBareInlineInParagraphs } from './transforms/dom/wrapBareInlineInParagraphs.js'
 import { wrapTablesForScroll } from './transforms/dom/wrapTablesForScroll.js'
@@ -104,6 +105,10 @@ export const defaultDomTransforms: Array<DomTransform> = [
   // and Eleventy feeds separate code lines with <br> instead of \n; without this they
   // highlight as a single line and adjacent blocks get wrongly merged.
   replacePreLineBreaks,
+  // Runs before highlightCode so it sees a single code block: a redundant <code> nested in
+  // a <code> (or <pre> in <pre>) from the source would otherwise survive and compound the
+  // reader's relative code font-size, shrinking the text.
+  unwrapNestedCodeWrappers,
   // Runs before wrapBareInlineInParagraphs so a promoted standalone code block is a
   // <pre> (block) by the time bare inline runs are wrapped, avoiding a <pre> nested
   // inside a <p>.
