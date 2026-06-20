@@ -1,4 +1,4 @@
-import { isElement, isText } from '../../common.js'
+import { collectTextNodes } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 const timestampIgnoreTags = new Set(['a', 'pre', 'code', 'kbd', 'samp', 'var', 'script', 'style'])
@@ -58,34 +58,6 @@ const shouldSkipElement = (element: Element): boolean => {
   )
 }
 
-// Iterative depth-first walk (an explicit stack rather than recursion) so a deeply
-// nested document can't overflow the call stack. Children are pushed in reverse so
-// they pop in document order. A skippable element prunes its whole subtree.
-const collectTextNodes = (root: Node): Array<Node> => {
-  const result: Array<Node> = []
-  const stack: Array<Node> = [root]
-
-  while (stack.length > 0) {
-    const node = stack.pop() as Node
-
-    if (isText(node)) {
-      result.push(node)
-      continue
-    }
-
-    if (isElement(node) && shouldSkipElement(node)) {
-      continue
-    }
-
-    const children = node.childNodes
-    for (let index = children.length - 1; index >= 0; index--) {
-      stack.push(children[index])
-    }
-  }
-
-  return result
-}
-
 // Wraps line-boundary YouTube-style timestamps (e.g. "01:21 - Title" or
 // "Title - 01:21") in a span carrying the time in seconds, so the reader can
 // later seek a player to that point. The visible text is left as-is; only the
@@ -94,7 +66,7 @@ export const markTimestamps: DomTransform = () => {
   return (document) => {
     // Walk from document (not documentElement) so linkedom fragment siblings are
     // reachable. documentElement only points to the first root-level element.
-    const textNodes = collectTextNodes(document) as Array<ChildNode>
+    const textNodes = collectTextNodes(document, shouldSkipElement) as Array<ChildNode>
 
     for (const node of textNodes) {
       const text = node.textContent
