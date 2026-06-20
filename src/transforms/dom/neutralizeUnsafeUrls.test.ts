@@ -40,6 +40,14 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
       expect(await transform(value)).toBe('<a href="#unsafe-link">x</a>')
     })
 
+    it('should see through a leading C0 control byte that \\s does not match', async () => {
+      // A leading \x01 survives HTML parsing and a browser strips it before reading the
+      // scheme, so `\x01javascript:` runs — but \s never matched it.
+      const value = '<a href="\x01javascript:alert(1)">x</a>'
+
+      expect(await transform(value)).toBe('<a href="#unsafe-link">x</a>')
+    })
+
     it('should match the scheme case-insensitively', async () => {
       const value = '<a href="JaVaScRiPt:alert(1)">x</a>'
 
