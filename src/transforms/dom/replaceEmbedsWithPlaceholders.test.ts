@@ -223,6 +223,18 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
     expect(result).toContain('data-embed-height="360"')
   })
 
+  it('should wrap every generic iframe when several are adjacent', async () => {
+    const value = html`
+      <iframe src="https://a-site.com/1"></iframe>
+      <iframe src="https://b-site.com/2"></iframe>
+      <iframe src="https://c-site.com/3"></iframe>
+    `
+    const result = await transform(value)
+
+    expect(result).not.toContain('<iframe')
+    expect(result.match(/data-embed-src=/g)).toHaveLength(3)
+  })
+
   it('should include fallback link when wrapping unknown iframe', async () => {
     const value = '<iframe src="https://unknown-site.com/123"></iframe>'
     const result = await transform(value)

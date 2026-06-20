@@ -27,7 +27,9 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
   const { embedResolvers, resolveUrlFn, baseUrl } = context
 
   return async (document) => {
-    const iframeSnapshot = document.getElementsByTagName('iframe') as unknown as Array<Element>
+    // A static snapshot: the fallback loop below replaces iframes, and a live
+    // getElementsByTagName collection would shrink mid-iteration and skip elements.
+    const iframeSnapshot = Array.from(document.getElementsByTagName('iframe'))
     const hasIframes = iframeSnapshot.length > 0
 
     for (const resolver of embedResolvers) {
