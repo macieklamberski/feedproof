@@ -1,24 +1,12 @@
 import { find as linkifyFind } from 'linkifyjs'
-import { isElement, isText } from '../../common.js'
+import { collectTextNodes } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 const urlProtocolRegex = /^https?:\/\//i
 const linkifyIgnoreTags = new Set(['a', 'pre', 'code', 'kbd', 'samp', 'var', 'script', 'style'])
 
-const collectTextNodes = (node: Node, result: Array<Node> = []): Array<Node> => {
-  if (isElement(node) && linkifyIgnoreTags.has(node.tagName.toLowerCase())) {
-    return result
-  }
-
-  for (const child of node.childNodes) {
-    if (isText(child)) {
-      result.push(child)
-    } else if (isElement(child) && !linkifyIgnoreTags.has(child.tagName.toLowerCase())) {
-      collectTextNodes(child, result)
-    }
-  }
-
-  return result
+const shouldSkipElement = (element: Element): boolean => {
+  return linkifyIgnoreTags.has(element.tagName.toLowerCase())
 }
 
 // Walks text nodes in the already-parsed DOM and wraps bare URLs in <a> tags.
@@ -29,7 +17,7 @@ export const linkifyUrls: DomTransform = () => {
   return (document) => {
     // Walk from document (not documentElement) so linkedom fragment siblings are
     // reachable. documentElement only points to the first root-level element.
-    const textNodes = collectTextNodes(document) as Array<ChildNode>
+    const textNodes = collectTextNodes(document, shouldSkipElement) as Array<ChildNode>
 
     for (const node of textNodes) {
       const text = node.textContent

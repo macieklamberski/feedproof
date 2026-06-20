@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { parseHTML } from 'linkedom'
 import { applyDomTransforms } from '../../common.js'
+import { parseHtml } from '../../parsers/linkedom.js'
 import { baseContext, describeForEachParser, queryElement } from '../../tests.js'
 import type { HighlightFn, TransformContext } from '../../types.js'
 import { detectLanguage, highlightCode } from './highlightCode.js'
@@ -1032,5 +1033,16 @@ describeForEachParser('highlightCode', (parseHtml) => {
       expect(result).toContain('<code class="hljs">')
       expect(result).not.toContain('<pre class="hljs"')
     })
+  })
+})
+
+// linkedom only: jsdom's serializer is itself superlinear in nesting depth, so it
+// can't round-trip a document this deep regardless of the transform.
+describe('highlightCode with deep nesting', () => {
+  it('should not overflow the stack on a deeply nested code block', async () => {
+    const value = `<pre><code class="language-javascript">${'<span>'.repeat(40000)}const x = 1${'</span>'.repeat(40000)}</code></pre>`
+    const result = await applyDomTransforms(parseHtml(value), [highlightCode(baseContext)])
+
+    expect(result).toContain('hljs')
   })
 })

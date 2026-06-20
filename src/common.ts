@@ -99,6 +99,39 @@ export const isBlockElement = (node: Node): boolean => {
   return isElement(node) && blockElements.has(node.localName)
 }
 
+// Collects a subtree's text nodes via an iterative depth-first walk (an explicit stack
+// rather than recursion) so a deeply nested document can't overflow the call stack.
+// Children are pushed in reverse so they pop in document order. An element for which
+// shouldPruneElement returns true prunes its whole subtree.
+export const collectTextNodes = (
+  root: Node,
+  shouldPruneElement: (element: Element) => boolean,
+): Array<Node> => {
+  const result: Array<Node> = []
+  const stack: Array<Node> = [root]
+
+  while (stack.length > 0) {
+    const node = stack.pop() as Node
+
+    if (isText(node)) {
+      result.push(node)
+      continue
+    }
+
+    if (isElement(node) && shouldPruneElement(node)) {
+      continue
+    }
+
+    const children = node.childNodes
+
+    for (let index = children.length - 1; index >= 0; index--) {
+      stack.push(children[index])
+    }
+  }
+
+  return result
+}
+
 // JSON shape + parseability predicates. Candidates to move to the shared toolbox
 // package later (the same helpers live in other projects).
 const jsonObjectStartRegex = /^\s*\{/

@@ -1,5 +1,6 @@
-import { expect, it } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
+import { parseHtml } from '../../parsers/linkedom.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { linkifyUrls } from './linkifyUrls.js'
@@ -173,5 +174,16 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
     const twice = await transform(once)
 
     expect(twice).toBe(once)
+  })
+})
+
+// linkedom only: jsdom's serializer is itself superlinear in nesting depth, so it
+// can't round-trip a document this deep regardless of the transform.
+describe('linkifyUrls with deep nesting', () => {
+  it('should not overflow the stack on a deeply nested document', async () => {
+    const value = `${'<div>'.repeat(40000)}visit https://example.com${'</div>'.repeat(40000)}`
+    const result = await applyDomTransforms(parseHtml(value), [linkifyUrls(baseContext)])
+
+    expect(result).toContain('<a href="https://example.com">')
   })
 })

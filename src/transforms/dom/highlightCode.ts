@@ -206,26 +206,34 @@ const blockLineWrappers = new Set(['div', 'p', 'li', 'tr'])
 const getCodeBlockText = (target: Element): string => {
   let text = ''
 
-  const walk = (node: Node): void => {
-    for (let child = node.firstChild; child; child = child.nextSibling) {
-      if (isText(child)) {
-        text += child.nodeValue ?? ''
-        continue
-      }
+  // Iterative pre-order walk (explicit stack, not recursion) so a deeply nested code
+  // block can't overflow the call stack. Children are pushed in reverse so they pop in
+  // document order; a block wrapper is visited before its children, matching the
+  // recursive order in which the leading newline was inserted.
+  const stack: Array<Node> = [target]
 
-      if (!isElement(child)) {
-        continue
-      }
+  while (stack.length > 0) {
+    const node = stack.pop() as Node
 
-      if (blockLineWrappers.has(child.localName) && text && !text.endsWith('\n')) {
-        text += '\n'
-      }
+    if (isText(node)) {
+      text += node.nodeValue ?? ''
+      continue
+    }
 
-      walk(child)
+    if (!isElement(node)) {
+      continue
+    }
+
+    if (node !== target && blockLineWrappers.has(node.localName) && text && !text.endsWith('\n')) {
+      text += '\n'
+    }
+
+    const children = node.childNodes
+
+    for (let index = children.length - 1; index >= 0; index--) {
+      stack.push(children[index])
     }
   }
-
-  walk(target)
 
   return text
 }
