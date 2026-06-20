@@ -50,11 +50,17 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
     expect(await transform('<p>&nbsp;</p>')).toBe('')
   })
 
-  it('should collapse whitespace-only inline elements to a space', async () => {
-    expect(await transform('<span>\u00A0</span>')).toBe(' ')
+  it('should preserve a whitespace-only inline element verbatim', async () => {
+    expect(await transform('<span>   </span>')).toBe('   ')
   })
 
-  it('should preserve inline word boundaries via the collapsed space', async () => {
+  it('should preserve significant indentation inside pre', async () => {
+    const value = '<pre><span>    </span><span>x</span></pre>'
+
+    expect(await transform(value)).toBe('<pre>    <span>x</span></pre>')
+  })
+
+  it('should preserve inline word boundaries', async () => {
     expect(await transform('a<span> </span>b')).toBe('a b')
   })
 

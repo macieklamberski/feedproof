@@ -29,8 +29,10 @@ const preserveWhenEmpty = new Set([
 
 // Removes elements with no non-whitespace text and no element children. A
 // whitespace-only block (e.g. a `<div>&nbsp;</div>` spacer) is removed; a
-// whitespace-only inline element collapses to a single space so word boundaries
-// survive. Reverse iteration handles nested empties in one pass.
+// whitespace-only inline element is unwrapped to its own whitespace, so a word
+// boundary survives in normal flow (the browser collapses it) while significant
+// indentation inside <pre> (e.g. a Pygments `<span class="w">    </span>` token)
+// is preserved. Reverse iteration handles nested empties in one pass.
 export const stripEmptyTags: DomTransform = () => {
   return (document) => {
     const all = document.body.querySelectorAll('*')
@@ -94,7 +96,8 @@ export const stripEmptyTags: DomTransform = () => {
       } else if (isBlockElement(element)) {
         element.remove()
       } else {
-        element.replaceWith(' ')
+        const whitespace = element.textContent ?? ''
+        element.replaceWith(whitespace === '' ? ' ' : whitespace)
       }
     }
   }
