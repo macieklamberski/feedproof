@@ -282,8 +282,27 @@ const stripCodeGutters = (document: Document): void => {
       .sort((a, b) => (b.textContent?.length ?? 0) - (a.textContent?.length ?? 0))[0]
 
     if (codePre) {
-      codePre.setAttribute('data-pre-numbered', '')
-      table.replaceWith(codePre)
+      // Rouge and similar wrap the gutter table inside the block's own <pre><code>.
+      // Replacing the table with the code column's <pre> would nest a <pre> inside that
+      // <code>. When such an outer <pre> exists, keep it as the block: move the code
+      // column's content in place of the table and mark the outer <pre> as numbered.
+      const wrapperPre = table.closest('pre')
+
+      if (wrapperPre) {
+        wrapperPre.setAttribute('data-pre-numbered', '')
+        const codeColumn = codePre.querySelector('code') ?? codePre
+        // Keep the code column's language when the surviving block declares none, so a
+        // language that lives only on the code column (not on the wrapper) is not lost.
+        const languageTarget = table.closest('code') ?? wrapperPre
+        const columnLanguage = codeColumn.className.match(languageRegex)?.[0]
+        if (columnLanguage && !languageRegex.test(languageTarget.className)) {
+          languageTarget.classList.add(columnLanguage)
+        }
+        table.replaceWith(...codeColumn.childNodes)
+      } else {
+        codePre.setAttribute('data-pre-numbered', '')
+        table.replaceWith(codePre)
+      }
     }
   }
 

@@ -6,6 +6,7 @@ import type { HighlightFn, TransformContext } from '../../types.js'
 import { detectLanguage, highlightCode } from './highlightCode.js'
 
 const lineBreakBeforeConstRegex = /;\s*\n\s*<span class="hljs-keyword">const/
+const nestedPreInCodeRegex = /<code[^>]*><pre/
 
 describe('detectLanguage', () => {
   const createElement = (html: string): { pre: Element; code: Element | null } => {
@@ -409,6 +410,27 @@ describeForEachParser('highlightCode', (parseHtml) => {
       expect(result).not.toContain('class="lineno"')
       expect(result).toContain('data-pre-language="ruby"')
       expect(result).toContain('data-pre-numbered=""')
+    })
+
+    it('should not nest a pre when the gutter table is inside the block pre/code', async () => {
+      const value =
+        '<figure class="highlight"><pre><code class="language-ruby"><table><tbody><tr><td class="gutter"><pre class="lineno">1\n2</pre></td><td class="code"><pre>puts 1\nputs 2</pre></td></tr></tbody></table></code></pre></figure>'
+      const result = await transform(value)
+
+      expect(result).not.toMatch(nestedPreInCodeRegex)
+      expect(result).not.toContain('class="lineno"')
+      expect(result).toContain('data-pre-numbered=""')
+      expect(result).toContain('data-pre-language="ruby"')
+    })
+
+    it('should keep the code column language when the wrapper declares none', async () => {
+      const value =
+        '<figure class="highlight"><pre><code><table><tbody><tr><td class="gutter"><pre class="lineno">1\n2</pre></td><td class="code"><pre><code class="language-ruby">puts 1\nputs 2</code></pre></td></tr></tbody></table></code></pre></figure>'
+      const result = await transform(value)
+
+      expect(result).not.toMatch(nestedPreInCodeRegex)
+      expect(result).toContain('data-pre-numbered=""')
+      expect(result).toContain('data-pre-language="ruby"')
     })
 
     it('should drop a Pygments highlighttable gutter', async () => {
