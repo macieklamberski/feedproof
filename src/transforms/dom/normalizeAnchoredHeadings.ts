@@ -59,7 +59,7 @@ const slugify = (value: string): string => {
 // Headings carry in-page permalinks ("anchors") in many shapes: the whole
 // heading wrapped in a `#fragment` link, a trailing `#`/`¶` glyph, a generator's
 // empty `headerlink`/`hash-link` anchor, a bare `<a name>`/`<a id>` scroll target,
-// and so on. This collapses every shape to
+// a plain `id` on the heading itself, and so on. This collapses every shape to
 // one canonical affordance: plain heading text plus a single empty, self-referential
 // anchor (`<a id="fragment" href="#fragment">`) as the heading's first child — the
 // fragment rides on the anchor's `id` (the scroll target), so the reader can paint a
@@ -181,8 +181,15 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
         }
       }
 
+      // No anchor contributed a permalink, but a bare `id` sitting directly on the
+      // heading is itself a scroll target — promote it to the same canonical anchor so
+      // every heading id renders one consistent affordance.
       if (permalinkFragment === null) {
-        continue
+        if (!headingId) {
+          continue
+        }
+
+        permalinkFragment = headingId
       }
 
       // The id rides on the anchor, not the heading, so the empty anchor survives
