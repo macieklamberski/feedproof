@@ -105,11 +105,18 @@ const createNativeMediaElement = (
   return element
 }
 
-const createImageElement = (
+// Image enclosure injection is currently disabled. To re-enable, uncomment the
+// call in injectEnclosures' loop below.
+// biome-ignore lint/correctness/noUnusedVariables: kept for easy re-enabling
+const injectImageEnclosure = (
   document: Document,
   enclosure: Enclosure,
   context: TransformContext,
-): HTMLElement => {
+): HTMLElement | undefined => {
+  if (!isImageEnclosure(enclosure)) {
+    return
+  }
+
   const element = document.createElement('img')
   const src = resolveOrKeepUrl(enclosure.url, context.resolveUrlFn, context.baseUrl)
   element.setAttribute('src', src)
@@ -176,13 +183,14 @@ export const injectEnclosures: DomTransform = (context) => {
       if (isVideoEnclosure(enclosure)) {
         created.push(createNativeMediaElement(document, 'video', enclosure, context))
         existingUrls.add(normalizedUrl)
-        continue
       }
 
-      if (isImageEnclosure(enclosure)) {
-        created.push(createImageElement(document, enclosure, context))
-        existingUrls.add(normalizedUrl)
-      }
+      // Image enclosure injection is disabled for now; uncomment to re-enable.
+      // const imageElement = injectImageEnclosure(document, enclosure, context)
+      // if (imageElement) {
+      //   created.push(imageElement)
+      //   existingUrls.add(normalizedUrl)
+      // }
     }
 
     // Prepend ahead of the existing content while preserving enclosure order; a
