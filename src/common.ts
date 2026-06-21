@@ -1,4 +1,3 @@
-import { resolveUrl, upgradeProtocol } from 'feedcanon'
 import type {
   BookmarkResolverResult,
   EmbedResolverResult,
@@ -12,12 +11,6 @@ export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
 
 // NodeFilter is not globally available in Bun; mirror the DOM-spec constants.
 export const NodeFilter = { SHOW_ELEMENT: 0x1, SHOW_TEXT: 0x4, SHOW_COMMENT: 0x80 } as const
-
-const safeThumbnailDataUrlRegex = /^data:image\/(png|jpe?g|gif|webp|avif);/i
-
-export const isSafeThumbnailUrl = (url: string): boolean => {
-  return resolveUrl(url) !== undefined || safeThumbnailDataUrlRegex.test(url)
-}
 
 export const applyDomTransforms = async (
   document: Document,
@@ -106,6 +99,39 @@ export const isBlockElement = (node: Node): boolean => {
   return isElement(node) && blockElements.has(node.localName)
 }
 
+// Collects a subtree's text nodes via an iterative depth-first walk (an explicit stack
+// rather than recursion) so a deeply nested document can't overflow the call stack.
+// Children are pushed in reverse so they pop in document order. An element for which
+// shouldPruneElement returns true prunes its whole subtree.
+export const collectTextNodes = (
+  root: Node,
+  shouldPruneElement: (element: Element) => boolean,
+): Array<Node> => {
+  const result: Array<Node> = []
+  const stack: Array<Node> = [root]
+
+  while (stack.length > 0) {
+    const node = stack.pop() as Node
+
+    if (isText(node)) {
+      result.push(node)
+      continue
+    }
+
+    if (isElement(node) && shouldPruneElement(node)) {
+      continue
+    }
+
+    const children = node.childNodes
+
+    for (let index = children.length - 1; index >= 0; index--) {
+      stack.push(children[index])
+    }
+  }
+
+  return result
+}
+
 // JSON shape + parseability predicates. Candidates to move to the shared toolbox
 // package later (the same helpers live in other projects).
 const jsonObjectStartRegex = /^\s*\{/
@@ -147,12 +173,24 @@ export const hasAncestorWithTagName = (node: Node, tagSet: Set<string>, stopAt?:
 }
 
 // Matches `<prop>: <number>[px];` — px is optional, other units (em/rem/%) don't match.
-const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*(?:;|$)/i
-const styleHeightRegex = /(?:^|;)\s*height\s*:\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*(?:;|$)/i
+// The numeric group gives each digit a single parse (`[0-9]+(?:\.[0-9]+)?|\.[0-9]+`, not
+// `[0-9]*\.?[0-9]+`): the ambiguous form backtracks quadratically on a long digit run
+// followed by a non-terminator, which `style` (an unbounded untrusted attribute) can carry.
+const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
+const styleHeightRegex =
+  /(?:^|;)\s*height\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
+
+// An empty or whitespace-only width/height attribute (`width=""`, common in editor output)
+// is not a declared dimension. coerceNumber reads it as 0 (Number('') === 0), which would
+// collapse media to a zero box and read as a tracking pixel; treat it as absent instead.
+const dimensionAttribute = (element: Element, name: string): number | undefined => {
+  const value = element.getAttribute(name)?.trim()
+  return value ? coerceNumber(value) : undefined
+}
 
 export const getElementDimensions = (element: Element): { width?: number; height?: number } => {
-  const width = coerceNumber(element.getAttribute('width'))
-  const height = coerceNumber(element.getAttribute('height'))
+  const width = dimensionAttribute(element, 'width')
+  const height = dimensionAttribute(element, 'height')
 
   if (width !== undefined && height !== undefined) {
     return { width, height }
@@ -262,6 +300,23 @@ export const getWrapperAspectRatio = (
 // won't promote a dimension at or below it.
 export const pixelDimensionLimit = 2
 
+const styleDisplayNoneRegex = /(?:^|;)\s*display\s*:\s*none/i
+const styleVisibilityHiddenRegex = /(?:^|;)\s*visibility\s*:\s*hidden/i
+
+// An element hidden from view: the `hidden` attribute, inline `display:none`, or
+// inline `visibility:hidden`. These are unambiguous. Other "hidden" signals are
+// overloaded and stay with their callers — `opacity:0` is usually a fade-in and
+// `0×0` is the lazy-placeholder convention, both handled in removeTrackingPixels.
+export const isElementHidden = (element: Element): boolean => {
+  if (element.hasAttribute('hidden')) {
+    return true
+  }
+
+  const style = element.getAttribute('style')
+
+  return !!style && (styleDisplayNoneRegex.test(style) || styleVisibilityHiddenRegex.test(style))
+}
+
 export const createPlaceholder = <Type extends object>(
   document: Document,
   type: string,
@@ -278,6 +333,36 @@ export const createPlaceholder = <Type extends object>(
   return element
 }
 
+// Matches any URL that already carries a scheme (the URL-spec scheme grammar) — i.e.
+// already absolute, so resolution must leave it byte-identical. Protocol-relative URLs
+// (`//host/path`) have no scheme and are intentionally not matched, so they resolve to
+// the base URL's scheme. Shared with resolveRelativeUrls so both treat URLs identically.
+export const absoluteUrlRegex = /^[a-z][a-z0-9+.-]*:/i
+
+// Resolves a relative URL against the base URL, keeping the original otherwise —
+// an already-absolute/opaque URL, or a relative one that can't be resolved (no
+// base). Mirrors resolveRelativeUrls' per-URL contract, so placeholder URLs are
+// treated identically to content URLs without normalizing or dropping them.
+// Overloaded so a definite URL returns a string (no undefined fallback needed at the
+// call site); only a possibly-undefined input widens the result. The cast is needed
+// because the body's `string | undefined` doesn't satisfy the string-returning signature.
+type ResolveOrKeepUrl = {
+  (url: string, resolveUrlFn: ResolveUrlFn, baseUrl: string | undefined): string
+  (
+    url: string | undefined,
+    resolveUrlFn: ResolveUrlFn,
+    baseUrl: string | undefined,
+  ): string | undefined
+}
+
+export const resolveOrKeepUrl: ResolveOrKeepUrl = ((url, resolveUrlFn, baseUrl) => {
+  if (!url || absoluteUrlRegex.test(url)) {
+    return url || undefined
+  }
+
+  return resolveUrlFn(url, baseUrl) ?? url
+}) as ResolveOrKeepUrl
+
 // Maps embed metadata to its `data-embed-*` field record. Key order is the
 // attribute write order, so it's kept stable. Shared by embed creation and
 // enrichment so the per-field rules live in one place.
@@ -285,18 +370,17 @@ export const normalizeEmbedFields = (
   metadata: Partial<EmbedResolverResult>,
 ): Record<string, string | undefined> => {
   return {
-    src: metadata.src ? upgradeProtocol(metadata.src) : undefined,
+    src: metadata.src,
     provider: metadata.provider,
     id: metadata.id,
-    url: metadata.url ? upgradeProtocol(metadata.url) : undefined,
-    thumbnail:
-      metadata.thumbnail && isSafeThumbnailUrl(metadata.thumbnail) ? metadata.thumbnail : undefined,
+    url: metadata.url,
+    thumbnail: metadata.thumbnail,
     width: metadata.width ? String(metadata.width) : undefined,
     height: metadata.height ? String(metadata.height) : undefined,
     title: metadata.title,
     description: metadata.description,
     author: metadata.author,
-    avatar: metadata.avatar && isSafeThumbnailUrl(metadata.avatar) ? metadata.avatar : undefined,
+    avatar: metadata.avatar,
     duration: metadata.duration ? String(metadata.duration) : undefined,
   }
 }
@@ -325,7 +409,7 @@ export const createEmbedPlaceholder = (
     normalizeEmbedFields({ ...metadata, src: metadata?.src ?? src }),
   )
 
-  const fallbackUrl = upgradeProtocol(metadata?.url ?? metadata?.src ?? src)
+  const fallbackUrl = metadata?.url ?? metadata?.src ?? src
   const link = document.createElement('a')
   link.setAttribute('href', fallbackUrl)
   link.textContent = fallbackUrl
@@ -339,19 +423,18 @@ export const createBookmarkPlaceholder = (
   result: BookmarkResolverResult,
 ): HTMLElement => {
   const { provider, title, url, icon, thumbnail, ...rest } = result
-  const safeUrl = upgradeProtocol(url)
 
   const element = createPlaceholder(document, 'bookmark', {
     provider,
     ...rest,
-    url: safeUrl,
+    url,
     title,
-    icon: icon && isSafeThumbnailUrl(icon) ? upgradeProtocol(icon) : undefined,
-    thumbnail: thumbnail && isSafeThumbnailUrl(thumbnail) ? upgradeProtocol(thumbnail) : undefined,
+    icon,
+    thumbnail,
   })
 
   const link = document.createElement('a')
-  link.setAttribute('href', safeUrl)
+  link.setAttribute('href', url)
   link.textContent = title
   element.appendChild(link)
 

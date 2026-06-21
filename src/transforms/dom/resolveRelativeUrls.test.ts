@@ -18,6 +18,17 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  it('should resolve through the configured resolveUrlFn', async () => {
+    const context: TransformContext = {
+      ...baseContext,
+      resolveUrlFn: (url) => `https://custom.test${url}`,
+    }
+    const value = '<a href="/page">link</a>'
+    const expected = '<a href="https://custom.test/page">link</a>'
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
   it('should resolve relative src on images', async () => {
     const value = '<img src="/images/photo.jpg">'
     const expected = '<img src="https://example.com/images/photo.jpg">'
@@ -28,6 +39,13 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
   it('should resolve relative src on video elements', async () => {
     const value = '<video src="/video.mp4"></video>'
     const expected = '<video src="https://example.com/video.mp4"></video>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should resolve relative data on object elements', async () => {
+    const value = '<object data="/player.swf"></object>'
+    const expected = '<object data="https://example.com/player.swf"></object>'
 
     expect(await transform(value)).toEqualHtml(expected)
   })
@@ -66,6 +84,14 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
 
     expect(result).toContain('https://example.com/small.jpg 300w')
     expect(result).toContain('https://example.com/large.jpg 600w')
+  })
+
+  it('should resolve a relative srcset entry following an absolute one with no space', async () => {
+    const value = '<img srcset="https://cdn.com/a.jpg 100w,/rel/b.jpg 200w">'
+    const result = await transform(value)
+
+    expect(result).toContain('https://cdn.com/a.jpg 100w')
+    expect(result).toContain('https://example.com/rel/b.jpg 200w')
   })
 
   it('should resolve srcset entries on source elements', async () => {
@@ -214,6 +240,18 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     expect(result).not.toContain('https://example.com/w_424')
     expect(result).not.toContain('https://example.com/c_limit')
     expect(result).not.toContain('https://example.com/f_webp')
+  })
+
+  it('should resolve a relative href on an svg image', async () => {
+    const result = await transform('<svg><image href="/img.png"></image></svg>')
+
+    expect(result).toContain('https://example.com/img.png')
+  })
+
+  it('should resolve a relative xlink:href on an svg image', async () => {
+    const result = await transform('<svg><image xlink:href="/img.png"></image></svg>')
+
+    expect(result).toContain('https://example.com/img.png')
   })
 
   it('should be idempotent', async () => {

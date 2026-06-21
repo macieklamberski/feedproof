@@ -1,5 +1,31 @@
+import { parseSrcset } from 'srcset'
 import { getElementDimensions, pixelDimensionLimit } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+
+// Largest-width candidate URL in a srcset, so a src-less responsive image can still
+// have its dimensions read from a rendition URL. Falls back to the last candidate when
+// no w-descriptors are present (density-only srcset).
+const widestSrcsetUrl = (srcset: string | null): string | null => {
+  if (!srcset) {
+    return null
+  }
+
+  const entries = parseSrcset(srcset)
+
+  if (entries.length === 0) {
+    return null
+  }
+
+  let widest = entries[entries.length - 1]
+
+  for (const entry of entries) {
+    if ((entry.width ?? 0) > (widest.width ?? 0)) {
+      widest = entry
+    }
+  }
+
+  return widest.url
+}
 
 // Both dimensions, only when each is above the tracking-pixel threshold (a real
 // content image is never that small, and a promoted pixel-sized value would let
@@ -81,6 +107,10 @@ export const resolveMediaDimensions: DomTransform = () => {
 
       if (!dimensions) {
         dimensions = urlDimensions(element.getAttribute('src'))
+      }
+
+      if (!dimensions) {
+        dimensions = urlDimensions(widestSrcsetUrl(element.getAttribute('srcset')))
       }
 
       if (

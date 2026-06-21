@@ -4,16 +4,18 @@ import { transformContent } from './index.js'
 import { describeForEachParser, html } from './tests.js'
 import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 
+const lineBreakAfterBraceRegex = /\{\n\s+/
+
 describeForEachParser('transformContent', (parseHtml) => {
   it('should apply all default transforms', async () => {
     const value = '<div><p>Hello <img data-src="photo.jpg"></p></div>'
-    // unwrapWrappers removes the outer div, fixLazyImages resolves data-src to src, and
-    // resolveRelativeUrls makes it absolute.
-    const expected = '<p>Hello <img src="https://example.com/photo.jpg"></p>'
+    // unwrapWrappers removes the outer div, fixLazyImages resolves data-src to src (keeping
+    // the original attribute), and resolveRelativeUrls makes the src absolute.
+    const expected = '<p>Hello <img data-src="photo.jpg" src="https://example.com/photo.jpg"></p>'
 
     expect(
       await transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com' }),
-    ).toBe(expected)
+    ).toEqualHtml(expected)
   })
 
   it('should resolve relative URLs when baseUrl is provided', async () => {
@@ -62,6 +64,22 @@ describeForEachParser('transformContent', (parseHtml) => {
     const expected = '<pre><code>function greet(name) {\n  return name\n}</code></pre>'
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
+  it('should keep <br>-delimited code lines multi-line and not merge adjacent blocks', async () => {
+    // Prism/Eleventy feeds separate code lines with <br> inside <pre>, not \n.
+    // replacePreLineBreaks must run before highlightCode so the lines survive
+    // highlighting and the two blocks are not collapsed into a single merged pre.
+    const value = [
+      '<pre class="language-html"><code class="language-html"><span class="highlight-line">&lt;div&gt;Hi&lt;/div&gt;</span></code></pre>',
+      '<pre class="language-css"><code class="language-css"><span class="highlight-line">.error {</span><br /><span class="highlight-line">  content: "x";</span><br /><span class="highlight-line">}</span></code></pre>',
+    ].join('\n')
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect((result.match(/<pre /g) ?? []).length).toBe(2)
+    expect(result).toContain('data-pre-label="HTML"')
+    expect(result).toContain('data-pre-label="CSS"')
+    expect(result).toMatch(lineBreakAfterBraceRegex)
   })
 
   it('should clean anchor urls with the provided cleanUrlFn', async () => {
@@ -249,7 +267,7 @@ describeForEachParser('transformContent', (parseHtml) => {
   })
 
   // enrichEmbedPlaceholders is opt-in; default pipeline does not include it.
-  it('should enrich embed placeholders with metadata from enrichEmbedFn when opted in', async () => {
+  it('should enrich embed placeholders with metadata from enrichEmbedFn', async () => {
     const value = html`
       <iframe
         src="https://www.youtube.com/embed/dQw4w9WgXcQ"
@@ -280,7 +298,6 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(
       await transformContent(value, {
         parseHtmlFn: parseHtml,
-        domTransforms: [...defaultDomTransforms, enrichEmbedPlaceholders],
         enrichEmbedFn: (embeds) => {
           return new Map(
             embeds.map(({ provider, id }) => [
@@ -312,17 +329,19 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(
       await transformContent(value, {
         parseHtmlFn: parseHtml,
-        domTransforms: [...defaultDomTransforms, enrichEmbedPlaceholders],
         enrichEmbedFn: () => new Map(),
       }),
     ).toEqualHtml(expected)
   })
 
-  it('should leave embed placeholders unenriched when enrichEmbedPlaceholders is not in the pipeline', async () => {
+  it('should not enrich when enrichEmbedPlaceholders is removed from the pipeline', async () => {
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     let called = false
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
+      domTransforms: defaultDomTransforms.filter(
+        (transform) => transform !== enrichEmbedPlaceholders,
+      ),
       enrichEmbedFn: () => {
         called = true
         return new Map([['youtube:dQw4w9WgXcQ', { title: 'Unused' }]])
@@ -410,7 +429,8 @@ describeForEachParser('transformContent', (parseHtml) => {
     })
 
     expect(result).toContain('src="https://example.com/a-800x600.webp"')
-    expect(result).not.toContain('a.jpg')
+    // The superseded data-src is left in place (fixLazyImages no longer strips it).
+    expect(result).toContain('data-src="https://example.com/a.jpg"')
   })
 
   it('should dimension an image surfaced from a noscript fallback', async () => {

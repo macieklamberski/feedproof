@@ -4,6 +4,7 @@ import { youtubeEmbedResolver } from '../../embeds/youtube.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { Enclosure, TransformContext } from '../../types.js'
 import { injectEnclosures } from './injectEnclosures.js'
+import { neutralizeUnsafeUrls } from './neutralizeUnsafeUrls.js'
 
 const withResolver: TransformContext = {
   ...baseContext,
@@ -305,11 +306,37 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       baseUrl: 'https://example.com',
     }
     const expected = html`
-      <video src="/clip.mp4" controls preload="none"></video>
+      <video src="https://example.com/clip.mp4" controls preload="none"></video>
       <p>Content</p>
     `
 
     expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
+  it('should resolve a relative image enclosure url against the base url', async () => {
+    const context = {
+      ...withEnclosures([{ url: '/photo.jpg', type: 'image/jpeg' }]),
+      baseUrl: 'https://example.com',
+    }
+    const result = await transform('<p>Content</p>', context)
+
+    expect(result).toContain('src="https://example.com/photo.jpg"')
+  })
+
+  it('should resolve a relative poster against the base url', async () => {
+    const context = {
+      ...withEnclosures([
+        {
+          url: 'https://example.com/clip.mp4',
+          type: 'video/mp4',
+          thumbnails: [{ url: '/thumb.jpg' }],
+        },
+      ]),
+      baseUrl: 'https://example.com',
+    }
+    const result = await transform('<p>Content</p>', context)
+
+    expect(result).toContain('poster="https://example.com/thumb.jpg"')
   })
 
   it('should skip a relative enclosure url when baseUrl is missing', async () => {
@@ -371,20 +398,21 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     expect(await transform(value, context)).toEqualHtml(expected)
   })
 
-  it('should skip unsafe poster url', async () => {
+  it('should leave an unsafe poster for neutralizeUnsafeUrls to handle downstream', async () => {
     const value = '<p>Content</p>'
-    const result = await transform(
-      value,
-      withEnclosures([
-        {
-          url: 'https://example.com/clip.mp4',
-          type: 'video/mp4',
-          thumbnails: [{ url: 'javascript:alert(1)' }],
-        },
-      ]),
-    )
+    const context = withEnclosures([
+      {
+        url: 'https://example.com/clip.mp4',
+        type: 'video/mp4',
+        thumbnails: [{ url: 'javascript:alert(1)' }],
+      },
+    ])
+    const result = await applyDomTransforms(parseHtml(value), [
+      injectEnclosures(context),
+      neutralizeUnsafeUrls(context),
+    ])
 
-    expect(result).not.toContain('poster=')
+    expect(result).toContain('poster="about:blank"')
     expect(result).not.toContain('javascript:')
   })
 
@@ -431,5 +459,26 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const twice = await transform(once, withEnclosures(enclosures))
 
     expect(twice).toBe(once)
+  })
+
+  // Untrusted feed data doesn't honor the required-`url` type.
+  it('should skip an enclosure without a url instead of throwing', async () => {
+    const value = '<p>Episode notes</p>'
+    const result = await transform(value, withEnclosures([{ type: 'image/png' } as Enclosure]))
+
+    expect(result).toBe(value)
+  })
+
+  it('should skip a malformed enclosure while still injecting valid ones', async () => {
+    const value = '<p>Episode notes</p>'
+    const result = await transform(
+      value,
+      withEnclosures([
+        { type: 'image/png' } as Enclosure,
+        { url: 'https://example.com/episode.mp3', type: 'audio/mpeg' },
+      ]),
+    )
+
+    expect(result).toContain('src="https://example.com/episode.mp3"')
   })
 })

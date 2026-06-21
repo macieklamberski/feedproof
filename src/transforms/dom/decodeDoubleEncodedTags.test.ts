@@ -1,6 +1,6 @@
-import { expect, it } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
-import { baseContext, describeForEachParser, html } from '../../tests.js'
+import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { decodeDoubleEncodedTags } from './decodeDoubleEncodedTags.js'
 
@@ -9,169 +9,154 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
     return applyDomTransforms(parseHtml(html), [decodeDoubleEncodedTags(context)])
   }
 
-  it('should decode entity-encoded link tags mixed with real HTML', async () => {
-    const value = '<p>Build &lt;a href="/products" target="_blank"&gt;eight products&lt;/a&gt;.</p>'
-    const expected = '<p>Build <a href="/products" target="_blank">eight products</a>.</p>'
+  describe('decodes whole escaped fragments', () => {
+    it('should decode an escaped element that is a real block’s whole content', async () => {
+      const value = '<p>&lt;b&gt;important&lt;/b&gt;</p>'
 
-    expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml('<p><b>important</b></p>')
+    })
+
+    it('should decode a fully escaped body', async () => {
+      const value = '&lt;p&gt;Hello world&lt;/p&gt;'
+
+      expect(await transform(value)).toEqualHtml('<p>Hello world</p>')
+    })
+
+    it('should decode multiple escaped block elements', async () => {
+      const value = '&lt;p&gt;One.&lt;/p&gt;&lt;p&gt;Two.&lt;/p&gt;'
+
+      expect(await transform(value)).toEqualHtml('<p>One.</p><p>Two.</p>')
+    })
+
+    it('should decode an escaped link with attributes and text', async () => {
+      const value = '&lt;p&gt;&lt;a href="https://example.com"&gt;link&lt;/a&gt;&lt;/p&gt;'
+
+      expect(await transform(value)).toEqualHtml('<p><a href="https://example.com">link</a></p>')
+    })
   })
 
-  it('should decode entity-encoded div tags', async () => {
-    const value = '<p>&lt;div class="mx-auto max-w-2xl"&gt;&lt;/div&gt;</p>'
-    const expected = '<p><div class="mx-auto max-w-2xl"></div></p>'
+  describe('leaves ambiguous content as text', () => {
+    it('should not decode an escaped tag embedded in prose', async () => {
+      const value = '<p>Build &lt;a href="/products"&gt;eight products&lt;/a&gt; today.</p>'
 
-    expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should not decode a tag mentioned in a heading', async () => {
+      const value = '<h2>Use &lt;video&gt;</h2>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should not decode a backtick-wrapped tag', async () => {
+      const value = '<p>example: `&lt;img src=picture.png&gt;`</p>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should not decode a lone self-closing tag', async () => {
+      const value = '<p>&lt;br/&gt;</p>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should not decode a stray closing tag', async () => {
+      const value = '<div>&lt;/pre&gt;</div>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should not decode non-HTML markup', async () => {
+      const value =
+        '&lt;dependency&gt;&lt;groupId&gt;org.example&lt;/groupId&gt;&lt;/dependency&gt;'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should not decode an unknown tag name', async () => {
+      const value = '&lt;widget&gt;content&lt;/widget&gt;'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should not decode an angle-bracketed url', async () => {
+      const value = '<p>see &lt;https://example.com/path&gt; for more</p>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should not modify plain text without tags', async () => {
+      const value = 'Just plain text with no tags'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should not modify content with only real HTML tags', async () => {
+      const value = '<p>Build <a href="/products">eight products</a>.</p>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
   })
 
-  it('should decode entity-encoded bold tags', async () => {
-    const value = '<p>&lt;b&gt;important&lt;/b&gt;</p>'
-    const expected = '<p><b>important</b></p>'
+  describe('respects opaque elements', () => {
+    it('should not decode an escaped fragment inside a real code element', async () => {
+      const value = '<code>&lt;p&gt;example&lt;/p&gt;</code>'
 
-    expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should not decode an escaped fragment inside a real pre element', async () => {
+      const value = '<pre>&lt;div&gt;&lt;span&gt;x&lt;/span&gt;&lt;/div&gt;</pre>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should decode outside a code element but not inside it', async () => {
+      const value = '<p>&lt;b&gt;bold&lt;/b&gt;</p><code>&lt;b&gt;code&lt;/b&gt;</code>'
+
+      expect(await transform(value)).toEqualHtml(
+        '<p><b>bold</b></p><code>&lt;b&gt;code&lt;/b&gt;</code>',
+      )
+    })
   })
 
-  it('should decode entity-encoded heading tags', async () => {
-    const value = '<p>&lt;h3&gt;Title&lt;/h3&gt;</p>'
-    const expected = '<p><h3>Title</h3></p>'
+  describe('decodes code blocks but keeps their contents as text', () => {
+    it('should decode an escaped pre>code wrapper and re-escape its contents', async () => {
+      const value =
+        '&lt;pre&gt;&lt;code&gt;&lt;div class="x"&gt;hi&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;'
 
-    expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(
+        '<pre><code>&lt;div class="x"&gt;hi&lt;/div&gt;</code></pre>',
+      )
+    })
+
+    it('should re-escape the contents of an escaped pre without a code child', async () => {
+      const value = '&lt;pre&gt;&lt;span&gt;x&lt;/span&gt;&lt;/pre&gt;'
+
+      expect(await transform(value)).toEqualHtml('<pre>&lt;span&gt;x&lt;/span&gt;</pre>')
+    })
+
+    it('should re-escape the contents of inline code in a fragment', async () => {
+      const value = '&lt;p&gt;use &lt;code&gt;&lt;b&gt;x&lt;/b&gt;&lt;/code&gt;&lt;/p&gt;'
+
+      expect(await transform(value)).toEqualHtml('<p>use <code>&lt;b&gt;x&lt;/b&gt;</code></p>')
+    })
+
+    it('should be idempotent for a code block', async () => {
+      const value = '&lt;pre&gt;&lt;code&gt;&lt;div&gt;hi&lt;/div&gt;&lt;/code&gt;&lt;/pre&gt;'
+      const once = await transform(value)
+      const twice = await transform(once)
+
+      expect(twice).toBe(once)
+    })
   })
 
-  it('should not modify content with only real HTML tags', async () => {
-    const value = '<p>Build <a href="/products">eight products</a>.</p>'
-
-    expect(await transform(value)).toBe(value)
-  })
-
-  it('should not modify content with only entity-encoded tags (no real HTML)', async () => {
-    const value = '&lt;p&gt;Hello world&lt;/p&gt;'
-
-    expect(await transform(value)).toBe(value)
-  })
-
-  it('should not modify plain text without any tags', async () => {
-    const value = 'Just plain text with no tags'
-
-    expect(await transform(value)).toBe(value)
-  })
-
-  it('should handle multiple encoded tags in one line', async () => {
-    const value = html`
-      <li>Visit &lt;a href="https://youtube.com"&gt;YouTube&lt;/a&gt;,
-      &lt;a href="https://x.com"&gt;X&lt;/a&gt;.</li>
-    `
-    const expected =
-      '<li>Visit <a href="https://youtube.com">YouTube</a>, <a href="https://x.com">X</a>.</li>'
-
-    expect(await transform(value)).toBe(expected)
-  })
-
-  it('should handle self-closing encoded tags', async () => {
-    const value = '<p>&lt;br/&gt;</p>'
-    const expected = '<p><br></p>'
-
-    expect(await transform(value)).toBe(expected)
-  })
-
-  it('should handle empty string', async () => {
+  it('should handle an empty string', async () => {
     expect(await transform('')).toBe('')
   })
 
-  it('should not decode entity-encoded tags inside code elements', async () => {
-    const value = '<p>Image is requested by <code>&lt;img&gt;</code> tag.</p>'
-
-    expect(await transform(value)).toBe(value)
-  })
-
-  it('should not decode entity-encoded tags inside pre elements', async () => {
-    const value = '<pre>&lt;div class="wrapper"&gt;&lt;/div&gt;</pre>'
-
-    expect(await transform(value)).toBe(value)
-  })
-
-  it('should not decode entity-encoded tags inside pre>code elements', async () => {
-    const value = '<pre><code>&lt;img src="photo.jpg"&gt;</code></pre>'
-
-    expect(await transform(value)).toBe(value)
-  })
-
-  it('should decode tags outside code but preserve tags inside code', async () => {
-    const value = html`
-      <p>&lt;b&gt;bold&lt;/b&gt;</p>
-      <code>&lt;img&gt;</code>
-    `
-    const expected = html`
-      <p><b>bold</b></p>
-      <code>&lt;img&gt;</code>
-    `
-
-    expect(await transform(value)).toBe(expected)
-  })
-
-  it('should handle multiple code blocks with encoded tags between them', async () => {
-    const value = html`
-      <code>&lt;a&gt;</code>
-      <p>&lt;b&gt;text&lt;/b&gt;</p>
-      <code>&lt;div&gt;</code>
-    `
-    const expected = html`
-      <code>&lt;a&gt;</code>
-      <p><b>text</b></p>
-      <code>&lt;div&gt;</code>
-    `
-
-    expect(await transform(value)).toBe(expected)
-  })
-
-  it('should not decode entity-encoded tags inside <script>', async () => {
-    // <script> is a raw-text element — its body is one text node, not parsed
-    // elements. The element-aware walk skips it without explicit guards.
-    const value = html`
-      <p>x</p>
-      <script>htmlString.replace(/&lt;/g, "<")</script>
-    `
-
-    expect(await transform(value)).toBe(value)
-  })
-
-  it('should not decode entity-encoded tags inside <style>', async () => {
-    const value = html`
-      <p>x</p>
-      <style>.x:before { content: "&lt;br&gt;" }</style>
-    `
-
-    expect(await transform(value)).toBe(value)
-  })
-
-  it('should not decode entity-encoded tags inside <textarea>', async () => {
-    const value = html`
-      <p>x</p>
-      <textarea>&lt;tag&gt;example to copy&lt;/tag&gt;</textarea>
-    `
-
-    expect(await transform(value)).toBe(value)
-  })
-
-  it('should not decode entity-encoded tags inside <noscript>', async () => {
-    const value = html`
-      <p>x</p>
-      <noscript>&lt;b&gt;fallback&lt;/b&gt;</noscript>
-    `
-
-    expect(await transform(value)).toBe(value)
-  })
-
-  it('should not decode entity-encoded tags inside HTML comments', async () => {
-    // Comments are COMMENT_NODE, not TEXT_NODE. The text-node walk ignores
-    // them.
-    const value = '<!-- &lt;div&gt; --><p>x &lt;b&gt;bold&lt;/b&gt;</p>'
-    const expected = '<!-- &lt;div&gt; --><p>x <b>bold</b></p>'
-
-    expect(await transform(value)).toBe(expected)
-  })
-
   it('should be idempotent', async () => {
-    const value = '<p>Build &lt;a href="/products" target="_blank"&gt;eight products&lt;/a&gt;.</p>'
+    const value = '&lt;p&gt;One.&lt;/p&gt;&lt;p&gt;Two.&lt;/p&gt;'
     const once = await transform(value)
     const twice = await transform(once)
 

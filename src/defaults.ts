@@ -9,16 +9,18 @@ import { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
+import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
+import { fixLazyIframes } from './transforms/dom/fixLazyIframes.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { flattenPictureElements } from './transforms/dom/flattenPictureElements.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
 import { hoistFigcaptionFromAnchor } from './transforms/dom/hoistFigcaptionFromAnchor.js'
 import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
 import { linkifyUrls } from './transforms/dom/linkifyUrls.js'
-import { linkOrphanFootnotes } from './transforms/dom/linkOrphanFootnotes.js'
 import { markTimestamps } from './transforms/dom/markTimestamps.js'
 import { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
 import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
+import { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
@@ -32,6 +34,7 @@ import { stripComments } from './transforms/dom/stripComments.js'
 import { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
 import { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 import { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
+import { stripHiddenElements } from './transforms/dom/stripHiddenElements.js'
 import { stripInertElements } from './transforms/dom/stripInertElements.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
@@ -39,6 +42,7 @@ import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 import { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 import { unwrapHeadingBold } from './transforms/dom/unwrapHeadingBold.js'
+import { unwrapNestedCodeWrappers } from './transforms/dom/unwrapNestedCodeWrappers.js'
 import { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 import { wrapBareInlineInParagraphs } from './transforms/dom/wrapBareInlineInParagraphs.js'
 import { wrapTablesForScroll } from './transforms/dom/wrapTablesForScroll.js'
@@ -66,6 +70,7 @@ export const defaultStringTransforms: Array<StringTransform> = [
 export const defaultDomTransforms: Array<DomTransform> = [
   decodeDoubleEncodedTags,
   stripComments,
+  stripHiddenElements,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
   demoteHeadings,
@@ -86,23 +91,27 @@ export const defaultDomTransforms: Array<DomTransform> = [
   cleanAnchorUrls,
   // Runs after resolveRelativeUrls/cleanAnchorUrls so hrefs are absolute and cleaned,
   // and before normalizeAnchoredHeadings so heading permalinks are already bare
-  // `#fragment` when the heading id is set.
+  // `#fragment` when the canonical `<a name>` is built.
   shortenSamePageLinkFragments,
   // Runs after cleanAnchorUrls so the href it inspects is already cleaned/resolved,
   // and before stripDeadAnchors so a `#`-only permalink isn't unwrapped first.
   normalizeAnchoredHeadings,
-  // Runs after shortenSamePageLinkFragments (footnote refs are now bare `#fragment`)
-  // so an orphan ref — one whose definition was truncated out of the feed — can be
-  // re-pointed at the source article.
-  linkOrphanFootnotes,
   stripDeadAnchors,
   convertBookmarkCards,
   removeTrackingPixels,
   unwrapEmojiImages,
   convertBreaksToParagraphs,
+  // Runs before highlightCode and the merge passes so they see real newlines. Prism
+  // and Eleventy feeds separate code lines with <br> instead of \n; without this they
+  // highlight as a single line and adjacent blocks get wrongly merged.
+  replacePreLineBreaks,
+  // Runs before highlightCode so it sees a single code block: a redundant <code> nested in
+  // a <code> (or <pre> in <pre>) from the source would otherwise survive and compound the
+  // reader's relative code font-size, shrinking the text.
+  unwrapNestedCodeWrappers,
   // Runs before wrapBareInlineInParagraphs so a promoted standalone code block is a
   // <pre> (block) by the time bare inline runs are wrapped, avoiding a <pre> nested
-  // inside a <p>. None of the strip/merge passes below touch <pre>/<code> internals.
+  // inside a <p>.
   highlightCode,
   wrapBareInlineInParagraphs,
   stripLeadingIndentation,
@@ -110,12 +119,22 @@ export const defaultDomTransforms: Array<DomTransform> = [
   stripBoundaryBreaks,
   mergeFragmentedLists,
   mergeConsecutiveOneLinerPres,
-  replacePreLineBreaks,
   trimPreWhitespace,
   linkifyUrls,
   markTimestamps,
+  // Promotes lazy/consent-gated iframe srcs into `src` so replaceEmbedsWithPlaceholders
+  // sees a resolvable iframe. Mirrors fixLazyImages for <img>.
+  fixLazyIframes,
   replaceEmbedsWithPlaceholders,
   injectEnclosures,
+  // Fills embed placeholder metadata via the caller's enrichEmbedFn. No-ops when that
+  // option is unset. Runs after placeholders exist and before neutralize/proxy so any
+  // enriched URLs are still neutralized and proxied.
+  enrichEmbedPlaceholders,
+  // Neutralizes unsafe URLs (dangerous-scheme floor + optional isSafeUrlFn) after embeds
+  // and bookmarks are placeholdered, so it covers their data-* URLs, and before
+  // proxyAssetUrls so the proxy never sees an unsafe URL.
+  neutralizeUnsafeUrls,
   proxyAssetUrls,
   stripEmptyTags,
   unwrapWrappers,
@@ -155,6 +174,31 @@ export const defaultLazySrcAttributes = [
   'nitro-lazy-src', // NitroPack — 222 hits, <0.01% of feeds. Non-`data-*` prefix.
   'data-orig', // Generic original-source variant — 27 hits, <0.01% of feeds.
   'data-runner-src', // Amazon affiliate / generic — 42 hits, <0.01% of feeds.
+  'fifu-data-src', // "Featured Image From URL" WP plugin — 2.1k hits, <0.01% of feeds.
+  'data-cfsrc', // Cloudflare Mirage edge rewrite — 641 hits, <0.01% of feeds.
+  'data-echo', // echo.js lazy-loader — 901 hits, <0.01% of feeds.
+  'data-opt-src', // Optimole image CDN — 390 hits, <0.01% of feeds.
+  'data-normal', // Future plc / generic CDN lazy-loader — 294 hits, <0.01% of feeds.
+]
+
+// Attributes that hold a lazy/consent-gated iframe src (the real embed URL) when the
+// `src` itself is empty or `about:blank`. Counts from a 1/16 corpus iframe-tag sample.
+export const defaultLazyIframeAttributes = [
+  'data-lazy-src', // Generic lazy loaders.
+  'data-src', // Generic lazy loaders.
+  'data-url', // Generic lazy loaders — 20 feeds carry it on empty-src iframes.
+  'data-litespeed-src', // LiteSpeed Cache.
+  'data-mce-src', // TinyMCE editor output.
+  'data-original-src', // Generic lazy loaders.
+  'data-opt-src', // Image/embed optimizers.
+  'src-consent', // GDPR/cookie-consent wrappers (e.g. Borlabs) holding the real src.
+  'consent-original-src', // Consent wrappers.
+  'consent-original-src-_', // Real Cookie Banner rendered form (trailing `-_`) — 167 feeds.
+  'consent-click-original-src-_', // Real Cookie Banner click-to-load variant — 142 feeds.
+  'data-privacy-src', // Privacy/lazy-video plugins (data-privacy-type="youtube") — 69 feeds.
+  'data-ep-src', // Embed Privacy — 54 feeds.
+  'data-cookieblock-src', // Cookiebot consent gate — 26 feeds.
+  'data-src-cmplz', // Complianz consent gate — 20 feeds.
 ]
 
 export const defaultLazySrcsetAttributes = [
@@ -274,4 +318,12 @@ export const defaultInertSelectors = [
   '.crp_related', // Contextual Related Posts WordPress plugin — 61 feeds (0.002%).
   'form[action*="buttondown.email"]', // Buttondown embed-subscribe form — 21 feeds (<0.001%).
   '.sqs-block-newsletter', // Squarespace newsletter block — 11 feeds (<0.001%).
+  // Anchor-scoped so a "read-more"/"continue-reading" *wrapper* (which can hold real
+  // content) is never deleted — only the truncation link itself. The class appears on
+  // 11,475 feeds (0.42%); the anchor subset is smaller but the safe one to strip.
+  'a[class*="read-more"]', // "Read more" excerpt-truncation links.
+  'a[class*="continue-reading"]', // "Continue reading" excerpt-truncation links.
+  '[class*="social-share"]', // Generic social-share button cluster — part of 1,212 feeds (0.045%).
+  '[class*="share-buttons"]', // Generic social-share button cluster.
+  '.feedflare', // FeedBurner share footer ("Share on X / Email this") — 220 feeds (0.008%).
 ]

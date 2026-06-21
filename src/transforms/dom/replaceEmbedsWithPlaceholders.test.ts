@@ -1,4 +1,4 @@
-import { expect, it } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import { applyDomTransforms } from '../../common.js'
 import { defaultEmbedResolvers } from '../../defaults.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
@@ -187,7 +187,9 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
     expect(result).toContain('data-embed-duration="125"')
   })
 
-  it('should skip data-embed-avatar when avatar url is unsafe', async () => {
+  // URL safety is neutralizeUnsafeUrls' job (see its tests); this transform only
+  // emits the placeholder, so an unsafe avatar passes through here unchanged.
+  it('should pass an unsafe avatar url through unchanged', async () => {
     const customResolver: EmbedResolver = {
       selector: 'iframe[src*="example.com"]',
       extract: (element) => ({
@@ -200,8 +202,7 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const result = await transform(value, customContext)
 
-    expect(result).not.toContain('data-embed-avatar')
-    expect(result).not.toContain('javascript:')
+    expect(result).toContain('data-embed-avatar="javascript:alert(1)"')
   })
 
   it('should wrap unknown iframe as generic placeholder without provider', async () => {
@@ -220,6 +221,18 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
 
     expect(result).toContain('data-embed-width="640"')
     expect(result).toContain('data-embed-height="360"')
+  })
+
+  it('should wrap every generic iframe when several are adjacent', async () => {
+    const value = html`
+      <iframe src="https://a-site.com/1"></iframe>
+      <iframe src="https://b-site.com/2"></iframe>
+      <iframe src="https://c-site.com/3"></iframe>
+    `
+    const result = await transform(value)
+
+    expect(result).not.toContain('<iframe')
+    expect(result.match(/data-embed-src=/g)).toHaveLength(3)
   })
 
   it('should include fallback link when wrapping unknown iframe', async () => {
@@ -351,5 +364,30 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
     const twice = await transform(once)
 
     expect(twice).toBe(once)
+  })
+
+  describe('non-iframe carriers', () => {
+    it('should replace an <object data> carrier with a placeholder', async () => {
+      const value = '<object data="https://example.com/v/x"></object>'
+      const result = await transform(value, withNoResolvers)
+
+      expect(result).toContain('data-embed-src="https://example.com/v/x"')
+      expect(result).not.toContain('<object')
+    })
+
+    it('should replace an <embed src> carrier with a placeholder', async () => {
+      const value = '<embed src="https://example.com/e/x">'
+      const result = await transform(value, withNoResolvers)
+
+      expect(result).toContain('data-embed-src="https://example.com/e/x"')
+      expect(result).not.toContain('<embed')
+    })
+
+    it('should leave an empty iframe with no recoverable content', async () => {
+      const value = '<iframe src="about:blank"></iframe>'
+      const result = await transform(value, withNoResolvers)
+
+      expect(result).toContain('<iframe')
+    })
   })
 })

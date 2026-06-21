@@ -1,4 +1,4 @@
-import { isElement, isText } from '../../common.js'
+import { collectTextNodes } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
 const timestampIgnoreTags = new Set(['a', 'pre', 'code', 'kbd', 'samp', 'var', 'script', 'style'])
@@ -9,9 +9,13 @@ const timestampIgnoreTags = new Set(['a', 'pre', 'code', 'kbd', 'samp', 'var', '
 // Anchoring to a boundary avoids turning incidental "12:30" mentions in the
 // middle of prose into markers.
 const timestampToken = '(?:\\d{1,2}:)?\\d{1,2}:\\d{2}'
+// The token is captured in one of two groups: at a line start (optional whitespace
+// prefix consumed ahead of it) or before a line end (trailing whitespace in a zero-width
+// lookahead). The prefix is consumed, not matched in a variable-length lookbehind, so a
+// long whitespace run is scanned once rather than re-scanned per position.
 const lineBoundaryTimestampRegex = new RegExp(
-  `(?<=(?:^|\\n)[ \\t]*)${timestampToken}|${timestampToken}(?=[ \\t]*(?:\\n|$))`,
-  'gm',
+  `(?:^|\\n)[ \\t]*(${timestampToken})|(${timestampToken})(?=[ \\t]*(?:\\n|$))`,
+  'g',
 )
 
 const numericPartRegex = /^\d+$/
@@ -54,18 +58,6 @@ const shouldSkipElement = (element: Element): boolean => {
   )
 }
 
-const collectTextNodes = (node: Node, result: Array<Node> = []): Array<Node> => {
-  for (const child of node.childNodes) {
-    if (isText(child)) {
-      result.push(child)
-    } else if (isElement(child) && !shouldSkipElement(child)) {
-      collectTextNodes(child, result)
-    }
-  }
-
-  return result
-}
-
 // Wraps line-boundary YouTube-style timestamps (e.g. "01:21 - Title" or
 // "Title - 01:21") in a span carrying the time in seconds, so the reader can
 // later seek a player to that point. The visible text is left as-is; only the
@@ -74,7 +66,7 @@ export const markTimestamps: DomTransform = () => {
   return (document) => {
     // Walk from document (not documentElement) so linkedom fragment siblings are
     // reachable. documentElement only points to the first root-level element.
-    const textNodes = collectTextNodes(document) as Array<ChildNode>
+    const textNodes = collectTextNodes(document, shouldSkipElement) as Array<ChildNode>
 
     for (const node of textNodes) {
       const text = node.textContent
@@ -90,14 +82,21 @@ export const markTimestamps: DomTransform = () => {
       let lastIndex = 0
 
       for (const match of text.matchAll(lineBoundaryTimestampRegex)) {
-        const token = match[0]
+        const token = match[1] ?? match[2]
+
+        if (!token) {
+          continue
+        }
+
         const seconds = parseTimestampSeconds(token)
 
         if (seconds === undefined) {
           continue
         }
 
-        const tokenStart = match.index ?? 0
+        // The line-start branch consumes a whitespace prefix, so the token sits at
+        // the end of the overall match; derive its offset from the match end.
+        const tokenStart = (match.index ?? 0) + match[0].length - token.length
 
         if (tokenStart > lastIndex) {
           parts.push(document.createTextNode(text.slice(lastIndex, tokenStart)))

@@ -120,7 +120,7 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
   })
 
   describe('hygiene (via createBookmarkPlaceholder)', () => {
-    it('should upgrade http urls to https for url and icon', async () => {
+    it('should pass http urls through without changing the protocol', async () => {
       const result = await transform(
         html`
           <div
@@ -134,12 +134,31 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
         [cardResolver],
       )
 
-      expect(result).toContain('data-bookmark-url="https://example.com/p"')
-      expect(result).toContain('data-bookmark-icon="https://example.com/i.ico"')
-      expect(result).toContain('<a href="https://example.com/p">')
+      expect(result).toContain('data-bookmark-url="http://example.com/p"')
+      expect(result).toContain('data-bookmark-icon="http://example.com/i.ico"')
+      expect(result).toContain('<a href="http://example.com/p">')
     })
 
-    it('should drop unsafe icon and thumbnail urls but keep the rest of the placeholder', async () => {
+    it('should resolve relative url, icon and thumbnail against the base url', async () => {
+      const context: TransformContext = {
+        ...baseContext,
+        bookmarkResolvers: [cardResolver],
+        baseUrl: 'https://example.com/post/',
+      }
+      const value = html`
+        <div class="card" data-url="/p" data-title="T" data-icon="/i.ico" data-thumbnail="/t.jpg">
+        </div>
+      `
+      const result = await applyDomTransforms(parseHtml(value), [convertBookmarkCards(context)])
+
+      expect(result).toContain('data-bookmark-url="https://example.com/p"')
+      expect(result).toContain('data-bookmark-icon="https://example.com/i.ico"')
+      expect(result).toContain('data-bookmark-thumbnail="https://example.com/t.jpg"')
+    })
+
+    // URL safety is neutralizeUnsafeUrls' job (see its tests); this transform only
+    // emits the placeholder, so unsafe icon/thumbnail urls pass through here unchanged.
+    it('should pass unsafe icon and thumbnail urls through unchanged', async () => {
       const result = await transform(
         html`
           <div
@@ -154,8 +173,8 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
         [cardResolver],
       )
 
-      expect(result).not.toContain('data-bookmark-icon')
-      expect(result).not.toContain('data-bookmark-thumbnail')
+      expect(result).toContain('data-bookmark-icon="javascript:alert(1)"')
+      expect(result).toContain('data-bookmark-thumbnail="javascript:alert(2)"')
       expect(result).toContain('data-bookmark-title="T"')
     })
   })

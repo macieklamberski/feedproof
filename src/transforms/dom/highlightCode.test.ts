@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { parseHTML } from 'linkedom'
 import { applyDomTransforms } from '../../common.js'
+import { parseHtml } from '../../parsers/linkedom.js'
 import { baseContext, describeForEachParser, queryElement } from '../../tests.js'
 import type { HighlightFn, TransformContext } from '../../types.js'
 import { detectLanguage, highlightCode } from './highlightCode.js'
@@ -8,6 +9,7 @@ import { detectLanguage, highlightCode } from './highlightCode.js'
 const lineBreakBeforeConstRegex = /;\s*\n\s*<span class="hljs-keyword">const/
 const insAfterNewlineRegex = /;\s*\n\s*<ins>/
 const commentSwallowsNextLineRegex = /hljs-comment">[^<]*const y/
+const nestedPreInCodeRegex = /<code[^>]*><pre/
 
 describe('detectLanguage', () => {
   const createElement = (html: string): { pre: Element; code: Element | null } => {
@@ -399,6 +401,95 @@ describeForEachParser('highlightCode', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(html), [highlightCode(context)])
   }
+
+  describe('line-number gutters', () => {
+    it('should drop a Rouge table gutter and highlight only the code', async () => {
+      const value =
+        '<figure class="highlight"><table class="rouge-table"><tbody><tr><td class="gutter"><pre class="lineno">1\n2</pre></td><td class="code"><pre><code class="language-ruby">puts 1\nputs 2</code></pre></td></tr></tbody></table></figure>'
+      const result = await transform(value)
+
+      expect(result).not.toContain('rouge-table')
+      expect(result).not.toContain('class="gutter"')
+      expect(result).not.toContain('class="lineno"')
+      expect(result).toContain('data-pre-language="ruby"')
+      expect(result).toContain('data-pre-numbered=""')
+    })
+
+    it('should not nest a pre when the gutter table is inside the block pre/code', async () => {
+      const value =
+        '<figure class="highlight"><pre><code class="language-ruby"><table><tbody><tr><td class="gutter"><pre class="lineno">1\n2</pre></td><td class="code"><pre>puts 1\nputs 2</pre></td></tr></tbody></table></code></pre></figure>'
+      const result = await transform(value)
+
+      expect(result).not.toMatch(nestedPreInCodeRegex)
+      expect(result).not.toContain('class="lineno"')
+      expect(result).toContain('data-pre-numbered=""')
+      expect(result).toContain('data-pre-language="ruby"')
+    })
+
+    it('should keep the code column language when the wrapper declares none', async () => {
+      const value =
+        '<figure class="highlight"><pre><code><table><tbody><tr><td class="gutter"><pre class="lineno">1\n2</pre></td><td class="code"><pre><code class="language-ruby">puts 1\nputs 2</code></pre></td></tr></tbody></table></code></pre></figure>'
+      const result = await transform(value)
+
+      expect(result).not.toMatch(nestedPreInCodeRegex)
+      expect(result).toContain('data-pre-numbered=""')
+      expect(result).toContain('data-pre-language="ruby"')
+    })
+
+    it('should drop a Pygments highlighttable gutter', async () => {
+      const value =
+        '<table class="highlighttable"><tbody><tr><td class="linenos"><pre>1</pre></td><td class="code"><pre><code class="language-python">x = 1</code></pre></td></tr></tbody></table>'
+      const result = await transform(value)
+
+      expect(result).not.toContain('highlighttable')
+      expect(result).not.toContain('linenos')
+    })
+
+    it('should remove inline per-line number spans (Chroma .ln)', async () => {
+      const value =
+        '<pre class="chroma"><code><span class="line"><span class="ln">1</span><span class="cl">echo hi</span></span></code></pre>'
+      const result = await transform(value)
+
+      expect(result).not.toContain('class="ln"')
+      expect(result).toContain('echo hi')
+      expect(result).toContain('data-pre-numbered=""')
+    })
+
+    it('should remove inline per-line number spans (Pygments .lineno)', async () => {
+      const value =
+        '<pre><span class="lineno">1</span>echo hi\n<span class="lineno">2</span>echo bye</pre>'
+      const result = await transform(value)
+
+      expect(result).not.toContain('class="lineno"')
+      expect(result).toContain('echo hi')
+      expect(result).toContain('echo bye')
+    })
+
+    it('should drop a gutter table with no recognized class (structural)', async () => {
+      const value =
+        '<table><tbody><tr><td><pre>1\n2</pre></td><td><pre><code class="language-js">const a = 1\nconst b = 2</code></pre></td></tr></tbody></table>'
+      const result = await transform(value)
+
+      expect(result).not.toContain('<table')
+      expect(result).toContain('data-pre-language')
+      expect(result).toContain('const')
+    })
+
+    it('should leave a real data table untouched', async () => {
+      const value =
+        '<table><tbody><tr><td>1</td><td>Apple</td></tr><tr><td>2</td><td>Banana</td></tr></tbody></table>'
+      const result = await transform(value)
+
+      expect(result).toBe(value)
+    })
+
+    it('should not mark a plain code block without a gutter', async () => {
+      const value = '<pre><code class="language-js">const x = 1</code></pre>'
+      const result = await transform(value)
+
+      expect(result).not.toContain('data-pre-numbered')
+    })
+  })
 
   it('should highlight code block with language-js class', async () => {
     const value = '<pre><code class="language-js">const x = 1</code></pre>'
@@ -1022,5 +1113,16 @@ describeForEachParser('highlightCode', (parseHtml) => {
       expect(result).toContain('<code class="hljs">')
       expect(result).not.toContain('<pre class="hljs"')
     })
+  })
+})
+
+// linkedom only: jsdom's serializer is itself superlinear in nesting depth, so it
+// can't round-trip a document this deep regardless of the transform.
+describe('highlightCode with deep nesting', () => {
+  it('should not overflow the stack on a deeply nested code block', async () => {
+    const value = `<pre><code class="language-javascript">${'<span>'.repeat(40000)}const x = 1${'</span>'.repeat(40000)}</code></pre>`
+    const result = await applyDomTransforms(parseHtml(value), [highlightCode(baseContext)])
+
+    expect(result).toContain('hljs')
   })
 })

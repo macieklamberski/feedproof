@@ -261,27 +261,44 @@ const collectDiffStream = (target: Element): { text: string; events: Array<Marku
   let text = ''
   const events: Array<MarkupEvent> = []
 
-  const walk = (node: Node): void => {
-    for (let child = node.firstChild; child; child = child.nextSibling) {
-      if (isText(child)) {
-        text += child.nodeValue ?? ''
-      } else if (isElement(child)) {
-        if (blockLineWrappers.has(child.localName) && text && !text.endsWith('\n')) {
-          text += '\n'
-        }
+  // Iterative pre-order walk (explicit stack, not recursion) so a deeply nested code
+  // block can't overflow the call stack. A diff marker pushes a close sentinel before
+  // its children so its stop event lands after the subtree; children are pushed in
+  // reverse to pop in document order. The \n insertion mirrors getCodeBlockText's.
+  const stack: Array<Node | { closeFor: Element }> = [target]
 
-        if (diffMarkerTags.has(child.localName)) {
-          events.push({ event: 'start', offset: text.length, node: child })
-          walk(child)
-          events.push({ event: 'stop', offset: text.length, node: child })
-        } else {
-          walk(child)
-        }
-      }
+  while (stack.length > 0) {
+    const item = stack.pop() as Node | { closeFor: Element }
+
+    if ('closeFor' in item) {
+      events.push({ event: 'stop', offset: text.length, node: item.closeFor })
+      continue
+    }
+
+    if (isText(item)) {
+      text += item.nodeValue ?? ''
+      continue
+    }
+
+    if (!isElement(item)) {
+      continue
+    }
+
+    if (item !== target && blockLineWrappers.has(item.localName) && text && !text.endsWith('\n')) {
+      text += '\n'
+    }
+
+    if (diffMarkerTags.has(item.localName)) {
+      events.push({ event: 'start', offset: text.length, node: item })
+      stack.push({ closeFor: item })
+    }
+
+    const children = item.childNodes
+
+    for (let index = children.length - 1; index >= 0; index--) {
+      stack.push(children[index])
     }
   }
-
-  walk(target)
 
   return { text, events }
 }
@@ -368,8 +385,92 @@ const mergeMarkupStreams = (
   return result + escapeHtml(text.slice(processed))
 }
 
+// Line-number gutters: Rouge/Pygments/Chroma (and others) render code in a two-column
+// table (numbers | code), and Chroma/Prism also emit per-line number spans. Either way
+// the digits get treated as a separate code block or walked into the highlighted text.
+// Drop them before highlighting: keep only the code column's <pre>, and remove inline
+// per-line number spans.
+
+const integerLineRegex = /^\d+$/
+
+// A node is a line-number gutter when every non-empty line of its text is just an
+// integer. Detected structurally (not by class) so any highlighter's table is covered.
+const isLineNumberText = (text: string): boolean => {
+  const lines = text.split('\n').reduce<Array<string>>((accumulator, line) => {
+    const trimmed = line.trim()
+
+    if (trimmed) {
+      accumulator.push(trimmed)
+    }
+
+    return accumulator
+  }, [])
+
+  return lines.length > 0 && lines.every((line) => integerLineRegex.test(line))
+}
+
+// Inline per-line number spans (Chroma `.ln`/`.lnt`, Prism `.line-numbers-rows`,
+// Pygments `linenos=inline` `.lineno`).
+// Class-based on purpose: a bare numeric span can't be told from a real number token
+// in highlighted code, so structural detection would corrupt the code.
+const gutterLineSpanSelector = 'span.line-numbers-rows, span.ln, span.lnt, span.lineno'
+
+const stripCodeGutters = (document: Document): void => {
+  for (const table of document.querySelectorAll('table')) {
+    const pres = Array.from(table.querySelectorAll('pre'))
+
+    if (pres.length === 0) {
+      continue
+    }
+
+    // Only a code table with a line-number cell — never a data table.
+    const cells = table.querySelectorAll('td, th, pre')
+    const hasGutter = Array.from(cells).some((cell) => isLineNumberText(cell.textContent ?? ''))
+
+    if (!hasGutter) {
+      continue
+    }
+
+    // The code <pre> is the largest one that isn't itself the line-number column.
+    const codePre = pres
+      .filter((pre) => !isLineNumberText(pre.textContent ?? ''))
+      .sort((a, b) => (b.textContent?.length ?? 0) - (a.textContent?.length ?? 0))[0]
+
+    if (codePre) {
+      // Rouge and similar wrap the gutter table inside the block's own <pre><code>.
+      // Replacing the table with the code column's <pre> would nest a <pre> inside that
+      // <code>. When such an outer <pre> exists, keep it as the block: move the code
+      // column's content in place of the table and mark the outer <pre> as numbered.
+      const wrapperPre = table.closest('pre')
+
+      if (wrapperPre) {
+        wrapperPre.setAttribute('data-pre-numbered', '')
+        const codeColumn = codePre.querySelector('code') ?? codePre
+        // Keep the code column's language when the surviving block declares none, so a
+        // language that lives only on the code column (not on the wrapper) is not lost.
+        const languageTarget = table.closest('code') ?? wrapperPre
+        const columnLanguage = codeColumn.className.match(languageRegex)?.[0]
+        if (columnLanguage && !languageRegex.test(languageTarget.className)) {
+          languageTarget.classList.add(columnLanguage)
+        }
+        table.replaceWith(...codeColumn.childNodes)
+      } else {
+        codePre.setAttribute('data-pre-numbered', '')
+        table.replaceWith(codePre)
+      }
+    }
+  }
+
+  for (const span of document.querySelectorAll(gutterLineSpanSelector)) {
+    span.closest('pre')?.setAttribute('data-pre-numbered', '')
+    span.remove()
+  }
+}
+
 export const highlightCode: DomTransform = ({ highlightFn }) => {
   return async (document) => {
+    stripCodeGutters(document)
+
     // Some editors emit a block of code as a standalone <code> with no <pre> wrapper.
     // Promote those to <pre><code> first so the loop below treats them like any other
     // block: highlighted by a declared hint (or detected JSON), and rendered as a

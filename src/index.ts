@@ -6,6 +6,7 @@ import {
   defaultEmojiImageHosts,
   defaultHighlightFn,
   defaultInertSelectors,
+  defaultLazyIframeAttributes,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
   defaultPreservedPreClasses,
@@ -27,6 +28,7 @@ export const transformContent = async (
     bookmarkResolvers: options.bookmarkResolvers ?? defaultBookmarkResolvers,
     lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,
     lazySrcsetAttributes: options.lazySrcsetAttributes ?? defaultLazySrcsetAttributes,
+    lazyIframeAttributes: options.lazyIframeAttributes ?? defaultLazyIframeAttributes,
     trackingHosts: options.trackingHosts ?? defaultTrackingHosts,
     trackingPathSegments: options.trackingPathSegments ?? defaultTrackingPathSegments,
     emojiImageHosts: options.emojiImageHosts ?? defaultEmojiImageHosts,
@@ -35,6 +37,7 @@ export const transformContent = async (
     resolveUrlFn: options.resolveUrlFn ?? defaultResolveUrlFn,
     cleanUrlFn: options.cleanUrlFn,
     assetProxyFn: options.assetProxyFn,
+    isSafeUrlFn: options.isSafeUrlFn,
     enrichEmbedFn: options.enrichEmbedFn,
     highlightFn: options.highlightFn ?? defaultHighlightFn,
     articleTitle: options.articleTitle,
@@ -65,7 +68,6 @@ export {
   createBookmarkPlaceholder,
   createEmbedPlaceholder,
   createPlaceholder,
-  isSafeThumbnailUrl,
   normalizeEmbedFields,
   updateEmbedPlaceholder,
 } from './common.js'
@@ -84,16 +86,17 @@ export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParag
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 export { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
+export { fixLazyIframes } from './transforms/dom/fixLazyIframes.js'
 export { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 export { flattenPictureElements } from './transforms/dom/flattenPictureElements.js'
 export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js'
 export { hoistFigcaptionFromAnchor } from './transforms/dom/hoistFigcaptionFromAnchor.js'
 export { injectEnclosures } from './transforms/dom/injectEnclosures.js'
 export { linkifyUrls } from './transforms/dom/linkifyUrls.js'
-export { linkOrphanFootnotes } from './transforms/dom/linkOrphanFootnotes.js'
 export { markTimestamps, parseTimestampSeconds } from './transforms/dom/markTimestamps.js'
 export { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
 export { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
+export { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 export { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 export { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 export { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
@@ -114,6 +117,7 @@ export { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 export { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 export { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 export { unwrapHeadingBold } from './transforms/dom/unwrapHeadingBold.js'
+export { unwrapNestedCodeWrappers } from './transforms/dom/unwrapNestedCodeWrappers.js'
 export { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 export { wrapBareInlineInParagraphs } from './transforms/dom/wrapBareInlineInParagraphs.js'
 export { wrapTablesForScroll } from './transforms/dom/wrapTablesForScroll.js'
@@ -134,11 +138,13 @@ export type {
   Enclosure,
   EnrichEmbedFn,
   HighlightFn,
+  IsSafeUrlFn,
   MaybePromise,
   ParseHtmlFn,
   ResolveUrlFn,
   StringTransform,
   TransformContentOptions,
   TransformContext,
+  UrlRole,
 } from './types.js'
 export { chooseBaseUrl, coerceNumber } from './utils.js'

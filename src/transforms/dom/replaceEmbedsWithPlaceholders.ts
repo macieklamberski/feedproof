@@ -2,6 +2,7 @@ import {
   createEmbedPlaceholder,
   getElementDimensions,
   getWrapperAspectRatio,
+  resolveOrKeepUrl,
 } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
@@ -26,7 +27,9 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
   const { embedResolvers, resolveUrlFn, baseUrl } = context
 
   return async (document) => {
-    const iframeSnapshot = document.getElementsByTagName('iframe') as unknown as Array<Element>
+    // A static snapshot: the fallback loop below replaces iframes, and a live
+    // getElementsByTagName collection would shrink mid-iteration and skip elements.
+    const iframeSnapshot = Array.from(document.getElementsByTagName('iframe'))
     const hasIframes = iframeSnapshot.length > 0
 
     for (const resolver of embedResolvers) {
@@ -41,50 +44,67 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
           continue
         }
 
-        if (!resolveUrlFn(metadata.src, baseUrl)) {
+        const resolvedSrc = resolveUrlFn(metadata.src, baseUrl)
+
+        if (!resolvedSrc) {
           continue
         }
 
-        if (metadata.url && !resolveUrlFn(metadata.url, baseUrl)) {
-          continue
+        let resolvedUrl: string | undefined
+
+        if (metadata.url) {
+          resolvedUrl = resolveUrlFn(metadata.url, baseUrl)
+
+          if (!resolvedUrl) {
+            continue
+          }
         }
 
         const { width, height } = getEmbedDimensions(element)
 
-        const placeholderMetadata =
-          width === undefined && height === undefined
-            ? metadata
-            : {
-                ...metadata,
-                width: width ?? metadata.width,
-                height: height ?? metadata.height,
-              }
+        const placeholderMetadata = {
+          ...metadata,
+          src: resolvedSrc,
+          url: resolvedUrl,
+          thumbnail: resolveOrKeepUrl(metadata.thumbnail, resolveUrlFn, baseUrl),
+          avatar: resolveOrKeepUrl(metadata.avatar, resolveUrlFn, baseUrl),
+          width: width ?? metadata.width,
+          height: height ?? metadata.height,
+        }
 
-        element.replaceWith(createEmbedPlaceholder(document, metadata.src, placeholderMetadata))
+        element.replaceWith(createEmbedPlaceholder(document, resolvedSrc, placeholderMetadata))
       }
     }
 
-    if (!hasIframes) {
-      return
+    // Generic iframe fallback. Resolvers may have detached some iframes (parentNode null).
+    if (hasIframes) {
+      for (const iframe of iframeSnapshot) {
+        if (!iframe.parentNode) {
+          continue
+        }
+
+        const src = iframe.getAttribute('src')
+
+        // resolveUrlFn rejects `about:blank`; the trim drops empty/whitespace placeholders
+        // (which would otherwise resolve to the base URL).
+        const resolved = src?.trim() ? resolveUrlFn(src, baseUrl) : undefined
+
+        if (resolved) {
+          iframe.replaceWith(createEmbedPlaceholder(document, resolved, getEmbedDimensions(iframe)))
+        }
+      }
     }
 
-    // Resolvers may have detached some iframes — skip those (parentNode null).
-    for (const iframe of iframeSnapshot) {
-      if (!iframe.parentNode) {
-        continue
+    // Legacy <object data> / <embed src> carriers — the iframe-only paths above miss
+    // them. Replace with a provider-less placeholder when the URL resolves.
+    for (const element of document.querySelectorAll('object[data], embed[src]')) {
+      const url =
+        element.localName === 'object' ? element.getAttribute('data') : element.getAttribute('src')
+      const resolved = url ? resolveUrlFn(url, baseUrl) : undefined
+
+      if (resolved) {
+        element.replaceWith(createEmbedPlaceholder(document, resolved, getEmbedDimensions(element)))
       }
-
-      const src = iframe.getAttribute('src')
-
-      if (!src) {
-        continue
-      }
-
-      if (!resolveUrlFn(src, baseUrl)) {
-        continue
-      }
-
-      iframe.replaceWith(createEmbedPlaceholder(document, src, getEmbedDimensions(iframe)))
     }
   }
 }

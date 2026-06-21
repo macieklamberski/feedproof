@@ -64,6 +64,14 @@ export type BookmarkResolver = {
 
 export type CleanUrlFn = (url: string) => string
 
+// The role a URL plays in the output, so safety policy and neutralization can differ:
+// a `link` (anchor href) and a `media` URL (asset src) need different inert sentinels.
+export type UrlRole = 'media' | 'link'
+
+// Whether a URL is safe to emit for its role. Optional consumer policy (e.g. SSRF or a
+// scheme allowlist); feedsweep always enforces its own dangerous-scheme floor regardless.
+export type IsSafeUrlFn = (url: string, type: UrlRole) => boolean
+
 export type AssetType = 'image' | 'video' | 'audio'
 
 export type AssetProxyFn = (url: string, type: AssetType) => string | undefined
@@ -80,6 +88,7 @@ export type TransformContext = {
   bookmarkResolvers: Array<BookmarkResolver>
   lazySrcAttributes: Array<string>
   lazySrcsetAttributes: Array<string>
+  lazyIframeAttributes: Array<string>
   trackingHosts: Array<string>
   trackingPathSegments: Array<string>
   emojiImageHosts: Array<string>
@@ -88,6 +97,7 @@ export type TransformContext = {
   resolveUrlFn: ResolveUrlFn
   cleanUrlFn?: CleanUrlFn
   assetProxyFn?: AssetProxyFn
+  isSafeUrlFn?: IsSafeUrlFn
   enrichEmbedFn?: EnrichEmbedFn
   highlightFn: HighlightFn
   articleTitle?: string
@@ -107,6 +117,7 @@ export type TransformContentOptions = {
   bookmarkResolvers?: Array<BookmarkResolver>
   lazySrcAttributes?: Array<string>
   lazySrcsetAttributes?: Array<string>
+  lazyIframeAttributes?: Array<string>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
   emojiImageHosts?: Array<string>
@@ -115,6 +126,7 @@ export type TransformContentOptions = {
   resolveUrlFn?: ResolveUrlFn
   cleanUrlFn?: CleanUrlFn
   assetProxyFn?: AssetProxyFn
+  isSafeUrlFn?: IsSafeUrlFn
   enrichEmbedFn?: EnrichEmbedFn
   highlightFn?: HighlightFn
   articleTitle?: string

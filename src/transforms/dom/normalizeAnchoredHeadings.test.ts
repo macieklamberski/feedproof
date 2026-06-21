@@ -198,6 +198,35 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
     })
   })
 
+  describe('bare heading id', () => {
+    it('should promote a heading id with no anchor to a canonical permalink', async () => {
+      const value = '<h2 id="exploitation">Exploitation</h2>'
+      const expected = '<h2><a id="exploitation" href="#exploitation"></a>Exploitation</h2>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should keep a real content link beside the promoted permalink', async () => {
+      const value = '<h3 id="refs">See <a href="https://example.com">docs</a></h3>'
+      const expected =
+        '<h3><a id="refs" href="#refs"></a>See <a href="https://example.com">docs</a></h3>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should leave a heading with no id and no anchor untouched', async () => {
+      const value = '<h2>Plain heading</h2>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should leave a heading with an empty id untouched', async () => {
+      const value = '<h2 id="">Empty id</h2>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+  })
+
   describe('excluded anchors', () => {
     it('should leave a footnote reference wrapped in <sup>', async () => {
       const value = '<h2>Title<sup><a href="#fn1">1</a></sup></h2>'

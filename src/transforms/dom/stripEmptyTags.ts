@@ -1,8 +1,8 @@
 import { isBlockElement, isElement, isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
 
-// Block members whose removal would break table layout / definition-list pairs;
-// these keep the collapse-to-space behaviour instead of being dropped.
+// Structural cells and definition terms whose slot must survive even when empty,
+// so table columns and definition-list pairs stay aligned. Never dropped or collapsed.
 const structuralTags = new Set(['td', 'th', 'tr', 'dt', 'dd'])
 
 const preserveWhenEmpty = new Set([
@@ -29,8 +29,10 @@ const preserveWhenEmpty = new Set([
 
 // Removes elements with no non-whitespace text and no element children. A
 // whitespace-only block (e.g. a `<div>&nbsp;</div>` spacer) is removed; a
-// whitespace-only inline element collapses to a single space so word boundaries
-// survive. Reverse iteration handles nested empties in one pass.
+// whitespace-only inline element is unwrapped to its own whitespace, so a word
+// boundary survives in normal flow (the browser collapses it) while significant
+// indentation inside <pre> (e.g. a Pygments `<span class="w">    </span>` token)
+// is preserved. Reverse iteration handles nested empties in one pass.
 export const stripEmptyTags: DomTransform = () => {
   return (document) => {
     const all = document.body.querySelectorAll('*')
@@ -61,6 +63,12 @@ export const stripEmptyTags: DomTransform = () => {
         continue
       }
 
+      // Structural cells/terms keep their slot even when empty, so table columns
+      // and definition-list pairs stay aligned.
+      if (structuralTags.has(tagName)) {
+        continue
+      }
+
       const childNodes = element.childNodes
       const childCount = childNodes.length
       let hasContent = false
@@ -85,10 +93,11 @@ export const stripEmptyTags: DomTransform = () => {
 
       if (childCount === 0) {
         element.remove()
-      } else if (isBlockElement(element) && !structuralTags.has(tagName)) {
+      } else if (isBlockElement(element)) {
         element.remove()
       } else {
-        element.replaceWith(' ')
+        const whitespace = element.textContent ?? ''
+        element.replaceWith(whitespace === '' ? ' ' : whitespace)
       }
     }
   }
