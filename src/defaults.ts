@@ -38,6 +38,7 @@ import { stripHiddenElements } from './transforms/dom/stripHiddenElements.js'
 import { stripInertElements } from './transforms/dom/stripInertElements.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
+import { stripMarkdownEscapeBackslashes } from './transforms/dom/stripMarkdownEscapeBackslashes.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 import { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
@@ -100,6 +101,9 @@ export const defaultDomTransforms: Array<DomTransform> = [
   convertBookmarkCards,
   removeTrackingPixels,
   unwrapEmojiImages,
+  // Empties lone-backslash paragraphs (`<p>\</p>`); runs before stripEmptyTags so
+  // the now-empty paragraphs are removed by it.
+  stripMarkdownEscapeBackslashes,
   convertBreaksToParagraphs,
   // Runs before highlightCode and the merge passes so they see real newlines. Prism
   // and Eleventy feeds separate code lines with <br> instead of \n; without this they
