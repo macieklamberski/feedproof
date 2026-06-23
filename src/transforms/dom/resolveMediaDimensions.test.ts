@@ -276,6 +276,50 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
     })
   })
 
+  describe('invalid attribute values', () => {
+    it('should drop an auto width on video', async () => {
+      const value =
+        '<video src="https://example.com/clip.mp4" width="auto" style="width:100%"></video>'
+      const expected = '<video src="https://example.com/clip.mp4" style="width:100%"></video>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should drop an auto height', async () => {
+      const value = '<img src="https://example.com/p.jpg" height="auto">'
+      const expected = '<img src="https://example.com/p.jpg">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should drop a percentage width', async () => {
+      const value = '<img src="https://example.com/p.jpg" width="100%">'
+      const expected = '<img src="https://example.com/p.jpg">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should drop a zero width', async () => {
+      const value = '<img src="https://example.com/p.jpg" width="0">'
+      const expected = '<img src="https://example.com/p.jpg">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should backfill from the URL after dropping an auto width', async () => {
+      const value = '<img src="https://example.com/photo-800x600.jpg" width="auto">'
+      const expected = '<img src="https://example.com/photo-800x600.jpg" width="800" height="600">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should keep valid integer attributes', async () => {
+      const value = '<img src="https://example.com/p.jpg" width="800" height="600">'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+  })
+
   describe('inheritance from srcset URL', () => {
     it('should read dimensions from the widest srcset candidate when there is no src', async () => {
       const value =

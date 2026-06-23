@@ -45,6 +45,9 @@ const promotableDimensions = (element: Element): { width: number; height: number
   }
 }
 
+// A valid width/height attribute value: a positive integer of pixels.
+const positiveIntegerRegex = /^[1-9]\d*$/
+
 // Dimensions encoded in the image URL: a filename or path `800x600`, `?w=&h=` /
 // `?width=&height=`, or `s=WxH`. This is the intrinsic size of that rendition, a
 // safer source than an inline-style display box. A `data:` placeholder (a lazy
@@ -99,6 +102,17 @@ const pictureDimensions = (picture: Element): { width: number; height: number } 
 export const resolveMediaDimensions: DomTransform = () => {
   return (document) => {
     for (const element of document.querySelectorAll('img, video')) {
+      // The width/height attributes take a positive pixel integer. Drop any other value
+      // (auto, a percentage, zero, junk) so it neither blocks the backfill below nor, left
+      // in the markup, trips reader CSS that keys off the attribute's mere presence.
+      for (const attribute of ['width', 'height']) {
+        const value = element.getAttribute(attribute)?.trim()
+
+        if (value !== undefined && !positiveIntegerRegex.test(value)) {
+          element.removeAttribute(attribute)
+        }
+      }
+
       if (element.hasAttribute('width') && element.hasAttribute('height')) {
         continue
       }
