@@ -39,6 +39,7 @@ import { stripInertElements } from './transforms/dom/stripInertElements.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
 import { stripMarkdownEscapeBackslashes } from './transforms/dom/stripMarkdownEscapeBackslashes.js'
+import { stripVideoPosterImages } from './transforms/dom/stripVideoPosterImages.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 import { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
@@ -130,6 +131,10 @@ export const defaultDomTransforms: Array<DomTransform> = [
   // sees a resolvable iframe. Mirrors fixLazyImages for <img>.
   fixLazyIframes,
   replaceEmbedsWithPlaceholders,
+  // Runs after placeholders exist so it can match a standalone poster image against
+  // an embedded video by id, and before injectEnclosures so a removed poster doesn't
+  // skew the enclosure dedup.
+  stripVideoPosterImages,
   injectEnclosures,
   // Fills embed placeholder metadata via the caller's enrichEmbedFn. No-ops when that
   // option is unset. Runs after placeholders exist and before neutralize/proxy so any

@@ -263,6 +263,39 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
 
       expect(result).toContain('src="https://example.com/photo.jpg"')
     })
+
+    it('should skip an image enclosure when the content is a video with no image of its own', async () => {
+      const value = html`
+        <div data-embed-src="https://cdn.jwplayer.com/players/abc123.html"></div>
+        <p>Watch the clip.</p>
+      `
+      const context = withEnclosures([
+        { url: 'https://example.com/poster.jpg', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).not.toContain('poster.jpg')
+    })
+
+    it('should still inject an image enclosure when the video item has its own inline image', async () => {
+      const value = html`
+        <iframe src="https://player.vimeo.com/video/123"></iframe>
+        <img src="https://example.com/inline.jpg">
+      `
+      const context = withEnclosures([
+        { url: 'https://example.com/poster.jpg', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).toContain('poster.jpg')
+    })
+
+    it('should still inject an image enclosure when there is no video', async () => {
+      const value = '<p>Just text.</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/poster.jpg', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).toContain('poster.jpg')
+    })
   })
 
   it('should skip enclosures without type or medium', async () => {

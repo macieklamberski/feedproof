@@ -11,6 +11,28 @@ import type {
 const existingMediaSelector =
   'audio[src], video[src], iframe[src], source[src], img[src], [data-embed-src]'
 
+// Hosts whose iframe/embed means a video player. Used to tell a video-led item
+// (where an image enclosure is the video's poster) from a normal article.
+const videoHostPattern =
+  /youtube\.com|youtu\.be|player\.vimeo\.com|vimeo\.com\/video|jwplayer|dailymotion\.com|wistia|videopress\.com|brightcove|streamable\.com|v\.redd\.it/i
+
+// Whether the content's primary media is a video: a native <video>, or an embed
+// (placeholder or iframe) pointing at a known video host.
+const hasVideoEmbed = (document: Document): boolean => {
+  if (document.querySelector('video[src], video > source[src]')) {
+    return true
+  }
+
+  for (const element of document.querySelectorAll('[data-embed-src], iframe[src]')) {
+    const src = element.getAttribute('data-embed-src') ?? element.getAttribute('src') ?? ''
+    if (videoHostPattern.test(src)) {
+      return true
+    }
+  }
+
+  return false
+}
+
 const isAudioEnclosure = (enclosure: Enclosure): boolean => {
   return enclosure.medium === 'audio' || !!enclosure.type?.startsWith('audio/')
 }
@@ -192,6 +214,12 @@ export const injectEnclosures: DomTransform = (context) => {
     const existingUrls = collectExistingMediaUrls(document, context.cleanUrlFn)
     const created: Array<HTMLElement> = []
 
+    // A video-led item with no inline image of its own (e.g. a feed whose body is
+    // just a video embed) supplies its featured image as an enclosure, where it is
+    // the video's poster rather than a separate picture. Injecting it would stack a
+    // still on top of the player, so image enclosures are suppressed in that case.
+    const isVideoLed = hasVideoEmbed(document) && !document.querySelector('img[src]')
+
     for (const enclosure of enclosures) {
       // Enclosures come from untrusted feed data, which doesn't honor the required-`url`
       // type. A missing or non-string url would throw in cleanUrlFn/resolveUrlFn and abort
@@ -228,6 +256,10 @@ export const injectEnclosures: DomTransform = (context) => {
       if (isVideoEnclosure(enclosure)) {
         created.push(createNativeMediaElement(document, 'video', enclosure, context))
         existingUrls.add(mediaKey)
+        continue
+      }
+
+      if (isVideoLed && isImageEnclosure(enclosure)) {
         continue
       }
 

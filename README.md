@@ -56,6 +56,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `wrapBareInlineInParagraphs` | Wrap loose inline content in `<p>` blocks |
 | `injectEnclosures` | Inject feed enclosures as native media or embed placeholders |
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` embeds into placeholders |
+| `stripVideoPosterImages` | Remove a standalone poster image that duplicates an embedded video |
 | `convertBookmarkCards` | Convert link-preview cards into `data-bookmark-*` placeholders |
 | `enrichEmbedPlaceholders` | Fill placeholder metadata via the caller's `enrichEmbedFn` (no-op unless set) |
 | `neutralizeUnsafeUrls` | Replace dangerous-scheme URLs (and any the `isSafeUrlFn` option rejects) with an inert sentinel, keeping the element |
