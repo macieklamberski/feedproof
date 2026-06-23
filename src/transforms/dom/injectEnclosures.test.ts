@@ -98,30 +98,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     expect(matches).toHaveLength(1)
   })
 
-  it('should not inject image enclosures', async () => {
-    const value = '<p>Content</p>'
-    const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
-
-    expect(await transform(value, context)).toEqualHtml(value)
-  })
-
-  it('should inject audio but skip image enclosures', async () => {
-    const value = '<p>Content</p>'
-    const result = await transform(
-      value,
-      withEnclosures([
-        { url: 'https://example.com/episode.mp3', type: 'audio/mpeg' },
-        { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
-      ]),
-    )
-
-    expect(result).toContain('<audio')
-    expect(result).not.toContain('<img')
-    expect(result).not.toContain('cover.jpg')
-  })
-
-  // Image enclosure injection is disabled; these cover it for when it's re-enabled.
-  describe.skip('image enclosures', () => {
+  describe('image enclosures', () => {
     it('should inject image enclosure as img element', async () => {
       const value = '<p>Content</p>'
       const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
@@ -169,6 +146,78 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       const matches = result.match(/example\.com\/photo\.jpg/g)
 
       expect(matches).toHaveLength(1)
+    })
+
+    it('should skip image enclosure that differs from inline image only by query', async () => {
+      const value = html`
+        <p>Content</p>
+        <img src="https://example.com/a/photo.png">
+      `
+      const context = withEnclosures([
+        { url: 'https://example.com/a/photo.png?w=1024', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).not.toContain('?w=1024')
+    })
+
+    it('should skip image enclosure that is a dimension-only crop of an inline image', async () => {
+      const value = html`
+        <p>Content</p>
+        <img src="https://example.com/news/group/wide__148x84">
+      `
+      const context = withEnclosures([
+        { url: 'https://example.com/news/group/original__640x360', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).not.toContain('original__640x360')
+    })
+
+    it('should skip image enclosure that is a size-keyword variant of an inline image', async () => {
+      const value = html`
+        <p>Content</p>
+        <img src="https://example.com/photos/123/456/large.jpg">
+      `
+      const context = withEnclosures([
+        { url: 'https://example.com/photos/123/456/small.jpg', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).not.toContain('small.jpg')
+    })
+
+    it('should skip image enclosure that is a WordPress sized copy of an inline image', async () => {
+      const value = html`
+        <p>Content</p>
+        <img src="https://example.com/uploads/photo-800x450.jpg">
+      `
+      const context = withEnclosures([
+        { url: 'https://example.com/uploads/photo.jpg', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).not.toContain(
+        'src="https://example.com/uploads/photo.jpg"',
+      )
+    })
+
+    it('should still inject an image enclosure that is a genuinely different image', async () => {
+      const value = html`
+        <p>Content</p>
+        <img src="https://example.com/photos/123/456/large.jpg">
+      `
+      const context = withEnclosures([
+        { url: 'https://example.com/photos/999/888/large.jpg', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).toContain('photos/999/888/large.jpg')
+    })
+
+    it('should not collapse unrelated root-level size-keyword files', async () => {
+      const value = html`
+        <p>Content</p>
+        <img src="https://example.com/large.jpg">
+      `
+      const context = withEnclosures([{ url: 'https://example.com/small.jpg', type: 'image/jpeg' }])
+
+      expect(await transform(value, context)).toContain('small.jpg')
     })
 
     it('should inject both image and audio enclosures', async () => {
