@@ -69,41 +69,12 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     expect(result).toContain('data-embed-thumbnail=')
   })
 
-  it('should skip enclosures already present in content', async () => {
-    const value = html`
-      <p>Content</p>
-      <video src="https://example.com/clip.mp4"></video>
-    `
-    const result = await transform(
-      value,
-      withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }]),
-    )
-    const matches = result.match(/example\.com\/clip\.mp4/g)
-
-    expect(matches).toHaveLength(1)
-  })
-
-  it('should skip enclosure matching an inline source after cleanUrlFn strips its query', async () => {
-    const value = html`
-      <p>Content</p>
-      <video><source src="https://example.com/clip.mp4?_=2"></video>
-    `
-    const context: TransformContext = {
-      ...withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }]),
-      cleanUrlFn: (url) => url.split('?')[0],
-    }
-    const result = await transform(value, context)
-    const matches = result.match(/example\.com\/clip\.mp4/g)
-
-    expect(matches).toHaveLength(1)
-  })
-
   describe('image enclosures', () => {
     it('should inject image enclosure as img element', async () => {
       const value = '<p>Content</p>'
       const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
       const expected = html`
-        <img src="https://example.com/photo.jpg">
+        <img src="https://example.com/photo.jpg" data-enclosure="">
         <p>Content</p>
       `
 
@@ -114,7 +85,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       const value = '<p>Content</p>'
       const context = withEnclosures([{ url: 'https://example.com/photo.jpg', medium: 'image' }])
       const expected = html`
-        <img src="https://example.com/photo.jpg">
+        <img src="https://example.com/photo.jpg" data-enclosure="">
         <p>Content</p>
       `
 
@@ -128,134 +99,12 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         { url: 'https://example.com/two.jpg', type: 'image/jpeg' },
       ])
       const expected = html`
-        <img src="https://example.com/one.jpg">
-        <img src="https://example.com/two.jpg">
+        <img src="https://example.com/one.jpg" data-enclosure="">
+        <img src="https://example.com/two.jpg" data-enclosure="">
         <p>Content</p>
       `
 
       expect(await transform(value, context)).toEqualHtml(expected)
-    })
-
-    it('should skip image enclosure already present in content', async () => {
-      const value = html`
-        <p>Content</p>
-        <img src="https://example.com/photo.jpg">
-      `
-      const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
-      const result = await transform(value, context)
-      const matches = result.match(/example\.com\/photo\.jpg/g)
-
-      expect(matches).toHaveLength(1)
-    })
-
-    it('should skip image enclosure that differs from inline image only by query', async () => {
-      const value = html`
-        <p>Content</p>
-        <img src="https://example.com/a/photo.png">
-      `
-      const context = withEnclosures([
-        { url: 'https://example.com/a/photo.png?w=1024', type: 'image/jpeg' },
-      ])
-
-      expect(await transform(value, context)).not.toContain('?w=1024')
-    })
-
-    it('should skip image enclosure that is a dimension-only crop of an inline image', async () => {
-      const value = html`
-        <p>Content</p>
-        <img src="https://example.com/news/group/wide__148x84">
-      `
-      const context = withEnclosures([
-        { url: 'https://example.com/news/group/original__640x360', type: 'image/jpeg' },
-      ])
-
-      expect(await transform(value, context)).not.toContain('original__640x360')
-    })
-
-    it('should skip image enclosure that is a size-keyword variant of an inline image', async () => {
-      const value = html`
-        <p>Content</p>
-        <img src="https://example.com/photos/123/456/large.jpg">
-      `
-      const context = withEnclosures([
-        { url: 'https://example.com/photos/123/456/small.jpg', type: 'image/jpeg' },
-      ])
-
-      expect(await transform(value, context)).not.toContain('small.jpg')
-    })
-
-    it('should skip image enclosure that is a WordPress sized copy of an inline image', async () => {
-      const value = html`
-        <p>Content</p>
-        <img src="https://example.com/uploads/photo-800x450.jpg">
-      `
-      const context = withEnclosures([
-        { url: 'https://example.com/uploads/photo.jpg', type: 'image/jpeg' },
-      ])
-
-      expect(await transform(value, context)).not.toContain(
-        'src="https://example.com/uploads/photo.jpg"',
-      )
-    })
-
-    it('should still inject an image enclosure that is a genuinely different image', async () => {
-      const value = html`
-        <p>Content</p>
-        <img src="https://example.com/photos/123/456/large.jpg">
-      `
-      const context = withEnclosures([
-        { url: 'https://example.com/photos/999/888/large.jpg', type: 'image/jpeg' },
-      ])
-
-      expect(await transform(value, context)).toContain('photos/999/888/large.jpg')
-    })
-
-    it('should not collapse unrelated root-level size-keyword files', async () => {
-      const value = html`
-        <p>Content</p>
-        <img src="https://example.com/large.jpg">
-      `
-      const context = withEnclosures([{ url: 'https://example.com/small.jpg', type: 'image/jpeg' }])
-
-      expect(await transform(value, context)).toContain('small.jpg')
-    })
-
-    it('should skip image enclosure that differs from inline image only by www', async () => {
-      const value = html`
-        <p>Content</p>
-        <img src="http://example.com/news/thumb.jpg">
-      `
-      const context = withEnclosures([
-        { url: 'http://www.example.com/news/thumb.jpg', type: 'image/jpeg' },
-      ])
-
-      expect(await transform(value, context)).not.toContain('www.example.com')
-    })
-
-    it('should skip image enclosure that differs from inline image only by protocol', async () => {
-      const value = html`
-        <p>Content</p>
-        <img src="http://example.com/news/thumb.jpg">
-      `
-      const context = withEnclosures([
-        { url: 'https://example.com/news/thumb.jpg', type: 'image/jpeg' },
-      ])
-      const result = await transform(value, context)
-
-      expect(result.match(/example\.com\/news\/thumb\.jpg/g)).toHaveLength(1)
-    })
-
-    it('should skip image enclosure that differs from inline image only by host case', async () => {
-      const value = html`
-        <p>Content</p>
-        <img src="https://example.com/news/thumb.jpg">
-      `
-      const context = withEnclosures([
-        { url: 'https://Example.COM/news/thumb.jpg', type: 'image/jpeg' },
-      ])
-      const result = await transform(value, context)
-
-      expect(result.match(/example\.com\/news\/thumb\.jpg/gi)).toHaveLength(1)
     })
 
     it('should inject both image and audio enclosures', async () => {
@@ -285,7 +134,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         },
       ])
       const expected = html`
-        <img src="https://example.com/photo.jpg" width="800" height="600" alt="A photo">
+        <img src="https://example.com/photo.jpg" width="800" height="600" alt="A photo" data-enclosure="">
         <p>Content</p>
       `
 
@@ -300,6 +149,39 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       const result = await transform('<p>Content</p>', context)
 
       expect(result).toContain('src="https://example.com/photo.jpg"')
+    })
+
+    it('should skip an image enclosure when the content is a video with no image of its own', async () => {
+      const value = html`
+        <div data-embed-src="https://cdn.jwplayer.com/players/abc123.html"></div>
+        <p>Watch the clip.</p>
+      `
+      const context = withEnclosures([
+        { url: 'https://example.com/poster.jpg', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).not.toContain('poster.jpg')
+    })
+
+    it('should still inject an image enclosure when the video item has its own inline image', async () => {
+      const value = html`
+        <iframe src="https://player.vimeo.com/video/123"></iframe>
+        <img src="https://example.com/inline.jpg">
+      `
+      const context = withEnclosures([
+        { url: 'https://example.com/poster.jpg', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).toContain('poster.jpg')
+    })
+
+    it('should still inject an image enclosure when there is no video', async () => {
+      const value = '<p>Just text.</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/poster.jpg', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).toContain('poster.jpg')
     })
   })
 
@@ -328,7 +210,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/episode.mp3', medium: 'audio' }])
     const expected = html`
-      <audio src="https://example.com/episode.mp3" controls preload="none"></audio>
+      <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
       <p>Content</p>
     `
 
@@ -339,7 +221,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/clip.mp4', medium: 'video' }])
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none"></video>
+      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
       <p>Content</p>
     `
 
@@ -383,6 +265,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-enclosure=""
       >
         <a
           href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
@@ -428,7 +311,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       baseUrl: 'https://example.com',
     }
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none"></video>
+      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
       <p>Content</p>
     `
 
@@ -489,6 +372,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         controls
         preload="none"
         poster="https://example.com/poster-large.jpg"
+        data-enclosure=""
       >
       </video>
       <p>Content</p>
@@ -503,7 +387,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       { url: 'https://example.com/clip.mp4', type: 'video/mp4', thumbnails: [] },
     ])
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none"></video>
+      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
       <p>Content</p>
     `
 
@@ -560,17 +444,6 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     expect(result).not.toContain('width=')
     expect(result).not.toContain('height=')
     expect(result).not.toContain('poster=')
-  })
-
-  it('should be idempotent', async () => {
-    const value = '<p>Episode notes</p>'
-    const enclosures: Array<Enclosure> = [
-      { url: 'https://example.com/clip.mp4', type: 'video/mp4' },
-    ]
-    const once = await transform(value, withEnclosures(enclosures))
-    const twice = await transform(once, withEnclosures(enclosures))
-
-    expect(twice).toBe(once)
   })
 
   // Untrusted feed data doesn't honor the required-`url` type.

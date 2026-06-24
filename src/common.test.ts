@@ -13,6 +13,7 @@ import {
   isJsonLike,
   isParseableJson,
   normalizeEmbedFields,
+  removeWithEmptyWrappers,
   resolveOrKeepUrl,
   updateEmbedPlaceholder,
 } from './common.js'
@@ -990,5 +991,55 @@ describe('isParseableJson', () => {
 
   it('should reject a plain string', () => {
     expect(isParseableJson('Hello World')).toBe(false)
+  })
+})
+
+describeForEachParser('removeWithEmptyWrappers', (parseHtml) => {
+  it('should remove a bare element with no wrapper', () => {
+    const document = parseHtml('<p>Keep</p><img src="https://example.com/a.jpg">')
+    removeWithEmptyWrappers(queryElement(document, 'img'))
+
+    expect(document.body.innerHTML).toBe('<p>Keep</p>')
+  })
+
+  it('should remove an empty wrapping figure', () => {
+    const document = parseHtml('<figure><img src="https://example.com/a.jpg"></figure>')
+    removeWithEmptyWrappers(queryElement(document, 'img'))
+
+    expect(document.body.innerHTML).toBe('')
+  })
+
+  it('should remove an empty wrapping anchor', () => {
+    const document = parseHtml(
+      '<a href="https://example.com"><img src="https://example.com/a.jpg"></a>',
+    )
+    removeWithEmptyWrappers(queryElement(document, 'img'))
+
+    expect(document.body.innerHTML).toBe('')
+  })
+
+  it('should remove nested empty wrappers', () => {
+    const document = parseHtml(
+      '<figure><a href="https://example.com"><img src="https://example.com/a.jpg"></a></figure>',
+    )
+    removeWithEmptyWrappers(queryElement(document, 'img'))
+
+    expect(document.body.innerHTML).toBe('')
+  })
+
+  it('should keep a wrapper that still has other content', () => {
+    const document = parseHtml(
+      '<figure><img src="https://example.com/a.jpg"><figcaption>Caption</figcaption></figure>',
+    )
+    removeWithEmptyWrappers(queryElement(document, 'img'))
+
+    expect(document.body.innerHTML).toBe('<figure><figcaption>Caption</figcaption></figure>')
+  })
+
+  it('should not unwrap a non-anchor/figure parent', () => {
+    const document = parseHtml('<div><img src="https://example.com/a.jpg"></div>')
+    removeWithEmptyWrappers(queryElement(document, 'img'))
+
+    expect(document.body.innerHTML).toBe('<div></div>')
   })
 })
