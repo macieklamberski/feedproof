@@ -32,6 +32,7 @@ import { shortenSamePageLinkFragments } from './transforms/dom/shortenSamePageLi
 import { stripBoundaryBreaks } from './transforms/dom/stripBoundaryBreaks.js'
 import { stripComments } from './transforms/dom/stripComments.js'
 import { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
+import { stripDuplicateEnclosures } from './transforms/dom/stripDuplicateEnclosures.js'
 import { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 import { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
 import { stripHiddenElements } from './transforms/dom/stripHiddenElements.js'
@@ -69,7 +70,7 @@ export const defaultStringTransforms: Array<StringTransform> = [
   paragraphizePlainText,
 ]
 
-export const defaultDomTransforms: Array<DomTransform> = [
+export const defaultStandardDomTransforms: Array<DomTransform> = [
   decodeDoubleEncodedTags,
   stripComments,
   stripHiddenElements,
@@ -131,10 +132,6 @@ export const defaultDomTransforms: Array<DomTransform> = [
   // sees a resolvable iframe. Mirrors fixLazyImages for <img>.
   fixLazyIframes,
   replaceEmbedsWithPlaceholders,
-  // Runs after placeholders exist so it can match a standalone poster image against
-  // an embedded video by id, and before injectEnclosures so a removed poster doesn't
-  // skew the enclosure dedup.
-  stripVideoPosterImages,
   injectEnclosures,
   // Fills embed placeholder metadata via the caller's enrichEmbedFn. No-ops when that
   // option is unset. Runs after placeholders exist and before neutralize/proxy so any
@@ -149,6 +146,23 @@ export const defaultDomTransforms: Array<DomTransform> = [
   unwrapWrappers,
   wrapTablesForScroll,
 ]
+
+// Opt-in "best judgement" transforms that may drop content on a heuristic. Not in
+// the standard pipeline; enable them with the `heuristics` option (which selects
+// defaultAllDomTransforms) or by composing them into a custom `domTransforms`.
+export const heuristicDomTransforms: Array<DomTransform> = [
+  stripVideoPosterImages,
+  stripDuplicateEnclosures,
+]
+
+// The standard pipeline with the heuristic transforms spliced in right after
+// injectEnclosures — they must run after injection (stripDuplicateEnclosures reads
+// the markers it leaves) and before proxyAssetUrls rewrites media URLs.
+export const defaultAllDomTransforms: Array<DomTransform> = defaultStandardDomTransforms.flatMap(
+  (transform) => {
+    return transform === injectEnclosures ? [transform, ...heuristicDomTransforms] : [transform]
+  },
+)
 
 // Order matters when selectors overlap: each resolver runs in array order and
 // claimed iframes can't be re-matched. Place more specific selectors (e.g.

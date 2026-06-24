@@ -1,7 +1,7 @@
 import { applyDomTransforms, applyStringTransforms } from './common.js'
 import {
+  defaultAllDomTransforms,
   defaultBookmarkResolvers,
-  defaultDomTransforms,
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
   defaultHighlightFn,
@@ -11,6 +11,7 @@ import {
   defaultLazySrcsetAttributes,
   defaultPreservedPreClasses,
   defaultResolveUrlFn,
+  defaultStandardDomTransforms,
   defaultStringTransforms,
   defaultTrackingHosts,
   defaultTrackingPathSegments,
@@ -44,7 +45,9 @@ export const transformContent = async (
   }
 
   const stringFns = options.stringTransforms ?? defaultStringTransforms
-  const domFns = options.domTransforms ?? defaultDomTransforms
+  const domFns =
+    options.domTransforms ??
+    (options.heuristics ? defaultAllDomTransforms : defaultStandardDomTransforms)
 
   const afterString = await applyStringTransforms(
     html,
@@ -71,7 +74,13 @@ export {
   normalizeEmbedFields,
   updateEmbedPlaceholder,
 } from './common.js'
-export { defaultHighlightFn, defaultResolveUrlFn } from './defaults.js'
+export {
+  defaultAllDomTransforms,
+  defaultHighlightFn,
+  defaultResolveUrlFn,
+  defaultStandardDomTransforms,
+  heuristicDomTransforms,
+} from './defaults.js'
 export {
   composeThumbnailUrl,
   extractVideoId,
@@ -108,6 +117,7 @@ export { shortenSamePageLinkFragments } from './transforms/dom/shortenSamePageLi
 export { stripBoundaryBreaks } from './transforms/dom/stripBoundaryBreaks.js'
 export { stripComments } from './transforms/dom/stripComments.js'
 export { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
+export { stripDuplicateEnclosures } from './transforms/dom/stripDuplicateEnclosures.js'
 export { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 export { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
 export { stripInertElements } from './transforms/dom/stripInertElements.js'

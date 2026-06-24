@@ -99,6 +99,28 @@ export const isBlockElement = (node: Node): boolean => {
   return isElement(node) && blockElements.has(node.localName)
 }
 
+// Remove an element along with any wrapper (a/figure) it leaves empty, so a
+// removed image doesn't leave a dangling link or empty figure behind.
+export const removeWithEmptyWrappers = (element: Element): void => {
+  let current: Element | null = element
+
+  while (current) {
+    const parent: Element | null = current.parentElement
+    current.remove()
+
+    if (!parent || (parent.tagName !== 'A' && parent.tagName !== 'FIGURE')) {
+      break
+    }
+
+    const isEmpty = parent.children.length === 0 && (parent.textContent ?? '').trim() === ''
+    if (!isEmpty) {
+      break
+    }
+
+    current = parent
+  }
+}
+
 // Collects a subtree's text nodes via an iterative depth-first walk (an explicit stack
 // rather than recursion) so a deeply nested document can't overflow the call stack.
 // Children are pushed in reverse so they pop in document order. An element for which
