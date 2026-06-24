@@ -220,6 +220,44 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(await transform(value, context)).toContain('small.jpg')
     })
 
+    it('should skip image enclosure that differs from inline image only by www', async () => {
+      const value = html`
+        <p>Content</p>
+        <img src="http://example.com/news/thumb.jpg">
+      `
+      const context = withEnclosures([
+        { url: 'http://www.example.com/news/thumb.jpg', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).not.toContain('www.example.com')
+    })
+
+    it('should skip image enclosure that differs from inline image only by protocol', async () => {
+      const value = html`
+        <p>Content</p>
+        <img src="http://example.com/news/thumb.jpg">
+      `
+      const context = withEnclosures([
+        { url: 'https://example.com/news/thumb.jpg', type: 'image/jpeg' },
+      ])
+      const result = await transform(value, context)
+
+      expect(result.match(/example\.com\/news\/thumb\.jpg/g)).toHaveLength(1)
+    })
+
+    it('should skip image enclosure that differs from inline image only by host case', async () => {
+      const value = html`
+        <p>Content</p>
+        <img src="https://example.com/news/thumb.jpg">
+      `
+      const context = withEnclosures([
+        { url: 'https://Example.COM/news/thumb.jpg', type: 'image/jpeg' },
+      ])
+      const result = await transform(value, context)
+
+      expect(result.match(/example\.com\/news\/thumb\.jpg/gi)).toHaveLength(1)
+    })
+
     it('should inject both image and audio enclosures', async () => {
       const value = '<p>Content</p>'
       const result = await transform(

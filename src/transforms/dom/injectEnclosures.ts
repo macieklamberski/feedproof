@@ -1,3 +1,4 @@
+import { normalizeUrl } from 'feedcanon'
 import { createEmbedPlaceholder, resolveOrKeepUrl } from '../../common.js'
 import type {
   CleanUrlFn,
@@ -68,6 +69,11 @@ const wordpressDimensionSuffix = /-\d{1,5}x\d{1,5}(\.[a-z0-9]+)$/i
 // image already in the content doesn't get injected a second time. Most feeds
 // encode the size in the URL and the variants are otherwise identical, so we
 // strip the size signal and compare host + path:
+//   - normalize host the same safe way feedcanon compares feed URLs: drop a
+//     leading www., lowercase the host (DNS is case-insensitive), and normalize
+//     percent-encoding/unicode/duplicate slashes. The key is host + path with no
+//     protocol, so http and https collapse together too. The path's case is left
+//     alone — it is case-sensitive on most servers.
 //   - drop the query (cache-busters and ?w=/?width= render params)
 //   - collapse a WordPress -WxH suffix back to the base filename
 //   - drop a leaf that is only dimensions or only a size keyword (no stem to keep)
@@ -75,12 +81,21 @@ const wordpressDimensionSuffix = /-\d{1,5}x\d{1,5}(\.[a-z0-9]+)$/i
 // root-level files like /large.jpg and /small.jpg are never collapsed.
 const buildMediaKey = (rawUrl: string, cleanUrlFn?: CleanUrlFn): string => {
   const cleaned = cleanUrlFn ? cleanUrlFn(rawUrl) : rawUrl
+  // Keep the protocol (stripProtocol off) so the result stays a parseable URL;
+  // it is dropped below when the key is assembled from host + path.
+  const normalized = normalizeUrl(cleaned, {
+    stripWww: true,
+    stripHash: true,
+    collapseSlashes: true,
+    normalizeEncoding: true,
+    normalizeUnicode: true,
+  })
 
   let parsed: URL
   try {
-    parsed = new URL(cleaned)
+    parsed = new URL(normalized)
   } catch {
-    return cleaned
+    return normalized
   }
 
   const segments = parsed.pathname.split('/').filter(Boolean)
