@@ -1,3 +1,4 @@
+import { removeWithEmptyWrappers } from '../../common.js'
 import { extractVideoId } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 
@@ -27,28 +28,6 @@ const collectEmbeddedVideoIds = (document: Document): Set<string> => {
   }
 
   return ids
-}
-
-// Remove an element along with any wrapper (a/figure) it leaves empty, so a
-// stripped poster doesn't leave a dangling link or empty figure behind.
-const removeWithEmptyWrappers = (element: Element): void => {
-  let current: Element | null = element
-
-  while (current) {
-    const parent: Element | null = current.parentElement
-    current.remove()
-
-    if (!parent || (parent.tagName !== 'A' && parent.tagName !== 'FIGURE')) {
-      break
-    }
-
-    const isEmpty = parent.children.length === 0 && (parent.textContent ?? '').trim() === ''
-    if (!isEmpty) {
-      break
-    }
-
-    current = parent
-  }
 }
 
 // Some feeds render a video as a poster image plus the embed (e.g. WordPress

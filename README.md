@@ -30,7 +30,7 @@ const result = await transformContent('<p>Check <img data-src="photo.jpg"> and v
 
 ## Transforms
 
-Inventory of every transform exported from the package. Most are enabled by default; pass a custom `stringTransforms` / `domTransforms` array via `transformContent` options to override.
+Inventory of every transform exported from the package. Most are enabled by default; pass a custom `stringTransforms` / `domTransforms` array via `transformContent` options to override. Transforms marked _Heuristic (opt-in)_ make a best-judgement guess and may drop content, so they are excluded from the standard pipeline — enable them with `heuristics: true` (see Options).
 
 | Transform | Description |
 | --- | --- |
@@ -56,7 +56,8 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `wrapBareInlineInParagraphs` | Wrap loose inline content in `<p>` blocks |
 | `injectEnclosures` | Inject feed enclosures as native media or embed placeholders |
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` embeds into placeholders |
-| `stripVideoPosterImages` | Remove a standalone poster image that duplicates an embedded video |
+| `stripVideoPosterImages` | _Heuristic (opt-in):_ remove a standalone poster image that duplicates an embedded video |
+| `stripDuplicateEnclosures` | _Heuristic (opt-in):_ remove an injected enclosure that duplicates inline content (image size-variants, exact audio/video/embed) |
 | `convertBookmarkCards` | Convert link-preview cards into `data-bookmark-*` placeholders |
 | `enrichEmbedPlaceholders` | Fill placeholder metadata via the caller's `enrichEmbedFn` (no-op unless set) |
 | `neutralizeUnsafeUrls` | Replace dangerous-scheme URLs (and any the `isSafeUrlFn` option rejects) with an inert sentinel, keeping the element |
@@ -106,6 +107,8 @@ const result = transformContent(html, {
   },
   // Swap the code highlighter (defaults to highlight.js; may be async).
   highlightFn: (text, language) => myHighlighter.highlight(text, language),
+  // Opt into the heuristic transforms (enclosure-duplicate + video-poster stripping). Ignored if domTransforms is set.
+  heuristics: true,
   // Run a custom DOM transform pipeline (omit to use defaults).
   domTransforms: [fixLazyImages, resolveRelativeUrls],
 })
@@ -115,7 +118,7 @@ All caller-provided functions (`parseHtmlFn`, `resolveUrlFn`, `cleanUrlFn`, `ass
 
 Code blocks are highlighted only when they declare a language (`language-*` class, `data-language`, Pandoc/Rouge/Expressive Code/etc.); unlabeled blocks are left plain rather than guessed at. The default highlighter is highlight.js (exported as `defaultHighlightFn` / `hljsHighlightFn`); replace it with `highlightFn`.
 
-The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. Every transform is also exported individually from `feedsweep`, so you can compose any pipeline — list them explicitly to build from scratch, or spread `defaultDomTransforms` (etc.) from `feedsweep/defaults` to extend or filter the defaults.
+The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. The `heuristics` flag (default `false`) selects between two exported DOM pipelines: `defaultStandardDomTransforms` (the safe defaults) and `defaultAllDomTransforms` (standard plus `heuristicDomTransforms` spliced in after `injectEnclosures`). Setting `domTransforms` explicitly overrides `heuristics`. Every transform and pipeline is also exported individually from `feedsweep`, so you can compose any pipeline — list transforms explicitly, or spread `defaultStandardDomTransforms` / `heuristicDomTransforms` to extend or filter the defaults.
 
 ## DOM library
 

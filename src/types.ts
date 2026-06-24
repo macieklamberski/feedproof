@@ -132,4 +132,7 @@ export type TransformContentOptions = {
   articleTitle?: string
   stringTransforms?: Array<StringTransform>
   domTransforms?: Array<DomTransform>
+  // Opt into the "best judgement" heuristic transforms (enclosure-duplicate and
+  // video-poster stripping). Ignored when `domTransforms` is set explicitly.
+  heuristics?: boolean
 }

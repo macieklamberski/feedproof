@@ -1,5 +1,5 @@
 import { expect, it } from 'bun:test'
-import { defaultDomTransforms } from './defaults.js'
+import { defaultStandardDomTransforms } from './defaults.js'
 import { transformContent } from './index.js'
 import { describeForEachParser, html } from './tests.js'
 import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
@@ -102,7 +102,7 @@ describeForEachParser('transformContent', (parseHtml) => {
       await transformContent(value, {
         parseHtmlFn: parseHtml,
         cleanUrlFn: (url) => url.split('?')[0],
-        domTransforms: defaultDomTransforms.filter((t) => t.name !== 'cleanAnchorUrls'),
+        domTransforms: defaultStandardDomTransforms.filter((t) => t.name !== 'cleanAnchorUrls'),
       }),
     ).toBe(expected)
   })
@@ -179,7 +179,7 @@ describeForEachParser('transformContent', (parseHtml) => {
   it('should inject audio/video enclosures as native media elements', async () => {
     const value = '<p>Content</p>'
     const expected = html`
-      <audio src="https://example.com/audio.mp3" controls preload="none"></audio>
+      <audio src="https://example.com/audio.mp3" controls preload="none" data-enclosure=""></audio>
       <p>Content</p>
     `
 
@@ -189,6 +189,25 @@ describeForEachParser('transformContent', (parseHtml) => {
         enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
       }),
     ).toEqualHtml(expected)
+  })
+
+  it('should strip a duplicate enclosure image only when heuristics are enabled', async () => {
+    // The enclosure is a WordPress-sized copy of the inline content image.
+    const value = '<p>Content</p><img src="https://example.com/uploads/photo.jpg">'
+    const enclosures = [
+      { url: 'https://example.com/uploads/photo-800x450.jpg', type: 'image/jpeg' },
+    ]
+
+    const standard = await transformContent(value, { parseHtmlFn: parseHtml, enclosures })
+    const heuristic = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      enclosures,
+      heuristics: true,
+    })
+
+    expect(standard).toContain('photo-800x450.jpg')
+    expect(heuristic).not.toContain('photo-800x450.jpg')
+    expect(heuristic).not.toContain('data-enclosure')
   })
 
   it('should remove paragraphs left empty after boundary br stripping', async () => {
@@ -220,7 +239,7 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(
       await transformContent(value, {
         parseHtmlFn: parseHtml,
-        domTransforms: defaultDomTransforms.filter((t) => t.name !== 'stripEmptyTags'),
+        domTransforms: defaultStandardDomTransforms.filter((t) => t.name !== 'stripEmptyTags'),
       }),
     ).toBe(expected)
   })
@@ -252,6 +271,7 @@ describeForEachParser('transformContent', (parseHtml) => {
         src="https://proxy.example.com/audio/https%3A%2F%2Fexample.com%2Faudio.mp3"
         controls
         preload="none"
+        data-enclosure=""
       >
       </audio>
       <p>Content</p>
@@ -339,7 +359,7 @@ describeForEachParser('transformContent', (parseHtml) => {
     let called = false
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
-      domTransforms: defaultDomTransforms.filter(
+      domTransforms: defaultStandardDomTransforms.filter(
         (transform) => transform !== enrichEmbedPlaceholders,
       ),
       enrichEmbedFn: () => {
