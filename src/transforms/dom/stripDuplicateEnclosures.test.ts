@@ -84,6 +84,97 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
+    it('should remove a marked Substack image that differs only in proxy render params', async () => {
+      const value = html`
+        <img src="https://substackcdn.com/image/fetch/$s_!a!,f_auto,q_auto:good/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabc_1456x1048.png" data-enclosure="">
+        <img src="https://substackcdn.com/image/fetch/$s_!a!,w_1456,c_limit,f_webp/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabc_1456x1048.png">
+      `
+      const result = await transform(value)
+
+      expect(result.match(/image\/fetch/g)).toHaveLength(1)
+      expect(result).toContain('w_1456,c_limit,f_webp')
+    })
+
+    it('should keep two Substack images with different inner sources', async () => {
+      const value = html`
+        <img src="https://substackcdn.com/image/fetch/$s_!a!,f_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Faaa_800x600.png" data-enclosure="">
+        <img src="https://substackcdn.com/image/fetch/$s_!a!,w_1456/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fbbb_800x600.png">
+      `
+      const result = await transform(value)
+
+      expect(result.match(/image\/fetch/g)).toHaveLength(2)
+    })
+
+    it('should remove a marked Photon image that wraps the same origin as the content', async () => {
+      const value = html`
+        <img src="https://i2.wp.com/example.com/wp-content/uploads/2024/05/photo.png?resize=584,438" data-enclosure="">
+        <img src="https://i0.wp.com/example.com/wp-content/uploads/2024/05/photo.png?w=300">
+      `
+      const result = await transform(value)
+
+      expect(result.match(/wp\.com/g)).toHaveLength(1)
+    })
+
+    it('should remove a Photon image that duplicates a non-proxied content image', async () => {
+      const value = html`
+        <img src="https://i1.wp.com/example.com/wp-content/uploads/photo.png?w=300" data-enclosure="">
+        <img src="https://example.com/wp-content/uploads/photo.png">
+      `
+      const expected = '<img src="https://example.com/wp-content/uploads/photo.png">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should remove a Cloudflare image-resize variant with an absolute source', async () => {
+      const value = html`
+        <img src="https://site.com/cdn-cgi/image/width=1600,format=webp/https://storage.site.com/asset123" data-enclosure="">
+        <img src="https://site.com/cdn-cgi/image/width=400,format=auto/https://storage.site.com/asset123">
+      `
+      const result = await transform(value)
+
+      expect(result.match(/cdn-cgi/g)).toHaveLength(1)
+    })
+
+    it('should remove a Cloudflare image-resize variant with a relative source (beehiiv)', async () => {
+      const value = html`
+        <img src="https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,quality=80/uploads/asset/file/uuid/Episode.png" data-enclosure="">
+        <img src="https://media.beehiiv.com/cdn-cgi/image/quality=60,format=auto/uploads/asset/file/uuid/Episode.png">
+      `
+      const result = await transform(value)
+
+      expect(result.match(/cdn-cgi/g)).toHaveLength(1)
+    })
+
+    it('should remove an ImageKit variant of the same source', async () => {
+      const value = html`
+        <img src="https://ik.imagekit.io/acct/tr:w-300/https://origin.example.com/a/photo.jpg" data-enclosure="">
+        <img src="https://ik.imagekit.io/acct/tr:w-900/https://origin.example.com/a/photo.jpg">
+      `
+      const result = await transform(value)
+
+      expect(result.match(/imagekit/g)).toHaveLength(1)
+    })
+
+    it('should remove a wsrv.nl variant of the same source', async () => {
+      const value = html`
+        <img src="https://wsrv.nl/?url=https%3A%2F%2Forigin.example.com%2Fa%2Fphoto.jpg&w=200" data-enclosure="">
+        <img src="https://wsrv.nl/?url=https%3A%2F%2Forigin.example.com%2Fa%2Fphoto.jpg&w=800">
+      `
+      const result = await transform(value)
+
+      expect(result.match(/wsrv\.nl/g)).toHaveLength(1)
+    })
+
+    it('should keep two proxied images with different inner sources across proxies', async () => {
+      const value = html`
+        <img src="https://i0.wp.com/example.com/a/one.png?w=300" data-enclosure="">
+        <img src="https://i0.wp.com/example.com/a/two.png?w=300">
+      `
+      const result = await transform(value)
+
+      expect(result.match(/wp\.com/g)).toHaveLength(2)
+    })
+
     it('should keep a genuinely different image and drop its marker', async () => {
       const value = html`
         <img src="https://example.com/photos/999/888/large.jpg" data-enclosure="">

@@ -9,8 +9,8 @@ import type {
 
 // Marks an injected element so stripDuplicateEnclosures (an opt-in heuristic) can
 // tell it from the item's own inline content. injectEnclosures itself does not
-// dedup — it injects every enclosure.
-const enclosureMarker = 'data-enclosure'
+// dedup — it injects every enclosure. Exported because that pass reads it.
+export const enclosureMarker = 'data-enclosure'
 
 // Hosts whose iframe/embed means a video player. Used to tell a video-led item
 // (where an image enclosure is the video's poster) from a normal article.
