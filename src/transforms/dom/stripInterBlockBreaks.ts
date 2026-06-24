@@ -1,5 +1,11 @@
-import { isBlockElement, isBr, isSkippable } from '../../common.js'
+import { isBlockElement, isBr, isMediaElement, isSkippable } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+
+// A <br> is redundant beside anything that already breaks the flow: a block element
+// or a block-displayed media element such as a bare image or video.
+const separatesFlow = (node: Node): boolean => {
+  return isBlockElement(node) || isMediaElement(node)
+}
 
 export const stripInterBlockBreaks: DomTransform = () => {
   return (document) => {
@@ -36,10 +42,10 @@ export const stripInterBlockBreaks: DomTransform = () => {
           }
         } else {
           if (runBrs !== null) {
-            const previousIsBlock = !previousBoundary || isBlockElement(previousBoundary)
-            const nextIsBlock = isBlockElement(child)
+            const previousSeparates = !previousBoundary || separatesFlow(previousBoundary)
+            const nextSeparates = separatesFlow(child)
 
-            if (previousIsBlock && nextIsBlock) {
+            if (previousSeparates && nextSeparates) {
               for (const br of runBrs) {
                 br.remove()
               }
@@ -55,9 +61,9 @@ export const stripInterBlockBreaks: DomTransform = () => {
       }
 
       if (runBrs !== null) {
-        const previousIsBlock = !previousBoundary || isBlockElement(previousBoundary)
+        const previousSeparates = !previousBoundary || separatesFlow(previousBoundary)
 
-        if (previousIsBlock) {
+        if (previousSeparates) {
           for (const br of runBrs) {
             br.remove()
           }

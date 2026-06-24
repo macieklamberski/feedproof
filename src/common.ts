@@ -121,6 +121,22 @@ export const removeWithEmptyWrappers = (element: Element): void => {
   }
 }
 
+// Embedded media that readers render on its own line, so it breaks the flow like
+// a block does even though HTML defaults it to inline.
+export const mediaElements = new Set([
+  'audio',
+  'embed',
+  'iframe',
+  'img',
+  'object',
+  'picture',
+  'video',
+])
+
+export const isMediaElement = (node: Node): boolean => {
+  return isElement(node) && mediaElements.has(node.localName)
+}
+
 // Collects a subtree's text nodes via an iterative depth-first walk (an explicit stack
 // rather than recursion) so a deeply nested document can't overflow the call stack.
 // Children are pushed in reverse so they pop in document order. An element for which

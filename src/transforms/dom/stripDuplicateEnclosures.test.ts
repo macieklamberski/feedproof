@@ -54,6 +54,36 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
+    it('should remove a marked image differing from a content image only by www', async () => {
+      const value = html`
+        <img src="http://www.example.com/news/thumb.jpg" data-enclosure="">
+        <img src="http://example.com/news/thumb.jpg">
+      `
+      const expected = '<img src="http://example.com/news/thumb.jpg">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should remove a marked image differing from a content image only by protocol', async () => {
+      const value = html`
+        <img src="https://example.com/news/thumb.jpg" data-enclosure="">
+        <img src="http://example.com/news/thumb.jpg">
+      `
+      const expected = '<img src="http://example.com/news/thumb.jpg">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should remove a marked image differing from a content image only by host case', async () => {
+      const value = html`
+        <img src="https://Example.COM/news/thumb.jpg" data-enclosure="">
+        <img src="https://example.com/news/thumb.jpg">
+      `
+      const expected = '<img src="https://example.com/news/thumb.jpg">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
     it('should keep a genuinely different image and drop its marker', async () => {
       const value = html`
         <img src="https://example.com/photos/999/888/large.jpg" data-enclosure="">

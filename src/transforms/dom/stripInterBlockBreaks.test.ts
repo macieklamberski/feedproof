@@ -108,6 +108,47 @@ describeForEachParser('stripInterBlockBreaks', (parseHtml) => {
     expect(await transform(value)).toBe(expected)
   })
 
+  it('should remove br between a bare image and a following block', async () => {
+    const value = '<img src="https://example.com/p.jpg"><br><blockquote>Quote</blockquote>'
+    const expected = '<img src="https://example.com/p.jpg"><blockquote>Quote</blockquote>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should remove br between a block and a following bare image', async () => {
+    const value = '<p>Text</p><br><img src="https://example.com/p.jpg">'
+    const expected = '<p>Text</p><img src="https://example.com/p.jpg">'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should remove br between two bare images', async () => {
+    const value = '<img src="https://example.com/a.jpg"><br><img src="https://example.com/b.jpg">'
+    const expected = '<img src="https://example.com/a.jpg"><img src="https://example.com/b.jpg">'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should remove br before a leading bare image', async () => {
+    const value = '<br><img src="https://example.com/p.jpg">'
+    const expected = '<img src="https://example.com/p.jpg">'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should remove br between a bare video and a following block', async () => {
+    const value = '<video src="https://example.com/c.mp4"></video><br><p>Text</p>'
+    const expected = '<video src="https://example.com/c.mp4"></video><p>Text</p>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should preserve br between bare text and a following image', async () => {
+    const value = 'leading text<br><img src="https://example.com/p.jpg">'
+
+    expect(await transform(value)).toBe(value)
+  })
+
   it('should not modify content without br', async () => {
     const value = html`
       <p>First</p>
