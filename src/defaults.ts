@@ -3,6 +3,7 @@ import { ghostBookmarkResolver } from './bookmarks/ghost.js'
 import { substackBookmarkResolver } from './bookmarks/substack.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
+import { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 import { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
 import { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
@@ -40,7 +41,6 @@ import { stripInertElements } from './transforms/dom/stripInertElements.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
 import { stripMarkdownEscapeBackslashes } from './transforms/dom/stripMarkdownEscapeBackslashes.js'
-import { stripVideoPosterImages } from './transforms/dom/stripVideoPosterImages.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 import { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
@@ -151,7 +151,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
 // the standard pipeline; enable them with the `heuristics` option (which selects
 // defaultAllDomTransforms) or by composing them into a custom `domTransforms`.
 export const heuristicDomTransforms: Array<DomTransform> = [
-  stripVideoPosterImages,
+  assignVideoPosters,
   stripDuplicateEnclosures,
 ]
 
