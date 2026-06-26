@@ -25,6 +25,7 @@ import { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 import { rebuildLiteVideoEmbeds } from './transforms/dom/rebuildLiteVideoEmbeds.js'
+import { rebuildLyteEmbeds } from './transforms/dom/rebuildLyteEmbeds.js'
 import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 import { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
@@ -82,6 +83,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   surfaceTemplateEmbeds,
   surfaceNoscriptEmbeds,
   rebuildLiteVideoEmbeds,
+  rebuildLyteEmbeds,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
   demoteHeadings,
