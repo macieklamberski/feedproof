@@ -56,6 +56,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `wrapBareInlineInParagraphs` | Wrap loose inline content in `<p>` blocks |
 | `injectEnclosures` | Inject feed enclosures as native media or embed placeholders |
 | `surfaceTemplateEmbeds` | Hoist a video embed out of a lazy-load `<template>` (e.g. Better Core Video Embeds) so it renders in a reader |
+| `rebuildLiteVideoEmbeds` | Rebuild a real `<iframe>` from a `lite-youtube` / `lite-vimeo` web component's `videoid`, carrying over `start` and `videotitle` |
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` embeds into placeholders |
 | `assignVideoPosters` | _Heuristic (opt-in):_ move a redundant video-poster image (inline or an enclosure) onto the embed as its poster, then drop the standalone image |
 | `stripDuplicateEnclosures` | _Heuristic (opt-in):_ remove an injected enclosure that duplicates inline content (image size-variants, exact audio/video/embed) |

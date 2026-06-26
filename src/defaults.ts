@@ -24,6 +24,7 @@ import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 import { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
+import { rebuildLiteVideoEmbeds } from './transforms/dom/rebuildLiteVideoEmbeds.js'
 import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 import { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
@@ -75,9 +76,10 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   decodeDoubleEncodedTags,
   stripComments,
   stripHiddenElements,
-  // Surfaces an embed trapped in a lazy-load <template> before the media/embed
-  // transforms run, so the iframe is placeholdered and its poster connected.
+  // Normalize lazy-loaded video embeds into a plain <iframe> before the media/embed
+  // transforms run, so each is placeholdered and any poster connected.
   surfaceTemplateEmbeds,
+  rebuildLiteVideoEmbeds,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
   demoteHeadings,
