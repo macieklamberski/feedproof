@@ -42,6 +42,7 @@ import { stripInertElements } from './transforms/dom/stripInertElements.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
 import { stripMarkdownEscapeBackslashes } from './transforms/dom/stripMarkdownEscapeBackslashes.js'
+import { surfaceNoscriptEmbeds } from './transforms/dom/surfaceNoscriptEmbeds.js'
 import { surfaceTemplateEmbeds } from './transforms/dom/surfaceTemplateEmbeds.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
@@ -79,6 +80,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // Normalize lazy-loaded video embeds into a plain <iframe> before the media/embed
   // transforms run, so each is placeholdered and any poster connected.
   surfaceTemplateEmbeds,
+  surfaceNoscriptEmbeds,
   rebuildLiteVideoEmbeds,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
