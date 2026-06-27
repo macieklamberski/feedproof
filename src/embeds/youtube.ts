@@ -7,6 +7,11 @@ const pathIdSegments = ['shorts', 'embed', 'live', 'v']
 
 const youtubeHosts = ['youtube.com', 'youtube-nocookie.com', 'youtu.be']
 
+// hqdefault always exists for a video, so it's the safe default. Higher-res variants
+// (maxresdefault, sddefault) give a sharper poster but only exist for some videos, so
+// we can't pick them blindly.
+// TODO: detect and prefer a higher-res thumbnail when present — the best available
+// resolution varies per video, so it needs a probe (HEAD request) rather than a guess.
 export const composeThumbnailUrl = (videoId: string): string => {
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
 }

@@ -82,6 +82,16 @@ export {
   heuristicDomTransforms,
 } from './defaults.js'
 export {
+  dailymotionEmbedResolver,
+  dailymotionResolveEmbed,
+  extractDailymotionId,
+} from './embeds/dailymotion.js'
+export {
+  extractVimeoId,
+  vimeoEmbedResolver,
+  vimeoResolveEmbed,
+} from './embeds/vimeo.js'
+export {
   composeThumbnailUrl,
   extractVideoId,
   youtubeEmbedResolver,
