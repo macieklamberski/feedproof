@@ -41,6 +41,7 @@ import { stripInertElements } from './transforms/dom/stripInertElements.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
 import { stripMarkdownEscapeBackslashes } from './transforms/dom/stripMarkdownEscapeBackslashes.js'
+import { surfaceTemplateEmbeds } from './transforms/dom/surfaceTemplateEmbeds.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 import { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
@@ -74,6 +75,9 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   decodeDoubleEncodedTags,
   stripComments,
   stripHiddenElements,
+  // Surfaces an embed trapped in a lazy-load <template> before the media/embed
+  // transforms run, so the iframe is placeholdered and its poster connected.
+  surfaceTemplateEmbeds,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
   demoteHeadings,
