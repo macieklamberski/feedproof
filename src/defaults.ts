@@ -1,6 +1,8 @@
 import { resolveUrl } from 'feedcanon'
 import { ghostBookmarkResolver } from './bookmarks/ghost.js'
 import { substackBookmarkResolver } from './bookmarks/substack.js'
+import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
+import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
 import { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
@@ -167,7 +169,11 @@ export const defaultAllDomTransforms: Array<DomTransform> = defaultStandardDomTr
 // Order matters when selectors overlap: each resolver runs in array order and
 // claimed iframes can't be re-matched. Place more specific selectors (e.g.
 // meta-providers like Embedly that wrap other providers) before broader ones.
-export const defaultEmbedResolvers: Array<EmbedResolver> = [youtubeEmbedResolver]
+export const defaultEmbedResolvers: Array<EmbedResolver> = [
+  youtubeEmbedResolver,
+  vimeoEmbedResolver,
+  dailymotionEmbedResolver,
+]
 
 export const defaultBookmarkResolvers: Array<BookmarkResolver> = [
   ghostBookmarkResolver,
