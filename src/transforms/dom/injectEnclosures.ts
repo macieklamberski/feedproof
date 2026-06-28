@@ -110,33 +110,59 @@ const injectImageEnclosure = (
   return element
 }
 
+// Layers the enclosure's own metadata over the resolver result, preferring the feed's
+// values for the display fields. The resolver only has URL-derived guesses (e.g. YouTube's
+// composed hqdefault thumbnail), while the feed carries the publisher's real thumbnail,
+// title, dimensions, and duration. Identity fields (provider/id/src/url) stay from the
+// resolver.
+const mergeEnclosureMetadata = (
+  resolved: EmbedResolverResult | undefined,
+  enclosure: Enclosure,
+): Partial<EmbedResolverResult> => {
+  return {
+    ...resolved,
+    thumbnail: enclosure.thumbnails?.[0]?.url ?? resolved?.thumbnail,
+    title: enclosure.title ?? resolved?.title,
+    description: enclosure.description ?? resolved?.description,
+    width: enclosure.width ?? resolved?.width,
+    height: enclosure.height ?? resolved?.height,
+    duration: enclosure.duration ?? resolved?.duration,
+  }
+}
+
 export const injectEnclosures: DomTransform = (context) => {
-  if (!context.enclosures?.length) {
+  const enclosures = context.enclosures
+
+  if (!enclosures?.length) {
     return () => {}
   }
-
-  const enclosures = context.enclosures
 
   return async (document) => {
     const created: Array<HTMLElement> = []
 
     for (const enclosure of enclosures) {
-      // Enclosures come from untrusted feed data, which doesn't honor the required-`url`
-      // type. A missing or non-string url would throw in cleanUrlFn/resolveUrlFn and abort
-      // the whole transform, so skip it before any URL handling.
-      if (typeof enclosure.url !== 'string' || enclosure.url === '') {
+      // The embeddable URL: a media:player console (when present) is the canonical thing to
+      // embed, otherwise the content URL. Enclosures come from untrusted feed data that
+      // doesn't honor the required-`url` type, so guard before any URL handling.
+      const embedSource = enclosure.playerUrl ?? enclosure.url
+
+      if (typeof embedSource !== 'string' || embedSource === '') {
         continue
       }
 
-      if (!context.resolveUrlFn(enclosure.url, context.baseUrl)) {
+      if (!context.resolveUrlFn(embedSource, context.baseUrl)) {
         continue
       }
 
-      const resolved = await resolveEnclosure(enclosure.url, context.embedResolvers, document)
+      const resolved = await resolveEnclosure(embedSource, context.embedResolvers, document)
 
-      if (resolved) {
-        const src = resolveOrKeepUrl(enclosure.url, context.resolveUrlFn, context.baseUrl)
-        created.push(createEmbedPlaceholder(document, src, resolved))
+      // A resolver match, or an explicit player URL (embeddable by the Media RSS spec even
+      // when no resolver claims it), produces an embed placeholder.
+      if (resolved || enclosure.playerUrl) {
+        const src = resolveOrKeepUrl(embedSource, context.resolveUrlFn, context.baseUrl)
+        created.push(
+          createEmbedPlaceholder(document, src, mergeEnclosureMetadata(resolved, enclosure)),
+        )
         continue
       }
 

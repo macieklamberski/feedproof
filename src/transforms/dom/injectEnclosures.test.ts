@@ -69,6 +69,74 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     expect(result).toContain('data-embed-thumbnail=')
   })
 
+  it('should embed a player URL even when no resolver claims it', async () => {
+    const result = await transform(
+      '<p>Notes</p>',
+      withEnclosures([
+        {
+          url: 'https://vimeo.com/76979871',
+          playerUrl: 'https://player.vimeo.com/video/76979871',
+          medium: 'video',
+          thumbnails: [{ url: 'https://i.vimeocdn.com/video/76979871.jpg' }],
+        },
+      ]),
+    )
+
+    expect(result).toContain('data-embed-src="https://player.vimeo.com/video/76979871"')
+    expect(result).toContain('data-embed-thumbnail="https://i.vimeocdn.com/video/76979871.jpg"')
+  })
+
+  it('should prefer the player URL over the content URL for resolution', async () => {
+    const result = await transform(
+      '<p>Notes</p>',
+      withEnclosures([
+        {
+          url: 'https://example.com/watch/123',
+          playerUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+          medium: 'video',
+        },
+      ]),
+    )
+
+    expect(result).toContain('data-embed-provider="youtube"')
+  })
+
+  it('should carry the feed thumbnail onto a resolved embed instead of the composed guess', async () => {
+    const result = await transform(
+      '<p>Notes</p>',
+      withEnclosures([
+        {
+          url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+          medium: 'video',
+          thumbnails: [{ url: 'https://cdn.example.com/feed-thumb.jpg' }],
+        },
+      ]),
+    )
+
+    expect(result).toContain('data-embed-thumbnail="https://cdn.example.com/feed-thumb.jpg"')
+    expect(result).not.toContain('hqdefault')
+  })
+
+  it('should keep the composed thumbnail when the feed provides none', async () => {
+    const result = await transform(
+      '<p>Notes</p>',
+      withEnclosures([{ url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video' }]),
+    )
+
+    expect(result).toContain('hqdefault')
+  })
+
+  it('should carry the enclosure duration onto the embed', async () => {
+    const result = await transform(
+      '<p>Notes</p>',
+      withEnclosures([
+        { url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video', duration: 212 },
+      ]),
+    )
+
+    expect(result).toContain('data-embed-duration="212"')
+  })
+
   describe('image enclosures', () => {
     it('should inject image enclosure as img element', async () => {
       const value = '<p>Content</p>'
