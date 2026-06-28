@@ -18,6 +18,7 @@ export type Enclosure = {
   title?: string
   description?: string
   thumbnails?: Array<EnclosureThumbnail>
+  playerUrl?: string
 }
 
 export type ResolveUrlFn = DiscoverResolveUrlFn
