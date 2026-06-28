@@ -62,11 +62,21 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
 
         const { width, height } = getEmbedDimensions(element)
 
+        // A rebuild transform (e.g. a lazy-load facade) may have recovered the publisher's
+        // real poster and stashed it on the element as `data-thumbnail`. Prefer it over the
+        // resolver's URL-derived guess, which is only a safe-default size (e.g. YouTube's
+        // hqdefault) — the carried poster is the exact frame the publisher chose.
+        const carriedThumbnail = element.getAttribute('data-thumbnail') || undefined
+
         const placeholderMetadata = {
           ...metadata,
           src: resolvedSrc,
           url: resolvedUrl,
-          thumbnail: resolveOrKeepUrl(metadata.thumbnail, resolveUrlFn, baseUrl),
+          thumbnail: resolveOrKeepUrl(
+            carriedThumbnail ?? metadata.thumbnail,
+            resolveUrlFn,
+            baseUrl,
+          ),
           avatar: resolveOrKeepUrl(metadata.avatar, resolveUrlFn, baseUrl),
           width: width ?? metadata.width,
           height: height ?? metadata.height,
