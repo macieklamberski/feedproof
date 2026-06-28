@@ -59,6 +59,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `surfaceNoscriptEmbeds` | Hoist a video `<iframe>` out of a `<noscript>` lazy-load fallback (e.g. WP Rocket, a3 Lazy Load); ignores non-video noscript iframes like Google Tag Manager |
 | `rebuildLiteVideoEmbeds` | Rebuild a real `<iframe>` from a `lite-youtube` / `lite-vimeo` web component's `videoid`, carrying over `start` and `videotitle` |
 | `rebuildLyteEmbeds` | Rebuild a real `<iframe>` from a WP YouTube Lyte facade (`WYL_`/`lyte_` id) |
+| `rebuildRocketYoutubePreviews` | Rebuild a real `<iframe>` from a WP Rocket YouTube preview facade (`.rll-youtube-player[data-id]`), carrying over `data-query` |
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` embeds into placeholders |
 | `assignVideoPosters` | _Heuristic (opt-in):_ move a redundant video-poster image (inline or an enclosure) onto the embed as its poster, then drop the standalone image |
 | `stripDuplicateEnclosures` | _Heuristic (opt-in):_ remove an injected enclosure that duplicates inline content (image size-variants, exact audio/video/embed) |
