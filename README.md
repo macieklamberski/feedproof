@@ -62,6 +62,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `rebuildLyteEmbeds` | Rebuild a real `<iframe>` from a WP YouTube Lyte facade (`WYL_`/`lyte_` id) |
 | `rebuildRocketYoutubePreviews` | Rebuild a real `<iframe>` from a WP Rocket YouTube preview facade (`.rll-youtube-player[data-id]`), carrying over `data-query` |
 | `rebuildWistiaEmbeds` | Rebuild a real `<iframe>` from a Wistia JS-API inline embed facade (`wistia_async_{id}` class) |
+| `rebuildLazyLoadForVideos` | Rebuild a real `<iframe>` from a "Lazy Load for Videos" facade (`a.preview-lazyload`), recovering the YouTube/Vimeo id from `data-video-uri` or `href` and carrying over `data-video-title` |
 | `rebuildLazyYtEmbeds` | Rebuild a real `<iframe>` from a jQuery lazyYT facade (`div.lazyYT[data-youtube-id]`) |
 | `rebuildElementorVideoEmbeds` | Rebuild a real `<iframe>` from an Elementor video widget's deferred `data-settings` (YouTube / Vimeo / Dailymotion / VideoPress) |
 | `replaceEmbedsWithPlaceholders` | Convert `<iframe>` embeds into placeholders |
