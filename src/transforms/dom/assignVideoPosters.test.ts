@@ -22,6 +22,18 @@ describeForEachParser('assignVideoPosters', (parseHtml) => {
     expect(result).not.toContain('hqdefault')
   })
 
+  it('should keep a feed-defined thumbnail over an inline poster', async () => {
+    const value = html`
+      <img src="https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg">
+      <div data-enclosure data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ" data-embed-thumbnail="https://feed.example.com/thumb.jpg"></div>
+    `
+    const result = await transform(value)
+
+    expect(result).not.toContain('<img')
+    expect(result).toContain('data-embed-thumbnail="https://feed.example.com/thumb.jpg"')
+    expect(result).not.toContain('maxresdefault')
+  })
+
   it('should move an inline poster onto an embed that has no thumbnail', async () => {
     const value = html`
       <img src="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg">

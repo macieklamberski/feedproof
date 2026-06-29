@@ -113,10 +113,11 @@ export const assignVideoPosters: DomTransform = () => (document) => {
         continue
       }
 
-      // The image is the publisher's own poster for this exact video, so it wins over the
-      // embed's existing thumbnail, which is only ever the resolver's guess composed from
-      // the video id.
-      moveImageToVideoPoster(image, embed, true)
+      // The image is the publisher's own poster for this exact video, so it wins over a
+      // resolver thumbnail (only ever a guess composed from the video id). A feed-defined
+      // thumbnail on an enclosure embed stays authoritative, so don't overwrite that one.
+      const isFeedDefined = embed.hasAttribute(enclosureMarker)
+      moveImageToVideoPoster(image, embed, !isFeedDefined)
     }
   }
 
