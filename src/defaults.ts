@@ -26,6 +26,7 @@ import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 import { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
+import { rebuildLazyYtEmbeds } from './transforms/dom/rebuildLazyYtEmbeds.js'
 import { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
 import { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
 import { rebuildLiteVideoEmbeds } from './transforms/dom/rebuildLiteVideoEmbeds.js'
@@ -93,6 +94,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   rebuildLyteEmbeds,
   rebuildRocketYoutubePreviews,
   rebuildWistiaEmbeds,
+  rebuildLazyYtEmbeds,
   rebuildElementorVideoEmbeds,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
