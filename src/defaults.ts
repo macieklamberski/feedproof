@@ -26,6 +26,7 @@ import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 import { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
+import { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
 import { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
 import { rebuildLiteVideoEmbeds } from './transforms/dom/rebuildLiteVideoEmbeds.js'
 import { rebuildLyteEmbeds } from './transforms/dom/rebuildLyteEmbeds.js'
@@ -87,6 +88,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // transforms run, so each is placeholdered and any poster connected.
   surfaceTemplateEmbeds,
   surfaceNoscriptEmbeds,
+  rebuildEmbedPlusEmbeds,
   rebuildLiteVideoEmbeds,
   rebuildLyteEmbeds,
   rebuildRocketYoutubePreviews,
