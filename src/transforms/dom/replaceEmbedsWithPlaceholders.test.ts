@@ -47,6 +47,21 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
     expect(result).not.toContain('<iframe')
   })
 
+  it('should prefer a carried data-thumbnail over the resolver thumbnail', async () => {
+    const value = html`
+      <iframe
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+      ></iframe>
+    `
+    const result = await transform(value)
+
+    expect(result).toContain(
+      'data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"',
+    )
+    expect(result).not.toContain('hqdefault')
+  })
+
   it('should include fallback link with canonical url', async () => {
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     const result = await transform(value)
