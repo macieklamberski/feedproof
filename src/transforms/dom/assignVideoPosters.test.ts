@@ -8,18 +8,18 @@ describeForEachParser('assignVideoPosters', (parseHtml) => {
     return applyDomTransforms(parseHtml(value), [assignVideoPosters(baseContext)])
   }
 
-  it('should remove an inline poster but keep an embed that already has a thumbnail', async () => {
+  it('should replace the resolver thumbnail with the publisher inline poster', async () => {
     const value = html`
-      <img src="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg">
+      <img src="https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg">
       <div data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ" data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"></div>
     `
     const result = await transform(value)
 
     expect(result).not.toContain('<img')
     expect(result).toContain(
-      'data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"',
+      'data-embed-thumbnail="https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"',
     )
-    expect(result).not.toContain('maxresdefault')
+    expect(result).not.toContain('hqdefault')
   })
 
   it('should move an inline poster onto an embed that has no thumbnail', async () => {

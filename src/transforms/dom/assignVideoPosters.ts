@@ -75,17 +75,21 @@ const findVideoElement = (document: Document): Element | undefined => {
   }
 }
 
-// Give the video its poster (without clobbering one it already has, e.g. a YouTube
-// resolver thumbnail), then drop the now-redundant standalone image.
-const moveImageToVideoPoster = (image: Element, video: Element): void => {
+// Give the video its poster, then drop the now-redundant standalone image. By default an
+// existing poster is kept (e.g. a YouTube resolver thumbnail); pass overwrite to replace it
+// with a better one.
+const moveImageToVideoPoster = (image: Element, video: Element, overwrite = false): void => {
   const url = image.getAttribute('src')
 
   if (url) {
     if (video.localName === 'video') {
-      if (!video.hasAttribute('poster')) {
+      if (overwrite || !video.hasAttribute('poster')) {
         video.setAttribute('poster', url)
       }
     } else {
+      if (overwrite) {
+        video.removeAttribute('data-embed-thumbnail')
+      }
       updateEmbedPlaceholder(video as HTMLElement, { thumbnail: url })
     }
   }
@@ -105,9 +109,14 @@ export const assignVideoPosters: DomTransform = () => (document) => {
     for (const image of document.querySelectorAll('img[src]')) {
       const id = image.getAttribute('src')?.match(thumbnailIdPattern)?.[1]
       const embed = id ? embedsByVideoId.get(id) : undefined
-      if (embed) {
-        moveImageToVideoPoster(image, embed)
+      if (!embed) {
+        continue
       }
+
+      // The image is the publisher's own poster for this exact video, so it wins over the
+      // embed's existing thumbnail, which is only ever the resolver's guess composed from
+      // the video id.
+      moveImageToVideoPoster(image, embed, true)
     }
   }
 
