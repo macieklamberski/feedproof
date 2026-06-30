@@ -1,5 +1,5 @@
-import { isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { isText } from '../../utils/dom.js'
 
 // Markdown's escape backslash leaks into some feeds' HTML as a literal `\` at the
 // very start of a paragraph, which the browser then renders as stray text:

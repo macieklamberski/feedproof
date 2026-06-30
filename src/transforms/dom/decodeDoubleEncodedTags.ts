@@ -1,6 +1,6 @@
 import htmlTags from 'html-tags'
-import { hasAncestorWithTagName, isText, NodeFilter } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { hasAncestorWithTagName, isText, NodeFilter } from '../../utils/dom.js'
 
 // Standard HTML elements (from html-tags) we materialize from escaped text. Non-HTML names
 // (`<dependency>`, `<dupa>`) are absent, so config/XML fragments are left as text.

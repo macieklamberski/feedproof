@@ -1,5 +1,5 @@
-import { isSamePage } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { isSamePage } from '../../utils/urls.js'
 
 // The inverse of resolveRelativeUrls: once hrefs are absolute, an in-page anchor
 // to the post itself (e.g. a heading permalink `https://site/post#sec`) still

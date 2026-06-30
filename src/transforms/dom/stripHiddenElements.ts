@@ -1,5 +1,5 @@
-import { isElementHidden } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { isElementHidden } from '../../utils/dom.js'
 
 // Removes elements hidden from view — the `hidden` attribute, inline `display:none`,
 // or inline `visibility:hidden`. Runs early so later transforms carry fewer nodes and

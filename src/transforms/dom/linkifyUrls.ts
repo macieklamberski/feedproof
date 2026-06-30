@@ -1,6 +1,6 @@
 import { find as linkifyFind } from 'linkifyjs'
-import { collectTextNodes } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { collectTextNodes } from '../../utils/dom.js'
 
 const urlProtocolRegex = /^https?:\/\//i
 const linkifyIgnoreTags = new Set(['a', 'pre', 'code', 'kbd', 'samp', 'var', 'script', 'style'])

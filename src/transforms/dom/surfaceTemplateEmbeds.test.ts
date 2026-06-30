@@ -1,7 +1,7 @@
 import { expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { transformContent } from '../../index.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { surfaceTemplateEmbeds } from './surfaceTemplateEmbeds.js'
 
 const hoistedInPlaceRegex = /before<\/p>.*<iframe.*<p>after/s

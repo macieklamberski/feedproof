@@ -1,6 +1,6 @@
 import { expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { assignVideoPosters } from './assignVideoPosters.js'
 
 describeForEachParser('assignVideoPosters', (parseHtml) => {

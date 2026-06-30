@@ -1,0 +1,374 @@
+import { expect, it } from 'bun:test'
+import { describeForEachParser, queryElement } from '../tests.js'
+import {
+  getElementAspectRatio,
+  getElementDimensions,
+  getWrapperAspectRatio,
+  hasAncestorWithTagName,
+  isElementHidden,
+  removeWithEmptyWrappers,
+} from './dom.js'
+
+describeForEachParser('getElementDimensions', (parseHtml) => {
+  it('should return both dimensions from attributes', () => {
+    const document = parseHtml('<img width="320" height="240">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 320, height: 240 })
+  })
+
+  it('should return only width when only width attribute is set', () => {
+    const document = parseHtml('<img width="100">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 100, height: undefined })
+  })
+
+  it('should read px-suffixed dimensions from style when attributes are missing', () => {
+    const document = parseHtml('<img style="width: 50px; height: 25px">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 50, height: 25 })
+  })
+
+  it('should read unitless dimensions from style', () => {
+    const document = parseHtml('<img style="width: 10; height: 5">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 10, height: 5 })
+  })
+
+  it('should ignore em / rem / % units in style', () => {
+    const document = parseHtml('<img style="width: 1.5em; height: 100%">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
+  })
+
+  it('should fall back to style when attribute is non-numeric', () => {
+    const document = parseHtml('<img width="auto" style="width: 200px">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 200, height: undefined })
+  })
+
+  it('should treat an empty attribute as absent rather than zero', () => {
+    const document = parseHtml('<img width="" height="">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
+  })
+
+  it('should fall back to style when the attribute is empty', () => {
+    const document = parseHtml('<img width="" style="width: 300px; height: 200px">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 300, height: 200 })
+  })
+
+  it('should prefer attribute over style when both are present', () => {
+    const document = parseHtml('<img width="100" style="width: 999px">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 100, height: undefined })
+  })
+
+  it('should return both undefined for an element with neither', () => {
+    const document = parseHtml('<img>')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
+  })
+
+  it('should not backtrack quadratically on a long invalid numeric style value', () => {
+    // A long digit run followed by a non-terminator made the old `[0-9]*\.?[0-9]+`
+    // form take seconds; this completes instantly and matches nothing.
+    const value = `width:${'9'.repeat(50000)}${'a'.repeat(50000)}`
+    const document = parseHtml(`<img style="${value}">`)
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
+  })
+
+  it('should extract the correct property from multi-property style', () => {
+    const document = parseHtml('<img style="color: red; width: 10px; height: 20px">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 10, height: 20 })
+  })
+
+  it('should parse decimal dimensions from style', () => {
+    const document = parseHtml('<img style="width: 1.5px; height: 2.5">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 1.5, height: 2.5 })
+  })
+})
+
+describeForEachParser('isElementHidden', (parseHtml) => {
+  it('should return true for the hidden attribute', () => {
+    const document = parseHtml('<div hidden>x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(true)
+  })
+
+  it('should return true for inline display:none', () => {
+    const document = parseHtml('<div style="display: none">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(true)
+  })
+
+  it('should return true for inline visibility:hidden', () => {
+    const document = parseHtml('<div style="visibility: hidden">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(true)
+  })
+
+  it('should match display:none among other declarations', () => {
+    const document = parseHtml('<div style="color: red; display: none">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(true)
+  })
+
+  it('should not treat opacity:0 as hidden', () => {
+    const document = parseHtml('<div style="opacity: 0">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(false)
+  })
+
+  it('should not treat a 0×0 size as hidden', () => {
+    const document = parseHtml('<div style="width: 0; height: 0">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(false)
+  })
+
+  it('should return false for a visible element', () => {
+    const document = parseHtml('<div style="color: red">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(false)
+  })
+})
+
+describeForEachParser('getElementAspectRatio', (parseHtml) => {
+  it('should read the aspect-ratio property from the element itself', () => {
+    const document = parseHtml('<iframe style="aspect-ratio: 21 / 9"></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getElementAspectRatio(iframe)).toBeCloseTo(21 / 9)
+  })
+
+  it('should read a wp-embed-aspect class from the element itself', () => {
+    const document = parseHtml('<figure class="wp-embed-aspect-4-3"></figure>')
+    const figure = queryElement(document, 'figure')
+
+    expect(getElementAspectRatio(figure)).toBeCloseTo(4 / 3)
+  })
+
+  it('should read a padding hack from the element itself', () => {
+    const document = parseHtml('<div style="padding-bottom:25%"></div>')
+    const div = queryElement(document, 'div')
+
+    expect(getElementAspectRatio(div)).toBe(4)
+  })
+
+  it('should return undefined when the element declares no ratio', () => {
+    const document = parseHtml('<iframe></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getElementAspectRatio(iframe)).toBeUndefined()
+  })
+
+  it('should return undefined for an out-of-range aspect-ratio value', () => {
+    const document = parseHtml('<div style="aspect-ratio: 0 / 0"></div>')
+    const div = queryElement(document, 'div')
+
+    expect(getElementAspectRatio(div)).toBeUndefined()
+  })
+})
+
+describeForEachParser('getWrapperAspectRatio', (parseHtml) => {
+  it('should read the ratio from a wp-embed-aspect class on an ancestor', () => {
+    const document = parseHtml(
+      '<figure class="wp-block-embed wp-embed-aspect-4-3"><div class="wp-block-embed__wrapper"><iframe></iframe></div></figure>',
+    )
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeCloseTo(4 / 3)
+  })
+
+  it('should read the ratio from an inline aspect-ratio property', () => {
+    const document = parseHtml('<div style="aspect-ratio: 16 / 9"><iframe></iframe></div>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeCloseTo(16 / 9)
+  })
+
+  it('should read a single-number aspect-ratio as width over height', () => {
+    const document = parseHtml('<div style="aspect-ratio: 1.5"><iframe></iframe></div>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBe(1.5)
+  })
+
+  it('should read the ratio from an inline padding hack on an ancestor', () => {
+    const document = parseHtml('<div style="padding-bottom:50%"><iframe></iframe></div>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBe(2)
+  })
+
+  it('should return undefined when no ancestor carries an aspect signal', () => {
+    const document = parseHtml('<p><iframe></iframe></p>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+  })
+
+  it('should return undefined for out-of-range wrapper values', () => {
+    const document = parseHtml(
+      '<figure class="wp-embed-aspect-0-0"><div style="padding-bottom:0%"><iframe></iframe></div></figure>',
+    )
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+  })
+
+  it('should not look beyond the ancestor depth limit', () => {
+    const document = parseHtml(
+      '<div style="padding-bottom:50%"><div><div><div><iframe></iframe></div></div></div></div>',
+    )
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+  })
+
+  it('should honor a custom maxDepth argument', () => {
+    const document = parseHtml('<div style="padding-bottom:50%"><iframe></iframe></div>')
+    const iframe = queryElement(document, 'iframe')
+
+    // maxDepth 0 checks only the element itself; the wrapper is one level up.
+    expect(getWrapperAspectRatio(iframe, 0)).toBeUndefined()
+    expect(getWrapperAspectRatio(iframe, 1)).toBe(2)
+  })
+
+  it('should not read a wrapper that holds the element plus siblings', () => {
+    const document = parseHtml(
+      '<div style="aspect-ratio:16/9"><iframe></iframe><p>caption</p></div>',
+    )
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+  })
+})
+
+describeForEachParser('hasAncestorWithTagName', (parseHtml) => {
+  const tagSet = new Set(['pre', 'code'])
+
+  it('should return true when direct parent matches', () => {
+    const document = parseHtml('<pre><span>x</span></pre>')
+    const span = queryElement(document, 'span')
+
+    expect(hasAncestorWithTagName(span, tagSet)).toBe(true)
+  })
+
+  it('should return true when a deeply nested ancestor matches', () => {
+    const document = parseHtml('<pre><div><section><span>x</span></section></div></pre>')
+    const span = queryElement(document, 'span')
+
+    expect(hasAncestorWithTagName(span, tagSet)).toBe(true)
+  })
+
+  it('should return false when no ancestor matches', () => {
+    const document = parseHtml('<div><p><span>x</span></p></div>')
+    const span = queryElement(document, 'span')
+
+    expect(hasAncestorWithTagName(span, tagSet)).toBe(false)
+  })
+
+  it('should return false when node has no parent', () => {
+    const document = parseHtml('')
+    const orphan = document.createElement('span')
+
+    expect(hasAncestorWithTagName(orphan, tagSet)).toBe(false)
+  })
+
+  it('should return false for an empty Set', () => {
+    const document = parseHtml('<pre><span>x</span></pre>')
+    const span = queryElement(document, 'span')
+
+    expect(hasAncestorWithTagName(span, new Set())).toBe(false)
+  })
+
+  it('should stop walking at the stopAt boundary', () => {
+    const document = parseHtml('<pre><div><span>x</span></div></pre>')
+    const span = queryElement(document, 'span')
+    const div = queryElement(document, 'div')
+
+    expect(hasAncestorWithTagName(span, tagSet, div)).toBe(false)
+  })
+
+  it('should not check the stopAt boundary itself', () => {
+    const document = parseHtml('<pre><span>x</span></pre>')
+    const span = queryElement(document, 'span')
+    const pre = queryElement(document, 'pre')
+
+    expect(hasAncestorWithTagName(span, tagSet, pre)).toBe(false)
+  })
+})
+
+describeForEachParser('removeWithEmptyWrappers', (parseHtml) => {
+  it('should remove a bare element with no wrapper', () => {
+    const document = parseHtml('<p>Keep</p><img src="https://example.com/a.jpg">')
+    removeWithEmptyWrappers(queryElement(document, 'img'))
+
+    expect(document.body.innerHTML).toBe('<p>Keep</p>')
+  })
+
+  it('should remove an empty wrapping figure', () => {
+    const document = parseHtml('<figure><img src="https://example.com/a.jpg"></figure>')
+    removeWithEmptyWrappers(queryElement(document, 'img'))
+
+    expect(document.body.innerHTML).toBe('')
+  })
+
+  it('should remove an empty wrapping anchor', () => {
+    const document = parseHtml(
+      '<a href="https://example.com"><img src="https://example.com/a.jpg"></a>',
+    )
+    removeWithEmptyWrappers(queryElement(document, 'img'))
+
+    expect(document.body.innerHTML).toBe('')
+  })
+
+  it('should remove nested empty wrappers', () => {
+    const document = parseHtml(
+      '<figure><a href="https://example.com"><img src="https://example.com/a.jpg"></a></figure>',
+    )
+    removeWithEmptyWrappers(queryElement(document, 'img'))
+
+    expect(document.body.innerHTML).toBe('')
+  })
+
+  it('should keep a wrapper that still has other content', () => {
+    const document = parseHtml(
+      '<figure><img src="https://example.com/a.jpg"><figcaption>Caption</figcaption></figure>',
+    )
+    removeWithEmptyWrappers(queryElement(document, 'img'))
+
+    expect(document.body.innerHTML).toBe('<figure><figcaption>Caption</figcaption></figure>')
+  })
+
+  it('should not unwrap a non-anchor/figure parent', () => {
+    const document = parseHtml('<div><img src="https://example.com/a.jpg"></div>')
+    removeWithEmptyWrappers(queryElement(document, 'img'))
+
+    expect(document.body.innerHTML).toBe('<div></div>')
+  })
+})

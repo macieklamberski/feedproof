@@ -1,5 +1,5 @@
-import { hasAncestorWithTagName, isBlockElement, isElement, isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { hasAncestorWithTagName, isBlockElement, isElement, isText } from '../../utils/dom.js'
 
 const processContainersSelector =
   'body, div, blockquote, td, li, article, section, main, header, footer, aside, figure'

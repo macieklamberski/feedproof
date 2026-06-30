@@ -1,4 +1,3 @@
-import { createEmbedPlaceholder, resolveOrKeepUrl } from '../../common.js'
 import type {
   DomTransform,
   EmbedResolver,
@@ -6,6 +5,8 @@ import type {
   Enclosure,
   TransformContext,
 } from '../../types.js'
+import { createEmbedPlaceholder } from '../../utils/embeds.js'
+import { resolveOrKeepUrl } from '../../utils/urls.js'
 
 // Marks an injected element so stripDuplicateEnclosures (an opt-in heuristic) can
 // tell it from the item's own inline content. injectEnclosures itself does not

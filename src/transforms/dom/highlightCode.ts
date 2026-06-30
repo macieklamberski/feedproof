@@ -1,11 +1,6 @@
-import {
-  hasAncestorWithTagName,
-  isElement,
-  isJsonLike,
-  isParseableJson,
-  isText,
-} from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { hasAncestorWithTagName, isElement, isText } from '../../utils/dom.js'
+import { isJsonLike, isParseableJson } from '../../utils/json.js'
 // Token -> display-label map for the languages feedsweep recognizes (canonical
 // names plus common aliases). Read from here so detecting and labelling a code
 // block needs no highlight.js import — the only place that touches hljs is the

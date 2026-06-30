@@ -1,5 +1,5 @@
-import { hasAncestorWithTagName, NodeFilter } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { hasAncestorWithTagName, NodeFilter } from '../../utils/dom.js'
 
 const codeBlockTags = new Set(['pre', 'code'])
 

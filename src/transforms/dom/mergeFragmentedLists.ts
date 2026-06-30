@@ -1,5 +1,5 @@
-import { isComment, isElement, isText, isWhitespaceText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { isComment, isElement, isText, isWhitespaceText } from '../../utils/dom.js'
 
 // Some feeds emit each list item as its own one-item <ul>/<ol>. Merges runs
 // of consecutive sibling lists sharing tag and attribute set into the first.
