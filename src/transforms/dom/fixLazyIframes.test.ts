@@ -16,6 +16,13 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
     expect(result).toContain('src="https://example.com/embed/x"')
   })
 
+  it('should promote a lazy data-orig into an iframe with no src', async () => {
+    const value = '<iframe id="_ytid_27860" data-orig="https://www.youtube.com/embed/x"></iframe>'
+    const result = await transform(value)
+
+    expect(result).toContain('src="https://www.youtube.com/embed/x"')
+  })
+
   it('should promote a consent-gated src into an empty src', async () => {
     const value = '<iframe src="" data-cookieblock-src="https://example.com/embed/x"></iframe>'
     const result = await transform(value)

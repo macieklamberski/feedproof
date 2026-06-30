@@ -246,6 +246,7 @@ export const defaultLazyIframeAttributes = [
   'data-url', // Generic lazy loaders — 20 feeds carry it on empty-src iframes.
   'data-litespeed-src', // LiteSpeed Cache.
   'data-mce-src', // TinyMCE editor output.
+  'data-orig', // Lazy-video facades (iframe id="_ytid_*") parking the embed URL with empty src — 337 feeds.
   'data-original-src', // Generic lazy loaders.
   'data-opt-src', // Image/embed optimizers.
   'src-consent', // GDPR/cookie-consent wrappers (e.g. Borlabs) holding the real src.
