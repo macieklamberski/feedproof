@@ -10,6 +10,7 @@ import { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js
 import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
 import { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
+import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
@@ -26,10 +27,10 @@ import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 import { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
+import { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
+import { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
 import { rebuildLazyLoadForVideos } from './transforms/dom/rebuildLazyLoadForVideos.js'
 import { rebuildLazyYtEmbeds } from './transforms/dom/rebuildLazyYtEmbeds.js'
-import { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
-import { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
 import { rebuildLiteVideoEmbeds } from './transforms/dom/rebuildLiteVideoEmbeds.js'
 import { rebuildLyteEmbeds } from './transforms/dom/rebuildLyteEmbeds.js'
 import { rebuildRocketYoutubePreviews } from './transforms/dom/rebuildRocketYoutubePreviews.js'
@@ -105,6 +106,10 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // Runs before flattenPictureElements and unwrapWrappers so an alignment signal on
   // a soon-dissolved <picture> or wrapper <div> is relocated onto the surviving media.
   canonicalizeAlignment,
+  // Recovers a real <img> from a lazy-image container (a media-less <div>/<figure>
+  // carrying an image-shaped lazy src) before the image transforms run, so the
+  // resulting <img> is dimensioned and proxied like any other.
+  convertLazyImageContainers,
   // fixLazyImages resolves the real src before resolveMediaDimensions reads a size from
   // the URL; resolveMediaDimensions runs before flattenPictureElements dissolves the
   // <picture> it reads dimensions from. flattenPictureElements last also lets its modern
