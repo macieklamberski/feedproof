@@ -8,6 +8,7 @@ import { hljsHighlightFn } from './highlighters/hljs.js'
 import { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 import { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
+import { convertAmpElements } from './transforms/dom/convertAmpElements.js'
 import { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
@@ -99,6 +100,11 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   rebuildLazyLoadForVideos,
   rebuildLazyYtEmbeds,
   rebuildElementorVideoEmbeds,
+  // Converts AMP custom elements into plain HTML media so the image/embed transforms
+  // below can dimension, placeholder, and proxy them. Runs in this normalize cluster so
+  // an amp-youtube becomes an iframe before replaceEmbedsWithPlaceholders, and an
+  // amp-img an <img> before resolveMediaDimensions.
+  convertAmpElements,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
   demoteHeadings,
