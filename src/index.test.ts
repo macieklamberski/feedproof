@@ -191,8 +191,10 @@ describeForEachParser('transformContent', (parseHtml) => {
     ).toEqualHtml(expected)
   })
 
-  it('should strip a duplicate enclosure image only when heuristics are enabled', async () => {
-    // The enclosure is a WordPress-sized copy of the inline content image.
+  it('should not inject an image enclosure when the content already has an image', async () => {
+    // The enclosure is a WordPress-sized copy of the inline content image. Because the
+    // content already carries an image, injectEnclosures skips it in both modes, so the
+    // duplicate never appears regardless of the heuristics flag.
     const value = '<p>Content</p><img src="https://example.com/uploads/photo.jpg">'
     const enclosures = [
       { url: 'https://example.com/uploads/photo-800x450.jpg', type: 'image/jpeg' },
@@ -205,8 +207,25 @@ describeForEachParser('transformContent', (parseHtml) => {
       heuristics: true,
     })
 
-    expect(standard).toContain('photo-800x450.jpg')
+    expect(standard).not.toContain('photo-800x450.jpg')
     expect(heuristic).not.toContain('photo-800x450.jpg')
+  })
+
+  it('should strip a duplicate enclosure media only when heuristics are enabled', async () => {
+    // The enclosure is the same audio already embedded in the content. Audio always
+    // injects (no inline equivalent), so this is where stripDuplicateEnclosures earns
+    // its keep, and only under heuristics.
+    const value = '<p>Content</p><audio src="https://example.com/episode.mp3"></audio>'
+    const enclosures = [{ url: 'https://example.com/episode.mp3', type: 'audio/mpeg' }]
+
+    const standard = await transformContent(value, { parseHtmlFn: parseHtml, enclosures })
+    const heuristic = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      enclosures,
+      heuristics: true,
+    })
+
+    expect(standard).toContain('data-enclosure')
     expect(heuristic).not.toContain('data-enclosure')
   })
 
