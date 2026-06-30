@@ -172,6 +172,13 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
     expect(result).toContain('src="photo.jpg"')
   })
 
+  it('should move data-original-mos to src', async () => {
+    const value = '<img data-original-mos="photo.jpg">'
+    const result = await transform(value)
+
+    expect(result).toContain('src="photo.jpg"')
+  })
+
   it('should prefer data-orig-file over data-large-file when both present', async () => {
     const value = '<img data-orig-file="orig.jpg" data-large-file="large.jpg">'
     const result = await transform(value)

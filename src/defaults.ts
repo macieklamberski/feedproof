@@ -235,6 +235,7 @@ export const defaultLazySrcAttributes = [
   'data-echo', // echo.js lazy-loader — 901 hits, <0.01% of feeds.
   'data-opt-src', // Optimole image CDN — 390 hits, <0.01% of feeds.
   'data-normal', // Future plc / generic CDN lazy-loader — 294 hits, <0.01% of feeds.
+  'data-original-mos', // CMS lazy-image variant — ~1.4k hits, <0.01% of feeds.
 ]
 
 // Attributes that hold a lazy/consent-gated iframe src (the real embed URL) when the
