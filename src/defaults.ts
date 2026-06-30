@@ -13,8 +13,10 @@ import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParag
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
+import { fixLazyAudios } from './transforms/dom/fixLazyAudios.js'
 import { fixLazyIframes } from './transforms/dom/fixLazyIframes.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
+import { fixLazyVideos } from './transforms/dom/fixLazyVideos.js'
 import { flattenPictureElements } from './transforms/dom/flattenPictureElements.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
 import { hoistFigcaptionFromAnchor } from './transforms/dom/hoistFigcaptionFromAnchor.js'
@@ -26,10 +28,10 @@ import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 import { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
+import { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
+import { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
 import { rebuildLazyLoadForVideos } from './transforms/dom/rebuildLazyLoadForVideos.js'
 import { rebuildLazyYtEmbeds } from './transforms/dom/rebuildLazyYtEmbeds.js'
-import { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
-import { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
 import { rebuildLiteVideoEmbeds } from './transforms/dom/rebuildLiteVideoEmbeds.js'
 import { rebuildLyteEmbeds } from './transforms/dom/rebuildLyteEmbeds.js'
 import { rebuildRocketYoutubePreviews } from './transforms/dom/rebuildRocketYoutubePreviews.js'
@@ -110,6 +112,11 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // <picture> it reads dimensions from. flattenPictureElements last also lets its modern
   // <source> win over a lazy data-src.
   fixLazyImages,
+  // Recover the real src/poster on a lazy <video>/<audio> element itself (lazy <source>
+  // children are handled by fixLazyImages). Runs before the URL passes are applied so
+  // the promoted src/poster is dimensioned, neutralized, and proxied like any other.
+  fixLazyVideos,
+  fixLazyAudios,
   resolveMediaDimensions,
   flattenPictureElements,
   hoistFigcaptionFromAnchor,
