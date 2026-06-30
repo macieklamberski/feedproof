@@ -8,6 +8,7 @@ import { hljsHighlightFn } from './highlighters/hljs.js'
 import { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 import { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
+import { convertAmpElements } from './transforms/dom/convertAmpElements.js'
 import { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
@@ -26,10 +27,10 @@ import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 import { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
+import { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
+import { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
 import { rebuildLazyLoadForVideos } from './transforms/dom/rebuildLazyLoadForVideos.js'
 import { rebuildLazyYtEmbeds } from './transforms/dom/rebuildLazyYtEmbeds.js'
-import { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
-import { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
 import { rebuildLiteVideoEmbeds } from './transforms/dom/rebuildLiteVideoEmbeds.js'
 import { rebuildLyteEmbeds } from './transforms/dom/rebuildLyteEmbeds.js'
 import { rebuildRocketYoutubePreviews } from './transforms/dom/rebuildRocketYoutubePreviews.js'
@@ -98,6 +99,11 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   rebuildLazyLoadForVideos,
   rebuildLazyYtEmbeds,
   rebuildElementorVideoEmbeds,
+  // Converts AMP custom elements into plain HTML media so the image/embed transforms
+  // below can dimension, placeholder, and proxy them. Runs in this normalize cluster so
+  // an amp-youtube becomes an iframe before replaceEmbedsWithPlaceholders, and an
+  // amp-img an <img> before resolveMediaDimensions.
+  convertAmpElements,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
   demoteHeadings,
