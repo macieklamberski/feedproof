@@ -1,7 +1,7 @@
 import { expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { hoistFigcaptionFromAnchor } from './hoistFigcaptionFromAnchor.js'
 
 describeForEachParser('hoistFigcaptionFromAnchor', (parseHtml) => {

@@ -1,5 +1,5 @@
-import { isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { isText } from '../../utils/dom.js'
 
 export const unwrapDoublyNestedLists: DomTransform = () => {
   return (document) => {

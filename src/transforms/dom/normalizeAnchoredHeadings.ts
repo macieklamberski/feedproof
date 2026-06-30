@@ -1,5 +1,6 @@
-import { hasAncestorWithTagName, isSamePage } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { hasAncestorWithTagName } from '../../utils/dom.js'
+import { isSamePage } from '../../utils/urls.js'
 
 const headingSelector = 'h1, h2, h3, h4, h5, h6'
 const supTags = new Set(['sup'])

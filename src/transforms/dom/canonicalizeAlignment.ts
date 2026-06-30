@@ -1,5 +1,5 @@
-import { isElement, isSkippable } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { isElement, isSkippable } from '../../utils/dom.js'
 
 type Direction = 'center' | 'left' | 'right'
 

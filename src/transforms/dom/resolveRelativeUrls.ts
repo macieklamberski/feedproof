@@ -1,6 +1,6 @@
 import { parseSrcset, stringifySrcset } from 'srcset'
-import { absoluteUrlRegex } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { absoluteUrlRegex } from '../../utils/urls.js'
 
 export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => {
   return (document) => {

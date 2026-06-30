@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { parseHtml } from '../../parsers/linkedom.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { linkifyUrls } from './linkifyUrls.js'
 
 describeForEachParser('linkifyUrls', (parseHtml) => {

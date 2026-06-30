@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { IsSafeUrlFn, TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { neutralizeUnsafeUrls } from './neutralizeUnsafeUrls.js'
 
 describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {

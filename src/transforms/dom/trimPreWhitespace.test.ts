@@ -1,7 +1,7 @@
 import { expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { trimPreWhitespace } from './trimPreWhitespace.js'
 
 const trailingNewlineBeforeCodeRegex = /\n<\/code>/

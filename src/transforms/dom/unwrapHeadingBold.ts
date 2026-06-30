@@ -1,5 +1,5 @@
-import { isComment, isElement, isWhitespaceText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { isComment, isElement, isWhitespaceText } from '../../utils/dom.js'
 
 const headingSelector = 'h1, h2, h3, h4, h5, h6'
 const boldTags = new Set(['b', 'strong'])

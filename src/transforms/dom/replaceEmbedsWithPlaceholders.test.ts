@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { defaultEmbedResolvers } from '../../defaults.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { EmbedResolver, TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { replaceEmbedsWithPlaceholders } from './replaceEmbedsWithPlaceholders.js'
 
 const stubResolver: EmbedResolver = {
