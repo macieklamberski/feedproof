@@ -26,10 +26,10 @@ import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 import { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
+import { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
+import { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
 import { rebuildLazyLoadForVideos } from './transforms/dom/rebuildLazyLoadForVideos.js'
 import { rebuildLazyYtEmbeds } from './transforms/dom/rebuildLazyYtEmbeds.js'
-import { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
-import { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
 import { rebuildLiteVideoEmbeds } from './transforms/dom/rebuildLiteVideoEmbeds.js'
 import { rebuildLyteEmbeds } from './transforms/dom/rebuildLyteEmbeds.js'
 import { rebuildRocketYoutubePreviews } from './transforms/dom/rebuildRocketYoutubePreviews.js'
@@ -240,6 +240,7 @@ export const defaultLazyIframeAttributes = [
   'data-url', // Generic lazy loaders — 20 feeds carry it on empty-src iframes.
   'data-litespeed-src', // LiteSpeed Cache.
   'data-mce-src', // TinyMCE editor output.
+  'data-orig', // Lazy-video facades (iframe id="_ytid_*") parking the embed URL with empty src — 337 feeds.
   'data-original-src', // Generic lazy loaders.
   'data-opt-src', // Image/embed optimizers.
   'src-consent', // GDPR/cookie-consent wrappers (e.g. Borlabs) holding the real src.
