@@ -1,4 +1,5 @@
 import type {
+  CleanUrlFn,
   DomTransform,
   EmbedResolver,
   EmbedResolverResult,
@@ -6,11 +7,11 @@ import type {
   TransformContext,
 } from '../../types.js'
 import { createEmbedPlaceholder } from '../../utils/embeds.js'
+import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
 import { resolveOrKeepUrl } from '../../utils/urls.js'
 
 // Marks an injected element so stripDuplicateEnclosures (an opt-in heuristic) can
-// tell it from the item's own inline content. injectEnclosures itself does not
-// dedup — it injects every enclosure. Exported because that pass reads it.
+// tell it from the item's own inline content. Exported because that pass reads it.
 export const enclosureMarker = 'data-enclosure'
 
 const isAudioEnclosure = (enclosure: Enclosure): boolean => {
@@ -131,6 +132,65 @@ const mergeEnclosureMetadata = (
   }
 }
 
+// Whether `incoming` is a better variant of the same image to keep than `kept`. A URL
+// with no size encoded in it (`hint === 0`) is treated as the full-res original and
+// preferred over any sized copy (a bare `photo.jpg` outranks `photo-800x450.jpg`).
+// Between two sized variants the larger wins; on a true tie the no-query URL wins, else
+// the first stays.
+const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
+  const incomingHint = getUrlSizeHint(incoming.url)
+  const keptHint = getUrlSizeHint(kept.url)
+
+  const incomingIsOriginal = incomingHint === 0
+  const keptIsOriginal = keptHint === 0
+  if (incomingIsOriginal !== keptIsOriginal) {
+    return incomingIsOriginal
+  }
+
+  if (incomingHint !== keptHint) {
+    return incomingHint > keptHint
+  }
+
+  return kept.url.includes('?') && !incoming.url.includes('?')
+}
+
+// Collapse image enclosures that are the same picture at a different size or render —
+// a scaled copy, a CDN-proxied variant, or just a `?w=` query (a feed often lists one
+// image as a native enclosure plus a media:content). Without this they each inject as a
+// stacked copy. Keyed by getImageFingerprint (the same size-agnostic key the duplicate
+// stripper uses), keeping the largest variant, then the no-query original, then the
+// first. Only images collapse: audio/video query strings often carry identity (podcast
+// proxies), so those pass through untouched.
+const dedupeImageEnclosures = (
+  enclosures: ReadonlyArray<Enclosure>,
+  cleanUrlFn?: CleanUrlFn,
+): Array<Enclosure> => {
+  const indexByKey = new Map<string, number>()
+  const result: Array<Enclosure> = []
+
+  for (const enclosure of enclosures) {
+    if (typeof enclosure.url !== 'string' || !isImageEnclosure(enclosure)) {
+      result.push(enclosure)
+      continue
+    }
+
+    const key = getImageFingerprint(enclosure.url, cleanUrlFn)
+    const existingIndex = indexByKey.get(key)
+
+    if (existingIndex === undefined) {
+      indexByKey.set(key, result.length)
+      result.push(enclosure)
+      continue
+    }
+
+    if (isPreferredVariant(enclosure, result[existingIndex])) {
+      result[existingIndex] = enclosure
+    }
+  }
+
+  return result
+}
+
 export const injectEnclosures: DomTransform = (context) => {
   const enclosures = context.enclosures
 
@@ -148,7 +208,7 @@ export const injectEnclosures: DomTransform = (context) => {
     // markup). Audio and video enclosures have no inline equivalent, so they always inject.
     const hasContentImage = !!document.querySelector('img[src], picture, [data-embed-thumbnail]')
 
-    for (const enclosure of enclosures) {
+    for (const enclosure of dedupeImageEnclosures(enclosures, context.cleanUrlFn)) {
       // The embeddable URL: a media:player console (when present) is the canonical thing to
       // embed, otherwise the content URL. Enclosures come from untrusted feed data that
       // doesn't honor the required-`url` type, so guard before any URL handling.
