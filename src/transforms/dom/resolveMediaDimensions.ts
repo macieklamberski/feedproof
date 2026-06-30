@@ -1,6 +1,7 @@
 import { parseSrcset } from 'srcset'
 import type { DomTransform } from '../../types.js'
 import { getElementDimensions, pixelDimensionLimit } from '../../utils/dom.js'
+import { getUrlDimensions } from '../../utils/images.js'
 
 // Largest-width candidate URL in a srcset, so a src-less responsive image can still
 // have its dimensions read from a rendition URL. Falls back to the last candidate when
@@ -48,35 +49,6 @@ const promotableDimensions = (element: Element): { width: number; height: number
 // A valid width/height attribute value: a positive integer of pixels.
 const positiveIntegerRegex = /^[1-9]\d*$/
 
-// Dimensions encoded in the image URL: a filename or path `800x600`, `?w=&h=` /
-// `?width=&height=`, or `s=WxH`. This is the intrinsic size of that rendition, a
-// safer source than an inline-style display box. A `data:` placeholder (a lazy
-// image not yet resolved) carries no size and is skipped.
-const urlPairRegex = /(?:^|[/_=-])(\d{2,5})x(\d{2,5})(?=[._\-&)?]|$)/gi
-const urlQueryWidthRegex = /[?&](?:w|width)=(\d{2,5})\b/i
-const urlQueryHeightRegex = /[?&](?:h|height)=(\d{2,5})\b/i
-
-const urlDimensions = (src: string | null): { width: number; height: number } | undefined => {
-  if (!src || src.startsWith('data:')) {
-    return
-  }
-
-  // Explicit w/h query params win; otherwise the last WxH pair in the path or
-  // filename (the rendition size sits after any path digits).
-  let width = Number(urlQueryWidthRegex.exec(src)?.[1])
-  let height = Number(urlQueryHeightRegex.exec(src)?.[1])
-
-  if (!(width > pixelDimensionLimit && height > pixelDimensionLimit)) {
-    const pair = [...src.matchAll(urlPairRegex)].at(-1)
-    width = Number(pair?.[1])
-    height = Number(pair?.[2])
-  }
-
-  if (width > pixelDimensionLimit && height > pixelDimensionLimit) {
-    return { width, height }
-  }
-}
-
 // An <img> often declares its size on the wrapping <picture>/<source> rather than
 // itself. First <source> carrying both dimensions wins, else the <picture> element.
 const pictureDimensions = (picture: Element): { width: number; height: number } | undefined => {
@@ -120,11 +92,11 @@ export const resolveMediaDimensions: DomTransform = () => {
       let dimensions = promotableDimensions(element)
 
       if (!dimensions) {
-        dimensions = urlDimensions(element.getAttribute('src'))
+        dimensions = getUrlDimensions(element.getAttribute('src'))
       }
 
       if (!dimensions) {
-        dimensions = urlDimensions(widestSrcsetUrl(element.getAttribute('srcset')))
+        dimensions = getUrlDimensions(widestSrcsetUrl(element.getAttribute('srcset')))
       }
 
       if (
