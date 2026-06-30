@@ -218,6 +218,41 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
 
       expect(result).toContain('src="https://example.com/photo.jpg"')
     })
+
+    it('should not inject an image enclosure when content already has an image', async () => {
+      const value = html`
+        <p>Content</p>
+        <img src="https://example.com/inline.jpg">
+      `
+      const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    it('should not inject an image enclosure when content has a picture element', async () => {
+      const value = html`
+        <picture><img src="https://example.com/inline.jpg"></picture>
+      `
+      const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    it('should still inject audio and video enclosures when content has an image', async () => {
+      const value = '<p>Content</p><img src="https://example.com/inline.jpg">'
+      const result = await transform(
+        value,
+        withEnclosures([
+          { url: 'https://example.com/episode.mp3', type: 'audio/mpeg' },
+          { url: 'https://example.com/clip.mp4', type: 'video/mp4' },
+          { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
+        ]),
+      )
+
+      expect(result).toContain('<audio')
+      expect(result).toContain('<video')
+      expect(result).not.toContain('cover.jpg')
+    })
   })
 
   it('should skip enclosures without type or medium', async () => {

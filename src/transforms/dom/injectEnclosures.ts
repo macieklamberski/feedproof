@@ -140,6 +140,13 @@ export const injectEnclosures: DomTransform = (context) => {
   return async (document) => {
     const created: Array<HTMLElement> = []
 
+    // An image enclosure is almost always the same picture as the lead content image,
+    // just a scaled or cropped copy on a different URL, so injecting it stacks a visible
+    // duplicate. Only inject it when the content has no image of its own, the case where
+    // the enclosure supplies the missing visual (e.g. an image-only feed with no body
+    // markup). Audio and video enclosures have no inline equivalent, so they always inject.
+    const hasContentImage = !!document.querySelector('img[src], picture, [data-embed-thumbnail]')
+
     for (const enclosure of enclosures) {
       // The embeddable URL: a media:player console (when present) is the canonical thing to
       // embed, otherwise the content URL. Enclosures come from untrusted feed data that
@@ -173,6 +180,10 @@ export const injectEnclosures: DomTransform = (context) => {
 
       if (isVideoEnclosure(enclosure)) {
         created.push(createNativeMediaElement(document, 'video', enclosure, context))
+        continue
+      }
+
+      if (hasContentImage) {
         continue
       }
 

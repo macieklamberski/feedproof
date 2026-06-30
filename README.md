@@ -104,9 +104,10 @@ const result = transformContent(html, {
   baseUrl: 'https://example.com/post/1',
   // Rewrite anchor hrefs: unwrap redirects and strip tracking params.
   cleanUrlFn: cleanUrl,
-  // Feed item enclosures (audio/video/image), injected into the content. Enable
-  // `heuristics` to drop an enclosure that only duplicates inline content (e.g. an
-  // image already present in a different size).
+  // Feed item enclosures (audio/video/image), injected into the content. Image
+  // enclosures inject only when the content has no image of its own. Enable
+  // `heuristics` to also drop an audio/video/embed enclosure that duplicates
+  // inline content.
   enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
   // Route image/video/audio URLs through a proxy. Return `undefined` to leave a URL untouched.
   assetProxyFn: (url, type) => `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`,
