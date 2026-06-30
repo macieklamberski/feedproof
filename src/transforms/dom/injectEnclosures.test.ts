@@ -238,6 +238,35 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(await transform(value, context)).toEqualHtml(value)
     })
 
+    it('should inject only one image when enclosures differ only by query, keeping the unquery one', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/cover.jpg?w=300', type: 'image/jpeg' },
+        { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/cover.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should inject distinct images that differ by path', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/a/photo.jpg', type: 'image/jpeg' },
+        { url: 'https://example.com/b/photo.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/a/photo.jpg" data-enclosure="">
+        <img src="https://example.com/b/photo.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
     it('should still inject audio and video enclosures when content has an image', async () => {
       const value = '<p>Content</p><img src="https://example.com/inline.jpg">'
       const result = await transform(

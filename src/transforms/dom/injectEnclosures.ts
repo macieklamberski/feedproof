@@ -24,6 +24,39 @@ const isImageEnclosure = (enclosure: Enclosure): boolean => {
   return enclosure.medium === 'image' || !!enclosure.type?.startsWith('image/')
 }
 
+// Collapse image enclosures that are the same file at different resize queries, e.g.
+// `cover.jpg` and `cover.jpg?w=300`, which a feed emits as a native enclosure plus a
+// media:content. Both would otherwise inject as stacked copies of one picture. Only
+// images are query-collapsed: audio/video query strings often carry identity (podcast
+// proxies like `play.mp3?episode=...`). When variants collide, keep the one with no
+// query (the original), otherwise the first seen.
+const dedupeImageEnclosures = (enclosures: ReadonlyArray<Enclosure>): Array<Enclosure> => {
+  const indexByKey = new Map<string, number>()
+  const result: Array<Enclosure> = []
+
+  for (const enclosure of enclosures) {
+    if (typeof enclosure.url !== 'string' || !isImageEnclosure(enclosure)) {
+      result.push(enclosure)
+      continue
+    }
+
+    const key = enclosure.url.split('?')[0].split('#')[0]
+    const existingIndex = indexByKey.get(key)
+
+    if (existingIndex === undefined) {
+      indexByKey.set(key, result.length)
+      result.push(enclosure)
+      continue
+    }
+
+    if (result[existingIndex].url.includes('?') && !enclosure.url.includes('?')) {
+      result[existingIndex] = enclosure
+    }
+  }
+
+  return result
+}
+
 // Run resolvers against a synthesized iframe carrying the enclosure URL so that
 // iframe-shaped resolvers (YouTube etc.) can claim platform-specific enclosures.
 const resolveEnclosure = async (
@@ -147,7 +180,7 @@ export const injectEnclosures: DomTransform = (context) => {
     // markup). Audio and video enclosures have no inline equivalent, so they always inject.
     const hasContentImage = !!document.querySelector('img[src], picture, [data-embed-thumbnail]')
 
-    for (const enclosure of enclosures) {
+    for (const enclosure of dedupeImageEnclosures(enclosures)) {
       // The embeddable URL: a media:player console (when present) is the canonical thing to
       // embed, otherwise the content URL. Enclosures come from untrusted feed data that
       // doesn't honor the required-`url` type, so guard before any URL handling.
