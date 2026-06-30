@@ -253,6 +253,75 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(result).toContain('<video')
       expect(result).not.toContain('cover.jpg')
     })
+
+    it('should inject one image when enclosures differ only by query, keeping the original', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/cover.jpg?w=300', type: 'image/jpeg' },
+        { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/cover.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should collapse a WordPress -WxH variant to the full-res original', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/uploads/photo.jpg', type: 'image/jpeg' },
+        { url: 'https://example.com/uploads/photo-800x450.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/uploads/photo.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should keep the larger of two sized variants', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/cover.jpg?w=300', type: 'image/jpeg' },
+        { url: 'https://example.com/cover.jpg?w=900', type: 'image/jpeg' },
+      ])
+      const result = await transform(value, context)
+
+      expect(result).toContain('cover.jpg?w=900')
+      expect(result).not.toContain('cover.jpg?w=300')
+    })
+
+    it('should prefer the no-query URL when colliding variants have no size to compare', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/cover.jpg?v=2', type: 'image/jpeg' },
+        { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/cover.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should keep distinct images that differ by path', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/a/photo.jpg', type: 'image/jpeg' },
+        { url: 'https://example.com/b/photo.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/a/photo.jpg" data-enclosure="">
+        <img src="https://example.com/b/photo.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
   })
 
   it('should skip enclosures without type or medium', async () => {
