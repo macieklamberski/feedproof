@@ -1,5 +1,5 @@
-import { getElementDimensions, isElementHidden, pixelDimensionLimit } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { getElementDimensions, isElementHidden, pixelDimensionLimit } from '../../utils/dom.js'
 
 const styleOpacityZeroRegex = /(?:^|;)\s*opacity\s*:\s*0(?:\.0+)?\s*(?:;|$)/i
 

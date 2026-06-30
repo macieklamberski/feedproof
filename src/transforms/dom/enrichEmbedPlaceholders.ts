@@ -1,5 +1,5 @@
-import { updateEmbedPlaceholder } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { updateEmbedPlaceholder } from '../../utils/embeds.js'
 
 export const enrichEmbedPlaceholders: DomTransform = (context) => {
   const enrichEmbedFn = context.enrichEmbedFn

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { BookmarkResolver, TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { convertBookmarkCards } from './convertBookmarkCards.js'
 
 // Reads bookmark fields off a `.card` element's data-* attributes.

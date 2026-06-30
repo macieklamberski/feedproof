@@ -1,7 +1,7 @@
 import { expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { transformContent } from '../../index.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { surfaceNoscriptEmbeds } from './surfaceNoscriptEmbeds.js'
 
 describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {

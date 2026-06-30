@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { Enclosure, TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { injectEnclosures } from './injectEnclosures.js'
 import { neutralizeUnsafeUrls } from './neutralizeUnsafeUrls.js'
 

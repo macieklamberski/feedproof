@@ -1,4 +1,3 @@
-import { applyDomTransforms, applyStringTransforms } from './common.js'
 import {
   defaultAllDomTransforms,
   defaultBookmarkResolvers,
@@ -17,6 +16,7 @@ import {
   defaultTrackingPathSegments,
 } from './defaults.js'
 import type { TransformContentOptions, TransformContext } from './types.js'
+import { applyDomTransforms, applyStringTransforms } from './utils/transforms.js'
 
 export const transformContent = async (
   html: string,
@@ -65,15 +65,6 @@ export const transformContent = async (
 
 export { ghostBookmarkResolver } from './bookmarks/ghost.js'
 export { substackBookmarkResolver } from './bookmarks/substack.js'
-export {
-  applyDomTransforms,
-  applyStringTransforms,
-  createBookmarkPlaceholder,
-  createEmbedPlaceholder,
-  createPlaceholder,
-  normalizeEmbedFields,
-  updateEmbedPlaceholder,
-} from './common.js'
 export {
   defaultAllDomTransforms,
   defaultHighlightFn,
@@ -182,4 +173,13 @@ export type {
   TransformContext,
   UrlRole,
 } from './types.js'
-export { chooseBaseUrl, coerceNumber } from './utils.js'
+export {
+  createBookmarkPlaceholder,
+  createEmbedPlaceholder,
+  createPlaceholder,
+  normalizeEmbedFields,
+  updateEmbedPlaceholder,
+} from './utils/embeds.js'
+export { coerceNumber } from './utils/numbers.js'
+export { applyDomTransforms, applyStringTransforms } from './utils/transforms.js'
+export { chooseBaseUrl } from './utils/urls.js'

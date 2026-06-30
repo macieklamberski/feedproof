@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser, html, queryElement } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripDuplicateTitleHeading } from './stripDuplicateTitleHeading.js'
 
 describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {

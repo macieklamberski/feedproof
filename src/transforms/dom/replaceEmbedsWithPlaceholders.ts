@@ -1,10 +1,7 @@
-import {
-  createEmbedPlaceholder,
-  getElementDimensions,
-  getWrapperAspectRatio,
-  resolveOrKeepUrl,
-} from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { getElementDimensions, getWrapperAspectRatio } from '../../utils/dom.js'
+import { createEmbedPlaceholder } from '../../utils/embeds.js'
+import { resolveOrKeepUrl } from '../../utils/urls.js'
 
 // When the iframe carries no usable dimensions, fall back to a responsive wrapper's
 // aspect ratio so the placeholder can still reserve space. The 100×N pair encodes the

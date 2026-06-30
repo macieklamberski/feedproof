@@ -1,5 +1,6 @@
-import { createBookmarkPlaceholder, resolveOrKeepUrl } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { createBookmarkPlaceholder } from '../../utils/embeds.js'
+import { resolveOrKeepUrl } from '../../utils/urls.js'
 
 export const convertBookmarkCards: DomTransform = (context) => {
   const { bookmarkResolvers, resolveUrlFn, baseUrl } = context

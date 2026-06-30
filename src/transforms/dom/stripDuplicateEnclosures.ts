@@ -1,6 +1,6 @@
 import { addMissingProtocol, normalizeUrl, resolveUrl } from 'feedcanon'
-import { removeWithEmptyWrappers } from '../../common.js'
 import type { CleanUrlFn, DomTransform } from '../../types.js'
+import { removeWithEmptyWrappers } from '../../utils/dom.js'
 import { enclosureMarker } from './injectEnclosures.js'
 
 const existingMediaSelector =
