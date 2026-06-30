@@ -1,5 +1,5 @@
-import { isBlockElement, isBr, isMediaElement, isSkippable } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { isBlockElement, isBr, isMediaElement, isSkippable } from '../../utils/dom.js'
 
 // A <br> is redundant beside anything that already breaks the flow: a block element
 // or a block-displayed media element such as a bare image or video.

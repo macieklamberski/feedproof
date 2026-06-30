@@ -1,5 +1,5 @@
-import { isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { isText } from '../../utils/dom.js'
 
 // A <code> nested directly inside another <code> (or a <pre> inside a <pre>) is a redundant
 // double-wrap some feeds emit. Readers size code with a relative font-size, so every extra

@@ -1,7 +1,7 @@
 import { expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { EmbedResolverResult, EnrichEmbedFn, TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { enrichEmbedPlaceholders } from './enrichEmbedPlaceholders.js'
 
 const withFn = (enrichEmbedFn: EnrichEmbedFn): TransformContext => {

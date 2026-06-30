@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { demoteHeadings } from './demoteHeadings.js'
 
 describeForEachParser('demoteHeadings', (parseHtml) => {

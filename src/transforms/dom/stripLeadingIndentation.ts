@@ -1,5 +1,5 @@
-import { isBlockElement, isElement, isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { isBlockElement, isElement, isText } from '../../utils/dom.js'
 
 // Some feeds fake indentation by prefixing block text with non-breaking spaces
 // (e.g. `<p>&nbsp;&nbsp;&nbsp;Lorem…`). Ordinary leading whitespace collapses at

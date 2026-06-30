@@ -1,7 +1,7 @@
 import { expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext as defaultContext, describeForEachParser, html } from '../../tests.js'
 import type { AssetProxyFn, TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { proxyAssetUrls } from './proxyAssetUrls.js'
 
 const wrapProxy: AssetProxyFn = (url, type) => {

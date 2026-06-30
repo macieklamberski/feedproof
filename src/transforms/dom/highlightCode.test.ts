@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import { parseHTML } from 'linkedom'
-import { applyDomTransforms } from '../../common.js'
 import { parseHtml } from '../../parsers/linkedom.js'
 import { baseContext, describeForEachParser, queryElement } from '../../tests.js'
 import type { HighlightFn, TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { detectLanguage, highlightCode } from './highlightCode.js'
 
 const lineBreakBeforeConstRegex = /;\s*\n\s*<span class="hljs-keyword">const/
