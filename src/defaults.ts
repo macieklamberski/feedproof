@@ -15,8 +15,10 @@ import { convertLazyImageContainers } from './transforms/dom/convertLazyImageCon
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
+import { fixLazyAudios } from './transforms/dom/fixLazyAudios.js'
 import { fixLazyIframes } from './transforms/dom/fixLazyIframes.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
+import { fixLazyVideos } from './transforms/dom/fixLazyVideos.js'
 import { flattenPictureElements } from './transforms/dom/flattenPictureElements.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
 import { hoistFigcaptionFromAnchor } from './transforms/dom/hoistFigcaptionFromAnchor.js'
@@ -121,6 +123,11 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // <picture> it reads dimensions from. flattenPictureElements last also lets its modern
   // <source> win over a lazy data-src.
   fixLazyImages,
+  // Recover the real src/poster on a lazy <video>/<audio> element itself (lazy <source>
+  // children are handled by fixLazyImages). Runs before the URL passes are applied so
+  // the promoted src/poster is dimensioned, neutralized, and proxied like any other.
+  fixLazyVideos,
+  fixLazyAudios,
   resolveMediaDimensions,
   flattenPictureElements,
   hoistFigcaptionFromAnchor,
