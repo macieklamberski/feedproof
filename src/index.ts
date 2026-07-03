@@ -63,6 +63,7 @@ export const transformContent = async (
   return afterDom
 }
 
+export { coerceNumber } from 'trousse'
 export { ghostBookmarkResolver } from './bookmarks/ghost.js'
 export { substackBookmarkResolver } from './bookmarks/substack.js'
 export {
@@ -180,6 +181,5 @@ export {
   normalizeEmbedFields,
   updateEmbedPlaceholder,
 } from './utils/embeds.js'
-export { coerceNumber } from './utils/numbers.js'
 export { applyDomTransforms, applyStringTransforms } from './utils/transforms.js'
 export { chooseBaseUrl } from './utils/urls.js'
