@@ -30,6 +30,10 @@ describe('extractDailymotionId', () => {
       'x7tgad0',
     )
   })
+
+  it('should return undefined for an invalid url', () => {
+    expect(extractDailymotionId('not a url')).toBeUndefined()
+  })
 })
 
 describe('dailymotionResolveEmbed', () => {
