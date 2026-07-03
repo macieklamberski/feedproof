@@ -63,7 +63,6 @@ export const transformContent = async (
   return afterDom
 }
 
-export { coerceNumber } from 'trousse'
 export { ghostBookmarkResolver } from './bookmarks/ghost.js'
 export { substackBookmarkResolver } from './bookmarks/substack.js'
 export {
@@ -166,7 +165,6 @@ export type {
   EnrichEmbedFn,
   HighlightFn,
   IsSafeUrlFn,
-  MaybePromise,
   ParseHtmlFn,
   ResolveUrlFn,
   StringTransform,
