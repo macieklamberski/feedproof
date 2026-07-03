@@ -1,6 +1,6 @@
 import type { DiscoverResolveUrlFn } from 'feedscout'
 
-export type MaybePromise<T> = T | Promise<T>
+import type { MaybePromise } from 'trousse'
 
 export type EnclosureThumbnail = {
   url: string

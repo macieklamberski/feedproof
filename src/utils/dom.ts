@@ -1,4 +1,4 @@
-import { coerceNumber } from './numbers.js'
+import { coerceNumber } from 'trousse'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
@@ -162,11 +162,9 @@ const styleHeightRegex =
   /(?:^|;)\s*height\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
 
 // An empty or whitespace-only width/height attribute (`width=""`, common in editor output)
-// is not a declared dimension. coerceNumber reads it as 0 (Number('') === 0), which would
-// collapse media to a zero box and read as a tracking pixel; treat it as absent instead.
+// is not a declared dimension; coerceNumber treats those as absent.
 const dimensionAttribute = (element: Element, name: string): number | undefined => {
-  const value = element.getAttribute(name)?.trim()
-  return value ? coerceNumber(value) : undefined
+  return coerceNumber(element.getAttribute(name))
 }
 
 export const getElementDimensions = (element: Element): { width?: number; height?: number } => {

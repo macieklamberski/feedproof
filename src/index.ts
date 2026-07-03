@@ -165,7 +165,6 @@ export type {
   EnrichEmbedFn,
   HighlightFn,
   IsSafeUrlFn,
-  MaybePromise,
   ParseHtmlFn,
   ResolveUrlFn,
   StringTransform,
@@ -180,6 +179,5 @@ export {
   normalizeEmbedFields,
   updateEmbedPlaceholder,
 } from './utils/embeds.js'
-export { coerceNumber } from './utils/numbers.js'
 export { applyDomTransforms, applyStringTransforms } from './utils/transforms.js'
 export { chooseBaseUrl } from './utils/urls.js'
