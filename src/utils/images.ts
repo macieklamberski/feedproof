@@ -1,4 +1,5 @@
 import { addMissingProtocol, normalizeUrl, resolveUrl } from 'feedcanon'
+import { getPathSegments, parseUrl } from 'trousse'
 import type { CleanUrlFn } from '../types.js'
 import { pixelDimensionLimit } from './dom.js'
 
@@ -85,10 +86,9 @@ const wordpressDimensionSuffix = /-\d{1,5}x\d{1,5}(\.[a-z0-9]+)$/i
 // If the URL is a known image-proxy wrapper, return its inner source URL so the
 // key is built from the real image rather than the proxy's render params.
 const unwrapProxiedImage = (url: string): string => {
-  let proxy: URL
-  try {
-    proxy = new URL(url)
-  } catch {
+  const proxy = parseUrl(url)
+
+  if (!proxy) {
     return url
   }
 
@@ -131,14 +131,13 @@ export const getImageFingerprint = (rawUrl: string, cleanUrlFn?: CleanUrlFn): st
     normalizeUnicode: true,
   })
 
-  let parsed: URL
-  try {
-    parsed = new URL(normalized)
-  } catch {
+  const parsed = parseUrl(normalized)
+
+  if (!parsed) {
     return normalized
   }
 
-  const segments = parsed.pathname.split('/').filter(Boolean)
+  const segments = getPathSegments(parsed)
 
   if (segments.length) {
     const lastIndex = segments.length - 1

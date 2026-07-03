@@ -1,4 +1,5 @@
 import { resolveUrl } from 'feedcanon'
+import { parseUrl } from 'trousse'
 import type { ResolveUrlFn } from '../types.js'
 
 // Matches any URL that already carries a scheme (the URL-spec scheme grammar) — i.e.
@@ -55,14 +56,14 @@ export const isSamePage = (
     return false
   }
 
-  try {
-    const target = new URL(resolvedHref)
-    const base = new URL(resolvedBase)
+  const target = parseUrl(resolvedHref)
+  const base = parseUrl(resolvedBase)
 
-    return target.origin === base.origin && target.pathname === base.pathname
-  } catch {}
+  if (!target || !base) {
+    return false
+  }
 
-  return false
+  return target.origin === base.origin && target.pathname === base.pathname
 }
 
 // Priority: item link → site URL → feed URL. Item content is authored relative to the

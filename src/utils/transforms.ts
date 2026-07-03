@@ -1,4 +1,4 @@
-import type { MaybePromise } from '../types.js'
+import type { MaybePromise } from 'trousse'
 
 export const applyDomTransforms = async (
   document: Document,

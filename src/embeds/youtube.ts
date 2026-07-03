@@ -1,4 +1,4 @@
-import { isHostOf, isSubdomainOf } from 'feedscout/utils'
+import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
@@ -17,25 +17,28 @@ export const composeThumbnailUrl = (videoId: string): string => {
 }
 
 export const extractVideoId = (link: string): string | undefined => {
-  try {
-    const { hostname, pathname, searchParams } = new URL(link)
-    const segments = pathname.split('/').filter(Boolean)
-    const isShortDomain = hostname === 'youtu.be' || hostname.endsWith('.youtu.be')
+  const url = parseUrl(link)
 
-    let id: string | null | undefined
+  if (!url) {
+    return
+  }
 
-    if (isShortDomain) {
-      id = segments[0]
-    } else if (segments[0] === 'watch') {
-      id = searchParams.get('v') ?? searchParams.get('vi')
-    } else if (segments.length >= 2 && pathIdSegments.includes(segments[0])) {
-      id = segments[1]
-    }
+  const segments = getPathSegments(url)
+  const isShortDomain = url.hostname === 'youtu.be' || url.hostname.endsWith('.youtu.be')
 
-    if (id && safeVideoIdRegex.test(id)) {
-      return id
-    }
-  } catch {}
+  let id: string | null | undefined
+
+  if (isShortDomain) {
+    id = segments[0]
+  } else if (segments[0] === 'watch') {
+    id = url.searchParams.get('v') ?? url.searchParams.get('vi')
+  } else if (segments.length >= 2 && pathIdSegments.includes(segments[0])) {
+    id = segments[1]
+  }
+
+  if (id && safeVideoIdRegex.test(id)) {
+    return id
+  }
 }
 
 export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefined => {
