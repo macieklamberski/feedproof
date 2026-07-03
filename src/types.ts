@@ -2,8 +2,6 @@ import type { DiscoverResolveUrlFn } from 'feedscout'
 
 import type { MaybePromise } from 'trousse'
 
-export type { MaybePromise }
-
 export type EnclosureThumbnail = {
   url: string
   width?: number
