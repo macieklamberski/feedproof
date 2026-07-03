@@ -1,3 +1,4 @@
+import { parseUrl } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { getElementDimensions, isElementHidden, pixelDimensionLimit } from '../../utils/dom.js'
 
@@ -16,26 +17,27 @@ const buildPathRegex = (segments: ReadonlyArray<string>): RegExp | null => {
 }
 
 const isTrackingUrl = (src: string, hosts: Set<string>, pathRegex: RegExp | null): boolean => {
-  try {
-    const url = new URL(src, 'http://placeholder/')
-    const hostname = url.hostname
+  const url = parseUrl(src, 'http://placeholder/')
 
-    if (hosts.size > 0) {
-      if (hosts.has(hostname)) {
-        return true
-      }
-
-      for (const host of hosts) {
-        if (hostname.endsWith(`.${host}`)) {
-          return true
-        }
-      }
-    }
-
-    return pathRegex?.test(url.pathname) ?? false
-  } catch {
+  if (!url) {
     return false
   }
+
+  const hostname = url.hostname
+
+  if (hosts.size > 0) {
+    if (hosts.has(hostname)) {
+      return true
+    }
+
+    for (const host of hosts) {
+      if (hostname.endsWith(`.${host}`)) {
+        return true
+      }
+    }
+  }
+
+  return pathRegex?.test(url.pathname) ?? false
 }
 
 const isPixelDimension = (value: number | undefined): boolean => {

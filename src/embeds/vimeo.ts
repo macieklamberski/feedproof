@@ -1,4 +1,4 @@
-import { isHostOf, isSubdomainOf } from 'feedscout/utils'
+import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
 
 const safeVideoIdRegex = /^\d+$/
@@ -6,21 +6,18 @@ const safeVideoIdRegex = /^\d+$/
 const vimeoHosts = ['vimeo.com', 'player.vimeo.com']
 
 export const extractVimeoId = (link: string): string | undefined => {
-  try {
-    const { pathname } = new URL(link)
-    const segments = pathname.split('/').filter(Boolean)
+  const segments = getPathSegments(link)
 
-    // player.vimeo.com/video/{id}; otherwise the first numeric segment, which covers
-    // vimeo.com/{id}, /channels/{name}/{id}, and /groups/{name}/videos/{id}.
-    const id =
-      segments[0] === 'video'
-        ? segments[1]
-        : segments.find((segment) => safeVideoIdRegex.test(segment))
+  // player.vimeo.com/video/{id}; otherwise the first numeric segment, which covers
+  // vimeo.com/{id}, /channels/{name}/{id}, and /groups/{name}/videos/{id}.
+  const id =
+    segments[0] === 'video'
+      ? segments[1]
+      : segments.find((segment) => safeVideoIdRegex.test(segment))
 
-    if (id && safeVideoIdRegex.test(id)) {
-      return id
-    }
-  } catch {}
+  if (id && safeVideoIdRegex.test(id)) {
+    return id
+  }
 }
 
 export const vimeoResolveEmbed = (url: string): EmbedResolverResult | undefined => {
@@ -32,10 +29,7 @@ export const vimeoResolveEmbed = (url: string): EmbedResolverResult | undefined 
 
   // Unlisted videos embed with a `?h={hash}` token; preserve it so the rebuilt embed
   // still loads (the player rejects those videos without it).
-  let hash: string | null = null
-  try {
-    hash = new URL(url).searchParams.get('h')
-  } catch {}
+  const hash = parseUrl(url)?.searchParams.get('h') ?? null
 
   return {
     provider: 'vimeo',
