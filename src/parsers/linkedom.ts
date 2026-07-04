@@ -1,35 +1,48 @@
 import { parseHTML } from 'linkedom'
+import { walkElements } from '../utils/dom.js'
 
 // Linkedom hard-codes `lowerCaseAttributeNames: false` and the maintainer declined to expose
 // a toggle (WebReflection/linkedom#235, won't fix). Normalize once at parse time so every
 // transform reads attributes by canonical lowercase name. Per the HTML spec, the first
 // occurrence of a duplicate (case-folded) name wins.
+// An element only needs rewriting when one of its attribute names is not already lowercase. A
+// duplicate name after folding means one of the pair was uppercase (two identical names can't
+// coexist on an element), so this check catches that case too. Walking (see walkElements) and
+// checking names allocates nothing for the near-total majority of elements, whose names are
+// already lowercase.
 const normalizeAttributeCase = (document: Document): void => {
-  for (const element of document.querySelectorAll('*')) {
+  walkElements(document, (element) => {
+    if (!element.hasAttributes()) {
+      return
+    }
+
+    let needsRewrite = false
+
+    for (const name of element.getAttributeNames()) {
+      if (name.toLowerCase() !== name) {
+        needsRewrite = true
+        break
+      }
+    }
+
+    if (!needsRewrite) {
+      return
+    }
+
     const original = Array.from(element.attributes).map((attribute) => ({
       name: attribute.name,
       value: attribute.value,
     }))
     const final = new Map<string, string>()
-    let needsRewrite = false
 
     for (const { name, value } of original) {
       const lower = name.toLowerCase()
 
-      if (lower !== name) {
-        needsRewrite = true
-      }
-
       if (final.has(lower)) {
-        needsRewrite = true
         continue
       }
 
       final.set(lower, value)
-    }
-
-    if (!needsRewrite) {
-      continue
     }
 
     for (const { name } of original) {
@@ -39,7 +52,7 @@ const normalizeAttributeCase = (document: Document): void => {
     for (const [name, value] of final) {
       element.setAttribute(name, value)
     }
-  }
+  })
 }
 
 // Known limitation (not worked around): because linkedom parses SVG in HTML mode (same
