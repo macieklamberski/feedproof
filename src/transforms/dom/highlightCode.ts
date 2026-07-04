@@ -1,6 +1,6 @@
 import { isJsonLike, isParseableJson } from 'trousse'
 import type { DomTransform } from '../../types.js'
-import { hasAncestorWithTagName, isElement, isText } from '../../utils/dom.js'
+import { hasAncestorWithTagName, isElement, isText, walkElements } from '../../utils/dom.js'
 // Token -> display-label map for the languages feedsweep recognizes (canonical
 // names plus common aliases). Read from here so detecting and labelling a code
 // block needs no highlight.js import — the only place that touches hljs is the
@@ -315,8 +315,34 @@ const stripCodeGutters = (document: Document): void => {
   }
 }
 
+// Tags and gutter-span classes whose presence means this transform has work to do.
+// The gutter classes are listed so an orphan line-number span outside any <pre> is
+// still stripped by stripCodeGutters.
+const highlightSignalTags = new Set(['pre', 'code', 'table'])
+const gutterSpanClasses = ['line-numbers-rows', 'ln', 'lnt', 'lineno']
+
 export const highlightCode: DomTransform = ({ highlightFn }) => {
   return async (document) => {
+    // Most feed items carry no code. One walk (see walkElements) checks that up
+    // front, instead of the five querySelectorAll calls below finding nothing.
+    const hasWork = walkElements(document, (element) => {
+      if (highlightSignalTags.has(element.localName)) {
+        return true
+      }
+
+      if (element.localName === 'span') {
+        for (const token of gutterSpanClasses) {
+          if (element.classList.contains(token)) {
+            return true
+          }
+        }
+      }
+    })
+
+    if (!hasWork) {
+      return
+    }
+
     stripCodeGutters(document)
 
     // Some editors emit a block of code as a standalone <code> with no <pre> wrapper.
