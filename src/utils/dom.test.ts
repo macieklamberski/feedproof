@@ -7,6 +7,7 @@ import {
   hasAncestorWithTagName,
   isElementHidden,
   removeWithEmptyWrappers,
+  walkElements,
 } from './dom.js'
 
 describeForEachParser('getElementDimensions', (parseHtml) => {
@@ -370,5 +371,50 @@ describeForEachParser('removeWithEmptyWrappers', (parseHtml) => {
     removeWithEmptyWrappers(queryElement(document, 'img'))
 
     expect(document.body.innerHTML).toBe('<div></div>')
+  })
+})
+
+describeForEachParser('walkElements', (parseHtml) => {
+  it('should visit elements in document order', () => {
+    const document = parseHtml('<div><p>one</p><span>two</span></div><section>three</section>')
+    const visited: Array<string> = []
+
+    walkElements(document, (element) => {
+      visited.push(element.localName)
+    })
+
+    expect(visited).toEqual(['html', 'head', 'body', 'div', 'p', 'span', 'section'])
+  })
+
+  it('should stop the walk when the visitor returns true', () => {
+    const document = parseHtml('<p>one</p><span>two</span><p>three</p>')
+    const visited: Array<string> = []
+
+    const stopped = walkElements(document, (element) => {
+      visited.push(element.localName)
+      return element.localName === 'span'
+    })
+
+    expect(stopped).toBe(true)
+    expect(visited).toEqual(['html', 'head', 'body', 'p', 'span'])
+  })
+
+  it('should return false when the walk completes without stopping', () => {
+    const document = parseHtml('<p>one</p>')
+
+    expect(walkElements(document, () => undefined)).toBe(false)
+  })
+
+  it('should skip template subtrees, matching querySelectorAll traversal', () => {
+    const document = parseHtml('<template><p class="inside">x</p></template><p>outside</p>')
+    const visited: Array<string> = []
+
+    walkElements(document, (element) => {
+      visited.push(element.localName)
+    })
+
+    // Only the <p> outside the template is seen.
+    expect(visited.filter((name) => name === 'p')).toHaveLength(1)
+    expect(document.querySelectorAll('.inside')).toHaveLength(0)
   })
 })
