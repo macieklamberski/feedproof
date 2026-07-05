@@ -310,34 +310,26 @@ const stripCodeGutters = (document: Document): void => {
   }
 
   for (const span of document.querySelectorAll(gutterLineSpanSelector)) {
+    // Only strip a gutter span inside a code block. A stray span carrying one of these
+    // class names in ordinary prose is left alone.
+    if (!span.closest('pre, code')) {
+      continue
+    }
+
     span.closest('pre')?.setAttribute('data-pre-numbered', '')
     span.remove()
   }
 }
 
-// Tags and gutter-span classes whose presence means this transform has work to do.
-// The gutter classes are listed so an orphan line-number span outside any <pre> is
-// still stripped by stripCodeGutters.
+// Tags whose presence means this transform has work to do. Gutter spans are only stripped
+// inside these, so a gutter class alone (outside any code block) is no longer a signal.
 const highlightSignalTags = new Set(['pre', 'code', 'table'])
-const gutterSpanClasses = ['line-numbers-rows', 'ln', 'lnt', 'lineno']
 
 export const highlightCode: DomTransform = ({ highlightFn }) => {
   return async (document) => {
     // Most feed items carry no code. One walk (see walkElements) checks that up
     // front, instead of the five querySelectorAll calls below finding nothing.
-    const hasWork = walkElements(document, (element) => {
-      if (highlightSignalTags.has(element.localName)) {
-        return true
-      }
-
-      if (element.localName === 'span') {
-        for (const token of gutterSpanClasses) {
-          if (element.classList.contains(token)) {
-            return true
-          }
-        }
-      }
-    })
+    const hasWork = walkElements(document, (element) => highlightSignalTags.has(element.localName))
 
     if (!hasWork) {
       return
