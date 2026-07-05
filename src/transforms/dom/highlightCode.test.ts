@@ -463,10 +463,10 @@ describeForEachParser('highlightCode', (parseHtml) => {
       expect(result).toContain('echo bye')
     })
 
-    it('should remove an orphan gutter span outside any pre, code, or table', async () => {
+    it('should leave an orphan gutter span outside any code block untouched', async () => {
       const value = '<p><span class="ln">1</span>text</p>'
 
-      expect(await transform(value)).toBe('<p>text</p>')
+      expect(await transform(value)).toBe(value)
     })
 
     it('should drop a gutter table with no recognized class (structural)', async () => {
