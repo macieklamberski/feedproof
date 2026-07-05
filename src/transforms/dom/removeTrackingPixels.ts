@@ -4,6 +4,11 @@ import { getElementDimensions, isElementHidden, pixelDimensionLimit } from '../.
 
 const styleOpacityZeroRegex = /(?:^|;)\s*opacity\s*:\s*0(?:\.0+)?\s*(?:;|$)/i
 
+// Escapes regex metacharacters so a path segment matches literally. Replaces RegExp.escape,
+// which is ES2025 and absent in Node 22 LTS (a supported runtime).
+const regexMetaCharsRegex = /[.*+?^${}()|[\]\\]/g
+const escapeRegex = (value: string): string => value.replace(regexMetaCharsRegex, '\\$&')
+
 // `[./]` anchors require the segment to terminate with `.` (file extension) or `/`
 // (path boundary) to avoid false positives on words like `tracker` or `counter`.
 const buildPathRegex = (segments: ReadonlyArray<string>): RegExp | null => {
@@ -11,7 +16,7 @@ const buildPathRegex = (segments: ReadonlyArray<string>): RegExp | null => {
     return null
   }
 
-  const alternation = segments.map(RegExp.escape).join('|')
+  const alternation = segments.map((segment) => escapeRegex(segment)).join('|')
 
   return new RegExp(`/(?:${alternation})[./]`, 'i')
 }
