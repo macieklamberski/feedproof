@@ -9,9 +9,16 @@ describe('getImageFingerprint', () => {
     expect(sized).toBe(bare)
   })
 
-  it('should collapse a WordPress -WxH suffix to the base filename', () => {
+  it('should collapse a hyphen -WxH dimension suffix to the base filename', () => {
     const bare = getImageFingerprint('https://example.com/uploads/photo.jpg')
     const scaled = getImageFingerprint('https://example.com/uploads/photo-800x450.jpg')
+
+    expect(scaled).toBe(bare)
+  })
+
+  it('should collapse an underscore _WxH dimension suffix to the base filename', () => {
+    const bare = getImageFingerprint('https://example.com/uploads/photo.jpg')
+    const scaled = getImageFingerprint('https://example.com/uploads/photo_800x450.jpg')
 
     expect(scaled).toBe(bare)
   })
