@@ -1,5 +1,6 @@
 import { parseSrcset, stringifySrcset } from 'srcset'
 import type { DomTransform, IsSafeUrlFn, UrlRole } from '../../types.js'
+import { walkElements } from '../../utils/dom.js'
 
 // Inert replacements that keep the element but render nothing: a same-page no-op for
 // links, the empty document for media (about:blank loads nothing and runs nothing).
@@ -70,63 +71,77 @@ const neutralizeSrcset = (element: Element, isSafeUrlFn: IsSafeUrlFn | undefined
   element.setAttribute('srcset', safe.length > 0 ? stringifySrcset(safe) : sentinels.media)
 }
 
-const linkAttributeSelectors: Array<[string, string]> = [
-  ['[data-embed-url]', 'data-embed-url'],
-  ['[data-bookmark-url]', 'data-bookmark-url'],
-  ['[formaction]', 'formaction'],
+// URL-carrying attributes checked on every element, whatever its tag. Embed and
+// bookmark placeholders put their URLs on data-* attributes of arbitrary elements.
+const genericAttributeRoles: Array<[string, UrlRole]> = [
+  ['data-embed-url', 'link'],
+  ['data-bookmark-url', 'link'],
+  ['formaction', 'link'],
+  ['data-embed-src', 'media'],
+  ['data-embed-thumbnail', 'media'],
+  ['data-embed-avatar', 'media'],
+  ['data-bookmark-icon', 'media'],
+  ['data-bookmark-thumbnail', 'media'],
 ]
-const mediaAttributeSelectors: Array<[string, string]> = [
-  ['img[src]', 'src'],
-  ['video[src]', 'src'],
-  ['video[poster]', 'poster'],
-  ['audio[src]', 'src'],
-  ['source[src]', 'src'],
-  ['track[src]', 'src'],
-  ['iframe[src]', 'src'],
-  ['embed[src]', 'src'],
-  ['object[data]', 'data'],
-  ['[data-embed-src]', 'data-embed-src'],
-  ['[data-embed-thumbnail]', 'data-embed-thumbnail'],
-  ['[data-embed-avatar]', 'data-embed-avatar'],
-  ['[data-bookmark-icon]', 'data-bookmark-icon'],
-  ['[data-bookmark-thumbnail]', 'data-bookmark-thumbnail'],
-]
-const srcsetSelector = 'img[srcset], source[srcset]'
-// Anchors (link) and SVG <image> (media) carry their URL on href (SVG2) or xlink:href
-// (SVG1). The colon in xlink:href can't go in a CSS attribute selector, so they match by
-// tag and pick the attribute in JS rather than sitting in the selector tables above.
-const hrefRoleSelectors: Array<[string, UrlRole]> = [
-  ['a', 'link'],
-  ['image', 'media'],
-]
+// URL-carrying attributes specific to a tag.
+const tagAttributeRoles: Record<string, Array<[string, UrlRole]>> = {
+  img: [['src', 'media']],
+  video: [
+    ['src', 'media'],
+    ['poster', 'media'],
+  ],
+  audio: [['src', 'media']],
+  source: [['src', 'media']],
+  track: [['src', 'media']],
+  iframe: [['src', 'media']],
+  embed: [['src', 'media']],
+  object: [['data', 'media']],
+}
+const srcsetTags = new Set(['img', 'source'])
+// Anchors and SVG <image> carry their URL on href/xlink:href, matched by tag because the
+// colon in xlink:href is invalid in a CSS attribute selector.
+const hrefTagRoles: Record<string, UrlRole> = { a: 'link', image: 'media' }
 
 // Replaces unsafe URLs with an inert, role-appropriate sentinel while keeping the
-// element. Enforces a hardcoded dangerous-scheme floor (javascript:/vbscript:/data:text/html)
-// always, plus the caller's isSafeUrlFn policy when provided. Runs after URLs are
-// resolved and embeds/bookmarks are placeholdered, and before proxyAssetUrls.
+// element. Always enforces a dangerous-scheme floor (javascript:/vbscript:/data:text/html),
+// plus the caller's isSafeUrlFn policy when provided. Runs after URLs are resolved and
+// embeds/bookmarks are placeholdered, and before proxyAssetUrls.
+// One walk covers every attribute the transform used to reach through ~20 separate
+// querySelectorAll calls (see walkElements).
 export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
   return (document) => {
-    for (const [selector, attribute] of linkAttributeSelectors) {
-      for (const element of document.querySelectorAll(selector)) {
-        neutralizeAttribute(element, attribute, 'link', isSafeUrlFn)
+    walkElements(document, (element) => {
+      // Skip elements with no attributes; hasAttributes is O(1) in linkedom.
+      if (!element.hasAttributes()) {
+        return
       }
-    }
 
-    for (const [selector, attribute] of mediaAttributeSelectors) {
-      for (const element of document.querySelectorAll(selector)) {
-        neutralizeAttribute(element, attribute, 'media', isSafeUrlFn)
-      }
-    }
-
-    for (const element of document.querySelectorAll(srcsetSelector)) {
-      neutralizeSrcset(element, isSafeUrlFn)
-    }
-
-    for (const [selector, role] of hrefRoleSelectors) {
-      for (const element of document.querySelectorAll(selector)) {
-        const attribute = element.hasAttribute('href') ? 'href' : 'xlink:href'
+      for (const [attribute, role] of genericAttributeRoles) {
         neutralizeAttribute(element, attribute, role, isSafeUrlFn)
       }
-    }
+
+      const name = element.localName
+      const tagAttributes = tagAttributeRoles[name]
+
+      if (tagAttributes !== undefined) {
+        for (const [attribute, role] of tagAttributes) {
+          neutralizeAttribute(element, attribute, role, isSafeUrlFn)
+        }
+
+        if (srcsetTags.has(name)) {
+          neutralizeSrcset(element, isSafeUrlFn)
+        }
+
+        return
+      }
+
+      // href wins over xlink:href when both are present.
+      const hrefRole = hrefTagRoles[name]
+
+      if (hrefRole !== undefined) {
+        const attribute = element.hasAttribute('href') ? 'href' : 'xlink:href'
+        neutralizeAttribute(element, attribute, hrefRole, isSafeUrlFn)
+      }
+    })
   }
 }
