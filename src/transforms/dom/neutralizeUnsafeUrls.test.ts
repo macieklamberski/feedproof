@@ -67,6 +67,12 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
       expect(await transform(value)).toBe(value)
     })
 
+    it('should leave template-shielded URLs alone, like querySelectorAll does', async () => {
+      const value = '<template><a href="javascript:alert(1)">x</a></template><p>keep</p>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
     it('should leave a data:image url untouched', async () => {
       const value = '<img src="data:image/png;base64,iVBORw0KGgo=">'
 

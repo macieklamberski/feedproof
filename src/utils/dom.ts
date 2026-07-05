@@ -295,3 +295,38 @@ export const isElementHidden = (element: Element): boolean => {
 
   return !!style && (styleDisplayNoneRegex.test(style) || styleVisibilityHiddenRegex.test(style))
 }
+
+// Visits every element in document order and calls `visit` on each. Linkedom's
+// querySelectorAll compiles its selector (via css-select) on every call, so
+// replacing a per-document query with this walk avoids that repeated compile.
+// Template subtrees are skipped, the same as querySelectorAll does. Return true
+// from `visit` to stop early; walkElements then also returns true.
+export const walkElements = (
+  document: Document,
+  visit: (element: Element) => boolean | undefined,
+): boolean => {
+  const stack: Array<Element> = []
+  const root = document.documentElement
+
+  if (root) {
+    stack.push(root)
+  }
+
+  while (stack.length > 0) {
+    const element = stack.pop() as Element
+
+    if (visit(element) === true) {
+      return true
+    }
+
+    if (element.localName === 'template') {
+      continue
+    }
+
+    for (let child = element.lastElementChild; child; child = child.previousElementSibling) {
+      stack.push(child)
+    }
+  }
+
+  return false
+}
