@@ -64,6 +64,94 @@ describe('getImageFingerprint', () => {
     // `%E0%A4%A` is an incomplete percent-escape; decoding throws and the raw value is kept.
     expect(() => getImageFingerprint('https://images.weserv.nl/?url=%E0%A4%A')).not.toThrow()
   })
+
+  it('should unwrap a Cloudinary fetch URL to its inner source', () => {
+    const value =
+      'https://res.cloudinary.com/demo/image/fetch/w_200/https://cdn.example.com/photo.jpg'
+    const expected = 'cdn.example.com/photo.jpg'
+
+    expect(getImageFingerprint(value)).toBe(expected)
+  })
+
+  it('should unwrap a Cloudflare cdn-cgi image URL relative to the proxy host', () => {
+    const value = 'https://example.com/cdn-cgi/image/width=200/uploads/photo.jpg'
+    const expected = 'example.com/uploads/photo.jpg'
+
+    expect(getImageFingerprint(value)).toBe(expected)
+  })
+
+  it('should unwrap an ImageKit URL to its inner source', () => {
+    const value = 'https://ik.imagekit.io/demo/tr:w-200/https://cdn.example.com/photo.jpg'
+    const expected = 'cdn.example.com/photo.jpg'
+
+    expect(getImageFingerprint(value)).toBe(expected)
+  })
+
+  it('should unwrap a WordPress Photon URL, re-adding the stripped scheme', () => {
+    const value = 'https://i0.wp.com/cdn.example.com/photo.jpg'
+    const expected = 'cdn.example.com/photo.jpg'
+
+    expect(getImageFingerprint(value)).toBe(expected)
+  })
+
+  it('should unwrap a Next.js image optimizer URL to its inner source', () => {
+    const value =
+      'https://example.com/_next/image?url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg&w=200'
+    const expected = 'cdn.example.com/photo.jpg'
+
+    expect(getImageFingerprint(value)).toBe(expected)
+  })
+
+  it('should drop a whole leaf that is only dimensions', () => {
+    const value = 'https://example.com/gallery/640x360.jpg'
+    const expected = 'example.com/gallery'
+
+    expect(getImageFingerprint(value)).toBe(expected)
+  })
+
+  it('should drop a whole leaf that is a crop name plus dimensions', () => {
+    const value = 'https://example.com/gallery/original__640x360.jpg'
+    const expected = 'example.com/gallery'
+
+    expect(getImageFingerprint(value)).toBe(expected)
+  })
+
+  it('should drop the hash fragment', () => {
+    const value = 'https://example.com/photo.jpg#section'
+    const expected = 'example.com/photo.jpg'
+
+    expect(getImageFingerprint(value)).toBe(expected)
+  })
+
+  it('should keep the opaque path id in the key when the file name is constant', () => {
+    const first = 'https://media.example.com/media/GypVyX5Nw0R2g/clip.gif'
+    const second = 'https://media.example.com/media/l0IyhVkiQ1IBQSCwU/clip.gif'
+    const firstExpected = 'media.example.com/media/GypVyX5Nw0R2g/clip.gif'
+    const secondExpected = 'media.example.com/media/l0IyhVkiQ1IBQSCwU/clip.gif'
+
+    expect(getImageFingerprint(first)).toBe(firstExpected)
+    expect(getImageFingerprint(second)).toBe(secondExpected)
+  })
+
+  it('should keep the path id in the key when a templated slug is shared', () => {
+    const first = 'https://cdn.example.com/img/AAA111/match-report.jpg'
+    const second = 'https://cdn.example.com/img/BBB222/match-report.jpg'
+    const firstExpected = 'cdn.example.com/img/AAA111/match-report.jpg'
+    const secondExpected = 'cdn.example.com/img/BBB222/match-report.jpg'
+
+    expect(getImageFingerprint(first)).toBe(firstExpected)
+    expect(getImageFingerprint(second)).toBe(secondExpected)
+  })
+
+  it('should keep the preview and original rendition segment in the key', () => {
+    const preview = 'https://cdn.example.com/pics/pics_preview/9/2/0/17577029.jpg'
+    const original = 'https://cdn.example.com/pics/pics_original/9/2/0/17577029.jpg'
+    const previewExpected = 'cdn.example.com/pics/pics_preview/9/2/0/17577029.jpg'
+    const originalExpected = 'cdn.example.com/pics/pics_original/9/2/0/17577029.jpg'
+
+    expect(getImageFingerprint(preview)).toBe(previewExpected)
+    expect(getImageFingerprint(original)).toBe(originalExpected)
+  })
 })
 
 describe('getUrlDimensions', () => {
