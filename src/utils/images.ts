@@ -47,24 +47,23 @@ const bareHostSource = (capture: string): string => {
   return addMissingProtocol(decodeSource(capture))
 }
 
-// Image CDNs that wrap the real source URL inside their own request. We key on the
-// inner source so different render params of the same image (width, format,
-// quality, crop) collapse to one. Each entry pairs a pattern that captures the
-// wrapped source with how to turn that capture into an absolute URL, noted with
-// provenance like urlpurify's tracking lists. Only host- or path-anchored proxies
-// are listed; self-hosted ones with no canonical host (imgproxy, willnorris) would
-// need shape-matching, which risks false matches.
-const imageProxies: Array<{
+// Image CDNs/proxies that wrap the real source URL inside their own request — one
+// entry per service. We key on the inner source so different render params of the same
+// image (width, format, quality, crop) collapse to one. Each pattern is host- or
+// path-anchored to a single CDN and captures the wrapped source (a url= query param, a
+// full URL at the end of the path, or a bare host+path for Photon); toSource turns that
+// capture into an absolute URL. Deliberately an explicit list rather than a generic
+// catch-all, so it stays auditable — an unlisted proxy is simply left as-is.
+type ImageProxy = {
   pattern: RegExp
   toSource: (capture: string, proxy: URL) => string | undefined
-}> = [
-  // Cloudinary fetch, incl. Substack substackcdn.com: .../image/fetch/{opts}/{src url}.
-  { pattern: /\/image\/fetch\/.*?(https?(?:%3a|:).+)$/i, toSource: resolvedSource },
-  // Cloudflare Image Resizing, incl. beehiiv: .../cdn-cgi/image/{opts}/{src}, where
-  // {src} is an absolute URL or a path relative to the proxy's own host.
+}
+const imageProxies: Array<ImageProxy> = [
+  // Cloudflare Image Resizing (incl. beehiiv): .../cdn-cgi/image/{opts}/{src}, where
+  // {src} may be a path relative to the proxy's own host.
   { pattern: /\/cdn-cgi\/image\/[^/]+\/(.+)$/i, toSource: resolvedSource },
-  // ImageKit web proxy: ik.imagekit.io/{id}/[tr:..]/{src url}.
-  { pattern: /ik\.imagekit\.io\/.*?(https?(?:%3a|:).+)$/i, toSource: resolvedSource },
+  // Cloudflare plain passthrough: .../cdn-cgi/plain/{src url}.
+  { pattern: /\/cdn-cgi\/plain\/(https?(?:%3a|:).+)$/i, toSource: resolvedSource },
   // WordPress Photon / Jetpack: i{0-3}.wp.com/{src-host}/{path}, scheme stripped.
   { pattern: /\/\/i[0-3]\.wp\.com\/([^?]+)/i, toSource: bareHostSource },
   // wsrv.nl / images.weserv.nl: source in the url= query param.
@@ -74,6 +73,59 @@ const imageProxies: Array<{
   },
   // Next.js / Vercel image optimizer: source in the url= query param.
   { pattern: /\/_next\/image\?(?:[^#]*&)?url=([^&]+)/i, toSource: resolvedSource },
+  // Blogger opensocial gadget proxy: gadgets/proxy?url={src}.
+  {
+    pattern:
+      /images-blogger-opensocial\.googleusercontent\.com\/gadgets\/proxy\?(?:[^#]*&)?url=([^&]+)/i,
+    toSource: resolvedSource,
+  },
+  // Brightspot dims (NPR, LA Times, Scripps): *.brightspotcdn.com/dims{3,4}/.../?url={src}.
+  { pattern: /\.brightspotcdn\.com\/dims\d\/.*[?&]url=([^&]+)/i, toSource: resolvedSource },
+  // Cloudinary fetch (incl. Substack substackcdn.com): .../image/fetch/{opts}/{src url}.
+  { pattern: /\/image\/fetch\/.*?(https?(?:%3a|:).+)$/i, toSource: resolvedSource },
+  // ImageKit web proxy: ik.imagekit.io/{id}/[tr:..]/{src url}.
+  { pattern: /ik\.imagekit\.io\/.*?(https?(?:%3a|:).+)$/i, toSource: resolvedSource },
+  // Hatena image scaler: cdn.image.st-hatena.com/image/scale/{sig}/{opts}/{src url}.
+  { pattern: /cdn\.image\.st-hatena\.com\/.*?(https?(?:%3a|:).+)$/i, toSource: resolvedSource },
+  // dev.to image optimizer: media*.dev.to/dynamic/image/{opts}/{src url}.
+  { pattern: /\.dev\.to\/dynamic\/image\/.*?(https?(?:%3a|:).+)$/i, toSource: resolvedSource },
+  // Yahoo image API: *.yimg.com/{ns}/api/res/{ver}/{opts}/{src url}.
+  { pattern: /\.yimg\.com\/.*?\/api\/res\/.*?(https?(?:%3a|:).+)$/i, toSource: resolvedSource },
+  // podigee (podcast art): images.podigee-cdn.net/{opts}/{src url}.
+  { pattern: /\.podigee-cdn\.net\/.*?(https?(?:%3a|:).+)$/i, toSource: resolvedSource },
+]
+
+// CDN "path transform" images: the render/size lives in a path segment of a
+// self-hosted CDN image (no embedded source URL to unwrap). Strip the transform so
+// renditions of one image collapse. Host-gated, or path-anchored when the CDN runs on
+// the publisher's own domain (Ghost, Cloudinary upload).
+type PathTransform = { host?: RegExp; strip: RegExp; replace: string }
+const pathTransforms: Array<PathTransform> = [
+  // Blogger / Blogspot / Google image hosts: .../{key}/s1600/{file}, /w640-h480/, and
+  // the newer =s1600 suffix form.
+  {
+    host: /(?:\.bp\.blogspot\.com|\.blogspot\.com|\.googleusercontent\.com)$/i,
+    strip: /\/(?:s\d{1,4}|w\d{1,4}-h\d{1,4})(?:-[a-z]{1,3})*(?=\/[^/]+$)/i,
+    replace: '',
+  },
+  {
+    host: /\.googleusercontent\.com$/i,
+    strip: /=(?:s\d{1,4}|w\d{1,4}-h\d{1,4})(?:-[a-z]{1,3})*$/i,
+    replace: '',
+  },
+  // Wix: media/{id}~mv2.{ext}/v1/{transform}/{file} — key on the id before /v1/.
+  { host: /wixstatic\.com$/i, strip: /\/v1\/.+$/i, replace: '' },
+  // Ghost (self-hosted): /content/images/size/w{N}/... — drop the size directory.
+  { strip: /\/content\/images\/size\/w\d+(?:h\d+)?\//i, replace: '/content/images/' },
+  // Cloudinary upload (self-hosted, host-agnostic): /image/upload/{signature?}/
+  // {transforms?}/... — strip the signature and comma-joined transform segments.
+  {
+    strip: /\/image\/upload\/(?:s--[^/]+--\/)?(?:[a-z]{1,3}_[^/,]+(?:,[a-z]{1,3}_[^/,]+)*\/)*/i,
+    replace: '/image/upload/',
+  },
+  // Medium: miro.medium.com/v2/{transforms}/{id}(-{width}).{ext} — key on the bare id.
+  { host: /miro\.medium\.com$/i, strip: /\/v2\/(?:[^/]+\/)+/i, replace: '/' },
+  { host: /miro\.medium\.com$/i, strip: /(?:-\d{2,4})?\.[a-z]+$/i, replace: '' },
 ]
 
 // A leaf that is purely a dimension descriptor, e.g. "640x360" or, with a crop
@@ -85,24 +137,39 @@ const dimensionLeaf = /^(.*__)?\d{1,5}x\d{1,5}(\.[a-z0-9]+)?$/i
 // width-only "_800x" and retina "@2x" shapes stay out, each below 0.1% of feeds.
 const dimensionSuffix = /[-_]\d{1,5}x\d{1,5}(\.[a-z0-9]+)$/i
 
-// If the URL is a known image-proxy wrapper, return its inner source URL so the
-// key is built from the real image rather than the proxy's render params.
+// If the URL is a known image-proxy wrapper, return its inner source URL so the key
+// is built from the real image rather than the proxy's render params. Loops so a
+// proxy that wraps another proxy (e.g. a Cloudinary fetch of a Cloudinary upload)
+// fully unwraps; the depth cap and same-value check stop any runaway.
 const unwrapProxiedImage = (url: string): string => {
-  const proxy = parseUrl(url)
+  let current = url
 
-  if (!proxy) {
-    return url
-  }
+  for (let depth = 0; depth < 5; depth++) {
+    const proxy = parseUrl(current)
 
-  for (const { pattern, toSource } of imageProxies) {
-    const match = url.match(pattern)
-
-    if (match) {
-      return toSource(match[1], proxy) ?? url
+    if (!proxy) {
+      break
     }
+
+    let next = current
+
+    for (const { pattern, toSource } of imageProxies) {
+      const match = current.match(pattern)
+
+      if (match) {
+        next = toSource(match[1], proxy) ?? current
+        break
+      }
+    }
+
+    if (next === current) {
+      break
+    }
+
+    current = next
   }
 
-  return url
+  return current
 }
 
 // Size-agnostic dedup key for images: a scaled or differently-cropped copy of an
@@ -139,15 +206,29 @@ export const getImageFingerprint = (rawUrl: string, cleanUrlFn?: CleanUrlFn): st
     return normalized
   }
 
-  const segments = getPathSegments(parsed)
+  // Strip a CDN render segment from the path (Blogger /s1600/, Wix /v1/, Cloudinary
+  // upload transforms, ...) so renditions of one image collapse before the leaf checks.
+  let path = `/${getPathSegments(parsed).join('/')}`
+
+  for (const { host, strip, replace } of pathTransforms) {
+    if (host && !host.test(parsed.host)) {
+      continue
+    }
+
+    path = path.replace(strip, replace)
+  }
+
+  const segments = path.split('/').filter(Boolean)
 
   if (segments.length) {
     const lastIndex = segments.length - 1
     const leaf = segments[lastIndex]
 
-    if (dimensionSuffix.test(leaf)) {
+    if (segments.length > 1 && dimensionLeaf.test(leaf)) {
+      segments.pop()
+    } else if (dimensionSuffix.test(leaf)) {
       segments[lastIndex] = leaf.replace(dimensionSuffix, '$1')
-    } else if (segments.length > 1 && (dimensionLeaf.test(leaf) || sizeKeywordLeaf.test(leaf))) {
+    } else if (segments.length > 1 && sizeKeywordLeaf.test(leaf)) {
       segments.pop()
     }
   }
