@@ -11,6 +11,7 @@ import delphi from 'highlight.js/lib/languages/delphi'
 import dockerfile from 'highlight.js/lib/languages/dockerfile'
 import elixir from 'highlight.js/lib/languages/elixir'
 import elm from 'highlight.js/lib/languages/elm'
+import erb from 'highlight.js/lib/languages/erb'
 import erlang from 'highlight.js/lib/languages/erlang'
 import fsharp from 'highlight.js/lib/languages/fsharp'
 import gherkin from 'highlight.js/lib/languages/gherkin'
@@ -58,6 +59,7 @@ export const extraLanguages: Record<string, LanguageFn> = {
   dockerfile,
   elixir,
   elm,
+  erb,
   erlang,
   fsharp,
   gherkin,
