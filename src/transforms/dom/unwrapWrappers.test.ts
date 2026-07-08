@@ -190,6 +190,22 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
     expect(await transform(value)).toBe(value)
   })
 
+  it('should preserve a wrapper that is the target of an in-page fragment link', async () => {
+    const value = html`
+      <p><sup><a href="#fn-1">1</a></sup></p>
+      <div class="footnote-definition" id="fn-1"><p>The note.</p></div>
+    `
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should still unwrap an id-bearing wrapper that no fragment link references', async () => {
+    const value = '<p><a href="#other">jump</a></p><div id="fn-1"><p>The note.</p></div>'
+    const expected = '<p><a href="#other">jump</a></p><p>The note.</p>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
   it('should be idempotent', async () => {
     const value = '<div><article><p>Content</p></article></div>'
     const once = await transform(value)

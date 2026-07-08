@@ -24,6 +24,7 @@ export const transformContent = async (
 ): Promise<string> => {
   const context: TransformContext = {
     baseUrl: options.baseUrl,
+    sameSiteUrls: options.sameSiteUrls,
     enclosures: options.enclosures,
     embedResolvers: options.embedResolvers ?? defaultEmbedResolvers,
     bookmarkResolvers: options.bookmarkResolvers ?? defaultBookmarkResolvers,
