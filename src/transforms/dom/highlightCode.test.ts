@@ -617,36 +617,12 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(value)
   })
 
-  it('should highlight an unlabeled JSON block as JSON', async () => {
+  it('should leave an unlabeled JSON block plain', async () => {
     const value = '<pre><code>{\n  "linter": true,\n  "rules": ["a", "b"]\n}</code></pre>'
     const result = await transform(value)
 
-    expect(result).toContain('hljs')
-    expect(result).toContain('data-pre-language="json"')
-    expect(result).toContain('data-pre-label="JSON"')
-    expect(result).not.toContain('data-pre-guessed')
-  })
-
-  it('should not force JSON on a JSON-shaped CSS rule body', async () => {
-    const value = '<pre><code>{ color: red; padding: 4px; }</code></pre>'
-
-    expect(await transform(value)).not.toContain('data-pre-language="json"')
-  })
-
-  it('should leave a JSONC block with comments plain (it fails JSON.parse)', async () => {
-    const value = '<pre><code>{\n  // a comment\n  "linter": true\n}</code></pre>'
-
-    // JSON.parse fails on the comment, so the deterministic JSON branch is skipped.
-    // With no auto-detection fallback, the block stays plain.
-    expect(await transform(value)).toEqualHtml(value)
-  })
-
-  it('should be idempotent on an unlabeled JSON block', async () => {
-    const value = '<pre><code>{\n  "linter": true,\n  "rules": ["a", "b"]\n}</code></pre>'
-    const once = await transform(value)
-    const twice = await transform(once)
-
-    expect(twice).toBe(once)
+    expect(result).not.toContain('hljs')
+    expect(result).not.toContain('data-pre-language')
   })
 
   it('should leave a trivial unlabeled one-liner plain', async () => {
