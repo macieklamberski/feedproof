@@ -1,6 +1,50 @@
 import { describe, expect, it } from 'bun:test'
 import { getImageFingerprint, getUrlDimensions, getUrlSizeHint } from './images.js'
 
+// Each case is [CDN label, wrapped input URL, expected inner-source key].
+const imageProxyCases: Array<[string, string, string]> = [
+  [
+    'Cloudflare image',
+    'https://files.zhedge.com/cdn-cgi/image/width=1080/https://assets.zerohedge.com/s3fs/photo.jpg',
+    'assets.zerohedge.com/s3fs/photo.jpg',
+  ],
+  [
+    'Cloudflare plain',
+    'https://assets.thelocal.com/cdn-cgi/plain/https://apiwp.thelocal.com/wp-content/uploads/photo.jpg',
+    'apiwp.thelocal.com/wp-content/uploads/photo.jpg',
+  ],
+  [
+    'Next.js image',
+    'https://x.com.br/_next/image?url=https%3A%2F%2Fx.com.br%2Ffotos%2Fphoto.jpg&w=384',
+    'x.com.br/fotos/photo.jpg',
+  ],
+  [
+    'Brightspot dims',
+    'https://npr.brightspotcdn.com/dims4/default/f008/resize/300x169!/quality/90/?url=https%3A%2F%2Fmedia.npr.org%2Fphoto.jpg',
+    'media.npr.org/photo.jpg',
+  ],
+  [
+    'ImageKit',
+    'https://ik.imagekit.io/demo/tr:w-200/https://cdn.example.com/photo.jpg',
+    'cdn.example.com/photo.jpg',
+  ],
+  [
+    'dev.to',
+    'https://media2.dev.to/dynamic/image/width=800/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fphoto.png',
+    'dev-to-uploads.s3.amazonaws.com/photo.png',
+  ],
+  [
+    'Yahoo image API',
+    'https://s.yimg.com/ny/api/res/1.2/As60/YXBw/https://d29szjachogqwa.cloudfront.net/images/photo.jpg',
+    'd29szjachogqwa.cloudfront.net/images/photo.jpg',
+  ],
+  [
+    'podigee',
+    'https://images.podigee-cdn.net/0x,siN6/https://main.podigee-cdn.net/uploads/u17132/photo.jpg',
+    'main.podigee-cdn.net/uploads/u17132/photo.jpg',
+  ],
+]
+
 describe('getImageFingerprint', () => {
   it('should drop the query so resize variants collapse', () => {
     const bare = getImageFingerprint('https://example.com/cover.jpg')
@@ -62,7 +106,108 @@ describe('getImageFingerprint', () => {
 
   it('should keep the raw capture when the proxied source is malformed', () => {
     // `%E0%A4%A` is an incomplete percent-escape; decoding throws and the raw value is kept.
-    expect(() => getImageFingerprint('https://images.weserv.nl/?url=%E0%A4%A')).not.toThrow()
+    expect(() =>
+      getImageFingerprint('https://images.weserv.nl/?url=https%3A%2F%2F%E0%A4%A'),
+    ).not.toThrow()
+  })
+
+  it('should return the input unchanged when it is not a parseable URL', () => {
+    expect(getImageFingerprint('not-a-url')).toBe('not-a-url')
+  })
+
+  it('should unwrap a WordPress Photon URL, re-adding the stripped scheme', () => {
+    const value = 'https://i0.wp.com/cdn.example.com/photo.jpg'
+    const expected = 'cdn.example.com/photo.jpg'
+
+    expect(getImageFingerprint(value)).toBe(expected)
+  })
+
+  it('should drop a whole leaf that is only dimensions', () => {
+    const one = 'https://example.com/gallery/640x360.jpg'
+    const two = 'https://example.com/gallery/1280x720.jpg'
+    const expected = 'example.com/gallery'
+
+    expect(getImageFingerprint(one)).toBe(expected)
+    expect(getImageFingerprint(two)).toBe(expected)
+  })
+
+  it('should unwrap the Blogger opensocial proxy, keeping distinct images distinct', () => {
+    const first =
+      'https://images-blogger-opensocial.googleusercontent.com/gadgets/proxy?url=https%3A%2F%2Fcdn.example.com%2Fa.jpg'
+    const second =
+      'https://images-blogger-opensocial.googleusercontent.com/gadgets/proxy?url=https%3A%2F%2Fcdn.example.com%2Fb.jpg'
+
+    expect(getImageFingerprint(first)).toBe('cdn.example.com/a.jpg')
+    expect(getImageFingerprint(second)).toBe('cdn.example.com/b.jpg')
+  })
+
+  it('should unwrap the Hatena image scaler to its inner source', () => {
+    const value =
+      'https://cdn.image.st-hatena.com/image/scale/abc/width=1300/https%3A%2F%2Fcdn.example.com%2Fphoto.jpg'
+    const expected = 'cdn.example.com/photo.jpg'
+
+    expect(getImageFingerprint(value)).toBe(expected)
+  })
+
+  it.each(
+    imageProxyCases,
+  )('should unwrap the %s image proxy to its inner source', (_name, url, expected) => {
+    expect(getImageFingerprint(url)).toBe(expected)
+  })
+
+  it('should unwrap then strip a Cloudinary fetch of an upload URL', () => {
+    const value =
+      'https://assets.example.com/x/image/fetch/c_fill,q_75/https://res.cloudinary.com/y/image/upload/v161/clients/a/DSC_0326.jpg'
+    const expected = 'res.cloudinary.com/y/image/upload/v161/clients/a/DSC_0326.jpg'
+
+    expect(getImageFingerprint(value)).toBe(expected)
+  })
+
+  it('should collapse Blogger size segments to the base image', () => {
+    const large = 'https://2.bp.blogspot.com/-a/b/c/d/s1600/photo.jpg'
+    const small = 'https://2.bp.blogspot.com/-a/b/c/d/s400/photo.jpg'
+    const expected = '2.bp.blogspot.com/-a/b/c/d/photo.jpg'
+
+    expect(getImageFingerprint(large)).toBe(expected)
+    expect(getImageFingerprint(small)).toBe(expected)
+  })
+
+  it('should collapse Wix render variants to the media id', () => {
+    const fit =
+      'https://static.wixstatic.com/media/0037b6_abc~mv2.jpg/v1/fit/w_1000,h_1000/file.png'
+    const fill =
+      'https://static.wixstatic.com/media/0037b6_abc~mv2.jpg/v1/fill/w_500,h_500/file.png'
+    const expected = 'static.wixstatic.com/media/0037b6_abc~mv2.jpg'
+
+    expect(getImageFingerprint(fit)).toBe(expected)
+    expect(getImageFingerprint(fill)).toBe(expected)
+  })
+
+  it('should drop the Ghost size directory', () => {
+    const small = 'https://blog.example.com/content/images/size/w600/2024/04/photo.png'
+    const large = 'https://blog.example.com/content/images/size/w1000/2024/04/photo.png'
+    const expected = 'blog.example.com/content/images/2024/04/photo.png'
+
+    expect(getImageFingerprint(small)).toBe(expected)
+    expect(getImageFingerprint(large)).toBe(expected)
+  })
+
+  it('should strip Cloudinary upload transforms', () => {
+    const one = 'https://cdn.example.com/x/image/upload/c_fill,h_104,w_300/v1/folder/id.jpg'
+    const two = 'https://cdn.example.com/x/image/upload/c_fill,h_112,w_172/v1/folder/id.jpg'
+    const expected = 'cdn.example.com/x/image/upload/v1/folder/id.jpg'
+
+    expect(getImageFingerprint(one)).toBe(expected)
+    expect(getImageFingerprint(two)).toBe(expected)
+  })
+
+  it('should collapse Medium render and format variants to the id', () => {
+    const webp = 'https://miro.medium.com/v2/resize:fit:1006/format:webp/1*abcDEF-1400.webp'
+    const jpeg = 'https://miro.medium.com/v2/resize:fit:1100/1*abcDEF.jpeg'
+    const expected = 'miro.medium.com/1*abcDEF'
+
+    expect(getImageFingerprint(webp)).toBe(expected)
+    expect(getImageFingerprint(jpeg)).toBe(expected)
   })
 
   it('should unwrap a Cloudinary fetch URL to its inner source', () => {
