@@ -1,4 +1,3 @@
-import { isJsonLike, isParseableJson } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { hasAncestorWithTagName, isElement, isText, walkElements } from '../../utils/dom.js'
 // Token -> display-label map for the languages feedsweep recognizes (canonical
@@ -54,8 +53,8 @@ const sphinxLanguageRegex = /^highlight-([a-z][a-z0-9+#]+)$/
 //   8. highlight-source-LANG / highlight-LANG wrapper class — GitHub/Linguist, Sphinx.
 //   9. A standalone class that is itself a grammar name (3+ chars) — class="haskell";
 //      older/hand-rolled templates with no prefix or wrapper token.
-// An unlabeled <pre><code> is highlighted only when it parses as JSON; anything
-// else stays plain (no relevance-based language guessing).
+// A block with no language hint stays plain: no relevance-based or shape-based
+// guessing, which mostly guesses wrong on short feed snippets.
 export const detectLanguage = (pre: Element | null, code: Element | null): string | undefined => {
   // Check language-* / lang-* class on <code>, then <pre>, then the pre's
   // wrapping ancestors — Jekyll/Rouge puts the class on an outer div:
@@ -396,29 +395,18 @@ export const highlightCode: DomTransform = ({ highlightFn }) => {
         continue
       }
 
-      // A code block is highlighted only when its language is known: declared via a
-      // hint (language-* class, data-language, etc.), or detected as JSON. JSON is
-      // the one detection kept because it is deterministic — the text actually parses
-      // as JSON — unlike relevance-based auto-detection, which mostly guesses wrong on
-      // short feed snippets. An unlabeled non-JSON block stays plain. The JSON check
-      // is limited to a <pre><code> (a bare <pre> is as often plain preformatted text
-      // as code).
-      const declared = detectLanguage(pre, code)
+      // A code block is highlighted only when its language is declared via a hint
+      // (language-* class, data-language, etc.). A block with no hint stays plain:
+      // auto-detection, even the deterministic parses-as-JSON kind, guesses a language
+      // the feed never marked and reads as inconsistent across unlabeled blocks.
+      const language = detectLanguage(pre, code)
 
-      // A block explicitly marked as plain text is just text — leave it untouched.
-      if (declared && plaintextLanguages.has(declared.toLowerCase())) {
+      if (language === undefined) {
         continue
       }
 
-      let language: string | undefined
-
-      if (declared) {
-        language = declared
-      } else if (code && isJsonLike(text) && isParseableJson(text)) {
-        language = 'json'
-      }
-
-      if (language === undefined) {
+      // A block explicitly marked as plain text is just text — leave it untouched.
+      if (plaintextLanguages.has(language.toLowerCase())) {
         continue
       }
 
