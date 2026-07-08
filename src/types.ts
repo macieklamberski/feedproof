@@ -84,6 +84,12 @@ export type HighlightFn = (text: string, language: string) => MaybePromise<strin
 
 export type TransformContext = {
   baseUrl?: string
+  // Other URLs that also stand for this item's own page (e.g. the feed's site
+  // page and feed URL, alongside the item permalink in `baseUrl`). Some feeds,
+  // notably HTML-to-Atom bridges, absolutize in-page fragments against one of
+  // these rather than the permalink, so transforms that recognize self-page
+  // links check these too. See `shortenSamePageLinkFragments`.
+  sameSiteUrls?: Array<string>
   enclosures?: Array<Enclosure>
   embedResolvers: Array<EmbedResolver>
   bookmarkResolvers: Array<BookmarkResolver>
@@ -113,6 +119,7 @@ export type ParseHtmlFn = (html: string) => MaybePromise<Document>
 export type TransformContentOptions = {
   parseHtmlFn: ParseHtmlFn
   baseUrl?: string
+  sameSiteUrls?: Array<string>
   enclosures?: Array<Enclosure>
   embedResolvers?: Array<EmbedResolver>
   bookmarkResolvers?: Array<BookmarkResolver>
