@@ -145,9 +145,11 @@ export const getImageFingerprint = (rawUrl: string, cleanUrlFn?: CleanUrlFn): st
     const lastIndex = segments.length - 1
     const leaf = segments[lastIndex]
 
-    if (dimensionSuffix.test(leaf)) {
+    if (segments.length > 1 && dimensionLeaf.test(leaf)) {
+      segments.pop()
+    } else if (dimensionSuffix.test(leaf)) {
       segments[lastIndex] = leaf.replace(dimensionSuffix, '$1')
-    } else if (segments.length > 1 && (dimensionLeaf.test(leaf) || sizeKeywordLeaf.test(leaf))) {
+    } else if (segments.length > 1 && sizeKeywordLeaf.test(leaf)) {
       segments.pop()
     }
   }
