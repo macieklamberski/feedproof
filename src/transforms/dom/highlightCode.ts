@@ -52,6 +52,8 @@ const sphinxLanguageRegex = /^highlight-([a-z][a-z0-9+#]+)$/
 //   6. <figure><figcaption>file.ext</figcaption> filename — Expressive Code (Astro).
 //   7. class="highlight LANG" (LANG resolving to a grammar) — Forem/dev.to, Pygments.
 //   8. highlight-source-LANG / highlight-LANG wrapper class — GitHub/Linguist, Sphinx.
+//   9. A standalone class that is itself a grammar name (3+ chars) — class="haskell";
+//      older/hand-rolled templates with no prefix or wrapper token.
 // An unlabeled <pre><code> is highlighted only when it parses as JSON; anything
 // else stays plain (no relevance-based language guessing).
 export const detectLanguage = (pre: Element | null, code: Element | null): string | undefined => {
@@ -166,6 +168,20 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
       if (language && isSupportedLanguage(language)) {
         return language
       }
+    }
+  }
+
+  // Bare language-name class: class="haskell", class="python" — older or hand-rolled
+  // templates name the language as a standalone class, with no prefix or wrapper token.
+  // Checked last so every explicit convention above wins. Accept a token that resolves
+  // to a grammar; require 3+ chars so the short aliases (c, r, go, js, md) that double
+  // as CSS utility classes cannot match.
+  for (const element of candidates) {
+    const tokens = element?.className.split(whitespaceRegex) ?? []
+    const language = tokens.find((token) => token.length >= 3 && isSupportedLanguage(token))
+
+    if (language) {
+      return language
     }
   }
 }

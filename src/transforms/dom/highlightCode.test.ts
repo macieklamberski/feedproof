@@ -332,6 +332,46 @@ describe('detectLanguage', () => {
     })
   })
 
+  describe('bare language-name class', () => {
+    it('should detect a standalone language-name class on pre', () => {
+      const { pre, code } = createElement('<pre class="haskell">x</pre>')
+
+      expect(detectLanguage(pre, code)).toBe('haskell')
+    })
+
+    it('should detect a standalone language-name class on code', () => {
+      const { pre, code } = createElement('<pre><code class="python">x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBe('python')
+    })
+
+    it('should detect a language-name token among other classes', () => {
+      const { pre, code } = createElement('<pre class="foo bar rust"><code>x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBe('rust')
+    })
+
+    it('should ignore a two-letter alias that collides with CSS classes', () => {
+      const { pre, code } = createElement('<pre class="md"><code>x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
+
+    it('should ignore a one-letter language class', () => {
+      const { pre, code } = createElement('<pre class="c"><code>x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
+
+    it('should prefer an explicit language-* class over a bare language-name class', () => {
+      const { pre, code } = createElement(
+        '<pre class="haskell"><code class="language-js">x</code></pre>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('js')
+    })
+  })
+
   describe('precedence between styles', () => {
     it('should prefer class on code over class on pre', () => {
       const { pre, code } = createElement(
