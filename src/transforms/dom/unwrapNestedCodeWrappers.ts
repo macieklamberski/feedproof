@@ -1,5 +1,5 @@
 import type { DomTransform } from '../../types.js'
-import { isText } from '../../utils/dom.js'
+import { isNonWhitespaceText } from '../../utils/dom.js'
 
 // A <code> nested directly inside another <code> (or a <pre> inside a <pre>) is a redundant
 // double-wrap some feeds emit. Readers size code with a relative font-size, so every extra
@@ -18,7 +18,7 @@ export const unwrapNestedCodeWrappers: DomTransform = () => {
       let hasDirectText = false
 
       for (let node = parent.firstChild; node !== null; node = node.nextSibling) {
-        if (isText(node) && node.textContent?.trim()) {
+        if (isNonWhitespaceText(node)) {
           hasDirectText = true
           break
         }
