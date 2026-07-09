@@ -64,6 +64,7 @@ import { unwrapHeadingBold } from './transforms/dom/unwrapHeadingBold.js'
 import { unwrapNestedCodeWrappers } from './transforms/dom/unwrapNestedCodeWrappers.js'
 import { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 import { wrapBareInlineInParagraphs } from './transforms/dom/wrapBareInlineInParagraphs.js'
+import { wrapCargoGalleryImages } from './transforms/dom/wrapCargoGalleryImages.js'
 import { wrapTablesForScroll } from './transforms/dom/wrapTablesForScroll.js'
 import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
 import { stripControlChars } from './transforms/string/stripControlChars.js'
@@ -102,6 +103,10 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   rebuildLazyLoadForVideos,
   rebuildLazyYtEmbeds,
   rebuildElementorVideoEmbeds,
+  // Wraps Cargo (cargo.site) portfolio images in <figure> here in the normalize
+  // cluster, so wrapBareInlineInParagraphs later sees block boundaries and keeps the
+  // caption, images, and PREV/NEXT nav apart instead of gluing them into one paragraph.
+  wrapCargoGalleryImages,
   // Converts AMP custom elements into plain HTML media so the image/embed transforms
   // below can dimension, placeholder, and proxy them. Runs in this normalize cluster so
   // an amp-youtube becomes an iframe before replaceEmbedsWithPlaceholders, and an
