@@ -1,5 +1,11 @@
 import type { DomTransform } from '../../types.js'
-import { hasAncestorWithTagName, isBlockElement, isElement, isText } from '../../utils/dom.js'
+import {
+  hasAncestorWithTagName,
+  hasText,
+  isBlockElement,
+  isElement,
+  isText,
+} from '../../utils/dom.js'
 
 const processContainersSelector =
   'body, div, blockquote, td, li, article, section, main, header, footer, aside, figure'
@@ -29,14 +35,14 @@ const mediaSelector = 'img, picture, video, audio, iframe, embed, object'
 // the text to it and hide it from media-specific styling.
 const isMediaBoundary = (node: Node): boolean => {
   if (isText(node)) {
-    return !node.textContent?.trim()
+    return !hasText(node)
   }
 
   if (!isElement(node)) {
     return true
   }
 
-  if (node.textContent?.trim()) {
+  if (hasText(node)) {
     return false
   }
 
@@ -95,9 +101,9 @@ export const wrapBareInlineInParagraphs: DomTransform = () => {
           return
         }
 
-        const hasText = buffer.some((node) => node.textContent?.trim())
+        const bufferHasText = buffer.some(hasText)
 
-        if (hasText) {
+        if (bufferHasText) {
           let start = 0
           let end = buffer.length - 1
 

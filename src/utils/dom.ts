@@ -1,4 +1,4 @@
-import { coerceNumber } from 'trousse'
+import { coerceNumber, isNonEmptyString } from 'trousse'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
@@ -53,8 +53,16 @@ export const isComment = (node: Node | null | undefined): node is Comment => {
   return node?.nodeType === Node.COMMENT_NODE
 }
 
+export const hasText = (node: Node | null | undefined): boolean => {
+  return isNonEmptyString(node?.textContent)
+}
+
 export const isWhitespaceText = (node: Node): boolean => {
-  return isText(node) && !node.textContent?.trim()
+  return isText(node) && !hasText(node)
+}
+
+export const isNonWhitespaceText = (node: Node): boolean => {
+  return isText(node) && hasText(node)
 }
 
 export const isBr = (node: Node): boolean => {

@@ -1,6 +1,7 @@
 import type { DomTransform } from '../../types.js'
 import {
   hasAncestorWithTagName,
+  hasText,
   isBlockElement,
   isBr,
   isElement,
@@ -90,7 +91,7 @@ export const convertBreaksToParagraphs: DomTransform = () => {
               current.hasBlock = true
             }
           } else if (isText(child)) {
-            if (!current.hasContent && child.textContent?.trim()) {
+            if (!current.hasContent && hasText(child)) {
               current.hasContent = true
             }
           }
