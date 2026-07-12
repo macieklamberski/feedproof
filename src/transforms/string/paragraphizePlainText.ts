@@ -1,4 +1,5 @@
 import type { StringTransform } from '../../types.js'
+import { isEscapedHtmlFragment } from '../../utils/html.js'
 
 // Matches `<tag>`, `<tag …>`, `<tag />` AND `<tag/>` (XHTML self-close without
 // a space before the slash, common in podcast feeds for `<br/>`).
@@ -20,6 +21,15 @@ export const paragraphizePlainText: StringTransform = () => {
 
     if (!html.trim()) {
       return ''
+    }
+
+    // Content that is wholly an escaped HTML fragment (a feed generator escaped its HTML
+    // twice) must reach the DOM stage as one text node so decodeDoubleEncodedTags can
+    // rebuild it. Splitting it into paragraphs and line breaks here would leave only the
+    // lines that happen to hold a complete tag pair decodable, and the rest would stay
+    // visible as text.
+    if (isEscapedHtmlFragment(html.replaceAll('&lt;', '<').replaceAll('&gt;', '>'))) {
+      return html
     }
 
     // The appended newline mirrors autop: it turns end-of-text whitespace into
