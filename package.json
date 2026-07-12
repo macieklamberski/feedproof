@@ -53,7 +53,7 @@
   },
   "peerDependencies": {
     "feedcanon": "^2.0.0-rc.1",
-    "feedscout": "^2.0.0-rc.1",
+    "feedscout": "^2.0.0-rc.2",
     "linkedom": "^0.18.12"
   },
   "peerDependenciesMeta": {
@@ -67,9 +67,9 @@
     "feedcanon": "2.0.0-rc.1",
     "feedscout": "2.0.0-rc.1",
     "jsdom": "^29.1.1",
-    "kvalita": "^1.15.1",
-    "linkedom": "^0.18.12",
-    "trousse": "^1.0.1",
-    "tsdown": "^0.22.3"
+    "kvalita": "^1.16.0",
+    "linkedom": "^0.18.13",
+    "trousse": "^1.1.0",
+    "tsdown": "^0.22.5"
   }
 }
