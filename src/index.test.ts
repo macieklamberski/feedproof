@@ -82,6 +82,33 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(result).toMatch(lineBreakAfterBraceRegex)
   })
 
+  it('should decode a multi-line double-escaped description in full', async () => {
+    // A double-escaping feed generator ships whole HTML as entity text spread across
+    // lines. paragraphizePlainText must pass it through so decodeDoubleEncodedTags gets
+    // the whole fragment as one text node; otherwise only the lines holding a complete
+    // tag pair decode and the rest stays visible as escaped text.
+    const value = [
+      '&lt;p&gt;A &lt;a href=&#34;https://example.com/about&#34;&gt;now page&lt;/a&gt;',
+      ': what has my attention.&lt;/p&gt;',
+      '&lt;h2 id=&#34;building&#34;&gt;Building&lt;/h2&gt;',
+      '&lt;ul&gt;',
+      '&lt;li&gt;&lt;strong&gt;first&lt;/strong&gt; item&lt;/li&gt;',
+      '&lt;/ul&gt;',
+    ].join('\n')
+    const expected = [
+      '<p>A <a href="https://example.com/about">now page</a>',
+      ': what has my attention.</p>',
+      '<h2><a href="#building" id="building"></a>Building</h2>',
+      '<ul>',
+      '<li><strong>first</strong> item</li>',
+      '</ul>',
+    ].join('\n')
+
+    expect(
+      await transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com' }),
+    ).toEqualHtml(expected)
+  })
+
   it('should clean anchor urls with the provided cleanUrlFn', async () => {
     const value = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
     const expected = '<p><a href="https://example.com">Link</a></p>'
