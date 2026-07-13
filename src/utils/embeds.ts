@@ -1,4 +1,8 @@
-import type { BookmarkResolverResult, EmbedResolverResult } from '../types.js'
+import type {
+  BookmarkResolverResult,
+  EmbedResolverResult,
+  GalleryResolverResult,
+} from '../types.js'
 
 export const createPlaceholder = <Type extends object>(
   document: Document,
@@ -90,6 +94,51 @@ export const createBookmarkPlaceholder = (
   link.setAttribute('href', url)
   link.textContent = title
   element.appendChild(link)
+
+  return element
+}
+
+export const createGalleryPlaceholder = (
+  document: Document,
+  result: GalleryResolverResult,
+): HTMLElement => {
+  const items = result.items
+
+  // URLs inside data-gallery-items are not run through proxyAssetUrls (it only
+  // rewrites element src/href). Left as-is for v1 — consumers proxy at render.
+  const element = createPlaceholder(document, 'gallery', {
+    provider: result.provider,
+    layout: result.layout,
+    title: result.title,
+    items: items.length ? JSON.stringify(items) : undefined,
+  })
+
+  for (const item of items) {
+    const figure = document.createElement('figure')
+    const image = document.createElement('img')
+    image.setAttribute('src', item.url)
+
+    if (item.alt) {
+      image.setAttribute('alt', item.alt)
+    }
+
+    if (item.fullUrl) {
+      const link = document.createElement('a')
+      link.setAttribute('href', item.fullUrl)
+      link.appendChild(image)
+      figure.appendChild(link)
+    } else {
+      figure.appendChild(image)
+    }
+
+    if (item.caption) {
+      const caption = document.createElement('figcaption')
+      caption.textContent = item.caption
+      figure.appendChild(caption)
+    }
+
+    element.appendChild(figure)
+  }
 
   return element
 }

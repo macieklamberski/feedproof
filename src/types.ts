@@ -63,6 +63,25 @@ export type BookmarkResolver = {
   extract: (element: Element) => MaybePromise<BookmarkResolverResult | undefined>
 }
 
+export type GalleryItem = {
+  url: string // Displayed <img src> (preview / display size).
+  fullUrl?: string // Full-resolution image from a wrapping <a href>, when present.
+  alt?: string
+  caption?: string // Per-image <figcaption>.
+}
+
+export type GalleryResolverResult = {
+  provider: string
+  title?: string // Gallery-level caption.
+  layout?: string // "slideshow" for sliders/carousels; omitted for grids.
+  items: Array<GalleryItem>
+}
+
+export type GalleryResolver = {
+  selector: string
+  extract: (element: Element) => MaybePromise<GalleryResolverResult | undefined>
+}
+
 export type CleanUrlFn = (url: string) => string
 
 // The role a URL plays in the output, so safety policy and neutralization can differ:
@@ -93,6 +112,7 @@ export type TransformContext = {
   enclosures?: Array<Enclosure>
   embedResolvers: Array<EmbedResolver>
   bookmarkResolvers: Array<BookmarkResolver>
+  galleryResolvers: Array<GalleryResolver>
   lazySrcAttributes: Array<string>
   lazySrcsetAttributes: Array<string>
   lazyIframeAttributes: Array<string>
@@ -123,6 +143,7 @@ export type TransformContentOptions = {
   enclosures?: Array<Enclosure>
   embedResolvers?: Array<EmbedResolver>
   bookmarkResolvers?: Array<BookmarkResolver>
+  galleryResolvers?: Array<GalleryResolver>
   lazySrcAttributes?: Array<string>
   lazySrcsetAttributes?: Array<string>
   lazyIframeAttributes?: Array<string>

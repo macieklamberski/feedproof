@@ -3,6 +3,7 @@ import {
   defaultBookmarkResolvers,
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
+  defaultGalleryResolvers,
   defaultHighlightFn,
   defaultInertSelectors,
   defaultLazyIframeAttributes,
@@ -28,6 +29,7 @@ export const transformContent = async (
     enclosures: options.enclosures,
     embedResolvers: options.embedResolvers ?? defaultEmbedResolvers,
     bookmarkResolvers: options.bookmarkResolvers ?? defaultBookmarkResolvers,
+    galleryResolvers: options.galleryResolvers ?? defaultGalleryResolvers,
     lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,
     lazySrcsetAttributes: options.lazySrcsetAttributes ?? defaultLazySrcsetAttributes,
     lazyIframeAttributes: options.lazyIframeAttributes ?? defaultLazyIframeAttributes,
@@ -89,6 +91,10 @@ export {
   youtubeEmbedResolver,
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
+export { coblocksGalleryResolver } from './galleries/coblocks.js'
+export { ghostGalleryResolver } from './galleries/ghost.js'
+export { jetpackSlideshowResolver } from './galleries/jetpack.js'
+export { wordpressGalleryResolver } from './galleries/wordpress.js'
 export { hljsHighlightFn } from './highlighters/hljs.js'
 export { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 export { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
@@ -96,6 +102,7 @@ export { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
 export { convertAmpElements } from './transforms/dom/convertAmpElements.js'
 export { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
+export { convertGalleries } from './transforms/dom/convertGalleries.js'
 export { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
@@ -165,6 +172,9 @@ export type {
   EmbedResolverResult,
   Enclosure,
   EnrichEmbedFn,
+  GalleryItem,
+  GalleryResolver,
+  GalleryResolverResult,
   HighlightFn,
   IsSafeUrlFn,
   ParseHtmlFn,
@@ -177,6 +187,7 @@ export type {
 export {
   createBookmarkPlaceholder,
   createEmbedPlaceholder,
+  createGalleryPlaceholder,
   createPlaceholder,
   normalizeEmbedFields,
   updateEmbedPlaceholder,

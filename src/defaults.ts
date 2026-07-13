@@ -4,6 +4,10 @@ import { substackBookmarkResolver } from './bookmarks/substack.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
+import { coblocksGalleryResolver } from './galleries/coblocks.js'
+import { ghostGalleryResolver } from './galleries/ghost.js'
+import { jetpackSlideshowResolver } from './galleries/jetpack.js'
+import { wordpressGalleryResolver } from './galleries/wordpress.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
 import { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 import { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
@@ -11,6 +15,7 @@ import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
 import { convertAmpElements } from './transforms/dom/convertAmpElements.js'
 import { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
+import { convertGalleries } from './transforms/dom/convertGalleries.js'
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
@@ -75,6 +80,7 @@ import type {
   BookmarkResolver,
   DomTransform,
   EmbedResolver,
+  GalleryResolver,
   ResolveUrlFn,
   StringTransform,
 } from './types.js'
@@ -148,6 +154,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   normalizeAnchoredHeadings,
   stripDeadAnchors,
   convertBookmarkCards,
+  convertGalleries,
   removeTrackingPixels,
   unwrapEmojiImages,
   // Empties lone-backslash paragraphs (`<p>\</p>`); runs before stripEmptyTags so
@@ -223,6 +230,13 @@ export const defaultEmbedResolvers: Array<EmbedResolver> = [
 export const defaultBookmarkResolvers: Array<BookmarkResolver> = [
   ghostBookmarkResolver,
   substackBookmarkResolver,
+]
+
+export const defaultGalleryResolvers: Array<GalleryResolver> = [
+  wordpressGalleryResolver,
+  ghostGalleryResolver,
+  jetpackSlideshowResolver,
+  coblocksGalleryResolver,
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)

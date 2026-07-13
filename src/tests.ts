@@ -4,6 +4,7 @@ import {
   defaultBookmarkResolvers,
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
+  defaultGalleryResolvers,
   defaultHighlightFn,
   defaultInertSelectors,
   defaultLazyIframeAttributes,
@@ -24,6 +25,7 @@ type ParseHtml = (html: string) => Document
 export const baseContext: TransformContext = {
   embedResolvers: defaultEmbedResolvers,
   bookmarkResolvers: defaultBookmarkResolvers,
+  galleryResolvers: defaultGalleryResolvers,
   emojiImageHosts: defaultEmojiImageHosts,
   inertSelectors: defaultInertSelectors,
   preservedPreClasses: defaultPreservedPreClasses,
