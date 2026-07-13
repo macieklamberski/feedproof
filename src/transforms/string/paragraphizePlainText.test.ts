@@ -81,6 +81,15 @@ describe('paragraphizePlainText', () => {
     expect(paragraphize(value)).toBe(value)
   })
 
+  it('should pass through an escaped fragment containing SVG and custom elements', () => {
+    const value = [
+      '&lt;p&gt;A talk &lt;svg viewBox="0 0 16 16"&gt;&lt;path d="M0 0h16"&gt;&lt;/path&gt;&lt;/svg&gt;',
+      'and a &lt;lite-youtube videoid="dQw4w9WgXcQ"&gt;&lt;/lite-youtube&gt; embed.&lt;/p&gt;',
+    ].join('\n')
+
+    expect(paragraphize(value)).toBe(value)
+  })
+
   it('should paragraphize prose that mentions an escaped tag', () => {
     const value = 'Use the &lt;img&gt; tag for images\n\nMore text'
     const expected = '<p>Use the &lt;img&gt; tag for images</p>\n<p>More text</p>\n'
