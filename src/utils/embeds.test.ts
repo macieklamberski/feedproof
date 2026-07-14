@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
-import type { BookmarkResolverResult } from '../types.js'
+import type { BookmarkResolverResult, GalleryResolverResult } from '../types.js'
 import {
   createBookmarkPlaceholder,
   createEmbedPlaceholder,
+  createGalleryPlaceholder,
   createPlaceholder,
   normalizeEmbedFields,
   updateEmbedPlaceholder,
@@ -414,5 +415,60 @@ describeForEachParser('createBookmarkPlaceholder', (parseHtml) => {
     `
 
     expect(element.outerHTML).toEqualHtml(expected)
+  })
+})
+
+describeForEachParser('createGalleryPlaceholder', (parseHtml) => {
+  it('should serialize items and wrap the full-size link, alt and caption in the fallback', () => {
+    const result: GalleryResolverResult = {
+      provider: 'wordpress',
+      title: 'My trip',
+      items: [
+        {
+          url: 'https://e.com/a.jpg',
+          fullUrl: 'https://e.com/a-full.jpg',
+          alt: 'Sunset',
+          caption: 'Day one',
+        },
+        { url: 'https://e.com/b.jpg' },
+      ],
+    }
+    const element = createGalleryPlaceholder(parseHtml(''), result)
+
+    expect(element.getAttribute('data-gallery-provider')).toBe('wordpress')
+    expect(element.getAttribute('data-gallery-title')).toBe('My trip')
+    expect(JSON.parse(element.getAttribute('data-gallery-items') ?? '')).toEqual(result.items)
+
+    const figures = element.querySelectorAll('figure')
+    expect(figures.length).toBe(2)
+
+    const link = figures[0].querySelector('a')
+    expect(link?.getAttribute('href')).toBe('https://e.com/a-full.jpg')
+    expect(link?.querySelector('img')?.getAttribute('src')).toBe('https://e.com/a.jpg')
+    expect(figures[0].querySelector('img')?.getAttribute('alt')).toBe('Sunset')
+    expect(figures[0].querySelector('figcaption')?.textContent).toBe('Day one')
+
+    expect(figures[1].querySelector('a')).toBeNull()
+    expect(figures[1].querySelector('img')?.getAttribute('src')).toBe('https://e.com/b.jpg')
+  })
+
+  it('should emit data-gallery-layout for a slideshow', () => {
+    const element = createGalleryPlaceholder(parseHtml(''), {
+      provider: 'jetpack',
+      layout: 'slideshow',
+      items: [{ url: 'https://e.com/a.jpg' }, { url: 'https://e.com/b.jpg' }],
+    })
+
+    expect(element.getAttribute('data-gallery-layout')).toBe('slideshow')
+  })
+
+  it('should omit optional attributes when unset', () => {
+    const element = createGalleryPlaceholder(parseHtml(''), {
+      provider: 'wordpress',
+      items: [{ url: 'https://e.com/a.jpg' }, { url: 'https://e.com/b.jpg' }],
+    })
+
+    expect(element.hasAttribute('data-gallery-layout')).toBe(false)
+    expect(element.hasAttribute('data-gallery-title')).toBe(false)
   })
 })
