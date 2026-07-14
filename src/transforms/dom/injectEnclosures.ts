@@ -1,3 +1,4 @@
+import { isHostOf, isSubdomainOf } from 'trousse'
 import type {
   CleanUrlFn,
   DomTransform,
@@ -24,6 +25,10 @@ const isVideoEnclosure = (enclosure: Enclosure): boolean => {
 
 const isImageEnclosure = (enclosure: Enclosure): boolean => {
   return enclosure.medium === 'image' || !!enclosure.type?.startsWith('image/')
+}
+
+const isAvatarEnclosure = (url: string, avatarHosts: ReadonlyArray<string>): boolean => {
+  return isHostOf(url, avatarHosts) || isSubdomainOf(url, avatarHosts)
 }
 
 // Run resolvers against a synthesized iframe carrying the enclosure URL so that
@@ -241,6 +246,13 @@ export const injectEnclosures: DomTransform = (context) => {
 
       if (isVideoEnclosure(enclosure)) {
         created.push(createNativeMediaElement(document, 'video', enclosure, context))
+        continue
+      }
+
+      // WordPress attaches the author's gravatar as a per-item media:content image.
+      // It is the author's avatar, not post imagery, so never inject it as the lead
+      // image of an otherwise imageless item.
+      if (isImageEnclosure(enclosure) && isAvatarEnclosure(embedSource, context.avatarImageHosts)) {
         continue
       }
 

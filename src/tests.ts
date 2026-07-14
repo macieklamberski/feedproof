@@ -1,6 +1,7 @@
 import { describe, expect } from 'bun:test'
 import { JSDOM } from 'jsdom'
 import {
+  defaultAvatarImageHosts,
   defaultBookmarkResolvers,
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
@@ -25,6 +26,7 @@ export const baseContext: TransformContext = {
   embedResolvers: defaultEmbedResolvers,
   bookmarkResolvers: defaultBookmarkResolvers,
   emojiImageHosts: defaultEmojiImageHosts,
+  avatarImageHosts: defaultAvatarImageHosts,
   inertSelectors: defaultInertSelectors,
   preservedPreClasses: defaultPreservedPreClasses,
   lazySrcAttributes: defaultLazySrcAttributes,
