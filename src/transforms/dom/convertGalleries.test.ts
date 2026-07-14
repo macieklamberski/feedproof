@@ -142,5 +142,14 @@ describe('convertGalleries', () => {
       expect(result).not.toContain('data-gallery')
       expect(result).toContain('class="gallery"')
     })
+
+    it('should be idempotent', async () => {
+      const value =
+        '<div class="gallery"><img src="https://e.com/a.jpg"><img src="https://e.com/b.jpg"></div>'
+      const once = await transform(value, [imageResolver])
+      const twice = await transform(once, [imageResolver])
+
+      expect(twice).toBe(once)
+    })
   })
 })
