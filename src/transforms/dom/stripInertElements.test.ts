@@ -113,6 +113,19 @@ describeForEachParser('stripInertElements', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
+    it('should remove Substack captioned-button-wrap share block', async () => {
+      const value = html`
+        <p>Body</p>
+        <div class="captioned-button-wrap">
+          <div class="preamble"><p class="cta-caption">Thanks for reading! This post is public so feel free to share it.</p></div>
+          <p class="button-wrapper"><a class="button primary" href="https://example.com/p/post?action=share"><span>Share</span></a></p>
+        </div>
+      `
+      const expected = '<p>Body</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
     it('should remove Ghost kg-signup-card', async () => {
       const value = html`
         <article>

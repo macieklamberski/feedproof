@@ -374,6 +374,7 @@ export const defaultInertSelectors = [
   '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget — 11,366 feeds (0.42%).
   '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA — 11,275 feeds (0.42%).
   'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets — 3,201 feeds (0.1%).
+  '.captioned-button-wrap', // Substack caption + CTA button (Share/Subscribe/Comment) — 1,969 feeds (0.04%).
   '.adsbygoogle', // Google AdSense ad slot — 1,515 feeds (0.056%).
   '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 766 feeds (0.028%).
   '.yarpp-related', // YARPP related-posts widget (WordPress) — 672 feeds (0.025%).
