@@ -222,6 +222,20 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     expect(result).not.toContain('proxy.example.com')
   })
 
+  it('should ignore malformed data-gallery-items JSON', async () => {
+    const value = `<div data-gallery-items='not json'></div>`
+    const result = await transform(value, wrapProxy)
+
+    expect(result).not.toContain('proxy.example.com')
+  })
+
+  it('should ignore data-gallery-items that is not an array', async () => {
+    const value = `<div data-gallery-items='{"url":"https://cdn.example.com/a.jpg"}'></div>`
+    const result = await transform(value, wrapProxy)
+
+    expect(result).not.toContain('proxy.example.com')
+  })
+
   it('should leave attributes unchanged when assetProxyFn returns undefined', async () => {
     const skip: AssetProxyFn = () => undefined
     const value = '<img src="https://cdn.example.com/photo.jpg">'
