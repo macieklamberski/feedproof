@@ -142,3 +142,57 @@ export const createGalleryPlaceholder = (
 
   return element
 }
+
+// Rewrites the URL-carrying fields inside a gallery placeholder's `data-gallery-items`
+// JSON in place. The DOM fallback figures are reached by the generic element passes, but
+// the JSON (a gallery-aware reader's primary render path) is opaque to them, so
+// neutralizeUnsafeUrls and proxyAssetUrls call this to cover it too. `rewrite` returns a
+// replacement URL or undefined to leave the value unchanged; `key` lets the caller apply a
+// different policy to the display `url` (media) than the full-size `fullUrl` (link).
+export const rewriteGalleryItemUrls = (
+  element: Element,
+  rewrite: (url: string, key: 'url' | 'fullUrl') => string | undefined,
+): void => {
+  const raw = element.getAttribute('data-gallery-items')
+
+  if (!raw) {
+    return
+  }
+
+  let items: Array<Record<string, unknown>>
+
+  try {
+    const parsed = JSON.parse(raw)
+
+    if (!Array.isArray(parsed)) {
+      return
+    }
+
+    items = parsed
+  } catch {
+    return
+  }
+
+  let changed = false
+
+  for (const item of items) {
+    for (const key of ['url', 'fullUrl'] as const) {
+      const value = item[key]
+
+      if (typeof value !== 'string') {
+        continue
+      }
+
+      const next = rewrite(value, key)
+
+      if (next !== undefined && next !== value) {
+        item[key] = next
+        changed = true
+      }
+    }
+  }
+
+  if (changed) {
+    element.setAttribute('data-gallery-items', JSON.stringify(items))
+  }
+}

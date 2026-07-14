@@ -264,6 +264,39 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
     })
   })
 
+  describe('gallery items', () => {
+    it('should neutralize the display url (media) and full-size link (link) inside data-gallery-items', async () => {
+      const value = `<div data-gallery-items='[{"url":"javascript:alert(1)","fullUrl":"javascript:alert(2)"}]'></div>`
+      const result = await transform(value)
+
+      expect(result).not.toContain('javascript:')
+      expect(result).toContain('about:blank')
+      expect(result).toContain('#unsafe-link')
+    })
+
+    it('should apply the caller isSafeUrlFn to gallery item urls', async () => {
+      const context: TransformContext = {
+        ...baseContext,
+        isSafeUrlFn: (url) => !url.includes('evil.test'),
+      }
+      const value = `<div data-gallery-items='[{"url":"https://evil.test/a.jpg","fullUrl":"https://evil.test/full.jpg"}]'></div>`
+      const result = await transform(value, context)
+
+      expect(result).not.toContain('evil.test')
+      expect(result).toContain('about:blank')
+      expect(result).toContain('#unsafe-link')
+    })
+
+    it('should leave safe gallery item urls untouched', async () => {
+      const value = `<div data-gallery-items='[{"url":"https://cdn.example.com/a.jpg"}]'></div>`
+      const result = await transform(value)
+
+      expect(result).toContain('https://cdn.example.com/a.jpg')
+      expect(result).not.toContain('about:blank')
+      expect(result).not.toContain('#unsafe-link')
+    })
+  })
+
   it('should be idempotent', async () => {
     const value = '<a href="javascript:alert(1)">x</a><img src="javascript:alert(1)">'
     const once = await transform(value)

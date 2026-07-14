@@ -1,6 +1,7 @@
 import { parseSrcset, stringifySrcset } from 'srcset'
 import type { DomTransform, IsSafeUrlFn, UrlRole } from '../../types.js'
 import { walkElements } from '../../utils/dom.js'
+import { rewriteGalleryItemUrls } from '../../utils/embeds.js'
 
 // Inert replacements that keep the element but render nothing: a same-page no-op for
 // links, the empty document for media (about:blank loads nothing and runs nothing).
@@ -119,6 +120,15 @@ export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
       for (const [attribute, role] of genericAttributeRoles) {
         neutralizeAttribute(element, attribute, role, isSafeUrlFn)
       }
+
+      // Gallery placeholders keep their URLs in a data-gallery-items JSON blob, out of
+      // reach of the per-attribute passes above. The display `url` is a media role, the
+      // full-size `fullUrl` a link, matching the fallback <img>/<a> the resolver emits.
+      rewriteGalleryItemUrls(element, (url, key) => {
+        const role: UrlRole = key === 'url' ? 'media' : 'link'
+
+        return isUnsafe(url, role, isSafeUrlFn) ? sentinels[role] : undefined
+      })
 
       const name = element.localName
       const tagAttributes = tagAttributeRoles[name]
