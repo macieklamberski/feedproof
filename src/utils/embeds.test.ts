@@ -7,6 +7,7 @@ import {
   createGalleryPlaceholder,
   createPlaceholder,
   normalizeEmbedFields,
+  rewriteGalleryItemUrls,
   updateEmbedPlaceholder,
 } from './embeds.js'
 
@@ -470,5 +471,70 @@ describeForEachParser('createGalleryPlaceholder', (parseHtml) => {
 
     expect(element.hasAttribute('data-gallery-layout')).toBe(false)
     expect(element.hasAttribute('data-gallery-title')).toBe(false)
+  })
+})
+
+describeForEachParser('rewriteGalleryItemUrls', (parseHtml) => {
+  const withItems = (items: Array<Record<string, unknown>>): Element => {
+    const element = parseHtml('').createElement('div')
+    element.setAttribute('data-gallery-items', JSON.stringify(items))
+    return element
+  }
+
+  it('should rewrite url and fullUrl via the callback and keep other fields', () => {
+    const element = withItems([
+      { url: 'https://e.com/a.jpg', fullUrl: 'https://e.com/full.jpg', alt: 'Alt', caption: 'Cap' },
+    ])
+
+    rewriteGalleryItemUrls(element, (url) => `proxied:${url}`)
+
+    const [item] = JSON.parse(element.getAttribute('data-gallery-items') ?? '')
+    expect(item.url).toBe('proxied:https://e.com/a.jpg')
+    expect(item.fullUrl).toBe('proxied:https://e.com/full.jpg')
+    expect(item.alt).toBe('Alt')
+    expect(item.caption).toBe('Cap')
+  })
+
+  it('should pass the field name so callers can apply a per-field policy', () => {
+    const element = withItems([{ url: 'https://e.com/a.jpg', fullUrl: 'https://e.com/full.jpg' }])
+    const keys: Array<string> = []
+
+    rewriteGalleryItemUrls(element, (_url, key) => {
+      keys.push(key)
+    })
+
+    expect(keys).toEqual(['url', 'fullUrl'])
+  })
+
+  it('should leave the attribute untouched when the callback changes nothing', () => {
+    const raw = JSON.stringify([{ url: 'https://e.com/a.jpg' }])
+    const element = parseHtml('').createElement('div')
+    element.setAttribute('data-gallery-items', raw)
+
+    rewriteGalleryItemUrls(element, () => undefined)
+
+    expect(element.getAttribute('data-gallery-items')).toBe(raw)
+  })
+
+  it('should skip non-string url values without throwing', () => {
+    const element = withItems([{ url: 42 }])
+
+    expect(() => rewriteGalleryItemUrls(element, (url) => `proxied:${url}`)).not.toThrow()
+
+    const [item] = JSON.parse(element.getAttribute('data-gallery-items') ?? '')
+    expect(item.url).toBe(42)
+  })
+
+  it('should ignore malformed JSON and a non-array payload', () => {
+    const malformed = parseHtml('').createElement('div')
+    malformed.setAttribute('data-gallery-items', 'not json')
+    const object = parseHtml('').createElement('div')
+    object.setAttribute('data-gallery-items', '{"url":"https://e.com/a.jpg"}')
+
+    rewriteGalleryItemUrls(malformed, () => 'changed')
+    rewriteGalleryItemUrls(object, () => 'changed')
+
+    expect(malformed.getAttribute('data-gallery-items')).toBe('not json')
+    expect(object.getAttribute('data-gallery-items')).toBe('{"url":"https://e.com/a.jpg"}')
   })
 })
