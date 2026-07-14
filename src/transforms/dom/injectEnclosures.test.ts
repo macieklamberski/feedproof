@@ -254,6 +254,43 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(result).not.toContain('cover.jpg')
     })
 
+    it('should not inject a gravatar avatar as the lead image of imageless content', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://2.gravatar.com/avatar/abc123?s=96&d=identicon', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    it('should keep a real image enclosure and skip the gravatar avatar in the same item', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://gravatar.com/avatar/abc123', type: 'image/jpeg' },
+        { url: 'https://example.com/photo.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/photo.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should inject the gravatar avatar when avatarImageHosts is empty', async () => {
+      const value = '<p>Content</p>'
+      const context: TransformContext = {
+        ...withEnclosures([{ url: 'https://2.gravatar.com/avatar/abc123', type: 'image/jpeg' }]),
+        avatarImageHosts: [],
+      }
+      const expected = html`
+        <img src="https://2.gravatar.com/avatar/abc123" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
     it('should inject one image when enclosures differ only by query, keeping the original', async () => {
       const value = '<p>Content</p>'
       const context = withEnclosures([

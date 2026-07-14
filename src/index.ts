@@ -1,5 +1,6 @@
 import {
   defaultAllDomTransforms,
+  defaultAvatarImageHosts,
   defaultBookmarkResolvers,
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
@@ -34,6 +35,7 @@ export const transformContent = async (
     trackingHosts: options.trackingHosts ?? defaultTrackingHosts,
     trackingPathSegments: options.trackingPathSegments ?? defaultTrackingPathSegments,
     emojiImageHosts: options.emojiImageHosts ?? defaultEmojiImageHosts,
+    avatarImageHosts: options.avatarImageHosts ?? defaultAvatarImageHosts,
     inertSelectors: options.inertSelectors ?? defaultInertSelectors,
     preservedPreClasses: options.preservedPreClasses ?? defaultPreservedPreClasses,
     resolveUrlFn: options.resolveUrlFn ?? defaultResolveUrlFn,

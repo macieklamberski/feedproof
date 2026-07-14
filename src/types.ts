@@ -99,6 +99,7 @@ export type TransformContext = {
   trackingHosts: Array<string>
   trackingPathSegments: Array<string>
   emojiImageHosts: Array<string>
+  avatarImageHosts: Array<string>
   inertSelectors: Array<string>
   preservedPreClasses: Array<string>
   resolveUrlFn: ResolveUrlFn
@@ -129,6 +130,7 @@ export type TransformContentOptions = {
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
   emojiImageHosts?: Array<string>
+  avatarImageHosts?: Array<string>
   inertSelectors?: Array<string>
   preservedPreClasses?: Array<string>
   resolveUrlFn?: ResolveUrlFn

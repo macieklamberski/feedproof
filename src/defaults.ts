@@ -357,6 +357,14 @@ export const defaultEmojiImageHosts = [
   'githubassets.com/images/icons/emoji/', // GitHub README scrapings — 43 feeds.
 ]
 
+// Hosts that only ever serve author avatars. WordPress / WP.com attaches the
+// author's gravatar as a per-item media:content image, so an otherwise imageless
+// post would inject the author's face as its lead image. Matched by host and
+// subdomain, so the sharded 0/1/2.gravatar.com and secure.gravatar.com are covered.
+export const defaultAvatarImageHosts = [
+  'gravatar.com', // WordPress / WP.com per-item author gravatar as media:content, ~30,000 feeds (~0.6%, 1% corpus sample).
+]
+
 // CSS class tokens that mark a <pre> as author-chosen distinct content
 // (poetry stanzas, scriptural verses, leader-dotted tables of contents).
 // `mergeConsecutiveOneLinerPres` skips any run where at least one <pre>
