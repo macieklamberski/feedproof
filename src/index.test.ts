@@ -299,15 +299,21 @@ describeForEachParser('transformContent', (parseHtml) => {
 
   it('should proxy asset URLs through assetProxyFn in the default pipeline', async () => {
     const value = '<p><img src="https://cdn.example.com/photo.jpg"></p>'
-    const expected =
-      '<p><img src="https://proxy.example.com/image/https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"></p>'
+    const expected = html`
+      <p>
+        <img
+          src="https://proxy.example.com/image/https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"
+          data-proxied-src="https://cdn.example.com/photo.jpg"
+        >
+      </p>
+    `
 
     expect(
       await transformContent(value, {
         parseHtmlFn: parseHtml,
         assetProxyFn: (url, type) => `https://proxy.example.com/${type}/${encodeURIComponent(url)}`,
       }),
-    ).toBe(expected)
+    ).toEqualHtml(expected)
   })
 
   it('should proxy native enclosure media elements injected by injectEnclosures', async () => {
@@ -315,6 +321,7 @@ describeForEachParser('transformContent', (parseHtml) => {
     const expected = html`
       <audio
         src="https://proxy.example.com/audio/https%3A%2F%2Fexample.com%2Faudio.mp3"
+        data-proxied-src="https://example.com/audio.mp3"
         controls
         preload="none"
         data-enclosure=""
