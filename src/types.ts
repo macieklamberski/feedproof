@@ -54,6 +54,7 @@ export type BookmarkResolverResult = {
   description?: string
   author?: string
   publisher?: string
+  date?: string
   icon?: string
   thumbnail?: string
 }

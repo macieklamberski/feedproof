@@ -138,6 +138,8 @@ const makePostCard = (
     publicationName?: string
     publicationLogoUrl?: string
     publishedBylines?: Array<{ name?: string }>
+    postDate?: string
+    date?: string
     rawDataAttrs?: string
     omitDataAttrs?: boolean
   } = {},
@@ -159,6 +161,8 @@ const makePostCard = (
       publication_name: options.publicationName,
       publication_logo_url: options.publicationLogoUrl,
       publishedBylines: options.publishedBylines,
+      post_date: options.postDate,
+      date: options.date,
     })
 
   // Substack stores the JSON in a double-quoted attribute with the inner
@@ -185,6 +189,7 @@ describeForEachParser('substackPostBookmarkResolver', (parseHtml) => {
         publicationName: 'The Reader',
         publicationLogoUrl: 'https://cdn.example.com/logo.png',
         publishedBylines: [{ name: 'Author name' }],
+        date: '2026-06-25T10:31:02.000Z',
       })
       const result = await extract(value)
       const expected: BookmarkResolverResult = {
@@ -194,6 +199,7 @@ describeForEachParser('substackPostBookmarkResolver', (parseHtml) => {
         description: 'A look at the backlash.',
         author: 'Author name',
         publisher: 'The Reader',
+        date: '2026-06-25T10:31:02.000Z',
         icon: 'https://cdn.example.com/logo.png',
         thumbnail: 'https://cdn.example.com/cover.png',
       }
@@ -208,6 +214,7 @@ describeForEachParser('substackPostBookmarkResolver', (parseHtml) => {
         coverImage: 'https://cdn.example.com/cover.webp',
         publicationName: 'The Reader',
         publishedBylines: [],
+        postDate: '2026-07-09T20:28:23.465Z',
       })
       const result = await extract(value)
       const expected: BookmarkResolverResult = {
@@ -217,6 +224,7 @@ describeForEachParser('substackPostBookmarkResolver', (parseHtml) => {
         description: undefined,
         author: undefined,
         publisher: 'The Reader',
+        date: '2026-07-09T20:28:23.465Z',
         icon: undefined,
         thumbnail: 'https://cdn.example.com/cover.webp',
       }
@@ -238,6 +246,7 @@ describeForEachParser('substackPostBookmarkResolver', (parseHtml) => {
         description: undefined,
         author: undefined,
         publisher: undefined,
+        date: undefined,
         icon: undefined,
         thumbnail: undefined,
       }
@@ -263,6 +272,7 @@ describeForEachParser('substackPostBookmarkResolver', (parseHtml) => {
         description: ' A look at the backlash. ',
         author: ' Author name ',
         publisher: ' The Reader ',
+        date: undefined,
         icon: undefined,
         thumbnail: undefined,
       }

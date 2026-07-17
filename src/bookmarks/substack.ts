@@ -33,6 +33,8 @@ type PostAttrs = {
   publication_name?: string
   publication_logo_url?: string
   publishedBylines?: Array<{ name?: string }>
+  post_date?: string
+  date?: string
 }
 
 export const substackPostBookmarkResolver: BookmarkResolver = {
@@ -58,6 +60,7 @@ export const substackPostBookmarkResolver: BookmarkResolver = {
       description: attrs.truncated_body_text,
       author: attrs.publishedBylines?.[0]?.name,
       publisher: attrs.publication_name,
+      date: attrs.post_date ?? attrs.date,
       icon: attrs.publication_logo_url,
       thumbnail: attrs.cover_image,
     }
