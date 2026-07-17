@@ -1,6 +1,6 @@
 import { resolveUrl } from 'feedcanon'
 import { ghostBookmarkResolver } from './bookmarks/ghost.js'
-import { substackBookmarkResolver } from './bookmarks/substack.js'
+import { substackBookmarkResolver, substackPostBookmarkResolver } from './bookmarks/substack.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
@@ -223,6 +223,7 @@ export const defaultEmbedResolvers: Array<EmbedResolver> = [
 export const defaultBookmarkResolvers: Array<BookmarkResolver> = [
   ghostBookmarkResolver,
   substackBookmarkResolver,
+  substackPostBookmarkResolver,
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
