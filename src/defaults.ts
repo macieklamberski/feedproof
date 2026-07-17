@@ -385,7 +385,6 @@ export const defaultInertSelectors = [
   'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets — 3,201 feeds (0.1%).
   '.captioned-button-wrap', // Substack caption + CTA button (Share/Subscribe/Comment) — 1,969 feeds (0.04%).
   '.adsbygoogle', // Google AdSense ad slot — 1,515 feeds (0.056%).
-  '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 766 feeds (0.028%).
   '.yarpp-related', // YARPP related-posts widget (WordPress) — 672 feeds (0.025%).
   '.sharethis-inline-share-buttons', // ShareThis inline share buttons — 643 feeds (0.024%).
   '.sharedaddy', // Jetpack Sharedaddy share buttons — 428 feeds (0.016%).

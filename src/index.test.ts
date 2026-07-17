@@ -563,9 +563,16 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(result).toEqualHtml(expected)
   })
 
-  it.todo('should preserve substack publication embeds through the full pipeline', () => {
-    // An .embedded-publication-wrap card with a data-attrs JSON blob should come
-    // out of the default pipeline as a data-bookmark-provider="substack" placeholder.
+  it('should preserve substack publication embeds through the full pipeline', async () => {
+    const value = `<div class="embedded-publication-wrap" data-attrs='{"name":"Other Pub","base_url":"https://other.substack.com","hero_text":"A great read"}'></div>`
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/',
+    })
+
+    expect(result).toContain('data-bookmark-provider="substack"')
+    expect(result).toContain('data-bookmark-url="https://other.substack.com"')
+    expect(result).toContain('data-bookmark-title="Other Pub"')
   })
 
   it.todo('should propagate an error thrown by a dom transform', () => {
