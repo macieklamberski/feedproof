@@ -1,4 +1,4 @@
-import { isHostOf, isSubdomainOf } from 'trousse'
+import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type {
   CleanUrlFn,
   DomTransform,
@@ -9,7 +9,7 @@ import type {
 } from '../../types.js'
 import { createEmbedPlaceholder } from '../../utils/embeds.js'
 import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
-import { resolveOrKeepUrl } from '../../utils/urls.js'
+import { absoluteUrlRegex, resolveOrKeepUrl } from '../../utils/urls.js'
 
 // Marks an injected element so stripDuplicateEnclosures (an opt-in heuristic) can
 // tell it from the item's own inline content. Exported because that pass reads it.
@@ -196,6 +196,83 @@ const dedupeImageEnclosures = (
   return result
 }
 
+// Query param values that are themselves absolute URLs, e.g. the file URL inside
+// a player page like player.example.com/?media_url=<file>.
+const extractNestedUrls = (url: string): Array<string> => {
+  const parsed = parseUrl(url)
+
+  if (!parsed) {
+    return []
+  }
+
+  const nested: Array<string> = []
+
+  for (const value of parsed.searchParams.values()) {
+    if (absoluteUrlRegex.test(value)) {
+      nested.push(value)
+    }
+  }
+
+  return nested
+}
+
+// A feed sometimes lists the same media twice: once as the raw file and once as a
+// player page carrying the file URL in a query param (podcast hosts pair a plain
+// <enclosure> with a player entry like …/?media_url=<file>; the param name varies
+// by host, so any URL-shaped param value counts). Collapse such pairs into the
+// file entry with the player page as its playerUrl, so the item renders one
+// embedded player instead of a player iframe next to a bare audio element.
+const mergePlayerEnclosures = (
+  enclosures: ReadonlyArray<Enclosure>,
+  cleanUrlFn?: CleanUrlFn,
+): Array<Enclosure> => {
+  const cleanUrl = (url: string): string => {
+    return cleanUrlFn ? cleanUrlFn(url) : url
+  }
+
+  const result = [...enclosures]
+  const removed = new Set<number>()
+
+  const findFileIndex = (nestedUrl: string, playerIndex: number): number => {
+    return result.findIndex((candidate, index) => {
+      if (index === playerIndex || removed.has(index)) {
+        return false
+      }
+
+      return typeof candidate.url === 'string' && cleanUrl(candidate.url) === nestedUrl
+    })
+  }
+
+  for (let playerIndex = 0; playerIndex < result.length; playerIndex++) {
+    const player = result[playerIndex]
+
+    if (removed.has(playerIndex) || typeof player.url !== 'string') {
+      continue
+    }
+
+    for (const nested of extractNestedUrls(player.url)) {
+      const fileIndex = findFileIndex(cleanUrl(nested), playerIndex)
+
+      if (fileIndex === -1) {
+        continue
+      }
+
+      // Keep the file entry's own fields and fill only what it lacks from the
+      // player entry (a player page often carries the display size the file
+      // doesn't). The earlier position of the two is kept so injection order
+      // stays stable.
+      const file = result[fileIndex]
+      const merged: Enclosure = { ...player, ...file, playerUrl: file.playerUrl ?? player.url }
+
+      result[Math.min(playerIndex, fileIndex)] = merged
+      removed.add(Math.max(playerIndex, fileIndex))
+      break
+    }
+  }
+
+  return result.filter((_, index) => !removed.has(index))
+}
+
 export const injectEnclosures: DomTransform = (context) => {
   const enclosures = context.enclosures
 
@@ -213,7 +290,12 @@ export const injectEnclosures: DomTransform = (context) => {
     // markup). Audio and video enclosures have no inline equivalent, so they always inject.
     const hasContentImage = !!document.querySelector('img[src], picture, [data-embed-thumbnail]')
 
-    for (const enclosure of dedupeImageEnclosures(enclosures, context.cleanUrlFn)) {
+    const mergedEnclosures = mergePlayerEnclosures(
+      dedupeImageEnclosures(enclosures, context.cleanUrlFn),
+      context.cleanUrlFn,
+    )
+
+    for (const enclosure of mergedEnclosures) {
       // The embeddable URL: a media:player console (when present) is the canonical thing to
       // embed, otherwise the content URL. Enclosures come from untrusted feed data that
       // doesn't honor the required-`url` type, so guard before any URL handling.

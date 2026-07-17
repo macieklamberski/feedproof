@@ -54,7 +54,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `resolveMediaDimensions` | Backfill `width`/`height` on media so aspect ratio survives style stripping |
 | `convertBreaksToParagraphs` | Convert `<br><br>` runs into real `<p>` blocks |
 | `wrapBareInlineInParagraphs` | Wrap loose inline content in `<p>` blocks |
-| `injectEnclosures` | Inject feed enclosures as native media or embed placeholders |
+| `injectEnclosures` | Inject feed enclosures as native media or embed placeholders, merging a player page entry with its media file |
 | `surfaceTemplateEmbeds` | Hoist a video embed out of a lazy-load `<template>` (e.g. Better Core Video Embeds) so it renders in a reader |
 | `surfaceNoscriptEmbeds` | Hoist a video `<iframe>` out of a `<noscript>` lazy-load fallback (e.g. WP Rocket, a3 Lazy Load); ignores non-video noscript iframes like Google Tag Manager |
 | `rebuildEmbedPlusEmbeds` | Rebuild a real `<iframe>` from an "Embed Plus for YouTube" facade (`.epyt-facade[data-facadesrc]`) |
