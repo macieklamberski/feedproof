@@ -15,9 +15,9 @@ export const ghostBookmarkResolver: BookmarkResolver = {
       provider: 'ghost',
       url,
       title,
-      description: element.querySelector('.kg-bookmark-description')?.textContent?.trim(),
-      author: element.querySelector('.kg-bookmark-author')?.textContent?.trim(),
-      publisher: element.querySelector('.kg-bookmark-publisher')?.textContent?.trim(),
+      description: element.querySelector('.kg-bookmark-description')?.textContent ?? undefined,
+      author: element.querySelector('.kg-bookmark-author')?.textContent ?? undefined,
+      publisher: element.querySelector('.kg-bookmark-publisher')?.textContent ?? undefined,
       icon: element.querySelector('img.kg-bookmark-icon')?.getAttribute('src') ?? undefined,
       thumbnail:
         element.querySelector('.kg-bookmark-thumbnail img')?.getAttribute('src') ?? undefined,

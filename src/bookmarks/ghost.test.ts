@@ -127,7 +127,9 @@ describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    it('should trim whitespace around extracted text fields', async () => {
+    // Optional fields pass through raw; createBookmarkPlaceholder trims every field
+    // when it writes the attributes. Only the guard-checked title is trimmed here.
+    it('should trim the title and pass optional text fields through raw', async () => {
       const value = makeCard({
         href: 'https://example.com/post',
         title: '  Post title  ',
@@ -139,9 +141,9 @@ describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
         provider: 'ghost',
         url: 'https://example.com/post',
         title: 'Post title',
-        description: 'Preview text',
-        author: 'Author name',
-        publisher: 'Publisher name',
+        description: ' Preview text ',
+        author: ' Author name ',
+        publisher: ' Publisher name ',
       }
 
       expect(await extract(value)).toEqual(expected)

@@ -100,6 +100,17 @@ describeForEachParser('updateEmbedPlaceholder', (parseHtml) => {
 
     expect(element.outerHTML).toEqualHtml(expected)
   })
+
+  it('should trim values and skip whitespace-only ones', () => {
+    const document = parseHtml('')
+    const element = document.createElement('div')
+
+    updateEmbedPlaceholder(element, { title: '  Video title  ', author: '   ' })
+
+    const expected = '<div data-embed-title="Video title"></div>'
+
+    expect(element.outerHTML).toEqualHtml(expected)
+  })
 })
 
 describe('normalizeEmbedFields', () => {
@@ -296,6 +307,30 @@ describeForEachParser('createPlaceholder', (parseHtml) => {
     expect(element.hasAttribute('data-embed-author')).toBe(false)
   })
 
+  it('should trim surrounding whitespace from string values', () => {
+    const document = parseHtml('<div></div>')
+    const element = createPlaceholder(document, 'embed', {
+      title: '  Video title  ',
+      author: '\n Channel name \t',
+    })
+
+    expect(element.getAttribute('data-embed-title')).toBe('Video title')
+    expect(element.getAttribute('data-embed-author')).toBe('Channel name')
+  })
+
+  it('should skip whitespace-only fields', () => {
+    const document = parseHtml('<div></div>')
+    const element = createPlaceholder(document, 'embed', {
+      provider: 'youtube',
+      title: '   ',
+      description: '\n\t',
+    })
+
+    expect(element.getAttribute('data-embed-provider')).toBe('youtube')
+    expect(element.hasAttribute('data-embed-title')).toBe(false)
+    expect(element.hasAttribute('data-embed-description')).toBe(false)
+  })
+
   it('should write only the non-empty fields when some are absent', () => {
     const document = parseHtml('<div></div>')
     const element = createPlaceholder(document, 'bookmark', {
@@ -356,6 +391,30 @@ describeForEachParser('createBookmarkPlaceholder', (parseHtml) => {
         data-bookmark-title="Post title"
         data-bookmark-icon="https://example.com/favicon.ico"
         data-bookmark-thumbnail="https://example.com/og-image.jpg"
+      >
+        <a href="https://example.com/post">Post title</a>
+      </div>
+    `
+
+    expect(element.outerHTML).toEqualHtml(expected)
+  })
+
+  it('should trim raw field values in attributes and the fallback link', () => {
+    const document = parseHtml('')
+    const value: BookmarkResolverResult = {
+      provider: 'ghost',
+      url: ' https://example.com/post ',
+      title: '  Post title\n',
+      description: ' Preview text ',
+      author: '   ',
+    }
+    const element = createBookmarkPlaceholder(document, value)
+    const expected = html`
+      <div
+        data-bookmark-provider="ghost"
+        data-bookmark-description="Preview text"
+        data-bookmark-url="https://example.com/post"
+        data-bookmark-title="Post title"
       >
         <a href="https://example.com/post">Post title</a>
       </div>
