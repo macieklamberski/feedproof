@@ -101,7 +101,7 @@ export type TransformContext = {
   trackingPathSegments: Array<string>
   emojiImageHosts: Array<string>
   avatarImageHosts: Array<string>
-  inertSelectors: Array<string>
+  nonContentSelectors: Array<string>
   preservedPreClasses: Array<string>
   resolveUrlFn: ResolveUrlFn
   cleanUrlFn?: CleanUrlFn
@@ -132,7 +132,7 @@ export type TransformContentOptions = {
   trackingPathSegments?: Array<string>
   emojiImageHosts?: Array<string>
   avatarImageHosts?: Array<string>
-  inertSelectors?: Array<string>
+  nonContentSelectors?: Array<string>
   preservedPreClasses?: Array<string>
   resolveUrlFn?: ResolveUrlFn
   cleanUrlFn?: CleanUrlFn

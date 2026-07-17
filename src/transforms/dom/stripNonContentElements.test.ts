@@ -2,11 +2,11 @@ import { describe, expect, it } from 'bun:test'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
-import { stripInertElements } from './stripInertElements.js'
+import { stripNonContentElements } from './stripNonContentElements.js'
 
-describeForEachParser('stripInertElements', (parseHtml) => {
+describeForEachParser('stripNonContentElements', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripInertElements(context)])
+    return applyDomTransforms(parseHtml(html), [stripNonContentElements(context)])
   }
 
   describe('with default selectors', () => {
@@ -307,7 +307,7 @@ describeForEachParser('stripInertElements', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
-    it('should leave document untouched when no inert elements are present', async () => {
+    it('should leave document untouched when no non-content elements are present', async () => {
       const value = html`
         <p>article text</p>
         <figure><img src="x.jpg"></figure>
@@ -342,7 +342,7 @@ describeForEachParser('stripInertElements', (parseHtml) => {
 
   describe('with caller-supplied selectors', () => {
     it('should remove elements matching a custom tag selector', async () => {
-      const context: TransformContext = { ...baseContext, inertSelectors: ['custom-widget'] }
+      const context: TransformContext = { ...baseContext, nonContentSelectors: ['custom-widget'] }
       const value = html`
         <p>before</p>
         <custom-widget data-x="1"></custom-widget>
@@ -357,7 +357,7 @@ describeForEachParser('stripInertElements', (parseHtml) => {
     })
 
     it('should remove elements matching a custom class selector', async () => {
-      const context: TransformContext = { ...baseContext, inertSelectors: ['.ad-slot'] }
+      const context: TransformContext = { ...baseContext, nonContentSelectors: ['.ad-slot'] }
       const value = html`
         <p>before</p>
         <div class="ad-slot">ad</div>
@@ -374,7 +374,7 @@ describeForEachParser('stripInertElements', (parseHtml) => {
     it('should remove elements matching any of several selectors', async () => {
       const context: TransformContext = {
         ...baseContext,
-        inertSelectors: ['.promo-box', 'newsletter-signup'],
+        nonContentSelectors: ['.promo-box', 'newsletter-signup'],
       }
       const value = html`
         <div class="promo-box">Try our app</div>
@@ -391,7 +391,7 @@ describeForEachParser('stripInertElements', (parseHtml) => {
     })
 
     it('should no-op when selector list is empty', async () => {
-      const context: TransformContext = { ...baseContext, inertSelectors: [] }
+      const context: TransformContext = { ...baseContext, nonContentSelectors: [] }
       const value = html`
         <div class="image-link-expand"><button></button></div>
         <p>kept</p>

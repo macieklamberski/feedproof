@@ -4,8 +4,8 @@ import type { DomTransform } from '../../types.js'
 // dead JS placeholders, control wrappers detached from their runtime, and
 // platform-injected chrome (subscribe forms, share buttons, related-posts
 // widgets, author bios, ad slots, email preheaders) that reads as noise.
-export const stripInertElements: DomTransform = ({ inertSelectors }) => {
-  const selector = inertSelectors.join(',')
+export const stripNonContentElements: DomTransform = ({ nonContentSelectors }) => {
+  const selector = nonContentSelectors.join(',')
 
   return (document) => {
     if (!selector) {

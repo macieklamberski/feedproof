@@ -51,10 +51,10 @@ import { stripDuplicateEnclosures } from './transforms/dom/stripDuplicateEnclosu
 import { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 import { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
 import { stripHiddenElements } from './transforms/dom/stripHiddenElements.js'
-import { stripInertElements } from './transforms/dom/stripInertElements.js'
 import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 import { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
 import { stripMarkdownEscapeBackslashes } from './transforms/dom/stripMarkdownEscapeBackslashes.js'
+import { stripNonContentElements } from './transforms/dom/stripNonContentElements.js'
 import { surfaceNoscriptEmbeds } from './transforms/dom/surfaceNoscriptEmbeds.js'
 import { surfaceTemplateEmbeds } from './transforms/dom/surfaceTemplateEmbeds.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
@@ -136,7 +136,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   resolveMediaDimensions,
   flattenPictureElements,
   hoistFigcaptionFromAnchor,
-  stripInertElements,
+  stripNonContentElements,
   resolveRelativeUrls,
   cleanAnchorUrls,
   // Runs after resolveRelativeUrls/cleanAnchorUrls so hrefs are absolute and cleaned,
@@ -378,7 +378,7 @@ export const defaultPreservedPreClasses = [
   'wp-block-preformatted', // WordPress Gutenberg Preformatted block — author-chosen distinct blocks (ToCs, quotes, numbered headings).
 ]
 
-export const defaultInertSelectors = [
+export const defaultNonContentSelectors = [
   '.image-link-expand', // Substack restack/zoom buttons next to images — 16,419 feeds (0.6%).
   '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget — 11,366 feeds (0.42%).
   '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA — 11,275 feeds (0.42%).
