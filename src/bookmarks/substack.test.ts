@@ -138,6 +138,7 @@ const makePostCard = (
     publicationName?: string
     publicationLogoUrl?: string
     publishedBylines?: Array<{ name?: string }>
+    bylines?: Array<{ name?: string }>
     postDate?: string
     date?: string
     rawDataAttrs?: string
@@ -161,6 +162,7 @@ const makePostCard = (
       publication_name: options.publicationName,
       publication_logo_url: options.publicationLogoUrl,
       publishedBylines: options.publishedBylines,
+      bylines: options.bylines,
       post_date: options.postDate,
       date: options.date,
     })
@@ -245,6 +247,28 @@ describeForEachParser('substackPostBookmarkResolver', (parseHtml) => {
         title: 'Model Drop',
         description: undefined,
         author: undefined,
+        publisher: undefined,
+        date: undefined,
+        icon: undefined,
+        thumbnail: undefined,
+      }
+
+      expect(result).toEqual(expected)
+    })
+
+    it('should fall back to the bylines key for the author', async () => {
+      const value = makePostCard({
+        title: 'Model Drop',
+        canonicalUrl: 'https://thereader.example.com/p/model-drop',
+        bylines: [{ name: 'Author name' }],
+      })
+      const result = await extract(value)
+      const expected: BookmarkResolverResult = {
+        provider: 'substack',
+        url: 'https://thereader.example.com/p/model-drop',
+        title: 'Model Drop',
+        description: undefined,
+        author: 'Author name',
         publisher: undefined,
         date: undefined,
         icon: undefined,

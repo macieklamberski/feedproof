@@ -33,6 +33,7 @@ type PostAttrs = {
   publication_name?: string
   publication_logo_url?: string
   publishedBylines?: Array<{ name?: string }>
+  bylines?: Array<{ name?: string }>
   post_date?: string
   date?: string
 }
@@ -58,7 +59,9 @@ export const substackPostBookmarkResolver: BookmarkResolver = {
       url,
       title,
       description: attrs.truncated_body_text,
-      author: attrs.publishedBylines?.[0]?.name,
+      // Older post embeds carry the byline under `bylines`, newer ones under
+      // `publishedBylines`; both appear in live feeds.
+      author: attrs.publishedBylines?.[0]?.name ?? attrs.bylines?.[0]?.name,
       publisher: attrs.publication_name,
       date: attrs.post_date ?? attrs.date,
       icon: attrs.publication_logo_url,
