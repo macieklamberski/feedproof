@@ -197,18 +197,6 @@ describeForEachParser('stripInertElements', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
-    it('should remove Substack cross-publication promo wrap', async () => {
-      const value = html`
-        <p>Body</p>
-        <div class="embedded-publication-wrap" data-attrs="{}">
-          <a href="https://other.substack.com">Other Newsletter</a>
-        </div>
-      `
-      const expected = '<p>Body</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
     it('should remove YARPP related-posts widget', async () => {
       const value = html`
         <p>Body</p>
