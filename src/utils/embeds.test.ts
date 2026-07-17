@@ -133,9 +133,9 @@ describe('normalizeEmbedFields', () => {
     })
 
     it('should keep data:image thumbnails', () => {
-      expect(
-        normalizeEmbedFields({ thumbnail: 'data:image/png;base64,iVBORw0KGgo=' }).thumbnail,
-      ).toBe('data:image/png;base64,iVBORw0KGgo=')
+      const value = { thumbnail: 'data:image/png;base64,iVBORw0KGgo=' }
+
+      expect(normalizeEmbedFields(value).thumbnail).toBe('data:image/png;base64,iVBORw0KGgo=')
     })
 
     // Safety is neutralizeUnsafeUrls' job (see its tests); normalizeEmbedFields only

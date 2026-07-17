@@ -107,23 +107,23 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
   })
 
   it('should strip multiple empty tags', async () => {
-    expect(
-      await transform(html`
+    const value = html`
       <div></div>
       <p></p>
       <span></span>
-    `),
-    ).toBe('')
+    `
+
+    expect(await transform(value)).toBe('')
   })
 
   it('should strip empty tags around content', async () => {
-    expect(
-      await transform(html`
+    const value = html`
       <div></div>
       <p>Keep</p>
       <div></div>
-    `),
-    ).toBe('<p>Keep</p>')
+    `
+
+    expect(await transform(value)).toBe('<p>Keep</p>')
   })
 
   it('should preserve tags with text content', async () => {

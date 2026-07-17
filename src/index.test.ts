@@ -12,38 +12,38 @@ describeForEachParser('transformContent', (parseHtml) => {
     // unwrapWrappers removes the outer div, fixLazyImages resolves data-src to src (keeping
     // the original attribute), and resolveRelativeUrls makes the src absolute.
     const expected = '<p>Hello <img data-src="photo.jpg" src="https://example.com/photo.jpg"></p>'
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com',
+    })
 
-    expect(
-      await transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com' }),
-    ).toEqualHtml(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   it('should resolve relative URLs when baseUrl is provided', async () => {
     const value = '<p><a href="/about">About</a></p>'
     const expected = '<p><a href="https://example.com/about">About</a></p>'
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post/1',
+    })
 
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        baseUrl: 'https://example.com/post/1',
-      }),
-    ).toBe(expected)
+    expect(result).toBe(expected)
   })
 
   it('should strip tracking parameters via cleanUrlFn', async () => {
     const value = '<p><a href="https://example.com?utm_source=feed&id=1">Link</a></p>'
     const expected = '<p><a href="https://example.com/?id=1">Link</a></p>'
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      cleanUrlFn: (url) => {
+        const parsed = new URL(url)
+        parsed.searchParams.delete('utm_source')
+        return parsed.toString()
+      },
+    })
 
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        cleanUrlFn: (url) => {
-          const parsed = new URL(url)
-          parsed.searchParams.delete('utm_source')
-          return parsed.toString()
-        },
-      }),
-    ).toBe(expected)
+    expect(result).toBe(expected)
   })
 
   it('should remove tracking pixels', async () => {
@@ -103,35 +103,35 @@ describeForEachParser('transformContent', (parseHtml) => {
       '<li><strong>first</strong> item</li>',
       '</ul>',
     ].join('\n')
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com',
+    })
 
-    expect(
-      await transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com' }),
-    ).toEqualHtml(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   it('should clean anchor urls with the provided cleanUrlFn', async () => {
     const value = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
     const expected = '<p><a href="https://example.com">Link</a></p>'
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      cleanUrlFn: (url) => url.split('?')[0],
+    })
 
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        cleanUrlFn: (url) => url.split('?')[0],
-      }),
-    ).toBe(expected)
+    expect(result).toBe(expected)
   })
 
   it('should allow overriding the dom transforms array', async () => {
     const value = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
     const expected = '<p><a href="https://example.com?utm_source=feed">Link</a></p>'
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      cleanUrlFn: (url) => url.split('?')[0],
+      domTransforms: defaultStandardDomTransforms.filter((t) => t.name !== 'cleanAnchorUrls'),
+    })
 
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        cleanUrlFn: (url) => url.split('?')[0],
-        domTransforms: defaultStandardDomTransforms.filter((t) => t.name !== 'cleanAnchorUrls'),
-      }),
-    ).toBe(expected)
+    expect(result).toBe(expected)
   })
 
   it('should handle empty string', async () => {
@@ -184,23 +184,22 @@ describeForEachParser('transformContent', (parseHtml) => {
         >https://custom-player.example.com/video/123</a>
       </div>
     `
-
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        embedResolvers: [
-          {
-            selector: 'iframe[src]',
-            extract: (element) => {
-              const src = element.getAttribute('src') ?? ''
-              if (src.includes('custom-player.example.com')) {
-                return { provider: 'custom', src }
-              }
-            },
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      embedResolvers: [
+        {
+          selector: 'iframe[src]',
+          extract: (element) => {
+            const src = element.getAttribute('src') ?? ''
+            if (src.includes('custom-player.example.com')) {
+              return { provider: 'custom', src }
+            }
           },
-        ],
-      }),
-    ).toEqualHtml(expected)
+        },
+      ],
+    })
+
+    expect(result).toEqualHtml(expected)
   })
 
   it('should inject audio/video enclosures as native media elements', async () => {
@@ -209,13 +208,12 @@ describeForEachParser('transformContent', (parseHtml) => {
       <audio src="https://example.com/audio.mp3" controls preload="none" data-enclosure=""></audio>
       <p>Content</p>
     `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
+    })
 
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
-      }),
-    ).toEqualHtml(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   it('should not inject an image enclosure when the content already has an image', async () => {
@@ -281,13 +279,12 @@ describeForEachParser('transformContent', (parseHtml) => {
       <p></p>
       <p>World</p>
     `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      domTransforms: defaultStandardDomTransforms.filter((t) => t.name !== 'stripEmptyTags'),
+    })
 
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        domTransforms: defaultStandardDomTransforms.filter((t) => t.name !== 'stripEmptyTags'),
-      }),
-    ).toBe(expected)
+    expect(result).toBe(expected)
   })
 
   it('should preserve comments inside pre blocks through full pipeline', async () => {
@@ -307,13 +304,12 @@ describeForEachParser('transformContent', (parseHtml) => {
         >
       </p>
     `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      assetProxyFn: (url, type) => `https://proxy.example.com/${type}/${encodeURIComponent(url)}`,
+    })
 
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        assetProxyFn: (url, type) => `https://proxy.example.com/${type}/${encodeURIComponent(url)}`,
-      }),
-    ).toEqualHtml(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   it('should proxy native enclosure media elements injected by injectEnclosures', async () => {
@@ -329,14 +325,13 @@ describeForEachParser('transformContent', (parseHtml) => {
       </audio>
       <p>Content</p>
     `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
+      assetProxyFn: (url, type) => `https://proxy.example.com/${type}/${encodeURIComponent(url)}`,
+    })
 
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
-        assetProxyFn: (url, type) => `https://proxy.example.com/${type}/${encodeURIComponent(url)}`,
-      }),
-    ).toEqualHtml(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   // enrichEmbedPlaceholders is opt-in; default pipeline does not include it.
@@ -367,20 +362,19 @@ describeForEachParser('transformContent', (parseHtml) => {
         >https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
       </div>
     `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      enrichEmbedFn: (embeds) => {
+        return new Map(
+          embeds.map(({ provider, id }) => [
+            `${provider}:${id}`,
+            { title: `Title for ${id}`, author: 'Test Channel', duration: 213 },
+          ]),
+        )
+      },
+    })
 
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        enrichEmbedFn: (embeds) => {
-          return new Map(
-            embeds.map(({ provider, id }) => [
-              `${provider}:${id}`,
-              { title: `Title for ${id}`, author: 'Test Channel', duration: 213 },
-            ]),
-          )
-        },
-      }),
-    ).toEqualHtml(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   it('should leave embed placeholders unenriched when enrichEmbedFn returns an empty map', async () => {
@@ -398,13 +392,12 @@ describeForEachParser('transformContent', (parseHtml) => {
         >https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
       </div>
     `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      enrichEmbedFn: () => new Map(),
+    })
 
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        enrichEmbedFn: () => new Map(),
-      }),
-    ).toEqualHtml(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   it('should not enrich when enrichEmbedPlaceholders is removed from the pipeline', async () => {
