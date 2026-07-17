@@ -361,6 +361,84 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     })
   })
 
+  describe('player page enclosures', () => {
+    it('should merge a player page enclosure with its media file into one embed', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3' },
+        { url: 'https://example.com/ep.mp3', type: 'audio/mpeg' },
+      ])
+      const expected = html`
+        <div
+          data-embed-src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3"
+          data-enclosure=""
+        >
+          <a href="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3">https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3</a>
+        </div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should fill missing display size from the player page and keep the file metadata', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://player.example.com/embed?file=https://example.com/ep.mp3', height: 165 },
+        { url: 'https://example.com/ep.mp3', type: 'audio/mpeg', duration: 843 },
+      ])
+      const expected = html`
+        <div
+          data-embed-src="https://player.example.com/embed?file=https://example.com/ep.mp3"
+          data-embed-height="165"
+          data-embed-duration="843"
+          data-enclosure=""
+        >
+          <a href="https://player.example.com/embed?file=https://example.com/ep.mp3">https://player.example.com/embed?file=https://example.com/ep.mp3</a>
+        </div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should not merge a file entry into a player page with a different nested url', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fother.mp3' },
+        { url: 'https://example.com/ep.mp3', type: 'audio/mpeg' },
+      ])
+      const expected = html`
+        <audio src="https://example.com/ep.mp3" controls preload="none" data-enclosure=""></audio>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should merge using cleanUrlFn-normalized urls', async () => {
+      const value = '<p>Content</p>'
+      const context = {
+        ...withEnclosures([
+          { url: 'https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3' },
+          { url: 'https://example.com/ep.mp3?utm_source=feed', type: 'audio/mpeg' },
+        ]),
+        cleanUrlFn: (url: string) => url.split('?')[0],
+      }
+      const expected = html`
+        <div
+          data-embed-src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3"
+          data-enclosure=""
+        >
+          <a href="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3">https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3</a>
+        </div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+  })
+
   it('should skip enclosures without type or medium', async () => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/file.bin' }])
