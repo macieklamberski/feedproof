@@ -5,10 +5,10 @@ import {
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
   defaultHighlightFn,
-  defaultInertSelectors,
   defaultLazyIframeAttributes,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
+  defaultNonContentSelectors,
   defaultPreservedPreClasses,
   defaultResolveUrlFn,
   defaultStandardDomTransforms,
@@ -36,7 +36,7 @@ export const transformContent = async (
     trackingPathSegments: options.trackingPathSegments ?? defaultTrackingPathSegments,
     emojiImageHosts: options.emojiImageHosts ?? defaultEmojiImageHosts,
     avatarImageHosts: options.avatarImageHosts ?? defaultAvatarImageHosts,
-    inertSelectors: options.inertSelectors ?? defaultInertSelectors,
+    nonContentSelectors: options.nonContentSelectors ?? defaultNonContentSelectors,
     preservedPreClasses: options.preservedPreClasses ?? defaultPreservedPreClasses,
     resolveUrlFn: options.resolveUrlFn ?? defaultResolveUrlFn,
     cleanUrlFn: options.cleanUrlFn,
@@ -137,9 +137,9 @@ export { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
 export { stripDuplicateEnclosures } from './transforms/dom/stripDuplicateEnclosures.js'
 export { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 export { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
-export { stripInertElements } from './transforms/dom/stripInertElements.js'
 export { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js'
 export { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
+export { stripNonContentElements } from './transforms/dom/stripNonContentElements.js'
 export { surfaceNoscriptEmbeds } from './transforms/dom/surfaceNoscriptEmbeds.js'
 export { surfaceTemplateEmbeds } from './transforms/dom/surfaceTemplateEmbeds.js'
 export { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'

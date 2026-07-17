@@ -48,7 +48,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `unwrapHeadingBold` | Unwrap redundant bold wrapping a whole heading |
 | `cleanAnchorUrls` | Clean anchor hrefs (redirects, tracking params) via the `cleanUrlFn` option |
 | `stripDeadAnchors` | Unwrap links with empty, `#`, or `javascript:` hrefs |
-| `stripInertElements` | Strip non-content chrome — subscribe/share/related widgets, ads, author bios |
+| `stripNonContentElements` | Strip non-content chrome — subscribe/share/related widgets, ads, author bios |
 | `removeTrackingPixels` | Strip 1×1 tracking pixels, keeping real images |
 | `unwrapEmojiImages` | Replace emoji `<img>` tags with their alt-text glyph |
 | `resolveMediaDimensions` | Backfill `width`/`height` on media so aspect ratio survives style stripping |

@@ -616,7 +616,7 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(result).not.toContain('Also gone')
   })
 
-  it('should strip inert widget elements', async () => {
+  it('should strip non-content widget elements', async () => {
     const value = '<p>Article text</p><div class="adsbygoogle">Ad slot</div>'
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
