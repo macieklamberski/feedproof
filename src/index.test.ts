@@ -606,4 +606,241 @@ describeForEachParser('transformContent', (parseHtml) => {
     // With articleTitle equal to the first heading text, stripDuplicateTitleHeading
     // should remove that heading from the output.
   })
+
+  it('should remove hidden elements', async () => {
+    const value = '<p>Keep</p><div hidden>Gone</div><p style="display:none">Also gone</p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('Keep')
+    expect(result).not.toContain('Gone')
+    expect(result).not.toContain('Also gone')
+  })
+
+  it('should strip inert widget elements', async () => {
+    const value = '<p>Article text</p><div class="adsbygoogle">Ad slot</div>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('Article text')
+    expect(result).not.toContain('Ad slot')
+  })
+
+  it('should strip comments outside pre blocks', async () => {
+    const value = '<p>Text<!-- leaked build note --></p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('Text')
+    expect(result).not.toContain('leaked build note')
+  })
+
+  it('should replace an emoji image with its alt text', async () => {
+    const value =
+      '<p>Hello <img src="https://s.w.org/images/core/emoji/17.0.2/72x72/1f609.png" alt="\u{1F609}" class="wp-smiley"> world</p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('\u{1F609}')
+    expect(result).not.toContain('<img')
+  })
+
+  it('should convert amp-img into a plain image', async () => {
+    const value =
+      '<amp-img src="https://example.com/photo.jpg" alt="A photo" width="640" height="480"></amp-img>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('<img')
+    expect(result).toContain('src="https://example.com/photo.jpg"')
+    expect(result).not.toContain('amp-img')
+  })
+
+  it('should canonicalize an alignment class into data-align', async () => {
+    const value = '<img class="aligncenter" src="https://example.com/a.jpg">'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('data-align="center"')
+  })
+
+  it('should promote style dimensions to width and height attributes', async () => {
+    const value = '<img src="https://example.com/photo.jpg" style="width:300px;height:200px">'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('width="300"')
+    expect(result).toContain('height="200"')
+  })
+
+  it('should linkify a bare url in text', async () => {
+    const value = '<p>See https://example.com/page for details</p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('<a href="https://example.com/page"')
+  })
+
+  it('should mark a line-leading timestamp', async () => {
+    const value = '<p>01:21 - Intro</p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('<span data-timestamp="81">01:21</span>')
+  })
+
+  // A javascript: anchor is unwrapped by stripDeadAnchors before neutralizeUnsafeUrls
+  // runs, so the pipeline outcome for links is removal, not the sentinel.
+  it('should unwrap an unsafe link and keep its text', async () => {
+    const value = '<p><a href="javascript:alert(1)">x</a></p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('x')
+    expect(result).not.toContain('javascript:')
+    expect(result).not.toContain('<a')
+  })
+
+  it('should neutralize an unsafe image src to the media sentinel', async () => {
+    const value = '<p>Text</p><img src="javascript:alert(1)">'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('src="about:blank"')
+    expect(result).not.toContain('javascript:')
+  })
+
+  it('should wrap a table in a scroll container', async () => {
+    const value = '<table><tbody><tr><td>Cell</td></tr></tbody></table>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('data-table')
+    expect(result).toContain('<table>')
+  })
+
+  it('should demote a lone h1 to h2', async () => {
+    const value = '<h1>Section</h1><p>Body</p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('<h2>Section</h2>')
+    expect(result).not.toContain('<h1>')
+  })
+
+  it.todo('should strip control characters from the raw input', () => {
+    // Raw content with C0 control chars (e.g. \u0008) should come out without them.
+  })
+
+  it.todo('should unwrap bare CDATA markers around content', () => {
+    // Content wrapped in literal <![CDATA[ ... ]]> markers should render as HTML.
+  })
+
+  it.todo('should surface an embed hidden in a template element', () => {
+    // A <template> holding an iframe embed should end up as a visible placeholder.
+  })
+
+  it.todo('should surface an embed hidden in a noscript element', () => {
+    // A <noscript> fallback iframe should be promoted and placeholdered.
+  })
+
+  it.todo('should rebuild a lite-youtube facade into an embed placeholder', () => {
+    // A <lite-youtube videoid> facade should produce a youtube data-embed-* placeholder.
+  })
+
+  it.todo('should rebuild a lazyYT facade into an embed placeholder', () => {
+    // A .lazyYT div with data-youtube-id should produce a youtube placeholder.
+  })
+
+  it.todo('should rebuild a WP Rocket youtube preview into an embed placeholder', () => {
+    // A .rll-youtube-player div with data-src should produce a youtube placeholder.
+  })
+
+  it.todo('should rebuild a Wistia embed into an embed placeholder', () => {
+    // A .wistia_embed div should produce an embed placeholder for the wistia player.
+  })
+
+  it.todo('should rebuild a Lyte embed into an embed placeholder', () => {
+    // A .lyte-wrapper facade should produce a youtube placeholder.
+  })
+
+  it.todo('should rebuild an Embed Plus embed into an embed placeholder', () => {
+    // An Embed Plus wrapper should produce a youtube placeholder.
+  })
+
+  it.todo('should rebuild an Elementor video facade into an embed placeholder', () => {
+    // An .elementor-video div carrying settings JSON should produce a placeholder.
+  })
+
+  it.todo('should rebuild a lazyload video iframe into an embed placeholder', () => {
+    // An iframe with class lazyload and data-src should resolve and placeholder.
+  })
+
+  it.todo('should wrap Cargo portfolio images in figures', () => {
+    // Cargo image runs should become sibling figures, not one glued paragraph.
+  })
+
+  it.todo('should unwrap a doubly nested list', () => {
+    // <ul><ul><li> nesting from broken exporters should flatten one level.
+  })
+
+  it.todo('should unwrap bold-only heading content', () => {
+    // <h2><strong>Title</strong></h2> should lose the redundant strong wrapper.
+  })
+
+  it.todo('should convert a lazy image container into an image', () => {
+    // A media-less div carrying an image-shaped lazy src should become an <img>.
+  })
+
+  it.todo('should recover the real src on a lazy video element', () => {
+    // A <video data-src> should have src promoted before URL passes run.
+  })
+
+  it.todo('should recover the real src on a lazy audio element', () => {
+    // An <audio data-src> should have src promoted before URL passes run.
+  })
+
+  it.todo('should hoist a figcaption out of a wrapping anchor', () => {
+    // <a><img><figcaption></a> should end with the caption outside the anchor.
+  })
+
+  it.todo('should shorten a same-page link to its bare fragment', () => {
+    // An absolute self-URL href ending in #section should become href="#section".
+  })
+
+  it.todo('should normalize an anchored heading into a self-linking permalink', () => {
+    // A heading with an id/anchor should carry the canonical empty self-link anchor.
+  })
+
+  it.todo('should unwrap a dead anchor without an href target', () => {
+    // An <a> with no href (or #-only) should be unwrapped, keeping its text.
+  })
+
+  it.todo('should empty a lone-backslash paragraph', () => {
+    // <p>\</p> from markdown escape leaks should be removed entirely.
+  })
+
+  it.todo('should convert a double br run into a paragraph break', () => {
+    // Text<br><br>Text should become two paragraphs.
+  })
+
+  it.todo('should unwrap a code element nested in another code element', () => {
+    // <pre><code><code> nesting should collapse to a single code block.
+  })
+
+  it.todo('should strip uniform leading indentation from a plain block', () => {
+    // Consistently indented plain-text lines should lose the shared indent.
+  })
+
+  it.todo('should strip a br between two block elements', () => {
+    // <p>a</p><br><p>b</p> should lose the inter-block br.
+  })
+
+  it.todo('should merge a list fragmented across consecutive containers', () => {
+    // Two adjacent <ul>s split by an exporter should merge into one list.
+  })
+
+  it.todo('should merge consecutive one-liner pre blocks', () => {
+    // Adjacent single-line <pre> blocks from line-by-line exporters should merge.
+  })
+
+  it.todo('should trim leading and trailing blank lines inside pre', () => {
+    // A <pre> padded with blank first/last lines should lose the padding.
+  })
+
+  it.todo('should promote a lazy iframe src before embed resolution', () => {
+    // An iframe with only data-src should still produce an embed placeholder.
+  })
+
+  it.todo('should assign a poster to a bare video when heuristics are enabled', () => {
+    // With heuristics: true, a poster-less <video> near a content image should
+    // receive that image as its poster.
+  })
 })
