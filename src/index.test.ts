@@ -536,6 +536,33 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(result).toContain('src="https://example.com/a.webp"')
   })
 
+  it('should convert a substack post embed into a bookmark placeholder', async () => {
+    const value = html`
+      <p>Intro</p>
+      <div
+        class="digest-post-embed"
+        data-attrs="{&quot;title&quot;:&quot;Model Drop&quot;,&quot;canonical_url&quot;:&quot;https://thereader.example.com/p/model-drop&quot;}"
+      ></div>
+    `
+    const expected = html`
+      <p>Intro</p>
+      <div
+        data-bookmark-provider="substack"
+        data-bookmark-url="https://thereader.example.com/p/model-drop"
+        data-bookmark-title="Model Drop"
+      >
+        <p><a href="https://thereader.example.com/p/model-drop">Model Drop</a></p>
+      </div>
+    `
+
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/',
+    })
+
+    expect(result).toEqualHtml(expected)
+  })
+
   it.todo('should preserve substack publication embeds through the full pipeline', () => {
     // An .embedded-publication-wrap card with a data-attrs JSON blob should come
     // out of the default pipeline as a data-bookmark-provider="substack" placeholder.
