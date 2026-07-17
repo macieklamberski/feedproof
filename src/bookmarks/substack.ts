@@ -34,8 +34,8 @@ export const substackBookmarkResolver: BookmarkResolver = {
       provider: 'substack',
       url,
       title,
-      description: attrs.hero_text?.trim(),
-      author: attrs.author_name?.trim(),
+      description: attrs.hero_text,
+      author: attrs.author_name,
       icon: attrs.logo_url,
     }
   },

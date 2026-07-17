@@ -7,9 +7,13 @@ export const createPlaceholder = <Type extends object>(
 ): HTMLElement => {
   const element = document.createElement('div')
 
+  // Trimming here lets resolvers pass extracted text as-is; a value that is only
+  // whitespace trims to an empty string and is skipped with the other empty fields.
   for (const [key, value] of Object.entries(fields)) {
-    if (value) {
-      element.setAttribute(`data-${type}-${key}`, value)
+    const cleaned = typeof value === 'string' ? value.trim() : value
+
+    if (cleaned) {
+      element.setAttribute(`data-${type}-${key}`, cleaned)
     }
   }
 
@@ -44,9 +48,10 @@ export const updateEmbedPlaceholder = (
 ): void => {
   for (const [key, value] of Object.entries(normalizeEmbedFields(metadata))) {
     const name = `data-embed-${key}`
+    const cleaned = value?.trim()
 
-    if (value && !element.hasAttribute(name)) {
-      element.setAttribute(name, value)
+    if (cleaned && !element.hasAttribute(name)) {
+      element.setAttribute(name, cleaned)
     }
   }
 }
@@ -62,7 +67,7 @@ export const createEmbedPlaceholder = (
     normalizeEmbedFields({ ...metadata, src: metadata?.src ?? src }),
   )
 
-  const fallbackUrl = metadata?.url ?? metadata?.src ?? src
+  const fallbackUrl = (metadata?.url ?? metadata?.src ?? src).trim()
   const link = document.createElement('a')
   link.setAttribute('href', fallbackUrl)
   link.textContent = fallbackUrl
@@ -87,8 +92,8 @@ export const createBookmarkPlaceholder = (
   })
 
   const link = document.createElement('a')
-  link.setAttribute('href', url)
-  link.textContent = title
+  link.setAttribute('href', url.trim())
+  link.textContent = title.trim()
   element.appendChild(link)
 
   return element

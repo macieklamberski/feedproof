@@ -77,7 +77,9 @@ describeForEachParser('substackBookmarkResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    it('should trim whitespace around name, hero_text and author_name', async () => {
+    // Optional fields pass through raw; createBookmarkPlaceholder trims every field
+    // when it writes the attributes. Only the guard-checked title is trimmed here.
+    it('should trim the name and pass hero_text and author_name through raw', async () => {
       const value = makeCard({
         name: '  The Reader  ',
         baseUrl: 'https://thereader.substack.com',
@@ -88,8 +90,8 @@ describeForEachParser('substackBookmarkResolver', (parseHtml) => {
         provider: 'substack',
         url: 'https://thereader.substack.com',
         title: 'The Reader',
-        description: 'A newsletter about things.',
-        author: 'Author name',
+        description: ' A newsletter about things. ',
+        author: ' Author name ',
       }
 
       expect(await extract(value)).toEqual(expected)
