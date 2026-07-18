@@ -22,6 +22,7 @@ export const ghostBookmarkResolver: BookmarkResolver = {
       // https://github.com/TryGhost/Ghost/blob/6e15b9d5bcceffcfef78e488f30692ce370ba928/koenig/kg-default-nodes/src/nodes/bookmark/bookmark-renderer.ts#L168
       author: element.querySelector('.kg-bookmark-publisher')?.textContent ?? undefined,
       publisher: element.querySelector('.kg-bookmark-author')?.textContent ?? undefined,
+      caption: element.querySelector('figcaption')?.textContent ?? undefined,
       icon: element.querySelector('img.kg-bookmark-icon')?.getAttribute('src') ?? undefined,
       thumbnail:
         element.querySelector('.kg-bookmark-thumbnail img')?.getAttribute('src') ?? undefined,
