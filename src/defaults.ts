@@ -1,6 +1,6 @@
 import { resolveUrl } from 'feedcanon'
 import { ghostBookmarkResolver } from './bookmarks/ghost.js'
-import { substackBookmarkResolver, substackPostBookmarkResolver } from './bookmarks/substack.js'
+import { substackPostBookmarkResolver } from './bookmarks/substack.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
@@ -222,7 +222,6 @@ export const defaultEmbedResolvers: Array<EmbedResolver> = [
 
 export const defaultBookmarkResolvers: Array<BookmarkResolver> = [
   ghostBookmarkResolver,
-  substackBookmarkResolver,
   substackPostBookmarkResolver,
 ]
 
@@ -382,6 +381,7 @@ export const defaultNonContentSelectors = [
   '.image-link-expand', // Substack restack/zoom buttons next to images — 16,419 feeds (0.6%).
   '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget — 11,366 feeds (0.42%).
   '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA — 11,275 feeds (0.42%).
+  '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 527 feeds (2026-07 corpus). Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
   'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets — 3,201 feeds (0.1%).
   '.captioned-button-wrap', // Substack caption + CTA button (Share/Subscribe/Comment) — 1,969 feeds (0.04%).
   '.adsbygoogle', // Google AdSense ad slot — 1,515 feeds (0.056%).

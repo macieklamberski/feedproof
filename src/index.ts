@@ -67,7 +67,7 @@ export const transformContent = async (
 }
 
 export { ghostBookmarkResolver } from './bookmarks/ghost.js'
-export { substackBookmarkResolver, substackPostBookmarkResolver } from './bookmarks/substack.js'
+export { substackPostBookmarkResolver } from './bookmarks/substack.js'
 export {
   defaultAllDomTransforms,
   defaultHighlightFn,

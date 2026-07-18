@@ -1,14 +1,5 @@
 import type { BookmarkResolver } from '../types.js'
 
-// Substack serializes the publication's metadata into the `data-attrs` JSON blob.
-type PublicationAttrs = {
-  name?: string
-  base_url?: string
-  logo_url?: string
-  hero_text?: string
-  author_name?: string
-}
-
 const parseDataAttrs = <Attrs>(raw: string | null): Attrs | undefined => {
   if (!raw) {
     return
@@ -66,28 +57,6 @@ export const substackPostBookmarkResolver: BookmarkResolver = {
       date: attrs.post_date ?? attrs.date,
       icon: attrs.publication_logo_url,
       thumbnail: attrs.cover_image,
-    }
-  },
-}
-
-export const substackBookmarkResolver: BookmarkResolver = {
-  selector: '.embedded-publication-wrap',
-  extract: (element) => {
-    const attrs = parseDataAttrs<PublicationAttrs>(element.getAttribute('data-attrs'))
-    const url = attrs?.base_url
-    const title = attrs?.name?.trim()
-
-    if (!url || !title) {
-      return
-    }
-
-    return {
-      provider: 'substack',
-      url,
-      title,
-      description: attrs.hero_text,
-      author: attrs.author_name,
-      icon: attrs.logo_url,
     }
   },
 }
