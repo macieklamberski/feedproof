@@ -440,8 +440,8 @@ describeForEachParser('transformContent', (parseHtml) => {
             <div class="kg-bookmark-description">Preview text</div>
             <div class="kg-bookmark-metadata">
               <img class="kg-bookmark-icon" src="https://example.com/favicon.ico" alt="">
-              <span class="kg-bookmark-author">Author name</span>
-              <span class="kg-bookmark-publisher">Publisher name</span>
+              <span class="kg-bookmark-author">Publisher name</span>
+              <span class="kg-bookmark-publisher">Author name</span>
             </div>
           </div>
           <div class="kg-bookmark-thumbnail">
