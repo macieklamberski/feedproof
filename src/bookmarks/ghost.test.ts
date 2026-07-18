@@ -20,12 +20,12 @@ const makeCard = (
     metadataParts.push(`<img class="kg-bookmark-icon" src="${options.icon}" alt="">`)
   }
 
-  if (options.author !== undefined) {
-    metadataParts.push(`<span class="kg-bookmark-author">${options.author}</span>`)
+  if (options.publisher !== undefined) {
+    metadataParts.push(`<span class="kg-bookmark-author">${options.publisher}</span>`)
   }
 
-  if (options.publisher !== undefined) {
-    metadataParts.push(`<span class="kg-bookmark-publisher">${options.publisher}</span>`)
+  if (options.author !== undefined) {
+    metadataParts.push(`<span class="kg-bookmark-publisher">${options.author}</span>`)
   }
 
   const metadataBlock = metadataParts.length
@@ -125,6 +125,26 @@ describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
       }
 
       expect(await extract(value)).toEqual(expected)
+    })
+
+    // Ghost >= 5.87 tidies bookmark cards in its RSS pipeline: icon, thumbnail and
+    // metadata are removed and the description is wrapped in <small>.
+    it('should extract the slimmed RSS card shape', async () => {
+      const value =
+        '<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com/post"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Post title</div><div class="kg-bookmark-description"><small>Preview text</small></div></div></a></figure>'
+      const result = await extract(value)
+      const expected: BookmarkResolverResult = {
+        provider: 'ghost',
+        url: 'https://example.com/post',
+        title: 'Post title',
+        description: 'Preview text',
+        author: undefined,
+        publisher: undefined,
+        icon: undefined,
+        thumbnail: undefined,
+      }
+
+      expect(result).toEqual(expected)
     })
 
     // Optional fields pass through raw; createBookmarkPlaceholder trims every field
