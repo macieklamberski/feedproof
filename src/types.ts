@@ -53,6 +53,9 @@ export type BookmarkResolverResult = {
   url: string
   title: string
   description?: string
+  // The embedding author's own note about the link (e.g. a Ghost bookmark figcaption),
+  // as opposed to `description`, which is the linked page's preview text.
+  caption?: string
   author?: string
   publisher?: string
   date?: string

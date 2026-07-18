@@ -12,6 +12,7 @@ const makeCard = (
     author?: string
     publisher?: string
     thumbnail?: string
+    caption?: string
   } = {},
 ): string => {
   const metadataParts: Array<string> = []
@@ -45,6 +46,9 @@ const makeCard = (
       ? `<div class="kg-bookmark-thumbnail"><img src="${options.thumbnail}"></div>`
       : ''
 
+  const captionBlock =
+    options.caption !== undefined ? `<figcaption>${options.caption}</figcaption>` : ''
+
   const containerOpen =
     options.href !== undefined
       ? `<a class="kg-bookmark-container" href="${options.href}">`
@@ -60,6 +64,7 @@ const makeCard = (
     '</div>',
     thumbnailBlock,
     '</a>',
+    captionBlock,
     '</figure>',
   ].join('')
 }
@@ -125,6 +130,29 @@ describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
       }
 
       expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should map the figcaption to the caption field', async () => {
+      const value = makeCard({
+        href: 'https://example.com/post',
+        title: 'Post title',
+        description: 'Preview text',
+        caption: 'My note about why this link matters',
+      })
+      const result = await extract(value)
+      const expected: BookmarkResolverResult = {
+        provider: 'ghost',
+        url: 'https://example.com/post',
+        title: 'Post title',
+        description: 'Preview text',
+        caption: 'My note about why this link matters',
+        author: undefined,
+        publisher: undefined,
+        icon: undefined,
+        thumbnail: undefined,
+      }
+
+      expect(result).toEqual(expected)
     })
 
     // Ghost >= 5.87 tidies bookmark cards in its RSS pipeline: icon, thumbnail and
