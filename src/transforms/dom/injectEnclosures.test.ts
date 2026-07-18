@@ -416,6 +416,43 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(await transform(value, context)).toEqualHtml(expected)
     })
 
+    it('should parse a playerEmbed enclosure and merge it with its media file', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        {
+          playerEmbed:
+            '<iframe src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3&amp;modern=1" scrolling="no" width="100%" height="165"></iframe>',
+        },
+        { url: 'https://example.com/ep.mp3', type: 'audio/mpeg' },
+      ])
+      const expected = html`
+        <div
+          data-embed-src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3&amp;modern=1"
+          data-embed-height="165"
+          data-enclosure=""
+        >
+          <a href="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3&amp;modern=1">https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3&amp;modern=1</a>
+        </div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should drop a playerEmbed enclosure without an iframe src', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { playerEmbed: '<p>player</p>' },
+        { url: 'https://example.com/ep.mp3', type: 'audio/mpeg' },
+      ])
+      const expected = html`
+        <audio src="https://example.com/ep.mp3" controls preload="none" data-enclosure=""></audio>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
     it('should merge using cleanUrlFn-normalized urls', async () => {
       const value = '<p>Content</p>'
       const context = {

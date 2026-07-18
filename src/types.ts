@@ -9,7 +9,7 @@ export type EnclosureThumbnail = {
 }
 
 export type Enclosure = {
-  url: string
+  url?: string
   type?: string
   medium?: string
   width?: number
@@ -19,6 +19,7 @@ export type Enclosure = {
   description?: string
   thumbnails?: Array<EnclosureThumbnail>
   playerUrl?: string
+  playerEmbed?: string
 }
 
 export type ResolveUrlFn = DiscoverResolveUrlFn

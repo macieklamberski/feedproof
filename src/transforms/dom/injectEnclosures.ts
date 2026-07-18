@@ -7,6 +7,7 @@ import type {
   Enclosure,
   TransformContext,
 } from '../../types.js'
+import { getElementDimensions } from '../../utils/dom.js'
 import { createEmbedPlaceholder } from '../../utils/embeds.js'
 import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
 import { absoluteUrlRegex, resolveOrKeepUrl } from '../../utils/urls.js'
@@ -63,7 +64,11 @@ const createNativeMediaElement = (
 ): HTMLElement => {
   const element = document.createElement(tagName)
   const src = resolveOrKeepUrl(enclosure.url, context.resolveUrlFn, context.baseUrl)
-  element.setAttribute('src', src)
+
+  if (src) {
+    element.setAttribute('src', src)
+  }
+
   element.setAttribute('controls', '')
   element.setAttribute('preload', 'none')
 
@@ -100,7 +105,10 @@ const injectImageEnclosure = (
 
   const element = document.createElement('img')
   const src = resolveOrKeepUrl(enclosure.url, context.resolveUrlFn, context.baseUrl)
-  element.setAttribute('src', src)
+
+  if (src) {
+    element.setAttribute('src', src)
+  }
 
   if (enclosure.width) {
     element.setAttribute('width', String(enclosure.width))
@@ -143,8 +151,10 @@ const mergeEnclosureMetadata = (
 // Between two sized variants the larger wins; on a true tie the no-query URL wins, else
 // the first stays.
 const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
-  const incomingHint = getUrlSizeHint(incoming.url)
-  const keptHint = getUrlSizeHint(kept.url)
+  const incomingUrl = incoming.url ?? ''
+  const keptUrl = kept.url ?? ''
+  const incomingHint = getUrlSizeHint(incomingUrl)
+  const keptHint = getUrlSizeHint(keptUrl)
 
   const incomingIsOriginal = incomingHint === 0
   const keptIsOriginal = keptHint === 0
@@ -156,7 +166,7 @@ const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
     return incomingHint > keptHint
   }
 
-  return kept.url.includes('?') && !incoming.url.includes('?')
+  return keptUrl.includes('?') && !incomingUrl.includes('?')
 }
 
 // Collapse image enclosures that are the same picture at a different size or render —
@@ -214,6 +224,39 @@ const extractNestedUrls = (url: string): Array<string> => {
   }
 
   return nested
+}
+
+// A player sometimes arrives as raw embed HTML (e.g. rawvoice:embed) instead of a
+// URL. Parse it through the DOM so entity decoding and attribute quoting are
+// handled properly, and turn the entry into a plain player page entry (url plus
+// display size) that mergePlayerEnclosures can pair with its media file.
+const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): Enclosure => {
+  if (!enclosure.playerEmbed) {
+    return enclosure
+  }
+
+  const { playerEmbed, ...rest } = enclosure
+  const container = document.createElement('div')
+  container.innerHTML = playerEmbed
+
+  // In real feeds (corpus sample, July 2026) rawvoice:embed is an iframe player in 36 of
+  // 40 feeds; the rest wrap a native <audio> for the same file as the enclosure, or plain
+  // text. Only frame-able elements count as players, so those others fall through and the
+  // enclosure itself still renders.
+  const frame = container.querySelector('iframe[src], embed[src]')
+
+  if (!frame) {
+    return rest
+  }
+
+  const dimensions = getElementDimensions(frame)
+
+  return {
+    ...rest,
+    url: rest.url ?? frame.getAttribute('src') ?? undefined,
+    width: rest.width ?? dimensions.width,
+    height: rest.height ?? dimensions.height,
+  }
 }
 
 // A feed sometimes lists the same media twice: once as the raw file and once as a
@@ -290,8 +333,11 @@ export const injectEnclosures: DomTransform = (context) => {
     // markup). Audio and video enclosures have no inline equivalent, so they always inject.
     const hasContentImage = !!document.querySelector('img[src], picture, [data-embed-thumbnail]')
 
+    const resolvedEnclosures = enclosures.map((enclosure) => {
+      return extractEnclosureFromEmbed(enclosure, document)
+    })
     const mergedEnclosures = mergePlayerEnclosures(
-      dedupeImageEnclosures(enclosures, context.cleanUrlFn),
+      dedupeImageEnclosures(resolvedEnclosures, context.cleanUrlFn),
       context.cleanUrlFn,
     )
 
