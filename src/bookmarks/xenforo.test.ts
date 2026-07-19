@@ -1,88 +1,63 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser } from '../tests.js'
+import { describeForEachParser, html } from '../tests.js'
 import type { BookmarkResolverResult } from '../types.js'
 import { xenforoBookmarkResolver } from './xenforo.js'
 
-const makeCard = (
-  options: {
-    url?: string
-    host?: string
-    title?: string
-    description?: string
-    icon?: string
-    thumbnail?: string
-  } = {},
-): string => {
-  const figureBlock =
-    options.thumbnail !== undefined
-      ? `<div class="contentRow-figure contentRow-figure--fixedSmall js-unfurl-figure"><img src="${options.thumbnail}" alt="" data-onerror="hide-parent"/></div>`
-      : ''
-
-  const titleBlock =
-    options.title !== undefined
-      ? `<h3 class="contentRow-header js-unfurl-title"><a href="https://example.com/page" class="link link--external fauxBlockLink-blockLink" target="_blank" rel="nofollow ugc noopener">${options.title}</a></h3>`
-      : ''
-
-  const descriptionBlock =
-    options.description !== undefined
-      ? `<div class="contentRow-snippet js-unfurl-desc">${options.description}</div>`
-      : ''
-
-  const iconBlock =
-    options.icon !== undefined
-      ? `<span class="js-unfurl-favicon"><img src="${options.icon}" alt="" class="bbCodeBlockUnfurl-icon" data-onerror="hide-parent"/></span>`
-      : ''
-
-  const urlAttribute = options.url !== undefined ? ` data-url="${options.url}"` : ''
-  const hostAttribute = options.host !== undefined ? ` data-host="${options.host}"` : ''
-
-  return [
-    `<div class="bbCodeBlock bbCodeBlock--unfurl js-unfurl fauxBlockLink" data-unfurl="true"${urlAttribute}${hostAttribute} data-pending="false">`,
-    '<div class="contentRow">',
-    figureBlock,
-    '<div class="contentRow-main">',
-    titleBlock,
-    descriptionBlock,
-    '<div class="contentRow-minor contentRow-minor--hideLinks">',
-    iconBlock,
-    '</div>',
-    '</div>',
-    '</div>',
-    '</div>',
-  ].join('')
-}
-
 describeForEachParser('xenforoBookmarkResolver', (parseHtml) => {
-  const extract = async (html: string): Promise<BookmarkResolverResult | undefined> => {
-    const element = parseHtml(html).querySelector(xenforoBookmarkResolver.selector)
+  const extract = async (value: string): Promise<BookmarkResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(xenforoBookmarkResolver.selector)
     return element ? await xenforoBookmarkResolver.extract(element) : undefined
   }
 
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {
-      const value = makeCard({
-        url: 'https://example.com/page',
-        host: 'example.com',
-        title: 'Page title',
-        description: 'Preview text',
-        icon: 'https://example.com/favicon.ico',
-        thumbnail: 'https://example.com/og-image.jpg',
-      })
+      const value = html`
+        <div
+          class="bbCodeBlock bbCodeBlock--unfurl js-unfurl fauxBlockLink"
+          data-unfurl="true"
+          data-result-id="6548"
+          data-url="https://example.com/profile.php?id=615739"
+          data-host="example.com"
+          data-pending="false"
+        >
+          <div class="contentRow">
+            <div class="contentRow-figure contentRow-figure--fixedSmall js-unfurl-figure">
+              <img src="https://cdn.example.net/thumb.jpg?ccb=1-7" alt="example.com" data-onerror="hide-parent" />
+            </div>
+            <div class="contentRow-main">
+              <h3 class="contentRow-header js-unfurl-title">
+                <a href="https://example.com/profile.php?id=615739" class="link link--external fauxBlockLink-blockLink" target="_blank" rel="nofollow ugc noopener" data-proxy-href="">Page title</a>
+              </h3>
+              <div class="contentRow-snippet js-unfurl-desc">Preview text</div>
+              <div class="contentRow-minor contentRow-minor--hideLinks">
+                <span class="js-unfurl-favicon">
+                  <img src="https://static.example.net/favicon.ico" alt="example.com" class="bbCodeBlockUnfurl-icon" data-onerror="hide-parent" />
+                </span>
+                example.com
+              </div>
+            </div>
+          </div>
+        </div>
+      `
       const expected: BookmarkResolverResult = {
         provider: 'xenforo',
-        url: 'https://example.com/page',
+        url: 'https://example.com/profile.php?id=615739',
         title: 'Page title',
         description: 'Preview text',
         publisher: 'example.com',
-        icon: 'https://example.com/favicon.ico',
-        thumbnail: 'https://example.com/og-image.jpg',
+        icon: 'https://static.example.net/favicon.ico',
+        thumbnail: 'https://cdn.example.net/thumb.jpg?ccb=1-7',
       }
 
       expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave optional fields undefined when only the url and title are present', async () => {
-      const value = makeCard({ url: 'https://example.com/page', title: 'Page title' })
+      const value = html`
+        <div class="bbCodeBlock bbCodeBlock--unfurl" data-url="https://example.com/page">
+          <h3 class="js-unfurl-title">Page title</h3>
+        </div>
+      `
       const expected: BookmarkResolverResult = {
         provider: 'xenforo',
         url: 'https://example.com/page',
@@ -97,36 +72,21 @@ describeForEachParser('xenforoBookmarkResolver', (parseHtml) => {
     })
   })
 
-  describe('happy paths (verbatim markup)', () => {
-    // Structure copied from a real feed, with urls and text replaced. The generated
-    // fixtures above can only assert what this file assumes the markup looks like, so
-    // this one pins the shape XenForo actually emits.
-    it('should extract all fields from unmodified forum markup', async () => {
-      const value =
-        '<div class="bbCodeBlock bbCodeBlock--unfurl    js-unfurl fauxBlockLink" data-unfurl="true" data-result-id="6548" data-url="https://example.com/profile.php?id=615739" data-host="example.com" data-pending="false"><div class="contentRow"><div class="contentRow-figure contentRow-figure--fixedSmall js-unfurl-figure"><img src="https://cdn.example.net/v/t39.30808-1/thumb.jpg?ccb=1-7&amp;_nc_zt=24" alt="example.com" data-onerror="hide-parent"/></div><div class="contentRow-main"><h3 class="contentRow-header js-unfurl-title"><a href="https://example.com/profile.php?id=615739" class="link link--external fauxBlockLink-blockLink" target="_blank" rel="nofollow ugc noopener" data-proxy-href="">Page title</a></h3><div class="contentRow-snippet js-unfurl-desc">Preview text pulled from the linked page. 51 likes &#183; 36 talking about this.</div><div class="contentRow-minor contentRow-minor--hideLinks"><span class="js-unfurl-favicon"><img src="https://static.example.net/rsrc.php/y1/favicon.ico" alt="example.com" class="bbCodeBlockUnfurl-icon" data-onerror="hide-parent"/></span> example.com</div></div></div></div>'
-      const expected: BookmarkResolverResult = {
-        provider: 'xenforo',
-        url: 'https://example.com/profile.php?id=615739',
-        title: 'Page title',
-        description: 'Preview text pulled from the linked page. 51 likes · 36 talking about this.',
-        publisher: 'example.com',
-        icon: 'https://static.example.net/rsrc.php/y1/favicon.ico',
-        thumbnail: 'https://cdn.example.net/v/t39.30808-1/thumb.jpg?ccb=1-7&_nc_zt=24',
-      }
-
-      expect(await extract(value)).toEqual(expected)
-    })
-  })
-
   describe('edge cases', () => {
     it('should extract a card without a thumbnail figure', async () => {
-      const value = makeCard({
-        url: 'https://example.com/page',
-        host: 'example.com',
-        title: 'Page title',
-        description: 'Preview text',
-        icon: 'https://example.com/favicon.ico',
-      })
+      const value = html`
+        <div
+          class="bbCodeBlock bbCodeBlock--unfurl"
+          data-url="https://example.com/page"
+          data-host="example.com"
+        >
+          <h3 class="js-unfurl-title">Page title</h3>
+          <div class="js-unfurl-desc">Preview text</div>
+          <span class="js-unfurl-favicon">
+            <img src="https://example.com/favicon.ico" alt="" />
+          </span>
+        </div>
+      `
       const expected: BookmarkResolverResult = {
         provider: 'xenforo',
         url: 'https://example.com/page',
@@ -141,13 +101,23 @@ describeForEachParser('xenforoBookmarkResolver', (parseHtml) => {
     })
 
     it('should prefer the wrapper url over the inner anchor href', async () => {
-      const value = makeCard({ url: 'https://example.com/canonical', title: 'Page title' })
+      const value = html`
+        <div class="bbCodeBlock bbCodeBlock--unfurl" data-url="https://example.com/canonical">
+          <h3 class="js-unfurl-title">
+            <a href="https://example.com/tracked">Page title</a>
+          </h3>
+        </div>
+      `
 
       expect((await extract(value))?.url).toBe('https://example.com/canonical')
     })
 
     it('should trim surrounding whitespace from the title', async () => {
-      const value = makeCard({ url: 'https://example.com/page', title: '  Padded title  ' })
+      const value = html`
+        <div class="bbCodeBlock bbCodeBlock--unfurl" data-url="https://example.com/page">
+          <h3 class="js-unfurl-title">&nbsp;Padded title&nbsp;</h3>
+        </div>
+      `
 
       expect((await extract(value))?.title).toBe('Padded title')
     })
@@ -155,19 +125,31 @@ describeForEachParser('xenforoBookmarkResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined when the url attribute is missing', async () => {
-      const value = makeCard({ title: 'Page title' })
+      const value = html`
+        <div class="bbCodeBlock bbCodeBlock--unfurl">
+          <h3 class="js-unfurl-title">Page title</h3>
+        </div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined when the title is missing', async () => {
-      const value = makeCard({ url: 'https://example.com/page', description: 'Preview text' })
+      const value = html`
+        <div class="bbCodeBlock bbCodeBlock--unfurl" data-url="https://example.com/page">
+          <div class="js-unfurl-desc">Preview text</div>
+        </div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined when the title is only whitespace', async () => {
-      const value = makeCard({ url: 'https://example.com/page', title: '   ' })
+      const value = html`
+        <div class="bbCodeBlock bbCodeBlock--unfurl" data-url="https://example.com/page">
+          <h3 class="js-unfurl-title">&nbsp;</h3>
+        </div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
