@@ -97,6 +97,27 @@ describeForEachParser('xenforoBookmarkResolver', (parseHtml) => {
     })
   })
 
+  describe('happy paths (verbatim markup)', () => {
+    // Structure copied from a real feed, with urls and text replaced. The generated
+    // fixtures above can only assert what this file assumes the markup looks like, so
+    // this one pins the shape XenForo actually emits.
+    it('should extract all fields from unmodified forum markup', async () => {
+      const value =
+        '<div class="bbCodeBlock bbCodeBlock--unfurl    js-unfurl fauxBlockLink" data-unfurl="true" data-result-id="6548" data-url="https://example.com/profile.php?id=615739" data-host="example.com" data-pending="false"><div class="contentRow"><div class="contentRow-figure contentRow-figure--fixedSmall js-unfurl-figure"><img src="https://cdn.example.net/v/t39.30808-1/thumb.jpg?ccb=1-7&amp;_nc_zt=24" alt="example.com" data-onerror="hide-parent"/></div><div class="contentRow-main"><h3 class="contentRow-header js-unfurl-title"><a href="https://example.com/profile.php?id=615739" class="link link--external fauxBlockLink-blockLink" target="_blank" rel="nofollow ugc noopener" data-proxy-href="">Page title</a></h3><div class="contentRow-snippet js-unfurl-desc">Preview text pulled from the linked page. 51 likes &#183; 36 talking about this.</div><div class="contentRow-minor contentRow-minor--hideLinks"><span class="js-unfurl-favicon"><img src="https://static.example.net/rsrc.php/y1/favicon.ico" alt="example.com" class="bbCodeBlockUnfurl-icon" data-onerror="hide-parent"/></span> example.com</div></div></div></div>'
+      const expected: BookmarkResolverResult = {
+        provider: 'xenforo',
+        url: 'https://example.com/profile.php?id=615739',
+        title: 'Page title',
+        description: 'Preview text pulled from the linked page. 51 likes · 36 talking about this.',
+        publisher: 'example.com',
+        icon: 'https://static.example.net/rsrc.php/y1/favicon.ico',
+        thumbnail: 'https://cdn.example.net/v/t39.30808-1/thumb.jpg?ccb=1-7&_nc_zt=24',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
   describe('edge cases', () => {
     it('should extract a card without a thumbnail figure', async () => {
       const value = makeCard({
