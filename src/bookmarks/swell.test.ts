@@ -109,6 +109,25 @@ describeForEachParser('swellBookmarkResolver', (parseHtml) => {
     })
   })
 
+  describe('happy paths (verbatim markup)', () => {
+    // Structure copied from a real feed, with urls and text replaced. The generated
+    // fixtures above can only assert what this file assumes the markup looks like, so
+    // this one pins the shape the theme actually emits.
+    it('should extract all fields from unmodified theme markup', async () => {
+      const value =
+        '<div class="swell-block-postLink"><div class="p-blogCard -internal" data-type="type1" data-onclick="clickLink"><div class="p-blogCard__inner"><span class="p-blogCard__caption">Recommended reading</span><div class="p-blogCard__thumb c-postThumb"><figure class="c-postThumb__figure"><img decoding="async" src="https://example.com/thumb.jpg" alt="" class="c-postThumb__img u-obf-cover" width="320" height="180"></figure></div><div class="p-blogCard__body"><a class="p-blogCard__title" href="https://example.com/?page_id=1240">Post title</a><span class="p-blogCard__excerpt">Preview text that the theme truncates with an ellipsis&#8230;</span></div></div></div></div>'
+      const expected: BookmarkResolverResult = {
+        provider: 'swell',
+        url: 'https://example.com/?page_id=1240',
+        title: 'Post title',
+        description: 'Preview text that the theme truncates with an ellipsis…',
+        thumbnail: 'https://example.com/thumb.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
   describe('edge cases', () => {
     it('should drop the theme caption', async () => {
       const value = makeCard({
