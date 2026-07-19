@@ -1,4 +1,5 @@
 import { resolveUrl } from 'feedcanon'
+import { cocoonBookmarkResolver } from './bookmarks/cocoon.js'
 import { ghostBookmarkResolver } from './bookmarks/ghost.js'
 import {
   substackCrossPostBookmarkResolver,
@@ -227,6 +228,7 @@ export const defaultBookmarkResolvers: Array<BookmarkResolver> = [
   ghostBookmarkResolver,
   substackOwnPostBookmarkResolver,
   substackCrossPostBookmarkResolver,
+  cocoonBookmarkResolver,
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
