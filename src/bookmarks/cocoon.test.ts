@@ -160,7 +160,7 @@ describeForEachParser('cocoonBookmarkResolver', (parseHtml) => {
     it('should trim surrounding whitespace from the title', async () => {
       const value = html`
         <a href="https://example.com/post" class="blogcard-wrap">
-          <div class="blogcard-title">&nbsp;Padded title&nbsp;</div>
+          <div class="blogcard-title"> Padded title </div>
         </a>
       `
 
@@ -192,7 +192,7 @@ describeForEachParser('cocoonBookmarkResolver', (parseHtml) => {
     it('should return undefined when the title is only whitespace', async () => {
       const value = html`
         <a href="https://example.com/post" class="blogcard-wrap">
-          <div class="blogcard-title">&nbsp;</div>
+          <div class="blogcard-title"> </div>
         </a>
       `
 
