@@ -12,10 +12,8 @@ const makeCard = (
     publisher?: string
     icon?: string
     thumbnail?: string
-    engine?: string
   } = {},
 ): string => {
-  const engine = options.engine ?? 'allowlistedgeneric'
   const level = options.titleLevel ?? 'h3'
 
   const iconBlock =
@@ -41,7 +39,7 @@ const makeCard = (
   const srcAttribute = options.src !== undefined ? ` data-onebox-src="${options.src}"` : ''
 
   return [
-    `<aside class="onebox ${engine}"${srcAttribute}>`,
+    `<aside class="onebox allowlistedgeneric"${srcAttribute}>`,
     '<header class="source">',
     iconBlock,
     publisherBlock,
@@ -101,27 +99,28 @@ describeForEachParser('discourseBookmarkResolver', (parseHtml) => {
     })
   })
 
-  describe('edge cases', () => {
-    it('should extract a card built by a per-site engine', async () => {
-      const value = makeCard({
-        src: 'https://github.com/owner/repo/issues/1',
-        title: 'Issue title',
-        description: 'Issue body',
-        engine: 'githubissue',
-      })
+  describe('happy paths (verbatim markup)', () => {
+    // Structure copied from a real feed, with urls and text replaced. The generated
+    // fixtures above can only assert what this file assumes the markup looks like, so
+    // this one pins the shape Discourse actually emits.
+    it('should extract all fields from unmodified onebox markup', async () => {
+      const value =
+        '<aside class="onebox allowlistedgeneric" data-onebox-src="https://example.com/page#comment-1"><header class="source"><img src="https://forum.example.org/uploads/default/original/2X/1/icon.png" class="site-icon" alt="" data-dominant-color="B4C5E1" width="32" height="32"><a href="https://example.com/page#comment-1" target="_blank" rel="noopener nofollow ugc">example.com</a></header><article class="onebox-body"><div class="aspect-image" style="--aspect-ratio:690/362;"><img src="https://forum.example.org/uploads/default/optimized/2X/d/thumb.jpeg" class="thumbnail" data-dominant-color="DEDEDE" width="690" height="362"></div><h3><a href="https://example.com/page#comment-1" target="_blank" rel="noopener nofollow ugc">Page title</a></h3><p>Preview text pulled from the linked page.</p></article><div class="onebox-metadata"></div><div style="clear: both"></div></aside>'
       const expected: BookmarkResolverResult = {
         provider: 'discourse',
-        url: 'https://github.com/owner/repo/issues/1',
-        title: 'Issue title',
-        description: 'Issue body',
-        publisher: undefined,
-        icon: undefined,
-        thumbnail: undefined,
+        url: 'https://example.com/page#comment-1',
+        title: 'Page title',
+        description: 'Preview text pulled from the linked page.',
+        publisher: 'example.com',
+        icon: 'https://forum.example.org/uploads/default/original/2X/1/icon.png',
+        thumbnail: 'https://forum.example.org/uploads/default/optimized/2X/d/thumb.jpeg',
       }
 
       expect(await extract(value)).toEqual(expected)
     })
+  })
 
+  describe('edge cases', () => {
     it('should read the title from a level-four heading', async () => {
       const value = makeCard({
         src: 'https://example.com/page',
