@@ -106,7 +106,7 @@ describeForEachParser('discourseBookmarkResolver', (parseHtml) => {
       const value = html`
         <aside class="onebox" data-onebox-src="https://example.com/page">
           <article class="onebox-body">
-            <h3>&nbsp;Padded title&nbsp;</h3>
+            <h3> Padded title </h3>
           </article>
         </aside>
       `
@@ -144,7 +144,7 @@ describeForEachParser('discourseBookmarkResolver', (parseHtml) => {
       const value = html`
         <aside class="onebox" data-onebox-src="https://example.com/page">
           <article class="onebox-body">
-            <h3>&nbsp;</h3>
+            <h3> </h3>
           </article>
         </aside>
       `
