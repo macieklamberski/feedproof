@@ -1,5 +1,6 @@
 import { resolveUrl } from 'feedcanon'
 import { cocoonBookmarkResolver } from './bookmarks/cocoon.js'
+import { devtoBookmarkResolver } from './bookmarks/devto.js'
 import { discourseBookmarkResolver } from './bookmarks/discourse.js'
 import { ghostBookmarkResolver } from './bookmarks/ghost.js'
 import {
@@ -235,6 +236,7 @@ export const defaultBookmarkResolvers: Array<BookmarkResolver> = [
   discourseBookmarkResolver,
   swellBookmarkResolver,
   xenforoBookmarkResolver,
+  devtoBookmarkResolver,
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
