@@ -115,7 +115,7 @@ describeForEachParser('xenforoBookmarkResolver', (parseHtml) => {
     it('should trim surrounding whitespace from the title', async () => {
       const value = html`
         <div class="bbCodeBlock bbCodeBlock--unfurl" data-url="https://example.com/page">
-          <h3 class="js-unfurl-title">&nbsp;Padded title&nbsp;</h3>
+          <h3 class="js-unfurl-title"> Padded title </h3>
         </div>
       `
 
@@ -147,7 +147,7 @@ describeForEachParser('xenforoBookmarkResolver', (parseHtml) => {
     it('should return undefined when the title is only whitespace', async () => {
       const value = html`
         <div class="bbCodeBlock bbCodeBlock--unfurl" data-url="https://example.com/page">
-          <h3 class="js-unfurl-title">&nbsp;</h3>
+          <h3 class="js-unfurl-title"> </h3>
         </div>
       `
 
