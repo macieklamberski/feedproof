@@ -6,6 +6,7 @@ import {
   substackCrossPostBookmarkResolver,
   substackOwnPostBookmarkResolver,
 } from './bookmarks/substack.js'
+import { swellBookmarkResolver } from './bookmarks/swell.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
@@ -231,6 +232,7 @@ export const defaultBookmarkResolvers: Array<BookmarkResolver> = [
   substackCrossPostBookmarkResolver,
   cocoonBookmarkResolver,
   discourseBookmarkResolver,
+  swellBookmarkResolver,
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
