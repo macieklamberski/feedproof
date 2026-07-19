@@ -3,74 +3,39 @@ import { describeForEachParser } from '../tests.js'
 import type { BookmarkResolverResult } from '../types.js'
 import { substackCrossPostBookmarkResolver, substackOwnPostBookmarkResolver } from './substack.js'
 
-const makePostCard = (
-  options: {
-    className?: string
-    title?: string
-    url?: string
-    canonicalUrl?: string
-    truncatedBodyText?: string
-    caption?: string
-    coverImage?: string
-    publicationName?: string
-    publicationLogoUrl?: string
-    publishedBylines?: Array<{ name?: string }>
-    bylines?: Array<{ name?: string }>
-    postDate?: string
-    date?: string
-    rawDataAttrs?: string
-    omitDataAttrs?: boolean
-  } = {},
-): string => {
-  const className = options.className ?? 'digest-post-embed'
-
-  if (options.omitDataAttrs) {
+// Substack ships these cards as empty divs whose data lives in a `data-attrs` JSON blob,
+// stored in a double-quoted attribute with the inner quotes HTML-encoded — that is what
+// survives a parse/serialise roundtrip. Tests pass the attrs object with Substack's own
+// key names so the wire keys stay visible at the call site.
+const makeCard = (className: string, attrs?: Record<string, unknown> | string): string => {
+  if (attrs === undefined) {
     return `<div class="${className}"></div>`
   }
 
-  const raw =
-    options.rawDataAttrs ??
-    JSON.stringify({
-      title: options.title,
-      url: options.url,
-      canonical_url: options.canonicalUrl,
-      truncated_body_text: options.truncatedBodyText,
-      caption: options.caption,
-      cover_image: options.coverImage,
-      publication_name: options.publicationName,
-      publication_logo_url: options.publicationLogoUrl,
-      publishedBylines: options.publishedBylines,
-      bylines: options.bylines,
-      post_date: options.postDate,
-      date: options.date,
-    })
-
-  // Substack stores the JSON in a double-quoted attribute with the inner
-  // quotes HTML-encoded, which is what survives a parse/serialise roundtrip.
+  const raw = typeof attrs === 'string' ? attrs : JSON.stringify(attrs)
   const encoded = raw.replace(/"/g, '&quot;')
 
   return `<div class="${className}" data-attrs="${encoded}"></div>`
 }
 
 describeForEachParser('substackOwnPostBookmarkResolver', (parseHtml) => {
-  const extract = async (html: string): Promise<BookmarkResolverResult | undefined> => {
-    const element = parseHtml(html).querySelector(substackOwnPostBookmarkResolver.selector)
+  const extract = async (value: string): Promise<BookmarkResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(substackOwnPostBookmarkResolver.selector)
     return element ? await substackOwnPostBookmarkResolver.extract(element) : undefined
   }
 
   describe('happy paths', () => {
     it('should extract all fields from a complete post card', async () => {
-      const value = makePostCard({
+      const value = makeCard('digest-post-embed', {
         title: 'Why Does Everyone Hate AI?',
-        canonicalUrl: 'https://thereader.example.com/p/why-does-everyone-hate-ai',
+        canonical_url: 'https://thereader.example.com/p/why-does-everyone-hate-ai',
         caption: 'A look at the backlash.',
-        coverImage: 'https://cdn.example.com/cover.png',
-        publicationName: 'The Reader',
-        publicationLogoUrl: 'https://cdn.example.com/logo.png',
+        cover_image: 'https://cdn.example.com/cover.png',
+        publication_name: 'The Reader',
+        publication_logo_url: 'https://cdn.example.com/logo.png',
         publishedBylines: [{ name: 'Author name' }],
-        postDate: '2026-06-25T10:31:02.000Z',
+        post_date: '2026-06-25T10:31:02.000Z',
       })
-      const result = await extract(value)
       const expected: BookmarkResolverResult = {
         provider: 'substack',
         url: 'https://thereader.example.com/p/why-does-everyone-hate-ai',
@@ -83,19 +48,18 @@ describeForEachParser('substackOwnPostBookmarkResolver', (parseHtml) => {
         thumbnail: 'https://cdn.example.com/cover.png',
       }
 
-      expect(result).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should extract a digest card using canonical_url', async () => {
-      const value = makePostCard({
+      const value = makeCard('digest-post-embed', {
         title: 'Model Drop',
-        canonicalUrl: 'https://thereader.example.com/p/model-drop',
-        coverImage: 'https://cdn.example.com/cover.webp',
-        publicationName: 'The Reader',
+        canonical_url: 'https://thereader.example.com/p/model-drop',
+        cover_image: 'https://cdn.example.com/cover.webp',
+        publication_name: 'The Reader',
         publishedBylines: [],
-        postDate: '2026-07-09T20:28:23.465Z',
+        post_date: '2026-07-09T20:28:23.465Z',
       })
-      const result = await extract(value)
       const expected: BookmarkResolverResult = {
         provider: 'substack',
         url: 'https://thereader.example.com/p/model-drop',
@@ -108,11 +72,11 @@ describeForEachParser('substackOwnPostBookmarkResolver', (parseHtml) => {
         thumbnail: 'https://cdn.example.com/cover.webp',
       }
 
-      expect(result).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should return undefined when only the cross-post url key is present', async () => {
-      const value = makePostCard({
+      const value = makeCard('digest-post-embed', {
         title: 'Model Drop',
         url: 'https://example.com/p/duplicate',
       })
@@ -121,27 +85,25 @@ describeForEachParser('substackOwnPostBookmarkResolver', (parseHtml) => {
     })
 
     it('should ignore the cross-post bylines key', async () => {
-      const value = makePostCard({
+      const value = makeCard('digest-post-embed', {
         title: 'Model Drop',
-        canonicalUrl: 'https://thereader.example.com/p/model-drop',
+        canonical_url: 'https://thereader.example.com/p/model-drop',
         bylines: [{ name: 'Author name' }],
       })
-      const result = await extract(value)
 
-      expect(result?.author).toBeUndefined()
+      expect((await extract(value))?.author).toBeUndefined()
     })
 
     // Optional fields pass through raw; createBookmarkPlaceholder trims every field
     // when it writes the attributes. Only the guard-checked title is trimmed here.
     it('should trim the title and pass optional text fields through raw', async () => {
-      const value = makePostCard({
+      const value = makeCard('digest-post-embed', {
         title: '  Model Drop  ',
-        canonicalUrl: 'https://thereader.example.com/p/model-drop',
+        canonical_url: 'https://thereader.example.com/p/model-drop',
         caption: ' A look at the backlash. ',
-        publicationName: ' The Reader ',
+        publication_name: ' The Reader ',
         publishedBylines: [{ name: ' Author name ' }],
       })
-      const result = await extract(value)
       const expected: BookmarkResolverResult = {
         provider: 'substack',
         url: 'https://thereader.example.com/p/model-drop',
@@ -154,63 +116,71 @@ describeForEachParser('substackOwnPostBookmarkResolver', (parseHtml) => {
         thumbnail: undefined,
       }
 
-      expect(result).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('edge cases', () => {
     it('should return undefined when canonical_url is missing', async () => {
-      expect(await extract(makePostCard({ title: 'Model Drop' }))).toBeUndefined()
+      const value = makeCard('digest-post-embed', { title: 'Model Drop' })
+
+      expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined when title is missing', async () => {
-      const value = makePostCard({ canonicalUrl: 'https://thereader.example.com/p/model-drop' })
+      const value = makeCard('digest-post-embed', {
+        canonical_url: 'https://thereader.example.com/p/model-drop',
+      })
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined when title is whitespace-only', async () => {
-      const value = makePostCard({
+      const value = makeCard('digest-post-embed', {
         title: '   ',
-        canonicalUrl: 'https://thereader.example.com/p/model-drop',
+        canonical_url: 'https://thereader.example.com/p/model-drop',
       })
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined when data-attrs is valid JSON but not an object', async () => {
-      expect(await extract(makePostCard({ rawDataAttrs: '"Model Drop"' }))).toBeUndefined()
+      const value = makeCard('digest-post-embed', '"Model Drop"')
+
+      expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined when data-attrs is malformed json', async () => {
-      expect(await extract(makePostCard({ rawDataAttrs: 'not-json' }))).toBeUndefined()
+      const value = makeCard('digest-post-embed', 'not-json')
+
+      expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined when data-attrs is absent', async () => {
-      expect(await extract(makePostCard({ omitDataAttrs: true }))).toBeUndefined()
+      const value = makeCard('digest-post-embed')
+
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })
 
 describeForEachParser('substackCrossPostBookmarkResolver', (parseHtml) => {
-  const extract = async (html: string) => {
-    const element = parseHtml(html).querySelector(substackCrossPostBookmarkResolver.selector)
+  const extract = async (value: string): Promise<BookmarkResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(substackCrossPostBookmarkResolver.selector)
     return element ? await substackCrossPostBookmarkResolver.extract(element) : undefined
   }
 
   it('should extract all fields from a complete cross-post card', async () => {
-    const value = makePostCard({
-      className: 'embedded-post-wrap',
+    const value = makeCard('embedded-post-wrap', {
       title: 'Why Does Everyone Hate AI?',
       url: 'https://thereader.example.com/p/why-does-everyone-hate-ai',
-      truncatedBodyText: 'A look at the backlash.',
-      coverImage: 'https://cdn.example.com/cover.png',
-      publicationName: 'The Reader',
-      publicationLogoUrl: 'https://cdn.example.com/logo.png',
+      truncated_body_text: 'A look at the backlash.',
+      cover_image: 'https://cdn.example.com/cover.png',
+      publication_name: 'The Reader',
+      publication_logo_url: 'https://cdn.example.com/logo.png',
       bylines: [{ name: 'Author name' }],
       date: '2023-10-08T10:00:31.798Z',
     })
-    const result = await extract(value)
     const expected: BookmarkResolverResult = {
       provider: 'substack',
       url: 'https://thereader.example.com/p/why-does-everyone-hate-ai',
@@ -223,25 +193,23 @@ describeForEachParser('substackCrossPostBookmarkResolver', (parseHtml) => {
       thumbnail: 'https://cdn.example.com/cover.png',
     }
 
-    expect(result).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
   it('should ignore the own-post publishedBylines key', async () => {
-    const value = makePostCard({
-      className: 'embedded-post-wrap',
+    const value = makeCard('embedded-post-wrap', {
       title: 'Model Drop',
       url: 'https://thereader.example.com/p/model-drop',
       publishedBylines: [{ name: 'Author name' }],
     })
-    const result = await extract(value)
 
-    expect(result?.author).toBeUndefined()
+    expect((await extract(value))?.author).toBeUndefined()
   })
 
   it('should not match the own-post class', async () => {
-    const value = makePostCard({
+    const value = makeCard('digest-post-embed', {
       title: 'Model Drop',
-      canonicalUrl: 'https://thereader.example.com/p/model-drop',
+      canonical_url: 'https://thereader.example.com/p/model-drop',
     })
 
     expect(await extract(value)).toBeUndefined()
