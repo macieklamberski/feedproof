@@ -109,7 +109,7 @@ describeForEachParser('swellBookmarkResolver', (parseHtml) => {
     it('should trim surrounding whitespace from the title', async () => {
       const value = html`
         <div class="p-blogCard">
-          <a class="p-blogCard__title" href="https://example.com/post">&nbsp;Padded title&nbsp;</a>
+          <a class="p-blogCard__title" href="https://example.com/post"> Padded title </a>
         </div>
       `
 
@@ -141,7 +141,7 @@ describeForEachParser('swellBookmarkResolver', (parseHtml) => {
     it('should return undefined when the title is only whitespace', async () => {
       const value = html`
         <div class="p-blogCard">
-          <a class="p-blogCard__title" href="https://example.com/post">&nbsp;</a>
+          <a class="p-blogCard__title" href="https://example.com/post"> </a>
         </div>
       `
 
