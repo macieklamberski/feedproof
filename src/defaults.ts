@@ -1,4 +1,5 @@
 import { resolveUrl } from 'feedcanon'
+import { amebaBookmarkResolver } from './bookmarks/ameba.js'
 import { cocoonBookmarkResolver } from './bookmarks/cocoon.js'
 import { devtoBookmarkResolver } from './bookmarks/devto.js'
 import { discourseBookmarkResolver } from './bookmarks/discourse.js'
@@ -238,6 +239,7 @@ export const defaultBookmarkResolvers: Array<BookmarkResolver> = [
   discourseBookmarkResolver,
   swellBookmarkResolver,
   xenforoBookmarkResolver,
+  amebaBookmarkResolver,
   tistoryBookmarkResolver,
   hatenaBookmarkResolver,
   devtoBookmarkResolver,
