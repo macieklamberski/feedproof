@@ -18,7 +18,7 @@ export const convertCiteCards: DomTransform = (context) => {
         // href get it already cleaned; the ones reading an attribute or a JSON blob (Tumblr,
         // Substack, Discourse, XenForo, Tistory, Paragraph) never pass through it, so their
         // redirect wrappers are unwrapped here. Re-cleaning an already-clean url is a no-op.
-        const resolvedUrl = resolveOrKeepUrl(result.url, resolveUrlFn, baseUrl) ?? result.url
+        const resolvedUrl = resolveOrKeepUrl(result.url, resolveUrlFn, baseUrl)
         const resolved = {
           ...result,
           url: cleanUrlFn?.(resolvedUrl) ?? resolvedUrl,
