@@ -7,20 +7,38 @@ export type RawCiteResult = {
   [Key in keyof CiteResolverResult]?: Nullish<CiteResolverResult[Key]>
 } & { provider: string }
 
+// The `Record` half forces every field to be listed below, so a field added to
+// `CiteResolverResult` becomes a type error here rather than a silently untrimmed value.
+type BuiltCite = CiteResolverResult & Record<keyof CiteResolverResult, unknown>
+
+const trim = (value: Nullish<string>): string | undefined => {
+  return value?.trim() || undefined
+}
+
 // Every resolver ends the same way, so the shared rules live here rather than in each one: a
 // card without a url or a title has nothing to render, and every value is trimmed, with the
 // blanks that leaves dropped.
 export const buildCite = (result: RawCiteResult): CiteResolverResult | undefined => {
-  const url = result.url?.trim()
-  const title = result.title?.trim()
+  const url = trim(result.url)
+  const title = trim(result.title)
 
   if (!url || !title) {
     return
   }
 
-  const trimmed = Object.entries(result).map(([key, value]) => {
-    return [key, typeof value === 'string' ? value.trim() || undefined : (value ?? undefined)]
-  })
+  const cite: BuiltCite = {
+    provider: result.provider,
+    url,
+    title,
+    description: trim(result.description),
+    caption: trim(result.caption),
+    author: trim(result.author),
+    publisher: trim(result.publisher),
+    date: trim(result.date),
+    icon: trim(result.icon),
+    thumbnail: trim(result.thumbnail),
+    kind: result.kind ?? undefined,
+  }
 
-  return { ...Object.fromEntries(trimmed), url, title } as CiteResolverResult
+  return cite
 }
