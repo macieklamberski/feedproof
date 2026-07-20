@@ -13,7 +13,9 @@ const shouldSkipElement = (element: Element): boolean => {
 // Uses linkifyjs for URL detection instead of linkify-html, avoiding a redundant
 // HTML re-parse (~25% pipeline speedup). Skips text inside tags like <a>, <pre>,
 // <code> etc. via collectTextNodes.
-export const linkifyUrls: DomTransform = () => {
+export const linkifyUrls: DomTransform = (context) => {
+  const cleanUrlFn = context.cleanUrlFn
+
   return (document) => {
     // Walk from document (not documentElement) so linkedom fragment siblings are
     // reachable. documentElement only points to the first root-level element.
@@ -46,9 +48,15 @@ export const linkifyUrls: DomTransform = () => {
           parts.push(document.createTextNode(text.slice(lastIndex, link.start)))
         }
 
+        // These anchors are minted long after cleanAnchorUrls, so they are the one link
+        // shape the caller's cleanUrlFn would otherwise never reach — including for the
+        // safety pass, which would judge a bare redirect wrapper by its own host.
+        const cleaned = cleanUrlFn?.(link.href) ?? link.href
         const anchor = document.createElement('a')
-        anchor.setAttribute('href', link.href)
-        anchor.textContent = link.value
+        anchor.setAttribute('href', cleaned)
+        // The text is the URL as written; show the cleaned one instead when cleaning
+        // changed it, so a visible URL never points somewhere else.
+        anchor.textContent = cleaned === link.href ? link.value : cleaned
         parts.push(anchor)
         lastIndex = link.end
       }

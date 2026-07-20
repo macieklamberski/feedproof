@@ -175,6 +175,35 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
 
     expect(twice).toBe(once)
   })
+
+  describe('cleanUrlFn', () => {
+    const withCleanUrlFn: TransformContext = {
+      ...baseContext,
+      cleanUrlFn: (url) => url.split('?')[0] ?? url,
+    }
+
+    it('should clean the href of a linkified url', async () => {
+      const value = '<p>See https://example.com/post?utm_source=feed for more</p>'
+      const result = await transform(value, withCleanUrlFn)
+
+      expect(result).toContain('href="https://example.com/post"')
+      expect(result).not.toContain('utm_source')
+    })
+
+    it('should show the cleaned url as the link text', async () => {
+      const value = '<p>See https://example.com/post?utm_source=feed for more</p>'
+      const result = await transform(value, withCleanUrlFn)
+
+      expect(result).toContain('>https://example.com/post</a>')
+    })
+
+    it('should keep the url as written when cleaning changes nothing', async () => {
+      const value = '<p>See https://example.com/post for more</p>'
+      const result = await transform(value, withCleanUrlFn)
+
+      expect(result).toContain('<a href="https://example.com/post">https://example.com/post</a>')
+    })
+  })
 })
 
 // linkedom only: jsdom's serializer is itself superlinear in nesting depth, so it
