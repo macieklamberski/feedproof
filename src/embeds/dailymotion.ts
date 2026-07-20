@@ -1,5 +1,6 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import { pickUrlParams } from '../utils/urls.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9]{5,}$/
 
@@ -36,6 +37,10 @@ export const extractDailymotionId = (link: string): string | undefined => {
   }
 }
 
+// Where playback starts, and the playlist the video sits in. The rest of the publisher's
+// query is dropped with the rebuilt src.
+const dailymotionEmbedParams = ['start', 'playlist']
+
 export const dailymotionResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const videoId = extractDailymotionId(url)
 
@@ -46,7 +51,7 @@ export const dailymotionResolveEmbed = (url: string): EmbedResolverResult | unde
   return {
     provider: 'dailymotion',
     id: videoId,
-    src: `https://www.dailymotion.com/embed/video/${videoId}`,
+    src: `https://www.dailymotion.com/embed/video/${videoId}${pickUrlParams(url, dailymotionEmbedParams)}`,
     url: `https://www.dailymotion.com/video/${videoId}`,
     thumbnail: `https://www.dailymotion.com/thumbnail/video/${videoId}`,
   }

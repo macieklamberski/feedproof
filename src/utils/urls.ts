@@ -23,6 +23,31 @@ export const isUrlShaped = (value: string): boolean => {
   return urlShapeRegex.test(value)
 }
 
+// The query string an embed resolver carries over when it rebuilds a src from the video id:
+// only the parameters that change what plays. Returns it ready to append, so a src with
+// nothing worth keeping stays bare.
+export const pickUrlParams = (url: string, names: ReadonlyArray<string>): string => {
+  const params = parseUrl(url)?.searchParams
+
+  if (!params) {
+    return ''
+  }
+
+  const kept = new URLSearchParams()
+
+  for (const name of names) {
+    const value = params.get(name)
+
+    if (value) {
+      kept.set(name, value)
+    }
+  }
+
+  const query = kept.toString()
+
+  return query ? `?${query}` : ''
+}
+
 // Resolves a relative URL against the base URL, keeping the original otherwise —
 // an already-absolute/opaque URL, or a relative one that can't be resolved (no
 // base). Mirrors resolveRelativeUrls' per-URL contract, so placeholder URLs are
