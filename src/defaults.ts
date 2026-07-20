@@ -8,6 +8,7 @@ import { hatenaCiteResolver } from './cites/hatena.js'
 import { microformatsCiteResolver } from './cites/microformats.js'
 import { nodebbCiteResolver } from './cites/nodebb.js'
 import { notecomCiteResolver } from './cites/notecom.js'
+import { paragraphCiteResolver } from './cites/paragraph.js'
 import { pzlinkcardCiteResolver } from './cites/pzlinkcard.js'
 import { substackCrossPostCiteResolver, substackOwnPostCiteResolver } from './cites/substack.js'
 import { swellCiteResolver } from './cites/swell.js'
@@ -250,6 +251,7 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   pzlinkcardCiteResolver,
   notecomCiteResolver,
   tumblrCiteResolver,
+  paragraphCiteResolver,
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
