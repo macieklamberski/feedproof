@@ -146,89 +146,31 @@ The `stringTransforms` and `domTransforms` options each fully replace the corres
 
 ## Cite cards
 
-A cite card is a link preview a publishing platform bakes into the post body: a bookmark card, a forum unfurl, an embedded-post block. `convertCiteCards` runs each resolver in `citeResolvers` over the document and replaces every card it matches with a placeholder, so a reader renders one card design of its own instead of each platform's frozen markup. Card URLs, icons and thumbnails are resolved against `baseUrl` and the URL additionally passes through `cleanUrlFn`; a card without both a URL and a title is left untouched.
+A cite card is a link preview a publishing platform bakes into the post body: a bookmark card, a forum unfurl, an embedded-post block. `convertCiteCards` replaces every card its resolvers match with a placeholder, so a reader renders one card design of its own instead of each platform's frozen markup. Card URLs, icons and thumbnails are resolved against `baseUrl`, the URL additionally passes through `cleanUrlFn`, and a card without both a URL and a title is left untouched.
 
 ```html
-<div data-cite-provider="ghost" data-cite-publisher="Example" data-cite-url="https://example.com/post" data-cite-title="Post title">
+<div data-cite-provider="ghost" data-cite-url="https://example.com/post" data-cite-title="Post title">
   <a href="https://example.com/post">Post title</a>
 </div>
 ```
 
+Only `data-cite-url` and `data-cite-title` are guaranteed; every other attribute is omitted when the card does not carry the field. The nested `<a>` is a fallback for readers that do not handle the placeholder.
+
 | Attribute | Meaning |
 | --- | --- |
 | `data-cite-provider` | The source the card came from (`ghost`, `discourse`, `devto`, …) |
-| `data-cite-url` | The linked page — always present |
-| `data-cite-title` | The linked page's title — always present |
+| `data-cite-url` | The linked page |
+| `data-cite-title` | The linked page's title |
 | `data-cite-description` | The linked page's own preview text |
 | `data-cite-caption` | The embedding author's note about the link, as opposed to the linked page's preview text |
 | `data-cite-author` | The linked work's author |
 | `data-cite-publisher` | The linked work's site or publication name |
-| `data-cite-date` | Publication date as the platform prints it — a display string, not normalized to ISO |
+| `data-cite-date` | Publication date as the platform states it — displayable, but not normalized to ISO |
 | `data-cite-icon` | The linked site's favicon |
 | `data-cite-thumbnail` | The card's preview image |
-| `data-cite-kind` | The relationship expressed toward the linked work: `bookmark`, `repost`, `like`, `reply`, `read`, `listen`, `watch` |
+| `data-cite-kind` | Relationship to the linked work: `bookmark`, `repost`, `like`, `reply`, `read`, `listen`, `watch`. Sparse — only a source expressing a real relationship sets it |
 
-Only `data-cite-url` and `data-cite-title` are guaranteed; every other attribute is simply omitted when the card does not carry the field, so treat them all as optional. `data-cite-kind` is sparse — only a source expressing a real relationship sets it (today just microformats `h-cite`, via its `u-*-of` class), and a plain platform link preview leaves it unset. The nested `<a>` is the fallback for a reader that does not handle the placeholder.
-
-Twenty resolvers ship, applied in this order — an earlier one replaces its cards before a later, broader selector can reach them.
-
-| Resolver | Matches |
-| --- | --- |
-| `ghostCiteResolver` | Ghost bookmark card (`.kg-bookmark-card`) |
-| `substackOwnPostCiteResolver` | Substack embed of the publication's own post (`.digest-post-embed`) |
-| `substackCrossPostCiteResolver` | Substack embed of another creator's post (`.embedded-post-wrap`) |
-| `cocoonCiteResolver` | Cocoon WordPress theme link card (`.blogcard-wrap`) |
-| `discourseCiteResolver` | Discourse forum onebox (`aside.onebox[data-onebox-src]`) |
-| `swellCiteResolver` | SWELL WordPress theme blog card (`.p-blogCard`) |
-| `xenforoCiteResolver` | XenForo forum link unfurl (`.bbCodeBlock--unfurl[data-url]`) |
-| `microformatsCiteResolver` | microformats2 `h-cite`, including the IndieWeb `u-*-of` response kind |
-| `amebaCiteResolver` | Ameba Open Graph card (`.ogpCard_wrap`) |
-| `tistoryCiteResolver` | Tistory Open Graph card (`[data-og-source-url]`) |
-| `hatenaCiteResolver` | Hatena Blog embed card — the card iframe plus its trailing `<cite>` |
-| `devtoLinkCiteResolver` | dev.to (Forem) external link card (`.c-embed`) |
-| `nodebbCiteResolver` | NodeBB link-preview card (`.link-preview`) |
-| `pzlinkcardCiteResolver` | Pz-LinkCard WordPress plugin card (`.lkc-card`) |
-| `notecomCiteResolver` | note.com external-article figure |
-| `tumblrCiteResolver` | Tumblr NPF link block (`data-npf` payload) |
-| `embedlyCiteResolver` | Static Embedly card (`blockquote.embedly-card`) |
-| `paragraphCiteResolver` | Paragraph link payload (`div[data-type="embedly"]`) |
-| `devtoPostCiteResolver` | dev.to embedded post card (`.ltag__link--embedded`) |
-| `devtoLegacyPostCiteResolver` | dev.to embedded post card, older shape (`.ltag__link`) |
-
-A resolver is a selector plus an extract that returns a `CiteResolverResult` (or `undefined` to skip the element). Compose your own with the built-ins you want:
-
-```typescript
-import { discourseCiteResolver, ghostCiteResolver, transformContent } from 'feedsweep'
-import type { CiteResolver } from 'feedsweep'
-import { parseHtml } from 'feedsweep/linkedom'
-
-const myCiteResolver: CiteResolver = {
-  selector: '.my-link-card',
-  extract: (element) => {
-    const link = element.querySelector('a[href]')
-    const url = link?.getAttribute('href')
-    const title = link?.textContent?.trim()
-
-    if (!url || !title) {
-      return
-    }
-
-    return {
-      provider: 'mysite',
-      url,
-      title,
-      description: element.querySelector('.summary')?.textContent?.trim(),
-      thumbnail: element.querySelector('img')?.getAttribute('src') ?? undefined,
-    }
-  },
-}
-
-await transformContent(html, {
-  parseHtmlFn: parseHtml,
-  baseUrl: 'https://example.com/post/1',
-  citeResolvers: [myCiteResolver, ghostCiteResolver, discourseCiteResolver],
-})
-```
+A resolver is a selector plus an `extract` returning a `CiteResolverResult`, or `undefined` to skip the element. Resolvers run in registration order, so an earlier one claims its cards before a later, broader selector reaches them. Each is exported individually (`ghostCiteResolver`, `discourseCiteResolver`, …) so `citeResolvers` can name the built-ins you want alongside your own; see `defaultCiteResolvers` in `feedsweep/defaults` for the full list and order.
 
 ## DOM library
 
