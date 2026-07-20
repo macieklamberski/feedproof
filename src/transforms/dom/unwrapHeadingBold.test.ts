@@ -116,5 +116,29 @@ describeForEachParser('unwrapHeadingBold', (parseHtml) => {
     it('should handle empty input', async () => {
       expect(await transform('')).toBe('')
     })
+
+    it('should unwrap past an inline element holding neither text nor media', async () => {
+      const value = html`
+        <h4><strong><a href="https://example.com/work">Work</a></strong><a href="https://example.com/work"> </a></h4>
+      `
+      const expected = html`
+        <h4><a href="https://example.com/work">Work</a><a href="https://example.com/work"> </a></h4>
+      `
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should keep the bold when the sibling element holds text', async () => {
+      const value = '<h2><strong>Title</strong><a href="https://example.com">More</a></h2>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should keep the bold when the sibling element holds media', async () => {
+      const value =
+        '<h2><strong>Title</strong><a href="https://example.com"><img src="https://example.com/icon.png"></a></h2>'
+
+      expect(await transform(value)).toBe(value)
+    })
   })
 })
