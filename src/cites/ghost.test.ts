@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { citeExtractor, describeForEachParser, html } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { ghostCiteResolver } from './ghost.js'
 
 describeForEachParser('ghostCiteResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(ghostCiteResolver.selector)
-    return element ? await ghostCiteResolver.extract(element) : undefined
-  }
+  const extract = citeExtractor(parseHtml, ghostCiteResolver)
 
   describe('happy paths', () => {
     // The author and publisher classes are reversed on purpose: Ghost's renderer puts

@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { citeExtractor, describeForEachParser, html } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { microformatsCiteResolver } from './microformats.js'
 
 describeForEachParser('microformatsCiteResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(microformatsCiteResolver.selector)
-    return element ? await microformatsCiteResolver.extract(element) : undefined
-  }
+  const extract = citeExtractor(parseHtml, microformatsCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete citation', async () => {

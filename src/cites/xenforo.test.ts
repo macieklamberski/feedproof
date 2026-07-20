@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { citeExtractor, describeForEachParser, html } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { xenforoCiteResolver } from './xenforo.js'
 
 describeForEachParser('xenforoCiteResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(xenforoCiteResolver.selector)
-    return element ? await xenforoCiteResolver.extract(element) : undefined
-  }
+  const extract = citeExtractor(parseHtml, xenforoCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {
