@@ -23,8 +23,11 @@ const citeKindByResponseClass: Record<string, CiteKind> = {
 //
 // The card's own `u-url` / `p-name` must be told apart from the author's: the `p-author`
 // is itself an h-card with its own url and name, so those are filtered out by `closest`.
-// `e-content` is left alone: on the wrappers that carry an h-cite it holds the citing post's
-// own body rather than the cited work's, and it can run to a whole article.
+// `e-content` is left alone. Nested inside the citation it is the cited work's full body,
+// which can run to a whole article, where `description` is a preview. The citing author's
+// own note — what `caption` is for — is not reachable from here: it sits outside the
+// citation, in the surrounding post's own `e-content`, which contains the citation itself,
+// so reading it would capture the whole post rather than a note about the link.
 export const microformatsCiteResolver: CiteResolver = {
   selector: '.h-cite',
   extract: (element) => {

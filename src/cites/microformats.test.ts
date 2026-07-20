@@ -144,11 +144,13 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
       expect((await extract(value))?.date).toBeUndefined()
     })
 
-    it('should not take the description from e-content, which holds the citing post body', async () => {
+    // Nested in the citation, e-content is the cited work's full body, not a preview and
+    // not the citing author's note about the link.
+    it('should not take the description from a nested e-content', async () => {
       const value = html`
         <div class="u-like-of h-cite">
           <a class="u-url p-name" href="https://example.com/post">Page title</a>
-          <div class="e-content"><p>What the citing author wrote about the link.</p></div>
+          <div class="e-content"><p>The full body of the cited post, which can run long.</p></div>
         </div>
       `
 
