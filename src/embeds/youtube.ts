@@ -1,5 +1,6 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import { getPathSegments, parseUrl } from 'trousse'
+import type { EmbedResolverResult } from '../types.js'
+import { createIframeEmbedResolver } from '../utils/embeds.js'
 import { pickUrlParams } from '../utils/urls.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
@@ -65,15 +66,4 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 }
 
-export const youtubeEmbedResolver: EmbedResolver = {
-  selector: 'iframe[src]',
-  extract: (element) => {
-    const src = element.getAttribute('src') ?? ''
-
-    if (!isHostOf(src, youtubeHosts) && !isSubdomainOf(src, youtubeHosts)) {
-      return
-    }
-
-    return youtubeResolveEmbed(src)
-  },
-}
+export const youtubeEmbedResolver = createIframeEmbedResolver(youtubeHosts, youtubeResolveEmbed)

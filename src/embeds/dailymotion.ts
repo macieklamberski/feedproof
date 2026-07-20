@@ -1,5 +1,6 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import { getPathSegments, parseUrl } from 'trousse'
+import type { EmbedResolverResult } from '../types.js'
+import { createIframeEmbedResolver } from '../utils/embeds.js'
 import { pickUrlParams } from '../utils/urls.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9]{5,}$/
@@ -57,15 +58,7 @@ export const dailymotionResolveEmbed = (url: string): EmbedResolverResult | unde
   }
 }
 
-export const dailymotionEmbedResolver: EmbedResolver = {
-  selector: 'iframe[src]',
-  extract: (element) => {
-    const src = element.getAttribute('src') ?? ''
-
-    if (!isHostOf(src, dailymotionHosts) && !isSubdomainOf(src, dailymotionHosts)) {
-      return
-    }
-
-    return dailymotionResolveEmbed(src)
-  },
-}
+export const dailymotionEmbedResolver = createIframeEmbedResolver(
+  dailymotionHosts,
+  dailymotionResolveEmbed,
+)

@@ -182,6 +182,7 @@ export type {
 export {
   createCitePlaceholder,
   createEmbedPlaceholder,
+  createIframeEmbedResolver,
   createPlaceholder,
   normalizeEmbedFields,
   updateEmbedPlaceholder,
