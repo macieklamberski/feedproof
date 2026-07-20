@@ -63,6 +63,11 @@ export type CiteResolverResult = {
   caption?: string
   author?: string
   publisher?: string
+  // Whatever the card states, in whatever format it states it: an ISO timestamp where the
+  // source carries one (Substack's JSON payload), a site-formatted string where it does not
+  // (Cocoon renders the blog's own date setting, e.g. "2018.10.14"). So it is displayable
+  // but not reliably parseable, and a resolver skips it rather than guessing when the card
+  // shows only a partial date — dev.to's "Jul 14" carries no year to recover.
   date?: string
   icon?: string
   thumbnail?: string
