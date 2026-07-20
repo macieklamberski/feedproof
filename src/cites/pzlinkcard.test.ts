@@ -66,6 +66,54 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
   })
 
   describe('edge cases', () => {
+    it('should read the favicon when the class sits on a wrapper around the image', async () => {
+      const value = html`
+        <a href="https://example.com/page">
+          <div class="lkc-card">
+            <div class="lkc-info">
+              <div class="lkc-favicon">
+                <img src="https://www.google.com/s2/favicons?domain=example.com" alt="" width="16" height="16" />
+              </div>
+              <div class="lkc-domain">example.com</div>
+            </div>
+            <div class="lkc-content"><div class="lkc-title">Page title</div></div>
+          </div>
+        </a>
+      `
+
+      expect((await extract(value))?.icon).toBe(
+        'https://www.google.com/s2/favicons?domain=example.com',
+      )
+    })
+
+    it('should read the printed url when the card has no wrapping anchor', async () => {
+      const value = html`
+        <div class="lkc-card">
+          <div class="lkc-content">
+            <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
+            <div class="lkc-url"><strike>https://example.com/page</strike></div>
+          </div>
+        </div>
+      `
+
+      expect((await extract(value))?.url).toBe('https://example.com/page')
+    })
+
+    it('should prefer the wrapping anchor over the printed url', async () => {
+      const value = html`
+        <a href="https://example.com/anchor">
+          <div class="lkc-card">
+            <div class="lkc-content">
+              <div class="lkc-title">Page title</div>
+              <div class="lkc-url"><strike>https://example.com/printed</strike></div>
+            </div>
+          </div>
+        </a>
+      `
+
+      expect((await extract(value))?.url).toBe('https://example.com/anchor')
+    })
+
     it('should fall back to the title container when the title-text element is absent', async () => {
       const value = html`
         <a href="https://example.com/page">
@@ -96,6 +144,17 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
       const value = html`
         <div class="lkc-card">
           <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
+        </div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the printed url is not a url', async () => {
+      const value = html`
+        <div class="lkc-card">
+          <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
+          <div class="lkc-url"><strike>リンク切れ</strike></div>
         </div>
       `
 
