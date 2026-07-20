@@ -23,16 +23,23 @@ const citeKindByResponseClass: Record<string, CiteKind> = {
 //
 // The card's own `u-url` / `p-name` must be told apart from the author's: the `p-author`
 // is itself an h-card with its own url and name, so those are filtered out by `closest`.
+// `caption` stays unset: the citing author's own note about the link sits outside the
+// citation, in the surrounding post's content, which contains the citation itself, so
+// reading it would capture the whole post rather than a note about the link.
 export const microformatsCiteResolver: CiteResolver = {
   selector: '.h-cite',
   extract: (element) => {
     const notInAuthor = (node: Element) => !node.closest('.p-author')
 
-    const description = find(element, '.p-summary, .p-content', notInAuthor)
+    // `p-content` and `e-content` are the same property in its plain-text and HTML
+    // spellings, so a card carries one or the other; `p-summary` wins over both when the
+    // source states a summary separately.
+    const description = find(element, '.p-summary, .p-content, .e-content', notInAuthor)
     // The image property is `u-featured` in the newer IndieWeb convention and `u-photo` in
     // the base spec; prefer the former and fall back to the latter.
     const image = find(element, '.u-featured, .u-photo', notInAuthor)
     const author = find(element, '.p-author')
+    const published = find(element, '.dt-published', notInAuthor)
 
     const responseClass = Array.from(element.classList).find(
       (name) => name in citeKindByResponseClass,
@@ -45,6 +52,11 @@ export const microformatsCiteResolver: CiteResolver = {
       title: text(find(element, '.p-name', notInAuthor)),
       description: text(description),
       author: text(author, '.p-name') ?? text(author),
+      publisher: text(find(element, '.p-publication', notInAuthor)),
+      // A dt-* property carries its machine-readable value in the `datetime` attribute of a
+      // `<time>`; other elements only have their text. Passed through unparsed, as the spec
+      // allows a bare date as well as a full timestamp.
+      date: attr(published, 'datetime') ?? text(published),
       thumbnail: attr(image, 'src'),
       kind,
     })

@@ -34,6 +34,25 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should extract the date and the publisher of a cited article', async () => {
+      const value = html`
+        <span class="h-cite">
+          <a class="u-url" href="https://example.com/article"><span class="p-name">Article title</span></a>
+          <time class="dt-published" datetime="2026-03-04T09:15:00Z">March 4, 2026</time>
+          in <cite class="p-publication">The Journal</cite>
+        </span>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/article',
+        title: 'Article title',
+        publisher: 'The Journal',
+        date: '2026-03-04T09:15:00Z',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should extract a minimal citation with only url and name', async () => {
       const value = html`
         <span class="h-cite">
@@ -102,6 +121,50 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
       `
 
       expect((await extract(value))?.description).toBe('Full note text')
+    })
+
+    it('should read the date from the text when dt-published has no datetime attribute', async () => {
+      const value = html`
+        <span class="h-cite">
+          <a class="u-url p-name" href="https://example.com/post">Page title</a>
+          <span class="dt-published">2026-03-04</span>
+        </span>
+      `
+
+      expect((await extract(value))?.date).toBe('2026-03-04')
+    })
+
+    it('should leave the date unset for a citation with no dt-published', async () => {
+      const value = html`
+        <span class="h-cite">
+          <a class="u-url p-name" href="https://example.com/post">Page title</a>
+        </span>
+      `
+
+      expect((await extract(value))?.date).toBeUndefined()
+    })
+
+    it('should take the description from e-content', async () => {
+      const value = html`
+        <div class="u-like-of h-cite">
+          <a class="u-url p-name" href="https://example.com/post">Page title</a>
+          <div class="e-content"><p>The cited post's body.</p></div>
+        </div>
+      `
+
+      expect((await extract(value))?.description).toBe("The cited post's body.")
+    })
+
+    it('should prefer the summary over e-content', async () => {
+      const value = html`
+        <div class="h-cite">
+          <a class="u-url p-name" href="https://example.com/post">Page title</a>
+          <p class="p-summary">Short summary.</p>
+          <div class="e-content"><p>The much longer body.</p></div>
+        </div>
+      `
+
+      expect((await extract(value))?.description).toBe('Short summary.')
     })
 
     it('should trim surrounding whitespace from the title', async () => {
