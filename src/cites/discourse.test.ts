@@ -63,10 +63,6 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
         provider: 'discourse',
         url: 'https://example.com/page',
         title: 'Page title',
-        description: undefined,
-        publisher: undefined,
-        icon: undefined,
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)

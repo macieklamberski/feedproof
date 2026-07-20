@@ -60,7 +60,6 @@ describeForEachParser('swellCiteResolver', (parseHtml) => {
         url: 'https://example.com/post',
         title: 'Post title',
         description: 'Preview text',
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -76,8 +75,6 @@ describeForEachParser('swellCiteResolver', (parseHtml) => {
         provider: 'swell',
         url: 'https://example.com/post',
         title: 'Post title',
-        description: undefined,
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -96,8 +93,6 @@ describeForEachParser('swellCiteResolver', (parseHtml) => {
         provider: 'swell',
         url: 'https://example.com/post',
         title: 'Post title',
-        description: undefined,
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)

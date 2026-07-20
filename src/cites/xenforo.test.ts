@@ -59,10 +59,6 @@ describeForEachParser('xenforoCiteResolver', (parseHtml) => {
         provider: 'xenforo',
         url: 'https://example.com/page',
         title: 'Page title',
-        description: undefined,
-        publisher: undefined,
-        icon: undefined,
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -91,7 +87,6 @@ describeForEachParser('xenforoCiteResolver', (parseHtml) => {
         description: 'Preview text',
         publisher: 'example.com',
         icon: 'https://example.com/favicon.ico',
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)

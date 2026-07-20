@@ -38,9 +38,6 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
         provider: 'tumblr',
         url: 'https://example.com/post',
         title: 'Page title',
-        description: undefined,
-        publisher: undefined,
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)

@@ -81,10 +81,6 @@ describeForEachParser('cocoonCiteResolver', (parseHtml) => {
         url: 'https://example.com/post',
         title: 'Post title',
         description: 'Preview text',
-        publisher: undefined,
-        date: undefined,
-        icon: undefined,
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -100,11 +96,6 @@ describeForEachParser('cocoonCiteResolver', (parseHtml) => {
         provider: 'cocoon',
         url: 'https://example.com/post',
         title: 'Post title',
-        description: undefined,
-        publisher: undefined,
-        date: undefined,
-        icon: undefined,
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)

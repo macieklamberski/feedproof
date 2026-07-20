@@ -56,11 +56,6 @@ describeForEachParser('ghostCiteResolver', (parseHtml) => {
         provider: 'ghost',
         url: 'https://example.com/post',
         title: 'Post title',
-        description: undefined,
-        author: undefined,
-        publisher: undefined,
-        icon: undefined,
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -107,10 +102,6 @@ describeForEachParser('ghostCiteResolver', (parseHtml) => {
         title: 'Post title',
         description: 'Preview text',
         caption: 'My note about why this link matters',
-        author: undefined,
-        publisher: undefined,
-        icon: undefined,
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -134,10 +125,6 @@ describeForEachParser('ghostCiteResolver', (parseHtml) => {
         url: 'https://example.com/post',
         title: 'Post title',
         description: 'Preview text',
-        author: undefined,
-        publisher: undefined,
-        icon: undefined,
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)

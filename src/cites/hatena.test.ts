@@ -68,7 +68,6 @@ describeForEachParser('hatenaCiteResolver', (parseHtml) => {
         provider: 'hatena',
         url: 'https://example.com/a?b=1',
         title: 'Page title',
-        publisher: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
