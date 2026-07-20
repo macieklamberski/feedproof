@@ -1,5 +1,6 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments, isHostOf, isSubdomainOf } from 'trousse'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import { pickUrlParams } from '../utils/urls.js'
 
 const safeVideoIdRegex = /^\d+$/
 
@@ -20,6 +21,10 @@ export const extractVimeoId = (link: string): string | undefined => {
   }
 }
 
+// Unlisted videos embed with a `?h={hash}` token; the player rejects them without it. `t`
+// is the start offset, in Vimeo's `{n}s` form.
+const vimeoEmbedParams = ['h', 't']
+
 export const vimeoResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const videoId = extractVimeoId(url)
 
@@ -27,14 +32,10 @@ export const vimeoResolveEmbed = (url: string): EmbedResolverResult | undefined 
     return
   }
 
-  // Unlisted videos embed with a `?h={hash}` token; preserve it so the rebuilt embed
-  // still loads (the player rejects those videos without it).
-  const hash = parseUrl(url)?.searchParams.get('h') ?? null
-
   return {
     provider: 'vimeo',
     id: videoId,
-    src: `https://player.vimeo.com/video/${videoId}${hash ? `?h=${hash}` : ''}`,
+    src: `https://player.vimeo.com/video/${videoId}${pickUrlParams(url, vimeoEmbedParams)}`,
     url: `https://vimeo.com/${videoId}`,
     // TODO: no thumbnail yet. Vimeo posters aren't derivable from the id (the URL
     // carries an opaque hash), so they need an oEmbed lookup

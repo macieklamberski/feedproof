@@ -1,5 +1,6 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import { pickUrlParams } from '../utils/urls.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
 
@@ -41,6 +42,13 @@ export const extractVideoId = (link: string): string | undefined => {
   }
 }
 
+// Parameters that change what the player shows, so a rebuilt src has to carry them: where
+// playback starts and ends, which playlist the video sits in and at which position, and the
+// window of a clip (`clip` is the clip id, `clipt` its encoded bounds — a clip embed needs
+// both). Everything else the publisher wrote — autoplay, `rel`, `si` and other tracking — is
+// dropped with the rest of the original query.
+const youtubeEmbedParams = ['start', 'end', 'list', 'index', 'clip', 'clipt']
+
 export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const videoId = extractVideoId(url)
 
@@ -51,7 +59,7 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
   return {
     provider: 'youtube',
     id: videoId,
-    src: `https://www.youtube.com/embed/${videoId}`,
+    src: `https://www.youtube.com/embed/${videoId}${pickUrlParams(url, youtubeEmbedParams)}`,
     url: `https://www.youtube.com/watch?v=${videoId}`,
     thumbnail: composeThumbnailUrl(videoId),
   }

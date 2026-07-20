@@ -1,7 +1,11 @@
 import { resolveUrl } from 'feedcanon'
 import { amebaCiteResolver } from './cites/ameba.js'
 import { cocoonCiteResolver } from './cites/cocoon.js'
-import { devtoCiteResolver } from './cites/devto.js'
+import {
+  devtoLegacyPostCiteResolver,
+  devtoLinkCiteResolver,
+  devtoPostCiteResolver,
+} from './cites/devto.js'
 import { discourseCiteResolver } from './cites/discourse.js'
 import { embedlyCiteResolver } from './cites/embedly.js'
 import { ghostCiteResolver } from './cites/ghost.js'
@@ -9,6 +13,7 @@ import { hatenaCiteResolver } from './cites/hatena.js'
 import { microformatsCiteResolver } from './cites/microformats.js'
 import { nodebbCiteResolver } from './cites/nodebb.js'
 import { notecomCiteResolver } from './cites/notecom.js'
+import { paragraphCiteResolver } from './cites/paragraph.js'
 import { pzlinkcardCiteResolver } from './cites/pzlinkcard.js'
 import { substackCrossPostCiteResolver, substackOwnPostCiteResolver } from './cites/substack.js'
 import { swellCiteResolver } from './cites/swell.js'
@@ -246,12 +251,15 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   amebaCiteResolver,
   tistoryCiteResolver,
   hatenaCiteResolver,
-  devtoCiteResolver,
+  devtoLinkCiteResolver,
   nodebbCiteResolver,
   pzlinkcardCiteResolver,
   notecomCiteResolver,
   tumblrCiteResolver,
   embedlyCiteResolver,
+  paragraphCiteResolver,
+  devtoPostCiteResolver,
+  devtoLegacyPostCiteResolver,
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
