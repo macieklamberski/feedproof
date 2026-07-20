@@ -11,6 +11,7 @@ import { discourseCiteResolver } from './cites/discourse.js'
 import { embedlyCiteResolver } from './cites/embedly.js'
 import { ghostCiteResolver } from './cites/ghost.js'
 import { hatenaCiteResolver } from './cites/hatena.js'
+import { mediumCiteResolver } from './cites/medium.js'
 import { microformatsCiteResolver } from './cites/microformats.js'
 import { nodebbCiteResolver } from './cites/nodebb.js'
 import { notecomCiteResolver } from './cites/notecom.js'
@@ -262,6 +263,7 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   devtoPostCiteResolver,
   devtoLegacyPostCiteResolver,
   affingerCiteResolver,
+  mediumCiteResolver,
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)

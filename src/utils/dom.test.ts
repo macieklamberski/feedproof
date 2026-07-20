@@ -2,6 +2,7 @@ import { expect, it } from 'bun:test'
 import { describeForEachParser, queryElement } from '../tests.js'
 import {
   attr,
+  bgImage,
   find,
   getElementAspectRatio,
   getElementDimensions,
@@ -522,5 +523,47 @@ describeForEachParser('attr', (parseHtml) => {
 
   it('should return undefined for a nullish element', () => {
     expect(attr(undefined, 'href')).toBeUndefined()
+  })
+})
+
+describeForEachParser('bgImage', (parseHtml) => {
+  it('should return the url from an unquoted background-image', () => {
+    const document = parseHtml(
+      '<a style="background-image: url(https://example.com/cover.jpg)"></a>',
+    )
+
+    expect(bgImage(queryElement(document, 'a'))).toBe('https://example.com/cover.jpg')
+  })
+
+  it('should return the url from a quoted background-image', () => {
+    const document = parseHtml(
+      `<a style="background-image: url('https://example.com/cover.jpg');"></a>`,
+    )
+
+    expect(bgImage(queryElement(document, 'a'))).toBe('https://example.com/cover.jpg')
+  })
+
+  it('should return the url from a background shorthand', () => {
+    const document = parseHtml(
+      '<a style="background: #fff url(https://example.com/c.png) no-repeat"></a>',
+    )
+
+    expect(bgImage(queryElement(document, 'a'))).toBe('https://example.com/c.png')
+  })
+
+  it('should return undefined when the style carries no url', () => {
+    const document = parseHtml('<a style="background-color: #fff"></a>')
+
+    expect(bgImage(queryElement(document, 'a'))).toBeUndefined()
+  })
+
+  it('should return undefined when there is no style attribute', () => {
+    const document = parseHtml('<a></a>')
+
+    expect(bgImage(queryElement(document, 'a'))).toBeUndefined()
+  })
+
+  it('should return undefined for a nullish element', () => {
+    expect(bgImage(undefined)).toBeUndefined()
   })
 })
