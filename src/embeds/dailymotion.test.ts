@@ -49,6 +49,22 @@ describe('dailymotionResolveEmbed', () => {
 
     expect(result).toEqual(expected)
   })
+
+  it('should preserve the start offset', () => {
+    const result = dailymotionResolveEmbed(
+      'https://www.dailymotion.com/embed/video/x8abcde?start=42',
+    )
+
+    expect(result?.src).toBe('https://www.dailymotion.com/embed/video/x8abcde?start=42')
+  })
+
+  it('should drop tracking parameters', () => {
+    const result = dailymotionResolveEmbed(
+      'https://www.dailymotion.com/embed/video/x8abcde?utm_source=feed',
+    )
+
+    expect(result?.src).toBe('https://www.dailymotion.com/embed/video/x8abcde')
+  })
 })
 
 describeForEachParser('dailymotionEmbedResolver', (parseHtml) => {

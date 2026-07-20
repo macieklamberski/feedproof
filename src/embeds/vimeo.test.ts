@@ -39,6 +39,18 @@ describe('vimeoResolveEmbed', () => {
 
     expect(result?.src).toBe('https://player.vimeo.com/video/76979871?h=abc123')
   })
+
+  it('should preserve the start offset', () => {
+    const result = vimeoResolveEmbed('https://player.vimeo.com/video/76979871?t=30s')
+
+    expect(result?.src).toBe('https://player.vimeo.com/video/76979871?t=30s')
+  })
+
+  it('should drop tracking parameters', () => {
+    const result = vimeoResolveEmbed('https://player.vimeo.com/video/76979871?utm_source=feed')
+
+    expect(result?.src).toBe('https://player.vimeo.com/video/76979871')
+  })
 })
 
 describeForEachParser('vimeoEmbedResolver', (parseHtml) => {

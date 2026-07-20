@@ -181,6 +181,36 @@ describe('youtubeResolveEmbed', () => {
     expect(youtubeResolveEmbed('https://www.youtube.com/embed/dQw4w9WgXcQ')).toEqual(expected)
   })
 
+  it('should preserve the start offset', () => {
+    const result = youtubeResolveEmbed('https://www.youtube.com/embed/dQw4w9WgXcQ?start=90')
+
+    expect(result?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ?start=90')
+  })
+
+  it('should preserve the playlist and its position', () => {
+    const result = youtubeResolveEmbed(
+      'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4',
+    )
+
+    expect(result?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4')
+  })
+
+  it('should preserve both halves of a clip', () => {
+    const result = youtubeResolveEmbed(
+      'https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh',
+    )
+
+    expect(result?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh')
+  })
+
+  it('should drop player and tracking parameters', () => {
+    const result = youtubeResolveEmbed(
+      'https://www.youtube.com/embed/dQw4w9WgXcQ?si=abc&autoplay=1&rel=0',
+    )
+
+    expect(result?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ')
+  })
+
   it('should resolve youtu.be short url', () => {
     const expected: EmbedResolverResult = {
       provider: 'youtube',
