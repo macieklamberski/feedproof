@@ -23,6 +23,8 @@ const citeKindByResponseClass: Record<string, CiteKind> = {
 //
 // The card's own `u-url` / `p-name` must be told apart from the author's: the `p-author`
 // is itself an h-card with its own url and name, so those are filtered out by `closest`.
+// `e-content` is left alone: on the wrappers that carry an h-cite it holds the citing post's
+// own body rather than the cited work's, and it can run to a whole article.
 export const microformatsCiteResolver: CiteResolver = {
   selector: '.h-cite',
   extract: (element) => {
@@ -33,6 +35,7 @@ export const microformatsCiteResolver: CiteResolver = {
     // the base spec; prefer the former and fall back to the latter.
     const image = find(element, '.u-featured, .u-photo', notInAuthor)
     const author = find(element, '.p-author')
+    const published = find(element, '.dt-published', notInAuthor)
 
     const responseClass = Array.from(element.classList).find(
       (name) => name in citeKindByResponseClass,
@@ -45,6 +48,11 @@ export const microformatsCiteResolver: CiteResolver = {
       title: text(find(element, '.p-name', notInAuthor)),
       description: text(description),
       author: text(author, '.p-name') ?? text(author),
+      publisher: text(find(element, '.p-publication', notInAuthor)),
+      // A dt-* property carries its machine-readable value in the `datetime` attribute of a
+      // `<time>`; other elements only have their text. Passed through unparsed, as the spec
+      // allows a bare date as well as a full timestamp.
+      date: attr(published, 'datetime') ?? text(published),
       thumbnail: attr(image, 'src'),
       kind,
     })
