@@ -1,4 +1,4 @@
-import { coerceNumber, isNonEmptyString, type Nullish } from 'trousse'
+import { coerceNumber, isNonEmptyString, type Nullish, startsWithAnyOf } from 'trousse'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
@@ -233,26 +233,22 @@ export const hasAncestorWithTagName = (node: Node, tagSet: Set<string>, stopAt?:
   return false
 }
 
-// The wrappers this package generates — embed and cite placeholders, the table scroll
-// wrapper, the code-block wrapper — carry their contract in these attributes, and their
-// children are a fixed shape a consumer reads or replaces wholesale. Transforms that
-// restructure containers treat them as opaque rather than rewriting the inside.
-const generatedWrapperPrefixes = ['data-embed', 'data-cite', 'data-table', 'data-pre']
+// The registry of wrapper types this package generates — embed and cite placeholders,
+// the table scroll wrapper, the code-block wrapper. A wrapper carries its contract in
+// `data-{type}-*` attributes and its children are a fixed shape a consumer reads or
+// replaces wholesale, so transforms that restructure containers treat it as opaque.
+// createPlaceholder only accepts these types, so a new widget fails to compile until it
+// is added here — and adding it makes the wrapper opaque everywhere at once. `table` and
+// `pre` are not minted through the factory (wrapTablesForScroll and highlightCode set
+// their attributes directly) and stay manual entries.
+export const generatedWrapperTypes = ['embed', 'cite', 'table', 'pre'] as const
+
+export type GeneratedWrapperType = (typeof generatedWrapperTypes)[number]
+
+const generatedWrapperPrefixes = generatedWrapperTypes.map((type) => `data-${type}`)
 
 export const isGeneratedWrapper = (element: Element): boolean => {
-  const attributes = element.attributes
-
-  for (let index = 0, length = attributes.length; index < length; index++) {
-    const name = attributes[index].name
-
-    for (const prefix of generatedWrapperPrefixes) {
-      if (name.startsWith(prefix)) {
-        return true
-      }
-    }
-  }
-
-  return false
+  return element.getAttributeNames().some((name) => startsWithAnyOf(name, generatedWrapperPrefixes))
 }
 
 // Matches `<prop>: <number>[px];` — px is optional, other units (em/rem/%) don't match.
