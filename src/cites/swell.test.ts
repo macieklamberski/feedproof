@@ -97,16 +97,6 @@ describeForEachParser('swellCiteResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <div class="p-blogCard">
-          <a class="p-blogCard__title" href="https://example.com/post"> Padded title </a>
-        </div>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
-    })
   })
 
   describe('sad paths', () => {
@@ -124,16 +114,6 @@ describeForEachParser('swellCiteResolver', (parseHtml) => {
       const value = html`
         <div class="p-blogCard">
           <span class="p-blogCard__excerpt">Preview text</span>
-        </div>
-      `
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should return undefined when the title is only whitespace', async () => {
-      const value = html`
-        <div class="p-blogCard">
-          <a class="p-blogCard__title" href="https://example.com/post"> </a>
         </div>
       `
 

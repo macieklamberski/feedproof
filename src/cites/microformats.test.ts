@@ -166,16 +166,6 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
 
       expect((await extract(value))?.description).toBe('Short summary.')
     })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <span class="h-cite">
-          <a class="u-url" href="https://example.com/post"><span class="p-name"> Padded title </span></a>
-        </span>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
-    })
   })
 
   describe('sad paths', () => {

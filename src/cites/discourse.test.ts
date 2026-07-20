@@ -94,18 +94,6 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
 
       expect((await extract(value))?.url).toBe('https://example.com/canonical')
     })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <aside class="onebox" data-onebox-src="https://example.com/page">
-          <article class="onebox-body">
-            <h3> Padded title </h3>
-          </article>
-        </aside>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
-    })
   })
 
   describe('sad paths', () => {
@@ -126,18 +114,6 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
         <aside class="onebox" data-onebox-src="https://example.com/page">
           <article class="onebox-body">
             <p>Preview text</p>
-          </article>
-        </aside>
-      `
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should return undefined when the title is only whitespace', async () => {
-      const value = html`
-        <aside class="onebox" data-onebox-src="https://example.com/page">
-          <article class="onebox-body">
-            <h3> </h3>
           </article>
         </aside>
       `

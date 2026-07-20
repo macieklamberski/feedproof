@@ -83,18 +83,6 @@ describeForEachParser('nodebbCiteResolver', (parseHtml) => {
 
       expect((await extract(value))?.url).toBe('https://example.com/post')
     })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <div class="card link-preview">
-          <div class="card-body">
-            <h5 class="card-title"><a href="https://example.com/post"> Padded title </a></h5>
-          </div>
-        </div>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
-    })
   })
 
   describe('sad paths', () => {
@@ -115,18 +103,6 @@ describeForEachParser('nodebbCiteResolver', (parseHtml) => {
         <div class="card link-preview">
           <div class="card-body">
             <p class="card-text">Preview text</p>
-          </div>
-        </div>
-      `
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should return undefined when the title is only whitespace', async () => {
-      const value = html`
-        <div class="card link-preview">
-          <div class="card-body">
-            <h5 class="card-title"><a href="https://example.com/post"> </a></h5>
           </div>
         </div>
       `

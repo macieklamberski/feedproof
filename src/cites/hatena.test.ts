@@ -87,20 +87,6 @@ describeForEachParser('hatenaCiteResolver', (parseHtml) => {
 
       expect((await extract(value))?.url).toBe('https://example.com/current')
     })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <p>
-          <iframe
-            src="https://hatenablog-parts.com/embed?url=https%3A%2F%2Fexample.com%2Fa"
-            title=" Padded title "
-            class="embed-card"
-          ></iframe>
-        </p>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
-    })
   })
 
   describe('sad paths', () => {

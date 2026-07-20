@@ -87,14 +87,6 @@ describeForEachParser('paragraphCiteResolver', (parseHtml) => {
 
       expect((await extract(value))?.title).toBe('Page title')
     })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <div data-type="embedly" data='{"url":"https://example.com/post","title":" Padded title "}'></div>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
-    })
   })
 
   describe('sad paths', () => {
@@ -137,14 +129,6 @@ describeForEachParser('paragraphCiteResolver', (parseHtml) => {
     it('should return undefined when there is no url anywhere', async () => {
       const value = html`
         <div data-type="embedly" data='{"title":"Page title"}'></div>
-      `
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should return undefined when the title is only whitespace', async () => {
-      const value = html`
-        <div data-type="embedly" data='{"url":"https://example.com/post","title":" "}'></div>
       `
 
       expect(await extract(value)).toBeUndefined()

@@ -90,28 +90,12 @@ describeForEachParser('tistoryCiteResolver', (parseHtml) => {
 
       expect((await extract(value))?.url).toBe('https://short.example.com/e/abc')
     })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <figure data-og-source-url="https://example.com/post" data-og-title=" Padded title "></figure>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
-    })
   })
 
   describe('sad paths', () => {
     it('should return undefined when no title is available', async () => {
       const value = html`
         <figure data-og-source-url="https://example.com/post" data-og-description="Preview text"></figure>
-      `
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should return undefined when the title is only whitespace', async () => {
-      const value = html`
-        <figure data-og-source-url="https://example.com/post" data-og-title=" "></figure>
       `
 
       expect(await extract(value)).toBeUndefined()

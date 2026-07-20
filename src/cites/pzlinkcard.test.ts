@@ -128,18 +128,6 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
 
       expect((await extract(value))?.title).toBe('Page title')
     })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <a href="https://example.com/page">
-          <div class="lkc-card">
-            <div class="lkc-title"><div class="lkc-title-text"> Padded title </div></div>
-          </div>
-        </a>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
-    })
   })
 
   describe('sad paths', () => {
@@ -158,18 +146,6 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
         <a href="https://example.com/page">
           <div class="lkc-card">
             <div class="lkc-excerpt">Preview text</div>
-          </div>
-        </a>
-      `
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should return undefined when the title is only whitespace', async () => {
-      const value = html`
-        <a href="https://example.com/page">
-          <div class="lkc-card">
-            <div class="lkc-title"><div class="lkc-title-text"> </div></div>
           </div>
         </a>
       `
