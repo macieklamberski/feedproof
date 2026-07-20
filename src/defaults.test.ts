@@ -22,9 +22,12 @@ describe('defaults', () => {
     expect(missing).toEqual([])
   })
 
-  // convertCiteCards runs every resolver over the same document, so a resolver whose
-  // selector matches an already-emitted placeholder would convert another resolver's
-  // output — or its own on a second run — and the transform would stop being idempotent.
+  // convertCiteCards hands every resolver the same document, in registration order, with
+  // the earlier replacements already applied — so a resolver has to stay off the others'
+  // toes. The next two tests pin the two ways one could tread on another.
+
+  // Claiming a placeholder an earlier resolver already produced: that converts finished
+  // work a second time, and the transform stops being idempotent.
   it('should not match a cite placeholder with any resolver selector', () => {
     const document = parseHtml('<div></div>')
     const placeholder = createCitePlaceholder(document, {
@@ -53,8 +56,8 @@ describe('defaults', () => {
     expect(matched).toEqual([])
   })
 
-  // Two resolvers sharing a selector means the second only ever sees cards the first
-  // declined, which is a silent shadowing rather than a registration.
+  // Claiming a selector another resolver already owns: the later one only ever sees the
+  // cards the first declined, so it looks registered while never really firing.
   it('should not register the same selector twice', () => {
     const selectors = defaultCiteResolvers.map((resolver) => resolver.selector)
     const duplicates = selectors.filter((selector, index) => {
