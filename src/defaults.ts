@@ -6,6 +6,7 @@ import { discourseCiteResolver } from './cites/discourse.js'
 import { ghostCiteResolver } from './cites/ghost.js'
 import { hatenaCiteResolver } from './cites/hatena.js'
 import { microformatsCiteResolver } from './cites/microformats.js'
+import { nodebbCiteResolver } from './cites/nodebb.js'
 import { substackCrossPostCiteResolver, substackOwnPostCiteResolver } from './cites/substack.js'
 import { swellCiteResolver } from './cites/swell.js'
 import { tistoryCiteResolver } from './cites/tistory.js'
@@ -242,6 +243,7 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   tistoryCiteResolver,
   hatenaCiteResolver,
   devtoCiteResolver,
+  nodebbCiteResolver,
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
