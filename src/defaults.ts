@@ -4,6 +4,7 @@ import { cocoonBookmarkResolver } from './bookmarks/cocoon.js'
 import { devtoBookmarkResolver } from './bookmarks/devto.js'
 import { discourseBookmarkResolver } from './bookmarks/discourse.js'
 import { ghostBookmarkResolver } from './bookmarks/ghost.js'
+import { microformatsBookmarkResolver } from './bookmarks/microformats.js'
 import { hatenaBookmarkResolver } from './bookmarks/hatena.js'
 import {
   substackCrossPostBookmarkResolver,
@@ -239,6 +240,7 @@ export const defaultBookmarkResolvers: Array<BookmarkResolver> = [
   discourseBookmarkResolver,
   swellBookmarkResolver,
   xenforoBookmarkResolver,
+  microformatsBookmarkResolver,
   amebaBookmarkResolver,
   tistoryBookmarkResolver,
   hatenaBookmarkResolver,
