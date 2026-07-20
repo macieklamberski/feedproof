@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { citeExtractor, describeForEachParser, html } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { notecomCiteResolver } from './notecom.js'
 
 describeForEachParser('notecomCiteResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(notecomCiteResolver.selector)
-    return element ? await notecomCiteResolver.extract(element) : undefined
-  }
+  const extract = citeExtractor(parseHtml, notecomCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {
