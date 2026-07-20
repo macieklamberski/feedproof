@@ -2,8 +2,8 @@ import { resolveUrl } from 'feedcanon'
 import { amebaCiteResolver } from './cites/ameba.js'
 import { cocoonCiteResolver } from './cites/cocoon.js'
 import {
-  devtoCiteResolver,
   devtoLegacyPostCiteResolver,
+  devtoLinkCiteResolver,
   devtoPostCiteResolver,
 } from './cites/devto.js'
 import { discourseCiteResolver } from './cites/discourse.js'
@@ -249,7 +249,7 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   amebaCiteResolver,
   tistoryCiteResolver,
   hatenaCiteResolver,
-  devtoCiteResolver,
+  devtoLinkCiteResolver,
   nodebbCiteResolver,
   pzlinkcardCiteResolver,
   notecomCiteResolver,

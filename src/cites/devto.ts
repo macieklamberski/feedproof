@@ -7,7 +7,7 @@ import { attr, find, text, textNode } from '../utils/dom.js'
 // feed renders, and the feed sanitizer's allowlist keeps `div`, `class` and `id` intact.
 // An external link becomes `.c-embed`; a link to another dev.to post becomes one of the two
 // shapes below.
-export const devtoCiteResolver: CiteResolver = {
+export const devtoLinkCiteResolver: CiteResolver = {
   selector: '.c-embed',
   extract: (element) => {
     const body = find(element, '.c-embed__body')
