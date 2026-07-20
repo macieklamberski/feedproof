@@ -7,11 +7,12 @@ import { ghostCiteResolver } from './cites/ghost.js'
 import { hatenaCiteResolver } from './cites/hatena.js'
 import { microformatsCiteResolver } from './cites/microformats.js'
 import { nodebbCiteResolver } from './cites/nodebb.js'
-import { pzlinkcardCiteResolver } from './cites/pzlinkcard.js'
 import { notecomCiteResolver } from './cites/notecom.js'
+import { pzlinkcardCiteResolver } from './cites/pzlinkcard.js'
 import { substackCrossPostCiteResolver, substackOwnPostCiteResolver } from './cites/substack.js'
 import { swellCiteResolver } from './cites/swell.js'
 import { tistoryCiteResolver } from './cites/tistory.js'
+import { tumblrCiteResolver } from './cites/tumblr.js'
 import { xenforoCiteResolver } from './cites/xenforo.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
@@ -248,6 +249,7 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   nodebbCiteResolver,
   pzlinkcardCiteResolver,
   notecomCiteResolver,
+  tumblrCiteResolver,
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
