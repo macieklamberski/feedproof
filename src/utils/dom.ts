@@ -99,6 +99,14 @@ export const attr = (element: Nullish<Element>, name: string): string | undefine
   return element?.getAttribute(name)?.trim() || undefined
 }
 
+// The first url in an element's inline `background-image`, for cards that paint their
+// thumbnail with CSS instead of an `<img>`. Matches the url with or without quotes.
+const bgImageUrlRegex = /url\(['"]?([^'")]+)/
+
+export const bgImage = (element: Nullish<Element>): string | undefined => {
+  return attr(element, 'style')?.match(bgImageUrlRegex)?.[1]
+}
+
 // Parsed value of an attribute holding a JSON blob, as several platforms ship whole cards
 // or widget settings in one. Malformed JSON yields undefined instead of throwing.
 export const jsonAttr = <Value>(element: Nullish<Element>, name: string): Value | undefined => {
