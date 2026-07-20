@@ -1,5 +1,6 @@
-import { getPathSegments, isHostOf, isSubdomainOf } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import { getPathSegments } from 'trousse'
+import type { EmbedResolverResult } from '../types.js'
+import { createIframeEmbedResolver } from '../utils/embeds.js'
 import { pickUrlParams } from '../utils/urls.js'
 
 const safeVideoIdRegex = /^\d+$/
@@ -43,15 +44,4 @@ export const vimeoResolveEmbed = (url: string): EmbedResolverResult | undefined 
   }
 }
 
-export const vimeoEmbedResolver: EmbedResolver = {
-  selector: 'iframe[src]',
-  extract: (element) => {
-    const src = element.getAttribute('src') ?? ''
-
-    if (!isHostOf(src, vimeoHosts) && !isSubdomainOf(src, vimeoHosts)) {
-      return
-    }
-
-    return vimeoResolveEmbed(src)
-  },
-}
+export const vimeoEmbedResolver = createIframeEmbedResolver(vimeoHosts, vimeoResolveEmbed)

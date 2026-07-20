@@ -1,4 +1,29 @@
-import type { CiteResolverResult, EmbedResolverResult } from '../types.js'
+import { isHostOf, isSubdomainOf } from 'trousse'
+import type { CiteResolverResult, EmbedResolver, EmbedResolverResult } from '../types.js'
+
+// Every video provider matches the same iframe and differs only in which hosts it claims
+// and how it reads an id out of the src, so the match itself lives here.
+//
+// This is not a pattern to copy for resolvers generally: it exists because these three
+// bodies were already identical. The cite resolvers each read a different shape, so a
+// shared builder there would need a config language and would cost more than it saves.
+export const createIframeEmbedResolver = (
+  hosts: Array<string>,
+  resolveEmbed: (url: string) => EmbedResolverResult | undefined,
+): EmbedResolver => {
+  return {
+    selector: 'iframe[src]',
+    extract: (element) => {
+      const src = element.getAttribute('src') ?? ''
+
+      if (!isHostOf(src, hosts) && !isSubdomainOf(src, hosts)) {
+        return
+      }
+
+      return resolveEmbed(src)
+    },
+  }
+}
 
 export const createPlaceholder = <Type extends object>(
   document: Document,
