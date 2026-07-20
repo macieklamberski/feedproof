@@ -1,18 +1,5 @@
 import type { CiteResolver } from '../types.js'
-import { attr } from '../utils/dom.js'
-
-// Both shapes carry their whole card as a JSON blob in `data-attrs`.
-const parseDataAttrs = <Attrs>(element: Element): Attrs | undefined => {
-  const raw = attr(element, 'data-attrs')
-
-  if (!raw) {
-    return
-  }
-
-  try {
-    return JSON.parse(raw)
-  } catch {}
-}
+import { jsonAttr } from '../utils/dom.js'
 
 // Substack's two post-embed shapes are separate components, not generations of one:
 // today's editor emits `.embedded-post-wrap` when embedding another creator's post and
@@ -48,7 +35,7 @@ type OwnPostAttrs = {
 export const substackCrossPostCiteResolver: CiteResolver = {
   selector: '.embedded-post-wrap',
   extract: (element) => {
-    const attrs = parseDataAttrs<CrossPostAttrs>(element)
+    const attrs = jsonAttr<CrossPostAttrs>(element, 'data-attrs')
 
     if (!attrs) {
       return
@@ -83,7 +70,7 @@ export const substackCrossPostCiteResolver: CiteResolver = {
 export const substackOwnPostCiteResolver: CiteResolver = {
   selector: '.digest-post-embed',
   extract: (element) => {
-    const attrs = parseDataAttrs<OwnPostAttrs>(element)
+    const attrs = jsonAttr<OwnPostAttrs>(element, 'data-attrs')
 
     if (!attrs) {
       return

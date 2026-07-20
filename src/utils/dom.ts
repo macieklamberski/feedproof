@@ -99,6 +99,20 @@ export const attr = (element: Nullish<Element>, name: string): string | undefine
   return element?.getAttribute(name)?.trim() || undefined
 }
 
+// Parsed value of an attribute holding a JSON blob, as several platforms ship whole cards
+// or widget settings in one. Malformed JSON yields undefined instead of throwing.
+export const jsonAttr = <Value>(element: Nullish<Element>, name: string): Value | undefined => {
+  const raw = attr(element, name)
+
+  if (!raw) {
+    return
+  }
+
+  try {
+    return JSON.parse(raw)
+  } catch {}
+}
+
 export const isElement = (node: Node | null | undefined): node is Element => {
   return node?.nodeType === Node.ELEMENT_NODE
 }

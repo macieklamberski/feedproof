@@ -48,43 +48,19 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
   })
 
   describe('edge cases', () => {
-    it('should unwrap an href.li redirect', async () => {
+    it('should keep a redirect url as it is, leaving unwrapping to the cleanUrlFn', async () => {
       const value = html`
         <p
           class="npf_link"
-          data-npf='{"type":"link","url":"https://href.li/?https://example.com/post","title":"Page title"}'
+          data-npf='{"type":"link","url":"https://t.umblr.com/redirect?z=https%3A%2F%2Fexample.com%2Fpost&t=abc","title":"Page title"}'
         >
-          <a href="https://href.li/?https://example.com/post">Page title</a>
+          <a href="https://t.umblr.com/redirect?z=https%3A%2F%2Fexample.com%2Fpost&t=abc">Page title</a>
         </p>
       `
 
-      expect((await extract(value))?.url).toBe('https://example.com/post')
-    })
-
-    it('should unwrap and decode a t.umblr.com redirect', async () => {
-      const value = html`
-        <p
-          class="npf_link"
-          data-npf='{"type":"link","url":"https://t.umblr.com/redirect?z=https%3A%2F%2Fexample.com%2Fprojects%2Fpost&t=abc","title":"Page title"}'
-        >
-          <a href="https://t.umblr.com/redirect?z=https%3A%2F%2Fexample.com%2Fprojects%2Fpost&t=abc">Page title</a>
-        </p>
-      `
-
-      expect((await extract(value))?.url).toBe('https://example.com/projects/post')
-    })
-
-    it('should keep the redirect url when it carries no target param', async () => {
-      const value = html`
-        <p
-          class="npf_link"
-          data-npf='{"type":"link","url":"https://t.umblr.com/redirect?t=abc","title":"Page title"}'
-        >
-          <a href="https://t.umblr.com/redirect?t=abc">Page title</a>
-        </p>
-      `
-
-      expect((await extract(value))?.url).toBe('https://t.umblr.com/redirect?t=abc')
+      expect((await extract(value))?.url).toBe(
+        'https://t.umblr.com/redirect?z=https%3A%2F%2Fexample.com%2Fpost&t=abc',
+      )
     })
 
     it('should leave the thumbnail undefined when the poster has no url', async () => {
@@ -120,14 +96,19 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
       expect((await extract(value))?.title).toBe('Anchor title')
     })
 
-    it('should extract a payload with no type', async () => {
+    it('should trim the description and the publisher', async () => {
       const value = html`
-        <p class="npf_link" data-npf='{"url":"https://example.com/post","title":"Page title"}'>
+        <p
+          class="npf_link"
+          data-npf='{"type":"link","url":"https://example.com/post","title":"Page title","description":"  Preview text\n","site_name":" example.com "}'
+        >
           <a href="https://example.com/post">Page title</a>
         </p>
       `
+      const result = await extract(value)
 
-      expect((await extract(value))?.title).toBe('Page title')
+      expect(result?.description).toBe('Preview text')
+      expect(result?.publisher).toBe('example.com')
     })
   })
 
@@ -136,6 +117,39 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
       const value = html`
         <p class="npf_link" data-npf='{"type":"link","url":"https://example.com/post"}'>
           <a href="https://example.com/post">https://example.com/post</a>
+        </p>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the anchor text is the url without a scheme', async () => {
+      const value = html`
+        <p class="npf_link" data-npf='{"type":"link","url":"https://example.com/post"}'>
+          <a href="https://example.com/post">example.com/post</a>
+        </p>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the anchor text is the display url truncated', async () => {
+      const value = html`
+        <p
+          class="npf_link"
+          data-npf='{"type":"link","url":"https://href.li/?https://example.com/a/very/long/post","display_url":"https://example.com/a/very/long/post"}'
+        >
+          <a href="https://href.li/?https://example.com/a/very/long/post">example.com/a/very…</a>
+        </p>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the payload has no type', async () => {
+      const value = html`
+        <p class="npf_link" data-npf='{"url":"https://example.com/post","title":"Page title"}'>
+          <a href="https://example.com/post">Page title</a>
         </p>
       `
 
