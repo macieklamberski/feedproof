@@ -66,11 +66,30 @@ export const transformContent = async (
   return afterDom
 }
 
+export { amebaCiteResolver } from './cites/ameba.js'
+export { cocoonCiteResolver } from './cites/cocoon.js'
+export {
+  devtoLegacyPostCiteResolver,
+  devtoLinkCiteResolver,
+  devtoPostCiteResolver,
+} from './cites/devto.js'
+export { discourseCiteResolver } from './cites/discourse.js'
+export { embedlyCiteResolver } from './cites/embedly.js'
 export { ghostCiteResolver } from './cites/ghost.js'
+export { hatenaCiteResolver } from './cites/hatena.js'
+export { microformatsCiteResolver } from './cites/microformats.js'
+export { nodebbCiteResolver } from './cites/nodebb.js'
+export { notecomCiteResolver } from './cites/notecom.js'
+export { paragraphCiteResolver } from './cites/paragraph.js'
+export { pzlinkcardCiteResolver } from './cites/pzlinkcard.js'
 export {
   substackCrossPostCiteResolver,
   substackOwnPostCiteResolver,
 } from './cites/substack.js'
+export { swellCiteResolver } from './cites/swell.js'
+export { tistoryCiteResolver } from './cites/tistory.js'
+export { tumblrCiteResolver } from './cites/tumblr.js'
+export { xenforoCiteResolver } from './cites/xenforo.js'
 export {
   defaultAllDomTransforms,
   defaultHighlightFn,
@@ -162,6 +181,7 @@ export { unwrapCdataMarkers } from './transforms/string/unwrapCdataMarkers.js'
 export type {
   AssetProxyFn,
   AssetType,
+  CiteKind,
   CiteResolver,
   CiteResolverResult,
   CleanUrlFn,
