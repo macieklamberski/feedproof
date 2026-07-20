@@ -7,6 +7,11 @@ import { attr, find, text } from '../utils/dom.js'
 // this matches: matching the iframe alone would convert the card but leave the citation
 // behind as a stray domain link next to it.
 //
+// Replacing the whole paragraph drops any prose the author wrote beside the card, measured
+// at 1.22% of corpus occurrences (19 of 1,558, across 7 feeds). Kept anyway: matching the
+// iframe alone leaves those cards to the generic embed path, which emits a placeholder
+// pointing at the card renderer rather than a viewable embed, plus a stray `<cite>`.
+//
 // The two elements carry different halves of the card. The iframe's `title` attribute holds
 // the page title and its `src` carries the target as a `url` query parameter; the citation
 // holds the same target unencoded, plus the domain as its text.
