@@ -144,17 +144,27 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
       expect((await extract(value))?.date).toBeUndefined()
     })
 
-    // Nested in the citation, e-content is the cited work's full body, not a preview and
-    // not the citing author's note about the link.
-    it('should not take the description from a nested e-content', async () => {
+    it('should take the description from e-content', async () => {
       const value = html`
         <div class="u-like-of h-cite">
           <a class="u-url p-name" href="https://example.com/post">Page title</a>
-          <div class="e-content"><p>The full body of the cited post, which can run long.</p></div>
+          <div class="e-content"><p>The cited post's body.</p></div>
         </div>
       `
 
-      expect((await extract(value))?.description).toBeUndefined()
+      expect((await extract(value))?.description).toBe("The cited post's body.")
+    })
+
+    it('should prefer the summary over e-content', async () => {
+      const value = html`
+        <div class="h-cite">
+          <a class="u-url p-name" href="https://example.com/post">Page title</a>
+          <p class="p-summary">Short summary.</p>
+          <div class="e-content"><p>The much longer body.</p></div>
+        </div>
+      `
+
+      expect((await extract(value))?.description).toBe('Short summary.')
     })
 
     it('should trim surrounding whitespace from the title', async () => {

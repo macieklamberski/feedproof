@@ -23,17 +23,18 @@ const citeKindByResponseClass: Record<string, CiteKind> = {
 //
 // The card's own `u-url` / `p-name` must be told apart from the author's: the `p-author`
 // is itself an h-card with its own url and name, so those are filtered out by `closest`.
-// `e-content` is left alone. Nested inside the citation it is the cited work's full body,
-// which can run to a whole article, where `description` is a preview. The citing author's
-// own note — what `caption` is for — is not reachable from here: it sits outside the
-// citation, in the surrounding post's own `e-content`, which contains the citation itself,
-// so reading it would capture the whole post rather than a note about the link.
+// `caption` stays unset: the citing author's own note about the link sits outside the
+// citation, in the surrounding post's content, which contains the citation itself, so
+// reading it would capture the whole post rather than a note about the link.
 export const microformatsCiteResolver: CiteResolver = {
   selector: '.h-cite',
   extract: (element) => {
     const notInAuthor = (node: Element) => !node.closest('.p-author')
 
-    const description = find(element, '.p-summary, .p-content', notInAuthor)
+    // `p-content` and `e-content` are the same property in its plain-text and HTML
+    // spellings, so a card carries one or the other; `p-summary` wins over both when the
+    // source states a summary separately.
+    const description = find(element, '.p-summary, .p-content, .e-content', notInAuthor)
     // The image property is `u-featured` in the newer IndieWeb convention and `u-photo` in
     // the base spec; prefer the former and fall back to the latter.
     const image = find(element, '.u-featured, .u-photo', notInAuthor)
