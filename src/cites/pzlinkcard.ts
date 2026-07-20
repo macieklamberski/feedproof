@@ -13,13 +13,24 @@ import { attr, find, text } from '../utils/dom.js'
 // class sits either on the `<img>` itself or on a wrapper `<div>` around it; and a card
 // may have no wrapping anchor at all, printing the target in `.lkc-url` instead.
 export const pzlinkcardCiteResolver: CiteResolver = {
-  selector: '.lkc-card',
+  // The wrapping anchor is matched rather than the card inside it, so that replacing the
+  // match swaps out the whole link. Matching `.lkc-card` alone left the anchor behind
+  // wrapping the placeholder, which reparses into a stray empty link before every card.
+  selector: 'a:has(.lkc-card), .lkc-card',
   extract: (element) => {
+    const anchor = element.closest('a')
+
+    // Both arms match a wrapped card; the anchor comes first in document order and owns
+    // it, so the inner card is skipped rather than converted a second time.
+    if (anchor && anchor !== element) {
+      return
+    }
+
     const favicon = find(element, '.lkc-favicon img') ?? find(element, '.lkc-favicon')
 
     return buildCite({
       provider: 'pzlinkcard',
-      url: attr(element.closest('a'), 'href') ?? text(element, '.lkc-url'),
+      url: attr(anchor, 'href') ?? text(element, '.lkc-url'),
       title: text(element, '.lkc-title-text') ?? text(element, '.lkc-title'),
       description: text(element, '.lkc-excerpt'),
       publisher: text(element, '.lkc-domain'),
