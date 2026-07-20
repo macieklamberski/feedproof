@@ -10,18 +10,20 @@ import type { CiteResolverResult, EmbedResolver, EmbedResolverResult } from '../
 export const createIframeEmbedResolver = (
   hosts: Array<string>,
   resolveEmbed: (url: string) => EmbedResolverResult | undefined,
-): EmbedResolver => ({
-  selector: 'iframe[src]',
-  extract: (element) => {
-    const src = element.getAttribute('src') ?? ''
+): EmbedResolver => {
+  return {
+    selector: 'iframe[src]',
+    extract: (element) => {
+      const src = element.getAttribute('src') ?? ''
 
-    if (!isHostOf(src, hosts) && !isSubdomainOf(src, hosts)) {
-      return
-    }
+      if (!isHostOf(src, hosts) && !isSubdomainOf(src, hosts)) {
+        return
+      }
 
-    return resolveEmbed(src)
-  },
-})
+      return resolveEmbed(src)
+    },
+  }
+}
 
 export const createPlaceholder = <Type extends object>(
   document: Document,
