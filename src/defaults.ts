@@ -9,6 +9,7 @@ import {
   substackOwnPostBookmarkResolver,
 } from './bookmarks/substack.js'
 import { swellBookmarkResolver } from './bookmarks/swell.js'
+import { tistoryBookmarkResolver } from './bookmarks/tistory.js'
 import { xenforoBookmarkResolver } from './bookmarks/xenforo.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
@@ -237,6 +238,7 @@ export const defaultBookmarkResolvers: Array<BookmarkResolver> = [
   discourseBookmarkResolver,
   swellBookmarkResolver,
   xenforoBookmarkResolver,
+  tistoryBookmarkResolver,
   hatenaBookmarkResolver,
   devtoBookmarkResolver,
 ]
