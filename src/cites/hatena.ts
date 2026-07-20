@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { attr, find, text } from '../utils/dom.js'
 
 // Hatena Blog renders a pasted link as an iframe pointing at its card renderer, followed by
 // a `<cite>` holding the real link. Both sit inside one paragraph, and the paragraph is what
@@ -11,16 +12,16 @@ import type { CiteResolver } from '../types.js'
 export const hatenaCiteResolver: CiteResolver = {
   selector: 'p:has(> iframe.embed-card)',
   extract: (element) => {
-    const iframe = element.querySelector('iframe.embed-card')
-    const citationLink = element.querySelector('cite.hatena-citation a')
+    const iframe = find(element, 'iframe.embed-card')
+    const citationLink = find(element, 'cite.hatena-citation a')
 
     // Prefer the citation's href: it is the plain target, so it needs no decoding.
-    const embedUrl = iframe?.getAttribute('src')
+    const embedUrl = attr(iframe, 'src')
     const embeddedUrl = embedUrl
       ? new URL(embedUrl, 'https://example.invalid').searchParams.get('url')
       : null
-    const url = citationLink?.getAttribute('href') ?? embeddedUrl ?? undefined
-    const title = iframe?.getAttribute('title')?.trim()
+    const url = attr(citationLink, 'href') ?? embeddedUrl ?? undefined
+    const title = attr(iframe, 'title')
 
     if (!url || !title) {
       return
@@ -30,7 +31,7 @@ export const hatenaCiteResolver: CiteResolver = {
       provider: 'hatena',
       url,
       title,
-      publisher: citationLink?.textContent ?? undefined,
+      publisher: text(citationLink),
     }
   },
 }

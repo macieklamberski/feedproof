@@ -1,6 +1,10 @@
 import type { CiteResolver } from '../types.js'
+import { attr } from '../utils/dom.js'
 
-const parseDataAttrs = <Attrs>(raw: string | null): Attrs | undefined => {
+// Both shapes carry their whole card as a JSON blob in `data-attrs`.
+const parseDataAttrs = <Attrs>(element: Element): Attrs | undefined => {
+  const raw = attr(element, 'data-attrs')
+
   if (!raw) {
     return
   }
@@ -44,7 +48,7 @@ type OwnPostAttrs = {
 export const substackCrossPostCiteResolver: CiteResolver = {
   selector: '.embedded-post-wrap',
   extract: (element) => {
-    const attrs = parseDataAttrs<CrossPostAttrs>(element.getAttribute('data-attrs'))
+    const attrs = parseDataAttrs<CrossPostAttrs>(element)
 
     if (!attrs) {
       return
@@ -79,7 +83,7 @@ export const substackCrossPostCiteResolver: CiteResolver = {
 export const substackOwnPostCiteResolver: CiteResolver = {
   selector: '.digest-post-embed',
   extract: (element) => {
-    const attrs = parseDataAttrs<OwnPostAttrs>(element.getAttribute('data-attrs'))
+    const attrs = parseDataAttrs<OwnPostAttrs>(element)
 
     if (!attrs) {
       return

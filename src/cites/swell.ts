@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { attr, find, text } from '../utils/dom.js'
 
 // SWELL, a widely used WordPress theme, renders its post-link block as a card. Unlike
 // Cocoon the URL sits on the title anchor rather than on a wrapping element. Internal
@@ -7,9 +8,9 @@ import type { CiteResolver } from '../types.js'
 export const swellCiteResolver: CiteResolver = {
   selector: '.p-blogCard',
   extract: (element) => {
-    const link = element.querySelector('a.p-blogCard__title')
-    const url = link?.getAttribute('href') ?? undefined
-    const title = link?.textContent?.trim()
+    const link = find(element, 'a.p-blogCard__title')
+    const url = attr(link, 'href')
+    const title = text(link)
 
     if (!url || !title) {
       return
@@ -19,8 +20,8 @@ export const swellCiteResolver: CiteResolver = {
       provider: 'swell',
       url,
       title,
-      description: element.querySelector('.p-blogCard__excerpt')?.textContent ?? undefined,
-      thumbnail: element.querySelector('.p-blogCard__thumb img')?.getAttribute('src') ?? undefined,
+      description: text(element, '.p-blogCard__excerpt'),
+      thumbnail: attr(find(element, '.p-blogCard__thumb img'), 'src'),
     }
   },
 }

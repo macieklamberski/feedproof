@@ -1,4 +1,4 @@
-import { coerceNumber, isNonEmptyString } from 'trousse'
+import { coerceNumber, isNonEmptyString, type Nullish } from 'trousse'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
@@ -40,6 +40,64 @@ export const blockElements = new Set([
   'table',
   'ul',
 ])
+
+// Extraction helpers, used mainly by the cite resolvers to pull one field out of a card.
+// Each accepts a nullable element and returns `undefined` rather than `null` or `''`, so
+// they compose (`attr(find(element, selector), 'src')`) and chain (`a() ?? b()`) without
+// optional-chaining noise, and so a blank value fails a `!value` guard.
+
+// The first descendant matching `selector`, or the first one also satisfying `predicate`.
+// The predicate form replaces `Array.from(element.querySelectorAll(…)).find(…)`: it builds
+// no intermediate array and stops at the first match.
+export const find = (
+  element: Nullish<Element>,
+  selector: string,
+  predicate?: (node: Element) => boolean,
+): Element | undefined => {
+  if (!element) {
+    return
+  }
+
+  if (!predicate) {
+    return element.querySelector(selector) ?? undefined
+  }
+
+  for (const node of element.querySelectorAll(selector)) {
+    if (predicate(node)) {
+      return node
+    }
+  }
+}
+
+// Trimmed text of a descendant, or of the element itself when no selector is given.
+export const text = (element: Nullish<Element>, selector?: string): string | undefined => {
+  const target = selector ? find(element, selector) : element
+
+  return target?.textContent?.trim() || undefined
+}
+
+// Trimmed text of the element's direct text-node children only, ignoring text inside any
+// nested elements. For values that sit as a bare text node beside a sibling element.
+export const textNode = (element: Nullish<Element>): string | undefined => {
+  if (!element) {
+    return
+  }
+
+  let result = ''
+
+  for (const node of element.childNodes) {
+    if (isText(node)) {
+      result += node.textContent ?? ''
+    }
+  }
+
+  return result.trim() || undefined
+}
+
+// Trimmed value of an attribute on the element itself.
+export const attr = (element: Nullish<Element>, name: string): string | undefined => {
+  return element?.getAttribute(name)?.trim() || undefined
+}
 
 export const isElement = (node: Node | null | undefined): node is Element => {
   return node?.nodeType === Node.ELEMENT_NODE

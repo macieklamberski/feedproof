@@ -37,7 +37,7 @@ describeForEachParser('devtoCiteResolver', (parseHtml) => {
         url: 'https://example.com/classes',
         title: 'Page title',
         description: 'Preview text',
-        publisher: ' example.com ',
+        publisher: 'example.com',
         icon: 'https://media.example.com/favicon.png',
         thumbnail: 'https://media.example.com/cover.png',
       }
@@ -96,7 +96,7 @@ describeForEachParser('devtoCiteResolver', (parseHtml) => {
         </div>
       `
 
-      expect((await extract(value))?.publisher).toBe(' example.com ')
+      expect((await extract(value))?.publisher).toBe('example.com')
     })
 
     it('should trim surrounding whitespace from the title', async () => {

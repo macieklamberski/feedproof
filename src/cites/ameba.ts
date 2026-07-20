@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { attr, find, text } from '../utils/dom.js'
 
 // Ameba (ameblo.jp) renders a pasted link as an "ogpCard": an anchor built from the linked
 // page's Open Graph data, with each field in its own heavily inline-styled span. The `og`
@@ -10,9 +11,8 @@ import type { CiteResolver } from '../types.js'
 export const amebaCiteResolver: CiteResolver = {
   selector: '.ogpCard_wrap',
   extract: (element) => {
-    const link = element.querySelector('a.ogpCard_link')
-    const url = link?.getAttribute('href') ?? undefined
-    const title = element.querySelector('.ogpCard_title')?.textContent?.trim()
+    const url = attr(find(element, 'a.ogpCard_link'), 'href')
+    const title = text(element, '.ogpCard_title')
 
     if (!url || !title) {
       return
@@ -22,9 +22,9 @@ export const amebaCiteResolver: CiteResolver = {
       provider: 'ameba',
       url,
       title,
-      description: element.querySelector('.ogpCard_description')?.textContent ?? undefined,
-      publisher: element.querySelector('.ogpCard_urlText')?.textContent ?? undefined,
-      thumbnail: element.querySelector('img.ogpCard_image')?.getAttribute('src') ?? undefined,
+      description: text(element, '.ogpCard_description'),
+      publisher: text(element, '.ogpCard_urlText'),
+      thumbnail: attr(find(element, 'img.ogpCard_image'), 'src'),
     }
   },
 }
