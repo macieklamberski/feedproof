@@ -21,7 +21,7 @@ const getEmbedDimensions = (element: Element): { width?: number; height?: number
 }
 
 export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
-  const { embedResolvers, resolveUrlFn, baseUrl } = context
+  const { embedResolvers, resolveUrlFn, cleanUrlFn, baseUrl } = context
 
   return async (document) => {
     // A static snapshot: the fallback loop below replaces iframes, and a live
@@ -95,9 +95,12 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
         // resolveUrlFn rejects `about:blank`; the trim drops empty/whitespace placeholders
         // (which would otherwise resolve to the base URL).
         const resolved = src?.trim() ? resolveUrlFn(src, baseUrl) : undefined
+        // Unlike a resolver's src, which is rebuilt from the parsed id, this one is the
+        // publisher's own URL and also becomes the fallback anchor's href and link text.
+        const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
 
-        if (resolved) {
-          iframe.replaceWith(createEmbedPlaceholder(document, resolved, getEmbedDimensions(iframe)))
+        if (cleaned) {
+          iframe.replaceWith(createEmbedPlaceholder(document, cleaned, getEmbedDimensions(iframe)))
         }
       }
     }
@@ -108,9 +111,10 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
       const url =
         element.localName === 'object' ? element.getAttribute('data') : element.getAttribute('src')
       const resolved = url ? resolveUrlFn(url, baseUrl) : undefined
+      const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
 
-      if (resolved) {
-        element.replaceWith(createEmbedPlaceholder(document, resolved, getEmbedDimensions(element)))
+      if (cleaned) {
+        element.replaceWith(createEmbedPlaceholder(document, cleaned, getEmbedDimensions(element)))
       }
     }
   }

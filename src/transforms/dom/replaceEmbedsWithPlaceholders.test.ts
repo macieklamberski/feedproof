@@ -398,6 +398,29 @@ describeForEachParser('replaceEmbedsWithPlaceholders', (parseHtml) => {
       expect(result).not.toContain('<embed')
     })
 
+    it('should clean a generic iframe src with the provided cleanUrlFn', async () => {
+      const context: TransformContext = {
+        ...withNoResolvers,
+        cleanUrlFn: (url) => url.split('?')[0] ?? url,
+      }
+      const value = '<iframe src="https://widget.example.com/thing?utm_source=feed"></iframe>'
+      const result = await transform(value, context)
+
+      expect(result).toContain('data-embed-src="https://widget.example.com/thing"')
+      expect(result).toContain('<a href="https://widget.example.com/thing">')
+    })
+
+    it('should clean a non-iframe carrier src with the provided cleanUrlFn', async () => {
+      const context: TransformContext = {
+        ...withNoResolvers,
+        cleanUrlFn: (url) => url.split('?')[0] ?? url,
+      }
+      const value = '<object data="https://example.com/v/x?utm_source=feed"></object>'
+      const result = await transform(value, context)
+
+      expect(result).toContain('data-embed-src="https://example.com/v/x"')
+    })
+
     it('should leave an empty iframe with no recoverable content', async () => {
       const value = '<iframe src="about:blank"></iframe>'
       const result = await transform(value, withNoResolvers)
