@@ -1,5 +1,5 @@
 import type { CiteResolver } from '../types.js'
-import { attr } from '../utils/dom.js'
+import { attr, jsonAttr } from '../utils/dom.js'
 
 // Paragraph renders the card client-side but also ships the whole payload as an oEmbed
 // JSON blob in `data`, which is richer and steadier than the rendered markup: the inner
@@ -15,22 +15,10 @@ type EmbedlyData = {
   author_name?: string
 }
 
-const parseData = (element: Element): EmbedlyData | undefined => {
-  const raw = attr(element, 'data')
-
-  if (!raw) {
-    return
-  }
-
-  try {
-    return JSON.parse(raw)
-  } catch {}
-}
-
 export const paragraphCiteResolver: CiteResolver = {
   selector: 'div[data-type="embedly"]',
   extract: (element) => {
-    const data = parseData(element)
+    const data = jsonAttr<EmbedlyData>(element, 'data')
 
     if (!data) {
       return
