@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { attr, find, text } from '../utils/dom.js'
 
 // Tistory renders a pasted link as a card built from the linked page's Open Graph tags.
 // The `data-og-*` attribute names and the `og-*` class names below are Tistory's, but they
@@ -15,33 +16,24 @@ export const tistoryCiteResolver: CiteResolver = {
     // `data-og-source-url` is the link the author added, which is what the card's own
     // anchor points at; `data-og-url` is the canonical target it resolves to.
     const url =
-      element.getAttribute('data-og-source-url') ??
-      element.getAttribute('data-og-url') ??
-      element.querySelector('a')?.getAttribute('href') ??
-      undefined
-    const attributeTitle = element.getAttribute('data-og-title')?.trim()
-    const title = attributeTitle || element.querySelector('.og-title')?.textContent?.trim()
+      attr(element, 'data-og-source-url') ??
+      attr(element, 'data-og-url') ??
+      attr(find(element, 'a'), 'href')
+    const title = attr(element, 'data-og-title') ?? text(element, '.og-title')
 
     if (!url || !title) {
       return
     }
 
     // A card can list several candidate images in one attribute, comma separated.
-    const images = element.getAttribute('data-og-image')?.split(',')
-    const thumbnail = images?.[0]?.trim()
+    const thumbnail = attr(element, 'data-og-image')?.split(',')[0]?.trim()
 
     return {
       provider: 'tistory',
       url,
       title,
-      description:
-        element.getAttribute('data-og-description') ??
-        element.querySelector('.og-desc')?.textContent ??
-        undefined,
-      publisher:
-        element.getAttribute('data-og-host') ??
-        element.querySelector('.og-host')?.textContent ??
-        undefined,
+      description: attr(element, 'data-og-description') ?? text(element, '.og-desc'),
+      publisher: attr(element, 'data-og-host') ?? text(element, '.og-host'),
       thumbnail: thumbnail || undefined,
     }
   },

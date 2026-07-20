@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { attr, find, text } from '../utils/dom.js'
 
 // XenForo forums expand a pasted link into an "unfurl" block. The URL and host sit on the
 // wrapper, and each field carries a `js-unfurl-*` hook alongside its theme classes. The
@@ -7,8 +8,8 @@ import type { CiteResolver } from '../types.js'
 export const xenforoCiteResolver: CiteResolver = {
   selector: '.bbCodeBlock--unfurl[data-url]',
   extract: (element) => {
-    const url = element.getAttribute('data-url') ?? undefined
-    const title = element.querySelector('.js-unfurl-title')?.textContent?.trim()
+    const url = attr(element, 'data-url')
+    const title = text(element, '.js-unfurl-title')
 
     if (!url || !title) {
       return
@@ -18,10 +19,10 @@ export const xenforoCiteResolver: CiteResolver = {
       provider: 'xenforo',
       url,
       title,
-      description: element.querySelector('.js-unfurl-desc')?.textContent ?? undefined,
-      publisher: element.getAttribute('data-host') ?? undefined,
-      icon: element.querySelector('.js-unfurl-favicon img')?.getAttribute('src') ?? undefined,
-      thumbnail: element.querySelector('.js-unfurl-figure img')?.getAttribute('src') ?? undefined,
+      description: text(element, '.js-unfurl-desc'),
+      publisher: attr(element, 'data-host'),
+      icon: attr(find(element, '.js-unfurl-favicon img'), 'src'),
+      thumbnail: attr(find(element, '.js-unfurl-figure img'), 'src'),
     }
   },
 }

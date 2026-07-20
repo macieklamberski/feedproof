@@ -1,12 +1,16 @@
 import { expect, it } from 'bun:test'
 import { describeForEachParser, queryElement } from '../tests.js'
 import {
+  attr,
+  find,
   getElementAspectRatio,
   getElementDimensions,
   getWrapperAspectRatio,
   hasAncestorWithTagName,
   isElementHidden,
   removeWithEmptyWrappers,
+  text,
+  textNode,
   walkElements,
 } from './dom.js'
 
@@ -416,5 +420,107 @@ describeForEachParser('walkElements', (parseHtml) => {
     // Only the <p> outside the template is seen.
     expect(visited.filter((name) => name === 'p')).toHaveLength(1)
     expect(document.querySelectorAll('.inside')).toHaveLength(0)
+  })
+})
+
+describeForEachParser('find', (parseHtml) => {
+  it('should return the first matching descendant', () => {
+    const document = parseHtml('<div><p class="a">first</p><p class="a">second</p></div>')
+    const element = queryElement(document, 'div')
+
+    expect(find(element, '.a')?.textContent).toBe('first')
+  })
+
+  it('should return the first descendant satisfying the predicate', () => {
+    const document = parseHtml('<div><p class="a">skip</p><p class="a" data-keep>keep</p></div>')
+    const element = queryElement(document, 'div')
+    const predicate = (node: Element) => node.hasAttribute('data-keep')
+
+    expect(find(element, '.a', predicate)?.textContent).toBe('keep')
+  })
+
+  it('should return undefined when nothing matches the predicate', () => {
+    const document = parseHtml('<div><p class="a">only</p></div>')
+    const element = queryElement(document, 'div')
+
+    expect(find(element, '.a', () => false)).toBeUndefined()
+  })
+
+  it('should return undefined for a nullish element', () => {
+    expect(find(undefined, '.a')).toBeUndefined()
+  })
+})
+
+describeForEachParser('text', (parseHtml) => {
+  it('should return the trimmed text of a descendant', () => {
+    const document = parseHtml('<div><p class="a"> spaced </p></div>')
+    const element = queryElement(document, 'div')
+
+    expect(text(element, '.a')).toBe('spaced')
+  })
+
+  it('should return the trimmed text of the element itself without a selector', () => {
+    const document = parseHtml('<p> spaced </p>')
+    const element = queryElement(document, 'p')
+
+    expect(text(element)).toBe('spaced')
+  })
+
+  it('should return undefined for blank text', () => {
+    const document = parseHtml('<div><p class="a">   </p></div>')
+    const element = queryElement(document, 'div')
+
+    expect(text(element, '.a')).toBeUndefined()
+  })
+
+  it('should return undefined for a nullish element', () => {
+    expect(text(undefined)).toBeUndefined()
+  })
+})
+
+describeForEachParser('textNode', (parseHtml) => {
+  it('should read only the direct text-node children', () => {
+    const document = parseHtml('<div><img src="i.png"> example.com <span>ignored</span></div>')
+    const element = queryElement(document, 'div')
+
+    expect(textNode(element)).toBe('example.com')
+  })
+
+  it('should return undefined when there is no direct text', () => {
+    const document = parseHtml('<div><span>nested only</span></div>')
+    const element = queryElement(document, 'div')
+
+    expect(textNode(element)).toBeUndefined()
+  })
+
+  it('should return undefined for a nullish element', () => {
+    expect(textNode(null)).toBeUndefined()
+  })
+})
+
+describeForEachParser('attr', (parseHtml) => {
+  it('should return the trimmed attribute value', () => {
+    const document = parseHtml('<a href=" https://example.com "></a>')
+    const element = queryElement(document, 'a')
+
+    expect(attr(element, 'href')).toBe('https://example.com')
+  })
+
+  it('should return undefined for a blank attribute', () => {
+    const document = parseHtml('<a href="  "></a>')
+    const element = queryElement(document, 'a')
+
+    expect(attr(element, 'href')).toBeUndefined()
+  })
+
+  it('should return undefined for a missing attribute', () => {
+    const document = parseHtml('<a></a>')
+    const element = queryElement(document, 'a')
+
+    expect(attr(element, 'href')).toBeUndefined()
+  })
+
+  it('should return undefined for a nullish element', () => {
+    expect(attr(undefined, 'href')).toBeUndefined()
   })
 })

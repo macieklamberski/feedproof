@@ -146,9 +146,7 @@ describeForEachParser('ghostCiteResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // Optional fields pass through raw; createCitePlaceholder trims every field
-    // when it writes the attributes. Only the guard-checked title is trimmed here.
-    it('should trim the title and pass optional text fields through raw', async () => {
+    it('should trim every text field', async () => {
       const value = html`
         <figure class="kg-card kg-bookmark-card">
           <a class="kg-bookmark-container" href="https://example.com/post">
@@ -167,9 +165,9 @@ describeForEachParser('ghostCiteResolver', (parseHtml) => {
         provider: 'ghost',
         url: 'https://example.com/post',
         title: 'Post title',
-        description: ' Preview text ',
-        author: ' Author name ',
-        publisher: ' Publisher name ',
+        description: 'Preview text',
+        author: 'Author name',
+        publisher: 'Publisher name',
       }
 
       expect(await extract(value)).toEqual(expected)

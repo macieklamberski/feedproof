@@ -1,4 +1,5 @@
 import type { CiteKind, CiteResolver } from '../types.js'
+import { attr, find, text } from '../utils/dom.js'
 
 // Maps the IndieWeb response class an h-cite is wrapped in to the citation kind it names.
 // `u-in-reply-to` uses the shorter `reply`; a bare h-cite with no wrapper stays unset.
@@ -26,24 +27,18 @@ export const microformatsCiteResolver: CiteResolver = {
   extract: (element) => {
     const notInAuthor = (node: Element) => !node.closest('.p-author')
 
-    const url = Array.from(element.querySelectorAll('.u-url'))
-      .find(notInAuthor)
-      ?.getAttribute('href')
-    const title = Array.from(element.querySelectorAll('.p-name'))
-      .find(notInAuthor)
-      ?.textContent?.trim()
+    const url = attr(find(element, '.u-url', notInAuthor), 'href')
+    const title = text(find(element, '.p-name', notInAuthor))
 
     if (!url || !title) {
       return
     }
 
-    const description = Array.from(element.querySelectorAll('.p-summary, .p-content')).find(
-      notInAuthor,
-    )
+    const description = find(element, '.p-summary, .p-content', notInAuthor)
     // The image property is `u-featured` in the newer IndieWeb convention and `u-photo` in
     // the base spec; prefer the former and fall back to the latter.
-    const image = Array.from(element.querySelectorAll('.u-featured, .u-photo')).find(notInAuthor)
-    const author = element.querySelector('.p-author')
+    const image = find(element, '.u-featured, .u-photo', notInAuthor)
+    const author = find(element, '.p-author')
 
     const responseClass = Array.from(element.classList).find(
       (name) => name in citeKindByResponseClass,
@@ -54,9 +49,9 @@ export const microformatsCiteResolver: CiteResolver = {
       provider: 'microformats',
       url,
       title,
-      description: description?.textContent ?? undefined,
-      author: author?.querySelector('.p-name')?.textContent ?? author?.textContent ?? undefined,
-      thumbnail: image?.getAttribute('src') ?? undefined,
+      description: text(description),
+      author: text(author, '.p-name') ?? text(author),
+      thumbnail: attr(image, 'src'),
       kind,
     }
   },
