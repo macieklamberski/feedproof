@@ -1,4 +1,5 @@
 import type { CiteKind, CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
 // Maps the IndieWeb response class an h-cite is wrapped in to the citation kind it names.
@@ -27,13 +28,6 @@ export const microformatsCiteResolver: CiteResolver = {
   extract: (element) => {
     const notInAuthor = (node: Element) => !node.closest('.p-author')
 
-    const url = attr(find(element, '.u-url', notInAuthor), 'href')
-    const title = text(find(element, '.p-name', notInAuthor))
-
-    if (!url || !title) {
-      return
-    }
-
     const description = find(element, '.p-summary, .p-content', notInAuthor)
     // The image property is `u-featured` in the newer IndieWeb convention and `u-photo` in
     // the base spec; prefer the former and fall back to the latter.
@@ -45,14 +39,14 @@ export const microformatsCiteResolver: CiteResolver = {
     )
     const kind = responseClass ? citeKindByResponseClass[responseClass] : undefined
 
-    return {
+    return buildCite({
       provider: 'microformats',
-      url,
-      title,
+      url: attr(find(element, '.u-url', notInAuthor), 'href'),
+      title: text(find(element, '.p-name', notInAuthor)),
       description: text(description),
       author: text(author, '.p-name') ?? text(author),
       thumbnail: attr(image, 'src'),
       kind,
-    }
+    })
   },
 }

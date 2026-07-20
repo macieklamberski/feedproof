@@ -93,7 +93,7 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
 
     // Optional fields pass through raw; createCitePlaceholder trims every field
     // when it writes the attributes. Only the guard-checked title is trimmed here.
-    it('should trim the title and pass optional text fields through raw', async () => {
+    it('should trim every text field', async () => {
       const value = makeCard('digest-post-embed', {
         title: '  Model Drop  ',
         canonical_url: 'https://thereader.example.com/p/model-drop',
@@ -105,9 +105,9 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
         provider: 'substack',
         url: 'https://thereader.example.com/p/model-drop',
         title: 'Model Drop',
-        description: ' A look at the backlash. ',
-        author: ' Author name ',
-        publisher: ' The Reader ',
+        description: 'A look at the backlash.',
+        author: 'Author name',
+        publisher: 'The Reader',
         date: undefined,
         icon: undefined,
         thumbnail: undefined,

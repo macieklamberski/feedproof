@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
 // note.com renders a pasted link as an `external-article` figure. The same
@@ -12,23 +13,15 @@ const backgroundImageUrl = /url\(['"]?([^'")]+)/
 export const notecomCiteResolver: CiteResolver = {
   selector: 'figure[embedded-service="external-article"]',
   extract: (element) => {
-    const url = attr(find(element, 'a'), 'href')
-    const title = text(element, '.external-article-widget-title')
-
-    if (!url || !title) {
-      return
-    }
-
     const style = attr(find(element, '.external-article-widget-image'), 'style')
-    const thumbnail = style?.match(backgroundImageUrl)?.[1]
 
-    return {
+    return buildCite({
       provider: 'notecom',
-      url,
-      title,
+      url: attr(find(element, 'a'), 'href'),
+      title: text(element, '.external-article-widget-title'),
       description: text(element, '.external-article-widget-description'),
       publisher: text(element, '.external-article-widget-url'),
-      thumbnail,
-    }
+      thumbnail: style?.match(backgroundImageUrl)?.[1],
+    })
   },
 }

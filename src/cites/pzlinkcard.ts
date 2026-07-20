@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
 // Pz-LinkCard is a widely used WordPress link-card plugin. Like Cocoon the whole card sits
@@ -9,21 +10,14 @@ import { attr, find, text } from '../utils/dom.js'
 export const pzlinkcardCiteResolver: CiteResolver = {
   selector: '.lkc-card',
   extract: (element) => {
-    const url = attr(element.closest('a'), 'href')
-    const title = text(element, '.lkc-title-text') ?? text(element, '.lkc-title')
-
-    if (!url || !title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'pzlinkcard',
-      url,
-      title,
+      url: attr(element.closest('a'), 'href'),
+      title: text(element, '.lkc-title-text') ?? text(element, '.lkc-title'),
       description: text(element, '.lkc-excerpt'),
       publisher: text(element, '.lkc-domain'),
       icon: attr(find(element, '.lkc-favicon'), 'src'),
       thumbnail: attr(find(element, '.lkc-thumbnail-img'), 'src'),
-    }
+    })
   },
 }

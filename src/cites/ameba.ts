@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
 // Ameba (ameblo.jp) renders a pasted link as an "ogpCard": an anchor built from the linked
@@ -11,20 +12,13 @@ import { attr, find, text } from '../utils/dom.js'
 export const amebaCiteResolver: CiteResolver = {
   selector: '.ogpCard_wrap',
   extract: (element) => {
-    const url = attr(find(element, 'a.ogpCard_link'), 'href')
-    const title = text(element, '.ogpCard_title')
-
-    if (!url || !title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'ameba',
-      url,
-      title,
+      url: attr(find(element, 'a.ogpCard_link'), 'href'),
+      title: text(element, '.ogpCard_title'),
       description: text(element, '.ogpCard_description'),
       publisher: text(element, '.ogpCard_urlText'),
       thumbnail: attr(find(element, 'img.ogpCard_image'), 'src'),
-    }
+    })
   },
 }

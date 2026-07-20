@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
 // Hatena Blog renders a pasted link as an iframe pointing at its card renderer, followed by
@@ -20,18 +21,12 @@ export const hatenaCiteResolver: CiteResolver = {
     const embeddedUrl = embedUrl
       ? new URL(embedUrl, 'https://example.invalid').searchParams.get('url')
       : null
-    const url = attr(citationLink, 'href') ?? embeddedUrl ?? undefined
-    const title = attr(iframe, 'title')
 
-    if (!url || !title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'hatena',
-      url,
-      title,
+      url: attr(citationLink, 'href') ?? embeddedUrl,
+      title: attr(iframe, 'title'),
       publisher: text(citationLink),
-    }
+    })
   },
 }

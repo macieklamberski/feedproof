@@ -1,20 +1,14 @@
 import type { CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
 export const ghostCiteResolver: CiteResolver = {
   selector: '.kg-bookmark-card',
   extract: (element) => {
-    const url = attr(find(element, 'a.kg-bookmark-container'), 'href')
-    const title = text(element, '.kg-bookmark-title')
-
-    if (!url || !title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'ghost',
-      url,
-      title,
+      url: attr(find(element, 'a.kg-bookmark-container'), 'href'),
+      title: text(element, '.kg-bookmark-title'),
       description: text(element, '.kg-bookmark-description'),
       // Ghost's renderer intentionally reverses these two classes for theme
       // backwards-compatibility: .kg-bookmark-author holds the publisher name and
@@ -25,6 +19,6 @@ export const ghostCiteResolver: CiteResolver = {
       caption: text(element, 'figcaption'),
       icon: attr(find(element, 'img.kg-bookmark-icon'), 'src'),
       thumbnail: attr(find(element, '.kg-bookmark-thumbnail img'), 'src'),
-    }
+    })
   },
 }
