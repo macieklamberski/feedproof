@@ -156,6 +156,36 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
       expect(result).toContain('data-cite-thumbnail="https://example.com/t.jpg"')
     })
 
+    it('should clean the url with the provided cleanUrlFn', async () => {
+      const context: TransformContext = {
+        ...baseContext,
+        citeResolvers: [cardResolver],
+        cleanUrlFn: (url) => url.split('?')[0] ?? url,
+      }
+      const value = html`
+        <div class="card" data-url="https://example.com/p?utm_source=feed" data-title="T"></div>
+      `
+      const result = await applyDomTransforms(parseHtml(value), [convertCiteCards(context)])
+
+      expect(result).toContain('data-cite-url="https://example.com/p"')
+      expect(result).toContain('<a href="https://example.com/p">')
+    })
+
+    it('should clean the url after resolving it against the base url', async () => {
+      const context: TransformContext = {
+        ...baseContext,
+        citeResolvers: [cardResolver],
+        baseUrl: 'https://example.com/post/',
+        cleanUrlFn: (url) => url.split('?')[0] ?? url,
+      }
+      const value = html`
+        <div class="card" data-url="/p?utm_source=feed" data-title="T"></div>
+      `
+      const result = await applyDomTransforms(parseHtml(value), [convertCiteCards(context)])
+
+      expect(result).toContain('data-cite-url="https://example.com/p"')
+    })
+
     // URL safety is neutralizeUnsafeUrls' job (see its tests); this transform only
     // emits the placeholder, so unsafe icon/thumbnail urls pass through here unchanged.
     it('should pass unsafe icon and thumbnail urls through unchanged', async () => {
