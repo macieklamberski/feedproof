@@ -7,10 +7,6 @@ export type RawCiteResult = {
   [Key in keyof CiteResolverResult]?: Nullish<CiteResolverResult[Key]>
 } & { provider: string }
 
-// The `Record` half forces every field to be listed below, so a field added to
-// `CiteResolverResult` becomes a type error here rather than a silently untrimmed value.
-type BuiltCite = CiteResolverResult & Record<keyof CiteResolverResult, unknown>
-
 const trim = (value: Nullish<string>): string | undefined => {
   return value?.trim() || undefined
 }
@@ -26,7 +22,7 @@ export const buildCite = (result: RawCiteResult): CiteResolverResult | undefined
     return
   }
 
-  const cite: BuiltCite = {
+  return {
     provider: result.provider,
     url,
     title,
@@ -39,6 +35,4 @@ export const buildCite = (result: RawCiteResult): CiteResolverResult | undefined
     thumbnail: trim(result.thumbnail),
     kind: result.kind ?? undefined,
   }
-
-  return cite
 }
