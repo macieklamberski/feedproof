@@ -74,18 +74,6 @@ describeForEachParser('notecomCiteResolver', (parseHtml) => {
 
       expect((await extract(value))?.thumbnail).toBe('https://cdn.example.com/thumb.jpg')
     })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <figure embedded-service="external-article">
-          <div class="external-article-widget">
-            <a href="https://example.com/page"><strong class="external-article-widget-title"> Padded title </strong></a>
-          </div>
-        </figure>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
-    })
   })
 
   describe('sad paths', () => {

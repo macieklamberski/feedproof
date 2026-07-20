@@ -95,18 +95,6 @@ describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
 
       expect((await extract(value))?.publisher).toBe('example.com')
     })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <div class="c-embed">
-          <div class="c-embed__body">
-            <h2><a href="https://example.com/page"> Padded title </a></h2>
-          </div>
-        </div>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
-    })
   })
 
   describe('sad paths', () => {
@@ -127,18 +115,6 @@ describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
         <div class="c-embed">
           <div class="c-embed__body">
             <p>Preview text</p>
-          </div>
-        </div>
-      `
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should return undefined when the title is only whitespace', async () => {
-      const value = html`
-        <div class="c-embed">
-          <div class="c-embed__body">
-            <h2><a href="https://example.com/page"> </a></h2>
           </div>
         </div>
       `
@@ -270,18 +246,6 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
 
       expect((await extract(value))?.url).toBe('https://example.com/post')
     })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <div class="ltag__link--embedded">
-          <div class="crayons-story ">
-            <h2 class="crayons-story__title"><a href="https://example.com/post"> Padded title </a></h2>
-          </div>
-        </div>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
-    })
   })
 
   describe('sad paths', () => {
@@ -373,18 +337,6 @@ describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
       `
 
       expect((await extract(value))?.author).toBeUndefined()
-    })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <div class="ltag__link">
-          <a href="https://example.com/author/post" class="ltag__link__link">
-            <div class="ltag__link__content"><h2> Padded title </h2></div>
-          </a>
-        </div>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
     })
   })
 

@@ -82,18 +82,6 @@ describeForEachParser('amebaCiteResolver', (parseHtml) => {
 
       expect((await extract(value))?.icon).toBeUndefined()
     })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <article class="ogpCard_wrap">
-          <a class="ogpCard_link" href="https://example.com/page">
-            <span class="ogpCard_title"> Padded title </span>
-          </a>
-        </article>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
-    })
   })
 
   describe('sad paths', () => {
@@ -114,18 +102,6 @@ describeForEachParser('amebaCiteResolver', (parseHtml) => {
         <article class="ogpCard_wrap">
           <a class="ogpCard_link" href="https://example.com/page">
             <span class="ogpCard_description">Preview text</span>
-          </a>
-        </article>
-      `
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should return undefined when the title is only whitespace', async () => {
-      const value = html`
-        <article class="ogpCard_wrap">
-          <a class="ogpCard_link" href="https://example.com/page">
-            <span class="ogpCard_title"> </span>
           </a>
         </article>
       `

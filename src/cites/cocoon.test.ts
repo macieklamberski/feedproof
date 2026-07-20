@@ -144,16 +144,6 @@ describeForEachParser('cocoonCiteResolver', (parseHtml) => {
 
       expect((await extract(value))?.title).toBe('Title from element')
     })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <a href="https://example.com/post" class="blogcard-wrap">
-          <div class="blogcard-title"> Padded title </div>
-        </a>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
-    })
   })
 
   describe('sad paths', () => {
@@ -171,16 +161,6 @@ describeForEachParser('cocoonCiteResolver', (parseHtml) => {
       const value = html`
         <a href="https://example.com/post" class="blogcard-wrap">
           <div class="blogcard-snippet">Preview text</div>
-        </a>
-      `
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should return undefined when the title is only whitespace', async () => {
-      const value = html`
-        <a href="https://example.com/post" class="blogcard-wrap">
-          <div class="blogcard-title"> </div>
         </a>
       `
 

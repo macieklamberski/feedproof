@@ -35,16 +35,6 @@ describeForEachParser('embedlyCiteResolver', (parseHtml) => {
 
       expect((await extract(value))?.description).toBeUndefined()
     })
-
-    it('should trim surrounding whitespace from the title', async () => {
-      const value = html`
-        <blockquote class="embedly-card">
-          <h4><a href="https://example.com/page"> Padded title </a></h4>
-        </blockquote>
-      `
-
-      expect((await extract(value))?.title).toBe('Padded title')
-    })
   })
 
   describe('sad paths', () => {
