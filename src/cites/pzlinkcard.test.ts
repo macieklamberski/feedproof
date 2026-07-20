@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
-import type { CiteResolverResult } from '../types.js'
+import { baseContext, citeExtractor, describeForEachParser, html } from '../tests.js'
+import { convertCiteCards } from '../transforms/dom/convertCiteCards.js'
+import type { CiteResolverResult, TransformContext } from '../types.js'
+import { applyDomTransforms } from '../utils/transforms.js'
 import { pzlinkcardCiteResolver } from './pzlinkcard.js'
 
 describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(pzlinkcardCiteResolver.selector)
-    return element ? await pzlinkcardCiteResolver.extract(element) : undefined
+  const extract = citeExtractor(parseHtml, pzlinkcardCiteResolver)
+
+  // Which element gets replaced only exists in the document once the transform runs, so
+  // extracting from a parsed element cannot see the wrapping anchor being swapped out.
+  const transform = (value: string) => {
+    const context: TransformContext = { ...baseContext, citeResolvers: [pzlinkcardCiteResolver] }
+
+    return applyDomTransforms(parseHtml(value), [convertCiteCards(context)])
   }
 
   describe('happy paths', () => {
@@ -172,6 +179,50 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
       `
 
       expect(await extract(value)).toBeUndefined()
+    })
+  })
+  describe('through convertCiteCards', () => {
+    it('should replace the wrapping anchor along with the card', async () => {
+      const value = html`
+        <a href="https://example.com/page">
+          <div class="lkc-card">
+            <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
+          </div>
+        </a>
+      `
+      const expected = html`
+        <div
+          data-cite-title="Page title"
+          data-cite-url="https://example.com/page"
+          data-cite-provider="pzlinkcard"
+        >
+          <a href="https://example.com/page">Page title</a>
+        </div>
+      `
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should emit one placeholder per card', async () => {
+      const value = html`
+        <a href="https://example.com/one">
+          <div class="lkc-card"><div class="lkc-title">One</div></div>
+        </a>
+        <div class="lkc-card">
+          <div class="lkc-title">Two</div>
+          <div class="lkc-url">https://example.com/two</div>
+        </div>
+      `
+      const result = await transform(value)
+
+      expect((result.match(/data-cite-provider="/g) ?? []).length).toBe(2)
+      expect(result).not.toContain('class="lkc-card"')
+    })
+
+    it('should leave an anchor that wraps no card alone', async () => {
+      const value = '<a href="https://example.com/page">Plain link</a>'
+
+      expect(await transform(value)).toEqualHtml(value)
     })
   })
 })
