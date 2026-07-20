@@ -1,13 +1,5 @@
 import type { DomTransform } from '../../types.js'
-
-// A real, loadable value — not empty or the `about:blank` lazy placeholder.
-const isUsableSrc = (src: string | null): src is string => {
-  const trimmed = src?.trim()
-  return !!trimmed && trimmed !== 'about:blank'
-}
-
-// Rejects flag-style values; a real URL carries a `:`, `/`, or `.`.
-const urlShapeRegex = /[:/.]/
+import { isUrlShaped, isUsableSrc } from '../../utils/urls.js'
 
 // Promote a lazy <video> src (the real clip URL parked in a data-* attribute) into
 // `src`, and a lazy `data-poster` into `poster`, so a no-JS reader shows the still
@@ -18,7 +10,7 @@ export const fixLazyVideos: DomTransform = (context) => (document) => {
     if (!isUsableSrc(video.getAttribute('poster'))) {
       const poster = video.getAttribute('data-poster')
 
-      if (poster && urlShapeRegex.test(poster)) {
+      if (poster && isUrlShaped(poster)) {
         video.setAttribute('poster', poster)
       }
     }
@@ -32,7 +24,7 @@ export const fixLazyVideos: DomTransform = (context) => (document) => {
     for (const attribute of context.lazySrcAttributes) {
       const value = video.getAttribute(attribute)
 
-      if (value && urlShapeRegex.test(value)) {
+      if (value && isUrlShaped(value)) {
         video.setAttribute('src', value)
         break
       }

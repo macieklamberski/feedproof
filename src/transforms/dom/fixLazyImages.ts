@@ -1,12 +1,12 @@
 import type { DomTransform } from '../../types.js'
+import { isUrlShaped } from '../../utils/urls.js'
 
 const imgRegex = /<img\s/i
-// Rejects flag-style values like `"1"` / `"true"` / `"loaded"` that some
-// libraries park on otherwise-lazy attribute names.
-const urlShapeRegex = /[:/.]/
 
-const isUrlShaped = (value: string): boolean => {
-  return urlShapeRegex.test(value) && !value.startsWith('{') && !value.startsWith('[')
+// Stricter than the shared check: image lazy-attributes also carry JSON blobs
+// (srcset descriptors, gallery configs), which are never a usable src.
+const isUsableLazyValue = (value: string): boolean => {
+  return isUrlShaped(value) && !value.startsWith('{') && !value.startsWith('[')
 }
 
 export const fixLazyImages: DomTransform = (context) => {
@@ -42,7 +42,7 @@ export const fixLazyImages: DomTransform = (context) => {
         for (const attribute of lazySrcAttributes) {
           const value = element.getAttribute(attribute)
 
-          if (value && isUrlShaped(value)) {
+          if (value && isUsableLazyValue(value)) {
             element.setAttribute('src', value)
             break
           }
@@ -53,7 +53,7 @@ export const fixLazyImages: DomTransform = (context) => {
         for (const attribute of lazySrcsetAttributes) {
           const value = element.getAttribute(attribute)
 
-          if (value && isUrlShaped(value)) {
+          if (value && isUsableLazyValue(value)) {
             element.setAttribute('srcset', value)
             break
           }
