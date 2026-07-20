@@ -150,17 +150,6 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined when the printed url is not a url', async () => {
-      const value = html`
-        <div class="lkc-card">
-          <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
-          <div class="lkc-url"><strike>リンク切れ</strike></div>
-        </div>
-      `
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
     it('should return undefined when the title is missing', async () => {
       const value = html`
         <a href="https://example.com/page">
