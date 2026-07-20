@@ -26,10 +26,6 @@ const cardResolver: CiteResolver = {
 }
 
 describeForEachParser('convertCiteCards', (parseHtml) => {
-  // This runs the transform alone, so the placeholders below are its raw output. In the
-  // default pipeline wrapBareInlineInParagraphs runs afterwards and wraps the fallback
-  // anchor in a `<p>`, which embed placeholders never get because they are built later.
-  // The difference is confined to that fallback: a consumer renders from the attributes.
   const transform = (html: string, citeResolvers: Array<CiteResolver>) => {
     const context: TransformContext = { ...baseContext, citeResolvers }
     return applyDomTransforms(parseHtml(html), [convertCiteCards(context)])

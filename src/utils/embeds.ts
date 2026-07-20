@@ -1,5 +1,6 @@
 import { isHostOf, isSubdomainOf } from 'trousse'
 import type { CiteResolverResult, EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { GeneratedWrapperType } from './dom.js'
 
 // Every video provider matches the same iframe and differs only in which hosts it claims
 // and how it reads an id out of the src, so the match itself lives here.
@@ -27,7 +28,7 @@ export const createIframeEmbedResolver = (
 
 export const createPlaceholder = <Type extends object>(
   document: Document,
-  type: string,
+  type: GeneratedWrapperType,
   fields: Type,
 ): HTMLElement => {
   const element = document.createElement('div')

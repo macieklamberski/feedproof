@@ -201,6 +201,7 @@ export type {
   TransformContext,
   UrlRole,
 } from './types.js'
+export { type GeneratedWrapperType, generatedWrapperTypes } from './utils/dom.js'
 export {
   createCitePlaceholder,
   createEmbedPlaceholder,
