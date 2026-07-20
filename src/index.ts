@@ -66,6 +66,7 @@ export const transformContent = async (
   return afterDom
 }
 
+export { affingerCiteResolver } from './cites/affinger.js'
 export { amebaCiteResolver } from './cites/ameba.js'
 export { cocoonCiteResolver } from './cites/cocoon.js'
 export {

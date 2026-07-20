@@ -1,4 +1,5 @@
 import { resolveUrl } from 'feedcanon'
+import { affingerCiteResolver } from './cites/affinger.js'
 import { amebaCiteResolver } from './cites/ameba.js'
 import { cocoonCiteResolver } from './cites/cocoon.js'
 import {
@@ -260,6 +261,7 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   paragraphCiteResolver,
   devtoPostCiteResolver,
   devtoLegacyPostCiteResolver,
+  affingerCiteResolver,
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
