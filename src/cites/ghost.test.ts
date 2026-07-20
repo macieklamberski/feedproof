@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
-import type { BookmarkResolverResult } from '../types.js'
-import { ghostBookmarkResolver } from './ghost.js'
+import type { CiteResolverResult } from '../types.js'
+import { ghostCiteResolver } from './ghost.js'
 
-describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<BookmarkResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(ghostBookmarkResolver.selector)
-    return element ? await ghostBookmarkResolver.extract(element) : undefined
+describeForEachParser('ghostCiteResolver', (parseHtml) => {
+  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(ghostCiteResolver.selector)
+    return element ? await ghostCiteResolver.extract(element) : undefined
   }
 
   describe('happy paths', () => {
@@ -31,7 +31,7 @@ describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
           </a>
         </figure>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'ghost',
         url: 'https://example.com/post',
         title: 'Post title',
@@ -55,7 +55,7 @@ describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
           </a>
         </figure>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'ghost',
         url: 'https://example.com/post',
         title: 'Post title',
@@ -82,7 +82,7 @@ describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
           </a>
         </figure>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'ghost',
         url: 'http://example.com/post',
         title: 'T',
@@ -104,7 +104,7 @@ describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
           <figcaption>My note about why this link matters</figcaption>
         </figure>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'ghost',
         url: 'https://example.com/post',
         title: 'Post title',
@@ -132,7 +132,7 @@ describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
           </a>
         </figure>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'ghost',
         url: 'https://example.com/post',
         title: 'Post title',
@@ -146,7 +146,7 @@ describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // Optional fields pass through raw; createBookmarkPlaceholder trims every field
+    // Optional fields pass through raw; createCitePlaceholder trims every field
     // when it writes the attributes. Only the guard-checked title is trimmed here.
     it('should trim the title and pass optional text fields through raw', async () => {
       const value = html`
@@ -163,7 +163,7 @@ describeForEachParser('ghostBookmarkResolver', (parseHtml) => {
           </a>
         </figure>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'ghost',
         url: 'https://example.com/post',
         title: 'Post title',

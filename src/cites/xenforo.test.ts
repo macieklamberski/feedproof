@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
-import type { BookmarkResolverResult } from '../types.js'
-import { xenforoBookmarkResolver } from './xenforo.js'
+import type { CiteResolverResult } from '../types.js'
+import { xenforoCiteResolver } from './xenforo.js'
 
-describeForEachParser('xenforoBookmarkResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<BookmarkResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(xenforoBookmarkResolver.selector)
-    return element ? await xenforoBookmarkResolver.extract(element) : undefined
+describeForEachParser('xenforoCiteResolver', (parseHtml) => {
+  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(xenforoCiteResolver.selector)
+    return element ? await xenforoCiteResolver.extract(element) : undefined
   }
 
   describe('happy paths', () => {
@@ -39,7 +39,7 @@ describeForEachParser('xenforoBookmarkResolver', (parseHtml) => {
           </div>
         </div>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'xenforo',
         url: 'https://example.com/profile.php?id=615739',
         title: 'Page title',
@@ -58,7 +58,7 @@ describeForEachParser('xenforoBookmarkResolver', (parseHtml) => {
           <h3 class="js-unfurl-title">Page title</h3>
         </div>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'xenforo',
         url: 'https://example.com/page',
         title: 'Page title',
@@ -87,7 +87,7 @@ describeForEachParser('xenforoBookmarkResolver', (parseHtml) => {
           </span>
         </div>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'xenforo',
         url: 'https://example.com/page',
         title: 'Page title',

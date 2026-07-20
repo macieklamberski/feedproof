@@ -1,4 +1,4 @@
-import type { BookmarkResolver } from '../types.js'
+import type { CiteResolver } from '../types.js'
 
 // Tistory renders a pasted link as a card built from the linked page's Open Graph tags.
 // The `data-og-*` attribute names and the `og-*` class names below are Tistory's, but they
@@ -9,7 +9,7 @@ import type { BookmarkResolver } from '../types.js'
 // Every field is duplicated: once as a `data-og-*` attribute on the wrapper and once as an
 // element inside the anchor. The attributes are read first because the elements are absent
 // on the slimmer card variants.
-export const tistoryBookmarkResolver: BookmarkResolver = {
+export const tistoryCiteResolver: CiteResolver = {
   selector: '[data-og-source-url]',
   extract: (element) => {
     // `data-og-source-url` is the link the author added, which is what the card's own

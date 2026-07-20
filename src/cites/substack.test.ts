@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser } from '../tests.js'
-import type { BookmarkResolverResult } from '../types.js'
-import { substackCrossPostBookmarkResolver, substackOwnPostBookmarkResolver } from './substack.js'
+import type { CiteResolverResult } from '../types.js'
+import { substackCrossPostCiteResolver, substackOwnPostCiteResolver } from './substack.js'
 
 // Substack ships these cards as empty divs whose data lives in a `data-attrs` JSON blob,
 // stored in a double-quoted attribute with the inner quotes HTML-encoded — that is what
@@ -18,10 +18,10 @@ const makeCard = (className: string, attrs?: Record<string, unknown> | string): 
   return `<div class="${className}" data-attrs="${encoded}"></div>`
 }
 
-describeForEachParser('substackOwnPostBookmarkResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<BookmarkResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(substackOwnPostBookmarkResolver.selector)
-    return element ? await substackOwnPostBookmarkResolver.extract(element) : undefined
+describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
+  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(substackOwnPostCiteResolver.selector)
+    return element ? await substackOwnPostCiteResolver.extract(element) : undefined
   }
 
   describe('happy paths', () => {
@@ -36,7 +36,7 @@ describeForEachParser('substackOwnPostBookmarkResolver', (parseHtml) => {
         publishedBylines: [{ name: 'Author name' }],
         post_date: '2026-06-25T10:31:02.000Z',
       })
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'substack',
         url: 'https://thereader.example.com/p/why-does-everyone-hate-ai',
         title: 'Why Does Everyone Hate AI?',
@@ -60,7 +60,7 @@ describeForEachParser('substackOwnPostBookmarkResolver', (parseHtml) => {
         publishedBylines: [],
         post_date: '2026-07-09T20:28:23.465Z',
       })
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'substack',
         url: 'https://thereader.example.com/p/model-drop',
         title: 'Model Drop',
@@ -94,7 +94,7 @@ describeForEachParser('substackOwnPostBookmarkResolver', (parseHtml) => {
       expect((await extract(value))?.author).toBeUndefined()
     })
 
-    // Optional fields pass through raw; createBookmarkPlaceholder trims every field
+    // Optional fields pass through raw; createCitePlaceholder trims every field
     // when it writes the attributes. Only the guard-checked title is trimmed here.
     it('should trim the title and pass optional text fields through raw', async () => {
       const value = makeCard('digest-post-embed', {
@@ -104,7 +104,7 @@ describeForEachParser('substackOwnPostBookmarkResolver', (parseHtml) => {
         publication_name: ' The Reader ',
         publishedBylines: [{ name: ' Author name ' }],
       })
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'substack',
         url: 'https://thereader.example.com/p/model-drop',
         title: 'Model Drop',
@@ -164,10 +164,10 @@ describeForEachParser('substackOwnPostBookmarkResolver', (parseHtml) => {
   })
 })
 
-describeForEachParser('substackCrossPostBookmarkResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<BookmarkResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(substackCrossPostBookmarkResolver.selector)
-    return element ? await substackCrossPostBookmarkResolver.extract(element) : undefined
+describeForEachParser('substackCrossPostCiteResolver', (parseHtml) => {
+  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(substackCrossPostCiteResolver.selector)
+    return element ? await substackCrossPostCiteResolver.extract(element) : undefined
   }
 
   it('should extract all fields from a complete cross-post card', async () => {
@@ -181,7 +181,7 @@ describeForEachParser('substackCrossPostBookmarkResolver', (parseHtml) => {
       bylines: [{ name: 'Author name' }],
       date: '2023-10-08T10:00:31.798Z',
     })
-    const expected: BookmarkResolverResult = {
+    const expected: CiteResolverResult = {
       provider: 'substack',
       url: 'https://thereader.example.com/p/why-does-everyone-hate-ai',
       title: 'Why Does Everyone Hate AI?',

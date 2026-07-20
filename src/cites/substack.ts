@@ -1,4 +1,4 @@
-import type { BookmarkResolver } from '../types.js'
+import type { CiteResolver } from '../types.js'
 
 const parseDataAttrs = <Attrs>(raw: string | null): Attrs | undefined => {
   if (!raw) {
@@ -41,7 +41,7 @@ type OwnPostAttrs = {
 // An embed of another creator's post. On Substack it renders as the tall branded card
 // (publication logo header, body preview, a Read more button, engagement counts),
 // because the reader may not know the linked publication.
-export const substackCrossPostBookmarkResolver: BookmarkResolver = {
+export const substackCrossPostCiteResolver: CiteResolver = {
   selector: '.embedded-post-wrap',
   extract: (element) => {
     const attrs = parseDataAttrs<CrossPostAttrs>(element.getAttribute('data-attrs'))
@@ -76,7 +76,7 @@ export const substackCrossPostBookmarkResolver: BookmarkResolver = {
 // also what a single self-post embed produces today. Ships as an empty hydration div.
 // The `caption` is the linked post's excerpt and the only preview text the div carries,
 // so it maps to the description.
-export const substackOwnPostBookmarkResolver: BookmarkResolver = {
+export const substackOwnPostCiteResolver: CiteResolver = {
   selector: '.digest-post-embed',
   extract: (element) => {
     const attrs = parseDataAttrs<OwnPostAttrs>(element.getAttribute('data-attrs'))

@@ -1,11 +1,11 @@
-import type { BookmarkResolver } from '../types.js'
+import type { CiteResolver } from '../types.js'
 
 // dev.to (Forem) turns a pasted link into an embed card. Forem compiles its liquid tags to
 // HTML when the article is saved, so the card is already in the stored body by the time the
 // feed renders, and the feed sanitizer's allowlist keeps `div`, `class` and `id` intact.
 // The publisher sits as a bare text node next to the favicon, so it is read from the
 // favicon's parent rather than from an element of its own.
-export const devtoBookmarkResolver: BookmarkResolver = {
+export const devtoCiteResolver: CiteResolver = {
   selector: '.c-embed',
   extract: (element) => {
     const body = element.querySelector('.c-embed__body')

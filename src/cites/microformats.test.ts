@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
-import type { BookmarkResolverResult } from '../types.js'
-import { microformatsBookmarkResolver } from './microformats.js'
+import type { CiteResolverResult } from '../types.js'
+import { microformatsCiteResolver } from './microformats.js'
 
-describeForEachParser('microformatsBookmarkResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<BookmarkResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(microformatsBookmarkResolver.selector)
-    return element ? await microformatsBookmarkResolver.extract(element) : undefined
+describeForEachParser('microformatsCiteResolver', (parseHtml) => {
+  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(microformatsCiteResolver.selector)
+    return element ? await microformatsCiteResolver.extract(element) : undefined
   }
 
   describe('happy paths', () => {
@@ -24,13 +24,14 @@ describeForEachParser('microformatsBookmarkResolver', (parseHtml) => {
           </details>
         </span>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'microformats',
         url: 'https://example.com/post',
         title: 'Page title',
         description: 'Preview text',
         author: 'Author name',
         thumbnail: 'https://example.com/cover.png',
+        kind: 'bookmark',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -42,7 +43,7 @@ describeForEachParser('microformatsBookmarkResolver', (parseHtml) => {
           <a class="u-url p-name" href="https://example.com/post">Page title</a>
         </span>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'microformats',
         url: 'https://example.com/post',
         title: 'Page title',
@@ -66,16 +67,27 @@ describeForEachParser('microformatsBookmarkResolver', (parseHtml) => {
           </span>
         </span>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'microformats',
         url: 'https://example.com/book',
         title: 'Book title',
         author: 'Author name',
         description: undefined,
         thumbnail: undefined,
+        kind: 'read',
       }
 
       expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should leave the kind unset for a bare citation with no response class', async () => {
+      const value = html`
+        <span class="h-cite">
+          <a class="u-url p-name" href="https://example.com/post">Page title</a>
+        </span>
+      `
+
+      expect((await extract(value))?.kind).toBeUndefined()
     })
 
     it('should read the image from u-photo when u-featured is absent', async () => {

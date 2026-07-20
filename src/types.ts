@@ -48,7 +48,12 @@ export type EmbedResolver = {
   extract: (element: Element) => MaybePromise<EmbedResolverResult | undefined>
 }
 
-export type BookmarkResolverResult = {
+// The relationship a citation expresses toward the linked work. Sparse: only sources that
+// carry a real relationship set it (today just microformats h-cite, via its `u-*-of` class);
+// every platform card leaves it unset, meaning a plain link preview with no relationship.
+export type CiteKind = 'bookmark' | 'repost' | 'like' | 'reply' | 'read' | 'listen' | 'watch'
+
+export type CiteResolverResult = {
   provider: string
   url: string
   title: string
@@ -61,11 +66,12 @@ export type BookmarkResolverResult = {
   date?: string
   icon?: string
   thumbnail?: string
+  kind?: CiteKind
 }
 
-export type BookmarkResolver = {
+export type CiteResolver = {
   selector: string
-  extract: (element: Element) => MaybePromise<BookmarkResolverResult | undefined>
+  extract: (element: Element) => MaybePromise<CiteResolverResult | undefined>
 }
 
 export type CleanUrlFn = (url: string) => string
@@ -97,7 +103,7 @@ export type TransformContext = {
   sameSiteUrls?: Array<string>
   enclosures?: Array<Enclosure>
   embedResolvers: Array<EmbedResolver>
-  bookmarkResolvers: Array<BookmarkResolver>
+  citeResolvers: Array<CiteResolver>
   lazySrcAttributes: Array<string>
   lazySrcsetAttributes: Array<string>
   lazyIframeAttributes: Array<string>
@@ -128,7 +134,7 @@ export type TransformContentOptions = {
   sameSiteUrls?: Array<string>
   enclosures?: Array<Enclosure>
   embedResolvers?: Array<EmbedResolver>
-  bookmarkResolvers?: Array<BookmarkResolver>
+  citeResolvers?: Array<CiteResolver>
   lazySrcAttributes?: Array<string>
   lazySrcsetAttributes?: Array<string>
   lazyIframeAttributes?: Array<string>

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
-import type { BookmarkResolverResult } from '../types.js'
-import { discourseBookmarkResolver } from './discourse.js'
+import type { CiteResolverResult } from '../types.js'
+import { discourseCiteResolver } from './discourse.js'
 
-describeForEachParser('discourseBookmarkResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<BookmarkResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(discourseBookmarkResolver.selector)
-    return element ? await discourseBookmarkResolver.extract(element) : undefined
+describeForEachParser('discourseCiteResolver', (parseHtml) => {
+  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(discourseCiteResolver.selector)
+    return element ? await discourseCiteResolver.extract(element) : undefined
   }
 
   describe('happy paths', () => {
@@ -41,7 +41,7 @@ describeForEachParser('discourseBookmarkResolver', (parseHtml) => {
           <div style="clear: both"></div>
         </aside>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'discourse',
         url: 'https://example.com/page#comment-1',
         title: 'Page title',
@@ -62,7 +62,7 @@ describeForEachParser('discourseBookmarkResolver', (parseHtml) => {
           </article>
         </aside>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'discourse',
         url: 'https://example.com/page',
         title: 'Page title',

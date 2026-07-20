@@ -431,7 +431,7 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(result).toEqualHtml(expected)
   })
 
-  it('should preserve ghost bookmark widget placeholders through unwrapWrappers', async () => {
+  it('should preserve ghost cite placeholders through unwrapWrappers', async () => {
     const value = html`
       <figure class="kg-card kg-bookmark-card">
         <a class="kg-bookmark-container" href="https://example.com/post">
@@ -452,14 +452,14 @@ describeForEachParser('transformContent', (parseHtml) => {
     `
     const expected = html`
       <div
-        data-bookmark-provider="ghost"
-        data-bookmark-url="https://example.com/post"
-        data-bookmark-title="Post title"
-        data-bookmark-description="Preview text"
-        data-bookmark-author="Author name"
-        data-bookmark-publisher="Publisher name"
-        data-bookmark-icon="https://example.com/favicon.ico"
-        data-bookmark-thumbnail="https://example.com/og-image.jpg"
+        data-cite-provider="ghost"
+        data-cite-url="https://example.com/post"
+        data-cite-title="Post title"
+        data-cite-description="Preview text"
+        data-cite-author="Author name"
+        data-cite-publisher="Publisher name"
+        data-cite-icon="https://example.com/favicon.ico"
+        data-cite-thumbnail="https://example.com/og-image.jpg"
       >
         <p><a href="https://example.com/post">Post title</a></p>
       </div>
@@ -536,7 +536,7 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(result).toContain('src="https://example.com/a.webp"')
   })
 
-  it('should convert a substack post embed into a bookmark placeholder', async () => {
+  it('should convert a substack post embed into a cite placeholder', async () => {
     const value = html`
       <p>Intro</p>
       <div
@@ -547,9 +547,9 @@ describeForEachParser('transformContent', (parseHtml) => {
     const expected = html`
       <p>Intro</p>
       <div
-        data-bookmark-provider="substack"
-        data-bookmark-url="https://thereader.example.com/p/model-drop"
-        data-bookmark-title="Model Drop"
+        data-cite-provider="substack"
+        data-cite-url="https://thereader.example.com/p/model-drop"
+        data-cite-title="Model Drop"
       >
         <p><a href="https://thereader.example.com/p/model-drop">Model Drop</a></p>
       </div>
@@ -597,9 +597,9 @@ describeForEachParser('transformContent', (parseHtml) => {
     // A resolveUrlFn override should control how relative hrefs resolve against baseUrl.
   })
 
-  it.todo('should allow custom bookmarkResolvers', () => {
+  it.todo('should allow custom citeResolvers', () => {
     // A custom resolver matching bespoke card markup should replace the card with
-    // a data-bookmark-* placeholder, like the built-in ghost resolver does.
+    // a data-cite-* placeholder, like the built-in ghost resolver does.
   })
 
   it.todo('should strip a duplicated leading heading when articleTitle matches', () => {

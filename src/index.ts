@@ -1,7 +1,7 @@
 import {
   defaultAllDomTransforms,
   defaultAvatarImageHosts,
-  defaultBookmarkResolvers,
+  defaultCiteResolvers,
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
   defaultHighlightFn,
@@ -28,7 +28,7 @@ export const transformContent = async (
     sameSiteUrls: options.sameSiteUrls,
     enclosures: options.enclosures,
     embedResolvers: options.embedResolvers ?? defaultEmbedResolvers,
-    bookmarkResolvers: options.bookmarkResolvers ?? defaultBookmarkResolvers,
+    citeResolvers: options.citeResolvers ?? defaultCiteResolvers,
     lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,
     lazySrcsetAttributes: options.lazySrcsetAttributes ?? defaultLazySrcsetAttributes,
     lazyIframeAttributes: options.lazyIframeAttributes ?? defaultLazyIframeAttributes,
@@ -66,11 +66,11 @@ export const transformContent = async (
   return afterDom
 }
 
-export { ghostBookmarkResolver } from './bookmarks/ghost.js'
+export { ghostCiteResolver } from './cites/ghost.js'
 export {
-  substackCrossPostBookmarkResolver,
-  substackOwnPostBookmarkResolver,
-} from './bookmarks/substack.js'
+  substackCrossPostCiteResolver,
+  substackOwnPostCiteResolver,
+} from './cites/substack.js'
 export {
   defaultAllDomTransforms,
   defaultHighlightFn,
@@ -99,8 +99,8 @@ export { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 export { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 export { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
 export { convertAmpElements } from './transforms/dom/convertAmpElements.js'
-export { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
+export { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 export { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
@@ -162,8 +162,8 @@ export { unwrapCdataMarkers } from './transforms/string/unwrapCdataMarkers.js'
 export type {
   AssetProxyFn,
   AssetType,
-  BookmarkResolver,
-  BookmarkResolverResult,
+  CiteResolver,
+  CiteResolverResult,
   CleanUrlFn,
   DomTransform,
   EmbedResolver,
@@ -180,7 +180,7 @@ export type {
   UrlRole,
 } from './types.js'
 export {
-  createBookmarkPlaceholder,
+  createCitePlaceholder,
   createEmbedPlaceholder,
   createPlaceholder,
   normalizeEmbedFields,

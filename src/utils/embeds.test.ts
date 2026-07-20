@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
-import type { BookmarkResolverResult } from '../types.js'
+import type { CiteResolverResult } from '../types.js'
 import {
-  createBookmarkPlaceholder,
+  createCitePlaceholder,
   createEmbedPlaceholder,
   createPlaceholder,
   normalizeEmbedFields,
@@ -268,17 +268,17 @@ describeForEachParser('createPlaceholder', (parseHtml) => {
     expect(element.getAttribute('data-embed-height')).toBe('315')
   })
 
-  it('should prefix attributes with the bookmark type', () => {
+  it('should prefix attributes with the cite type', () => {
     const document = parseHtml('<div></div>')
-    const element = createPlaceholder(document, 'bookmark', {
+    const element = createPlaceholder(document, 'cite', {
       provider: 'ghost',
       url: 'https://example.com',
       title: 'Title',
     })
 
-    expect(element.getAttribute('data-bookmark-provider')).toBe('ghost')
-    expect(element.getAttribute('data-bookmark-url')).toBe('https://example.com')
-    expect(element.getAttribute('data-bookmark-title')).toBe('Title')
+    expect(element.getAttribute('data-cite-provider')).toBe('ghost')
+    expect(element.getAttribute('data-cite-url')).toBe('https://example.com')
+    expect(element.getAttribute('data-cite-title')).toBe('Title')
   })
 
   it('should skip undefined fields', () => {
@@ -333,7 +333,7 @@ describeForEachParser('createPlaceholder', (parseHtml) => {
 
   it('should write only the non-empty fields when some are absent', () => {
     const document = parseHtml('<div></div>')
-    const element = createPlaceholder(document, 'bookmark', {
+    const element = createPlaceholder(document, 'cite', {
       provider: 'ghost',
       url: 'https://example.com',
       title: '',
@@ -342,17 +342,17 @@ describeForEachParser('createPlaceholder', (parseHtml) => {
     })
 
     expect(element.attributes.length).toBe(3)
-    expect(element.hasAttribute('data-bookmark-title')).toBe(false)
-    expect(element.hasAttribute('data-bookmark-icon')).toBe(false)
-    expect(element.getAttribute('data-bookmark-thumbnail')).toBe('https://example.com/t.jpg')
+    expect(element.hasAttribute('data-cite-title')).toBe(false)
+    expect(element.hasAttribute('data-cite-icon')).toBe(false)
+    expect(element.getAttribute('data-cite-thumbnail')).toBe('https://example.com/t.jpg')
   })
 
   it('should preserve values containing reserved characters verbatim', () => {
     const document = parseHtml('<div></div>')
     const value = 'https://example.com/p?a=1&b="2"&c=<x>'
-    const element = createPlaceholder(document, 'bookmark', { url: value })
+    const element = createPlaceholder(document, 'cite', { url: value })
 
-    expect(element.getAttribute('data-bookmark-url')).toBe(value)
+    expect(element.getAttribute('data-cite-url')).toBe(value)
   })
 
   it('should skip falsy non-string values such as null', () => {
@@ -367,10 +367,10 @@ describeForEachParser('createPlaceholder', (parseHtml) => {
   })
 })
 
-describeForEachParser('createBookmarkPlaceholder', (parseHtml) => {
+describeForEachParser('createCitePlaceholder', (parseHtml) => {
   it('should write all fields and append a link labelled with the title', () => {
     const document = parseHtml('')
-    const value: BookmarkResolverResult = {
+    const value: CiteResolverResult = {
       provider: 'ghost',
       url: 'https://example.com/post',
       title: 'Post title',
@@ -380,17 +380,17 @@ describeForEachParser('createBookmarkPlaceholder', (parseHtml) => {
       icon: 'https://example.com/favicon.ico',
       thumbnail: 'https://example.com/og-image.jpg',
     }
-    const element = createBookmarkPlaceholder(document, value)
+    const element = createCitePlaceholder(document, value)
     const expected = html`
       <div
-        data-bookmark-provider="ghost"
-        data-bookmark-description="Preview text"
-        data-bookmark-author="Author name"
-        data-bookmark-publisher="Publisher name"
-        data-bookmark-url="https://example.com/post"
-        data-bookmark-title="Post title"
-        data-bookmark-icon="https://example.com/favicon.ico"
-        data-bookmark-thumbnail="https://example.com/og-image.jpg"
+        data-cite-provider="ghost"
+        data-cite-description="Preview text"
+        data-cite-author="Author name"
+        data-cite-publisher="Publisher name"
+        data-cite-url="https://example.com/post"
+        data-cite-title="Post title"
+        data-cite-icon="https://example.com/favicon.ico"
+        data-cite-thumbnail="https://example.com/og-image.jpg"
       >
         <a href="https://example.com/post">Post title</a>
       </div>
@@ -401,20 +401,20 @@ describeForEachParser('createBookmarkPlaceholder', (parseHtml) => {
 
   it('should trim raw field values in attributes and the fallback link', () => {
     const document = parseHtml('')
-    const value: BookmarkResolverResult = {
+    const value: CiteResolverResult = {
       provider: 'ghost',
       url: ' https://example.com/post ',
       title: '  Post title\n',
       description: ' Preview text ',
       author: '   ',
     }
-    const element = createBookmarkPlaceholder(document, value)
+    const element = createCitePlaceholder(document, value)
     const expected = html`
       <div
-        data-bookmark-provider="ghost"
-        data-bookmark-description="Preview text"
-        data-bookmark-url="https://example.com/post"
-        data-bookmark-title="Post title"
+        data-cite-provider="ghost"
+        data-cite-description="Preview text"
+        data-cite-url="https://example.com/post"
+        data-cite-title="Post title"
       >
         <a href="https://example.com/post">Post title</a>
       </div>
@@ -425,21 +425,21 @@ describeForEachParser('createBookmarkPlaceholder', (parseHtml) => {
 
   it('should pass http url, icon and thumbnail through without changing the protocol', () => {
     const document = parseHtml('')
-    const value: BookmarkResolverResult = {
+    const value: CiteResolverResult = {
       provider: 'ghost',
       url: 'http://example.com/post',
       title: 'Post title',
       icon: 'http://example.com/favicon.ico',
       thumbnail: 'http://example.com/og-image.jpg',
     }
-    const element = createBookmarkPlaceholder(document, value)
+    const element = createCitePlaceholder(document, value)
     const expected = html`
       <div
-        data-bookmark-provider="ghost"
-        data-bookmark-url="http://example.com/post"
-        data-bookmark-title="Post title"
-        data-bookmark-icon="http://example.com/favicon.ico"
-        data-bookmark-thumbnail="http://example.com/og-image.jpg"
+        data-cite-provider="ghost"
+        data-cite-url="http://example.com/post"
+        data-cite-title="Post title"
+        data-cite-icon="http://example.com/favicon.ico"
+        data-cite-thumbnail="http://example.com/og-image.jpg"
       >
         <a href="http://example.com/post">Post title</a>
       </div>
@@ -452,21 +452,21 @@ describeForEachParser('createBookmarkPlaceholder', (parseHtml) => {
   // icon/thumbnail as-is and the later pass neutralizes any unsafe URL.
   it('should pass unsafe icon and thumbnail urls through unchanged', () => {
     const document = parseHtml('')
-    const value: BookmarkResolverResult = {
+    const value: CiteResolverResult = {
       provider: 'ghost',
       url: 'https://example.com/post',
       title: 'Post title',
       icon: 'javascript:alert(1)',
       thumbnail: 'data:image/svg+xml;utf8,<svg/>',
     }
-    const element = createBookmarkPlaceholder(document, value)
+    const element = createCitePlaceholder(document, value)
     const expected = html`
       <div
-        data-bookmark-provider="ghost"
-        data-bookmark-url="https://example.com/post"
-        data-bookmark-title="Post title"
-        data-bookmark-icon="javascript:alert(1)"
-        data-bookmark-thumbnail="data:image/svg+xml;utf8,<svg/>"
+        data-cite-provider="ghost"
+        data-cite-url="https://example.com/post"
+        data-cite-title="Post title"
+        data-cite-icon="javascript:alert(1)"
+        data-cite-thumbnail="data:image/svg+xml;utf8,<svg/>"
       >
         <a href="https://example.com/post">Post title</a>
       </div>

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
-import type { BookmarkResolverResult } from '../types.js'
-import { amebaBookmarkResolver } from './ameba.js'
+import type { CiteResolverResult } from '../types.js'
+import { amebaCiteResolver } from './ameba.js'
 
-describeForEachParser('amebaBookmarkResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<BookmarkResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(amebaBookmarkResolver.selector)
-    return element ? await amebaBookmarkResolver.extract(element) : undefined
+describeForEachParser('amebaCiteResolver', (parseHtml) => {
+  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(amebaCiteResolver.selector)
+    return element ? await amebaCiteResolver.extract(element) : undefined
   }
 
   describe('happy paths', () => {
@@ -28,7 +28,7 @@ describeForEachParser('amebaBookmarkResolver', (parseHtml) => {
           </article>
         </div>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'ameba',
         url: 'https://example.com/product',
         title: 'Page title',
@@ -55,7 +55,7 @@ describeForEachParser('amebaBookmarkResolver', (parseHtml) => {
           </a>
         </article>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'ameba',
         url: 'https://example.com/shop',
         title: 'Page title',

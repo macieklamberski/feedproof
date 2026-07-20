@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
-import type { BookmarkResolverResult } from '../types.js'
-import { cocoonBookmarkResolver } from './cocoon.js'
+import type { CiteResolverResult } from '../types.js'
+import { cocoonCiteResolver } from './cocoon.js'
 
-describeForEachParser('cocoonBookmarkResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<BookmarkResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(cocoonBookmarkResolver.selector)
-    return element ? await cocoonBookmarkResolver.extract(element) : undefined
+describeForEachParser('cocoonCiteResolver', (parseHtml) => {
+  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(cocoonCiteResolver.selector)
+    return element ? await cocoonCiteResolver.extract(element) : undefined
   }
 
   describe('happy paths', () => {
@@ -54,7 +54,7 @@ describeForEachParser('cocoonBookmarkResolver', (parseHtml) => {
           </div>
         </a>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'cocoon',
         url: 'https://example.com/post',
         title: 'Post title',
@@ -79,7 +79,7 @@ describeForEachParser('cocoonBookmarkResolver', (parseHtml) => {
           </div>
         </a>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'cocoon',
         url: 'https://example.com/post',
         title: 'Post title',
@@ -99,7 +99,7 @@ describeForEachParser('cocoonBookmarkResolver', (parseHtml) => {
           <div class="blogcard-title">Post title</div>
         </a>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'cocoon',
         url: 'https://example.com/post',
         title: 'Post title',

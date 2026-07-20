@@ -189,35 +189,35 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
-  it('should rewrite data-bookmark-icon as image', async () => {
-    const value = '<div data-bookmark-icon="https://cdn.example.com/favicon.ico"></div>'
+  it('should rewrite data-cite-icon as image', async () => {
+    const value = '<div data-cite-icon="https://cdn.example.com/favicon.ico"></div>'
     const expected = html`
       <div
-        data-bookmark-icon="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Ffavicon.ico"
-        data-proxied-bookmark-icon="https://cdn.example.com/favicon.ico"
+        data-cite-icon="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Ffavicon.ico"
+        data-proxied-cite-icon="https://cdn.example.com/favicon.ico"
       ></div>
     `
 
     expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
-  it('should rewrite data-bookmark-thumbnail as image', async () => {
-    const value = '<div data-bookmark-thumbnail="https://cdn.example.com/thumb.jpg"></div>'
+  it('should rewrite data-cite-thumbnail as image', async () => {
+    const value = '<div data-cite-thumbnail="https://cdn.example.com/thumb.jpg"></div>'
     const expected = html`
       <div
-        data-bookmark-thumbnail="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fthumb.jpg"
-        data-proxied-bookmark-thumbnail="https://cdn.example.com/thumb.jpg"
+        data-cite-thumbnail="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fthumb.jpg"
+        data-proxied-cite-thumbnail="https://cdn.example.com/thumb.jpg"
       ></div>
     `
 
     expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
-  it('should not rewrite data-bookmark-url (navigation, not asset)', async () => {
-    const value = '<div data-bookmark-url="https://example.com/post"></div>'
+  it('should not rewrite data-cite-url (navigation, not asset)', async () => {
+    const value = '<div data-cite-url="https://example.com/post"></div>'
     const result = await transform(value, wrapProxy)
 
-    expect(result).toContain('data-bookmark-url="https://example.com/post"')
+    expect(result).toContain('data-cite-url="https://example.com/post"')
     expect(result).not.toContain('proxy.example.com')
   })
 

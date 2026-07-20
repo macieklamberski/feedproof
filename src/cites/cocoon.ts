@@ -1,4 +1,4 @@
-import type { BookmarkResolver } from '../types.js'
+import type { CiteResolver } from '../types.js'
 
 // Cocoon, a widely used WordPress theme, renders link cards for both external links and
 // same-site posts. The wrapping element is the anchor itself, so the URL comes
@@ -6,7 +6,7 @@ import type { BookmarkResolver } from '../types.js'
 // repeats the card title as a fallback. Internal (same-site) cards are treated like
 // external ones: the author places them in the editor, unlike the related-posts widgets
 // we strip, which themes append to every post automatically.
-export const cocoonBookmarkResolver: BookmarkResolver = {
+export const cocoonCiteResolver: CiteResolver = {
   selector: '.blogcard-wrap',
   extract: (element) => {
     const url = element.getAttribute('href') ?? undefined
