@@ -93,7 +93,13 @@ Inventory of every transform exported from the package. Most are enabled by defa
 ## Options
 
 ```typescript
-import { fixLazyImages, resolveRelativeUrls, transformContent } from 'feedsweep'
+import {
+  fixLazyImages,
+  ghostCiteResolver,
+  resolveRelativeUrls,
+  transformContent,
+  youtubeEmbedResolver,
+} from 'feedsweep'
 import { parseHtml } from 'feedsweep/linkedom'
 import { cleanUrl } from 'urlpurify'
 
@@ -119,6 +125,10 @@ const result = transformContent(html, {
   },
   // Swap the code highlighter (defaults to highlight.js; may be async).
   highlightFn: (text, language) => myHighlighter.highlight(text, language),
+  // Resolvers turning `<iframe>` embeds into placeholders (defaults: YouTube, Vimeo, Dailymotion).
+  embedResolvers: [youtubeEmbedResolver, myEmbedResolver],
+  // Resolvers turning link-preview cards into `data-cite-*` placeholders.
+  citeResolvers: [ghostCiteResolver, myCiteResolver],
   // Opt into the heuristic transforms (enclosure-duplicate + video-poster stripping). Ignored if domTransforms is set.
   heuristics: true,
   // Run a custom DOM transform pipeline (omit to use defaults).
@@ -131,6 +141,8 @@ All caller-provided functions (`parseHtmlFn`, `resolveUrlFn`, `cleanUrlFn`, `ass
 Code blocks are highlighted only when they declare a language (`language-*` class, `data-language`, Pandoc/Rouge/Expressive Code/etc.); unlabeled blocks are left plain rather than guessed at. The default highlighter is highlight.js (exported as `defaultHighlightFn` / `hljsHighlightFn`); replace it with `highlightFn`.
 
 The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. The `heuristics` flag (default `false`) selects between two exported DOM pipelines: `defaultStandardDomTransforms` (the safe defaults) and `defaultAllDomTransforms` (standard plus `heuristicDomTransforms` spliced in after `injectEnclosures`). Setting `domTransforms` explicitly overrides `heuristics`. Every transform and pipeline is also exported individually from `feedsweep`, so you can compose any pipeline — list transforms explicitly, or spread `defaultStandardDomTransforms` / `heuristicDomTransforms` to extend or filter the defaults.
+
+`embedResolvers` and `citeResolvers` each fully replace their default resolver list when provided; omit them for the defaults. Every resolver is exported individually from `feedsweep`, so a custom list is composed by naming the built-ins you want alongside your own.
 
 ## DOM library
 
