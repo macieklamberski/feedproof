@@ -1,4 +1,4 @@
-import type { BookmarkResolverResult, EmbedResolverResult } from '../types.js'
+import type { CiteResolverResult, EmbedResolverResult } from '../types.js'
 
 export const createPlaceholder = <Type extends object>(
   document: Document,
@@ -76,13 +76,13 @@ export const createEmbedPlaceholder = (
   return element
 }
 
-export const createBookmarkPlaceholder = (
+export const createCitePlaceholder = (
   document: Document,
-  result: BookmarkResolverResult,
+  result: CiteResolverResult,
 ): HTMLElement => {
   const { provider, title, url, icon, thumbnail, ...rest } = result
 
-  const element = createPlaceholder(document, 'bookmark', {
+  const element = createPlaceholder(document, 'cite', {
     provider,
     ...rest,
     url,

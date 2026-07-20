@@ -72,16 +72,16 @@ const neutralizeSrcset = (element: Element, isSafeUrlFn: IsSafeUrlFn | undefined
 }
 
 // URL-carrying attributes checked on every element, whatever its tag. Embed and
-// bookmark placeholders put their URLs on data-* attributes of arbitrary elements.
+// cite placeholders put their URLs on data-* attributes of arbitrary elements.
 const genericAttributeRoles: Array<[string, UrlRole]> = [
   ['data-embed-url', 'link'],
-  ['data-bookmark-url', 'link'],
+  ['data-cite-url', 'link'],
   ['formaction', 'link'],
   ['data-embed-src', 'media'],
   ['data-embed-thumbnail', 'media'],
   ['data-embed-avatar', 'media'],
-  ['data-bookmark-icon', 'media'],
-  ['data-bookmark-thumbnail', 'media'],
+  ['data-cite-icon', 'media'],
+  ['data-cite-thumbnail', 'media'],
 ]
 // URL-carrying attributes specific to a tag.
 const tagAttributeRoles: Record<string, Array<[string, UrlRole]>> = {
@@ -105,7 +105,7 @@ const hrefTagRoles: Record<string, UrlRole> = { a: 'link', image: 'media' }
 // Replaces unsafe URLs with an inert, role-appropriate sentinel while keeping the
 // element. Always enforces a dangerous-scheme floor (javascript:/vbscript:/data:text/html),
 // plus the caller's isSafeUrlFn policy when provided. Runs after URLs are resolved and
-// embeds/bookmarks are placeholdered, and before proxyAssetUrls.
+// embeds/cites are placeholdered, and before proxyAssetUrls.
 // One walk covers every attribute the transform used to reach through ~20 separate
 // querySelectorAll calls (see walkElements).
 export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {

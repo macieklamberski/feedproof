@@ -1,10 +1,10 @@
-import type { BookmarkResolver } from '../types.js'
+import type { CiteResolver } from '../types.js'
 
 // XenForo forums expand a pasted link into an "unfurl" block. The URL and host sit on the
 // wrapper, and each field carries a `js-unfurl-*` hook alongside its theme classes. The
 // hooks are what this reads: they are near-universal across the corpus (title and favicon
 // in 1,283 of 1,284 feeds) while the theme classes vary from site to site.
-export const xenforoBookmarkResolver: BookmarkResolver = {
+export const xenforoCiteResolver: CiteResolver = {
   selector: '.bbCodeBlock--unfurl[data-url]',
   extract: (element) => {
     const url = element.getAttribute('data-url') ?? undefined

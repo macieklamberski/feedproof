@@ -1,4 +1,4 @@
-import type { BookmarkResolver } from '../types.js'
+import type { CiteResolver } from '../types.js'
 
 // Ameba (ameblo.jp) renders a pasted link as an "ogpCard": an anchor built from the linked
 // page's Open Graph data, with each field in its own heavily inline-styled span. The `og`
@@ -7,7 +7,7 @@ import type { BookmarkResolver } from '../types.js'
 //
 // Note the icon: `img.ogpCard_icon` is a generic grey link glyph from Ameba's own asset
 // host (editor_link.svg), not the linked site's favicon, so it is deliberately not mapped.
-export const amebaBookmarkResolver: BookmarkResolver = {
+export const amebaCiteResolver: CiteResolver = {
   selector: '.ogpCard_wrap',
   extract: (element) => {
     const link = element.querySelector('a.ogpCard_link')

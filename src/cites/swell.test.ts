@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
-import type { BookmarkResolverResult } from '../types.js'
-import { swellBookmarkResolver } from './swell.js'
+import type { CiteResolverResult } from '../types.js'
+import { swellCiteResolver } from './swell.js'
 
-describeForEachParser('swellBookmarkResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<BookmarkResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(swellBookmarkResolver.selector)
-    return element ? await swellBookmarkResolver.extract(element) : undefined
+describeForEachParser('swellCiteResolver', (parseHtml) => {
+  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(swellCiteResolver.selector)
+    return element ? await swellCiteResolver.extract(element) : undefined
   }
 
   describe('happy paths', () => {
@@ -36,7 +36,7 @@ describeForEachParser('swellBookmarkResolver', (parseHtml) => {
           </div>
         </div>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'swell',
         url: 'https://example.com/?page_id=1240',
         title: 'Post title',
@@ -58,7 +58,7 @@ describeForEachParser('swellBookmarkResolver', (parseHtml) => {
           </div>
         </div>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'swell',
         url: 'https://example.com/post',
         title: 'Post title',
@@ -75,7 +75,7 @@ describeForEachParser('swellBookmarkResolver', (parseHtml) => {
           <a class="p-blogCard__title" href="https://example.com/post">Post title</a>
         </div>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'swell',
         url: 'https://example.com/post',
         title: 'Post title',
@@ -95,7 +95,7 @@ describeForEachParser('swellBookmarkResolver', (parseHtml) => {
           <a class="p-blogCard__title" href="https://example.com/post">Post title</a>
         </div>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'swell',
         url: 'https://example.com/post',
         title: 'Post title',

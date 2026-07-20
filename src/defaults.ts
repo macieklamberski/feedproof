@@ -1,18 +1,15 @@
 import { resolveUrl } from 'feedcanon'
-import { amebaBookmarkResolver } from './bookmarks/ameba.js'
-import { cocoonBookmarkResolver } from './bookmarks/cocoon.js'
-import { devtoBookmarkResolver } from './bookmarks/devto.js'
-import { discourseBookmarkResolver } from './bookmarks/discourse.js'
-import { ghostBookmarkResolver } from './bookmarks/ghost.js'
-import { microformatsBookmarkResolver } from './bookmarks/microformats.js'
-import { hatenaBookmarkResolver } from './bookmarks/hatena.js'
-import {
-  substackCrossPostBookmarkResolver,
-  substackOwnPostBookmarkResolver,
-} from './bookmarks/substack.js'
-import { swellBookmarkResolver } from './bookmarks/swell.js'
-import { tistoryBookmarkResolver } from './bookmarks/tistory.js'
-import { xenforoBookmarkResolver } from './bookmarks/xenforo.js'
+import { amebaCiteResolver } from './cites/ameba.js'
+import { cocoonCiteResolver } from './cites/cocoon.js'
+import { devtoCiteResolver } from './cites/devto.js'
+import { discourseCiteResolver } from './cites/discourse.js'
+import { ghostCiteResolver } from './cites/ghost.js'
+import { hatenaCiteResolver } from './cites/hatena.js'
+import { microformatsCiteResolver } from './cites/microformats.js'
+import { substackCrossPostCiteResolver, substackOwnPostCiteResolver } from './cites/substack.js'
+import { swellCiteResolver } from './cites/swell.js'
+import { tistoryCiteResolver } from './cites/tistory.js'
+import { xenforoCiteResolver } from './cites/xenforo.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
@@ -21,8 +18,8 @@ import { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 import { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
 import { convertAmpElements } from './transforms/dom/convertAmpElements.js'
-import { convertBookmarkCards } from './transforms/dom/convertBookmarkCards.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
+import { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
@@ -84,7 +81,7 @@ import { stripOversizedBase64Sources } from './transforms/string/stripOversizedB
 import { unwrapCdataComments } from './transforms/string/unwrapCdataComments.js'
 import { unwrapCdataMarkers } from './transforms/string/unwrapCdataMarkers.js'
 import type {
-  BookmarkResolver,
+  CiteResolver,
   DomTransform,
   EmbedResolver,
   ResolveUrlFn,
@@ -159,7 +156,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // and before stripDeadAnchors so a `#`-only permalink isn't unwrapped first.
   normalizeAnchoredHeadings,
   stripDeadAnchors,
-  convertBookmarkCards,
+  convertCiteCards,
   removeTrackingPixels,
   unwrapEmojiImages,
   // Empties lone-backslash paragraphs (`<p>\</p>`); runs before stripEmptyTags so
@@ -197,7 +194,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // enriched URLs are still neutralized and proxied.
   enrichEmbedPlaceholders,
   // Neutralizes unsafe URLs (dangerous-scheme floor + optional isSafeUrlFn) after embeds
-  // and bookmarks are placeholdered, so it covers their data-* URLs, and before
+  // and cites are placeholdered, so it covers their data-* URLs, and before
   // proxyAssetUrls so the proxy never sees an unsafe URL.
   neutralizeUnsafeUrls,
   proxyAssetUrls,
@@ -232,19 +229,19 @@ export const defaultEmbedResolvers: Array<EmbedResolver> = [
   dailymotionEmbedResolver,
 ]
 
-export const defaultBookmarkResolvers: Array<BookmarkResolver> = [
-  ghostBookmarkResolver,
-  substackOwnPostBookmarkResolver,
-  substackCrossPostBookmarkResolver,
-  cocoonBookmarkResolver,
-  discourseBookmarkResolver,
-  swellBookmarkResolver,
-  xenforoBookmarkResolver,
-  microformatsBookmarkResolver,
-  amebaBookmarkResolver,
-  tistoryBookmarkResolver,
-  hatenaBookmarkResolver,
-  devtoBookmarkResolver,
+export const defaultCiteResolvers: Array<CiteResolver> = [
+  ghostCiteResolver,
+  substackOwnPostCiteResolver,
+  substackCrossPostCiteResolver,
+  cocoonCiteResolver,
+  discourseCiteResolver,
+  swellCiteResolver,
+  xenforoCiteResolver,
+  microformatsCiteResolver,
+  amebaCiteResolver,
+  tistoryCiteResolver,
+  hatenaCiteResolver,
+  devtoCiteResolver,
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)

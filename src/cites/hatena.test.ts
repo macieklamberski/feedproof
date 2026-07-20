@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
-import type { BookmarkResolverResult } from '../types.js'
-import { hatenaBookmarkResolver } from './hatena.js'
+import type { CiteResolverResult } from '../types.js'
+import { hatenaCiteResolver } from './hatena.js'
 
-describeForEachParser('hatenaBookmarkResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<BookmarkResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(hatenaBookmarkResolver.selector)
-    return element ? await hatenaBookmarkResolver.extract(element) : undefined
+describeForEachParser('hatenaCiteResolver', (parseHtml) => {
+  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(hatenaCiteResolver.selector)
+    return element ? await hatenaCiteResolver.extract(element) : undefined
   }
 
   describe('happy paths', () => {
@@ -24,7 +24,7 @@ describeForEachParser('hatenaBookmarkResolver', (parseHtml) => {
           <cite class="hatena-citation"><a href="https://example.com/spirit/">example.com</a></cite>
         </p>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'hatena',
         url: 'https://example.com/spirit/',
         title: 'Page title',
@@ -45,7 +45,7 @@ describeForEachParser('hatenaBookmarkResolver', (parseHtml) => {
           <cite class="hatena-citation"><a href="https://example.com/entry">example.com</a></cite>
         </p>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'hatena',
         url: 'https://example.com/entry',
         title: 'Page title',
@@ -67,7 +67,7 @@ describeForEachParser('hatenaBookmarkResolver', (parseHtml) => {
           ></iframe>
         </p>
       `
-      const expected: BookmarkResolverResult = {
+      const expected: CiteResolverResult = {
         provider: 'hatena',
         url: 'https://example.com/a?b=1',
         title: 'Page title',

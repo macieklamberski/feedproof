@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
-import type { BookmarkResolver, TransformContext } from '../../types.js'
+import type { CiteResolver, TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
-import { convertBookmarkCards } from './convertBookmarkCards.js'
+import { convertCiteCards } from './convertCiteCards.js'
 
-// Reads bookmark fields off a `.card` element's data-* attributes.
-const cardResolver: BookmarkResolver = {
+// Reads cite fields off a `.card` element's data-* attributes.
+const cardResolver: CiteResolver = {
   selector: '.card',
   extract: (element) => {
     const url = element.getAttribute('data-url')
@@ -25,22 +25,22 @@ const cardResolver: BookmarkResolver = {
   },
 }
 
-describeForEachParser('convertBookmarkCards', (parseHtml) => {
-  const transform = (html: string, bookmarkResolvers: Array<BookmarkResolver>) => {
-    const context: TransformContext = { ...baseContext, bookmarkResolvers }
-    return applyDomTransforms(parseHtml(html), [convertBookmarkCards(context)])
+describeForEachParser('convertCiteCards', (parseHtml) => {
+  const transform = (html: string, citeResolvers: Array<CiteResolver>) => {
+    const context: TransformContext = { ...baseContext, citeResolvers }
+    return applyDomTransforms(parseHtml(html), [convertCiteCards(context)])
   }
 
   describe('happy paths', () => {
-    it('should replace a matched element with a bookmark placeholder', async () => {
+    it('should replace a matched element with a cite placeholder', async () => {
       const result = await transform(
         '<div class="card" data-url="https://example.com" data-title="Title"></div>',
         [cardResolver],
       )
 
-      expect(result).toContain('data-bookmark-provider="stub"')
-      expect(result).toContain('data-bookmark-url="https://example.com"')
-      expect(result).toContain('data-bookmark-title="Title"')
+      expect(result).toContain('data-cite-provider="stub"')
+      expect(result).toContain('data-cite-url="https://example.com"')
+      expect(result).toContain('data-cite-title="Title"')
       expect(result).toContain('<a href="https://example.com">Title</a>')
       expect(result).not.toContain('class="card"')
     })
@@ -54,18 +54,18 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
 
       expect(result).not.toContain('<ul')
       expect(result).not.toContain('<li')
-      expect((result.match(/data-bookmark-provider="/g) ?? []).length).toBe(2)
+      expect((result.match(/data-cite-provider="/g) ?? []).length).toBe(2)
     })
 
     it('should run each resolver in the registry', async () => {
-      const resolverA: BookmarkResolver = {
+      const resolverA: CiteResolver = {
         selector: '.a',
         extract: (element) => {
           const url = element.getAttribute('data-url')
           return url ? { provider: 'a', url, title: 'A' } : undefined
         },
       }
-      const resolverB: BookmarkResolver = {
+      const resolverB: CiteResolver = {
         selector: '.b',
         extract: (element) => {
           const url = element.getAttribute('data-url')
@@ -78,16 +78,16 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
       `
       const expected = html`
         <div
-          data-bookmark-provider="a"
-          data-bookmark-url="https://example.org"
-          data-bookmark-title="A"
+          data-cite-provider="a"
+          data-cite-url="https://example.org"
+          data-cite-title="A"
         >
           <a href="https://example.org">A</a>
         </div>
         <div
-          data-bookmark-provider="b"
-          data-bookmark-url="https://example.net"
-          data-bookmark-title="B"
+          data-cite-provider="b"
+          data-cite-url="https://example.net"
+          data-cite-title="B"
         >
           <a href="https://example.net">B</a>
         </div>
@@ -97,7 +97,7 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
     })
 
     it('should support a resolver with a promise-returning extract', async () => {
-      const asyncResolver: BookmarkResolver = {
+      const asyncResolver: CiteResolver = {
         selector: '.card',
         extract: (element) => {
           const url = element.getAttribute('data-url')
@@ -107,9 +107,9 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
       const value = '<div class="card" data-url="https://example.com/post"></div>'
       const expected = html`
         <div
-          data-bookmark-provider="async"
-          data-bookmark-url="https://example.com/post"
-          data-bookmark-title="Async title"
+          data-cite-provider="async"
+          data-cite-url="https://example.com/post"
+          data-cite-title="Async title"
         >
           <a href="https://example.com/post">Async title</a>
         </div>
@@ -119,7 +119,7 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
     })
   })
 
-  describe('hygiene (via createBookmarkPlaceholder)', () => {
+  describe('hygiene (via createCitePlaceholder)', () => {
     it('should pass http urls through without changing the protocol', async () => {
       const result = await transform(
         html`
@@ -134,26 +134,26 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
         [cardResolver],
       )
 
-      expect(result).toContain('data-bookmark-url="http://example.com/p"')
-      expect(result).toContain('data-bookmark-icon="http://example.com/i.ico"')
+      expect(result).toContain('data-cite-url="http://example.com/p"')
+      expect(result).toContain('data-cite-icon="http://example.com/i.ico"')
       expect(result).toContain('<a href="http://example.com/p">')
     })
 
     it('should resolve relative url, icon and thumbnail against the base url', async () => {
       const context: TransformContext = {
         ...baseContext,
-        bookmarkResolvers: [cardResolver],
+        citeResolvers: [cardResolver],
         baseUrl: 'https://example.com/post/',
       }
       const value = html`
         <div class="card" data-url="/p" data-title="T" data-icon="/i.ico" data-thumbnail="/t.jpg">
         </div>
       `
-      const result = await applyDomTransforms(parseHtml(value), [convertBookmarkCards(context)])
+      const result = await applyDomTransforms(parseHtml(value), [convertCiteCards(context)])
 
-      expect(result).toContain('data-bookmark-url="https://example.com/p"')
-      expect(result).toContain('data-bookmark-icon="https://example.com/i.ico"')
-      expect(result).toContain('data-bookmark-thumbnail="https://example.com/t.jpg"')
+      expect(result).toContain('data-cite-url="https://example.com/p"')
+      expect(result).toContain('data-cite-icon="https://example.com/i.ico"')
+      expect(result).toContain('data-cite-thumbnail="https://example.com/t.jpg"')
     })
 
     // URL safety is neutralizeUnsafeUrls' job (see its tests); this transform only
@@ -173,9 +173,9 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
         [cardResolver],
       )
 
-      expect(result).toContain('data-bookmark-icon="javascript:alert(1)"')
-      expect(result).toContain('data-bookmark-thumbnail="javascript:alert(2)"')
-      expect(result).toContain('data-bookmark-title="T"')
+      expect(result).toContain('data-cite-icon="javascript:alert(1)"')
+      expect(result).toContain('data-cite-thumbnail="javascript:alert(2)"')
+      expect(result).toContain('data-cite-title="T"')
     })
   })
 
@@ -189,7 +189,7 @@ describeForEachParser('convertBookmarkCards', (parseHtml) => {
     it('should skip elements when the resolver returns undefined', async () => {
       const result = await transform('<div class="card"></div>', [cardResolver])
 
-      expect(result).not.toContain('data-bookmark')
+      expect(result).not.toContain('data-cite')
       expect(result).toContain('class="card"')
     })
 

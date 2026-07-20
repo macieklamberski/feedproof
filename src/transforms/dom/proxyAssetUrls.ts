@@ -10,8 +10,8 @@ const proxyableSelectors = [
   'image',
   '[data-embed-thumbnail]',
   '[data-embed-avatar]',
-  '[data-bookmark-icon]',
-  '[data-bookmark-thumbnail]',
+  '[data-cite-icon]',
+  '[data-cite-thumbnail]',
 ]
 
 const sourceTypeFromParent = (element: Element): AssetType => {
@@ -153,12 +153,12 @@ export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
         proxyAttribute(element, 'data-embed-avatar', 'image', assetProxyFn)
       }
 
-      if (element.hasAttribute('data-bookmark-icon')) {
-        proxyAttribute(element, 'data-bookmark-icon', 'image', assetProxyFn)
+      if (element.hasAttribute('data-cite-icon')) {
+        proxyAttribute(element, 'data-cite-icon', 'image', assetProxyFn)
       }
 
-      if (element.hasAttribute('data-bookmark-thumbnail')) {
-        proxyAttribute(element, 'data-bookmark-thumbnail', 'image', assetProxyFn)
+      if (element.hasAttribute('data-cite-thumbnail')) {
+        proxyAttribute(element, 'data-cite-thumbnail', 'image', assetProxyFn)
       }
     }
   }

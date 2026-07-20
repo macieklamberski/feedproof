@@ -1,6 +1,6 @@
-import type { BookmarkResolver } from '../types.js'
+import type { CiteResolver } from '../types.js'
 
-export const ghostBookmarkResolver: BookmarkResolver = {
+export const ghostCiteResolver: CiteResolver = {
   selector: '.kg-bookmark-card',
   extract: (element) => {
     const link = element.querySelector('a.kg-bookmark-container')

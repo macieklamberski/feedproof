@@ -2,7 +2,7 @@ import { describe, expect } from 'bun:test'
 import { JSDOM } from 'jsdom'
 import {
   defaultAvatarImageHosts,
-  defaultBookmarkResolvers,
+  defaultCiteResolvers,
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
   defaultHighlightFn,
@@ -24,7 +24,7 @@ type ParseHtml = (html: string) => Document
 
 export const baseContext: TransformContext = {
   embedResolvers: defaultEmbedResolvers,
-  bookmarkResolvers: defaultBookmarkResolvers,
+  citeResolvers: defaultCiteResolvers,
   emojiImageHosts: defaultEmojiImageHosts,
   avatarImageHosts: defaultAvatarImageHosts,
   nonContentSelectors: defaultNonContentSelectors,

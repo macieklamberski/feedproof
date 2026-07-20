@@ -1,4 +1,4 @@
-import type { BookmarkResolver } from '../types.js'
+import type { CiteResolver } from '../types.js'
 
 // Hatena Blog renders a pasted link as an iframe pointing at its card renderer, followed by
 // a `<cite>` holding the real link. Both sit inside one paragraph, and the paragraph is what
@@ -8,7 +8,7 @@ import type { BookmarkResolver } from '../types.js'
 // The two elements carry different halves of the card. The iframe's `title` attribute holds
 // the page title and its `src` carries the target as a `url` query parameter; the citation
 // holds the same target unencoded, plus the domain as its text.
-export const hatenaBookmarkResolver: BookmarkResolver = {
+export const hatenaCiteResolver: CiteResolver = {
   selector: 'p:has(> iframe.embed-card)',
   extract: (element) => {
     const iframe = element.querySelector('iframe.embed-card')

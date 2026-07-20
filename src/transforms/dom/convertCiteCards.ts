@@ -1,12 +1,12 @@
 import type { DomTransform } from '../../types.js'
-import { createBookmarkPlaceholder } from '../../utils/embeds.js'
+import { createCitePlaceholder } from '../../utils/embeds.js'
 import { resolveOrKeepUrl } from '../../utils/urls.js'
 
-export const convertBookmarkCards: DomTransform = (context) => {
-  const { bookmarkResolvers, resolveUrlFn, baseUrl } = context
+export const convertCiteCards: DomTransform = (context) => {
+  const { citeResolvers, resolveUrlFn, baseUrl } = context
 
   return async (document) => {
-    for (const resolver of bookmarkResolvers) {
+    for (const resolver of citeResolvers) {
       for (const element of document.querySelectorAll(resolver.selector)) {
         const result = await resolver.extract(element)
 
@@ -21,7 +21,7 @@ export const convertBookmarkCards: DomTransform = (context) => {
           thumbnail: resolveOrKeepUrl(result.thumbnail, resolveUrlFn, baseUrl),
         }
 
-        element.replaceWith(createBookmarkPlaceholder(document, resolved))
+        element.replaceWith(createCitePlaceholder(document, resolved))
       }
     }
   }

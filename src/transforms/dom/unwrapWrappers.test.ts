@@ -168,9 +168,9 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
     expect(await transform(value)).toBe(value)
   })
 
-  it('should preserve a div carrying data-bookmark attributes', async () => {
+  it('should preserve a div carrying data-cite attributes', async () => {
     const value = html`
-      <div data-bookmark-provider="ghost" data-bookmark-url="https://example.com/x">
+      <div data-cite-provider="ghost" data-cite-url="https://example.com/x">
         <a href="https://example.com/x">Title</a>
       </div>
     `
