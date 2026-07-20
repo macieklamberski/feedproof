@@ -60,7 +60,6 @@ describeForEachParser('tistoryCiteResolver', (parseHtml) => {
         title: 'Page title',
         description: 'Preview text',
         publisher: 'example.com',
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)

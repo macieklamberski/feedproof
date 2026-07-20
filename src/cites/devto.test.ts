@@ -58,10 +58,6 @@ describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
         provider: 'devto',
         url: 'https://example.com/page',
         title: 'Page title',
-        description: undefined,
-        publisher: undefined,
-        icon: undefined,
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -199,7 +195,6 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
         provider: 'devto',
         url: 'https://example.com/org/post',
         title: 'Page title',
-        description: undefined,
         author: 'Author name',
         publisher: 'Org name',
       }
@@ -225,9 +220,7 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
         provider: 'devto',
         url: 'https://example.com/post',
         title: 'Page title',
-        description: undefined,
         author: 'Author name',
-        publisher: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)

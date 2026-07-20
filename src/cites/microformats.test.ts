@@ -44,9 +44,6 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
         provider: 'microformats',
         url: 'https://example.com/post',
         title: 'Page title',
-        description: undefined,
-        author: undefined,
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -69,8 +66,6 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
         url: 'https://example.com/book',
         title: 'Book title',
         author: 'Author name',
-        description: undefined,
-        thumbnail: undefined,
         kind: 'read',
       }
 

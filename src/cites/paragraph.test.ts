@@ -38,10 +38,6 @@ describeForEachParser('paragraphCiteResolver', (parseHtml) => {
         provider: 'paragraph',
         url: 'https://example.com/post',
         title: 'Page title',
-        description: undefined,
-        author: undefined,
-        publisher: undefined,
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)

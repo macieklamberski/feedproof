@@ -61,11 +61,8 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
         provider: 'substack',
         url: 'https://thereader.example.com/p/model-drop',
         title: 'Model Drop',
-        description: undefined,
-        author: undefined,
         publisher: 'The Reader',
         date: '2026-07-09T20:28:23.465Z',
-        icon: undefined,
         thumbnail: 'https://cdn.example.com/cover.webp',
       }
 
@@ -108,9 +105,6 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
         description: 'A look at the backlash.',
         author: 'Author name',
         publisher: 'The Reader',
-        date: undefined,
-        icon: undefined,
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)

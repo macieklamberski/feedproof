@@ -57,9 +57,7 @@ describeForEachParser('notecomCiteResolver', (parseHtml) => {
         provider: 'notecom',
         url: 'https://example.com/page',
         title: 'Page title',
-        description: undefined,
         publisher: 'example.com',
-        thumbnail: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
