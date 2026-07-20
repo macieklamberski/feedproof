@@ -461,7 +461,7 @@ describeForEachParser('transformContent', (parseHtml) => {
         data-cite-icon="https://example.com/favicon.ico"
         data-cite-thumbnail="https://example.com/og-image.jpg"
       >
-        <p><a href="https://example.com/post">Post title</a></p>
+        <a href="https://example.com/post">Post title</a>
       </div>
     `
 
@@ -551,7 +551,7 @@ describeForEachParser('transformContent', (parseHtml) => {
         data-cite-url="https://thereader.example.com/p/model-drop"
         data-cite-title="Model Drop"
       >
-        <p><a href="https://thereader.example.com/p/model-drop">Model Drop</a></p>
+        <a href="https://thereader.example.com/p/model-drop">Model Drop</a>
       </div>
     `
 
@@ -842,5 +842,30 @@ describeForEachParser('transformContent', (parseHtml) => {
   it.todo('should assign a poster to a bare video when heuristics are enabled', () => {
     // With heuristics: true, a poster-less <video> near a content image should
     // receive that image as its poster.
+  })
+
+  // Every transform has its own idempotency case, but nothing pinned the pipeline as a
+  // whole, which is where the placeholder shapes drifted: an embed placeholder is built
+  // after wrapBareInlineInParagraphs and a cite placeholder before it, so re-running the
+  // pipeline used to wrap the embed's fallback link and change the output.
+  it('should be idempotent for embed and cite placeholders', async () => {
+    const options = { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' }
+    const value = html`
+      <p>Intro</p>
+      <iframe src="https://www.youtube.com/embed/abc123"></iframe>
+      <figure class="kg-card kg-bookmark-card">
+        <a class="kg-bookmark-container" href="https://example.com/linked">
+          <div class="kg-bookmark-content">
+            <div class="kg-bookmark-title">Linked post</div>
+          </div>
+        </a>
+      </figure>
+    `
+    const once = await transformContent(value, options)
+    const twice = await transformContent(once, options)
+
+    expect(once).toContain('data-embed-src=')
+    expect(once).toContain('data-cite-provider="ghost"')
+    expect(twice).toBe(once)
   })
 })

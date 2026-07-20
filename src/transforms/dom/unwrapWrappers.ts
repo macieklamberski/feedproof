@@ -1,21 +1,7 @@
 import type { DomTransform } from '../../types.js'
+import { isGeneratedWrapper } from '../../utils/dom.js'
 
 const wrapperTags = new Set(['div', 'article', 'section', 'main', 'header', 'footer'])
-
-const preservedPrefixes = ['data-embed', 'data-cite', 'data-table', 'data-pre']
-
-const hasPreservedAttribute = (element: Element): boolean => {
-  const attributes = element.attributes
-  for (let i = 0, n = attributes.length; i < n; i++) {
-    const name = attributes[i].name
-    for (const prefix of preservedPrefixes) {
-      if (name.startsWith(prefix)) {
-        return true
-      }
-    }
-  }
-  return false
-}
 
 // Collects the ids that in-page anchors (`<a href="#id">`) point at, so wrappers
 // that are those anchors' scroll targets (e.g. a `<div class="footnote-definition"
@@ -58,7 +44,7 @@ export const unwrapWrappers: DomTransform = () => {
         continue
       }
 
-      if (hasPreservedAttribute(element)) {
+      if (isGeneratedWrapper(element)) {
         continue
       }
 
