@@ -5,7 +5,7 @@ import type { CiteResolverResult } from '../types.js'
 // untrimmed and nullish wherever the field is absent.
 export type RawCiteResult = {
   [Key in keyof CiteResolverResult]?: Nullish<CiteResolverResult[Key]>
-} & { provider: string }
+} & Pick<CiteResolverResult, 'provider'>
 
 const trim = (value: Nullish<string>): string | undefined => {
   return value?.trim() || undefined
