@@ -23,6 +23,7 @@ import { swellCiteResolver } from './cites/swell.js'
 import { tcdCiteResolver } from './cites/tcd.js'
 import { tistoryCiteResolver } from './cites/tistory.js'
 import { tumblrCiteResolver } from './cites/tumblr.js'
+import { wordpressCiteResolver } from './cites/wordpress.js'
 import { xenforoCiteResolver } from './cites/xenforo.js'
 import { anchorEmbedResolver } from './embeds/anchor.js'
 import { appleEmbedResolver } from './embeds/apple.js'
@@ -454,6 +455,7 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   devtoLegacyPostCiteResolver,
   affingerCiteResolver,
   mediumCiteResolver,
+  wordpressCiteResolver,
 ]
 
 // Attributes that park a media file URL on a container which then builds the player with JS,
@@ -790,4 +792,9 @@ export const defaultNonContentSelectors = [
   // wrapper holding no player, so the ones whose iframe survived are untouched. The video id is
   // nowhere in the markup, so there is nothing to recover here, only chrome to remove.
   'span[data-s9e-mediaembed]:not(:has(iframe, embed, object, video, audio))',
+  // The other half of a WordPress post embed, whose blockquote wordpressCiteResolver
+  // converts. Its src is a `/embed/#?secret=…` handshake url that renders nothing outside
+  // WordPress's postMessage bridge, so left alone it becomes an embed placeholder pointing
+  // at a blank page — 14,353 feeds (0.113%).
+  'iframe.wp-embedded-content',
 ]

@@ -82,6 +82,8 @@ const specimens: Record<string, string | [string, string]> = {
     '<drupal-render-placeholder callback="comment.lazy_builders:renderLinks" arguments="0=node:1"></drupal-render-placeholder>',
   '.mcnPreviewText': '<span class="mcnPreviewText" style="display:none">Preview text</span>',
   '.tmblr-alt-text-helper': '<span class="tmblr-alt-text-helper">ALT</span>',
+  'iframe.wp-embedded-content':
+    '<iframe class="wp-embedded-content" src="https://example.com/post/embed/#?secret=abc" sandbox="allow-scripts" security="restricted"></iframe>',
   'img[src*="steamcommunity.com"][src*="placeholder"]':
     '<img src="https://cdn.steamcommunity.com/news/placeholder_video.gif">',
   'script[consent-original-src-_]':

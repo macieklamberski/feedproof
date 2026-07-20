@@ -99,6 +99,7 @@ export { swellCiteResolver } from './cites/swell.js'
 export { tcdCiteResolver } from './cites/tcd.js'
 export { tistoryCiteResolver } from './cites/tistory.js'
 export { tumblrCiteResolver } from './cites/tumblr.js'
+export { wordpressCiteResolver } from './cites/wordpress.js'
 export { xenforoCiteResolver } from './cites/xenforo.js'
 export {
   defaultAllDomTransforms,
