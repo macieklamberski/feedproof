@@ -1,7 +1,11 @@
 import { resolveUrl } from 'feedcanon'
 import { amebaCiteResolver } from './cites/ameba.js'
 import { cocoonCiteResolver } from './cites/cocoon.js'
-import { devtoCiteResolver } from './cites/devto.js'
+import {
+  devtoCiteResolver,
+  devtoLegacyPostCiteResolver,
+  devtoPostCiteResolver,
+} from './cites/devto.js'
 import { discourseCiteResolver } from './cites/discourse.js'
 import { ghostCiteResolver } from './cites/ghost.js'
 import { hatenaCiteResolver } from './cites/hatena.js'
@@ -250,6 +254,8 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   pzlinkcardCiteResolver,
   notecomCiteResolver,
   tumblrCiteResolver,
+  devtoPostCiteResolver,
+  devtoLegacyPostCiteResolver,
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
