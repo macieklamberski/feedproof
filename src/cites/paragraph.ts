@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { attr, jsonAttr } from '../utils/dom.js'
 
 // Paragraph renders the card client-side but also ships the whole payload as an oEmbed
@@ -30,24 +31,17 @@ export const paragraphCiteResolver: CiteResolver = {
       return
     }
 
-    // `url` is Embedly's canonical form; the `src` attribute holds what the author typed
-    // and can differ (a bare http:// host, or an entirely different slug), so it is only
-    // the fallback.
-    const url = data.url ?? attr(element, 'src')
-    const title = data.title?.trim()
-
-    if (!url || !title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'paragraph',
-      url,
-      title,
+      // `url` is Embedly's canonical form; the `src` attribute holds what the author typed
+      // and can differ (a bare http:// host, or an entirely different slug), so it is only
+      // the fallback.
+      url: data.url ?? attr(element, 'src'),
+      title: data.title,
       description: data.description,
       author: data.author_name,
       publisher: data.provider_name,
       thumbnail: data.thumbnail_url,
-    }
+    })
   },
 }
