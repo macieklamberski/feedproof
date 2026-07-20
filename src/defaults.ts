@@ -7,6 +7,7 @@ import {
   devtoPostCiteResolver,
 } from './cites/devto.js'
 import { discourseCiteResolver } from './cites/discourse.js'
+import { embedlyCiteResolver } from './cites/embedly.js'
 import { ghostCiteResolver } from './cites/ghost.js'
 import { hatenaCiteResolver } from './cites/hatena.js'
 import { microformatsCiteResolver } from './cites/microformats.js'
@@ -255,6 +256,7 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   pzlinkcardCiteResolver,
   notecomCiteResolver,
   tumblrCiteResolver,
+  embedlyCiteResolver,
   paragraphCiteResolver,
   devtoPostCiteResolver,
   devtoLegacyPostCiteResolver,
