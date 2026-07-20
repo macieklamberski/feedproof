@@ -181,6 +181,7 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
   })
+
   describe('through convertCiteCards', () => {
     it('should replace the wrapping anchor along with the card', async () => {
       const value = html`
@@ -223,6 +224,20 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
       const value = '<a href="https://example.com/page">Plain link</a>'
 
       expect(await transform(value)).toEqualHtml(value)
+    })
+
+    // The nested anchor this fixes only misbehaves once the output is reparsed, which is
+    // what a second run does — so this is the case that pins the bug staying fixed.
+    it('should be idempotent', async () => {
+      const value = html`
+        <a href="https://example.com/page">
+          <div class="lkc-card"><div class="lkc-title">Page title</div></div>
+        </a>
+      `
+      const once = await transform(value)
+      const twice = await transform(once)
+
+      expect(twice).toBe(once)
     })
   })
 })
