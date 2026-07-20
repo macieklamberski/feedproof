@@ -1,13 +1,16 @@
 import { resolveUrl } from 'feedcanon'
 import { amebaBookmarkResolver } from './bookmarks/ameba.js'
 import { cocoonBookmarkResolver } from './bookmarks/cocoon.js'
+import { devtoBookmarkResolver } from './bookmarks/devto.js'
 import { discourseBookmarkResolver } from './bookmarks/discourse.js'
 import { ghostBookmarkResolver } from './bookmarks/ghost.js'
+import { hatenaBookmarkResolver } from './bookmarks/hatena.js'
 import {
   substackCrossPostBookmarkResolver,
   substackOwnPostBookmarkResolver,
 } from './bookmarks/substack.js'
 import { swellBookmarkResolver } from './bookmarks/swell.js'
+import { tistoryBookmarkResolver } from './bookmarks/tistory.js'
 import { xenforoBookmarkResolver } from './bookmarks/xenforo.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
@@ -237,6 +240,9 @@ export const defaultBookmarkResolvers: Array<BookmarkResolver> = [
   swellBookmarkResolver,
   xenforoBookmarkResolver,
   amebaBookmarkResolver,
+  tistoryBookmarkResolver,
+  hatenaBookmarkResolver,
+  devtoBookmarkResolver,
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
