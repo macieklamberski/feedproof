@@ -34,19 +34,13 @@ export const devtoPostCiteResolver: CiteResolver = {
   selector: '.ltag__link--embedded',
   extract: (element) => {
     const heading = find(element, '.crayons-story__title')
-    const url =
-      attr(find(element, 'a.crayons-story__hidden-navigation-link'), 'href') ??
-      attr(find(heading, 'a'), 'href')
-    const title = text(heading, 'a')
 
-    if (!url || !title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'devto',
-      url,
-      title,
+      url:
+        attr(find(element, 'a.crayons-story__hidden-navigation-link'), 'href') ??
+        attr(find(heading, 'a'), 'href'),
+      title: text(heading, 'a'),
       // Only posts carrying a context note or a status preview have any text beside the
       // title; an ordinary post card has none.
       description:
@@ -56,7 +50,7 @@ export const devtoPostCiteResolver: CiteResolver = {
       // the organization is the one wrapped in the `for <org>` span.
       author: text(element, 'a.crayons-story__secondary'),
       publisher: text(element, 'span > a.crayons-story__secondary'),
-    }
+    })
   },
 }
 
@@ -75,20 +69,13 @@ export const devtoLegacyPostCiteResolver: CiteResolver = {
     }
 
     const content = find(element, '.ltag__link__content')
-    const url = attr(content?.closest('a'), 'href')
-    const title = text(content, 'h2')
-
-    if (!url || !title) {
-      return
-    }
-
     const [author] = text(content, 'h3')?.split(authorSeparator) ?? []
 
-    return {
+    return buildCite({
       provider: 'devto',
-      url,
-      title,
-      author: author?.trim() || undefined,
-    }
+      url: attr(content?.closest('a'), 'href'),
+      title: text(content, 'h2'),
+      author,
+    })
   },
 }
