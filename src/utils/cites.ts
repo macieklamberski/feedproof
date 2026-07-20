@@ -1,21 +1,11 @@
 import type { Nullish } from 'trousse'
-import type { CiteKind, CiteResolverResult } from '../types.js'
+import type { CiteResolverResult } from '../types.js'
 
 // What a resolver scrapes: the result fields as the markup or the JSON blob carries them,
 // untrimmed and nullish wherever the field is absent.
 export type RawCiteResult = {
-  provider: string
-  url?: Nullish<string>
-  title?: Nullish<string>
-  description?: Nullish<string>
-  caption?: Nullish<string>
-  author?: Nullish<string>
-  publisher?: Nullish<string>
-  date?: Nullish<string>
-  icon?: Nullish<string>
-  thumbnail?: Nullish<string>
-  kind?: Nullish<CiteKind>
-}
+  [Key in keyof CiteResolverResult]?: Nullish<CiteResolverResult[Key]>
+} & { provider: string }
 
 const trim = (value: Nullish<string>): string | undefined => {
   return value?.trim() || undefined
