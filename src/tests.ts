@@ -16,7 +16,7 @@ import {
   defaultTrackingPathSegments,
 } from './defaults.js'
 import { parseHtml as parseWithLinkedom } from './parsers/linkedom.js'
-import type { TransformContext } from './types.js'
+import type { CiteResolver, CiteResolverResult, TransformContext } from './types.js'
 
 // Test adapters are synchronous, unlike the public `ParseHtmlFn` which allows a
 // promise — a sync return keeps `parseHtml(html).querySelector(...)` typechecking.
@@ -69,6 +69,17 @@ export const describeForEachParser = (name: string, fn: (parseHtml: ParseHtml) =
     describe(`${name} [${library}]`, () => {
       fn(parseHtml)
     })
+  }
+}
+
+// Every cite resolver test runs the same two steps: match the resolver's own selector,
+// then hand the element to its extract. Bound per test file so each one reads as a single
+// `extract(html)` call.
+export const citeExtractor = (parseHtml: ParseHtml, resolver: CiteResolver) => {
+  return async (value: string): Promise<CiteResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(resolver.selector)
+
+    return element ? await resolver.extract(element) : undefined
   }
 }
 

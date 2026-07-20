@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { citeExtractor, describeForEachParser, html } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { amebaCiteResolver } from './ameba.js'
 
 describeForEachParser('amebaCiteResolver', (parseHtml) => {
-  const extract = async (value: string): Promise<CiteResolverResult | undefined> => {
-    const element = parseHtml(value).querySelector(amebaCiteResolver.selector)
-    return element ? await amebaCiteResolver.extract(element) : undefined
-  }
+  const extract = citeExtractor(parseHtml, amebaCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {

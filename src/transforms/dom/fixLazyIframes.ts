@@ -1,13 +1,5 @@
 import type { DomTransform } from '../../types.js'
-
-// A real, loadable src — not empty or the `about:blank` lazy placeholder.
-const isUsableSrc = (src: string | null): src is string => {
-  const trimmed = src?.trim()
-  return !!trimmed && trimmed !== 'about:blank'
-}
-
-// Rejects flag-style values; a real URL carries a `:`, `/`, or `.`.
-const urlShapeRegex = /[:/.]/
+import { isUrlShaped, isUsableSrc } from '../../utils/urls.js'
 
 // Promote a lazy/consent-gated iframe src (the real embed URL parked in a data-*
 // attribute) into `src` when the src itself is empty or `about:blank`, so the
@@ -24,7 +16,7 @@ export const fixLazyIframes: DomTransform = (context) => {
       for (const attribute of lazyIframeAttributes) {
         const value = iframe.getAttribute(attribute)
 
-        if (value && urlShapeRegex.test(value)) {
+        if (value && isUrlShaped(value)) {
           iframe.setAttribute('src', value)
           break
         }
