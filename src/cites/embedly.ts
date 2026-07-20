@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
 // Embedly's platform.js turns an `.embedly-card` anchor or blockquote into an iframe on the
@@ -10,18 +11,11 @@ import { attr, find, text } from '../utils/dom.js'
 export const embedlyCiteResolver: CiteResolver = {
   selector: '.embedly-card',
   extract: (element) => {
-    const url = attr(element, 'href') ?? attr(find(element, 'a'), 'href')
-    const title = text(element, 'h4') ?? text(element)
-
-    if (!url || !title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'embedly',
-      url,
-      title,
+      url: attr(element, 'href') ?? attr(find(element, 'a'), 'href'),
+      title: text(element, 'h4') ?? text(element),
       description: text(element, 'p'),
-    }
+    })
   },
 }
