@@ -1,0 +1,140 @@
+import { describe, expect, it } from 'bun:test'
+import { describeForEachParser, html } from '../tests.js'
+import type { BookmarkResolverResult } from '../types.js'
+import { amebaBookmarkResolver } from './ameba.js'
+
+describeForEachParser('amebaBookmarkResolver', (parseHtml) => {
+  const extract = async (value: string): Promise<BookmarkResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(amebaBookmarkResolver.selector)
+    return element ? await amebaBookmarkResolver.extract(element) : undefined
+  }
+
+  describe('happy paths', () => {
+    it('should extract all fields from a complete card', async () => {
+      const value = html`
+        <div class="ogpCard_root">
+          <article class="ogpCard_wrap" contenteditable="false">
+            <a class="ogpCard_link" href="https://example.com/product" target="_blank" rel="noopener noreferrer" data-ogp-card-log="">
+              <span class="ogpCard_imageWrap"><img class="ogpCard_image" src="https://cdn.example.com/thumb.jpg" alt="" /></span>
+              <span class="ogpCard_content">
+                <span class="ogpCard_title">Page title</span>
+                <span class="ogpCard_description">Preview text</span>
+                <span class="ogpCard_url">
+                  <span class="ogpCard_iconWrap"><img class="ogpCard_icon" alt="link" src="https://c.stat100.ameba.jp/ameblo/symbols/editor_link.svg" /></span>
+                  <span class="ogpCard_urlText">example.com</span>
+                </span>
+              </span>
+            </a>
+          </article>
+        </div>
+      `
+      const expected: BookmarkResolverResult = {
+        provider: 'ameba',
+        url: 'https://example.com/product',
+        title: 'Page title',
+        description: 'Preview text',
+        publisher: 'example.com',
+        thumbnail: 'https://cdn.example.com/thumb.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should extract a card without a thumbnail image', async () => {
+      const value = html`
+        <article class="ogpCard_wrap">
+          <a class="ogpCard_link" href="https://example.com/shop" data-ogp-card-log="">
+            <span class="ogpCard_content">
+              <span class="ogpCard_title">Page title</span>
+              <span class="ogpCard_description">Preview text</span>
+              <span class="ogpCard_url">
+                <span class="ogpCard_iconWrap"><img class="ogpCard_icon" src="https://c.stat100.ameba.jp/ameblo/symbols/editor_link.svg" /></span>
+                <span class="ogpCard_urlText">example.com</span>
+              </span>
+            </span>
+          </a>
+        </article>
+      `
+      const expected: BookmarkResolverResult = {
+        provider: 'ameba',
+        url: 'https://example.com/shop',
+        title: 'Page title',
+        description: 'Preview text',
+        publisher: 'example.com',
+        thumbnail: undefined,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should not map the decorative link icon as an icon', async () => {
+      const value = html`
+        <article class="ogpCard_wrap">
+          <a class="ogpCard_link" href="https://example.com/page">
+            <span class="ogpCard_content">
+              <span class="ogpCard_title">Page title</span>
+              <span class="ogpCard_url">
+                <span class="ogpCard_iconWrap"><img class="ogpCard_icon" src="https://c.stat100.ameba.jp/ameblo/symbols/editor_link.svg" /></span>
+                <span class="ogpCard_urlText">example.com</span>
+              </span>
+            </span>
+          </a>
+        </article>
+      `
+
+      expect((await extract(value))?.icon).toBeUndefined()
+    })
+
+    it('should trim surrounding whitespace from the title', async () => {
+      const value = html`
+        <article class="ogpCard_wrap">
+          <a class="ogpCard_link" href="https://example.com/page">
+            <span class="ogpCard_title"> Padded title </span>
+          </a>
+        </article>
+      `
+
+      expect((await extract(value))?.title).toBe('Padded title')
+    })
+  })
+
+  describe('sad paths', () => {
+    it('should return undefined when the link has no href', async () => {
+      const value = html`
+        <article class="ogpCard_wrap">
+          <a class="ogpCard_link">
+            <span class="ogpCard_title">Page title</span>
+          </a>
+        </article>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the title is missing', async () => {
+      const value = html`
+        <article class="ogpCard_wrap">
+          <a class="ogpCard_link" href="https://example.com/page">
+            <span class="ogpCard_description">Preview text</span>
+          </a>
+        </article>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the title is only whitespace', async () => {
+      const value = html`
+        <article class="ogpCard_wrap">
+          <a class="ogpCard_link" href="https://example.com/page">
+            <span class="ogpCard_title"> </span>
+          </a>
+        </article>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+})
