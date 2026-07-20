@@ -127,7 +127,7 @@ const result = transformContent(html, {
   highlightFn: (text, language) => myHighlighter.highlight(text, language),
   // Resolvers turning `<iframe>` embeds into placeholders (defaults: YouTube, Vimeo, Dailymotion).
   embedResolvers: [youtubeEmbedResolver, myEmbedResolver],
-  // Resolvers turning link-preview cards into placeholders — see "Cite cards".
+  // Resolvers turning link-preview cards into `data-cite-*` placeholders.
   citeResolvers: [ghostCiteResolver, myCiteResolver],
   // Opt into the heuristic transforms (enclosure-duplicate + video-poster stripping). Ignored if domTransforms is set.
   heuristics: true,
@@ -143,34 +143,6 @@ Code blocks are highlighted only when they declare a language (`language-*` clas
 The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. The `heuristics` flag (default `false`) selects between two exported DOM pipelines: `defaultStandardDomTransforms` (the safe defaults) and `defaultAllDomTransforms` (standard plus `heuristicDomTransforms` spliced in after `injectEnclosures`). Setting `domTransforms` explicitly overrides `heuristics`. Every transform and pipeline is also exported individually from `feedsweep`, so you can compose any pipeline — list transforms explicitly, or spread `defaultStandardDomTransforms` / `heuristicDomTransforms` to extend or filter the defaults.
 
 `embedResolvers` and `citeResolvers` each fully replace their default resolver list when provided; omit them for the defaults. Every resolver is exported individually from `feedsweep`, so a custom list is composed by naming the built-ins you want alongside your own.
-
-## Cite cards
-
-A cite card is a link preview a publishing platform bakes into the post body: a bookmark card, a forum unfurl, an embedded-post block. `convertCiteCards` replaces every card its resolvers match with a placeholder, so a reader renders one card design of its own instead of each platform's frozen markup. Card URLs, icons and thumbnails are resolved against `baseUrl`, the URL additionally passes through `cleanUrlFn`, and a card without both a URL and a title is left untouched.
-
-```html
-<div data-cite-provider="ghost" data-cite-url="https://example.com/post" data-cite-title="Post title">
-  <a href="https://example.com/post">Post title</a>
-</div>
-```
-
-Only `data-cite-url` and `data-cite-title` are guaranteed; every other attribute is omitted when the card does not carry the field. The nested `<a>` is a fallback for readers that do not handle the placeholder.
-
-| Attribute | Meaning |
-| --- | --- |
-| `data-cite-provider` | The source the card came from (`ghost`, `discourse`, `devto`, …) |
-| `data-cite-url` | The linked page |
-| `data-cite-title` | The linked page's title |
-| `data-cite-description` | The linked page's own preview text |
-| `data-cite-caption` | The embedding author's note about the link, as opposed to the linked page's preview text |
-| `data-cite-author` | The linked work's author |
-| `data-cite-publisher` | The linked work's site or publication name |
-| `data-cite-date` | Publication date as the platform states it — displayable, but not normalized to ISO |
-| `data-cite-icon` | The linked site's favicon |
-| `data-cite-thumbnail` | The card's preview image |
-| `data-cite-kind` | Relationship to the linked work: `bookmark`, `repost`, `like`, `reply`, `read`, `listen`, `watch`. Sparse — only a source expressing a real relationship sets it |
-
-A resolver is a selector plus an `extract` returning a `CiteResolverResult`, or `undefined` to skip the element. Resolvers run in registration order, so an earlier one claims its cards before a later, broader selector reaches them. Each is exported individually (`ghostCiteResolver`, `discourseCiteResolver`, …) so `citeResolvers` can name the built-ins you want alongside your own; see `defaultCiteResolvers` in `feedsweep/defaults` for the full list and order.
 
 ## DOM library
 
