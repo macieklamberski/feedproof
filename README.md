@@ -93,7 +93,13 @@ Inventory of every transform exported from the package. Most are enabled by defa
 ## Options
 
 ```typescript
-import { fixLazyImages, resolveRelativeUrls, transformContent } from 'feedsweep'
+import {
+  fixLazyImages,
+  ghostCiteResolver,
+  resolveRelativeUrls,
+  transformContent,
+  youtubeEmbedResolver,
+} from 'feedsweep'
 import { parseHtml } from 'feedsweep/linkedom'
 import { cleanUrl } from 'urlpurify'
 
@@ -119,6 +125,10 @@ const result = transformContent(html, {
   },
   // Swap the code highlighter (defaults to highlight.js; may be async).
   highlightFn: (text, language) => myHighlighter.highlight(text, language),
+  // Resolvers turning `<iframe>` embeds into placeholders (defaults: YouTube, Vimeo, Dailymotion).
+  embedResolvers: [youtubeEmbedResolver, myEmbedResolver],
+  // Resolvers turning link-preview cards into placeholders — see "Cite cards".
+  citeResolvers: [ghostCiteResolver, myCiteResolver],
   // Opt into the heuristic transforms (enclosure-duplicate + video-poster stripping). Ignored if domTransforms is set.
   heuristics: true,
   // Run a custom DOM transform pipeline (omit to use defaults).
@@ -131,6 +141,94 @@ All caller-provided functions (`parseHtmlFn`, `resolveUrlFn`, `cleanUrlFn`, `ass
 Code blocks are highlighted only when they declare a language (`language-*` class, `data-language`, Pandoc/Rouge/Expressive Code/etc.); unlabeled blocks are left plain rather than guessed at. The default highlighter is highlight.js (exported as `defaultHighlightFn` / `hljsHighlightFn`); replace it with `highlightFn`.
 
 The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. The `heuristics` flag (default `false`) selects between two exported DOM pipelines: `defaultStandardDomTransforms` (the safe defaults) and `defaultAllDomTransforms` (standard plus `heuristicDomTransforms` spliced in after `injectEnclosures`). Setting `domTransforms` explicitly overrides `heuristics`. Every transform and pipeline is also exported individually from `feedsweep`, so you can compose any pipeline — list transforms explicitly, or spread `defaultStandardDomTransforms` / `heuristicDomTransforms` to extend or filter the defaults.
+
+`embedResolvers` and `citeResolvers` each fully replace their default resolver list when provided; omit them for the defaults. Every resolver is exported individually from `feedsweep`, so a custom list is composed by naming the built-ins you want alongside your own.
+
+## Cite cards
+
+A cite card is a link preview a publishing platform bakes into the post body: a bookmark card, a forum unfurl, an embedded-post block. `convertCiteCards` runs each resolver in `citeResolvers` over the document and replaces every card it matches with a placeholder, so a reader renders one card design of its own instead of each platform's frozen markup. Card URLs, icons and thumbnails are resolved against `baseUrl` and the URL additionally passes through `cleanUrlFn`; a card without both a URL and a title is left untouched.
+
+```html
+<div data-cite-provider="ghost" data-cite-publisher="Example" data-cite-url="https://example.com/post" data-cite-title="Post title">
+  <a href="https://example.com/post">Post title</a>
+</div>
+```
+
+| Attribute | Meaning |
+| --- | --- |
+| `data-cite-provider` | The source the card came from (`ghost`, `discourse`, `devto`, …) |
+| `data-cite-url` | The linked page — always present |
+| `data-cite-title` | The linked page's title — always present |
+| `data-cite-description` | The linked page's own preview text |
+| `data-cite-caption` | The embedding author's note about the link, as opposed to the linked page's preview text |
+| `data-cite-author` | The linked work's author |
+| `data-cite-publisher` | The linked work's site or publication name |
+| `data-cite-date` | Publication date as the platform prints it — a display string, not normalized to ISO |
+| `data-cite-icon` | The linked site's favicon |
+| `data-cite-thumbnail` | The card's preview image |
+| `data-cite-kind` | The relationship expressed toward the linked work: `bookmark`, `repost`, `like`, `reply`, `read`, `listen`, `watch` |
+
+Only `data-cite-url` and `data-cite-title` are guaranteed; every other attribute is simply omitted when the card does not carry the field, so treat them all as optional. `data-cite-kind` is sparse — only a source expressing a real relationship sets it (today just microformats `h-cite`, via its `u-*-of` class), and a plain platform link preview leaves it unset. The nested `<a>` is the fallback for a reader that does not handle the placeholder.
+
+Twenty resolvers ship, applied in this order — an earlier one replaces its cards before a later, broader selector can reach them.
+
+| Resolver | Matches |
+| --- | --- |
+| `ghostCiteResolver` | Ghost bookmark card (`.kg-bookmark-card`) |
+| `substackOwnPostCiteResolver` | Substack embed of the publication's own post (`.digest-post-embed`) |
+| `substackCrossPostCiteResolver` | Substack embed of another creator's post (`.embedded-post-wrap`) |
+| `cocoonCiteResolver` | Cocoon WordPress theme link card (`.blogcard-wrap`) |
+| `discourseCiteResolver` | Discourse forum onebox (`aside.onebox[data-onebox-src]`) |
+| `swellCiteResolver` | SWELL WordPress theme blog card (`.p-blogCard`) |
+| `xenforoCiteResolver` | XenForo forum link unfurl (`.bbCodeBlock--unfurl[data-url]`) |
+| `microformatsCiteResolver` | microformats2 `h-cite`, including the IndieWeb `u-*-of` response kind |
+| `amebaCiteResolver` | Ameba Open Graph card (`.ogpCard_wrap`) |
+| `tistoryCiteResolver` | Tistory Open Graph card (`[data-og-source-url]`) |
+| `hatenaCiteResolver` | Hatena Blog embed card — the card iframe plus its trailing `<cite>` |
+| `devtoLinkCiteResolver` | dev.to (Forem) external link card (`.c-embed`) |
+| `nodebbCiteResolver` | NodeBB link-preview card (`.link-preview`) |
+| `pzlinkcardCiteResolver` | Pz-LinkCard WordPress plugin card (`.lkc-card`) |
+| `notecomCiteResolver` | note.com external-article figure |
+| `tumblrCiteResolver` | Tumblr NPF link block (`data-npf` payload) |
+| `embedlyCiteResolver` | Static Embedly card (`blockquote.embedly-card`) |
+| `paragraphCiteResolver` | Paragraph link payload (`div[data-type="embedly"]`) |
+| `devtoPostCiteResolver` | dev.to embedded post card (`.ltag__link--embedded`) |
+| `devtoLegacyPostCiteResolver` | dev.to embedded post card, older shape (`.ltag__link`) |
+
+A resolver is a selector plus an extract that returns a `CiteResolverResult` (or `undefined` to skip the element). Compose your own with the built-ins you want:
+
+```typescript
+import { discourseCiteResolver, ghostCiteResolver, transformContent } from 'feedsweep'
+import type { CiteResolver } from 'feedsweep'
+import { parseHtml } from 'feedsweep/linkedom'
+
+const myCiteResolver: CiteResolver = {
+  selector: '.my-link-card',
+  extract: (element) => {
+    const link = element.querySelector('a[href]')
+    const url = link?.getAttribute('href')
+    const title = link?.textContent?.trim()
+
+    if (!url || !title) {
+      return
+    }
+
+    return {
+      provider: 'mysite',
+      url,
+      title,
+      description: element.querySelector('.summary')?.textContent?.trim(),
+      thumbnail: element.querySelector('img')?.getAttribute('src') ?? undefined,
+    }
+  },
+}
+
+await transformContent(html, {
+  parseHtmlFn: parseHtml,
+  baseUrl: 'https://example.com/post/1',
+  citeResolvers: [myCiteResolver, ghostCiteResolver, discourseCiteResolver],
+})
+```
 
 ## DOM library
 
