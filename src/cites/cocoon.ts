@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
 // Cocoon, a widely used WordPress theme, renders link cards for both external links and
@@ -10,17 +11,10 @@ import { attr, find, text } from '../utils/dom.js'
 export const cocoonCiteResolver: CiteResolver = {
   selector: '.blogcard-wrap',
   extract: (element) => {
-    const url = attr(element, 'href')
-    const title = text(element, '.blogcard-title') ?? attr(element, 'title')
-
-    if (!url || !title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'cocoon',
-      url,
-      title,
+      url: attr(element, 'href'),
+      title: text(element, '.blogcard-title') ?? attr(element, 'title'),
       // Both spellings of the snippet class ship in the wild: `blogcard-snippet` in 1,289
       // corpus feeds and the misspelled `blogcard-snipet` in another 40.
       description: text(element, '.blogcard-snippet, .blogcard-snipet'),
@@ -30,6 +24,6 @@ export const cocoonCiteResolver: CiteResolver = {
       date: text(element, '.blogcard-post-date'),
       icon: attr(find(element, '.blogcard-favicon-image'), 'src'),
       thumbnail: attr(find(element, '.blogcard-thumb-image'), 'src'),
-    }
+    })
   },
 }

@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { attr, find, text, textNode } from '../utils/dom.js'
 
 // NodeBB's bundled link-preview plugin (on by default since v3.1) rewrites a pasted link
@@ -10,20 +11,13 @@ import { attr, find, text, textNode } from '../utils/dom.js'
 export const nodebbCiteResolver: CiteResolver = {
   selector: '.link-preview',
   extract: (element) => {
-    const url = attr(find(element, '.card-title a'), 'href') ?? attr(find(element, 'a'), 'href')
-    const title = text(element, '.card-title')
-
-    if (!url || !title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'nodebb',
-      url,
-      title,
+      url: attr(find(element, '.card-title a'), 'href') ?? attr(find(element, 'a'), 'href'),
+      title: text(element, '.card-title'),
       description: text(element, '.card-text'),
       publisher: textNode(find(element, '.card-footer p')),
       thumbnail: attr(find(element, '.card-img-top'), 'src'),
-    }
+    })
   },
 }

@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
 // XenForo forums expand a pasted link into an "unfurl" block. The URL and host sit on the
@@ -8,21 +9,14 @@ import { attr, find, text } from '../utils/dom.js'
 export const xenforoCiteResolver: CiteResolver = {
   selector: '.bbCodeBlock--unfurl[data-url]',
   extract: (element) => {
-    const url = attr(element, 'data-url')
-    const title = text(element, '.js-unfurl-title')
-
-    if (!url || !title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'xenforo',
-      url,
-      title,
+      url: attr(element, 'data-url'),
+      title: text(element, '.js-unfurl-title'),
       description: text(element, '.js-unfurl-desc'),
       publisher: attr(element, 'data-host'),
       icon: attr(find(element, '.js-unfurl-favicon img'), 'src'),
       thumbnail: attr(find(element, '.js-unfurl-figure img'), 'src'),
-    }
+    })
   },
 }

@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
 // SWELL, a widely used WordPress theme, renders its post-link block as a card. Unlike
@@ -9,19 +10,13 @@ export const swellCiteResolver: CiteResolver = {
   selector: '.p-blogCard',
   extract: (element) => {
     const link = find(element, 'a.p-blogCard__title')
-    const url = attr(link, 'href')
-    const title = text(link)
 
-    if (!url || !title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'swell',
-      url,
-      title,
+      url: attr(link, 'href'),
+      title: text(link),
       description: text(element, '.p-blogCard__excerpt'),
       thumbnail: attr(find(element, '.p-blogCard__thumb img'), 'src'),
-    }
+    })
   },
 }

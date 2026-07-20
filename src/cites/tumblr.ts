@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { attr, find, jsonAttr, text } from '../utils/dom.js'
 
 // Tumblr's NPF (Neue Post Format) link block renders to a bare anchor with the whole card
@@ -37,32 +38,23 @@ export const tumblrCiteResolver: CiteResolver = {
     }
 
     const anchor = find(element, 'a')
-    const url = data.url ?? attr(anchor, 'href')
-
-    if (!url) {
-      return
-    }
+    const url = data.url?.trim() || attr(anchor, 'href')
 
     // The anchor repeats the title when there is one and shows the link itself when there is
     // not, so it only works as a fallback once it is checked against the link.
     const anchorText = text(anchor)
     const isLinkText =
-      !!anchorText && bareUrl(data.display_url ?? url).startsWith(bareUrl(anchorText))
-    const title = data.title?.trim() || (isLinkText ? undefined : anchorText)
+      !!url && !!anchorText && bareUrl(data.display_url ?? url).startsWith(bareUrl(anchorText))
 
-    if (!title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'tumblr',
       url,
-      title,
-      description: data.description?.trim(),
-      publisher: data.site_name?.trim(),
+      title: data.title?.trim() || (isLinkText ? undefined : anchorText),
+      description: data.description,
+      publisher: data.site_name,
       // Recent posts describe the poster by `media_key` only, with no URL to resolve it to;
       // older ones carry a real one.
       thumbnail: data.poster?.find((poster) => poster.url)?.url,
-    }
+    })
   },
 }

@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { jsonAttr } from '../utils/dom.js'
 
 // Substack's two post-embed shapes are separate components, not generations of one:
@@ -41,24 +42,17 @@ export const substackCrossPostCiteResolver: CiteResolver = {
       return
     }
 
-    const url = attrs.url
-    const title = attrs.title?.trim()
-
-    if (!url || !title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'substack',
-      url,
-      title,
+      url: attrs.url,
+      title: attrs.title,
       description: attrs.truncated_body_text,
       author: attrs.bylines?.[0]?.name,
       publisher: attrs.publication_name,
       date: attrs.date,
       icon: attrs.publication_logo_url,
       thumbnail: attrs.cover_image,
-    }
+    })
   },
 }
 
@@ -76,23 +70,16 @@ export const substackOwnPostCiteResolver: CiteResolver = {
       return
     }
 
-    const url = attrs.canonical_url
-    const title = attrs.title?.trim()
-
-    if (!url || !title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'substack',
-      url,
-      title,
+      url: attrs.canonical_url,
+      title: attrs.title,
       description: attrs.caption,
       author: attrs.publishedBylines?.[0]?.name,
       publisher: attrs.publication_name,
       date: attrs.post_date,
       icon: attrs.publication_logo_url,
       thumbnail: attrs.cover_image,
-    }
+    })
   },
 }

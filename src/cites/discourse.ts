@@ -1,4 +1,5 @@
 import type { CiteResolver } from '../types.js'
+import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
 // Discourse forums expand a pasted link into a "onebox" card. The engine that built the
@@ -9,23 +10,17 @@ import { attr, find, text } from '../utils/dom.js'
 export const discourseCiteResolver: CiteResolver = {
   selector: 'aside.onebox[data-onebox-src]',
   extract: (element) => {
-    const url = attr(element, 'data-onebox-src')
     const body = find(element, '.onebox-body')
-    // Engines differ on the heading level they use for the title.
-    const title = text(body, 'h3, h4')
 
-    if (!url || !title) {
-      return
-    }
-
-    return {
+    return buildCite({
       provider: 'discourse',
-      url,
-      title,
+      url: attr(element, 'data-onebox-src'),
+      // Engines differ on the heading level they use for the title.
+      title: text(body, 'h3, h4'),
       description: text(body, 'p'),
       publisher: text(element, 'header.source a'),
       icon: attr(find(element, 'img.site-icon'), 'src'),
       thumbnail: attr(find(element, '.aspect-image img'), 'src'),
-    }
+    })
   },
 }
