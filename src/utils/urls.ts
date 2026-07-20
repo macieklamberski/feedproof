@@ -6,7 +6,22 @@ import type { ResolveUrlFn } from '../types.js'
 // already absolute, so resolution must leave it byte-identical. Protocol-relative URLs
 // (`//host/path`) have no scheme and are intentionally not matched, so they resolve to
 // the base URL's scheme. Shared with resolveRelativeUrls so both treat URLs identically.
+const urlShapeRegex = /[:/.]/
+
 export const absoluteUrlRegex = /^[a-z][a-z0-9+.-]*:/i
+
+// A real, loadable src — not empty and not the `about:blank` lazy placeholder.
+export const isUsableSrc = (src: string | null): src is string => {
+  const trimmed = src?.trim()
+
+  return !!trimmed && trimmed !== 'about:blank'
+}
+
+// Rejects flag-style values like `"1"` / `"true"` / `"loaded"` that some lazy-loading
+// libraries park on otherwise-lazy attribute names; a real URL carries a `:`, `/`, or `.`.
+export const isUrlShaped = (value: string): boolean => {
+  return urlShapeRegex.test(value)
+}
 
 // Resolves a relative URL against the base URL, keeping the original otherwise —
 // an already-absolute/opaque URL, or a relative one that can't be resolved (no
