@@ -1,4 +1,4 @@
-import { expect, it } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import { defaultStandardDomTransforms } from './defaults.js'
 import { transformContent } from './index.js'
 import { describeForEachParser, html } from './tests.js'
@@ -573,6 +573,86 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(result).toContain('<p>Text</p>')
     expect(result).not.toContain('embedded-publication-wrap')
     expect(result).not.toContain('Other Pub')
+  })
+
+  // Markup that reaches a clean shape through the interaction of generic transforms alone,
+  // with no platform-specific transform. Substack's captioned image is the case:
+  // `unwrapWrappers` dissolves its container divs, `flattenPictureElements` collapses the
+  // `<picture>`, and `stripNonContentElements` removes the restack chrome. A regression in
+  // any of those would break the normalization silently, since no single-transform test
+  // covers the combination.
+  describe('platform image normalization without a dedicated transform', () => {
+    it('should normalize a Substack captioned image to a clean figure', async () => {
+      const value = html`
+        <div class="captioned-image-container">
+          <figure>
+            <a
+              class="image-link image2 is-viewable-img"
+              target="_blank"
+              href="https://cdn.example.com/full.png"
+              data-component-name="Image2ToDOM"
+            >
+              <div class="image2-inset">
+                <picture>
+                  <source type="image/webp" srcset="https://cdn.example.com/w_848.webp 848w" />
+                  <img src="https://cdn.example.com/w_1456.png" width="654" height="493" alt="A chart" />
+                </picture>
+                <div class="image-link-expand">
+                  <button class="restack-image">restack</button>
+                  <button class="view-image">view</button>
+                </div>
+              </div>
+            </a>
+            <figcaption class="image-caption">Figure 1: the caption</figcaption>
+          </figure>
+        </div>
+      `
+      const expected = html`
+        <figure>
+          <a
+            class="image-link image2 is-viewable-img"
+            target="_blank"
+            href="https://cdn.example.com/full.png"
+            data-component-name="Image2ToDOM"
+          >
+            <img
+              srcset="https://cdn.example.com/w_848.webp 848w"
+              src="https://cdn.example.com/w_848.webp"
+              width="654"
+              height="493"
+              alt="A chart"
+            />
+          </a>
+          <figcaption class="image-caption">Figure 1: the caption</figcaption>
+        </figure>
+      `
+
+      expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+    })
+
+    it('should normalize a Substack captioned image that has no caption', async () => {
+      const value = html`
+        <div class="captioned-image-container">
+          <figure>
+            <a class="image-link image2" href="https://cdn.example.com/full.png" data-component-name="Image2ToDOM">
+              <div class="image2-inset">
+                <picture><img src="https://cdn.example.com/img.png" width="600" height="400" alt="" /></picture>
+                <div class="image-link-expand"><button class="restack-image">restack</button></div>
+              </div>
+            </a>
+          </figure>
+        </div>
+      `
+      const expected = html`
+        <figure>
+          <a class="image-link image2" href="https://cdn.example.com/full.png" data-component-name="Image2ToDOM">
+            <img src="https://cdn.example.com/img.png" width="600" height="400" alt="" />
+          </a>
+        </figure>
+      `
+
+      expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+    })
   })
 
   it.todo('should propagate an error thrown by a dom transform', () => {
