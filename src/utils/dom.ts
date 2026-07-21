@@ -273,6 +273,12 @@ const dimensionAttribute = (element: Element, name: string): number | undefined 
   return coerceNumber(element.getAttribute(name))
 }
 
+// Squarespace stamps the intrinsic size on `data-image-dimensions="2500x1695"`, and for
+// its gallery images (`img.thumb-image`) that is the only place the size exists — the
+// `src` is a resized CDN URL and there are no width/height attributes. It carries the same
+// value as the real attributes when both are present, so it is read as their fallback.
+const imageDimensionsRegex = /^\s*([0-9]+)\s*x\s*([0-9]+)\s*$/i
+
 export const getElementDimensions = (element: Element): { width?: number; height?: number } => {
   const width = dimensionAttribute(element, 'width')
   const height = dimensionAttribute(element, 'height')
@@ -281,20 +287,20 @@ export const getElementDimensions = (element: Element): { width?: number; height
     return { width, height }
   }
 
+  // `data-image-dimensions` holds both sizes in one `WxH` attribute, so it is matched once
+  // and each dimension picks its own capture group, the same way `style` is read once and
+  // `fromStyle` picks each property.
+  const dimensions = imageDimensionsRegex.exec(element.getAttribute('data-image-dimensions') ?? '')
   const style = element.getAttribute('style')
 
-  if (!style) {
-    return { width, height }
-  }
-
   const fromStyle = (regex: RegExp): number | undefined => {
-    const match = regex.exec(style)
+    const match = style ? regex.exec(style) : null
     return match ? coerceNumber(match[1]) : undefined
   }
 
   return {
-    width: width ?? fromStyle(styleWidthRegex),
-    height: height ?? fromStyle(styleHeightRegex),
+    width: width ?? coerceNumber(dimensions?.[1]) ?? fromStyle(styleWidthRegex),
+    height: height ?? coerceNumber(dimensions?.[2]) ?? fromStyle(styleHeightRegex),
   }
 }
 
