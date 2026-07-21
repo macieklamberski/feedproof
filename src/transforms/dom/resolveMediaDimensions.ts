@@ -1,7 +1,6 @@
-import { parseSrcset } from 'srcset'
 import type { DomTransform } from '../../types.js'
 import { getElementDimensions, pixelDimensionLimit } from '../../utils/dom.js'
-import { getUrlDimensions } from '../../utils/images.js'
+import { getUrlDimensions, parseSrcset } from '../../utils/images.js'
 
 // Largest-width candidate URL in a srcset, so a src-less responsive image can still
 // have its dimensions read from a rendition URL. Falls back to the last candidate when

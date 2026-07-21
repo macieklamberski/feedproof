@@ -1,5 +1,6 @@
-import { parseSrcset, stringifySrcset } from 'srcset'
+import { stringifySrcset } from 'srcset'
 import type { AssetProxyFn, AssetType, DomTransform } from '../../types.js'
+import { parseSrcset } from '../../utils/images.js'
 
 const proxyableSelectors = [
   'img',

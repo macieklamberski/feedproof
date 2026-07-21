@@ -1,5 +1,48 @@
 import { describe, expect, it } from 'bun:test'
-import { getImageFingerprint, getUrlDimensions, getUrlSizeHint } from './images.js'
+import {
+  countSrcsetCandidates,
+  getImageFingerprint,
+  getUrlDimensions,
+  getUrlSizeHint,
+  parseSrcset,
+} from './images.js'
+
+describe('parseSrcset', () => {
+  it('should keep well-formed width and density candidates', () => {
+    const value = 'https://example.com/a.jpg 768w, https://example.com/b.jpg 2x'
+    const result = parseSrcset(value)
+
+    expect(result.map((candidate) => candidate.url)).toEqual([
+      'https://example.com/a.jpg',
+      'https://example.com/b.jpg',
+    ])
+  })
+
+  it('should drop descriptor-only candidates left by a url-less feed srcset', () => {
+    // A Jetpack/WordPress bug: only the first candidate keeps its url, the rest are bare
+    // width descriptors the parser then reads as candidate urls.
+    const value = 'https://example.com/a.jpg 768w,  225w,  563w,  1152w'
+    const result = parseSrcset(value)
+
+    expect(result.map((candidate) => candidate.url)).toEqual(['https://example.com/a.jpg'])
+  })
+
+  it('should not mistake a filename that merely ends in a descriptor for one', () => {
+    const value = 'https://example.com/225w.jpg 768w'
+    const result = parseSrcset(value)
+
+    expect(result.map((candidate) => candidate.url)).toEqual(['https://example.com/225w.jpg'])
+  })
+})
+
+describe('countSrcsetCandidates', () => {
+  it('should report more candidates than parseSrcset keeps when descriptors are dropped', () => {
+    const value = 'https://example.com/a.jpg 768w,  225w,  563w'
+
+    expect(countSrcsetCandidates(value)).toBeGreaterThan(parseSrcset(value).length)
+    expect(parseSrcset(value)).toHaveLength(1)
+  })
+})
 
 // Each case is [CDN label, wrapped input URL, expected inner-source key].
 const imageProxyCases: Array<[string, string, string]> = [

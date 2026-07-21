@@ -56,6 +56,18 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     expect(result).toContain('https%3A%2F%2Fcdn.example.com%2Flarge.jpg')
   })
 
+  // A url-less feed srcset leaves bare width descriptors the parser reads as urls; proxying
+  // one would sign and request a page that does not exist, so they are dropped first.
+  it('should not proxy descriptor-only srcset candidates', async () => {
+    const value = html`
+      <img srcset="https://cdn.example.com/a.jpg 768w,  225w,  563w,  1152w">
+    `
+    const result = await transform(value, wrapProxy)
+
+    expect(result).toContain('url=https%3A%2F%2Fcdn.example.com%2Fa.jpg')
+    expect(result).not.toContain('url=225w')
+  })
+
   it('should normalize camelCase srcSet to lowercase srcset', async () => {
     const value = '<img srcSet="https://cdn.example.com/small.jpg 300w">'
     const result = await transform(value, wrapProxy)

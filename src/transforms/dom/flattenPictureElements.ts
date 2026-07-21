@@ -1,5 +1,5 @@
-import { parseSrcset } from 'srcset'
 import type { DomTransform } from '../../types.js'
+import { parseSrcset } from '../../utils/images.js'
 
 // Prefer AVIF, then WebP. Other source types are not worth promoting over the
 // <img> fallback, which is already a widely-supported format.
