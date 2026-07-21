@@ -55,6 +55,10 @@ describe('jwplayerResolveEmbed', () => {
 
     expect(result?.src).toBe('https://cdn.jwplayer.com/players/H4GXr873.html')
   })
+
+  it('should return undefined when no media id can be extracted', () => {
+    expect(jwplayerResolveEmbed('not a url')).toBeUndefined()
+  })
 })
 
 describeForEachParser('jwplayerEmbedResolver', (parseHtml) => {
