@@ -72,6 +72,36 @@ describeForEachParser('getElementDimensions', (parseHtml) => {
     expect(getElementDimensions(image)).toEqual({ width: 300, height: 200 })
   })
 
+  it('should read both dimensions from data-image-dimensions', () => {
+    const document = parseHtml('<img data-image-dimensions="2500x1695">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 2500, height: 1695 })
+  })
+
+  it('should prefer real attributes over data-image-dimensions', () => {
+    const document = parseHtml('<img width="800" height="600" data-image-dimensions="2500x1695">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 800, height: 600 })
+  })
+
+  it('should prefer data-image-dimensions over style', () => {
+    const document = parseHtml(
+      '<img data-image-dimensions="2500x1695" style="width: 300px; height: 200px">',
+    )
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 2500, height: 1695 })
+  })
+
+  it('should ignore a malformed data-image-dimensions value', () => {
+    const document = parseHtml('<img data-image-dimensions="wide">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
+  })
+
   it('should prefer attribute over style when both are present', () => {
     const document = parseHtml('<img width="100" style="width: 999px">')
     const image = queryElement(document, 'img')
