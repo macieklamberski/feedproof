@@ -844,6 +844,21 @@ describeForEachParser('transformContent', (parseHtml) => {
     // receive that image as its poster.
   })
 
+  // unwrapHeadingBold runs late so it judges the heading by its final content. These pin
+  // the ordering: each heading carries junk beside the bold that an intermediate transform
+  // removes, so with the unwrap placed early the bold only came off on a second run.
+  it('should unwrap the heading bold once junk siblings are cleaned', async () => {
+    const options = { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' }
+    const value = html`
+      <h2><a href="https://example.com/post#anchored"><strong>Anchored</strong></a></h2>
+      <h3><strong>Shared</strong><span class="sharedaddy">Share this</span></h3>
+    `
+    const result = await transformContent(value, options)
+
+    expect(result).not.toContain('<strong>')
+    expect(await transformContent(result, options)).toBe(result)
+  })
+
   // Every transform has its own idempotency case, but nothing pinned the pipeline as a
   // whole, which is where the placeholder shapes drifted: an embed placeholder is built
   // after wrapBareInlineInParagraphs and a cite placeholder before it, so re-running the

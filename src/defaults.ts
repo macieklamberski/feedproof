@@ -136,7 +136,6 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
   demoteHeadings,
-  unwrapHeadingBold,
   // Runs before flattenPictureElements and unwrapWrappers so an alignment signal on
   // a soon-dissolved <picture> or wrapper <div> is relocated onto the surviving media.
   canonicalizeAlignment,
@@ -211,6 +210,11 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   neutralizeUnsafeUrls,
   proxyAssetUrls,
   stripEmptyTags,
+  // Judges whether a bold spans the whole heading, so it runs after everything that
+  // removes heading junk — stripNonContentElements (share buttons), normalizeAnchoredHeadings
+  // (permalink wrappers), stripEmptyTags — or the decision is made against siblings that
+  // are about to disappear and the unwrap only fires on a re-run.
+  unwrapHeadingBold,
   unwrapWrappers,
   wrapTablesForScroll,
 ]
