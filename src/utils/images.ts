@@ -1,7 +1,30 @@
 import { addMissingProtocol, normalizeUrl, resolveUrl } from 'feedcanon'
+import { parseSrcset as parseRawSrcset } from 'srcset'
 import { getPathSegments, parseUrl } from 'trousse'
 import type { CleanUrlFn } from '../types.js'
 import { pixelDimensionLimit } from './dom.js'
+
+// A candidate whose url is only a width/density descriptor (`225w`, `2x`), which a real
+// image url never is. The `srcset` parser is lenient: when a feed drops the urls and
+// leaves bare descriptors — a Jetpack/WordPress bug that ships `…768w, 225w, 563w` with
+// only the first url present — it reads each stray descriptor as a candidate whose url
+// IS the descriptor. Resolving that against the base url or handing it to an asset proxy
+// produces a request for a page that does not exist, so the wrapper below drops them.
+const descriptorOnlyUrl = /^\d+(?:\.\d+)?[wx]$/i
+// The lenient parser can leave a trailing comma on a malformed candidate's url.
+const trailingComma = /,$/
+
+export const parseSrcset = (srcset: string): ReturnType<typeof parseRawSrcset> => {
+  return parseRawSrcset(srcset).filter((candidate) => {
+    return !descriptorOnlyUrl.test(candidate.url.replace(trailingComma, ''))
+  })
+}
+
+// Candidate count before the descriptor-only filter, so a caller can tell whether
+// parseSrcset dropped any and rewrite the attribute accordingly.
+export const countSrcsetCandidates = (srcset: string): number => {
+  return parseRawSrcset(srcset).length
+}
 
 // Size words a feed uses as a whole filename for a scaled variant, e.g.
 // .../{id}/large.jpg vs .../{id}/small.jpg. Defined as a list with provenance

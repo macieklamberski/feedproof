@@ -1,5 +1,6 @@
-import { parseSrcset, stringifySrcset } from 'srcset'
+import { stringifySrcset } from 'srcset'
 import type { DomTransform } from '../../types.js'
+import { countSrcsetCandidates, parseSrcset } from '../../utils/images.js'
 import { absoluteUrlRegex } from '../../utils/urls.js'
 
 export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => {
@@ -81,8 +82,12 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => 
 
         if (srcset) {
           const entries = parseSrcset(srcset)
+          const hasRelative = entries.some((entry) => !absoluteUrlRegex.test(entry.url))
+          // parseSrcset drops malformed descriptor-only candidates; rewriting when it did
+          // keeps them out of the attribute even when no url needed resolving.
+          const droppedCandidate = entries.length < countSrcsetCandidates(srcset)
 
-          if (entries.some((entry) => !absoluteUrlRegex.test(entry.url))) {
+          if (hasRelative || droppedCandidate) {
             const resolved = entries.map((entry) => ({
               ...entry,
               url: resolveUrlFn(entry.url, baseUrl) ?? entry.url,

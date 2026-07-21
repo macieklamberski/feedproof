@@ -94,6 +94,17 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     expect(result).toContain('https://example.com/rel/b.jpg 200w')
   })
 
+  // A url-less feed srcset ("…768w, 225w, 563w") makes the parser read the bare width
+  // descriptors as candidate urls; left in, each resolves to a page that does not exist.
+  it('should drop descriptor-only srcset candidates instead of resolving them', async () => {
+    const value = '<img srcset="https://cdn.com/a.jpg 768w,  225w,  563w,  1152w">'
+    const result = await transform(value)
+
+    expect(result).toContain('srcset="https://cdn.com/a.jpg 768w"')
+    expect(result).not.toContain('example.com/225w')
+    expect(result).not.toContain('225w')
+  })
+
   it('should resolve srcset entries on source elements', async () => {
     const value = '<picture><source srcset="/small.webp 300w"><img src="/photo.jpg"></picture>'
     const expected = html`
