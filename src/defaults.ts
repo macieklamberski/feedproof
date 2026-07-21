@@ -23,6 +23,7 @@ import { tistoryCiteResolver } from './cites/tistory.js'
 import { tumblrCiteResolver } from './cites/tumblr.js'
 import { xenforoCiteResolver } from './cites/xenforo.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
+import { jwplayerEmbedResolver } from './embeds/jwplayer.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
@@ -243,6 +244,7 @@ export const defaultEmbedResolvers: Array<EmbedResolver> = [
   youtubeEmbedResolver,
   vimeoEmbedResolver,
   dailymotionEmbedResolver,
+  jwplayerEmbedResolver,
 ]
 
 export const defaultCiteResolvers: Array<CiteResolver> = [

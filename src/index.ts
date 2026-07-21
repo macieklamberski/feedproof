@@ -105,6 +105,11 @@ export {
   extractDailymotionId,
 } from './embeds/dailymotion.js'
 export {
+  extractJwplayerId,
+  jwplayerEmbedResolver,
+  jwplayerResolveEmbed,
+} from './embeds/jwplayer.js'
+export {
   extractVimeoId,
   vimeoEmbedResolver,
   vimeoResolveEmbed,
