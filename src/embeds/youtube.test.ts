@@ -143,6 +143,13 @@ describe('extractVideoId', () => {
     expect(extractVideoId(value)).toBe(expected)
   })
 
+  it('should extract id from nocookie embed with a leaked leading quote', () => {
+    const value = 'https://www.youtube-nocookie.com/embed/"Y2kC39Wihow?fs=1&modestbranding=1&rel=0'
+    const expected = 'Y2kC39Wihow'
+
+    expect(extractVideoId(value)).toBe(expected)
+  })
+
   it('should reject id shorter than 11 chars', () => {
     const value = 'https://www.youtube.com/watch?v=abc123'
 

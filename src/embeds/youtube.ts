@@ -5,6 +5,13 @@ import { pickUrlParams } from '../utils/urls.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
 
+// Some feeds (Steam news) leak the opening quote of the source `[previewyoutube="id]`
+// bbcode into the embed src, so it arrives as `/embed/"{id}` — the quote reaches the id
+// as a literal `"` (from a param) or percent-encoded `%22` (from a path segment). Strip a
+// leading stray quote so the real 11-char id still resolves instead of the video being
+// dropped to the generic iframe handler.
+const strayLeadingQuoteRegex = /^(?:%22|")/
+
 const pathIdSegments = ['shorts', 'embed', 'live', 'v']
 
 const youtubeHosts = ['youtube.com', 'youtube-nocookie.com', 'youtu.be']
@@ -38,8 +45,10 @@ export const extractVideoId = (link: string): string | undefined => {
     id = segments[1]
   }
 
-  if (id && safeVideoIdRegex.test(id)) {
-    return id
+  const cleanedId = id?.replace(strayLeadingQuoteRegex, '')
+
+  if (cleanedId && safeVideoIdRegex.test(cleanedId)) {
+    return cleanedId
   }
 }
 
