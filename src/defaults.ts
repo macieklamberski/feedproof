@@ -468,4 +468,5 @@ export const defaultNonContentSelectors = [
   '.image-link-expand', // Substack restack/zoom buttons next to images — 16,419 feeds (0.6%).
   'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets — 3,201 feeds (0.1%).
   '.mcnPreviewText', // Mailchimp hidden email preheader text — 137 feeds (0.005%).
+  'img[src*="steamcommunity.com"][src*="placeholder"]', // Steam news static poster gif shown before its JS swaps in the YouTube iframe.
 ]

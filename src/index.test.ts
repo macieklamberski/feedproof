@@ -400,6 +400,39 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(result).toEqualHtml(expected)
   })
 
+  it('should collapse a Steam news YouTube facade into a clean embed placeholder', async () => {
+    const value = html`
+      <p>Watch the trailer:</p>
+      <div class="sharedFilePreviewYouTubeVideo">
+        <img
+          class="sharedFilePreviewYouTubeVideo"
+          src="https://steamcommunity.com/public/shared/images/responsive/youtube_16x9_placeholder.gif"
+        />
+        <iframe
+          src="https://www.youtube-nocookie.com/embed/QMIjaUgLLJg?fs=1&modestbranding=1&rel=0"
+          allowFullScreen="1"
+          frameBorder="0"
+        ></iframe>
+      </div>
+    `
+    const expected = html`
+      <p>Watch the trailer:</p>
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="QMIjaUgLLJg"
+        data-embed-src="https://www.youtube.com/embed/QMIjaUgLLJg"
+        data-embed-url="https://www.youtube.com/watch?v=QMIjaUgLLJg"
+        data-embed-thumbnail="https://i.ytimg.com/vi/QMIjaUgLLJg/hqdefault.jpg"
+      >
+        <a
+          href="https://www.youtube.com/watch?v=QMIjaUgLLJg"
+        >https://www.youtube.com/watch?v=QMIjaUgLLJg</a>
+      </div>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
   it('should not enrich when enrichEmbedPlaceholders is removed from the pipeline', async () => {
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     let called = false
