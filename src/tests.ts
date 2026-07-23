@@ -3,6 +3,7 @@ import { JSDOM } from 'jsdom'
 import {
   defaultAvatarImageHosts,
   defaultCiteResolvers,
+  defaultDeferredIframeSources,
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
   defaultHighlightFn,
@@ -32,6 +33,7 @@ export const baseContext: TransformContext = {
   lazySrcAttributes: defaultLazySrcAttributes,
   lazySrcsetAttributes: defaultLazySrcsetAttributes,
   lazyIframeAttributes: defaultLazyIframeAttributes,
+  deferredIframeSources: defaultDeferredIframeSources,
   trackingHosts: defaultTrackingHosts,
   trackingPathSegments: defaultTrackingPathSegments,
 
