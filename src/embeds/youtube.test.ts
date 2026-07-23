@@ -177,6 +177,7 @@ describe('extractVideoId', () => {
 
 describe('youtubeResolveEmbed', () => {
   it('should resolve youtube watch url', () => {
+    const value = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
@@ -185,10 +186,11 @@ describe('youtubeResolveEmbed', () => {
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
 
-    expect(youtubeResolveEmbed('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toEqual(expected)
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should resolve youtube embed url', () => {
+    const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ'
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
@@ -197,40 +199,41 @@ describe('youtubeResolveEmbed', () => {
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
 
-    expect(youtubeResolveEmbed('https://www.youtube.com/embed/dQw4w9WgXcQ')).toEqual(expected)
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should preserve the start offset', () => {
-    const result = youtubeResolveEmbed('https://www.youtube.com/embed/dQw4w9WgXcQ?start=90')
+    const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=90'
 
-    expect(result?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ?start=90')
+    expect(youtubeResolveEmbed(value)?.src).toBe(
+      'https://www.youtube.com/embed/dQw4w9WgXcQ?start=90',
+    )
   })
 
   it('should preserve the playlist and its position', () => {
-    const result = youtubeResolveEmbed(
+    const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4'
+
+    expect(youtubeResolveEmbed(value)?.src).toBe(
       'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4',
     )
-
-    expect(result?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4')
   })
 
   it('should preserve both halves of a clip', () => {
-    const result = youtubeResolveEmbed(
+    const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh'
+
+    expect(youtubeResolveEmbed(value)?.src).toBe(
       'https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh',
     )
-
-    expect(result?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh')
   })
 
   it('should drop player and tracking parameters', () => {
-    const result = youtubeResolveEmbed(
-      'https://www.youtube.com/embed/dQw4w9WgXcQ?si=abc&autoplay=1&rel=0',
-    )
+    const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?si=abc&autoplay=1&rel=0'
 
-    expect(result?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ')
+    expect(youtubeResolveEmbed(value)?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ')
   })
 
   it('should resolve youtu.be short url', () => {
+    const value = 'https://youtu.be/dQw4w9WgXcQ'
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
@@ -239,10 +242,11 @@ describe('youtubeResolveEmbed', () => {
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
 
-    expect(youtubeResolveEmbed('https://youtu.be/dQw4w9WgXcQ')).toEqual(expected)
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should resolve youtube-nocookie embed url', () => {
+    const value = 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ'
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
@@ -251,9 +255,7 @@ describe('youtubeResolveEmbed', () => {
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
 
-    expect(youtubeResolveEmbed('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')).toEqual(
-      expected,
-    )
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should resolve a videoseries playlist embed, posterless', () => {
@@ -301,7 +303,9 @@ describe('youtubeResolveEmbed', () => {
   })
 
   it('should return undefined for invalid url', () => {
-    expect(youtubeResolveEmbed('not-a-url')).toBeUndefined()
+    const value = 'not-a-url'
+
+    expect(youtubeResolveEmbed(value)).toBeUndefined()
   })
 })
 
