@@ -10,6 +10,26 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
   }
 
   describe('with default selectors', () => {
+    // Widgets added from the 2026-07 corpus scan. Each pair is [label, the widget markup].
+    const scannedWidgets: Array<[string, string]> = [
+      ['AddToAny', '<span class="a2a_kit a2a_kit_size_32 addtoany_list"></span>'],
+      ['AddThis', '<div class="addthis_toolbox addthis_default_style"></div>'],
+      ['Shareaholic', '<div class="shareaholic-canvas" data-app="share_buttons"></div>'],
+      ['Google Ad Manager', '<div id="div-gpt-ad-1234567890"></div>'],
+      ['Bloom optin', '<div class="et_bloom"><input type="email"></div>'],
+      ['WPForms', '<div class="wpforms-container"><form></form></div>'],
+      ['Thrive Leads', '<div class="tve-leads-conversion-object"></div>'],
+      ['Facebook Comments', '<div class="fb-comments" data-href="https://example.com/p"></div>'],
+      ['PrintFriendly link', '<a class="printfriendly" href="#">Print</a>'],
+      ['PrintFriendly button', '<button class="pf-button">Print</button>'],
+    ]
+
+    it.each(scannedWidgets)('should strip a %s widget', async (_label, widget) => {
+      expect(await transform(`<p>Before</p>${widget}<p>After</p>`)).toBe(
+        '<p>Before</p><p>After</p>',
+      )
+    })
+
     it('should remove a read-more truncation link', async () => {
       const value = '<p>Excerpt</p><a class="read-more-link" href="/post">Read more</a>'
 

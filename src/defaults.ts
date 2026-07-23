@@ -441,9 +441,13 @@ export const defaultNonContentSelectors = [
   '.jetpack_subscription_widget', // Jetpack legacy sidebar subscribe widget — 69 feeds (0.003%).
   'form[action*="buttondown.email"]', // Buttondown embed-subscribe form — 21 feeds (<0.001%).
   '.sqs-block-newsletter', // Squarespace newsletter block — 11 feeds (<0.001%).
+  '.et_bloom', // Bloom (Elegant Themes) optin — ~1,410 feeds (2026-07 scan).
+  '.wpforms-container', // WPForms — ~640 feeds (2026-07 scan).
+  '[class*="tve-leads"]', // Thrive Leads optin — ~260 feeds (2026-07 scan).
 
   // Ad slots.
   '.adsbygoogle', // Google AdSense ad slot — 1,515 feeds (0.056%).
+  'div[id^="div-gpt-ad"]', // Google Ad Manager (GPT) ad slot — ~1,920 feeds (2026-07 scan).
   '.adthrive-ad', // AdThrive (Raptive) ad slot — 72 feeds (0.003%).
 
   // Share and call-to-action button clusters.
@@ -454,6 +458,9 @@ export const defaultNonContentSelectors = [
   '.sharedaddy', // Jetpack Sharedaddy share buttons — 428 feeds (0.016%).
   '.feedflare', // FeedBurner share footer ("Share on X / Email this") — 220 feeds (0.008%).
   '.addtoany_share_save_container', // AddToAny share buttons (WordPress) — 97 feeds (0.004%).
+  '.a2a_kit', // AddToAny share icons (higher-prevalence marker than the wrapper) — ~7,100 feeds (2026-07 scan).
+  '[class*="addthis_"]', // AddThis share toolbox — ~1,800 feeds (2026-07 scan).
+  '.shareaholic-canvas', // Shareaholic share/related widget — ~640 feeds (2026-07 scan).
 
   // Related-posts widgets.
   '.yarpp-related', // YARPP related-posts widget (WordPress) — 672 feeds (0.025%).
@@ -467,6 +474,13 @@ export const defaultNonContentSelectors = [
   // Excerpt-truncation links. Anchor-scoped so wrappers holding real content survive.
   'a[class*="read-more"]', // "Read more" excerpt-truncation links.
   'a[class*="continue-reading"]', // "Continue reading" excerpt-truncation links.
+
+  // Comment-system embeds (JS mounts that render nothing without their loader script).
+  '.fb-comments', // Facebook Comments — ~1,020 feeds (2026-07 scan).
+
+  // Print / PDF buttons.
+  '.printfriendly', // PrintFriendly print/PDF button — ~640 feeds (2026-07 scan).
+  '.pf-button', // PrintFriendly button.
 
   // Platform UI chrome and non-rendered scaffolding.
   '.image-link-expand', // Substack restack/zoom buttons next to images — 16,419 feeds (0.6%).
