@@ -161,6 +161,18 @@ describe('extractVideoId', () => {
 
     expect(extractVideoId(value)).toBeUndefined()
   })
+
+  it('should reject the videoseries playlist path-word', () => {
+    const value = 'https://www.youtube.com/embed/videoseries?list=PLabc123'
+
+    expect(extractVideoId(value)).toBeUndefined()
+  })
+
+  it('should reject the live_stream channel path-word', () => {
+    const value = 'https://www.youtube.com/embed/live_stream?channel=UCabc123'
+
+    expect(extractVideoId(value)).toBeUndefined()
+  })
 })
 
 describe('youtubeResolveEmbed', () => {
@@ -242,6 +254,50 @@ describe('youtubeResolveEmbed', () => {
     expect(youtubeResolveEmbed('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')).toEqual(
       expected,
     )
+  })
+
+  it('should resolve a videoseries playlist embed, posterless', () => {
+    const value = 'https://www.youtube.com/embed/videoseries?list=PLabc123'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'PLabc123',
+      src: 'https://www.youtube.com/embed/videoseries?list=PLabc123',
+      url: 'https://www.youtube.com/playlist?list=PLabc123',
+    }
+
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should resolve a live_stream channel embed, posterless', () => {
+    const value = 'https://www.youtube.com/embed/live_stream?channel=UCabc123'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'UCabc123',
+      src: 'https://www.youtube.com/embed/live_stream?channel=UCabc123',
+      url: 'https://www.youtube.com/channel/UCabc123',
+    }
+
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should normalize a nocookie playlist embed to youtube.com', () => {
+    const value = 'https://www.youtube-nocookie.com/embed/videoseries?list=PLxyz'
+
+    expect(youtubeResolveEmbed(value)?.src).toBe(
+      'https://www.youtube.com/embed/videoseries?list=PLxyz',
+    )
+  })
+
+  it('should return undefined for a videoseries embed with no list', () => {
+    const value = 'https://www.youtube.com/embed/videoseries'
+
+    expect(youtubeResolveEmbed(value)).toBeUndefined()
+  })
+
+  it('should return undefined for a live_stream embed with no channel', () => {
+    const value = 'https://www.youtube.com/embed/live_stream'
+
+    expect(youtubeResolveEmbed(value)).toBeUndefined()
   })
 
   it('should return undefined for invalid url', () => {

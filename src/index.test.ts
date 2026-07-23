@@ -172,6 +172,49 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
+  it('should resolve a YouTube playlist embed to a posterless youtube placeholder', async () => {
+    const value = '<iframe src="https://www.youtube.com/embed/videoseries?list=PLabc123"></iframe>'
+    // `videoseries` is a playlist, not a video: keep the working src, give a canonical playlist
+    // url, and no thumbnail (a playlist has no id-derivable poster). The list id stays as the
+    // enrichment key.
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="PLabc123"
+        data-embed-src="https://www.youtube.com/embed/videoseries?list=PLabc123"
+        data-embed-url="https://www.youtube.com/playlist?list=PLabc123"
+      >
+        <a
+          href="https://www.youtube.com/playlist?list=PLabc123"
+        >https://www.youtube.com/playlist?list=PLabc123</a>
+      </div>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
+  it('should resolve a YouTube channel live embed to a posterless youtube placeholder', async () => {
+    const value =
+      '<iframe src="https://www.youtube.com/embed/live_stream?channel=UCabc123"></iframe>'
+    // `live_stream` is a channel live embed, not a video: the `channel` param is preserved
+    // (resolving it as a video would drop it and leave a dead `embed/live_stream`), the url
+    // points at the channel, and there is no thumbnail. The channel id is the enrichment key.
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="UCabc123"
+        data-embed-src="https://www.youtube.com/embed/live_stream?channel=UCabc123"
+        data-embed-url="https://www.youtube.com/channel/UCabc123"
+      >
+        <a
+          href="https://www.youtube.com/channel/UCabc123"
+        >https://www.youtube.com/channel/UCabc123</a>
+      </div>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
   it('should allow custom embedResolvers', async () => {
     const value = '<iframe src="https://custom-player.example.com/video/123"></iframe>'
     const expected = html`
