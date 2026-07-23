@@ -12,6 +12,12 @@ const safeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
 // dropped to the generic iframe handler.
 const strayLeadingQuoteRegex = /^(?:%22|")/
 
+// `videoseries` (playlist embeds) and `live_stream` (channel live embeds) are YouTube embed
+// path-words, not video ids — but each is coincidentally 11 valid id chars, so it passes
+// safeVideoIdRegex. Excluded here so extractVideoId never mistakes one for a video (a bogus
+// watch url and thumbnail); youtubeResolveEmbed handles them as playlist/live embeds below.
+const nonVideoIds = new Set(['videoseries', 'live_stream'])
+
 const pathIdSegments = ['shorts', 'embed', 'live', 'v']
 
 const youtubeHosts = ['youtube.com', 'youtube-nocookie.com', 'youtu.be']
@@ -47,7 +53,7 @@ export const extractVideoId = (link: string): string | undefined => {
 
   const cleanedId = id?.replace(strayLeadingQuoteRegex, '')
 
-  if (cleanedId && safeVideoIdRegex.test(cleanedId)) {
+  if (cleanedId && !nonVideoIds.has(cleanedId) && safeVideoIdRegex.test(cleanedId)) {
     return cleanedId
   }
 }
@@ -59,7 +65,50 @@ export const extractVideoId = (link: string): string | undefined => {
 // dropped with the rest of the original query.
 const youtubeEmbedParams = ['start', 'end', 'list', 'index', 'clip', 'clipt']
 
+// Playlist (`list`) and channel (`channel`) ids. A charset guard, not a length/prefix one:
+// it only keeps a stray value out of the rebuilt url and the enrichment key.
+const safePlaylistChannelIdRegex = /^[a-zA-Z0-9_-]+$/
+
 export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+  const parsed = parseUrl(url)
+  const segments = parsed ? getPathSegments(parsed) : []
+
+  // A playlist or channel live embed is not a single video: it has no video id, no single
+  // poster, and no `watch?v=` page. Keep the working src and give a canonical playlist/channel
+  // url, posterless. The id is the list/channel id — kept as the enrichment key (a playlist
+  // resolves title + poster via YouTube's keyless oEmbed; a channel via the Data API).
+  if (segments[0] === 'embed' && parsed) {
+    if (segments[1] === 'videoseries') {
+      const list = parsed.searchParams.get('list')
+
+      if (list && safePlaylistChannelIdRegex.test(list)) {
+        return {
+          provider: 'youtube',
+          id: list,
+          src: `https://www.youtube.com/embed/videoseries?list=${list}`,
+          url: `https://www.youtube.com/playlist?list=${list}`,
+        }
+      }
+
+      return
+    }
+
+    if (segments[1] === 'live_stream') {
+      const channel = parsed.searchParams.get('channel')
+
+      if (channel && safePlaylistChannelIdRegex.test(channel)) {
+        return {
+          provider: 'youtube',
+          id: channel,
+          src: `https://www.youtube.com/embed/live_stream?channel=${channel}`,
+          url: `https://www.youtube.com/channel/${channel}`,
+        }
+      }
+
+      return
+    }
+  }
+
   const videoId = extractVideoId(url)
 
   if (!videoId) {

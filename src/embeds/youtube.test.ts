@@ -161,10 +161,23 @@ describe('extractVideoId', () => {
 
     expect(extractVideoId(value)).toBeUndefined()
   })
+
+  it('should reject the videoseries playlist path-word', () => {
+    const value = 'https://www.youtube.com/embed/videoseries?list=PLabc123'
+
+    expect(extractVideoId(value)).toBeUndefined()
+  })
+
+  it('should reject the live_stream channel path-word', () => {
+    const value = 'https://www.youtube.com/embed/live_stream?channel=UCabc123'
+
+    expect(extractVideoId(value)).toBeUndefined()
+  })
 })
 
 describe('youtubeResolveEmbed', () => {
   it('should resolve youtube watch url', () => {
+    const value = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
@@ -173,10 +186,11 @@ describe('youtubeResolveEmbed', () => {
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
 
-    expect(youtubeResolveEmbed('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toEqual(expected)
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should resolve youtube embed url', () => {
+    const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ'
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
@@ -185,40 +199,41 @@ describe('youtubeResolveEmbed', () => {
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
 
-    expect(youtubeResolveEmbed('https://www.youtube.com/embed/dQw4w9WgXcQ')).toEqual(expected)
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should preserve the start offset', () => {
-    const result = youtubeResolveEmbed('https://www.youtube.com/embed/dQw4w9WgXcQ?start=90')
+    const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=90'
 
-    expect(result?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ?start=90')
+    expect(youtubeResolveEmbed(value)?.src).toBe(
+      'https://www.youtube.com/embed/dQw4w9WgXcQ?start=90',
+    )
   })
 
   it('should preserve the playlist and its position', () => {
-    const result = youtubeResolveEmbed(
+    const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4'
+
+    expect(youtubeResolveEmbed(value)?.src).toBe(
       'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4',
     )
-
-    expect(result?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4')
   })
 
   it('should preserve both halves of a clip', () => {
-    const result = youtubeResolveEmbed(
+    const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh'
+
+    expect(youtubeResolveEmbed(value)?.src).toBe(
       'https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh',
     )
-
-    expect(result?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh')
   })
 
   it('should drop player and tracking parameters', () => {
-    const result = youtubeResolveEmbed(
-      'https://www.youtube.com/embed/dQw4w9WgXcQ?si=abc&autoplay=1&rel=0',
-    )
+    const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?si=abc&autoplay=1&rel=0'
 
-    expect(result?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ')
+    expect(youtubeResolveEmbed(value)?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ')
   })
 
   it('should resolve youtu.be short url', () => {
+    const value = 'https://youtu.be/dQw4w9WgXcQ'
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
@@ -227,10 +242,11 @@ describe('youtubeResolveEmbed', () => {
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
 
-    expect(youtubeResolveEmbed('https://youtu.be/dQw4w9WgXcQ')).toEqual(expected)
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should resolve youtube-nocookie embed url', () => {
+    const value = 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ'
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
@@ -239,13 +255,57 @@ describe('youtubeResolveEmbed', () => {
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
 
-    expect(youtubeResolveEmbed('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')).toEqual(
-      expected,
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should resolve a videoseries playlist embed, posterless', () => {
+    const value = 'https://www.youtube.com/embed/videoseries?list=PLabc123'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'PLabc123',
+      src: 'https://www.youtube.com/embed/videoseries?list=PLabc123',
+      url: 'https://www.youtube.com/playlist?list=PLabc123',
+    }
+
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should resolve a live_stream channel embed, posterless', () => {
+    const value = 'https://www.youtube.com/embed/live_stream?channel=UCabc123'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'UCabc123',
+      src: 'https://www.youtube.com/embed/live_stream?channel=UCabc123',
+      url: 'https://www.youtube.com/channel/UCabc123',
+    }
+
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should normalize a nocookie playlist embed to youtube.com', () => {
+    const value = 'https://www.youtube-nocookie.com/embed/videoseries?list=PLxyz'
+
+    expect(youtubeResolveEmbed(value)?.src).toBe(
+      'https://www.youtube.com/embed/videoseries?list=PLxyz',
     )
   })
 
+  it('should return undefined for a videoseries embed with no list', () => {
+    const value = 'https://www.youtube.com/embed/videoseries'
+
+    expect(youtubeResolveEmbed(value)).toBeUndefined()
+  })
+
+  it('should return undefined for a live_stream embed with no channel', () => {
+    const value = 'https://www.youtube.com/embed/live_stream'
+
+    expect(youtubeResolveEmbed(value)).toBeUndefined()
+  })
+
   it('should return undefined for invalid url', () => {
-    expect(youtubeResolveEmbed('not-a-url')).toBeUndefined()
+    const value = 'not-a-url'
+
+    expect(youtubeResolveEmbed(value)).toBeUndefined()
   })
 })
 
