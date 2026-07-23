@@ -11,21 +11,9 @@ export const rebuildEmbedlyEmbeds: DomTransform = () => (document) => {
   const iframes = document.querySelectorAll('iframe[src*="cdn.embedly.com/widgets/media.html"]')
 
   for (const iframe of iframes) {
-    const src = iframe.getAttribute('src')
-
-    if (!src) {
-      continue
-    }
-
-    let params: URLSearchParams
-
-    try {
-      // A base handles the protocol-relative `//cdn.embedly.com/...` form.
-      params = new URL(src, 'https://cdn.embedly.com').searchParams
-    } catch {
-      continue
-    }
-
+    // URLSearchParams reads (and percent-decodes) the query without throwing on a malformed src,
+    // so no full URL parse is needed — the protocol-relative `//cdn.embedly.com` form works too.
+    const params = new URLSearchParams(iframe.getAttribute('src')?.split('?')[1] ?? '')
     const inner = params.get('src')
 
     if (!inner || !isUrlShaped(inner)) {
