@@ -46,6 +46,7 @@ import { flattenPictureElements } from './transforms/dom/flattenPictureElements.
 import { highlightCode } from './transforms/dom/highlightCode.js'
 import { hoistFigcaptionFromAnchor } from './transforms/dom/hoistFigcaptionFromAnchor.js'
 import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
+import { linkifyGistEmbeds } from './transforms/dom/linkifyGistEmbeds.js'
 import { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 import { markTimestamps } from './transforms/dom/markTimestamps.js'
 import { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
@@ -133,6 +134,9 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // Unwraps an Embedly media widget to the inner provider iframe (carrying Embedly's poster as
   // data-thumbnail), so the provider transforms below handle it instead of a cdn.embedly wrapper.
   rebuildEmbedlyEmbeds,
+  // A GitHub Gist embed is a JS-only <script> that renders nothing in a reader; replace it
+  // with a link to the gist so the content is at least reachable.
+  linkifyGistEmbeds,
   // Wraps Cargo (cargo.site) portfolio images in <figure> here in the normalize
   // cluster, so wrapBareInlineInParagraphs later sees block boundaries and keeps the
   // caption, images, and PREV/NEXT nav apart instead of gluing them into one paragraph.
