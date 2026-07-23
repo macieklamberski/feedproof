@@ -33,6 +33,7 @@ import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
 import { convertAmpElements } from './transforms/dom/convertAmpElements.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { convertCiteCards } from './transforms/dom/convertCiteCards.js'
+import { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
@@ -134,6 +135,10 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // an amp-youtube becomes an iframe before replaceEmbedsWithPlaceholders, and an
   // amp-img an <img> before resolveMediaDimensions.
   convertAmpElements,
+  // Converts Datawrapper chart embeds (iframe, script/noscript, and link forms) into a
+  // linked static <img> of the chart's published PNG render. Runs in this normalize
+  // cluster so the emitted <img> is dimensioned and proxied by the image transforms below.
+  convertDatawrapperEmbeds,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
   demoteHeadings,
