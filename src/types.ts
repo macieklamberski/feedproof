@@ -48,6 +48,15 @@ export type EmbedResolver = {
   extract: (element: Element) => MaybePromise<EmbedResolverResult | undefined>
 }
 
+// A convention that parks an iframe's real URL in a `<div>` attribute and builds the iframe
+// with JS at runtime — Pym.js (`data-pym-src`) and @newswire/frames (`data-frame-src`) are the
+// two seen in the wild. A reader runs no JS, so `rebuildDeferredIframes` materializes the iframe
+// from `attribute` on each `selector` match.
+export type DeferredIframeSource = {
+  selector: string
+  attribute: string
+}
+
 // The relationship a citation expresses toward the linked work. Sparse: only sources that
 // carry a real relationship set it (today just microformats h-cite, via its `u-*-of` class);
 // every platform card leaves it unset, meaning a plain link preview with no relationship.
@@ -112,6 +121,7 @@ export type TransformContext = {
   lazySrcAttributes: Array<string>
   lazySrcsetAttributes: Array<string>
   lazyIframeAttributes: Array<string>
+  deferredIframeSources: Array<DeferredIframeSource>
   trackingHosts: Array<string>
   trackingPathSegments: Array<string>
   emojiImageHosts: Array<string>
@@ -143,6 +153,7 @@ export type TransformContentOptions = {
   lazySrcAttributes?: Array<string>
   lazySrcsetAttributes?: Array<string>
   lazyIframeAttributes?: Array<string>
+  deferredIframeSources?: Array<DeferredIframeSource>
   trackingHosts?: Array<string>
   trackingPathSegments?: Array<string>
   emojiImageHosts?: Array<string>

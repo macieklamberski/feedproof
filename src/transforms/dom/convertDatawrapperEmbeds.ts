@@ -62,17 +62,8 @@ export const convertDatawrapperEmbeds: DomTransform = () => (document) => {
     wrapper.replaceWith(buildChartImage(document, chartId, fallback?.getAttribute('alt') ?? null))
   }
 
-  // Texas Tribune republish wrapper: `<div data-frame-src="dwcdn.net/<id>/">` that a runtime
-  // script turns into an iframe. Convert the div directly.
-  for (const wrapper of document.querySelectorAll('[data-frame-src*="datawrapper.dwcdn.net/"]')) {
-    const chartId = getChartId(wrapper.getAttribute('data-frame-src'))
-
-    if (!chartId) {
-      continue
-    }
-
-    wrapper.replaceWith(buildChartImage(document, chartId, null))
-  }
+  // A `data-frame-src` chart embed (Texas Tribune / @newswire/frames) is already an <iframe> by
+  // now — rebuildDeferredIframes materialized it upstream, so the iframe pass above handles it.
 
   // Link form: some feeds ship only `<div class="datawrapper-embed"><a href="dwcdn/<id>/">`.
   // The img-child guard keeps a converted image (also an `a[href*=dwcdn]`) from being

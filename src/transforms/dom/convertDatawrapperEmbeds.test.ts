@@ -95,12 +95,16 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
     expect(result).not.toContain('embed.js')
   })
 
-  it('should convert the Texas Tribune data-frame-src wrapper', async () => {
+  // data-frame-src is now materialized into an <iframe> by rebuildDeferredIframes upstream, so
+  // a Texas Tribune / @newswire/frames Datawrapper wrapper still becomes an image — end to end.
+  it('should convert a data-frame-src datawrapper wrapper end to end', async () => {
     const value = html`<div data-frame-sandbox="allow-scripts" data-frame-src="https://datawrapper.dwcdn.net/OaEnQ/"></div>`
-    const result = await transform(value)
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com',
+    })
 
-    expect(result).toContain('<a href="https://datawrapper.dwcdn.net/OaEnQ/">')
-    expect(result).toContain('src="https://datawrapper.dwcdn.net/OaEnQ/full.png"')
+    expect(result).toContain('https://datawrapper.dwcdn.net/OaEnQ/full.png')
     expect(result).not.toContain('data-frame-src')
   })
 

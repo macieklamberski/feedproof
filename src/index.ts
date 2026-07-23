@@ -2,6 +2,7 @@ import {
   defaultAllDomTransforms,
   defaultAvatarImageHosts,
   defaultCiteResolvers,
+  defaultDeferredIframeSources,
   defaultEmbedResolvers,
   defaultEmojiImageHosts,
   defaultHighlightFn,
@@ -32,6 +33,7 @@ export const transformContent = async (
     lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,
     lazySrcsetAttributes: options.lazySrcsetAttributes ?? defaultLazySrcsetAttributes,
     lazyIframeAttributes: options.lazyIframeAttributes ?? defaultLazyIframeAttributes,
+    deferredIframeSources: options.deferredIframeSources ?? defaultDeferredIframeSources,
     trackingHosts: options.trackingHosts ?? defaultTrackingHosts,
     trackingPathSegments: options.trackingPathSegments ?? defaultTrackingPathSegments,
     emojiImageHosts: options.emojiImageHosts ?? defaultEmojiImageHosts,
@@ -147,6 +149,7 @@ export { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 export { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 export { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 export { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
+export { rebuildDeferredIframes } from './transforms/dom/rebuildDeferredIframes.js'
 export { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
 export { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
 export { rebuildLazyLoadForVideos } from './transforms/dom/rebuildLazyLoadForVideos.js'
