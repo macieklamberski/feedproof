@@ -152,6 +152,34 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
+    it('should remove a Complianz consent-gated iframe', async () => {
+      const value = html`
+        <p>Before</p>
+        <iframe src="about:blank" data-src-cmplz="https://www.youtube.com/embed/abc"></iframe>
+        <p>After</p>
+      `
+      const expected = html`
+        <p>Before</p>
+        <p>After</p>
+      `
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should remove a WPConsent consent-gated iframe', async () => {
+      const value = html`
+        <p>Before</p>
+        <iframe src="about:blank" data-wpconsent-src="https://www.youtube.com/embed/xyz"></iframe>
+        <p>After</p>
+      `
+      const expected = html`
+        <p>Before</p>
+        <p>After</p>
+      `
+
+      expect(await transform(value)).toBe(expected)
+    })
+
     it('should remove Buttondown form by action host', async () => {
       const value = html`
         <p>Before</p>

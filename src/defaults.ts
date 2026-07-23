@@ -321,7 +321,6 @@ export const defaultLazyIframeAttributes = [
   'data-privacy-src', // Privacy/lazy-video plugins (data-privacy-type="youtube") — 69 feeds.
   'data-ep-src', // Embed Privacy — 54 feeds.
   'data-cookieblock-src', // Cookiebot consent gate — 26 feeds.
-  'data-src-cmplz', // Complianz consent gate — 20 feeds.
 ]
 
 export const defaultLazySrcsetAttributes = [
@@ -469,4 +468,9 @@ export const defaultNonContentSelectors = [
   'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets — 3,201 feeds (0.1%).
   '.mcnPreviewText', // Mailchimp hidden email preheader text — 137 feeds (0.005%).
   'img[src*="steamcommunity.com"][src*="placeholder"]', // Steam news static poster gif shown before its JS swaps in the YouTube iframe.
+
+  // GDPR/consent-gated embeds — the plugin parks the real iframe URL and shows a cookie notice;
+  // a reader has no consent flow, so strip the gated element rather than resurrect it.
+  '[data-src-cmplz]', // Complianz consent gate.
+  '[data-wpconsent-src]', // WPConsent consent gate.
 ]
