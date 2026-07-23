@@ -144,6 +144,26 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(await transformContent('Hello world', { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
+  it('should linkify a bare url whole when a wbr splits it', async () => {
+    // Email clients emit long links as `youtu.be/<wbr>{id}`. Without stripping the <wbr>
+    // first, linkifyUrls sees only `https://youtu.be/` and makes a dead stub, dropping the
+    // id to plain text. The whole url must become one working link.
+    const value = '<p>Watch <span>https://youtu.be/<wbr></wbr>HnLpU5vd5rI</span></p>'
+    const expected =
+      '<p>Watch <span><a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/HnLpU5vd5rI</a></span></p>'
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
+  it('should keep an anchored wbr url working and drop the break hint', async () => {
+    const value =
+      '<p><a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/<wbr></wbr>HnLpU5vd5rI</a></p>'
+    const expected =
+      '<p><a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/HnLpU5vd5rI</a></p>'
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
   it('should use built-in YouTube embed resolver', async () => {
     const value = html`
       <iframe

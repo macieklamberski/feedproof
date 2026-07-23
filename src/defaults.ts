@@ -77,6 +77,7 @@ import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js
 import { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
 import { stripMarkdownEscapeBackslashes } from './transforms/dom/stripMarkdownEscapeBackslashes.js'
 import { stripNonContentElements } from './transforms/dom/stripNonContentElements.js'
+import { stripWordBreaks } from './transforms/dom/stripWordBreaks.js'
 import { surfaceNoscriptEmbeds } from './transforms/dom/surfaceNoscriptEmbeds.js'
 import { surfaceTemplateEmbeds } from './transforms/dom/surfaceTemplateEmbeds.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
@@ -194,6 +195,9 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   mergeFragmentedLists,
   mergeConsecutiveOneLinerPres,
   trimPreWhitespace,
+  // Runs before linkifyUrls so a bare URL fragmented by a <wbr> (email clients split long
+  // links this way) is rejoined and linkified whole, not truncated into a dead stub.
+  stripWordBreaks,
   linkifyUrls,
   markTimestamps,
   // Promotes lazy/consent-gated iframe srcs into `src` so replaceEmbedsWithPlaceholders
