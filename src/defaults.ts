@@ -33,6 +33,7 @@ import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
 import { convertAmpElements } from './transforms/dom/convertAmpElements.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { convertCiteCards } from './transforms/dom/convertCiteCards.js'
+import { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
@@ -52,6 +53,7 @@ import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 import { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
+import { rebuildDeferredIframes } from './transforms/dom/rebuildDeferredIframes.js'
 import { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
 import { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
 import { rebuildLazyLoadForVideos } from './transforms/dom/rebuildLazyLoadForVideos.js'
@@ -96,6 +98,7 @@ import { unwrapCdataComments } from './transforms/string/unwrapCdataComments.js'
 import { unwrapCdataMarkers } from './transforms/string/unwrapCdataMarkers.js'
 import type {
   CiteResolver,
+  DeferredIframeSource,
   DomTransform,
   EmbedResolver,
   ResolveUrlFn,
@@ -135,6 +138,14 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // an amp-youtube becomes an iframe before replaceEmbedsWithPlaceholders, and an
   // amp-img an <img> before resolveMediaDimensions.
   convertAmpElements,
+  // Materializes an iframe parked in a <div> attribute (Pym.js, @newswire/frames) so it's
+  // placeholdered downstream. Runs before convertDatawrapperEmbeds so a data-frame-src
+  // Datawrapper div becomes an iframe that convertDatawrapperEmbeds turns into a static image.
+  rebuildDeferredIframes,
+  // Converts Datawrapper chart embeds (iframe, script/noscript, and link forms) into a
+  // linked static <img> of the chart's published PNG render. Runs in this normalize
+  // cluster so the emitted <img> is dimensioned and proxied by the image transforms below.
+  convertDatawrapperEmbeds,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
   demoteHeadings,
@@ -326,6 +337,13 @@ export const defaultLazyIframeAttributes = [
   'data-ep-src', // Embed Privacy — 54 feeds.
   'data-cookieblock-src', // Cookiebot consent gate — 26 feeds.
   'data-src-cmplz', // Complianz consent gate — 20 feeds.
+]
+
+export const defaultDeferredIframeSources: Array<DeferredIframeSource> = [
+  // Pym.js (NPR) — the established responsive-embed convention; skip already-initialized nodes.
+  { selector: '[data-pym-src]:not([data-pym-auto-initialized])', attribute: 'data-pym-src' },
+  // @newswire/frames (Ryan Murphy; Texas Tribune bundles it as newswireFrames).
+  { selector: '[data-frame-src]', attribute: 'data-frame-src' },
 ]
 
 export const defaultLazySrcsetAttributes = [
