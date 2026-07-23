@@ -14,6 +14,12 @@ const consentGateAttributes: Array<[string, string]> = [
   ['Cookiebot', 'data-cookieblock-src'],
   ['Complianz', 'data-src-cmplz'],
   ['WPConsent', 'data-wpconsent-src'],
+  ['iubenda', 'data-suppressedsrc'],
+  ['Usercentrics', 'data-uc-src'],
+  ['Cookie Information', 'data-consent-src'],
+  ['Moove GDPR Cookie Compliance', 'data-gdpr-iframesrc'],
+  ['CookieFirst', 'data-cookiefirst-category'],
+  ['Cookie Script', 'data-cookiescript'],
 ]
 
 describeForEachParser('stripNonContentElements', (parseHtml) => {
@@ -168,6 +174,13 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
       consentGateAttributes,
     )('should strip a %s consent-gated iframe', async (_label, attribute) => {
       const value = `<p>Before</p><iframe src="about:blank" ${attribute}="https://www.youtube.com/embed/x"></iframe><p>After</p>`
+
+      expect(await transform(value)).toBe('<p>Before</p><p>After</p>')
+    })
+
+    // OneTrust/Optanon marks the gated iframe with a class, not a src attribute.
+    it('should strip a OneTrust/Optanon consent-gated iframe (class marker)', async () => {
+      const value = `<p>Before</p><iframe src="about:blank" class="optanon-category-C0004" data-src="https://www.youtube.com/embed/x"></iframe><p>After</p>`
 
       expect(await transform(value)).toBe('<p>Before</p><p>After</p>')
     })

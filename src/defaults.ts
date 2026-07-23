@@ -477,4 +477,13 @@ export const defaultNonContentSelectors = [
   '[data-cookieblock-src]', // Cookiebot — 26 feeds.
   '[data-src-cmplz]', // Complianz — 20 feeds.
   '[data-wpconsent-src]', // WPConsent.
+  // Further CMPs. iframe-scoped: several of these attributes/classes also tag gated <script>
+  // tags or use broader markers, so a bare attribute selector would over-match.
+  'iframe[data-suppressedsrc]', // iubenda.
+  'iframe[data-uc-src]', // Usercentrics.
+  'iframe[data-consent-src]', // Cookie Information.
+  'iframe[data-gdpr-iframesrc]', // Moove GDPR Cookie Compliance (300k+ installs).
+  'iframe[data-cookiefirst-category]', // CookieFirst (real URL in data-src).
+  'iframe[data-cookiescript]', // Cookie Script (real URL in data-src).
+  'iframe[class*="optanon-category"]', // OneTrust / Optanon (real URL in data-src).
 ]
