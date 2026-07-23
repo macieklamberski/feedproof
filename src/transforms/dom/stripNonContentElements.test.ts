@@ -4,6 +4,18 @@ import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripNonContentElements } from './stripNonContentElements.js'
 
+// Each pair is [plugin label, the attribute it parks the real iframe URL in when consent-gating].
+const consentGateAttributes: Array<[string, string]> = [
+  ['Borlabs Cookie', 'src-consent'],
+  ['a generic consent wrapper', 'consent-original-src'],
+  ['Real Cookie Banner (rendered)', 'consent-original-src-_'],
+  ['Real Cookie Banner (click-to-load)', 'consent-click-original-src-_'],
+  ['Embed Privacy', 'data-ep-src'],
+  ['Cookiebot', 'data-cookieblock-src'],
+  ['Complianz', 'data-src-cmplz'],
+  ['WPConsent', 'data-wpconsent-src'],
+]
+
 describeForEachParser('stripNonContentElements', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(html), [stripNonContentElements(context)])
@@ -152,32 +164,12 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
-    it('should remove a Complianz consent-gated iframe', async () => {
-      const value = html`
-        <p>Before</p>
-        <iframe src="about:blank" data-src-cmplz="https://www.youtube.com/embed/abc"></iframe>
-        <p>After</p>
-      `
-      const expected = html`
-        <p>Before</p>
-        <p>After</p>
-      `
+    it.each(
+      consentGateAttributes,
+    )('should strip a %s consent-gated iframe', async (_label, attribute) => {
+      const value = `<p>Before</p><iframe src="about:blank" ${attribute}="https://www.youtube.com/embed/x"></iframe><p>After</p>`
 
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should remove a WPConsent consent-gated iframe', async () => {
-      const value = html`
-        <p>Before</p>
-        <iframe src="about:blank" data-wpconsent-src="https://www.youtube.com/embed/xyz"></iframe>
-        <p>After</p>
-      `
-      const expected = html`
-        <p>Before</p>
-        <p>After</p>
-      `
-
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toBe('<p>Before</p><p>After</p>')
     })
 
     it('should remove Buttondown form by action host', async () => {

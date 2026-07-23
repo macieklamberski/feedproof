@@ -314,13 +314,10 @@ export const defaultLazyIframeAttributes = [
   'data-orig', // Lazy-video facades (iframe id="_ytid_*") parking the embed URL with empty src — 337 feeds.
   'data-original-src', // Generic lazy loaders.
   'data-opt-src', // Image/embed optimizers.
-  'src-consent', // GDPR/cookie-consent wrappers (e.g. Borlabs) holding the real src.
-  'consent-original-src', // Consent wrappers.
-  'consent-original-src-_', // Real Cookie Banner rendered form (trailing `-_`) — 167 feeds.
-  'consent-click-original-src-_', // Real Cookie Banner click-to-load variant — 142 feeds.
   'data-privacy-src', // Privacy/lazy-video plugins (data-privacy-type="youtube") — 69 feeds.
-  'data-ep-src', // Embed Privacy — 54 feeds.
-  'data-cookieblock-src', // Cookiebot consent gate — 26 feeds.
+  // Cookie-CONSENT gates (Cookiebot, Complianz, Borlabs, …) are NOT recovered — they're
+  // stripped as non-content (see the GDPR block in defaultNonContentSelectors). Only generic
+  // performance lazy-loaders and the privacy-video facade above live here.
 ]
 
 export const defaultLazySrcsetAttributes = [
@@ -469,8 +466,15 @@ export const defaultNonContentSelectors = [
   '.mcnPreviewText', // Mailchimp hidden email preheader text — 137 feeds (0.005%).
   'img[src*="steamcommunity.com"][src*="placeholder"]', // Steam news static poster gif shown before its JS swaps in the YouTube iframe.
 
-  // GDPR/consent-gated embeds — the plugin parks the real iframe URL and shows a cookie notice;
-  // a reader has no consent flow, so strip the gated element rather than resurrect it.
-  '[data-src-cmplz]', // Complianz consent gate.
-  '[data-wpconsent-src]', // WPConsent consent gate.
+  // GDPR/consent- and privacy-gated embeds — the plugin parks the real iframe URL and shows a
+  // cookie notice; a reader has no consent flow, so strip the gated element rather than
+  // resurrect it. Matched by the attribute each plugin parks the real URL in.
+  '[src-consent]', // Borlabs Cookie.
+  '[consent-original-src]', // Consent wrappers.
+  '[consent-original-src-_]', // Real Cookie Banner (rendered) — 167 feeds.
+  '[consent-click-original-src-_]', // Real Cookie Banner (click-to-load) — 142 feeds.
+  '[data-ep-src]', // Embed Privacy — 54 feeds.
+  '[data-cookieblock-src]', // Cookiebot — 26 feeds.
+  '[data-src-cmplz]', // Complianz — 20 feeds.
+  '[data-wpconsent-src]', // WPConsent.
 ]
