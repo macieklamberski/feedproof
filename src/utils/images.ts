@@ -36,7 +36,7 @@ export const countSrcsetCandidates = (srcset: string): number => {
 // a false match would drop a genuine image. (wide/full are still covered when
 // paired with dimensions, e.g. "wide__148x84", via dimensionLeaf.) Add a keyword
 // here only if the corpus shows it earns its keep against that false-match risk.
-const sizeKeywordLiterals = [
+export const sizeKeywordLiterals = [
   // Generic keys.
   'small',
   'xsmall',

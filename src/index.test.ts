@@ -144,6 +144,26 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(await transformContent('Hello world', { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
+  it('should linkify a bare url whole when a wbr splits it', async () => {
+    // Email clients emit long links as `youtu.be/<wbr>{id}`. Without stripping the <wbr>
+    // first, linkifyUrls sees only `https://youtu.be/` and makes a dead stub, dropping the
+    // id to plain text. The whole url must become one working link.
+    const value = '<p>Watch <span>https://youtu.be/<wbr></wbr>HnLpU5vd5rI</span></p>'
+    const expected =
+      '<p>Watch <span><a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/HnLpU5vd5rI</a></span></p>'
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
+  it('should keep an anchored wbr url working and drop the break hint', async () => {
+    const value =
+      '<p><a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/<wbr></wbr>HnLpU5vd5rI</a></p>'
+    const expected =
+      '<p><a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/HnLpU5vd5rI</a></p>'
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
   it('should use built-in YouTube embed resolver', async () => {
     const value = html`
       <iframe
@@ -728,6 +748,33 @@ describeForEachParser('transformContent', (parseHtml) => {
       `
 
       expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+    })
+  })
+
+  describe('Avada privacy embed without a dedicated transform', () => {
+    // Avada gates a video behind a consent notice: a hidden <iframe> parks the real URL in
+    // data-privacy-src, and a sibling .fusion-privacy-placeholder shows "please accept". No
+    // single transform owns this — fixLazyIframes recovers the iframe (then the youtube
+    // resolver placeholders it) while stripNonContentElements removes the notice.
+    it('should recover the gated video and strip the "please accept" notice', async () => {
+      const value = html`
+        <p><iframe class="fusion-hidden" data-privacy-type="youtube" src="" title="YouTube video player" data-privacy-src="https://www.youtube.com/embed/0OqYNLrUoes?si=ZEdmlrLKAggBE_AS" width="560" height="315"></iframe></p>
+        <div class="fusion-privacy-placeholder" style="width:560px; height:315px;" data-privacy-type="youtube">
+          <div class="fusion-privacy-placeholder-content">
+            <div class="fusion-privacy-label">For privacy reasons YouTube needs your permission to be loaded.</div>
+            <a href="" class="fusion-privacy-consent">I Accept</a>
+          </div>
+        </div>
+      `
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      // Video recovered into a YouTube placeholder.
+      expect(result).toContain('data-embed-provider="youtube"')
+      expect(result).toContain('data-embed-src="https://www.youtube.com/embed/0OqYNLrUoes"')
+      // Consent notice and its text gone.
+      expect(result).not.toContain('fusion-privacy-placeholder')
+      expect(result).not.toContain('For privacy reasons')
+      expect(result).not.toContain('I Accept')
     })
   })
 

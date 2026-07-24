@@ -1,4 +1,5 @@
 import { expect, it } from 'bun:test'
+import { defaultLazyIframeAttributes } from '../../defaults.js'
 import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
@@ -9,25 +10,26 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
     return applyDomTransforms(parseHtml(html), [fixLazyIframes(context)])
   }
 
-  it('should promote a lazy data-src into src', async () => {
-    const value = '<iframe src="about:blank" data-src="https://example.com/embed/x"></iframe>'
-    const result = await transform(value)
+  // Iterates the real default list, so every entry is exercised and a new entry
+  // is covered automatically.
+  it.each(defaultLazyIframeAttributes)('should promote %s into src', async (attribute) => {
+    const value = `<iframe src="" ${attribute}="https://example.com/embed/x"></iframe>`
+    const expected = `<iframe src="https://example.com/embed/x" ${attribute}="https://example.com/embed/x"></iframe>`
 
-    expect(result).toContain('src="https://example.com/embed/x"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
-  it('should promote a lazy data-orig into an iframe with no src', async () => {
+  it('should promote a lazy attribute into an iframe with no src', async () => {
     const value = '<iframe id="_ytid_27860" data-orig="https://www.youtube.com/embed/x"></iframe>'
     const result = await transform(value)
 
     expect(result).toContain('src="https://www.youtube.com/embed/x"')
   })
 
-  it('should promote a consent-gated src into an empty src', async () => {
+  it('should not promote a consent-gated attribute', async () => {
     const value = '<iframe src="" data-cookieblock-src="https://example.com/embed/x"></iframe>'
-    const result = await transform(value)
 
-    expect(result).toContain('src="https://example.com/embed/x"')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not overwrite a usable src', async () => {

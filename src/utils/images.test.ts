@@ -5,6 +5,7 @@ import {
   getUrlDimensions,
   getUrlSizeHint,
   parseSrcset,
+  sizeKeywordLiterals,
 } from './images.js'
 
 describe('parseSrcset', () => {
@@ -110,11 +111,13 @@ describe('getImageFingerprint', () => {
     expect(scaled).toBe(bare)
   })
 
-  it('should drop a size-keyword leaf when a parent path anchors it', () => {
-    const large = getImageFingerprint('https://example.com/media/large.jpg')
-    const small = getImageFingerprint('https://example.com/media/small.jpg')
+  // Iterates the real keyword list, so every entry is exercised and a new entry
+  // is covered automatically.
+  it.each(sizeKeywordLiterals)('should drop a %s size-keyword leaf', (keyword) => {
+    const value = getImageFingerprint(`https://example.com/media/${keyword}.jpg`)
+    const expected = getImageFingerprint('https://example.com/media/small.jpg')
 
-    expect(small).toBe(large)
+    expect(value).toBe(expected)
   })
 
   it('should not collapse root-level size-keyword files', () => {

@@ -33,6 +33,7 @@ import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
 import { convertAmpElements } from './transforms/dom/convertAmpElements.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { convertCiteCards } from './transforms/dom/convertCiteCards.js'
+import { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
@@ -52,6 +53,7 @@ import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
 import { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
+import { rebuildDeferredIframes } from './transforms/dom/rebuildDeferredIframes.js'
 import { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
 import { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
 import { rebuildLazyLoadForVideos } from './transforms/dom/rebuildLazyLoadForVideos.js'
@@ -77,6 +79,7 @@ import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js
 import { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
 import { stripMarkdownEscapeBackslashes } from './transforms/dom/stripMarkdownEscapeBackslashes.js'
 import { stripNonContentElements } from './transforms/dom/stripNonContentElements.js'
+import { stripWordBreaks } from './transforms/dom/stripWordBreaks.js'
 import { surfaceNoscriptEmbeds } from './transforms/dom/surfaceNoscriptEmbeds.js'
 import { surfaceTemplateEmbeds } from './transforms/dom/surfaceTemplateEmbeds.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
@@ -95,6 +98,7 @@ import { unwrapCdataComments } from './transforms/string/unwrapCdataComments.js'
 import { unwrapCdataMarkers } from './transforms/string/unwrapCdataMarkers.js'
 import type {
   CiteResolver,
+  DeferredIframeSource,
   DomTransform,
   EmbedResolver,
   ResolveUrlFn,
@@ -134,6 +138,14 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // an amp-youtube becomes an iframe before replaceEmbedsWithPlaceholders, and an
   // amp-img an <img> before resolveMediaDimensions.
   convertAmpElements,
+  // Materializes an iframe parked in a <div> attribute (Pym.js, @newswire/frames) so it's
+  // placeholdered downstream. Runs before convertDatawrapperEmbeds so a data-frame-src
+  // Datawrapper div becomes an iframe that convertDatawrapperEmbeds turns into a static image.
+  rebuildDeferredIframes,
+  // Converts Datawrapper chart embeds (iframe, script/noscript, and link forms) into a
+  // linked static <img> of the chart's published PNG render. Runs in this normalize
+  // cluster so the emitted <img> is dimensioned and proxied by the image transforms below.
+  convertDatawrapperEmbeds,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
   demoteHeadings,
@@ -194,6 +206,9 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   mergeFragmentedLists,
   mergeConsecutiveOneLinerPres,
   trimPreWhitespace,
+  // Runs before linkifyUrls so a bare URL fragmented by a <wbr> (email clients split long
+  // links this way) is rejoined and linkified whole, not truncated into a dead stub.
+  stripWordBreaks,
   linkifyUrls,
   markTimestamps,
   // Promotes lazy/consent-gated iframe srcs into `src` so replaceEmbedsWithPlaceholders
@@ -314,14 +329,21 @@ export const defaultLazyIframeAttributes = [
   'data-orig', // Lazy-video facades (iframe id="_ytid_*") parking the embed URL with empty src — 337 feeds.
   'data-original-src', // Generic lazy loaders.
   'data-opt-src', // Image/embed optimizers.
-  'src-consent', // GDPR/cookie-consent wrappers (e.g. Borlabs) holding the real src.
-  'consent-original-src', // Consent wrappers.
-  'consent-original-src-_', // Real Cookie Banner rendered form (trailing `-_`) — 167 feeds.
-  'consent-click-original-src-_', // Real Cookie Banner click-to-load variant — 142 feeds.
-  'data-privacy-src', // Privacy/lazy-video plugins (data-privacy-type="youtube") — 69 feeds.
-  'data-ep-src', // Embed Privacy — 54 feeds.
-  'data-cookieblock-src', // Cookiebot consent gate — 26 feeds.
-  'data-src-cmplz', // Complianz consent gate — 20 feeds.
+  // Avada's privacy-embed facade (data-privacy-type is a taxonomy — YouTube, Vimeo, …), NOT a
+  // cookie banner: it defers a real video the author embedded. Recovering it yields a privacy-safe
+  // click-to-load placeholder; stripping would just delete the video. The visible Avada notice
+  // (.fusion-privacy-placeholder) is stripped separately in defaultNonContentSelectors.
+  'data-privacy-src', // Avada privacy-embed facade — 19 feeds.
+  // Cookie-CONSENT gates (Cookiebot, Complianz, Borlabs, …) are NOT recovered — they're
+  // stripped as non-content (see the GDPR block in defaultNonContentSelectors). Only generic
+  // performance lazy-loaders and the privacy-video facade above live here.
+]
+
+export const defaultDeferredIframeSources: Array<DeferredIframeSource> = [
+  // Pym.js (NPR) — the established responsive-embed convention; skip already-initialized nodes.
+  { selector: '[data-pym-src]:not([data-pym-auto-initialized])', attribute: 'data-pym-src' },
+  // @newswire/frames (Ryan Murphy; Texas Tribune bundles it as newswireFrames).
+  { selector: '[data-frame-src]', attribute: 'data-frame-src' },
 ]
 
 export const defaultLazySrcsetAttributes = [
@@ -415,7 +437,7 @@ export const defaultAvatarImageHosts = [
 // CSS class tokens that mark a <pre> as author-chosen distinct content
 // (poetry stanzas, scriptural verses, leader-dotted tables of contents).
 // `mergeConsecutiveOneLinerPres` skips any run where at least one <pre>
-// carries one of these tokens. Curated from a corpus scan: of all
+// carries one of these tokens. Of all
 // matching runs, `wp-block-verse` and `wp-block-preformatted` dominate
 // the false-positive cases (split poems, ToCs), while `wp-block-code`
 // stays out — fragmented code blocks are the merge's intended target.
@@ -428,7 +450,7 @@ export const defaultNonContentSelectors = [
   // Subscribe and newsletter signup forms.
   '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget — 11,366 feeds (0.42%).
   '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA — 11,275 feeds (0.42%).
-  '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 527 feeds (2026-07 corpus). Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
+  '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 527 feeds. Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
   '.wp-block-jetpack-subscriptions', // Jetpack Gutenberg subscribe block — 353 feeds (0.013%).
   '.kg-signup-card', // Ghost (Koenig) signup card — 323 feeds (0.012%).
   '.mc4wp-form', // Mailchimp for WordPress plugin form — 311 feeds (0.012%).
@@ -437,9 +459,13 @@ export const defaultNonContentSelectors = [
   '.jetpack_subscription_widget', // Jetpack legacy sidebar subscribe widget — 69 feeds (0.003%).
   'form[action*="buttondown.email"]', // Buttondown embed-subscribe form — 21 feeds (<0.001%).
   '.sqs-block-newsletter', // Squarespace newsletter block — 11 feeds (<0.001%).
+  '.et_bloom', // Bloom (Elegant Themes) optin — 963 feeds.
+  '.wpforms-container', // WPForms — 804 feeds.
+  '[class*="tve-leads"]', // Thrive Leads optin — 232 feeds.
 
   // Ad slots.
   '.adsbygoogle', // Google AdSense ad slot — 1,515 feeds (0.056%).
+  'div[id^="div-gpt-ad"]', // Google Ad Manager (GPT) ad slot — 1,748 feeds.
   '.adthrive-ad', // AdThrive (Raptive) ad slot — 72 feeds (0.003%).
 
   // Share and call-to-action button clusters.
@@ -450,6 +476,9 @@ export const defaultNonContentSelectors = [
   '.sharedaddy', // Jetpack Sharedaddy share buttons — 428 feeds (0.016%).
   '.feedflare', // FeedBurner share footer ("Share on X / Email this") — 220 feeds (0.008%).
   '.addtoany_share_save_container', // AddToAny share buttons (WordPress) — 97 feeds (0.004%).
+  '.a2a_kit', // AddToAny share icons (higher-prevalence marker than the wrapper) — 6,714 feeds.
+  '[class*="addthis_"]', // AddThis share toolbox — 2,312 feeds.
+  '.shareaholic-canvas', // Shareaholic share/related widget — 669 feeds.
 
   // Related-posts widgets.
   '.yarpp-related', // YARPP related-posts widget (WordPress) — 672 feeds (0.025%).
@@ -464,9 +493,41 @@ export const defaultNonContentSelectors = [
   'a[class*="read-more"]', // "Read more" excerpt-truncation links.
   'a[class*="continue-reading"]', // "Continue reading" excerpt-truncation links.
 
+  // Comment-system embeds (JS mounts that render nothing without their loader script).
+  '.fb-comments', // Facebook Comments — 1,050 feeds.
+
+  // Print / PDF buttons.
+  '.printfriendly', // PrintFriendly print/PDF button — ≤642 feeds (upper bound; ~half are class-scoped).
+  '.pf-button', // PrintFriendly button — 93 feeds.
+
   // Platform UI chrome and non-rendered scaffolding.
   '.image-link-expand', // Substack restack/zoom buttons next to images — 16,419 feeds (0.6%).
   'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets — 3,201 feeds (0.1%).
   '.mcnPreviewText', // Mailchimp hidden email preheader text — 137 feeds (0.005%).
   'img[src*="steamcommunity.com"][src*="placeholder"]', // Steam news static poster gif shown before its JS swaps in the YouTube iframe.
+
+  // GDPR/consent- and privacy-gated embeds — the plugin parks the real iframe URL and shows a
+  // cookie notice; a reader has no consent flow, so strip the gated element rather than
+  // resurrect it. Matched by the attribute each plugin parks the real URL in. Kept even at low
+  // prevalence — a genuine consent gate is cheap config and these CMPs are widely installed.
+  '[src-consent]', // Borlabs Cookie — 2 feeds.
+  '[consent-original-src]', // Consent wrappers (generic form).
+  '[consent-original-src-_]', // Real Cookie Banner (rendered) — 186 feeds (both consent-original-src forms).
+  '[consent-click-original-src-_]', // Real Cookie Banner (click-to-load) — 82 feeds.
+  '[data-ep-src]', // Embed Privacy — 14 feeds.
+  '[data-cookieblock-src]', // Cookiebot — 34 feeds.
+  '[data-src-cmplz]', // Complianz — 13 feeds.
+  '[data-wpconsent-src]', // WPConsent — 0 feeds.
+  // Avada's leftover "For privacy reasons … please accept" notice. The gated iframe itself is
+  // recovered via data-privacy-src (a lazy attribute); only this consent nag is dead chrome.
+  '.fusion-privacy-placeholder', // Avada privacy-embed notice — 19 feeds.
+  // Further CMPs. iframe-scoped: several of these attributes/classes also tag gated <script>
+  // tags or use broader markers, so a bare attribute selector would over-match.
+  'iframe[data-suppressedsrc]', // iubenda — 0 feeds.
+  'iframe[data-uc-src]', // Usercentrics — 0 feeds.
+  'iframe[data-consent-src]', // Cookie Information — 4 feeds.
+  'iframe[data-gdpr-iframesrc]', // Moove GDPR Cookie Compliance (300k+ installs) — 1 feed.
+  'iframe[data-cookiefirst-category]', // CookieFirst (real URL in data-src) — 0 feeds.
+  'iframe[data-cookiescript]', // Cookie Script (real URL in data-src) — 4 feeds.
+  'iframe[class*="optanon-category"]', // OneTrust / Optanon (real URL in data-src) — 71 feeds.
 ]
