@@ -314,7 +314,7 @@ export const defaultLazyIframeAttributes = [
   'data-orig', // Lazy-video facades (iframe id="_ytid_*") parking the embed URL with empty src — 337 feeds.
   'data-original-src', // Generic lazy loaders.
   'data-opt-src', // Image/embed optimizers.
-  'data-privacy-src', // Privacy/lazy-video plugins (data-privacy-type="youtube") — 19 feeds (2026-07 full-corpus scan).
+  'data-privacy-src', // Privacy/lazy-video plugins (data-privacy-type="youtube") — 19 feeds.
   // Cookie-CONSENT gates (Cookiebot, Complianz, Borlabs, …) are NOT recovered — they're
   // stripped as non-content (see the GDPR block in defaultNonContentSelectors). Only generic
   // performance lazy-loaders and the privacy-video facade above live here.
@@ -411,7 +411,7 @@ export const defaultAvatarImageHosts = [
 // CSS class tokens that mark a <pre> as author-chosen distinct content
 // (poetry stanzas, scriptural verses, leader-dotted tables of contents).
 // `mergeConsecutiveOneLinerPres` skips any run where at least one <pre>
-// carries one of these tokens. Curated from a corpus scan: of all
+// carries one of these tokens. Of all
 // matching runs, `wp-block-verse` and `wp-block-preformatted` dominate
 // the false-positive cases (split poems, ToCs), while `wp-block-code`
 // stays out — fragmented code blocks are the merge's intended target.
@@ -424,7 +424,7 @@ export const defaultNonContentSelectors = [
   // Subscribe and newsletter signup forms.
   '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget — 11,366 feeds (0.42%).
   '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA — 11,275 feeds (0.42%).
-  '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 527 feeds (2026-07 corpus). Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
+  '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 527 feeds. Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
   '.wp-block-jetpack-subscriptions', // Jetpack Gutenberg subscribe block — 353 feeds (0.013%).
   '.kg-signup-card', // Ghost (Koenig) signup card — 323 feeds (0.012%).
   '.mc4wp-form', // Mailchimp for WordPress plugin form — 311 feeds (0.012%).
@@ -468,9 +468,8 @@ export const defaultNonContentSelectors = [
 
   // GDPR/consent- and privacy-gated embeds — the plugin parks the real iframe URL and shows a
   // cookie notice; a reader has no consent flow, so strip the gated element rather than
-  // resurrect it. Matched by the attribute each plugin parks the real URL in. Feed counts are
-  // from the 2026-07 full-corpus scan (12.7M feeds); kept even at low prevalence — a genuine
-  // consent gate is cheap config and these CMPs are widely installed.
+  // resurrect it. Matched by the attribute each plugin parks the real URL in. Kept even at low
+  // prevalence — a genuine consent gate is cheap config and these CMPs are widely installed.
   '[src-consent]', // Borlabs Cookie — 2 feeds.
   '[consent-original-src]', // Consent wrappers (generic form).
   '[consent-original-src-_]', // Real Cookie Banner (rendered) — 186 feeds (both consent-original-src forms).
