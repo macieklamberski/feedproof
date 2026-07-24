@@ -751,6 +751,33 @@ describeForEachParser('transformContent', (parseHtml) => {
     })
   })
 
+  describe('Avada privacy embed without a dedicated transform', () => {
+    // Avada gates a video behind a consent notice: a hidden <iframe> parks the real URL in
+    // data-privacy-src, and a sibling .fusion-privacy-placeholder shows "please accept". No
+    // single transform owns this — fixLazyIframes recovers the iframe (then the youtube
+    // resolver placeholders it) while stripNonContentElements removes the notice.
+    it('should recover the gated video and strip the "please accept" notice', async () => {
+      const value = html`
+        <p><iframe class="fusion-hidden" data-privacy-type="youtube" src="" title="YouTube video player" data-privacy-src="https://www.youtube.com/embed/0OqYNLrUoes?si=ZEdmlrLKAggBE_AS" width="560" height="315"></iframe></p>
+        <div class="fusion-privacy-placeholder" style="width:560px; height:315px;" data-privacy-type="youtube">
+          <div class="fusion-privacy-placeholder-content">
+            <div class="fusion-privacy-label">For privacy reasons YouTube needs your permission to be loaded.</div>
+            <a href="" class="fusion-privacy-consent">I Accept</a>
+          </div>
+        </div>
+      `
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      // Video recovered into a YouTube placeholder.
+      expect(result).toContain('data-embed-provider="youtube"')
+      expect(result).toContain('data-embed-src="https://www.youtube.com/embed/0OqYNLrUoes"')
+      // Consent notice and its text gone.
+      expect(result).not.toContain('fusion-privacy-placeholder')
+      expect(result).not.toContain('For privacy reasons')
+      expect(result).not.toContain('I Accept')
+    })
+  })
+
   it.todo('should propagate an error thrown by a dom transform', () => {
     // A custom domTransforms entry that throws should reject the transformContent promise.
   })
