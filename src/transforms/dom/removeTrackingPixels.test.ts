@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { defaultTrackingHosts, defaultTrackingPathSegments } from '../../defaults.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
@@ -216,116 +217,16 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
   })
 
   describe('host-based detection', () => {
-    it('should remove images from feedsportal.com', async () => {
-      const value = '<img src="https://feedsportal.com/c/12345/abc.gif">'
+    // Iterates the real default list, so every entry is exercised and a new entry
+    // is covered automatically.
+    it.each(defaultTrackingHosts)('should remove images from %s', async (host) => {
+      const value = `<img src="https://${host}/t.gif?id=abc">`
 
       expect(await transform(value)).toEqualHtml('')
     })
 
-    it('should remove images from feedsportal.com subdomains', async () => {
+    it('should remove images from tracking-host subdomains', async () => {
       const value = '<img src="https://da.feedsportal.com/c/12345/abc.gif">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from stats.wordpress.com', async () => {
-      const value = '<img src="https://stats.wordpress.com/b.gif?v=noscript">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from pixel.wp.com', async () => {
-      const value = '<img src="https://pixel.wp.com/g.gif?v=ext&blog=12345">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from doubleclick.net', async () => {
-      const value = '<img src="https://ad.doubleclick.net/ddm/trackimp/N123">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from google-analytics.com', async () => {
-      const value = '<img src="https://www.google-analytics.com/collect?v=1&tid=UA-1">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from list-manage.com (Mailchimp)', async () => {
-      const value = '<img src="https://example.list-manage.com/track/open.php?u=1&id=2">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from feedburner.com', async () => {
-      const value = '<img src="https://feeds.feedburner.com/~ff/MyFeed?d=abc123">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from mailerlite.com', async () => {
-      const value = '<img src="https://track.mailerlite.com/o/abc123">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from email.medium.com', async () => {
-      const value = '<img src="https://email.medium.com/o/eJw_/abc.gif">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from stat-c.medium.com', async () => {
-      const value = '<img src="https://stat-c.medium.com/track?u=abc">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from taboola.com', async () => {
-      const value = '<img src="https://trc.taboola.com/123/log/3/click?article=abc">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from scorecardresearch.com', async () => {
-      const value = '<img src="https://b.scorecardresearch.com/p?c1=2&c2=12345">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from googlesyndication.com', async () => {
-      const value = '<img src="https://pagead2.googlesyndication.com/pagead/gen_204?id=trc">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from sentry.io beacons', async () => {
-      const value = '<img src="https://o123.ingest.sentry.io/api/0/envelope/?sentry_key=abc">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from assoc-amazon.com', async () => {
-      const value = '<img src="https://www.assoc-amazon.com/e/ir?t=tag&l=as2&o=1&a=B001">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from statcounter.com', async () => {
-      const value = '<img src="https://c.statcounter.com/counter.php?sc_project=123">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images from a8.net affiliate pixels', async () => {
-      const value = '<img src="https://www12.a8.net/0.gif?a=1&p=2">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove The Conversation counter subdomain only', async () => {
-      const value = '<img src="https://counter.theconversation.com/content/82899/count.gif">'
 
       expect(await transform(value)).toEqualHtml('')
     })
@@ -344,26 +245,14 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
   })
 
   describe('path-based detection', () => {
-    it('should remove images with /pixel. path', async () => {
-      const value = '<img src="https://example.com/pixel.gif?id=abc">'
+    it.each(defaultTrackingPathSegments)('should remove images with /%s. path', async (segment) => {
+      const value = `<img src="https://example.com/${segment}.gif?id=abc">`
 
       expect(await transform(value)).toEqualHtml('')
     })
 
     it('should remove images with /pixel/ path', async () => {
       const value = '<img src="https://example.com/pixel/abc.png">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images with /beacon path', async () => {
-      const value = '<img src="https://example.com/beacon.gif">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove images with /count path', async () => {
-      const value = '<img src="https://example.com/count.gif">'
 
       expect(await transform(value)).toEqualHtml('')
     })

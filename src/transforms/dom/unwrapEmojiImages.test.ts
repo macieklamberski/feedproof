@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { defaultEmojiImageHosts } from '../../defaults.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
@@ -97,6 +98,15 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
   })
 
   describe('configurable host list', () => {
+    // Iterates the real default list, so every entry is exercised and a new entry
+    // is covered automatically.
+    it.each(defaultEmojiImageHosts)('should replace an emoji image from %s', async (host) => {
+      const value = `<p>Hi <img src="https://${host}1f642.png" alt="🙂"></p>`
+      const expected = '<p>Hi 🙂</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
     it('should replace no-class WP variant matched by s.w.org URL', async () => {
       const value =
         '<p><img src="https://s.w.org/images/core/emoji/13.1.0/svg/1f680.svg" alt="🚀"></p>'
