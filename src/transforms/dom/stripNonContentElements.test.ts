@@ -10,8 +10,8 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
   }
 
   describe('with default selectors', () => {
-    // Widgets added from the 2026-07 corpus scan. Each pair is [label, the widget markup].
-    const scannedWidgets: Array<[string, string]> = [
+    // Each pair is [label, the widget markup].
+    const nonContentWidgets: Array<[string, string]> = [
       ['AddToAny', '<span class="a2a_kit a2a_kit_size_32 addtoany_list"></span>'],
       ['AddThis', '<div class="addthis_toolbox addthis_default_style"></div>'],
       ['Shareaholic', '<div class="shareaholic-canvas" data-app="share_buttons"></div>'],
@@ -24,7 +24,7 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
       ['PrintFriendly button', '<button class="pf-button">Print</button>'],
     ]
 
-    it.each(scannedWidgets)('should strip a %s widget', async (_label, widget) => {
+    it.each(nonContentWidgets)('should strip a %s widget', async (_label, widget) => {
       expect(await transform(`<p>Before</p>${widget}<p>After</p>`)).toBe(
         '<p>Before</p><p>After</p>',
       )

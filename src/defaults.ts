@@ -419,7 +419,7 @@ export const defaultAvatarImageHosts = [
 // CSS class tokens that mark a <pre> as author-chosen distinct content
 // (poetry stanzas, scriptural verses, leader-dotted tables of contents).
 // `mergeConsecutiveOneLinerPres` skips any run where at least one <pre>
-// carries one of these tokens. Curated from a corpus scan: of all
+// carries one of these tokens. Of all
 // matching runs, `wp-block-verse` and `wp-block-preformatted` dominate
 // the false-positive cases (split poems, ToCs), while `wp-block-code`
 // stays out — fragmented code blocks are the merge's intended target.
@@ -432,7 +432,7 @@ export const defaultNonContentSelectors = [
   // Subscribe and newsletter signup forms.
   '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget — 11,366 feeds (0.42%).
   '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA — 11,275 feeds (0.42%).
-  '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 527 feeds (2026-07 corpus). Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
+  '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 527 feeds. Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
   '.wp-block-jetpack-subscriptions', // Jetpack Gutenberg subscribe block — 353 feeds (0.013%).
   '.kg-signup-card', // Ghost (Koenig) signup card — 323 feeds (0.012%).
   '.mc4wp-form', // Mailchimp for WordPress plugin form — 311 feeds (0.012%).
@@ -441,13 +441,13 @@ export const defaultNonContentSelectors = [
   '.jetpack_subscription_widget', // Jetpack legacy sidebar subscribe widget — 69 feeds (0.003%).
   'form[action*="buttondown.email"]', // Buttondown embed-subscribe form — 21 feeds (<0.001%).
   '.sqs-block-newsletter', // Squarespace newsletter block — 11 feeds (<0.001%).
-  '.et_bloom', // Bloom (Elegant Themes) optin — 963 feeds (2026-07 full-corpus scan).
-  '.wpforms-container', // WPForms — 804 feeds (2026-07 full-corpus scan).
-  '[class*="tve-leads"]', // Thrive Leads optin — 232 feeds (2026-07 full-corpus scan).
+  '.et_bloom', // Bloom (Elegant Themes) optin — 963 feeds.
+  '.wpforms-container', // WPForms — 804 feeds.
+  '[class*="tve-leads"]', // Thrive Leads optin — 232 feeds.
 
   // Ad slots.
   '.adsbygoogle', // Google AdSense ad slot — 1,515 feeds (0.056%).
-  'div[id^="div-gpt-ad"]', // Google Ad Manager (GPT) ad slot — 1,748 feeds (2026-07 full-corpus scan).
+  'div[id^="div-gpt-ad"]', // Google Ad Manager (GPT) ad slot — 1,748 feeds.
   '.adthrive-ad', // AdThrive (Raptive) ad slot — 72 feeds (0.003%).
 
   // Share and call-to-action button clusters.
@@ -458,9 +458,9 @@ export const defaultNonContentSelectors = [
   '.sharedaddy', // Jetpack Sharedaddy share buttons — 428 feeds (0.016%).
   '.feedflare', // FeedBurner share footer ("Share on X / Email this") — 220 feeds (0.008%).
   '.addtoany_share_save_container', // AddToAny share buttons (WordPress) — 97 feeds (0.004%).
-  '.a2a_kit', // AddToAny share icons (higher-prevalence marker than the wrapper) — 6,714 feeds (2026-07 full-corpus scan).
-  '[class*="addthis_"]', // AddThis share toolbox — 2,312 feeds (2026-07 full-corpus scan).
-  '.shareaholic-canvas', // Shareaholic share/related widget — 669 feeds (2026-07 full-corpus scan).
+  '.a2a_kit', // AddToAny share icons (higher-prevalence marker than the wrapper) — 6,714 feeds.
+  '[class*="addthis_"]', // AddThis share toolbox — 2,312 feeds.
+  '.shareaholic-canvas', // Shareaholic share/related widget — 669 feeds.
 
   // Related-posts widgets.
   '.yarpp-related', // YARPP related-posts widget (WordPress) — 672 feeds (0.025%).
@@ -476,11 +476,11 @@ export const defaultNonContentSelectors = [
   'a[class*="continue-reading"]', // "Continue reading" excerpt-truncation links.
 
   // Comment-system embeds (JS mounts that render nothing without their loader script).
-  '.fb-comments', // Facebook Comments — 1,050 feeds (2026-07 full-corpus scan).
+  '.fb-comments', // Facebook Comments — 1,050 feeds.
 
   // Print / PDF buttons.
-  '.printfriendly', // PrintFriendly print/PDF button — ≤642 feeds (2026-07 full-corpus scan; bare-token upper bound, ~half are class-scoped).
-  '.pf-button', // PrintFriendly button — 93 feeds (2026-07 full-corpus scan).
+  '.printfriendly', // PrintFriendly print/PDF button — ≤642 feeds (upper bound; ~half are class-scoped).
+  '.pf-button', // PrintFriendly button — 93 feeds.
 
   // Platform UI chrome and non-rendered scaffolding.
   '.image-link-expand', // Substack restack/zoom buttons next to images — 16,419 feeds (0.6%).
