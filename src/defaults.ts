@@ -329,7 +329,11 @@ export const defaultLazyIframeAttributes = [
   'data-orig', // Lazy-video facades (iframe id="_ytid_*") parking the embed URL with empty src — 337 feeds.
   'data-original-src', // Generic lazy loaders.
   'data-opt-src', // Image/embed optimizers.
-  'data-privacy-src', // Privacy/lazy-video plugins (data-privacy-type="youtube") — 19 feeds.
+  // Avada's privacy-embed facade (data-privacy-type is a taxonomy — YouTube, Vimeo, …), NOT a
+  // cookie banner: it defers a real video the author embedded. Recovering it yields a privacy-safe
+  // click-to-load placeholder; stripping would just delete the video. The visible Avada notice
+  // (.fusion-privacy-placeholder) is stripped separately in defaultNonContentSelectors.
+  'data-privacy-src', // Avada privacy-embed facade — 19 feeds.
   // Cookie-CONSENT gates (Cookiebot, Complianz, Borlabs, …) are NOT recovered — they're
   // stripped as non-content (see the GDPR block in defaultNonContentSelectors). Only generic
   // performance lazy-loaders and the privacy-video facade above live here.
@@ -514,6 +518,9 @@ export const defaultNonContentSelectors = [
   '[data-cookieblock-src]', // Cookiebot — 34 feeds.
   '[data-src-cmplz]', // Complianz — 13 feeds.
   '[data-wpconsent-src]', // WPConsent — 0 feeds.
+  // Avada's leftover "For privacy reasons … please accept" notice. The gated iframe itself is
+  // recovered via data-privacy-src (a lazy attribute); only this consent nag is dead chrome.
+  '.fusion-privacy-placeholder', // Avada privacy-embed notice — 19 feeds.
   // Further CMPs. iframe-scoped: several of these attributes/classes also tag gated <script>
   // tags or use broader markers, so a bare attribute selector would over-match.
   'iframe[data-suppressedsrc]', // iubenda — 0 feeds.
