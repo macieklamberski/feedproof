@@ -314,7 +314,7 @@ export const defaultLazyIframeAttributes = [
   'data-orig', // Lazy-video facades (iframe id="_ytid_*") parking the embed URL with empty src — 337 feeds.
   'data-original-src', // Generic lazy loaders.
   'data-opt-src', // Image/embed optimizers.
-  'data-privacy-src', // Privacy/lazy-video plugins (data-privacy-type="youtube") — 69 feeds.
+  'data-privacy-src', // Privacy/lazy-video plugins (data-privacy-type="youtube") — 19 feeds (2026-07 full-corpus scan).
   // Cookie-CONSENT gates (Cookiebot, Complianz, Borlabs, …) are NOT recovered — they're
   // stripped as non-content (see the GDPR block in defaultNonContentSelectors). Only generic
   // performance lazy-loaders and the privacy-video facade above live here.
@@ -468,22 +468,24 @@ export const defaultNonContentSelectors = [
 
   // GDPR/consent- and privacy-gated embeds — the plugin parks the real iframe URL and shows a
   // cookie notice; a reader has no consent flow, so strip the gated element rather than
-  // resurrect it. Matched by the attribute each plugin parks the real URL in.
-  '[src-consent]', // Borlabs Cookie.
-  '[consent-original-src]', // Consent wrappers.
-  '[consent-original-src-_]', // Real Cookie Banner (rendered) — 167 feeds.
-  '[consent-click-original-src-_]', // Real Cookie Banner (click-to-load) — 142 feeds.
-  '[data-ep-src]', // Embed Privacy — 54 feeds.
-  '[data-cookieblock-src]', // Cookiebot — 26 feeds.
-  '[data-src-cmplz]', // Complianz — 20 feeds.
-  '[data-wpconsent-src]', // WPConsent.
+  // resurrect it. Matched by the attribute each plugin parks the real URL in. Feed counts are
+  // from the 2026-07 full-corpus scan (12.7M feeds); kept even at low prevalence — a genuine
+  // consent gate is cheap config and these CMPs are widely installed.
+  '[src-consent]', // Borlabs Cookie — 2 feeds.
+  '[consent-original-src]', // Consent wrappers (generic form).
+  '[consent-original-src-_]', // Real Cookie Banner (rendered) — 186 feeds (both consent-original-src forms).
+  '[consent-click-original-src-_]', // Real Cookie Banner (click-to-load) — 82 feeds.
+  '[data-ep-src]', // Embed Privacy — 14 feeds.
+  '[data-cookieblock-src]', // Cookiebot — 34 feeds.
+  '[data-src-cmplz]', // Complianz — 13 feeds.
+  '[data-wpconsent-src]', // WPConsent — 0 feeds.
   // Further CMPs. iframe-scoped: several of these attributes/classes also tag gated <script>
   // tags or use broader markers, so a bare attribute selector would over-match.
-  'iframe[data-suppressedsrc]', // iubenda.
-  'iframe[data-uc-src]', // Usercentrics.
-  'iframe[data-consent-src]', // Cookie Information.
-  'iframe[data-gdpr-iframesrc]', // Moove GDPR Cookie Compliance (300k+ installs).
-  'iframe[data-cookiefirst-category]', // CookieFirst (real URL in data-src).
-  'iframe[data-cookiescript]', // Cookie Script (real URL in data-src).
-  'iframe[class*="optanon-category"]', // OneTrust / Optanon (real URL in data-src).
+  'iframe[data-suppressedsrc]', // iubenda — 0 feeds.
+  'iframe[data-uc-src]', // Usercentrics — 0 feeds.
+  'iframe[data-consent-src]', // Cookie Information — 4 feeds.
+  'iframe[data-gdpr-iframesrc]', // Moove GDPR Cookie Compliance (300k+ installs) — 1 feed.
+  'iframe[data-cookiefirst-category]', // CookieFirst (real URL in data-src) — 0 feeds.
+  'iframe[data-cookiescript]', // Cookie Script (real URL in data-src) — 4 feeds.
+  'iframe[class*="optanon-category"]', // OneTrust / Optanon (real URL in data-src) — 71 feeds.
 ]
