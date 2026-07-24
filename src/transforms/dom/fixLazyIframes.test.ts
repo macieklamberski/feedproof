@@ -23,11 +23,19 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
     expect(result).toContain('src="https://www.youtube.com/embed/x"')
   })
 
-  it('should promote a consent-gated src into an empty src', async () => {
-    const value = '<iframe src="" data-cookieblock-src="https://example.com/embed/x"></iframe>'
+  it('should promote the privacy-video facade data-privacy-src into an empty src', async () => {
+    const value = '<iframe src="" data-privacy-src="https://example.com/embed/x"></iframe>'
     const result = await transform(value)
 
-    expect(result).toContain('src="https://example.com/embed/x"')
+    expect(result).toEqualHtml(
+      '<iframe src="https://example.com/embed/x" data-privacy-src="https://example.com/embed/x"></iframe>',
+    )
+  })
+
+  it('should not promote a consent-gated attribute', async () => {
+    const value = '<iframe src="" data-cookieblock-src="https://example.com/embed/x"></iframe>'
+
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not overwrite a usable src', async () => {
