@@ -329,14 +329,10 @@ export const defaultLazyIframeAttributes = [
   'data-orig', // Lazy-video facades (iframe id="_ytid_*") parking the embed URL with empty src — 337 feeds.
   'data-original-src', // Generic lazy loaders.
   'data-opt-src', // Image/embed optimizers.
-  'src-consent', // GDPR/cookie-consent wrappers (e.g. Borlabs) holding the real src.
-  'consent-original-src', // Consent wrappers.
-  'consent-original-src-_', // Real Cookie Banner rendered form (trailing `-_`) — 167 feeds.
-  'consent-click-original-src-_', // Real Cookie Banner click-to-load variant — 142 feeds.
-  'data-privacy-src', // Privacy/lazy-video plugins (data-privacy-type="youtube") — 69 feeds.
-  'data-ep-src', // Embed Privacy — 54 feeds.
-  'data-cookieblock-src', // Cookiebot consent gate — 26 feeds.
-  'data-src-cmplz', // Complianz consent gate — 20 feeds.
+  'data-privacy-src', // Privacy/lazy-video plugins (data-privacy-type="youtube") — 19 feeds.
+  // Cookie-CONSENT gates (Cookiebot, Complianz, Borlabs, …) are NOT recovered — they're
+  // stripped as non-content (see the GDPR block in defaultNonContentSelectors). Only generic
+  // performance lazy-loaders and the privacy-video facade above live here.
 ]
 
 export const defaultDeferredIframeSources: Array<DeferredIframeSource> = [
@@ -437,7 +433,7 @@ export const defaultAvatarImageHosts = [
 // CSS class tokens that mark a <pre> as author-chosen distinct content
 // (poetry stanzas, scriptural verses, leader-dotted tables of contents).
 // `mergeConsecutiveOneLinerPres` skips any run where at least one <pre>
-// carries one of these tokens. Curated from a corpus scan: of all
+// carries one of these tokens. Of all
 // matching runs, `wp-block-verse` and `wp-block-preformatted` dominate
 // the false-positive cases (split poems, ToCs), while `wp-block-code`
 // stays out — fragmented code blocks are the merge's intended target.
@@ -450,7 +446,7 @@ export const defaultNonContentSelectors = [
   // Subscribe and newsletter signup forms.
   '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget — 11,366 feeds (0.42%).
   '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA — 11,275 feeds (0.42%).
-  '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 527 feeds (2026-07 corpus). Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
+  '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 527 feeds. Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
   '.wp-block-jetpack-subscriptions', // Jetpack Gutenberg subscribe block — 353 feeds (0.013%).
   '.kg-signup-card', // Ghost (Koenig) signup card — 323 feeds (0.012%).
   '.mc4wp-form', // Mailchimp for WordPress plugin form — 311 feeds (0.012%).
@@ -491,4 +487,26 @@ export const defaultNonContentSelectors = [
   'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets — 3,201 feeds (0.1%).
   '.mcnPreviewText', // Mailchimp hidden email preheader text — 137 feeds (0.005%).
   'img[src*="steamcommunity.com"][src*="placeholder"]', // Steam news static poster gif shown before its JS swaps in the YouTube iframe.
+
+  // GDPR/consent- and privacy-gated embeds — the plugin parks the real iframe URL and shows a
+  // cookie notice; a reader has no consent flow, so strip the gated element rather than
+  // resurrect it. Matched by the attribute each plugin parks the real URL in. Kept even at low
+  // prevalence — a genuine consent gate is cheap config and these CMPs are widely installed.
+  '[src-consent]', // Borlabs Cookie — 2 feeds.
+  '[consent-original-src]', // Consent wrappers (generic form).
+  '[consent-original-src-_]', // Real Cookie Banner (rendered) — 186 feeds (both consent-original-src forms).
+  '[consent-click-original-src-_]', // Real Cookie Banner (click-to-load) — 82 feeds.
+  '[data-ep-src]', // Embed Privacy — 14 feeds.
+  '[data-cookieblock-src]', // Cookiebot — 34 feeds.
+  '[data-src-cmplz]', // Complianz — 13 feeds.
+  '[data-wpconsent-src]', // WPConsent — 0 feeds.
+  // Further CMPs. iframe-scoped: several of these attributes/classes also tag gated <script>
+  // tags or use broader markers, so a bare attribute selector would over-match.
+  'iframe[data-suppressedsrc]', // iubenda — 0 feeds.
+  'iframe[data-uc-src]', // Usercentrics — 0 feeds.
+  'iframe[data-consent-src]', // Cookie Information — 4 feeds.
+  'iframe[data-gdpr-iframesrc]', // Moove GDPR Cookie Compliance (300k+ installs) — 1 feed.
+  'iframe[data-cookiefirst-category]', // CookieFirst (real URL in data-src) — 0 feeds.
+  'iframe[data-cookiescript]', // Cookie Script (real URL in data-src) — 4 feeds.
+  'iframe[class*="optanon-category"]', // OneTrust / Optanon (real URL in data-src) — 71 feeds.
 ]
