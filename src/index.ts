@@ -151,6 +151,7 @@ export { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHea
 export { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
 export { rebuildDeferredIframes } from './transforms/dom/rebuildDeferredIframes.js'
 export { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
+export { rebuildEmbedlyEmbeds } from './transforms/dom/rebuildEmbedlyEmbeds.js'
 export { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
 export { rebuildLazyLoadForVideos } from './transforms/dom/rebuildLazyLoadForVideos.js'
 export { rebuildLazyYtEmbeds } from './transforms/dom/rebuildLazyYtEmbeds.js'
