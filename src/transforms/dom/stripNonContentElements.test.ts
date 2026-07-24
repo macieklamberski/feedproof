@@ -84,6 +84,8 @@ const specimens: Record<string, string> = {
     '<iframe src="about:blank" data-src-cmplz="https://www.youtube.com/embed/x"></iframe>',
   '[data-wpconsent-src]':
     '<iframe src="about:blank" data-wpconsent-src="https://www.youtube.com/embed/x"></iframe>',
+  '.fusion-privacy-placeholder':
+    '<div class="fusion-privacy-placeholder" data-privacy-type="youtube"><div class="fusion-privacy-label">For privacy reasons YouTube needs your permission to be loaded.</div></div>',
   'iframe[data-suppressedsrc]':
     '<iframe src="about:blank" data-suppressedsrc="https://www.youtube.com/embed/x"></iframe>',
   'iframe[data-uc-src]':
