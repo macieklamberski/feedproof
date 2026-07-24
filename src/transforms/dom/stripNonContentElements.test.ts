@@ -1,26 +1,106 @@
 import { describe, expect, it } from 'bun:test'
+import { defaultNonContentSelectors } from '../../defaults.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripNonContentElements } from './stripNonContentElements.js'
 
-// Each pair is [plugin label, the attribute it parks the real iframe URL in when consent-gating].
-const consentGateAttributes: Array<[string, string]> = [
-  ['Borlabs Cookie', 'src-consent'],
-  ['a generic consent wrapper', 'consent-original-src'],
-  ['Real Cookie Banner (rendered)', 'consent-original-src-_'],
-  ['Real Cookie Banner (click-to-load)', 'consent-click-original-src-_'],
-  ['Embed Privacy', 'data-ep-src'],
-  ['Cookiebot', 'data-cookieblock-src'],
-  ['Complianz', 'data-src-cmplz'],
-  ['WPConsent', 'data-wpconsent-src'],
-  ['iubenda', 'data-suppressedsrc'],
-  ['Usercentrics', 'data-uc-src'],
-  ['Cookie Information', 'data-consent-src'],
-  ['Moove GDPR Cookie Compliance', 'data-gdpr-iframesrc'],
-  ['CookieFirst', 'data-cookiefirst-category'],
-  ['Cookie Script', 'data-cookiescript'],
-]
+// One real-world specimen per default selector, keyed by the selector itself. The completeness
+// test below keeps this table in lockstep with defaultNonContentSelectors, so a selector cannot
+// be added (or removed) without its specimen.
+const specimens: Record<string, string> = {
+  '[data-component-name="SubscribeWidget"]':
+    '<div data-component-name="SubscribeWidget"><input type="email"><button>Subscribe</button></div>',
+  '.subscription-widget-wrap-editor':
+    '<div class="subscription-widget-wrap-editor"><div class="subscription-widget"><h2>Keep reading with a 7-day free trial</h2></div></div>',
+  '.embedded-publication-wrap':
+    '<div class="embedded-publication-wrap"><a href="https://other.substack.com">Other newsletter</a></div>',
+  '.wp-block-jetpack-subscriptions':
+    '<div class="wp-block-jetpack-subscriptions"><form><input type="email"></form></div>',
+  '.kg-signup-card':
+    '<div class="kg-card kg-signup-card" data-lexical-signup-form><h2>Subscribe</h2></div>',
+  '.mc4wp-form': '<form class="mc4wp-form" method="post"><input type="email" name="EMAIL"></form>',
+  '.formkit-form': '<form class="formkit-form" data-sv-form="123456"><input type="email"></form>',
+  'iframe[src*="embeds.beehiiv.com"]':
+    '<iframe src="https://embeds.beehiiv.com/72773897-9d0c" height="320"></iframe>',
+  '.jetpack_subscription_widget':
+    '<div class="jetpack_subscription_widget"><form><input type="email"></form></div>',
+  'form[action*="buttondown.email"]':
+    '<form action="https://buttondown.email/api/emails/embed-subscribe/foo" method="post"><input name="email"></form>',
+  '.sqs-block-newsletter':
+    '<div class="sqs-block newsletter-block sqs-block-newsletter"><form><input type="email"></form></div>',
+  '.et_bloom': '<div class="et_bloom"><input type="email"></div>',
+  '.wpforms-container': '<div class="wpforms-container"><form></form></div>',
+  '[class*="tve-leads"]': '<div class="tve-leads-conversion-object"></div>',
+  '.adsbygoogle':
+    '<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-x" data-ad-slot="123"></ins>',
+  'div[id^="div-gpt-ad"]': '<div id="div-gpt-ad-1234567890"></div>',
+  '.adthrive-ad': '<div class="adthrive-ad adthrive-content"></div>',
+  '.captioned-button-wrap':
+    '<div class="captioned-button-wrap"><p class="button-wrapper"><a class="button primary" href="https://example.com/p/post?action=share"><span>Share</span></a></p></div>',
+  '[class*="social-share"]': '<div class="social-share"><a href="/x">X</a></div>',
+  '[class*="share-buttons"]': '<div class="share-buttons"><a href="/fb">Facebook</a></div>',
+  '.sharethis-inline-share-buttons': '<div class="sharethis-inline-share-buttons"></div>',
+  '.sharedaddy': '<div class="sharedaddy sd-sharing-enabled"></div>',
+  '.feedflare': '<div class="feedflare"><a href="/ff">Share</a></div>',
+  '.addtoany_share_save_container':
+    '<div class="addtoany_share_save_container"><a class="a2a_button_facebook" href="#">Share</a></div>',
+  '.a2a_kit': '<span class="a2a_kit a2a_kit_size_32 addtoany_list"></span>',
+  '[class*="addthis_"]': '<div class="addthis_toolbox addthis_default_style"></div>',
+  '.shareaholic-canvas': '<div class="shareaholic-canvas" data-app="share_buttons"></div>',
+  '.yarpp-related':
+    '<div class="yarpp yarpp-related yarpp-template-list"><h3>Related</h3><ol><li><a href="/a">A</a></li></ol></div>',
+  '.jp-relatedposts':
+    '<div id="jp-relatedposts" class="jp-relatedposts"><h3 class="jp-relatedposts-headline">Related</h3></div>',
+  '.crp_related': '<div class="crp_related"><ul><li><a href="/a">A</a></li></ul></div>',
+  '.wp-block-post-author':
+    '<div class="wp-block-post-author"><div class="wp-block-post-author__content"><p>Jane</p></div></div>',
+  '.saboxplugin-wrap':
+    '<div class="saboxplugin-wrap"><div class="saboxplugin-tab"><p>About the author</p></div></div>',
+  'a[class*="read-more"]': '<a class="read-more-link" href="/post">Read more</a>',
+  'a[class*="continue-reading"]': '<a class="continue-reading" href="/post">Continue reading</a>',
+  '.fb-comments': '<div class="fb-comments" data-href="https://example.com/p"></div>',
+  '.printfriendly': '<a class="printfriendly" href="#">Print</a>',
+  '.pf-button': '<button class="pf-button">Print</button>',
+  '.image-link-expand': '<div class="image-link-expand"><button><svg></svg></button></div>',
+  'drupal-render-placeholder':
+    '<drupal-render-placeholder callback="comment.lazy_builders:renderLinks" arguments="0=node:1"></drupal-render-placeholder>',
+  '.mcnPreviewText': '<span class="mcnPreviewText" style="display:none">Preview text</span>',
+  'img[src*="steamcommunity.com"][src*="placeholder"]':
+    '<img src="https://cdn.steamcommunity.com/news/placeholder_video.gif">',
+  '[src-consent]':
+    '<iframe src="about:blank" src-consent="https://www.youtube.com/embed/x"></iframe>',
+  '[consent-original-src]':
+    '<iframe src="about:blank" consent-original-src="https://www.youtube.com/embed/x"></iframe>',
+  '[consent-original-src-_]':
+    '<iframe src="about:blank" consent-original-src-_="https://www.youtube.com/embed/x"></iframe>',
+  '[consent-click-original-src-_]':
+    '<iframe src="about:blank" consent-click-original-src-_="https://www.youtube.com/embed/x"></iframe>',
+  '[data-ep-src]':
+    '<iframe src="about:blank" data-ep-src="https://www.youtube.com/embed/x"></iframe>',
+  '[data-cookieblock-src]':
+    '<iframe src="about:blank" data-cookieblock-src="https://www.youtube.com/embed/x"></iframe>',
+  '[data-src-cmplz]':
+    '<iframe src="about:blank" data-src-cmplz="https://www.youtube.com/embed/x"></iframe>',
+  '[data-wpconsent-src]':
+    '<iframe src="about:blank" data-wpconsent-src="https://www.youtube.com/embed/x"></iframe>',
+  'iframe[data-suppressedsrc]':
+    '<iframe src="about:blank" data-suppressedsrc="https://www.youtube.com/embed/x"></iframe>',
+  'iframe[data-uc-src]':
+    '<iframe src="about:blank" data-uc-src="https://www.youtube.com/embed/x"></iframe>',
+  'iframe[data-consent-src]':
+    '<iframe src="about:blank" data-consent-src="https://www.youtube.com/embed/x"></iframe>',
+  'iframe[data-gdpr-iframesrc]':
+    '<iframe src="about:blank" data-gdpr-iframesrc="https://www.youtube.com/embed/x"></iframe>',
+  'iframe[data-cookiefirst-category]':
+    '<iframe src="about:blank" data-cookiefirst-category="advertising" data-src="https://www.youtube.com/embed/x"></iframe>',
+  'iframe[data-cookiescript]':
+    '<iframe src="about:blank" data-cookiescript="accepted" data-src="https://www.youtube.com/embed/x"></iframe>',
+  'iframe[class*="optanon-category"]':
+    '<iframe src="about:blank" class="optanon-category-C0004" data-src="https://www.youtube.com/embed/x"></iframe>',
+}
+
+const specimenEntries = Object.entries(specimens)
 
 describeForEachParser('stripNonContentElements', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
@@ -28,30 +108,17 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
   }
 
   describe('with default selectors', () => {
-    // Each pair is [label, the widget markup].
-    const nonContentWidgets: Array<[string, string]> = [
-      ['AddToAny', '<span class="a2a_kit a2a_kit_size_32 addtoany_list"></span>'],
-      ['AddThis', '<div class="addthis_toolbox addthis_default_style"></div>'],
-      ['Shareaholic', '<div class="shareaholic-canvas" data-app="share_buttons"></div>'],
-      ['Google Ad Manager', '<div id="div-gpt-ad-1234567890"></div>'],
-      ['Bloom optin', '<div class="et_bloom"><input type="email"></div>'],
-      ['WPForms', '<div class="wpforms-container"><form></form></div>'],
-      ['Thrive Leads', '<div class="tve-leads-conversion-object"></div>'],
-      ['Facebook Comments', '<div class="fb-comments" data-href="https://example.com/p"></div>'],
-      ['PrintFriendly link', '<a class="printfriendly" href="#">Print</a>'],
-      ['PrintFriendly button', '<button class="pf-button">Print</button>'],
-    ]
+    it('should have a specimen for every default selector', () => {
+      const specimenSelectors = Object.keys(specimens).sort()
+      const defaultSelectors = [...defaultNonContentSelectors].sort()
 
-    it.each(nonContentWidgets)('should strip a %s widget', async (_label, widget) => {
-      expect(await transform(`<p>Before</p>${widget}<p>After</p>`)).toBe(
-        '<p>Before</p><p>After</p>',
-      )
+      expect(specimenSelectors).toEqual(defaultSelectors)
     })
 
-    it('should remove a read-more truncation link', async () => {
-      const value = '<p>Excerpt</p><a class="read-more-link" href="/post">Read more</a>'
-
-      expect(await transform(value)).toBe('<p>Excerpt</p>')
+    it.each(specimenEntries)('should strip %s', async (_selector, specimen) => {
+      expect(await transform(`<p>Before</p>${specimen}<p>After</p>`)).toBe(
+        '<p>Before</p><p>After</p>',
+      )
     })
 
     it('should keep a read-more wrapper that holds real content (anchor-scoped)', async () => {
@@ -60,65 +127,12 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
       expect(await transform(value)).toBe(value)
     })
 
-    it('should remove a social-share button cluster', async () => {
-      const value = '<p>Body</p><div class="social-share"><a href="/x">X</a></div>'
-
-      expect(await transform(value)).toBe('<p>Body</p>')
-    })
-
-    it('should remove a FeedBurner feedflare footer', async () => {
-      const value = '<p>Body</p><div class="feedflare"><a href="/ff">Share</a></div>'
-
-      expect(await transform(value)).toBe('<p>Body</p>')
-    })
-
-    it('should remove Substack image-link-expand sibling of picture', async () => {
-      const value = html`
-        <picture><img src="x.jpg"></picture>
-        <div class="image-link-expand"><button><svg></svg></button></div>
-      `
-      const expected = '<picture><img src="x.jpg"></picture>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should remove image-link-expand with nested restack and zoom buttons', async () => {
-      const value = html`
-        <div class="image-link-expand">
-          <div class="pencraft pc-display-flex pc-gap-8 pc-reset">
-            <button class="restack-image"><svg></svg></button>
-            <button class="zoom-image"><svg></svg></button>
-          </div>
-        </div>
-      `
-      const expected = ''
-
-      expect(await transform(value)).toBe(expected)
-    })
-
     it('should remove image-link-expand carrying additional classes', async () => {
       const value = html`
         <picture><img src="x.jpg"></picture>
         <div class="image-link-expand extra-class"><button></button></div>
       `
       const expected = '<picture><img src="x.jpg"></picture>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should remove Substack SubscribeWidget with nested form controls', async () => {
-      const value = html`
-        <p>Hello</p>
-        <div data-component-name="SubscribeWidget">
-          <input type="email">
-          <button>Subscribe</button>
-        </div>
-        <p>World</p>
-      `
-      const expected = html`
-        <p>Hello</p>
-        <p>World</p>
-      `
 
       expect(await transform(value)).toBe(expected)
     })
@@ -139,88 +153,6 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
       expect(await transform(value)).toBe(value)
     })
 
-    it('should remove Substack subscription-widget-wrap-editor paywall block', async () => {
-      const value = html`
-        <p>Preview</p>
-        <div class="subscription-widget-wrap-editor">
-          <div class="subscription-widget"><h2>Keep reading with a 7-day free trial</h2></div>
-        </div>
-      `
-      const expected = '<p>Preview</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should remove Substack captioned-button-wrap share block', async () => {
-      const value = html`
-        <p>Body</p>
-        <div class="captioned-button-wrap">
-          <div class="preamble"><p class="cta-caption">Thanks for reading! This post is public so feel free to share it.</p></div>
-          <p class="button-wrapper"><a class="button primary" href="https://example.com/p/post?action=share"><span>Share</span></a></p>
-        </div>
-      `
-      const expected = '<p>Body</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should remove Ghost kg-signup-card', async () => {
-      const value = html`
-        <article>
-          <p>Body</p>
-          <div class="kg-card kg-signup-card" data-lexical-signup-form><h2>Subscribe</h2></div>
-        </article>
-      `
-      const expected = '<article><p>Body</p></article>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should remove Beehiiv embed iframe by src host', async () => {
-      const value = html`
-        <p>Before</p>
-        <iframe src="https://embeds.beehiiv.com/72773897-9d0c" width="100%" height="320"></iframe>
-        <p>After</p>
-      `
-      const expected = html`
-        <p>Before</p>
-        <p>After</p>
-      `
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it.each(
-      consentGateAttributes,
-    )('should strip a %s consent-gated iframe', async (_label, attribute) => {
-      const value = `<p>Before</p><iframe src="about:blank" ${attribute}="https://www.youtube.com/embed/x"></iframe><p>After</p>`
-
-      expect(await transform(value)).toBe('<p>Before</p><p>After</p>')
-    })
-
-    // OneTrust/Optanon marks the gated iframe with a class, not a src attribute.
-    it('should strip a OneTrust/Optanon consent-gated iframe (class marker)', async () => {
-      const value = `<p>Before</p><iframe src="about:blank" class="optanon-category-C0004" data-src="https://www.youtube.com/embed/x"></iframe><p>After</p>`
-
-      expect(await transform(value)).toBe('<p>Before</p><p>After</p>')
-    })
-
-    it('should remove Buttondown form by action host', async () => {
-      const value = html`
-        <p>Before</p>
-        <form action="https://buttondown.email/api/emails/embed-subscribe/foo" method="post">
-          <input name="email">
-        </form>
-        <p>After</p>
-      `
-      const expected = html`
-        <p>Before</p>
-        <p>After</p>
-      `
-
-      expect(await transform(value)).toBe(expected)
-    })
-
     it('should leave unrelated iframes and forms untouched', async () => {
       const value = html`
         <iframe src="https://example.com/embed"></iframe>
@@ -228,108 +160,6 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
       `
 
       expect(await transform(value)).toBe(value)
-    })
-
-    it('should remove Google AdSense ins slot', async () => {
-      const value = html`
-        <p>Before</p>
-        <ins
-          class="adsbygoogle"
-          style="display:block"
-          data-ad-client="ca-pub-x"
-          data-ad-slot="123"
-        >
-        </ins>
-        <p>After</p>
-      `
-      const expected = html`
-        <p>Before</p>
-        <p>After</p>
-      `
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should remove YARPP related-posts widget', async () => {
-      const value = html`
-        <p>Body</p>
-        <div class="yarpp yarpp-related yarpp-related-rss yarpp-template-list">
-          <h3>Related</h3>
-          <ol><li><a href="/a">A</a></li></ol>
-        </div>
-      `
-      const expected = '<p>Body</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should remove ShareThis and Sharedaddy share-button blocks', async () => {
-      const value = html`
-        <p>Body</p>
-        <div class="sharethis-inline-share-buttons"></div>
-        <div class="sharedaddy sd-sharing-enabled"></div>
-      `
-      const expected = '<p>Body</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should remove WordPress Gutenberg author bio block', async () => {
-      const value = html`
-        <p>Body</p>
-        <div class="wp-block-post-author">
-          <div class="wp-block-post-author__avatar"><img src="x"></div>
-          <div class="wp-block-post-author__content"><p>Jane</p></div>
-        </div>
-      `
-      const expected = '<p>Body</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should remove Mailchimp hidden preheader span', async () => {
-      const value = html`
-        <span class="mcnPreviewText" style="display:none">Preview text</span>
-        <p>Body</p>
-      `
-      const expected = '<p>Body</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should remove Drupal render placeholder for comment links', async () => {
-      const value = html`
-        <article>body<drupal-render-placeholder
-          callback="comment.lazy_builders:renderLinks"
-          arguments="0=node:1"
-        >
-        </drupal-render-placeholder></article>
-      `
-      const expected = '<article>body</article>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should remove Drupal render placeholder for comment form', async () => {
-      const value = html`
-        <drupal-render-placeholder
-          callback="comment.lazy_builders:renderForm"
-          arguments="0=node:42"
-        >
-        </drupal-render-placeholder>
-        <p>after</p>
-      `
-      const expected = '<p>after</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should remove Drupal render placeholder for flag links', async () => {
-      const value =
-        '<drupal-render-placeholder callback="flag.link_builder:build"></drupal-render-placeholder>'
-      const expected = ''
-
-      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove both Substack and Drupal markers in the same document', async () => {
