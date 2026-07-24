@@ -52,21 +52,29 @@ describeForEachParser('wordpressCiteResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined when the blockquote has no link', async () => {
-      const value = '<blockquote class="wp-embedded-content">Post title</blockquote>'
+      const value = html`
+        <blockquote class="wp-embedded-content">Post title</blockquote>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined when the link has no text', async () => {
       const value = html`
-        <blockquote class="wp-embedded-content"><a href="https://example.com/post/"></a></blockquote>
+        <blockquote class="wp-embedded-content">
+          <a href="https://example.com/post/"></a>
+        </blockquote>
       `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should not match a plain blockquote', async () => {
-      const value = '<blockquote><a href="https://example.com/post/">Quoted</a></blockquote>'
+      const value = html`
+        <blockquote>
+          <a href="https://example.com/post/">Quoted</a>
+        </blockquote>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
