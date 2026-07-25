@@ -10,7 +10,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     return applyDomTransforms(parseHtml(html), [unwrapEmojiImages(context)])
   }
 
-  describe('wp-smiley class', () => {
+  describe('WordPress (wp-smiley class + s.w.org host)', () => {
     it('should replace wp-smiley image with alt emoji', async () => {
       const value = html`
         <p>Hello
@@ -37,36 +37,13 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
-    it('should preserve multi-codepoint alt (ZWJ sequence)', async () => {
-      const value = '<p><img alt="👨‍👩‍👧" class="wp-smiley"></p>'
-      const expected = '<p>👨‍👩‍👧</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should preserve skin-tone modifier alt', async () => {
-      const value = '<p><img alt="👋🏽" class="wp-smiley"></p>'
-      const expected = '<p>👋🏽</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should preserve BMP-only emoji (length 1 in JS)', async () => {
-      const value = '<p><img class="wp-smiley" alt="✔"></p>'
-      const expected = '<p>✔</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
     it('should handle wp-smiley alongside additional classes', async () => {
       const value = '<p><img alt="😀" class="wp-smiley emoji extra"></p>'
       const expected = '<p>😀</p>'
 
       expect(await transform(value)).toBe(expected)
     })
-  })
 
-  describe('emoji class (newer WP variant + Discourse)', () => {
     it('should replace newer WP variant with class="emoji"', async () => {
       const value = html`
         <p>
@@ -84,29 +61,6 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
-    it('should leave Discourse shortcode-alt with class="emoji" untouched', async () => {
-      const value = '<p><img class="emoji" alt=":slight_smile:"></p>'
-
-      expect(await transform(value)).toBe(value)
-    })
-
-    it('should leave class="emoji" image with mixed-text alt untouched', async () => {
-      const value = '<p><img class="emoji" alt="hello 🐱"></p>'
-
-      expect(await transform(value)).toBe(value)
-    })
-  })
-
-  describe('configurable host list', () => {
-    // Iterates the real default list, so every entry is exercised and a new entry
-    // is covered automatically.
-    it.each(defaultEmojiImageHosts)('should replace an emoji image from %s', async (host) => {
-      const value = `<p>Hi <img src="https://${host}1f642.png" alt="🙂"></p>`
-      const expected = '<p>Hi 🙂</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
     it('should replace no-class WP variant matched by s.w.org URL', async () => {
       const value =
         '<p><img src="https://s.w.org/images/core/emoji/13.1.0/svg/1f680.svg" alt="🚀"></p>'
@@ -114,7 +68,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
       expect(await transform(value)).toBe(expected)
     })
+  })
 
+  describe('WordPress.com (wpcom-smileys Twemoji)', () => {
     it('should replace WordPress.com wpcom-smileys image', async () => {
       const value = html`
         <p>
@@ -128,7 +84,17 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
       expect(await transform(value)).toBe(expected)
     })
+  })
 
+  describe('Discourse (emoji class with shortcode alt)', () => {
+    it('should leave Discourse shortcode-alt with class="emoji" untouched', async () => {
+      const value = '<p><img class="emoji" alt=":slight_smile:"></p>'
+
+      expect(await transform(value)).toBe(value)
+    })
+  })
+
+  describe('Facebook (embedded posts)', () => {
     it('should replace Facebook emoji image', async () => {
       const value = html`
         <p>
@@ -145,14 +111,18 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
       expect(await transform(value)).toBe(expected)
     })
+  })
 
+  describe('Twitter / X (embedded tweets)', () => {
     it('should replace Twitter/X emoji image', async () => {
       const value = '<p><img src="https://abs.twimg.com/emoji/v2/72x72/1f600.png" alt="😀"></p>'
       const expected = '<p>😀</p>'
 
       expect(await transform(value)).toBe(expected)
     })
+  })
 
+  describe('GitHub (gemoji README scrapings)', () => {
     it('should replace GitHub gemoji image when alt is the emoji glyph', async () => {
       const value = html`
         <p>
@@ -163,6 +133,17 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
       const expected = '<p>🚀</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+  })
+
+  describe('configurable host list', () => {
+    // Iterates the real default list, so every entry is exercised and a new entry
+    // is covered automatically.
+    it.each(defaultEmojiImageHosts)('should replace an emoji image from %s', async (host) => {
+      const value = `<p>Hi <img src="https://${host}1f642.png" alt="🙂"></p>`
+      const expected = '<p>Hi 🙂</p>'
 
       expect(await transform(value)).toBe(expected)
     })
@@ -185,6 +166,33 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
   })
 
   describe('alt-shape guard', () => {
+    it('should preserve multi-codepoint alt (ZWJ sequence)', async () => {
+      const value = '<p><img alt="👨‍👩‍👧" class="wp-smiley"></p>'
+      const expected = '<p>👨‍👩‍👧</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should preserve skin-tone modifier alt', async () => {
+      const value = '<p><img alt="👋🏽" class="wp-smiley"></p>'
+      const expected = '<p>👋🏽</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should preserve BMP-only emoji (length 1 in JS)', async () => {
+      const value = '<p><img class="wp-smiley" alt="✔"></p>'
+      const expected = '<p>✔</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should leave image untouched when alt has mixed text', async () => {
+      const value = '<p><img class="emoji" alt="hello 🐱"></p>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
     it('should leave image untouched when alt is empty', async () => {
       const value = '<p><img src="emoji.png" alt="" class="wp-smiley"></p>'
 
