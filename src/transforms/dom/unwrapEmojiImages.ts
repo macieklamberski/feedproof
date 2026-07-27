@@ -28,6 +28,92 @@ const rendersNothing = (src: string): boolean => {
   return src.startsWith('data:') && src.length <= maxSpriteDataUrlLength
 }
 
+// Codepoint ranges an emoji filename may encode. A name outside them is hexadecimal by
+// coincidence rather than intent — `1920.png` is a width, not U+1920 — so the decode is
+// abandoned rather than producing a stray Limbu letter.
+const emojiCodePointRanges: Array<[number, number]> = [
+  [0x23, 0x23], // Number sign, a keycap base.
+  [0x2a, 0x2a], // Asterisk, a keycap base.
+  [0x30, 0x39], // Digits, the remaining keycap bases.
+  [0xa9, 0xa9], // Copyright.
+  [0xae, 0xae], // Registered.
+  [0x2000, 0x33ff], // Arrows, dingbats, enclosed characters, and the joiner.
+  [0xfe0f, 0xfe0f], // Variation selector-16.
+  [0xe0020, 0xe007f], // Tag characters, which spell out a subdivision flag.
+  [0x1f000, 0x1faff], // The emoji planes proper, skin-tone modifiers and flags included.
+]
+
+// Symbols in the older ranges default to text presentation in many fonts, so a lone one is
+// pinned to its emoji form: U+2764 renders as ❤️ rather than ❤.
+const textPresentationRanges: Array<[number, number]> = [
+  [0xa9, 0xa9],
+  [0xae, 0xae],
+  [0x2000, 0x33ff],
+]
+
+const keycapCodePoint = 0x20e3
+const variationSelectorCodePoint = 0xfe0f
+const maxCodePointSegments = 8
+const hexSegmentRegex = /^[0-9a-f]{2,6}$/i
+const queryOrHashRegex = /[?#]/
+
+const isInAnyRange = (codePoint: number, ranges: Array<[number, number]>): boolean => {
+  return ranges.some(([start, end]) => codePoint >= start && codePoint <= end)
+}
+
+const getFileStem = (src: string): string => {
+  const path = src.split(queryOrHashRegex)[0] ?? ''
+  const name = path.slice(path.lastIndexOf('/') + 1)
+  const extension = name.lastIndexOf('.')
+
+  return extension === -1 ? name : name.slice(0, extension)
+}
+
+// Emoji CDNs name each file after the codepoints it depicts (`1f642.png`,
+// `1f926-1f3fb-2640.png`), so an image whose alt is a shortcode still resolves exactly. Only
+// attempted for host-list matches: forum smilie sets ship files called `21.gif`, which would
+// decode to an exclamation mark.
+const glyphFromFilename = (src: string): string | undefined => {
+  const segments = getFileStem(src).split('-')
+
+  if (segments.length > maxCodePointSegments) {
+    return
+  }
+
+  const codePoints: Array<number> = []
+
+  for (const segment of segments) {
+    if (!hexSegmentRegex.test(segment)) {
+      return
+    }
+
+    const codePoint = Number.parseInt(segment, 16)
+
+    if (!isInAnyRange(codePoint, emojiCodePointRanges)) {
+      return
+    }
+
+    // The selector is omitted from these filenames, so `0031-20e3` alone would rebuild the
+    // text-style keycap `1⃣` instead of `1️⃣`.
+    if (codePoint === keycapCodePoint && codePoints.at(-1) !== variationSelectorCodePoint) {
+      codePoints.push(variationSelectorCodePoint)
+    }
+
+    codePoints.push(codePoint)
+  }
+
+  if (codePoints.length === 1 && isInAnyRange(codePoints[0], textPresentationRanges)) {
+    codePoints.push(variationSelectorCodePoint)
+  }
+
+  const glyph = String.fromCodePoint(...codePoints)
+
+  // The ranges above admit characters that are only emoji in company: `30.png` would decode
+  // to a bare `0` and `2000.png` to an invisible EN QUAD. Holding the result to the same bar
+  // an alt has to clear rejects both without a second list to keep in step.
+  return isEmojiShapedAlt(glyph) ? glyph : undefined
+}
+
 export const unwrapEmojiImages: DomTransform = (context) => {
   const hosts = context.emojiImageHosts
 
@@ -44,26 +130,29 @@ export const unwrapEmojiImages: DomTransform = (context) => {
       // all three would put prose where a glyph belongs.
       const shortname = attr(element, 'data-shortname')
       const isSprite = !!shortname && rendersNothing(source)
+      const isHosted = source !== '' && includesAnyOf(source, hosts)
 
       if (
         !isSprite &&
-        !anyWordMatchesAnyOf(element.getAttribute('class') ?? '', emojiClasses) &&
-        !(source !== '' && includesAnyOf(source, hosts))
+        !isHosted &&
+        !anyWordMatchesAnyOf(element.getAttribute('class') ?? '', emojiClasses)
       ) {
         return
       }
 
       // An alt that is already the glyph wins over every other route, so an image matched by
-      // two rules resolves the same way regardless of which matched first.
+      // two rules resolves the same way regardless of which matched first. It is also the only
+      // route that carries the variation selector, which these filenames omit.
       const glyph = alt && isEmojiShapedAlt(alt) ? alt : undefined
       const mapped = isSprite ? shortcodes[shortname.toLowerCase()] : undefined
+      const decoded = isHosted ? glyphFromFilename(source) : undefined
 
       // A sprite paints nothing, so an unmapped one still becomes the text the author typed —
       // any text beats an invisible image. Every other source serves a real image that
       // renders, so leaving it alone beats degrading a working custom smilie into literal
       // text. An empty resolution counts as no resolution: it would strand an empty <a> or
       // <figure> for stripEmptyTags to delete.
-      const text = glyph ?? mapped ?? (isSprite ? shortname : undefined)
+      const text = glyph ?? mapped ?? decoded ?? (isSprite ? shortname : undefined)
 
       if (text) {
         element.replaceWith(document.createTextNode(text))
