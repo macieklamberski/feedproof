@@ -7,11 +7,17 @@ import { attr, walkElements } from '../../utils/dom.js'
 // gap to fill — it falls back to the text the author typed.
 import vocabularies from './unwrapEmojiImages.json' with { type: 'json' }
 
-const nonAsciiRegex = /[-￿]/
-const asciiLetterRegex = /[a-zA-Z]/
+// Every character has to belong to an emoji sequence, and at least one has to be a picture
+// rather than a joiner or modifier. Testing for "non-ASCII and no ASCII letter" instead would
+// accept any non-Latin script, so a Chinese or Cyrillic alt — which is what a localized board
+// writes — would be injected into the text as though it were a glyph. The tag-character range
+// is what spells out a subdivision flag (🏴󠁧󠁢󠁳󠁣󠁴󠁿 is U+1F3F4 followed by seven of them).
+const emojiSequenceRegex =
+  /^(?:\p{Extended_Pictographic}|\p{Emoji_Modifier}|\p{Regional_Indicator}|[\u200d\ufe0f\u20e3#*0-9\s]|[\u{e0020}-\u{e007f}])+$/u
+const emojiPictureRegex = /\p{Extended_Pictographic}|\p{Regional_Indicator}|[0-9#*]\ufe0f?\u20e3/u
 
 const isEmojiShapedAlt = (alt: string): boolean => {
-  return nonAsciiRegex.test(alt) && !asciiLetterRegex.test(alt)
+  return emojiSequenceRegex.test(alt) && emojiPictureRegex.test(alt)
 }
 
 const shortcodes: Record<string, string> = vocabularies.shortcodes

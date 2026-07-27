@@ -439,6 +439,44 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
+    // These are real alts from localized boards. The old guard accepted anything non-ASCII
+    // without ASCII letters, so each was injected into the text in place of its image.
+    it.each([
+      '壞笑',
+      'улыбка',
+      '笑顔',
+      'χαμόγελο',
+    ])('should leave image untouched when alt is the localized word %s', async (alt) => {
+      const value = `<p><img src="emoji.png" alt="${alt}" class="wp-smiley"></p>`
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    // A subdivision flag is a base flag plus tag characters spelling the region code, so the
+    // guard has to accept a class of character that appears in nothing else.
+    it.each([
+      '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+      '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+      '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
+    ])('should replace image when alt is the subdivision flag %s', async (flag) => {
+      const value = `<p><img class="wp-smiley" src="/f.png" alt="${flag}"></p>`
+
+      expect(await transform(value)).toBe(`<p>${flag}</p>`)
+    })
+
+    it('should leave image untouched when alt is a lone digit without a keycap', async () => {
+      const value = '<p><img src="emoji.png" alt="7" class="wp-smiley"></p>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should replace image when alt is several emoji separated by a space', async () => {
+      const value = '<p><img src="emoji.png" alt="🙂 🎉" class="wp-smiley"></p>'
+      const expected = '<p>🙂 🎉</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
     it('should leave image untouched when alt has mixed text', async () => {
       const value = '<p><img class="emoji" alt="hello 🐱"></p>'
 
