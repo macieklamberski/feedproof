@@ -21,8 +21,44 @@ const isEmojiShapedAlt = (alt: string): boolean => {
 }
 
 const shortcodes: Record<string, string> = vocabularies.shortcodes
+const names: Record<string, string> = vocabularies.names
 
-const emojiClasses = ['wp-smiley', 'emoji']
+// Engines that inherited the phpBB-era shortcode vocabulary, recognized by class, by the
+// attribute they mark a smilie with, or by the path they serve one from. Kept apart from the
+// generic `emoji` class below: several platforms use that class with a shortcode namespace of
+// their own (Discourse's `:slight_smile:`), so the shared table must never be reached through
+// it. Path matching is deliberately loose — a banner sitting in a smilies folder is caught by
+// the matcher but resolves to nothing, so it keeps its image.
+const shortcodeClasses = ['wp-smiley', 'smilies', 'smilie', 'smiley', 'bbc_emoticon', 'e-emoticon']
+const shortcodeAttribute = 'data-emoticon'
+
+// XenForo 1.x numbers its classes (`mceSmilieSprite mceSmilie7`), so these need a prefix test
+// rather than a whole-token one. Its sprites sit on a transparent `clear.png` instead of a
+// data URI, which is why they slip past the spacer check and render as blank boxes today.
+const shortcodeClassPrefix = 'mcesmilie'
+// Every engine puts its set in a directory named for smilies, but the parent is the theme name
+// and varies per board (`/styles/xenforo/smilies/`, `/dc2themes/mrvb6_sobre/smilies/`), so the
+// directory alone is the stable part. Three spellings are in use: `smilies` (phpBB, XenForo,
+// FluxBB), `smileys` (Drupal and several blog engines), and `emoticons` (Serendipity under
+// `/img/`, IPS under `/uploads/`).
+const shortcodePathSegments = [
+  '/smilies/', // phpBB, XenForo, MyBB, FluxBB, vBulletin, WoltLab.
+  '/smileys/', // Drupal, DokuWiki, SMF.
+  '/emoticons/', // Serendipity, IPS, TinyMCE.
+  '/smiley/', // CKEditor and FCKeditor, ProBoards.
+  '/style_emoticons/', // Invision Power Board 2 and 3, which the plural form misses.
+  '/emotes/', // e107.
+  '/resources/emoji/', // Vanilla, whose only class is the generic `emoji`.
+  'forum-smileys/', // Simple:Press, which has no leading slash before the directory.
+]
+
+// Matched for a glyph alt only. Never consulted for a shortcode.
+const genericEmojiClasses = ['emoji']
+
+// `default_` marks a stock file, `face-` the Tango set, `smiley-` TinyMCE's, `sf-`
+// Simple:Press's, and `@2x` a resolution variant; none is part of the name.
+const namePrefixRegex = /^(?:default_|face-|smiley-|sf-)/
+const nameVariantRegex = /@[0-9]+x$/
 
 // An image whose `src` is a short `data:` URI paints nothing in a reader: it is the 1x1
 // transparent GIF a CSS sprite sheet sits behind, and a reader loads no site CSS. XenForo
@@ -120,6 +156,30 @@ const glyphFromFilename = (src: string): string | undefined => {
   return isEmojiShapedAlt(glyph) ? glyph : undefined
 }
 
+// The shortcode the author typed, then the filename the engine picked for it. The filename is
+// the second key rather than the first because it is the one that survives an empty alt.
+const glyphFromVocabularies = (token: string | undefined, src: string): string | undefined => {
+  const byShortcode = token ? shortcodes[token.toLowerCase()] : undefined
+
+  if (byShortcode) {
+    return byShortcode
+  }
+
+  // A `data:` URI names nothing — base64 may contain `/`, so a stem parsed out of it is a
+  // slice of the payload that can collide with a real name and answer for a smilie whose own
+  // shortcode was never in the table.
+  if (src.startsWith('data:')) {
+    return
+  }
+
+  const stem = getFileStem(src)
+    .toLowerCase()
+    .replace(namePrefixRegex, '')
+    .replace(nameVariantRegex, '')
+
+  return names[stem]
+}
+
 export const unwrapEmojiImages: DomTransform = (context) => {
   const hosts = context.emojiImageHosts
 
@@ -137,12 +197,15 @@ export const unwrapEmojiImages: DomTransform = (context) => {
       const shortname = attr(element, 'data-shortname')
       const isSprite = !!shortname && rendersNothing(source)
       const isHosted = source !== '' && includesAnyOf(source, hosts)
+      const classes = element.getAttribute('class') ?? ''
+      const speaksShortcodes =
+        isSprite ||
+        element.hasAttribute(shortcodeAttribute) ||
+        anyWordMatchesAnyOf(classes, shortcodeClasses) ||
+        classes.toLowerCase().includes(shortcodeClassPrefix) ||
+        (source !== '' && includesAnyOf(source, shortcodePathSegments))
 
-      if (
-        !isSprite &&
-        !isHosted &&
-        !anyWordMatchesAnyOf(element.getAttribute('class') ?? '', emojiClasses)
-      ) {
+      if (!speaksShortcodes && !isHosted && !anyWordMatchesAnyOf(classes, genericEmojiClasses)) {
         return
       }
 
@@ -150,7 +213,7 @@ export const unwrapEmojiImages: DomTransform = (context) => {
       // two rules resolves the same way regardless of which matched first. It is also the only
       // route that carries the variation selector, which these filenames omit.
       const glyph = alt && isEmojiShapedAlt(alt) ? alt : undefined
-      const mapped = isSprite ? shortcodes[shortname.toLowerCase()] : undefined
+      const mapped = speaksShortcodes ? glyphFromVocabularies(shortname ?? alt, source) : undefined
       const decoded = isHosted ? glyphFromFilename(source) : undefined
 
       // A sprite paints nothing, so an unmapped one still becomes the text the author typed —
