@@ -426,12 +426,19 @@ export const defaultTrackingHosts = [
 
 export const defaultTrackingPathSegments = ['pixel', 'beacon', 'count', 'impression']
 
+// Counts are distinct feeds from a full walk of all 12,724,862 corpus feeds (2026-07-28,
+// plans/analysis/scans/emoji-full/report.md). The earlier figures here were measured on a
+// ~2.7M-feed corpus and are not comparable, so every entry was re-measured together.
 export const defaultEmojiImageHosts = [
-  's.w.org/images/core/emoji/', // WordPress core wp-emoji-release output — 56,859 feeds (2.10%).
-  's0.wp.com/wp-content/mu-plugins/wpcom-smileys/', // WordPress.com (Twemoji assets) — 11,043 feeds (0.41%).
-  'fbcdn.net/images/emoji.php/', // Facebook embedded posts — 3,983 feeds (0.15%).
-  'abs.twimg.com/emoji/', // Twitter / X embedded tweets — 195 feeds.
-  'githubassets.com/images/icons/emoji/', // GitHub README scrapings — 43 feeds.
+  's.w.org/images/core/emoji/', // WordPress core wp-emoji-release output — 76,256 feeds (0.599%).
+  's0.wp.com/wp-content/mu-plugins/wpcom-smileys/', // WordPress.com Twemoji assets — 9,863 feeds (0.078%).
+  'fbcdn.net/images/emoji.php/', // Facebook embedded posts — 8,446 feeds (0.066%).
+  'cdn.jsdelivr.net/gh/twitter/twemoji', // Twemoji via jsDelivr, used by IPS and others — 2,350 feeds (0.018%).
+  'cdn.jsdelivr.net/joypixels/assets/', // JoyPixels CDN, incl. XenForo emoji mode — 1,895 feeds (0.015%).
+  'twemoji.maxcdn.com/', // Twemoji's retired CDN, still linked from older posts — 816 feeds (0.006%).
+  'abs.twimg.com/emoji/', // Twitter / X embedded tweets — 149 feeds.
+  'githubassets.com/images/icons/emoji/', // GitHub README scrapings — 39 feeds.
+  'assets.github.com/images/icons/emoji/', // GitHub's pre-2018 asset host; seen in archived feeds, not separately counted.
 ]
 
 // Hosts that only ever serve author avatars. WordPress / WP.com attaches the

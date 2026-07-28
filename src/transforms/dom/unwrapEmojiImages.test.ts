@@ -189,6 +189,137 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
   })
 
+  describe('JoyPixels CDN (codepoint filenames)', () => {
+    it('should decode a codepoint filename when the alt is a shortcode', async () => {
+      const value = html`
+        <p>
+          <img
+            src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/1f642.png"
+            class="smilie smilie--emoji"
+            loading="lazy"
+            width="64"
+            height="64"
+            alt=":)"
+            title="Smile    :)"
+            data-shortname=":)"
+          >
+        </p>
+      `
+      const expected = '<p>🙂</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should decode a flag built from regional indicators', async () => {
+      const value =
+        '<p><img src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/1f1fa-1f1f8.png" alt=":us:"></p>'
+      const expected = '<p>🇺🇸</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should decode a skin-tone and gender ZWJ sequence', async () => {
+      const value =
+        '<p><img src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/1f926-1f3fb-200d-2640-fe0f.png" alt=":facepalm:"></p>'
+      const expected = '<p>🤦🏻‍♀️</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should restore the variation selector a keycap filename omits', async () => {
+      const value =
+        '<p><img src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/0031-20e3.png" alt=":one:"></p>'
+      const result = await transform(value)
+
+      expect(result).toBe('<p>1️⃣</p>')
+      expect(result).not.toBe('<p>1⃣</p>')
+    })
+
+    it('should pin a lone text-presentation symbol to its emoji form', async () => {
+      const value =
+        '<p><img src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/2764.png" alt=":heart:"></p>'
+      const expected = '<p>❤️</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should prefer a glyph alt over the filename codepoints', async () => {
+      const value =
+        '<p><img src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/0031-20e3.png" alt="1️⃣"></p>'
+      const expected = '<p>1️⃣</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should decode past a query string', async () => {
+      const value =
+        '<p><img src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/1f642.png?v=2" alt=":)"></p>'
+      const expected = '<p>🙂</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should leave a filename that is hexadecimal only by coincidence untouched', async () => {
+      const context: TransformContext = { ...baseContext, emojiImageHosts: ['cdn.example.com'] }
+      const value = '<p><img src="https://cdn.example.com/photo-1920.png" alt="a photo"></p>'
+
+      expect(await transform(value, context)).toBe(value)
+    })
+
+    it('should leave a filename decoding outside the emoji ranges untouched', async () => {
+      const context: TransformContext = { ...baseContext, emojiImageHosts: ['cdn.example.com'] }
+      const value = '<p><img src="https://cdn.example.com/1920.png" alt=":x:"></p>'
+
+      expect(await transform(value, context)).toBe(value)
+    })
+
+    // Twemoji, which WordPress core and WordPress.com both serve, strips leading zeros.
+    it('should decode a short-hex filename that drops leading zeros', async () => {
+      const value =
+        '<p><img src="https://s.w.org/images/core/emoji/15.0.3/72x72/a9.png" alt="?" class="wp-smiley"></p>'
+      const expected = '<p>©️</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should decode a short-hex keycap filename', async () => {
+      const value =
+        '<p><img src="https://s.w.org/images/core/emoji/15.0.3/72x72/23-20e3.png" alt="?" class="wp-smiley"></p>'
+      const expected = '<p>#️⃣</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should leave a filename decoding to a bare digit untouched', async () => {
+      const context: TransformContext = { ...baseContext, emojiImageHosts: ['cdn.example.com'] }
+      const value = '<p><img src="https://cdn.example.com/30.png" alt=":x:"></p>'
+
+      expect(await transform(value, context)).toBe(value)
+    })
+
+    it('should leave a filename with more segments than any emoji sequence untouched', async () => {
+      const segments = Array.from({ length: 9 }, () => '1f642').join('-')
+      const value = `<p><img src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/${segments}.png" alt=":x:"></p>`
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should leave an unhosted image with a codepoint filename untouched', async () => {
+      const value = '<p><img src="https://forum.example.com/smilies/1f642.png" alt=":)"></p>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should be idempotent', async () => {
+      const value =
+        '<p>Hi <img src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/1f642.png" alt=":)"></p>'
+      const once = await transform(value)
+      const twice = await transform(once)
+
+      expect(twice).toBe(once)
+    })
+  })
+
   describe('shortcode table', () => {
     const shortcodeEntries = Object.entries(shortcodes)
 
@@ -326,7 +457,16 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       expect(await transform(value)).toBe(value)
     })
 
-    it('should leave image untouched when alt is a "?" fallback', async () => {
+    it('should never emit a "?" fallback alt as text', async () => {
+      const value = '<p><img src="smilies/broken.png" alt="?" class="wp-smiley"></p>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    // A "?" alt is WordPress failing to encode the emoji it meant. The filename still names
+    // the codepoint, so on a known emoji host the glyph is recovered rather than the image
+    // being left with an alt that says nothing.
+    it('should recover the glyph from the filename when the alt is a "?" fallback', async () => {
       const value = html`
         <p>
           <img
@@ -336,8 +476,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
           >
         </p>
       `
+      const expected = '<p>🙂</p>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should leave image untouched when alt attribute is missing', async () => {
