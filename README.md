@@ -50,7 +50,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `stripDeadAnchors` | Unwrap links with empty, `#`, or `javascript:` hrefs |
 | `stripNonContentElements` | Strip non-content chrome — subscribe/share/related widgets, ads, author bios |
 | `removeTrackingPixels` | Strip 1×1 tracking pixels, keeping real images |
-| `unwrapEmojiImages` | Replace emoji `<img>` tags with their alt-text glyph |
+| `unwrapEmojiImages` | Replace emoji and forum smilie `<img>` tags with their glyph |
 | `resolveMediaDimensions` | Backfill `width`/`height` on media so aspect ratio survives style stripping |
 | `convertBreaksToParagraphs` | Convert `<br><br>` runs into real `<p>` blocks |
 | `wrapBareInlineInParagraphs` | Wrap loose inline content in `<p>` blocks |

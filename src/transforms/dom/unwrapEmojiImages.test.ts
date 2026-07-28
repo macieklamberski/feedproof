@@ -4,6 +4,11 @@ import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { unwrapEmojiImages } from './unwrapEmojiImages.js'
+import vocabularies from './unwrapEmojiImages.json' with { type: 'json' }
+
+const { shortcodes } = vocabularies
+
+const asciiLetterRegex = /[a-zA-Z]/
 
 describeForEachParser('unwrapEmojiImages', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
@@ -83,6 +88,122 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const expected = '<p>🙂</p>'
 
       expect(await transform(value)).toBe(expected)
+    })
+  })
+
+  describe('XenForo (sprite smilies: data-URI src + data-shortname)', () => {
+    // The src is the 1x1 transparent GIF XenForo paints its sprite sheet behind, so these
+    // render as nothing in a reader. Kept verbatim from a real feed.
+    const spriteSource =
+      'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+    it('should replace a mapped sprite smilie with its glyph', async () => {
+      const value = html`
+        <p>Eigenwerbung...
+          <img
+            src="${spriteSource}"
+            class="smilie smilie--sprite smilie--sprite8"
+            alt=":D"
+            title="Big grin    :D"
+            loading="lazy"
+            data-shortname=":D"
+          >
+        </p>
+      `
+      const expected = '<p>Eigenwerbung... 😃</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should match the shortname case-insensitively', async () => {
+      const value = `<p><img src="${spriteSource}" data-shortname=":ROFLMAO:" alt=":ROFLMAO:"></p>`
+      const expected = '<p>🤣</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should replace an unmapped sprite smilie with its literal shortname', async () => {
+      const value = `<p><img src="${spriteSource}" data-shortname=":sk21_d1:" alt=":sk21_d1:"></p>`
+      const expected = '<p>:sk21_d1:</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should never emit the title, which pads the name onto the shortcode', async () => {
+      const value = html`
+        <p>
+          <img
+            src="${spriteSource}"
+            data-shortname=":confused:"
+            alt=":confused:"
+            title="Confused    :confused:"
+          >
+        </p>
+      `
+      const result = await transform(value)
+
+      expect(result).toBe('<p>😕</p>')
+      expect(result).not.toContain('Confused')
+    })
+
+    it('should leave a sprite smilie without data-shortname untouched', async () => {
+      const value = `<p><img src="${spriteSource}" class="smilie smilie--sprite" alt=":D"></p>`
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should leave an inlined data-URI image untouched when it is too long to be a spacer', async () => {
+      const value = `<p><img src="data:image/png;base64,${'A'.repeat(300)}" data-shortname=":D"></p>`
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should leave a hosted XenForo smilie with a shortcode alt untouched', async () => {
+      const value = html`
+        <p>
+          <img
+            src="https://example.com/styles/default/xenforo/smilies/smile.png"
+            class="smilie"
+            alt=":)"
+            data-shortname=":)"
+          >
+        </p>
+      `
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should preserve position when the sprite is nested inside an anchor', async () => {
+      const value = `<p><a href="/x">nice <img src="${spriteSource}" data-shortname=":)"> work</a></p>`
+      const expected = '<p><a href="/x">nice 🙂 work</a></p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should be idempotent', async () => {
+      const value = `<p>Hi <img src="${spriteSource}" data-shortname=":D" alt=":D"></p>`
+      const once = await transform(value)
+      const twice = await transform(once)
+
+      expect(twice).toBe(once)
+    })
+  })
+
+  describe('shortcode table', () => {
+    const shortcodeEntries = Object.entries(shortcodes)
+
+    // Iterates the real table, so every entry is exercised and a new entry is covered
+    // automatically. A value carrying ASCII letters would inject a word into the document,
+    // and an empty one would strand the wrapper it sat in for stripEmptyTags to delete.
+    it.each(shortcodeEntries)('should map %s to a bare glyph', (_shortcode, glyph) => {
+      expect(glyph).not.toBe('')
+      expect(glyph).not.toMatch(asciiLetterRegex)
+    })
+
+    it('should key every entry in lower case so lookups can normalize', () => {
+      const keys = Object.keys(shortcodes)
+
+      expect(keys).toEqual(keys.map((key) => key.toLowerCase()))
     })
   })
 
