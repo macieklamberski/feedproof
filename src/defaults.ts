@@ -85,6 +85,7 @@ import { stripWordBreaks } from './transforms/dom/stripWordBreaks.js'
 import { surfaceNoscriptEmbeds } from './transforms/dom/surfaceNoscriptEmbeds.js'
 import { surfaceTemplateEmbeds } from './transforms/dom/surfaceTemplateEmbeds.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
+import { unwrapCustomEmojiElements } from './transforms/dom/unwrapCustomEmojiElements.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 import { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 import { unwrapHeadingBold } from './transforms/dom/unwrapHeadingBold.js'
@@ -191,6 +192,9 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   convertCiteCards,
   removeTrackingPixels,
   unwrapEmojiImages,
+  // Sits with unwrapEmojiImages because it does the same job for an element rather than an
+  // image: replaces a custom-emoji wrapper with the fallback glyph it already contains.
+  unwrapCustomEmojiElements,
   // Empties lone-backslash paragraphs (`<p>\</p>`); runs before stripEmptyTags so
   // the now-empty paragraphs are removed by it.
   stripMarkdownEscapeBackslashes,

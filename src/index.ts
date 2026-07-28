@@ -178,6 +178,7 @@ export { stripNonContentElements } from './transforms/dom/stripNonContentElement
 export { surfaceNoscriptEmbeds } from './transforms/dom/surfaceNoscriptEmbeds.js'
 export { surfaceTemplateEmbeds } from './transforms/dom/surfaceTemplateEmbeds.js'
 export { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
+export { unwrapCustomEmojiElements } from './transforms/dom/unwrapCustomEmojiElements.js'
 export { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
 export { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 export { unwrapHeadingBold } from './transforms/dom/unwrapHeadingBold.js'

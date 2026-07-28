@@ -51,6 +51,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `stripNonContentElements` | Strip non-content chrome — subscribe/share/related widgets, ads, author bios |
 | `removeTrackingPixels` | Strip 1×1 tracking pixels, keeping real images |
 | `unwrapEmojiImages` | Replace emoji `<img>` tags with their alt-text glyph |
+| `unwrapCustomEmojiElements` | Replace a custom-emoji element (Telegram's `<tg-emoji>`) with the fallback glyph it wraps |
 | `resolveMediaDimensions` | Backfill `width`/`height` on media so aspect ratio survives style stripping |
 | `convertBreaksToParagraphs` | Convert `<br><br>` runs into real `<p>` blocks |
 | `wrapBareInlineInParagraphs` | Wrap loose inline content in `<p>` blocks |
