@@ -638,6 +638,78 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
   })
 
+  describe('Telegram (tg-emoji element)', () => {
+    it('should replace the element with the glyph it wraps', async () => {
+      const value = '<p>Nice work <tg-emoji emoji-id="5368324170671202286">👍</tg-emoji> today</p>'
+      const expected = '<p>Nice work 👍 today</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should replace several elements in one paragraph', async () => {
+      const value =
+        '<p><tg-emoji emoji-id="1">🔥</tg-emoji><tg-emoji emoji-id="2">🎉</tg-emoji></p>'
+      const expected = '<p>🔥🎉</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should preserve position inside a link', async () => {
+      const value = '<p><a href="/x">go <tg-emoji emoji-id="1">👍</tg-emoji></a></p>'
+      const expected = '<p><a href="/x">go 👍</a></p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should keep a multi-codepoint fallback intact', async () => {
+      const value = '<p><tg-emoji emoji-id="1">👨‍👩‍👧</tg-emoji></p>'
+      const expected = '<p>👨‍👩‍👧</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should emit the text of a fallback that is not an emoji', async () => {
+      const value = '<p><tg-emoji emoji-id="1">[cat]</tg-emoji></p>'
+      const expected = '<p>[cat]</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should flatten a fallback wrapped in another element', async () => {
+      const value = '<p><tg-emoji emoji-id="1"><span>👍</span></tg-emoji></p>'
+      const expected = '<p>👍</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should leave an empty element untouched', async () => {
+      const value = '<p>a <tg-emoji emoji-id="1"></tg-emoji> b</p>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    // The facades this package rebuilds into real iframes are custom elements too, so the tag
+    // list stays explicit rather than unwrapping anything hyphenated that wraps text.
+    it('should leave other custom elements untouched', async () => {
+      const value = html`
+        <p>
+          <lite-youtube videoid="dQw4w9WgXcQ"></lite-youtube>
+          <my-widget>text</my-widget>
+        </p>
+      `
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should be idempotent', async () => {
+      const value = '<p>Hi <tg-emoji emoji-id="1">👍</tg-emoji></p>'
+      const once = await transform(value)
+      const twice = await transform(once)
+
+      expect(twice).toBe(once)
+    })
+  })
+
   describe('images that must keep their picture', () => {
     // Custom emoji have no Unicode counterpart at all, so there is nothing to convert them to.
     it('should leave a Mastodon custom emoji untouched', async () => {
