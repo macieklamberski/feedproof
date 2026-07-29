@@ -1,11 +1,8 @@
 import { anyWordMatchesAnyOf, includesAnyOf, isAnyOf } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { attr, walkElements } from '../../utils/dom.js'
-// Hand-maintained: add an entry only where the shortcode has an unambiguous counterpart.
 import vocabularies from './unwrapEmojiImages.json' with { type: 'json' }
 
-// A looser "non-ASCII, no ASCII letter" test would take any non-Latin script, injecting a
-// localized board's alt as though it were a glyph.
 const emojiSequenceParts = [
   '\\p{Extended_Pictographic}', // The pictures themselves.
   '\\p{Emoji_Modifier}', // Skin tones.
@@ -13,15 +10,13 @@ const emojiSequenceParts = [
   '[\\u200d\\ufe0f\\u20e3#*0-9\\s]', // Joiner, variation selector, keycap mark and its bases.
   '[\\u{e0020}-\\u{e007f}]', // Tag characters, which spell out a subdivision flag.
 ]
+const emojiSequenceRegex = new RegExp(`^(?:${emojiSequenceParts.join('|')})+$`, 'u')
+
 const emojiPictureParts = [
-  '\\p{Extended_Pictographic}',
-  '\\p{Regional_Indicator}',
+  '\\p{Extended_Pictographic}', // The pictures themselves.
+  '\\p{Regional_Indicator}', // The pair of letters that makes a flag.
   '[0-9#*]\\ufe0f?\\u20e3', // A keycap: base, optional selector, enclosing mark.
 ]
-
-// Every character must belong to an emoji sequence, and at least one must be a picture rather
-// than a joiner or modifier.
-const emojiSequenceRegex = new RegExp(`^(?:${emojiSequenceParts.join('|')})+$`, 'u')
 const emojiPictureRegex = new RegExp(emojiPictureParts.join('|'), 'u')
 
 const isEmojiShapedAlt = (alt: string): boolean => {
@@ -40,12 +35,11 @@ const shortcodeClasses = [
   'e-emoticon', // e107.
   /^mcesmilie/, // XenForo 1.x, which numbers them (`mceSmilieSprite mceSmilie7`).
 ]
+
 const shortcodeAttributes = [
   'data-emoticon', // IPS / Invision.
 ]
 
-// The theme parent varies per board (`/dc2themes/mrvb6_sobre/smilies/`), so the directory name
-// is the stable part. Loose matching is safe: a banner in one resolves to nothing and is kept.
 const shortcodePathSegments = [
   '/smilies/', // phpBB, XenForo, MyBB, FluxBB, vBulletin, WoltLab.
   '/smileys/', // Drupal, DokuWiki, SMF.
@@ -76,10 +70,8 @@ const nameVariantRegex = /@[0-9]+x$/
 
 // A short `data:` URI renders nothing in a reader: it is the 1x1 GIF a CSS sprite sheet sits
 // behind, and no site CSS is loaded. The bound keeps real inlined PNGs out of this case.
-const maxSpriteDataUrlLength = 256
-
 const rendersNothing = (src: string): boolean => {
-  return src.startsWith('data:') && src.length <= maxSpriteDataUrlLength
+  return src.startsWith('data:') && src.length <= 256
 }
 
 const getFileStem = (src: string): string => {
