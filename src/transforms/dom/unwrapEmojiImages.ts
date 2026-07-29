@@ -1,4 +1,4 @@
-import { anyWordMatchesAnyOf, includesAnyOf, isAnyOf } from 'trousse'
+import { includesAnyOf } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { attr, walkElements } from '../../utils/dom.js'
 import vocabularies from './unwrapEmojiImages.json' with { type: 'json' }
@@ -26,15 +26,17 @@ const isEmojiShapedAlt = (alt: string): boolean => {
 const shortcodes: Record<string, string> = vocabularies.shortcodes
 const names: Record<string, string> = vocabularies.names
 
-const shortcodeClasses = [
+const shortcodeClasses = new Set([
   'wp-smiley', // WordPress.
   'smilies', // phpBB.
   'smilie', // XenForo, MyBB.
   'smiley', // SMF, DokuWiki, Dotclear, WoltLab.
   'bbc_emoticon', // Invision Power Board 3.
   'e-emoticon', // e107.
-  /^mcesmilie/, // XenForo 1.x, which numbers them (`mceSmilieSprite mceSmilie7`).
-]
+])
+
+// XenForo 1.x numbers its classes (`mceSmilieSprite mceSmilie7`), so they need a prefix test.
+const shortcodeClassRegex = /^mcesmilie/
 
 const shortcodeAttributes = [
   'data-emoticon', // IPS / Invision.
@@ -54,15 +56,15 @@ const shortcodePathSegments = [
 
 // Read for a glyph alt only, never a shortcode: platforms using this class have namespaces of
 // their own (Discourse's `:slight_smile:`), so the shared table must not be reached through it.
-const genericEmojiClasses = [
+const genericEmojiClasses = new Set([
   'emoji', // Discourse, Vanilla, NodeBB, newer WordPress.
-]
+])
 
 // Wrappers holding a standard emoji as the fallback. A reader cannot fetch the custom asset,
 // and a sanitizer dropping unknown elements would take the fallback with it.
-const customEmojiTags = [
+const customEmojiTags = new Set([
   'tg-emoji', // Telegram.
-]
+])
 // Applied to a filename in turn: the query and hash split, then the stock-file, icon-set and
 // resolution markers that are not part of the name.
 const queryOrHashRegex = /[?#]/
@@ -105,6 +107,23 @@ const glyphFromVocabularies = (token: string | undefined, src: string): string |
   return names[stem]
 }
 
+const whitespaceRegex = /\s+/
+
+// Split once, because two vocabularies are matched against the same tokens.
+const readClassNames = (element: Element): Array<string> => {
+  const classes = element.getAttribute('class')
+
+  return classes ? classes.toLowerCase().split(whitespaceRegex) : []
+}
+
+const hasShortcodeClass = (classNames: Array<string>): boolean => {
+  return classNames.some((name) => shortcodeClasses.has(name) || shortcodeClassRegex.test(name))
+}
+
+const hasGenericEmojiClass = (classNames: Array<string>): boolean => {
+  return classNames.some((name) => genericEmojiClasses.has(name))
+}
+
 // `title` is deliberately absent: XenForo's is `Big grin    :D`, phpBB's the English `Smile`,
 // Khoros' localized. All three are prose where a glyph belongs.
 type EmojiImage = {
@@ -118,17 +137,17 @@ type EmojiImage = {
 
 const readEmojiImage = (element: Element, hosts: Array<string>): EmojiImage | undefined => {
   const source = element.getAttribute('src') ?? ''
-  const classes = element.getAttribute('class') ?? ''
+  const classNames = readClassNames(element)
   const shortname = attr(element, 'data-shortname')
   const isSprite = !!shortname && rendersNothing(source)
   const isHosted = includesAnyOf(source, hosts)
   const hasKnownVocabulary =
     isSprite ||
     shortcodeAttributes.some((attribute) => element.hasAttribute(attribute)) ||
-    anyWordMatchesAnyOf(classes, shortcodeClasses) ||
+    hasShortcodeClass(classNames) ||
     includesAnyOf(source, shortcodePathSegments)
 
-  if (!hasKnownVocabulary && !isHosted && !anyWordMatchesAnyOf(classes, genericEmojiClasses)) {
+  if (!hasKnownVocabulary && !isHosted && !hasGenericEmojiClass(classNames)) {
     return
   }
 
@@ -162,7 +181,9 @@ const resolveGlyph = (image: EmojiImage): string | undefined => {
 export const unwrapEmojiImages: DomTransform = (context) => {
   return (document) => {
     walkElements(document, (element) => {
-      if (isAnyOf(element.localName, customEmojiTags)) {
+      const { localName } = element
+
+      if (customEmojiTags.has(localName)) {
         // Removing an empty one would be a deletion this transform has no business making.
         if (element.textContent) {
           element.replaceWith(element.textContent)
@@ -171,7 +192,7 @@ export const unwrapEmojiImages: DomTransform = (context) => {
         return
       }
 
-      if (element.localName !== 'img') {
+      if (localName !== 'img') {
         return
       }
 
