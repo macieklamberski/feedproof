@@ -48,6 +48,7 @@ const shortcodePathSegments = [
   '/style_emoticons/', // Invision Power Board 2 and 3, which the plural form misses.
   '/emotes/', // e107.
   '/resources/emoji/', // Vanilla, whose only class is the generic `emoji`.
+  '/mailer/emoji/', // ArtStation, same generic class and a stock name in the filename.
   'forum-smileys/', // Simple:Press, which has no leading slash before the directory.
 ]
 
