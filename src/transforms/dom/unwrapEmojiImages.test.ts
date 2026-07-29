@@ -470,6 +470,22 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       expect(await transform(value)).toBe(`<p>${expected}</p>`)
     })
 
+    // ArtStation carries only the generic `emoji` class, which is read for a glyph alt and
+    // never for a shortcode, so the path is what lets the filename be looked up.
+    it('should replace an ArtStation emoji, which is named only by its path', async () => {
+      const value =
+        '<p><img class="emoji" alt="smiley" src="https://cdn.artstation.com/mailer/emoji/smiley.png"></p>'
+
+      expect(await transform(value)).toBe('<p>🙂</p>')
+    })
+
+    it('should leave an ArtStation emoji whose name is not in the table alone', async () => {
+      const value =
+        '<p><img class="emoji" alt="partying" src="https://cdn.artstation.com/mailer/emoji/partying.png"></p>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
     it('should resolve a Tango icon-set filename once the face- prefix is dropped', async () => {
       const value =
         '<p><img class="wp-smiley" src="/wp-content/plugins/tango-smilies/tango/face-smile.png" alt=":)"></p>'
