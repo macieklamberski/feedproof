@@ -14,6 +14,20 @@
 // Each `paths` entry is the narrowest segment that still matches every board of that platform.
 // Some can be pinned exactly, others cannot because the directory above the smilies is the
 // board's theme name, which is why `/smilies/` appears where a longer path would be wrong.
+//
+// Names checked against the whole corpus and left out on purpose, so a later pass does not
+// rediscover them as gaps:
+//
+// - `twisted` 😈, `shock` 😱, `oops` 😳, `roflmao` 🤣, `sleep` 😴, `coffee` ☕, `geek` 🤓,
+//   `saint` 😇, `poop` 💩, `thumbsup` 👍, `thumbsdown` 👎. Each already resolves through the
+//   shortcode table, so only the filename key is missing and the meaning is not in doubt. A
+//   filename is matched across every engine at once, though, and several of these are ordinary
+//   words: a `coffee.png` or `sleep.png` sitting in a matched directory would become an emoji.
+//   Zero occurrences across 12.7M feeds, so the risk buys nothing.
+// - `^^` cannot be mapped at all. It is an alt, and boards bind it to whichever emoticon they
+//   like: the same alt appears over `default_cute`, `default_laugh`, `default_happy` and custom
+//   uploads. Mapping it would also convert the `default_happy` ones, smuggling back the
+//   ambiguity `happy` is excluded for.
 
 export type EmojiPlatform = {
   name: string
@@ -337,6 +351,7 @@ export const emojiPlatforms: Array<EmojiPlatform> = [
     // being unattributed.
     name: 'observed in feeds, engine not identified',
     names: {
+      clap: '👏', // Boards add it to several engines' sets; 293 feeds, always applause.
       laughing: '😄',
       ohmy: '😲',
       dizzy: '😵',
