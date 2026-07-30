@@ -140,14 +140,14 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
-    it('should remove the Tumblr alt-text badge and keep the image it labels', async () => {
+    it('should remove the Tumblr alt-text badge and keep the image alt it labels', async () => {
       const value = html`
         <figure class="tmblr-full" data-orig-height="814" data-orig-width="1000">
-          <img src="photo.jpg"><span class="tmblr-alt-text-helper">ALT</span>
+          <img src="photo.jpg" alt="A cat asleep on a windowsill"><span class="tmblr-alt-text-helper">ALT</span>
         </figure>
       `
       const expected =
-        '<figure class="tmblr-full" data-orig-height="814" data-orig-width="1000"><img src="photo.jpg"></figure>'
+        '<figure class="tmblr-full" data-orig-height="814" data-orig-width="1000"><img src="photo.jpg" alt="A cat asleep on a windowsill"></figure>'
 
       expect(await transform(value)).toBe(expected)
     })
