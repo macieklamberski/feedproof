@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { describeForEachParser } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
+  composeEmbedUrl,
   composeThumbnailUrl,
   extractVideoId,
   isVideoId,
@@ -349,6 +350,41 @@ describe('isVideoId', () => {
       expect(isVideoId(' dQw4w9WgXcQ')).toBe(false)
       expect(isVideoId('dQw4w9WgXcQ\n')).toBe(false)
     })
+  })
+})
+
+describe('composeEmbedUrl', () => {
+  it('should build the player url from an id', () => {
+    const value = 'dQw4w9WgXcQ'
+    const expected = 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+
+    expect(composeEmbedUrl(value)).toBe(expected)
+  })
+
+  it('should append params as a query string', () => {
+    const expected = 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=42'
+
+    expect(composeEmbedUrl('dQw4w9WgXcQ', { start: '42' })).toBe(expected)
+  })
+
+  it('should join several params with an ampersand', () => {
+    const expected = 'https://www.youtube.com/embed/videoseries?list=PL1&index=2'
+
+    expect(composeEmbedUrl('videoseries', { list: 'PL1', index: '2' })).toBe(expected)
+  })
+
+  it('should stay bare for an empty param object', () => {
+    const expected = 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+
+    expect(composeEmbedUrl('dQw4w9WgXcQ', {})).toBe(expected)
+  })
+
+  // One param whose value happens to contain the separator, not two params. Encoding is what
+  // keeps it that way, so a feed cannot smuggle `autoplay` in through a list id.
+  it('should encode a separator inside a value instead of starting a new param', () => {
+    const expected = 'https://www.youtube.com/embed/videoseries?list=PL1%26autoplay%3D1'
+
+    expect(composeEmbedUrl('videoseries', { list: 'PL1&autoplay=1' })).toBe(expected)
   })
 })
 

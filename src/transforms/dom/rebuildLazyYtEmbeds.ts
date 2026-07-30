@@ -1,3 +1,4 @@
+import { composeEmbedUrl } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 
 // The jQuery lazyYT plugin renders a facade `<div class="lazyYT" data-youtube-id="{id}">`
@@ -12,7 +13,7 @@ export const rebuildLazyYtEmbeds: DomTransform = () => (document) => {
     }
 
     const iframe = document.createElement('iframe')
-    iframe.setAttribute('src', `https://www.youtube.com/embed/${videoId}`)
+    iframe.setAttribute('src', composeEmbedUrl(videoId))
 
     // Carry the facade's pixel size so the placeholder downstream can reserve the right space.
     const width = element.getAttribute('data-width')

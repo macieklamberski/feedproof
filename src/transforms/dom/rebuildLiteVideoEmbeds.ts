@@ -1,3 +1,4 @@
+import { composeEmbedUrl } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 
 // `start` carries a whole-second offset; guard it so only digits reach the URL and a
@@ -10,7 +11,7 @@ const startSecondsPattern = /^\d+$/
 // from the id, applying the `start` offset the way that platform's player expects.
 const embedSources: Record<string, (id: string, start?: string) => string> = {
   'lite-youtube': (id, start) => {
-    return `https://www.youtube.com/embed/${id}${start ? `?start=${start}` : ''}`
+    return composeEmbedUrl(id, start ? { start } : undefined)
   },
   'lite-vimeo': (id, start) => {
     return `https://player.vimeo.com/video/${id}${start ? `#t=${start}s` : ''}`
