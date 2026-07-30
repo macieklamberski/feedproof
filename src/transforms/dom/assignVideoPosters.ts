@@ -1,3 +1,4 @@
+import { escapeRegex } from 'trousse'
 import { extractVideoId } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 import { removeWithEmptyWrappers } from '../../utils/dom.js'
@@ -12,22 +13,22 @@ const thumbnailIdPattern = /\/vi\/([a-zA-Z0-9_-]{11})\//
 // Markers in an iframe/embed src that mean a video player, used to spot a video-led
 // item whose image enclosure is really the video's poster. A host list is needed
 // because players without a feedsweep resolver (e.g. JW Player) carry no
-// data-embed-provider. Listed with provenance (regex fragments matched against the
-// src), then joined into one matcher like urlpurify's tracking lists.
+// data-embed-provider. Listed with provenance as plain substrings, then escaped and
+// joined into one matcher like urlpurify's tracking lists.
 const videoHostFragments = [
-  'youtube\\.com', // YouTube.
-  'youtu\\.be', // YouTube share links.
-  'player\\.vimeo\\.com', // Vimeo player.
-  'vimeo\\.com/video', // Vimeo video path.
+  'youtube.com', // YouTube.
+  'youtu.be', // YouTube share links.
+  'player.vimeo.com', // Vimeo player.
+  'vimeo.com/video', // Vimeo video path.
   'jwplayer', // JW Player (cdn.jwplayer.com).
-  'dailymotion\\.com', // Dailymotion.
+  'dailymotion.com', // Dailymotion.
   'wistia', // Wistia (fast.wistia.net/.com).
-  'videopress\\.com', // VideoPress (WordPress.com).
+  'videopress.com', // VideoPress (WordPress.com).
   'brightcove', // Brightcove.
-  'streamable\\.com', // Streamable.
-  'v\\.redd\\.it', // Reddit-hosted video.
+  'streamable.com', // Streamable.
+  'v.redd.it', // Reddit-hosted video.
 ]
-const videoHostPattern = new RegExp(videoHostFragments.join('|'), 'i')
+const videoHostPattern = new RegExp(videoHostFragments.map(escapeRegex).join('|'), 'i')
 
 // Map each embedded video's id to its element (placeholders carry data-embed-*, a
 // raw iframe carries src) so an id-matched poster image can be moved onto it.
