@@ -171,9 +171,10 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
+    // The shortname is not an emoji, so it is marked as fallback text rather than left as prose.
     it('should replace an unmapped sprite smilie with its literal shortname', async () => {
       const value = `<p><img src="${spriteSource}" data-shortname=":sk21_d1:" alt=":sk21_d1:"></p>`
-      const expected = '<p>:sk21_d1:</p>'
+      const expected = '<p><span data-emoji="">:sk21_d1:</span></p>'
 
       expect(await transform(value)).toBe(expected)
     })
@@ -384,20 +385,31 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     // image cannot load anywhere. Text beats a broken picture, unlike every case above.
     it('should replace a smilie whose path is the raw placeholder', async () => {
       const value = `<p><img src="{SMILIES_PATH}/teeth_smile.gif" alt=":D" title="Very Happy"></p>`
+      const expected = '<p>😃</p>'
 
-      expect(await transform(value)).toBe('<p>😃</p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should replace a smilie whose placeholder arrived percent-encoded', async () => {
       const value = `<p><img src="%7BSMILIES_PATH%7D/wink_smile.gif" alt=";)"></p>`
+      const expected = '<p>😉</p>'
 
-      expect(await transform(value)).toBe('<p>😉</p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should resolve a placeholder smilie by its alt when the filename carries no meaning', async () => {
       const value = `<p><img src="{SMILIES_PATH}/15.gif" alt=":cry:" title="Crying"></p>`
+      const expected = '<p>😢</p>'
 
-      expect(await transform(value)).toBe('<p>😢</p>')
+      expect(await transform(value)).toBe(expected)
+    })
+
+    // A placeholder src is a link the board failed to build, which is not this transform's to
+    // repair. Unresolvable ones are left exactly as any other dead image would be.
+    it('should leave a placeholder smilie that resolves to nothing alone', async () => {
+      const value = `<p><img src="%7BSMILIES_PATH%7D/borracho.gif" alt="(borracho)" title="Borracho"></p>`
+
+      expect(await transformKeeping(value)).toBe(value)
     })
   })
 
@@ -485,7 +497,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     it('should not answer an unmapped sprite from its own base64 payload', async () => {
       const value =
         '<p><img src="data:image/gif;base64,AAA/smile" data-shortname=":totally_custom:"></p>'
-      const expected = '<p>:totally_custom:</p>'
+      const expected = '<p><span data-emoji="">:totally_custom:</span></p>'
 
       expect(await transform(value)).toBe(expected)
     })
@@ -726,9 +738,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
-    it('should emit the text of a fallback that is not an emoji', async () => {
+    it('should mark the text of a fallback that is not an emoji', async () => {
       const value = '<p><tg-emoji emoji-id="1">[cat]</tg-emoji></p>'
-      const expected = '<p>[cat]</p>'
+      const expected = '<p><span data-emoji="">[cat]</span></p>'
 
       expect(await transform(value)).toBe(expected)
     })
@@ -906,8 +918,30 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       expect(result).not.toContain('<img')
     })
 
+    // Marking a glyph would style two identical emoji differently in one sentence, since an
+    // author who typed theirs directly never had an image for us to mark.
+    it('should leave a converted emoji indistinguishable from one the author typed', async () => {
+      const value = html`
+        <p>Nice 😉 work
+          <img class="wp-smiley" src="https://s.w.org/images/core/emoji/14/72x72/1f609.png" alt="😉">
+        </p>
+      `
+      const expected = '<p>Nice 😉 work 😉</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
     it('should be idempotent', async () => {
       const value = '<p><img class="smilies" src="/images/smilies/x.gif" alt=":mrgreen:"></p>'
+      const once = await transform(value)
+      const twice = await transform(once)
+
+      expect(twice).toBe(once)
+    })
+
+    it('should be idempotent over fallback text it wrapped', async () => {
+      const value =
+        '<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-shortname=":sk21_d1:"></p>'
       const once = await transform(value)
       const twice = await transform(once)
 
