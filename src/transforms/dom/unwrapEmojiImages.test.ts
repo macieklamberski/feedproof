@@ -468,6 +468,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       ],
       ['Drupal smileys module', 'http://example.com/misc/smileys/smile.png', '🙂'],
       ['blog smileys directory', 'http://example.com/images/smileys/big_smile.gif', '😃'],
+      ['Kunena emoticons directory', 'http://example.com/media/kunena/emoticons/unsure.png', '😕'],
     ]
 
     it.each(pathCases)('should replace a %s smilie', async (_engine, source, expected) => {
@@ -562,10 +563,93 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         '<img src="/wp-content/forum-smileys/sf-wink.gif" width="15" class="sfimageleft" title="wink" alt="wink">',
         '😉',
       ],
+      // WoltLab names its files after the codepoint, so only the alt says what the picture is.
+      [
+        'WoltLab thumbs up',
+        '<img src="https://example.com/images/smilies/emojione/1f44d.png" alt=":thumbup:" title="thumbup" class="smiley" height="23">',
+        '👍',
+      ],
+      [
+        'WoltLab halo face',
+        '<img src="https://example.com/images/smilies/emojione/1f607.png" alt=":saint:" title="saint" class="smiley" height="23">',
+        '😇',
+      ],
     ]
 
     it.each(engineCases)('should replace a %s smilie', async (_engine, tag, expected) => {
       expect(await transform(`<p>${tag}</p>`)).toBe(`<p>${expected}</p>`)
+    })
+  })
+
+  describe('Khoros / Lithium (/i/smilies/ stock faces)', () => {
+    // The alt and title are translated per board, so the stock filename is the only stable key.
+    const faceCases: Array<[string, string, string]> = [
+      ['smiley-happy', 'Smiley heureux', '🙂'],
+      ['smiley-wink', "Smiley clignant de l'œil", '😉'],
+      ['smiley-very-happy', 'Smiley très heureux', '😃'],
+      ['smiley-tongue', 'Emotikon: Język', '😛'],
+      ['smiley-sad', 'Emotikon: Smutny', '🙁'],
+      ['smiley-surprised', 'Emotikon: Zaskoczony', '😲'],
+      ['smiley-lol', 'Smiley LOL', '😄'],
+      ['smiley-embarrassed', 'Smiley Embarrassed', '😳'],
+      ['smiley-indifferent', 'Smiley Indifferent', '😐'],
+      ['heart', 'Cœur', '❤️'],
+    ]
+
+    it.each(faceCases)('should replace the %s face', async (name, alt, expected) => {
+      const value = html`
+        <p>
+          <img
+            id="${name}"
+            class="emoticon emoticon-${name}"
+            src="https://example.com/i/smilies/16x16_${name}.png"
+            alt="${alt}"
+            title="${alt}"
+          >
+        </p>
+      `
+
+      expect(await transform(value)).toBe(`<p>${expected}</p>`)
+    })
+
+    // The set also draws each expression on a cat, a man, a woman and a robot. Unicode has cat
+    // faces but not a winking or tongue-out one, so swapping these would change the expression.
+    const keptCases: Array<[string, string]> = [
+      ['cat', '16x16_cat-wink'],
+      ['woman', '16x16_woman-happy'],
+      ['robot', '16x16_robot-lol'],
+    ]
+
+    it.each(keptCases)('should leave the %s variant with its picture', async (_species, name) => {
+      const value = `<p><img class="emoticon" src="https://example.com/i/smilies/${name}.png" alt="Wink"></p>`
+
+      expect(await transformKeeping(value)).toBe(value)
+    })
+
+    // Between annoyed, weary and pouting there is no single face this one obviously means.
+    it('should leave the frustrated face with its picture', async () => {
+      const value =
+        '<p><img class="emoticon emoticon-smileyfrustrated" src="https://example.com/i/smilies/16x16_smiley-frustrated.png" alt="Smiley frustré"></p>'
+
+      expect(await transformKeeping(value)).toBe(value)
+    })
+
+    // Some boards replace the stock art with a licensed set whose files are numbered, leaving
+    // nothing in the markup that names the picture.
+    it('should leave a board-specific replacement set with its picture', async () => {
+      const value =
+        '<p><img class="emoticon emoticon-ClinDoeil" src="https://example.com/images/smilies/emoji_licence_46.png" alt=""></p>'
+
+      expect(await transformKeeping(value)).toBe(value)
+    })
+
+    it('should be idempotent', async () => {
+      const value =
+        '<p>Hi <img class="emoticon emoticon-smileywink" src="https://example.com/i/smilies/16x16_smiley-wink.png" alt="Smiley clignant"></p>'
+      const once = await transform(value)
+      const twice = await transform(once)
+
+      expect(twice).toBe(once)
     })
   })
 
