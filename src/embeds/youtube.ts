@@ -27,6 +27,12 @@ const youtubeHosts = ['youtube.com', 'youtube-nocookie.com', 'youtu.be']
 // we can't pick them blindly.
 // TODO: detect and prefer a higher-res thumbnail when present — the best available
 // resolution varies per video, so it needs a probe (HEAD request) rather than a guess.
+// A bare id, already separated from any url. Callers that read one straight out of an
+// attribute need the same guard extractVideoId applies once it has parsed a link.
+export const isVideoId = (value: string): boolean => {
+  return safeVideoIdRegex.test(value) && !nonVideoIds.has(value)
+}
+
 export const composeThumbnailUrl = (videoId: string): string => {
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
 }

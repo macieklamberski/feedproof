@@ -4,6 +4,7 @@ import type { EmbedResolverResult } from '../types.js'
 import {
   composeThumbnailUrl,
   extractVideoId,
+  isVideoId,
   youtubeEmbedResolver,
   youtubeResolveEmbed,
 } from './youtube.js'
@@ -306,6 +307,48 @@ describe('youtubeResolveEmbed', () => {
     const value = 'not-a-url'
 
     expect(youtubeResolveEmbed(value)).toBeUndefined()
+  })
+})
+
+describe('isVideoId', () => {
+  describe('happy paths', () => {
+    it('should accept an id of letters, digits, underscore and dash', () => {
+      expect(isVideoId('dQw4w9WgXcQ')).toBe(true)
+      expect(isVideoId('a_b-c1D2e3F')).toBe(true)
+      expect(isVideoId('___________')).toBe(true)
+    })
+  })
+
+  describe('sad paths', () => {
+    it('should reject an id of the wrong length', () => {
+      expect(isVideoId('dQw4w9WgXc')).toBe(false)
+      expect(isVideoId('dQw4w9WgXcQQ')).toBe(false)
+      expect(isVideoId('')).toBe(false)
+    })
+
+    it('should reject characters outside the id alphabet', () => {
+      expect(isVideoId('dQw4w9WgXc.')).toBe(false)
+      expect(isVideoId('dQw4w9WgX Q')).toBe(false)
+      expect(isVideoId('dQw4w9WgXc/')).toBe(false)
+    })
+
+    it('should reject a path traversal that happens to be the right length', () => {
+      expect(isVideoId('../../evil/')).toBe(false)
+    })
+  })
+
+  describe('edge cases', () => {
+    // Both are 11 valid id characters but name an embed path, so a video url built from
+    // either would be bogus.
+    it('should reject the playlist and live-stream path words', () => {
+      expect(isVideoId('videoseries')).toBe(false)
+      expect(isVideoId('live_stream')).toBe(false)
+    })
+
+    it('should reject an id padded with whitespace', () => {
+      expect(isVideoId(' dQw4w9WgXcQ')).toBe(false)
+      expect(isVideoId('dQw4w9WgXcQ\n')).toBe(false)
+    })
   })
 })
 

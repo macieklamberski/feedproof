@@ -1,27 +1,18 @@
+import { isVideoId } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 
 type AmpConversion = {
   selector: string
   target: string
-  attributes: Array<string>
   moveChildren?: boolean
 }
 
-const youtubeIdRegex = /^[\w-]{11}$/
-
-// Attributes carried onto the replacement element. AMP layout attributes (layout, on,
-// placeholder, fallback, …) are intentionally dropped.
-const imageAttributes = ['src', 'srcset', 'sizes', 'alt', 'width', 'height']
-const videoAttributes = ['src', 'poster', 'width', 'height', 'controls', 'loop', 'muted']
-const audioAttributes = ['src', 'controls', 'loop']
-const iframeAttributes = ['src', 'width', 'height', 'allowfullscreen', 'frameborder', 'title']
-
 const conversions: Array<AmpConversion> = [
-  { selector: 'amp-img', target: 'img', attributes: imageAttributes },
-  { selector: 'amp-anim', target: 'img', attributes: imageAttributes },
-  { selector: 'amp-video', target: 'video', attributes: videoAttributes, moveChildren: true },
-  { selector: 'amp-audio', target: 'audio', attributes: audioAttributes, moveChildren: true },
-  { selector: 'amp-iframe', target: 'iframe', attributes: iframeAttributes },
+  { selector: 'amp-img', target: 'img' },
+  { selector: 'amp-anim', target: 'img' },
+  { selector: 'amp-video', target: 'video', moveChildren: true },
+  { selector: 'amp-audio', target: 'audio', moveChildren: true },
+  { selector: 'amp-iframe', target: 'iframe' },
 ]
 
 // AMP custom elements (<amp-img>, <amp-video>, …) render nothing without the AMP
@@ -35,7 +26,7 @@ export const convertAmpElements: DomTransform = () => (document) => {
   for (const element of document.querySelectorAll('amp-youtube')) {
     const videoId = element.getAttribute('data-videoid')
 
-    if (!videoId || !youtubeIdRegex.test(videoId)) {
+    if (!videoId || !isVideoId(videoId)) {
       continue
     }
 
@@ -57,12 +48,12 @@ export const convertAmpElements: DomTransform = () => (document) => {
     for (const element of document.querySelectorAll(conversion.selector)) {
       const replacement = document.createElement(conversion.target)
 
-      for (const attribute of conversion.attributes) {
-        const value = element.getAttribute(attribute)
-
-        if (value !== null) {
-          replacement.setAttribute(attribute, value)
-        }
+      // Everything the publisher wrote rides along. AMP's own layout attributes (layout, on,
+      // placeholder, …) come with it and mean nothing on a plain element, but picking a subset
+      // costs more than it saves: the allow-list silently dropped ordinary HTML like `preload`
+      // and `loading`, and it has to grow every time HTML does.
+      for (const attribute of Array.from(element.attributes)) {
+        replacement.setAttribute(attribute.name, attribute.value)
       }
 
       // Carry the playable sources over; AMP placeholder/fallback children are dropped.
