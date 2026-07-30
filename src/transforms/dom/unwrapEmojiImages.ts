@@ -32,8 +32,8 @@ const emojiPictureParts = [
 ]
 const emojiPictureRegex = new RegExp(emojiPictureParts.join('|'), 'u')
 
-const isEmojiShapedAlt = (alt: string): boolean => {
-  return emojiSequenceRegex.test(alt) && emojiPictureRegex.test(alt)
+const isEmojiShaped = (text: string): boolean => {
+  return emojiSequenceRegex.test(text) && emojiPictureRegex.test(text)
 }
 
 const shortcodes: Record<string, string> = vocabularies.shortcodes
@@ -132,9 +132,8 @@ const glyphFromCodepoints = (stem: string): string | undefined => {
   const codepoints = stem.split(codepointSeparatorRegex).map((part) => Number.parseInt(part, 16))
   const glyph = String.fromCodePoint(...codepoints)
 
-  // Hex-shaped is not emoji-shaped: `2000` is a space, `dead` a lone surrogate, `face` a CJK
-  // ideograph.
-  return isEmojiShapedAlt(glyph) ? glyph : undefined
+  // Hex-shaped is not emoji-shaped: `2000` is a space and `dead` a lone surrogate.
+  return isEmojiShaped(glyph) ? glyph : undefined
 }
 
 // The filename is the second key because it is what survives an empty alt.
@@ -199,7 +198,7 @@ const resolveGlyph = (image: EmojiImage): string | undefined => {
 
   // The alt is preferred over the tables, so an image matched by two rules resolves the same
   // either way.
-  const glyph = alt && isEmojiShapedAlt(alt) ? alt : undefined
+  const glyph = alt && isEmojiShaped(alt) ? alt : undefined
   const mapped = image.hasKnownVocabulary ? glyphFromVocabularies(shortname ?? alt, src) : undefined
 
   return glyph ?? mapped
@@ -232,7 +231,7 @@ export const unwrapEmojiImages: DomTransform = (context) => {
 
         // Removing an empty one would be a deletion this transform has no business making.
         if (fallback) {
-          const replacement = isEmojiShapedAlt(fallback)
+          const replacement = isEmojiShaped(fallback)
             ? fallback
             : wrapFallbackText(document, fallback)
 
