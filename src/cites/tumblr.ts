@@ -1,10 +1,12 @@
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
-import { attr, find, jsonAttr, text } from '../utils/dom.js'
+import { attr, bgImage, find, jsonAttr, text } from '../utils/dom.js'
 
-// Tumblr's NPF (Neue Post Format) link block renders to a bare anchor with the whole card
-// alongside it in `data-npf`, as scraped Open Graph data. The visible markup carries only
-// the link, so everything except the URL comes from the JSON.
+// Tumblr's NPF (Neue Post Format) link block reaches feeds in two shapes. `.npf_link` is a
+// bare anchor with the whole card alongside it in `data-npf`, as scraped Open Graph data;
+// the visible markup carries only the link, so everything except the URL comes from the
+// JSON. `.npf-link-block` is the card painted as markup instead, with the poster as a CSS
+// `background-image` rather than an `<img>`.
 //
 // The URL is usually wrapped in one of Tumblr's outbound redirectors (`t.umblr.com/redirect`
 // or `href.li`), sometimes nested. Unwrapping is left to the injected cleanUrlFn, which
@@ -29,8 +31,19 @@ const bareUrl = (value: string): string => {
 }
 
 export const tumblrCiteResolver: CiteResolver = {
-  selector: '.npf_link',
+  selector: '.npf_link, .npf-link-block',
   extract: (element) => {
+    if (element.matches('.npf-link-block')) {
+      return buildCite({
+        provider: 'tumblr',
+        url: attr(find(element, 'a'), 'href'),
+        title: text(element, '.title'),
+        description: text(element, '.description'),
+        publisher: text(element, '.site-name'),
+        thumbnail: bgImage(find(element, '.poster')),
+      })
+    }
+
     const data = jsonAttr<TumblrLinkData>(element, 'data-npf')
 
     if (data?.type !== 'link') {
