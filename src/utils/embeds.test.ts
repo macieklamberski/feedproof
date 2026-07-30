@@ -6,14 +6,15 @@ import {
   createEmbedPlaceholder,
   createPlaceholder,
   normalizeEmbedFields,
+  updateCitePlaceholder,
   updateEmbedPlaceholder,
 } from './embeds.js'
 
 describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
   describe('fallback link', () => {
-    it('should use metadata.url when present', () => {
+    it('should use url when present', () => {
       const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'https://embed.example/abc', {
+      const element = createEmbedPlaceholder(document, {
         provider: 'custom',
         src: 'https://embed.example/abc',
         url: 'https://canonical.example/abc',
@@ -22,38 +23,32 @@ describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
       expect(element.querySelector('a')?.getAttribute('href')).toBe('https://canonical.example/abc')
     })
 
-    it('should fall back to metadata.src when url is absent', () => {
+    it('should fall back to src when url is absent', () => {
       const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'https://passed-src.example', {
+      const element = createEmbedPlaceholder(document, {
         provider: 'custom',
         src: 'https://embed.example/abc',
       })
 
       expect(element.querySelector('a')?.getAttribute('href')).toBe('https://embed.example/abc')
     })
-
-    it('should fall back to src argument when metadata is omitted', () => {
-      const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'https://passed-src.example')
-
-      expect(element.querySelector('a')?.getAttribute('href')).toBe('https://passed-src.example')
-    })
   })
 
   describe('src wiring', () => {
-    it('should write the src argument as data-embed-src', () => {
+    it('should write src as data-embed-src', () => {
       const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'https://self-hosted.example/player')
+      const element = createEmbedPlaceholder(document, {
+        src: 'https://self-hosted.example/player',
+      })
 
       expect(element.getAttribute('data-embed-src')).toBe('https://self-hosted.example/player')
     })
 
-    it('should let metadata.src override the src argument', () => {
+    it('should build a placeholder from src alone, with no provider', () => {
       const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'https://passed-src.example', {
-        src: 'https://embed.example/abc',
-      })
+      const element = createEmbedPlaceholder(document, { src: 'https://embed.example/abc' })
 
+      expect(element.hasAttribute('data-embed-provider')).toBe(false)
       expect(element.getAttribute('data-embed-src')).toBe('https://embed.example/abc')
     })
   })
@@ -110,6 +105,57 @@ describeForEachParser('updateEmbedPlaceholder', (parseHtml) => {
     const expected = '<div data-embed-title="Video title"></div>'
 
     expect(element.outerHTML).toEqualHtml(expected)
+  })
+})
+
+describeForEachParser('updateCitePlaceholder', (parseHtml) => {
+  it('should write normalized fields as data-cite-* attributes', () => {
+    const document = parseHtml('')
+    const element = document.createElement('div')
+
+    updateCitePlaceholder(element, {
+      publisher: 'example.com',
+      thumbnail: 'https://example.com/cover.jpg',
+    })
+
+    const expected = html`
+      <div
+        data-cite-publisher="example.com"
+        data-cite-thumbnail="https://example.com/cover.jpg"
+      >
+      </div>
+    `
+
+    expect(element.outerHTML).toEqualHtml(expected)
+  })
+
+  it('should not overwrite attributes already present on the element', () => {
+    const document = parseHtml('')
+    const element = document.createElement('div')
+    element.setAttribute('data-cite-title', 'Resolver title')
+
+    updateCitePlaceholder(element, { title: 'Enrichment title', publisher: 'example.com' })
+
+    const expected = html`
+      <div data-cite-title="Resolver title" data-cite-publisher="example.com"></div>
+    `
+
+    expect(element.outerHTML).toEqualHtml(expected)
+  })
+
+  // An enricher passing a whole API payload through would otherwise turn every key of it
+  // into an attribute, and a key that is not a valid attribute name would throw.
+  it('should ignore keys that are not cite fields', () => {
+    const document = parseHtml('')
+    const element = document.createElement('div')
+
+    updateCitePlaceholder(element, {
+      title: 'Post title',
+      media_key: '0b043233:b33b79b8',
+      'invalid name': 'value',
+    } as Partial<CiteResolverResult>)
+
+    expect(element.outerHTML).toEqualHtml('<div data-cite-title="Post title"></div>')
   })
 })
 
