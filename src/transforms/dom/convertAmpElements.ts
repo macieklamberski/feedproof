@@ -1,4 +1,3 @@
-import { isVideoId } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 
 type AmpConversion = {
@@ -26,7 +25,7 @@ export const convertAmpElements: DomTransform = () => (document) => {
   for (const element of document.querySelectorAll('amp-youtube')) {
     const videoId = element.getAttribute('data-videoid')
 
-    if (!videoId || !isVideoId(videoId)) {
+    if (!videoId) {
       continue
     }
 

@@ -97,8 +97,17 @@ describeForEachParser('convertAmpElements', (parseHtml) => {
     expect(result).toContain('src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
   })
 
-  it('should leave amp-youtube with an invalid videoid untouched', async () => {
+  // The id is whatever the publisher wrote. A broken one yields a broken embed, which is what
+  // the source said, and matches every other transform that builds one of these urls.
+  it('should build the embed from a malformed videoid as it stands', async () => {
     const value = '<amp-youtube data-videoid="../../evil"></amp-youtube>'
+    const result = await transform(value)
+
+    expect(result).toContain('src="https://www.youtube.com/embed/../../evil"')
+  })
+
+  it('should leave amp-youtube without a videoid untouched', async () => {
+    const value = '<amp-youtube></amp-youtube>'
     const result = await transform(value)
 
     expect(result).not.toContain('<iframe')
