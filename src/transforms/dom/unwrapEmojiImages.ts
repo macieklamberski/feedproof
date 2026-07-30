@@ -64,6 +64,7 @@ const shortcodePathSegments = [
   '/resources/emoji/', // Vanilla, whose only class is the generic `emoji`.
   '/mailer/emoji/', // ArtStation, same generic class and a stock name in the filename.
   'forum-smileys/', // Simple:Press, which has no leading slash before the directory.
+  'SMILIES_PATH', // phpBB template variable that shipped unexpanded, raw or percent-encoded.
 ]
 
 // Read for a glyph alt only, never a shortcode: platforms using this class have namespaces of

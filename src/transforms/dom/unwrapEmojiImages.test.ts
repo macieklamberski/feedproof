@@ -333,6 +333,26 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
       expect(await transformKeeping(value)).toBe(value)
     })
+
+    // The board shipped the template variable unsubstituted, so the src is a placeholder and the
+    // image cannot load anywhere. Text beats a broken picture, unlike every case above.
+    it('should replace a smilie whose path is the raw placeholder', async () => {
+      const value = `<p><img src="{SMILIES_PATH}/teeth_smile.gif" alt=":D" title="Very Happy"></p>`
+
+      expect(await transform(value)).toBe('<p>😃</p>')
+    })
+
+    it('should replace a smilie whose placeholder arrived percent-encoded', async () => {
+      const value = `<p><img src="%7BSMILIES_PATH%7D/wink_smile.gif" alt=";)"></p>`
+
+      expect(await transform(value)).toBe('<p>😉</p>')
+    })
+
+    it('should resolve a placeholder smilie by its alt when the filename carries no meaning', async () => {
+      const value = `<p><img src="{SMILIES_PATH}/15.gif" alt=":cry:" title="Crying"></p>`
+
+      expect(await transform(value)).toBe('<p>😢</p>')
+    })
   })
 
   describe('IPS / Invision (data-emoticon + /uploads/emoticons/ path)', () => {
