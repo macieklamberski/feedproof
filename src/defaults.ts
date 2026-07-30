@@ -277,6 +277,9 @@ export const defaultEmbedResolvers: Array<EmbedResolver> = [
   jwplayerEmbedResolver,
 ]
 
+// Order matters here too: a resolver replaces the element it matches, so a later one never
+// sees it. No two selectors below overlap today, so nothing depends on the current order; keep
+// the more specific one first if that ever changes.
 export const defaultCiteResolvers: Array<CiteResolver> = [
   ghostCiteResolver,
   substackOwnPostCiteResolver,
