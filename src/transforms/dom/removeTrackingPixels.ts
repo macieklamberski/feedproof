@@ -1,13 +1,8 @@
-import { parseUrl } from 'trousse'
+import { escapeRegex, parseUrl } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { getElementDimensions, isElementHidden, pixelDimensionLimit } from '../../utils/dom.js'
 
 const styleOpacityZeroRegex = /(?:^|;)\s*opacity\s*:\s*0(?:\.0+)?\s*(?:;|$)/i
-
-// Escapes regex metacharacters so a path segment matches literally. Replaces RegExp.escape,
-// which is ES2025 and absent in Node 22 LTS (a supported runtime).
-const regexMetaCharsRegex = /[.*+?^${}()|[\]\\]/g
-const escapeRegex = (value: string): string => value.replace(regexMetaCharsRegex, '\\$&')
 
 // `[./]` anchors require the segment to terminate with `.` (file extension) or `/`
 // (path boundary) to avoid false positives on words like `tracker` or `counter`.
