@@ -181,20 +181,41 @@ const resolveGlyph = (image: EmojiImage): string | undefined => {
   const glyph = alt && isEmojiShapedAlt(alt) ? alt : undefined
   const mapped = image.hasKnownVocabulary ? glyphFromVocabularies(shortname ?? alt, src) : undefined
 
-  // A sprite renders nothing, so an unmapped one still becomes the text the author typed. Every
-  // other image renders, and turning a working smilie into literal text is worse. A CDN image
-  // with no usable alt therefore keeps its picture: decoding the codepoints these CDNs name
-  // files after would close that, but it was the only route for 0.36% of 18,225 sampled images.
-  return glyph ?? mapped ?? (image.isSprite ? shortname : undefined)
+  return glyph ?? mapped
+}
+
+// The literal token the author typed, for a sprite that paints nothing even when it loads. A
+// picture that merely fails to load is left alone like any other dead image, and turning a
+// working smilie into text would be worse still, so a CDN image with no usable alt keeps its
+// picture. Needs no isNamedEmoji bar: nothing reaches here without a data-URI sprite src.
+const resolveFallbackText = (image: EmojiImage): string | undefined => {
+  return rendersNothing(image.src) ? (image.shortname ?? image.alt) : undefined
+}
+
+// Marked like an emoji image that keeps its picture: both are things a reader may want to style
+// as emoji rather than as prose.
+const wrapFallbackText = (document: Document, text: string): Element => {
+  const span = document.createElement('span')
+
+  span.setAttribute(emojiImageAttribute, '')
+  span.textContent = text
+
+  return span
 }
 
 export const unwrapEmojiImages: DomTransform = (context) => {
   return (document) => {
     walkElements(document, (element) => {
       if (isAnyOf(element.localName, customEmojiTags)) {
+        const fallback = element.textContent
+
         // Removing an empty one would be a deletion this transform has no business making.
-        if (element.textContent) {
-          element.replaceWith(element.textContent)
+        if (fallback) {
+          const replacement = isEmojiShapedAlt(fallback)
+            ? fallback
+            : wrapFallbackText(document, fallback)
+
+          element.replaceWith(replacement)
         }
 
         return
@@ -211,11 +232,21 @@ export const unwrapEmojiImages: DomTransform = (context) => {
       }
 
       // An empty result would leave the wrapping element for stripEmptyTags to delete.
-      const text = resolveGlyph(image)
+      const glyph = resolveGlyph(image)
 
-      if (text) {
-        element.replaceWith(text)
-      } else if (image.isNamedEmoji) {
+      if (glyph) {
+        element.replaceWith(glyph)
+        return
+      }
+
+      const fallbackText = resolveFallbackText(image)
+
+      if (fallbackText) {
+        element.replaceWith(wrapFallbackText(document, fallbackText))
+        return
+      }
+
+      if (image.isNamedEmoji) {
         element.setAttribute(emojiImageAttribute, '')
       }
     })
