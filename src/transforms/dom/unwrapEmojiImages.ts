@@ -58,6 +58,21 @@ const genericEmojiClasses = [
   'emoji', // Discourse, Vanilla, NodeBB, newer WordPress.
 ]
 
+// Sets with no Unicode equivalent at all, recognized so they can be marked rather than
+// converted. Nothing here ever resolves to a glyph.
+const customEmojiClasses = [
+  'emojione', // Mastodon.
+  'custom-emoji', // Mastodon, newer.
+]
+const customEmojiPathSegments = [
+  '/custom_emojis/', // Mastodon.
+  'sinaimg.cn/m/emoticon/', // Weibo.
+]
+
+// Left on an emoji image that keeps its picture, so the reader can size it like text and keep
+// it out of thumbnail selection. Presence is the whole signal.
+const emojiImageAttribute = 'data-emoji'
+
 // Wrappers holding a standard emoji as the fallback. A reader cannot fetch the custom asset,
 // and a sanitizer dropping unknown elements would take the fallback with it.
 const customEmojiTags = [
@@ -114,6 +129,9 @@ type EmojiImage = {
   isSprite: boolean
   isHosted: boolean
   hasKnownVocabulary: boolean
+  // Evidence that does not come from a directory name. A smilie directory is matched loosely
+  // on purpose, so a banner sitting in one must not be marked when it fails to resolve.
+  isNamedEmoji: boolean
 }
 
 const readEmojiImage = (element: Element, hosts: Array<string>): EmojiImage | undefined => {
@@ -128,7 +146,12 @@ const readEmojiImage = (element: Element, hosts: Array<string>): EmojiImage | un
     anyWordMatchesAnyOf(classes, shortcodeClasses) ||
     includesAnyOf(source, shortcodePathSegments)
 
-  if (!hasKnownVocabulary && !isHosted && !anyWordMatchesAnyOf(classes, genericEmojiClasses)) {
+  const isGenericEmoji = anyWordMatchesAnyOf(classes, genericEmojiClasses)
+  const isCustomSet =
+    anyWordMatchesAnyOf(classes, customEmojiClasses) ||
+    includesAnyOf(source, customEmojiPathSegments)
+
+  if (!hasKnownVocabulary && !isHosted && !isGenericEmoji && !isCustomSet) {
     return
   }
 
@@ -139,6 +162,13 @@ const readEmojiImage = (element: Element, hosts: Array<string>): EmojiImage | un
     isSprite,
     isHosted,
     hasKnownVocabulary,
+    isNamedEmoji:
+      isSprite ||
+      isHosted ||
+      isGenericEmoji ||
+      isCustomSet ||
+      element.hasAttribute(shortcodeAttributes[0]) ||
+      anyWordMatchesAnyOf(classes, shortcodeClasses),
   }
 }
 
@@ -176,11 +206,18 @@ export const unwrapEmojiImages: DomTransform = (context) => {
       }
 
       const image = readEmojiImage(element, context.emojiImageHosts)
-      const text = image && resolveGlyph(image)
+
+      if (!image) {
+        return
+      }
 
       // An empty result would leave the wrapping element for stripEmptyTags to delete.
+      const text = resolveGlyph(image)
+
       if (text) {
         element.replaceWith(text)
+      } else if (image.isNamedEmoji) {
+        element.setAttribute(emojiImageAttribute, '')
       }
     })
   }
