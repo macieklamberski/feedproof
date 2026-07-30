@@ -114,8 +114,15 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
 
     it('should leave the lossy mrgreen smilie with its working image', async () => {
-      const value =
-        '<p><img src="https://example.com/wp-includes/images/smilies/mrgreen.gif" alt=":mrgreen:" class="wp-smiley"></p>'
+      const value = html`
+        <p>
+          <img
+            src="https://example.com/wp-includes/images/smilies/mrgreen.gif"
+            alt=":mrgreen:"
+            class="wp-smiley"
+          >
+        </p>
+      `
 
       expect(await transformKeeping(value)).toBe(value)
     })
@@ -301,8 +308,14 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     // vocabulary known, so a CDN image never reaches the filename table and the codepoint route
     // with it. Widening that is a separate decision about how much a bare host should imply.
     it('should leave a host-matched image with no usable alt alone', async () => {
-      const value =
-        '<p><img src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/1f1fa-1f1f8.png" alt=""></p>'
+      const value = html`
+        <p>
+          <img
+            src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/1f1fa-1f1f8.png"
+            alt=""
+          >
+        </p>
+      `
 
       expect(await transformKeeping(value)).toBe(value)
     })
@@ -334,8 +347,13 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
 
     it('should replace several smilies in one sentence', async () => {
-      const value =
-        '<p>See <img class="smilies" src="/images/smilies/icon_arrow.gif" alt=":arrow:"> and <img class="smilies" src="/images/smilies/icon_cool.gif" alt="8-)"></p>'
+      const value = html`
+        <p>See
+          <img class="smilies" src="/images/smilies/icon_arrow.gif" alt=":arrow:">
+          and
+          <img class="smilies" src="/images/smilies/icon_cool.gif" alt="8-)">
+        </p>
+      `
       const expected = '<p>See ➡️ and 😎</p>'
 
       expect(await transform(value)).toBe(expected)
@@ -437,8 +455,15 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
 
     it('should resolve a stock filename once the default_ prefix is dropped', async () => {
-      const value =
-        '<p><img data-emoticon="true" src="https://example.com/uploads/emoticons/default_wink.png" alt=""></p>'
+      const value = html`
+        <p>
+          <img
+            data-emoticon="true"
+            src="https://example.com/uploads/emoticons/default_wink.png"
+            alt=""
+          >
+        </p>
+      `
       const expected = '<p>😉</p>'
 
       expect(await transform(value)).toBe(expected)
@@ -725,8 +750,15 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
     // Between annoyed, weary and pouting there is no single face this one obviously means.
     it('should leave the frustrated face with its picture', async () => {
-      const value =
-        '<p><img class="emoticon emoticon-smileyfrustrated" src="https://example.com/i/smilies/16x16_smiley-frustrated.png" alt="Smiley frustré"></p>'
+      const value = html`
+        <p>
+          <img
+            class="emoticon emoticon-smileyfrustrated"
+            src="https://example.com/i/smilies/16x16_smiley-frustrated.png"
+            alt="Smiley frustré"
+          >
+        </p>
+      `
 
       expect(await transformKeeping(value)).toBe(value)
     })
@@ -734,15 +766,29 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     // Some boards replace the stock art with a licensed set whose files are numbered, leaving
     // nothing in the markup that names the picture.
     it('should leave a board-specific replacement set with its picture', async () => {
-      const value =
-        '<p><img class="emoticon emoticon-ClinDoeil" src="https://example.com/images/smilies/emoji_licence_46.png" alt=""></p>'
+      const value = html`
+        <p>
+          <img
+            class="emoticon emoticon-ClinDoeil"
+            src="https://example.com/images/smilies/emoji_licence_46.png"
+            alt=""
+          >
+        </p>
+      `
 
       expect(await transformKeeping(value)).toBe(value)
     })
 
     it('should be idempotent', async () => {
-      const value =
-        '<p>Hi <img class="emoticon emoticon-smileywink" src="https://example.com/i/smilies/16x16_smiley-wink.png" alt="Smiley clignant"></p>'
+      const value = html`
+        <p>Hi
+          <img
+            class="emoticon emoticon-smileywink"
+            src="https://example.com/i/smilies/16x16_smiley-wink.png"
+            alt="Smiley clignant"
+          >
+        </p>
+      `
       const once = await transform(value)
       const twice = await transform(once)
 
@@ -842,8 +888,13 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
   describe('Weibo (sinaimg emoticon path)', () => {
     it('should leave an emoticon with a bracketed localized alt untouched', async () => {
-      const value =
-        '<p><span class="url-icon"><img alt="[围观]" src="https://h5.sinaimg.cn/m/emoticon/icon/others/o_weiguan.png"></span></p>'
+      const value = html`
+        <p>
+          <span class="url-icon">
+            <img alt="[围观]" src="https://h5.sinaimg.cn/m/emoticon/icon/others/o_weiguan.png">
+          </span>
+        </p>
+      `
 
       expect(await transformKeeping(value)).toBe(value)
     })
@@ -1054,8 +1105,14 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
 
     it('should be idempotent over fallback text it wrapped', async () => {
-      const value =
-        '<p><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-shortname=":sk21_d1:"></p>'
+      const value = html`
+        <p>
+          <img
+            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+            data-shortname=":sk21_d1:"
+          >
+        </p>
+      `
       const once = await transform(value)
       const twice = await transform(once)
 
