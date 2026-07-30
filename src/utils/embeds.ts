@@ -85,18 +85,15 @@ export const updateEmbedPlaceholder = (
   updatePlaceholder(element, 'embed', normalizeEmbedFields(metadata))
 }
 
+// `src` is the one field a placeholder cannot be built without, so it is required inside the
+// metadata rather than passed beside it — a second argument would let the two disagree.
 export const createEmbedPlaceholder = (
   document: Document,
-  src: string,
-  metadata?: Partial<EmbedResolverResult>,
+  metadata: Partial<EmbedResolverResult> & Pick<EmbedResolverResult, 'src'>,
 ): HTMLElement => {
-  const element = createPlaceholder(
-    document,
-    'embed',
-    normalizeEmbedFields({ ...metadata, src: metadata?.src ?? src }),
-  )
+  const element = createPlaceholder(document, 'embed', normalizeEmbedFields(metadata))
 
-  const fallbackUrl = (metadata?.url ?? metadata?.src ?? src).trim()
+  const fallbackUrl = (metadata.url ?? metadata.src).trim()
   const link = document.createElement('a')
   link.setAttribute('href', fallbackUrl)
   link.textContent = fallbackUrl
