@@ -9,8 +9,6 @@ type EmojiImage = {
   src: string
   alt: string | undefined
   shortname: string | undefined
-  isSprite: boolean
-  isHosted: boolean
   hasKnownVocabulary: boolean
   // Evidence that does not come from a directory name. A smilie directory is matched loosely
   // on purpose, so a banner sitting in one must not be marked when it fails to resolve.
@@ -160,8 +158,6 @@ const readEmojiImage = (element: Element, hosts: Array<string>): EmojiImage | un
     src,
     alt: attr(element, 'alt'),
     shortname,
-    isSprite,
-    isHosted,
     hasKnownVocabulary,
     isNamedEmoji:
       isSprite ||
