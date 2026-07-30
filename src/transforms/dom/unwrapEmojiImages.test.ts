@@ -637,6 +637,13 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         '<img class="e-emoticon" src="/e107_images/emotes/default/cheesey.png" alt="">',
         '😁',
       ],
+      // Boards add clap.gif to several engines' sets. The shortcode alt already resolved; this
+      // is the localized-title case where only the filename says what the picture is.
+      [
+        'community-added clap',
+        '<img class="smiley" src="https://example.com/images/smilies/clap.gif" alt="" title="Beifall">',
+        '👏',
+      ],
     ]
 
     it.each(engineCases)('should replace a %s smilie', async (_engine, tag, expected) => {
