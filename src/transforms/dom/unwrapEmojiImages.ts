@@ -32,8 +32,8 @@ const emojiPictureParts = [
 ]
 const emojiPictureRegex = new RegExp(emojiPictureParts.join('|'), 'u')
 
-const isEmojiShapedAlt = (alt: string): boolean => {
-  return emojiSequenceRegex.test(alt) && emojiPictureRegex.test(alt)
+const isEmojiShaped = (text: string): boolean => {
+  return emojiSequenceRegex.test(text) && emojiPictureRegex.test(text)
 }
 
 const shortcodes: Record<string, string> = vocabularies.shortcodes
@@ -118,6 +118,24 @@ const getFileStem = (src: string): string => {
   return extension === -1 ? name : name.slice(0, extension)
 }
 
+// Read for any engine the tables already cover, not one in particular: WoltLab happens to name
+// its whole default set this way. The length bound is also the safety check, since five hex
+// digits max is 0xFFFFF, below the 0x10FFFF where fromCodePoint throws.
+const codepointNameRegex = /^[0-9a-f]{4,5}(?:[-_][0-9a-f]{4,5})*$/
+const codepointSeparatorRegex = /[-_]/
+
+const glyphFromCodepoints = (stem: string): string | undefined => {
+  if (!codepointNameRegex.test(stem)) {
+    return
+  }
+
+  const codepoints = stem.split(codepointSeparatorRegex).map((part) => Number.parseInt(part, 16))
+  const glyph = String.fromCodePoint(...codepoints)
+
+  // Hex-shaped is not emoji-shaped: `2000` is a space and `dead` a lone surrogate.
+  return isEmojiShaped(glyph) ? glyph : undefined
+}
+
 // The filename is the second key because it is what survives an empty alt.
 const glyphFromVocabularies = (token: string | undefined, src: string): string | undefined => {
   const byShortcode = token ? shortcodes[token.toLowerCase()] : undefined
@@ -137,7 +155,7 @@ const glyphFromVocabularies = (token: string | undefined, src: string): string |
     .replace(namePrefixRegex, '')
     .replace(nameVariantRegex, '')
 
-  return names[stem]
+  return names[stem] ?? glyphFromCodepoints(stem)
 }
 
 const readEmojiImage = (element: Element, hosts: Array<string>): EmojiImage | undefined => {
@@ -180,7 +198,7 @@ const resolveGlyph = (image: EmojiImage): string | undefined => {
 
   // The alt is preferred over the tables, so an image matched by two rules resolves the same
   // either way.
-  const glyph = alt && isEmojiShapedAlt(alt) ? alt : undefined
+  const glyph = alt && isEmojiShaped(alt) ? alt : undefined
   const mapped = image.hasKnownVocabulary ? glyphFromVocabularies(shortname ?? alt, src) : undefined
 
   return glyph ?? mapped
@@ -213,7 +231,7 @@ export const unwrapEmojiImages: DomTransform = (context) => {
 
         // Removing an empty one would be a deletion this transform has no business making.
         if (fallback) {
-          const replacement = isEmojiShapedAlt(fallback)
+          const replacement = isEmojiShaped(fallback)
             ? fallback
             : wrapFallbackText(document, fallback)
 

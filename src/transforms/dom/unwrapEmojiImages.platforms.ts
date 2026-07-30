@@ -295,7 +295,8 @@ export const emojiPlatforms: Array<EmojiPlatform> = [
       shades_smile: '😎',
       angel_smile: '😇',
       devil_smile: '😈',
-      tounge_smile: '😛', // Misspelled upstream.
+      tongue_smile: '😛',
+      tounge_smile: '😛', // Misspelled upstream, and four times rarer than the corrected name.
       embaressed_smile: '😳', // Same.
       embarrassed_smile: '😳',
       broken_heart: '💔',
