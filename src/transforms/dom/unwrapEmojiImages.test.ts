@@ -620,6 +620,12 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         '🙂',
       ],
       ['FCKeditor', '<img src="/editor/images/smiley/msn/wink_smile.gif">', '😉'],
+      // Both spellings ship in the wild, and the corrected one is the commoner of the two.
+      [
+        'CKEditor corrected tongue',
+        '<img src="/ckeditor/plugins/smiley/images/tongue_smile.png" alt="cheeky" title="cheeky">',
+        '😛',
+      ],
       ['TinyMCE 4', '<img src="/tinymce/plugins/emoticons/img/smiley-cool.gif" alt="cool">', '😎'],
       [
         'Invision Power Board 3',
