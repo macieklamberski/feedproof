@@ -40,9 +40,11 @@
     ":coffee:": "☕",
     ":alien:": "👽",
     ":geek:": "🤓",
+    ":saint:": "😇",
     ":poop:": "💩",
     ":clap:": "👏",
     ":thumbsup:": "👍",
+    ":thumbup:": "👍",
     ":thumbsdown:": "👎",
     "(y)": "👍",
     "(n)": "👎",
@@ -115,6 +117,7 @@
     "huh": "😕",
     "undecided": "😕",
     "doubt": "😕",
+    "unsure": "😕",
     "shy": "😊",
     "blush": "😊",
     "cheesy": "😁",
@@ -158,6 +161,16 @@
     "angel_smile": "😇",
     "shades_smile": "😎",
     "devil_smile": "😈",
-    "cry_smile": "😢"
+    "cry_smile": "😢",
+    "16x16_smiley-happy": "🙂",
+    "16x16_smiley-wink": "😉",
+    "16x16_smiley-very-happy": "😃",
+    "16x16_smiley-tongue": "😛",
+    "16x16_smiley-sad": "🙁",
+    "16x16_smiley-surprised": "😲",
+    "16x16_smiley-lol": "😄",
+    "16x16_smiley-embarrassed": "😳",
+    "16x16_smiley-indifferent": "😐",
+    "16x16_heart": "❤️"
   }
 }
