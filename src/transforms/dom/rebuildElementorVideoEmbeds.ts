@@ -1,6 +1,6 @@
 import { extractDailymotionId } from '../../embeds/dailymotion.js'
 import { extractVimeoId } from '../../embeds/vimeo.js'
-import { extractVideoId } from '../../embeds/youtube.js'
+import { composeEmbedUrl, extractVideoId } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 
 // The Elementor video widget defers its player for the embed sources (YouTube, Vimeo,
@@ -14,7 +14,7 @@ const iframeSources: Record<string, (settings: Record<string, unknown>) => strin
     const url = settings.youtube_url
     const videoId = typeof url === 'string' ? extractVideoId(url) : undefined
 
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : undefined
+    return videoId ? composeEmbedUrl(videoId) : undefined
   },
   vimeo: (settings) => {
     const url = settings.vimeo_url

@@ -1,3 +1,4 @@
+import { composeEmbedUrl } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 
 type AmpConversion = {
@@ -30,7 +31,7 @@ export const convertAmpElements: DomTransform = () => (document) => {
     }
 
     const iframe = document.createElement('iframe')
-    iframe.setAttribute('src', `https://www.youtube.com/embed/${videoId}`)
+    iframe.setAttribute('src', composeEmbedUrl(videoId))
 
     for (const attribute of ['width', 'height']) {
       const value = element.getAttribute(attribute)

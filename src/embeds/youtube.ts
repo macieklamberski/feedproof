@@ -22,19 +22,28 @@ const pathIdSegments = ['shorts', 'embed', 'live', 'v']
 
 const youtubeHosts = ['youtube.com', 'youtube-nocookie.com', 'youtu.be']
 
-// hqdefault always exists for a video, so it's the safe default. Higher-res variants
-// (maxresdefault, sddefault) give a sharper poster but only exist for some videos, so
-// we can't pick them blindly.
-// TODO: detect and prefer a higher-res thumbnail when present — the best available
-// resolution varies per video, so it needs a probe (HEAD request) rather than a guess.
 // A bare id, already separated from any url: the right shape, and not one of the embed path
 // words that share it.
 export const isVideoId = (value: string): boolean => {
   return safeVideoIdRegex.test(value) && !nonVideoIds.has(value)
 }
 
+// hqdefault always exists for a video, so it's the safe default. Higher-res variants
+// (maxresdefault, sddefault) give a sharper poster but only exist for some videos, so
+// we can't pick them blindly.
+// TODO: detect and prefer a higher-res thumbnail when present — the best available
+// resolution varies per video, so it needs a probe (HEAD request) rather than a guess.
 export const composeThumbnailUrl = (videoId: string): string => {
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+}
+
+// The player url every transform that recovers an id has to build. Params are given as values
+// rather than a ready query string so they get encoded here, and one carrying an `&` cannot
+// open a parameter of its own.
+export const composeEmbedUrl = (videoId: string, params?: Record<string, string>): string => {
+  const query = params && Object.keys(params).length ? `?${new URLSearchParams(params)}` : ''
+
+  return `https://www.youtube.com/embed/${videoId}${query}`
 }
 
 export const extractVideoId = (link: string): string | undefined => {
@@ -91,7 +100,7 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
         return {
           provider: 'youtube',
           id: list,
-          src: `https://www.youtube.com/embed/videoseries?list=${list}`,
+          src: composeEmbedUrl('videoseries', { list }),
           url: `https://www.youtube.com/playlist?list=${list}`,
         }
       }
@@ -106,7 +115,7 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
         return {
           provider: 'youtube',
           id: channel,
-          src: `https://www.youtube.com/embed/live_stream?channel=${channel}`,
+          src: composeEmbedUrl('live_stream', { channel }),
           url: `https://www.youtube.com/channel/${channel}`,
         }
       }
@@ -124,7 +133,7 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
   return {
     provider: 'youtube',
     id: videoId,
-    src: `https://www.youtube.com/embed/${videoId}${pickUrlParams(url, youtubeEmbedParams)}`,
+    src: `${composeEmbedUrl(videoId)}${pickUrlParams(url, youtubeEmbedParams)}`,
     url: `https://www.youtube.com/watch?v=${videoId}`,
     thumbnail: composeThumbnailUrl(videoId),
   }
