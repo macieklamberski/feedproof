@@ -93,6 +93,35 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
       expect(await transform(value)).toBe(expected)
     })
+
+    it('should replace a legacy wp-includes smilie whose alt is a shortcode', async () => {
+      const value = html`
+        <p>
+          <img
+            src="https://example.com/wp-includes/images/smilies/icon_smile.gif"
+            alt=":)"
+            class="wp-smiley"
+          >
+        </p>
+      `
+      const expected = '<p>🙂</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should leave the lossy mrgreen smilie with its working image', async () => {
+      const value =
+        '<p><img src="https://example.com/wp-includes/images/smilies/mrgreen.gif" alt=":mrgreen:" class="wp-smiley"></p>'
+
+      expect(await transformKeeping(value)).toBe(value)
+    })
+
+    it('should resolve a Tango icon-set filename once the face- prefix is dropped', async () => {
+      const value =
+        '<p><img class="wp-smiley" src="/wp-content/plugins/tango-smilies/tango/face-smile.png" alt=":)"></p>'
+
+      expect(await transform(value)).toBe('<p>🙂</p>')
+    })
   })
 
   describe('WordPress.com (wpcom-smileys Twemoji)', () => {
@@ -185,6 +214,23 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const value = `<p><img src="data:image/png;base64,${'A'.repeat(300)}" data-shortname=":D"></p>`
 
       expect(await transformKeeping(value)).toBe(value)
+    })
+
+    // 1.x numbers its sprites in the class instead of carrying data-shortname, and points src at
+    // a shared transparent PNG rather than a data URI.
+    it('should replace a 1.x sprite named by its numbered class', async () => {
+      const value = html`
+        <p>
+          <img
+            src="styles/default/xenforo/clear.png"
+            class="mceSmilieSprite mceSmilie7"
+            alt=":p"
+            title="Stick Out Tongue :p"
+          >
+        </p>
+      `
+
+      expect(await transform(value)).toBe('<p>😛</p>')
     })
 
     // The theme directory differs per board, so the `smilies` directory is what identifies a
@@ -452,31 +498,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
   })
 
-  describe('WordPress (legacy wp-includes smilies)', () => {
-    it('should replace a legacy smilie whose alt is a shortcode', async () => {
-      const value = html`
-        <p>
-          <img
-            src="https://example.com/wp-includes/images/smilies/icon_smile.gif"
-            alt=":)"
-            class="wp-smiley"
-          >
-        </p>
-      `
-      const expected = '<p>🙂</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should leave the lossy mrgreen smilie with its working image', async () => {
-      const value =
-        '<p><img src="https://example.com/wp-includes/images/smilies/mrgreen.gif" alt=":mrgreen:" class="wp-smiley"></p>'
-
-      expect(await transformKeeping(value)).toBe(value)
-    })
-  })
-
-  describe('Serendipity and other engines named only by their path', () => {
+  describe('engines named only by their smilie directory', () => {
     // None of these carry a usable class, so the smilie directory is the only signal. All three
     // spellings are in use in the wild.
     const pathCases: Array<[string, string, string]> = [
@@ -497,40 +519,36 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       expect(await transform(value)).toBe(`<p>${expected}</p>`)
     })
 
-    // ArtStation carries only the generic `emoji` class, which is read for a glyph alt and
-    // never for a shortcode, so the path is what lets the filename be looked up.
-    it('should replace an ArtStation emoji, which is named only by its path', async () => {
+    it('should leave a site-custom smilie set untouched', async () => {
+      const value = '<p><img src="http://example.com/smilies/yahoo_laughloud.gif" alt=":))"></p>'
+
+      expect(await transformKeeping(value)).toBe(value)
+    })
+  })
+
+  describe('ArtStation (/mailer/emoji/ path with a generic emoji class)', () => {
+    // The generic class is read for a glyph alt and never for a shortcode, so the path is what
+    // lets the filename be looked up.
+    it('should replace an emoji named only by its path', async () => {
       const value =
         '<p><img class="emoji" alt="smiley" src="https://cdn.artstation.com/mailer/emoji/smiley.png"></p>'
 
       expect(await transform(value)).toBe('<p>🙂</p>')
     })
 
-    it('should leave an ArtStation emoji whose name is not in the table alone', async () => {
+    it('should leave an emoji whose name is not in the table alone', async () => {
       const value =
         '<p><img class="emoji" alt="partying" src="https://cdn.artstation.com/mailer/emoji/partying.png"></p>'
 
       expect(await transformKeeping(value)).toBe(value)
     })
-
-    it('should resolve a Tango icon-set filename once the face- prefix is dropped', async () => {
-      const value =
-        '<p><img class="wp-smiley" src="/wp-content/plugins/tango-smilies/tango/face-smile.png" alt=":)"></p>'
-
-      expect(await transform(value)).toBe('<p>🙂</p>')
-    })
   })
 
-  describe('forum engines recognized by class, attribute or path', () => {
+  describe('engines with a single distinguishing case', () => {
     // Each entry is markup as the engine actually emits it into feed content, so the awkward
     // parts are deliberate: MyBB's alt is an English name, vBulletin's is empty, FCKeditor
     // ships neither alt nor class, and IPB 2 puts the filename in the alt.
     const engineCases: Array<[string, string, string]> = [
-      [
-        'XenForo 1.x sprite',
-        '<img src="styles/default/xenforo/clear.png" class="mceSmilieSprite mceSmilie7" alt=":p" title="Stick Out Tongue :p">',
-        '😛',
-      ],
       [
         'SMF',
         '<img src="https://example.com/forum/Smileys/default/wink.gif" alt=";)" title="Wink" class="smiley">',
@@ -583,21 +601,26 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         '<img src="/wp-content/forum-smileys/sf-wink.gif" width="15" class="sfimageleft" title="wink" alt="wink">',
         '😉',
       ],
-      // WoltLab names its files after the codepoint, so only the alt says what the picture is.
-      [
-        'WoltLab thumbs up',
-        '<img src="https://example.com/images/smilies/emojione/1f44d.png" alt=":thumbup:" title="thumbup" class="smiley" height="23">',
-        '👍',
-      ],
-      [
-        'WoltLab halo face',
-        '<img src="https://example.com/images/smilies/emojione/1f607.png" alt=":saint:" title="saint" class="smiley" height="23">',
-        '😇',
-      ],
     ]
 
     it.each(engineCases)('should replace a %s smilie', async (_engine, tag, expected) => {
       expect(await transform(`<p>${tag}</p>`)).toBe(`<p>${expected}</p>`)
+    })
+  })
+
+  describe('WoltLab (codepoint filenames under /smilies/)', () => {
+    // The file is named after the codepoint, so only the alt says what the picture is.
+    const shortcodeCases: Array<[string, string, string]> = [
+      [':thumbup:', '1f44d', '👍'],
+      [':saint:', '1f607', '😇'],
+    ]
+
+    it.each(
+      shortcodeCases,
+    )('should replace a %s smilie from its alt', async (shortcode, codepoint, expected) => {
+      const value = `<p><img src="https://example.com/images/smilies/emojione/${codepoint}.png" alt="${shortcode}" title="${shortcode}" class="smiley" height="23"></p>`
+
+      expect(await transform(value)).toBe(`<p>${expected}</p>`)
     })
   })
 
@@ -745,6 +768,85 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
   })
 
+  describe('Mastodon (custom_emojis path with an emojione class)', () => {
+    // Custom emoji have no Unicode counterpart at all, so there is nothing to convert them to.
+    it('should leave a custom emoji with its picture', async () => {
+      const value = html`
+        <p>
+          <img
+            rel="emoji"
+            class="emojione"
+            alt=":catjam:"
+            src="https://files.mastodon.social/custom_emojis/images/000/224/097/original/d9c.gif"
+          >
+        </p>
+      `
+
+      expect(await transformKeeping(value)).toBe(value)
+    })
+  })
+
+  describe('Weibo (sinaimg emoticon path)', () => {
+    it('should leave an emoticon with a bracketed localized alt untouched', async () => {
+      const value =
+        '<p><span class="url-icon"><img alt="[围观]" src="https://h5.sinaimg.cn/m/emoticon/icon/others/o_weiguan.png"></span></p>'
+
+      expect(await transformKeeping(value)).toBe(value)
+    })
+  })
+
+  describe('Discourse (emoji class with shortcode alt)', () => {
+    it('should leave Discourse shortcode-alt with class="emoji" untouched', async () => {
+      const value = '<p><img class="emoji" alt=":slight_smile:"></p>'
+
+      expect(await transformKeeping(value)).toBe(value)
+    })
+  })
+
+  describe('Facebook (embedded posts)', () => {
+    it('should replace Facebook emoji image', async () => {
+      const value = html`
+        <p>
+          <img
+            height="16"
+            width="16"
+            alt="🙂"
+            referrerpolicy="origin-when-cross-origin"
+            src="https://static.xx.fbcdn.net/images/emoji.php/v9/t4c/1/16/1f642.png"
+          >
+        </p>
+      `
+      const expected = '<p>🙂</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+  })
+
+  describe('Twitter / X (embedded tweets)', () => {
+    it('should replace Twitter/X emoji image', async () => {
+      const value = '<p><img src="https://abs.twimg.com/emoji/v2/72x72/1f600.png" alt="😀"></p>'
+      const expected = '<p>😀</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+  })
+
+  describe('GitHub (gemoji README scrapings)', () => {
+    it('should replace GitHub gemoji image when alt is the emoji glyph', async () => {
+      const value = html`
+        <p>
+          <img
+            src="https://github.githubassets.com/images/icons/emoji/unicode/1f680.png"
+            alt="🚀"
+          >
+        </p>
+      `
+      const expected = '<p>🚀</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+  })
+
   describe('data-emoji marker', () => {
     // Custom sets have no glyph to become, so the marker is the only thing a reader can act on.
     const markedCases: Array<[string, string]> = [
@@ -813,37 +915,6 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
   })
 
-  describe('images that must keep their picture', () => {
-    // Custom emoji have no Unicode counterpart at all, so there is nothing to convert them to.
-    it('should leave a Mastodon custom emoji untouched', async () => {
-      const value = html`
-        <p>
-          <img
-            rel="emoji"
-            class="emojione"
-            alt=":catjam:"
-            src="https://files.mastodon.social/custom_emojis/images/000/224/097/original/d9c.gif"
-          >
-        </p>
-      `
-
-      expect(await transformKeeping(value)).toBe(value)
-    })
-
-    it('should leave a Weibo emoticon with a bracketed localized alt untouched', async () => {
-      const value =
-        '<p><span class="url-icon"><img alt="[围观]" src="https://h5.sinaimg.cn/m/emoticon/icon/others/o_weiguan.png"></span></p>'
-
-      expect(await transformKeeping(value)).toBe(value)
-    })
-
-    it('should leave a site-custom smilie set untouched', async () => {
-      const value = '<p><img src="http://example.com/smilies/yahoo_laughloud.gif" alt=":))"></p>'
-
-      expect(await transformKeeping(value)).toBe(value)
-    })
-  })
-
   describe('shortcode table', () => {
     const shortcodeEntries = Object.entries(vocabularies.shortcodes)
 
@@ -859,58 +930,6 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const keys = Object.keys(vocabularies.shortcodes)
 
       expect(keys).toEqual(keys.map((key) => key.toLowerCase()))
-    })
-  })
-
-  describe('Discourse (emoji class with shortcode alt)', () => {
-    it('should leave Discourse shortcode-alt with class="emoji" untouched', async () => {
-      const value = '<p><img class="emoji" alt=":slight_smile:"></p>'
-
-      expect(await transformKeeping(value)).toBe(value)
-    })
-  })
-
-  describe('Facebook (embedded posts)', () => {
-    it('should replace Facebook emoji image', async () => {
-      const value = html`
-        <p>
-          <img
-            height="16"
-            width="16"
-            alt="🙂"
-            referrerpolicy="origin-when-cross-origin"
-            src="https://static.xx.fbcdn.net/images/emoji.php/v9/t4c/1/16/1f642.png"
-          >
-        </p>
-      `
-      const expected = '<p>🙂</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-  })
-
-  describe('Twitter / X (embedded tweets)', () => {
-    it('should replace Twitter/X emoji image', async () => {
-      const value = '<p><img src="https://abs.twimg.com/emoji/v2/72x72/1f600.png" alt="😀"></p>'
-      const expected = '<p>😀</p>'
-
-      expect(await transform(value)).toBe(expected)
-    })
-  })
-
-  describe('GitHub (gemoji README scrapings)', () => {
-    it('should replace GitHub gemoji image when alt is the emoji glyph', async () => {
-      const value = html`
-        <p>
-          <img
-            src="https://github.githubassets.com/images/icons/emoji/unicode/1f680.png"
-            alt="🚀"
-          >
-        </p>
-      `
-      const expected = '<p>🚀</p>'
-
-      expect(await transform(value)).toBe(expected)
     })
   })
 
