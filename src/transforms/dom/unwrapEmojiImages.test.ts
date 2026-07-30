@@ -3,10 +3,12 @@ import { defaultEmojiImageHosts } from '../../defaults.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
-import { unwrapEmojiImages } from './unwrapEmojiImages.js'
+import { mergeEmojiNames, unwrapEmojiImages } from './unwrapEmojiImages.js'
 import vocabularies from './unwrapEmojiImages.json' with { type: 'json' }
+import { emojiPlatforms } from './unwrapEmojiImages.platforms.js'
 
 const asciiLetterRegex = /[a-zA-Z]/
+const conflictingNameRegex = /happy/
 
 describeForEachParser('unwrapEmojiImages', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
@@ -613,6 +615,35 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         '<img src="/wp-content/forum-smileys/sf-wink.gif" width="15" class="sfimageleft" title="wink" alt="wink">',
         '😉',
       ],
+      // From the engines' own default sets rather than from corpus tokens, so these cover
+      // boards the corpus never sampled. The last two are misspelled in the distributions.
+      [
+        'phpBB geek',
+        '<img class="smilies" src="/images/smilies/icon_e_geek.svg" alt="" title="Geek">',
+        '🤓',
+      ],
+      [
+        'SMF sealed lips',
+        '<img src="/Smileys/fugue/lipsrsealed.png" alt="" title="Lips sealed" class="smiley">',
+        '🤐',
+      ],
+      [
+        'e107 suprised',
+        '<img class="e-emoticon" src="/e107_images/emotes/default/suprised.png" alt="">',
+        '😲',
+      ],
+      [
+        'e107 cheesey',
+        '<img class="e-emoticon" src="/e107_images/emotes/default/cheesey.png" alt="">',
+        '😁',
+      ],
+      // Boards add clap.gif to several engines' sets. The shortcode alt already resolved; this
+      // is the localized-title case where only the filename says what the picture is.
+      [
+        'community-added clap',
+        '<img class="smiley" src="https://example.com/images/smilies/clap.gif" alt="" title="Beifall">',
+        '👏',
+      ],
     ]
 
     it.each(engineCases)('should replace a %s smilie', async (_engine, tag, expected) => {
@@ -964,6 +995,49 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const keys = Object.keys(vocabularies.shortcodes)
 
       expect(keys).toEqual(keys.map((key) => key.toLowerCase()))
+    })
+  })
+
+  describe('platform filename tables', () => {
+    const nameEntries = emojiPlatforms.flatMap((platform) =>
+      Object.entries(platform.names ?? {}).map(
+        ([name, glyph]) => [platform.name, name, glyph] as const,
+      ),
+    )
+
+    it.each(nameEntries)('should map the %s name %s to a bare glyph', (_platform, _name, glyph) => {
+      expect(glyph).not.toBe('')
+      expect(glyph).not.toMatch(asciiLetterRegex)
+    })
+
+    it.each(
+      nameEntries,
+    )('should key the %s name %s in lower case, as getFileStem normalizes', (_platform, name) => {
+      expect(name).toBe(name.toLowerCase())
+    })
+
+    // A filename two platforms disagree on cannot be resolved without knowing the engine, which
+    // the markup does not say, so the merge refuses rather than picking a winner.
+    it('should reject two platforms mapping one filename to different glyphs', () => {
+      const conflicting = [
+        { name: 'one', names: { happy: '🙂' } },
+        { name: 'two', names: { happy: '😄' } },
+      ]
+
+      expect(() => mergeEmojiNames(conflicting)).toThrow(conflictingNameRegex)
+    })
+
+    it('should accept the same filename when the platforms agree', () => {
+      const agreeing = [
+        { name: 'one', names: { smile: '🙂' } },
+        { name: 'two', names: { smile: '🙂' } },
+      ]
+
+      expect(mergeEmojiNames(agreeing)).toEqual({ smile: '🙂' })
+    })
+
+    it('should merge the shipped platforms without conflict', () => {
+      expect(() => mergeEmojiNames(emojiPlatforms)).not.toThrow()
     })
   })
 

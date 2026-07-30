@@ -2,6 +2,7 @@ import { anyWordMatchesAnyOf, includesAnyOf, isAnyOf } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { attr, walkElements } from '../../utils/dom.js'
 import vocabularies from './unwrapEmojiImages.json' with { type: 'json' }
+import { type EmojiPlatform, emojiPlatforms } from './unwrapEmojiImages.platforms.js'
 
 // `title` is deliberately absent: XenForo's is `Big grin    :D`, phpBB's the English `Smile`,
 // Khoros' localized. All three are prose where a glyph belongs.
@@ -36,33 +37,38 @@ const isEmojiShapedAlt = (alt: string): boolean => {
 }
 
 const shortcodes: Record<string, string> = vocabularies.shortcodes
-const names: Record<string, string> = vocabularies.names
 
-const shortcodeClasses = [
-  'wp-smiley', // WordPress.
-  'smilies', // phpBB.
-  'smilie', // XenForo, MyBB.
-  'smiley', // SMF, DokuWiki, Dotclear, WoltLab.
-  'bbc_emoticon', // Invision Power Board 3.
-  'e-emoticon', // e107.
-  /^mcesmilie/, // XenForo 1.x, which numbers them (`mceSmilieSprite mceSmilie7`).
-]
+// Two platforms shipping the same filename is fine while they agree on what it depicts. When
+// they disagree the filename cannot be resolved without knowing which engine produced it, and
+// the markers are many-to-many with engines, so the name has to be left unmapped in both.
+export const mergeEmojiNames = (platforms: Array<EmojiPlatform>): Record<string, string> => {
+  const merged: Record<string, string> = {}
 
+  for (const platform of platforms) {
+    for (const [name, glyph] of Object.entries(platform.names ?? {})) {
+      if (merged[name] && merged[name] !== glyph) {
+        throw new Error(
+          `Emoji name "${name}" is ${merged[name]} and ${glyph} on different platforms`,
+        )
+      }
+
+      merged[name] = glyph
+    }
+  }
+
+  return merged
+}
+
+const names = mergeEmojiNames(emojiPlatforms)
+
+// Platforms sharing a marker list it each, so the derived lookups dedup. A `Set` leaves every
+// regex in place, since each literal is a distinct object, which is what we want.
+const shortcodeClasses = [...new Set(emojiPlatforms.flatMap((platform) => platform.classes ?? []))]
 const shortcodeAttributes = [
-  'data-emoticon', // IPS / Invision.
+  ...new Set(emojiPlatforms.flatMap((platform) => platform.attributes ?? [])),
 ]
-
 const shortcodePathSegments = [
-  '/smilies/', // phpBB, XenForo, MyBB, FluxBB, vBulletin, WoltLab.
-  '/smileys/', // Drupal, DokuWiki, SMF.
-  '/emoticons/', // Serendipity, IPS, TinyMCE.
-  '/smiley/', // CKEditor and FCKeditor, ProBoards.
-  '/style_emoticons/', // Invision Power Board 2 and 3, which the plural form misses.
-  '/emotes/', // e107.
-  '/resources/emoji/', // Vanilla, whose only class is the generic `emoji`.
-  '/mailer/emoji/', // ArtStation, same generic class and a stock name in the filename.
-  'forum-smileys/', // Simple:Press, which has no leading slash before the directory.
-  'SMILIES_PATH', // phpBB template variable that shipped unexpanded, raw or percent-encoded.
+  ...new Set(emojiPlatforms.flatMap((platform) => platform.paths ?? [])),
 ]
 
 // Read for a glyph alt only, never a shortcode: platforms using this class have namespaces of
@@ -164,7 +170,7 @@ const readEmojiImage = (element: Element, hosts: Array<string>): EmojiImage | un
       isHosted ||
       isGenericEmoji ||
       isCustomSet ||
-      element.hasAttribute(shortcodeAttributes[0]) ||
+      shortcodeAttributes.some((attribute) => element.hasAttribute(attribute)) ||
       anyWordMatchesAnyOf(classes, shortcodeClasses),
   }
 }
