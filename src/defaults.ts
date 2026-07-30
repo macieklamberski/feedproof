@@ -37,6 +37,7 @@ import { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmb
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
+import { enrichCitePlaceholders } from './transforms/dom/enrichCitePlaceholders.js'
 import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 import { fixLazyAudios } from './transforms/dom/fixLazyAudios.js'
 import { fixLazyIframes } from './transforms/dom/fixLazyIframes.js'
@@ -228,6 +229,12 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // option is unset. Runs after placeholders exist and before neutralize/proxy so any
   // enriched URLs are still neutralized and proxied.
   enrichEmbedPlaceholders,
+  // Fills cite placeholder metadata via the caller's enrichCiteFn, for the fields a card's
+  // markup leaves out (e.g. a Tumblr link block whose poster carries no URL). No-ops when
+  // that option is unset. Runs after convertCiteCards has written the placeholders with
+  // their urls resolved and cleaned, and before neutralize/proxy so any enriched URLs are
+  // still neutralized and proxied.
+  enrichCitePlaceholders,
   // Neutralizes unsafe URLs (dangerous-scheme floor + optional isSafeUrlFn) after embeds
   // and cites are placeholdered, so it covers their data-* URLs, and before
   // proxyAssetUrls so the proxy never sees an unsafe URL.

@@ -26,22 +26,32 @@ export const createIframeEmbedResolver = (
   }
 }
 
+// Writes a field record as `data-{type}-*` attributes, leaving the ones already on the
+// element alone so a resolver's own values always survive an enrichment pass.
+export const updatePlaceholder = <Type extends object>(
+  element: HTMLElement,
+  type: GeneratedWrapperType,
+  fields: Type,
+): void => {
+  // Trimming here lets resolvers pass extracted text as-is; a value that is only
+  // whitespace trims to an empty string and is skipped with the other empty fields.
+  for (const [key, value] of Object.entries(fields)) {
+    const name = `data-${type}-${key}`
+    const cleaned = typeof value === 'string' ? value.trim() : value
+
+    if (cleaned && !element.hasAttribute(name)) {
+      element.setAttribute(name, cleaned)
+    }
+  }
+}
+
 export const createPlaceholder = <Type extends object>(
   document: Document,
   type: GeneratedWrapperType,
   fields: Type,
 ): HTMLElement => {
   const element = document.createElement('div')
-
-  // Trimming here lets resolvers pass extracted text as-is; a value that is only
-  // whitespace trims to an empty string and is skipped with the other empty fields.
-  for (const [key, value] of Object.entries(fields)) {
-    const cleaned = typeof value === 'string' ? value.trim() : value
-
-    if (cleaned) {
-      element.setAttribute(`data-${type}-${key}`, cleaned)
-    }
-  }
+  updatePlaceholder(element, type, fields)
 
   return element
 }
@@ -72,14 +82,7 @@ export const updateEmbedPlaceholder = (
   element: HTMLElement,
   metadata: Partial<EmbedResolverResult>,
 ): void => {
-  for (const [key, value] of Object.entries(normalizeEmbedFields(metadata))) {
-    const name = `data-embed-${key}`
-    const cleaned = value?.trim()
-
-    if (cleaned && !element.hasAttribute(name)) {
-      element.setAttribute(name, cleaned)
-    }
-  }
+  updatePlaceholder(element, 'embed', normalizeEmbedFields(metadata))
 }
 
 export const createEmbedPlaceholder = (
@@ -102,24 +105,44 @@ export const createEmbedPlaceholder = (
   return element
 }
 
+// Maps cite metadata to its `data-cite-*` field record. Key order is the attribute write
+// order, so it's kept stable. Shared by cite creation and enrichment so the field set lives
+// in one place: an enricher passing a whole API payload through cannot reach beyond these
+// names, and no value ever ends up in an attribute name.
+export const normalizeCiteFields = (
+  result: Partial<CiteResolverResult>,
+): Record<string, string | undefined> => {
+  return {
+    provider: result.provider,
+    description: result.description,
+    caption: result.caption,
+    author: result.author,
+    publisher: result.publisher,
+    date: result.date,
+    kind: result.kind,
+    url: result.url,
+    title: result.title,
+    icon: result.icon,
+    thumbnail: result.thumbnail,
+  }
+}
+
+export const updateCitePlaceholder = (
+  element: HTMLElement,
+  result: Partial<CiteResolverResult>,
+): void => {
+  updatePlaceholder(element, 'cite', normalizeCiteFields(result))
+}
+
 export const createCitePlaceholder = (
   document: Document,
   result: CiteResolverResult,
 ): HTMLElement => {
-  const { provider, title, url, icon, thumbnail, ...rest } = result
-
-  const element = createPlaceholder(document, 'cite', {
-    provider,
-    ...rest,
-    url,
-    title,
-    icon,
-    thumbnail,
-  })
+  const element = createPlaceholder(document, 'cite', normalizeCiteFields(result))
 
   const link = document.createElement('a')
-  link.setAttribute('href', url.trim())
-  link.textContent = title.trim()
+  link.setAttribute('href', result.url.trim())
+  link.textContent = result.title.trim()
   element.appendChild(link)
 
   return element

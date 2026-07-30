@@ -463,6 +463,40 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(result).toEqualHtml(expected)
   })
 
+  // A Tumblr link block names its poster by media_key alone, with no URL to render, so the
+  // thumbnail can only come from the caller resolving that key.
+  it('should enrich cite placeholders with metadata from enrichCiteFn', async () => {
+    const value = html`
+      <p
+        class="npf_link"
+        data-npf='{"type":"link","url":"https://example.com/post","title":"Page title","site_name":"example.com","poster":[{"media_key":"0b043233:b33b79b8","type":"image/png","width":800,"height":316}]}'
+      >
+        <a href="https://example.com/post" target="_blank">Page title</a>
+      </p>
+    `
+    const expected = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-publisher="example.com"
+        data-cite-url="https://example.com/post"
+        data-cite-title="Page title"
+        data-cite-thumbnail="https://example.com/cover.png"
+      >
+        <a href="https://example.com/post">Page title</a>
+      </div>
+    `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      enrichCiteFn: (cites) => {
+        return new Map(
+          cites.map(({ url }) => [url, { thumbnail: 'https://example.com/cover.png' }]),
+        )
+      },
+    })
+
+    expect(result).toEqualHtml(expected)
+  })
+
   it('should collapse a Steam news YouTube facade into a clean embed placeholder', async () => {
     const value = html`
       <p>Watch the trailer:</p>

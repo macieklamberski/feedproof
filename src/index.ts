@@ -45,6 +45,7 @@ export const transformContent = async (
     assetProxyFn: options.assetProxyFn,
     isSafeUrlFn: options.isSafeUrlFn,
     enrichEmbedFn: options.enrichEmbedFn,
+    enrichCiteFn: options.enrichCiteFn,
     highlightFn: options.highlightFn ?? defaultHighlightFn,
     articleTitle: options.articleTitle,
   }
@@ -133,6 +134,7 @@ export { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmb
 export { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
+export { enrichCitePlaceholders } from './transforms/dom/enrichCitePlaceholders.js'
 export { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 export { fixLazyAudios } from './transforms/dom/fixLazyAudios.js'
 export { fixLazyIframes } from './transforms/dom/fixLazyIframes.js'
@@ -202,6 +204,7 @@ export type {
   EmbedResolver,
   EmbedResolverResult,
   Enclosure,
+  EnrichCiteFn,
   EnrichEmbedFn,
   HighlightFn,
   IsSafeUrlFn,
@@ -218,8 +221,11 @@ export {
   createEmbedPlaceholder,
   createIframeEmbedResolver,
   createPlaceholder,
+  normalizeCiteFields,
   normalizeEmbedFields,
+  updateCitePlaceholder,
   updateEmbedPlaceholder,
+  updatePlaceholder,
 } from './utils/embeds.js'
 export { applyDomTransforms, applyStringTransforms } from './utils/transforms.js'
 export { chooseBaseUrl } from './utils/urls.js'

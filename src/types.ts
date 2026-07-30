@@ -83,6 +83,16 @@ export type CiteResolverResult = {
   kind?: CiteKind
 }
 
+// Fills in the fields a card's markup does not carry (e.g. a Tumblr link block naming its
+// poster by a media key that only Tumblr's own media service resolves), keyed by the cited
+// url. Unlike an embed's `provider:id`, the provider is not part of the key: it names the
+// platform the card was scraped from, not the linked page, so two cards from different
+// platforms pointing at one url share a single entry. It stays in the payload because an
+// implementation still dispatches on it.
+export type EnrichCiteFn = (
+  cites: Array<{ provider: string; url: string }>,
+) => MaybePromise<Map<string, Partial<CiteResolverResult>>>
+
 export type CiteResolver = {
   selector: string
   extract: (element: Element) => MaybePromise<CiteResolverResult | undefined>
@@ -133,6 +143,7 @@ export type TransformContext = {
   assetProxyFn?: AssetProxyFn
   isSafeUrlFn?: IsSafeUrlFn
   enrichEmbedFn?: EnrichEmbedFn
+  enrichCiteFn?: EnrichCiteFn
   highlightFn: HighlightFn
   articleTitle?: string
 }
@@ -165,6 +176,7 @@ export type TransformContentOptions = {
   assetProxyFn?: AssetProxyFn
   isSafeUrlFn?: IsSafeUrlFn
   enrichEmbedFn?: EnrichEmbedFn
+  enrichCiteFn?: EnrichCiteFn
   highlightFn?: HighlightFn
   articleTitle?: string
   stringTransforms?: Array<StringTransform>

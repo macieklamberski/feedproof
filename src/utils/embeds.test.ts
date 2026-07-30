@@ -6,6 +6,7 @@ import {
   createEmbedPlaceholder,
   createPlaceholder,
   normalizeEmbedFields,
+  updateCitePlaceholder,
   updateEmbedPlaceholder,
 } from './embeds.js'
 
@@ -110,6 +111,57 @@ describeForEachParser('updateEmbedPlaceholder', (parseHtml) => {
     const expected = '<div data-embed-title="Video title"></div>'
 
     expect(element.outerHTML).toEqualHtml(expected)
+  })
+})
+
+describeForEachParser('updateCitePlaceholder', (parseHtml) => {
+  it('should write normalized fields as data-cite-* attributes', () => {
+    const document = parseHtml('')
+    const element = document.createElement('div')
+
+    updateCitePlaceholder(element, {
+      publisher: 'example.com',
+      thumbnail: 'https://example.com/cover.jpg',
+    })
+
+    const expected = html`
+      <div
+        data-cite-publisher="example.com"
+        data-cite-thumbnail="https://example.com/cover.jpg"
+      >
+      </div>
+    `
+
+    expect(element.outerHTML).toEqualHtml(expected)
+  })
+
+  it('should not overwrite attributes already present on the element', () => {
+    const document = parseHtml('')
+    const element = document.createElement('div')
+    element.setAttribute('data-cite-title', 'Resolver title')
+
+    updateCitePlaceholder(element, { title: 'Enrichment title', publisher: 'example.com' })
+
+    const expected = html`
+      <div data-cite-title="Resolver title" data-cite-publisher="example.com"></div>
+    `
+
+    expect(element.outerHTML).toEqualHtml(expected)
+  })
+
+  // An enricher passing a whole API payload through would otherwise turn every key of it
+  // into an attribute, and a key that is not a valid attribute name would throw.
+  it('should ignore keys that are not cite fields', () => {
+    const document = parseHtml('')
+    const element = document.createElement('div')
+
+    updateCitePlaceholder(element, {
+      title: 'Post title',
+      media_key: '0b043233:b33b79b8',
+      'invalid name': 'value',
+    } as Partial<CiteResolverResult>)
+
+    expect(element.outerHTML).toEqualHtml('<div data-cite-title="Post title"></div>')
   })
 })
 
