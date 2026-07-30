@@ -3,6 +3,20 @@ import type { DomTransform } from '../../types.js'
 import { attr, walkElements } from '../../utils/dom.js'
 import vocabularies from './unwrapEmojiImages.json' with { type: 'json' }
 
+// `title` is deliberately absent: XenForo's is `Big grin    :D`, phpBB's the English `Smile`,
+// Khoros' localized. All three are prose where a glyph belongs.
+type EmojiImage = {
+  src: string
+  alt: string | undefined
+  shortname: string | undefined
+  isSprite: boolean
+  isHosted: boolean
+  hasKnownVocabulary: boolean
+  // Evidence that does not come from a directory name. A smilie directory is matched loosely
+  // on purpose, so a banner sitting in one must not be marked when it fails to resolve.
+  isNamedEmoji: boolean
+}
+
 const emojiSequenceParts = [
   '\\p{Extended_Pictographic}', // The pictures themselves.
   '\\p{Emoji_Modifier}', // Skin tones.
@@ -78,6 +92,7 @@ const emojiImageAttribute = 'data-emoji'
 const customEmojiTags = [
   'tg-emoji', // Telegram.
 ]
+
 // Applied to a filename in turn: the query and hash split, then the stock-file, icon-set and
 // resolution markers that are not part of the name.
 const queryOrHashRegex = /[?#]/
@@ -120,43 +135,28 @@ const glyphFromVocabularies = (token: string | undefined, src: string): string |
   return names[stem]
 }
 
-// `title` is deliberately absent: XenForo's is `Big grin    :D`, phpBB's the English `Smile`,
-// Khoros' localized. All three are prose where a glyph belongs.
-type EmojiImage = {
-  source: string
-  alt: string | undefined
-  shortname: string | undefined
-  isSprite: boolean
-  isHosted: boolean
-  hasKnownVocabulary: boolean
-  // Evidence that does not come from a directory name. A smilie directory is matched loosely
-  // on purpose, so a banner sitting in one must not be marked when it fails to resolve.
-  isNamedEmoji: boolean
-}
-
 const readEmojiImage = (element: Element, hosts: Array<string>): EmojiImage | undefined => {
-  const source = element.getAttribute('src') ?? ''
+  const src = element.getAttribute('src') ?? ''
   const classes = element.getAttribute('class') ?? ''
   const shortname = attr(element, 'data-shortname')
-  const isSprite = !!shortname && rendersNothing(source)
-  const isHosted = includesAnyOf(source, hosts)
+  const isSprite = !!shortname && rendersNothing(src)
+  const isHosted = includesAnyOf(src, hosts)
   const hasKnownVocabulary =
     isSprite ||
     shortcodeAttributes.some((attribute) => element.hasAttribute(attribute)) ||
     anyWordMatchesAnyOf(classes, shortcodeClasses) ||
-    includesAnyOf(source, shortcodePathSegments)
+    includesAnyOf(src, shortcodePathSegments)
 
   const isGenericEmoji = anyWordMatchesAnyOf(classes, genericEmojiClasses)
   const isCustomSet =
-    anyWordMatchesAnyOf(classes, customEmojiClasses) ||
-    includesAnyOf(source, customEmojiPathSegments)
+    anyWordMatchesAnyOf(classes, customEmojiClasses) || includesAnyOf(src, customEmojiPathSegments)
 
   if (!hasKnownVocabulary && !isHosted && !isGenericEmoji && !isCustomSet) {
     return
   }
 
   return {
-    source,
+    src,
     alt: attr(element, 'alt'),
     shortname,
     isSprite,
@@ -173,14 +173,12 @@ const readEmojiImage = (element: Element, hosts: Array<string>): EmojiImage | un
 }
 
 const resolveGlyph = (image: EmojiImage): string | undefined => {
-  const { alt, shortname, source } = image
+  const { alt, shortname, src } = image
 
   // The alt is preferred over the tables, so an image matched by two rules resolves the same
   // either way.
   const glyph = alt && isEmojiShapedAlt(alt) ? alt : undefined
-  const mapped = image.hasKnownVocabulary
-    ? glyphFromVocabularies(shortname ?? alt, source)
-    : undefined
+  const mapped = image.hasKnownVocabulary ? glyphFromVocabularies(shortname ?? alt, src) : undefined
 
   // A sprite renders nothing, so an unmapped one still becomes the text the author typed. Every
   // other image renders, and turning a working smilie into literal text is worse. A CDN image
