@@ -1,4 +1,3 @@
-import { resolveUrl } from 'feedcanon'
 import { parseUrl } from 'trousse'
 import type { ResolveUrlFn } from '../types.js'
 
@@ -104,80 +103,4 @@ export const isSamePage = (
   }
 
   return target.origin === base.origin && target.pathname === base.pathname
-}
-
-// An already-absolute http(s) URL, with no repair attempted. Every other candidate is meant
-// to be a URL and merely arrives malformed, so `resolveUrl`'s repairs are right for them. A
-// GUID is only sometimes a URL at all, and repairing it would add a scheme to `12345` or
-// `example.com` and make the result the base for the whole item.
-const strictHttpUrl = (value: string): string | undefined => {
-  const parsed = parseUrl(value)
-
-  if (parsed?.protocol !== 'http:' && parsed?.protocol !== 'https:') {
-    return
-  }
-
-  return parsed.href
-}
-
-// Priority: declared xml:base → item link → item GUID → site URL → feed URL. Item content is
-// authored relative to the item's page, so its link is the best base for resolving relative
-// URLs in content — but an explicit xml:base outranks it, being the spec-correct base URI for
-// relative references (Atom RFC 4287 §2, RFC 3986 §5.1.1). Item-level xml:base inherits from
-// channel-level, which resolves against the document URI, i.e. the feed URL.
-//
-// An empty-string xml:base is a declaration per W3C XML Base — it resolves to the parent's
-// base, effectively a reset — so it is told apart from "not declared" by an explicit null
-// check rather than by falsiness.
-//
-// The GUID is a base only when it is URL-shaped, which is common: an Atom <id> is often an
-// IRI and an RSS <guid isPermaLink="true"> is a URL by definition. It is the one candidate
-// read strictly, for the reason given at strictHttpUrl.
-export const chooseBaseUrl = (
-  itemUrl: string | null | undefined,
-  siteUrl: string | null | undefined,
-  feedUrl: string,
-  xmlBase?: { channel?: string | null; item?: string | null },
-  itemGuid?: string | null,
-): string | undefined => {
-  if (xmlBase?.channel != null || xmlBase?.item != null) {
-    const channelBase =
-      xmlBase.channel != null ? resolveUrl(xmlBase.channel, feedUrl) : resolveUrl(feedUrl)
-
-    if (xmlBase.item != null) {
-      const itemBase = channelBase
-        ? resolveUrl(xmlBase.item, channelBase)
-        : resolveUrl(xmlBase.item)
-
-      if (itemBase) {
-        return itemBase
-      }
-    }
-
-    if (channelBase) {
-      return channelBase
-    }
-  }
-
-  if (itemUrl && resolveUrl(itemUrl)) {
-    return itemUrl
-  }
-
-  if (itemGuid) {
-    const guidAsUrl = strictHttpUrl(itemGuid)
-
-    if (guidAsUrl) {
-      return guidAsUrl
-    }
-  }
-
-  if (siteUrl) {
-    const resolved = resolveUrl(siteUrl, feedUrl)
-
-    if (resolved) {
-      return resolved
-    }
-  }
-
-  return resolveUrl(feedUrl)
 }

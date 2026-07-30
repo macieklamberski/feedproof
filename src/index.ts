@@ -228,4 +228,3 @@ export {
   updatePlaceholder,
 } from './utils/embeds.js'
 export { applyDomTransforms, applyStringTransforms } from './utils/transforms.js'
-export { chooseBaseUrl } from './utils/urls.js'
