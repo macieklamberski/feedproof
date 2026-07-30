@@ -20,7 +20,7 @@ describeForEachParser('convertAmpElements', (parseHtml) => {
     expect(result).not.toContain('<amp-img')
   })
 
-  it('should drop AMP layout attributes and fallback children', async () => {
+  it('should carry AMP layout attributes over and still drop fallback children', async () => {
     const value = html`
       <amp-img src="photo.jpg" layout="responsive">
         <img src="fallback.jpg" fallback>
@@ -29,8 +29,19 @@ describeForEachParser('convertAmpElements', (parseHtml) => {
     const result = await transform(value)
 
     expect(result).toContain('src="photo.jpg"')
-    expect(result).not.toContain('layout=')
+    expect(result).toContain('layout="responsive"')
     expect(result).not.toContain('fallback.jpg')
+  })
+
+  it('should carry attributes the element type allows beyond the AMP basics', async () => {
+    const value = html`
+      <amp-video src="clip.mp4" preload="none" playsinline crossorigin="anonymous"></amp-video>
+    `
+    const result = await transform(value)
+
+    expect(result).toContain('preload="none"')
+    expect(result).toContain('playsinline')
+    expect(result).toContain('crossorigin="anonymous"')
   })
 
   it('should convert amp-anim into img', async () => {
