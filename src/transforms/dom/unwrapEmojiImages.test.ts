@@ -72,9 +72,10 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
-    // WordPress does not always put the glyph in the alt: a shortcode outside our table and a
-    // mis-encoded "?" both occur, and neither resolves. The image renders, so it stays.
-    it('should leave a wp-smiley whose alt is an untabled shortcode alone', async () => {
+    // The alt is a gemoji shortcode we deliberately do not carry, but the filename names the
+    // codepoint, so the picture states its own meaning. The mrgreen case below still covers an
+    // untabled alt whose filename says nothing.
+    it('should resolve a wp-smiley by its codepoint filename when the alt is untabled', async () => {
       const value = html`
         <p>
           <img
@@ -84,8 +85,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
           >
         </p>
       `
+      const expected = '<p>🐍</p>'
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should replace no-class WP variant matched by s.w.org URL', async () => {
@@ -295,11 +297,10 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
-    // A known gap, kept deliberately. These CDNs name each file after the codepoints it
-    // depicts, so this flag could be recovered from `1f1fa-1f1f8`. Decoding them cost about a
-    // quarter of the transform and, measured on a 1/64 corpus sample of 18,225 CDN images, was
-    // the only route for 0.36% of them. The image renders, so it is left alone instead.
-    it('should leave an image with no usable alt alone rather than decode its filename', async () => {
+    // Still a gap, though no longer for want of a decoder. A host match alone does not make the
+    // vocabulary known, so a CDN image never reaches the filename table and the codepoint route
+    // with it. Widening that is a separate decision about how much a bare host should imply.
+    it('should leave a host-matched image with no usable alt alone', async () => {
       const value =
         '<p><img src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/1f1fa-1f1f8.png" alt=""></p>'
 
@@ -661,7 +662,17 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     it.each(
       shortcodeCases,
     )('should replace a %s smilie from its alt', async (shortcode, codepoint, expected) => {
-      const value = `<p><img src="https://example.com/images/smilies/emojione/${codepoint}.png" alt="${shortcode}" title="${shortcode}" class="smiley" height="23"></p>`
+      const value = html`
+        <p>
+          <img
+            src="https://example.com/images/smilies/emojione/${codepoint}.png"
+            alt="${shortcode}"
+            title="${shortcode}"
+            class="smiley"
+            height="23"
+          >
+        </p>
+      `
 
       expect(await transform(value)).toBe(`<p>${expected}</p>`)
     })
@@ -887,6 +898,78 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const expected = '<p>🚀</p>'
 
       expect(await transform(value)).toBe(expected)
+    })
+  })
+
+  describe('codepoint filenames', () => {
+    // Read for any engine the tables already cover. WoltLab names its whole default set this
+    // way, across both the 1F plane and the BMP, but nothing here is specific to it.
+    const codepointCases: Array<[string, string]> = [
+      ['1f618', '😘'],
+      ['1f62d', '😭'],
+      ['2639', '☹'],
+      ['263a', '☺'],
+      ['1f1fa-1f1f8', '🇺🇸'],
+    ]
+
+    it.each(codepointCases)('should decode the filename %s', async (codepoint, expected) => {
+      const value = html`
+        <p>
+          <img
+            class="smiley"
+            src="https://example.com/images/smilies/emojione/${codepoint}.png"
+            alt=""
+          >
+        </p>
+      `
+
+      expect(await transform(value)).toBe(`<p>${expected}</p>`)
+    })
+
+    it('should decode a filename carrying a resolution variant suffix', async () => {
+      const value = html`
+        <p>
+          <img
+            class="smiley"
+            src="https://example.com/images/smilies/emojione/1f44d@2x.png"
+            alt=""
+          >
+        </p>
+      `
+      const expected = '<p>👍</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    // Any engine, not one: this is a phpBB directory rather than WoltLab's.
+    it('should decode under any recognized smilie directory', async () => {
+      const value = html`
+        <p>
+          <img class="smilies" src="https://example.com/images/smilies/1f604.png" alt="">
+        </p>
+      `
+      const expected = '<p>😄</p>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    // Hex-shaped is not emoji-shaped, and each of these is a filename that really occurs:
+    // e107 ships dead.png, and boards number their uploads.
+    const hexShapedCases: Array<[string, string]> = [
+      ['a sequential id, which decodes to a space', '2000'],
+      ['a lone surrogate', 'dead'],
+      ['a CJK ideograph', 'face'],
+      ['a stem too long to be a codepoint', 'ffffff'],
+    ]
+
+    it.each(hexShapedCases)('should not decode %s', async (_reason, stem) => {
+      const value = html`
+        <p>
+          <img class="smiley" src="https://example.com/images/smilies/${stem}.png" alt="">
+        </p>
+      `
+
+      expect(await transformKeeping(value)).toBe(value)
     })
   })
 
