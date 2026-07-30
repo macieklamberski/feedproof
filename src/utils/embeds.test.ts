@@ -12,9 +12,9 @@ import {
 
 describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
   describe('fallback link', () => {
-    it('should use metadata.url when present', () => {
+    it('should use url when present', () => {
       const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'https://embed.example/abc', {
+      const element = createEmbedPlaceholder(document, {
         provider: 'custom',
         src: 'https://embed.example/abc',
         url: 'https://canonical.example/abc',
@@ -23,38 +23,32 @@ describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
       expect(element.querySelector('a')?.getAttribute('href')).toBe('https://canonical.example/abc')
     })
 
-    it('should fall back to metadata.src when url is absent', () => {
+    it('should fall back to src when url is absent', () => {
       const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'https://passed-src.example', {
+      const element = createEmbedPlaceholder(document, {
         provider: 'custom',
         src: 'https://embed.example/abc',
       })
 
       expect(element.querySelector('a')?.getAttribute('href')).toBe('https://embed.example/abc')
     })
-
-    it('should fall back to src argument when metadata is omitted', () => {
-      const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'https://passed-src.example')
-
-      expect(element.querySelector('a')?.getAttribute('href')).toBe('https://passed-src.example')
-    })
   })
 
   describe('src wiring', () => {
-    it('should write the src argument as data-embed-src', () => {
+    it('should write src as data-embed-src', () => {
       const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'https://self-hosted.example/player')
+      const element = createEmbedPlaceholder(document, {
+        src: 'https://self-hosted.example/player',
+      })
 
       expect(element.getAttribute('data-embed-src')).toBe('https://self-hosted.example/player')
     })
 
-    it('should let metadata.src override the src argument', () => {
+    it('should build a placeholder from src alone, with no provider', () => {
       const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, 'https://passed-src.example', {
-        src: 'https://embed.example/abc',
-      })
+      const element = createEmbedPlaceholder(document, { src: 'https://embed.example/abc' })
 
+      expect(element.hasAttribute('data-embed-provider')).toBe(false)
       expect(element.getAttribute('data-embed-src')).toBe('https://embed.example/abc')
     })
   })

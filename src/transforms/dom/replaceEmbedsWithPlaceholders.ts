@@ -79,7 +79,7 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
           height: height ?? metadata.height,
         }
 
-        element.replaceWith(createEmbedPlaceholder(document, resolvedSrc, placeholderMetadata))
+        element.replaceWith(createEmbedPlaceholder(document, placeholderMetadata))
       }
     }
 
@@ -100,7 +100,9 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
         const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
 
         if (cleaned) {
-          iframe.replaceWith(createEmbedPlaceholder(document, cleaned, getEmbedDimensions(iframe)))
+          iframe.replaceWith(
+            createEmbedPlaceholder(document, { src: cleaned, ...getEmbedDimensions(iframe) }),
+          )
         }
       }
     }
@@ -114,7 +116,9 @@ export const replaceEmbedsWithPlaceholders: DomTransform = (context) => {
       const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
 
       if (cleaned) {
-        element.replaceWith(createEmbedPlaceholder(document, cleaned, getEmbedDimensions(element)))
+        element.replaceWith(
+          createEmbedPlaceholder(document, { src: cleaned, ...getEmbedDimensions(element) }),
+        )
       }
     }
   }
