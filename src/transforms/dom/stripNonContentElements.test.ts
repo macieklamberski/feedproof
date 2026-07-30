@@ -66,6 +66,7 @@ const specimens: Record<string, string> = {
   'drupal-render-placeholder':
     '<drupal-render-placeholder callback="comment.lazy_builders:renderLinks" arguments="0=node:1"></drupal-render-placeholder>',
   '.mcnPreviewText': '<span class="mcnPreviewText" style="display:none">Preview text</span>',
+  '.tmblr-alt-text-helper': '<span class="tmblr-alt-text-helper">ALT</span>',
   'img[src*="steamcommunity.com"][src*="placeholder"]':
     '<img src="https://cdn.steamcommunity.com/news/placeholder_video.gif">',
   '[src-consent]':
@@ -135,6 +136,18 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
         <div class="image-link-expand extra-class"><button></button></div>
       `
       const expected = '<picture><img src="x.jpg"></picture>'
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    it('should remove the Tumblr alt-text badge and keep the image it labels', async () => {
+      const value = html`
+        <figure class="tmblr-full" data-orig-height="814" data-orig-width="1000">
+          <img src="photo.jpg"><span class="tmblr-alt-text-helper">ALT</span>
+        </figure>
+      `
+      const expected =
+        '<figure class="tmblr-full" data-orig-height="814" data-orig-width="1000"><img src="photo.jpg"></figure>'
 
       expect(await transform(value)).toBe(expected)
     })
