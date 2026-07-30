@@ -118,6 +118,25 @@ const getFileStem = (src: string): string => {
   return extension === -1 ? name : name.slice(0, extension)
 }
 
+// Read for any engine the tables already cover, not one in particular: WoltLab happens to name
+// its whole default set this way. The length bound is also the safety check, since five hex
+// digits max is 0xFFFFF, below the 0x10FFFF where fromCodePoint throws.
+const codepointNameRegex = /^[0-9a-f]{4,5}(?:[-_][0-9a-f]{4,5})*$/
+const codepointSeparatorRegex = /[-_]/
+
+const glyphFromCodepoints = (stem: string): string | undefined => {
+  if (!codepointNameRegex.test(stem)) {
+    return
+  }
+
+  const codepoints = stem.split(codepointSeparatorRegex).map((part) => Number.parseInt(part, 16))
+  const glyph = String.fromCodePoint(...codepoints)
+
+  // Hex-shaped is not emoji-shaped: `2000` is a space, `dead` a lone surrogate, `face` a CJK
+  // ideograph.
+  return isEmojiShapedAlt(glyph) ? glyph : undefined
+}
+
 // The filename is the second key because it is what survives an empty alt.
 const glyphFromVocabularies = (token: string | undefined, src: string): string | undefined => {
   const byShortcode = token ? shortcodes[token.toLowerCase()] : undefined
@@ -137,7 +156,7 @@ const glyphFromVocabularies = (token: string | undefined, src: string): string |
     .replace(namePrefixRegex, '')
     .replace(nameVariantRegex, '')
 
-  return names[stem]
+  return names[stem] ?? glyphFromCodepoints(stem)
 }
 
 const readEmojiImage = (element: Element, hosts: Array<string>): EmojiImage | undefined => {
