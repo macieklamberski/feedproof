@@ -166,6 +166,131 @@ describe('chooseBaseUrl', () => {
 
     expect(value).toBe(expected)
   })
+
+  describe('xml:base', () => {
+    it('should prefer a declared item xml:base over the item url', () => {
+      const value = chooseBaseUrl(
+        'https://example.com/post/1',
+        'https://example.com',
+        'https://example.com/feed.xml',
+        { item: 'https://cdn.example.com/assets/' },
+      )
+      const expected = 'https://cdn.example.com/assets/'
+
+      expect(value).toBe(expected)
+    })
+
+    it('should resolve a relative item xml:base against the channel one', () => {
+      const value = chooseBaseUrl(null, null, 'https://example.com/feed.xml', {
+        channel: 'https://cdn.example.com/assets/',
+        item: 'posts/1/',
+      })
+      const expected = 'https://cdn.example.com/assets/posts/1/'
+
+      expect(value).toBe(expected)
+    })
+
+    it('should resolve a relative channel xml:base against the feed url', () => {
+      const value = chooseBaseUrl(null, null, 'https://example.com/feeds/main.xml', {
+        channel: '../assets/',
+      })
+      const expected = 'https://example.com/assets/'
+
+      expect(value).toBe(expected)
+    })
+
+    it('should resolve a relative item xml:base against the feed url when no channel one is declared', () => {
+      const value = chooseBaseUrl(null, null, 'https://example.com/feeds/main.xml', {
+        item: 'posts/1/',
+      })
+      const expected = 'https://example.com/feeds/posts/1/'
+
+      expect(value).toBe(expected)
+    })
+
+    it('should treat an empty xml:base as a reset to the feed url', () => {
+      const value = chooseBaseUrl(
+        'https://example.com/post/1',
+        null,
+        'https://example.com/feed.xml',
+        { channel: '' },
+      )
+      const expected = 'https://example.com/feed.xml'
+
+      expect(value).toBe(expected)
+    })
+
+    // An xml:base is meant to be a URL, so a malformed one is repaired like the item, site
+    // and feed urls are, rather than dropped.
+    it('should repair a feed-scheme xml:base', () => {
+      const value = chooseBaseUrl(null, null, 'https://example.com/feed.xml', {
+        channel: 'feed://cdn.example.com/assets/',
+      })
+      const expected = 'https://cdn.example.com/assets/'
+
+      expect(value).toBe(expected)
+    })
+
+    it('should decode entities in an xml:base', () => {
+      const value = chooseBaseUrl(null, null, 'https://example.com/feed.xml', {
+        channel: 'https://cdn.example.com/a&amp;b/',
+      })
+      const expected = 'https://cdn.example.com/a&b/'
+
+      expect(value).toBe(expected)
+    })
+
+    it('should fall through to the item url when the xml:base is not a usable url', () => {
+      const value = chooseBaseUrl('https://example.com/post/1', null, 'not-a-url', {
+        item: 'assets/',
+      })
+      const expected = 'https://example.com/post/1'
+
+      expect(value).toBe(expected)
+    })
+  })
+
+  describe('item guid', () => {
+    it('should use a url-shaped guid when the item url is missing', () => {
+      const value = chooseBaseUrl(
+        null,
+        'https://example.com',
+        'https://example.com/feed.xml',
+        undefined,
+        'https://example.com/post/1',
+      )
+      const expected = 'https://example.com/post/1'
+
+      expect(value).toBe(expected)
+    })
+
+    it('should rank the item url above the guid', () => {
+      const value = chooseBaseUrl(
+        'https://example.com/post/1',
+        null,
+        'https://example.com/feed.xml',
+        undefined,
+        'https://example.com/other/2',
+      )
+      const expected = 'https://example.com/post/1'
+
+      expect(value).toBe(expected)
+    })
+
+    // A tag: URI, an opaque string and a bare number are all common guids. None is a base,
+    // and a bare host must not be promoted into one by adding a scheme.
+    it.each([
+      'tag:example.com,2024:post-1',
+      '12345',
+      'example.com',
+      'post-1',
+    ])('should skip the guid %s', (guid) => {
+      const value = chooseBaseUrl(null, null, 'https://example.com/feed.xml', undefined, guid)
+      const expected = 'https://example.com/feed.xml'
+
+      expect(value).toBe(expected)
+    })
+  })
 })
 
 describe('pickUrlParams', () => {
