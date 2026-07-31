@@ -62,6 +62,31 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       expect(await transform(value, context)).toBe(expected)
     })
 
+    it('should remove heading when the title still carries HTML entities', async () => {
+      const value = html`
+        <h1><b><i>Let ‘em laugh</i></b><b>: Country’s last word 🪕</b></h1>
+        <p>Article body.</p>
+      `
+      const context: TransformContext = {
+        ...baseContext,
+        articleTitle: 'Let &lsquo;em laugh: Country&rsquo;s last word 🪕',
+      }
+      const expected = '<p>Article body.</p>'
+
+      expect(await transform(value, context)).toBe(expected)
+    })
+
+    it('should remove heading when the title itself carries inline markup', async () => {
+      const value = html`
+        <h1>The real story</h1>
+        <p>Article body.</p>
+      `
+      const context: TransformContext = { ...baseContext, articleTitle: 'The <em>real</em> story' }
+      const expected = '<p>Article body.</p>'
+
+      expect(await transform(value, context)).toBe(expected)
+    })
+
     it('should remove heading when text has collapsed multi-space whitespace', async () => {
       const value = html`
         <h1>The   real   story</h1>
