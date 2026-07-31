@@ -2,6 +2,7 @@ import { extractDailymotionId } from '../../embeds/dailymotion.js'
 import { extractVimeoId } from '../../embeds/vimeo.js'
 import { composeEmbedUrl, extractVideoId } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
+import { jsonAttr } from '../../utils/dom.js'
 
 // The Elementor video widget defers its player for the embed sources (YouTube, Vimeo,
 // Dailymotion, VideoPress): the real URL lives only in the widget's `data-settings` JSON and
@@ -45,18 +46,10 @@ const iframeSources: Record<string, (settings: Record<string, unknown>) => strin
 // `data-settings` or an unrecoverable id skips the widget rather than throwing.
 export const rebuildElementorVideoEmbeds: DomTransform = () => (document) => {
   for (const widget of document.querySelectorAll('.elementor-widget-video[data-settings]')) {
-    // getAttribute returns the decoded JSON (the parser unescapes the entities), so it
-    // can be parsed directly.
-    const rawSettings = widget.getAttribute('data-settings')
+    // The attribute reads back as decoded JSON, since the parser unescapes the entities.
+    const settings = jsonAttr<Record<string, unknown>>(widget, 'data-settings')
 
-    if (!rawSettings) {
-      continue
-    }
-
-    let settings: Record<string, unknown>
-    try {
-      settings = JSON.parse(rawSettings)
-    } catch {
+    if (!settings) {
       continue
     }
 
