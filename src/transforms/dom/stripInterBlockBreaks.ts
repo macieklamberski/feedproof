@@ -1,10 +1,38 @@
 import type { DomTransform } from '../../types.js'
-import { isBlockElement, isBr, isMediaElement, isSkippable } from '../../utils/dom.js'
+import { isBlockElement, isBr, isElement, isMediaElement, isSkippable } from '../../utils/dom.js'
+
+// A media element renders on its own line, and so does an inline wrapper holding
+// nothing but one: a linked image is the common case.
+const isMediaBlock = (node: Node): boolean => {
+  if (isMediaElement(node)) {
+    return true
+  }
+
+  if (!isElement(node) || isBlockElement(node)) {
+    return false
+  }
+
+  let media = false
+
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    if (isSkippable(child)) {
+      continue
+    }
+
+    if (media || !isMediaElement(child)) {
+      return false
+    }
+
+    media = true
+  }
+
+  return media
+}
 
 // A <br> is redundant beside anything that already breaks the flow: a block element
 // or a block-displayed media element such as a bare image or video.
 const separatesFlow = (node: Node): boolean => {
-  return isBlockElement(node) || isMediaElement(node)
+  return isBlockElement(node) || isMediaBlock(node)
 }
 
 export const stripInterBlockBreaks: DomTransform = () => {
@@ -45,7 +73,12 @@ export const stripInterBlockBreaks: DomTransform = () => {
             const previousSeparates = !previousBoundary || separatesFlow(previousBoundary)
             const nextSeparates = separatesFlow(child)
 
-            if (previousSeparates && nextSeparates) {
+            // Media only breaks the line because readers display it as a block, so the
+            // author's own <br> after it doubles the break whatever follows. After a real
+            // block the break was already redundant in the source, so it stays as intended.
+            const previousIsMedia = previousBoundary !== null && isMediaBlock(previousBoundary)
+
+            if (previousIsMedia || (previousSeparates && nextSeparates)) {
               for (const br of runBrs) {
                 br.remove()
               }
