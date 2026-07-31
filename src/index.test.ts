@@ -5,6 +5,7 @@ import { describeForEachParser, html } from './tests.js'
 import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 
 const lineBreakAfterBraceRegex = /\{\n\s+/
+const blockInParagraphRegex = /<p[^>]*>(?:[^<]|<(?!\/p>|p[\s>]))*<(?:div|pre|figure|table)[\s>]/
 
 describeForEachParser('transformContent', (parseHtml) => {
   it('should apply all default transforms', async () => {
@@ -1170,6 +1171,7 @@ describeForEachParser('transformContent', (parseHtml) => {
     const value = html`
       <p>Intro</p>
       <iframe src="https://www.youtube.com/embed/abc123"></iframe>
+      <p>Watch <iframe src="https://www.youtube.com/embed/def456"></iframe> inline</p>
       <figure class="kg-card kg-bookmark-card">
         <a class="kg-bookmark-container" href="https://example.com/linked">
           <div class="kg-bookmark-content">
@@ -1184,5 +1186,38 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(once).toContain('data-embed-src=')
     expect(once).toContain('data-cite-provider="ghost"')
     expect(twice).toBe(once)
+  })
+
+  // Transforms move elements through the DOM API, which enforces no nesting rules, so any
+  // of them can leave a block inside a paragraph. A browser takes that apart into a split
+  // paragraph, a hoisted block, bare text and a stray empty paragraph, so the pipeline
+  // emits the split itself. The two tests below reach it through different transforms.
+  it('should leave no embed placeholder inside a paragraph', async () => {
+    const value = html`
+      <p>Watch <iframe src="https://www.youtube.com/embed/abc123"></iframe> inline</p>
+      <p>Wrapped <span><iframe src="https://www.youtube.com/embed/def456"></iframe></span> after</p>
+    `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+    })
+
+    expect(result).toContain('<p>Watch </p>')
+    expect(result).toContain('<p>Wrapped </p>')
+    expect(result).not.toMatch(blockInParagraphRegex)
+  })
+
+  // The <code> holds a real newline, so it is promoted to a block <pre> rather than left
+  // inline. The html tag collapses whitespace, which would drop the promotion.
+  it('should leave no promoted code block inside a paragraph', async () => {
+    const value = '<p>Install <code>npm install feedsweep\nbun add feedsweep</code> and done</p>'
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+    })
+
+    expect(result).toContain('<p>Install </p>')
+    expect(result).toContain('<pre>')
+    expect(result).not.toMatch(blockInParagraphRegex)
   })
 })
