@@ -1,11 +1,18 @@
 import type { DomTransform } from '../../types.js'
 import { isBlockElement, isBr, isElement, isMediaElement, isSkippable } from '../../utils/dom.js'
+import { emojiImageAttribute } from './unwrapEmojiImages.js'
+
+// An emoji image keeps its picture but is sized like text, so it sits inside the line
+// instead of ending it and the <br> after it is a break the author meant.
+const isEmojiImage = (node: Node): boolean => {
+  return isElement(node) && node.hasAttribute(emojiImageAttribute)
+}
 
 // A media element renders on its own line, and so does an inline wrapper holding
 // nothing but one: a linked image is the common case.
 const isMediaBlock = (node: Node): boolean => {
   if (isMediaElement(node)) {
-    return true
+    return !isEmojiImage(node)
   }
 
   if (!isElement(node) || isBlockElement(node)) {
@@ -19,7 +26,7 @@ const isMediaBlock = (node: Node): boolean => {
       continue
     }
 
-    if (media || !isMediaElement(child)) {
+    if (media || !isMediaElement(child) || isEmojiImage(child)) {
       return false
     }
 

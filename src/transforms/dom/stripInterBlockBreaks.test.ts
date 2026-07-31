@@ -187,6 +187,43 @@ describeForEachParser('stripInterBlockBreaks', (parseHtml) => {
     expect(await transform(value)).toBe(value)
   })
 
+  it('should preserve br after an emoji image', async () => {
+    const value = html`
+      <p>
+        Nice
+        <img src="https://example.com/wink.png" data-emoji="">
+        <br>
+        Have fun!
+      </p>
+    `
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should preserve br after a linked emoji image', async () => {
+    const value = html`
+      <p>
+        <a href="https://example.com">
+          <img src="https://example.com/wink.png" data-emoji="">
+        </a>
+        <br>
+        Have fun!
+      </p>
+    `
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should preserve br between a block and a following emoji image', async () => {
+    const value = html`
+      <p>Text</p>
+      <br>
+      <img src="https://example.com/wink.png" data-emoji="">
+    `
+
+    expect(await transform(value)).toBe(value)
+  })
+
   it('should preserve br between bare text and a following image', async () => {
     const value = 'leading text<br><img src="https://example.com/p.jpg">'
 
