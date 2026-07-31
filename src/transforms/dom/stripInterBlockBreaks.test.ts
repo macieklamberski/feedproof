@@ -152,10 +152,21 @@ describeForEachParser('stripInterBlockBreaks', (parseHtml) => {
 
   it('should remove br between a linked image and following bare text', async () => {
     const value = html`
-      <p><a href="https://example.com"><img src="https://example.com/p.jpg"></a><br>Have fun!</p>
+      <p>
+        <a href="https://example.com">
+          <img src="https://example.com/p.jpg">
+        </a>
+        <br>
+        Have fun!
+      </p>
     `
     const expected = html`
-      <p><a href="https://example.com"><img src="https://example.com/p.jpg"></a>Have fun!</p>
+      <p>
+        <a href="https://example.com">
+          <img src="https://example.com/p.jpg">
+        </a>
+        Have fun!
+      </p>
     `
 
     expect(await transform(value)).toBe(expected)
@@ -163,7 +174,14 @@ describeForEachParser('stripInterBlockBreaks', (parseHtml) => {
 
   it('should preserve br between a link with text beside its image and following text', async () => {
     const value = html`
-      <p><a href="https://example.com"><img src="https://example.com/p.jpg">Label</a><br>Have fun!</p>
+      <p>
+        <a href="https://example.com">
+          <img src="https://example.com/p.jpg">
+          Label
+        </a>
+        <br>
+        Have fun!
+      </p>
     `
 
     expect(await transform(value)).toBe(value)
