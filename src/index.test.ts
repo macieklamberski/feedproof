@@ -56,6 +56,27 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
+  it('should keep the break after a custom emoji image', async () => {
+    const value = html`
+      <p>
+        Nice
+        <img src="https://mastodon.example/custom_emojis/images/blob.png" alt=":blob:">
+        <br>
+        Have fun!
+      </p>
+    `
+    const expected = html`
+      <p>
+        Nice
+        <img src="https://mastodon.example/custom_emojis/images/blob.png" alt=":blob:" data-emoji="">
+        <br>
+        Have fun!
+      </p>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
   it('should normalize a standalone code block to a scrollable pre, not a paragraph', async () => {
     const value = '<code>function greet(name) {\n  return name\n}</code>'
     // highlightCode promotes the bare block to <pre><code> before wrapBareInlineInParagraphs

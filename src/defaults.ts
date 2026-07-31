@@ -212,6 +212,8 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   highlightCode,
   wrapBareInlineInParagraphs,
   stripLeadingIndentation,
+  // Runs after unwrapEmojiImages so a custom emoji already carries data-emoji: without it
+  // the emoji reads as a block-displayed image and the <br> after it is taken as redundant.
   stripInterBlockBreaks,
   stripBoundaryBreaks,
   mergeFragmentedLists,
