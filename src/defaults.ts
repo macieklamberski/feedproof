@@ -77,6 +77,7 @@ import { stripBoundaryBreaks } from './transforms/dom/stripBoundaryBreaks.js'
 import { stripComments } from './transforms/dom/stripComments.js'
 import { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
 import { stripDuplicateEnclosures } from './transforms/dom/stripDuplicateEnclosures.js'
+import { stripDuplicateRules } from './transforms/dom/stripDuplicateRules.js'
 import { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 import { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
 import { stripHiddenElements } from './transforms/dom/stripHiddenElements.js'
@@ -251,6 +252,11 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // are about to disappear and the unwrap only fires on a re-run.
   unwrapHeadingBold,
   unwrapWrappers,
+  // Compares rules against their siblings, so it runs last: stripNonContentElements and
+  // stripEmptyTags have to have removed whatever sat between them, and unwrapWrappers has
+  // to have dissolved the per-rule <div> a feed wraps each one in — until then the rules
+  // are not siblings at all and the run is invisible.
+  stripDuplicateRules,
   wrapTablesForScroll,
 ]
 
