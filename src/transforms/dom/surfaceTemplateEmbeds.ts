@@ -1,6 +1,16 @@
 import type { DomTransform } from '../../types.js'
 
-const embedSelector = 'iframe, [data-embed-src]'
+// Media is here alongside embeds because Shopify's default theme parks a complete
+// <video controls><source src> inside a <template> in its <deferred-media> element, so the
+// markup is already right and only its location makes it inert.
+const embedSelector = [
+  'iframe',
+  '[data-embed-src]',
+  'video[src]',
+  'audio[src]',
+  'video source[src]',
+  'audio source[src]',
+].join(', ')
 
 // Returns the node that actually holds a template's content: the `.content`
 // DocumentFragment in a spec parser (jsdom), or the template element itself in
