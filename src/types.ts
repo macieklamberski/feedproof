@@ -106,10 +106,6 @@ export type CiteResolver = {
 export type MediaResolverResult = {
   tag: 'video' | 'audio'
   src: string
-  // No Substack upload can fill this: its assets sit behind a signed playback policy, so the
-  // thumbnail is refused even given the playback id from the redirect. Kept because other
-  // platforms do carry one (Squarespace hands out a poster through the same url template
-  // that serves the video), and because <video poster> renders it with nothing else needed.
   poster?: string
 }
 
