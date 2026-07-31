@@ -1,6 +1,7 @@
 import { resolveUrl } from 'feedcanon'
 import { affingerCiteResolver } from './cites/affinger.js'
 import { amebaCiteResolver } from './cites/ameba.js'
+import { blogCardCiteResolver } from './cites/blogcard.js'
 import { cocoonCiteResolver } from './cites/cocoon.js'
 import {
   devtoLegacyPostCiteResolver,
@@ -285,6 +286,7 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   substackOwnPostCiteResolver,
   substackCrossPostCiteResolver,
   cocoonCiteResolver,
+  blogCardCiteResolver,
   discourseCiteResolver,
   swellCiteResolver,
   xenforoCiteResolver,

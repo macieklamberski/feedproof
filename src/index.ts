@@ -71,6 +71,7 @@ export const transformContent = async (
 
 export { affingerCiteResolver } from './cites/affinger.js'
 export { amebaCiteResolver } from './cites/ameba.js'
+export { blogCardCiteResolver } from './cites/blogcard.js'
 export { cocoonCiteResolver } from './cites/cocoon.js'
 export {
   devtoLegacyPostCiteResolver,
