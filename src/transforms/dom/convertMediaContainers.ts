@@ -20,6 +20,11 @@ export const convertMediaContainers: DomTransform = (context) => {
         media.setAttribute('src', result.src)
         media.setAttribute('controls', '')
 
+        // <audio> has no poster, so it is written only where it renders.
+        if (result.poster && result.tag === 'video') {
+          media.setAttribute('poster', result.poster)
+        }
+
         element.replaceWith(media)
       }
     }

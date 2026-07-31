@@ -75,6 +75,37 @@ describeForEachParser('convertMediaContainers', (parseHtml) => {
     expect(result).toContain('https://example.com/track.mp3')
   })
 
+  it('should write a poster onto a video', async () => {
+    const posterResolver: MediaResolver = {
+      selector: '.poster-embed',
+      extract: () => ({
+        tag: 'video',
+        src: 'https://example.com/clip.mp4',
+        poster: 'https://example.com/still.jpg',
+      }),
+    }
+    const value = '<div class="poster-embed"></div>'
+    const result = await transform(value, withResolver(posterResolver))
+
+    expect(result).toContain('poster="https://example.com/still.jpg"')
+  })
+
+  it('should not write a poster onto an audio element', async () => {
+    const posterResolver: MediaResolver = {
+      selector: '.poster-embed',
+      extract: () => ({
+        tag: 'audio',
+        src: 'https://example.com/track.mp3',
+        poster: 'https://example.com/still.jpg',
+      }),
+    }
+    const value = '<div class="poster-embed"></div>'
+    const result = await transform(value, withResolver(posterResolver))
+
+    expect(result).toContain('<audio')
+    expect(result).not.toContain('poster')
+  })
+
   it('should await an async resolver', async () => {
     const asyncResolver: MediaResolver = {
       selector: '.async-embed',
