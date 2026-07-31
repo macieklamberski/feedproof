@@ -47,6 +47,7 @@ import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { fixLazyVideos } from './transforms/dom/fixLazyVideos.js'
 import { flattenPictureElements } from './transforms/dom/flattenPictureElements.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
+import { hoistBlocksFromParagraphs } from './transforms/dom/hoistBlocksFromParagraphs.js'
 import { hoistFigcaptionFromAnchor } from './transforms/dom/hoistFigcaptionFromAnchor.js'
 import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
 import { linkifyGistEmbeds } from './transforms/dom/linkifyGistEmbeds.js'
@@ -207,9 +208,8 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // a <code> (or <pre> in <pre>) from the source would otherwise survive and compound the
   // reader's relative code font-size, shrinking the text.
   unwrapNestedCodeWrappers,
-  // Runs before wrapBareInlineInParagraphs so a promoted standalone code block is a
-  // <pre> (block) by the time bare inline runs are wrapped, avoiding a <pre> nested
-  // inside a <p>.
+  // Runs before wrapBareInlineInParagraphs so a standalone multi-line <code> is promoted
+  // to a <pre> before bare inline runs are swept into paragraphs.
   highlightCode,
   wrapBareInlineInParagraphs,
   stripLeadingIndentation,
@@ -258,6 +258,9 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // are not siblings at all and the run is invisible.
   stripDuplicateRules,
   wrapTablesForScroll,
+  // Runs after everything that can insert a block element, so no transform downstream
+  // leaves one inside a paragraph.
+  hoistBlocksFromParagraphs,
 ]
 
 // Opt-in "best judgement" transforms that may drop content on a heuristic. Not in
