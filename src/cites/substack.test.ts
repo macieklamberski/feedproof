@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser } from '../tests.js'
+import { citeExtractor, describeForEachParser, html } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { substackCrossPostCiteResolver, substackOwnPostCiteResolver } from './substack.js'
 
@@ -149,6 +149,98 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
 
     it('should return undefined when data-attrs is absent', async () => {
       const value = makeCard('digest-post-embed')
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  // The shape a reader-mode fetch of the post page returns: no data-attrs, fields as markup.
+  describe('rendered shape', () => {
+    it('should extract every field from a rendered card', async () => {
+      const value = html`
+        <div data-component-name="DigestPostEmbed" class="digestPostEmbed-flwiST">
+          <a href="https://thereader.example.com/p/model-drop" rel="noopener" target="_blank">
+            <div class="pencraft pc-display-flex pc-gap-16 pc-reset">
+              <div style="width:70px;height:70px;" class="pencraft pc-reset">
+                <img src="https://cdn.example.com/cover.jpeg" alt="Model Drop" width="140" height="140">
+              </div>
+              <div class="pencraft pc-display-flex pc-flexDirection-column pc-reset">
+                <h4 class="pencraft pc-reset">Model Drop </h4>
+                <div class="pencraft pc-display-flex pc-gap-4 pc-reset">
+                  <div class="pencraft pc-reset">
+                    <a href="https://substack.com/profile/8243895-author-name">Author name</a>
+                  </div>
+                  <div class="pencraft pc-reset">·</div>
+                  <div class="pencraft pc-reset">October 5, 2025</div>
+                </div>
+                <a href="https://thereader.example.com/p/model-drop"><span>Read full story</span></a>
+              </div>
+            </div>
+          </a>
+        </div>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'substack',
+        url: 'https://thereader.example.com/p/model-drop',
+        title: 'Model Drop',
+        author: 'Author name',
+        thumbnail: 'https://cdn.example.com/cover.jpeg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Reader extraction strips class attributes, so nothing may depend on them.
+    it('should extract a card stripped of its classes', async () => {
+      const value = html`
+        <div data-component-name="DigestPostEmbed">
+          <a href="https://thereader.example.com/p/model-drop">
+            <div>
+              <img src="https://cdn.example.com/cover.jpeg">
+              <h4>Model Drop</h4>
+            </div>
+          </a>
+        </div>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'substack',
+        url: 'https://thereader.example.com/p/model-drop',
+        title: 'Model Drop',
+        thumbnail: 'https://cdn.example.com/cover.jpeg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should ignore a byline that is not a profile link', async () => {
+      const value = html`
+        <div data-component-name="DigestPostEmbed">
+          <a href="https://thereader.example.com/p/model-drop">
+            <h4>Model Drop</h4>
+            <a href="https://thereader.example.com/about">Author name</a>
+          </a>
+        </div>
+      `
+
+      expect((await extract(value))?.author).toBeUndefined()
+    })
+
+    it('should return undefined when the card has no anchor', async () => {
+      const value = html`
+        <div data-component-name="DigestPostEmbed">
+          <h4>Model Drop</h4>
+        </div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the card has no heading', async () => {
+      const value = html`
+        <div data-component-name="DigestPostEmbed">
+          <a href="https://thereader.example.com/p/model-drop">Read full story</a>
+        </div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })

@@ -1,6 +1,6 @@
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
-import { jsonAttr } from '../utils/dom.js'
+import { attr, find, jsonAttr, text } from '../utils/dom.js'
 
 // Substack's two post-embed shapes are separate components, not generations of one:
 // today's editor emits `.embedded-post-wrap` when embedding another creator's post and
@@ -58,16 +58,31 @@ export const substackCrossPostCiteResolver: CiteResolver = {
 
 // An embed of the publication's own post: the compact card behind Substack's digest and
 // "in case you missed it" flows (the March 2023 feature the class name comes from), and
-// also what a single self-post embed produces today. Ships as an empty hydration div.
-// The `caption` is the linked post's excerpt and the only preview text the div carries,
-// so it maps to the description.
+// also what a single self-post embed produces today. In a feed it ships as an empty
+// hydration div, where the `caption` is the linked post's excerpt and the only preview text
+// available, so it maps to the description.
+//
+// Substack's own site ships the same card hydrated instead, which is what a reader-mode
+// fetch of the post page sees. Its class is build-hashed there (`digestPostEmbed-flwiST`)
+// and reader extraction drops classes anyway, so the second arm matches the component name
+// and reads every field out of the markup. That shape carries no preview text or publication
+// branding, and dates it long-form ("October 5, 2025") rather than as the ISO string
+// `data-cite-date` holds, so those fields stay empty.
 export const substackOwnPostCiteResolver: CiteResolver = {
-  selector: '.digest-post-embed',
+  selector: '.digest-post-embed, [data-component-name="DigestPostEmbed"]',
   extract: (element) => {
     const attrs = jsonAttr<OwnPostAttrs>(element, 'data-attrs')
 
     if (!attrs) {
-      return
+      return buildCite({
+        provider: 'substack',
+        // The card's own anchor comes first; the byline anchor below it points at the
+        // author's Substack profile, on custom domains too.
+        url: attr(find(element, 'a[href]'), 'href'),
+        title: text(element, 'h4'),
+        author: text(find(element, 'a[href*="substack.com/profile/"]')),
+        thumbnail: attr(find(element, 'img'), 'src'),
+      })
     }
 
     return buildCite({
