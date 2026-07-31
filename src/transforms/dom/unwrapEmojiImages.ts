@@ -92,7 +92,7 @@ const customEmojiPathSegments = [
 
 // Left on an emoji image that keeps its picture, so the reader can size it like text and keep
 // it out of thumbnail selection. Presence is the whole signal.
-const emojiImageAttribute = 'data-emoji'
+export const emojiImageAttribute = 'data-emoji'
 
 // Wrappers holding a standard emoji as the fallback. A reader cannot fetch the custom asset,
 // and a sanitizer dropping unknown elements would take the fallback with it.
