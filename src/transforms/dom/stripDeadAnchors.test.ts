@@ -51,6 +51,20 @@ describeForEachParser('stripDeadAnchors', (parseHtml) => {
     expect(await transform(value)).toBe(expected)
   })
 
+  it('should unwrap anchor pointing at a client-side route', async () => {
+    const value = '<p><a href="#/portal/signup" class="kg-cta-button">Click here</a></p>'
+    const expected = '<p>Click here</p>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should unwrap anchor pointing at a client-side route with no trailing path', async () => {
+    const value = '<p><a href="#/">Home</a></p>'
+    const expected = '<p>Home</p>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
   it('should preserve anchor with fragment href pointing to a section', async () => {
     const value = '<p><a href="#section">jump</a></p>'
 

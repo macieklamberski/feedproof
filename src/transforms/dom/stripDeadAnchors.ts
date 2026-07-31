@@ -1,6 +1,10 @@
 import type { DomTransform } from '../../types.js'
 
 const javascriptSchemeRegex = /^javascript:/i
+// A fragment beginning with `#/` addresses a client-side router, not an element on the page:
+// Ghost's membership portal (`#/portal/signup`) is the common one in feeds. An in-page target
+// would need an id literally starting with a slash, so this cannot collide with `#section-2`.
+const hashRouteRegex = /^#\//
 
 // Some feeds carry anchors whose href has no navigation target — empty,
 // fragment-only, or javascript: pseudo-protocol left over from interactive
@@ -22,7 +26,11 @@ export const stripDeadAnchors: DomTransform = () => {
 
       const trimmed = href.trim()
 
-      const isDead = trimmed === '' || trimmed === '#' || javascriptSchemeRegex.test(trimmed)
+      const isDead =
+        trimmed === '' ||
+        trimmed === '#' ||
+        javascriptSchemeRegex.test(trimmed) ||
+        hashRouteRegex.test(trimmed)
 
       if (!isDead) {
         continue
