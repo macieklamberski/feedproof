@@ -86,6 +86,8 @@ const customEmojiClasses = [
 const customEmojiPathSegments = [
   '/custom_emojis/', // Mastodon.
   'sinaimg.cn/m/emoticon/', // Weibo.
+  'stat100.ameba.jp/blog/ucs/img/char/', // Ameba's built-in set, also served from c.stat100.
+  'emoji.ameba.jp/img/', // Ameba emoji uploaded by the blog's author.
 ]
 
 // Left on an emoji image that keeps its picture, so the reader can size it like text and keep
