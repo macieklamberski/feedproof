@@ -93,6 +93,7 @@ export {
   substackOwnPostCiteResolver,
 } from './cites/substack.js'
 export { swellCiteResolver } from './cites/swell.js'
+export { tcdCiteResolver } from './cites/tcd.js'
 export { tistoryCiteResolver } from './cites/tistory.js'
 export { tumblrCiteResolver } from './cites/tumblr.js'
 export { xenforoCiteResolver } from './cites/xenforo.js'

@@ -20,6 +20,7 @@ import { paragraphCiteResolver } from './cites/paragraph.js'
 import { pzlinkcardCiteResolver } from './cites/pzlinkcard.js'
 import { substackCrossPostCiteResolver, substackOwnPostCiteResolver } from './cites/substack.js'
 import { swellCiteResolver } from './cites/swell.js'
+import { tcdCiteResolver } from './cites/tcd.js'
 import { tistoryCiteResolver } from './cites/tistory.js'
 import { tumblrCiteResolver } from './cites/tumblr.js'
 import { xenforoCiteResolver } from './cites/xenforo.js'
@@ -293,6 +294,7 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   microformatsCiteResolver,
   amebaCiteResolver,
   tistoryCiteResolver,
+  tcdCiteResolver,
   hatenaCiteResolver,
   devtoLinkCiteResolver,
   nodebbCiteResolver,
