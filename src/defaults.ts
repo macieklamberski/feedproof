@@ -329,6 +329,23 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
 
 export const defaultMediaResolvers: Array<MediaResolver> = [substackMediaResolver]
 
+// Attributes that park a media file URL on a container which then builds the player with JS,
+// so the media never appears for a reader. Counts are feeds in a 1/32 corpus sample
+// (397,652 files) unless noted; the shapes were verified in live markup 2026-08-01.
+export const defaultMediaSrcAttributes = [
+  'data-src', // Drupal audiofield (`.audiofield-wordpress-player`) and assorted themes — 40 feeds.
+  'data-video-src', // Discourse video placeholders, Discourse 3.2+ — 1 feed, but every forum on that version emits it.
+  'data-mp4', // Beaver Builder row background video (`.fl-bg-video`).
+  'data-webm', // The same widget's second source.
+  'data-audiopath', // Sonaar MP3 Audio Player, ~100k WordPress installs — 2 feeds.
+  'data-qtmplayer-file', // QTM Player — 1 feed.
+  'data-asset-url', // Squarespace audio block, Squarespace-hosted — 12 feeds.
+  'data-nectar-video-src', // Salient theme.
+  'data-videolazy-id', // Tilda, page markup only.
+  'data-mp4video', // Tilda Zero Block, page markup only.
+  'data-pswp-video-src', // PhotoSwipe video support — 1 feed.
+]
+
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
 
 // Default code highlighter: highlight.js. Swap it via the highlightFn option.

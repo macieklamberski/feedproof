@@ -1,4 +1,4 @@
-import { expect, it } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { MediaResolver, TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
@@ -124,6 +124,75 @@ describeForEachParser('convertMediaContainers', (parseHtml) => {
 
     expect(result).toContain('native-video-embed')
     expect(result).not.toContain('<video')
+  })
+
+  describe('containers parking a media url in an attribute', () => {
+    it('should convert a Discourse video placeholder', async () => {
+      const value =
+        '<div class="video-placeholder-container" data-video-src="https://cdn.example.com/clip.mp4"></div>'
+      const result = await transform(value)
+
+      expect(result).toContain('<video')
+      expect(result).toContain('src="https://cdn.example.com/clip.mp4"')
+    })
+
+    it('should convert an audio url into an audio element', async () => {
+      const value =
+        '<div class="audiofield-wordpress-player" data-src="https://x.example/a.mp3"></div>'
+      const result = await transform(value)
+
+      expect(result).toContain('<audio')
+      expect(result).toContain('src="https://x.example/a.mp3"')
+      expect(result).not.toContain('<video')
+    })
+
+    it('should keep the container and its text, adding the media in front', async () => {
+      const value = '<li data-audiopath="https://x.example/track.mp3">Track one</li>'
+      const result = await transform(value)
+
+      expect(result).toContain('<audio')
+      expect(result).toContain('Track one')
+    })
+
+    // A manifest plays natively only in Safari, so promoting one breaks the player elsewhere.
+    it('should skip a streaming manifest', async () => {
+      const value = '<div data-video-src="https://x.example/index.m3u8"></div>'
+      const result = await transform(value)
+
+      expect(result).not.toContain('<video')
+    })
+
+    it('should skip a value that names an image', async () => {
+      const value = '<div data-src="https://x.example/photo.jpg"></div>'
+      const result = await transform(value)
+
+      expect(result).not.toContain('<video')
+      expect(result).not.toContain('<audio')
+    })
+
+    it('should skip a container that already wraps a player', async () => {
+      const value =
+        '<div data-src="https://x.example/a.mp3"><audio controls src="https://x.example/a.mp3"></audio></div>'
+      const result = await transform(value)
+
+      expect(result.match(/<audio/g)).toHaveLength(1)
+    })
+
+    it('should take the first attribute that names a media file', async () => {
+      const value =
+        '<div data-mp4="https://x.example/a.mp4" data-webm="https://x.example/a.webm"></div>'
+      const result = await transform(value)
+
+      expect(result).toContain('src="https://x.example/a.mp4"')
+      expect(result).not.toContain('src="https://x.example/a.webm"')
+    })
+
+    it('should do nothing when no attributes are configured', async () => {
+      const value = '<div data-video-src="https://x.example/clip.mp4"></div>'
+      const result = await transform(value, { ...baseContext, mediaSrcAttributes: [] })
+
+      expect(result).not.toContain('<video')
+    })
   })
 
   it('should be idempotent', async () => {

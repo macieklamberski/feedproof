@@ -145,6 +145,7 @@ export type TransformContext = {
   embedResolvers: Array<EmbedResolver>
   citeResolvers: Array<CiteResolver>
   mediaResolvers: Array<MediaResolver>
+  mediaSrcAttributes: Array<string>
   lazySrcAttributes: Array<string>
   lazySrcsetAttributes: Array<string>
   lazyIframeAttributes: Array<string>
@@ -179,6 +180,7 @@ export type TransformContentOptions = {
   embedResolvers?: Array<EmbedResolver>
   citeResolvers?: Array<CiteResolver>
   mediaResolvers?: Array<MediaResolver>
+  mediaSrcAttributes?: Array<string>
   lazySrcAttributes?: Array<string>
   lazySrcsetAttributes?: Array<string>
   lazyIframeAttributes?: Array<string>
