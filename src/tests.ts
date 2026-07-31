@@ -10,6 +10,7 @@ import {
   defaultLazyIframeAttributes,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
+  defaultMediaResolvers,
   defaultNonContentSelectors,
   defaultPreservedPreClasses,
   defaultResolveUrlFn,
@@ -26,6 +27,7 @@ type ParseHtml = (html: string) => Document
 export const baseContext: TransformContext = {
   embedResolvers: defaultEmbedResolvers,
   citeResolvers: defaultCiteResolvers,
+  mediaResolvers: defaultMediaResolvers,
   emojiImageHosts: defaultEmojiImageHosts,
   avatarImageHosts: defaultAvatarImageHosts,
   nonContentSelectors: defaultNonContentSelectors,

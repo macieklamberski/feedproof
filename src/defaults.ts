@@ -29,6 +29,7 @@ import { jwplayerEmbedResolver } from './embeds/jwplayer.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
+import { substackMediaResolver } from './media/substack.js'
 import { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 import { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
@@ -37,6 +38,7 @@ import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParag
 import { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 import { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
+import { convertMediaContainers } from './transforms/dom/convertMediaContainers.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 import { enrichCitePlaceholders } from './transforms/dom/enrichCitePlaceholders.js'
@@ -108,6 +110,7 @@ import type {
   DeferredIframeSource,
   DomTransform,
   EmbedResolver,
+  MediaResolver,
   ResolveUrlFn,
   StringTransform,
 } from './types.js'
@@ -169,6 +172,10 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // carrying an image-shaped lazy src) before the image transforms run, so the
   // resulting <img> is dimensioned and proxied like any other.
   convertLazyImageContainers,
+  // Recovers a real <video>/<audio> from a container that names its file by an id, in the
+  // same position and for the same reason as convertLazyImageContainers above: the element
+  // it produces then goes through the media passes like any other.
+  convertMediaContainers,
   // fixLazyImages resolves the real src before resolveMediaDimensions reads a size from
   // the URL; resolveMediaDimensions runs before flattenPictureElements dissolves the
   // <picture> it reads dimensions from. flattenPictureElements last also lets its modern
@@ -319,6 +326,8 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   affingerCiteResolver,
   mediumCiteResolver,
 ]
+
+export const defaultMediaResolvers: Array<MediaResolver> = [substackMediaResolver]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
 

@@ -9,6 +9,7 @@ import {
   defaultLazyIframeAttributes,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
+  defaultMediaResolvers,
   defaultNonContentSelectors,
   defaultPreservedPreClasses,
   defaultResolveUrlFn,
@@ -30,6 +31,7 @@ export const transformContent = async (
     enclosures: options.enclosures,
     embedResolvers: options.embedResolvers ?? defaultEmbedResolvers,
     citeResolvers: options.citeResolvers ?? defaultCiteResolvers,
+    mediaResolvers: options.mediaResolvers ?? defaultMediaResolvers,
     lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,
     lazySrcsetAttributes: options.lazySrcsetAttributes ?? defaultLazySrcsetAttributes,
     lazyIframeAttributes: options.lazyIframeAttributes ?? defaultLazyIframeAttributes,
@@ -126,6 +128,7 @@ export {
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
 export { hljsHighlightFn } from './highlighters/hljs.js'
+export { substackMediaResolver } from './media/substack.js'
 export { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 export { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 export { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
@@ -134,6 +137,7 @@ export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParag
 export { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 export { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
 export { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
+export { convertMediaContainers } from './transforms/dom/convertMediaContainers.js'
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 export { enrichCitePlaceholders } from './transforms/dom/enrichCitePlaceholders.js'
@@ -212,6 +216,8 @@ export type {
   EnrichEmbedFn,
   HighlightFn,
   IsSafeUrlFn,
+  MediaResolver,
+  MediaResolverResult,
   ParseHtmlFn,
   ResolveUrlFn,
   StringTransform,
