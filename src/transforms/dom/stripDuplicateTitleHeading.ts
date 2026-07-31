@@ -29,16 +29,17 @@ export const stripDuplicateTitleHeading: DomTransform = (context) => {
 
   return (document) => {
     let heading: Element | null = document.querySelector(headingSelector)
-    let text = heading?.textContent?.trim() ?? ''
+    let text = normalize(heading?.textContent ?? '')
 
     // Fall back to a full sweep only when the first heading is empty (rare).
-    if (heading && text.length === 0) {
+    if (heading && !text) {
       heading = null
+
       for (const candidate of document.querySelectorAll(headingSelector)) {
-        const candidateText = candidate.textContent?.trim() ?? ''
-        if (candidateText.length > 0) {
+        text = normalize(candidate.textContent ?? '')
+
+        if (text) {
           heading = candidate
-          text = candidateText
           break
         }
       }
@@ -48,7 +49,7 @@ export const stripDuplicateTitleHeading: DomTransform = (context) => {
       return
     }
 
-    if (normalize(text) !== normalize(getTitleText(document, articleTitle))) {
+    if (text !== normalize(getTitleText(document, articleTitle))) {
       return
     }
 
