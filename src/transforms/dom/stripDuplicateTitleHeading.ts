@@ -5,11 +5,25 @@ const mediaSelector = 'img, picture, video, audio, iframe, svg'
 
 const normalize = (value: string): string => value.trim().toLowerCase().replace(/\s+/g, ' ')
 
-export const stripDuplicateTitleHeading: DomTransform = (context) => {
-  const articleTitle = context.articleTitle
-  const title = articleTitle && articleTitle.trim().length > 0 ? normalize(articleTitle) : ''
+const markupRegex = /[&<]/
 
-  if (!title) {
+// A title can carry markup the heading's text does not: entities left by a feed that escaped
+// it twice (Tumblr's `&amp;rsquo;`), or inline tags. Parsing it gives the text to compare.
+const getTitleText = (document: Document, value: string): string => {
+  if (!markupRegex.test(value)) {
+    return value
+  }
+
+  const container = document.createElement('div')
+  container.innerHTML = value
+
+  return container.textContent ?? ''
+}
+
+export const stripDuplicateTitleHeading: DomTransform = (context) => {
+  const articleTitle = context.articleTitle?.trim() ?? ''
+
+  if (!articleTitle) {
     return () => {}
   }
 
@@ -34,7 +48,7 @@ export const stripDuplicateTitleHeading: DomTransform = (context) => {
       return
     }
 
-    if (text.toLowerCase().replace(/\s+/g, ' ') !== title) {
+    if (normalize(text) !== normalize(getTitleText(document, articleTitle))) {
       return
     }
 
