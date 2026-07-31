@@ -48,26 +48,6 @@ export type EmbedResolver = {
   extract: (element: Element) => MaybePromise<EmbedResolverResult | undefined>
 }
 
-// A platform that ships its own media as a container naming the file by an id, with no url
-// anywhere in the markup, so the element renders as nothing until the id is turned into a
-// url. Unlike the embed and cite resolvers, which mint opaque placeholders, this one
-// produces an ordinary <video>/<audio> that the later media passes then treat as any other:
-// dimensioned, proxied and deduplicated against the enclosures.
-export type MediaResolverResult = {
-  tag: 'video' | 'audio'
-  src: string
-  // No Substack upload can fill this: its assets sit behind a signed playback policy, so the
-  // thumbnail is refused even given the playback id from the redirect. Kept because other
-  // platforms do carry one (Squarespace hands out a poster through the same url template
-  // that serves the video), and because <video poster> renders it with nothing else needed.
-  poster?: string
-}
-
-export type MediaResolver = {
-  selector: string
-  extract: (element: Element) => MaybePromise<MediaResolverResult | undefined>
-}
-
 // A convention that parks an iframe's real URL in a `<div>` attribute and builds the iframe
 // with JS at runtime — Pym.js (`data-pym-src`) and @newswire/frames (`data-frame-src`) are the
 // two seen in the wild. A reader runs no JS, so `rebuildDeferredIframes` materializes the iframe
@@ -116,6 +96,26 @@ export type EnrichCiteFn = (
 export type CiteResolver = {
   selector: string
   extract: (element: Element) => MaybePromise<CiteResolverResult | undefined>
+}
+
+// A platform that ships its own media as a container naming the file by an id, with no url
+// anywhere in the markup, so the element renders as nothing until the id is turned into a
+// url. Unlike the embed and cite resolvers, which mint opaque placeholders, this one
+// produces an ordinary <video>/<audio> that the later media passes then treat as any other:
+// dimensioned, proxied and deduplicated against the enclosures.
+export type MediaResolverResult = {
+  tag: 'video' | 'audio'
+  src: string
+  // No Substack upload can fill this: its assets sit behind a signed playback policy, so the
+  // thumbnail is refused even given the playback id from the redirect. Kept because other
+  // platforms do carry one (Squarespace hands out a poster through the same url template
+  // that serves the video), and because <video poster> renders it with nothing else needed.
+  poster?: string
+}
+
+export type MediaResolver = {
+  selector: string
+  extract: (element: Element) => MaybePromise<MediaResolverResult | undefined>
 }
 
 export type CleanUrlFn = (url: string) => string
