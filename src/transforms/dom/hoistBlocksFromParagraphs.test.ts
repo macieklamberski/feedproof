@@ -3,8 +3,6 @@ import { baseContext, describeForEachParser, html } from '../../tests.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { hoistBlocksFromParagraphs } from './hoistBlocksFromParagraphs.js'
 
-const blockInParagraphRegex = /<p[^>]*>[^<]*<(p|div)/
-
 describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
   // Both parsers close the paragraph themselves when they read `<p><div>`, so the nesting
   // this transform fixes cannot be written as a fixture. It only ever arises after
@@ -140,11 +138,30 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
       expect(result).toContain('<p> <img src="a.jpg"></p>')
     })
 
-    it('should hoist a nested paragraph together with the block inside it', async () => {
-      const value = '<p>Outer <span><p>Inner <i class="marker">Block</i></p></span> end</p>'
-      const result = await transform(value)
+    // Both blocks match the selector, so the inner one gets its turn after the outer has
+    // already carried it out of the paragraph.
+    it('should hoist a block holding another block only once', async () => {
+      const value = '<p>Before <i class="marker">Block</i> after</p>'
+      const document = parseHtml(value)
+      const marker = document.querySelector('i.marker')
 
-      expect(result).not.toMatch(blockInParagraphRegex)
+      if (!marker) {
+        throw new Error('Missing marker')
+      }
+
+      const outer = document.createElement('div')
+      outer.setAttribute('data-block', '')
+      outer.innerHTML = '<div data-inner="">Inner</div>'
+      marker.replaceWith(outer)
+
+      const result = await applyDomTransforms(document, [hoistBlocksFromParagraphs(baseContext)])
+      const expected = html`
+        <p>Before </p>
+        <div data-block=""><div data-inner="">Inner</div></div>
+        <p> after</p>
+      `
+
+      expect(result).toEqualHtml(expected)
     })
 
     it('should be idempotent', async () => {
