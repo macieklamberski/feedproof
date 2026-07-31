@@ -130,7 +130,9 @@ export {
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
 export { hljsHighlightFn } from './highlighters/hljs.js'
+export { amebaMediaResolver } from './media/ameba.js'
 export { substackMediaResolver } from './media/substack.js'
+export { wechatMediaResolver } from './media/wechat.js'
 export { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 export { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 export { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'

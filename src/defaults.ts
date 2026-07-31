@@ -29,7 +29,9 @@ import { jwplayerEmbedResolver } from './embeds/jwplayer.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
+import { amebaMediaResolver } from './media/ameba.js'
 import { substackMediaResolver } from './media/substack.js'
+import { wechatMediaResolver } from './media/wechat.js'
 import { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 import { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
@@ -327,7 +329,11 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   mediumCiteResolver,
 ]
 
-export const defaultMediaResolvers: Array<MediaResolver> = [substackMediaResolver]
+export const defaultMediaResolvers: Array<MediaResolver> = [
+  substackMediaResolver,
+  amebaMediaResolver,
+  wechatMediaResolver,
+]
 
 // Attributes that park a media file URL on a container which then builds the player with JS,
 // so the media never appears for a reader. Counts are feeds in a 1/32 corpus sample
