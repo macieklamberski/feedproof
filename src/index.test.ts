@@ -882,6 +882,50 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(result).not.toContain('Ad slot')
   })
 
+  it('should collapse rules left touching by an emptied block between them', async () => {
+    const value = '<hr><p>&nbsp;</p><hr>'
+    // stripEmptyTags drops the spacer paragraph, and the two rules it was holding apart
+    // then read as one run.
+    const expected = '<hr>'
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
+  })
+
+  it('should collapse a longer run of rules down to one', async () => {
+    const value = '<p>First</p><hr><hr><hr><hr><p>Second</p>'
+    const expected = '<p>First</p><hr><p>Second</p>'
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
+  })
+
+  it('should collapse rules separated only by breaks', async () => {
+    const value = '<p>First</p><hr><br><br><hr><p>Second</p>'
+    // stripDuplicateRules ignores a <br> between two rules, but stripInterBlockBreaks has
+    // already dropped it as redundant between blocks, so the run still collapses.
+    const expected = '<p>First</p><hr><p>Second</p>'
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
+  })
+
+  it('should collapse rules left touching by a stripped subscribe widget', async () => {
+    const value = html`
+      <p>Article text</p>
+      <div><hr></div>
+      <div class="subscription-widget-wrap-editor"><p>Subscribe now</p></div>
+      <div><hr></div>
+      <p>More text</p>
+    `
+    // The rules bracket the widget in the feed, so removing it as non-content is what
+    // puts them side by side — unwrapWrappers dissolves their <div>s first.
+    const expected = html`
+      <p>Article text</p>
+      <hr>
+      <p>More text</p>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
   it('should strip comments outside pre blocks', async () => {
     const value = '<p>Text<!-- leaked build note --></p>'
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
