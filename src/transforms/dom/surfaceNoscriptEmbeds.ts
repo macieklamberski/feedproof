@@ -23,7 +23,7 @@ const isVideoIframe = async (
 //
 // The video check is essential: <noscript><iframe> is also how Google Tag Manager,
 // reCAPTCHA, and ad networks ship their fallbacks, and those must never be surfaced
-// into content. Gating on the embed resolvers excludes them.
+// into content. Gating on the widget resolvers excludes them.
 export const surfaceNoscriptEmbeds: DomTransform = (context) => async (document) => {
   for (const noscript of document.querySelectorAll('noscript')) {
     const iframe = noscript.querySelector('iframe[src]')

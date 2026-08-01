@@ -65,7 +65,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `rebuildLazyLoadForVideos` | Rebuild a real `<iframe>` from a "Lazy Load for Videos" facade (`a.preview-lazyload`), recovering the YouTube/Vimeo id from `data-video-uri` or `href` and carrying over `data-video-title` |
 | `rebuildLazyYtEmbeds` | Rebuild a real `<iframe>` from a jQuery lazyYT facade (`div.lazyYT[data-youtube-id]`) |
 | `rebuildElementorVideoEmbeds` | Rebuild a real `<iframe>` from an Elementor video widget's deferred `data-settings` (YouTube / Vimeo / Dailymotion / VideoPress) |
-| `replaceEmbedsWithPlaceholders` | Convert `<iframe>` embeds into placeholders |
+| `convertWidgets` | Convert recognized widgets: embeds become `data-embed-*` placeholders, platform-hosted media becomes a real `<video>`/`<audio>` (from an id template, a media-file src, or a URL parked in a `mediaSrcAttributes` attribute) |
 | `assignVideoPosters` | _Heuristic (opt-in):_ move a redundant video-poster image (inline or an enclosure) onto the embed as its poster, then drop the standalone image |
 | `stripDuplicateEnclosures` | _Heuristic (opt-in):_ remove an injected enclosure that duplicates inline content (image size-variants, exact audio/video/embed) |
 | `convertCiteCards` | Convert link-preview cards into `data-cite-*` placeholders |
@@ -125,8 +125,10 @@ const result = transformContent(html, {
   },
   // Swap the code highlighter (defaults to highlight.js; may be async).
   highlightFn: (text, language) => myHighlighter.highlight(text, language),
-  // Resolvers turning `<iframe>` embeds into placeholders (defaults: YouTube, Vimeo, Dailymotion, JW Player).
-  embedResolvers: [youtubeEmbedResolver, myEmbedResolver],
+  // Widget resolvers: embed results become placeholders, media results become real
+  // <video>/<audio> elements (defaults: YouTube, Vimeo, Dailymotion, JW Player, plus the
+  // media resolvers for Substack, Ameba, WeChat, Weebly, Buzzsprout and JW Player uploads).
+  widgetResolvers: [youtubeEmbedResolver, myEmbedResolver],
   // Resolvers turning link-preview cards into `data-cite-*` placeholders.
   citeResolvers: [ghostCiteResolver, myCiteResolver],
   // Opt into the heuristic transforms (enclosure-duplicate + video-poster stripping). Ignored if domTransforms is set.
@@ -142,7 +144,7 @@ Code blocks are highlighted only when they declare a language (`language-*` clas
 
 The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. The `heuristics` flag (default `false`) selects between two exported DOM pipelines: `defaultStandardDomTransforms` (the safe defaults) and `defaultAllDomTransforms` (standard plus `heuristicDomTransforms` spliced in after `injectEnclosures`). Setting `domTransforms` explicitly overrides `heuristics`. Every transform and pipeline is also exported individually from `feedsweep`, so you can compose any pipeline — list transforms explicitly, or spread `defaultStandardDomTransforms` / `heuristicDomTransforms` to extend or filter the defaults.
 
-`embedResolvers` and `citeResolvers` each fully replace their default resolver list when provided; omit them for the defaults. Every resolver is exported individually from `feedsweep`, so a custom list is composed by naming the built-ins you want alongside your own.
+`widgetResolvers` and `citeResolvers` each fully replace their default resolver list when provided; omit them for the defaults. Every resolver is exported individually from `feedsweep`, so a custom list is composed by naming the built-ins you want alongside your own.
 
 ## DOM library
 
