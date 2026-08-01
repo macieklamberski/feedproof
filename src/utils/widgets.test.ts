@@ -8,7 +8,7 @@ import {
   normalizeEmbedFields,
   updateCitePlaceholder,
   updateEmbedPlaceholder,
-} from './embeds.js'
+} from './widgets.js'
 
 describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
   describe('fallback link', () => {

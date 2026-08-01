@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/embeds.js'
 import { pickUrlParams } from '../utils/urls.js'
+import { createIframeEmbedResolver } from '../utils/widgets.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9]{5,}$/
 

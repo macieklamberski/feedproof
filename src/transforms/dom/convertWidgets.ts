@@ -1,7 +1,7 @@
 import type { DomTransform, MediaResolverResult } from '../../types.js'
 import { getElementDimensions, getWrapperAspectRatio, playableElements } from '../../utils/dom.js'
-import { createEmbedPlaceholder, isMediaResult } from '../../utils/embeds.js'
 import { audioFileRegex, resolveOrKeepUrl, videoFileRegex } from '../../utils/urls.js'
+import { createEmbedPlaceholder, isMediaResult } from '../../utils/widgets.js'
 
 const playableSelector = [...playableElements].join(', ')
 

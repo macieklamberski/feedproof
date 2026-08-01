@@ -9,9 +9,9 @@ import type {
   WidgetResolver,
 } from '../../types.js'
 import { getElementDimensions } from '../../utils/dom.js'
-import { createEmbedPlaceholder, isMediaResult } from '../../utils/embeds.js'
 import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
 import { absoluteUrlRegex, resolveOrKeepUrl } from '../../utils/urls.js'
+import { createEmbedPlaceholder, isMediaResult } from '../../utils/widgets.js'
 
 // Marks an injected element so stripDuplicateEnclosures (an opt-in heuristic) can
 // tell it from the item's own inline content. Exported because that pass reads it.

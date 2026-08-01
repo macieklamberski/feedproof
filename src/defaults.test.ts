@@ -6,7 +6,7 @@ import {
 } from './defaults.js'
 import * as index from './index.js'
 import { parseHtml } from './parsers/linkedom.js'
-import { createCitePlaceholder } from './utils/embeds.js'
+import { createCitePlaceholder } from './utils/widgets.js'
 
 describe('defaults', () => {
   // A resolver reachable only through the default array cannot be named, so a consumer

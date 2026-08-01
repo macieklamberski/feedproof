@@ -229,6 +229,7 @@ export type {
   WidgetResolverResult,
 } from './types.js'
 export { type GeneratedWrapperType, generatedWrapperTypes } from './utils/dom.js'
+export { applyDomTransforms, applyStringTransforms } from './utils/transforms.js'
 export {
   createCitePlaceholder,
   createEmbedPlaceholder,
@@ -239,5 +240,4 @@ export {
   updateCitePlaceholder,
   updateEmbedPlaceholder,
   updatePlaceholder,
-} from './utils/embeds.js'
-export { applyDomTransforms, applyStringTransforms } from './utils/transforms.js'
+} from './utils/widgets.js'
