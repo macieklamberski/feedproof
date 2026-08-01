@@ -1,5 +1,5 @@
 import type { DomTransform } from '../../types.js'
-import { updateCitePlaceholder } from '../../utils/embeds.js'
+import { updateCitePlaceholder } from '../../utils/widgets.js'
 
 export const enrichCitePlaceholders: DomTransform = (context) => {
   const enrichCiteFn = context.enrichCiteFn

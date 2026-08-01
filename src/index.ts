@@ -3,12 +3,12 @@ import {
   defaultAvatarImageHosts,
   defaultCiteResolvers,
   defaultDeferredIframeSources,
-  defaultEmbedResolvers,
   defaultEmojiImageHosts,
   defaultHighlightFn,
   defaultLazyIframeAttributes,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
+  defaultMediaSrcAttributes,
   defaultNonContentSelectors,
   defaultPreservedPreClasses,
   defaultResolveUrlFn,
@@ -16,6 +16,7 @@ import {
   defaultStringTransforms,
   defaultTrackingHosts,
   defaultTrackingPathSegments,
+  defaultWidgetResolvers,
 } from './defaults.js'
 import type { TransformContentOptions, TransformContext } from './types.js'
 import { applyDomTransforms, applyStringTransforms } from './utils/transforms.js'
@@ -28,8 +29,9 @@ export const transformContent = async (
     baseUrl: options.baseUrl,
     sameSiteUrls: options.sameSiteUrls,
     enclosures: options.enclosures,
-    embedResolvers: options.embedResolvers ?? defaultEmbedResolvers,
+    widgetResolvers: options.widgetResolvers ?? defaultWidgetResolvers,
     citeResolvers: options.citeResolvers ?? defaultCiteResolvers,
+    mediaSrcAttributes: options.mediaSrcAttributes ?? defaultMediaSrcAttributes,
     lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,
     lazySrcsetAttributes: options.lazySrcsetAttributes ?? defaultLazySrcsetAttributes,
     lazyIframeAttributes: options.lazyIframeAttributes ?? defaultLazyIframeAttributes,
@@ -126,6 +128,12 @@ export {
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
 export { hljsHighlightFn } from './highlighters/hljs.js'
+export { amebaMediaResolver } from './media/ameba.js'
+export { buzzsproutMediaResolver } from './media/buzzsprout.js'
+export { jwplayerMediaResolver } from './media/jwplayer.js'
+export { substackMediaResolver } from './media/substack.js'
+export { wechatMediaResolver } from './media/wechat.js'
+export { weeblyMediaResolver } from './media/weebly.js'
 export { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 export { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 export { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
@@ -134,6 +142,7 @@ export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParag
 export { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 export { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
 export { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
+export { convertWidgets } from './transforms/dom/convertWidgets.js'
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 export { enrichCitePlaceholders } from './transforms/dom/enrichCitePlaceholders.js'
@@ -166,7 +175,6 @@ export { rebuildLyteEmbeds } from './transforms/dom/rebuildLyteEmbeds.js'
 export { rebuildRocketYoutubePreviews } from './transforms/dom/rebuildRocketYoutubePreviews.js'
 export { rebuildWistiaEmbeds } from './transforms/dom/rebuildWistiaEmbeds.js'
 export { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
-export { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 export { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
 export { resolveMediaDimensions } from './transforms/dom/resolveMediaDimensions.js'
 export { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
@@ -212,14 +220,19 @@ export type {
   EnrichEmbedFn,
   HighlightFn,
   IsSafeUrlFn,
+  MediaResolver,
+  MediaResolverResult,
   ParseHtmlFn,
   ResolveUrlFn,
   StringTransform,
   TransformContentOptions,
   TransformContext,
   UrlRole,
+  WidgetResolver,
+  WidgetResolverResult,
 } from './types.js'
 export { type GeneratedWrapperType, generatedWrapperTypes } from './utils/dom.js'
+export { applyDomTransforms, applyStringTransforms } from './utils/transforms.js'
 export {
   createCitePlaceholder,
   createEmbedPlaceholder,
@@ -230,5 +243,4 @@ export {
   updateCitePlaceholder,
   updateEmbedPlaceholder,
   updatePlaceholder,
-} from './utils/embeds.js'
-export { applyDomTransforms, applyStringTransforms } from './utils/transforms.js'
+} from './utils/widgets.js'

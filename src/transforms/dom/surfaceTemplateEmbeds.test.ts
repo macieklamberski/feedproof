@@ -55,3 +55,41 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
     expect(result).toContain('data-embed-thumbnail')
   })
 })
+
+describeForEachParser('surfaceTemplateEmbeds (media)', (parseHtml) => {
+  const transform = (html: string) => {
+    return applyDomTransforms(parseHtml(html), [surfaceTemplateEmbeds(baseContext)])
+  }
+
+  // Shopify's default theme ships correct markup parked inside an inert <template>.
+  it('should surface a video parked in a template', async () => {
+    const value = html`
+      <deferred-media data-media-id="1">
+        <template>
+          <video controls><source src="https://cdn.example.com/clip.mp4" type="video/mp4"></video>
+        </template>
+      </deferred-media>
+    `
+    const result = await transform(value)
+
+    expect(result).toContain('<video')
+    expect(result).toContain('https://cdn.example.com/clip.mp4')
+    expect(result).not.toContain('<template')
+  })
+
+  it('should surface an audio parked in a template', async () => {
+    const value =
+      '<div><template><audio controls src="https://cdn.example.com/ep.mp3"></audio></template></div>'
+    const result = await transform(value)
+
+    expect(result).toContain('<audio')
+    expect(result).not.toContain('<template')
+  })
+
+  it('should leave a template holding no media or embed alone', async () => {
+    const value = '<div><template><span class="skeleton"></span></template></div>'
+    const result = await transform(value)
+
+    expect(result).toContain('<template')
+  })
+})

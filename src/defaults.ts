@@ -29,6 +29,12 @@ import { jwplayerEmbedResolver } from './embeds/jwplayer.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
+import { amebaMediaResolver } from './media/ameba.js'
+import { buzzsproutMediaResolver } from './media/buzzsprout.js'
+import { jwplayerMediaResolver } from './media/jwplayer.js'
+import { substackMediaResolver } from './media/substack.js'
+import { wechatMediaResolver } from './media/wechat.js'
+import { weeblyMediaResolver } from './media/weebly.js'
 import { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 import { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
@@ -37,6 +43,7 @@ import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParag
 import { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 import { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
+import { convertWidgets } from './transforms/dom/convertWidgets.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 import { enrichCitePlaceholders } from './transforms/dom/enrichCitePlaceholders.js'
@@ -69,7 +76,6 @@ import { rebuildLyteEmbeds } from './transforms/dom/rebuildLyteEmbeds.js'
 import { rebuildRocketYoutubePreviews } from './transforms/dom/rebuildRocketYoutubePreviews.js'
 import { rebuildWistiaEmbeds } from './transforms/dom/rebuildWistiaEmbeds.js'
 import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
-import { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
 import { resolveMediaDimensions } from './transforms/dom/resolveMediaDimensions.js'
 import { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
@@ -110,6 +116,7 @@ import type {
   EmbedResolver,
   ResolveUrlFn,
   StringTransform,
+  WidgetResolver,
 } from './types.js'
 
 export const defaultStringTransforms: Array<StringTransform> = [
@@ -148,7 +155,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   wrapCargoGalleryImages,
   // Converts AMP custom elements into plain HTML media so the image/embed transforms
   // below can dimension, placeholder, and proxy them. Runs in this normalize cluster so
-  // an amp-youtube becomes an iframe before replaceEmbedsWithPlaceholders, and an
+  // an amp-youtube becomes an iframe before convertWidgets, and an
   // amp-img an <img> before resolveMediaDimensions.
   convertAmpElements,
   // Materializes an iframe parked in a <div> attribute (Pym.js, @newswire/frames) so it's
@@ -225,10 +232,10 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   stripWordBreaks,
   linkifyUrls,
   markTimestamps,
-  // Promotes lazy/consent-gated iframe srcs into `src` so replaceEmbedsWithPlaceholders
+  // Promotes lazy/consent-gated iframe srcs into `src` so convertWidgets
   // sees a resolvable iframe. Mirrors fixLazyImages for <img>.
   fixLazyIframes,
-  replaceEmbedsWithPlaceholders,
+  convertWidgets,
   injectEnclosures,
   // Fills embed placeholder metadata via the caller's enrichEmbedFn. No-ops when that
   // option is unset. Runs after placeholders exist and before neutralize/proxy so any
@@ -283,11 +290,17 @@ export const defaultAllDomTransforms: Array<DomTransform> = defaultStandardDomTr
 // Order matters when selectors overlap: each resolver runs in array order and
 // claimed iframes can't be re-matched. Place more specific selectors (e.g.
 // meta-providers like Embedly that wrap other providers) before broader ones.
-export const defaultEmbedResolvers: Array<EmbedResolver> = [
+export const defaultWidgetResolvers: Array<WidgetResolver> = [
   youtubeEmbedResolver,
   vimeoEmbedResolver,
   dailymotionEmbedResolver,
   jwplayerEmbedResolver,
+  substackMediaResolver,
+  amebaMediaResolver,
+  wechatMediaResolver,
+  weeblyMediaResolver,
+  buzzsproutMediaResolver,
+  jwplayerMediaResolver,
 ]
 
 // Order matters here too: a resolver replaces the element it matches, so a later one never
@@ -318,6 +331,23 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   devtoLegacyPostCiteResolver,
   affingerCiteResolver,
   mediumCiteResolver,
+]
+
+// Attributes that park a media file URL on a container which then builds the player with JS,
+// so the media never appears for a reader. Counts are feeds in a 1/32 corpus sample
+// (397,652 files) unless noted; the shapes were verified in live markup 2026-08-01.
+export const defaultMediaSrcAttributes = [
+  'data-src', // Drupal audiofield (`.audiofield-wordpress-player`) and assorted themes — 40 feeds.
+  'data-video-src', // Discourse video placeholders, Discourse 3.2+ — 1 feed, but every forum on that version emits it.
+  'data-mp4', // Beaver Builder row background video (`.fl-bg-video`).
+  'data-webm', // The same widget's second source.
+  'data-audiopath', // Sonaar MP3 Audio Player, ~100k WordPress installs — 2 feeds.
+  'data-qtmplayer-file', // QTM Player — 1 feed.
+  'data-asset-url', // Squarespace audio block, Squarespace-hosted — 12 feeds.
+  'data-nectar-video-src', // Salient theme.
+  'data-videolazy-id', // Tilda, page markup only.
+  'data-mp4video', // Tilda Zero Block, page markup only.
+  'data-pswp-video-src', // PhotoSwipe video support — 1 feed.
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)

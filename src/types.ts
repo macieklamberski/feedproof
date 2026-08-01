@@ -98,6 +98,31 @@ export type CiteResolver = {
   extract: (element: Element) => MaybePromise<CiteResolverResult | undefined>
 }
 
+// A platform that ships its own media as a container naming the file by an id, with no url
+// anywhere in the markup, so the element renders as nothing until the id is turned into a
+// url. Unlike the embed and cite resolvers, which mint opaque placeholders, this one
+// produces an ordinary <video>/<audio> that the later media passes then treat as any other:
+// dimensioned, proxied and deduplicated against the enclosures.
+export type MediaResolverResult = {
+  tag: 'video' | 'audio'
+  src: string
+  poster?: string
+}
+
+export type MediaResolver = {
+  selector: string
+  extract: (element: Element) => MaybePromise<MediaResolverResult | undefined>
+}
+
+// One registry for everything the widget pass recognizes. A resolver keeps a single honest
+// contract (an EmbedResolver only ever returns embed results), and the union describes what
+// the array accepts; the pass discriminates on the result shape to emit either an opaque
+// placeholder or a real media element. Cite resolvers stay out: their pass reads card markup
+// earlier in the pipeline, before link and prose normalization can disturb it.
+export type WidgetResolver = EmbedResolver | MediaResolver
+
+export type WidgetResolverResult = EmbedResolverResult | MediaResolverResult
+
 export type CleanUrlFn = (url: string) => string
 
 // The role a URL plays in the output, so safety policy and neutralization can differ:
@@ -126,8 +151,9 @@ export type TransformContext = {
   // links check these too. See `shortenSamePageLinkFragments`.
   sameSiteUrls?: Array<string>
   enclosures?: Array<Enclosure>
-  embedResolvers: Array<EmbedResolver>
+  widgetResolvers: Array<WidgetResolver>
   citeResolvers: Array<CiteResolver>
+  mediaSrcAttributes: Array<string>
   lazySrcAttributes: Array<string>
   lazySrcsetAttributes: Array<string>
   lazyIframeAttributes: Array<string>
@@ -159,8 +185,9 @@ export type TransformContentOptions = {
   baseUrl?: string
   sameSiteUrls?: Array<string>
   enclosures?: Array<Enclosure>
-  embedResolvers?: Array<EmbedResolver>
+  widgetResolvers?: Array<WidgetResolver>
   citeResolvers?: Array<CiteResolver>
+  mediaSrcAttributes?: Array<string>
   lazySrcAttributes?: Array<string>
   lazySrcsetAttributes?: Array<string>
   lazyIframeAttributes?: Array<string>

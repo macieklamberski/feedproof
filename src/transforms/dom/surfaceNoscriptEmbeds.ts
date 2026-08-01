@@ -1,11 +1,11 @@
-import type { DomTransform, EmbedResolver } from '../../types.js'
+import type { DomTransform, WidgetResolver } from '../../types.js'
 
-// True when an iframe is a recognized video embed, i.e. one of the embed resolvers
-// claims it. This is the same check replaceEmbedsWithPlaceholders makes, so only
-// iframes that would become a real video placeholder pass.
+// True when an iframe is a recognized video embed, i.e. one of the widget resolvers
+// claims it. This is the same check convertWidgets makes, so only iframes that would
+// become a video placeholder (or a recovered media element) pass.
 const isVideoIframe = async (
   iframe: Element,
-  resolvers: ReadonlyArray<EmbedResolver>,
+  resolvers: ReadonlyArray<WidgetResolver>,
 ): Promise<boolean> => {
   for (const resolver of resolvers) {
     if (iframe.matches(resolver.selector) && (await resolver.extract(iframe))) {
@@ -23,12 +23,12 @@ const isVideoIframe = async (
 //
 // The video check is essential: <noscript><iframe> is also how Google Tag Manager,
 // reCAPTCHA, and ad networks ship their fallbacks, and those must never be surfaced
-// into content. Gating on the embed resolvers excludes them.
+// into content. Gating on the widget resolvers excludes them.
 export const surfaceNoscriptEmbeds: DomTransform = (context) => async (document) => {
   for (const noscript of document.querySelectorAll('noscript')) {
     const iframe = noscript.querySelector('iframe[src]')
 
-    if (!iframe || !(await isVideoIframe(iframe, context.embedResolvers))) {
+    if (!iframe || !(await isVideoIframe(iframe, context.widgetResolvers))) {
       continue
     }
 

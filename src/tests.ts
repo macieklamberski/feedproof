@@ -4,17 +4,18 @@ import {
   defaultAvatarImageHosts,
   defaultCiteResolvers,
   defaultDeferredIframeSources,
-  defaultEmbedResolvers,
   defaultEmojiImageHosts,
   defaultHighlightFn,
   defaultLazyIframeAttributes,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
+  defaultMediaSrcAttributes,
   defaultNonContentSelectors,
   defaultPreservedPreClasses,
   defaultResolveUrlFn,
   defaultTrackingHosts,
   defaultTrackingPathSegments,
+  defaultWidgetResolvers,
 } from './defaults.js'
 import { parseHtml as parseWithLinkedom } from './parsers/linkedom.js'
 import type { CiteResolver, CiteResolverResult, TransformContext } from './types.js'
@@ -24,8 +25,9 @@ import type { CiteResolver, CiteResolverResult, TransformContext } from './types
 type ParseHtml = (html: string) => Document
 
 export const baseContext: TransformContext = {
-  embedResolvers: defaultEmbedResolvers,
+  widgetResolvers: defaultWidgetResolvers,
   citeResolvers: defaultCiteResolvers,
+  mediaSrcAttributes: defaultMediaSrcAttributes,
   emojiImageHosts: defaultEmojiImageHosts,
   avatarImageHosts: defaultAvatarImageHosts,
   nonContentSelectors: defaultNonContentSelectors,

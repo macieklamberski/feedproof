@@ -8,7 +8,7 @@ import { neutralizeUnsafeUrls } from './neutralizeUnsafeUrls.js'
 
 const withResolver: TransformContext = {
   ...baseContext,
-  embedResolvers: [youtubeEmbedResolver],
+  widgetResolvers: [youtubeEmbedResolver],
 }
 
 const withEnclosures = (enclosures: Array<Enclosure>): TransformContext => {

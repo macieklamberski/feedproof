@@ -1,6 +1,6 @@
 import type { DomTransform } from '../../types.js'
-import { createCitePlaceholder } from '../../utils/embeds.js'
 import { resolveOrKeepUrl } from '../../utils/urls.js'
+import { createCitePlaceholder } from '../../utils/widgets.js'
 
 export const convertCiteCards: DomTransform = (context) => {
   const { citeResolvers, resolveUrlFn, cleanUrlFn, baseUrl } = context

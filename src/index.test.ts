@@ -257,7 +257,7 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
-  it('should allow custom embedResolvers', async () => {
+  it('should allow custom widgetResolvers', async () => {
     const value = '<iframe src="https://custom-player.example.com/video/123"></iframe>'
     const expected = html`
       <div
@@ -271,7 +271,7 @@ describeForEachParser('transformContent', (parseHtml) => {
     `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
-      embedResolvers: [
+      widgetResolvers: [
         {
           selector: 'iframe[src]',
           extract: (element) => {
