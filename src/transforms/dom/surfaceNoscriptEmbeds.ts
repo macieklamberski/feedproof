@@ -28,7 +28,7 @@ export const surfaceNoscriptEmbeds: DomTransform = (context) => async (document)
   for (const noscript of document.querySelectorAll('noscript')) {
     const iframe = noscript.querySelector('iframe[src]')
 
-    if (!iframe || !(await isVideoIframe(iframe, context.embedResolvers))) {
+    if (!iframe || !(await isVideoIframe(iframe, context.widgetResolvers))) {
       continue
     }
 

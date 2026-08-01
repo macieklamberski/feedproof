@@ -151,7 +151,7 @@ export type TransformContext = {
   // links check these too. See `shortenSamePageLinkFragments`.
   sameSiteUrls?: Array<string>
   enclosures?: Array<Enclosure>
-  embedResolvers: Array<WidgetResolver>
+  widgetResolvers: Array<WidgetResolver>
   citeResolvers: Array<CiteResolver>
   mediaSrcAttributes: Array<string>
   lazySrcAttributes: Array<string>
@@ -185,7 +185,7 @@ export type TransformContentOptions = {
   baseUrl?: string
   sameSiteUrls?: Array<string>
   enclosures?: Array<Enclosure>
-  embedResolvers?: Array<WidgetResolver>
+  widgetResolvers?: Array<WidgetResolver>
   citeResolvers?: Array<CiteResolver>
   mediaSrcAttributes?: Array<string>
   lazySrcAttributes?: Array<string>

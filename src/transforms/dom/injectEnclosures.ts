@@ -358,7 +358,7 @@ export const injectEnclosures: DomTransform = (context) => {
         continue
       }
 
-      const resolved = await resolveEnclosure(embedSource, context.embedResolvers, document)
+      const resolved = await resolveEnclosure(embedSource, context.widgetResolvers, document)
 
       // A resolver match, or an explicit player URL (embeddable by the Media RSS spec even
       // when no resolver claims it), produces an embed placeholder.

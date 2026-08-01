@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { defaultEmbedResolvers } from '../../defaults.js'
+import { defaultWidgetResolvers } from '../../defaults.js'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { EmbedResolver, MediaResolver, TransformContext } from '../../types.js'
@@ -16,12 +16,12 @@ const stubResolver: EmbedResolver = {
 
 const withResolvers: TransformContext = {
   ...baseContext,
-  embedResolvers: [youtubeEmbedResolver, stubResolver],
+  widgetResolvers: [youtubeEmbedResolver, stubResolver],
 }
 
 const withNoResolvers: TransformContext = {
   ...baseContext,
-  embedResolvers: [],
+  widgetResolvers: [],
 }
 
 describeForEachParser('convertWidgets', (parseHtml) => {
@@ -117,7 +117,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         height: 270,
       }),
     }
-    const customContext: TransformContext = { ...baseContext, embedResolvers: [sizedResolver] }
+    const customContext: TransformContext = { ...baseContext, widgetResolvers: [sizedResolver] }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const expected = html`
       <div
@@ -142,7 +142,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
           src: element.getAttribute('src') ?? '',
         }),
     }
-    const customContext: TransformContext = { ...baseContext, embedResolvers: [asyncResolver] }
+    const customContext: TransformContext = { ...baseContext, widgetResolvers: [asyncResolver] }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const expected = html`
       <div data-embed-provider="async" data-embed-src="https://example.com/player/xyz">
@@ -191,7 +191,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         duration: 125,
       }),
     }
-    const customContext: TransformContext = { ...baseContext, embedResolvers: [customResolver] }
+    const customContext: TransformContext = { ...baseContext, widgetResolvers: [customResolver] }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const result = await transform(value, customContext)
 
@@ -213,7 +213,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         avatar: 'javascript:alert(1)',
       }),
     }
-    const customContext: TransformContext = { ...baseContext, embedResolvers: [customResolver] }
+    const customContext: TransformContext = { ...baseContext, widgetResolvers: [customResolver] }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const result = await transform(value, customContext)
 
@@ -267,7 +267,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     expect(result).toContain('<iframe')
   })
 
-  it('should still wrap unknown iframes when embedResolvers is empty', async () => {
+  it('should still wrap unknown iframes when widgetResolvers is empty', async () => {
     const value = '<iframe src="https://unknown-site.com/123"></iframe>'
     const result = await transform(value, withNoResolvers)
 
@@ -314,10 +314,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     expect(result).toContain('data-embed-provider="example"')
   })
 
-  it('should resolve YouTube via defaultEmbedResolvers export', async () => {
+  it('should resolve YouTube via defaultWidgetResolvers export', async () => {
     const customContext: TransformContext = {
       ...baseContext,
-      embedResolvers: defaultEmbedResolvers,
+      widgetResolvers: defaultWidgetResolvers,
     }
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     const result = await transform(value, customContext)
@@ -333,7 +333,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         src: 'javascript:alert(1)',
       }),
     }
-    const customContext: TransformContext = { ...baseContext, embedResolvers: [unsafeResolver] }
+    const customContext: TransformContext = { ...baseContext, widgetResolvers: [unsafeResolver] }
     const value = '<iframe src="https://example.com/x"></iframe>'
     const result = await transform(value, customContext)
 
@@ -350,7 +350,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         url: 'javascript:alert(1)',
       }),
     }
-    const customContext: TransformContext = { ...baseContext, embedResolvers: [unsafeResolver] }
+    const customContext: TransformContext = { ...baseContext, widgetResolvers: [unsafeResolver] }
     const value = '<iframe src="https://example.com/x"></iframe>'
     const result = await transform(value, customContext)
 
@@ -361,7 +361,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   it('should let consumer override resolveUrlFn to allow non-default schemes', async () => {
     const customContext: TransformContext = {
       ...baseContext,
-      embedResolvers: [],
+      widgetResolvers: [],
       resolveUrlFn: (url) => url,
     }
     const value = '<iframe src="custom-scheme://payload"></iframe>'
@@ -439,7 +439,7 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
   }
 
   const withResolver = (resolver: MediaResolver): TransformContext => {
-    return { ...baseContext, embedResolvers: [resolver] }
+    return { ...baseContext, widgetResolvers: [resolver] }
   }
 
   // The two parsers order attributes differently and serialize `controls` with and without

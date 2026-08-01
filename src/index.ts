@@ -3,7 +3,6 @@ import {
   defaultAvatarImageHosts,
   defaultCiteResolvers,
   defaultDeferredIframeSources,
-  defaultEmbedResolvers,
   defaultEmojiImageHosts,
   defaultHighlightFn,
   defaultLazyIframeAttributes,
@@ -17,6 +16,7 @@ import {
   defaultStringTransforms,
   defaultTrackingHosts,
   defaultTrackingPathSegments,
+  defaultWidgetResolvers,
 } from './defaults.js'
 import type { TransformContentOptions, TransformContext } from './types.js'
 import { applyDomTransforms, applyStringTransforms } from './utils/transforms.js'
@@ -29,7 +29,7 @@ export const transformContent = async (
     baseUrl: options.baseUrl,
     sameSiteUrls: options.sameSiteUrls,
     enclosures: options.enclosures,
-    embedResolvers: options.embedResolvers ?? defaultEmbedResolvers,
+    widgetResolvers: options.widgetResolvers ?? defaultWidgetResolvers,
     citeResolvers: options.citeResolvers ?? defaultCiteResolvers,
     mediaSrcAttributes: options.mediaSrcAttributes ?? defaultMediaSrcAttributes,
     lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,

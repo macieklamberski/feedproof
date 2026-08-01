@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'bun:test'
 import {
   defaultCiteResolvers,
-  defaultEmbedResolvers,
   defaultNonContentSelectors,
+  defaultWidgetResolvers,
 } from './defaults.js'
 import * as index from './index.js'
 import { parseHtml } from './parsers/linkedom.js'
@@ -15,7 +15,7 @@ describe('defaults', () => {
   // since the two lists drifted apart once already as resolvers were added.
   it('should export every registered resolver individually', () => {
     const exported = new Set(Object.values(index))
-    const missing = [...defaultCiteResolvers, ...defaultEmbedResolvers].filter((resolver) => {
+    const missing = [...defaultCiteResolvers, ...defaultWidgetResolvers].filter((resolver) => {
       return !exported.has(resolver)
     })
 
@@ -49,7 +49,7 @@ describe('defaults', () => {
     wrapper.appendChild(placeholder)
     document.body.appendChild(wrapper)
 
-    const matched = [...defaultCiteResolvers, ...defaultEmbedResolvers]
+    const matched = [...defaultCiteResolvers, ...defaultWidgetResolvers]
       .filter((resolver) => document.querySelectorAll(resolver.selector).length > 0)
       .map((resolver) => resolver.selector)
 
@@ -70,7 +70,7 @@ describe('defaults', () => {
   // stripNonContentElements runs before the embed and cite transforms, so a selector
   // registered in both lists is always stripped and its resolver can never fire.
   it('should not list any resolver selector as a non-content selector', () => {
-    const resolverSelectors = [...defaultCiteResolvers, ...defaultEmbedResolvers]
+    const resolverSelectors = [...defaultCiteResolvers, ...defaultWidgetResolvers]
       .flatMap((resolver) => resolver.selector.split(','))
       .map((selector) => selector.trim())
     const overlap = resolverSelectors.filter((selector) => {

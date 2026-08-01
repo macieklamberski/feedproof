@@ -78,7 +78,7 @@ const findParkedMedia = (
 // enclosures like any other. The generic tiers below apply the same split to embeds no
 // resolver claims: a src that names a media file plays directly instead of being framed.
 export const convertWidgets: DomTransform = (context) => {
-  const { embedResolvers, mediaSrcAttributes, resolveUrlFn, cleanUrlFn, baseUrl } = context
+  const { widgetResolvers, mediaSrcAttributes, resolveUrlFn, cleanUrlFn, baseUrl } = context
 
   return async (document) => {
     // A static snapshot: the fallback loop below replaces iframes, and a live
@@ -110,7 +110,7 @@ export const convertWidgets: DomTransform = (context) => {
       element.prepend(createMediaElement(document, { tag: parked.tag, src: cleaned }))
     }
 
-    for (const resolver of embedResolvers) {
+    for (const resolver of widgetResolvers) {
       if (!hasIframes && resolver.selector.startsWith('iframe')) {
         continue
       }
