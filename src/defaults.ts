@@ -40,7 +40,7 @@ import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParag
 import { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 import { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
-import { convertMediaContainers } from './transforms/dom/convertMediaContainers.js'
+import { convertWidgets } from './transforms/dom/convertWidgets.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 import { enrichCitePlaceholders } from './transforms/dom/enrichCitePlaceholders.js'
@@ -73,7 +73,6 @@ import { rebuildLyteEmbeds } from './transforms/dom/rebuildLyteEmbeds.js'
 import { rebuildRocketYoutubePreviews } from './transforms/dom/rebuildRocketYoutubePreviews.js'
 import { rebuildWistiaEmbeds } from './transforms/dom/rebuildWistiaEmbeds.js'
 import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
-import { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
 import { resolveMediaDimensions } from './transforms/dom/resolveMediaDimensions.js'
 import { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
@@ -112,9 +111,9 @@ import type {
   DeferredIframeSource,
   DomTransform,
   EmbedResolver,
-  MediaResolver,
   ResolveUrlFn,
   StringTransform,
+  WidgetResolver,
 } from './types.js'
 
 export const defaultStringTransforms: Array<StringTransform> = [
@@ -153,7 +152,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   wrapCargoGalleryImages,
   // Converts AMP custom elements into plain HTML media so the image/embed transforms
   // below can dimension, placeholder, and proxy them. Runs in this normalize cluster so
-  // an amp-youtube becomes an iframe before replaceEmbedsWithPlaceholders, and an
+  // an amp-youtube becomes an iframe before convertWidgets, and an
   // amp-img an <img> before resolveMediaDimensions.
   convertAmpElements,
   // Materializes an iframe parked in a <div> attribute (Pym.js, @newswire/frames) so it's
@@ -174,10 +173,6 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // carrying an image-shaped lazy src) before the image transforms run, so the
   // resulting <img> is dimensioned and proxied like any other.
   convertLazyImageContainers,
-  // Recovers a real <video>/<audio> from a container that names its file by an id, in the
-  // same position and for the same reason as convertLazyImageContainers above: the element
-  // it produces then goes through the media passes like any other.
-  convertMediaContainers,
   // fixLazyImages resolves the real src before resolveMediaDimensions reads a size from
   // the URL; resolveMediaDimensions runs before flattenPictureElements dissolves the
   // <picture> it reads dimensions from. flattenPictureElements last also lets its modern
@@ -234,10 +229,10 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   stripWordBreaks,
   linkifyUrls,
   markTimestamps,
-  // Promotes lazy/consent-gated iframe srcs into `src` so replaceEmbedsWithPlaceholders
+  // Promotes lazy/consent-gated iframe srcs into `src` so convertWidgets
   // sees a resolvable iframe. Mirrors fixLazyImages for <img>.
   fixLazyIframes,
-  replaceEmbedsWithPlaceholders,
+  convertWidgets,
   injectEnclosures,
   // Fills embed placeholder metadata via the caller's enrichEmbedFn. No-ops when that
   // option is unset. Runs after placeholders exist and before neutralize/proxy so any
@@ -292,11 +287,14 @@ export const defaultAllDomTransforms: Array<DomTransform> = defaultStandardDomTr
 // Order matters when selectors overlap: each resolver runs in array order and
 // claimed iframes can't be re-matched. Place more specific selectors (e.g.
 // meta-providers like Embedly that wrap other providers) before broader ones.
-export const defaultEmbedResolvers: Array<EmbedResolver> = [
+export const defaultEmbedResolvers: Array<WidgetResolver> = [
   youtubeEmbedResolver,
   vimeoEmbedResolver,
   dailymotionEmbedResolver,
   jwplayerEmbedResolver,
+  substackMediaResolver,
+  amebaMediaResolver,
+  wechatMediaResolver,
 ]
 
 // Order matters here too: a resolver replaces the element it matches, so a later one never
@@ -327,12 +325,6 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   devtoLegacyPostCiteResolver,
   affingerCiteResolver,
   mediumCiteResolver,
-]
-
-export const defaultMediaResolvers: Array<MediaResolver> = [
-  substackMediaResolver,
-  amebaMediaResolver,
-  wechatMediaResolver,
 ]
 
 // Attributes that park a media file URL on a container which then builds the player with JS,

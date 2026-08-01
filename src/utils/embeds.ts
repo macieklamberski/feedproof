@@ -1,5 +1,11 @@
 import { isHostOf, isSubdomainOf } from 'trousse'
-import type { CiteResolverResult, EmbedResolver, EmbedResolverResult } from '../types.js'
+import type {
+  CiteResolverResult,
+  EmbedResolver,
+  EmbedResolverResult,
+  MediaResolverResult,
+  WidgetResolverResult,
+} from '../types.js'
 import type { GeneratedWrapperType } from './dom.js'
 
 // Every video provider matches the same iframe and differs only in which hosts it claims
@@ -28,6 +34,12 @@ export const createIframeEmbedResolver = (
 
 // Writes a field record as `data-{type}-*` attributes, leaving the ones already on the
 // element alone so a resolver's own values always survive an enrichment pass.
+// Tells a media result apart from an embed result in the widget pass: only media results
+// carry the element tag to mint.
+export const isMediaResult = (result: WidgetResolverResult): result is MediaResolverResult => {
+  return 'tag' in result
+}
+
 export const updatePlaceholder = <Type extends object>(
   element: HTMLElement,
   type: GeneratedWrapperType,

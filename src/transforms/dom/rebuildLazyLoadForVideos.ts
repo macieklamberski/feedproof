@@ -11,7 +11,7 @@ import type { DomTransform } from '../../types.js'
 const resolveEmbedSource = [youtubeResolveEmbed, vimeoResolveEmbed]
 
 // Rebuilds a plain <iframe> from a "Lazy Load for Videos" facade so the later
-// replaceEmbedsWithPlaceholders turns it into a placeholder (YouTube gains a thumbnail; Vimeo
+// convertWidgets turns it into a placeholder (YouTube gains a thumbnail; Vimeo
 // stays posterless). Recovers the URL from `data-video-uri`, falling back to `href`, and
 // carries `data-video-title` over as the iframe title.
 export const rebuildLazyLoadForVideos: DomTransform = () => (document) => {

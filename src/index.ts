@@ -9,7 +9,6 @@ import {
   defaultLazyIframeAttributes,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
-  defaultMediaResolvers,
   defaultMediaSrcAttributes,
   defaultNonContentSelectors,
   defaultPreservedPreClasses,
@@ -32,7 +31,6 @@ export const transformContent = async (
     enclosures: options.enclosures,
     embedResolvers: options.embedResolvers ?? defaultEmbedResolvers,
     citeResolvers: options.citeResolvers ?? defaultCiteResolvers,
-    mediaResolvers: options.mediaResolvers ?? defaultMediaResolvers,
     mediaSrcAttributes: options.mediaSrcAttributes ?? defaultMediaSrcAttributes,
     lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,
     lazySrcsetAttributes: options.lazySrcsetAttributes ?? defaultLazySrcsetAttributes,
@@ -141,7 +139,7 @@ export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParag
 export { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 export { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
 export { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
-export { convertMediaContainers } from './transforms/dom/convertMediaContainers.js'
+export { convertWidgets } from './transforms/dom/convertWidgets.js'
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 export { enrichCitePlaceholders } from './transforms/dom/enrichCitePlaceholders.js'
@@ -174,7 +172,6 @@ export { rebuildLyteEmbeds } from './transforms/dom/rebuildLyteEmbeds.js'
 export { rebuildRocketYoutubePreviews } from './transforms/dom/rebuildRocketYoutubePreviews.js'
 export { rebuildWistiaEmbeds } from './transforms/dom/rebuildWistiaEmbeds.js'
 export { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
-export { replaceEmbedsWithPlaceholders } from './transforms/dom/replaceEmbedsWithPlaceholders.js'
 export { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
 export { resolveMediaDimensions } from './transforms/dom/resolveMediaDimensions.js'
 export { resolveRelativeUrls } from './transforms/dom/resolveRelativeUrls.js'
@@ -228,6 +225,8 @@ export type {
   TransformContentOptions,
   TransformContext,
   UrlRole,
+  WidgetResolver,
+  WidgetResolverResult,
 } from './types.js'
 export { type GeneratedWrapperType, generatedWrapperTypes } from './utils/dom.js'
 export {

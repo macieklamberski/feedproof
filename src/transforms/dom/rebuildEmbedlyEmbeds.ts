@@ -6,7 +6,7 @@ import { isUrlShaped } from '../../utils/urls.js'
 // The real embed URL and its poster are both in the wrapper's own query. Unwrap to the inner
 // iframe so it flows to the provider transforms downstream (a Datawrapper inner becomes a static
 // image, a YouTube inner is placeholdered), carrying the poster as `data-thumbnail` — which
-// replaceEmbedsWithPlaceholders prefers over a resolver's URL-derived guess.
+// convertWidgets prefers over a resolver's URL-derived guess.
 export const rebuildEmbedlyEmbeds: DomTransform = () => (document) => {
   const iframes = document.querySelectorAll('iframe[src*="cdn.embedly.com/widgets/media.html"]')
 

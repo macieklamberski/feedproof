@@ -6,9 +6,10 @@ import type {
   EmbedResolverResult,
   Enclosure,
   TransformContext,
+  WidgetResolver,
 } from '../../types.js'
 import { getElementDimensions } from '../../utils/dom.js'
-import { createEmbedPlaceholder } from '../../utils/embeds.js'
+import { createEmbedPlaceholder, isMediaResult } from '../../utils/embeds.js'
 import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
 import { absoluteUrlRegex, resolveOrKeepUrl } from '../../utils/urls.js'
 
@@ -36,7 +37,7 @@ const isAvatarEnclosure = (url: string, avatarHosts: ReadonlyArray<string>): boo
 // iframe-shaped resolvers (YouTube etc.) can claim platform-specific enclosures.
 const resolveEnclosure = async (
   url: string,
-  resolvers: ReadonlyArray<EmbedResolver>,
+  resolvers: ReadonlyArray<WidgetResolver>,
   document: Document,
 ): Promise<EmbedResolverResult | undefined> => {
   const probe = document.createElement('iframe')
@@ -46,7 +47,9 @@ const resolveEnclosure = async (
     if (probe.matches(resolver.selector)) {
       const metadata = await resolver.extract(probe)
 
-      if (metadata) {
+      // A media result is not an embeddable player page, and the audio/video enclosure
+      // branches below already produce the native element for it.
+      if (metadata && !isMediaResult(metadata)) {
         return metadata
       }
     }

@@ -17,7 +17,7 @@ export const rebuildEmbedPlusEmbeds: DomTransform = () => (document) => {
     iframe.setAttribute('src', src)
 
     // The facade ships the publisher's real poster (a maxres YouTube thumbnail). Carry it on
-    // the iframe so replaceEmbedsWithPlaceholders uses it instead of the resolver's hqdefault.
+    // the iframe so convertWidgets uses it instead of the resolver's hqdefault.
     const poster = element.querySelector('.epyt-facade-poster')?.getAttribute('src')
 
     if (poster) {

@@ -114,6 +114,15 @@ export type MediaResolver = {
   extract: (element: Element) => MaybePromise<MediaResolverResult | undefined>
 }
 
+// One registry for everything the widget pass recognizes. A resolver keeps a single honest
+// contract (an EmbedResolver only ever returns embed results), and the union describes what
+// the array accepts; the pass discriminates on the result shape to emit either an opaque
+// placeholder or a real media element. Cite resolvers stay out: their pass reads card markup
+// earlier in the pipeline, before link and prose normalization can disturb it.
+export type WidgetResolver = EmbedResolver | MediaResolver
+
+export type WidgetResolverResult = EmbedResolverResult | MediaResolverResult
+
 export type CleanUrlFn = (url: string) => string
 
 // The role a URL plays in the output, so safety policy and neutralization can differ:
@@ -142,9 +151,8 @@ export type TransformContext = {
   // links check these too. See `shortenSamePageLinkFragments`.
   sameSiteUrls?: Array<string>
   enclosures?: Array<Enclosure>
-  embedResolvers: Array<EmbedResolver>
+  embedResolvers: Array<WidgetResolver>
   citeResolvers: Array<CiteResolver>
-  mediaResolvers: Array<MediaResolver>
   mediaSrcAttributes: Array<string>
   lazySrcAttributes: Array<string>
   lazySrcsetAttributes: Array<string>
@@ -177,9 +185,8 @@ export type TransformContentOptions = {
   baseUrl?: string
   sameSiteUrls?: Array<string>
   enclosures?: Array<Enclosure>
-  embedResolvers?: Array<EmbedResolver>
+  embedResolvers?: Array<WidgetResolver>
   citeResolvers?: Array<CiteResolver>
-  mediaResolvers?: Array<MediaResolver>
   mediaSrcAttributes?: Array<string>
   lazySrcAttributes?: Array<string>
   lazySrcsetAttributes?: Array<string>

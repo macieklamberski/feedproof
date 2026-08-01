@@ -24,7 +24,7 @@ const templateContent = (template: Element): ParentNode => {
 // moby.com) park the real <iframe> inside a <template> and show a thumbnail outside
 // it. In a reader there is no JS to activate the template, so the embed stays trapped
 // and never renders. When a template holds an embed, hoist its content into the tree
-// so replaceEmbedsWithPlaceholders and assignVideoPosters can placeholder it and
+// so convertWidgets and assignVideoPosters can placeholder it and
 // connect the poster. Templates without an embed are JS-templating / web-component
 // skeletons not meant to render, so they are left alone.
 export const surfaceTemplateEmbeds: DomTransform = () => (document) => {

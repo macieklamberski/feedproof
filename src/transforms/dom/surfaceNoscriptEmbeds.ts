@@ -1,11 +1,11 @@
-import type { DomTransform, EmbedResolver } from '../../types.js'
+import type { DomTransform, WidgetResolver } from '../../types.js'
 
-// True when an iframe is a recognized video embed, i.e. one of the embed resolvers
-// claims it. This is the same check replaceEmbedsWithPlaceholders makes, so only
-// iframes that would become a real video placeholder pass.
+// True when an iframe is a recognized video embed, i.e. one of the widget resolvers
+// claims it. This is the same check convertWidgets makes, so only iframes that would
+// become a video placeholder (or a recovered media element) pass.
 const isVideoIframe = async (
   iframe: Element,
-  resolvers: ReadonlyArray<EmbedResolver>,
+  resolvers: ReadonlyArray<WidgetResolver>,
 ): Promise<boolean> => {
   for (const resolver of resolvers) {
     if (iframe.matches(resolver.selector) && (await resolver.extract(iframe))) {
