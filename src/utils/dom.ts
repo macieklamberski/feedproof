@@ -195,6 +195,13 @@ export const isMediaElement = (node: Node): boolean => {
   return isElement(node) && mediaElements.has(node.localName)
 }
 
+// Elements that already play, or that already hold an assembled player, so a container
+// wrapping one needs nothing recovered. Deliberately not `mediaElements`: `img` and `picture`
+// are excluded because a poster image beside a parked media url is the common shape and
+// skipping those would miss the recovery, and `source` is included because its presence means
+// a player is already built around it.
+export const playableElements = new Set(['audio', 'embed', 'iframe', 'object', 'source', 'video'])
+
 // Collects a subtree's text nodes via an iterative depth-first walk (an explicit stack
 // rather than recursion) so a deeply nested document can't overflow the call stack.
 // Children are pushed in reverse so they pop in document order. An element for which

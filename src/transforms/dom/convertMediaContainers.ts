@@ -1,4 +1,7 @@
 import type { DomTransform, MediaResolverResult } from '../../types.js'
+import { playableElements } from '../../utils/dom.js'
+
+const playableSelector = [...playableElements].join(', ')
 
 const videoFileRegex = /\.(mp4|m4v|webm|mov|ogv)(\?|#|$)/i
 const audioFileRegex = /\.(mp3|m4a|ogg|oga|wav|flac|opus)(\?|#|$)/i
@@ -61,7 +64,7 @@ export const convertMediaContainers: DomTransform = (context) => {
     for (const element of document.querySelectorAll('div, figure, span, li')) {
       // A container that already wraps something playable is chrome around a real player,
       // and the attribute belongs to that player rather than to a missing element.
-      if (element.querySelector('video, audio, source, iframe, embed, object')) {
+      if (element.querySelector(playableSelector)) {
         continue
       }
 
