@@ -1,8 +1,7 @@
 import type { DomTransform } from '../../types.js'
-
-// Matches a value that points at an image file, so a non-image lazy src (an AJAX
-// content-loader URL parked on the same attribute name) is never turned into an <img>.
-const imageUrlRegex = /\.(avif|gif|jpe?g|png|svg|webp)(\?|#|$)/i
+// The extension check keeps a non-image lazy src (an AJAX content-loader URL parked on
+// the same attribute name) from being turned into an <img>.
+import { imageFileRegex } from '../../utils/urls.js'
 
 // Lazy-image containers: a <div>/<figure> that parks the real image URL in a lazy
 // data-* attribute and builds the <img> with JS on load (e.g. gallery widgets that
@@ -24,7 +23,7 @@ export const convertLazyImageContainers: DomTransform = (context) => {
       for (const attribute of lazySrcAttributes) {
         const value = element.getAttribute(attribute)
 
-        if (value && imageUrlRegex.test(value)) {
+        if (value && imageFileRegex.test(value)) {
           const image = document.createElement('img')
           image.setAttribute('src', value)
           element.replaceWith(image)

@@ -1,19 +1,15 @@
 import type { DomTransform, MediaResolverResult } from '../../types.js'
 import { playableElements } from '../../utils/dom.js'
+import { audioFileRegex, videoFileRegex } from '../../utils/urls.js'
 
 const playableSelector = [...playableElements].join(', ')
-
-const videoFileRegex = /\.(mp4|m4v|webm|mov|ogv)(\?|#|$)/i
-const audioFileRegex = /\.(mp3|m4a|ogg|oga|wav|flac|opus)(\?|#|$)/i
 
 // A container that parks its media URL in an attribute and builds the player with JS, so a
 // reader shows nothing (Discourse video placeholders, Beaver Builder row backgrounds, the
 // Drupal audio field, several WordPress audio players). Mirrors convertLazyImageContainers,
 // which does the same for an image: the value has to name a media file, which is what keeps
-// a generic attribute like `data-src` from matching something that is not media.
-//
-// Streaming manifests (.m3u8, .mpd) are deliberately not matched: they play natively only in
-// Safari, so promoting one produces a player that is broken everywhere else.
+// a generic attribute like `data-src` from matching something that is not media (the
+// manifest exclusion is explained on the regexes themselves).
 const findParkedMedia = (element: Element, attributes: Array<string>) => {
   for (const attribute of attributes) {
     const value = element.getAttribute(attribute)?.trim()

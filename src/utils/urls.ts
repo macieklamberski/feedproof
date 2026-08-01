@@ -9,6 +9,14 @@ const urlShapeRegex = /[:/.]/
 
 export const absoluteUrlRegex = /^[a-z][a-z0-9+.-]*:/i
 
+// Whether a URL names a media file of each kind, by extension, tolerating a query or
+// fragment after it. Streaming manifests (.m3u8, .mpd) are deliberately absent from the
+// video set: they play natively only in Safari, so a transform that promotes one produces
+// a player that is broken everywhere else.
+export const imageFileRegex = /\.(avif|gif|jpe?g|png|svg|webp)(\?|#|$)/i
+export const videoFileRegex = /\.(mp4|m4v|webm|mov|ogv)(\?|#|$)/i
+export const audioFileRegex = /\.(mp3|m4a|ogg|oga|wav|flac|opus)(\?|#|$)/i
+
 // A real, loadable src — not empty and not the `about:blank` lazy placeholder.
 export const isUsableSrc = (src: string | null): src is string => {
   const trimmed = src?.trim()
