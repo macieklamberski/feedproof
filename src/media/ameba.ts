@@ -1,3 +1,4 @@
+import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { MediaResolver, MediaResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
 
@@ -6,7 +7,7 @@ import { attr } from '../utils/dom.js'
 // carries no src and a <noscript> telling the reader to enable JavaScript, so following the
 // iframe leads nowhere either. The upload id in the query resolves to the file directly
 // (verified 2026-08-01, 206 video/mp4, no auth, and the redirect fills in the blog name).
-const playerHostRegex = /(^|\.)static\.blog-video\.jp$/
+const playerHost = 'static.blog-video.jp'
 const uploadIdRegex = /^[A-Za-z0-9]{20,40}$/
 
 const composeSourceUrl = (uploadId: string): string => {
@@ -22,9 +23,9 @@ export const amebaMediaResolver: MediaResolver = {
       return
     }
 
-    const url = URL.parse(source, 'https://ameblo.jp')
+    const url = parseUrl(source, 'https://ameblo.jp')
 
-    if (!url || !playerHostRegex.test(url.hostname)) {
+    if (!url || (!isHostOf(url, playerHost) && !isSubdomainOf(url, playerHost))) {
       return
     }
 

@@ -1,3 +1,4 @@
+import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { MediaResolver, MediaResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
 
@@ -7,7 +8,7 @@ import { attr } from '../utils/dom.js'
 // video/mp4; the misses were a suspended account and a restricted asset, which today render
 // nothing anyway). The iframe form of the same embed (`/players/{media}-{player}.html`) is a
 // working player page and stays with the embed resolver.
-const jwplayerHostRegex = /(^|\.)jwplayer\.com$/
+const jwplayerHost = 'jwplayer.com'
 const playerScriptRegex = /^\/players\/([A-Za-z0-9]{8})-[A-Za-z0-9]+\.js$/
 
 const composeSourceUrl = (mediaId: string): string => {
@@ -19,9 +20,9 @@ export const jwplayerMediaResolver: MediaResolver = {
   extract: (element): MediaResolverResult | undefined => {
     // The selector guarantees a src containing the path substring, so only the host and
     // id checks can reject.
-    const url = URL.parse(attr(element, 'src') ?? '', 'https://example.com')
+    const url = parseUrl(attr(element, 'src') ?? '', 'https://example.com')
 
-    if (!url || !jwplayerHostRegex.test(url.hostname)) {
+    if (!url || (!isHostOf(url, jwplayerHost) && !isSubdomainOf(url, jwplayerHost))) {
       return
     }
 

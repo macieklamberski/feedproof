@@ -1,3 +1,4 @@
+import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { MediaResolver, MediaResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
 
@@ -12,7 +13,7 @@ import { attr } from '../utils/dom.js'
 // Both observed script forms:
 //   https://www.buzzsprout.com/{podcast}/{episode}.js?container_id=…
 //   https://www.buzzsprout.com/{podcast}/episodes/{episode}-{slug}.js?container_id=…
-const buzzsproutHostRegex = /(^|\.)buzzsprout\.com$/
+const buzzsproutHost = 'buzzsprout.com'
 const episodePathRegex = /^\/(\d+)\/(?:episodes\/)?(\d+)(?:-[^/]*)?\.js$/
 
 const composeSourceUrl = (podcastId: string, episodeId: string): string => {
@@ -24,9 +25,9 @@ export const buzzsproutMediaResolver: MediaResolver = {
   extract: (element): MediaResolverResult | undefined => {
     // The selector guarantees a src containing the host substring, so only the host and
     // path checks can reject.
-    const url = URL.parse(attr(element, 'src') ?? '', 'https://example.com')
+    const url = parseUrl(attr(element, 'src') ?? '', 'https://example.com')
 
-    if (!url || !buzzsproutHostRegex.test(url.hostname)) {
+    if (!url || (!isHostOf(url, buzzsproutHost) && !isSubdomainOf(url, buzzsproutHost))) {
       return
     }
 
