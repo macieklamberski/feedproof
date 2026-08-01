@@ -32,6 +32,7 @@ import { hljsHighlightFn } from './highlighters/hljs.js'
 import { amebaMediaResolver } from './media/ameba.js'
 import { substackMediaResolver } from './media/substack.js'
 import { wechatMediaResolver } from './media/wechat.js'
+import { weeblyMediaResolver } from './media/weebly.js'
 import { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 import { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
@@ -295,6 +296,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   substackMediaResolver,
   amebaMediaResolver,
   wechatMediaResolver,
+  weeblyMediaResolver,
 ]
 
 // Order matters here too: a resolver replaces the element it matches, so a later one never
