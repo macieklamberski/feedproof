@@ -36,6 +36,15 @@ describeForEachParser('jwplayerMediaResolver', (parseHtml) => {
       expect(extract(value)).toBeUndefined()
     })
 
+    // Contains the selector substring in its path, so extract runs and the host check
+    // has to be the thing that rejects it.
+    it('should return undefined when the substring sits in a foreign path', () => {
+      const value =
+        '<script src="https://evil.test/jwplayer.com/players/yx0qKI9z-TVAGoXhx.js"></script>'
+
+      expect(extract(value)).toBeUndefined()
+    })
+
     it('should return undefined for an id that is not the shape JW emits', () => {
       const value = '<script src="https://cdn.jwplayer.com/players/libraries-x.js"></script>'
 

@@ -17,13 +17,9 @@ const composeSourceUrl = (mediaId: string): string => {
 export const jwplayerMediaResolver: MediaResolver = {
   selector: 'script[src*="jwplayer.com/players/"]',
   extract: (element): MediaResolverResult | undefined => {
-    const source = attr(element, 'src')
-
-    if (!source) {
-      return
-    }
-
-    const url = URL.parse(source, 'https://example.com')
+    // The selector guarantees a src containing the path substring, so only the host and
+    // id checks can reject.
+    const url = URL.parse(attr(element, 'src') ?? '', 'https://example.com')
 
     if (!url || !jwplayerHostRegex.test(url.hostname)) {
       return

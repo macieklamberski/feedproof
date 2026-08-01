@@ -22,25 +22,17 @@ const composeSourceUrl = (podcastId: string, episodeId: string): string => {
 export const buzzsproutMediaResolver: MediaResolver = {
   selector: 'script[src*="buzzsprout.com"]',
   extract: (element): MediaResolverResult | undefined => {
-    const source = attr(element, 'src')
-
-    if (!source) {
-      return
-    }
-
-    const url = URL.parse(source, 'https://example.com')
+    // The selector guarantees a src containing the host substring, so only the host and
+    // path checks can reject.
+    const url = URL.parse(attr(element, 'src') ?? '', 'https://example.com')
 
     if (!url || !buzzsproutHostRegex.test(url.hostname)) {
       return
     }
 
     const match = url.pathname.match(episodePathRegex)
-
-    if (!match) {
-      return
-    }
-
-    const [, podcastId, episodeId] = match
+    const podcastId = match?.[1]
+    const episodeId = match?.[2]
 
     if (!podcastId || !episodeId) {
       return
