@@ -29,7 +29,6 @@ import { jwplayerEmbedResolver } from './embeds/jwplayer.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
-import { amebaMediaResolver } from './media/ameba.js'
 import { buzzsproutMediaResolver } from './media/buzzsprout.js'
 import { jwplayerMediaResolver } from './media/jwplayer.js'
 import { substackMediaResolver } from './media/substack.js'
@@ -296,7 +295,6 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   dailymotionEmbedResolver,
   jwplayerEmbedResolver,
   substackMediaResolver,
-  amebaMediaResolver,
   wechatMediaResolver,
   weeblyMediaResolver,
   buzzsproutMediaResolver,

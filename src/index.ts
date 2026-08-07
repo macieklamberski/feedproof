@@ -128,7 +128,6 @@ export {
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
 export { hljsHighlightFn } from './highlighters/hljs.js'
-export { amebaMediaResolver } from './media/ameba.js'
 export { buzzsproutMediaResolver } from './media/buzzsprout.js'
 export { jwplayerMediaResolver } from './media/jwplayer.js'
 export { substackMediaResolver } from './media/substack.js'
