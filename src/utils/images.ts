@@ -1,6 +1,6 @@
 import { addMissingProtocol, normalizeUrl, resolveUrl } from 'feedcanon'
 import { parseSrcset as parseRawSrcset } from 'srcset'
-import { getPathSegments, parseUrl } from 'trousse'
+import { escapeRegex, getPathSegments, parseUrl } from 'trousse'
 import type { CleanUrlFn } from '../types.js'
 import { pixelDimensionLimit } from './dom.js'
 
@@ -49,7 +49,10 @@ export const sizeKeywordLiterals = [
   'original',
   'orig',
 ]
-const sizeKeywordLeaf = new RegExp(`^(?:${sizeKeywordLiterals.join('|')})(\\.[a-z0-9]+)?$`, 'i')
+const sizeKeywordLeaf = new RegExp(
+  `^(?:${sizeKeywordLiterals.map(escapeRegex).join('|')})(\\.[a-z0-9]+)?$`,
+  'i',
+)
 
 const decodeSource = (value: string): string => {
   try {
