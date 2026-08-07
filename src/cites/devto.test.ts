@@ -173,6 +173,7 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
         title: 'Page title',
         author: 'Author name',
         publisher: 'Org name',
+        icon: 'https://example.com/org.png',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -204,6 +205,23 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
   })
 
   describe('edge cases', () => {
+    it('should read the icon from the author avatar when there is no organization', async () => {
+      const value = html`
+        <div class="ltag__link--embedded">
+          <div class="crayons-story ">
+            <div class="crayons-story__author-pic">
+              <a href="/author" class="crayons-avatar crayons-avatar--l">
+                <img src="https://example.com/author.png" alt="author profile" class="crayons-avatar__image" />
+              </a>
+            </div>
+            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+          </div>
+        </div>
+      `
+
+      expect((await extract(value))?.icon).toBe('https://example.com/author.png')
+    })
+
     it('should read the description from a context note', async () => {
       const value = html`
         <div class="ltag__link--embedded">
@@ -304,6 +322,7 @@ describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
         url: 'https://example.com/author/post',
         title: 'Page title',
         author: 'Author name',
+        icon: 'https://example.com/author.jpg',
       }
 
       expect(await extract(value)).toEqual(expected)
