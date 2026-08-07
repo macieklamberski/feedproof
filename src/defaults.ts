@@ -83,6 +83,7 @@ import { stripBoundaryBreaks } from './transforms/dom/stripBoundaryBreaks.js'
 import { stripComments } from './transforms/dom/stripComments.js'
 import { stripDeadAnchors } from './transforms/dom/stripDeadAnchors.js'
 import { stripDuplicateEnclosures } from './transforms/dom/stripDuplicateEnclosures.js'
+import { stripDuplicateLeadingImages } from './transforms/dom/stripDuplicateLeadingImages.js'
 import { stripDuplicateRules } from './transforms/dom/stripDuplicateRules.js'
 import { stripDuplicateTitleHeading } from './transforms/dom/stripDuplicateTitleHeading.js'
 import { stripEmptyTags } from './transforms/dom/stripEmptyTags.js'
@@ -275,6 +276,9 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
 export const heuristicDomTransforms: Array<DomTransform> = [
   assignVideoPosters,
   stripDuplicateEnclosures,
+  // After stripDuplicateEnclosures: an injected enclosure that duplicates the first
+  // content image is already gone by then, so this only sees publisher-authored repeats.
+  stripDuplicateLeadingImages,
 ]
 
 // The standard pipeline with the heuristic transforms spliced in right after
