@@ -4,11 +4,14 @@ import { attr, find, text } from '../utils/dom.js'
 
 // Maps the IndieWeb response class an h-cite is wrapped in to the citation kind it names.
 // `u-in-reply-to` uses the shorter `reply`; a bare h-cite with no wrapper stays unset.
+// mf2 spells the same property `u-` or `p-` depending on whether the value is a URL or the
+// nested h-cite itself; WordPress Post Kinds emits the `p-` spelling for replies.
 const citeKindByResponseClass: Record<string, CiteKind> = {
   'u-bookmark-of': 'bookmark',
   'u-repost-of': 'repost',
   'u-like-of': 'like',
   'u-in-reply-to': 'reply',
+  'p-in-reply-to': 'reply',
   'u-read-of': 'read',
   'u-listen-of': 'listen',
   'u-watch-of': 'watch',
@@ -32,9 +35,9 @@ export const microformatsCiteResolver: CiteResolver = {
     const notInAuthor = (node: Element) => !node.closest('.p-author')
 
     // `p-content` and `e-content` are the same property in its plain-text and HTML
-    // spellings, so a card carries one or the other; `p-summary` wins over both when the
-    // source states a summary separately.
-    const description = find(element, '.p-summary, .p-content, .e-content', notInAuthor)
+    // spellings, and `summary` comes in the same two; either summary wins over content when
+    // the source states one separately.
+    const description = find(element, '.p-summary, .e-summary, .p-content, .e-content', notInAuthor)
     // The image property is `u-featured` in the newer IndieWeb convention and `u-photo` in
     // the base spec; prefer the former and fall back to the latter.
     const image = find(element, '.u-featured, .u-photo', notInAuthor)
@@ -57,6 +60,7 @@ export const microformatsCiteResolver: CiteResolver = {
       // `<time>`; other elements only have their text. Passed through unparsed, as the spec
       // allows a bare date as well as a full timestamp.
       date: attr(published, 'datetime') ?? text(published),
+      icon: attr(find(element, '.p-author .u-photo'), 'src'),
       thumbnail: attr(image, 'src'),
       kind,
     })

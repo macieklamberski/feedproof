@@ -91,6 +91,44 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should read the author photo as the icon, not the thumbnail', async () => {
+      const value = html`
+        <span class="h-cite">
+          <a class="u-url p-name" href="https://example.com/post">Page title</a>
+          by
+          <span class="p-author h-card">
+            <img class="u-photo" src="https://example.com/avatar.jpg" width="32" height="32" />
+            <span class="p-name">Author name</span>
+          </span>
+        </span>
+      `
+      const result = await extract(value)
+
+      expect(result?.icon).toBe('https://example.com/avatar.jpg')
+      expect(result?.thumbnail).toBeUndefined()
+    })
+
+    it('should read the description from e-summary', async () => {
+      const value = html`
+        <span class="h-cite">
+          <a class="u-url p-name" href="https://example.com/post">Page title</a>
+          <blockquote class="e-summary">Preview text</blockquote>
+        </span>
+      `
+
+      expect((await extract(value))?.description).toBe('Preview text')
+    })
+
+    it('should map the p-spelled reply class to the reply kind', async () => {
+      const value = html`
+        <span class="h-cite response p-in-reply-to">
+          <a class="u-url p-name" href="https://example.com/post">Page title</a>
+        </span>
+      `
+
+      expect((await extract(value))?.kind).toBe('reply')
+    })
+
     it('should leave the kind unset for a bare citation with no response class', async () => {
       const value = html`
         <span class="h-cite">
