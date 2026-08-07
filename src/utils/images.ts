@@ -1,6 +1,6 @@
 import { addMissingProtocol, normalizeUrl, resolveUrl } from 'feedcanon'
 import { parseSrcset as parseRawSrcset } from 'srcset'
-import { escapeRegex, getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl } from 'trousse'
 import type { CleanUrlFn } from '../types.js'
 import { pixelDimensionLimit } from './dom.js'
 
@@ -50,12 +50,9 @@ const sizeKeywordRanks: Record<string, number> = {
   preview: 0, // Ambiguous: a "preview" is a thumbnail on one host and full-size on another.
 }
 export const sizeKeywordLiterals = Object.keys(sizeKeywordRanks)
-const sizeKeywordLeaf = new RegExp(
-  `^(?:${sizeKeywordLiterals.map(escapeRegex).join('|')})(\\.[a-z0-9]+)?$`,
-  'i',
-)
+const sizeKeywordLeaf = new RegExp(`^(?:${sizeKeywordLiterals.join('|')})(\\.[a-z0-9]+)?$`, 'i')
 
-const decodeSource = (value: string): string => {
+const decodeUrlPart = (value: string): string => {
   try {
     return decodeURIComponent(value)
   } catch {
@@ -66,12 +63,12 @@ const decodeSource = (value: string): string => {
 // The capture is (or resolves to) a URL: absolute, protocol-relative, or relative
 // to the proxy's own origin (a Cloudflare relative path, Next.js, wsrv).
 const resolvedSource = (capture: string, proxy: URL): string | undefined => {
-  return resolveUrl(decodeSource(capture), proxy.origin)
+  return resolveUrl(decodeUrlPart(capture), proxy.origin)
 }
 
 // The capture is a bare host+path with the scheme stripped (Photon): re-add it.
 const bareHostSource = (capture: string): string => {
-  return addMissingProtocol(decodeSource(capture))
+  return addMissingProtocol(decodeUrlPart(capture))
 }
 
 // Image CDNs/proxies that wrap the real source URL inside their own request — one
@@ -160,7 +157,7 @@ const pathTransforms: Array<PathTransform> = [
 // `avatar.php?userid=`). Extensionless URLs are deliberately out: they are CDN render
 // endpoints whose query is exactly the width/quality noise the key drops.
 const scriptExtensionLiterals = ['php', 'aspx', 'ashx', 'axd', 'cgi']
-const scriptLeaf = new RegExp(`\\.(?:${scriptExtensionLiterals.map(escapeRegex).join('|')})$`, 'i')
+const scriptLeaf = new RegExp(`\\.(?:${scriptExtensionLiterals.join('|')})$`, 'i')
 
 // A leaf that is purely a dimension descriptor, e.g. "640x360" or, with a crop
 // name, "original__640x360" / "wide__148x84". No shared filename stem survives.
