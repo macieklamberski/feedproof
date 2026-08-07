@@ -258,7 +258,7 @@ describeForEachParser('substackCrossPostCiteResolver', (parseHtml) => {
       cover_image: 'https://cdn.example.com/cover.png',
       publication_name: 'The Reader',
       publication_logo_url: 'https://cdn.example.com/logo.png',
-      bylines: [{ name: 'Author name' }],
+      bylines: [{ name: 'Author name', photo_url: 'https://cdn.example.com/author.png' }],
       date: '2023-10-08T10:00:31.798Z',
     })
     const expected: CiteResolverResult = {
@@ -274,6 +274,16 @@ describeForEachParser('substackCrossPostCiteResolver', (parseHtml) => {
     }
 
     expect(await extract(value)).toEqual(expected)
+  })
+
+  it('should fall back to the byline photo when the publication has no logo', async () => {
+    const value = makeCard('embedded-post-wrap', {
+      title: 'Model Drop',
+      url: 'https://thereader.example.com/p/model-drop',
+      bylines: [{ name: 'Author name', photo_url: 'https://cdn.example.com/author.png' }],
+    })
+
+    expect((await extract(value))?.icon).toBe('https://cdn.example.com/author.png')
   })
 
   it('should ignore the own-post publishedBylines key', async () => {
