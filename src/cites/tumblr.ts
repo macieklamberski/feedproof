@@ -17,6 +17,7 @@ type TumblrLinkData = {
   display_url?: string
   title?: string
   description?: string
+  author?: string
   site_name?: string
   poster?: Array<{ url?: string }>
 }
@@ -64,6 +65,7 @@ export const tumblrCiteResolver: CiteResolver = {
       url,
       title: data.title?.trim() || (isLinkText ? undefined : anchorText),
       description: data.description,
+      author: data.author,
       publisher: data.site_name,
       // Recent posts describe the poster by `media_key` only, with no URL to resolve it to;
       // older ones carry a real one.

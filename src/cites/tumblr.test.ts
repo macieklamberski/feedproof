@@ -11,7 +11,7 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
       const value = html`
         <p
           class="npf_link"
-          data-npf='{"type":"link","url":"https://example.com/post","display_url":"https://example.com/post","title":"Page title","description":"Preview text","site_name":"example.com","poster":[{"url":"https://example.com/cover.jpg","type":"image/jpeg","width":800,"height":316}]}'
+          data-npf='{"type":"link","url":"https://example.com/post","display_url":"https://example.com/post","title":"Page title","description":"Preview text","author":"Author name","site_name":"example.com","poster":[{"url":"https://example.com/cover.jpg","type":"image/jpeg","width":800,"height":316}]}'
         >
           <a href="https://example.com/post" target="_blank">Page title</a>
         </p>
@@ -21,6 +21,7 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
         url: 'https://example.com/post',
         title: 'Page title',
         description: 'Preview text',
+        author: 'Author name',
         publisher: 'example.com',
         thumbnail: 'https://example.com/cover.jpg',
       }
