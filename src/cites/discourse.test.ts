@@ -70,6 +70,41 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
   })
 
   describe('edge cases', () => {
+    it('should read the date from the source title and trim it off the publisher', async () => {
+      const value = html`
+        <aside class="onebox allowlistedgeneric" data-onebox-src="https://example.com/page">
+          <header class="source">
+            <img src="https://example.com/favicon.svg" class="site-icon" width="500" height="500">
+            <a href="https://example.com/page" target="_blank" rel="noopener" title="03:33PM - 13 January 2023">Example – 13 Jan 23</a>
+          </header>
+          <article class="onebox-body">
+            <h3>Page title</h3>
+          </article>
+        </aside>
+      `
+      const result = await extract(value)
+
+      expect(result?.publisher).toBe('Example')
+      expect(result?.date).toBe('03:33PM - 13 January 2023')
+    })
+
+    it('should keep a dash-carrying publisher whole when there is no timestamp', async () => {
+      const value = html`
+        <aside class="onebox" data-onebox-src="https://example.com/page">
+          <header class="source">
+            <a href="https://example.com/page">Foo – Bar Forum</a>
+          </header>
+          <article class="onebox-body">
+            <h3>Page title</h3>
+          </article>
+        </aside>
+      `
+      const result = await extract(value)
+
+      expect(result?.publisher).toBe('Foo – Bar Forum')
+      expect(result?.date).toBeUndefined()
+    })
+
     it('should read the title from a level-four heading', async () => {
       const value = html`
         <aside class="onebox githubissue" data-onebox-src="https://example.com/owner/repo/issues/1">
