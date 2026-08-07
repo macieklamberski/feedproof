@@ -2,9 +2,11 @@ import { describe, expect, it } from 'bun:test'
 import {
   countSrcsetCandidates,
   getImageFingerprint,
+  getSizeKeywordRank,
   getUrlDimensions,
   getUrlSizeHint,
   parseSrcset,
+  pickLargerImageUrl,
   sizeKeywordLiterals,
 } from './images.js'
 
@@ -148,6 +150,16 @@ describe('getImageFingerprint', () => {
     const expected = getImageFingerprint('https://example.com/media/small.jpg')
 
     expect(value).toBe(expected)
+  })
+
+  it('should keep a keyword leaf distinct from a dimension-suffixed keyword leaf', () => {
+    // Deliberate: collapsing these would send the pair into dedup, where the size
+    // signals cannot rank them correctly. A kept duplicate only renders twice; a wrong
+    // removal deletes content, so the ambiguous shape stays unmatched.
+    const keyword = getImageFingerprint('https://example.com/photos/123/small.jpg')
+    const suffixed = getImageFingerprint('https://example.com/photos/123/large-800x600.jpg')
+
+    expect(keyword).not.toBe(suffixed)
   })
 
   it('should not collapse root-level size-keyword files', () => {
@@ -436,5 +448,192 @@ describe('getUrlSizeHint', () => {
     const expected = 0
 
     expect(getUrlSizeHint(value)).toBe(expected)
+  })
+})
+
+describe('getSizeKeywordRank', () => {
+  it('should return 0 for a file name that is not a size keyword', () => {
+    const value = 'https://example.com/photos/123/sunset.jpg'
+    const expected = 0
+
+    expect(getSizeKeywordRank(value)).toBe(expected)
+  })
+
+  it('should return 0 for the ambiguous preview keyword', () => {
+    const value = 'https://example.com/photos/123/preview.jpg'
+    const expected = 0
+
+    expect(getSizeKeywordRank(value)).toBe(expected)
+  })
+
+  it('should rank a larger keyword above a smaller one', () => {
+    const larger = getSizeKeywordRank('https://example.com/photos/123/large.jpg')
+    const smaller = getSizeKeywordRank('https://example.com/photos/123/small.jpg')
+
+    expect(larger).toBeGreaterThan(smaller)
+  })
+
+  it('should rank the original above every sized keyword', () => {
+    const original = getSizeKeywordRank('https://example.com/photos/123/original.jpg')
+    const largest = getSizeKeywordRank('https://example.com/photos/123/xlarge.jpg')
+
+    expect(original).toBeGreaterThan(largest)
+  })
+
+  it('should rank thumb and thumbnail as the same size', () => {
+    const thumb = getSizeKeywordRank('https://example.com/photos/123/thumb.jpg')
+    const thumbnail = getSizeKeywordRank('https://example.com/photos/123/thumbnail.jpg')
+
+    expect(thumb).toBe(thumbnail)
+    expect(thumb).toBeGreaterThan(0)
+  })
+
+  it('should ignore case and the file extension', () => {
+    const uppercase = getSizeKeywordRank('https://example.com/photos/123/LARGE.PNG')
+    const lowercase = getSizeKeywordRank('https://example.com/photos/123/large.jpg')
+
+    expect(uppercase).toBe(lowercase)
+    expect(uppercase).toBeGreaterThan(0)
+  })
+
+  it('should read the keyword through a query string', () => {
+    const value = 'https://example.com/photos/123/large.jpg?v=2'
+
+    expect(getSizeKeywordRank(value)).toBeGreaterThan(0)
+  })
+
+  it('should read an extensionless keyword leaf', () => {
+    const value = 'https://example.com/photos/123/large'
+
+    expect(getSizeKeywordRank(value)).toBeGreaterThan(0)
+  })
+
+  it('should return 0 for a scheme-only url the base cannot rescue', () => {
+    // `http://` has a scheme but no host, so it parses as neither absolute nor relative.
+    const value = 'http://'
+    const expected = 0
+
+    expect(getSizeKeywordRank(value)).toBe(expected)
+  })
+
+  it('should read the keyword from a relative url', () => {
+    const relative = getSizeKeywordRank('/photos/123/large.jpg')
+    const absolute = getSizeKeywordRank('https://example.com/photos/123/large.jpg')
+
+    expect(relative).toBe(absolute)
+    expect(relative).toBeGreaterThan(0)
+  })
+
+  it('should return 0 for a keyword carrying a dimension suffix', () => {
+    // The name is `large-800x600`, not `large`: the dimension branch owns this URL.
+    const value = 'https://example.com/photos/123/large-800x600.jpg'
+    const expected = 0
+
+    expect(getSizeKeywordRank(value)).toBe(expected)
+  })
+})
+
+describe('pickLargerImageUrl', () => {
+  it('should pick the url encoding the larger dimensions', () => {
+    const value1 = 'https://example.com/uploads/photo-577x1024.jpg'
+    const value2 = 'https://example.com/uploads/photo-169x300.jpg'
+
+    expect(pickLargerImageUrl(value1, value2)).toBe(value1)
+  })
+
+  it('should pick the url with the larger query width', () => {
+    const value1 = 'https://example.com/uploads/photo.jpg?w=300'
+    const value2 = 'https://example.com/uploads/photo.jpg?w=900'
+
+    expect(pickLargerImageUrl(value1, value2)).toBe(value2)
+  })
+
+  it('should return undefined when both encode the same size', () => {
+    const value1 = 'https://example.com/uploads/photo-800x450.jpg'
+    const value2 = 'https://cdn.example.com/copy/photo-800x450.jpg'
+
+    expect(pickLargerImageUrl(value1, value2)).toBeUndefined()
+  })
+
+  it('should return undefined when only one side encodes a size', () => {
+    const value1 = 'https://example.com/uploads/photo.jpg'
+    const value2 = 'https://example.com/uploads/photo-800x450.jpg'
+
+    expect(pickLargerImageUrl(value1, value2)).toBeUndefined()
+    expect(pickLargerImageUrl(value2, value1)).toBeUndefined()
+  })
+
+  it('should pick the larger size-keyword variant when neither encodes dimensions', () => {
+    const value1 = 'https://example.com/photos/123/small.jpg'
+    const value2 = 'https://example.com/photos/123/large.jpg'
+
+    expect(pickLargerImageUrl(value1, value2)).toBe(value2)
+    expect(pickLargerImageUrl(value2, value1)).toBe(value2)
+  })
+
+  it('should pick the original over a sized keyword variant', () => {
+    const value1 = 'https://example.com/photos/123/original.jpg'
+    const value2 = 'https://example.com/photos/123/large.jpg'
+
+    expect(pickLargerImageUrl(value1, value2)).toBe(value1)
+  })
+
+  it('should prefer encoded dimensions over keyword names', () => {
+    const value1 = 'https://example.com/uploads/large-150x150.jpg'
+    const value2 = 'https://example.com/uploads/small-800x600.jpg'
+
+    expect(pickLargerImageUrl(value1, value2)).toBe(value2)
+  })
+
+  it('should let query widths decide between keyword-named variants', () => {
+    const value1 = 'https://example.com/photos/123/large.jpg?w=300'
+    const value2 = 'https://example.com/photos/123/small.jpg?w=900'
+
+    expect(pickLargerImageUrl(value1, value2)).toBe(value2)
+  })
+
+  it('should return undefined when a bare keyword faces a dimensioned variant', () => {
+    // One-sided signal, so the keyword never overrides it: the caller's tie policy
+    // decides what a size-less src means.
+    const value1 = 'https://example.com/photos/123/large.jpg'
+    const value2 = 'https://example.com/photos/123/small-800x600.jpg'
+
+    expect(pickLargerImageUrl(value1, value2)).toBeUndefined()
+    expect(pickLargerImageUrl(value2, value1)).toBeUndefined()
+  })
+
+  it('should return undefined when one keyword is ambiguous', () => {
+    const value1 = 'https://example.com/photos/123/preview.jpg'
+    const value2 = 'https://example.com/photos/123/large.jpg'
+
+    expect(pickLargerImageUrl(value1, value2)).toBeUndefined()
+  })
+
+  it('should return undefined when both keywords rank the same', () => {
+    const value1 = 'https://example.com/photos/123/thumb.jpg'
+    const value2 = 'https://example.com/photos/123/thumbnail.jpg'
+
+    expect(pickLargerImageUrl(value1, value2)).toBeUndefined()
+  })
+
+  it('should return undefined when neither side carries any signal', () => {
+    const value1 = 'https://example.com/uploads/sunset.jpg'
+    const value2 = 'https://example.com/uploads/beach.jpg'
+
+    expect(pickLargerImageUrl(value1, value2)).toBeUndefined()
+  })
+
+  // The size hint is regex-only, so a value that is not a parseable URL cannot throw;
+  // it just carries no signal and defers to the caller's tie policy.
+  it('should return undefined for values that are not urls', () => {
+    expect(pickLargerImageUrl('not-a-url', 'also not a url')).toBeUndefined()
+    expect(pickLargerImageUrl('', 'https://example.com/photo-800x450.jpg')).toBeUndefined()
+  })
+
+  it('should rank relative urls the same as absolute ones', () => {
+    const value1 = '/uploads/photo-800x600.jpg'
+    const value2 = '/uploads/photo-150x150.jpg'
+
+    expect(pickLargerImageUrl(value1, value2)).toBe(value1)
   })
 })

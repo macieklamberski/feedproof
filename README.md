@@ -68,6 +68,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `convertWidgets` | Convert recognized widgets: embeds become `data-embed-*` placeholders, platform-hosted media becomes a real `<video>`/`<audio>` (from an id template, a media-file src, or a URL parked in a `mediaSrcAttributes` attribute) |
 | `assignVideoPosters` | _Heuristic (opt-in):_ move a redundant video-poster image (inline or an enclosure) onto the embed as its poster, then drop the standalone image |
 | `stripDuplicateEnclosures` | _Heuristic (opt-in):_ remove an injected enclosure that duplicates inline content (image size-variants, exact audio/video/embed) |
+| `stripDuplicateLeadingImages` | _Heuristic (opt-in):_ remove a leading image the body repeats as the very next image (featured-image prepends), keeping the larger copy |
 | `convertCiteCards` | Convert link-preview cards into `data-cite-*` placeholders |
 | `enrichEmbedPlaceholders` | Fill placeholder metadata via the caller's `enrichEmbedFn` (no-op unless set) |
 | `neutralizeUnsafeUrls` | Replace dangerous-scheme URLs (and any the `isSafeUrlFn` option rejects) with an inert sentinel, keeping the element |
@@ -131,7 +132,7 @@ const result = transformContent(html, {
   widgetResolvers: [youtubeEmbedResolver, myEmbedResolver],
   // Resolvers turning link-preview cards into `data-cite-*` placeholders.
   citeResolvers: [ghostCiteResolver, myCiteResolver],
-  // Opt into the heuristic transforms (enclosure-duplicate + video-poster stripping). Ignored if domTransforms is set.
+  // Opt into the heuristic transforms (enclosure-duplicate, leading-image-duplicate and video-poster stripping). Ignored if domTransforms is set.
   heuristics: true,
   // Run a custom DOM transform pipeline (omit to use defaults).
   domTransforms: [fixLazyImages, resolveRelativeUrls],

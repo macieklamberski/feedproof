@@ -1,6 +1,6 @@
 import { addMissingProtocol, normalizeUrl, resolveUrl } from 'feedcanon'
 import { parseSrcset as parseRawSrcset } from 'srcset'
-import { escapeRegex, getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl } from 'trousse'
 import type { CleanUrlFn } from '../types.js'
 import { pixelDimensionLimit } from './dom.js'
 
@@ -27,34 +27,32 @@ export const countSrcsetCandidates = (srcset: string): number => {
 }
 
 // Size words a feed uses as a whole filename for a scaled variant, e.g.
-// .../{id}/large.jpg vs .../{id}/small.jpg. Defined as a list with provenance
-// (like urlpurify's tracking-param literals) then joined into the leaf matcher.
-// "generic" means a common cross-platform size word, not a single source.
+// .../{id}/large.jpg vs .../{id}/small.jpg. Defined with provenance (like urlpurify's
+// tracking-param literals): the keys join into the leaf matcher, and the rank orders two
+// variants of one image so pickLargerImageUrl can keep the larger. Rank 0 means the word
+// dedups but is too ambiguous to win or lose a size comparison.
 //
-// Conservative on purpose: "main"/"cover"/"default"/"wide"/"full" are left out —
-// they read as size hints but turn up as real content filenames often enough that
-// a false match would drop a genuine image. (wide/full are still covered when
-// paired with dimensions, e.g. "wide__148x84", via dimensionLeaf.) Add a keyword
-// here only if the corpus shows it earns its keep against that false-match risk.
-export const sizeKeywordLiterals = [
-  // Generic keys.
-  'small',
-  'xsmall',
-  'medium',
-  'large',
-  'xlarge',
-  'thumb',
-  'thumbnail',
-  'preview',
-  'original',
-  'orig',
-]
-const sizeKeywordLeaf = new RegExp(
-  `^(?:${sizeKeywordLiterals.map(escapeRegex).join('|')})(\\.[a-z0-9]+)?$`,
-  'i',
-)
+// Conservative on purpose: "main"/"cover"/"default"/"wide"/"full" are left out. They
+// read as size hints but turn up as real content filenames often enough that a false
+// match would drop a genuine image. (wide/full are still covered when paired with
+// dimensions, e.g. "wide__148x84", via dimensionLeaf.) Add a keyword here only if the
+// corpus shows it earns its keep against that false-match risk.
+const sizeKeywordRanks: Record<string, number> = {
+  thumb: 1,
+  thumbnail: 1,
+  xsmall: 2,
+  small: 3,
+  medium: 4,
+  large: 5,
+  xlarge: 6,
+  orig: 7,
+  original: 7,
+  preview: 0, // Ambiguous: a "preview" is a thumbnail on one host and full-size on another.
+}
+export const sizeKeywordLiterals = Object.keys(sizeKeywordRanks)
+const sizeKeywordLeaf = new RegExp(`^(?:${sizeKeywordLiterals.join('|')})(\\.[a-z0-9]+)?$`, 'i')
 
-const decodeSource = (value: string): string => {
+const decodeUrlPart = (value: string): string => {
   try {
     return decodeURIComponent(value)
   } catch {
@@ -65,12 +63,12 @@ const decodeSource = (value: string): string => {
 // The capture is (or resolves to) a URL: absolute, protocol-relative, or relative
 // to the proxy's own origin (a Cloudflare relative path, Next.js, wsrv).
 const resolvedSource = (capture: string, proxy: URL): string | undefined => {
-  return resolveUrl(decodeSource(capture), proxy.origin)
+  return resolveUrl(decodeUrlPart(capture), proxy.origin)
 }
 
 // The capture is a bare host+path with the scheme stripped (Photon): re-add it.
 const bareHostSource = (capture: string): string => {
-  return addMissingProtocol(decodeSource(capture))
+  return addMissingProtocol(decodeUrlPart(capture))
 }
 
 // Image CDNs/proxies that wrap the real source URL inside their own request — one
@@ -159,7 +157,7 @@ const pathTransforms: Array<PathTransform> = [
 // `avatar.php?userid=`). Extensionless URLs are deliberately out: they are CDN render
 // endpoints whose query is exactly the width/quality noise the key drops.
 const scriptExtensionLiterals = ['php', 'aspx', 'ashx', 'axd', 'cgi']
-const scriptLeaf = new RegExp(`\\.(?:${scriptExtensionLiterals.map(escapeRegex).join('|')})$`, 'i')
+const scriptLeaf = new RegExp(`\\.(?:${scriptExtensionLiterals.join('|')})$`, 'i')
 
 // A leaf that is purely a dimension descriptor, e.g. "640x360" or, with a crop
 // name, "original__640x360" / "wide__148x84". No shared filename stem survives.
@@ -324,4 +322,52 @@ export const getUrlSizeHint = (url: string): number => {
 
   const pairWidth = Number([...url.matchAll(urlPairRegex)].at(-1)?.[1])
   return pairWidth > 0 ? pairWidth : 0
+}
+
+const leafExtensionRegex = /\.[a-z0-9]+$/i
+
+// Rank of a URL whose file name is a size keyword, 0 when it is not (or is a rank-0
+// ambiguous one). Only meaningful between two URLs that already share a fingerprint:
+// the comparison is then within one host's own directory naming, where small vs large
+// is unambiguous, not a cross-CDN convention.
+export const getSizeKeywordRank = (url: string): number => {
+  // The base only anchors a relative src so its leaf can be read; it never surfaces.
+  const parsed = parseUrl(url, 'https://example.com')
+
+  if (!parsed) {
+    return 0
+  }
+
+  const leaf = getPathSegments(parsed).at(-1) ?? ''
+  const stem = leaf.replace(leafExtensionRegex, '').toLowerCase()
+
+  return sizeKeywordRanks[stem] ?? 0
+}
+
+// Picks the strictly larger of two same-image URLs. Encoded dimensions decide first;
+// when neither side encodes any, two ranked size-keyword file names (large.jpg beside
+// small.jpg) decide instead. Returns undefined on a tie or when only one side carries
+// a signal: a URL that encodes no size may be the unscaled original or just
+// unmeasurable, and which way to read that is the caller's tie policy, not this
+// function's.
+export const pickLargerImageUrl = (first: string, second: string): string | undefined => {
+  const firstHint = getUrlSizeHint(first)
+  const secondHint = getUrlSizeHint(second)
+
+  if (firstHint > 0 && secondHint > 0 && firstHint !== secondHint) {
+    return firstHint > secondHint ? first : second
+  }
+
+  if (firstHint > 0 || secondHint > 0) {
+    return
+  }
+
+  const firstRank = getSizeKeywordRank(first)
+  const secondRank = getSizeKeywordRank(second)
+
+  if (firstRank === 0 || secondRank === 0 || firstRank === secondRank) {
+    return
+  }
+
+  return firstRank > secondRank ? first : second
 }
