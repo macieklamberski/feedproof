@@ -50,6 +50,32 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should extract an unwrapped old-shortcode card', async () => {
+      const value = html`
+        <div class="kanren st-cardbox">
+          <dl class="clearfix">
+            <dt>
+              <a href="https://example.com/post"><img width="300" height="204" src="https://example.com/cover.jpg" class="attachment-300x300 size-300x300 wp-post-image" alt="" /></a>
+            </dt>
+            <dd>
+              <h5 class="st-cardbox-t"><a href="https://example.com/post">Page title</a></h5>
+              <div class="smanone"><p>Preview text</p></div>
+              <p class="cardbox-more"><a href="https://example.com/post">More</a></p>
+            </dd>
+          </dl>
+        </div>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'affinger',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        description: 'Preview text',
+        thumbnail: 'https://example.com/cover.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should extract an internal card, which carries no host or favicon', async () => {
       const value = html`
         <a href="https://example.com/post" class="st-cardlink st-embed-cardlink">
@@ -100,7 +126,7 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
       expect((await extract(value))?.thumbnail).toBe('https://example.com/cover.webp')
     })
 
-    it('should ignore the label badge', async () => {
+    it('should read the label badge as the caption', async () => {
       const value = html`
         <a href="https://example.com/post" class="st-cardlink">
           <div class="kanren st-cardbox">
@@ -113,9 +139,28 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
         provider: 'affinger',
         url: 'https://example.com/post',
         title: 'Page title',
+        caption: 'Recommended',
       }
 
       expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should read the description from a smanone2 div without the more-link text', async () => {
+      const value = html`
+        <div class="kanren st-cardbox">
+          <dl class="clearfix">
+            <dd>
+              <h5 class="st-cardbox-t"><a href="https://example.com/post">Page title</a></h5>
+              <div class="smanone2">
+                <p>Preview text</p>
+                <p class="cardbox-more"><a href="https://example.com/post">More</a></p>
+              </div>
+            </dd>
+          </dl>
+        </div>
+      `
+
+      expect((await extract(value))?.description).toBe('Preview text')
     })
 
     it('should tolerate the literal undefined class the theme leaks', async () => {
@@ -165,6 +210,17 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
     it('should return undefined when the card has no link', async () => {
       const value = html`
         <div class="kanren st-cardbox"><h5 class="st-cardbox-t">Page title</h5></div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for the link-less callout box', async () => {
+      const value = html`
+        <div class="st-cardbox">
+          <p>Callout paragraph one.</p>
+          <p>Callout paragraph two.</p>
+        </div>
       `
 
       expect(await extract(value)).toBeUndefined()

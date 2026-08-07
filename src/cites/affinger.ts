@@ -22,16 +22,26 @@ const imageSrc = (element: Element | undefined): string | undefined => {
 export const affingerCiteResolver: CiteResolver = {
   // The anchor is the match so that replacing it swaps out the whole link; the second arm
   // takes cards that are not wrapped, and excludes wrapped ones so the two never overlap.
+  //
+  // Old-shortcode cards are unwrapped and carry none of the modern classes: the url sits on
+  // the title anchor, the thumbnail under a class-less `dt`, and the excerpt in a
+  // `.smanone`/`.smanone2` div. The excerpt is read per-paragraph because `.smanone2` nests
+  // the more-link inside the div. The theme also emits `.st-cardbox` as a link-less callout
+  // box, which the missing title and url still drop.
   selector: 'a:has(.st-cardbox), .st-cardbox:not(a .st-cardbox)',
   extract: (element) => {
     return buildCite({
       provider: 'affinger',
-      url: attr(element.closest('a'), 'href'),
+      url: attr(element.closest('a'), 'href') ?? attr(find(element, '.st-cardbox-t a'), 'href'),
       title: text(element, '.st-cardbox-t'),
-      description: text(element, '.st-card-excerpt'),
+      // The author-set label badge ("あわせて読む", "おすすめ") is the embedding author's own
+      // note about the link, not linked-page data.
+      caption: text(element, '.st-cardbox-label-text'),
+      description:
+        text(element, '.st-card-excerpt') ?? text(element, '.smanone > p, .smanone2 > p'),
       publisher: text(element, '.st-cardbox-host'),
       icon: imageSrc(find(element, '.st-cardbox-favicon img')),
-      thumbnail: imageSrc(find(element, '.st-card-img img')),
+      thumbnail: imageSrc(find(element, '.st-card-img img') ?? find(element, 'dt img')),
     })
   },
 }
