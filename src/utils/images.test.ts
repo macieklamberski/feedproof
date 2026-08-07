@@ -97,6 +97,36 @@ describe('getImageFingerprint', () => {
     expect(sized).toBe(bare)
   })
 
+  it('should keep the query on a script endpoint so distinct images stay distinct', () => {
+    const first = getImageFingerprint('https://example.com/download/file.php?id=119394')
+    const second = getImageFingerprint('https://example.com/download/file.php?id=119393')
+
+    expect(first).not.toBe(second)
+  })
+
+  it('should keep the query for every script extension it recognizes', () => {
+    for (const extension of ['php', 'aspx', 'ashx', 'axd', 'cgi']) {
+      const first = getImageFingerprint(`https://example.com/serve.${extension}?id=1`)
+      const second = getImageFingerprint(`https://example.com/serve.${extension}?id=2`)
+
+      expect(first).not.toBe(second)
+    }
+  })
+
+  it('should still collapse a script endpoint whose query is identical', () => {
+    const first = getImageFingerprint('https://example.com/avatar.php?userid=7')
+    const second = getImageFingerprint('http://www.example.com/avatar.php?userid=7')
+
+    expect(first).toBe(second)
+  })
+
+  it('should drop the query on an extensionless url, where it holds render params', () => {
+    const bare = getImageFingerprint('https://example.com/images/cover')
+    const sized = getImageFingerprint('https://example.com/images/cover?w=300')
+
+    expect(sized).toBe(bare)
+  })
+
   it('should collapse a hyphen -WxH dimension suffix to the base filename', () => {
     const bare = getImageFingerprint('https://example.com/uploads/photo.jpg')
     const scaled = getImageFingerprint('https://example.com/uploads/photo-800x450.jpg')

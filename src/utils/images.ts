@@ -1,6 +1,6 @@
 import { addMissingProtocol, normalizeUrl, resolveUrl } from 'feedcanon'
 import { parseSrcset as parseRawSrcset } from 'srcset'
-import { getPathSegments, parseUrl } from 'trousse'
+import { escapeRegex, getPathSegments, parseUrl } from 'trousse'
 import type { CleanUrlFn } from '../types.js'
 import { pixelDimensionLimit } from './dom.js'
 
@@ -151,6 +151,13 @@ const pathTransforms: Array<PathTransform> = [
   { host: /miro\.medium\.com$/i, strip: /(?:-\d{2,4})?\.[a-z]+$/i, replace: '' },
 ]
 
+// Server scripts that pick which image to serve from the query, so the query carries the
+// image's identity instead of render params (phpBB `download/file.php?id=`, Wikidot
+// `avatar.php?userid=`). Extensionless URLs are deliberately out: they are CDN render
+// endpoints whose query is exactly the width/quality noise the key drops.
+const scriptExtensionLiterals = ['php', 'aspx', 'ashx', 'axd', 'cgi']
+const scriptLeaf = new RegExp(`\\.(?:${scriptExtensionLiterals.map(escapeRegex).join('|')})$`, 'i')
+
 // A leaf that is purely a dimension descriptor, e.g. "640x360" or, with a crop
 // name, "original__640x360" / "wide__148x84". No shared filename stem survives.
 const dimensionLeaf = /^(.*__)?\d{1,5}x\d{1,5}(\.[a-z0-9]+)?$/i
@@ -206,7 +213,8 @@ const unwrapProxiedImage = (url: string): string => {
 //     percent-encoding/unicode/duplicate slashes. The key is host + path with no
 //     protocol, so http and https collapse together too. The path's case is left
 //     alone — it is case-sensitive on most servers.
-//   - drop the query (cache-busters and ?w=/?width= render params)
+//   - drop the query (cache-busters and ?w=/?width= render params), except on a script
+//     endpoint, where the query names the image instead of describing a rendition
 //   - collapse a -WxH or _WxH dimension suffix back to the base filename
 //   - drop a leaf that is only dimensions or only a size keyword (no stem to keep)
 // The whole-leaf drops require a parent path to anchor on, so two unrelated
@@ -246,6 +254,12 @@ export const getImageFingerprint = (rawUrl: string, cleanUrlFn?: CleanUrlFn): st
   if (segments.length) {
     const lastIndex = segments.length - 1
     const leaf = segments[lastIndex]
+
+    // Keep the query for a script endpoint: without it every image the endpoint serves on
+    // one host collapses to a single key, and two unrelated attachments read as duplicates.
+    if (scriptLeaf.test(leaf)) {
+      return `${parsed.host}/${segments.join('/')}${parsed.search}`
+    }
 
     if (segments.length > 1 && dimensionLeaf.test(leaf)) {
       segments.pop()
