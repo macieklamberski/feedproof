@@ -127,7 +127,7 @@ const result = transformContent(html, {
   highlightFn: (text, language) => myHighlighter.highlight(text, language),
   // Widget resolvers: embed results become placeholders, media results become real
   // <video>/<audio> elements (defaults: YouTube, Vimeo, Dailymotion, JW Player, plus the
-  // media resolvers for Substack, Ameba, WeChat, Weebly, Buzzsprout and JW Player uploads).
+  // media resolvers for Substack, WeChat, Weebly, Buzzsprout and JW Player uploads).
   widgetResolvers: [youtubeEmbedResolver, myEmbedResolver],
   // Resolvers turning link-preview cards into `data-cite-*` placeholders.
   citeResolvers: [ghostCiteResolver, myCiteResolver],
