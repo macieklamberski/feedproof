@@ -31,7 +31,12 @@ export const blogCardCiteResolver: CiteResolver = {
       // A theme-formatted date following the site's own settings, not ISO. Passed through
       // as-is for the consumer to parse.
       date: text(element, '.blog-card-date'),
-      thumbnail: attr(find(element, '.blog-card-thumb-image, .blog-card-image-src'), 'src'),
+      icon: attr(find(element, '.blog-card-favicon img'), 'src'),
+      // A third dialect classes the wrapper div and leaves the img bare.
+      thumbnail: attr(
+        find(element, '.blog-card-thumb-image, .blog-card-image-src, .blog-card-thumbnail img'),
+        'src',
+      ),
     })
   },
 }

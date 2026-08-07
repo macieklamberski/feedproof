@@ -22,7 +22,14 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
             <div class="blog-card-excerpt">Preview text</div>
             <div class="blog-card-date">2018.10.14</div>
           </div>
-          <div class="blog-card-footer"><div class="blog-card-site">example.com</div></div>
+          <div class="blog-card-footer">
+            <div class="blog-card-site">
+              <span class="blog-card-favicon">
+                <img src="//www.google.com/s2/favicons?domain=example.com" class="blog-card-favicon-img" alt="" width="16" height="16">
+              </span>
+              example.com
+            </div>
+          </div>
         </div>
       `
       const expected: CiteResolverResult = {
@@ -32,6 +39,7 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
         description: 'Preview text',
         publisher: 'example.com',
         date: '2018.10.14',
+        icon: '//www.google.com/s2/favicons?domain=example.com',
         thumbnail: 'https://example.com/thumb.jpg',
       }
 
@@ -122,6 +130,22 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
 
       expect(result?.url).toBe('https://example.com/post')
       expect(result?.title).toBe('Page title')
+    })
+
+    it('should read the thumbnail from the wrapper-classed dialect with a bare img', async () => {
+      const value = html`
+        <div class="blog-card">
+          <a href="https://example.com/post">
+            <div class="blog-card-thumbnail"><img src="https://example.com/thumb.jpg" alt="Page title" width="150" height="150"></div>
+            <div class="blog-card-content">
+              <div class="blog-card-title">Page title</div>
+              <div class="blog-card-excerpt">Preview text</div>
+            </div>
+          </a>
+        </div>
+      `
+
+      expect((await extract(value))?.thumbnail).toBe('https://example.com/thumb.jpg')
     })
 
     it('should leave optional fields undefined when only the title link is present', async () => {
