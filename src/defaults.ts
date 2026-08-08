@@ -49,6 +49,7 @@ import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParag
 import { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 import { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
+import { convertNoteEmbeds } from './transforms/dom/convertNoteEmbeds.js'
 import { convertWidgets } from './transforms/dom/convertWidgets.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
@@ -169,6 +170,10 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // an amp-youtube becomes an iframe before convertWidgets, and an
   // amp-img an <img> before resolveMediaDimensions.
   convertAmpElements,
+  // Converts note.com's empty embed figures: media services become plain iframes for the
+  // widget pass to classify, own-post embeds become plain links (the figure carries only
+  // the post URL). External-article figures stay for the cite pass.
+  convertNoteEmbeds,
   // Materializes an iframe parked in a <div> attribute (Pym.js, @newswire/frames) so it's
   // placeholdered downstream. Runs before convertDatawrapperEmbeds so a data-frame-src
   // Datawrapper div becomes an iframe that convertDatawrapperEmbeds turns into a static image.
