@@ -43,7 +43,9 @@
     "build": "tsdown src/index.ts src/defaults.ts src/parsers/linkedom.ts --format esm --dts --clean --unbundle --no-fixed-extension",
     "test": "bun test",
     "test:linkedom": "DOM_LIBRARY=linkedom bun test",
-    "test:jsdom": "DOM_LIBRARY=jsdom bun test"
+    "test:jsdom": "DOM_LIBRARY=jsdom bun test",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs"
   },
   "dependencies": {
     "highlight.js": "^11.11.1",
@@ -72,6 +74,7 @@
     "kvalita": "^1.16.0",
     "linkedom": "^0.18.13",
     "trousse": "^1.4.0",
-    "tsdown": "^0.22.14"
+    "tsdown": "^0.22.14",
+    "vitepress": "^2.0.0-alpha.18"
   }
 }
