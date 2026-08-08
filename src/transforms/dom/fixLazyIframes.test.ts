@@ -32,6 +32,21 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(value)
   })
 
+  it('should promote over the Invision interface placeholder src', async () => {
+    const value =
+      '<iframe src="https://forum.example.com/applications/core/interface/index.html" data-embed-src="https://www.youtube.com/embed/x?feature=oembed"></iframe>'
+    const result = await transform(value)
+
+    expect(result).toContain('src="https://www.youtube.com/embed/x?feature=oembed"')
+  })
+
+  it('should leave the Invision placeholder src when nothing is parked', async () => {
+    const value =
+      '<iframe src="https://forum.example.com/applications/core/interface/index.html"></iframe>'
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
   it('should not overwrite a usable src', async () => {
     const value =
       '<iframe src="https://example.com/real" data-src="https://example.com/lazy"></iframe>'

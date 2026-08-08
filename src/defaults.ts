@@ -384,7 +384,7 @@ export const defaultLazySrcAttributes = [
 ]
 
 // Attributes that hold a lazy/consent-gated iframe src (the real embed URL) when the
-// `src` itself is empty or `about:blank`. Counts from a 1/16 corpus iframe-tag sample.
+// `src` itself is empty or `about:blank`. Counts from 1/16 and 1/64 corpus iframe-tag samples.
 export const defaultLazyIframeAttributes = [
   'data-lazy-src', // Generic lazy loaders.
   'data-src', // Generic lazy loaders.
@@ -394,6 +394,10 @@ export const defaultLazyIframeAttributes = [
   'data-orig', // Lazy-video facades (iframe id="_ytid_*") parking the embed URL with empty src — 337 feeds.
   'data-original-src', // Generic lazy loaders.
   'data-opt-src', // Image/embed optimizers.
+  // Invision Community forums defer embeds two ways: an iframe with no src at all, or one whose
+  // src points at the forum's own blank interface page; fixLazyIframes treats that page as a
+  // placeholder so this attribute wins in both shapes.
+  'data-embed-src', // Invision Community deferred embeds — 24 feeds in a 1/64 sample.
   // Avada's privacy-embed facade (data-privacy-type is a taxonomy — YouTube, Vimeo, …), NOT a
   // cookie banner: it defers a real video the author embedded. Recovering it yields a privacy-safe
   // click-to-load placeholder; stripping would just delete the video. The visible Avada notice
