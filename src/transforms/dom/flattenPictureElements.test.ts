@@ -212,6 +212,21 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
     expect(result).toContain('src="https://example.com/b.webp"')
   })
 
+  it('should take the last candidate of a density-only srcset', async () => {
+    const value = html`
+      <picture>
+        <source
+          type="image/webp"
+          srcset="https://example.com/a.webp 1x, https://example.com/a@2x.webp 2x"
+        >
+        <img src="https://example.com/a.jpeg" alt="photo">
+      </picture>
+    `
+    const result = await transform(value)
+
+    expect(result).toContain('src="https://example.com/a@2x.webp"')
+  })
+
   it('should be idempotent', async () => {
     const value = html`
       <picture>
