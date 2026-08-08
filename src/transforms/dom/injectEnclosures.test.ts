@@ -757,4 +757,16 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
 
     expect(result).toContain('src="https://example.com/episode.mp3"')
   })
+
+  it('should be idempotent', async () => {
+    const value = '<p>Episode notes</p>'
+    const context = withEnclosures([
+      { url: 'https://example.com/episode.mp3', type: 'audio/mpeg' },
+      { url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video' },
+    ])
+    const once = await transform(value, context)
+    const twice = await transform(once, context)
+
+    expect(twice).toBe(once)
+  })
 })
