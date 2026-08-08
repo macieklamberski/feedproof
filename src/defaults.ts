@@ -57,6 +57,7 @@ import { fixLazyAudios } from './transforms/dom/fixLazyAudios.js'
 import { fixLazyIframes } from './transforms/dom/fixLazyIframes.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { fixLazyVideos } from './transforms/dom/fixLazyVideos.js'
+import { fixSubstackMentions } from './transforms/dom/fixSubstackMentions.js'
 import { flattenPictureElements } from './transforms/dom/flattenPictureElements.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
 import { hoistBlocksFromParagraphs } from './transforms/dom/hoistBlocksFromParagraphs.js'
@@ -155,6 +156,9 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // A GitHub Gist embed is a JS-only <script> that renders nothing in a reader; replace it
   // with a link to the gist so the content is at least reachable.
   linkifyGistEmbeds,
+  // A Substack @-mention is an empty span whose name lives only in its data-attrs JSON;
+  // rebuild the anchor before stripEmptyTags deletes the span and the name with it.
+  fixSubstackMentions,
   // Wraps Cargo (cargo.site) portfolio images in <figure> here in the normalize
   // cluster, so wrapBareInlineInParagraphs later sees block boundaries and keeps the
   // caption, images, and PREV/NEXT nav apart instead of gluing them into one paragraph.
