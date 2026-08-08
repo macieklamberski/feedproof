@@ -265,4 +265,16 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
 
     expect(await transform(value)).toEqualHtml(value)
   })
+
+  it('should be idempotent', async () => {
+    const value = html`
+      <img src="https://example.com/photo.jpg" data-enclosure="">
+      <p>Content</p>
+      <img src="https://example.com/photo.jpg">
+    `
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

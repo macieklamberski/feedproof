@@ -57,4 +57,12 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
     expect(result).toContain('data-embed-width="480"')
     expect(result).toContain('data-embed-height="270"')
   })
+
+  it('should be idempotent', async () => {
+    const value = html`<div class="lazyYT" data-youtube-id="dQw4w9WgXcQ"></div>`
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

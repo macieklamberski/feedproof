@@ -54,6 +54,14 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
     expect(result).toContain('data-embed-provider="youtube"')
     expect(result).toContain('data-embed-thumbnail')
   })
+
+  it('should be idempotent', async () => {
+    const value = html`<p>thumb</p><template><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></template>`
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })
 
 describeForEachParser('surfaceTemplateEmbeds (media)', (parseHtml) => {
