@@ -273,6 +273,56 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
     })
   })
 
+  describe('Hacker News oneboxes', () => {
+    it('should leave the description unset on a link post whose only paragraph is the stats line', async () => {
+      const value = html`
+        <aside class="onebox hackernews" data-onebox-src="https://news.ycombinator.com/item?id=28680387">
+          <header class="source">
+            <img src="https://cdn.example.com/y18.svg" class="site-icon" alt="" width="18" height="18">
+            <a href="https://news.ycombinator.com/item?id=28680387" target="_blank" rel="noopener">news.ycombinator.com</a>
+          </header>
+          <article class="onebox-body">
+            <h3><a href="https://news.ycombinator.com/item?id=28680387" target="_blank" rel="noopener">Story title</a></h3>
+            <p>
+              <span class="label1">379 points</span> —
+              <span class="label2">127 comments</span> —
+              <a href="https://news.ycombinator.com/user?id=poster" class="author" target="_blank" rel="noopener">poster</a> —
+              <a href="https://news.ycombinator.com/item?id=28680387" class="timestamp" target="_blank" rel="noopener">8:09 AM - 28 Sep 2021</a>
+            </p>
+          </article>
+        </aside>
+      `
+      const result = await extract(value)
+
+      expect(result?.title).toBe('Story title')
+      expect(result?.description).toBeUndefined()
+    })
+
+    it('should read the self-post text over the stats line', async () => {
+      const value = html`
+        <aside class="onebox hackernews" data-onebox-src="https://news.ycombinator.com/item?id=12759520">
+          <header class="source">
+            <a href="https://news.ycombinator.com/item?id=12759520" target="_blank" rel="noopener">news.ycombinator.com</a>
+          </header>
+          <article class="onebox-body">
+            <h3><a href="https://news.ycombinator.com/item?id=12759520" target="_blank" rel="noopener">Story title</a></h3>
+            <p>The text the poster wrote for the self-post.</p>
+            <p>
+              <span class="label1">391 points</span> —
+              <span class="label2">265 comments</span> —
+              <a href="https://news.ycombinator.com/user?id=poster" class="author" target="_blank" rel="noopener">poster</a> —
+              <a href="https://news.ycombinator.com/item?id=12759520" class="timestamp" target="_blank" rel="noopener">11:30 AM - 21 Oct 2016</a>
+            </p>
+          </article>
+        </aside>
+      `
+
+      expect(await extract(value)).toMatchObject({
+        description: 'The text the poster wrote for the self-post.',
+      })
+    })
+  })
+
   describe('omitted oneboxes', () => {
     // Iterates the real exclusion list, so every entry is exercised and a new entry is
     // covered automatically.

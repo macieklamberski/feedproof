@@ -34,6 +34,7 @@ export const omittedOneboxClasses = [
   'threadsstatus', // The same social-post shape as twitterstatus.
   'instagram', // Legacy social-post asides; since 2021 the engine emits a bare iframe.
   'pdf', // A file card: the title is the filename and the only paragraph its size.
+  'googlemeet', // A join-call card: every field is a fixed label or the meeting code.
 ]
 
 // Social platforms without their own onebox engine: their posts arrive as generic asides
@@ -88,6 +89,10 @@ export const discourseCiteResolver: CiteResolver = {
       description = githubDescription(githubBody)
     } else if (element.classList.contains('githubfolder')) {
       description = text(body, 'p span.label1')
+    } else if (element.classList.contains('hackernews')) {
+      // The Hacker News onebox always ends on a stats paragraph (points, comments, author,
+      // timestamp); only self-posts put a real text paragraph before it.
+      description = text(find(body, 'p', (paragraph) => !find(paragraph, 'a.author')))
     }
 
     // The Stack Exchange onebox writes "asked by <author> on <date>" as two anchors in its
