@@ -1,9 +1,11 @@
 import type { DomTransform } from '../../types.js'
 import { isUrlShaped, isUsableSrc } from '../../utils/urls.js'
 
-// Invision Community points a deferred embed's src at the forum's own blank interface page
-// and parks the real URL in `data-embed-src`, so that src is a placeholder, not content.
-const placeholderPageRegex = /\/applications\/core\/interface\/index\.html(?:[?#]|$)/
+// Blank pages a platform points a deferred iframe's src at while the real URL sits in a
+// lazy attribute: a src matching one of these is a placeholder, not content.
+const placeholderPageRegexes = [
+  /\/applications\/core\/interface\/index\.html(?:[?#]|$)/, // Invision Community, paired with data-embed-src.
+]
 
 // Promote a lazy/consent-gated iframe src (the real embed URL parked in a data-*
 // attribute) into `src` when the src itself is empty or `about:blank`, so the
@@ -15,7 +17,7 @@ export const fixLazyIframes: DomTransform = (context) => {
     for (const iframe of document.querySelectorAll('iframe')) {
       const src = iframe.getAttribute('src')
 
-      if (isUsableSrc(src) && !placeholderPageRegex.test(src)) {
+      if (isUsableSrc(src) && !placeholderPageRegexes.some((regex) => regex.test(src))) {
         continue
       }
 
