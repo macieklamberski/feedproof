@@ -283,7 +283,9 @@ describeForEachParser('substackCrossPostCiteResolver', (parseHtml) => {
       bylines: [{ name: 'Author name', photo_url: 'https://cdn.example.com/author.png' }],
     })
 
-    expect((await extract(value))?.icon).toBe('https://cdn.example.com/author.png')
+    expect(await extract(value)).toMatchObject({
+      icon: 'https://cdn.example.com/author.png',
+    })
   })
 
   it('should ignore the own-post publishedBylines key', async () => {
