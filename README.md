@@ -66,6 +66,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `rebuildLazyYtEmbeds` | Rebuild a real `<iframe>` from a jQuery lazyYT facade (`div.lazyYT[data-youtube-id]`) |
 | `rebuildElementorVideoEmbeds` | Rebuild a real `<iframe>` from an Elementor video widget's deferred `data-settings` (YouTube / Vimeo / Dailymotion / VideoPress) |
 | `fixSubstackMentions` | Rebuild a Substack @-mention (empty `span.mention-wrap`) into an inline `<a>@name</a>` link, so the name survives instead of vanishing mid-sentence |
+| `convertNoteEmbeds` | Convert note.com's empty embed figures (`figure[embedded-service][data-src]`): media services become plain iframes for the widget pass, own-post embeds become plain links |
 | `convertWidgets` | Convert recognized widgets: embeds become `data-embed-*` placeholders, platform-hosted media becomes a real `<video>`/`<audio>` (from an id template, a media-file src, or a URL parked in a `mediaSrcAttributes` attribute) |
 | `assignVideoPosters` | _Heuristic (opt-in):_ move a redundant video-poster image (inline or an enclosure) onto the embed as its poster, then drop the standalone image |
 | `stripDuplicateEnclosures` | _Heuristic (opt-in):_ remove an injected enclosure that duplicates inline content (image size-variants, exact audio/video/embed) |
