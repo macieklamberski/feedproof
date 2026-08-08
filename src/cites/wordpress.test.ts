@@ -46,7 +46,9 @@ describeForEachParser('wordpressCiteResolver', (parseHtml) => {
         </blockquote>
       `
 
-      expect((await extract(value))?.title).toBe('Padded title')
+      expect(await extract(value)).toMatchObject({
+        title: 'Padded title',
+      })
     })
   })
 
