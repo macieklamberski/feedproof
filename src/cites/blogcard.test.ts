@@ -145,7 +145,9 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
         </div>
       `
 
-      expect((await extract(value))?.thumbnail).toBe('https://example.com/thumb.jpg')
+      expect(await extract(value)).toMatchObject({
+        thumbnail: 'https://example.com/thumb.jpg',
+      })
     })
 
     it('should leave optional fields undefined when only the title link is present', async () => {
