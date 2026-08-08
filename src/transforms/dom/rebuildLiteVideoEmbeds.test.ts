@@ -70,4 +70,12 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     expect(result).toContain('data-embed-provider="youtube"')
     expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
   })
+
+  it('should be idempotent', async () => {
+    const value = html`<lite-youtube videoid="dQw4w9WgXcQ"></lite-youtube>`
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

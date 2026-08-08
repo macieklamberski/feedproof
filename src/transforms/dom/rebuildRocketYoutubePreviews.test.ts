@@ -68,4 +68,19 @@ describeForEachParser('rebuildRocketYoutubePreviews', (parseHtml) => {
     expect(result).toContain('data-embed-thumbnail=')
     expect(result).not.toContain('rll-youtube-player')
   })
+
+  it('should be idempotent', async () => {
+    const value = html`
+      <div
+        class="rll-youtube-player"
+        data-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-id="dQw4w9WgXcQ"
+        data-alt="Title"
+      ></div>
+    `
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

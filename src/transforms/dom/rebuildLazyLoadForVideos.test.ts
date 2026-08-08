@@ -114,4 +114,21 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
     expect(result).toContain('data-embed-thumbnail=')
     expect(result).not.toContain('preview-lazyload')
   })
+
+  it('should be idempotent', async () => {
+    const value = html`
+      <div class="container-lazyload preview-lazyload container-youtube">
+        <a
+          href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          class="lazy-load-youtube preview-lazyload preview-youtube"
+        >
+          https://www.youtube.com/watch?v=dQw4w9WgXcQ
+        </a>
+      </div>
+    `
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

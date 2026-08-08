@@ -95,4 +95,18 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
       expect(extract(value)).toBeUndefined()
     })
   })
+
+  it('should be idempotent', async () => {
+    const value = html`
+      <iframe height="300" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1"></iframe>
+      <div>
+        <a href="https://soundcloud.com/artist">Artist</a> ·
+        <a href="https://soundcloud.com/artist/track">Track title</a>
+      </div>
+    `
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

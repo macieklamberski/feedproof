@@ -48,4 +48,12 @@ describeForEachParser('rebuildLyteEmbeds', (parseHtml) => {
     expect(result).toContain('data-embed-provider="youtube"')
     expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
   })
+
+  it('should be idempotent', async () => {
+    const value = html`<div id="WYL_dQw4w9WgXcQ" class="lyMe"><div id="lyte_dQw4w9WgXcQ"></div></div>`
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

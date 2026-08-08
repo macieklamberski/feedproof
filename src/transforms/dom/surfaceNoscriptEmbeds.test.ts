@@ -42,4 +42,12 @@ describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {
     expect(result).toContain('data-embed-provider="youtube"')
     expect(result).not.toContain('<noscript')
   })
+
+  it('should be idempotent', async () => {
+    const value = html`<noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>`
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

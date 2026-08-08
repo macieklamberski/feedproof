@@ -52,4 +52,18 @@ describeForEachParser('rebuildWistiaEmbeds', (parseHtml) => {
 
     expect(result).toContain('https://fast.wistia.net/embed/iframe/zyl6xrmj10')
   })
+
+  it('should be idempotent', async () => {
+    const value = html`
+      <div class="wistia_responsive_padding">
+        <div class="wistia_responsive_wrapper">
+          <div class="wistia_embed wistia_async_zyl6xrmj10 popover=true"></div>
+        </div>
+      </div>
+    `
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })

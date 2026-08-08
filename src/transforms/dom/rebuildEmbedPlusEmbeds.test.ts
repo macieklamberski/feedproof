@@ -75,4 +75,20 @@ describeForEachParser('rebuildEmbedPlusEmbeds', (parseHtml) => {
     )
     expect(result).not.toContain('epyt-facade')
   })
+
+  it('should be idempotent', async () => {
+    const value = html`
+      <div
+        class="__youtube_prefs__ epyt-facade no-lazyload"
+        data-facadesrc="https://www.youtube.com/embed/dQw4w9WgXcQ"
+      >
+        <img class="epyt-facade-poster" src="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" />
+        <button class="epyt-facade-play"></button>
+      </div>
+    `
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })
