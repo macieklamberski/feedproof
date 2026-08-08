@@ -11,7 +11,7 @@ import { attr, bgImage, find, text } from '../utils/dom.js'
 // pass through note.com's RSS sanitizer, which strips every class and style, leaving
 // `<a><strong>title</strong><em>description</em><em>host</em></a>` (some older cards carry
 // the description and host as bare text runs instead of `em`s, where only the title is
-// recoverable). The classful reads come first, the bare-shape ones as fallbacks.
+// recoverable).
 export const notecomCiteResolver: CiteResolver = {
   selector: 'figure[embedded-service="external-article"]',
   extract: (element) => {

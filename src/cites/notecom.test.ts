@@ -60,8 +60,6 @@ describeForEachParser('notecomCiteResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // Feed bodies pass through note.com's RSS sanitizer, which strips every class and
-    // style off the card.
     it('should extract a class-stripped feed card', async () => {
       const value = html`
         <figure name="abc" data-src="https://example.com/page" data-identifier="null" embedded-service="external-article" embedded-content-key="emb123">
