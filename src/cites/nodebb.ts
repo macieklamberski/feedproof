@@ -17,6 +17,7 @@ export const nodebbCiteResolver: CiteResolver = {
       title: text(element, '.card-title'),
       description: text(element, '.card-text'),
       publisher: textNode(find(element, '.card-footer p')),
+      icon: attr(find(element, '.card-footer img'), 'src'),
       thumbnail: attr(find(element, '.card-img-top'), 'src'),
     })
   },

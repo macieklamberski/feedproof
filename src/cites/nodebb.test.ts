@@ -31,6 +31,7 @@ describeForEachParser('nodebbCiteResolver', (parseHtml) => {
         title: 'Page title',
         description: 'Preview text',
         publisher: 'Example',
+        icon: 'https://example.com/favicon.svg',
         thumbnail: 'https://cdn.example.com/cover.png',
       }
 
