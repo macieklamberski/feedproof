@@ -118,6 +118,7 @@ export {
   dailymotionResolveEmbed,
   extractDailymotionId,
 } from './embeds/dailymotion.js'
+export { flourishEmbedResolver } from './embeds/flourish.js'
 export {
   extractJwplayerId,
   jwplayerIframeEmbedResolver,
