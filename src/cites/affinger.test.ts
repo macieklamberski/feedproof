@@ -160,7 +160,9 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
         </div>
       `
 
-      expect((await extract(value))?.description).toBe('Preview text')
+      expect(await extract(value)).toMatchObject({
+        description: 'Preview text',
+      })
     })
 
     it('should tolerate the literal undefined class the theme leaks', async () => {
