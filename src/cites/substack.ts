@@ -15,7 +15,7 @@ type CrossPostAttrs = {
   cover_image?: string
   publication_name?: string
   publication_logo_url?: string
-  bylines?: Array<{ name?: string }>
+  bylines?: Array<{ name?: string; photo_url?: string }>
   date?: string
 }
 
@@ -50,7 +50,7 @@ export const substackCrossPostCiteResolver: CiteResolver = {
       author: attrs.bylines?.[0]?.name,
       publisher: attrs.publication_name,
       date: attrs.date,
-      icon: attrs.publication_logo_url,
+      icon: attrs.publication_logo_url ?? attrs.bylines?.[0]?.photo_url,
       thumbnail: attrs.cover_image,
     })
   },
