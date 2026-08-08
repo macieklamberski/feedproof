@@ -15,18 +15,17 @@ import { attr, bgImage, find, text } from '../utils/dom.js'
 export const notecomCiteResolver: CiteResolver = {
   selector: 'figure[embedded-service="external-article"]',
   extract: (element) => {
-    const emphases = Array.from(element.querySelectorAll('a > em'))
+    const ems = Array.from(element.querySelectorAll('a > em'))
+    // The stripped shape's host is always the last `em`, so a lone `em` has no description.
+    const hostEm = ems.at(-1)
+    const descriptionEm = ems.length > 1 ? ems[0] : undefined
 
     return buildCite({
       provider: 'notecom',
       url: attr(find(element, 'a'), 'href'),
       title: text(element, '.external-article-widget-title') ?? text(element, 'a > strong'),
-      description:
-        text(element, '.external-article-widget-description') ??
-        (emphases.length > 1 ? text(emphases[0]) : undefined),
-      // In the stripped shape the host always sits in the last `em`; a lone `em` is the
-      // host with no description before it.
-      publisher: text(element, '.external-article-widget-url') ?? text(emphases.at(-1)),
+      description: text(element, '.external-article-widget-description') ?? text(descriptionEm),
+      publisher: text(element, '.external-article-widget-url') ?? text(hostEm),
       thumbnail: bgImage(find(element, '.external-article-widget-image')),
     })
   },
