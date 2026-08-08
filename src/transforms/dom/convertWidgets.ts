@@ -45,6 +45,14 @@ const createMediaElement = (document: Document, result: MediaResolverResult): HT
     media.setAttribute('poster', result.poster)
   }
 
+  if (result.width) {
+    media.setAttribute('width', String(result.width))
+  }
+
+  if (result.height) {
+    media.setAttribute('height', String(result.height))
+  }
+
   return media
 }
 

@@ -107,6 +107,8 @@ export type MediaResolverResult = {
   tag: 'video' | 'audio'
   src: string
   poster?: string
+  width?: number
+  height?: number
 }
 
 export type MediaResolver = {

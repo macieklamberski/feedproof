@@ -130,6 +130,7 @@ export {
 } from './embeds/youtube.js'
 export { hljsHighlightFn } from './highlighters/hljs.js'
 export { buzzsproutMediaResolver } from './media/buzzsprout.js'
+export { ghostMediaResolver } from './media/ghost.js'
 export { jwplayerMediaResolver } from './media/jwplayer.js'
 export { substackMediaResolver } from './media/substack.js'
 export { wechatMediaResolver } from './media/wechat.js'
