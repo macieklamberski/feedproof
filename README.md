@@ -34,6 +34,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 
 | Transform | Description |
 | --- | --- |
+| `decodeDoubleEncodedEntities` | Decode double-escaped entities (`&amp;amp;` → `&amp;`) in text, one layer per run |
 | `decodeDoubleEncodedTags` | Decode double-escaped tags (`&lt;tag&gt;`) back to real HTML |
 | `fixLazyImages` | Promote lazy-loaded `data-src` / `data-original` to real `src` |
 | `flattenPictureElements` | Collapse `<picture>` to one `<img>`, keeping the best modern-format source |

@@ -51,6 +51,7 @@ import { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmb
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 import { convertNoteEmbeds } from './transforms/dom/convertNoteEmbeds.js'
 import { convertWidgets } from './transforms/dom/convertWidgets.js'
+import { decodeDoubleEncodedEntities } from './transforms/dom/decodeDoubleEncodedEntities.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 import { enrichCitePlaceholders } from './transforms/dom/enrichCitePlaceholders.js'
@@ -137,6 +138,11 @@ export const defaultStringTransforms: Array<StringTransform> = [
 ]
 
 export const defaultStandardDomTransforms: Array<DomTransform> = [
+  // Runs before decodeDoubleEncodedTags: a both-doubled fragment (`&amp;lt;b&amp;gt;`)
+  // parses to text with no literal `<`, which the tag pass skips. The entity peel turns it
+  // into `<b>…</b>` text, the exact whole-fragment shape the tag pass judges. Reversed,
+  // the tag pass has already run and the fragment stays visible escaped markup.
+  decodeDoubleEncodedEntities,
   decodeDoubleEncodedTags,
   stripComments,
   stripHiddenElements,
