@@ -25,11 +25,16 @@ const githubDescription = (paragraph: Element): string | undefined => {
   return result.trim() || undefined
 }
 
-// Onebox engines that render a social post rather than a link preview: the card's heading
-// is the author and its body the post text, so a cite would mislabel it. These are the only
-// social engines that render as `aside.onebox` — the others (TikTok, Reddit, Facebook,
+// Onebox engines whose cards are not link previews, so a cite would misrepresent what the
+// author linked; their markup passes through untouched. Only engines that render as
+// `aside.onebox` need listing — the other social engines (TikTok, Reddit, Facebook,
 // Twitch) emit bare iframes, and Mastodon links go through the generic engine.
-export const socialOneboxClasses = ['twitterstatus', 'threadsstatus', 'instagram']
+export const omittedOneboxClasses = [
+  'twitterstatus', // A social post: the heading is the author and the body the post text.
+  'threadsstatus', // The same social-post shape as twitterstatus.
+  'instagram', // Legacy social-post asides; since 2021 the engine emits a bare iframe.
+  'pdf', // A file card: the title is the filename and the only paragraph its size.
+]
 
 // Social platforms without their own onebox engine: their posts arrive as generic asides
 // whose og title is the author's name, so they are recognized by the cited host instead of
@@ -43,7 +48,7 @@ export const socialPostHosts = ['bsky.app', 'threads.net', 'threads.com']
 // keys on the wrapper and the fields the generic shape shares rather than on the engine
 // subclass. The canonical URL sits on the wrapper, so no inner anchor is needed.
 export const discourseCiteResolver: CiteResolver = {
-  selector: `aside.onebox${socialOneboxClasses.map((name) => `:not(.${name})`).join('')}`,
+  selector: `aside.onebox${omittedOneboxClasses.map((name) => `:not(.${name})`).join('')}`,
   extract: (element) => {
     const body = find(element, '.onebox-body')
     const source = find(element, 'header.source a')
@@ -63,6 +68,16 @@ export const discourseCiteResolver: CiteResolver = {
     const githubBody = find(body, 'p.github-body-container')
     const githubDate = find(element, '.github-info .date .discourse-local-date')
 
+    // The folder onebox's first paragraph is the path link, not an excerpt; its repo
+    // description sits in a `span.label1` after it.
+    let description = text(body, 'p')
+
+    if (githubBody) {
+      description = githubDescription(githubBody)
+    } else if (element.classList.contains('githubfolder')) {
+      description = text(body, 'p span.label1')
+    }
+
     // The Stack Exchange onebox writes "asked by <author> on <date>" as two anchors in its
     // `.date` div.
     const dateAnchors = Array.from(body?.querySelectorAll('.date a') ?? [])
@@ -72,7 +87,7 @@ export const discourseCiteResolver: CiteResolver = {
       url,
       // Engines differ on the heading level they use for the title.
       title: text(body, 'h3, h4'),
-      description: githubBody ? githubDescription(githubBody) : text(body, 'p'),
+      description,
       author: text(element, '.github-info .user a') ?? text(dateAnchors[0]),
       publisher,
       date: date ?? attr(githubDate, 'data-date') ?? text(githubDate) ?? text(dateAnchors[1]),
