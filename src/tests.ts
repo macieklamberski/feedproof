@@ -6,6 +6,7 @@ import {
   defaultCiteResolvers,
   defaultDeferredIframeSources,
   defaultEmojiImageHosts,
+  defaultGalleryResolvers,
   defaultHighlightFn,
   defaultLazyIframeAttributes,
   defaultLazySrcAttributes,
@@ -28,6 +29,7 @@ type ParseHtml = (html: string) => Document
 export const baseContext: TransformContext = {
   widgetResolvers: defaultWidgetResolvers,
   citeResolvers: defaultCiteResolvers,
+  galleryResolvers: defaultGalleryResolvers,
   mediaSrcAttributes: defaultMediaSrcAttributes,
   emojiImageHosts: defaultEmojiImageHosts,
   avatarImageHosts: defaultAvatarImageHosts,

@@ -127,6 +127,25 @@ export type WidgetResolver = EmbedResolver | MediaResolver
 
 export type WidgetResolverResult = EmbedResolverResult | MediaResolverResult
 
+export type GalleryItem = {
+  url: string // Displayed <img src> (preview / display size).
+  fullUrl?: string // Full-resolution image from a wrapping <a href>, when present.
+  alt?: string
+  caption?: string // Per-image <figcaption>.
+}
+
+export type GalleryResolverResult = {
+  provider: string
+  title?: string // Gallery-level caption.
+  layout?: string // "slideshow" for sliders and carousels; omitted for grids.
+  items: Array<GalleryItem>
+}
+
+export type GalleryResolver = {
+  selector: string
+  extract: (element: Element) => MaybePromise<GalleryResolverResult | undefined>
+}
+
 export type CleanUrlFn = (url: string) => string
 
 // The role a URL plays in the output, so safety policy and neutralization can differ:
@@ -162,6 +181,7 @@ export type TransformContext = {
   enclosures?: Array<Enclosure>
   widgetResolvers: Array<WidgetResolver>
   citeResolvers: Array<CiteResolver>
+  galleryResolvers: Array<GalleryResolver>
   mediaSrcAttributes: Array<string>
   lazySrcAttributes: Array<string>
   lazySrcsetAttributes: Array<string>
@@ -197,6 +217,7 @@ export type TransformContentOptions = {
   enclosures?: Array<Enclosure>
   widgetResolvers?: Array<WidgetResolver>
   citeResolvers?: Array<CiteResolver>
+  galleryResolvers?: Array<GalleryResolver>
   mediaSrcAttributes?: Array<string>
   lazySrcAttributes?: Array<string>
   lazySrcsetAttributes?: Array<string>

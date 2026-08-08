@@ -87,6 +87,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `stripDuplicateEnclosures` | _Heuristic (opt-in):_ remove an injected enclosure that duplicates inline content (image size-variants, exact audio/video/embed) |
 | `stripDuplicateLeadingImages` | _Heuristic (opt-in):_ remove a leading image the body repeats as the very next image (featured-image prepends), keeping the larger copy |
 | `convertCiteCards` | Convert link-preview cards into `data-cite-*` placeholders |
+| `convertGalleries` | Convert multi-image galleries and slideshows into `data-gallery-*` placeholders carrying an items JSON plus a per-image `<figure>` fallback |
 | `enrichEmbedPlaceholders` | Fill placeholder metadata via the caller's `enrichEmbedFn` (no-op unless set) |
 | `enrichCitePlaceholders` | Fill cite placeholder metadata via the caller's `enrichCiteFn` (no-op unless set) |
 | `neutralizeUnsafeUrls` | Replace dangerous-scheme URLs (and any the `isSafeUrlFn` option rejects) with an inert sentinel, keeping the element |
@@ -122,6 +123,7 @@ import {
   ghostCiteResolver,
   resolveRelativeUrls,
   transformContent,
+  wordpressGalleryResolver,
   youtubeIframeEmbedResolver,
 } from 'feedsweep'
 import { parseHtml } from 'feedsweep/linkedom'
@@ -154,6 +156,8 @@ const result = transformContent(html, {
   widgetResolvers: [youtubeIframeEmbedResolver, myEmbedResolver],
   // Resolvers turning link-preview cards into `data-cite-*` placeholders.
   citeResolvers: [ghostCiteResolver, myCiteResolver],
+  // Resolvers turning multi-image galleries into `data-gallery-*` placeholders.
+  galleryResolvers: [wordpressGalleryResolver, myGalleryResolver],
   // Opt into the heuristic transforms. Ignored if a custom domTransforms is set.
   heuristics: true,
   // Run a custom DOM transform pipeline (omit to use defaults).
@@ -167,7 +171,7 @@ Code blocks are highlighted only when they declare a language (`language-*` clas
 
 The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. The `heuristics` flag (default `false`) selects between two exported DOM pipelines: `defaultStandardDomTransforms` (the safe defaults) and `defaultAllDomTransforms` (standard plus `heuristicDomTransforms` spliced in after `injectEnclosures`). Setting `domTransforms` explicitly overrides `heuristics`. Every transform and pipeline is also exported individually from `feedsweep`, so you can compose any pipeline — list transforms explicitly, or spread `defaultStandardDomTransforms` / `heuristicDomTransforms` to extend or filter the defaults.
 
-`widgetResolvers` and `citeResolvers` each fully replace their default resolver list when provided; omit them for the defaults. Every resolver is exported individually from `feedsweep`, so a custom list is composed by naming the built-ins you want alongside your own.
+`widgetResolvers`, `citeResolvers`, and `galleryResolvers` each fully replace their default resolver list when provided; omit them for the defaults. Every resolver is exported individually from `feedsweep`, so a custom list is composed by naming the built-ins you want alongside your own.
 
 Embed resolvers are named `{service}EmbedResolver` where a service ships one, and `{service}{Carrier}EmbedResolver` where it ships several, since the carrier is the only thing that differs between them: `buzzsproutIframeEmbedResolver` beside `buzzsproutScriptEmbedResolver`, `brightcoveVideoJsEmbedResolver` beside `brightcoveFlashEmbedResolver`.
 

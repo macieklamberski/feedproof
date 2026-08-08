@@ -81,6 +81,10 @@ import { typeformIframeEmbedResolver, typeformWidgetEmbedResolver } from './embe
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { wistiaEmbedResolver } from './embeds/wistia.js'
 import { youtubeAmpEmbedResolver, youtubeIframeEmbedResolver } from './embeds/youtube.js'
+import { coblocksGalleryResolver } from './galleries/coblocks.js'
+import { ghostGalleryResolver } from './galleries/ghost.js'
+import { jetpackSlideshowResolver } from './galleries/jetpack.js'
+import { wordpressGalleryResolver } from './galleries/wordpress.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
 import { discourseMediaResolver } from './media/discourse.js'
 import { ghostMediaResolver } from './media/ghost.js'
@@ -95,6 +99,7 @@ import { convertAmpNativeElements } from './transforms/dom/convertAmpNativeEleme
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 import { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
+import { convertGalleries } from './transforms/dom/convertGalleries.js'
 import { convertGiphyEmbeds } from './transforms/dom/convertGiphyEmbeds.js'
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 import { convertNoteEmbeds } from './transforms/dom/convertNoteEmbeds.js'
@@ -174,6 +179,7 @@ import type {
   DeferredIframeSource,
   DomTransform,
   EmbedResolver,
+  GalleryResolver,
   ResolveUrlFn,
   StringTransform,
   WidgetResolver,
@@ -280,6 +286,11 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   normalizeAnchoredHeadings,
   stripDeadAnchors,
   convertCiteCards,
+  // Sits after resolveRelativeUrls and the lazy-image fixes: whatever goes into the
+  // data-gallery-items JSON has to be already real and absolute, because that JSON is out
+  // of reach of the per-attribute URL passes. neutralizeUnsafeUrls and proxyAssetUrls run
+  // later and are the two passes that do reach into it (rewriteGalleryItemUrls).
+  convertGalleries,
   removeTrackingPixels,
   unwrapEmojiImages,
   // Empties lone-backslash paragraphs (`<p>\</p>`); runs before stripEmptyTags so
@@ -469,6 +480,17 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   devtoLegacyPostCiteResolver,
   affingerCiteResolver,
   mediumCiteResolver,
+]
+
+// Order matters here too: a resolver replaces the element it matches, so a later one never
+// sees it. No two selectors below overlap (`wp-block-coblocks-gallery-*` is a different
+// class token from `wp-block-gallery`); keep the more specific one first if that ever
+// changes.
+export const defaultGalleryResolvers: Array<GalleryResolver> = [
+  wordpressGalleryResolver,
+  ghostGalleryResolver,
+  jetpackSlideshowResolver,
+  coblocksGalleryResolver,
 ]
 
 // Attributes that park a media file URL on a container which then builds the player with JS,

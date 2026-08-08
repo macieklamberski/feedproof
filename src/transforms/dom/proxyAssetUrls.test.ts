@@ -233,6 +233,38 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     expect(result).not.toContain('proxy.example.com')
   })
 
+  it('should proxy the display url of each gallery item, not the full-size link', async () => {
+    const value = `<div data-gallery-items='[{"url":"https://cdn.example.com/a.jpg","fullUrl":"https://cdn.example.com/full.jpg"}]'></div>`
+    const result = await transform(value, wrapProxy)
+
+    expect(result).toContain('type=image')
+    expect(result).toContain('https%3A%2F%2Fcdn.example.com%2Fa.jpg')
+    expect(result).toContain('https://cdn.example.com/full.jpg')
+    expect((result.match(/proxy\.example\.com/g) ?? []).length).toBe(1)
+  })
+
+  it('should leave data: URIs in gallery items untouched', async () => {
+    const value = `<div data-gallery-items='[{"url":"data:image/gif;base64,AAAA"}]'></div>`
+    const result = await transform(value, wrapProxy)
+
+    expect(result).toContain('data:image/gif;base64,AAAA')
+    expect(result).not.toContain('proxy.example.com')
+  })
+
+  it('should ignore malformed data-gallery-items JSON', async () => {
+    const value = `<div data-gallery-items='not json'></div>`
+    const result = await transform(value, wrapProxy)
+
+    expect(result).not.toContain('proxy.example.com')
+  })
+
+  it('should ignore data-gallery-items that is not an array', async () => {
+    const value = `<div data-gallery-items='{"url":"https://cdn.example.com/a.jpg"}'></div>`
+    const result = await transform(value, wrapProxy)
+
+    expect(result).not.toContain('proxy.example.com')
+  })
+
   it('should leave attributes unchanged when assetProxyFn returns undefined', async () => {
     const skip: AssetProxyFn = () => undefined
     const value = '<img src="https://cdn.example.com/photo.jpg">'

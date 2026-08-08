@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'bun:test'
 import {
   defaultCiteResolvers,
+  defaultGalleryResolvers,
   defaultNonContentSelectors,
   defaultWidgetResolvers,
 } from './defaults.js'
 import * as index from './index.js'
 import { parseHtml } from './parsers/linkedom.js'
-import { createCitePlaceholder } from './utils/widgets.js'
+import { createCitePlaceholder, createGalleryPlaceholder } from './utils/widgets.js'
 
 describe('defaults', () => {
   // A resolver reachable only through the default array cannot be named, so a consumer
@@ -15,7 +16,12 @@ describe('defaults', () => {
   // since the two lists drifted apart once already as resolvers were added.
   it('should export every registered resolver individually', () => {
     const exported = new Set(Object.values(index))
-    const missing = [...defaultCiteResolvers, ...defaultWidgetResolvers].filter((resolver) => {
+    const registered = [
+      ...defaultCiteResolvers,
+      ...defaultWidgetResolvers,
+      ...defaultGalleryResolvers,
+    ]
+    const missing = registered.filter((resolver) => {
       return !exported.has(resolver)
     })
 
@@ -28,9 +34,9 @@ describe('defaults', () => {
 
   // Claiming a placeholder an earlier resolver already produced: that converts finished
   // work a second time, and the transform stops being idempotent.
-  it('should not match a cite placeholder with any resolver selector', () => {
+  it('should not match a cite or gallery placeholder with any resolver selector', () => {
     const document = parseHtml('<div></div>')
-    const placeholder = createCitePlaceholder(document, {
+    const citePlaceholder = createCitePlaceholder(document, {
       provider: 'stub',
       url: 'https://example.com/post',
       title: 'Title',
@@ -43,13 +49,24 @@ describe('defaults', () => {
       thumbnail: 'https://example.com/thumb.jpg',
       kind: 'bookmark',
     })
-    // The placeholder is matched both on its own and wrapped, since the pipeline leaves it
-    // nested inside whatever contained the card it replaced.
-    const wrapper = document.createElement('div')
-    wrapper.appendChild(placeholder)
-    document.body.appendChild(wrapper)
+    const galleryPlaceholder = createGalleryPlaceholder(document, {
+      provider: 'stub',
+      title: 'Title',
+      layout: 'slideshow',
+      items: [
+        { url: 'https://example.com/a.jpg', fullUrl: 'https://example.com/a-full.jpg' },
+        { url: 'https://example.com/b.jpg' },
+      ],
+    })
+    // Each placeholder is matched both on its own and wrapped, since the pipeline leaves it
+    // nested inside whatever contained the element it replaced.
+    for (const placeholder of [citePlaceholder, galleryPlaceholder]) {
+      const wrapper = document.createElement('div')
+      wrapper.appendChild(placeholder)
+      document.body.appendChild(wrapper)
+    }
 
-    const matched = [...defaultCiteResolvers, ...defaultWidgetResolvers]
+    const matched = [...defaultCiteResolvers, ...defaultWidgetResolvers, ...defaultGalleryResolvers]
       .filter((resolver) => document.querySelectorAll(resolver.selector).length > 0)
       .map((resolver) => resolver.selector)
 
@@ -59,7 +76,9 @@ describe('defaults', () => {
   // Claiming a selector another resolver already owns: the later one only ever sees the
   // cards the first declined, so it looks registered while never really firing.
   it('should not register the same selector twice', () => {
-    const selectors = defaultCiteResolvers.map((resolver) => resolver.selector)
+    const selectors = [...defaultCiteResolvers, ...defaultGalleryResolvers].map((resolver) => {
+      return resolver.selector
+    })
     const duplicates = selectors.filter((selector, index) => {
       return selectors.indexOf(selector) !== index
     })
@@ -67,10 +86,14 @@ describe('defaults', () => {
     expect(duplicates).toEqual([])
   })
 
-  // stripNonContentElements runs before the embed and cite transforms, so a selector
-  // registered in both lists is always stripped and its resolver can never fire.
+  // stripNonContentElements runs before the embed, cite and gallery transforms, so a
+  // selector registered in both lists is always stripped and its resolver can never fire.
   it('should not list any resolver selector as a non-content selector', () => {
-    const resolverSelectors = [...defaultCiteResolvers, ...defaultWidgetResolvers]
+    const resolverSelectors = [
+      ...defaultCiteResolvers,
+      ...defaultWidgetResolvers,
+      ...defaultGalleryResolvers,
+    ]
       .flatMap((resolver) => resolver.selector.split(','))
       .map((selector) => selector.trim())
     const overlap = resolverSelectors.filter((selector) => {

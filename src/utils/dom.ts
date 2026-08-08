@@ -267,15 +267,15 @@ export const hasAncestorWithTagName = (node: Node, tagSet: Set<string>, stopAt?:
   return false
 }
 
-// The registry of wrapper types this package generates — embed and cite placeholders,
-// the table scroll wrapper, the code-block wrapper. A wrapper carries its contract in
-// `data-{type}-*` attributes and its children are a fixed shape a consumer reads or
-// replaces wholesale, so transforms that restructure containers treat it as opaque.
-// createPlaceholder only accepts these types, so a new widget fails to compile until it
-// is added here — and adding it makes the wrapper opaque everywhere at once. `table` and
-// `pre` are not minted through the factory (wrapTablesForScroll and highlightCode set
-// their attributes directly) and stay manual entries.
-export const generatedWrapperTypes = ['embed', 'cite', 'table', 'pre'] as const
+// The registry of wrapper types this package generates — embed, cite and gallery
+// placeholders, the table scroll wrapper, the code-block wrapper. A wrapper carries its
+// contract in `data-{type}-*` attributes and its children are a fixed shape a consumer
+// reads or replaces wholesale, so transforms that restructure containers treat it as
+// opaque. createPlaceholder only accepts these types, so a new widget fails to compile
+// until it is added here — and adding it makes the wrapper opaque everywhere at once.
+// `table` and `pre` are not minted through the factory (wrapTablesForScroll and
+// highlightCode set their attributes directly) and stay manual entries.
+export const generatedWrapperTypes = ['embed', 'cite', 'gallery', 'table', 'pre'] as const
 
 export type GeneratedWrapperType = (typeof generatedWrapperTypes)[number]
 

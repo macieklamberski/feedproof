@@ -1,6 +1,7 @@
 import { stringifySrcset } from 'srcset'
 import type { AssetProxyFn, AssetType, DomTransform } from '../../types.js'
 import { parseSrcset } from '../../utils/images.js'
+import { rewriteGalleryItemUrls } from '../../utils/widgets.js'
 
 const proxyableSelectors = [
   'img',
@@ -13,6 +14,7 @@ const proxyableSelectors = [
   '[data-embed-avatar]',
   '[data-cite-icon]',
   '[data-cite-thumbnail]',
+  '[data-gallery-items]',
 ]
 
 const sourceTypeFromParent = (element: Element): AssetType => {
@@ -161,6 +163,17 @@ export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
       if (element.hasAttribute('data-cite-thumbnail')) {
         proxyAttribute(element, 'data-cite-thumbnail', 'image', assetProxyFn)
       }
+
+      // Proxy the display `url` of each gallery item (inside the data-gallery-items JSON),
+      // matching the fallback <img> that the generic pass above already proxies. The
+      // full-size `fullUrl` is a link, so it is left alone like the fallback <a href>.
+      rewriteGalleryItemUrls(element, (url, key) => {
+        if (key !== 'url' || !isProxyableUrl(url)) {
+          return
+        }
+
+        return assetProxyFn(url, 'image')
+      })
     }
   }
 }

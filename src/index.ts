@@ -4,6 +4,7 @@ import {
   defaultCiteResolvers,
   defaultDeferredIframeSources,
   defaultEmojiImageHosts,
+  defaultGalleryResolvers,
   defaultHighlightFn,
   defaultLazyIframeAttributes,
   defaultLazySrcAttributes,
@@ -31,6 +32,7 @@ export const transformContent = async (
     enclosures: options.enclosures,
     widgetResolvers: options.widgetResolvers ?? defaultWidgetResolvers,
     citeResolvers: options.citeResolvers ?? defaultCiteResolvers,
+    galleryResolvers: options.galleryResolvers ?? defaultGalleryResolvers,
     mediaSrcAttributes: options.mediaSrcAttributes ?? defaultMediaSrcAttributes,
     lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,
     lazySrcsetAttributes: options.lazySrcsetAttributes ?? defaultLazySrcsetAttributes,
@@ -193,6 +195,10 @@ export {
   youtubeAmpEmbedResolver,
   youtubeIframeEmbedResolver,
 } from './embeds/youtube.js'
+export { coblocksGalleryResolver } from './galleries/coblocks.js'
+export { ghostGalleryResolver } from './galleries/ghost.js'
+export { jetpackSlideshowResolver } from './galleries/jetpack.js'
+export { wordpressGalleryResolver } from './galleries/wordpress.js'
 export { hljsHighlightFn } from './highlighters/hljs.js'
 export { discourseMediaResolver } from './media/discourse.js'
 export { ghostMediaResolver } from './media/ghost.js'
@@ -207,6 +213,7 @@ export { convertAmpNativeElements } from './transforms/dom/convertAmpNativeEleme
 export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 export { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 export { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
+export { convertGalleries } from './transforms/dom/convertGalleries.js'
 export { convertGiphyEmbeds } from './transforms/dom/convertGiphyEmbeds.js'
 export { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 export { convertNoteEmbeds } from './transforms/dom/convertNoteEmbeds.js'
@@ -294,6 +301,9 @@ export type {
   Enclosure,
   EnrichCiteFn,
   EnrichEmbedFn,
+  GalleryItem,
+  GalleryResolver,
+  GalleryResolverResult,
   HighlightFn,
   IsSafeUrlFn,
   MediaResolver,
@@ -317,6 +327,7 @@ export { applyDomTransforms, applyStringTransforms } from './utils/transforms.js
 export {
   createCitePlaceholder,
   createEmbedPlaceholder,
+  createGalleryPlaceholder,
   createMarkupEmbedResolver,
   createPlaceholder,
   createUrlEmbedResolver,

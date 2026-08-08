@@ -35,7 +35,7 @@ const collectReferencedFragments = (document: Document): Set<string> => {
 }
 
 // Removes purely presentational container tags. Children are hoisted in place.
-// Containers carrying `data-embed-*`, `data-cite-*`, `data-table`, or
+// Containers carrying `data-embed-*`, `data-cite-*`, `data-gallery-*`, `data-table`, or
 // `data-pre` attributes (feedsweep's own markers) are preserved, as are ones whose
 // id is the target of an in-page fragment link (unwrapping would drop the id and
 // break the link). Must run AFTER merge transforms so unwrapping doesn't expose new
