@@ -36,6 +36,7 @@ import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
+import { discourseMediaResolver } from './media/discourse.js'
 import { ghostMediaResolver } from './media/ghost.js'
 import { substackMediaResolver } from './media/substack.js'
 import { wechatMediaResolver } from './media/wechat.js'
@@ -318,6 +319,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   wechatMediaResolver,
   weeblyMediaResolver,
   ghostMediaResolver,
+  discourseMediaResolver,
 ]
 
 // Order matters here too: a resolver replaces the element it matches, so a later one never
