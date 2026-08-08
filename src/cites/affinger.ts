@@ -34,8 +34,6 @@ export const affingerCiteResolver: CiteResolver = {
       provider: 'affinger',
       url: attr(element.closest('a'), 'href') ?? attr(find(element, '.st-cardbox-t a'), 'href'),
       title: text(element, '.st-cardbox-t'),
-      // The author-set label badge ("あわせて読む", "おすすめ") is the embedding author's own
-      // note about the link, not linked-page data.
       caption: text(element, '.st-cardbox-label-text'),
       description:
         text(element, '.st-card-excerpt') ?? text(element, '.smanone > p, .smanone2 > p'),
