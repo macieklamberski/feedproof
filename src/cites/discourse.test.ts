@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { citeExtractor, describeForEachParser, html } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
-import { discourseCiteResolver } from './discourse.js'
+import { discourseCiteResolver, socialOneboxClasses } from './discourse.js'
 
 describeForEachParser('discourseCiteResolver', (parseHtml) => {
   const extract = citeExtractor(parseHtml, discourseCiteResolver)
@@ -236,6 +236,23 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
   })
 
   describe('social oneboxes', () => {
+    // Iterates the real exclusion list, so every entry is exercised and a new entry is
+    // covered automatically.
+    it.each(socialOneboxClasses)('should not match the %s onebox', async (engine) => {
+      const value = html`
+        <aside class="onebox ${engine}" data-onebox-src="https://example.com/post/1">
+          <header class="source">
+            <a href="https://example.com/post/1" target="_blank" rel="noopener">example.com</a>
+          </header>
+          <article class="onebox-body">
+            <h4><a href="https://example.com/post/1" target="_blank" rel="noopener">Author name on Platform</a></h4>
+          </article>
+        </aside>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     // A social post is not a link preview, so its onebox must not turn into a cite.
     it('should not match the social-post onebox', async () => {
       const value = html`

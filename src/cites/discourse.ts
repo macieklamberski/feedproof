@@ -24,15 +24,19 @@ const githubDescription = (paragraph: Element): string | undefined => {
   return result.trim() || undefined
 }
 
+// Onebox engines that render a social post rather than a link preview: the card's heading
+// is the author and its body the post text, so a cite would mislabel it. These are the only
+// social engines that render as `aside.onebox` — the others (TikTok, Reddit, Facebook,
+// Twitch) emit bare iframes, and Mastodon links go through the generic engine.
+export const socialOneboxClasses = ['twitterstatus', 'threadsstatus', 'instagram']
+
 // Discourse forums expand a pasted link into a "onebox" card. The engine that built the
 // card varies (a generic one covers 979 of the 1,118 corpus feeds, the rest are per-site
 // engines like github or wikipedia), and each engine renders its own body markup, so this
 // keys on the wrapper and the fields the generic shape shares rather than on the engine
 // subclass. The canonical URL sits on the wrapper, so no inner anchor is needed.
-//
-// The `twitterstatus` onebox is excluded: it renders a social post, not a link preview.
 export const discourseCiteResolver: CiteResolver = {
-  selector: 'aside.onebox:not(.twitterstatus)',
+  selector: `aside.onebox${socialOneboxClasses.map((name) => `:not(.${name})`).join('')}`,
   extract: (element) => {
     const body = find(element, '.onebox-body')
     const source = find(element, 'header.source a')
