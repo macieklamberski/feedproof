@@ -59,9 +59,59 @@ describeForEachParser('notecomCiteResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should extract a class-stripped feed card', async () => {
+      const value = html`
+        <figure name="abc" data-src="https://example.com/page" data-identifier="null" embedded-service="external-article" embedded-content-key="emb123">
+          <a href="https://example.com/page" rel="nofollow noopener" target="_blank">
+            <strong>Page title</strong>
+            <em>Preview text</em>
+            <em>example.com</em>
+          </a>
+          <a href="https://example.com/page" rel="nofollow noopener" target="_blank"></a>
+        </figure>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'notecom',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        description: 'Preview text',
+        publisher: 'example.com',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('edge cases', () => {
+    it('should read only the title and url from a stripped card with bare text runs', async () => {
+      const value = html`
+        <figure embedded-service="external-article" name="abc" data-identifier="null">
+          <a href="https://example.com/page" target="_blank" rel="nofollow"><strong>Page title</strong>Preview text example.com</a>
+          <a href="https://example.com/page" target="_blank" rel="nofollow"></a>
+        </figure>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'notecom',
+        url: 'https://example.com/page',
+        title: 'Page title',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should read a lone em as the publisher with no description', async () => {
+      const value = html`
+        <figure embedded-service="external-article">
+          <a href="https://example.com/page"><strong>Page title</strong><em>example.com</em></a>
+        </figure>
+      `
+      const result = await extract(value)
+
+      expect(result?.publisher).toBe('example.com')
+      expect(result?.description).toBeUndefined()
+    })
+
     it('should parse the thumbnail from the background-image style', async () => {
       const value = html`
         <figure embedded-service="external-article">
@@ -85,6 +135,16 @@ describeForEachParser('notecomCiteResolver', (parseHtml) => {
               <em class="external-article-widget-productImage-price">1000</em>
             </a>
           </div>
+        </figure>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a stripped shopping card with no anchor', async () => {
+      const value = html`
+        <figure name="abc" id="abc" data-identifier="null" embedded-service="external-article" embedded-content-key="emb123">
+          <strong>Product title</strong><em></em><em>amzn.to</em> <em>1,980円</em>(2026年05月12日 11:31時点詳しくはこちら) Amazon.co.jpで購入する
         </figure>
       `
 
