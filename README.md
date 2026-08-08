@@ -36,6 +36,10 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | --- | --- |
 | `decodeDoubleEncodedTags` | Decode double-escaped tags (`&lt;tag&gt;`) back to real HTML |
 | `fixLazyImages` | Promote lazy-loaded `data-src` / `data-original` to real `src` |
+| `fixLazyIframes` | Promote a lazy or consent-parked iframe `src` (real URL in a `data-*` attribute) to real `src`, skipping placeholder pages |
+| `fixLazyVideos` | Promote a lazy `<video>` src and `data-poster` to real attributes |
+| `fixLazyAudios` | Promote a lazy `<audio>` src to real `src` |
+| `convertLazyImageContainers` | Convert a container parking an image URL in a lazy attribute into a real `<img>` |
 | `flattenPictureElements` | Collapse `<picture>` to one `<img>`, keeping the best modern-format source |
 | `hoistFigcaptionFromAnchor` | Move a `<figcaption>` out of the figure's click-through link |
 | `canonicalizeAlignment` | Normalize media alignment into a single `data-align` hook |
@@ -46,14 +50,18 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `stripDuplicateTitleHeading` | Remove a leading heading that repeats the article title |
 | `demoteHeadings` | Shift headings down a level so they sit below the reader's page title |
 | `unwrapHeadingBold` | Unwrap redundant bold wrapping a whole heading |
+| `normalizeAnchoredHeadings` | Strip static-site-generator permalink anchors from headings (Sphinx/MkDocs, Docusaurus, AnchorJS, Zola) |
 | `cleanAnchorUrls` | Clean anchor hrefs (redirects, tracking params) via the `cleanUrlFn` option |
 | `stripDeadAnchors` | Unwrap links with empty, `#`, or `javascript:` hrefs |
 | `stripNonContentElements` | Strip non-content chrome — subscribe/share/related widgets, ads, author bios |
+| `stripHiddenElements` | Strip elements hidden from view (`hidden` attribute, inline `display:none` / `visibility:hidden`) |
 | `removeTrackingPixels` | Strip 1×1 tracking pixels, keeping real images |
 | `unwrapEmojiImages` | Replace emoji and forum smilie markup with the real glyph, marking with `data-emoji` the images and fallback text that have none |
 | `resolveMediaDimensions` | Backfill `width`/`height` on media so aspect ratio survives style stripping |
 | `convertBreaksToParagraphs` | Convert `<br><br>` runs into real `<p>` blocks |
 | `wrapBareInlineInParagraphs` | Wrap loose inline content in `<p>` blocks |
+| `hoistBlocksFromParagraphs` | Hoist block elements out of enclosing paragraphs, keeping only halves that still render |
+| `wrapCargoGalleryImages` | Wrap Cargo portfolio captions and images in `<figure>` blocks so they stay apart |
 | `injectEnclosures` | Inject feed enclosures as native media or embed placeholders, merging a player page entry with its media file |
 | `surfaceTemplateEmbeds` | Hoist a video embed out of a lazy-load `<template>` (e.g. Better Core Video Embeds) so it renders in a reader |
 | `surfaceNoscriptEmbeds` | Hoist a video `<iframe>` out of a `<noscript>` lazy-load fallback (e.g. WP Rocket, a3 Lazy Load); ignores non-video noscript iframes like Google Tag Manager |
@@ -65,28 +73,39 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `rebuildLazyLoadForVideos` | Rebuild a real `<iframe>` from a "Lazy Load for Videos" facade (`a.preview-lazyload`), recovering the YouTube/Vimeo id from `data-video-uri` or `href` and carrying over `data-video-title` |
 | `rebuildLazyYtEmbeds` | Rebuild a real `<iframe>` from a jQuery lazyYT facade (`div.lazyYT[data-youtube-id]`) |
 | `rebuildElementorVideoEmbeds` | Rebuild a real `<iframe>` from an Elementor video widget's deferred `data-settings` (YouTube / Vimeo / Dailymotion / VideoPress) |
+| `rebuildEmbedlyEmbeds` | Unwrap an Embedly media widget to the inner provider iframe, carrying the poster as `data-thumbnail` |
+| `rebuildDeferredIframes` | Rebuild a real `<iframe>` from a URL parked in a `<div>` attribute (Pym.js `data-pym-src`, @newswire/frames `data-frame-src`) |
+| `linkifyGistEmbeds` | Replace a GitHub Gist script embed with a link to the gist |
 | `fixSubstackMentions` | Rebuild a Substack @-mention (empty `span.mention-wrap`) into an inline `<a>@name</a>` link, so the name survives instead of vanishing mid-sentence |
 | `convertNoteEmbeds` | Convert note.com's empty embed figures (`figure[embedded-service][data-src]`): media services become plain iframes for the widget pass, own-post embeds become plain links |
+| `convertAmpElements` | Convert AMP custom elements (`amp-img`, `amp-youtube`, …) into plain HTML media |
+| `convertDatawrapperEmbeds` | Convert Datawrapper chart embeds (iframe, script/noscript, and link forms) into a static image linking to the interactive chart |
 | `convertWidgets` | Convert recognized widgets: embeds become `data-embed-*` placeholders, platform-hosted media becomes a real `<video>`/`<audio>` (from an id template, a media-file src, or a URL parked in a `mediaSrcAttributes` attribute) |
 | `assignVideoPosters` | _Heuristic (opt-in):_ move a redundant video-poster image (inline or an enclosure) onto the embed as its poster, then drop the standalone image |
 | `stripDuplicateEnclosures` | _Heuristic (opt-in):_ remove an injected enclosure that duplicates inline content (image size-variants, exact audio/video/embed) |
 | `stripDuplicateLeadingImages` | _Heuristic (opt-in):_ remove a leading image the body repeats as the very next image (featured-image prepends), keeping the larger copy |
 | `convertCiteCards` | Convert link-preview cards into `data-cite-*` placeholders |
 | `enrichEmbedPlaceholders` | Fill placeholder metadata via the caller's `enrichEmbedFn` (no-op unless set) |
+| `enrichCitePlaceholders` | Fill cite placeholder metadata via the caller's `enrichCiteFn` (no-op unless set) |
 | `neutralizeUnsafeUrls` | Replace dangerous-scheme URLs (and any the `isSafeUrlFn` option rejects) with an inert sentinel, keeping the element |
 | `proxyAssetUrls` | Rewrite media URLs through a caller-supplied proxy, keeping each original in `data-proxied-<attr>` |
 | `resolveRelativeUrls` | Resolve relative URLs to absolute against the base URL |
+| `shortenSamePageLinkFragments` | Shorten absolute in-page links back to bare `#fragment` hrefs |
 | `unwrapWrappers` | Remove redundant outer `<div>` / `<article>` / `<section>` wrappers |
 | `unwrapDoublyNestedLists` | Unwrap a list that only wraps a single same-type list |
 | `wrapTablesForScroll` | Wrap tables in a horizontal-scroll container |
 | `mergeFragmentedLists` | Merge consecutive sibling lists of the same type |
 | `paragraphizePlainText` | Wrap bare plain text in `<p>` tags |
 | `stripOversizedBase64Sources` | Drop oversized inline base64 media sources before parsing |
+| `stripWordBreaks` | Remove `<wbr>` tags so split URLs rejoin before linkifying |
 | `linkifyUrls` | Wrap bare URLs in links |
 | `markTimestamps` | Wrap line-leading timestamps for player seeking |
 | `stripLeadingIndentation` | Strip fake leading indentation (nbsp / fixed-width spaces) from block text |
 | `trimPreWhitespace` | Remove shared leading indentation from `<pre>` blocks |
+| `unwrapNestedCodeWrappers` | Collapse redundant `code`-in-`code` / `pre`-in-`pre` double-wraps |
 | `highlightCode` | Syntax-highlight code blocks that declare a language and expose the language for a badge |
+| `stripDuplicateRules` | Collapse a run of thematic breaks to the first one |
+| `stripMarkdownEscapeBackslashes` | Strip leaked Markdown escape backslashes at paragraph starts |
 | `stripEmptyTags` | Remove empty elements |
 | `stripComments` | Remove HTML comments |
 | `unwrapCdataComments` | Unwrap malformed `<!--[CDATA[ … ]]-->` wrappers before parsing |
