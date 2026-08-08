@@ -179,6 +179,7 @@ export {
   telegramIframeEmbedResolver,
   telegramScriptEmbedResolver,
 } from './embeds/telegram.js'
+export { tiktokEmbedResolver } from './embeds/tiktok.js'
 export { transistorEmbedResolver } from './embeds/transistor.js'
 export {
   typeformIframeEmbedResolver,
