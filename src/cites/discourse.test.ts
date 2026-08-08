@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { citeExtractor, describeForEachParser, html } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
-import { discourseCiteResolver } from './discourse.js'
+import { discourseCiteResolver, socialOneboxClasses, socialPostHosts } from './discourse.js'
 
 describeForEachParser('discourseCiteResolver', (parseHtml) => {
   const extract = citeExtractor(parseHtml, discourseCiteResolver)
 
-  describe('happy paths', () => {
+  describe('generic oneboxes', () => {
     it('should extract all fields from a complete card', async () => {
       const value = html`
         <aside class="onebox allowlistedgeneric" data-onebox-src="https://example.com/page#comment-1">
@@ -67,9 +67,7 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
-  })
 
-  describe('edge cases', () => {
     it('should split the date suffix off the source into date', async () => {
       const value = html`
         <aside class="onebox allowlistedgeneric" data-onebox-src="https://example.com/page">
@@ -106,6 +104,20 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
       expect(result?.date).toBeUndefined()
     })
 
+    it('should prefer the wrapper source over the inner anchor href', async () => {
+      const value = html`
+        <aside class="onebox" data-onebox-src="https://example.com/canonical">
+          <article class="onebox-body">
+            <h3><a href="https://example.com/tracked">Page title</a></h3>
+          </article>
+        </aside>
+      `
+
+      expect((await extract(value))?.url).toBe('https://example.com/canonical')
+    })
+  })
+
+  describe('GitHub oneboxes', () => {
     it('should read the title from a level-four heading', async () => {
       const value = html`
         <aside class="onebox githubissue" data-onebox-src="https://example.com/owner/repo/issues/1">
@@ -119,16 +131,177 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
       expect((await extract(value))?.title).toBe('Issue title')
     })
 
-    it('should prefer the wrapper source over the inner anchor href', async () => {
+    it('should extract the author, date, avatar and rejoined body from a GitHub onebox', async () => {
       const value = html`
-        <aside class="onebox" data-onebox-src="https://example.com/canonical">
+        <aside class="onebox githubissue" data-onebox-src="https://github.com/owner/repo/issues/284">
+          <header class="source">
+            <a href="https://github.com/owner/repo/issues/284" target="_blank" rel="noopener">github.com/owner/repo</a>
+          </header>
           <article class="onebox-body">
-            <h3><a href="https://example.com/tracked">Page title</a></h3>
+            <div class="github-row">
+              <div class="github-info-container">
+                <h4><a href="https://github.com/owner/repo/issues/284" target="_blank" rel="noopener">Issue title</a></h4>
+                <div class="github-info">
+                  <div class="date">
+                    opened <span class="discourse-local-date" data-format="ll" data-date="2024-12-06" data-time="01:33:49" data-timezone="UTC">01:33AM - 06 Dec 24 UTC</span>
+                  </div>
+                  <div class="user">
+                    <a href="https://github.com/author" target="_blank" rel="noopener">
+                      <img alt="author" src="https://avatars.example.com/u/1" class="onebox-avatar-inline" width="20" height="20">
+                      Author name
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="github-row">
+              <p class="github-body-container">The visible half of the configur<span class="show-more-container"><a href="" rel="noopener" class="show-more">…</a></span><span class="excerpt hidden">ation preview.</span></p>
+            </div>
+          </article>
+        </aside>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://github.com/owner/repo/issues/284',
+        title: 'Issue title',
+        description: 'The visible half of the configuration preview.',
+        author: 'Author name',
+        publisher: 'github.com/owner/repo',
+        date: '2024-12-06',
+        icon: 'https://avatars.example.com/u/1',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should read a githubrepo onebox through the generic reads', async () => {
+      const value = html`
+        <aside class="onebox githubrepo" data-onebox-src="https://github.com/owner/repo">
+          <header class="source">
+            <a href="https://github.com/owner/repo" target="_blank" rel="noopener">github.com</a>
+          </header>
+          <article class="onebox-body">
+            <div class="github-row">
+              <img width="690" height="344" src="https://cdn.example.com/preview.png" class="thumbnail" />
+              <h3><a href="https://github.com/owner/repo" target="_blank">GitHub - owner/repo</a></h3>
+              <p><span class="github-repo-description">Repo description text.</span></p>
+            </div>
+          </article>
+        </aside>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://github.com/owner/repo',
+        title: 'GitHub - owner/repo',
+        description: 'Repo description text.',
+        publisher: 'github.com',
+        thumbnail: 'https://cdn.example.com/preview.png',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('Stack Exchange oneboxes', () => {
+    it('should extract the author, date and avatar from a Stack Exchange onebox', async () => {
+      const value = html`
+        <aside class="onebox stackexchange">
+          <header class="source">
+            <a href="https://stackoverflow.com/questions/1">stackoverflow.com</a>
+          </header>
+          <article class="onebox-body">
+            <a href="https://stackoverflow.com/users/1/author" target="_blank">
+              <img alt="Author name" src="https://www.gravatar.com/avatar/abc?s=128" class="thumbnail" width="" height="">
+            </a>
+            <h4><a href="https://stackoverflow.com/questions/1" target="_blank">Question title</a></h4>
+            <div class="date">
+              asked by <a href="https://stackoverflow.com/users/1/author" target="_blank">Author name</a> on <a href="https://stackoverflow.com/questions/1" target="_blank">12:42AM - 07 Sep 08</a>
+            </div>
+            <div><strong>c++, c, bit-manipulation</strong></div>
+          </article>
+        </aside>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://stackoverflow.com/questions/1',
+        title: 'Question title',
+        author: 'Author name',
+        publisher: 'stackoverflow.com',
+        date: '12:42AM - 07 Sep 08',
+        thumbnail: 'https://www.gravatar.com/avatar/abc?s=128',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('social oneboxes', () => {
+    // Iterates the real exclusion list, so every entry is exercised and a new entry is
+    // covered automatically.
+    it.each(socialOneboxClasses)('should not match the %s onebox', async (engine) => {
+      const value = html`
+        <aside class="onebox ${engine}" data-onebox-src="https://example.com/post/1">
+          <header class="source">
+            <a href="https://example.com/post/1" target="_blank" rel="noopener">example.com</a>
+          </header>
+          <article class="onebox-body">
+            <h4><a href="https://example.com/post/1" target="_blank" rel="noopener">Author name on Platform</a></h4>
           </article>
         </aside>
       `
 
-      expect((await extract(value))?.url).toBe('https://example.com/canonical')
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it.each(socialPostHosts)('should not cite a generic onebox of a %s post', async (host) => {
+      const value = html`
+        <aside class="onebox allowlistedgeneric" data-onebox-src="https://${host}/profile/user/post/1">
+          <header class="source">
+            <a href="https://${host}/profile/user/post/1" target="_blank" rel="noopener">${host}</a>
+          </header>
+          <article class="onebox-body">
+            <h3><a href="https://${host}/profile/user/post/1">Author name (@handle)</a></h3>
+            <p>Post text</p>
+          </article>
+        </aside>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should skip a social post whose url only sits on the source anchor', async () => {
+      const value = html`
+        <aside class="onebox allowlistedgeneric">
+          <header class="source">
+            <a href="https://bsky.app/profile/user/post/1" target="_blank">bsky.app</a>
+          </header>
+          <article class="onebox-body">
+            <h3><a href="https://bsky.app/profile/user/post/1">Author name (@handle)</a></h3>
+            <p>Post text</p>
+          </article>
+        </aside>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // A social post is not a link preview, so its onebox must not turn into a cite.
+    it('should not match the social-post onebox', async () => {
+      const value = html`
+        <aside class="onebox twitterstatus" data-onebox-src="https://twitter.com/handle/status/1">
+          <header class="source">
+            <a href="https://twitter.com/handle/status/1" target="_blank" rel="noopener">twitter.com</a>
+          </header>
+          <article class="onebox-body">
+            <img src="https://cdn.example.com/avatar.jpeg" class="thumbnail onebox-avatar" alt="" width="200" height="200">
+            <h4><a href="https://twitter.com/handle/status/1" target="_blank" rel="noopener">Display name (@handle) on X</a></h4>
+            <div class="twitter-screen-name"><a href="https://twitter.com/handle/status/1" target="_blank" rel="noopener">@handle</a></div>
+            <div class="tweet"><span class="tweet-description">Tweet text</span></div>
+          </article>
+        </aside>
+      `
+
+      expect(await extract(value)).toBeUndefined()
     })
   })
 
