@@ -6,7 +6,7 @@ import { discourseCiteResolver } from './discourse.js'
 describeForEachParser('discourseCiteResolver', (parseHtml) => {
   const extract = citeExtractor(parseHtml, discourseCiteResolver)
 
-  describe('happy paths', () => {
+  describe('generic oneboxes', () => {
     it('should extract all fields from a complete card', async () => {
       const value = html`
         <aside class="onebox allowlistedgeneric" data-onebox-src="https://example.com/page#comment-1">
@@ -67,9 +67,7 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
-  })
 
-  describe('edge cases', () => {
     it('should split the date suffix off the source into date', async () => {
       const value = html`
         <aside class="onebox allowlistedgeneric" data-onebox-src="https://example.com/page">
@@ -106,6 +104,20 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
       expect(result?.date).toBeUndefined()
     })
 
+    it('should prefer the wrapper source over the inner anchor href', async () => {
+      const value = html`
+        <aside class="onebox" data-onebox-src="https://example.com/canonical">
+          <article class="onebox-body">
+            <h3><a href="https://example.com/tracked">Page title</a></h3>
+          </article>
+        </aside>
+      `
+
+      expect((await extract(value))?.url).toBe('https://example.com/canonical')
+    })
+  })
+
+  describe('GitHub oneboxes', () => {
     it('should read the title from a level-four heading', async () => {
       const value = html`
         <aside class="onebox githubissue" data-onebox-src="https://example.com/owner/repo/issues/1">
@@ -188,7 +200,9 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+  })
 
+  describe('Stack Exchange oneboxes', () => {
     it('should extract the author, date and avatar from a Stack Exchange onebox', async () => {
       const value = html`
         <aside class="onebox stackexchange">
@@ -219,7 +233,9 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+  })
 
+  describe('social oneboxes', () => {
     // A social post is not a link preview, so its onebox must not turn into a cite.
     it('should not match the social-post onebox', async () => {
       const value = html`
@@ -237,18 +253,6 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
       `
 
       expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should prefer the wrapper source over the inner anchor href', async () => {
-      const value = html`
-        <aside class="onebox" data-onebox-src="https://example.com/canonical">
-          <article class="onebox-body">
-            <h3><a href="https://example.com/tracked">Page title</a></h3>
-          </article>
-        </aside>
-      `
-
-      expect((await extract(value))?.url).toBe('https://example.com/canonical')
     })
   })
 
