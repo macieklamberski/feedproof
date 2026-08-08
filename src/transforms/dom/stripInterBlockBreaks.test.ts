@@ -1,7 +1,7 @@
 import { expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripInterBlockBreaks } from './stripInterBlockBreaks.js'
 
 describeForEachParser('stripInterBlockBreaks', (parseHtml) => {
@@ -106,6 +106,128 @@ describeForEachParser('stripInterBlockBreaks', (parseHtml) => {
     `
 
     expect(await transform(value)).toBe(expected)
+  })
+
+  it('should remove br between a bare image and a following block', async () => {
+    const value = '<img src="https://example.com/p.jpg"><br><blockquote>Quote</blockquote>'
+    const expected = '<img src="https://example.com/p.jpg"><blockquote>Quote</blockquote>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should remove br between a block and a following bare image', async () => {
+    const value = '<p>Text</p><br><img src="https://example.com/p.jpg">'
+    const expected = '<p>Text</p><img src="https://example.com/p.jpg">'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should remove br between two bare images', async () => {
+    const value = '<img src="https://example.com/a.jpg"><br><img src="https://example.com/b.jpg">'
+    const expected = '<img src="https://example.com/a.jpg"><img src="https://example.com/b.jpg">'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should remove br before a leading bare image', async () => {
+    const value = '<br><img src="https://example.com/p.jpg">'
+    const expected = '<img src="https://example.com/p.jpg">'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should remove br between a bare video and a following block', async () => {
+    const value = '<video src="https://example.com/c.mp4"></video><br><p>Text</p>'
+    const expected = '<video src="https://example.com/c.mp4"></video><p>Text</p>'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should remove br between a bare image and following bare text', async () => {
+    const value = '<img src="https://example.com/p.jpg"><br>trailing text'
+    const expected = '<img src="https://example.com/p.jpg">trailing text'
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should remove br between a linked image and following bare text', async () => {
+    const value = html`
+      <p>
+        <a href="https://example.com">
+          <img src="https://example.com/p.jpg">
+        </a>
+        <br>
+        Have fun!
+      </p>
+    `
+    const expected = html`
+      <p>
+        <a href="https://example.com">
+          <img src="https://example.com/p.jpg">
+        </a>
+        Have fun!
+      </p>
+    `
+
+    expect(await transform(value)).toBe(expected)
+  })
+
+  it('should preserve br between a link with text beside its image and following text', async () => {
+    const value = html`
+      <p>
+        <a href="https://example.com">
+          <img src="https://example.com/p.jpg">
+          Label
+        </a>
+        <br>
+        Have fun!
+      </p>
+    `
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should preserve br after an emoji image', async () => {
+    const value = html`
+      <p>
+        Nice
+        <img src="https://example.com/wink.png" data-emoji="">
+        <br>
+        Have fun!
+      </p>
+    `
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should preserve br after a linked emoji image', async () => {
+    const value = html`
+      <p>
+        <a href="https://example.com">
+          <img src="https://example.com/wink.png" data-emoji="">
+        </a>
+        <br>
+        Have fun!
+      </p>
+    `
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should preserve br between a block and a following emoji image', async () => {
+    const value = html`
+      <p>Text</p>
+      <br>
+      <img src="https://example.com/wink.png" data-emoji="">
+    `
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should preserve br between bare text and a following image', async () => {
+    const value = 'leading text<br><img src="https://example.com/p.jpg">'
+
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not modify content without br', async () => {

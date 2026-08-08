@@ -1,7 +1,7 @@
 import { expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext as defaultContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { resolveRelativeUrls } from './resolveRelativeUrls.js'
 
 const baseContext: TransformContext = { ...defaultContext, baseUrl: 'https://example.com' }
@@ -92,6 +92,17 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
 
     expect(result).toContain('https://cdn.com/a.jpg 100w')
     expect(result).toContain('https://example.com/rel/b.jpg 200w')
+  })
+
+  // A url-less feed srcset ("…768w, 225w, 563w") makes the parser read the bare width
+  // descriptors as candidate urls; left in, each resolves to a page that does not exist.
+  it('should drop descriptor-only srcset candidates instead of resolving them', async () => {
+    const value = '<img srcset="https://cdn.com/a.jpg 768w,  225w,  563w,  1152w">'
+    const result = await transform(value)
+
+    expect(result).toContain('srcset="https://cdn.com/a.jpg 768w"')
+    expect(result).not.toContain('example.com/225w')
+    expect(result).not.toContain('225w')
   })
 
   it('should resolve srcset entries on source elements', async () => {

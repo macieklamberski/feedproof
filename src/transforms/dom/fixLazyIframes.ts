@@ -1,13 +1,13 @@
+import { isAnyOf } from 'trousse'
 import type { DomTransform } from '../../types.js'
+import { isUrlShaped, isUsableSrc } from '../../utils/urls.js'
 
-// A real, loadable src — not empty or the `about:blank` lazy placeholder.
-const isUsableSrc = (src: string | null): src is string => {
-  const trimmed = src?.trim()
-  return !!trimmed && trimmed !== 'about:blank'
-}
-
-// Rejects flag-style values; a real URL carries a `:`, `/`, or `.`.
-const urlShapeRegex = /[:/.]/
+// Blank pages a platform points a deferred iframe's src at while the real URL sits in a
+// lazy attribute: a src matching one of these is a placeholder, not content.
+const placeholderPageRegexes = [
+  /\/applications\/core\/interface\/index\.html(?:[?#]|$)/, // Invision Community, paired with data-embed-src.
+  /\/complianz-gdpr(?:-premium)?\/assets\/video\//, // Complianz placeholder video, paired with data-src-cmplz.
+]
 
 // Promote a lazy/consent-gated iframe src (the real embed URL parked in a data-*
 // attribute) into `src` when the src itself is empty or `about:blank`, so the
@@ -17,14 +17,16 @@ export const fixLazyIframes: DomTransform = (context) => {
 
   return (document) => {
     for (const iframe of document.querySelectorAll('iframe')) {
-      if (isUsableSrc(iframe.getAttribute('src'))) {
+      const src = iframe.getAttribute('src')
+
+      if (isUsableSrc(src) && !isAnyOf(src, placeholderPageRegexes)) {
         continue
       }
 
       for (const attribute of lazyIframeAttributes) {
         const value = iframe.getAttribute(attribute)
 
-        if (value && urlShapeRegex.test(value)) {
+        if (value && isUrlShaped(value)) {
           iframe.setAttribute('src', value)
           break
         }

@@ -1,5 +1,12 @@
-import { hasAncestorWithTagName, isBlockElement, isElement, isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import {
+  hasAncestorWithTagName,
+  hasText,
+  isBlockElement,
+  isElement,
+  isGeneratedWrapper,
+  isText,
+} from '../../utils/dom.js'
 
 const processContainersSelector =
   'body, div, blockquote, td, li, article, section, main, header, footer, aside, figure'
@@ -29,14 +36,14 @@ const mediaSelector = 'img, picture, video, audio, iframe, embed, object'
 // the text to it and hide it from media-specific styling.
 const isMediaBoundary = (node: Node): boolean => {
   if (isText(node)) {
-    return !node.textContent?.trim()
+    return !hasText(node)
   }
 
   if (!isElement(node)) {
     return true
   }
 
-  if (node.textContent?.trim()) {
+  if (hasText(node)) {
     return false
   }
 
@@ -60,6 +67,14 @@ export const wrapBareInlineInParagraphs: DomTransform = () => {
   return (document) => {
     for (const container of document.querySelectorAll(processContainersSelector)) {
       if (hasAncestorWithTagName(container, inlineHostTags)) {
+        continue
+      }
+
+      // A placeholder's fallback link is its whole content and is replaced wholesale by a
+      // consumer, so wrapping it gains nothing. Skipping also keeps the pipeline stable on
+      // a second run: cite placeholders exist by the time this runs and embed placeholders
+      // do not, so wrapping produced two different shapes and a re-run changed the output.
+      if (isGeneratedWrapper(container)) {
         continue
       }
 
@@ -95,9 +110,9 @@ export const wrapBareInlineInParagraphs: DomTransform = () => {
           return
         }
 
-        const hasText = buffer.some((node) => node.textContent?.trim())
+        const bufferHasText = buffer.some(hasText)
 
-        if (hasText) {
+        if (bufferHasText) {
           let start = 0
           let end = buffer.length - 1
 

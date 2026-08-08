@@ -1,35 +1,41 @@
 import { describe, expect } from 'bun:test'
 import { JSDOM } from 'jsdom'
 import {
-  defaultBookmarkResolvers,
-  defaultEmbedResolvers,
+  defaultAvatarImageHosts,
+  defaultCiteResolvers,
+  defaultDeferredIframeSources,
   defaultEmojiImageHosts,
   defaultHighlightFn,
-  defaultInertSelectors,
   defaultLazyIframeAttributes,
   defaultLazySrcAttributes,
   defaultLazySrcsetAttributes,
+  defaultMediaSrcAttributes,
+  defaultNonContentSelectors,
   defaultPreservedPreClasses,
   defaultResolveUrlFn,
   defaultTrackingHosts,
   defaultTrackingPathSegments,
+  defaultWidgetResolvers,
 } from './defaults.js'
 import { parseHtml as parseWithLinkedom } from './parsers/linkedom.js'
-import type { TransformContext } from './types.js'
+import type { CiteResolver, CiteResolverResult, TransformContext } from './types.js'
 
 // Test adapters are synchronous, unlike the public `ParseHtmlFn` which allows a
 // promise — a sync return keeps `parseHtml(html).querySelector(...)` typechecking.
 type ParseHtml = (html: string) => Document
 
 export const baseContext: TransformContext = {
-  embedResolvers: defaultEmbedResolvers,
-  bookmarkResolvers: defaultBookmarkResolvers,
+  widgetResolvers: defaultWidgetResolvers,
+  citeResolvers: defaultCiteResolvers,
+  mediaSrcAttributes: defaultMediaSrcAttributes,
   emojiImageHosts: defaultEmojiImageHosts,
-  inertSelectors: defaultInertSelectors,
+  avatarImageHosts: defaultAvatarImageHosts,
+  nonContentSelectors: defaultNonContentSelectors,
   preservedPreClasses: defaultPreservedPreClasses,
   lazySrcAttributes: defaultLazySrcAttributes,
   lazySrcsetAttributes: defaultLazySrcsetAttributes,
   lazyIframeAttributes: defaultLazyIframeAttributes,
+  deferredIframeSources: defaultDeferredIframeSources,
   trackingHosts: defaultTrackingHosts,
   trackingPathSegments: defaultTrackingPathSegments,
 
@@ -67,6 +73,17 @@ export const describeForEachParser = (name: string, fn: (parseHtml: ParseHtml) =
     describe(`${name} [${library}]`, () => {
       fn(parseHtml)
     })
+  }
+}
+
+// Every cite resolver test runs the same two steps: match the resolver's own selector,
+// then hand the element to its extract. Bound per test file so each one reads as a single
+// `extract(html)` call.
+export const citeExtractor = (parseHtml: ParseHtml, resolver: CiteResolver) => {
+  return async (value: string): Promise<CiteResolverResult | undefined> => {
+    const element = parseHtml(value).querySelector(resolver.selector)
+
+    return element ? await resolver.extract(element) : undefined
   }
 }
 

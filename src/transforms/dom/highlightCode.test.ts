@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import { parseHTML } from 'linkedom'
-import { applyDomTransforms } from '../../common.js'
 import { parseHtml } from '../../parsers/linkedom.js'
 import { baseContext, describeForEachParser, queryElement } from '../../tests.js'
 import type { HighlightFn, TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { detectLanguage, highlightCode } from './highlightCode.js'
 
 const lineBreakBeforeConstRegex = /;\s*\n\s*<span class="hljs-keyword">const/
@@ -334,6 +334,46 @@ describe('detectLanguage', () => {
     })
   })
 
+  describe('bare language-name class', () => {
+    it('should detect a standalone language-name class on pre', () => {
+      const { pre, code } = createElement('<pre class="haskell">x</pre>')
+
+      expect(detectLanguage(pre, code)).toBe('haskell')
+    })
+
+    it('should detect a standalone language-name class on code', () => {
+      const { pre, code } = createElement('<pre><code class="python">x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBe('python')
+    })
+
+    it('should detect a language-name token among other classes', () => {
+      const { pre, code } = createElement('<pre class="foo bar rust"><code>x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBe('rust')
+    })
+
+    it('should ignore a two-letter alias that collides with CSS classes', () => {
+      const { pre, code } = createElement('<pre class="md"><code>x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
+
+    it('should ignore a one-letter language class', () => {
+      const { pre, code } = createElement('<pre class="c"><code>x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
+
+    it('should prefer an explicit language-* class over a bare language-name class', () => {
+      const { pre, code } = createElement(
+        '<pre class="haskell"><code class="language-js">x</code></pre>',
+      )
+
+      expect(detectLanguage(pre, code)).toBe('js')
+    })
+  })
+
   describe('precedence between styles', () => {
     it('should prefer class on code over class on pre', () => {
       const { pre, code } = createElement(
@@ -463,6 +503,12 @@ describeForEachParser('highlightCode', (parseHtml) => {
       expect(result).not.toContain('class="lineno"')
       expect(result).toContain('echo hi')
       expect(result).toContain('echo bye')
+    })
+
+    it('should leave an orphan gutter span outside any code block untouched', async () => {
+      const value = '<p><span class="ln">1</span>text</p>'
+
+      expect(await transform(value)).toBe(value)
     })
 
     it('should drop a gutter table with no recognized class (structural)', async () => {
@@ -651,36 +697,12 @@ describeForEachParser('highlightCode', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(value)
   })
 
-  it('should highlight an unlabeled JSON block as JSON', async () => {
+  it('should leave an unlabeled JSON block plain', async () => {
     const value = '<pre><code>{\n  "linter": true,\n  "rules": ["a", "b"]\n}</code></pre>'
     const result = await transform(value)
 
-    expect(result).toContain('hljs')
-    expect(result).toContain('data-pre-language="json"')
-    expect(result).toContain('data-pre-label="JSON"')
-    expect(result).not.toContain('data-pre-guessed')
-  })
-
-  it('should not force JSON on a JSON-shaped CSS rule body', async () => {
-    const value = '<pre><code>{ color: red; padding: 4px; }</code></pre>'
-
-    expect(await transform(value)).not.toContain('data-pre-language="json"')
-  })
-
-  it('should leave a JSONC block with comments plain (it fails JSON.parse)', async () => {
-    const value = '<pre><code>{\n  // a comment\n  "linter": true\n}</code></pre>'
-
-    // JSON.parse fails on the comment, so the deterministic JSON branch is skipped.
-    // With no auto-detection fallback, the block stays plain.
-    expect(await transform(value)).toEqualHtml(value)
-  })
-
-  it('should be idempotent on an unlabeled JSON block', async () => {
-    const value = '<pre><code>{\n  "linter": true,\n  "rules": ["a", "b"]\n}</code></pre>'
-    const once = await transform(value)
-    const twice = await transform(once)
-
-    expect(twice).toBe(once)
+    expect(result).not.toContain('hljs')
+    expect(result).not.toContain('data-pre-language')
   })
 
   it('should leave a trivial unlabeled one-liner plain', async () => {

@@ -1,44 +1,10 @@
-import htmlTags from 'html-tags'
-import { hasAncestorWithTagName, isText, NodeFilter } from '../../common.js'
 import type { DomTransform } from '../../types.js'
-
-// Standard HTML elements (from html-tags) we materialize from escaped text. Non-HTML names
-// (`<dependency>`, `<dupa>`) are absent, so config/XML fragments are left as text.
-const decodableTags = new Set<string>(htmlTags)
+import { hasAncestorWithTagName, isText, NodeFilter } from '../../utils/dom.js'
+import { isEscapedHtmlFragment } from '../../utils/html.js'
 
 // Real elements whose entity-escaped contents are intentional text (a tutorial showing
 // `<img>`), so their descendants are left untouched.
 const opaqueTags = new Set(['code', 'pre', 'script', 'style', 'textarea', 'noscript'])
-
-const tagNameRegex = /<\/?([a-zA-Z][\w-]*)/g
-const openTagRegex = /<[a-zA-Z]/g
-
-// True when the text node is itself an escaped HTML fragment: bounded by tags (a markup
-// block, not prose that merely mentions a tag), with real structure (an opening tag plus a
-// close, or 2+ opening tags — never a lone `<video>` nor a stray `</code>`, which would
-// decode to nothing), built only from known HTML elements (so `<dependency>`, `<dupa>`, and
-// other non-HTML markup are left as text).
-const isEscapedHtmlFragment = (data: string): boolean => {
-  const trimmed = data.trim()
-
-  if (!trimmed.startsWith('<') || !trimmed.endsWith('>')) {
-    return false
-  }
-
-  const openCount = trimmed.match(openTagRegex)?.length ?? 0
-
-  if (openCount === 0 || (!trimmed.includes('</') && openCount < 2)) {
-    return false
-  }
-
-  for (const match of trimmed.matchAll(tagNameRegex)) {
-    if (!decodableTags.has(match[1].toLowerCase())) {
-      return false
-    }
-  }
-
-  return true
-}
 
 // Decodes HTML that a buggy feed generator entity-escaped so it shipped as visible text.
 // Only a whole escaped fragment is decoded; an escaped tag embedded in prose, a lone tag,

@@ -1,11 +1,5 @@
-import {
-  hasAncestorWithTagName,
-  isElement,
-  isJsonLike,
-  isParseableJson,
-  isText,
-} from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { hasAncestorWithTagName, isElement, isText, walkElements } from '../../utils/dom.js'
 // Token -> display-label map for the languages feedsweep recognizes (canonical
 // names plus common aliases). Read from here so detecting and labelling a code
 // block needs no highlight.js import — the only place that touches hljs is the
@@ -57,8 +51,10 @@ const sphinxLanguageRegex = /^highlight-([a-z][a-z0-9+#]+)$/
 //   6. <figure><figcaption>file.ext</figcaption> filename — Expressive Code (Astro).
 //   7. class="highlight LANG" (LANG resolving to a grammar) — Forem/dev.to, Pygments.
 //   8. highlight-source-LANG / highlight-LANG wrapper class — GitHub/Linguist, Sphinx.
-// An unlabeled <pre><code> is highlighted only when it parses as JSON; anything
-// else stays plain (no relevance-based language guessing).
+//   9. A standalone class that is itself a grammar name (3+ chars) — class="haskell";
+//      older/hand-rolled templates with no prefix or wrapper token.
+// A block with no language hint stays plain: no relevance-based or shape-based
+// guessing, which mostly guesses wrong on short feed snippets.
 export const detectLanguage = (pre: Element | null, code: Element | null): string | undefined => {
   // Check language-* / lang-* class on <code>, then <pre>, then the pre's
   // wrapping ancestors — Jekyll/Rouge puts the class on an outer div:
@@ -171,6 +167,20 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
       if (language && isSupportedLanguage(language)) {
         return language
       }
+    }
+  }
+
+  // Bare language-name class: class="haskell", class="python" — older or hand-rolled
+  // templates name the language as a standalone class, with no prefix or wrapper token.
+  // Checked last so every explicit convention above wins. Accept a token that resolves
+  // to a grammar; require 3+ chars so the short aliases (c, r, go, js, md) that double
+  // as CSS utility classes cannot match.
+  for (const element of candidates) {
+    const tokens = element?.className.split(whitespaceRegex) ?? []
+    const language = tokens.find((token) => token.length >= 3 && isSupportedLanguage(token))
+
+    if (language) {
+      return language
     }
   }
 }
@@ -462,13 +472,31 @@ const stripCodeGutters = (document: Document): void => {
   }
 
   for (const span of document.querySelectorAll(gutterLineSpanSelector)) {
+    // Only strip a gutter span inside a code block. A stray span carrying one of these
+    // class names in ordinary prose is left alone.
+    if (!span.closest('pre, code')) {
+      continue
+    }
+
     span.closest('pre')?.setAttribute('data-pre-numbered', '')
     span.remove()
   }
 }
 
+// Tags whose presence means this transform has work to do. Gutter spans are only stripped
+// inside these, so a gutter class alone (outside any code block) is no longer a signal.
+const highlightSignalTags = new Set(['pre', 'code', 'table'])
+
 export const highlightCode: DomTransform = ({ highlightFn }) => {
   return async (document) => {
+    // Most feed items carry no code. One walk (see walkElements) checks that up
+    // front, instead of the five querySelectorAll calls below finding nothing.
+    const hasWork = walkElements(document, (element) => highlightSignalTags.has(element.localName))
+
+    if (!hasWork) {
+      return
+    }
+
     stripCodeGutters(document)
 
     // Some editors emit a block of code as a standalone <code> with no <pre> wrapper.
@@ -523,29 +551,18 @@ export const highlightCode: DomTransform = ({ highlightFn }) => {
         continue
       }
 
-      // A code block is highlighted only when its language is known: declared via a
-      // hint (language-* class, data-language, etc.), or detected as JSON. JSON is
-      // the one detection kept because it is deterministic — the text actually parses
-      // as JSON — unlike relevance-based auto-detection, which mostly guesses wrong on
-      // short feed snippets. An unlabeled non-JSON block stays plain. The JSON check
-      // is limited to a <pre><code> (a bare <pre> is as often plain preformatted text
-      // as code).
-      const declared = detectLanguage(pre, code)
+      // A code block is highlighted only when its language is declared via a hint
+      // (language-* class, data-language, etc.). A block with no hint stays plain:
+      // auto-detection, even the deterministic parses-as-JSON kind, guesses a language
+      // the feed never marked and reads as inconsistent across unlabeled blocks.
+      const language = detectLanguage(pre, code)
 
-      // A block explicitly marked as plain text is just text — leave it untouched.
-      if (declared && plaintextLanguages.has(declared.toLowerCase())) {
+      if (language === undefined) {
         continue
       }
 
-      let language: string | undefined
-
-      if (declared) {
-        language = declared
-      } else if (code && isJsonLike(text) && isParseableJson(text)) {
-        language = 'json'
-      }
-
-      if (language === undefined) {
+      // A block explicitly marked as plain text is just text — leave it untouched.
+      if (plaintextLanguages.has(language.toLowerCase())) {
         continue
       }
 

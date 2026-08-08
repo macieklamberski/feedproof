@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { parseHtml } from '../../parsers/linkedom.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { linkifyUrls } from './linkifyUrls.js'
 
 describeForEachParser('linkifyUrls', (parseHtml) => {
@@ -174,6 +174,35 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
     const twice = await transform(once)
 
     expect(twice).toBe(once)
+  })
+
+  describe('cleanUrlFn', () => {
+    const withCleanUrlFn: TransformContext = {
+      ...baseContext,
+      cleanUrlFn: (url) => url.split('?')[0] ?? url,
+    }
+
+    it('should clean the href of a linkified url', async () => {
+      const value = '<p>See https://example.com/post?utm_source=feed for more</p>'
+      const result = await transform(value, withCleanUrlFn)
+
+      expect(result).toContain('href="https://example.com/post"')
+      expect(result).not.toContain('utm_source')
+    })
+
+    it('should show the cleaned url as the link text', async () => {
+      const value = '<p>See https://example.com/post?utm_source=feed for more</p>'
+      const result = await transform(value, withCleanUrlFn)
+
+      expect(result).toContain('>https://example.com/post</a>')
+    })
+
+    it('should keep the url as written when cleaning changes nothing', async () => {
+      const value = '<p>See https://example.com/post for more</p>'
+      const result = await transform(value, withCleanUrlFn)
+
+      expect(result).toContain('<a href="https://example.com/post">https://example.com/post</a>')
+    })
   })
 })
 

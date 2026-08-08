@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { IsSafeUrlFn, TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { neutralizeUnsafeUrls } from './neutralizeUnsafeUrls.js'
 
 describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
@@ -63,6 +63,12 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
     it('should leave mailto, tel and fragment links untouched', async () => {
       const value =
         '<a href="mailto:a@b.com">mail</a><a href="tel:+123">call</a><a href="#section">jump</a>'
+
+      expect(await transform(value)).toBe(value)
+    })
+
+    it('should leave template-shielded URLs alone, like querySelectorAll does', async () => {
+      const value = '<template><a href="javascript:alert(1)">x</a></template><p>keep</p>'
 
       expect(await transform(value)).toBe(value)
     })
@@ -176,7 +182,7 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
   })
 
   describe('coverage', () => {
-    it('should neutralize across iframe, poster, embed data-* and bookmark attributes', async () => {
+    it('should neutralize across iframe, poster, embed data-* and cite attributes', async () => {
       const context: TransformContext = {
         ...baseContext,
         isSafeUrlFn: (url) => !url.includes('evil.test'),
@@ -185,26 +191,26 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
         <iframe src="https://evil.test/e"></iframe>
         <video poster="https://evil.test/p.jpg"></video>
         <div data-embed-thumbnail="https://evil.test/t.jpg"></div>
-        <div data-bookmark-icon="https://evil.test/i.ico"></div>
+        <div data-cite-icon="https://evil.test/i.ico"></div>
       `
       const expected = html`
         <iframe src="about:blank"></iframe>
         <video poster="about:blank"></video>
         <div data-embed-thumbnail="about:blank"></div>
-        <div data-bookmark-icon="about:blank"></div>
+        <div data-cite-icon="about:blank"></div>
       `
 
       expect(await transform(value, context)).toBe(expected)
     })
 
-    it('should neutralize unsafe embed and bookmark target urls with the link sentinel', async () => {
+    it('should neutralize unsafe embed and cite target urls with the link sentinel', async () => {
       const value = html`
         <div data-embed-url="javascript:alert(1)"></div>
-        <div data-bookmark-url="javascript:alert(1)"></div>
+        <div data-cite-url="javascript:alert(1)"></div>
       `
       const expected = html`
         <div data-embed-url="#unsafe-link"></div>
-        <div data-bookmark-url="#unsafe-link"></div>
+        <div data-cite-url="#unsafe-link"></div>
       `
 
       expect(await transform(value)).toBe(expected)

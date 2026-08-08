@@ -1,5 +1,5 @@
-import { isBlockElement, isBr, isComment, isElement, isWhitespaceText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { isBlockElement, isBr, isComment, isElement, isWhitespaceText } from '../../utils/dom.js'
 
 // Flow-content blocks where a boundary <br> is redundant. Structural
 // members (td, th, dt, dd) are omitted: emptying one (e.g. <td><br></td>)

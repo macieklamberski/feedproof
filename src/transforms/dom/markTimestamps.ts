@@ -1,5 +1,5 @@
-import { collectTextNodes } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { collectTextNodes } from '../../utils/dom.js'
 
 const timestampIgnoreTags = new Set(['a', 'pre', 'code', 'kbd', 'samp', 'var', 'script', 'style'])
 

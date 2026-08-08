@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
+import { defaultLazySrcAttributes, defaultLazySrcsetAttributes } from '../../defaults.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { fixLazyImages } from './fixLazyImages.js'
 import { flattenPictureElements } from './flattenPictureElements.js'
 
@@ -10,11 +11,13 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
     return applyDomTransforms(parseHtml(html), [fixLazyImages(context)])
   }
 
-  it('should move data-src to src', async () => {
-    const value = '<img data-src="photo.jpg">'
-    const result = await transform(value)
+  // Iterates the real default list, so every entry is exercised and a new entry
+  // is covered automatically.
+  it.each(defaultLazySrcAttributes)('should promote %s into src', async (attribute) => {
+    const value = `<img ${attribute}="photo.jpg">`
+    const expected = `<img ${attribute}="photo.jpg" src="photo.jpg">`
 
-    expect(result).toContain('src="photo.jpg"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should keep the original lazy attribute after promoting', async () => {
@@ -23,34 +26,6 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
 
     expect(result).toContain('src="photo.jpg"')
     expect(result).toContain('data-src="photo.jpg"')
-  })
-
-  it('should move data-original to src', async () => {
-    const value = '<img data-original="photo.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="photo.jpg"')
-  })
-
-  it('should move data-lazy-src to src', async () => {
-    const value = '<img data-lazy-src="photo.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="photo.jpg"')
-  })
-
-  it('should move data-url to src', async () => {
-    const value = '<img data-url="photo.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="photo.jpg"')
-  })
-
-  it('should move data-srcset to srcset', async () => {
-    const value = '<img data-srcset="small.jpg 300w, large.jpg 600w">'
-    const result = await transform(value)
-
-    expect(result).toContain('srcset="small.jpg 300w, large.jpg 600w"')
   })
 
   it('should extract image from noscript when sibling is lazy placeholder', async () => {
@@ -116,102 +91,11 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
     expect(result).toContain('src="preferred.jpg"')
   })
 
-  it('should move data-orig to src', async () => {
-    const value = '<img data-orig="photo.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="photo.jpg"')
-  })
-
-  it('should move data-orig-file to src', async () => {
-    const value = '<img data-orig-file="photo.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="photo.jpg"')
-  })
-
-  it('should move data-large-file to src', async () => {
-    const value = '<img data-large-file="large.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="large.jpg"')
-  })
-
-  it('should move data-medium-file to src', async () => {
-    const value = '<img data-medium-file="medium.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="medium.jpg"')
-  })
-
-  it('should move data-img-url to src', async () => {
-    const value = '<img data-img-url="photo.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="photo.jpg"')
-  })
-
-  it('should move data-runner-src to src', async () => {
-    const value = '<img data-runner-src="photo.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="photo.jpg"')
-  })
-
-  it('should move nitro-lazy-src to src', async () => {
-    const value = '<img nitro-lazy-src="photo.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="photo.jpg"')
-  })
-
-  it('should move data-canonical-src to src', async () => {
-    const value = '<img data-canonical-src="photo.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="photo.jpg"')
-  })
-
   it('should prefer data-orig-file over data-large-file when both present', async () => {
     const value = '<img data-orig-file="orig.jpg" data-large-file="large.jpg">'
     const result = await transform(value)
 
     expect(result).toContain('src="orig.jpg"')
-  })
-
-  it('should move data-image to src', async () => {
-    const value = '<img data-image="https://images.squarespace-cdn.com/photo.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="https://images.squarespace-cdn.com/photo.jpg"')
-  })
-
-  it('should move data-thumb to src', async () => {
-    const value = '<img data-thumb="https://example.com/thumb.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="https://example.com/thumb.jpg"')
-  })
-
-  it('should move data-thumb-src to src', async () => {
-    const value = '<img data-thumb-src="https://example.com/thumb.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="https://example.com/thumb.jpg"')
-  })
-
-  it('should move data-original-src to src', async () => {
-    const value = '<img data-original-src="https://cdn.example.com/photo.jpg">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="https://cdn.example.com/photo.jpg"')
-  })
-
-  it('should move data-image-src to src', async () => {
-    const value = '<img data-image-src="https://example.com/photo.png">'
-    const result = await transform(value)
-
-    expect(result).toContain('src="https://example.com/photo.png"')
   })
 
   it('should prefer data-src over data-image when both present', async () => {
@@ -301,25 +185,11 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
   })
 
   describe('lazy srcset attributes', () => {
-    it('should move data-lazy-srcset to srcset', async () => {
-      const value = '<img data-lazy-srcset="small.jpg 300w, large.jpg 600w">'
-      const result = await transform(value)
+    it.each(defaultLazySrcsetAttributes)('should promote %s into srcset', async (attribute) => {
+      const value = `<img ${attribute}="small.jpg 300w, large.jpg 600w">`
+      const expected = `<img ${attribute}="small.jpg 300w, large.jpg 600w" srcset="small.jpg 300w, large.jpg 600w">`
 
-      expect(result).toContain('srcset="small.jpg 300w, large.jpg 600w"')
-    })
-
-    it('should move nitro-lazy-srcset to srcset', async () => {
-      const value = '<img nitro-lazy-srcset="small.jpg 300w, large.jpg 600w">'
-      const result = await transform(value)
-
-      expect(result).toContain('srcset="small.jpg 300w, large.jpg 600w"')
-    })
-
-    it('should move data-flickity-lazyload-srcset to srcset', async () => {
-      const value = '<img data-flickity-lazyload-srcset="small.jpg 300w, large.jpg 600w">'
-      const result = await transform(value)
-
-      expect(result).toContain('srcset="small.jpg 300w, large.jpg 600w"')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should prefer data-srcset over data-lazy-srcset when both present', async () => {
@@ -327,20 +197,6 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
       const result = await transform(value)
 
       expect(result).toContain('srcset="primary.jpg 300w"')
-    })
-
-    it('should move data-tf-srcset to srcset', async () => {
-      const value = '<img data-tf-srcset="a.jpg 150w, b.jpg 300w">'
-      const result = await transform(value)
-
-      expect(result).toContain('srcset="a.jpg 150w, b.jpg 300w"')
-    })
-
-    it('should move data-pswp-srcset to srcset', async () => {
-      const value = '<img data-pswp-srcset="a.jpg 300w, b.jpg 150w">'
-      const result = await transform(value)
-
-      expect(result).toContain('srcset="a.jpg 300w, b.jpg 150w"')
     })
 
     it('should skip non-URL srcset values like Cloudinary transform params', async () => {

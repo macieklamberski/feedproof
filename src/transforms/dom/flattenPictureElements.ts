@@ -1,5 +1,5 @@
-import { parseSrcset } from 'srcset'
 import type { DomTransform } from '../../types.js'
+import { parseSrcset } from '../../utils/images.js'
 
 // Prefer AVIF, then WebP. Other source types are not worth promoting over the
 // <img> fallback, which is already a widely-supported format.
@@ -17,9 +17,15 @@ const widestUrl = (srcset: string): string | undefined => {
     return
   }
 
-  const widest = entries.reduce((best, entry) => {
-    return (entry.width ?? 0) > (best.width ?? 0) ? entry : best
-  })
+  // Seeded from the last entry, matching resolveMediaDimensions: a density-only srcset
+  // (1x, 1.5x, 2x) carries no width to compare, and those lists ascend, so the last
+  // candidate is the highest-resolution one.
+  const widest = entries.reduce(
+    (best, entry) => {
+      return (entry.width ?? 0) > (best.width ?? 0) ? entry : best
+    },
+    entries[entries.length - 1],
+  )
 
   return widest.url || undefined
 }

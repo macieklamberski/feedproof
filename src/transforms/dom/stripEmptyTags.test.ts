@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripEmptyTags } from './stripEmptyTags.js'
 
 describeForEachParser('stripEmptyTags', (parseHtml) => {
@@ -107,23 +107,23 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
   })
 
   it('should strip multiple empty tags', async () => {
-    expect(
-      await transform(html`
+    const value = html`
       <div></div>
       <p></p>
       <span></span>
-    `),
-    ).toBe('')
+    `
+
+    expect(await transform(value)).toBe('')
   })
 
   it('should strip empty tags around content', async () => {
-    expect(
-      await transform(html`
+    const value = html`
       <div></div>
       <p>Keep</p>
       <div></div>
-    `),
-    ).toBe('<p>Keep</p>')
+    `
+
+    expect(await transform(value)).toBe('<p>Keep</p>')
   })
 
   it('should preserve tags with text content', async () => {

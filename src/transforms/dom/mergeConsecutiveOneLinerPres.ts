@@ -1,5 +1,5 @@
-import { isElement, isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { hasText, isElement, isText } from '../../utils/dom.js'
 
 // Feeds like Medium wrap each code line in its own <pre>, which renders as
 // a stack of separate boxes instead of a unified code block. This merges
@@ -54,7 +54,7 @@ export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses
         }
 
         if (isText(sibling)) {
-          if (sibling.textContent?.trim() !== '') {
+          if (hasText(sibling)) {
             break
           }
 

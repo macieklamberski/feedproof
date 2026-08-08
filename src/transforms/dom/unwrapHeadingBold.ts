@@ -1,16 +1,38 @@
-import { isComment, isElement, isWhitespaceText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import {
+  hasText,
+  isComment,
+  isElement,
+  isMediaElement,
+  isWhitespaceText,
+  mediaElements,
+} from '../../utils/dom.js'
 
 const headingSelector = 'h1, h2, h3, h4, h5, h6'
 const boldTags = new Set(['b', 'strong'])
 
-// Returns the heading's only meaningful child (ignoring whitespace and comments)
-// when that child is an element, else null.
+const mediaSelector = [...mediaElements].join(', ')
+
+// Whitespace, comments, and inline elements holding neither text nor media — the nodes
+// stripEmptyTags later removes. Judging the heading against them keeps the unwrap aligned
+// with the final content: a whitespace-only anchor beside the bold used to block it here,
+// only for stripEmptyTags to delete that anchor and leave the unwrap to a second run.
+const isIgnorableNode = (node: Node): boolean => {
+  if (isWhitespaceText(node) || isComment(node)) {
+    return true
+  }
+
+  return (
+    isElement(node) && !hasText(node) && !isMediaElement(node) && !node.querySelector(mediaSelector)
+  )
+}
+
+// Returns the heading's only meaningful child when that child is an element, else null.
 const soleContentElement = (heading: Element): Element | null => {
   let found: Element | null = null
 
   for (const child of heading.childNodes) {
-    if (isWhitespaceText(child) || isComment(child)) {
+    if (isIgnorableNode(child)) {
       continue
     }
 

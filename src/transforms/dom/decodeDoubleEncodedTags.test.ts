@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { decodeDoubleEncodedTags } from './decodeDoubleEncodedTags.js'
 
 describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
@@ -32,6 +32,30 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
       const value = '&lt;p&gt;&lt;a href="https://example.com"&gt;link&lt;/a&gt;&lt;/p&gt;'
 
       expect(await transform(value)).toEqualHtml('<p><a href="https://example.com">link</a></p>')
+    })
+
+    it('should decode an escaped fragment containing SVG markup', async () => {
+      const value =
+        '&lt;p&gt;icon &lt;svg viewBox="0 0 16 16"&gt;&lt;path d="M0 0h16v16H0z"&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/p&gt;'
+
+      expect(await transform(value)).toEqualHtml(
+        '<p>icon <svg viewBox="0 0 16 16"><path d="M0 0h16v16H0z"></path></svg></p>',
+      )
+    })
+
+    it('should decode an escaped fragment containing a custom element', async () => {
+      const value =
+        '&lt;p&gt;&lt;lite-youtube videoid="dQw4w9WgXcQ"&gt;&lt;/lite-youtube&gt;&lt;/p&gt;'
+
+      expect(await transform(value)).toEqualHtml(
+        '<p><lite-youtube videoid="dQw4w9WgXcQ"></lite-youtube></p>',
+      )
+    })
+
+    it('should decode an escaped fragment containing an obsolete element', async () => {
+      const value = '&lt;center&gt;&lt;font color="red"&gt;hello&lt;/font&gt;&lt;/center&gt;'
+
+      expect(await transform(value)).toEqualHtml('<center><font color="red">hello</font></center>')
     })
   })
 
@@ -75,6 +99,18 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
 
     it('should not decode an unknown tag name', async () => {
       const value = '&lt;widget&gt;content&lt;/widget&gt;'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should not decode a fragment containing command placeholders', async () => {
+      const value = '&lt;p&gt;Run ssh &lt;user&gt;@&lt;host&gt; to connect.&lt;/p&gt;'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should not decode a fragment containing code generics', async () => {
+      const value = '&lt;p&gt;Store items in Vec&lt;T&gt; for speed.&lt;/p&gt;'
 
       expect(await transform(value)).toEqualHtml(value)
     })

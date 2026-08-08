@@ -1,5 +1,5 @@
-import { hasAncestorWithTagName } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { hasAncestorWithTagName } from '../../utils/dom.js'
 
 const tableTags = new Set(['table'])
 

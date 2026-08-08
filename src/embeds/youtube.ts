@@ -1,39 +1,129 @@
-import { isHostOf, isSubdomainOf } from 'feedscout/utils'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import { getPathSegments, parseUrl } from 'trousse'
+import type { EmbedResolverResult } from '../types.js'
+import { pickUrlParams } from '../utils/urls.js'
+import { createIframeEmbedResolver } from '../utils/widgets.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
+
+// Some feeds (Steam news) leak the opening quote of the source `[previewyoutube="id]`
+// bbcode into the embed src, so it arrives as `/embed/"{id}` — the quote reaches the id
+// as a literal `"` (from a param) or percent-encoded `%22` (from a path segment). Strip a
+// leading stray quote so the real 11-char id still resolves instead of the video being
+// dropped to the generic iframe handler.
+const strayLeadingQuoteRegex = /^(?:%22|")/
+
+// `videoseries` (playlist embeds) and `live_stream` (channel live embeds) are YouTube embed
+// path-words, not video ids — but each is coincidentally 11 valid id chars, so it passes
+// safeVideoIdRegex. Excluded here so extractVideoId never mistakes one for a video (a bogus
+// watch url and thumbnail); youtubeResolveEmbed handles them as playlist/live embeds below.
+const nonVideoIds = new Set(['videoseries', 'live_stream'])
 
 const pathIdSegments = ['shorts', 'embed', 'live', 'v']
 
 const youtubeHosts = ['youtube.com', 'youtube-nocookie.com', 'youtu.be']
 
+// A bare id, already separated from any url: the right shape, and not one of the embed path
+// words that share it.
+export const isVideoId = (value: string): boolean => {
+  return safeVideoIdRegex.test(value) && !nonVideoIds.has(value)
+}
+
+// hqdefault always exists for a video, so it's the safe default. Higher-res variants
+// (maxresdefault, sddefault) give a sharper poster but only exist for some videos, so
+// we can't pick them blindly.
+// TODO: detect and prefer a higher-res thumbnail when present — the best available
+// resolution varies per video, so it needs a probe (HEAD request) rather than a guess.
 export const composeThumbnailUrl = (videoId: string): string => {
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
 }
 
-export const extractVideoId = (link: string): string | undefined => {
-  try {
-    const { hostname, pathname, searchParams } = new URL(link)
-    const segments = pathname.split('/').filter(Boolean)
-    const isShortDomain = hostname === 'youtu.be' || hostname.endsWith('.youtu.be')
+// The player url every transform that recovers an id has to build. Params are given as values
+// rather than a ready query string so they get encoded here, and one carrying an `&` cannot
+// open a parameter of its own.
+export const composeEmbedUrl = (videoId: string, params?: Record<string, string>): string => {
+  const query = params && Object.keys(params).length ? `?${new URLSearchParams(params)}` : ''
 
-    let id: string | null | undefined
-
-    if (isShortDomain) {
-      id = segments[0]
-    } else if (segments[0] === 'watch') {
-      id = searchParams.get('v') ?? searchParams.get('vi')
-    } else if (segments.length >= 2 && pathIdSegments.includes(segments[0])) {
-      id = segments[1]
-    }
-
-    if (id && safeVideoIdRegex.test(id)) {
-      return id
-    }
-  } catch {}
+  return `https://www.youtube.com/embed/${videoId}${query}`
 }
 
+export const extractVideoId = (link: string): string | undefined => {
+  const url = parseUrl(link)
+
+  if (!url) {
+    return
+  }
+
+  const segments = getPathSegments(url)
+  const isShortDomain = url.hostname === 'youtu.be' || url.hostname.endsWith('.youtu.be')
+
+  let id: string | null | undefined
+
+  if (isShortDomain) {
+    id = segments[0]
+  } else if (segments[0] === 'watch') {
+    id = url.searchParams.get('v') ?? url.searchParams.get('vi')
+  } else if (segments.length >= 2 && pathIdSegments.includes(segments[0])) {
+    id = segments[1]
+  }
+
+  const cleanedId = id?.replace(strayLeadingQuoteRegex, '')
+
+  if (cleanedId && isVideoId(cleanedId)) {
+    return cleanedId
+  }
+}
+
+// Parameters that change what the player shows, so a rebuilt src has to carry them: where
+// playback starts and ends, which playlist the video sits in and at which position, and the
+// window of a clip (`clip` is the clip id, `clipt` its encoded bounds — a clip embed needs
+// both). Everything else the publisher wrote — autoplay, `rel`, `si` and other tracking — is
+// dropped with the rest of the original query.
+const youtubeEmbedParams = ['start', 'end', 'list', 'index', 'clip', 'clipt']
+
+// Playlist (`list`) and channel (`channel`) ids. A charset guard, not a length/prefix one:
+// it only keeps a stray value out of the rebuilt url and the enrichment key.
+const safePlaylistChannelIdRegex = /^[a-zA-Z0-9_-]+$/
+
 export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+  const parsed = parseUrl(url)
+  const segments = parsed ? getPathSegments(parsed) : []
+
+  // A playlist or channel live embed is not a single video: it has no video id, no single
+  // poster, and no `watch?v=` page. Keep the working src and give a canonical playlist/channel
+  // url, posterless. The id is the list/channel id — kept as the enrichment key (a playlist
+  // resolves title + poster via YouTube's keyless oEmbed; a channel via the Data API).
+  if (segments[0] === 'embed' && parsed) {
+    if (segments[1] === 'videoseries') {
+      const list = parsed.searchParams.get('list')
+
+      if (list && safePlaylistChannelIdRegex.test(list)) {
+        return {
+          provider: 'youtube',
+          id: list,
+          src: composeEmbedUrl('videoseries', { list }),
+          url: `https://www.youtube.com/playlist?list=${list}`,
+        }
+      }
+
+      return
+    }
+
+    if (segments[1] === 'live_stream') {
+      const channel = parsed.searchParams.get('channel')
+
+      if (channel && safePlaylistChannelIdRegex.test(channel)) {
+        return {
+          provider: 'youtube',
+          id: channel,
+          src: composeEmbedUrl('live_stream', { channel }),
+          url: `https://www.youtube.com/channel/${channel}`,
+        }
+      }
+
+      return
+    }
+  }
+
   const videoId = extractVideoId(url)
 
   if (!videoId) {
@@ -43,21 +133,10 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
   return {
     provider: 'youtube',
     id: videoId,
-    src: `https://www.youtube.com/embed/${videoId}`,
+    src: `${composeEmbedUrl(videoId)}${pickUrlParams(url, youtubeEmbedParams)}`,
     url: `https://www.youtube.com/watch?v=${videoId}`,
     thumbnail: composeThumbnailUrl(videoId),
   }
 }
 
-export const youtubeEmbedResolver: EmbedResolver = {
-  selector: 'iframe[src]',
-  extract: (element) => {
-    const src = element.getAttribute('src') ?? ''
-
-    if (!isHostOf(src, youtubeHosts) && !isSubdomainOf(src, youtubeHosts)) {
-      return
-    }
-
-    return youtubeResolveEmbed(src)
-  },
-}
+export const youtubeEmbedResolver = createIframeEmbedResolver(youtubeHosts, youtubeResolveEmbed)

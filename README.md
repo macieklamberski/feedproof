@@ -6,7 +6,7 @@
 
 Tidy up the HTML content in web feeds. Fix feed-specific quirks so content displays in its best possible form.
 
-Feedsweep takes raw feed item HTML and runs it through a pipeline that genuinely improves the output: fixing lazy-loaded images so they actually render, resolving relative URLs to absolute, stripping tracking pixels for privacy (plus tracking params and redirect wrappers via the cleanUrlFn option), highlighting code blocks, normalizing broken markup from common feed quirks, auto-linking bare URLs, and converting embeds into framework-agnostic placeholders. It ships with sensible defaults and built-in support for YouTube and other popular platforms.
+Feedsweep takes raw feed item HTML and runs it through a pipeline that genuinely improves the output: fixing lazy-loaded images so they actually render, resolving relative URLs to absolute, stripping tracking pixels for privacy (plus tracking params and redirect wrappers via the cleanUrlFn option), highlighting code blocks, normalizing broken markup from common feed quirks, auto-linking bare URLs, and converting embeds into framework-agnostic placeholders. It ships with sensible defaults and built-in support for YouTube, Vimeo, Dailymotion, JW Player, Buzzsprout, Brightcove, Mediavine, and SoundCloud.
 
 ## Installation
 
@@ -30,7 +30,7 @@ const result = await transformContent('<p>Check <img data-src="photo.jpg"> and v
 
 ## Transforms
 
-Inventory of every transform exported from the package. Most are enabled by default; pass a custom `stringTransforms` / `domTransforms` array via `transformContent` options to override.
+Inventory of every transform exported from the package. Most are enabled by default; pass a custom `stringTransforms` / `domTransforms` array via `transformContent` options to override. Transforms marked _Heuristic (opt-in)_ make a best-judgement guess and may drop content, so they are excluded from the standard pipeline — enable them with `heuristics: true` (see Options).
 
 | Transform | Description |
 | --- | --- |
@@ -48,18 +48,33 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `unwrapHeadingBold` | Unwrap redundant bold wrapping a whole heading |
 | `cleanAnchorUrls` | Clean anchor hrefs (redirects, tracking params) via the `cleanUrlFn` option |
 | `stripDeadAnchors` | Unwrap links with empty, `#`, or `javascript:` hrefs |
-| `stripInertElements` | Strip non-content chrome — subscribe/share/related widgets, ads, author bios |
+| `stripNonContentElements` | Strip non-content chrome — subscribe/share/related widgets, ads, author bios |
 | `removeTrackingPixels` | Strip 1×1 tracking pixels, keeping real images |
-| `unwrapEmojiImages` | Replace emoji `<img>` tags with their alt-text glyph |
+| `unwrapEmojiImages` | Replace emoji and forum smilie markup with the real glyph, marking with `data-emoji` the images and fallback text that have none |
 | `resolveMediaDimensions` | Backfill `width`/`height` on media so aspect ratio survives style stripping |
 | `convertBreaksToParagraphs` | Convert `<br><br>` runs into real `<p>` blocks |
 | `wrapBareInlineInParagraphs` | Wrap loose inline content in `<p>` blocks |
-| `injectEnclosures` | Inject feed enclosures as native media or embed placeholders |
-| `replaceEmbedsWithPlaceholders` | Convert `<iframe>` embeds into placeholders |
-| `convertBookmarkCards` | Convert link-preview cards into `data-bookmark-*` placeholders |
+| `injectEnclosures` | Inject feed enclosures as native media or embed placeholders, merging a player page entry with its media file |
+| `surfaceTemplateEmbeds` | Hoist a video embed out of a lazy-load `<template>` (e.g. Better Core Video Embeds) so it renders in a reader |
+| `surfaceNoscriptEmbeds` | Hoist a video `<iframe>` out of a `<noscript>` lazy-load fallback (e.g. WP Rocket, a3 Lazy Load); ignores non-video noscript iframes like Google Tag Manager |
+| `rebuildEmbedPlusEmbeds` | Rebuild a real `<iframe>` from an "Embed Plus for YouTube" facade (`.epyt-facade[data-facadesrc]`) |
+| `rebuildLiteVideoEmbeds` | Rebuild a real `<iframe>` from a `lite-youtube` / `lite-vimeo` web component's `videoid`, carrying over `start` and `videotitle` |
+| `rebuildLyteEmbeds` | Rebuild a real `<iframe>` from a WP YouTube Lyte facade (`WYL_`/`lyte_` id) |
+| `rebuildRocketYoutubePreviews` | Rebuild a real `<iframe>` from a WP Rocket YouTube preview facade (`.rll-youtube-player[data-id]`), carrying over `data-query` |
+| `rebuildWistiaEmbeds` | Rebuild a real `<iframe>` from a Wistia JS-API inline embed facade (`wistia_async_{id}` class) |
+| `rebuildLazyLoadForVideos` | Rebuild a real `<iframe>` from a "Lazy Load for Videos" facade (`a.preview-lazyload`), recovering the YouTube/Vimeo id from `data-video-uri` or `href` and carrying over `data-video-title` |
+| `rebuildLazyYtEmbeds` | Rebuild a real `<iframe>` from a jQuery lazyYT facade (`div.lazyYT[data-youtube-id]`) |
+| `rebuildElementorVideoEmbeds` | Rebuild a real `<iframe>` from an Elementor video widget's deferred `data-settings` (YouTube / Vimeo / Dailymotion / VideoPress) |
+| `fixSubstackMentions` | Rebuild a Substack @-mention (empty `span.mention-wrap`) into an inline `<a>@name</a>` link, so the name survives instead of vanishing mid-sentence |
+| `convertNoteEmbeds` | Convert note.com's empty embed figures (`figure[embedded-service][data-src]`): media services become plain iframes for the widget pass, own-post embeds become plain links |
+| `convertWidgets` | Convert recognized widgets: embeds become `data-embed-*` placeholders, platform-hosted media becomes a real `<video>`/`<audio>` (from an id template, a media-file src, or a URL parked in a `mediaSrcAttributes` attribute) |
+| `assignVideoPosters` | _Heuristic (opt-in):_ move a redundant video-poster image (inline or an enclosure) onto the embed as its poster, then drop the standalone image |
+| `stripDuplicateEnclosures` | _Heuristic (opt-in):_ remove an injected enclosure that duplicates inline content (image size-variants, exact audio/video/embed) |
+| `stripDuplicateLeadingImages` | _Heuristic (opt-in):_ remove a leading image the body repeats as the very next image (featured-image prepends), keeping the larger copy |
+| `convertCiteCards` | Convert link-preview cards into `data-cite-*` placeholders |
 | `enrichEmbedPlaceholders` | Fill placeholder metadata via the caller's `enrichEmbedFn` (no-op unless set) |
 | `neutralizeUnsafeUrls` | Replace dangerous-scheme URLs (and any the `isSafeUrlFn` option rejects) with an inert sentinel, keeping the element |
-| `proxyAssetUrls` | Rewrite media URLs through a caller-supplied proxy |
+| `proxyAssetUrls` | Rewrite media URLs through a caller-supplied proxy, keeping each original in `data-proxied-<attr>` |
 | `resolveRelativeUrls` | Resolve relative URLs to absolute against the base URL |
 | `unwrapWrappers` | Remove redundant outer `<div>` / `<article>` / `<section>` wrappers |
 | `unwrapDoublyNestedLists` | Unwrap a list that only wraps a single same-type list |
@@ -81,7 +96,13 @@ Inventory of every transform exported from the package. Most are enabled by defa
 ## Options
 
 ```typescript
-import { fixLazyImages, resolveRelativeUrls, transformContent } from 'feedsweep'
+import {
+  fixLazyImages,
+  ghostCiteResolver,
+  resolveRelativeUrls,
+  transformContent,
+  youtubeEmbedResolver,
+} from 'feedsweep'
 import { parseHtml } from 'feedsweep/linkedom'
 import { cleanUrl } from 'urlpurify'
 
@@ -92,7 +113,10 @@ const result = transformContent(html, {
   baseUrl: 'https://example.com/post/1',
   // Rewrite anchor hrefs: unwrap redirects and strip tracking params.
   cleanUrlFn: cleanUrl,
-  // Feed item enclosures (audio/video).
+  // Feed item enclosures (audio/video/image), injected into the content. Image
+  // enclosures inject only when the content has no image of its own. Enable
+  // `heuristics` to also drop an audio/video/embed enclosure that duplicates
+  // inline content.
   enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
   // Route image/video/audio URLs through a proxy. Return `undefined` to leave a URL untouched.
   assetProxyFn: (url, type) => `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`,
@@ -102,18 +126,32 @@ const result = transformContent(html, {
   enrichEmbedFn: async (embeds) => {
     return new Map(embeds.map(({ provider, id }) => [`${provider}:${id}`, { title: '…' }]))
   },
+  // Normalize a cite card's site-formatted display date (e.g. "2018.10.14"); return
+  // undefined to keep the raw string verbatim.
+  parseDateFn: (raw) => parseDate(raw),
   // Swap the code highlighter (defaults to highlight.js; may be async).
   highlightFn: (text, language) => myHighlighter.highlight(text, language),
+  // Widget resolvers: embed results become placeholders, media results become real
+  // <video>/<audio> elements (defaults: YouTube, Vimeo, Dailymotion, JW Player, Buzzsprout,
+  // Brightcove, Mediavine and SoundCloud embeds, plus the media resolvers for Substack,
+  // WeChat, Weebly and Ghost uploads).
+  widgetResolvers: [youtubeEmbedResolver, myEmbedResolver],
+  // Resolvers turning link-preview cards into `data-cite-*` placeholders.
+  citeResolvers: [ghostCiteResolver, myCiteResolver],
+  // Opt into the heuristic transforms (enclosure-duplicate, leading-image-duplicate and video-poster stripping). Ignored if domTransforms is set.
+  heuristics: true,
   // Run a custom DOM transform pipeline (omit to use defaults).
   domTransforms: [fixLazyImages, resolveRelativeUrls],
 })
 ```
 
-All caller-provided functions (`parseHtmlFn`, `resolveUrlFn`, `cleanUrlFn`, `assetProxyFn`, `isSafeUrlFn`, `enrichEmbedFn`, `highlightFn`, and resolver extracts) must not throw — an exception is not caught and rejects the `transformContent` promise.
+All caller-provided functions (`parseHtmlFn`, `resolveUrlFn`, `cleanUrlFn`, `assetProxyFn`, `isSafeUrlFn`, `enrichEmbedFn`, `parseDateFn`, `highlightFn`, and resolver extracts) must not throw — an exception is not caught and rejects the `transformContent` promise.
 
 Code blocks are highlighted only when they declare a language (`language-*` class, `data-language`, Pandoc/Rouge/Expressive Code/etc.); unlabeled blocks are left plain rather than guessed at. The default highlighter is highlight.js (exported as `defaultHighlightFn` / `hljsHighlightFn`); replace it with `highlightFn`.
 
-The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. Every transform is also exported individually from `feedsweep`, so you can compose any pipeline — list them explicitly to build from scratch, or spread `defaultDomTransforms` (etc.) from `feedsweep/defaults` to extend or filter the defaults.
+The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. The `heuristics` flag (default `false`) selects between two exported DOM pipelines: `defaultStandardDomTransforms` (the safe defaults) and `defaultAllDomTransforms` (standard plus `heuristicDomTransforms` spliced in after `injectEnclosures`). Setting `domTransforms` explicitly overrides `heuristics`. Every transform and pipeline is also exported individually from `feedsweep`, so you can compose any pipeline — list transforms explicitly, or spread `defaultStandardDomTransforms` / `heuristicDomTransforms` to extend or filter the defaults.
+
+`widgetResolvers` and `citeResolvers` each fully replace their default resolver list when provided; omit them for the defaults. Every resolver is exported individually from `feedsweep`, so a custom list is composed by naming the built-ins you want alongside your own.
 
 ## DOM library
 

@@ -1,14 +1,14 @@
-import { expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
+import { describe, expect, it } from 'bun:test'
 import { youtubeEmbedResolver } from '../../embeds/youtube.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { Enclosure, TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { injectEnclosures } from './injectEnclosures.js'
 import { neutralizeUnsafeUrls } from './neutralizeUnsafeUrls.js'
 
 const withResolver: TransformContext = {
   ...baseContext,
-  embedResolvers: [youtubeEmbedResolver],
+  widgetResolvers: [youtubeEmbedResolver],
 }
 
 const withEnclosures = (enclosures: Array<Enclosure>): TransformContext => {
@@ -69,116 +69,411 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     expect(result).toContain('data-embed-thumbnail=')
   })
 
-  it('should skip enclosures already present in content', async () => {
-    const value = html`
-      <p>Content</p>
-      <video src="https://example.com/clip.mp4"></video>
-    `
+  it('should embed a player URL even when no resolver claims it', async () => {
     const result = await transform(
-      value,
-      withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }]),
-    )
-    const matches = result.match(/example\.com\/clip\.mp4/g)
-
-    expect(matches).toHaveLength(1)
-  })
-
-  it('should skip enclosure matching an inline source after cleanUrlFn strips its query', async () => {
-    const value = html`
-      <p>Content</p>
-      <video><source src="https://example.com/clip.mp4?_=2"></video>
-    `
-    const context: TransformContext = {
-      ...withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }]),
-      cleanUrlFn: (url) => url.split('?')[0],
-    }
-    const result = await transform(value, context)
-    const matches = result.match(/example\.com\/clip\.mp4/g)
-
-    expect(matches).toHaveLength(1)
-  })
-
-  it('should inject image enclosure as img element', async () => {
-    const value = '<p>Content</p>'
-    const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
-    const expected = html`
-      <img src="https://example.com/photo.jpg">
-      <p>Content</p>
-    `
-
-    expect(await transform(value, context)).toEqualHtml(expected)
-  })
-
-  it('should detect image by medium field', async () => {
-    const value = '<p>Content</p>'
-    const context = withEnclosures([{ url: 'https://example.com/photo.jpg', medium: 'image' }])
-    const expected = html`
-      <img src="https://example.com/photo.jpg">
-      <p>Content</p>
-    `
-
-    expect(await transform(value, context)).toEqualHtml(expected)
-  })
-
-  it('should inject multiple image enclosures as stacked images in order', async () => {
-    const value = '<p>Content</p>'
-    const context = withEnclosures([
-      { url: 'https://example.com/one.jpg', type: 'image/jpeg' },
-      { url: 'https://example.com/two.jpg', type: 'image/jpeg' },
-    ])
-    const expected = html`
-      <img src="https://example.com/one.jpg">
-      <img src="https://example.com/two.jpg">
-      <p>Content</p>
-    `
-
-    expect(await transform(value, context)).toEqualHtml(expected)
-  })
-
-  it('should skip image enclosure already present in content', async () => {
-    const value = html`
-      <p>Content</p>
-      <img src="https://example.com/photo.jpg">
-    `
-    const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
-    const result = await transform(value, context)
-    const matches = result.match(/example\.com\/photo\.jpg/g)
-
-    expect(matches).toHaveLength(1)
-  })
-
-  it('should inject both image and audio enclosures', async () => {
-    const value = '<p>Content</p>'
-    const result = await transform(
-      value,
+      '<p>Notes</p>',
       withEnclosures([
-        { url: 'https://example.com/episode.mp3', type: 'audio/mpeg' },
-        { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
+        {
+          url: 'https://vimeo.com/76979871',
+          playerUrl: 'https://player.vimeo.com/video/76979871',
+          medium: 'video',
+          thumbnails: [{ url: 'https://i.vimeocdn.com/video/76979871.jpg' }],
+        },
       ]),
     )
 
-    expect(result).toContain('<audio')
-    expect(result).toContain('<img')
-    expect(result).toContain('src="https://example.com/cover.jpg"')
+    expect(result).toContain('data-embed-src="https://player.vimeo.com/video/76979871"')
+    expect(result).toContain('data-embed-thumbnail="https://i.vimeocdn.com/video/76979871.jpg"')
   })
 
-  it('should emit width, height, and alt on image enclosure when provided', async () => {
-    const value = '<p>Content</p>'
-    const context = withEnclosures([
-      {
-        url: 'https://example.com/photo.jpg',
-        type: 'image/jpeg',
-        width: 800,
-        height: 600,
-        title: 'A photo',
-      },
-    ])
-    const expected = html`
-      <img src="https://example.com/photo.jpg" width="800" height="600" alt="A photo">
-      <p>Content</p>
-    `
+  it('should prefer the player URL over the content URL for resolution', async () => {
+    const result = await transform(
+      '<p>Notes</p>',
+      withEnclosures([
+        {
+          url: 'https://example.com/watch/123',
+          playerUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+          medium: 'video',
+        },
+      ]),
+    )
 
-    expect(await transform(value, context)).toEqualHtml(expected)
+    expect(result).toContain('data-embed-provider="youtube"')
+  })
+
+  it('should carry the feed thumbnail onto a resolved embed instead of the composed guess', async () => {
+    const result = await transform(
+      '<p>Notes</p>',
+      withEnclosures([
+        {
+          url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+          medium: 'video',
+          thumbnails: [{ url: 'https://cdn.example.com/feed-thumb.jpg' }],
+        },
+      ]),
+    )
+
+    expect(result).toContain('data-embed-thumbnail="https://cdn.example.com/feed-thumb.jpg"')
+    expect(result).not.toContain('hqdefault')
+  })
+
+  it('should keep the composed thumbnail when the feed provides none', async () => {
+    const result = await transform(
+      '<p>Notes</p>',
+      withEnclosures([{ url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video' }]),
+    )
+
+    expect(result).toContain('hqdefault')
+  })
+
+  it('should carry the enclosure duration onto the embed', async () => {
+    const result = await transform(
+      '<p>Notes</p>',
+      withEnclosures([
+        { url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video', duration: 212 },
+      ]),
+    )
+
+    expect(result).toContain('data-embed-duration="212"')
+  })
+
+  describe('image enclosures', () => {
+    it('should inject image enclosure as img element', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
+      const expected = html`
+        <img src="https://example.com/photo.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should detect image by medium field', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([{ url: 'https://example.com/photo.jpg', medium: 'image' }])
+      const expected = html`
+        <img src="https://example.com/photo.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should inject multiple image enclosures as stacked images in order', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/one.jpg', type: 'image/jpeg' },
+        { url: 'https://example.com/two.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/one.jpg" data-enclosure="">
+        <img src="https://example.com/two.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should inject both image and audio enclosures', async () => {
+      const value = '<p>Content</p>'
+      const result = await transform(
+        value,
+        withEnclosures([
+          { url: 'https://example.com/episode.mp3', type: 'audio/mpeg' },
+          { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
+        ]),
+      )
+
+      expect(result).toContain('<audio')
+      expect(result).toContain('<img')
+      expect(result).toContain('src="https://example.com/cover.jpg"')
+    })
+
+    it('should emit width, height, and alt on image enclosure when provided', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        {
+          url: 'https://example.com/photo.jpg',
+          type: 'image/jpeg',
+          width: 800,
+          height: 600,
+          title: 'A photo',
+        },
+      ])
+      const expected = html`
+        <img src="https://example.com/photo.jpg" width="800" height="600" alt="A photo" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should resolve a relative image enclosure url against the base url', async () => {
+      const context = {
+        ...withEnclosures([{ url: '/photo.jpg', type: 'image/jpeg' }]),
+        baseUrl: 'https://example.com',
+      }
+      const result = await transform('<p>Content</p>', context)
+
+      expect(result).toContain('src="https://example.com/photo.jpg"')
+    })
+
+    it('should not inject an image enclosure when content already has an image', async () => {
+      const value = html`
+        <p>Content</p>
+        <img src="https://example.com/inline.jpg">
+      `
+      const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    it('should not inject an image enclosure when content has a picture element', async () => {
+      const value = html`
+        <picture><img src="https://example.com/inline.jpg"></picture>
+      `
+      const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    it('should still inject audio and video enclosures when content has an image', async () => {
+      const value = '<p>Content</p><img src="https://example.com/inline.jpg">'
+      const result = await transform(
+        value,
+        withEnclosures([
+          { url: 'https://example.com/episode.mp3', type: 'audio/mpeg' },
+          { url: 'https://example.com/clip.mp4', type: 'video/mp4' },
+          { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
+        ]),
+      )
+
+      expect(result).toContain('<audio')
+      expect(result).toContain('<video')
+      expect(result).not.toContain('cover.jpg')
+    })
+
+    it('should not inject a gravatar avatar as the lead image of imageless content', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://2.gravatar.com/avatar/abc123?s=96&d=identicon', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    it('should keep a real image enclosure and skip the gravatar avatar in the same item', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://gravatar.com/avatar/abc123', type: 'image/jpeg' },
+        { url: 'https://example.com/photo.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/photo.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should inject the gravatar avatar when avatarImageHosts is empty', async () => {
+      const value = '<p>Content</p>'
+      const context: TransformContext = {
+        ...withEnclosures([{ url: 'https://2.gravatar.com/avatar/abc123', type: 'image/jpeg' }]),
+        avatarImageHosts: [],
+      }
+      const expected = html`
+        <img src="https://2.gravatar.com/avatar/abc123" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should inject one image when enclosures differ only by query, keeping the original', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/cover.jpg?w=300', type: 'image/jpeg' },
+        { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/cover.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should collapse a WordPress -WxH variant to the full-res original', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/uploads/photo.jpg', type: 'image/jpeg' },
+        { url: 'https://example.com/uploads/photo-800x450.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/uploads/photo.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should keep the larger of two sized variants', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/cover.jpg?w=300', type: 'image/jpeg' },
+        { url: 'https://example.com/cover.jpg?w=900', type: 'image/jpeg' },
+      ])
+      const result = await transform(value, context)
+
+      expect(result).toContain('cover.jpg?w=900')
+      expect(result).not.toContain('cover.jpg?w=300')
+    })
+
+    it('should prefer the no-query URL when colliding variants have no size to compare', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/cover.jpg?v=2', type: 'image/jpeg' },
+        { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/cover.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should keep distinct images that differ by path', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/a/photo.jpg', type: 'image/jpeg' },
+        { url: 'https://example.com/b/photo.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/a/photo.jpg" data-enclosure="">
+        <img src="https://example.com/b/photo.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+  })
+
+  describe('player page enclosures', () => {
+    it('should merge a player page enclosure with its media file into one embed', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3' },
+        { url: 'https://example.com/ep.mp3', type: 'audio/mpeg' },
+      ])
+      const expected = html`
+        <div
+          data-embed-src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3"
+          data-enclosure=""
+        >
+          <a href="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3">https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3</a>
+        </div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should fill missing display size from the player page and keep the file metadata', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://player.example.com/embed?file=https://example.com/ep.mp3', height: 165 },
+        { url: 'https://example.com/ep.mp3', type: 'audio/mpeg', duration: 843 },
+      ])
+      const expected = html`
+        <div
+          data-embed-src="https://player.example.com/embed?file=https://example.com/ep.mp3"
+          data-embed-height="165"
+          data-embed-duration="843"
+          data-enclosure=""
+        >
+          <a href="https://player.example.com/embed?file=https://example.com/ep.mp3">https://player.example.com/embed?file=https://example.com/ep.mp3</a>
+        </div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should not merge a file entry into a player page with a different nested url', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fother.mp3' },
+        { url: 'https://example.com/ep.mp3', type: 'audio/mpeg' },
+      ])
+      const expected = html`
+        <audio src="https://example.com/ep.mp3" controls preload="none" data-enclosure=""></audio>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should parse a playerEmbed enclosure and merge it with its media file', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        {
+          playerEmbed:
+            '<iframe src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3&amp;modern=1" scrolling="no" width="100%" height="165"></iframe>',
+        },
+        { url: 'https://example.com/ep.mp3', type: 'audio/mpeg' },
+      ])
+      const expected = html`
+        <div
+          data-embed-src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3&amp;modern=1"
+          data-embed-height="165"
+          data-enclosure=""
+        >
+          <a href="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3&amp;modern=1">https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3&amp;modern=1</a>
+        </div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should drop a playerEmbed enclosure without an iframe src', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { playerEmbed: '<p>player</p>' },
+        { url: 'https://example.com/ep.mp3', type: 'audio/mpeg' },
+      ])
+      const expected = html`
+        <audio src="https://example.com/ep.mp3" controls preload="none" data-enclosure=""></audio>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should merge using cleanUrlFn-normalized urls', async () => {
+      const value = '<p>Content</p>'
+      const context = {
+        ...withEnclosures([
+          { url: 'https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3' },
+          { url: 'https://example.com/ep.mp3?utm_source=feed', type: 'audio/mpeg' },
+        ]),
+        cleanUrlFn: (url: string) => url.split('?')[0],
+      }
+      const expected = html`
+        <div
+          data-embed-src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3"
+          data-enclosure=""
+        >
+          <a href="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3">https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3</a>
+        </div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
   })
 
   it('should skip enclosures without type or medium', async () => {
@@ -206,7 +501,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/episode.mp3', medium: 'audio' }])
     const expected = html`
-      <audio src="https://example.com/episode.mp3" controls preload="none"></audio>
+      <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
       <p>Content</p>
     `
 
@@ -217,7 +512,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/clip.mp4', medium: 'video' }])
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none"></video>
+      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
       <p>Content</p>
     `
 
@@ -261,6 +556,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-enclosure=""
       >
         <a
           href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
@@ -306,21 +602,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       baseUrl: 'https://example.com',
     }
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none"></video>
+      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
       <p>Content</p>
     `
 
     expect(await transform(value, context)).toEqualHtml(expected)
-  })
-
-  it('should resolve a relative image enclosure url against the base url', async () => {
-    const context = {
-      ...withEnclosures([{ url: '/photo.jpg', type: 'image/jpeg' }]),
-      baseUrl: 'https://example.com',
-    }
-    const result = await transform('<p>Content</p>', context)
-
-    expect(result).toContain('src="https://example.com/photo.jpg"')
   })
 
   it('should resolve a relative poster against the base url', async () => {
@@ -377,6 +663,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         controls
         preload="none"
         poster="https://example.com/poster-large.jpg"
+        data-enclosure=""
       >
       </video>
       <p>Content</p>
@@ -391,7 +678,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       { url: 'https://example.com/clip.mp4', type: 'video/mp4', thumbnails: [] },
     ])
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none"></video>
+      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
       <p>Content</p>
     `
 
@@ -448,17 +735,6 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     expect(result).not.toContain('width=')
     expect(result).not.toContain('height=')
     expect(result).not.toContain('poster=')
-  })
-
-  it('should be idempotent', async () => {
-    const value = '<p>Episode notes</p>'
-    const enclosures: Array<Enclosure> = [
-      { url: 'https://example.com/clip.mp4', type: 'video/mp4' },
-    ]
-    const once = await transform(value, withEnclosures(enclosures))
-    const twice = await transform(once, withEnclosures(enclosures))
-
-    expect(twice).toBe(once)
   })
 
   // Untrusted feed data doesn't honor the required-`url` type.

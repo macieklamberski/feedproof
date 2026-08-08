@@ -63,6 +63,49 @@ describe('paragraphizePlainText', () => {
     expect(paragraphize('')).toBe('')
   })
 
+  it('should pass through a wholly escaped HTML fragment', () => {
+    // A double-escaping feed generator ships its HTML as entity text. The fragment must
+    // stay intact so decodeDoubleEncodedTags sees it as one text node; paragraphizing
+    // would cut it line-by-line and only complete-tag-pair lines would decode.
+    const value = [
+      '&lt;p&gt;A &lt;a href="https://example.com/about"&gt;now page&lt;/a&gt;',
+      ': what has my attention this month.&lt;/p&gt;',
+      '&lt;h2 id="building"&gt;',
+      'Building',
+      '&lt;/h2&gt;',
+      '&lt;ul&gt;',
+      '&lt;li&gt;first&lt;/li&gt;',
+      '&lt;/ul&gt;',
+    ].join('\n')
+
+    expect(paragraphize(value)).toBe(value)
+  })
+
+  it('should pass through an escaped fragment containing SVG and custom elements', () => {
+    const value = [
+      '&lt;p&gt;A talk &lt;svg viewBox="0 0 16 16"&gt;&lt;path d="M0 0h16"&gt;&lt;/path&gt;&lt;/svg&gt;',
+      'and a &lt;lite-youtube videoid="dQw4w9WgXcQ"&gt;&lt;/lite-youtube&gt; embed.&lt;/p&gt;',
+    ].join('\n')
+
+    expect(paragraphize(value)).toBe(value)
+  })
+
+  it('should paragraphize prose that mentions an escaped tag', () => {
+    const value = 'Use the &lt;img&gt; tag for images\n\nMore text'
+    const expected = '<p>Use the &lt;img&gt; tag for images</p>\n<p>More text</p>\n'
+
+    expect(paragraphize(value)).toBe(expected)
+  })
+
+  it('should paragraphize escaped non-HTML markup', () => {
+    const value =
+      '&lt;dependency&gt;\n&lt;groupId&gt;org.example&lt;/groupId&gt;\n&lt;/dependency&gt;'
+    const expected =
+      '<p>&lt;dependency&gt;<br />\n&lt;groupId&gt;org.example&lt;/groupId&gt;<br />\n&lt;/dependency&gt;</p>\n'
+
+    expect(paragraphize(value)).toBe(expected)
+  })
+
   // Exact-output fixtures pinned to @wordpress/autop behavior on plain text,
   // captured before the dependency was inlined.
   describe('autop-compatible output', () => {

@@ -1,12 +1,13 @@
+import type { DomTransform } from '../../types.js'
 import {
   hasAncestorWithTagName,
+  hasText,
   isBlockElement,
   isBr,
   isElement,
   isText,
   isWhitespaceText,
-} from '../../common.js'
-import type { DomTransform } from '../../types.js'
+} from '../../utils/dom.js'
 
 const processContainersSelector =
   'body, div, blockquote, td, li, article, section, main, header, footer, aside'
@@ -90,7 +91,7 @@ export const convertBreaksToParagraphs: DomTransform = () => {
               current.hasBlock = true
             }
           } else if (isText(child)) {
-            if (!current.hasContent && child.textContent?.trim()) {
+            if (!current.hasContent && hasText(child)) {
               current.hasContent = true
             }
           }

@@ -1,5 +1,5 @@
-import { isBlockElement, isElement, isText } from '../../common.js'
 import type { DomTransform } from '../../types.js'
+import { isBlockElement, isElement, isText } from '../../utils/dom.js'
 
 // Structural cells and definition terms whose slot must survive even when empty,
 // so table columns and definition-list pairs stay aligned. Never dropped or collapsed.

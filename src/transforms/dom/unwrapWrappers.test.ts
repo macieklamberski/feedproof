@@ -1,7 +1,7 @@
 import { expect, it } from 'bun:test'
-import { applyDomTransforms } from '../../common.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
+import { applyDomTransforms } from '../../utils/transforms.js'
 import { unwrapWrappers } from './unwrapWrappers.js'
 
 describeForEachParser('unwrapWrappers', (parseHtml) => {
@@ -168,9 +168,9 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
     expect(await transform(value)).toBe(value)
   })
 
-  it('should preserve a div carrying data-bookmark attributes', async () => {
+  it('should preserve a div carrying data-cite attributes', async () => {
     const value = html`
-      <div data-bookmark-provider="ghost" data-bookmark-url="https://example.com/x">
+      <div data-cite-provider="ghost" data-cite-url="https://example.com/x">
         <a href="https://example.com/x">Title</a>
       </div>
     `
@@ -188,6 +188,22 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
     const value = '<div data-pre=""><pre>const x = 1</pre></div>'
 
     expect(await transform(value)).toBe(value)
+  })
+
+  it('should preserve a wrapper that is the target of an in-page fragment link', async () => {
+    const value = html`
+      <p><sup><a href="#fn-1">1</a></sup></p>
+      <div class="footnote-definition" id="fn-1"><p>The note.</p></div>
+    `
+
+    expect(await transform(value)).toBe(value)
+  })
+
+  it('should still unwrap an id-bearing wrapper that no fragment link references', async () => {
+    const value = '<p><a href="#other">jump</a></p><div id="fn-1"><p>The note.</p></div>'
+    const expected = '<p><a href="#other">jump</a></p><p>The note.</p>'
+
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should be idempotent', async () => {
