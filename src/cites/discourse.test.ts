@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { citeExtractor, describeForEachParser, html } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
-import { discourseCiteResolver, socialOneboxClasses, socialPostHosts } from './discourse.js'
+import { discourseCiteResolver, omittedOneboxClasses, socialPostHosts } from './discourse.js'
 
 describeForEachParser('discourseCiteResolver', (parseHtml) => {
   const extract = citeExtractor(parseHtml, discourseCiteResolver)
@@ -174,6 +174,25 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should read the folder description from its label span, not the path', async () => {
+      const value = html`
+        <aside class="onebox githubfolder" data-onebox-src="https://github.com/owner/repo/tree/main/lib">
+          <header class="source">
+            <a href="https://github.com/owner/repo/tree/main/lib" target="_blank">github.com</a>
+          </header>
+          <article class="onebox-body">
+            <h3><a href="https://github.com/owner/repo/tree/main/lib">repo/lib at main</a></h3>
+            <p><a href="https://github.com/owner/repo/tree/main/lib">main/lib</a></p>
+            <p><span class="label1">The repo description text.</span></p>
+          </article>
+        </aside>
+      `
+
+      expect(await extract(value)).toMatchObject({
+        description: 'The repo description text.',
+      })
+    })
+
     it('should read a githubrepo onebox through the generic reads', async () => {
       const value = html`
         <aside class="onebox githubrepo" data-onebox-src="https://github.com/owner/repo">
@@ -199,6 +218,25 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
       }
 
       expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('file oneboxes (omitted)', () => {
+    it('should not match the pdf onebox', async () => {
+      const value = html`
+        <aside class="onebox pdf" data-onebox-src="https://example.com/paper.pdf">
+          <header class="source">
+            <a href="https://example.com/paper.pdf" target="_blank">example.com</a>
+          </header>
+          <article class="onebox-body">
+            <span class="pdf-onebox-logo"></span>
+            <h3><a href="https://example.com/paper.pdf">paper.pdf</a></h3>
+            <p class="filesize">697 KB</p>
+          </article>
+        </aside>
+      `
+
+      expect(await extract(value)).toBeUndefined()
     })
   })
 
@@ -235,10 +273,10 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
     })
   })
 
-  describe('social oneboxes', () => {
+  describe('omitted oneboxes', () => {
     // Iterates the real exclusion list, so every entry is exercised and a new entry is
     // covered automatically.
-    it.each(socialOneboxClasses)('should not match the %s onebox', async (engine) => {
+    it.each(omittedOneboxClasses)('should not match the %s onebox', async (engine) => {
       const value = html`
         <aside class="onebox ${engine}" data-onebox-src="https://example.com/post/1">
           <header class="source">
