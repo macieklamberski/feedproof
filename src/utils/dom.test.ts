@@ -1,4 +1,4 @@
-import { expect, it } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, queryElement } from '../tests.js'
 import {
   attr,
@@ -9,6 +9,8 @@ import {
   getWrapperAspectRatio,
   hasAncestorWithTagName,
   isElementHidden,
+  parseAspectRatio,
+  ratioDimensions,
   removeWithEmptyWrappers,
   text,
   textNode,
@@ -301,6 +303,43 @@ describeForEachParser('getWrapperAspectRatio', (parseHtml) => {
     const iframe = queryElement(document, 'iframe')
 
     expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+  })
+})
+
+describe('parseAspectRatio', () => {
+  it('should parse the colon form', () => {
+    expect(parseAspectRatio('16:9')).toBeCloseTo(16 / 9)
+  })
+
+  it('should parse the slash form', () => {
+    expect(parseAspectRatio('16/9')).toBeCloseTo(16 / 9)
+  })
+
+  it('should allow spaces around the separator', () => {
+    expect(parseAspectRatio('16 : 9')).toBeCloseTo(16 / 9)
+    expect(parseAspectRatio('690 / 362')).toBeCloseTo(690 / 362)
+  })
+
+  it('should reject a zero part', () => {
+    expect(parseAspectRatio('0:9')).toBeUndefined()
+  })
+
+  it('should reject a single number', () => {
+    expect(parseAspectRatio('16')).toBeUndefined()
+  })
+
+  it('should reject an empty string', () => {
+    expect(parseAspectRatio('')).toBeUndefined()
+  })
+})
+
+describe('ratioDimensions', () => {
+  it('should encode a landscape ratio', () => {
+    expect(ratioDimensions(16 / 9)).toEqual({ width: 100, height: 56 })
+  })
+
+  it('should encode a portrait ratio', () => {
+    expect(ratioDimensions(9 / 16)).toEqual({ width: 100, height: 178 })
   })
 })
 

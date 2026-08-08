@@ -124,6 +124,7 @@ export {
   jwplayerResolveEmbed,
   jwplayerScriptEmbedResolver,
 } from './embeds/jwplayer.js'
+export { mediavineEmbedResolver } from './embeds/mediavine.js'
 export { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 export {
   extractVimeoId,

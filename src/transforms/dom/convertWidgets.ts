@@ -1,13 +1,17 @@
 import type { DomTransform, MediaResolverResult } from '../../types.js'
-import { getElementDimensions, getWrapperAspectRatio, playableElements } from '../../utils/dom.js'
+import {
+  getElementDimensions,
+  getWrapperAspectRatio,
+  playableElements,
+  ratioDimensions,
+} from '../../utils/dom.js'
 import { audioFileRegex, resolveOrKeepUrl, videoFileRegex } from '../../utils/urls.js'
 import { createEmbedPlaceholder, isMediaResult } from '../../utils/widgets.js'
 
 const playableSelector = [...playableElements].join(', ')
 
 // When the iframe carries no usable dimensions, fall back to a responsive wrapper's
-// aspect ratio so the placeholder can still reserve space. The 100×N pair encodes the
-// ratio, not absolute pixels.
+// aspect ratio so the placeholder can still reserve space.
 const getEmbedDimensions = (element: Element): { width?: number; height?: number } => {
   const dimensions = getElementDimensions(element)
 
@@ -15,7 +19,7 @@ const getEmbedDimensions = (element: Element): { width?: number; height?: number
     const ratio = getWrapperAspectRatio(element)
 
     if (ratio !== undefined) {
-      return { width: 100, height: Math.round(100 / ratio) }
+      return ratioDimensions(ratio)
     }
   }
 

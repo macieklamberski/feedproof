@@ -393,6 +393,34 @@ export const getWrapperAspectRatio = (
   }
 }
 
+const ratioPairRegexes = [
+  /^\s*(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)\s*$/, // 16:9, 690 : 362
+  /^\s*(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*$/, // 100/56, 690 / 362
+]
+
+export const parseAspectRatio = (value: string): number | undefined => {
+  for (const regex of ratioPairRegexes) {
+    const match = value.match(regex)
+
+    if (!match) {
+      continue
+    }
+
+    const width = Number(match[1])
+    const height = Number(match[2])
+
+    if (width > 0 && height > 0) {
+      return width / height
+    }
+  }
+}
+
+// Encodes an aspect ratio as placeholder dimensions: the 100×N pair encodes the ratio, not
+// absolute pixels. Assumes a valid positive ratio; validation stays at the call sites.
+export const ratioDimensions = (ratio: number): { width: number; height: number } => {
+  return { width: 100, height: Math.round(100 / ratio) }
+}
+
 // A width or height at or below this many pixels marks a tracking pixel, not real
 // content. removeTrackingPixels strips images at or below it; resolveMediaDimensions
 // won't promote a dimension at or below it.
