@@ -24,6 +24,7 @@ import { tcdCiteResolver } from './cites/tcd.js'
 import { tistoryCiteResolver } from './cites/tistory.js'
 import { tumblrCiteResolver } from './cites/tumblr.js'
 import { xenforoCiteResolver } from './cites/xenforo.js'
+import { brightcoveEmbedResolver } from './embeds/brightcove.js'
 import {
   buzzsproutIframeEmbedResolver,
   buzzsproutScriptEmbedResolver,
@@ -304,6 +305,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   jwplayerScriptEmbedResolver,
   buzzsproutIframeEmbedResolver,
   buzzsproutScriptEmbedResolver,
+  brightcoveEmbedResolver,
   substackMediaResolver,
   wechatMediaResolver,
   weeblyMediaResolver,
