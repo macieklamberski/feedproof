@@ -24,14 +24,16 @@ import { tcdCiteResolver } from './cites/tcd.js'
 import { tistoryCiteResolver } from './cites/tistory.js'
 import { tumblrCiteResolver } from './cites/tumblr.js'
 import { xenforoCiteResolver } from './cites/xenforo.js'
+import {
+  buzzsproutIframeEmbedResolver,
+  buzzsproutScriptEmbedResolver,
+} from './embeds/buzzsprout.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
-import { jwplayerEmbedResolver } from './embeds/jwplayer.js'
+import { jwplayerIframeEmbedResolver, jwplayerScriptEmbedResolver } from './embeds/jwplayer.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
-import { buzzsproutMediaResolver } from './media/buzzsprout.js'
 import { ghostMediaResolver } from './media/ghost.js'
-import { jwplayerMediaResolver } from './media/jwplayer.js'
 import { substackMediaResolver } from './media/substack.js'
 import { wechatMediaResolver } from './media/wechat.js'
 import { weeblyMediaResolver } from './media/weebly.js'
@@ -298,13 +300,14 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   youtubeEmbedResolver,
   vimeoEmbedResolver,
   dailymotionEmbedResolver,
-  jwplayerEmbedResolver,
+  jwplayerIframeEmbedResolver,
+  jwplayerScriptEmbedResolver,
+  buzzsproutIframeEmbedResolver,
+  buzzsproutScriptEmbedResolver,
   substackMediaResolver,
   wechatMediaResolver,
   weeblyMediaResolver,
   ghostMediaResolver,
-  buzzsproutMediaResolver,
-  jwplayerMediaResolver,
 ]
 
 // Order matters here too: a resolver replaces the element it matches, so a later one never
