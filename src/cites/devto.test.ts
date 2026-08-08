@@ -219,7 +219,9 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
         </div>
       `
 
-      expect((await extract(value))?.icon).toBe('https://example.com/author.png')
+      expect(await extract(value)).toMatchObject({
+        icon: 'https://example.com/author.png',
+      })
     })
 
     it('should read the description from a context note', async () => {
