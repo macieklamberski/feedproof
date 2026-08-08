@@ -71,14 +71,8 @@ const specimens: Record<string, string> = {
     '<img src="https://cdn.steamcommunity.com/news/placeholder_video.gif">',
   '[src-consent]':
     '<iframe src="about:blank" src-consent="https://www.youtube.com/embed/x"></iframe>',
-  '[consent-original-src]':
-    '<iframe src="about:blank" consent-original-src="https://www.youtube.com/embed/x"></iframe>',
-  '[consent-original-src-_]':
-    '<iframe src="about:blank" consent-original-src-_="https://www.youtube.com/embed/x"></iframe>',
-  '[consent-click-original-src-_]':
-    '<iframe src="about:blank" consent-click-original-src-_="https://www.youtube.com/embed/x"></iframe>',
-  '[data-ep-src]':
-    '<iframe src="about:blank" data-ep-src="https://www.youtube.com/embed/x"></iframe>',
+  'script[consent-original-src-_]':
+    '<script type="text/plain" consent-original-src-_="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>',
   '[data-cookieblock-src]':
     '<iframe src="about:blank" data-cookieblock-src="https://www.youtube.com/embed/x"></iframe>',
   '[data-src-cmplz]':

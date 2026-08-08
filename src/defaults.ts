@@ -412,9 +412,22 @@ export const defaultLazyIframeAttributes = [
   // click-to-load placeholder; stripping would just delete the video. The visible Avada notice
   // (.fusion-privacy-placeholder) is stripped separately in defaultNonContentSelectors.
   'data-privacy-src', // Avada privacy-embed facade — 19 feeds.
-  // Cookie-CONSENT gates (Cookiebot, Complianz, Borlabs, …) are NOT recovered — they're
-  // stripped as non-content (see the GDPR block in defaultNonContentSelectors). Only generic
-  // performance lazy-loaders and the privacy-video facade above live here.
+  // Real Cookie Banner sits on the same recover side of that line: it rewrites the author's
+  // embed iframe in place, dropping src and parking the real URL in consent-original-src-_ (and
+  // the same URL plus autoplay=1 in consent-click-original-src-_ on the same iframe). Feed
+  // bodies carry no notice chrome, so the gated iframe is the whole embed, and the parked URLs
+  // are all players and viewers (YouTube, Bandcamp, Vimeo, SoundCloud, Spotify, Google
+  // docs/maps): stripping would just delete them. The non-autoplay attribute is listed first so
+  // its URL wins. Gated <script> tags stay stripped in defaultNonContentSelectors.
+  'consent-original-src-_', // Real Cookie Banner — 186 feeds.
+  'consent-click-original-src-_', // Real Cookie Banner click-to-load variant — fallback only.
+  // EmbedPlus parks the deferred player's URL here; the plugin's facade shape is rebuilt by
+  // rebuildEmbedPlusEmbeds.
+  'data-ep-src', // EmbedPlus YouTube deferred player — 14 feeds.
+  // Below the 1/64 sample resolution; the count is from an older full-corpus walk.
+  'data-lazy-load', // JetElements / Woodmart / Elementor lazy video widgets — 82 feeds.
+  // Other cookie-consent gates (Cookiebot, Complianz, Borlabs, …) are NOT recovered: they're
+  // stripped as non-content (see the GDPR block in defaultNonContentSelectors).
 ]
 
 export const defaultDeferredIframeSources: Array<DeferredIframeSource> = [
@@ -592,15 +605,17 @@ export const defaultNonContentSelectors = [
   '.tmblr-alt-text-helper', // Tumblr badge rendering a stray "ALT" beside an image that keeps its own alt attribute. 311 feeds (0.002%).
   'img[src*="steamcommunity.com"][src*="placeholder"]', // Steam news static poster gif shown before its JS swaps in the YouTube iframe.
 
-  // GDPR/consent- and privacy-gated embeds — the plugin parks the real iframe URL and shows a
-  // cookie notice; a reader has no consent flow, so strip the gated element rather than
-  // resurrect it. Matched by the attribute each plugin parks the real URL in. Kept even at low
-  // prevalence — a genuine consent gate is cheap config and these CMPs are widely installed.
+  // GDPR/consent- and privacy-gated embeds: the plugin parks the real iframe URL and shows a
+  // cookie notice; a reader has no consent flow, so strip the gated element instead of
+  // resurrecting it. Matched by the attribute each plugin parks the real URL in. Kept even at
+  // low prevalence: a genuine consent gate is cheap config and these CMPs are widely installed.
+  // Real Cookie Banner and EmbedPlus iframes are the exception: their attributes park pure
+  // content with no notice chrome, so fixLazyIframes recovers them via
+  // defaultLazyIframeAttributes.
   '[src-consent]', // Borlabs Cookie — 2 feeds.
-  '[consent-original-src]', // Consent wrappers (generic form).
-  '[consent-original-src-_]', // Real Cookie Banner (rendered) — 186 feeds (both consent-original-src forms).
-  '[consent-click-original-src-_]', // Real Cookie Banner (click-to-load) — 82 feeds.
-  '[data-ep-src]', // Embed Privacy — 14 feeds.
+  // Real Cookie Banner also gates <script> tags (adsbygoogle, Vimeo player.js). Script-scoped so
+  // the gated scripts still go while the gated iframes are recovered.
+  'script[consent-original-src-_]', // Real Cookie Banner gated scripts — 14 occurrences.
   '[data-cookieblock-src]', // Cookiebot — 34 feeds.
   '[data-src-cmplz]', // Complianz — 13 feeds.
   '[data-wpconsent-src]', // WPConsent — 0 feeds.
