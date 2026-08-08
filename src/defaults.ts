@@ -33,6 +33,7 @@ import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { jwplayerIframeEmbedResolver, jwplayerScriptEmbedResolver } from './embeds/jwplayer.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
+import { speakerdeckEmbedResolver } from './embeds/speakerdeck.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
@@ -320,6 +321,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   brightcoveEmbedResolver,
   mediavineEmbedResolver,
   soundcloudEmbedResolver,
+  speakerdeckEmbedResolver,
   substackMediaResolver,
   wechatMediaResolver,
   weeblyMediaResolver,

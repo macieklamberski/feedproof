@@ -126,6 +126,7 @@ export {
 } from './embeds/jwplayer.js'
 export { mediavineEmbedResolver } from './embeds/mediavine.js'
 export { soundcloudEmbedResolver } from './embeds/soundcloud.js'
+export { speakerdeckEmbedResolver } from './embeds/speakerdeck.js'
 export {
   extractVimeoId,
   vimeoEmbedResolver,
