@@ -37,20 +37,23 @@ export const microformatsCiteResolver: CiteResolver = {
   extract: (element) => {
     const notInAuthor = (node: Element) => !node.closest('.p-author')
 
-    // `p-content` and `e-content` are the same property in its plain-text and HTML
-    // spellings, and `summary` comes in the same two; either summary wins over content when
-    // the source states one separately.
-    const description = find(element, '.p-summary, .e-summary, .p-content, .e-content', notInAuthor)
+    // `summary` and `content` each come in a plain-text (`p-`) and an HTML (`e-`) spelling.
+    // Two separate reads, not one selector list: a list returns the first match in document
+    // order, and a stated summary must win over the content even when it sits after it.
+    const description =
+      find(element, '.p-summary, .e-summary', notInAuthor) ??
+      find(element, '.p-content, .e-content', notInAuthor)
     // The image property is `u-featured` in the newer IndieWeb convention and `u-photo` in
-    // the base spec; prefer the former and fall back to the latter.
-    const image = find(element, '.u-featured, .u-photo', notInAuthor)
+    // the base spec.
+    const image =
+      find(element, '.u-featured', notInAuthor) ?? find(element, '.u-photo', notInAuthor)
     const author = find(element, '.p-author')
     const published = find(element, '.dt-published', notInAuthor)
 
     const responseProperty = Array.from(element.classList)
       .filter((name) => startsWithAnyOf(name, responsePrefixes))
       .map((name) => name.slice(2))
-      .find((property) => property in citeKindByResponseProperty)
+      .find((property) => Object.hasOwn(citeKindByResponseProperty, property))
     const kind = responseProperty ? citeKindByResponseProperty[responseProperty] : undefined
 
     return buildCite({

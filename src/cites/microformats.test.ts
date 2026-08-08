@@ -104,8 +104,28 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
       `
       const result = await extract(value)
 
-      expect(result?.icon).toBe('https://example.com/avatar.jpg')
+      expect(result).toMatchObject({
+        icon: 'https://example.com/avatar.jpg',
+      })
       expect(result?.thumbnail).toBeUndefined()
+    })
+
+    it('should split the citation image and the author photo between thumbnail and icon', async () => {
+      const value = html`
+        <span class="h-cite">
+          <a class="u-url p-name" href="https://example.com/post">Page title</a>
+          <img class="u-photo" src="https://example.com/cover.png" />
+          <span class="p-author h-card">
+            <img class="u-photo" src="https://example.com/avatar.jpg" />
+            <span class="p-name">Author name</span>
+          </span>
+        </span>
+      `
+
+      expect(await extract(value)).toMatchObject({
+        icon: 'https://example.com/avatar.jpg',
+        thumbnail: 'https://example.com/cover.png',
+      })
     })
 
     it('should read the description from e-summary', async () => {
@@ -219,6 +239,44 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
       `
 
       expect((await extract(value))?.description).toBe('Short summary.')
+    })
+
+    it('should prefer the summary even when the content comes first', async () => {
+      const value = html`
+        <div class="h-cite">
+          <a class="u-url p-name" href="https://example.com/post">Page title</a>
+          <div class="e-content"><p>The much longer body.</p></div>
+          <p class="p-summary">Short summary.</p>
+        </div>
+      `
+
+      expect(await extract(value)).toMatchObject({
+        description: 'Short summary.',
+      })
+    })
+
+    it('should prefer u-featured even when u-photo comes first', async () => {
+      const value = html`
+        <div class="h-cite">
+          <a class="u-url p-name" href="https://example.com/post">Page title</a>
+          <img class="u-photo" src="https://example.com/photo.png" />
+          <img class="u-featured" src="https://example.com/featured.png" />
+        </div>
+      `
+
+      expect(await extract(value)).toMatchObject({
+        thumbnail: 'https://example.com/featured.png',
+      })
+    })
+
+    it('should ignore a class that only resembles a response property', async () => {
+      const value = html`
+        <span class="h-cite u-constructor">
+          <a class="u-url p-name" href="https://example.com/post">Page title</a>
+        </span>
+      `
+
+      expect((await extract(value))?.kind).toBeUndefined()
     })
   })
 
