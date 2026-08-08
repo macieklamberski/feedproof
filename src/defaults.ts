@@ -625,6 +625,9 @@ export const defaultNonContentSelectors = [
   'script[consent-original-src-_]', // Real Cookie Banner gated scripts — 14 occurrences.
   '.cookieconsent-optout-marketing', // Cookiebot "please accept marketing cookies" notice beside the gated iframe.
   '.pec-overlay', // Publii Embed Consent click-to-accept overlay beside the gated iframe.
+  // OneTrust video fallback: thumbnail plus "enable cookies to view this content" text and a
+  // settings link, serialized as a sibling of the gated iframe inside the wrapper.
+  '.onetrust-css-video-wrapper .fallback-container', // OneTrust video fallback notice.
   // Avada's leftover "For privacy reasons … please accept" notice. The gated iframe itself is
   // recovered via data-privacy-src (a lazy attribute); only this consent nag is dead chrome.
   '.fusion-privacy-placeholder', // Avada privacy-embed notice — 19 feeds.
