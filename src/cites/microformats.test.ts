@@ -133,6 +133,18 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
       })
     })
 
+    it('should accept the p- spelling for every response property', async () => {
+      const value = html`
+        <span class="h-cite p-bookmark-of">
+          <a class="u-url p-name" href="https://example.com/post">Page title</a>
+        </span>
+      `
+
+      expect(await extract(value)).toMatchObject({
+        kind: 'bookmark',
+      })
+    })
+
     it('should leave the kind unset for a bare citation with no response class', async () => {
       const value = html`
         <span class="h-cite">

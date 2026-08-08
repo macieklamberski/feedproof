@@ -1,28 +1,31 @@
+import { startsWithAnyOf } from 'trousse'
 import type { CiteKind, CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
-// Maps the IndieWeb response class an h-cite is wrapped in to the citation kind it names.
-// `u-in-reply-to` uses the shorter `reply`; a bare h-cite with no wrapper stays unset.
-// mf2 spells the same property `u-` or `p-` depending on whether the value is a URL or the
-// nested h-cite itself; WordPress Post Kinds emits the `p-` spelling for replies.
-const citeKindByResponseClass: Record<string, CiteKind> = {
-  'u-bookmark-of': 'bookmark',
-  'u-repost-of': 'repost',
-  'u-like-of': 'like',
-  'u-in-reply-to': 'reply',
-  'p-in-reply-to': 'reply',
-  'u-read-of': 'read',
-  'u-listen-of': 'listen',
-  'u-watch-of': 'watch',
+// Maps the IndieWeb response property an h-cite is wrapped in to the citation kind it names.
+// `in-reply-to` uses the shorter `reply`; a bare h-cite with no wrapper stays unset.
+// The class carries a `u-` or `p-` prefix depending on whether the value is a URL or the
+// nested h-cite itself (WordPress Post Kinds emits `p-in-reply-to`), so both prefixes are
+// accepted for every property.
+const citeKindByResponseProperty: Record<string, CiteKind> = {
+  'bookmark-of': 'bookmark',
+  'repost-of': 'repost',
+  'like-of': 'like',
+  'in-reply-to': 'reply',
+  'read-of': 'read',
+  'listen-of': 'listen',
+  'watch-of': 'watch',
 }
+
+const responsePrefixes = ['u-', 'p-']
 
 // h-cite is the microformats2 citation format (https://microformats.org/wiki/h-cite): a
 // standard, cross-site way to mark up a reference to another work. Unlike every other
 // cite source here it is not a platform convention — any mf2-emitting theme (IndieWeb
 // sites, Hugo microblog themes) renders the same classes, so one resolver covers all of
-// them. An IndieWeb post commonly wraps the citation in a `u-{repost,bookmark,like,read,
-// listen,watch,in-reply}-of` class naming the kind of reference; that becomes the `kind`.
+// them. An IndieWeb post commonly wraps the citation in a response class (`u-repost-of`,
+// `u-bookmark-of`, `p-in-reply-to`, …) naming the kind of reference; that becomes the `kind`.
 //
 // The card's own `u-url` / `p-name` must be told apart from the author's: the `p-author`
 // is itself an h-card with its own url and name, so those are filtered out by `closest`.
@@ -44,10 +47,11 @@ export const microformatsCiteResolver: CiteResolver = {
     const author = find(element, '.p-author')
     const published = find(element, '.dt-published', notInAuthor)
 
-    const responseClass = Array.from(element.classList).find(
-      (name) => name in citeKindByResponseClass,
-    )
-    const kind = responseClass ? citeKindByResponseClass[responseClass] : undefined
+    const responseProperty = Array.from(element.classList)
+      .filter((name) => startsWithAnyOf(name, responsePrefixes))
+      .map((name) => name.slice(2))
+      .find((property) => property in citeKindByResponseProperty)
+    const kind = responseProperty ? citeKindByResponseProperty[responseProperty] : undefined
 
     return buildCite({
       provider: 'microformats',
