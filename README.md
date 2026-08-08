@@ -6,7 +6,7 @@
 
 Tidy up the HTML content in web feeds. Fix feed-specific quirks so content displays in its best possible form.
 
-Feedsweep takes raw feed item HTML and runs it through a pipeline that genuinely improves the output: fixing lazy-loaded images so they actually render, resolving relative URLs to absolute, stripping tracking pixels for privacy (plus tracking params and redirect wrappers via the cleanUrlFn option), highlighting code blocks, normalizing broken markup from common feed quirks, auto-linking bare URLs, and converting embeds into framework-agnostic placeholders. It ships with sensible defaults and built-in support for YouTube, Vimeo, Dailymotion, JW Player, Buzzsprout, and Brightcove.
+Feedsweep takes raw feed item HTML and runs it through a pipeline that genuinely improves the output: fixing lazy-loaded images so they actually render, resolving relative URLs to absolute, stripping tracking pixels for privacy (plus tracking params and redirect wrappers via the cleanUrlFn option), highlighting code blocks, normalizing broken markup from common feed quirks, auto-linking bare URLs, and converting embeds into framework-agnostic placeholders. It ships with sensible defaults and built-in support for YouTube, Vimeo, Dailymotion, JW Player, Buzzsprout, Brightcove, and SoundCloud.
 
 ## Installation
 
@@ -131,7 +131,8 @@ const result = transformContent(html, {
   highlightFn: (text, language) => myHighlighter.highlight(text, language),
   // Widget resolvers: embed results become placeholders, media results become real
   // <video>/<audio> elements (defaults: YouTube, Vimeo, Dailymotion, JW Player, Buzzsprout
-  // and Brightcove embeds, plus the media resolvers for Substack, WeChat, Weebly and Ghost uploads).
+  // Brightcove and SoundCloud embeds, plus the media resolvers for Substack, WeChat, Weebly
+  // and Ghost uploads).
   widgetResolvers: [youtubeEmbedResolver, myEmbedResolver],
   // Resolvers turning link-preview cards into `data-cite-*` placeholders.
   citeResolvers: [ghostCiteResolver, myCiteResolver],
