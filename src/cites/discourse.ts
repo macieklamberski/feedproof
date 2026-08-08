@@ -1,3 +1,4 @@
+import { isHostOf } from 'trousse'
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, isElement, text } from '../utils/dom.js'
@@ -30,6 +31,12 @@ const githubDescription = (paragraph: Element): string | undefined => {
 // Twitch) emit bare iframes, and Mastodon links go through the generic engine.
 export const socialOneboxClasses = ['twitterstatus', 'threadsstatus', 'instagram']
 
+// Social platforms without their own onebox engine: their posts arrive as generic asides
+// whose og title is the author's name, so they are recognized by the cited host instead of
+// the engine class. Mastodon posts cannot be told apart by host (any domain can be an
+// instance) and stay unrecognized.
+export const socialPostHosts = ['bsky.app', 'threads.net', 'threads.com']
+
 // Discourse forums expand a pasted link into a "onebox" card. The engine that built the
 // card varies (a generic one covers 979 of the 1,118 corpus feeds, the rest are per-site
 // engines like github or wikipedia), and each engine renders its own body markup, so this
@@ -40,6 +47,15 @@ export const discourseCiteResolver: CiteResolver = {
   extract: (element) => {
     const body = find(element, '.onebox-body')
     const source = find(element, 'header.source a')
+
+    // Old-generation oneboxes (the Stack Exchange shape among them) carry no
+    // data-onebox-src; their canonical url is the source anchor's.
+    const url = attr(element, 'data-onebox-src') ?? attr(source, 'href')
+
+    if (url && isHostOf(url, socialPostHosts)) {
+      return
+    }
+
     const [publisher, date] = text(source)?.split(publisherDateSeparator) ?? []
 
     // The GitHub engines (issue, pull request, commit) put the author and an ISO-dated
@@ -53,9 +69,7 @@ export const discourseCiteResolver: CiteResolver = {
 
     return buildCite({
       provider: 'discourse',
-      // Old-generation oneboxes (the Stack Exchange shape among them) carry no
-      // data-onebox-src; their canonical url is the source anchor's.
-      url: attr(element, 'data-onebox-src') ?? attr(source, 'href'),
+      url,
       // Engines differ on the heading level they use for the title.
       title: text(body, 'h3, h4'),
       description: githubBody ? githubDescription(githubBody) : text(body, 'p'),

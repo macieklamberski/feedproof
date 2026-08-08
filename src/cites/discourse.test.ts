@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { citeExtractor, describeForEachParser, html } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
-import { discourseCiteResolver, socialOneboxClasses } from './discourse.js'
+import { discourseCiteResolver, socialOneboxClasses, socialPostHosts } from './discourse.js'
 
 describeForEachParser('discourseCiteResolver', (parseHtml) => {
   const extract = citeExtractor(parseHtml, discourseCiteResolver)
@@ -246,6 +246,22 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </header>
           <article class="onebox-body">
             <h4><a href="https://example.com/post/1" target="_blank" rel="noopener">Author name on Platform</a></h4>
+          </article>
+        </aside>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it.each(socialPostHosts)('should not cite a generic onebox of a %s post', async (host) => {
+      const value = html`
+        <aside class="onebox allowlistedgeneric" data-onebox-src="https://${host}/profile/user/post/1">
+          <header class="source">
+            <a href="https://${host}/profile/user/post/1" target="_blank" rel="noopener">${host}</a>
+          </header>
+          <article class="onebox-body">
+            <h3><a href="https://${host}/profile/user/post/1">Author name (@handle)</a></h3>
+            <p>Post text</p>
           </article>
         </aside>
       `
