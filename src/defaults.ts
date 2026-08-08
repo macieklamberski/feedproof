@@ -31,6 +31,7 @@ import {
 } from './embeds/buzzsprout.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { jwplayerIframeEmbedResolver, jwplayerScriptEmbedResolver } from './embeds/jwplayer.js'
+import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
@@ -307,6 +308,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   buzzsproutIframeEmbedResolver,
   buzzsproutScriptEmbedResolver,
   brightcoveEmbedResolver,
+  mediavineEmbedResolver,
   soundcloudEmbedResolver,
   substackMediaResolver,
   wechatMediaResolver,

@@ -1,0 +1,32 @@
+import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import { attr, parseAspectRatio, ratioDimensions } from '../utils/dom.js'
+
+// Mediavine ships a video as an empty `<div class="mv-video-target mv-video-id-{id}"
+// data-video-id="{id}">` that its script builds into a player, so a reader shows nothing at
+// all. The embed player page is mintable from the id alone (verified live, 200). Mediavine
+// has no public watch page, so the placeholder carries no `url`.
+export const mediavineEmbedResolver: EmbedResolver = {
+  selector: 'div.mv-video-target[data-video-id]',
+  extract: (element): EmbedResolverResult | undefined => {
+    const videoId = attr(element, 'data-video-id')
+
+    if (!videoId) {
+      return
+    }
+
+    const result: EmbedResolverResult = {
+      provider: 'mediavine',
+      id: videoId,
+      src: `https://embed.mediavine.com/videos/${videoId}`,
+    }
+
+    // The div carries the player's aspect ratio as `data-ratio="{w}:{h}"`.
+    const ratio = parseAspectRatio(attr(element, 'data-ratio') ?? '')
+
+    if (ratio) {
+      return { ...result, ...ratioDimensions(ratio) }
+    }
+
+    return result
+  },
+}
