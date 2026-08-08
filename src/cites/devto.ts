@@ -2,6 +2,15 @@ import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text, textNode } from '../utils/dom.js'
 
+// Forem renders the card date without a year when the post's year matched the embedding
+// article's save year ("Jul 25"), and the save year itself is unrecoverable later, so only
+// dates spelling a year ("Aug 21, 2025", "Nov 6 '22") are worth passing through.
+const yearRegex = /\b(19|20)\d{2}\b|'\d{2}\b/
+
+const dateWithYear = (value: string | undefined): string | undefined => {
+  return value && yearRegex.test(value) ? value : undefined
+}
+
 // dev.to (Forem) turns a pasted link into an embed card. Forem compiles its liquid tags to
 // HTML when the article is saved, so the card is already in the stored body by the time the
 // feed renders, and the feed sanitizer's allowlist keeps `div`, `class` and `id` intact.
@@ -50,6 +59,7 @@ export const devtoPostCiteResolver: CiteResolver = {
       // the organization is the one wrapped in the `for <org>` span.
       author: text(element, 'a.crayons-story__secondary'),
       publisher: text(element, 'span > a.crayons-story__secondary'),
+      date: dateWithYear(text(element, 'time')),
       icon: attr(find(element, '.crayons-story__author-pic img'), 'src'),
     })
   },
@@ -57,7 +67,6 @@ export const devtoPostCiteResolver: CiteResolver = {
 
 // The shape the same card had from 2019 until March 2026. Its byline packs author and date
 // into one text node (`Name ・ Aug 25 '22`, with a reading time appended on older posts).
-// Only the author is read: the date is a display string, not a machine-readable one.
 const authorSeparator = '・'
 
 export const devtoLegacyPostCiteResolver: CiteResolver = {
@@ -70,13 +79,14 @@ export const devtoLegacyPostCiteResolver: CiteResolver = {
     }
 
     const content = find(element, '.ltag__link__content')
-    const [author] = text(content, 'h3')?.split(authorSeparator) ?? []
+    const [author, date] = text(content, 'h3')?.split(authorSeparator) ?? []
 
     return buildCite({
       provider: 'devto',
       url: attr(content?.closest('a'), 'href'),
       title: text(content, 'h2'),
       author,
+      date: dateWithYear(date),
       icon: attr(find(element, '.ltag__link__pic img'), 'src'),
     })
   },

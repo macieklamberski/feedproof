@@ -224,6 +224,32 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
       })
     })
 
+    it('should read the date when it spells a year', async () => {
+      const value = html`
+        <div class="ltag__link--embedded">
+          <div class="crayons-story ">
+            <a href="https://example.com/post" class="crayons-story__tertiary fs-xs"><time>Aug 21, 2025</time></a>
+            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+          </div>
+        </div>
+      `
+
+      expect((await extract(value))?.date).toBe('Aug 21, 2025')
+    })
+
+    it('should leave the date unset when it carries no year', async () => {
+      const value = html`
+        <div class="ltag__link--embedded">
+          <div class="crayons-story ">
+            <a href="https://example.com/post" class="crayons-story__tertiary fs-xs"><time>Jul 25</time><span class="time-ago-indicator-initial-placeholder"></span></a>
+            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+          </div>
+        </div>
+      `
+
+      expect((await extract(value))?.date).toBeUndefined()
+    })
+
     it('should read the description from a context note', async () => {
       const value = html`
         <div class="ltag__link--embedded">
@@ -324,6 +350,7 @@ describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
         url: 'https://example.com/author/post',
         title: 'Page title',
         author: 'Author name',
+        date: "Aug 25 '22",
         icon: 'https://example.com/author.jpg',
       }
 
