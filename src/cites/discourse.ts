@@ -38,9 +38,15 @@ export const omittedOneboxClasses = [
 
 // Social platforms without their own onebox engine: their posts arrive as generic asides
 // whose og title is the author's name, so they are recognized by the cited host instead of
-// the engine class. Mastodon posts cannot be told apart by host (any domain can be an
-// instance) and stay unrecognized.
+// the engine class.
 export const socialPostHosts = ['bsky.app', 'threads.net', 'threads.com']
+
+// Mastodon posts cannot be told apart by host (any domain can be an instance). Two other
+// signals mark them: a status url is `/@user/<numeric id>` on any instance (no article url
+// ends in a bare number there), and the page titles itself "Display Name (@user@instance)",
+// which the generic onebox renders as its heading.
+const mastodonStatusPathRegex = /\/@[^/]+\/\d{6,}(?:[?#]|$)/
+const fediverseHandleRegex = /@[\w.-]+@[\w-]+(?:\.[\w-]+)+/
 
 // Discourse forums expand a pasted link into a "onebox" card. The engine that built the
 // card varies (a generic one covers 979 of the 1,118 corpus feeds, the rest are per-site
@@ -56,8 +62,14 @@ export const discourseCiteResolver: CiteResolver = {
     // Old-generation oneboxes (the Stack Exchange shape among them) carry no
     // data-onebox-src; their canonical url is the source anchor's.
     const url = attr(element, 'data-onebox-src') ?? attr(source, 'href')
+    // Engines differ on the heading level they use for the title.
+    const title = text(body, 'h3, h4')
 
-    if (url && isHostOf(url, socialPostHosts)) {
+    if (url && (isHostOf(url, socialPostHosts) || mastodonStatusPathRegex.test(url))) {
+      return
+    }
+
+    if (title && fediverseHandleRegex.test(title)) {
       return
     }
 
@@ -85,8 +97,7 @@ export const discourseCiteResolver: CiteResolver = {
     return buildCite({
       provider: 'discourse',
       url,
-      // Engines differ on the heading level they use for the title.
-      title: text(body, 'h3, h4'),
+      title,
       description,
       author: text(element, '.github-info .user a') ?? text(dateAnchors[0]),
       publisher,

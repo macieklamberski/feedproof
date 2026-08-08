@@ -307,6 +307,56 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    it('should not cite a generic onebox of a Mastodon status, recognized by its url shape', async () => {
+      const value = html`
+        <aside class="onebox allowlistedgeneric" data-onebox-src="https://mastodon.social/@Gargron/117060465546524768">
+          <header class="source">
+            <a href="https://mastodon.social/@Gargron/117060465546524768" target="_blank" rel="noopener">mastodon.social</a>
+          </header>
+          <article class="onebox-body">
+            <h3><a href="https://mastodon.social/@Gargron/117060465546524768">Eugen Rochko (@Gargron@mastodon.social)</a></h3>
+            <p>Post text</p>
+          </article>
+        </aside>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should not cite a generic onebox whose title carries a fediverse handle', async () => {
+      const value = html`
+        <aside class="onebox allowlistedgeneric" data-onebox-src="https://mastodon.example/users/author/statuses/117060465546524768">
+          <header class="source">
+            <a href="https://mastodon.example/users/author/statuses/117060465546524768" target="_blank">mastodon.example</a>
+          </header>
+          <article class="onebox-body">
+            <h3>Author name (@author@mastodon.example)</h3>
+            <p>Post text</p>
+          </article>
+        </aside>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should still cite an article whose path has an @author segment and a slug', async () => {
+      const value = html`
+        <aside class="onebox allowlistedgeneric" data-onebox-src="https://blog.example.com/@author/why-i-did-it-3f2a1b9c">
+          <header class="source">
+            <a href="https://blog.example.com/@author/why-i-did-it-3f2a1b9c" target="_blank">blog.example.com</a>
+          </header>
+          <article class="onebox-body">
+            <h3><a href="https://blog.example.com/@author/why-i-did-it-3f2a1b9c">Why I did it</a></h3>
+            <p>Preview text</p>
+          </article>
+        </aside>
+      `
+      const result = await extract(value)
+
+      expect(result?.title).toBe('Why I did it')
+      expect(result?.url).toBe('https://blog.example.com/@author/why-i-did-it-3f2a1b9c')
+    })
+
     it('should skip a social post whose url only sits on the source anchor', async () => {
       const value = html`
         <aside class="onebox allowlistedgeneric">
