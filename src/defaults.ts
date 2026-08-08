@@ -30,6 +30,7 @@ import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
 import { buzzsproutMediaResolver } from './media/buzzsprout.js'
+import { ghostMediaResolver } from './media/ghost.js'
 import { jwplayerMediaResolver } from './media/jwplayer.js'
 import { substackMediaResolver } from './media/substack.js'
 import { wechatMediaResolver } from './media/wechat.js'
@@ -301,6 +302,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   substackMediaResolver,
   wechatMediaResolver,
   weeblyMediaResolver,
+  ghostMediaResolver,
   buzzsproutMediaResolver,
   jwplayerMediaResolver,
 ]
