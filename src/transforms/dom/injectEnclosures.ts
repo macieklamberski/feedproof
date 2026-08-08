@@ -13,8 +13,9 @@ import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
 import { absoluteUrlRegex, resolveOrKeepUrl } from '../../utils/urls.js'
 import { createEmbedPlaceholder, isMediaResult } from '../../utils/widgets.js'
 
-// Marks an injected element so stripDuplicateEnclosures (an opt-in heuristic) can
-// tell it from the item's own inline content. Exported because that pass reads it.
+// Marks an injected element so a repeat run skips it and stripDuplicateEnclosures (an
+// opt-in heuristic) can tell it from the item's own inline content. Exported because
+// that pass reads it.
 export const enclosureMarker = 'data-enclosure'
 
 const isAudioEnclosure = (enclosure: Enclosure): boolean => {
@@ -262,6 +263,12 @@ const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): En
   }
 }
 
+// The attribute the injected element carries its source in: `src` on native audio, video,
+// and img elements, `data-embed-src` on embed placeholders.
+const getInjectedSource = (element: Element): string | null => {
+  return element.getAttribute('src') ?? element.getAttribute('data-embed-src')
+}
+
 // A feed sometimes lists the same media twice: once as the raw file and once as a
 // player page carrying the file URL in a query param (podcast hosts pair a plain
 // <enclosure> with a player entry like …/?media_url=<file>; the param name varies
@@ -398,16 +405,33 @@ export const injectEnclosures: DomTransform = (context) => {
       }
     }
 
+    // Content that already carries a marked element with the same source (typically
+    // a previous run of this transform over the same item) already shows that
+    // enclosure, so injecting it again would stack a visible duplicate.
+    const existingSources = new Set<string>()
+
+    for (const element of document.querySelectorAll(`[${enclosureMarker}]`)) {
+      const source = getInjectedSource(element)
+
+      if (source) {
+        existingSources.add(source)
+      }
+    }
+
+    const injected = created.filter((element) => {
+      return !existingSources.has(getInjectedSource(element) ?? '')
+    })
+
     // Tag each injected element so the optional stripDuplicateEnclosures pass can
     // recognize it as injected media rather than the item's own content.
-    for (const element of created) {
+    for (const element of injected) {
       element.setAttribute(enclosureMarker, '')
     }
 
     // Prepend ahead of the existing content while preserving enclosure order; a
     // per-item prepend would reverse the order of multi-enclosure items.
-    for (let index = created.length - 1; index >= 0; index--) {
-      document.body.prepend(created[index])
+    for (let index = injected.length - 1; index >= 0; index--) {
+      document.body.prepend(injected[index])
     }
   }
 }
