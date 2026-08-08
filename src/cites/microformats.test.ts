@@ -116,7 +116,9 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
         </span>
       `
 
-      expect((await extract(value))?.description).toBe('Preview text')
+      expect(await extract(value)).toMatchObject({
+        description: 'Preview text',
+      })
     })
 
     it('should map the p-spelled reply class to the reply kind', async () => {
@@ -126,7 +128,9 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
         </span>
       `
 
-      expect((await extract(value))?.kind).toBe('reply')
+      expect(await extract(value)).toMatchObject({
+        kind: 'reply',
+      })
     })
 
     it('should leave the kind unset for a bare citation with no response class', async () => {
