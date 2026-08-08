@@ -402,6 +402,20 @@ describe('getUrlDimensions', () => {
     expect(getUrlDimensions(value)).toEqual(expected)
   })
 
+  it('should read a WxH pair from a path segment', () => {
+    const value = 'https://a.storyblok.com/f/88751/1280x1280/hash/logo.png'
+    const expected = { width: 1280, height: 1280 }
+
+    expect(getUrlDimensions(value)).toEqual(expected)
+  })
+
+  it('should prefer the last WxH pair when the path carries several', () => {
+    const value = 'https://a.storyblok.com/f/88751/1280x1280/hash/logo.png/m/300x300/'
+    const expected = { width: 300, height: 300 }
+
+    expect(getUrlDimensions(value)).toEqual(expected)
+  })
+
   it('should require both dimensions', () => {
     const value = 'https://example.com/photo.jpg?w=300'
 
@@ -494,6 +508,21 @@ describe('getSizeKeywordRank', () => {
 
     expect(uppercase).toBe(lowercase)
     expect(uppercase).toBeGreaterThan(0)
+  })
+
+  it('should read the keyword from a directory segment', () => {
+    const original = getSizeKeywordRank('https://cdn.example.com/files/1/2/original/abc.jpg')
+    const small = getSizeKeywordRank('https://cdn.example.com/files/1/2/small/abc.jpg')
+
+    expect(small).toBeGreaterThan(0)
+    expect(original).toBeGreaterThan(small)
+  })
+
+  it('should prefer the file name keyword over a directory one', () => {
+    const value = 'https://cdn.example.com/photos/small/large.jpg'
+    const expected = getSizeKeywordRank('https://cdn.example.com/photos/123/large.jpg')
+
+    expect(getSizeKeywordRank(value)).toBe(expected)
   })
 
   it('should read the keyword through a query string', () => {

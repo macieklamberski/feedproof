@@ -278,7 +278,7 @@ export const getImageFingerprint = (rawUrl: string, cleanUrlFn?: CleanUrlFn): st
 // `?width=&height=`, or `s=WxH`. This is the intrinsic size of that rendition, a
 // safer source than an inline-style display box. A `data:` placeholder (a lazy
 // image not yet resolved) carries no size and is skipped.
-const urlPairRegex = /(?:^|[/_=-])(\d{2,5})x(\d{2,5})(?=[._\-&)?]|$)/gi
+const urlPairRegex = /(?:^|[/_=-])(\d{2,5})x(\d{2,5})(?=[._\-&)?/]|$)/gi
 const urlQueryWidthRegex = /[?&](?:w|width)=(\d{2,5})\b/i
 const urlQueryHeightRegex = /[?&](?:h|height)=(\d{2,5})\b/i
 
@@ -326,10 +326,10 @@ export const getUrlSizeHint = (url: string): number => {
 
 const leafExtensionRegex = /\.[a-z0-9]+$/i
 
-// Rank of a URL whose file name is a size keyword, 0 when it is not (or is a rank-0
-// ambiguous one). Only meaningful between two URLs that already share a fingerprint:
-// the comparison is then within one host's own directory naming, where small vs large
-// is unambiguous, not a cross-CDN convention.
+// Rank of a URL that names its size with a keyword, 0 when it does not (or names a
+// rank-0 ambiguous one). Only meaningful between two URLs that already share a
+// fingerprint: the comparison is then within one host's own directory naming, where
+// small vs large is unambiguous, not a cross-CDN convention.
 export const getSizeKeywordRank = (url: string): number => {
   // The base only anchors a relative src so its leaf can be read; it never surfaces.
   const parsed = parseUrl(url, 'https://example.com')
@@ -338,10 +338,19 @@ export const getSizeKeywordRank = (url: string): number => {
     return 0
   }
 
-  const leaf = getPathSegments(parsed).at(-1) ?? ''
-  const stem = leaf.replace(leafExtensionRegex, '').toLowerCase()
+  // The keyword is the file name on some hosts and the directory holding it on others
+  // (Mastodon serves .../small/{hash}.jpg beside .../original/{hash}.jpg), so walk the
+  // segments from the leaf outwards and take the first one the table knows.
+  for (const segment of [...getPathSegments(parsed)].reverse()) {
+    const stem = segment.replace(leafExtensionRegex, '').toLowerCase()
+    const rank = sizeKeywordRanks[stem]
 
-  return sizeKeywordRanks[stem] ?? 0
+    if (rank !== undefined) {
+      return rank
+    }
+  }
+
+  return 0
 }
 
 // Picks the strictly larger of two same-image URLs. Encoded dimensions decide first;
