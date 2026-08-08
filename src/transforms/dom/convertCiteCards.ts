@@ -3,7 +3,7 @@ import { resolveOrKeepUrl } from '../../utils/urls.js'
 import { createCitePlaceholder } from '../../utils/widgets.js'
 
 export const convertCiteCards: DomTransform = (context) => {
-  const { citeResolvers, resolveUrlFn, cleanUrlFn, baseUrl } = context
+  const { citeResolvers, resolveUrlFn, cleanUrlFn, parseDateFn, baseUrl } = context
 
   return async (document) => {
     for (const resolver of citeResolvers) {
@@ -24,6 +24,7 @@ export const convertCiteCards: DomTransform = (context) => {
           url: cleanUrlFn?.(resolvedUrl) ?? resolvedUrl,
           icon: resolveOrKeepUrl(result.icon, resolveUrlFn, baseUrl),
           thumbnail: resolveOrKeepUrl(result.thumbnail, resolveUrlFn, baseUrl),
+          date: result.date ? (parseDateFn?.(result.date) ?? result.date) : undefined,
         }
 
         element.replaceWith(createCitePlaceholder(document, resolved))

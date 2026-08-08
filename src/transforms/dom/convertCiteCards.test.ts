@@ -21,14 +21,18 @@ const cardResolver: CiteResolver = {
       title,
       icon: element.getAttribute('data-icon') ?? undefined,
       thumbnail: element.getAttribute('data-thumbnail') ?? undefined,
+      date: element.getAttribute('data-date') ?? undefined,
     }
   },
 }
 
 describeForEachParser('convertCiteCards', (parseHtml) => {
-  const transform = (html: string, citeResolvers: Array<CiteResolver>) => {
-    const context: TransformContext = { ...baseContext, citeResolvers }
-    return applyDomTransforms(parseHtml(html), [convertCiteCards(context)])
+  const transform = (
+    html: string,
+    citeResolvers: Array<CiteResolver>,
+    context: TransformContext = baseContext,
+  ) => {
+    return applyDomTransforms(parseHtml(html), [convertCiteCards({ ...context, citeResolvers })])
   }
 
   describe('happy paths', () => {
@@ -235,6 +239,46 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
       const twice = await transform(once, [cardResolver])
 
       expect(twice).toBe(once)
+    })
+  })
+
+  describe('parseDateFn', () => {
+    const value =
+      '<div class="card" data-url="https://example.com" data-title="Title" data-date="2018.10.14"></div>'
+
+    it('should write the normalized date when the hook parses it', async () => {
+      const parseDateFn = (raw: string) => {
+        return raw === '2018.10.14' ? '2018-10-14' : undefined
+      }
+      const result = await transform(value, [cardResolver], { ...baseContext, parseDateFn })
+
+      expect(result).toContain('data-cite-date="2018-10-14"')
+    })
+
+    it('should keep the raw date when the hook returns undefined', async () => {
+      const parseDateFn = () => undefined
+      const result = await transform(value, [cardResolver], { ...baseContext, parseDateFn })
+
+      expect(result).toContain('data-cite-date="2018.10.14"')
+    })
+
+    it('should keep the raw date when no hook is provided', async () => {
+      const result = await transform(value, [cardResolver])
+
+      expect(result).toContain('data-cite-date="2018.10.14"')
+    })
+
+    it('should not call the hook when the card has no date', async () => {
+      const calls: Array<string> = []
+      const parseDateFn = (raw: string) => {
+        calls.push(raw)
+        return raw
+      }
+      const noDate = '<div class="card" data-url="https://example.com" data-title="Title"></div>'
+      const result = await transform(noDate, [cardResolver], { ...baseContext, parseDateFn })
+
+      expect(result).not.toContain('data-cite-date')
+      expect(calls).toEqual([])
     })
   })
 })

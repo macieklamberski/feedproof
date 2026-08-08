@@ -137,6 +137,11 @@ export type AssetType = 'image' | 'video' | 'audio'
 
 export type AssetProxyFn = (url: string, type: AssetType) => string | undefined
 
+// Normalizes a cite card's site-formatted display date (e.g. "2018.10.14") into the
+// caller's preferred form. Returning undefined keeps the raw string verbatim, so an
+// ambiguous or partial date stays displayed as the site wrote it.
+export type ParseDateFn = (raw: string) => string | undefined
+
 // Highlights a code block's text for a known language, returning the highlighted
 // inner HTML, or undefined when the highlighter does not know the language (the
 // block then stays plain). Async so consumers can plug in an async highlighter.
@@ -170,6 +175,7 @@ export type TransformContext = {
   isSafeUrlFn?: IsSafeUrlFn
   enrichEmbedFn?: EnrichEmbedFn
   enrichCiteFn?: EnrichCiteFn
+  parseDateFn?: ParseDateFn
   highlightFn: HighlightFn
   articleTitle?: string
 }
@@ -204,6 +210,7 @@ export type TransformContentOptions = {
   isSafeUrlFn?: IsSafeUrlFn
   enrichEmbedFn?: EnrichEmbedFn
   enrichCiteFn?: EnrichCiteFn
+  parseDateFn?: ParseDateFn
   highlightFn?: HighlightFn
   articleTitle?: string
   stringTransforms?: Array<StringTransform>
