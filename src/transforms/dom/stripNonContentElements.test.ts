@@ -8,7 +8,9 @@ import { stripNonContentElements } from './stripNonContentElements.js'
 // One real-world specimen per default selector, keyed by the selector itself. The completeness
 // test below keeps this table in lockstep with defaultNonContentSelectors, so a selector cannot
 // be added (or removed) without its specimen.
-const specimens: Record<string, string> = {
+// A specimen is removed whole, or [input, expected] when the selector strips a child and the
+// element around it must survive.
+const specimens: Record<string, string | [string, string]> = {
   '[data-component-name="SubscribeWidget"]':
     '<div data-component-name="SubscribeWidget"><input type="email"><button>Subscribe</button></div>',
   '.subscription-widget-wrap-editor':
@@ -75,6 +77,10 @@ const specimens: Record<string, string> = {
     '<div class="cookieconsent-optout-marketing"><a href="javascript:Cookiebot.renew()">Please accept marketing cookies to see this content.</a></div>',
   '.pec-overlay':
     '<div class="pec-overlay pec-active"><div class="pec-box"><p>This content is blocked. Accept cookies to watch it.</p></div></div>',
+  '.onetrust-css-video-wrapper .fallback-container': [
+    '<div class="onetrust-css-video-wrapper"><div class="fallback-container"><img class="fallback-bg" src="https://i.ytimg.com/vi/x/maxresdefault.jpg"><p>Enable cookies to view this content.</p></div><iframe class="optanon-category-C0004" data-src="https://www.youtube.com/embed/x"></iframe></div>',
+    '<div class="onetrust-css-video-wrapper"><iframe class="optanon-category-C0004" data-src="https://www.youtube.com/embed/x"></iframe></div>',
+  ],
   '.fusion-privacy-placeholder':
     '<div class="fusion-privacy-placeholder" data-privacy-type="youtube"><div class="fusion-privacy-label">For privacy reasons YouTube needs your permission to be loaded.</div></div>',
 }
@@ -95,8 +101,10 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
     })
 
     it.each(specimenEntries)('should strip %s', async (_selector, specimen) => {
-      expect(await transform(`<p>Before</p>${specimen}<p>After</p>`)).toBe(
-        '<p>Before</p><p>After</p>',
+      const [value, expected] = Array.isArray(specimen) ? specimen : [specimen, '']
+
+      expect(await transform(`<p>Before</p>${value}<p>After</p>`)).toBe(
+        `<p>Before</p>${expected}<p>After</p>`,
       )
     })
 
