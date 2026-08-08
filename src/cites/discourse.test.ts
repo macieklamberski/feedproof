@@ -70,7 +70,7 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
   })
 
   describe('edge cases', () => {
-    it('should read the date from the source title and trim it off the publisher', async () => {
+    it('should split the date suffix off the source into date', async () => {
       const value = html`
         <aside class="onebox allowlistedgeneric" data-onebox-src="https://example.com/page">
           <header class="source">
@@ -82,17 +82,18 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </article>
         </aside>
       `
-      const result = await extract(value)
 
-      expect(result?.publisher).toBe('Example')
-      expect(result?.date).toBe('03:33PM - 13 January 2023')
+      expect(await extract(value)).toMatchObject({
+        publisher: 'Example',
+        date: '13 Jan 23',
+      })
     })
 
-    it('should keep a dash-carrying publisher whole when there is no timestamp', async () => {
+    it('should leave the date unset when the source has no suffix', async () => {
       const value = html`
         <aside class="onebox" data-onebox-src="https://example.com/page">
           <header class="source">
-            <a href="https://example.com/page">Foo – Bar Forum</a>
+            <a href="https://example.com/page">Example Forum</a>
           </header>
           <article class="onebox-body">
             <h3>Page title</h3>
@@ -101,7 +102,7 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
       `
       const result = await extract(value)
 
-      expect(result?.publisher).toBe('Foo – Bar Forum')
+      expect(result?.publisher).toBe('Example Forum')
       expect(result?.date).toBeUndefined()
     })
 
