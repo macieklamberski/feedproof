@@ -79,5 +79,9 @@ export const rebuildElementorVideoEmbeds: DomTransform = () => (document) => {
     } else {
       widget.appendChild(iframe)
     }
+
+    // The settings are consumed so a repeat run doesn't match the rebuilt widget and
+    // stack a second iframe next to the first.
+    widget.removeAttribute('data-settings')
   }
 }
