@@ -1,5 +1,12 @@
+import { isAnyOf } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { isUrlShaped, isUsableSrc } from '../../utils/urls.js'
+
+// Blank pages a platform points a deferred iframe's src at while the real URL sits in a
+// lazy attribute: a src matching one of these is a placeholder, not content.
+const placeholderPageRegexes = [
+  /\/applications\/core\/interface\/index\.html(?:[?#]|$)/, // Invision Community, paired with data-embed-src.
+]
 
 // Promote a lazy/consent-gated iframe src (the real embed URL parked in a data-*
 // attribute) into `src` when the src itself is empty or `about:blank`, so the
@@ -9,7 +16,9 @@ export const fixLazyIframes: DomTransform = (context) => {
 
   return (document) => {
     for (const iframe of document.querySelectorAll('iframe')) {
-      if (isUsableSrc(iframe.getAttribute('src'))) {
+      const src = iframe.getAttribute('src')
+
+      if (isUsableSrc(src) && !isAnyOf(src, placeholderPageRegexes)) {
         continue
       }
 
