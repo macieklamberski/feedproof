@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser } from '../tests.js'
-import { extractJwplayerId, jwplayerEmbedResolver, jwplayerResolveEmbed } from './jwplayer.js'
+import {
+  extractJwplayerId,
+  jwplayerIframeEmbedResolver,
+  jwplayerResolveEmbed,
+  jwplayerScriptEmbedResolver,
+} from './jwplayer.js'
 
 describe('extractJwplayerId', () => {
   it('should extract the media id from a player url', () => {
@@ -61,10 +66,11 @@ describe('jwplayerResolveEmbed', () => {
   })
 })
 
-describeForEachParser('jwplayerEmbedResolver', (parseHtml) => {
+describeForEachParser('jwplayerIframeEmbedResolver', (parseHtml) => {
   const resolve = (value: string) => {
-    const element = parseHtml(value).querySelector(jwplayerEmbedResolver.selector) ?? undefined
-    return element ? jwplayerEmbedResolver.extract(element) : undefined
+    const element =
+      parseHtml(value).querySelector(jwplayerIframeEmbedResolver.selector) ?? undefined
+    return element ? jwplayerIframeEmbedResolver.extract(element) : undefined
   }
 
   it('should resolve a jwplayer iframe', async () => {
@@ -80,5 +86,31 @@ describeForEachParser('jwplayerEmbedResolver', (parseHtml) => {
     const result = await resolve('<iframe src="https://example.com/video"></iframe>')
 
     expect(result).toBeUndefined()
+  })
+})
+
+describeForEachParser('jwplayerScriptEmbedResolver', (parseHtml) => {
+  const extract = (value: string) => {
+    const element = parseHtml(value).querySelector(jwplayerScriptEmbedResolver.selector)
+
+    return element ? jwplayerScriptEmbedResolver.extract(element) : undefined
+  }
+
+  it('should resolve the script embed to the default-player placeholder', () => {
+    const value =
+      '<script type="application/javascript" src="https://cdn.jwplayer.com/players/H4GXr873-abc12345.js"></script>'
+
+    expect(extract(value)).toMatchObject({
+      provider: 'jwplayer',
+      id: 'H4GXr873',
+      src: 'https://cdn.jwplayer.com/players/H4GXr873.html',
+    })
+  })
+
+  it('should return undefined for a foreign host carrying the player path', () => {
+    const value =
+      '<script src="https://evil.test/jwplayer.com/players/H4GXr873-abc12345.js"></script>'
+
+    expect(extract(value)).toBeUndefined()
   })
 })
