@@ -50,6 +50,7 @@ export const devtoPostCiteResolver: CiteResolver = {
       // the organization is the one wrapped in the `for <org>` span.
       author: text(element, 'a.crayons-story__secondary'),
       publisher: text(element, 'span > a.crayons-story__secondary'),
+      icon: attr(find(element, '.crayons-story__author-pic img'), 'src'),
     })
   },
 }
@@ -76,6 +77,7 @@ export const devtoLegacyPostCiteResolver: CiteResolver = {
       url: attr(content?.closest('a'), 'href'),
       title: text(content, 'h2'),
       author,
+      icon: attr(find(element, '.ltag__link__pic img'), 'src'),
     })
   },
 }
