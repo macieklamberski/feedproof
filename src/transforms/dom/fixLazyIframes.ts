@@ -1,3 +1,4 @@
+import { isAnyOf } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { isUrlShaped, isUsableSrc } from '../../utils/urls.js'
 
@@ -17,7 +18,7 @@ export const fixLazyIframes: DomTransform = (context) => {
     for (const iframe of document.querySelectorAll('iframe')) {
       const src = iframe.getAttribute('src')
 
-      if (isUsableSrc(src) && !placeholderPageRegexes.some((regex) => regex.test(src))) {
+      if (isUsableSrc(src) && !isAnyOf(src, placeholderPageRegexes)) {
         continue
       }
 
