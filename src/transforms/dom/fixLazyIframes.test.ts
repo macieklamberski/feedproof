@@ -1,6 +1,6 @@
 import { expect, it } from 'bun:test'
 import { defaultLazyIframeAttributes } from '../../defaults.js'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { fixLazyIframes } from './fixLazyIframes.js'
@@ -26,15 +26,34 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
     expect(result).toContain('src="https://www.youtube.com/embed/x"')
   })
 
-  it('should not promote a consent-gated attribute', async () => {
-    const value = '<iframe src="" data-cookieblock-src="https://example.com/embed/x"></iframe>'
+  // Real Cookie Banner parks the plain URL and an autoplay=1 variant on the same iframe; the
+  // list order makes the plain one win even when the click variant comes first in the markup.
+  it('should prefer the non-autoplay URL when both consent attributes are parked', async () => {
+    const value = html`
+      <iframe
+        consent-click-original-src-_="https://www.youtube.com/embed/x?feature=oembed&autoplay=1"
+        consent-original-src-_="https://www.youtube.com/embed/x?feature=oembed"
+        width="750"
+        height="422"
+        allowfullscreen
+      ></iframe>
+    `
+    const result = await transform(value)
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(result).toContain('src="https://www.youtube.com/embed/x?feature=oembed"')
   })
 
   it('should promote over the Invision interface placeholder src', async () => {
     const value =
       '<iframe src="https://forum.example.com/applications/core/interface/index.html" data-embed-src="https://www.youtube.com/embed/x?feature=oembed"></iframe>'
+    const result = await transform(value)
+
+    expect(result).toContain('src="https://www.youtube.com/embed/x?feature=oembed"')
+  })
+
+  it('should promote over the Complianz placeholder video src', async () => {
+    const value =
+      '<iframe src="https://site.example/wp-content/plugins/complianz-gdpr/assets/video/youtube-placeholder.mp4?cmplz=1" data-src-cmplz="https://www.youtube.com/embed/x?feature=oembed"></iframe>'
     const result = await transform(value)
 
     expect(result).toContain('src="https://www.youtube.com/embed/x?feature=oembed"')

@@ -69,38 +69,14 @@ const specimens: Record<string, string> = {
   '.tmblr-alt-text-helper': '<span class="tmblr-alt-text-helper">ALT</span>',
   'img[src*="steamcommunity.com"][src*="placeholder"]':
     '<img src="https://cdn.steamcommunity.com/news/placeholder_video.gif">',
-  '[src-consent]':
-    '<iframe src="about:blank" src-consent="https://www.youtube.com/embed/x"></iframe>',
-  '[consent-original-src]':
-    '<iframe src="about:blank" consent-original-src="https://www.youtube.com/embed/x"></iframe>',
-  '[consent-original-src-_]':
-    '<iframe src="about:blank" consent-original-src-_="https://www.youtube.com/embed/x"></iframe>',
-  '[consent-click-original-src-_]':
-    '<iframe src="about:blank" consent-click-original-src-_="https://www.youtube.com/embed/x"></iframe>',
-  '[data-ep-src]':
-    '<iframe src="about:blank" data-ep-src="https://www.youtube.com/embed/x"></iframe>',
-  '[data-cookieblock-src]':
-    '<iframe src="about:blank" data-cookieblock-src="https://www.youtube.com/embed/x"></iframe>',
-  '[data-src-cmplz]':
-    '<iframe src="about:blank" data-src-cmplz="https://www.youtube.com/embed/x"></iframe>',
-  '[data-wpconsent-src]':
-    '<iframe src="about:blank" data-wpconsent-src="https://www.youtube.com/embed/x"></iframe>',
+  'script[consent-original-src-_]':
+    '<script type="text/plain" consent-original-src-_="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>',
+  '.cookieconsent-optout-marketing':
+    '<div class="cookieconsent-optout-marketing"><a href="javascript:Cookiebot.renew()">Please accept marketing cookies to see this content.</a></div>',
+  '.pec-overlay':
+    '<div class="pec-overlay pec-active"><div class="pec-box"><p>This content is blocked. Accept cookies to watch it.</p></div></div>',
   '.fusion-privacy-placeholder':
     '<div class="fusion-privacy-placeholder" data-privacy-type="youtube"><div class="fusion-privacy-label">For privacy reasons YouTube needs your permission to be loaded.</div></div>',
-  'iframe[data-suppressedsrc]':
-    '<iframe src="about:blank" data-suppressedsrc="https://www.youtube.com/embed/x"></iframe>',
-  'iframe[data-uc-src]':
-    '<iframe src="about:blank" data-uc-src="https://www.youtube.com/embed/x"></iframe>',
-  'iframe[data-consent-src]':
-    '<iframe src="about:blank" data-consent-src="https://www.youtube.com/embed/x"></iframe>',
-  'iframe[data-gdpr-iframesrc]':
-    '<iframe src="about:blank" data-gdpr-iframesrc="https://www.youtube.com/embed/x"></iframe>',
-  'iframe[data-cookiefirst-category]':
-    '<iframe src="about:blank" data-cookiefirst-category="advertising" data-src="https://www.youtube.com/embed/x"></iframe>',
-  'iframe[data-cookiescript]':
-    '<iframe src="about:blank" data-cookiescript="accepted" data-src="https://www.youtube.com/embed/x"></iframe>',
-  'iframe[class*="optanon-category"]':
-    '<iframe src="about:blank" class="optanon-category-C0004" data-src="https://www.youtube.com/embed/x"></iframe>',
 }
 
 const specimenEntries = Object.entries(specimens)

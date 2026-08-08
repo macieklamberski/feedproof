@@ -6,6 +6,7 @@ import { isUrlShaped, isUsableSrc } from '../../utils/urls.js'
 // lazy attribute: a src matching one of these is a placeholder, not content.
 const placeholderPageRegexes = [
   /\/applications\/core\/interface\/index\.html(?:[?#]|$)/, // Invision Community, paired with data-embed-src.
+  /\/complianz-gdpr(?:-premium)?\/assets\/video\//, // Complianz placeholder video, paired with data-src-cmplz.
 ]
 
 // Promote a lazy/consent-gated iframe src (the real embed URL parked in a data-*

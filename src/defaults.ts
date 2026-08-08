@@ -414,9 +414,32 @@ export const defaultLazyIframeAttributes = [
   // click-to-load placeholder; stripping would just delete the video. The visible Avada notice
   // (.fusion-privacy-placeholder) is stripped separately in defaultNonContentSelectors.
   'data-privacy-src', // Avada privacy-embed facade — 19 feeds.
-  // Cookie-CONSENT gates (Cookiebot, Complianz, Borlabs, …) are NOT recovered — they're
-  // stripped as non-content (see the GDPR block in defaultNonContentSelectors). Only generic
-  // performance lazy-loaders and the privacy-video facade above live here.
+  // Cookie-consent gates (CMPs) sit on the same recover side of that line. Each plugin rewrites
+  // the author's embed iframe in place, dropping src and parking the real URL in its own
+  // attribute, and feed bodies carry no consent flow: the gated iframe is the whole embed, and
+  // every parked URL classified in the corpus is a player or viewer (YouTube, Bandcamp, Vimeo,
+  // SoundCloud, Spotify, PeerTube, Google docs/maps). The tracking iframes CMPs gate live in
+  // page chrome, which never reaches feed content. Real Cookie Banner parks the same URL plus
+  // autoplay=1 in consent-click-original-src-_ on the same iframe, so the non-autoplay
+  // attribute is listed first and wins. OneTrust, CookieFirst and Cookie Script park theirs in
+  // data-src, already listed above. Gated <script> tags and the notice elements a few plugins
+  // serialize next to the iframe stay stripped in defaultNonContentSelectors.
+  'consent-original-src', // Consent wrappers (generic form) — 0 feeds, kept beside the suffixed form.
+  'consent-original-src-_', // Real Cookie Banner — 186 feeds.
+  'consent-click-original-src-_', // Real Cookie Banner click-to-load variant — fallback only.
+  'src-consent', // Borlabs Cookie — 2 feeds.
+  'data-cookieblock-src', // Cookiebot — 34 feeds; the attribute is the only URL copy.
+  'data-src-cmplz', // Complianz — 13 feeds; src holds the plugin's placeholder video or about:blank.
+  'data-consent-src', // Cookie Information / Publii Embed Consent — 4 feeds.
+  'data-wpconsent-src', // WPConsent — 0 feeds.
+  'data-suppressedsrc', // iubenda — 0 feeds.
+  'data-uc-src', // Usercentrics — 0 feeds.
+  'data-gdpr-iframesrc', // Moove GDPR Cookie Compliance — 1 feed.
+  // EmbedPlus parks the deferred player's URL here; the plugin's facade shape is rebuilt by
+  // rebuildEmbedPlusEmbeds.
+  'data-ep-src', // EmbedPlus YouTube deferred player — 14 feeds.
+  // Below the 1/64 sample resolution; the count is from an older full-corpus walk.
+  'data-lazy-load', // JetElements / Woodmart / Elementor lazy video widgets — 82 feeds.
 ]
 
 export const defaultDeferredIframeSources: Array<DeferredIframeSource> = [
@@ -594,28 +617,15 @@ export const defaultNonContentSelectors = [
   '.tmblr-alt-text-helper', // Tumblr badge rendering a stray "ALT" beside an image that keeps its own alt attribute. 311 feeds (0.002%).
   'img[src*="steamcommunity.com"][src*="placeholder"]', // Steam news static poster gif shown before its JS swaps in the YouTube iframe.
 
-  // GDPR/consent- and privacy-gated embeds — the plugin parks the real iframe URL and shows a
-  // cookie notice; a reader has no consent flow, so strip the gated element rather than
-  // resurrect it. Matched by the attribute each plugin parks the real URL in. Kept even at low
-  // prevalence — a genuine consent gate is cheap config and these CMPs are widely installed.
-  '[src-consent]', // Borlabs Cookie — 2 feeds.
-  '[consent-original-src]', // Consent wrappers (generic form).
-  '[consent-original-src-_]', // Real Cookie Banner (rendered) — 186 feeds (both consent-original-src forms).
-  '[consent-click-original-src-_]', // Real Cookie Banner (click-to-load) — 82 feeds.
-  '[data-ep-src]', // Embed Privacy — 14 feeds.
-  '[data-cookieblock-src]', // Cookiebot — 34 feeds.
-  '[data-src-cmplz]', // Complianz — 13 feeds.
-  '[data-wpconsent-src]', // WPConsent — 0 feeds.
+  // GDPR/consent-gated embeds are recovered, not stripped: each CMP parks the author's embed
+  // URL on the iframe itself, so fixLazyIframes promotes it back into src (see the CMP block in
+  // defaultLazyIframeAttributes). What stays stripped here is the part that renders as chrome.
+  // Real Cookie Banner also gates <script> tags (adsbygoogle, Vimeo player.js). Script-scoped so
+  // the gated scripts still go while the gated iframes are recovered.
+  'script[consent-original-src-_]', // Real Cookie Banner gated scripts — 14 occurrences.
+  '.cookieconsent-optout-marketing', // Cookiebot "please accept marketing cookies" notice beside the gated iframe.
+  '.pec-overlay', // Publii Embed Consent click-to-accept overlay beside the gated iframe.
   // Avada's leftover "For privacy reasons … please accept" notice. The gated iframe itself is
   // recovered via data-privacy-src (a lazy attribute); only this consent nag is dead chrome.
   '.fusion-privacy-placeholder', // Avada privacy-embed notice — 19 feeds.
-  // Further CMPs. iframe-scoped: several of these attributes/classes also tag gated <script>
-  // tags or use broader markers, so a bare attribute selector would over-match.
-  'iframe[data-suppressedsrc]', // iubenda — 0 feeds.
-  'iframe[data-uc-src]', // Usercentrics — 0 feeds.
-  'iframe[data-consent-src]', // Cookie Information — 4 feeds.
-  'iframe[data-gdpr-iframesrc]', // Moove GDPR Cookie Compliance (300k+ installs) — 1 feed.
-  'iframe[data-cookiefirst-category]', // CookieFirst (real URL in data-src) — 0 feeds.
-  'iframe[data-cookiescript]', // Cookie Script (real URL in data-src) — 4 feeds.
-  'iframe[class*="optanon-category"]', // OneTrust / Optanon (real URL in data-src) — 71 feeds.
 ]
