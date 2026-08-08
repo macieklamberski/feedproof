@@ -138,6 +138,7 @@ export {
   youtubeResolveEmbed,
 } from './embeds/youtube.js'
 export { hljsHighlightFn } from './highlighters/hljs.js'
+export { discourseMediaResolver } from './media/discourse.js'
 export { ghostMediaResolver } from './media/ghost.js'
 export { substackMediaResolver } from './media/substack.js'
 export { wechatMediaResolver } from './media/wechat.js'
