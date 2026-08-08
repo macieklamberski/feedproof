@@ -70,6 +70,42 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
   })
 
   describe('edge cases', () => {
+    it('should split the date suffix off the source into date', async () => {
+      const value = html`
+        <aside class="onebox allowlistedgeneric" data-onebox-src="https://example.com/page">
+          <header class="source">
+            <img src="https://example.com/favicon.svg" class="site-icon" width="500" height="500">
+            <a href="https://example.com/page" target="_blank" rel="noopener" title="03:33PM - 13 January 2023">Example – 13 Jan 23</a>
+          </header>
+          <article class="onebox-body">
+            <h3>Page title</h3>
+          </article>
+        </aside>
+      `
+
+      expect(await extract(value)).toMatchObject({
+        publisher: 'Example',
+        date: '13 Jan 23',
+      })
+    })
+
+    it('should leave the date unset when the source has no suffix', async () => {
+      const value = html`
+        <aside class="onebox" data-onebox-src="https://example.com/page">
+          <header class="source">
+            <a href="https://example.com/page">Example Forum</a>
+          </header>
+          <article class="onebox-body">
+            <h3>Page title</h3>
+          </article>
+        </aside>
+      `
+      const result = await extract(value)
+
+      expect(result?.publisher).toBe('Example Forum')
+      expect(result?.date).toBeUndefined()
+    })
+
     it('should read the title from a level-four heading', async () => {
       const value = html`
         <aside class="onebox githubissue" data-onebox-src="https://example.com/owner/repo/issues/1">
