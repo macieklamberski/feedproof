@@ -62,13 +62,12 @@ export const discourseCiteResolver: CiteResolver = {
     // Old-generation oneboxes (the Stack Exchange shape among them) carry no
     // data-onebox-src; their canonical url is the source anchor's.
     const url = attr(element, 'data-onebox-src') ?? attr(source, 'href')
+    // Engines differ on the heading level they use for the title.
+    const title = text(body, 'h3, h4')
 
     if (url && (isHostOf(url, socialPostHosts) || mastodonStatusPathRegex.test(url))) {
       return
     }
-
-    // Engines differ on the heading level they use for the title.
-    const title = text(body, 'h3, h4')
 
     if (title && fediverseHandleRegex.test(title)) {
       return
@@ -98,8 +97,7 @@ export const discourseCiteResolver: CiteResolver = {
     return buildCite({
       provider: 'discourse',
       url,
-      // Engines differ on the heading level they use for the title.
-      title: text(body, 'h3, h4'),
+      title,
       description,
       author: text(element, '.github-info .user a') ?? text(dateAnchors[0]),
       publisher,
