@@ -269,6 +269,22 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    it('should skip a social post whose url only sits on the source anchor', async () => {
+      const value = html`
+        <aside class="onebox allowlistedgeneric">
+          <header class="source">
+            <a href="https://bsky.app/profile/user/post/1" target="_blank">bsky.app</a>
+          </header>
+          <article class="onebox-body">
+            <h3><a href="https://bsky.app/profile/user/post/1">Author name (@handle)</a></h3>
+            <p>Post text</p>
+          </article>
+        </aside>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     // A social post is not a link preview, so its onebox must not turn into a cite.
     it('should not match the social-post onebox', async () => {
       const value = html`
