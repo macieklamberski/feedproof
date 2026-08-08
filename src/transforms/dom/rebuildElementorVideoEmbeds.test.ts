@@ -138,4 +138,21 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
     expect(result).toContain('data-embed-provider="youtube"')
     expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
   })
+
+  it('should be idempotent', async () => {
+    const value = html`
+      <div
+        class="elementor-widget elementor-widget-video"
+        data-settings='{"youtube_url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ","video_type":"youtube"}'
+      >
+        <div class="elementor-widget-container">
+          <div class="elementor-video"></div>
+        </div>
+      </div>
+    `
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
+  })
 })
