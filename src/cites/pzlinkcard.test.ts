@@ -32,6 +32,9 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
             <div class="lkc-content">
               <figure class="lkc-thumbnail"><img class="lkc-thumbnail-img" src="https://cdn.example.com/thumb.jpg" alt="" /></figure>
               <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
+              <div class="lkc-date">
+                <img src="https://s.w.org/images/core/emoji/17.0.2/72x72/1f552.png" alt="🕒" class="wp-smiley" style="height: 1em; max-height: 1em;" />2023年6月8日
+              </div>
               <div class="lkc-excerpt">Preview text</div>
             </div>
           </div>
@@ -43,6 +46,7 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
         title: 'Page title',
         description: 'Preview text',
         publisher: 'example.com',
+        date: '2023年6月8日',
         icon: 'https://www.google.com/s2/favicons?domain=example.com',
         thumbnail: 'https://cdn.example.com/thumb.jpg',
       }

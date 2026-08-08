@@ -27,6 +27,9 @@ export const pzlinkcardCiteResolver: CiteResolver = {
       title: text(element, '.lkc-title-text') ?? text(element, '.lkc-title'),
       description: text(element, '.lkc-excerpt'),
       publisher: text(element, '.lkc-domain'),
+      // A full site-formatted date (e.g. "2023年6月8日"). The clock emoji beside it is an
+      // `<img>` in feeds, so the text comes out clean.
+      date: text(element, '.lkc-date'),
       icon: attr(favicon, 'src'),
       thumbnail: attr(find(element, '.lkc-thumbnail-img'), 'src'),
     })
