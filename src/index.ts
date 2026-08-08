@@ -48,6 +48,7 @@ export const transformContent = async (
     isSafeUrlFn: options.isSafeUrlFn,
     enrichEmbedFn: options.enrichEmbedFn,
     enrichCiteFn: options.enrichCiteFn,
+    parseDateFn: options.parseDateFn,
     highlightFn: options.highlightFn ?? defaultHighlightFn,
     articleTitle: options.articleTitle,
   }
@@ -222,6 +223,7 @@ export type {
   IsSafeUrlFn,
   MediaResolver,
   MediaResolverResult,
+  ParseDateFn,
   ParseHtmlFn,
   ResolveUrlFn,
   StringTransform,

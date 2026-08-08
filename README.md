@@ -124,6 +124,9 @@ const result = transformContent(html, {
   enrichEmbedFn: async (embeds) => {
     return new Map(embeds.map(({ provider, id }) => [`${provider}:${id}`, { title: '…' }]))
   },
+  // Normalize a cite card's site-formatted display date (e.g. "2018.10.14"); return
+  // undefined to keep the raw string verbatim.
+  parseDateFn: (raw) => parseDate(raw),
   // Swap the code highlighter (defaults to highlight.js; may be async).
   highlightFn: (text, language) => myHighlighter.highlight(text, language),
   // Widget resolvers: embed results become placeholders, media results become real
@@ -139,7 +142,7 @@ const result = transformContent(html, {
 })
 ```
 
-All caller-provided functions (`parseHtmlFn`, `resolveUrlFn`, `cleanUrlFn`, `assetProxyFn`, `isSafeUrlFn`, `enrichEmbedFn`, `highlightFn`, and resolver extracts) must not throw — an exception is not caught and rejects the `transformContent` promise.
+All caller-provided functions (`parseHtmlFn`, `resolveUrlFn`, `cleanUrlFn`, `assetProxyFn`, `isSafeUrlFn`, `enrichEmbedFn`, `parseDateFn`, `highlightFn`, and resolver extracts) must not throw — an exception is not caught and rejects the `transformContent` promise.
 
 Code blocks are highlighted only when they declare a language (`language-*` class, `data-language`, Pandoc/Rouge/Expressive Code/etc.); unlabeled blocks are left plain rather than guessed at. The default highlighter is highlight.js (exported as `defaultHighlightFn` / `hljsHighlightFn`); replace it with `highlightFn`.
 
