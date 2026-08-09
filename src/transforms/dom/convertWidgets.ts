@@ -1,9 +1,8 @@
 import type { DomTransform, MediaResolverResult } from '../../types.js'
 import {
   getElementDimensions,
-  getWrapperAspectRatio,
+  getWrapperRatioDimensions,
   playableElements,
-  ratioDimensions,
 } from '../../utils/dom.js'
 import { audioFileRegex, resolveOrKeepUrl, videoFileRegex } from '../../utils/urls.js'
 import { createEmbedPlaceholder, isMediaResult } from '../../utils/widgets.js'
@@ -16,11 +15,7 @@ const getEmbedDimensions = (element: Element): { width?: number; height?: number
   const dimensions = getElementDimensions(element)
 
   if (dimensions.width === undefined && dimensions.height === undefined) {
-    const ratio = getWrapperAspectRatio(element)
-
-    if (ratio !== undefined) {
-      return ratioDimensions(ratio)
-    }
+    return getWrapperRatioDimensions(element) ?? dimensions
   }
 
   return dimensions
