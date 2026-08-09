@@ -25,6 +25,7 @@ const composeEmbed = (podcastId: string, episodeId: string): EmbedResolverResult
     id: `${podcastId}/${episodeId}`,
     src: `https://www.buzzsprout.com/${podcastId}/${episodeId}?iframe=true`,
     url: `https://www.buzzsprout.com/${podcastId}/${episodeId}`,
+    height: 200,
   }
 }
 
