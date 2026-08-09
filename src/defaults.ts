@@ -36,6 +36,7 @@ import { jwplayerIframeEmbedResolver, jwplayerScriptEmbedResolver } from './embe
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 import { speakerdeckEmbedResolver } from './embeds/speakerdeck.js'
+import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
@@ -326,6 +327,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   speakerdeckEmbedResolver,
   flourishEmbedResolver,
   appleEmbedResolver,
+  spotifyEmbedResolver,
   substackMediaResolver,
   wechatMediaResolver,
   weeblyMediaResolver,
