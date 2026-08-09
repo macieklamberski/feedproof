@@ -30,6 +30,7 @@ import {
   buzzsproutScriptEmbedResolver,
 } from './embeds/buzzsprout.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
+import { flourishEmbedResolver } from './embeds/flourish.js'
 import { jwplayerIframeEmbedResolver, jwplayerScriptEmbedResolver } from './embeds/jwplayer.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
@@ -322,6 +323,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   mediavineEmbedResolver,
   soundcloudEmbedResolver,
   speakerdeckEmbedResolver,
+  flourishEmbedResolver,
   substackMediaResolver,
   wechatMediaResolver,
   weeblyMediaResolver,
