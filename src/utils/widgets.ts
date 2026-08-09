@@ -4,9 +4,21 @@ import type {
   EmbedResolver,
   EmbedResolverResult,
   MediaResolverResult,
+  ParseDateFn,
   WidgetResolverResult,
 } from '../types.js'
 import type { GeneratedWrapperType } from './dom.js'
+
+// A card's date is whatever string the site chose to display, so the caller gets one chance
+// to normalize it and anything the parser rejects is kept verbatim rather than dropped.
+// Mirrors resolveOrKeepUrl's contract for URLs: every path that writes a date uses this, so
+// resolver output and enrichment payloads are treated identically.
+export const parseOrKeepDate = (
+  date: string | undefined,
+  parseDateFn: ParseDateFn | undefined,
+): string | undefined => {
+  return date ? (parseDateFn?.(date) ?? date) : undefined
+}
 
 // Every video provider matches the same iframe and differs only in which hosts it claims
 // and how it reads an id out of the src, so the match itself lives here.
@@ -41,7 +53,7 @@ export const isMediaResult = (result: WidgetResolverResult): result is MediaReso
 }
 
 export const updatePlaceholder = <Type extends object>(
-  element: HTMLElement,
+  element: Element,
   type: GeneratedWrapperType,
   fields: Type,
 ): void => {
@@ -86,12 +98,14 @@ export const normalizeEmbedFields = (
     description: metadata.description,
     author: metadata.author,
     avatar: metadata.avatar,
+    publisher: metadata.publisher,
+    date: metadata.date,
     duration: metadata.duration ? String(metadata.duration) : undefined,
   }
 }
 
 export const updateEmbedPlaceholder = (
-  element: HTMLElement,
+  element: Element,
   metadata: Partial<EmbedResolverResult>,
 ): void => {
   updatePlaceholder(element, 'embed', normalizeEmbedFields(metadata))
@@ -137,7 +151,7 @@ export const normalizeCiteFields = (
 }
 
 export const updateCitePlaceholder = (
-  element: HTMLElement,
+  element: Element,
   result: Partial<CiteResolverResult>,
 ): void => {
   updatePlaceholder(element, 'cite', normalizeCiteFields(result))

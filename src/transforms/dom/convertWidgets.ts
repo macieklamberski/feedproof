@@ -5,7 +5,7 @@ import {
   playableElements,
 } from '../../utils/dom.js'
 import { audioFileRegex, resolveOrKeepUrl, videoFileRegex } from '../../utils/urls.js'
-import { createEmbedPlaceholder, isMediaResult } from '../../utils/widgets.js'
+import { createEmbedPlaceholder, isMediaResult, parseOrKeepDate } from '../../utils/widgets.js'
 
 const playableSelector = [...playableElements].join(', ')
 
@@ -85,7 +85,8 @@ const findParkedMedia = (
 // enclosures like any other. The generic tiers below apply the same split to embeds no
 // resolver claims: a src that names a media file plays directly instead of being framed.
 export const convertWidgets: DomTransform = (context) => {
-  const { widgetResolvers, mediaSrcAttributes, resolveUrlFn, cleanUrlFn, baseUrl } = context
+  const { widgetResolvers, mediaSrcAttributes, resolveUrlFn, cleanUrlFn, parseDateFn, baseUrl } =
+    context
 
   return async (document) => {
     // A static snapshot: the fallback loop below replaces iframes, and a live
@@ -174,6 +175,7 @@ export const convertWidgets: DomTransform = (context) => {
           avatar: resolveOrKeepUrl(metadata.avatar, resolveUrlFn, baseUrl),
           width: width ?? metadata.width,
           height: height ?? metadata.height,
+          date: parseOrKeepDate(metadata.date, parseDateFn),
         }
 
         element.replaceWith(createEmbedPlaceholder(document, placeholderMetadata))

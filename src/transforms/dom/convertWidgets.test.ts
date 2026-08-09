@@ -638,4 +638,42 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       expect(result).not.toContain('<video')
     })
   })
+
+  describe('post fields', () => {
+    const postResolver: EmbedResolver = {
+      selector: 'iframe[src*="post.example"]',
+      extract: () => ({
+        provider: 'example',
+        src: 'https://post.example/embed/1',
+        publisher: 'r/example',
+        date: '2018.10.14',
+      }),
+    }
+    const withPostResolver: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [postResolver],
+    }
+    const value = '<iframe src="https://post.example/embed/1"></iframe>'
+
+    it('should write publisher and date as placeholder attributes', async () => {
+      const result = await transform(value, withPostResolver)
+
+      expect(result).toContain('data-embed-publisher="r/example"')
+      expect(result).toContain('data-embed-date="2018.10.14"')
+    })
+
+    it('should normalize the date through parseDateFn', async () => {
+      const parseDateFn = (raw: string) => raw.replaceAll('.', '-')
+      const result = await transform(value, { ...withPostResolver, parseDateFn })
+
+      expect(result).toContain('data-embed-date="2018-10-14"')
+    })
+
+    it('should keep the raw date when parseDateFn returns undefined', async () => {
+      const parseDateFn = () => undefined
+      const result = await transform(value, { ...withPostResolver, parseDateFn })
+
+      expect(result).toContain('data-embed-date="2018.10.14"')
+    })
+  })
 })
