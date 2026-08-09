@@ -6,7 +6,7 @@
 
 Tidy up the HTML content in web feeds. Fix feed-specific quirks so content displays in its best possible form.
 
-Feedsweep takes raw feed item HTML and runs it through a pipeline that genuinely improves the output: fixing lazy-loaded images so they actually render, resolving relative URLs to absolute, stripping tracking pixels for privacy (plus tracking params and redirect wrappers via the cleanUrlFn option), highlighting code blocks, normalizing broken markup from common feed quirks, auto-linking bare URLs, and converting embeds into framework-agnostic placeholders. It ships with sensible defaults and built-in support for YouTube, Vimeo, Dailymotion, JW Player, Buzzsprout, Brightcove, Mediavine, SoundCloud, and Speakerdeck.
+Feedsweep takes raw feed item HTML and runs it through a pipeline that genuinely improves the output: fixing lazy-loaded images so they actually render, resolving relative URLs to absolute, stripping tracking pixels for privacy (plus tracking params and redirect wrappers via the cleanUrlFn option), highlighting code blocks, normalizing broken markup from common feed quirks, auto-linking bare URLs, and converting embeds into framework-agnostic placeholders. It ships with sensible defaults, so the common video, audio and chart providers (YouTube, Vimeo, SoundCloud and more) are recognized without any configuration.
 
 ## Installation
 
@@ -62,7 +62,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `wrapBareInlineInParagraphs` | Wrap loose inline content in `<p>` blocks |
 | `hoistBlocksFromParagraphs` | Hoist block elements out of enclosing paragraphs, keeping only halves that still render |
 | `wrapCargoGalleryImages` | Wrap Cargo portfolio captions and images in `<figure>` blocks so they stay apart |
-| `injectEnclosures` | Inject feed enclosures as native media or embed placeholders, merging a player page entry with its media file |
+| `injectEnclosures` | Inject feed enclosures as native media or embed placeholders, merging a player page entry with its media file; an image enclosure injects only when the content has no image of its own |
 | `surfaceTemplateEmbeds` | Hoist a video embed out of a lazy-load `<template>` (e.g. Better Core Video Embeds) so it renders in a reader |
 | `surfaceNoscriptEmbeds` | Hoist a video `<iframe>` out of a `<noscript>` lazy-load fallback (e.g. WP Rocket, a3 Lazy Load); ignores non-video noscript iframes like Google Tag Manager |
 | `rebuildEmbedPlusEmbeds` | Rebuild a real `<iframe>` from an "Embed Plus for YouTube" facade (`.epyt-facade[data-facadesrc]`) |
@@ -132,10 +132,7 @@ const result = transformContent(html, {
   baseUrl: 'https://example.com/post/1',
   // Rewrite anchor hrefs: unwrap redirects and strip tracking params.
   cleanUrlFn: cleanUrl,
-  // Feed item enclosures (audio/video/image), injected into the content. Image
-  // enclosures inject only when the content has no image of its own. Enable
-  // `heuristics` to also drop an audio/video/embed enclosure that duplicates
-  // inline content.
+  // Feed item enclosures (audio/video/image), injected into the content.
   enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
   // Route image/video/audio URLs through a proxy. Return `undefined` to leave a URL untouched.
   assetProxyFn: (url, type) => `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`,
@@ -151,13 +148,11 @@ const result = transformContent(html, {
   // Swap the code highlighter (defaults to highlight.js; may be async).
   highlightFn: (text, language) => myHighlighter.highlight(text, language),
   // Widget resolvers: embed results become placeholders, media results become real
-  // <video>/<audio> elements (defaults: YouTube, Vimeo, Dailymotion, JW Player, Buzzsprout,
-  // Brightcove, Mediavine, SoundCloud and Speakerdeck embeds, plus the media resolvers for Substack,
-  // WeChat, Weebly and Ghost uploads).
+  // <video>/<audio> elements.
   widgetResolvers: [youtubeEmbedResolver, myEmbedResolver],
   // Resolvers turning link-preview cards into `data-cite-*` placeholders.
   citeResolvers: [ghostCiteResolver, myCiteResolver],
-  // Opt into the heuristic transforms (enclosure-duplicate, leading-image-duplicate and video-poster stripping). Ignored if domTransforms is set.
+  // Opt into the heuristic transforms. Ignored if a custom domTransforms is set.
   heuristics: true,
   // Run a custom DOM transform pipeline (omit to use defaults).
   domTransforms: [fixLazyImages, resolveRelativeUrls],
