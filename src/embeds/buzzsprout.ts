@@ -25,9 +25,6 @@ const composeEmbed = (podcastId: string, episodeId: string): EmbedResolverResult
     id: `${podcastId}/${episodeId}`,
     src: `https://www.buzzsprout.com/${podcastId}/${episodeId}?iframe=true`,
     url: `https://www.buzzsprout.com/${podcastId}/${episodeId}`,
-    // The script builds a fluid-width iframe 200px tall, for the small and the large player
-    // alike. The shortcode's own markup carries no size, so without this the player is drawn
-    // as a video-shaped box.
     height: 200,
   }
 }
