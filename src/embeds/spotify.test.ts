@@ -47,6 +47,16 @@ describe('spotifyResolveEmbed', () => {
       })
     })
 
+    it('should resolve the legacy uri form', () => {
+      const value = 'https://embed.spotify.com/?uri=spotify:track:4cOdK2wGLETKBW3PvgPWqT'
+
+      expect(spotifyResolveEmbed(value)).toMatchObject({
+        id: 'track/4cOdK2wGLETKBW3PvgPWqT',
+        src: 'https://open.spotify.com/embed/track/4cOdK2wGLETKBW3PvgPWqT',
+        height: 152,
+      })
+    })
+
     it('should ignore what follows the id', () => {
       const value = 'https://open.spotify.com/embed/show/4rOoJ6Egrf8K2IrywzwOMk/video'
 
@@ -65,6 +75,10 @@ describe('spotifyResolveEmbed', () => {
 
     it('should return undefined for an id that is not 22 characters', () => {
       expect(spotifyResolveEmbed('https://open.spotify.com/embed/track/abc')).toBeUndefined()
+    })
+
+    it('should return undefined for a legacy uri that names no id', () => {
+      expect(spotifyResolveEmbed('https://embed.spotify.com/?uri=spotify:track')).toBeUndefined()
     })
 
     it('should return undefined for a lookalike host', () => {
