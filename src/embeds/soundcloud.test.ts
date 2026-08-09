@@ -37,6 +37,7 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
         author: 'Anjunadeep',
         title: 'The Anjunadeep Edition 586',
         url: 'https://soundcloud.com/anjunadeep/the-anjunadeep-edition-586',
+        height: 166,
       })
     })
 
@@ -66,16 +67,33 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
   })
 
   describe('edge cases', () => {
-    it('should yield only the src and id for a bare iframe', () => {
+    it('should yield only the src, id and height for a bare iframe', () => {
       const value =
         '<iframe src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/44018/"></iframe>'
       const expected: EmbedResolverResult = {
         provider: 'soundcloud',
         id: 'playlists/44018',
         src: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/44018/',
+        height: 450,
       }
 
       expect(extract(value)).toEqual(expected)
+    })
+
+    it('should give the visual player its own height whatever it holds', () => {
+      const value =
+        '<iframe src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/292279199&visual=true"></iframe>'
+
+      expect(extract(value)).toMatchObject({
+        height: 450,
+      })
+    })
+
+    it('should leave the height out when the player names nothing it can size', () => {
+      const value =
+        '<iframe src="https://w.soundcloud.com/player/?url=https%3A//example.com/x"></iframe>'
+
+      expect(extract(value)?.height).toBeUndefined()
     })
 
     it('should leave a sibling that is not the share snippet alone', async () => {
