@@ -14,6 +14,7 @@ describe('buzzsproutResolveEmbed', () => {
       id: '1735722/8166676',
       src: 'https://www.buzzsprout.com/1735722/8166676?iframe=true',
       url: 'https://www.buzzsprout.com/1735722/8166676',
+      height: 200,
     }
 
     expect(
@@ -52,6 +53,7 @@ describeForEachParser('buzzsproutScriptEmbedResolver', (parseHtml) => {
         id: '231452/19565923',
         src: 'https://www.buzzsprout.com/231452/19565923?iframe=true',
         url: 'https://www.buzzsprout.com/231452/19565923',
+        height: 200,
       }
 
       expect(extract(value)).toEqual(expected)
