@@ -21,6 +21,10 @@ const safeIdRegex = /^[a-zA-Z0-9]{22}$/
 // `embed` opens a player path, `embed-podcast` its older podcast-only twin, `intl-{lang}` a
 // localized page path. Whatever follows the id (`/video` on a video podcast) is decorative.
 const pathPrefixRegex = /^(?:embed|embed-podcast|intl-[a-z]{2})$/
+// The pre-2017 snippet framed `embed.spotify.com/?uri=spotify:{type}:{id}`, naming the track
+// in a query parameter instead of the path. That host still serves a player, so these resolve
+// to the modern URL rather than falling through to the generic iframe path.
+const legacyUriRegex = /^spotify:([a-z]+):([a-zA-Z0-9]+)$/
 
 const spotifyHost = 'spotify.com'
 
@@ -32,7 +36,10 @@ export const spotifyResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 
   const segments = getPathSegments(parsed)
-  const [type, id] = pathPrefixRegex.test(segments[0] ?? '') ? segments.slice(1) : segments
+  const [pathType, pathId] = pathPrefixRegex.test(segments[0] ?? '') ? segments.slice(1) : segments
+  const legacy = parsed.searchParams.get('uri')?.match(legacyUriRegex)
+  const type = pathType ?? legacy?.[1]
+  const id = pathId ?? legacy?.[2]
 
   if (!type || !id || !(type in spotifyHeights) || !safeIdRegex.test(id)) {
     return
