@@ -51,7 +51,7 @@ describeForEachParser('speakerdeckEmbedResolver', (parseHtml) => {
   })
 
   describe('edge cases', () => {
-    it('should omit the dimensions for a malformed ratio', () => {
+    it('should fall back to the default ratio for a malformed one', () => {
       const value = html`
         <script
           class="speakerdeck-embed"
@@ -64,12 +64,14 @@ describeForEachParser('speakerdeckEmbedResolver', (parseHtml) => {
         provider: 'speakerdeck',
         id: '198d4fae73df442e89b76766b54e4773',
         src: 'https://speakerdeck.com/player/198d4fae73df442e89b76766b54e4773',
+        width: 100,
+        height: 56,
       }
 
       expect(extract(value)).toEqual(expected)
     })
 
-    it('should omit the dimensions for a zero ratio', () => {
+    it('should fall back to the default ratio for a zero one', () => {
       const value = html`
         <script
           class="speakerdeck-embed"
@@ -80,7 +82,23 @@ describeForEachParser('speakerdeckEmbedResolver', (parseHtml) => {
       `
 
       expect(extract(value)).toMatchObject({
-        src: 'https://speakerdeck.com/player/198d4fae73df442e89b76766b54e4773',
+        width: 100,
+        height: 56,
+      })
+    })
+
+    it('should give the default ratio to a script carrying none', () => {
+      const value = html`
+        <script
+          class="speakerdeck-embed"
+          data-id="198d4fae73df442e89b76766b54e4773"
+          src="//speakerdeck.com/assets/embed.js"
+        ></script>
+      `
+
+      expect(extract(value)).toMatchObject({
+        width: 100,
+        height: 56,
       })
     })
   })
