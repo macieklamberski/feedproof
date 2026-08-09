@@ -107,6 +107,7 @@ export {
   defaultStandardDomTransforms,
   heuristicDomTransforms,
 } from './defaults.js'
+export { appleEmbedResolver, appleResolveEmbed } from './embeds/apple.js'
 export { brightcoveEmbedResolver } from './embeds/brightcove.js'
 export {
   buzzsproutIframeEmbedResolver,
