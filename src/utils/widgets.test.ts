@@ -266,6 +266,8 @@ describe('normalizeEmbedFields', () => {
         description: 'd',
         author: 'a',
         avatar: 'https://cdn.example/a.jpg',
+        publisher: 'r/example',
+        date: '2026-08-09',
         duration: 3,
       })
 
@@ -281,6 +283,8 @@ describe('normalizeEmbedFields', () => {
         'description',
         'author',
         'avatar',
+        'publisher',
+        'date',
         'duration',
       ])
     })

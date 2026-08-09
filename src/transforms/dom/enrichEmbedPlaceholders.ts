@@ -1,8 +1,8 @@
 import type { DomTransform } from '../../types.js'
-import { updateEmbedPlaceholder } from '../../utils/widgets.js'
+import { parseOrKeepDate, updateEmbedPlaceholder } from '../../utils/widgets.js'
 
 export const enrichEmbedPlaceholders: DomTransform = (context) => {
-  const enrichEmbedFn = context.enrichEmbedFn
+  const { enrichEmbedFn, parseDateFn } = context
 
   if (!enrichEmbedFn) {
     return () => {}
@@ -33,7 +33,10 @@ export const enrichEmbedPlaceholders: DomTransform = (context) => {
       const data = enriched.get(`${embed.provider}:${embed.id}`)
 
       if (data) {
-        updateEmbedPlaceholder(placeholders[i] as HTMLElement, data)
+        updateEmbedPlaceholder(placeholders[i], {
+          ...data,
+          date: parseOrKeepDate(data.date, parseDateFn),
+        })
       }
     }
   }

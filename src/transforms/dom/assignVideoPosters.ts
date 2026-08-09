@@ -92,7 +92,7 @@ const moveImageToVideoPoster = (image: Element, video: Element, overwrite = fals
       if (overwrite) {
         video.removeAttribute('data-embed-thumbnail')
       }
-      updateEmbedPlaceholder(video as HTMLElement, { thumbnail: url })
+      updateEmbedPlaceholder(video, { thumbnail: url })
     }
   }
 

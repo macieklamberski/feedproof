@@ -36,6 +36,8 @@ export type EmbedResolverResult = {
   description?: string
   author?: string
   avatar?: string
+  publisher?: string
+  date?: string
   duration?: number
 }
 

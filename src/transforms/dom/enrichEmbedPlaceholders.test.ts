@@ -62,6 +62,8 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
         title: 'Sample Title',
         description: 'Sample description',
         author: 'channel name',
+        publisher: 'r/example',
+        date: '2026-08-09',
         duration: 125,
       }
       return new Map([['youtube:abc', data]])
@@ -71,7 +73,33 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     expect(result).toContain('data-embed-title="Sample Title"')
     expect(result).toContain('data-embed-description="Sample description"')
     expect(result).toContain('data-embed-author="channel name"')
+    expect(result).toContain('data-embed-publisher="r/example"')
+    expect(result).toContain('data-embed-date="2026-08-09"')
     expect(result).toContain('data-embed-duration="125"')
+  })
+
+  it('should write the enriched date normalized through parseDateFn', async () => {
+    const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
+    const fn: EnrichEmbedFn = () => {
+      return new Map([['youtube:abc', { date: '2018.10.14' }]])
+    }
+    const parseDateFn = (raw: string) => {
+      return raw.replaceAll('.', '-')
+    }
+    const result = await transform(value, { ...withFn(fn), parseDateFn })
+
+    expect(result).toContain('data-embed-date="2018-10-14"')
+  })
+
+  it('should keep the raw enriched date when parseDateFn returns undefined', async () => {
+    const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
+    const fn: EnrichEmbedFn = () => {
+      return new Map([['youtube:abc', { date: 'Jul 14' }]])
+    }
+    const parseDateFn = () => undefined
+    const result = await transform(value, { ...withFn(fn), parseDateFn })
+
+    expect(result).toContain('data-embed-date="Jul 14"')
   })
 
   it('should not overwrite existing data-embed-* attributes', async () => {
