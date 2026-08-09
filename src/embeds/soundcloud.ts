@@ -12,6 +12,17 @@ import { attr, text } from '../utils/dom.js'
 // iframe itself ("Track by Artist").
 const referenceRegex = /api\.soundcloud\.com\/(tracks|playlists|users)\/(\d+)/
 
+// The player is fluid-width and fixed-height. The classic one is a bar for a single track and
+// a scrolling list for anything holding several, and `visual=true` swaps both for one big
+// artwork box. These are the heights SoundCloud's own embed config carries per player, and
+// they are a fallback for the iframes that ship no size: a height in the markup wins.
+const visualPlayerHeight = 450
+const classicPlayerHeights: Record<string, number | undefined> = {
+  tracks: 166,
+  playlists: 450,
+  users: 450,
+}
+
 export const soundcloudEmbedResolver: EmbedResolver = {
   selector: 'iframe[src*="w.soundcloud.com/player"]',
   extract: (element): EmbedResolverResult | undefined => {
@@ -30,6 +41,16 @@ export const soundcloudEmbedResolver: EmbedResolver = {
 
     if (reference) {
       result.id = `${reference[1]}/${reference[2]}`
+    }
+
+    // The visual player is one height whatever it holds, so it needs no reference to size it.
+    const height =
+      parsed.searchParams.get('visual') === 'true'
+        ? visualPlayerHeight
+        : classicPlayerHeights[reference?.[1] ?? '']
+
+    if (height) {
+      result.height = height
     }
 
     const title = attr(element, 'title')
