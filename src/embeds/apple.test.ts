@@ -19,12 +19,40 @@ describe('appleResolveEmbed', () => {
       ).toEqual(expected)
     })
 
-    it('should take the track inside an album as the id', () => {
+    it('should take the track inside an album as the id and shorten the player', () => {
       const value = 'https://embed.music.apple.com/us/album/thriller/1440857781?i=1440857785'
 
       expect(appleResolveEmbed(value)).toMatchObject({
         id: 'album/1440857785',
         src: 'https://embed.music.apple.com/us/album/thriller/1440857781?i=1440857785',
+        height: 175,
+      })
+    })
+
+    it('should give a standalone song the shorter player', () => {
+      const value = 'https://embed.music.apple.com/us/song/beat-it/1440857797'
+
+      expect(appleResolveEmbed(value)).toMatchObject({
+        id: 'song/1440857797',
+        height: 175,
+      })
+    })
+
+    it('should leave a music video without a height', () => {
+      const value = 'https://embed.music.apple.com/us/music-video/beat-it/454551983'
+
+      expect(appleResolveEmbed(value)).toMatchObject({
+        id: 'music-video/454551983',
+      })
+      expect(appleResolveEmbed(value)?.height).toBeUndefined()
+    })
+
+    it('should resolve an artist', () => {
+      const value = 'https://embed.music.apple.com/us/artist/michael-jackson/32940'
+
+      expect(appleResolveEmbed(value)).toMatchObject({
+        id: 'artist/32940',
+        height: 450,
       })
     })
 
@@ -45,6 +73,7 @@ describe('appleResolveEmbed', () => {
         provider: 'applepodcasts',
         id: 'podcast/1000123456789',
         url: 'https://podcasts.apple.com/us/podcast/the-daily/id1200361736?i=1000123456789',
+        height: 175,
       })
     })
 
@@ -53,6 +82,7 @@ describe('appleResolveEmbed', () => {
 
       expect(appleResolveEmbed(value)).toMatchObject({
         id: 'podcast/1200361736',
+        height: 450,
       })
     })
 
