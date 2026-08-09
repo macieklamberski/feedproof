@@ -15,33 +15,20 @@ const storefrontRegex = /^[a-z]{2}$/
 const safeIdRegex = /^(?:id\d+|\d+|[a-z]{2}\.[a-z0-9-]+)$/i
 const podcastIdPrefixRegex = /^id/
 
-const appleKinds = new Set([
-  'album',
-  'artist',
-  'music-video',
-  'playlist',
-  'podcast',
-  'song',
-  'station',
-])
-
 // The player is fluid-width and fixed-height, and one item gets a much shorter box than a
-// collection. Both heights are what the players render at, measured across widths. Apple's
-// own embed code declares 150 for the single item, which cuts 25px off the player it opens.
-const singleItemHeight = 175
-const collectionHeight = 450
-
-const getEmbedHeight = (kind: string, trackId: string | null): number | undefined => {
-  // A music video keeps a 16:9 picture, so it is the one kind with no fixed height.
-  if (kind === 'music-video') {
-    return
-  }
-
-  if (kind === 'song' || trackId) {
-    return singleItemHeight
-  }
-
-  return collectionHeight
+// collection. These are the heights the players render at, measured across widths; a music
+// video is the one kind that keeps a 16:9 picture instead, so it has none. Apple's own embed
+// code declares 150 for a song, which cuts 25px off the player it opens. They are a fallback
+// for the shapes that ship no size at all: a height the markup declares is the publisher's
+// choice and wins over these. The map doubles as the set of kinds that embed.
+const appleHeights: Record<string, number | undefined> = {
+  album: 450,
+  artist: 450,
+  playlist: 450,
+  podcast: 450,
+  station: 450,
+  song: 175,
+  'music-video': undefined,
 }
 
 export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined => {
@@ -55,15 +42,15 @@ export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined 
   const [kind, ...rest] = storefrontRegex.test(segments[0] ?? '') ? segments.slice(1) : segments
   const pathId = rest[rest.length - 1]
 
-  if (!kind || !pathId || !appleKinds.has(kind) || !safeIdRegex.test(pathId)) {
+  if (!kind || !pathId || !(kind in appleHeights) || !safeIdRegex.test(pathId)) {
     return
   }
 
   const isPodcast = isHostOf(parsed, applePodcastsHost) || isSubdomainOf(parsed, applePodcastsHost)
   const host = isPodcast ? applePodcastsHost : 'music.apple.com'
   // `i` names the track inside an album or the episode inside a show, so where it is present
-  // it is the thing being embedded, and it also picks the shorter player. Either way the id
-  // is the numeric one a lookup takes.
+  // it is the thing being embedded, and the player is the song one whatever the path says.
+  // Either way the id is the numeric one a lookup takes.
   const trackId = parsed.searchParams.get('i')
   const id = trackId ?? pathId.replace(podcastIdPrefixRegex, '')
   const query = pickUrlParams(url, ['i'])
@@ -73,7 +60,7 @@ export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined 
     id: `${kind}/${id}`,
     src: `https://embed.${host}${parsed.pathname}${query}`,
     url: `https://${host}${parsed.pathname}${query}`,
-    height: getEmbedHeight(kind, trackId),
+    height: appleHeights[trackId ? 'song' : kind],
   }
 }
 
