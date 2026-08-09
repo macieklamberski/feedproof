@@ -575,66 +575,69 @@ export const defaultPreservedPreClasses = [
   'wp-block-preformatted', // WordPress Gutenberg Preformatted block — author-chosen distinct blocks (ToCs, quotes, numbered headings).
 ]
 
+// Feed counts below are distinct feeds in the 12,724,862-feed corpus, from one full walk on
+// 2026-07-24. A `≤` count is an upper bound: the walk matched the marker anywhere in the feed
+// while the selector here is narrower, so the true figure is lower by an unmeasured margin.
 export const defaultNonContentSelectors = [
   // Subscribe and newsletter signup forms.
-  '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget — 11,366 feeds (0.42%).
-  '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA — 11,275 feeds (0.42%).
-  '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 527 feeds. Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
-  '.wp-block-jetpack-subscriptions', // Jetpack Gutenberg subscribe block — 353 feeds (0.013%).
-  '.kg-signup-card', // Ghost (Koenig) signup card — 323 feeds (0.012%).
-  '.mc4wp-form', // Mailchimp for WordPress plugin form — 311 feeds (0.012%).
-  '.formkit-form', // ConvertKit / Kit subscribe form — 241 feeds (0.009%).
-  'iframe[src*="embeds.beehiiv.com"]', // Beehiiv embed iframe — 81 feeds (0.003%).
-  '.jetpack_subscription_widget', // Jetpack legacy sidebar subscribe widget — 69 feeds (0.003%).
-  'form[action*="buttondown.email"]', // Buttondown embed-subscribe form — 21 feeds (<0.001%).
-  '.sqs-block-newsletter', // Squarespace newsletter block — 11 feeds (<0.001%).
-  '.et_bloom', // Bloom (Elegant Themes) optin — 963 feeds.
-  '.wpforms-container', // WPForms — 804 feeds.
-  '[class*="tve-leads"]', // Thrive Leads optin — 232 feeds.
+  '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget — 7,718 feeds (0.061%).
+  '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA — 7,648 feeds (0.060%).
+  '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 527 feeds (0.004%). Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
+  '.wp-block-jetpack-subscriptions', // Jetpack Gutenberg subscribe block — 245 feeds (0.002%).
+  '.kg-signup-card', // Ghost (Koenig) signup card — 266 feeds (0.002%).
+  '.mc4wp-form', // Mailchimp for WordPress plugin form — 214 feeds (0.002%).
+  '.formkit-form', // ConvertKit / Kit subscribe form — 152 feeds (0.001%).
+  'iframe[src*="embeds.beehiiv.com"]', // Beehiiv embed iframe — 61 feeds (<0.001%).
+  '.jetpack_subscription_widget', // Jetpack legacy sidebar subscribe widget — 51 feeds (<0.001%).
+  'form[action*="buttondown.email"]', // Buttondown embed-subscribe form — 21 feeds (<0.001%); 1,055 feeds mention the host at all, nearly all as plain links.
+  '.sqs-block-newsletter', // Squarespace newsletter block — 3 feeds (<0.001%).
+  '.et_bloom', // Bloom (Elegant Themes) optin — 963 feeds (0.008%).
+  '.wpforms-container', // WPForms — 804 feeds (0.006%).
+  '[class*="tve-leads"]', // Thrive Leads optin — 232 feeds (0.002%).
 
   // Ad slots.
-  '.adsbygoogle', // Google AdSense ad slot — 1,515 feeds (0.056%).
-  'div[id^="div-gpt-ad"]', // Google Ad Manager (GPT) ad slot — 1,748 feeds.
-  '.adthrive-ad', // AdThrive (Raptive) ad slot — 72 feeds (0.003%).
+  '.adsbygoogle', // Google AdSense ad slot — 11,388 feeds (0.089%).
+  'div[id^="div-gpt-ad"]', // Google Ad Manager (GPT) ad slot — 1,748 feeds (0.014%).
+  '.adthrive-ad', // AdThrive (Raptive) ad slot — 79 feeds (0.001%).
 
   // Share and call-to-action button clusters.
-  '.captioned-button-wrap', // Substack caption + CTA button (Share/Subscribe/Comment) — 1,969 feeds (0.04%).
-  '[class*="social-share"]', // Generic social-share button cluster — part of 1,212 feeds (0.045%).
-  '[class*="share-buttons"]', // Generic social-share button cluster.
-  '.sharethis-inline-share-buttons', // ShareThis inline share buttons — 643 feeds (0.024%).
-  '.sharedaddy', // Jetpack Sharedaddy share buttons — 428 feeds (0.016%).
-  '.feedflare', // FeedBurner share footer ("Share on X / Email this") — 220 feeds (0.008%).
-  '.addtoany_share_save_container', // AddToAny share buttons (WordPress) — 97 feeds (0.004%).
-  '.a2a_kit', // AddToAny share icons (higher-prevalence marker than the wrapper) — 6,714 feeds.
-  '[class*="addthis_"]', // AddThis share toolbox — 2,312 feeds.
-  '.shareaholic-canvas', // Shareaholic share/related widget — 669 feeds.
+  '.captioned-button-wrap', // Substack caption + CTA button (Share/Subscribe/Comment) — 1,976 feeds (0.016%).
+  '[class*="social-share"]', // Generic social-share button cluster — ≤1,695 feeds (0.013%).
+  '[class*="share-buttons"]', // Generic social-share button cluster — ≤1,853 feeds (0.015%).
+  '.sharethis-inline-share-buttons', // ShareThis inline share buttons — 674 feeds (0.005%).
+  '.sharedaddy', // Jetpack Sharedaddy share buttons — 588 feeds (0.005%).
+  '.feedflare', // FeedBurner share footer ("Share on X / Email this") — 262 feeds (0.002%).
+  '.addtoany_share_save_container', // AddToAny share buttons (WordPress) — 157 feeds (0.001%).
+  '.a2a_kit', // AddToAny share icons (higher-prevalence marker than the wrapper) — 6,714 feeds (0.053%).
+  '[class*="addthis_"]', // AddThis share toolbox — 2,312 feeds (0.018%).
+  '.shareaholic-canvas', // Shareaholic share/related widget — 669 feeds (0.005%).
 
   // Related-posts widgets.
-  '.yarpp-related', // YARPP related-posts widget (WordPress) — 672 feeds (0.025%).
-  '.jp-relatedposts', // Jetpack related-posts carousel — 74 feeds (0.003%).
-  '.crp_related', // Contextual Related Posts WordPress plugin — 61 feeds (0.002%).
+  '.yarpp-related', // YARPP related-posts widget (WordPress) — 1,243 feeds (0.010%).
+  '.jp-relatedposts', // Jetpack related-posts carousel — 427 feeds (0.003%).
+  '.crp_related', // Contextual Related Posts WordPress plugin — 207 feeds (0.002%).
 
   // Author bio blocks.
-  '.wp-block-post-author', // WordPress Gutenberg author bio block — 353 feeds (0.013%).
-  '.saboxplugin-wrap', // Simple Author Box WordPress plugin — 120 feeds (0.004%).
+  '.wp-block-post-author', // WordPress Gutenberg author bio block — 244 feeds (0.002%).
+  '.saboxplugin-wrap', // Simple Author Box WordPress plugin — 352 feeds (0.003%).
 
   // Excerpt-truncation links. Anchor-scoped so wrappers holding real content survive.
-  'a[class*="read-more"]', // "Read more" excerpt-truncation links.
-  'a[class*="continue-reading"]', // "Continue reading" excerpt-truncation links.
+  'a[class*="read-more"]', // "Read more" excerpt-truncation links — ≤44,947 feeds (0.353%).
+  'a[class*="continue-reading"]', // "Continue reading" excerpt-truncation links — ≤1,822 feeds (0.014%).
 
   // Comment-system embeds (JS mounts that render nothing without their loader script).
-  '.fb-comments', // Facebook Comments — 1,050 feeds.
+  '.fb-comments', // Facebook Comments — 1,050 feeds (0.008%).
 
   // Print / PDF buttons.
-  '.printfriendly', // PrintFriendly print/PDF button — ≤642 feeds (upper bound; ~half are class-scoped).
-  '.pf-button', // PrintFriendly button — 93 feeds.
+  '.printfriendly', // PrintFriendly print/PDF button — ≤642 feeds (0.005%); ~half are class-scoped.
+  '.pf-button', // PrintFriendly button — 93 feeds (0.001%).
 
   // Platform UI chrome and non-rendered scaffolding.
-  '.image-link-expand', // Substack restack/zoom buttons next to images — 16,419 feeds (0.6%).
-  'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets — 3,201 feeds (0.1%).
-  '.mcnPreviewText', // Mailchimp hidden email preheader text — 137 feeds (0.005%).
+  '.image-link-expand', // Substack restack/zoom buttons next to images — 11,319 feeds (0.089%).
+  'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets — 13,345 feeds (0.105%).
+  '.mcnPreviewText', // Mailchimp hidden email preheader text — 276 feeds (0.002%).
   '.tmblr-alt-text-helper', // Tumblr badge rendering a stray "ALT" beside an image that keeps its own alt attribute. 311 feeds (0.002%).
-  'img[src*="steamcommunity.com"][src*="placeholder"]', // Steam news static poster gif shown before its JS swaps in the YouTube iframe.
+  'img[src*="steamcommunity.com"][src*="placeholder"]', // Steam news static poster gif shown before its JS swaps in the YouTube iframe — ≤2,331 feeds (0.018%).
 
   // GDPR/consent-gated embeds are recovered, not stripped: each CMP parks the author's embed
   // URL on the iframe itself, so fixLazyIframes promotes it back into src (see the CMP block in
