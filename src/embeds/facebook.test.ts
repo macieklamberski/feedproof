@@ -5,6 +5,7 @@ import type { EmbedResolverResult } from '../types.js'
 import {
   facebookIframeEmbedResolver,
   facebookPostEmbedResolver,
+  facebookResolveEmbed,
   facebookVideoEmbedResolver,
 } from './facebook.js'
 
@@ -35,8 +36,12 @@ describeForEachParser('facebookPostEmbedResolver', (parseHtml) => {
     })
 
     it('should keep the href query encoded in the plugin url', () => {
-      const value =
-        '<div class="fb-post" data-href="https://www.facebook.com/renodancecompany/photos/317243261734291/?type=1"></div>'
+      const value = html`
+        <div
+          class="fb-post"
+          data-href="https://www.facebook.com/renodancecompany/photos/317243261734291/?type=1"
+        ></div>
+      `
 
       expect(extract(value)).toMatchObject({
         src: 'https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Frenodancecompany%2Fphotos%2F317243261734291%2F%3Ftype%3D1',
@@ -44,8 +49,12 @@ describeForEachParser('facebookPostEmbedResolver', (parseHtml) => {
     })
 
     it('should replace the empty div with an embed placeholder', async () => {
-      const value =
-        '<div class="fb-post" data-href="https://www.facebook.com/BlowflyOfficial/posts/10153426898243990:0"></div>'
+      const value = html`
+        <div
+          class="fb-post"
+          data-href="https://www.facebook.com/BlowflyOfficial/posts/10153426898243990:0"
+        ></div>
+      `
       const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
       expect(result).toContain('data-embed-provider="facebook"')
@@ -112,8 +121,12 @@ describeForEachParser('facebookVideoEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for a lookalike host', () => {
-      const value =
-        '<div class="fb-video" data-href="https://facebook.com.evil.test/videos/732638203506014/"></div>'
+      const value = html`
+        <div
+          class="fb-video"
+          data-href="https://facebook.com.evil.test/videos/732638203506014/"
+        ></div>
+      `
 
       expect(extract(value)).toBeUndefined()
     })
@@ -131,8 +144,11 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
 
   describe('happy paths', () => {
     it('should name a post plugin iframe and keep the publisher src', () => {
-      const value =
-        '<iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123&show_text=true&width=500"></iframe>'
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123&show_text=true&width=500"
+        ></iframe>
+      `
 
       expect(extract(value)).toMatchObject({
         provider: 'facebook',
@@ -143,8 +159,11 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should name a video plugin iframe', () => {
-      const value =
-        '<iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F"></iframe>'
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F"
+        ></iframe>
+      `
 
       expect(extract(value)).toMatchObject({
         provider: 'facebook',
@@ -157,8 +176,13 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
   // Facebook embed gets depends on which of these it is, so each one is asserted separately.
   describe('size sources', () => {
     describe('V1 modern post iframe, size on the element only', () => {
-      const value =
-        '<iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123" width="500" height="500"></iframe>'
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123"
+          width="500"
+          height="500"
+        ></iframe>
+      `
 
       it('should add no size of its own', () => {
         expect(extract(value)?.width).toBeUndefined()
@@ -177,8 +201,11 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
     })
 
     describe('V5 landscape video iframe, size in the plugin query', () => {
-      const value =
-        '<iframe src="https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F&show_text=false&width=560"></iframe>'
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F&show_text=false&width=560"
+        ></iframe>
+      `
 
       it('should take 560x314 from the query', () => {
         expect(extract(value)).toMatchObject({
@@ -189,8 +216,11 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
     })
 
     describe('V5 Reel iframe, vertical in the plugin query', () => {
-      const value =
-        '<iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F123%2F&show_text=false&width=267"></iframe>'
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F123%2F&show_text=false&width=267"
+        ></iframe>
+      `
 
       // A Reel is taller than it is wide, so a shared default would render it in a
       // landscape box.
@@ -203,8 +233,11 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
     })
 
     describe('V2 legacy iframe, no size anywhere in the url', () => {
-      const value =
-        '<iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123"></iframe>'
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123"
+        ></iframe>
+      `
 
       // A post's height follows its own content and Facebook publishes no signal for it, so
       // guessing one would be worse than leaving it to the consumer.
@@ -215,8 +248,11 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
     })
 
     describe('V5 video iframe carrying only one of the two', () => {
-      const value =
-        '<iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F&width=560"></iframe>'
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F&width=560"
+        ></iframe>
+      `
 
       it('should carry the width and leave the height unset', () => {
         expect(extract(value)).toMatchObject({ width: 560 })
@@ -233,8 +269,11 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for a plugin href on a lookalike host', () => {
-      const value =
-        '<iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Ffacebook.com.evil.test%2Fposts%2F123"></iframe>'
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Ffacebook.com.evil.test%2Fposts%2F123"
+        ></iframe>
+      `
 
       expect(extract(value)).toBeUndefined()
     })
@@ -243,6 +282,22 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
       const value = '<iframe src="https://www.facebook.com/plugins/post.php?width=500"></iframe>'
 
       expect(extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a url that does not parse', () => {
+      expect(facebookResolveEmbed('not a url')).toBeUndefined()
+    })
+
+    it('should return undefined for a legacy video frame with no video_id', () => {
+      expect(
+        facebookResolveEmbed('https://www.facebook.com/video/embed?autoplay=1'),
+      ).toBeUndefined()
+    })
+
+    it('should return undefined for a legacy video frame with a non-numeric id', () => {
+      expect(
+        facebookResolveEmbed('https://www.facebook.com/video/embed?video_id=../etc'),
+      ).toBeUndefined()
     })
   })
 })
@@ -329,6 +384,46 @@ describeForEachParser('facebook variants', (parseHtml) => {
     })
   })
 
+  describe('V4 fallback whose byline is not the dialog shape', () => {
+    const value = html`
+      <div class="fb-post" data-href="https://www.facebook.com/PageName/posts/123">
+        <div class="fb-xfbml-parse-ignore">
+          <blockquote cite="https://www.facebook.com/PageName/posts/123">
+            <p>Caption only, no byline anchors.</p>
+          </blockquote>
+        </div>
+      </div>
+    `
+
+    // "Posted by {page} on {date}" is a fixed pair of anchors. Anything else is a hand-edited
+    // fallback, so the text is kept and no author or date is invented from it.
+    it('should keep the text and claim no author or date', async () => {
+      const result = await convert(value)
+
+      expect(result).toContain('data-embed-description="Caption only, no byline anchors."')
+      expect(result).not.toContain('data-embed-author')
+      expect(result).not.toContain('data-embed-date')
+    })
+  })
+
+  describe('a fallback blockquote citing somewhere else entirely', () => {
+    const value = html`
+      <blockquote
+        cite="https://evil.test/facebook.com/posts/123"
+        class="fb-xfbml-parse-ignore"
+      >
+        <p>Not a facebook post.</p>
+      </blockquote>
+    `
+
+    it('should be left alone', async () => {
+      const result = await convert(value)
+
+      expect(result).not.toContain('data-embed-provider')
+      expect(result).toContain('Not a facebook post.')
+    })
+  })
+
   describe('V8 bare SDK loader beside the widget', () => {
     const value = html`
       <div id="fb-root"></div>
@@ -394,23 +489,36 @@ describeForEachParser('facebook shapes outside the sampled variants', (parseHtml
 
   describe('amp-facebook component', () => {
     it('should resolve a post to the post plugin', async () => {
-      const value =
-        '<amp-facebook width="552" height="303" data-href="https://www.facebook.com/PageName/posts/123"></amp-facebook>'
+      const value = html`
+        <amp-facebook
+          width="552"
+          height="303"
+          data-href="https://www.facebook.com/PageName/posts/123"
+        ></amp-facebook>
+      `
 
       expect(await convert(value)).toContain('plugins/post.php')
     })
 
     it('should follow data-embed-as to the video plugin', async () => {
-      const value =
-        '<amp-facebook data-embed-as="video" data-href="https://www.facebook.com/PageName/videos/123/"></amp-facebook>'
+      const value = html`
+        <amp-facebook
+          data-embed-as="video"
+          data-href="https://www.facebook.com/PageName/videos/123/"
+        ></amp-facebook>
+      `
 
       expect(await convert(value)).toContain('plugins/video.php')
     })
 
     // A comment thread is page chrome, not the article's content.
     it('should leave a comment embed unresolved', async () => {
-      const value =
-        '<amp-facebook data-embed-as="comment" data-href="https://www.facebook.com/PageName/posts/123"></amp-facebook>'
+      const value = html`
+        <amp-facebook
+          data-embed-as="comment"
+          data-href="https://www.facebook.com/PageName/posts/123"
+        ></amp-facebook>
+      `
 
       expect(await convert(value)).not.toContain('data-embed-provider')
     })
@@ -436,8 +544,11 @@ describeForEachParser('facebook shapes outside the sampled variants', (parseHtml
     })
 
     it('should not resolve a comments plugin iframe', async () => {
-      const value =
-        '<iframe src="https://www.facebook.com/plugins/comments.php?href=https%3A%2F%2Fexample.com%2Fpost"></iframe>'
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/plugins/comments.php?href=https%3A%2F%2Fexample.com%2Fpost"
+        ></iframe>
+      `
 
       expect(await convert(value)).not.toContain('data-embed-provider')
     })
