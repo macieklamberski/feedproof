@@ -115,6 +115,7 @@ export {
   extractAudioboomPost,
 } from './embeds/audioboom.js'
 export { bandcampEmbedResolver, extractBandcampRelease } from './embeds/bandcamp.js'
+export { blubrryEmbedResolver, blubrryResolveEmbed, extractBlubrryEmbed } from './embeds/blubrry.js'
 export { brightcoveEmbedResolver, brightcoveFlashEmbedResolver } from './embeds/brightcove.js'
 export {
   buzzsproutIframeEmbedResolver,
