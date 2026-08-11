@@ -108,7 +108,7 @@ export {
   heuristicDomTransforms,
 } from './defaults.js'
 export { appleEmbedResolver, appleResolveEmbed } from './embeds/apple.js'
-export { brightcoveEmbedResolver } from './embeds/brightcove.js'
+export { brightcoveEmbedResolver, brightcoveFlashEmbedResolver } from './embeds/brightcove.js'
 export {
   buzzsproutIframeEmbedResolver,
   buzzsproutResolveEmbed,
@@ -128,7 +128,7 @@ export {
 } from './embeds/jwplayer.js'
 export { mediavineEmbedResolver } from './embeds/mediavine.js'
 export { soundcloudEmbedResolver } from './embeds/soundcloud.js'
-export { speakerdeckEmbedResolver } from './embeds/speakerdeck.js'
+export { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embeds/speakerdeck.js'
 export { spotifyEmbedResolver, spotifyResolveEmbed } from './embeds/spotify.js'
 export {
   extractVimeoId,

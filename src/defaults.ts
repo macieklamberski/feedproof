@@ -25,7 +25,7 @@ import { tistoryCiteResolver } from './cites/tistory.js'
 import { tumblrCiteResolver } from './cites/tumblr.js'
 import { xenforoCiteResolver } from './cites/xenforo.js'
 import { appleEmbedResolver } from './embeds/apple.js'
-import { brightcoveEmbedResolver } from './embeds/brightcove.js'
+import { brightcoveEmbedResolver, brightcoveFlashEmbedResolver } from './embeds/brightcove.js'
 import {
   buzzsproutIframeEmbedResolver,
   buzzsproutScriptEmbedResolver,
@@ -35,7 +35,7 @@ import { flourishEmbedResolver } from './embeds/flourish.js'
 import { jwplayerIframeEmbedResolver, jwplayerScriptEmbedResolver } from './embeds/jwplayer.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
-import { speakerdeckEmbedResolver } from './embeds/speakerdeck.js'
+import { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embeds/speakerdeck.js'
 import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
@@ -322,9 +322,11 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   buzzsproutIframeEmbedResolver,
   buzzsproutScriptEmbedResolver,
   brightcoveEmbedResolver,
+  brightcoveFlashEmbedResolver,
   mediavineEmbedResolver,
   soundcloudEmbedResolver,
   speakerdeckEmbedResolver,
+  speakerdeckIframeEmbedResolver,
   flourishEmbedResolver,
   appleEmbedResolver,
   spotifyEmbedResolver,

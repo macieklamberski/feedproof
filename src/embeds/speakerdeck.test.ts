@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { speakerdeckEmbedResolver } from './speakerdeck.js'
+import { speakerdeckEmbedResolver, speakerdeckResolveEmbed } from './speakerdeck.js'
 
 describeForEachParser('speakerdeckEmbedResolver', (parseHtml) => {
   const extract = (value: string): EmbedResolverResult | undefined => {
@@ -154,5 +154,34 @@ describeForEachParser('speakerdeckEmbedResolver', (parseHtml) => {
       'data-embed-src="https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0"',
     )
     expect(result).not.toContain('<script')
+  })
+})
+
+describe('speakerdeckResolveEmbed', () => {
+  it('should resolve a player url', () => {
+    const value = 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0'
+
+    expect(speakerdeckResolveEmbed(value)).toMatchObject({
+      provider: 'speakerdeck',
+      id: '40746bbd65b944eb848e90ab1be552c0',
+      src: value,
+    })
+  })
+
+  it('should give a size-less player the default deck ratio', () => {
+    const result = speakerdeckResolveEmbed(
+      'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
+    )
+
+    expect(result?.width).toBeDefined()
+    expect(result?.height).toBeDefined()
+  })
+
+  it('should ignore a deck page rather than a player', () => {
+    expect(speakerdeckResolveEmbed('https://speakerdeck.com/user/some-deck')).toBeUndefined()
+  })
+
+  it('should ignore a player id that is not a 32-char hex', () => {
+    expect(speakerdeckResolveEmbed('https://speakerdeck.com/player/not-a-deck')).toBeUndefined()
   })
 })
