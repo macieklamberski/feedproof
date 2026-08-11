@@ -52,6 +52,7 @@ import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 import { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embeds/speakerdeck.js'
 import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { spreakerEmbedResolver } from './embeds/spreaker.js'
+import { tedEmbedResolver } from './embeds/ted.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { wistiaEmbedResolver } from './embeds/wistia.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
@@ -331,6 +332,7 @@ export const defaultAllDomTransforms: Array<DomTransform> = defaultStandardDomTr
 // meta-providers like Embedly that wrap other providers) before broader ones.
 export const defaultWidgetResolvers: Array<WidgetResolver> = [
   youtubeEmbedResolver,
+  tedEmbedResolver,
   vimeoEmbedResolver,
   wistiaEmbedResolver,
   captivateEmbedResolver,
