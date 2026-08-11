@@ -128,7 +128,11 @@ export {
 } from './embeds/buzzsprout.js'
 export { captivateEmbedResolver } from './embeds/captivate.js'
 export { dailymotionEmbedResolver } from './embeds/dailymotion.js'
-export { facebookPostEmbedResolver, facebookVideoEmbedResolver } from './embeds/facebook.js'
+export {
+  facebookIframeEmbedResolver,
+  facebookPostEmbedResolver,
+  facebookVideoEmbedResolver,
+} from './embeds/facebook.js'
 export { firesideEmbedResolver } from './embeds/fireside.js'
 export { flourishEmbedResolver } from './embeds/flourish.js'
 export { geniallyEmbedResolver } from './embeds/genially.js'

@@ -42,7 +42,11 @@ import {
 } from './embeds/buzzsprout.js'
 import { captivateEmbedResolver } from './embeds/captivate.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
-import { facebookPostEmbedResolver, facebookVideoEmbedResolver } from './embeds/facebook.js'
+import {
+  facebookIframeEmbedResolver,
+  facebookPostEmbedResolver,
+  facebookVideoEmbedResolver,
+} from './embeds/facebook.js'
 import { firesideEmbedResolver } from './embeds/fireside.js'
 import { flourishEmbedResolver } from './embeds/flourish.js'
 import { geniallyEmbedResolver } from './embeds/genially.js'
@@ -375,6 +379,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   blubrryEmbedResolver,
   facebookPostEmbedResolver,
   facebookVideoEmbedResolver,
+  facebookIframeEmbedResolver,
   mediavineEmbedResolver,
   mixcloudEmbedResolver,
   podbeanEmbedResolver,

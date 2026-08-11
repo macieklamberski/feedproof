@@ -2,7 +2,11 @@ import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { facebookPostEmbedResolver, facebookVideoEmbedResolver } from './facebook.js'
+import {
+  facebookIframeEmbedResolver,
+  facebookPostEmbedResolver,
+  facebookVideoEmbedResolver,
+} from './facebook.js'
 
 describeForEachParser('facebookPostEmbedResolver', (parseHtml) => {
   const extract = (value: string): EmbedResolverResult | undefined => {
@@ -110,6 +114,133 @@ describeForEachParser('facebookVideoEmbedResolver', (parseHtml) => {
     it('should return undefined for a lookalike host', () => {
       const value =
         '<div class="fb-video" data-href="https://facebook.com.evil.test/videos/732638203506014/"></div>'
+
+      expect(extract(value)).toBeUndefined()
+    })
+  })
+})
+
+describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
+  const extract = (value: string): EmbedResolverResult | undefined => {
+    const element = parseHtml(value).querySelector(facebookIframeEmbedResolver.selector)
+
+    return element
+      ? (facebookIframeEmbedResolver.extract(element) as EmbedResolverResult)
+      : undefined
+  }
+
+  describe('happy paths', () => {
+    it('should name a post plugin iframe and keep the publisher src', () => {
+      const value =
+        '<iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123&show_text=true&width=500"></iframe>'
+
+      expect(extract(value)).toMatchObject({
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/posts/123',
+        url: 'https://www.facebook.com/PageName/posts/123',
+        src: 'https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123&show_text=true&width=500',
+      })
+    })
+
+    it('should name a video plugin iframe', () => {
+      const value =
+        '<iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F"></iframe>'
+
+      expect(extract(value)).toMatchObject({
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/videos/123/',
+      })
+    })
+  })
+
+  // Variant numbers refer to plans/research_widget_embeds/_corpus/facebook.md. The size a
+  // Facebook embed gets depends on which of these it is, so each one is asserted separately.
+  describe('size sources', () => {
+    describe('V1 modern post iframe, size on the element only', () => {
+      const value =
+        '<iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123" width="500" height="500"></iframe>'
+
+      it('should add no size of its own', () => {
+        expect(extract(value)?.width).toBeUndefined()
+        expect(extract(value)?.height).toBeUndefined()
+      })
+
+      it('should still reach the placeholder, read off the element', async () => {
+        const result = await transformContent(value, {
+          parseHtmlFn: parseHtml,
+          baseUrl: 'https://example.com/post',
+        })
+
+        expect(result).toContain('data-embed-width="500"')
+        expect(result).toContain('data-embed-height="500"')
+      })
+    })
+
+    describe('V5 landscape video iframe, size in the plugin query', () => {
+      const value =
+        '<iframe src="https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F&show_text=false&width=560"></iframe>'
+
+      it('should take 560x314 from the query', () => {
+        expect(extract(value)).toMatchObject({
+          width: 560,
+          height: 314,
+        })
+      })
+    })
+
+    describe('V5 Reel iframe, vertical in the plugin query', () => {
+      const value =
+        '<iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F123%2F&show_text=false&width=267"></iframe>'
+
+      // A Reel is taller than it is wide, so a shared default would render it in a
+      // landscape box.
+      it('should keep the vertical 267x476 rather than a video default', () => {
+        const result = extract(value)
+
+        expect(result).toMatchObject({ width: 267, height: 476 })
+        expect(Number(result?.width) < Number(result?.height)).toBe(true)
+      })
+    })
+
+    describe('V2 legacy iframe, no size anywhere in the url', () => {
+      const value =
+        '<iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123"></iframe>'
+
+      // A post's height follows its own content and Facebook publishes no signal for it, so
+      // guessing one would be worse than leaving it to the consumer.
+      it('should carry no size at all', () => {
+        expect(extract(value)?.width).toBeUndefined()
+        expect(extract(value)?.height).toBeUndefined()
+      })
+    })
+
+    describe('V5 video iframe carrying only one of the two', () => {
+      const value =
+        '<iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F&width=560"></iframe>'
+
+      it('should carry the width and leave the height unset', () => {
+        expect(extract(value)).toMatchObject({ width: 560 })
+        expect(extract(value)?.height).toBeUndefined()
+      })
+    })
+  })
+
+  describe('sad paths', () => {
+    it('should ignore a facebook url that is not a plugin', () => {
+      const value = '<iframe src="https://www.facebook.com/PageName/posts/123"></iframe>'
+
+      expect(extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a plugin href on a lookalike host', () => {
+      const value =
+        '<iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Ffacebook.com.evil.test%2Fposts%2F123"></iframe>'
+
+      expect(extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a plugin url with no href', () => {
+      const value = '<iframe src="https://www.facebook.com/plugins/post.php?width=500"></iframe>'
 
       expect(extract(value)).toBeUndefined()
     })
