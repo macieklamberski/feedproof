@@ -172,8 +172,8 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
     })
   })
 
-  // Variant numbers refer to plans/research_widget_embeds/_corpus/facebook.md. The size a
-  // Facebook embed gets depends on which of these it is, so each one is asserted separately.
+  // The size a Facebook embed gets depends on which shape it arrived as, so each one is
+  // asserted separately. Variant numbers are the ones the corpus survey assigned.
   describe('size sources', () => {
     describe('V1 modern post iframe, size on the element only', () => {
       const value = html`
@@ -302,8 +302,8 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
   })
 })
 
-// Variant numbers refer to plans/research_widget_embeds/_corpus/facebook.md. Every variant the
-// deep pass found has a block here, so an unhandled one is visible as a missing block.
+// One block per shape the corpus survey found, numbered as it numbered them, so a shape
+// nobody handles is visible here as a missing block.
 describeForEachParser('facebook variants', (parseHtml) => {
   const convert = (value: string) => {
     return transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' })
