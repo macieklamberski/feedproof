@@ -152,6 +152,19 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
   })
 
   describe('rejections', () => {
+    // The id lookup runs and finds nothing, which is separate from there being no script.
+    it('should return undefined when no sibling script names the player', () => {
+      const value = html`
+        <div>
+          <div id="player-three" class="podlove-web-player"></div>
+          <p>Prose between the player and an unrelated script.</p>
+          <script>console.log("some other widget")</script>
+        </div>
+      `
+
+      expect(extract(value)).toBeUndefined()
+    })
+
     // The endpoint spelling: a config url with no data, which would need a fetch.
     it('should return undefined for the fetch-based player form', () => {
       const value = html`

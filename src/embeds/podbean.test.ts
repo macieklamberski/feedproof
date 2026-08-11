@@ -17,6 +17,10 @@ describe('extractPodbeanId', () => {
   it('should return undefined for a podbean url naming no episode', () => {
     expect(extractPodbeanId('https://www.podbean.com/pricing')).toBeUndefined()
   })
+
+  it('should return undefined for a url that cannot be parsed', () => {
+    expect(extractPodbeanId('https://[')).toBeUndefined()
+  })
 })
 
 describe('podbeanResolveEmbed', () => {

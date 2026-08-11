@@ -28,6 +28,14 @@ describe('extractSimplecastEpisode', () => {
   it('should return undefined for a simplecast url naming no episode', () => {
     expect(extractSimplecastEpisode('https://simplecast.com/pricing')).toBeUndefined()
   })
+
+  it('should return undefined for a url that cannot be parsed', () => {
+    expect(extractSimplecastEpisode('https://[')).toBeUndefined()
+  })
+
+  it('should return undefined for a simplecast url naming no path', () => {
+    expect(extractSimplecastEpisode('https://simplecast.com/')).toBeUndefined()
+  })
 })
 
 describe('simplecastResolveEmbed', () => {
@@ -68,5 +76,9 @@ describe('simplecastResolveEmbed', () => {
       src: 'https://simplecast.com/e/1234567',
       height: 200,
     })
+  })
+
+  it('should return undefined for a simplecast url naming no episode', () => {
+    expect(simplecastResolveEmbed('https://simplecast.com/pricing')).toBeUndefined()
   })
 })

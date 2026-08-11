@@ -16,6 +16,10 @@ describe('extractBlubrryEmbed', () => {
   it('should return undefined for a blubrry url naming nothing', () => {
     expect(extractBlubrryEmbed('https://blubrry.com/pricing')).toBeUndefined()
   })
+
+  it('should return undefined for a url that cannot be parsed', () => {
+    expect(extractBlubrryEmbed('https://[')).toBeUndefined()
+  })
 })
 
 describe('blubrryResolveEmbed', () => {
@@ -37,5 +41,9 @@ describe('blubrryResolveEmbed', () => {
       provider: 'blubrry',
       src: 'https://player.blubrry.com/?media_url=https%3A%2F%2Fmedia.blubrry.com%2Fshow%2Fep.mp3',
     })
+  })
+
+  it('should return undefined for a blubrry url naming no episode', () => {
+    expect(blubrryResolveEmbed('https://blubrry.com/about')).toBeUndefined()
   })
 })

@@ -24,6 +24,10 @@ describe('extractTransistorEmbed', () => {
   it('should return undefined for a transistor url naming nothing', () => {
     expect(extractTransistorEmbed('https://share.transistor.fm/pricing')).toBeUndefined()
   })
+
+  it('should return undefined for a url that cannot be parsed', () => {
+    expect(extractTransistorEmbed('https://[')).toBeUndefined()
+  })
 })
 
 describe('transistorResolveEmbed', () => {
@@ -42,5 +46,9 @@ describe('transistorResolveEmbed', () => {
       id: 'show/9f8e7d6c',
       height: 390,
     })
+  })
+
+  it('should return undefined for a transistor url naming no episode', () => {
+    expect(transistorResolveEmbed('https://share.transistor.fm/about')).toBeUndefined()
   })
 })

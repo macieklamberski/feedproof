@@ -39,6 +39,10 @@ describe('extractLibsynEmbed', () => {
   it('should return undefined for a non-numeric id', () => {
     expect(extractLibsynEmbed('https://play.libsyn.com/embed/episode/id/abc/')).toBeUndefined()
   })
+
+  it('should return undefined for a url that cannot be parsed', () => {
+    expect(extractLibsynEmbed('https://[')).toBeUndefined()
+  })
 })
 
 describe('libsynResolveEmbed', () => {
@@ -64,5 +68,9 @@ describe('libsynResolveEmbed', () => {
       id: 'episode/5508311',
       src: 'https://play.libsyn.com/embed/episode/id/5508311/',
     })
+  })
+
+  it('should return undefined for a libsyn url naming no episode', () => {
+    expect(libsynResolveEmbed('https://play.libsyn.com/about')).toBeUndefined()
   })
 })

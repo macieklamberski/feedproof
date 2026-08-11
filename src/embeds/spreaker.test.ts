@@ -42,4 +42,8 @@ describe('spreakerResolveEmbed', () => {
       height: 200,
     })
   })
+
+  it('should return undefined for a spreaker url naming no episode', () => {
+    expect(spreakerResolveEmbed('https://widget.spreaker.com/player?x=1')).toBeUndefined()
+  })
 })

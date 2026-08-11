@@ -21,6 +21,10 @@ describe('extractOmnyClip', () => {
   it('should return undefined when no clip is named', () => {
     expect(extractOmnyClip('https://omny.fm/shows/embed')).toBeUndefined()
   })
+
+  it('should return undefined for a url that cannot be parsed', () => {
+    expect(extractOmnyClip('https://[')).toBeUndefined()
+  })
 })
 
 describe('omnyResolveEmbed', () => {
@@ -34,5 +38,9 @@ describe('omnyResolveEmbed', () => {
       src: 'https://omny.fm/shows/the-show/an-episode/embed?media=audio&style=cover',
       height: 180,
     })
+  })
+
+  it('should return undefined for a omny url naming no clip', () => {
+    expect(omnyResolveEmbed('https://omny.fm/about')).toBeUndefined()
   })
 })

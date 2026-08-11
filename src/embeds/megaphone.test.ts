@@ -19,6 +19,10 @@ describe('extractMegaphoneEmbed', () => {
   it('should return undefined when nothing is named', () => {
     expect(extractMegaphoneEmbed('https://playlist.megaphone.fm/?light=true')).toBeUndefined()
   })
+
+  it('should return undefined for a url that cannot be parsed', () => {
+    expect(extractMegaphoneEmbed('https://[')).toBeUndefined()
+  })
 })
 
 describe('megaphoneResolveEmbed', () => {
@@ -37,5 +41,9 @@ describe('megaphoneResolveEmbed', () => {
       id: 'playlist/NSM7546490835',
       height: 480,
     })
+  })
+
+  it('should return undefined for a megaphone url naming no episode', () => {
+    expect(megaphoneResolveEmbed('https://playlist.megaphone.fm/?x=ABC123')).toBeUndefined()
   })
 })
