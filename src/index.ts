@@ -135,6 +135,7 @@ export {
   vimeoEmbedResolver,
   vimeoResolveEmbed,
 } from './embeds/vimeo.js'
+export { extractWistiaId, wistiaEmbedResolver, wistiaResolveEmbed } from './embeds/wistia.js'
 export {
   composeThumbnailUrl,
   extractVideoId,

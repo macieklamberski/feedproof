@@ -38,6 +38,7 @@ import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 import { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embeds/speakerdeck.js'
 import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
+import { wistiaEmbedResolver } from './embeds/wistia.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
 import { discourseMediaResolver } from './media/discourse.js'
@@ -316,6 +317,7 @@ export const defaultAllDomTransforms: Array<DomTransform> = defaultStandardDomTr
 export const defaultWidgetResolvers: Array<WidgetResolver> = [
   youtubeEmbedResolver,
   vimeoEmbedResolver,
+  wistiaEmbedResolver,
   dailymotionEmbedResolver,
   jwplayerIframeEmbedResolver,
   jwplayerScriptEmbedResolver,
