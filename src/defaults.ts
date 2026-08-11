@@ -38,6 +38,7 @@ import { captivateEmbedResolver } from './embeds/captivate.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { firesideEmbedResolver } from './embeds/fireside.js'
 import { flourishEmbedResolver } from './embeds/flourish.js'
+import { ivooxEmbedResolver } from './embeds/ivoox.js'
 import { jwplayerIframeEmbedResolver, jwplayerScriptEmbedResolver } from './embeds/jwplayer.js'
 import { libsynEmbedResolver } from './embeds/libsyn.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
@@ -329,6 +330,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   wistiaEmbedResolver,
   captivateEmbedResolver,
   dailymotionEmbedResolver,
+  ivooxEmbedResolver,
   jwplayerIframeEmbedResolver,
   jwplayerScriptEmbedResolver,
   libsynEmbedResolver,
