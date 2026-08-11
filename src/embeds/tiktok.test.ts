@@ -328,7 +328,7 @@ describeForEachParser('tiktok variants', (parseHtml) => {
     })
   })
 
-  describe('a creator blockquote whose handle is not a handle', () => {
+  describe('a creator blockquote whose data-unique-id is not a handle', () => {
     const value = html`
       <blockquote
         class="tiktok-embed"
@@ -341,9 +341,26 @@ describeForEachParser('tiktok variants', (parseHtml) => {
     `
 
     // The handle is interpolated into the viewer url, so anything outside TikTok's own
-    // character set is refused rather than minted into a path.
+    // character set is refused. The profile anchor still names the account, so it wins.
+    it('should ignore the attribute and take the handle from the anchor', async () => {
+      expect(await convert(value)).toContain('data-embed-src="https://www.tiktok.com/embed/@user"')
+    })
+  })
+
+  describe('a blockquote naming no account anywhere', () => {
+    const value = html`
+      <blockquote class="tiktok-embed">
+        <a href="https://www.tiktok.com/tag/tag?refer=embed">#tag</a> orphaned caption
+      </blockquote>
+    `
+
+    // A hashtag is not an account and there is no clip either, so nothing can be minted and
+    // the text stays as it is.
     it('should be left alone', async () => {
-      expect(await convert(value)).not.toContain('data-embed-provider')
+      const result = await convert(value)
+
+      expect(result).not.toContain('data-embed-provider')
+      expect(result).toContain('orphaned caption')
     })
   })
 
@@ -378,13 +395,17 @@ describeForEachParser('tiktok variants', (parseHtml) => {
     const value =
       '&lt;blockquote class="tiktok-embed" style="max-width: 605px;"&gt; &lt;a target="_blank" href="https://www.tiktok.com/@user?refer=embed"&gt;@user&lt;/a&gt; caption text &lt;/blockquote&gt;'
 
-    // No video id, no cite, no /video/ link: there is nothing to mint a player from, so the
-    // caption and the profile link stay as readable content.
-    it('should be left as text rather than resolved', async () => {
+    // No video id, no cite, no /video/ link: the account is the only thing this markup still
+    // identifies, so it resolves to the profile viewer rather than being left as text.
+    it('should resolve to the profile the anchor names', async () => {
       const result = await convert(value)
 
-      expect(result).not.toContain('data-embed-provider')
-      expect(result).toContain('caption text')
+      expect(result).toContain('data-embed-src="https://www.tiktok.com/embed/@user"')
+      expect(result).toContain('data-embed-id="@user"')
+    })
+
+    it('should keep the caption that sat beside the anchors', async () => {
+      expect(await convert(value)).toContain('data-embed-title="caption text"')
     })
   })
 })
