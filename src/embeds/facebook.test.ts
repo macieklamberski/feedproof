@@ -173,9 +173,9 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
   })
 
   // The size a Facebook embed gets depends on which shape it arrived as, so each one is
-  // asserted separately. Variant numbers are the ones the corpus survey assigned.
+  // asserted separately.
   describe('size sources', () => {
-    describe('V1 modern post iframe, size on the element only', () => {
+    describe('modern post iframe, size on the element only', () => {
       const value = html`
         <iframe
           src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123"
@@ -200,7 +200,7 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
       })
     })
 
-    describe('V5 landscape video iframe, size in the plugin query', () => {
+    describe('landscape video iframe, size in the plugin query', () => {
       const value = html`
         <iframe
           src="https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F&show_text=false&width=560"
@@ -215,7 +215,7 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
       })
     })
 
-    describe('V5 Reel iframe, vertical in the plugin query', () => {
+    describe('Reel iframe, vertical in the plugin query', () => {
       const value = html`
         <iframe
           src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F123%2F&show_text=false&width=267"
@@ -232,7 +232,7 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
       })
     })
 
-    describe('V2 legacy iframe, no size anywhere in the url', () => {
+    describe('legacy iframe, no size anywhere in the url', () => {
       const value = html`
         <iframe
           src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123"
@@ -247,7 +247,7 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
       })
     })
 
-    describe('V5 video iframe carrying only one of the two', () => {
+    describe('video iframe carrying only one of the two', () => {
       const value = html`
         <iframe
           src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F&width=560"
@@ -302,14 +302,14 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
   })
 })
 
-// One block per shape the corpus survey found, numbered as it numbered them, so a shape
-// nobody handles is visible here as a missing block.
+// One block per shape the corpus survey found, so a shape nobody handles is visible here as
+// a missing block.
 describeForEachParser('facebook variants', (parseHtml) => {
   const convert = (value: string) => {
     return transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' })
   }
 
-  describe('V3 SDK div, post', () => {
+  describe('SDK div, post', () => {
     const value =
       '<div class="fb-post" data-href="https://www.facebook.com/PageName/posts/123"></div>'
 
@@ -321,7 +321,7 @@ describeForEachParser('facebook variants', (parseHtml) => {
     })
   })
 
-  describe('V4 SDK div with the dialog fallback blockquote', () => {
+  describe('SDK div with the dialog fallback blockquote', () => {
     const value = html`
       <div class="fb-post" data-href="https://www.facebook.com/PageName/posts/123">
         <div class="fb-xfbml-parse-ignore">
@@ -345,7 +345,7 @@ describeForEachParser('facebook variants', (parseHtml) => {
     })
   })
 
-  describe('V6 SDK div, video with an fb.watch short link', () => {
+  describe('SDK div, video with an fb.watch short link', () => {
     const value = '<div class="fb-video" data-href="https://fb.watch/abcDEF123/"></div>'
 
     // The mobile app hands out fb.watch links and publishers paste them into the widget.
@@ -357,7 +357,7 @@ describeForEachParser('facebook variants', (parseHtml) => {
     })
   })
 
-  describe('V7 standalone fallback blockquote, no widget div', () => {
+  describe('standalone fallback blockquote, no widget div', () => {
     const value = html`
       <blockquote
         cite="https://www.facebook.com/PageName/videos/123/"
@@ -384,7 +384,7 @@ describeForEachParser('facebook variants', (parseHtml) => {
     })
   })
 
-  describe('V4 fallback whose byline is not the dialog shape', () => {
+  describe('fallback whose byline is not the dialog shape', () => {
     const value = html`
       <div class="fb-post" data-href="https://www.facebook.com/PageName/posts/123">
         <div class="fb-xfbml-parse-ignore">
@@ -424,7 +424,7 @@ describeForEachParser('facebook variants', (parseHtml) => {
     })
   })
 
-  describe('V8 bare SDK loader beside the widget', () => {
+  describe('bare SDK loader beside the widget', () => {
     const value = html`
       <div id="fb-root"></div>
       <script async defer src="https://connect.facebook.net/en_US/sdk.js#xfbml=1"></script>
@@ -440,11 +440,12 @@ describeForEachParser('facebook variants', (parseHtml) => {
     })
   })
 
-  describe('V9 entity-escaped embed from an Atom content payload', () => {
+  describe('entity-escaped embed from an Atom content payload', () => {
     const value =
       '&lt;iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123"&gt;&lt;/iframe&gt;'
 
-    // The escaping is undone upstream by decodeDoubleEncodedTags, so the embed arrives as V1.
+    // The escaping is undone upstream by decodeDoubleEncodedTags, so the embed arrives as the
+    // plain modern iframe.
     it('should resolve once the entities are decoded', async () => {
       const result = await convert(value)
 
