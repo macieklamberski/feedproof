@@ -25,6 +25,7 @@ import { tistoryCiteResolver } from './cites/tistory.js'
 import { tumblrCiteResolver } from './cites/tumblr.js'
 import { xenforoCiteResolver } from './cites/xenforo.js'
 import { appleEmbedResolver } from './embeds/apple.js'
+import { bandcampEmbedResolver } from './embeds/bandcamp.js'
 import { brightcoveEmbedResolver, brightcoveFlashEmbedResolver } from './embeds/brightcove.js'
 import {
   buzzsproutIframeEmbedResolver,
@@ -331,6 +332,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   speakerdeckIframeEmbedResolver,
   flourishEmbedResolver,
   appleEmbedResolver,
+  bandcampEmbedResolver,
   spotifyEmbedResolver,
   substackMediaResolver,
   weeblyMediaResolver,
