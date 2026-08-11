@@ -74,7 +74,7 @@ import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from './embeds/spreaker.js'
 import { tedEmbedResolver } from './embeds/ted.js'
 import { telegramIframeEmbedResolver, telegramScriptEmbedResolver } from './embeds/telegram.js'
-import { tiktokEmbedResolver } from './embeds/tiktok.js'
+import { tiktokCreatorEmbedResolver, tiktokEmbedResolver } from './embeds/tiktok.js'
 import { transistorEmbedResolver } from './embeds/transistor.js'
 import { typeformIframeEmbedResolver, typeformWidgetEmbedResolver } from './embeds/typeform.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
@@ -399,6 +399,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   slideshareFlashEmbedResolver,
   slideshareIframeEmbedResolver,
   tiktokEmbedResolver,
+  tiktokCreatorEmbedResolver,
   soundcloudEmbedResolver,
   speakerdeckScriptEmbedResolver,
   speakerdeckIframeEmbedResolver,
