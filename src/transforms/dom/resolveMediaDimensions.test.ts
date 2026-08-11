@@ -185,6 +185,20 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
+    it('should scale a declared height by the URL aspect ratio', async () => {
+      const value = '<img src="https://example.com/xml-480x512.png" height="60">'
+      const expected = '<img src="https://example.com/xml-480x512.png" height="60" width="56">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should scale a declared width by the URL aspect ratio', async () => {
+      const value = '<img src="https://example.com/photo-800x600.jpg" width="400">'
+      const expected = '<img src="https://example.com/photo-800x600.jpg" width="400" height="300">'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
     it('should prefer own style dimensions over the URL', async () => {
       const value =
         '<img src="https://example.com/photo-800x600.jpg" style="width:300px;height:200px">'
