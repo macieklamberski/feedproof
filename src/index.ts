@@ -123,6 +123,11 @@ export {
   buzzsproutScriptEmbedResolver,
 } from './embeds/buzzsprout.js'
 export {
+  captivateEmbedResolver,
+  captivateResolveEmbed,
+  extractCaptivateEmbed,
+} from './embeds/captivate.js'
+export {
   dailymotionEmbedResolver,
   dailymotionResolveEmbed,
   extractDailymotionId,

@@ -34,6 +34,7 @@ import {
   buzzsproutIframeEmbedResolver,
   buzzsproutScriptEmbedResolver,
 } from './embeds/buzzsprout.js'
+import { captivateEmbedResolver } from './embeds/captivate.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { flourishEmbedResolver } from './embeds/flourish.js'
 import { jwplayerIframeEmbedResolver, jwplayerScriptEmbedResolver } from './embeds/jwplayer.js'
@@ -325,6 +326,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   youtubeEmbedResolver,
   vimeoEmbedResolver,
   wistiaEmbedResolver,
+  captivateEmbedResolver,
   dailymotionEmbedResolver,
   jwplayerIframeEmbedResolver,
   jwplayerScriptEmbedResolver,
