@@ -28,6 +28,7 @@ import { anchorEmbedResolver } from './embeds/anchor.js'
 import { appleEmbedResolver } from './embeds/apple.js'
 import { audioboomEmbedResolver } from './embeds/audioboom.js'
 import { bandcampEmbedResolver } from './embeds/bandcamp.js'
+import { blubrryEmbedResolver } from './embeds/blubrry.js'
 import { brightcoveEmbedResolver, brightcoveFlashEmbedResolver } from './embeds/brightcove.js'
 import {
   buzzsproutIframeEmbedResolver,
@@ -330,6 +331,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   libsynEmbedResolver,
   buzzsproutIframeEmbedResolver,
   buzzsproutScriptEmbedResolver,
+  blubrryEmbedResolver,
   brightcoveEmbedResolver,
   brightcoveFlashEmbedResolver,
   mediavineEmbedResolver,
