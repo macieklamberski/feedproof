@@ -333,8 +333,8 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   appleEmbedResolver,
   spotifyEmbedResolver,
   substackMediaResolver,
-  wechatMediaResolver,
   weeblyMediaResolver,
+  wechatMediaResolver,
   ghostMediaResolver,
   discourseMediaResolver,
 ]
