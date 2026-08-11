@@ -53,6 +53,7 @@ import { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embe
 import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { spreakerEmbedResolver } from './embeds/spreaker.js'
 import { tedEmbedResolver } from './embeds/ted.js'
+import { transistorEmbedResolver } from './embeds/transistor.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { wistiaEmbedResolver } from './embeds/wistia.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
@@ -333,6 +334,7 @@ export const defaultAllDomTransforms: Array<DomTransform> = defaultStandardDomTr
 export const defaultWidgetResolvers: Array<WidgetResolver> = [
   youtubeEmbedResolver,
   tedEmbedResolver,
+  transistorEmbedResolver,
   vimeoEmbedResolver,
   wistiaEmbedResolver,
   captivateEmbedResolver,
