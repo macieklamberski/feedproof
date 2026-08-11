@@ -15,6 +15,22 @@ describe('extractVimeoId', () => {
     expect(extractVimeoId('https://vimeo.com/channels/staffpicks/76979871')).toBe('76979871')
   })
 
+  // The Flash player carried no id in the path at all.
+  it('should extract id from the moogaloop.swf url', () => {
+    expect(extractVimeoId('http://vimeo.com/moogaloop.swf?clip_id=43301601')).toBe('43301601')
+  })
+
+  it('should extract id from a moogaloop.swf url carrying player options', () => {
+    const value =
+      'http://vimeo.com/moogaloop.swf?clip_id=43301601&force_embed=1&server=vimeo.com&color=00adef'
+
+    expect(extractVimeoId(value)).toBe('43301601')
+  })
+
+  it('should return undefined for a moogaloop.swf url with no clip id', () => {
+    expect(extractVimeoId('http://vimeo.com/moogaloop.swf?server=vimeo.com')).toBeUndefined()
+  })
+
   it('should return undefined when there is no numeric id', () => {
     expect(extractVimeoId('https://vimeo.com/user/profile')).toBeUndefined()
   })

@@ -1,5 +1,7 @@
+import { getPathSegments } from 'trousse'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
 import { attr, parseRatioDimensions } from '../utils/dom.js'
+import { createIframeEmbedResolver } from '../utils/widgets.js'
 
 // Every corpus id is 32 lowercase hex chars (a dashless UUID); anything else is dropped
 // rather than interpolated into the player URL.
@@ -40,3 +42,27 @@ export const speakerdeckEmbedResolver: EmbedResolver = {
     return { ...result, ...dimensions }
   },
 }
+
+// The player the script above builds at runtime, saved into the feed by a CMS that ran the
+// script first. Same deck, same placeholder: only the carrier differs. A size on the element
+// wins over the default ratio, so the fallback only applies to a size-less embed.
+export const speakerdeckResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+  const segments = getPathSegments(url)
+  const deckId = segments[0] === 'player' ? segments[1] : undefined
+
+  if (!deckId || !deckIdRegex.test(deckId)) {
+    return
+  }
+
+  return {
+    provider: 'speakerdeck',
+    id: deckId,
+    src: `https://speakerdeck.com/player/${deckId}`,
+    ...parseRatioDimensions(defaultDeckRatio),
+  }
+}
+
+export const speakerdeckIframeEmbedResolver = createIframeEmbedResolver(
+  ['speakerdeck.com'],
+  speakerdeckResolveEmbed,
+)

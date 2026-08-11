@@ -18,9 +18,16 @@ const strayLeadingQuoteRegex = /^(?:%22|")/
 // watch url and thumbnail); youtubeResolveEmbed handles them as playlist/live embeds below.
 const nonVideoIds = new Set(['videoseries', 'live_stream'])
 
+// The Flash player took its parameters with `&` and no `?`, so `/v/{id}&hl=en_US&fs=1`
+// arrives as one path segment and the id fails the length check. Browsers read the leading
+// id out of it, and so does this.
+const strayParamsRegex = /&.*$/
+
 const pathIdSegments = ['shorts', 'embed', 'live', 'v']
 
-const youtubeHosts = ['youtube.com', 'youtube-nocookie.com', 'youtu.be']
+// `youtube.googleapis.com/v/{id}` is the Flash player's other host, still shipped by Blogger
+// feeds of that era.
+const youtubeHosts = ['youtube.com', 'youtube-nocookie.com', 'youtu.be', 'youtube.googleapis.com']
 
 // A bare id, already separated from any url: the right shape, and not one of the embed path
 // words that share it.
@@ -66,7 +73,7 @@ export const extractVideoId = (link: string): string | undefined => {
     id = segments[1]
   }
 
-  const cleanedId = id?.replace(strayLeadingQuoteRegex, '')
+  const cleanedId = id?.replace(strayLeadingQuoteRegex, '').replace(strayParamsRegex, '')
 
   if (cleanedId && isVideoId(cleanedId)) {
     return cleanedId

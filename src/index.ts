@@ -108,7 +108,7 @@ export {
   heuristicDomTransforms,
 } from './defaults.js'
 export { appleEmbedResolver, appleResolveEmbed } from './embeds/apple.js'
-export { brightcoveEmbedResolver } from './embeds/brightcove.js'
+export { brightcoveEmbedResolver, brightcoveFlashEmbedResolver } from './embeds/brightcove.js'
 export {
   buzzsproutIframeEmbedResolver,
   buzzsproutResolveEmbed,
@@ -128,13 +128,14 @@ export {
 } from './embeds/jwplayer.js'
 export { mediavineEmbedResolver } from './embeds/mediavine.js'
 export { soundcloudEmbedResolver } from './embeds/soundcloud.js'
-export { speakerdeckEmbedResolver } from './embeds/speakerdeck.js'
+export { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embeds/speakerdeck.js'
 export { spotifyEmbedResolver, spotifyResolveEmbed } from './embeds/spotify.js'
 export {
   extractVimeoId,
   vimeoEmbedResolver,
   vimeoResolveEmbed,
 } from './embeds/vimeo.js'
+export { extractWistiaId, wistiaEmbedResolver, wistiaResolveEmbed } from './embeds/wistia.js'
 export {
   composeThumbnailUrl,
   extractVideoId,
@@ -256,8 +257,8 @@ export { applyDomTransforms, applyStringTransforms } from './utils/transforms.js
 export {
   createCitePlaceholder,
   createEmbedPlaceholder,
-  createIframeEmbedResolver,
   createPlaceholder,
+  createIframeEmbedResolver,
   normalizeCiteFields,
   normalizeEmbedFields,
   updateCitePlaceholder,

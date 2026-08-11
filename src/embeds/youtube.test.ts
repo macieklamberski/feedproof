@@ -33,6 +33,29 @@ describe('extractVideoId', () => {
     expect(extractVideoId(value)).toBe(expected)
   })
 
+  it('should extract id from the Flash /v/ url', () => {
+    const value = 'http://www.youtube.com/v/dQw4w9WgXcQ'
+    const expected = 'dQw4w9WgXcQ'
+
+    expect(extractVideoId(value)).toBe(expected)
+  })
+
+  // The Flash player appended its parameters with `&` and no `?`, so the whole tail arrives
+  // inside the id's path segment.
+  it('should extract id from a Flash url whose params carry no question mark', () => {
+    const value = 'http://www.youtube.com/v/dQw4w9WgXcQ&hl=en_US&fs=1&'
+    const expected = 'dQw4w9WgXcQ'
+
+    expect(extractVideoId(value)).toBe(expected)
+  })
+
+  it('should extract id from the googleapis Flash host', () => {
+    const value = 'http://youtube.googleapis.com/v/dQw4w9WgXcQ&hl=en_US'
+    const expected = 'dQw4w9WgXcQ'
+
+    expect(extractVideoId(value)).toBe(expected)
+  })
+
   it('should extract id from www.youtu.be url', () => {
     const value = 'https://www.youtu.be/dQw4w9WgXcQ'
     const expected = 'dQw4w9WgXcQ'

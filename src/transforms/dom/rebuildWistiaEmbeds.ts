@@ -6,10 +6,9 @@ const wistiaIdPattern = /\bwistia_async_([A-Za-z0-9]+)/
 // Wistia's JS-API inline embed is a `<div class="wistia_embed wistia_async_{id} ...">`
 // (usually wrapped in `wistia_responsive_padding` / `wistia_responsive_wrapper` divs) with
 // no iframe — JS builds the player on load. A reader runs no JS, so the video never
-// appears. Rebuild a plain <iframe> from the id so the embed renders. feedsweep has no
-// Wistia resolver, so this stays a raw iframe (a generic placeholder downstream, no
-// thumbnail) — like the lite-vimeo case in rebuildLiteVideoEmbeds, still better than a
-// dead facade a reader can't activate.
+// appears. Rebuild a plain <iframe> from the id so the embed renders; `wistiaEmbedResolver`
+// then reads that same url and gives it a provider and an id. No thumbnail either way, since
+// Wistia's poster needs the media JSON hop.
 export const rebuildWistiaEmbeds: DomTransform = () => (document) => {
   for (const element of document.querySelectorAll('[class*="wistia_async_"]')) {
     const match = element.className.match(wistiaIdPattern)
