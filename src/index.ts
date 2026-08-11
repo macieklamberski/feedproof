@@ -134,6 +134,7 @@ export {
   mixcloudEmbedResolver,
   mixcloudResolveEmbed,
 } from './embeds/mixcloud.js'
+export { extractPodbeanId, podbeanEmbedResolver, podbeanResolveEmbed } from './embeds/podbean.js'
 export { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 export { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embeds/speakerdeck.js'
 export { spotifyEmbedResolver, spotifyResolveEmbed } from './embeds/spotify.js'

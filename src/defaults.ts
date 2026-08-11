@@ -37,6 +37,7 @@ import { jwplayerIframeEmbedResolver, jwplayerScriptEmbedResolver } from './embe
 import { libsynEmbedResolver } from './embeds/libsyn.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { mixcloudEmbedResolver } from './embeds/mixcloud.js'
+import { podbeanEmbedResolver } from './embeds/podbean.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 import { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embeds/speakerdeck.js'
 import { spotifyEmbedResolver } from './embeds/spotify.js'
@@ -331,6 +332,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   brightcoveFlashEmbedResolver,
   mediavineEmbedResolver,
   mixcloudEmbedResolver,
+  podbeanEmbedResolver,
   soundcloudEmbedResolver,
   speakerdeckEmbedResolver,
   speakerdeckIframeEmbedResolver,
