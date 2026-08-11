@@ -428,6 +428,57 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       expect(result).toContain('<iframe')
     })
   })
+
+  // A url-keyed resolver claims these before the provider-less fallback above sees them,
+  // which is the difference between a placeholder holding a dead .swf link and a real one.
+  describe('provider resolution on non-iframe carriers', () => {
+    it('should resolve a provider from an <embed src> carrier', async () => {
+      const value = '<embed src="https://www.youtube.com/v/dQw4w9WgXcQ" width="425" height="350">'
+      const result = await transform(value)
+
+      expect(result).toContain('data-embed-provider="youtube"')
+      expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
+      expect(result).toContain('data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
+      expect(result).not.toContain('<embed')
+    })
+
+    it('should resolve a provider from an <object data> carrier', async () => {
+      const value = '<object data="https://www.youtube.com/v/dQw4w9WgXcQ"></object>'
+      const result = await transform(value)
+
+      expect(result).toContain('data-embed-provider="youtube"')
+      expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
+      expect(result).not.toContain('<object')
+    })
+
+    it('should emit one placeholder for an <object> wrapping an <embed>', async () => {
+      const value = html`
+        <object data="https://www.youtube.com/v/dQw4w9WgXcQ">
+          <embed src="https://www.youtube.com/v/dQw4w9WgXcQ" />
+        </object>
+      `
+      const result = await transform(value)
+
+      expect(result.match(/data-embed-provider="youtube"/g)).toHaveLength(1)
+      expect(result).not.toContain('<embed')
+    })
+
+    it('should read the Flash parameter form that carries no question mark', async () => {
+      const value = '<embed src="https://www.youtube.com/v/dQw4w9WgXcQ&hl=en_US&fs=1">'
+      const result = await transform(value)
+
+      expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
+      expect(result).toContain('data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
+    })
+
+    it('should leave a non-provider carrier to the generic placeholder', async () => {
+      const value = '<embed src="https://example.com/player.swf">'
+      const result = await transform(value)
+
+      expect(result).toContain('data-embed-src="https://example.com/player.swf"')
+      expect(result).not.toContain('data-embed-provider')
+    })
+  })
 })
 
 const uploadId = 'de58e4a3-5505-45a7-8abc-b46c5c0f6e7a'

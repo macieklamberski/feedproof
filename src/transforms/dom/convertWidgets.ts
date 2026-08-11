@@ -5,7 +5,13 @@ import {
   playableElements,
 } from '../../utils/dom.js'
 import { audioFileRegex, resolveOrKeepUrl, videoFileRegex } from '../../utils/urls.js'
-import { createEmbedPlaceholder, isMediaResult, parseOrKeepDate } from '../../utils/widgets.js'
+import {
+  createEmbedPlaceholder,
+  embedCarrierSelector,
+  isMediaResult,
+  parseOrKeepDate,
+  readCarrierUrl,
+} from '../../utils/widgets.js'
 
 const playableSelector = [...playableElements].join(', ')
 
@@ -89,10 +95,25 @@ export const convertWidgets: DomTransform = (context) => {
     context
 
   return async (document) => {
-    // A static snapshot: the fallback loop below replaces iframes, and a live
-    // getElementsByTagName collection would shrink mid-iteration and skip elements.
-    const iframeSnapshot = Array.from(document.getElementsByTagName('iframe'))
-    const hasIframes = iframeSnapshot.length > 0
+    // One query per distinct selector rather than per resolver: every url-keyed resolver
+    // shares the same one, and the fallback at the end reuses that same result, so the
+    // registry and the fallback can never disagree about what a carrier is. The arrays are
+    // static because both loops replace elements, and a live collection would shrink
+    // mid-iteration and skip some.
+    const queried = new Map<string, Array<Element>>()
+
+    const elementsFor = (selector: string): Array<Element> => {
+      const cached = queried.get(selector)
+
+      if (cached) {
+        return cached
+      }
+
+      const found = Array.from(document.querySelectorAll(selector))
+      queried.set(selector, found)
+
+      return found
+    }
 
     // Parked-URL containers go first, while original iframes still exist: the guard reads
     // "already wraps a player" from the markup, and the tiers below replace iframes with
@@ -119,11 +140,14 @@ export const convertWidgets: DomTransform = (context) => {
     }
 
     for (const resolver of widgetResolvers) {
-      if (!hasIframes && resolver.selector.startsWith('iframe')) {
-        continue
-      }
+      for (const element of elementsFor(resolver.selector)) {
+        // Legacy Flash pairs an `<object>` with a nested `<embed>` and a url-keyed resolver
+        // matches both. Replacing the outer one detaches the inner, which is still in this
+        // snapshot.
+        if (!element.parentNode) {
+          continue
+        }
 
-      for (const element of document.querySelectorAll(resolver.selector)) {
         const metadata = await resolver.extract(element)
 
         if (!metadata) {
@@ -182,53 +206,29 @@ export const convertWidgets: DomTransform = (context) => {
       }
     }
 
-    // Generic iframe fallback. Resolvers may have detached some iframes (parentNode null).
-    if (hasIframes) {
-      for (const iframe of iframeSnapshot) {
-        if (!iframe.parentNode) {
-          continue
-        }
-
-        const src = iframe.getAttribute('src')
-
-        // resolveUrlFn rejects `about:blank`; the trim drops empty/whitespace placeholders
-        // (which would otherwise resolve to the base URL).
-        const resolved = src?.trim() ? resolveUrlFn(src, baseUrl) : undefined
-        // Unlike a resolver's src, which is rebuilt from the parsed id, this one is the
-        // publisher's own URL and also becomes the fallback anchor's href and link text.
-        const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
-
-        if (!cleaned) {
-          continue
-        }
-
-        // An iframe framing a bare media file plays as the element instead: the reader
-        // gets a native player, and the src flows through the media passes downstream.
-        const mediaTag = getMediaTag(cleaned)
-
-        if (mediaTag) {
-          iframe.replaceWith(createMediaElement(document, { tag: mediaTag, src: cleaned }))
-          continue
-        }
-
-        iframe.replaceWith(
-          createEmbedPlaceholder(document, { src: cleaned, ...getEmbedDimensions(iframe) }),
-        )
+    // Whatever no resolver claimed. A resolver may have replaced an element that is still in
+    // the snapshot, including the inner half of an <object>/<embed> pair, so a detached one
+    // is already handled.
+    for (const element of elementsFor(embedCarrierSelector)) {
+      if (!element.parentNode) {
+        continue
       }
-    }
 
-    // Legacy <object data> / <embed src> carriers — the iframe-only paths above miss
-    // them. Replace with a provider-less placeholder when the URL resolves.
-    for (const element of document.querySelectorAll('object[data], embed[src]')) {
-      const url =
-        element.localName === 'object' ? element.getAttribute('data') : element.getAttribute('src')
-      const resolved = url ? resolveUrlFn(url, baseUrl) : undefined
+      const src = readCarrierUrl(element)
+
+      // resolveUrlFn rejects `about:blank`; the trim drops empty/whitespace placeholders
+      // (which would otherwise resolve to the base URL).
+      const resolved = src.trim() ? resolveUrlFn(src, baseUrl) : undefined
+      // Unlike a resolver's src, which is rebuilt from the parsed id, this one is the
+      // publisher's own URL and also becomes the fallback anchor's href and link text.
       const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
 
       if (!cleaned) {
         continue
       }
 
+      // A carrier framing a bare media file plays as the element instead: the reader gets a
+      // native player, and the src flows through the media passes downstream.
       const mediaTag = getMediaTag(cleaned)
 
       if (mediaTag) {

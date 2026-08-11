@@ -20,20 +20,43 @@ export const parseOrKeepDate = (
   return date ? (parseDateFn?.(date) ?? date) : undefined
 }
 
-// Every video provider matches the same iframe and differs only in which hosts it claims
-// and how it reads an id out of the src, so the match itself lives here.
+// The elements that carry a third-party URL for someone else to render, each with the
+// attribute holding it: `<object>` names that URL `data` while the other two use `src`, and
+// that is the only difference between them. Adding a carrier is one line here, because both
+// the selector and the reader below are derived from this.
 //
-// This is not a pattern to copy for resolvers generally: it exists because these three
-// bodies were already identical. The cite resolvers each read a different shape, so a
-// shared builder there would need a config language and would cost more than it saves.
+// Legacy Flash markup nests an `<embed>` inside an `<object>` and both match. The outer one
+// wins by document order and takes the inner with it.
+export const embedCarriers: Record<string, string> = {
+  iframe: 'src',
+  embed: 'src',
+  object: 'data',
+}
+
+export const embedCarrierSelector = Object.entries(embedCarriers)
+  .map(([tag, attribute]) => `${tag}[${attribute}]`)
+  .join(', ')
+
+export const readCarrierUrl = (element: Element): string => {
+  return element.getAttribute(embedCarriers[element.localName] ?? 'src') ?? ''
+}
+
+// Every provider matches the same carriers and differs only in which hosts it claims and
+// how it reads an id out of the URL, so the match itself lives here. Keying on the URL
+// rather than on markup is what separates these resolvers from the ones that recognise a
+// platform's own class or attribute, and it is why the name says url and not iframe.
+//
+// This is not a pattern to copy for resolvers generally: it exists because these bodies
+// were already identical. The cite resolvers each read a different shape, so a shared
+// builder there would need a config language and would cost more than it saves.
 export const createIframeEmbedResolver = (
   hosts: Array<string>,
   resolveEmbed: (url: string) => EmbedResolverResult | undefined,
 ): EmbedResolver => {
   return {
-    selector: 'iframe[src]',
+    selector: embedCarrierSelector,
     extract: (element) => {
-      const src = element.getAttribute('src') ?? ''
+      const src = readCarrierUrl(element)
 
       if (!isHostOf(src, hosts) && !isSubdomainOf(src, hosts)) {
         return

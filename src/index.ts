@@ -256,8 +256,8 @@ export { applyDomTransforms, applyStringTransforms } from './utils/transforms.js
 export {
   createCitePlaceholder,
   createEmbedPlaceholder,
-  createIframeEmbedResolver,
   createPlaceholder,
+  createIframeEmbedResolver,
   normalizeCiteFields,
   normalizeEmbedFields,
   updateCitePlaceholder,
