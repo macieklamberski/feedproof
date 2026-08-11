@@ -108,6 +108,7 @@ export {
   heuristicDomTransforms,
 } from './defaults.js'
 export { appleEmbedResolver, appleResolveEmbed } from './embeds/apple.js'
+export { bandcampEmbedResolver, extractBandcampRelease } from './embeds/bandcamp.js'
 export { brightcoveEmbedResolver, brightcoveFlashEmbedResolver } from './embeds/brightcove.js'
 export {
   buzzsproutIframeEmbedResolver,
@@ -257,8 +258,8 @@ export { applyDomTransforms, applyStringTransforms } from './utils/transforms.js
 export {
   createCitePlaceholder,
   createEmbedPlaceholder,
-  createPlaceholder,
   createIframeEmbedResolver,
+  createPlaceholder,
   normalizeCiteFields,
   normalizeEmbedFields,
   updateCitePlaceholder,
