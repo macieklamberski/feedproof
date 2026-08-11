@@ -35,6 +35,10 @@ describe('extractBandcampRelease', () => {
   it('should return undefined for a non-numeric id', () => {
     expect(extractBandcampRelease('https://bandcamp.com/VideoEmbed?track=abc')).toBeUndefined()
   })
+
+  it('should return undefined for a url that cannot be parsed', () => {
+    expect(extractBandcampRelease('https://[')).toBeUndefined()
+  })
 })
 
 describeForEachParser('bandcampEmbedResolver', (parseHtml) => {

@@ -21,6 +21,10 @@ describe('extractFiresideToken', () => {
   it('should return undefined for a token of the wrong shape', () => {
     expect(extractFiresideToken('https://fireside.fm/player/v2/onlyoneside')).toBeUndefined()
   })
+
+  it('should return undefined for a url that cannot be parsed', () => {
+    expect(extractFiresideToken('https://[')).toBeUndefined()
+  })
 })
 
 describe('firesideResolveEmbed', () => {
@@ -32,5 +36,9 @@ describe('firesideResolveEmbed', () => {
       src: 'https://player.fireside.fm/v2/DiNRb69N+Dagp3z15',
       height: 200,
     })
+  })
+
+  it('should return undefined for a fireside url naming no episode', () => {
+    expect(firesideResolveEmbed('https://fireside.fm/pricing')).toBeUndefined()
   })
 })

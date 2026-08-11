@@ -27,6 +27,10 @@ describe('extractIvooxEpisode', () => {
       extractIvooxEpisode('https://www.ivoox.com/podcast-something_sq_f1_1.html'),
     ).toBeUndefined()
   })
+
+  it('should return undefined for a url that cannot be parsed', () => {
+    expect(extractIvooxEpisode('https://[')).toBeUndefined()
+  })
 })
 
 describe('ivooxResolveEmbed', () => {
@@ -44,5 +48,9 @@ describe('ivooxResolveEmbed', () => {
     expect(ivooxResolveEmbed('https://www.ivoox.com/player_ej_80807760_6_1.html')).toMatchObject({
       src: 'https://www.ivoox.com/player_ej_80807760_6_1.html',
     })
+  })
+
+  it('should return undefined for a ivoox url naming no episode', () => {
+    expect(ivooxResolveEmbed('https://www.ivoox.com/index.html')).toBeUndefined()
   })
 })

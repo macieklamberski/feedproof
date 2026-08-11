@@ -74,6 +74,10 @@ describe('dailymotionResolveEmbed', () => {
 
     expect(result?.src).toBe('https://www.dailymotion.com/embed/video/x8abcde')
   })
+
+  it('should return undefined for a dailymotion url naming no video', () => {
+    expect(dailymotionResolveEmbed('https://www.dailymotion.com/about')).toBeUndefined()
+  })
 })
 
 describeForEachParser('dailymotionEmbedResolver', (parseHtml) => {

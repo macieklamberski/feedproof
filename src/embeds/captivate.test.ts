@@ -24,6 +24,10 @@ describe('extractCaptivateEmbed', () => {
   it('should return undefined for a captivate url that is not a player', () => {
     expect(extractCaptivateEmbed('https://captivate.fm/pricing')).toBeUndefined()
   })
+
+  it('should return undefined for a url that cannot be parsed', () => {
+    expect(extractCaptivateEmbed('https://[')).toBeUndefined()
+  })
 })
 
 describe('captivateResolveEmbed', () => {
@@ -34,5 +38,9 @@ describe('captivateResolveEmbed', () => {
       src: `https://player.captivate.fm/episode/${uuid}`,
       height: 200,
     })
+  })
+
+  it('should return undefined for a captivate url naming no episode', () => {
+    expect(captivateResolveEmbed('https://player.captivate.fm/about')).toBeUndefined()
   })
 })

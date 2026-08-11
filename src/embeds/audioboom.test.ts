@@ -24,6 +24,10 @@ describe('extractAudioboomPost', () => {
   it('should return undefined for an audioboom url naming no post', () => {
     expect(extractAudioboomPost('https://audioboom.com/channels/something')).toBeUndefined()
   })
+
+  it('should return undefined for a url that cannot be parsed', () => {
+    expect(extractAudioboomPost('https://[')).toBeUndefined()
+  })
 })
 
 describe('audioboomResolveEmbed', () => {
@@ -43,5 +47,9 @@ describe('audioboomResolveEmbed', () => {
         height: 95,
       },
     )
+  })
+
+  it('should return undefined for a audioboom url naming no post', () => {
+    expect(audioboomResolveEmbed('https://audioboom.com/about')).toBeUndefined()
   })
 })

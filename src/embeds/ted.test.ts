@@ -22,6 +22,10 @@ describe('extractTedTalk', () => {
   it('should return undefined for a ted url that is not a talk', () => {
     expect(extractTedTalk('https://www.ted.com/playlists/123/something')).toBeUndefined()
   })
+
+  it('should return undefined for a url that cannot be parsed', () => {
+    expect(extractTedTalk('https://[')).toBeUndefined()
+  })
 })
 
 describe('tedResolveEmbed', () => {
@@ -32,5 +36,9 @@ describe('tedResolveEmbed', () => {
       src: 'https://embed.ted.com/embed/ethan_zuckerman',
       url: 'https://www.ted.com/talks/ethan_zuckerman',
     })
+  })
+
+  it('should return undefined for a ted url naming no talk', () => {
+    expect(tedResolveEmbed('https://embed.ted.com/about')).toBeUndefined()
   })
 })

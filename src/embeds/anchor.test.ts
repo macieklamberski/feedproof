@@ -23,6 +23,20 @@ describe('extractAnchorEpisode', () => {
   it('should return undefined for a show page rather than an embed', () => {
     expect(extractAnchorEpisode('https://anchor.fm/myshow')).toBeUndefined()
   })
+
+  it('should return undefined for a url that cannot be parsed', () => {
+    expect(extractAnchorEpisode('https://[')).toBeUndefined()
+  })
+
+  it('should return undefined for a anchor url naming no episode', () => {
+    expect(extractAnchorEpisode('https://anchor.fm/pricing')).toBeUndefined()
+  })
+
+  // The marker is present but the episode segment is not, which is a different guard from a
+  // url that never mentions `embed/episodes` at all.
+  it('should return undefined when the embed marker names no episode', () => {
+    expect(extractAnchorEpisode('https://anchor.fm/myshow/embed/episodes')).toBeUndefined()
+  })
 })
 
 describe('anchorResolveEmbed', () => {
@@ -40,5 +54,9 @@ describe('anchorResolveEmbed', () => {
     const value = 'https://creators.spotify.com/pod/profile/me/embed/episodes/my-title-e1/a-abc'
 
     expect(anchorResolveEmbed(value)).toMatchObject({ height: 204 })
+  })
+
+  it('should return undefined for a anchor url naming no episode', () => {
+    expect(anchorResolveEmbed('https://anchor.fm/pricing')).toBeUndefined()
   })
 })

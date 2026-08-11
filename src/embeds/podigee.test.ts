@@ -27,6 +27,10 @@ describeForEachParser('podigeeEmbedResolver', (parseHtml) => {
   })
 
   describe('sad paths', () => {
+    it('should return undefined for a podigee url naming no episode', () => {
+      expect(extract(script('https://theshow.podigee.io/'))).toBeUndefined()
+    })
+
     // 14 of 100 corpus feeds point the attribute at an inline config object instead of a url.
     it('should ignore an inline configuration reference', () => {
       expect(extract(script('podigee'))).toBeUndefined()
