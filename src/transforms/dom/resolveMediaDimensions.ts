@@ -101,9 +101,7 @@ export const resolveMediaDimensions: DomTransform = () => {
       if (
         !dimensions &&
         element.localName === 'img' &&
-        element.parentElement?.localName === 'picture' &&
-        !element.hasAttribute('width') &&
-        !element.hasAttribute('height')
+        element.parentElement?.localName === 'picture'
       ) {
         dimensions = pictureDimensions(element.parentElement)
       }
@@ -112,11 +110,24 @@ export const resolveMediaDimensions: DomTransform = () => {
         continue
       }
 
-      if (!element.hasAttribute('width')) {
-        element.setAttribute('width', String(Math.round(dimensions.width)))
-      }
+      // When the element already declares one dimension, the resolved pair only supplies
+      // the aspect ratio: a feed that says height="60" for a 480x512 source is asking for
+      // a 56x60 rendering, not 480x60.
+      const declaredWidth = Number(element.getAttribute('width'))
+      const declaredHeight = Number(element.getAttribute('height'))
 
-      if (!element.hasAttribute('height')) {
+      if (declaredWidth) {
+        element.setAttribute(
+          'height',
+          String(Math.round((declaredWidth * dimensions.height) / dimensions.width)),
+        )
+      } else if (declaredHeight) {
+        element.setAttribute(
+          'width',
+          String(Math.round((declaredHeight * dimensions.width) / dimensions.height)),
+        )
+      } else {
+        element.setAttribute('width', String(Math.round(dimensions.width)))
         element.setAttribute('height', String(Math.round(dimensions.height)))
       }
     }
