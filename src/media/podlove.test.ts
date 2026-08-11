@@ -1,0 +1,205 @@
+import { describe, expect, it } from 'bun:test'
+import { describeForEachParser, html } from '../tests.js'
+import type { MediaResolverResult } from '../types.js'
+import { podloveMediaResolver } from './podlove.js'
+
+// The corpus shape: a player div of custom elements, then a script carrying the whole config.
+const makePlayer = (config: string, playerId = 'player-6a7b24b4e645d'): string => {
+  return html`
+    <div id="${playerId}" class="podlove-web-player">
+      <root>
+        <tab-chapters></tab-chapters>
+        <subscribe-button></subscribe-button>
+      </root>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        var player = document.getElementById("${playerId}");
+        podlovePlayerCache.add(${config})
+      })
+    </script>
+  `
+}
+
+const episodeConfig = JSON.stringify([
+  {
+    url: 'https://300hertz.de/wp-json/podlove-web-player/shortcode/publisher/480',
+    data: {
+      version: 5,
+      title: 'Schallwellentherapie',
+      poster: 'https://300hertz.de/podlove/image/deadbeef/500/0/0/300hertz',
+      audio: [
+        {
+          url: 'https://300hertz.de/podlove/file/1036/s/webplayer/c/website/300Hertz_E043.mp3',
+          size: '141373154',
+          title: 'MP3 Audio (mp3)',
+          mimeType: 'audio/mpeg',
+        },
+      ],
+    },
+  },
+])
+
+describeForEachParser('podloveMediaResolver', (parseHtml) => {
+  const extract = (value: string): MediaResolverResult | undefined => {
+    const element = parseHtml(value).querySelector(podloveMediaResolver.selector)
+
+    return element ? (podloveMediaResolver.extract(element) as MediaResolverResult) : undefined
+  }
+
+  describe('happy paths', () => {
+    it('should read the audio file and poster out of the inlined config', () => {
+      const result = extract(makePlayer(episodeConfig))
+
+      expect(result).toEqual({
+        tag: 'audio',
+        src: 'https://300hertz.de/podlove/file/1036/s/webplayer/c/website/300Hertz_E043.mp3',
+        poster: 'https://300hertz.de/podlove/image/deadbeef/500/0/0/300hertz',
+      })
+    })
+
+    it('should fall back to the show poster when the episode has none', () => {
+      const config = JSON.stringify([
+        {
+          data: {
+            show: { poster: 'https://example.com/show.jpg' },
+            audio: [{ url: 'https://example.com/e.mp3', mimeType: 'audio/mpeg' }],
+          },
+        },
+      ])
+
+      expect(extract(makePlayer(config))).toEqual({
+        tag: 'audio',
+        src: 'https://example.com/e.mp3',
+        poster: 'https://example.com/show.jpg',
+      })
+    })
+
+    it('should take the first audio entry when several formats are offered', () => {
+      const config = JSON.stringify([
+        {
+          data: {
+            audio: [
+              { url: 'https://example.com/e.mp3', mimeType: 'audio/mpeg' },
+              { url: 'https://example.com/e.opus', mimeType: 'audio/opus' },
+            ],
+          },
+        },
+      ])
+
+      expect(extract(makePlayer(config))?.src).toBe('https://example.com/e.mp3')
+    })
+
+    // Safari plays neither, so the order the publisher chose must not decide the file.
+    it('should skip ogg and opus for a widely playable format listed after them', () => {
+      const config = JSON.stringify([
+        {
+          data: {
+            audio: [
+              { url: 'https://example.com/e.opus', mimeType: 'audio/opus' },
+              { url: 'https://example.com/e.oga', mimeType: 'audio/ogg' },
+              { url: 'https://example.com/e.m4a', mimeType: 'audio/mp4' },
+            ],
+          },
+        },
+      ])
+
+      expect(extract(makePlayer(config))?.src).toBe('https://example.com/e.m4a')
+    })
+
+    // Nothing preferred is on offer, so the config's own order stands.
+    it('should fall back to the first entry when no preferred format is offered', () => {
+      const config = JSON.stringify([
+        {
+          data: {
+            audio: [
+              { url: 'https://example.com/e.opus', mimeType: 'audio/opus' },
+              { url: 'https://example.com/e.oga', mimeType: 'audio/ogg' },
+            ],
+          },
+        },
+      ])
+
+      expect(extract(makePlayer(config))?.src).toBe('https://example.com/e.opus')
+    })
+
+    // Several episodes in one item: each player has its own script, and they are not adjacent.
+    it('should find the config by player id when the script is not the next sibling', () => {
+      const value = html`
+        <div>
+          <div id="player-one" class="podlove-web-player"></div>
+          <p>Prose between the player and its script.</p>
+          <script>
+            var player = document.getElementById("player-one");
+            podlovePlayerCache.add([{"data":{"audio":[{"url":"https://example.com/one.mp3","mimeType":"audio/mpeg"}]}}])
+          </script>
+        </div>
+      `
+
+      expect(extract(value)?.src).toBe('https://example.com/one.mp3')
+    })
+
+    it('should emit no poster when the config states none', () => {
+      const config = JSON.stringify([
+        { data: { audio: [{ url: 'https://example.com/e.mp3', mimeType: 'audio/mpeg' }] } },
+      ])
+
+      expect(extract(makePlayer(config))).toEqual({
+        tag: 'audio',
+        src: 'https://example.com/e.mp3',
+      })
+    })
+  })
+
+  describe('rejections', () => {
+    // The endpoint spelling: a config url with no data, which would need a fetch.
+    it('should return undefined for the fetch-based player form', () => {
+      const value = html`
+        <div id="player-two" class="podlove-web-player"></div>
+        <script>
+          podlovePlayer("#player-two", "https://example.com/wp-json/podlove-web-player/480")
+        </script>
+      `
+
+      expect(extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the config is malformed json', () => {
+      const value = html`
+        <div class="podlove-web-player"></div>
+        <script>podlovePlayerCache.add([{"data":{"audio":[}])</script>
+      `
+
+      expect(extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when no audio entry names a file', () => {
+      const config = JSON.stringify([{ data: { audio: [{ mimeType: 'audio/mpeg' }] } }])
+
+      expect(extract(makePlayer(config))).toBeUndefined()
+    })
+
+    it('should return undefined when the entry is not audio', () => {
+      const config = JSON.stringify([
+        { data: { audio: [{ url: 'https://example.com/e.mp4', mimeType: 'video/mp4' }] } },
+      ])
+
+      expect(extract(makePlayer(config))).toBeUndefined()
+    })
+
+    // The url is interpolated into the document, so a relative or scriptable value is dropped.
+    it('should return undefined for a url that is not absolute', () => {
+      const config = JSON.stringify([
+        { data: { audio: [{ url: 'javascript:alert(1)', mimeType: 'audio/mpeg' }] } },
+      ])
+
+      expect(extract(makePlayer(config))).toBeUndefined()
+    })
+
+    it('should return undefined when the player carries no script', () => {
+      const value = html`<div class="podlove-web-player"></div>`
+
+      expect(extract(value)).toBeUndefined()
+    })
+  })
+})

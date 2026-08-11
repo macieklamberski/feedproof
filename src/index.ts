@@ -195,6 +195,7 @@ export {
 export { hljsHighlightFn } from './highlighters/hljs.js'
 export { discourseMediaResolver } from './media/discourse.js'
 export { ghostMediaResolver } from './media/ghost.js'
+export { podloveMediaResolver } from './media/podlove.js'
 export { substackMediaResolver } from './media/substack.js'
 export { wechatMediaResolver } from './media/wechat.js'
 export { weeblyMediaResolver } from './media/weebly.js'
