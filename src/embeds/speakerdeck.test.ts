@@ -11,6 +11,50 @@ describeForEachParser('speakerdeckEmbedResolver', (parseHtml) => {
     return element ? (speakerdeckEmbedResolver.extract(element) as EmbedResolverResult) : undefined
   }
 
+  // Measured 2026-08-11: 36 corpus feeds carry a 24-char Mongo ObjectId from 2011-2012 and
+  // every sampled one still plays. The old 32-char-only rule dropped all of them.
+  describe('legacy ids and slides', () => {
+    it('should accept a legacy 24-char deck id', () => {
+      const value =
+        '<script class="speakerdeck-embed" data-id="4f2b3c1d5e6a7b8c9d0e1f2a" src="//speakerdeck.com/assets/embed.js"></script>'
+
+      expect(extract(value)).toMatchObject({
+        provider: 'speakerdeck',
+        src: 'https://speakerdeck.com/player/4f2b3c1d5e6a7b8c9d0e1f2a',
+      })
+    })
+
+    // A feed can embed one deck at many slides; without this they collapse into identical
+    // placeholders.
+    it('should carry data-slide into the player url', () => {
+      const value =
+        '<script class="speakerdeck-embed" data-id="40746bbd65b944eb848e90ab1be552c0" data-slide="21" src="//speakerdeck.com/assets/embed.js"></script>'
+
+      expect(extract(value)).toMatchObject({
+        id: '40746bbd65b944eb848e90ab1be552c0/21',
+        src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=21',
+      })
+    })
+
+    it('should read a slide written inside the id attribute', () => {
+      const value =
+        '<script class="speakerdeck-embed" data-id="40746bbd65b944eb848e90ab1be552c0?slide=69" src="//speakerdeck.com/assets/embed.js"></script>'
+
+      expect(extract(value)).toMatchObject({
+        src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=69',
+      })
+    })
+
+    it('should ignore a non-numeric slide', () => {
+      const value =
+        '<script class="speakerdeck-embed" data-id="40746bbd65b944eb848e90ab1be552c0" data-slide="last" src="//speakerdeck.com/assets/embed.js"></script>'
+
+      expect(extract(value)).toMatchObject({
+        src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
+      })
+    })
+  })
+
   describe('happy paths', () => {
     it('should mint the player url from the deck id', () => {
       const value = html`
