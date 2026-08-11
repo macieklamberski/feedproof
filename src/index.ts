@@ -127,6 +127,7 @@ export {
   jwplayerResolveEmbed,
   jwplayerScriptEmbedResolver,
 } from './embeds/jwplayer.js'
+export { extractLibsynEmbed, libsynEmbedResolver, libsynResolveEmbed } from './embeds/libsyn.js'
 export { mediavineEmbedResolver } from './embeds/mediavine.js'
 export { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 export { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embeds/speakerdeck.js'
