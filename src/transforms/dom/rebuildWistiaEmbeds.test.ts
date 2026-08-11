@@ -53,6 +53,53 @@ describeForEachParser('rebuildWistiaEmbeds', (parseHtml) => {
     expect(result).toContain('https://fast.wistia.net/embed/iframe/zyl6xrmj10')
   })
 
+  it('should rebuild an iframe from the wistia-player custom element', async () => {
+    const value = html`<wistia-player media-id="zyl6xrmj10" aspect="1.7777777777777777"></wistia-player>`
+    const result = await transform(value)
+
+    expect(result).toContain('src="https://fast.wistia.net/embed/iframe/zyl6xrmj10"')
+    expect(result).toContain('width="100"')
+    expect(result).toContain('height="56"')
+    expect(result).not.toContain('<wistia-player')
+  })
+
+  it('should rebuild the custom element without an aspect, stating no size', async () => {
+    const value = html`<wistia-player media-id="zyl6xrmj10"></wistia-player>`
+    const result = await transform(value)
+
+    expect(result).toContain('<iframe src="https://fast.wistia.net/embed/iframe/zyl6xrmj10">')
+    expect(result).not.toContain('width=')
+  })
+
+  it('should rebuild an iframe from a lone loader script', async () => {
+    const value = html`<script src="https://fast.wistia.com/embed/medias/zyl6xrmj10.jsonp"></script>`
+    const result = await transform(value)
+
+    expect(result).toContain('<iframe src="https://fast.wistia.net/embed/iframe/zyl6xrmj10">')
+  })
+
+  // The common shape: loader plus facade div. The div is the better carrier, so the script
+  // must not mint a second player beside it.
+  it('should not duplicate the player when the script sits beside its facade div', async () => {
+    const value = html`
+      <script src="https://fast.wistia.com/embed/medias/zyl6xrmj10.jsonp"></script>
+      <div class="wistia_embed wistia_async_zyl6xrmj10"></div>
+    `
+    const result = await transform(value)
+
+    expect(result.match(/<iframe/g)).toHaveLength(1)
+  })
+
+  it('should not duplicate the player when a real iframe already names the media', async () => {
+    const value = html`
+      <script src="https://fast.wistia.com/embed/medias/zyl6xrmj10.jsonp"></script>
+      <iframe src="https://fast.wistia.net/embed/medias/zyl6xrmj10"></iframe>
+    `
+    const result = await transform(value)
+
+    expect(result.match(/<iframe/g)).toHaveLength(1)
+  })
+
   it('should be idempotent', async () => {
     const value = html`
       <div class="wistia_responsive_padding">
