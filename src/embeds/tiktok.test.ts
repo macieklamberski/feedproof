@@ -206,8 +206,8 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
   })
 })
 
-// One block per shape the corpus survey found, numbered as it numbered them, so a shape
-// nobody handles is visible here as a missing block.
+// One block per shape the corpus survey found, so a shape nobody handles is visible here as
+// a missing block.
 describeForEachParser('tiktok variants', (parseHtml) => {
   const convert = (value: string) => {
     return transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' })
@@ -222,7 +222,7 @@ describeForEachParser('tiktok variants', (parseHtml) => {
     </section>
   `
 
-  describe('V1 canonical oEmbed blockquote with the loader script', () => {
+  describe('canonical oEmbed blockquote with the loader script', () => {
     const value = html`
       <blockquote
         class="tiktok-embed"
@@ -250,7 +250,7 @@ describeForEachParser('tiktok variants', (parseHtml) => {
     })
   })
 
-  describe('V3 WordPress Gutenberg figure wrapper', () => {
+  describe('WordPress Gutenberg figure wrapper', () => {
     const value = html`
       <figure class="wp-block-embed is-type-video is-provider-tiktok wp-block-embed-tiktok">
         <div class="wp-block-embed__wrapper">
@@ -266,13 +266,13 @@ describeForEachParser('tiktok variants', (parseHtml) => {
     `
 
     // Wrappers nest arbitrarily deep, so the selector keys on the blockquote and they cost
-    // nothing. V4, V5 and V6 are the same shape with a different wrapper class.
+    // nothing. The theme, news-engine and Ghost wrappers are the same shape with another class.
     it('should resolve through the wrapper unchanged', async () => {
       expect(await convert(value)).toContain(`data-embed-id="${videoId}"`)
     })
   })
 
-  describe('V7 post-hydration iframe inside the surviving blockquote', () => {
+  describe('post-hydration iframe inside the surviving blockquote', () => {
     const value = html`
       <blockquote
         id="v25421583374779120"
@@ -302,7 +302,7 @@ describeForEachParser('tiktok variants', (parseHtml) => {
     })
   })
 
-  describe('V8 creator-profile embed, no video', () => {
+  describe('creator-profile embed, no video', () => {
     const value = html`
       <blockquote
         class="tiktok-embed"
@@ -347,7 +347,7 @@ describeForEachParser('tiktok variants', (parseHtml) => {
     })
   })
 
-  describe('V9 non-canonical attribute order, class last and no style', () => {
+  describe('non-canonical attribute order, class last and no style', () => {
     const value = html`
       <blockquote
         cite="https://www.tiktok.com/@user/video/${videoId}"
@@ -363,17 +363,18 @@ describeForEachParser('tiktok variants', (parseHtml) => {
     })
   })
 
-  describe('V11 fully entity-encoded blockquote', () => {
+  describe('fully entity-encoded blockquote', () => {
     const value =
       '&lt;blockquote cite=&quot;https://www.tiktok.com/@user/video/7000000000000000000&quot; class=&quot;tiktok-embed&quot; data-video-id=&quot;7000000000000000000&quot;&gt; &lt;section&gt; &lt;a href=&quot;https://www.tiktok.com/@user&quot;&gt;@user&lt;/a&gt; &lt;/section&gt; &lt;/blockquote&gt;'
 
-    // The decoding happens upstream, so by the time the widget pass runs this is V1 again.
+    // The decoding happens upstream, so by the time the widget pass runs this is the canonical
+    // blockquote again.
     it('should resolve once the entities are decoded', async () => {
       expect(await convert(value)).toContain(`data-embed-id="${videoId}"`)
     })
   })
 
-  describe('V10 half entity-encoded blockquote, the minimal authored shape', () => {
+  describe('half entity-encoded blockquote, the minimal authored shape', () => {
     const value =
       '&lt;blockquote class="tiktok-embed" style="max-width: 605px;"&gt; &lt;a target="_blank" href="https://www.tiktok.com/@user?refer=embed"&gt;@user&lt;/a&gt; caption text &lt;/blockquote&gt;'
 
