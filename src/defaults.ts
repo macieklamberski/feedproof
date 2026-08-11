@@ -42,6 +42,7 @@ import { ivooxEmbedResolver } from './embeds/ivoox.js'
 import { jwplayerIframeEmbedResolver, jwplayerScriptEmbedResolver } from './embeds/jwplayer.js'
 import { libsynEmbedResolver } from './embeds/libsyn.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
+import { megaphoneEmbedResolver } from './embeds/megaphone.js'
 import { mixcloudEmbedResolver } from './embeds/mixcloud.js'
 import { podbeanEmbedResolver } from './embeds/podbean.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
@@ -342,6 +343,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   mediavineEmbedResolver,
   mixcloudEmbedResolver,
   podbeanEmbedResolver,
+  megaphoneEmbedResolver,
   soundcloudEmbedResolver,
   speakerdeckEmbedResolver,
   speakerdeckIframeEmbedResolver,
