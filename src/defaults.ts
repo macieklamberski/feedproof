@@ -24,6 +24,7 @@ import { tcdCiteResolver } from './cites/tcd.js'
 import { tistoryCiteResolver } from './cites/tistory.js'
 import { tumblrCiteResolver } from './cites/tumblr.js'
 import { xenforoCiteResolver } from './cites/xenforo.js'
+import { anchorEmbedResolver } from './embeds/anchor.js'
 import { appleEmbedResolver } from './embeds/apple.js'
 import { bandcampEmbedResolver } from './embeds/bandcamp.js'
 import { brightcoveEmbedResolver, brightcoveFlashEmbedResolver } from './embeds/brightcove.js'
@@ -337,6 +338,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   speakerdeckEmbedResolver,
   speakerdeckIframeEmbedResolver,
   flourishEmbedResolver,
+  anchorEmbedResolver,
   appleEmbedResolver,
   bandcampEmbedResolver,
   spotifyEmbedResolver,

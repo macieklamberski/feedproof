@@ -107,6 +107,7 @@ export {
   defaultStandardDomTransforms,
   heuristicDomTransforms,
 } from './defaults.js'
+export { anchorEmbedResolver, anchorResolveEmbed, extractAnchorEpisode } from './embeds/anchor.js'
 export { appleEmbedResolver, appleResolveEmbed } from './embeds/apple.js'
 export { bandcampEmbedResolver, extractBandcampRelease } from './embeds/bandcamp.js'
 export { brightcoveEmbedResolver, brightcoveFlashEmbedResolver } from './embeds/brightcove.js'
