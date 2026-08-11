@@ -371,3 +371,75 @@ describeForEachParser('facebook variants', (parseHtml) => {
     })
   })
 })
+
+// Shapes the 200-file sample behind the corpus doc did not contain, found by probing the
+// pipeline (2026-08-11). Kept in their own group because their prevalence is unmeasured.
+describeForEachParser('facebook shapes outside the sampled variants', (parseHtml) => {
+  const convert = (value: string) => {
+    return transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' })
+  }
+
+  describe('legacy fb:post XFBML tag', () => {
+    const value = '<fb:post href="https://www.facebook.com/PageName/posts/123"></fb:post>'
+
+    // It is an empty element, so before it resolved it was deleted as an empty tag and the
+    // post vanished with it.
+    it('should resolve rather than be dropped as empty', async () => {
+      const result = await convert(value)
+
+      expect(result).toContain('data-embed-provider="facebook"')
+      expect(result).toContain('plugins/post.php')
+    })
+  })
+
+  describe('amp-facebook component', () => {
+    it('should resolve a post to the post plugin', async () => {
+      const value =
+        '<amp-facebook width="552" height="303" data-href="https://www.facebook.com/PageName/posts/123"></amp-facebook>'
+
+      expect(await convert(value)).toContain('plugins/post.php')
+    })
+
+    it('should follow data-embed-as to the video plugin', async () => {
+      const value =
+        '<amp-facebook data-embed-as="video" data-href="https://www.facebook.com/PageName/videos/123/"></amp-facebook>'
+
+      expect(await convert(value)).toContain('plugins/video.php')
+    })
+
+    // A comment thread is page chrome, not the article's content.
+    it('should leave a comment embed unresolved', async () => {
+      const value =
+        '<amp-facebook data-embed-as="comment" data-href="https://www.facebook.com/PageName/posts/123"></amp-facebook>'
+
+      expect(await convert(value)).not.toContain('data-embed-provider')
+    })
+  })
+
+  describe('legacy video/embed iframe', () => {
+    const value = '<iframe src="https://www.facebook.com/video/embed?video_id=123456"></iframe>'
+
+    it('should rebuild it onto the current plugin and the watch page', async () => {
+      const result = await convert(value)
+
+      expect(result).toContain('data-embed-id="123456"')
+      expect(result).toContain('data-embed-url="https://www.facebook.com/watch/?v=123456"')
+      expect(result).toContain('plugins/video.php')
+    })
+  })
+
+  describe('the page and comment widgets, which are chrome', () => {
+    it('should not resolve a fb-page timeline', async () => {
+      const value = '<div class="fb-page" data-href="https://www.facebook.com/PageName"></div>'
+
+      expect(await convert(value)).not.toContain('data-embed-provider')
+    })
+
+    it('should not resolve a comments plugin iframe', async () => {
+      const value =
+        '<iframe src="https://www.facebook.com/plugins/comments.php?href=https%3A%2F%2Fexample.com%2Fpost"></iframe>'
+
+      expect(await convert(value)).not.toContain('data-embed-provider')
+    })
+  })
+})

@@ -43,8 +43,12 @@ const readFallback = (blockquote: Nullish<Element>): Partial<EmbedResolverResult
 
 const fallbackSelector = '.fb-xfbml-parse-ignore blockquote, blockquote.fb-xfbml-parse-ignore'
 
-const extractEmbed = (element: Element, plugin: string): EmbedResolverResult | undefined => {
-  const href = attr(element, 'data-href')
+const extractEmbed = (
+  element: Element,
+  plugin: string,
+  attribute = 'data-href',
+): EmbedResolverResult | undefined => {
+  const href = attr(element, attribute)
 
   if (!href) {
     return
@@ -79,10 +83,39 @@ export const facebookVideoEmbedResolver: EmbedResolver = {
   },
 }
 
+// The pre-SDK XFBML tag, still pasted into old blog templates. It is an empty element with the
+// url in a plain `href`, so left alone it is deleted as an empty tag and the post disappears.
+export const facebookXfbmlEmbedResolver: EmbedResolver = {
+  selector: 'fb\\:post[href]',
+  extract: (element): EmbedResolverResult | undefined => {
+    return extractEmbed(element, 'post', 'href')
+  },
+}
+
+// The AMP component, which names which plugin it wants in `data-embed-as` (post, video or
+// comment). A comment thread is page chrome rather than the article's content, so it is left
+// for the non-content pass and only the other two resolve.
+export const facebookAmpEmbedResolver: EmbedResolver = {
+  selector: 'amp-facebook[data-href]',
+  extract: (element): EmbedResolverResult | undefined => {
+    const embedAs = attr(element, 'data-embed-as')
+
+    if (embedAs === 'comment') {
+      return
+    }
+
+    return extractEmbed(element, embedAs === 'video' ? 'video' : 'post')
+  },
+}
+
 // The plugin url the SDK builds at runtime, which is also what Facebook's own embed dialog
 // hands a publisher to paste. It is the more common of the two forms, so most Facebook embeds
 // arrive already pointing at a working player and only need naming.
 const pluginPathRegex = /^\/plugins\/(?:post|video)\.php$/
+// The pre-plugins video frame from old posts, which names its video in `video_id` instead of an
+// encoded href. It is rebuilt onto the current plugin, pointed at the watch page.
+const legacyVideoPathRegex = /^\/video\/embed$/
+const safeVideoIdRegex = /^\d+$/
 
 // The dialog writes the chosen size into the query as well as onto the element, and the query
 // copy survives a CMS that strips presentation attributes. It is the publisher's own number,
@@ -99,7 +132,29 @@ const querySize = (url: URL): { width?: number; height?: number } => {
 export const facebookResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url)
 
-  if (!parsed || !pluginPathRegex.test(parsed.pathname)) {
+  if (!parsed) {
+    return
+  }
+
+  if (legacyVideoPathRegex.test(parsed.pathname)) {
+    const videoId = parsed.searchParams.get('video_id')
+
+    if (!videoId || !safeVideoIdRegex.test(videoId)) {
+      return
+    }
+
+    const watchUrl = `https://www.facebook.com/watch/?v=${videoId}`
+
+    return {
+      provider: 'facebook',
+      id: videoId,
+      src: `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(watchUrl)}`,
+      url: watchUrl,
+      ...querySize(parsed),
+    }
+  }
+
+  if (!pluginPathRegex.test(parsed.pathname)) {
     return
   }
 
