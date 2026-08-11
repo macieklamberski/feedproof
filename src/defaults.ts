@@ -46,6 +46,7 @@ import { megaphoneEmbedResolver } from './embeds/megaphone.js'
 import { mixcloudEmbedResolver } from './embeds/mixcloud.js'
 import { omnyEmbedResolver } from './embeds/omny.js'
 import { podbeanEmbedResolver } from './embeds/podbean.js'
+import { podigeeEmbedResolver } from './embeds/podigee.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 import { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embeds/speakerdeck.js'
 import { spotifyEmbedResolver } from './embeds/spotify.js'
@@ -345,6 +346,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   mixcloudEmbedResolver,
   podbeanEmbedResolver,
   megaphoneEmbedResolver,
+  podigeeEmbedResolver,
   soundcloudEmbedResolver,
   speakerdeckEmbedResolver,
   speakerdeckIframeEmbedResolver,
