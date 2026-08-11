@@ -132,6 +132,11 @@ export {
   dailymotionResolveEmbed,
   extractDailymotionId,
 } from './embeds/dailymotion.js'
+export {
+  extractFiresideToken,
+  firesideEmbedResolver,
+  firesideResolveEmbed,
+} from './embeds/fireside.js'
 export { flourishEmbedResolver } from './embeds/flourish.js'
 export {
   extractJwplayerId,

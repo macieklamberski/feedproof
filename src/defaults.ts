@@ -36,6 +36,7 @@ import {
 } from './embeds/buzzsprout.js'
 import { captivateEmbedResolver } from './embeds/captivate.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
+import { firesideEmbedResolver } from './embeds/fireside.js'
 import { flourishEmbedResolver } from './embeds/flourish.js'
 import { jwplayerIframeEmbedResolver, jwplayerScriptEmbedResolver } from './embeds/jwplayer.js'
 import { libsynEmbedResolver } from './embeds/libsyn.js'
@@ -342,6 +343,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   soundcloudEmbedResolver,
   speakerdeckEmbedResolver,
   speakerdeckIframeEmbedResolver,
+  firesideEmbedResolver,
   flourishEmbedResolver,
   anchorEmbedResolver,
   appleEmbedResolver,
