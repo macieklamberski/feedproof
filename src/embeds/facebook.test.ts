@@ -246,3 +246,128 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
     })
   })
 })
+
+// Variant numbers refer to plans/research_widget_embeds/_corpus/facebook.md. Every variant the
+// deep pass found has a block here, so an unhandled one is visible as a missing block.
+describeForEachParser('facebook variants', (parseHtml) => {
+  const convert = (value: string) => {
+    return transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' })
+  }
+
+  describe('V3 SDK div, post', () => {
+    const value =
+      '<div class="fb-post" data-href="https://www.facebook.com/PageName/posts/123"></div>'
+
+    it('should become a post placeholder', async () => {
+      const result = await convert(value)
+
+      expect(result).toContain('data-embed-provider="facebook"')
+      expect(result).toContain('plugins/post.php')
+    })
+  })
+
+  describe('V4 SDK div with the dialog fallback blockquote', () => {
+    const value = html`
+      <div class="fb-post" data-href="https://www.facebook.com/PageName/posts/123">
+        <div class="fb-xfbml-parse-ignore">
+          <blockquote cite="https://www.facebook.com/PageName/posts/123">
+            <p>Caption text about the thing.</p>
+            Posted by <a href="https://www.facebook.com/PageName/">PageName</a> on
+            <a href="https://www.facebook.com/PageName/posts/123">Tuesday, 3 June 2026</a>
+          </blockquote>
+        </div>
+      </div>
+    `
+
+    // The fallback is the only readable copy of the post, so replacing the widget without it
+    // would lose the text outright.
+    it('should carry the post text, page and date onto the placeholder', async () => {
+      const result = await convert(value)
+
+      expect(result).toContain('data-embed-description="Caption text about the thing."')
+      expect(result).toContain('data-embed-author="PageName"')
+      expect(result).toContain('data-embed-date="Tuesday, 3 June 2026"')
+    })
+  })
+
+  describe('V6 SDK div, video with an fb.watch short link', () => {
+    const value = '<div class="fb-video" data-href="https://fb.watch/abcDEF123/"></div>'
+
+    // The mobile app hands out fb.watch links and publishers paste them into the widget.
+    it('should accept the short-link host', async () => {
+      const result = await convert(value)
+
+      expect(result).toContain('data-embed-provider="facebook"')
+      expect(result).toContain('plugins/video.php')
+    })
+  })
+
+  describe('V7 standalone fallback blockquote, no widget div', () => {
+    const value = html`
+      <blockquote
+        cite="https://www.facebook.com/PageName/videos/123/"
+        class="fb-xfbml-parse-ignore"
+      >
+        <p>A video caption.</p>
+        Posted by <a href="https://www.facebook.com/PageName/">PageName</a> on
+        <a href="https://www.facebook.com/PageName/videos/123/">Wednesday, 4 June 2026</a>
+      </blockquote>
+    `
+
+    it('should resolve from the cite url and keep the text', async () => {
+      const result = await convert(value)
+
+      expect(result).toContain('data-embed-provider="facebook"')
+      expect(result).toContain('data-embed-description="A video caption."')
+    })
+
+    // Nothing names the plugin here, so the path in `cite` decides.
+    it('should pick the video plugin from the cite path', async () => {
+      const result = await convert(value)
+
+      expect(result).toContain('plugins/video.php')
+    })
+  })
+
+  describe('V8 bare SDK loader beside the widget', () => {
+    const value = html`
+      <div id="fb-root"></div>
+      <script async defer src="https://connect.facebook.net/en_US/sdk.js#xfbml=1"></script>
+      <p>Article text.</p>
+    `
+
+    it('should leave nothing of the loader behind', async () => {
+      const result = await convert(value)
+
+      expect(result).not.toContain('fb-root')
+      expect(result).not.toContain('connect.facebook.net')
+      expect(result).toContain('Article text.')
+    })
+  })
+
+  describe('V9 entity-escaped embed from an Atom content payload', () => {
+    const value =
+      '&lt;iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123"&gt;&lt;/iframe&gt;'
+
+    // The escaping is undone upstream by decodeDoubleEncodedTags, so the embed arrives as V1.
+    it('should resolve once the entities are decoded', async () => {
+      const result = await convert(value)
+
+      expect(result).toContain('data-embed-provider="facebook"')
+    })
+  })
+
+  describe('the page-promo widgets, which are chrome and not content', () => {
+    const value = html`
+      <div class="fb-like" data-href="https://www.facebook.com/PageName"></div>
+      <p>Article text.</p>
+    `
+
+    it('should strip a fb-like rather than resolve it', async () => {
+      const result = await convert(value)
+
+      expect(result).not.toContain('data-embed-provider')
+      expect(result).toContain('Article text.')
+    })
+  })
+})

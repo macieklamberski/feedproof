@@ -43,6 +43,7 @@ import {
 import { captivateEmbedResolver } from './embeds/captivate.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import {
+  facebookFallbackEmbedResolver,
   facebookIframeEmbedResolver,
   facebookPostEmbedResolver,
   facebookVideoEmbedResolver,
@@ -380,6 +381,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   facebookPostEmbedResolver,
   facebookVideoEmbedResolver,
   facebookIframeEmbedResolver,
+  facebookFallbackEmbedResolver,
   mediavineEmbedResolver,
   mixcloudEmbedResolver,
   podbeanEmbedResolver,

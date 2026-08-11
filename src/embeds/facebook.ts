@@ -1,6 +1,6 @@
-import { coerceNumber, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { coerceNumber, isHostOf, isSubdomainOf, type Nullish, parseUrl } from 'trousse'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
-import { attr } from '../utils/dom.js'
+import { attr, find, text } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Facebook's embed SDK ships a post as `<div class="fb-post" data-href="{post url}">` and a
@@ -10,13 +10,38 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // live 2026-08-08, 200 on real posts and videos):
 //   https://www.facebook.com/plugins/post.php?href={encoded href}
 //   https://www.facebook.com/plugins/video.php?href={encoded href}
-const facebookHost = 'facebook.com'
+// `fb.watch` is the short-link host the mobile app hands out, and it turns up inside both
+// widget divs, so it is a Facebook url for our purposes even though the plugin lives elsewhere.
+const facebookHosts = ['facebook.com', 'fb.watch']
 
 // Posts live on the apex and on `web.`/`m.`/`business.` alike, so both checks are the guard,
 // and only a url passing it may be interpolated into the plugin template.
 const isFacebookUrl = (url: URL): boolean => {
-  return isHostOf(url, facebookHost) || isSubdomainOf(url, facebookHost)
+  return isHostOf(url, facebookHosts) || isSubdomainOf(url, facebookHosts)
 }
+
+// The copy-paste embed dialog ships the post text, the page and the date inside a fallback
+// `<blockquote cite>` that renders when the SDK never loads. Replacing the widget without
+// lifting those out would drop the only readable copy of the post.
+//
+// The shape is fixed: a caption paragraph, then "Posted by {page} on {date}" as two anchors.
+// Anything else is not the dialog's output, so only the paragraph is taken.
+const readFallback = (blockquote: Nullish<Element>): Partial<EmbedResolverResult> => {
+  if (!blockquote) {
+    return {}
+  }
+
+  const description = text(find(blockquote, 'p'))
+  const anchors = Array.from(blockquote.querySelectorAll('a'))
+
+  if (anchors.length !== 2) {
+    return { description }
+  }
+
+  return { description, author: text(anchors[0]), date: text(anchors[1]) }
+}
+
+const fallbackSelector = '.fb-xfbml-parse-ignore blockquote, blockquote.fb-xfbml-parse-ignore'
 
 const extractEmbed = (element: Element, plugin: string): EmbedResolverResult | undefined => {
   const href = attr(element, 'data-href')
@@ -36,6 +61,7 @@ const extractEmbed = (element: Element, plugin: string): EmbedResolverResult | u
     id: href,
     src: `https://www.facebook.com/plugins/${plugin}.php?href=${encodeURIComponent(href)}`,
     url: href,
+    ...readFallback(find(element, fallbackSelector)),
   }
 }
 
@@ -96,6 +122,34 @@ export const facebookResolveEmbed = (url: string): EmbedResolverResult | undefin
 }
 
 export const facebookIframeEmbedResolver = createUrlEmbedResolver(
-  [facebookHost],
+  facebookHosts,
   facebookResolveEmbed,
 )
+
+// The same fallback blockquote as above, but the publisher kept only it and dropped the widget
+// div, so nothing names the plugin. The url in `cite` does: a video, reel or watch path is the
+// video player, everything else is a post. Registered after the two divs, whose subtree this
+// would otherwise match a second time.
+const videoPathRegex = /\/(?:videos?|reel|watch)\b/i
+
+export const facebookFallbackEmbedResolver: EmbedResolver = {
+  selector: fallbackSelector,
+  extract: (element): EmbedResolverResult | undefined => {
+    const cite = attr(element, 'cite')
+    const parsed = cite ? parseUrl(cite) : undefined
+
+    if (!cite || !parsed || !isFacebookUrl(parsed)) {
+      return
+    }
+
+    const plugin = videoPathRegex.test(parsed.pathname) ? 'video' : 'post'
+
+    return {
+      provider: 'facebook',
+      id: cite,
+      src: `https://www.facebook.com/plugins/${plugin}.php?href=${encodeURIComponent(cite)}`,
+      url: cite,
+      ...readFallback(element),
+    }
+  },
+}
