@@ -3,9 +3,16 @@ import type { EmbedResolver, EmbedResolverResult } from '../types.js'
 import { attr, parseRatioDimensions } from '../utils/dom.js'
 import { createIframeEmbedResolver } from '../utils/widgets.js'
 
-// Every corpus id is 32 lowercase hex chars (a dashless UUID); anything else is dropped
-// rather than interpolated into the player URL.
-const deckIdRegex = /^[0-9a-f]{32}$/
+// Ids are lowercase hex, in two lengths. 32 chars is the current dashless UUID; 24 is the
+// legacy Mongo ObjectId Speaker Deck issued around 2011-2012, and those decks still play —
+// every sampled one returns 200 on the player url. An earlier version of this comment claimed
+// the corpus held only the 32-char form, which cost 36 feeds, 25 of them resolving to nothing
+// (measured 2026-08-11).
+const deckIdRegex = /^[0-9a-f]{24}(?:[0-9a-f]{8})?$/
+
+// A few feeds put the slide inside the id attribute rather than beside it.
+const slideSuffixRegex = /\?slide=(\d+)$/
+const safeSlideRegex = /^\d+$/
 
 // What a deck is when its own script does not say. Speaker Deck's snippet always carries the
 // ratio, so this is for the feeds that strip the attribute, and 16:9 is what decks mostly are:
@@ -22,16 +29,23 @@ const defaultDeckRatio = '16/9'
 export const speakerdeckEmbedResolver: EmbedResolver = {
   selector: 'script.speakerdeck-embed[data-id]',
   extract: (element): EmbedResolverResult | undefined => {
-    const deckId = attr(element, 'data-id')
+    const raw = attr(element, 'data-id') ?? ''
+    const inlineSlide = raw.match(slideSuffixRegex)?.[1]
+    const deckId = raw.replace(slideSuffixRegex, '')
 
     if (!deckId || !deckIdRegex.test(deckId)) {
       return
     }
 
+    // One feed can embed the same deck at several slides. Without the slide those collapse
+    // into identical placeholders, and the player url honours `?slide=`.
+    const slide = inlineSlide ?? attr(element, 'data-slide')
+    const hasSlide = Boolean(slide && safeSlideRegex.test(slide))
+
     const result: EmbedResolverResult = {
       provider: 'speakerdeck',
-      id: deckId,
-      src: `https://speakerdeck.com/player/${deckId}`,
+      id: hasSlide ? `${deckId}/${slide}` : deckId,
+      src: `https://speakerdeck.com/player/${deckId}${hasSlide ? `?slide=${slide}` : ''}`,
     }
 
     // The script carries the deck's aspect ratio as a bare decimal, e.g. `data-ratio="1.33"`.
