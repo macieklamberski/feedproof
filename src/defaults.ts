@@ -44,6 +44,7 @@ import { libsynEmbedResolver } from './embeds/libsyn.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { megaphoneEmbedResolver } from './embeds/megaphone.js'
 import { mixcloudEmbedResolver } from './embeds/mixcloud.js'
+import { omnyEmbedResolver } from './embeds/omny.js'
 import { podbeanEmbedResolver } from './embeds/podbean.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 import { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embeds/speakerdeck.js'
@@ -353,6 +354,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   appleEmbedResolver,
   bandcampEmbedResolver,
   audioboomEmbedResolver,
+  omnyEmbedResolver,
   spotifyEmbedResolver,
   substackMediaResolver,
   weeblyMediaResolver,
