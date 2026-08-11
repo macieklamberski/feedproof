@@ -174,6 +174,7 @@ export {
   spreakerEmbedResolver,
   spreakerResolveEmbed,
 } from './embeds/spreaker.js'
+export { extractTedTalk, tedEmbedResolver, tedResolveEmbed } from './embeds/ted.js'
 export {
   extractVimeoId,
   vimeoEmbedResolver,
