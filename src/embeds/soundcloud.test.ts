@@ -66,6 +66,34 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
     })
   })
 
+  // The Flash player put the same `url=` reference on the legacy carriers, so the same
+  // extraction reaches them once the selector stops naming the iframe player path.
+  describe('legacy Flash carriers', () => {
+    it('should read the track reference from an <embed> carrier', () => {
+      const value =
+        '<embed src="https://player.soundcloud.com/player.swf?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F34695066">'
+
+      expect(extract(value)).toMatchObject({
+        provider: 'soundcloud',
+        id: 'tracks/34695066',
+      })
+    })
+
+    it('should read the track reference from an <object> carrier', () => {
+      const value =
+        '<object data="https://player.soundcloud.com/player.swf?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F34695066"></object>'
+
+      expect(extract(value)).toMatchObject({
+        provider: 'soundcloud',
+        id: 'tracks/34695066',
+      })
+    })
+
+    it('should ignore a carrier pointing somewhere else', () => {
+      expect(extract('<embed src="https://example.com/player.swf?url=whatever">')).toBeUndefined()
+    })
+  })
+
   describe('edge cases', () => {
     it('should yield only the src, id and height for a bare iframe', () => {
       const value =

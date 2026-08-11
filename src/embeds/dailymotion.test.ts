@@ -19,6 +19,15 @@ describe('extractDailymotionId', () => {
     expect(extractDailymotionId('https://www.dailymotion.com/embed/video/x7tgad0')).toBe('x7tgad0')
   })
 
+  // Both forms the Flash player shipped.
+  it('should extract id from the swf player url', () => {
+    expect(extractDailymotionId('http://www.dailymotion.com/swf/x7tgad0')).toBe('x7tgad0')
+  })
+
+  it('should extract id from the swf player url carrying a video segment', () => {
+    expect(extractDailymotionId('http://www.dailymotion.com/swf/video/x7tgad0')).toBe('x7tgad0')
+  })
+
   it('should extract id from the geo player url', () => {
     expect(extractDailymotionId('https://geo.dailymotion.com/player.html?video=x7tgad0')).toBe(
       'x7tgad0',

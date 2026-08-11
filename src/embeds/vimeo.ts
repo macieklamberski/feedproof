@@ -1,4 +1,4 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { pickUrlParams } from '../utils/urls.js'
 import { createIframeEmbedResolver } from '../utils/widgets.js'
@@ -11,11 +11,13 @@ export const extractVimeoId = (link: string): string | undefined => {
   const segments = getPathSegments(link)
 
   // player.vimeo.com/video/{id}; otherwise the first numeric segment, which covers
-  // vimeo.com/{id}, /channels/{name}/{id}, and /groups/{name}/videos/{id}.
+  // vimeo.com/{id}, /channels/{name}/{id}, and /groups/{name}/videos/{id}. The Flash player
+  // carried no id in the path at all: moogaloop.swf?clip_id={id}.
   const id =
     segments[0] === 'video'
       ? segments[1]
-      : segments.find((segment) => safeVideoIdRegex.test(segment))
+      : (segments.find((segment) => safeVideoIdRegex.test(segment)) ??
+        parseUrl(link)?.searchParams.get('clip_id'))
 
   if (id && safeVideoIdRegex.test(id)) {
     return id

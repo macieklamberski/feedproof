@@ -471,6 +471,36 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       expect(result).toContain('data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
     })
 
+    it('should replace the Flash shell rather than the carrier inside it', async () => {
+      const value = html`
+        <object width="425" height="350" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000">
+          <param name="allowfullscreen" value="true" />
+          <param name="src" value="https://www.youtube.com/v/dQw4w9WgXcQ" />
+          <embed src="https://www.youtube.com/v/dQw4w9WgXcQ" width="425" height="350" />
+        </object>
+      `
+      const result = await transform(value)
+
+      expect(result).toContain('data-embed-provider="youtube"')
+      expect(result).not.toContain('<object')
+      expect(result).not.toContain('<param')
+    })
+
+    it('should keep a Flash shell that holds the publisher own fallback', async () => {
+      const value = html`
+        <object width="425" height="350">
+          <param name="src" value="https://www.youtube.com/v/dQw4w9WgXcQ" />
+          <embed src="https://www.youtube.com/v/dQw4w9WgXcQ" />
+          <p>Your browser cannot play this video.</p>
+        </object>
+      `
+      const result = await transform(value)
+
+      expect(result).toContain('data-embed-provider="youtube"')
+      expect(result).toContain('<object')
+      expect(result).toContain('Your browser cannot play this video.')
+    })
+
     it('should leave a non-provider carrier to the generic placeholder', async () => {
       const value = '<embed src="https://example.com/player.swf">'
       const result = await transform(value)

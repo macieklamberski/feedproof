@@ -85,6 +85,25 @@ const findParkedMedia = (
   }
 }
 
+// A Flash `<object>` is a shell around its carrier: `classid`, `codebase` and a pile of
+// `<param>`s, none of which renders anything. Replacing the shell rather than the carrier
+// inside it is what keeps the conversion from leaving dead markup wrapped around the
+// placeholder. An object holding its own text or other elements is a real fallback the
+// publisher wrote, so that one keeps its content and only the carrier is replaced.
+const carrierOrShell = (element: Element): Element => {
+  const parent = element.parentElement
+
+  if (parent?.localName !== 'object' || parent.textContent?.trim()) {
+    return element
+  }
+
+  const others = Array.from(parent.children).filter(
+    (child) => child !== element && child.localName !== 'param',
+  )
+
+  return others.length ? element : parent
+}
+
 // The widget pass: one registry of resolvers whose result shape decides the output. An
 // embed result becomes an opaque `data-embed-*` placeholder; a media result becomes a real
 // <video>/<audio> that the later passes then neutralize, proxy and deduplicate against the
@@ -163,7 +182,7 @@ export const convertWidgets: DomTransform = (context) => {
         if (isMediaResult(metadata)) {
           const poster = resolveOrKeepUrl(metadata.poster, resolveUrlFn, baseUrl)
 
-          element.replaceWith(
+          carrierOrShell(element).replaceWith(
             createMediaElement(document, { ...metadata, src: resolvedSrc, poster }),
           )
           continue
@@ -202,7 +221,7 @@ export const convertWidgets: DomTransform = (context) => {
           date: parseOrKeepDate(metadata.date, parseDateFn),
         }
 
-        element.replaceWith(createEmbedPlaceholder(document, placeholderMetadata))
+        carrierOrShell(element).replaceWith(createEmbedPlaceholder(document, placeholderMetadata))
       }
     }
 
@@ -232,11 +251,13 @@ export const convertWidgets: DomTransform = (context) => {
       const mediaTag = getMediaTag(cleaned)
 
       if (mediaTag) {
-        element.replaceWith(createMediaElement(document, { tag: mediaTag, src: cleaned }))
+        carrierOrShell(element).replaceWith(
+          createMediaElement(document, { tag: mediaTag, src: cleaned }),
+        )
         continue
       }
 
-      element.replaceWith(
+      carrierOrShell(element).replaceWith(
         createEmbedPlaceholder(document, { src: cleaned, ...getEmbedDimensions(element) }),
       )
     }

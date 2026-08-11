@@ -1,6 +1,7 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
 import { attr, text } from '../utils/dom.js'
+import { embedCarrierSelector, readCarrierUrl } from '../utils/widgets.js'
 
 // SoundCloud's embed is an iframe whose `url=` query names the track as an
 // `api.soundcloud.com/tracks/{id}` reference, which is not human-clickable, so the iframe
@@ -24,9 +25,12 @@ const classicPlayerHeights: Record<string, number | undefined> = {
 }
 
 export const soundcloudEmbedResolver: EmbedResolver = {
-  selector: 'iframe[src*="w.soundcloud.com/player"]',
+  // Any carrier, because the Flash player shipped the same `url=` reference on an `<embed>`
+  // and an `<object>`: `player.soundcloud.com/player.swf?url=api.soundcloud.com/tracks/{id}`.
+  // The host check below is what narrows it, so no player path is spelled in the selector.
+  selector: embedCarrierSelector,
   extract: (element): EmbedResolverResult | undefined => {
-    const src = attr(element, 'src') ?? ''
+    const src = readCarrierUrl(element)
     const parsed = parseUrl(src, 'https://example.com')
 
     if (
