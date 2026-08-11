@@ -51,6 +51,7 @@ import { simplecastEmbedResolver } from './embeds/simplecast.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 import { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embeds/speakerdeck.js'
 import { spotifyEmbedResolver } from './embeds/spotify.js'
+import { spreakerEmbedResolver } from './embeds/spreaker.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { wistiaEmbedResolver } from './embeds/wistia.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
@@ -360,6 +361,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   audioboomEmbedResolver,
   omnyEmbedResolver,
   spotifyEmbedResolver,
+  spreakerEmbedResolver,
   substackMediaResolver,
   weeblyMediaResolver,
   wechatMediaResolver,

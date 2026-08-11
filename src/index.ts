@@ -170,6 +170,11 @@ export { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 export { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embeds/speakerdeck.js'
 export { spotifyEmbedResolver, spotifyResolveEmbed } from './embeds/spotify.js'
 export {
+  extractSpreakerEmbed,
+  spreakerEmbedResolver,
+  spreakerResolveEmbed,
+} from './embeds/spreaker.js'
+export {
   extractVimeoId,
   vimeoEmbedResolver,
   vimeoResolveEmbed,
