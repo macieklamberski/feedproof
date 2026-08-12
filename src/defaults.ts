@@ -71,6 +71,7 @@ import { convertAmpElements } from './transforms/dom/convertAmpElements.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 import { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
+import { convertGiphyEmbeds } from './transforms/dom/convertGiphyEmbeds.js'
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 import { convertNoteEmbeds } from './transforms/dom/convertNoteEmbeds.js'
 import { convertWidgets } from './transforms/dom/convertWidgets.js'
@@ -205,6 +206,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // linked static <img> of the chart's published PNG render. Runs in this normalize
   // cluster so the emitted <img> is dimensioned and proxied by the image transforms below.
   convertDatawrapperEmbeds,
+  convertGiphyEmbeds,
   unwrapDoublyNestedLists,
   stripDuplicateTitleHeading,
   demoteHeadings,
