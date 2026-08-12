@@ -7,38 +7,68 @@ import {
   readCarrierUrl,
 } from '../utils/widgets.js'
 
-// Brightcove's in-page embed is a bare `<video-js>` custom element that the loader script
-// turns into a player, so a reader shows nothing at all: the element is empty and survives
-// as an unknown tag. The player page is mintable from its attributes. The account id is
-// usually on the element, but some plugins leave it only in the loader script's URL
-// (`players.brightcove.net/{account}/…`), so that is the fallback. Brightcove has no public
-// watch page, so the placeholder carries no `url` and anchors to the player src.
+// Brightcove builds its player page from four ids the in-page embed carries as attributes. The
+// account is usually one of them, but some plugins leave it only in the loader script's url, so
+// both places are read here rather than by whoever holds the element.
+const brightcoveIdRegex = /^\d{5,}$/
+const accountScriptSelector = 'script[src*="players.brightcove.net"]'
 const accountScriptRegex = /players\.brightcove\.net\/(\d+)\//
 
+export const readPlayerAccount = (element: Element): string | undefined => {
+  const stated = attr(element, 'data-account')
+
+  if (stated) {
+    return stated
+  }
+
+  const loader = element.ownerDocument.querySelector(accountScriptSelector)
+
+  return attr(loader, 'src')?.match(accountScriptRegex)?.[1]
+}
+
+export const composePlayerUrl = (
+  account: string,
+  videoId: string,
+  player = 'default',
+  embed = 'default',
+): string => {
+  return `https://players.brightcove.net/${account}/${player}_${embed}/index.html?videoId=${videoId}`
+}
+
+// Brightcove's in-page embed is a bare `<video-js>` that its loader script turns into a player,
+// so a reader shows nothing: the element is empty and survives as an unknown tag. Video.js is
+// only the renderer here; the video is Brightcove's, named by id, which is why this lives with
+// the rest of Brightcove rather than with the generic Video.js rebuild. Brightcove has no public
+// watch page, so the placeholder carries no `url`.
 export const brightcoveVideoJsEmbedResolver: EmbedResolver = {
   selector: 'video-js[data-video-id]',
   extract: (element): EmbedResolverResult | undefined => {
     const videoId = attr(element, 'data-video-id')
+    const account = videoId ? readPlayerAccount(element) : undefined
 
-    if (!videoId) {
+    // Video.js is a library anyone can use, and `data-video-id` is not a name only Brightcove
+    // could have chosen, so the ids have to look like Brightcove's before this mints a
+    // Brightcove url from them. Both are long digit strings, the same test the other two
+    // resolvers here apply. In the corpus the inference is safe anyway: 116 of the 120 feeds
+    // carrying this element also ship the `players.brightcove.net` loader script.
+    if (
+      !videoId ||
+      !account ||
+      !brightcoveIdRegex.test(videoId) ||
+      !brightcoveIdRegex.test(account)
+    ) {
       return
     }
-
-    const loader = element.ownerDocument.querySelector('script[src*="players.brightcove.net"]')
-    const account =
-      attr(element, 'data-account') ?? attr(loader, 'src')?.match(accountScriptRegex)?.[1]
-
-    if (!account) {
-      return
-    }
-
-    const player = attr(element, 'data-player') ?? 'default'
-    const embed = attr(element, 'data-embed') ?? 'default'
 
     return {
       provider: 'brightcove',
       id: videoId,
-      src: `https://players.brightcove.net/${account}/${player}_${embed}/index.html?videoId=${videoId}`,
+      src: composePlayerUrl(
+        account,
+        videoId,
+        attr(element, 'data-player'),
+        attr(element, 'data-embed'),
+      ),
     }
   },
 }
@@ -49,7 +79,6 @@ export const brightcoveVideoJsEmbedResolver: EmbedResolver = {
 // minted url takes the account's default player, which is verified live: this shape answers
 // 200 while a bogus account 404s.
 const federatedPathRegex = /\/services\/viewer\/federated_/
-const brightcoveIdRegex = /^\d{5,}$/
 
 const readFlashVars = (element: Element): URLSearchParams | undefined => {
   const own = attr(element, 'flashvars')
