@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
@@ -6,64 +7,6 @@ import {
   brightcoveResolveEmbed,
   brightcoveVideoJsEmbedResolver,
 } from './brightcove.js'
-
-describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(brightcoveVideoJsEmbedResolver.selector)
-
-    return element
-      ? (brightcoveVideoJsEmbedResolver.extract(element) as EmbedResolverResult)
-      : undefined
-  }
-
-  describe('happy paths', () => {
-    it('should mint the player url from the element attributes', () => {
-      const value =
-        '<video-js id="6274747546001" data-video-id="6274747546001" data-account="5436121860001" data-player="default" data-embed="default" class="video-js" controls></video-js>'
-      const expected: EmbedResolverResult = {
-        provider: 'brightcove',
-        id: '6274747546001',
-        src: 'https://players.brightcove.net/5436121860001/default_default/index.html?videoId=6274747546001',
-      }
-
-      expect(extract(value)).toEqual(expected)
-    })
-
-    it('should read the account from the loader script when the element lacks it', () => {
-      const value = html`
-        <video-js id="brightcove-embed-player-6388838370112" data-video-id="6388838370112" data-embed="default" class="video-js" controls></video-js>
-        <script src="https://players.brightcove.net/6057277732001/experience_default/index.min.js"></script>
-      `
-
-      expect(extract(value)?.src).toBe(
-        'https://players.brightcove.net/6057277732001/default_default/index.html?videoId=6388838370112',
-      )
-    })
-
-    it('should default the player and embed segments', () => {
-      const value =
-        '<video-js data-video-id="6310428365112" data-account="6314321213001"></video-js>'
-
-      expect(extract(value)?.src).toBe(
-        'https://players.brightcove.net/6314321213001/default_default/index.html?videoId=6310428365112',
-      )
-    })
-  })
-
-  describe('sad paths', () => {
-    it('should return undefined when no account is recoverable', () => {
-      const value = '<video-js data-video-id="6388838370112" data-embed="default"></video-js>'
-
-      expect(extract(value)).toBeUndefined()
-    })
-
-    it('should return undefined for an empty video id', () => {
-      const value = '<video-js data-video-id="" data-account="6314321213001"></video-js>'
-
-      expect(extract(value)).toBeUndefined()
-    })
-  })
-})
 
 describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
   const extract = (value: string): EmbedResolverResult | undefined => {
@@ -195,5 +138,82 @@ describe('brightcoveResolveEmbed', () => {
     it('should return undefined for a url that cannot be parsed', () => {
       expect(brightcoveResolveEmbed('https://[')).toBeUndefined()
     })
+  })
+})
+
+describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
+  const extract = (value: string): EmbedResolverResult | undefined => {
+    const element = parseHtml(value).querySelector(brightcoveVideoJsEmbedResolver.selector)
+
+    return element
+      ? (brightcoveVideoJsEmbedResolver.extract(element) as EmbedResolverResult)
+      : undefined
+  }
+
+  describe('happy paths', () => {
+    it('should mint the player page from the element attributes', () => {
+      const value = html`<video-js data-account="1234567890" data-player="AbCdEf" data-embed="custom" data-video-id="6098765432" controls></video-js>`
+
+      expect(extract(value)).toEqual({
+        provider: 'brightcove',
+        id: '6098765432',
+        src: 'https://players.brightcove.net/1234567890/AbCdEf_custom/index.html?videoId=6098765432',
+      })
+    })
+
+    it('should default the player and embed ids when the element omits them', () => {
+      const value = html`<video-js data-account="1234567890" data-video-id="6098765432"></video-js>`
+
+      expect(extract(value)).toMatchObject({
+        src: 'https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432',
+      })
+    })
+
+    // Some plugins leave the account only in the loader script's url.
+    it('should take the account from the loader script when the element has none', () => {
+      const value = html`
+        <video-js data-video-id="6098765432"></video-js>
+        <script src="https://players.brightcove.net/1234567890/default_default/index.min.js"></script>
+      `
+
+      expect(extract(value)).toMatchObject({ id: '6098765432' })
+    })
+  })
+
+  describe('sad paths', () => {
+    it('should return undefined when no account can be found', () => {
+      expect(extract(html`<video-js data-video-id="6098765432"></video-js>`)).toBeUndefined()
+    })
+
+    // Video.js is a library anyone can use, so ids that are not Brightcove-shaped are left to
+    // whoever else emitted them.
+    it('should return undefined when the video id is not a brightcove id', () => {
+      const value = html`<video-js data-account="1234567890" data-video-id="my-clip"></video-js>`
+
+      expect(extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the account is not a brightcove account', () => {
+      const value = html`<video-js data-account="acme" data-video-id="6098765432"></video-js>`
+
+      expect(extract(value)).toBeUndefined()
+    })
+  })
+})
+
+// The other half of the contract asserted in rebuildVideoJsEmbeds.test.ts: that transform leaves
+// a hosted player's element alone, and this is what then claims it. Asserted end to end because
+// neither file knows about the other, so nothing but a run proves the two halves meet.
+describeForEachParser('brightcove video-js through the pipeline', (parseHtml) => {
+  it('should become a placeholder the element alone could not produce', async () => {
+    const value = html`<video-js data-account="1234567890" data-video-id="6098765432"></video-js>`
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+    })
+
+    expect(result).toContain('data-embed-provider="brightcove"')
+    expect(result).toContain('data-embed-id="6098765432"')
+    expect(result).not.toContain('<video-js')
   })
 })

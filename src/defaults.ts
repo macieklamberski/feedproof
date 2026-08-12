@@ -113,6 +113,7 @@ import { rebuildLazyYtEmbeds } from './transforms/dom/rebuildLazyYtEmbeds.js'
 import { rebuildLiteVideoEmbeds } from './transforms/dom/rebuildLiteVideoEmbeds.js'
 import { rebuildLyteEmbeds } from './transforms/dom/rebuildLyteEmbeds.js'
 import { rebuildRocketYoutubePreviews } from './transforms/dom/rebuildRocketYoutubePreviews.js'
+import { rebuildVideoJsEmbeds } from './transforms/dom/rebuildVideoJsEmbeds.js'
 import { rebuildWistiaEmbeds } from './transforms/dom/rebuildWistiaEmbeds.js'
 import { removeTrackingPixels } from './transforms/dom/removeTrackingPixels.js'
 import { replacePreLineBreaks } from './transforms/dom/replacePreLineBreaks.js'
@@ -179,6 +180,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   rebuildLiteVideoEmbeds,
   rebuildLyteEmbeds,
   rebuildRocketYoutubePreviews,
+  rebuildVideoJsEmbeds,
   rebuildWistiaEmbeds,
   rebuildLazyLoadForVideos,
   rebuildLazyYtEmbeds,
@@ -352,9 +354,9 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   ivooxEmbedResolver,
   jwplayerIframeEmbedResolver,
   jwplayerScriptEmbedResolver,
-  brightcoveVideoJsEmbedResolver,
   brightcoveFlashEmbedResolver,
   brightcoveIframeEmbedResolver,
+  brightcoveVideoJsEmbedResolver,
   libsynEmbedResolver,
   buzzsproutIframeEmbedResolver,
   buzzsproutScriptEmbedResolver,
