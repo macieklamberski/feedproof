@@ -91,8 +91,6 @@ const composeEmbed = (status: Status, extra: Partial<EmbedResolverResult>): Embe
   return {
     provider: 'twitter',
     id: status.id,
-    // Verified live 2026-08-12: this host serves the player and 200s, while `platform.x.com`
-    // only redirects to it. The watch page is the reverse, `twitter.com` 301s to `x.com`.
     src: `https://platform.twitter.com/embed/Tweet.html?id=${status.id}`,
     url: status.handle ? `https://x.com/${status.handle}/status/${status.id}` : undefined,
     ...extra,
