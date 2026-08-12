@@ -162,6 +162,12 @@ export {
   mixcloudEmbedResolver,
   mixcloudResolveEmbed,
 } from './embeds/mixcloud.js'
+export {
+  extractNicovideoId,
+  nicovideoIframeEmbedResolver,
+  nicovideoResolveEmbed,
+  nicovideoScriptEmbedResolver,
+} from './embeds/nicovideo.js'
 export { extractOmnyClip, omnyEmbedResolver, omnyResolveEmbed } from './embeds/omny.js'
 export { extractPodbeanId, podbeanEmbedResolver, podbeanResolveEmbed } from './embeds/podbean.js'
 export { podigeeEmbedResolver } from './embeds/podigee.js'
