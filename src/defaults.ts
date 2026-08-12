@@ -44,6 +44,7 @@ import { libsynEmbedResolver } from './embeds/libsyn.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { megaphoneEmbedResolver } from './embeds/megaphone.js'
 import { mixcloudEmbedResolver } from './embeds/mixcloud.js'
+import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from './embeds/nicovideo.js'
 import { omnyEmbedResolver } from './embeds/omny.js'
 import { podbeanEmbedResolver } from './embeds/podbean.js'
 import { podigeeEmbedResolver } from './embeds/podigee.js'
@@ -365,6 +366,8 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   bandcampEmbedResolver,
   audioboomEmbedResolver,
   omnyEmbedResolver,
+  nicovideoScriptEmbedResolver,
+  nicovideoIframeEmbedResolver,
   spotifyEmbedResolver,
   spreakerEmbedResolver,
   substackMediaResolver,
