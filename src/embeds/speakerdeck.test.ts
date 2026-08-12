@@ -2,13 +2,15 @@ import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { speakerdeckEmbedResolver, speakerdeckResolveEmbed } from './speakerdeck.js'
+import { speakerdeckResolveEmbed, speakerdeckScriptEmbedResolver } from './speakerdeck.js'
 
-describeForEachParser('speakerdeckEmbedResolver', (parseHtml) => {
+describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
   const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(speakerdeckEmbedResolver.selector)
+    const element = parseHtml(value).querySelector(speakerdeckScriptEmbedResolver.selector)
 
-    return element ? (speakerdeckEmbedResolver.extract(element) as EmbedResolverResult) : undefined
+    return element
+      ? (speakerdeckScriptEmbedResolver.extract(element) as EmbedResolverResult)
+      : undefined
   }
 
   // Measured 2026-08-11: 36 corpus feeds carry a 24-char Mongo ObjectId from 2011-2012 and

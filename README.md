@@ -167,6 +167,8 @@ The `stringTransforms` and `domTransforms` options each fully replace the corres
 
 `widgetResolvers` and `citeResolvers` each fully replace their default resolver list when provided; omit them for the defaults. Every resolver is exported individually from `feedsweep`, so a custom list is composed by naming the built-ins you want alongside your own.
 
+Embed resolvers are named `{service}EmbedResolver` where a service ships one, and `{service}{Carrier}EmbedResolver` where it ships several, since the carrier is the only thing that differs between them: `buzzsproutIframeEmbedResolver` beside `buzzsproutScriptEmbedResolver`, `brightcoveVideoJsEmbedResolver` beside `brightcoveFlashEmbedResolver`.
+
 ## DOM library
 
 Feedsweep is parser-agnostic. You provide `parseHtmlFn` — a function that turns an HTML string into a `Document`. Use any DOM library that produces a standards-compliant `Document`. The test suite runs the full pipeline against both linkedom and jsdom.

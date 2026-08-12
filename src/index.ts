@@ -116,7 +116,10 @@ export {
 } from './embeds/audioboom.js'
 export { bandcampEmbedResolver, extractBandcampRelease } from './embeds/bandcamp.js'
 export { blubrryEmbedResolver, blubrryResolveEmbed, extractBlubrryEmbed } from './embeds/blubrry.js'
-export { brightcoveEmbedResolver, brightcoveFlashEmbedResolver } from './embeds/brightcove.js'
+export {
+  brightcoveFlashEmbedResolver,
+  brightcoveVideoJsEmbedResolver,
+} from './embeds/brightcove.js'
 export {
   buzzsproutIframeEmbedResolver,
   buzzsproutResolveEmbed,
@@ -167,7 +170,10 @@ export {
 } from './embeds/simplecast.js'
 
 export { soundcloudEmbedResolver } from './embeds/soundcloud.js'
-export { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embeds/speakerdeck.js'
+export {
+  speakerdeckIframeEmbedResolver,
+  speakerdeckScriptEmbedResolver,
+} from './embeds/speakerdeck.js'
 export { spotifyEmbedResolver, spotifyResolveEmbed } from './embeds/spotify.js'
 export {
   extractSpreakerEmbed,

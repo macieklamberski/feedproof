@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { brightcoveEmbedResolver, brightcoveFlashEmbedResolver } from './brightcove.js'
+import { brightcoveFlashEmbedResolver, brightcoveVideoJsEmbedResolver } from './brightcove.js'
 
-describeForEachParser('brightcoveEmbedResolver', (parseHtml) => {
+describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
   const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(brightcoveEmbedResolver.selector)
+    const element = parseHtml(value).querySelector(brightcoveVideoJsEmbedResolver.selector)
 
-    return element ? (brightcoveEmbedResolver.extract(element) as EmbedResolverResult) : undefined
+    return element
+      ? (brightcoveVideoJsEmbedResolver.extract(element) as EmbedResolverResult)
+      : undefined
   }
 
   describe('happy paths', () => {
