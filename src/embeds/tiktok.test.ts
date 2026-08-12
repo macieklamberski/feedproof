@@ -6,6 +6,28 @@ import type { EmbedResolverResult } from '../types.js'
 import { applyDomTransforms } from '../utils/transforms.js'
 import { tiktokEmbedResolver } from './tiktok.js'
 
+const videoId = '7000000000000000000'
+
+// Every `data-embed-*` field the placeholder carries, so a variant can assert the whole set
+// rather than the one field it happens to care about.
+const readPlaceholder = (
+  result: string,
+  parseHtml: (value: string) => Document,
+): Record<string, string> => {
+  const element = parseHtml(result).querySelector('[data-embed-src]')
+  const fields: Record<string, string> = {}
+
+  for (const name of element?.getAttributeNames() ?? []) {
+    const value = element?.getAttribute(name)
+
+    if (name.startsWith('data-embed-') && value) {
+      fields[name.replace('data-embed-', '')] = value
+    }
+  }
+
+  return fields
+}
+
 describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
   const extract = (value: string): EmbedResolverResult | undefined => {
     const element = parseHtml(value).querySelector(tiktokEmbedResolver.selector)
@@ -205,44 +227,47 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
     })
   })
 })
-
 // One block per shape the corpus survey found, so a shape nobody handles is visible here as
-// a missing block.
+// a missing block. Each asserts the whole placeholder, since the point is that every shape
+// maps to the same fields and not merely that it is recognised.
 describeForEachParser('tiktok variants', (parseHtml) => {
   const convert = (value: string) => {
     return transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' })
   }
 
-  const videoId = '7000000000000000000'
-  const section = html`
-    <section>
-      <a target="_blank" title="@user" href="https://www.tiktok.com/@user?refer=embed">@user</a>
-      <p>caption text <a href="https://www.tiktok.com/tag/tag?refer=embed">#tag</a></p>
-      <a href="https://www.tiktok.com/music/x-700001?refer=embed">&#9836; original sound</a>
-    </section>
-  `
+  const placeholder = async (value: string): Promise<Record<string, string>> => {
+    return readPlaceholder(await convert(value), parseHtml)
+  }
+
+  const fullClip = {
+    provider: 'tiktok',
+    id: videoId,
+    src: `https://www.tiktok.com/embed/v2/${videoId}`,
+    url: `https://www.tiktok.com/@user/video/${videoId}`,
+    title: 'caption text #tag',
+    author: '@user',
+  }
 
   describe('canonical oEmbed blockquote with the loader script', () => {
     const value = html`
       <blockquote
         class="tiktok-embed"
-        cite="https://www.tiktok.com/@user/video/${videoId}"
-        data-video-id="${videoId}"
+        cite="https://www.tiktok.com/@user/video/7000000000000000000"
+        data-video-id="7000000000000000000"
         data-embed-from="oembed"
         style="max-width:605px; min-width:325px;"
       >
-        ${section}
+        <section>
+          <a target="_blank" title="@user" href="https://www.tiktok.com/@user?refer=embed">@user</a>
+          <p>caption text <a href="https://www.tiktok.com/tag/tag?refer=embed">#tag</a></p>
+          <a href="https://www.tiktok.com/music/x-700001?refer=embed">&#9836; original sound</a>
+        </section>
       </blockquote>
       <script async src="https://www.tiktok.com/embed.js"></script>
     `
 
-    it('should carry the id, watch url, author and caption', async () => {
-      const result = await convert(value)
-
-      expect(result).toContain(`data-embed-id="${videoId}"`)
-      expect(result).toContain(`data-embed-url="https://www.tiktok.com/@user/video/${videoId}"`)
-      expect(result).toContain('data-embed-author="@user"')
-      expect(result).toContain('data-embed-title="caption text #tag"')
+    it('should carry every field across', async () => {
+      expect(await placeholder(value)).toEqual(fullClip)
     })
 
     it('should leave no loader script behind', async () => {
@@ -251,58 +276,86 @@ describeForEachParser('tiktok variants', (parseHtml) => {
   })
 
   describe('WordPress Gutenberg figure wrapper', () => {
+    // The theme, news-engine and Ghost wrappers are the same shape with another class, so the
+    // selector keys on the blockquote and they cost nothing.
     const value = html`
       <figure class="wp-block-embed is-type-video is-provider-tiktok wp-block-embed-tiktok">
         <div class="wp-block-embed__wrapper">
           <blockquote
             class="tiktok-embed"
-            cite="https://www.tiktok.com/@user/video/${videoId}"
-            data-video-id="${videoId}"
+            cite="https://www.tiktok.com/@user/video/7000000000000000000"
+            data-video-id="7000000000000000000"
           >
-            ${section}
+            <section>
+              <a target="_blank" href="https://www.tiktok.com/@user?refer=embed">@user</a>
+              <p>caption text <a href="https://www.tiktok.com/tag/tag?refer=embed">#tag</a></p>
+            </section>
           </blockquote>
         </div>
       </figure>
     `
 
-    // Wrappers nest arbitrarily deep, so the selector keys on the blockquote and they cost
-    // nothing. The theme, news-engine and Ghost wrappers are the same shape with another class.
-    it('should resolve through the wrapper unchanged', async () => {
-      expect(await convert(value)).toContain(`data-embed-id="${videoId}"`)
+    it('should carry every field across through the wrapper', async () => {
+      expect(await placeholder(value)).toEqual(fullClip)
+    })
+  })
+
+  describe('non-canonical attribute order, class last and no style', () => {
+    const value = html`
+      <blockquote
+        cite="https://www.tiktok.com/@user/video/7000000000000000000"
+        data-video-id="7000000000000000000"
+        class="tiktok-embed"
+      >
+        <section>
+          <a target="_blank" href="https://www.tiktok.com/@user?refer=embed">@user</a>
+          <p>caption text <a href="https://www.tiktok.com/tag/tag?refer=embed">#tag</a></p>
+        </section>
+      </blockquote>
+    `
+
+    it('should match on the class token rather than a position', async () => {
+      expect(await placeholder(value)).toEqual(fullClip)
     })
   })
 
   describe('post-hydration iframe inside the surviving blockquote', () => {
+    // No other shape declares a height, so without this a vertical clip is drawn as a
+    // video-shaped box. The hydrated iframe rendered at this height against the blockquote's
+    // own max-width, so the pair is a real measurement rather than a guess. The text is gone,
+    // replaced by the frame, so there is no caption or author left to take.
     const value = html`
       <blockquote
         id="v25421583374779120"
         class="tiktok-embed"
-        cite="https://www.tiktok.com/@user/video/${videoId}"
-        data-video-id="${videoId}"
+        cite="https://www.tiktok.com/@user/video/7000000000000000000"
+        data-video-id="7000000000000000000"
         style="max-width: 605px;min-width: 325px"
       >
         <p>
           <iframe
             name="__tt_embed__v25421583374779120"
-            src="https://www.tiktok.com/embed/v2/${videoId}?lang=es-ES"
+            src="https://www.tiktok.com/embed/v2/7000000000000000000?lang=es-ES"
             style="width: 100%;height: 758px;max-height: 758px"
           ></iframe>
         </p>
       </blockquote>
     `
 
-    // No other variant declares a height, so without this a vertical clip is drawn as a
-    // video-shaped box. The hydrated iframe rendered at this height against the blockquote's
-    // own max-width, so the pair is a real measurement rather than a guess.
-    it('should take the rendered size off the hydrated iframe', async () => {
-      const result = await convert(value)
-
-      expect(result).toContain('data-embed-width="605"')
-      expect(result).toContain('data-embed-height="758"')
+    it('should carry the rendered size and claim no text it does not have', async () => {
+      expect(await placeholder(value)).toEqual({
+        provider: 'tiktok',
+        id: videoId,
+        src: `https://www.tiktok.com/embed/v2/${videoId}`,
+        url: `https://www.tiktok.com/@user/video/${videoId}`,
+        width: '605',
+        height: '758',
+      })
     })
   })
 
   describe('creator-profile embed, no video', () => {
+    // It carries no data-video-id at all, so a selector keyed on one silently misses it.
     const value = html`
       <blockquote
         class="tiktok-embed"
@@ -318,17 +371,20 @@ describeForEachParser('tiktok variants', (parseHtml) => {
       </blockquote>
     `
 
-    // It carries no data-video-id at all, so a selector keyed on one silently misses it.
-    it('should resolve to the profile viewer', async () => {
-      const result = await convert(value)
-
-      expect(result).toContain('data-embed-src="https://www.tiktok.com/embed/@user"')
-      expect(result).toContain('data-embed-id="@user"')
-      expect(result).toContain('data-embed-url="https://www.tiktok.com/@user"')
+    it('should carry every field across, pointing at the profile viewer', async () => {
+      expect(await placeholder(value)).toEqual({
+        provider: 'tiktok',
+        id: '@user',
+        src: 'https://www.tiktok.com/embed/@user',
+        url: 'https://www.tiktok.com/@user',
+        author: '@user',
+      })
     })
   })
 
   describe('a creator blockquote whose data-unique-id is not a handle', () => {
+    // The handle is interpolated into the viewer url, so anything outside TikTok's own
+    // character set is refused. The profile anchor still names the account, so it wins.
     const value = html`
       <blockquote
         class="tiktok-embed"
@@ -340,22 +396,26 @@ describeForEachParser('tiktok variants', (parseHtml) => {
       </blockquote>
     `
 
-    // The handle is interpolated into the viewer url, so anything outside TikTok's own
-    // character set is refused. The profile anchor still names the account, so it wins.
     it('should ignore the attribute and take the handle from the anchor', async () => {
-      expect(await convert(value)).toContain('data-embed-src="https://www.tiktok.com/embed/@user"')
+      expect(await placeholder(value)).toEqual({
+        provider: 'tiktok',
+        id: '@user',
+        src: 'https://www.tiktok.com/embed/@user',
+        url: 'https://www.tiktok.com/@user',
+        author: '@user',
+      })
     })
   })
 
   describe('a blockquote naming no account anywhere', () => {
+    // A hashtag is not an account and there is no clip either, so nothing can be minted and
+    // the text stays as it is.
     const value = html`
       <blockquote class="tiktok-embed">
         <a href="https://www.tiktok.com/tag/tag?refer=embed">#tag</a> orphaned caption
       </blockquote>
     `
 
-    // A hashtag is not an account and there is no clip either, so nothing can be minted and
-    // the text stays as it is.
     it('should be left alone', async () => {
       const result = await convert(value)
 
@@ -364,48 +424,32 @@ describeForEachParser('tiktok variants', (parseHtml) => {
     })
   })
 
-  describe('non-canonical attribute order, class last and no style', () => {
-    const value = html`
-      <blockquote
-        cite="https://www.tiktok.com/@user/video/${videoId}"
-        data-video-id="${videoId}"
-        class="tiktok-embed"
-      >
-        ${section}
-      </blockquote>
-    `
-
-    it('should match on the class token rather than a position', async () => {
-      expect(await convert(value)).toContain(`data-embed-id="${videoId}"`)
-    })
-  })
-
   describe('fully entity-encoded blockquote', () => {
-    const value =
-      '&lt;blockquote cite=&quot;https://www.tiktok.com/@user/video/7000000000000000000&quot; class=&quot;tiktok-embed&quot; data-video-id=&quot;7000000000000000000&quot;&gt; &lt;section&gt; &lt;a href=&quot;https://www.tiktok.com/@user&quot;&gt;@user&lt;/a&gt; &lt;/section&gt; &lt;/blockquote&gt;'
-
     // The decoding happens upstream, so by the time the widget pass runs this is the canonical
     // blockquote again.
-    it('should resolve once the entities are decoded', async () => {
-      expect(await convert(value)).toContain(`data-embed-id="${videoId}"`)
+    const value =
+      '&lt;blockquote cite=&quot;https://www.tiktok.com/@user/video/7000000000000000000&quot; class=&quot;tiktok-embed&quot; data-video-id=&quot;7000000000000000000&quot;&gt; &lt;section&gt; &lt;a href=&quot;https://www.tiktok.com/@user&quot;&gt;@user&lt;/a&gt; &lt;p&gt;caption text &lt;a href=&quot;https://www.tiktok.com/tag/tag&quot;&gt;#tag&lt;/a&gt;&lt;/p&gt; &lt;/section&gt; &lt;/blockquote&gt;'
+
+    it('should carry every field across once decoded', async () => {
+      expect(await placeholder(value)).toEqual(fullClip)
     })
   })
 
   describe('half entity-encoded blockquote, the minimal authored shape', () => {
+    // No video id, no cite, no /video/ link: the account is the only thing this markup still
+    // identifies, so it resolves to the profile viewer rather than being left as text.
     const value =
       '&lt;blockquote class="tiktok-embed" style="max-width: 605px;"&gt; &lt;a target="_blank" href="https://www.tiktok.com/@user?refer=embed"&gt;@user&lt;/a&gt; caption text &lt;/blockquote&gt;'
 
-    // No video id, no cite, no /video/ link: the account is the only thing this markup still
-    // identifies, so it resolves to the profile viewer rather than being left as text.
-    it('should resolve to the profile the anchor names', async () => {
-      const result = await convert(value)
-
-      expect(result).toContain('data-embed-src="https://www.tiktok.com/embed/@user"')
-      expect(result).toContain('data-embed-id="@user"')
-    })
-
-    it('should keep the caption that sat beside the anchors', async () => {
-      expect(await convert(value)).toContain('data-embed-title="caption text"')
+    it('should carry every field across, the caption included', async () => {
+      expect(await placeholder(value)).toEqual({
+        provider: 'tiktok',
+        id: '@user',
+        src: 'https://www.tiktok.com/embed/@user',
+        url: 'https://www.tiktok.com/@user',
+        author: '@user',
+        title: 'caption text',
+      })
     })
   })
 })
