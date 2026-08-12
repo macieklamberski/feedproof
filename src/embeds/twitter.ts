@@ -52,7 +52,10 @@ const findStatus = (element: Element): { status: Status; anchor?: Element } | un
     }
   }
 
-  const declared = attr(element, 'data-twitter-tweet-id') ?? attr(element, 'data-tweet-id')
+  const declared =
+    attr(element, 'data-twitter-tweet-id') ??
+    attr(element, 'data-tweet-id') ??
+    attr(element, 'data-tweetid')
 
   if (declared && safeStatusIdRegex.test(declared)) {
     return { status: { handle: '', id: declared } }
@@ -98,8 +101,10 @@ const composeEmbed = (status: Status, extra: Partial<EmbedResolverResult>): Embe
 
 // `twitter-tweet` is matched as a class token, never as the whole attribute: it arrives
 // compounded with a skeleton class, with the rendered marker, and inside every CMS wrapper.
+// The AMP component names the same tweet in an attribute and carries no text at all, so left
+// alone it is dropped as an empty element.
 export const twitterEmbedResolver: EmbedResolver = {
-  selector: '.twitter-tweet',
+  selector: '.twitter-tweet, amp-twitter[data-tweetid]',
   extract: (element): EmbedResolverResult | undefined => {
     const found = findStatus(element)
 
