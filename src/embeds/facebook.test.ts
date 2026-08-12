@@ -9,6 +9,26 @@ import {
   facebookVideoEmbedResolver,
 } from './facebook.js'
 
+// Every `data-embed-*` field the placeholder carries, so a variant can assert the whole set
+// rather than the one field it happens to care about.
+const readPlaceholder = (
+  result: string,
+  parseHtml: (value: string) => Document,
+): Record<string, string> => {
+  const element = parseHtml(result).querySelector('[data-embed-src]')
+  const fields: Record<string, string> = {}
+
+  for (const name of element?.getAttributeNames() ?? []) {
+    const value = element?.getAttribute(name)
+
+    if (name.startsWith('data-embed-') && value) {
+      fields[name.replace('data-embed-', '')] = value
+    }
+  }
+
+  return fields
+}
+
 describeForEachParser('facebookPostEmbedResolver', (parseHtml) => {
   const extract = (value: string): EmbedResolverResult | undefined => {
     const element = parseHtml(value).querySelector(facebookPostEmbedResolver.selector)
@@ -309,15 +329,21 @@ describeForEachParser('facebook variants', (parseHtml) => {
     return transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' })
   }
 
+  const placeholder = async (value: string): Promise<Record<string, string>> => {
+    return readPlaceholder(await convert(value), parseHtml)
+  }
+
   describe('SDK div, post', () => {
     const value =
       '<div class="fb-post" data-href="https://www.facebook.com/PageName/posts/123"></div>'
 
-    it('should become a post placeholder', async () => {
-      const result = await convert(value)
-
-      expect(result).toContain('data-embed-provider="facebook"')
-      expect(result).toContain('plugins/post.php')
+    it('should carry every field across', async () => {
+      expect(await placeholder(value)).toEqual({
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/posts/123',
+        src: 'https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123',
+        url: 'https://www.facebook.com/PageName/posts/123',
+      })
     })
   })
 
@@ -336,12 +362,16 @@ describeForEachParser('facebook variants', (parseHtml) => {
 
     // The fallback is the only readable copy of the post, so replacing the widget without it
     // would lose the text outright.
-    it('should carry the post text, page and date onto the placeholder', async () => {
-      const result = await convert(value)
-
-      expect(result).toContain('data-embed-description="Caption text about the thing."')
-      expect(result).toContain('data-embed-author="PageName"')
-      expect(result).toContain('data-embed-date="Tuesday, 3 June 2026"')
+    it('should carry every field across, the text included', async () => {
+      expect(await placeholder(value)).toEqual({
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/posts/123',
+        src: 'https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123',
+        url: 'https://www.facebook.com/PageName/posts/123',
+        description: 'Caption text about the thing.',
+        author: 'PageName',
+        date: 'Tuesday, 3 June 2026',
+      })
     })
   })
 
@@ -349,11 +379,13 @@ describeForEachParser('facebook variants', (parseHtml) => {
     const value = '<div class="fb-video" data-href="https://fb.watch/abcDEF123/"></div>'
 
     // The mobile app hands out fb.watch links and publishers paste them into the widget.
-    it('should accept the short-link host', async () => {
-      const result = await convert(value)
-
-      expect(result).toContain('data-embed-provider="facebook"')
-      expect(result).toContain('plugins/video.php')
+    it('should carry every field across from the short link', async () => {
+      expect(await placeholder(value)).toEqual({
+        provider: 'facebook',
+        id: 'https://fb.watch/abcDEF123/',
+        src: 'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Ffb.watch%2FabcDEF123%2F',
+        url: 'https://fb.watch/abcDEF123/',
+      })
     })
   })
 
@@ -369,18 +401,17 @@ describeForEachParser('facebook variants', (parseHtml) => {
       </blockquote>
     `
 
-    it('should resolve from the cite url and keep the text', async () => {
-      const result = await convert(value)
-
-      expect(result).toContain('data-embed-provider="facebook"')
-      expect(result).toContain('data-embed-description="A video caption."')
-    })
-
-    // Nothing names the plugin here, so the path in `cite` decides.
-    it('should pick the video plugin from the cite path', async () => {
-      const result = await convert(value)
-
-      expect(result).toContain('plugins/video.php')
+    // Nothing names the plugin here, so the path in `cite` decides which one it is.
+    it('should carry every field across, from the cite url alone', async () => {
+      expect(await placeholder(value)).toEqual({
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/videos/123/',
+        src: 'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F',
+        url: 'https://www.facebook.com/PageName/videos/123/',
+        description: 'A video caption.',
+        author: 'PageName',
+        date: 'Wednesday, 4 June 2026',
+      })
     })
   })
 
@@ -398,11 +429,13 @@ describeForEachParser('facebook variants', (parseHtml) => {
     // "Posted by {page} on {date}" is a fixed pair of anchors. Anything else is a hand-edited
     // fallback, so the text is kept and no author or date is invented from it.
     it('should keep the text and claim no author or date', async () => {
-      const result = await convert(value)
-
-      expect(result).toContain('data-embed-description="Caption only, no byline anchors."')
-      expect(result).not.toContain('data-embed-author')
-      expect(result).not.toContain('data-embed-date')
+      expect(await placeholder(value)).toEqual({
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/posts/123',
+        src: 'https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123',
+        url: 'https://www.facebook.com/PageName/posts/123',
+        description: 'Caption only, no byline anchors.',
+      })
     })
   })
 
@@ -446,10 +479,13 @@ describeForEachParser('facebook variants', (parseHtml) => {
 
     // The escaping is undone upstream by decodeDoubleEncodedTags, so the embed arrives as the
     // plain modern iframe.
-    it('should resolve once the entities are decoded', async () => {
-      const result = await convert(value)
-
-      expect(result).toContain('data-embed-provider="facebook"')
+    it('should carry every field across once decoded', async () => {
+      expect(await placeholder(value)).toEqual({
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/posts/123',
+        src: 'https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123',
+        url: 'https://www.facebook.com/PageName/posts/123',
+      })
     })
   })
 
@@ -475,16 +511,22 @@ describeForEachParser('facebook shapes outside the sampled variants', (parseHtml
     return transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' })
   }
 
+  const placeholder = async (value: string): Promise<Record<string, string>> => {
+    return readPlaceholder(await convert(value), parseHtml)
+  }
+
   describe('legacy fb:post XFBML tag', () => {
     const value = '<fb:post href="https://www.facebook.com/PageName/posts/123"></fb:post>'
 
     // It is an empty element, so before it resolved it was deleted as an empty tag and the
     // post vanished with it.
-    it('should resolve rather than be dropped as empty', async () => {
-      const result = await convert(value)
-
-      expect(result).toContain('data-embed-provider="facebook"')
-      expect(result).toContain('plugins/post.php')
+    it('should carry every field across rather than be dropped as empty', async () => {
+      expect(await placeholder(value)).toEqual({
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/posts/123',
+        src: 'https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123',
+        url: 'https://www.facebook.com/PageName/posts/123',
+      })
     })
   })
 
@@ -498,7 +540,14 @@ describeForEachParser('facebook shapes outside the sampled variants', (parseHtml
         ></amp-facebook>
       `
 
-      expect(await convert(value)).toContain('plugins/post.php')
+      expect(await placeholder(value)).toEqual({
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/posts/123',
+        src: 'https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123',
+        url: 'https://www.facebook.com/PageName/posts/123',
+        width: '552',
+        height: '303',
+      })
     })
 
     it('should follow data-embed-as to the video plugin', async () => {
@@ -509,7 +558,12 @@ describeForEachParser('facebook shapes outside the sampled variants', (parseHtml
         ></amp-facebook>
       `
 
-      expect(await convert(value)).toContain('plugins/video.php')
+      expect(await placeholder(value)).toEqual({
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/videos/123/',
+        src: 'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F',
+        url: 'https://www.facebook.com/PageName/videos/123/',
+      })
     })
 
     // A comment thread is page chrome, not the article's content.
@@ -529,11 +583,12 @@ describeForEachParser('facebook shapes outside the sampled variants', (parseHtml
     const value = '<iframe src="https://www.facebook.com/video/embed?video_id=123456"></iframe>'
 
     it('should rebuild it onto the current plugin and the watch page', async () => {
-      const result = await convert(value)
-
-      expect(result).toContain('data-embed-id="123456"')
-      expect(result).toContain('data-embed-url="https://www.facebook.com/watch/?v=123456"')
-      expect(result).toContain('plugins/video.php')
+      expect(await placeholder(value)).toEqual({
+        provider: 'facebook',
+        id: '123456',
+        src: 'https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fwatch%2F%3Fv%3D123456',
+        url: 'https://www.facebook.com/watch/?v=123456',
+      })
     })
   })
 
