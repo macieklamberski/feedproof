@@ -8,12 +8,73 @@ const statusId = '123456789012345'
 const playerUrl = `https://platform.twitter.com/embed/Tweet.html?id=${statusId}`
 const statusUrl = `https://x.com/user/status/${statusId}`
 
+// Every `data-embed-*` field the placeholder carries, so a variant can assert the whole set
+// rather than the one field it happens to care about.
+const readPlaceholder = (
+  result: string,
+  parseHtml: (value: string) => Document,
+): Record<string, string> => {
+  const element = parseHtml(result).querySelector('[data-embed-src]')
+  const fields: Record<string, string> = {}
+
+  for (const name of element?.getAttributeNames() ?? []) {
+    const value = element?.getAttribute(name)
+
+    if (name.startsWith('data-embed-') && value) {
+      fields[name.replace('data-embed-', '')] = value
+    }
+  }
+
+  return fields
+}
+
 describeForEachParser('twitterEmbedResolver', (parseHtml) => {
   const extract = (value: string): EmbedResolverResult | undefined => {
     const element = parseHtml(value).querySelector(twitterEmbedResolver.selector)
 
     return element ? (twitterEmbedResolver.extract(element) as EmbedResolverResult) : undefined
   }
+
+  describe('happy paths', () => {
+    it('should build the whole placeholder from the canonical blockquote', () => {
+      const value = html`
+        <blockquote class="twitter-tweet" data-dnt="true">
+          <p lang="en" dir="ltr">Tweet text here.</p>
+          <p>
+            &mdash; Display Name (@user)
+            <a href="https://twitter.com/user/status/123456789012345">May 12, 2020</a>
+          </p>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: statusUrl,
+        description: 'Tweet text here.',
+        author: 'Display Name',
+        date: 'May 12, 2020',
+      }
+
+      expect(extract(value)).toEqual(expected)
+    })
+
+    it('should keep the byline as written when it is not the dialog shape', () => {
+      const value = html`
+        <blockquote class="twitter-tweet">
+          <p lang="en" dir="ltr">Tweet text here.</p>
+          <p>
+            Posted by somebody
+            <a href="https://twitter.com/user/status/123456789012345">May 12, 2020</a>
+          </p>
+        </blockquote>
+      `
+
+      expect(extract(value)).toMatchObject({
+        author: 'Posted by somebody',
+      })
+    })
+  })
 
   describe('sad paths', () => {
     it('should return undefined when nothing names a status', () => {
@@ -77,18 +138,8 @@ describeForEachParser('twitter variants', (parseHtml) => {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com/post',
     })
-    const element = parseHtml(result).querySelector('[data-embed-src]')
-    const fields: Record<string, string> = {}
 
-    for (const name of element?.getAttributeNames() ?? []) {
-      const value = element?.getAttribute(name)
-
-      if (name.startsWith('data-embed-') && value) {
-        fields[name.replace('data-embed-', '')] = value
-      }
-    }
-
-    return fields
+    return readPlaceholder(result, parseHtml)
   }
 
   const fullTweet = {
@@ -298,6 +349,38 @@ describeForEachParser('twitter variants', (parseHtml) => {
     })
   })
 
+  describe('the read-more wrapper that borrows the class, a false friend', () => {
+    // It carries the class but names no tweet. Resolving it would replace a real link with a
+    // placeholder pointing at nothing.
+    const value = html`
+      <div class="twitter-tweet">
+        <a href="https://finance.yahoo.com/news/story.html">Read more</a>
+      </div>
+    `
+
+    it('should be left alone', async () => {
+      const result = await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/post',
+      })
+
+      expect(result).not.toContain('data-embed-provider')
+      expect(result).toContain('Read more')
+    })
+  })
+})
+
+// Shapes the survey's 200-file sample did not contain, found by probing the pipeline
+// (2026-08-12). Kept apart because their prevalence is unmeasured.
+describeForEachParser('twitter shapes outside the sampled variants', (parseHtml) => {
+  const convert = (value: string) => {
+    return transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' })
+  }
+
+  const placeholder = async (value: string): Promise<Record<string, string>> => {
+    return readPlaceholder(await convert(value), parseHtml)
+  }
+
   describe('the AMP component, which the survey sample did not contain', () => {
     // It is an empty element, so before it resolved it was dropped as an empty tag.
     const value = html`
@@ -317,26 +400,6 @@ describeForEachParser('twitter variants', (parseHtml) => {
         width: '375',
         height: '472',
       })
-    })
-  })
-
-  describe('the read-more wrapper that borrows the class, a false friend', () => {
-    // It carries the class but names no tweet. Resolving it would replace a real link with a
-    // placeholder pointing at nothing.
-    const value = html`
-      <div class="twitter-tweet">
-        <a href="https://finance.yahoo.com/news/story.html">Read more</a>
-      </div>
-    `
-
-    it('should be left alone', async () => {
-      const result = await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        baseUrl: 'https://example.com/post',
-      })
-
-      expect(result).not.toContain('data-embed-provider')
-      expect(result).toContain('Read more')
     })
   })
 
