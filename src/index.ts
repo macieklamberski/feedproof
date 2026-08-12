@@ -118,6 +118,8 @@ export { bandcampEmbedResolver, extractBandcampRelease } from './embeds/bandcamp
 export { blubrryEmbedResolver, blubrryResolveEmbed, extractBlubrryEmbed } from './embeds/blubrry.js'
 export {
   brightcoveFlashEmbedResolver,
+  brightcoveIframeEmbedResolver,
+  brightcoveResolveEmbed,
   brightcoveVideoJsEmbedResolver,
 } from './embeds/brightcove.js'
 export {
