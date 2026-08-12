@@ -26,7 +26,7 @@ const defaultDeckRatio = '16/9'
 // reader shows nothing at all. The player page is mintable from the id alone (verified
 // live, 200). The deck's public page needs the author and slug, which the script does not
 // carry, so the placeholder has no `url`.
-export const speakerdeckEmbedResolver: EmbedResolver = {
+export const speakerdeckScriptEmbedResolver: EmbedResolver = {
   selector: 'script.speakerdeck-embed[data-id]',
   extract: (element): EmbedResolverResult | undefined => {
     const raw = attr(element, 'data-id') ?? ''

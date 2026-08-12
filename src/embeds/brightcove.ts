@@ -11,7 +11,7 @@ import { embedCarrierSelector, readCarrierUrl } from '../utils/widgets.js'
 // watch page, so the placeholder carries no `url` and anchors to the player src.
 const accountScriptRegex = /players\.brightcove\.net\/(\d+)\//
 
-export const brightcoveEmbedResolver: EmbedResolver = {
+export const brightcoveVideoJsEmbedResolver: EmbedResolver = {
   selector: 'video-js[data-video-id]',
   extract: (element): EmbedResolverResult | undefined => {
     const videoId = attr(element, 'data-video-id')

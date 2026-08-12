@@ -10,7 +10,7 @@ const firesideHosts = ['fireside.fm']
 // Fireside's player is one fixed size: `height="200"` in **28 of 28** sampled corpus iframes.
 // That is the whole case for this resolver — the embed carries no metadata, no thumbnail and
 // no canonical episode url, so stating the height is what a reader gains, the same way
-// speakerdeckEmbedResolver states its default deck ratio.
+// speakerdeckScriptEmbedResolver states its default deck ratio.
 const playerHeight = 200
 
 // Feeds write `fireside.fm/player/v2/{token}`, which 301s to `player.fireside.fm/v2/{token}`

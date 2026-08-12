@@ -29,7 +29,10 @@ import { appleEmbedResolver } from './embeds/apple.js'
 import { audioboomEmbedResolver } from './embeds/audioboom.js'
 import { bandcampEmbedResolver } from './embeds/bandcamp.js'
 import { blubrryEmbedResolver } from './embeds/blubrry.js'
-import { brightcoveEmbedResolver, brightcoveFlashEmbedResolver } from './embeds/brightcove.js'
+import {
+  brightcoveFlashEmbedResolver,
+  brightcoveVideoJsEmbedResolver,
+} from './embeds/brightcove.js'
 import {
   buzzsproutIframeEmbedResolver,
   buzzsproutScriptEmbedResolver,
@@ -49,7 +52,10 @@ import { podbeanEmbedResolver } from './embeds/podbean.js'
 import { podigeeEmbedResolver } from './embeds/podigee.js'
 import { simplecastEmbedResolver } from './embeds/simplecast.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
-import { speakerdeckEmbedResolver, speakerdeckIframeEmbedResolver } from './embeds/speakerdeck.js'
+import {
+  speakerdeckIframeEmbedResolver,
+  speakerdeckScriptEmbedResolver,
+} from './embeds/speakerdeck.js'
 import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { spreakerEmbedResolver } from './embeds/spreaker.js'
 import { tedEmbedResolver } from './embeds/ted.js'
@@ -349,7 +355,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   buzzsproutIframeEmbedResolver,
   buzzsproutScriptEmbedResolver,
   blubrryEmbedResolver,
-  brightcoveEmbedResolver,
+  brightcoveVideoJsEmbedResolver,
   brightcoveFlashEmbedResolver,
   mediavineEmbedResolver,
   mixcloudEmbedResolver,
@@ -358,7 +364,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   podigeeEmbedResolver,
   simplecastEmbedResolver,
   soundcloudEmbedResolver,
-  speakerdeckEmbedResolver,
+  speakerdeckScriptEmbedResolver,
   speakerdeckIframeEmbedResolver,
   firesideEmbedResolver,
   flourishEmbedResolver,
