@@ -18,10 +18,9 @@ const embedSources: Record<string, (id: string, start?: string) => string> = {
   },
 }
 
-// Rebuilds a plain <iframe> from a lite-youtube / lite-vimeo custom element so the
-// later convertWidgets turns the YouTube one into a placeholder. Vimeo
-// has no resolver yet, so it stays a raw iframe — still better than a dead custom
-// element a reader can't activate. Carries over the `start` offset and `videotitle`.
+// Rebuilds a plain <iframe> from a lite-youtube / lite-vimeo custom element so the later
+// convertWidgets turns it into a placeholder, which both providers now have a resolver for.
+// Carries over the `start` offset and `videotitle`.
 export const rebuildLiteVideoEmbeds: DomTransform = () => (document) => {
   for (const element of document.querySelectorAll('lite-youtube[videoid], lite-vimeo[videoid]')) {
     const buildSource = embedSources[element.localName]
