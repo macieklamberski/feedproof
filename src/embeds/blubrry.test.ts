@@ -32,7 +32,7 @@ describe('blubrryResolveEmbed', () => {
     })
   })
 
-  // The raw file stays inside the player url: form fidelity keeps a vendor player an embed.
+  // The raw file stays inside the player url: form fidelity keeps a provider's player an embed.
   it('should keep a media url as a player rather than a native audio element', () => {
     const value =
       'https://player.blubrry.com/?media_url=https%3A%2F%2Fmedia.blubrry.com%2Fshow%2Fep.mp3'
