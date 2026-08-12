@@ -217,7 +217,17 @@ describeForEachParser('twitter variants', (parseHtml) => {
   })
 
   describe('blockquote wrapped in a paragraph, which is illegal but real', () => {
-    const value = `<p><blockquote class="twitter-tweet"><p lang="en" dir="ltr">Tweet text here.</p><p>&mdash; Display Name (@user) <a href="https://twitter.com/user/status/123456789012345">May 12, 2020</a></p></blockquote></p>`
+    const value = html`
+      <p>
+        <blockquote class="twitter-tweet">
+          <p lang="en" dir="ltr">Tweet text here.</p>
+          <p>
+            &mdash; Display Name (@user)
+            <a href="https://twitter.com/user/status/123456789012345">May 12, 2020</a>
+          </p>
+        </blockquote>
+      </p>
+    `
 
     it('should carry every field across despite the split paragraph', async () => {
       expect(await placeholder(value)).toEqual(fullTweet)
@@ -275,7 +285,9 @@ describeForEachParser('twitter variants', (parseHtml) => {
   })
 
   describe('a bare player iframe with no blockquote around it', () => {
-    const value = `<iframe src="https://platform.twitter.com/embed/Tweet.html?id=123456789012345"></iframe>`
+    const value = html`
+      <iframe src="https://platform.twitter.com/embed/Tweet.html?id=123456789012345"></iframe>
+    `
 
     it('should name its provider and its tweet', async () => {
       expect(await placeholder(value)).toEqual({
