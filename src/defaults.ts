@@ -31,6 +31,7 @@ import { bandcampEmbedResolver } from './embeds/bandcamp.js'
 import { blubrryEmbedResolver } from './embeds/blubrry.js'
 import {
   brightcoveFlashEmbedResolver,
+  brightcoveIframeEmbedResolver,
   brightcoveVideoJsEmbedResolver,
 } from './embeds/brightcove.js'
 import {
@@ -351,12 +352,13 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   ivooxEmbedResolver,
   jwplayerIframeEmbedResolver,
   jwplayerScriptEmbedResolver,
+  brightcoveVideoJsEmbedResolver,
+  brightcoveFlashEmbedResolver,
+  brightcoveIframeEmbedResolver,
   libsynEmbedResolver,
   buzzsproutIframeEmbedResolver,
   buzzsproutScriptEmbedResolver,
   blubrryEmbedResolver,
-  brightcoveVideoJsEmbedResolver,
-  brightcoveFlashEmbedResolver,
   mediavineEmbedResolver,
   mixcloudEmbedResolver,
   podbeanEmbedResolver,

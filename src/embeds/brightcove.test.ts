@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { brightcoveFlashEmbedResolver, brightcoveVideoJsEmbedResolver } from './brightcove.js'
+import {
+  brightcoveFlashEmbedResolver,
+  brightcoveResolveEmbed,
+  brightcoveVideoJsEmbedResolver,
+} from './brightcove.js'
 
 describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
   const extract = (value: string): EmbedResolverResult | undefined => {
@@ -127,6 +131,69 @@ describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
       const value = '<embed src="http://admin.brightcove.com/viewer/us1/something.swf">'
 
       expect(extract(value)).toBeUndefined()
+    })
+  })
+})
+
+describe('brightcoveResolveEmbed', () => {
+  const playerUrl =
+    'https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432'
+
+  describe('happy paths', () => {
+    it('should read the account and video id out of the player url', () => {
+      expect(brightcoveResolveEmbed(playerUrl)).toEqual({
+        provider: 'brightcove',
+        id: '6098765432',
+        src: playerUrl,
+      })
+    })
+
+    it('should keep a named player rather than assuming the default', () => {
+      const value =
+        'https://players.brightcove.net/1234567890/AbCdEf123_custom/index.html?videoId=6098765432'
+
+      expect(brightcoveResolveEmbed(value)).toMatchObject({
+        src: 'https://players.brightcove.net/1234567890/AbCdEf123_custom/index.html?videoId=6098765432',
+      })
+    })
+
+    it('should drop the other player parameters', () => {
+      const value = `${playerUrl}&autoplay=true&muted=true`
+
+      expect(brightcoveResolveEmbed(value)).toMatchObject({ src: playerUrl })
+    })
+  })
+
+  describe('sad paths', () => {
+    // A reference id names the video for the account's own API, not the player.
+    it('should return undefined for a reference id', () => {
+      const value =
+        'https://players.brightcove.net/1234567890/default_default/index.html?videoId=ref:my-video'
+
+      expect(brightcoveResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the url names no video', () => {
+      const value = 'https://players.brightcove.net/1234567890/default_default/index.html'
+
+      expect(brightcoveResolveEmbed(value)).toBeUndefined()
+    })
+
+    // `{player}_{embed}` is one segment holding two ids.
+    it('should return undefined when the player segment is not a player path', () => {
+      const value = 'https://players.brightcove.net/1234567890/index.html?videoId=6098765432'
+
+      expect(brightcoveResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should return undefined for another brightcove.net host', () => {
+      const value = 'https://studio.brightcove.net/1234567890/default_default/index.html?videoId=1'
+
+      expect(brightcoveResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a url that cannot be parsed', () => {
+      expect(brightcoveResolveEmbed('https://[')).toBeUndefined()
     })
   })
 })

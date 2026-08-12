@@ -1,7 +1,11 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { embedCarrierSelector, readCarrierUrl } from '../utils/widgets.js'
+import {
+  createIframeEmbedResolver,
+  embedCarrierSelector,
+  readCarrierUrl,
+} from '../utils/widgets.js'
 
 // Brightcove's in-page embed is a bare `<video-js>` custom element that the loader script
 // turns into a player, so a reader shows nothing at all: the element is empty and survives
@@ -96,3 +100,51 @@ export const brightcoveFlashEmbedResolver: EmbedResolver = {
     }
   },
 }
+
+// The player page as an ordinary iframe, `players.brightcove.net/{account}/{player}_{embed}
+// /index.html?videoId={id}`. It is the most common Brightcove carrier in the corpus at 243
+// feeds, more than the `<video-js>` element, and until now it fell through to the generic
+// placeholder with no provider and no id.
+//
+// The account and video id are read back out rather than the url passed through whole, because
+// the pair is what an enricher would key on later, and because a player url carrying neither is
+// not a video worth naming.
+const playerPathRegex = /^([^_]+)_(.+)$/
+
+export const brightcoveResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+  const parsed = parseUrl(url, 'https://example.com')
+
+  if (!parsed || !parsed.hostname.startsWith('players.')) {
+    return
+  }
+
+  const [account, player] = getPathSegments(parsed)
+  const videoId = parsed.searchParams.get('videoId')
+
+  if (!account || !player || !videoId) {
+    return
+  }
+
+  // `{player}_{embed}` is one segment holding two ids; a segment shaped otherwise is not a
+  // player path.
+  if (!brightcoveIdRegex.test(account) || !playerPathRegex.test(player)) {
+    return
+  }
+
+  // A reference id names the video for the account's own api rather than the player, the same
+  // exclusion the Flash form makes.
+  if (!brightcoveIdRegex.test(videoId)) {
+    return
+  }
+
+  return {
+    provider: 'brightcove',
+    id: videoId,
+    src: `https://players.brightcove.net/${account}/${player}/index.html?videoId=${videoId}`,
+  }
+}
+
+export const brightcoveIframeEmbedResolver = createIframeEmbedResolver(
+  ['brightcove.net'],
+  brightcoveResolveEmbed,
+)
