@@ -152,7 +152,7 @@ describeForEachParser('twitter variants', (parseHtml) => {
     date: 'May 12, 2020',
   }
 
-  describe('canonical blockquote with the widgets.js loader', () => {
+  describe('Variant #1: canonical blockquote with the widgets.js loader', () => {
     const value = html`
       <blockquote class="twitter-tweet" data-dnt="true">
         <p lang="en" dir="ltr">Tweet text here.</p>
@@ -178,7 +178,7 @@ describeForEachParser('twitter variants', (parseHtml) => {
     })
   })
 
-  describe('orphan blockquote with no loader anywhere', () => {
+  describe('Variant #2: orphan blockquote with no loader anywhere', () => {
     // A quarter of the sampled files have no script at all: feed renderers strip it, one
     // shared script often covers several embeds, and some publishers paste the quote alone.
     const value = html`
@@ -196,7 +196,7 @@ describeForEachParser('twitter variants', (parseHtml) => {
     })
   })
 
-  describe('entity-encoded blockquote from an Atom payload', () => {
+  describe('Variant #3: entity-encoded blockquote from an Atom payload', () => {
     // Decoded upstream, so by the time the widget pass runs this is the canonical shape.
     const value =
       '&lt;blockquote class=&quot;twitter-tweet&quot;&gt;&lt;p lang=&quot;en&quot; dir=&quot;ltr&quot;&gt;Tweet text here.&lt;/p&gt;&amp;mdash; Display Name (@user) &lt;a href=&quot;https://twitter.com/user/status/123456789012345&quot;&gt;May 12, 2020&lt;/a&gt;&lt;/blockquote&gt;'
@@ -206,7 +206,7 @@ describeForEachParser('twitter variants', (parseHtml) => {
     })
   })
 
-  describe('WordPress Gutenberg figure wrapper', () => {
+  describe('Variant #4: WordPress Gutenberg figure wrapper', () => {
     // The Jetpack, Ghost, Substack, RebelMouse, Octopress and per-theme wrappers are the same
     // shape with another class, so the selector keys on the blockquote and they cost nothing.
     const value = html`
@@ -229,7 +229,7 @@ describeForEachParser('twitter variants', (parseHtml) => {
     })
   })
 
-  describe('post-rendered div holding the player it already built', () => {
+  describe('Variant #9: post-rendered div holding the player it already built', () => {
     // The script replaced the text with the frame before the page was stored, so the id is
     // all that survives and there is no byline left to read.
     const value = html`
@@ -249,7 +249,7 @@ describeForEachParser('twitter variants', (parseHtml) => {
     })
   })
 
-  describe('skeleton blockquote naming the tweet in an attribute', () => {
+  describe('Variant #10: skeleton blockquote naming the tweet in an attribute', () => {
     // The class arrives compounded here, which is why it is matched as a token.
     const value = html`
       <blockquote class="rm-embed twitter-tweet" data-twitter-tweet-id="123456789012345">
@@ -267,25 +267,7 @@ describeForEachParser('twitter variants', (parseHtml) => {
     })
   })
 
-  describe('blockquote wrapped in a paragraph, which is illegal but real', () => {
-    const value = html`
-      <p>
-        <blockquote class="twitter-tweet">
-          <p lang="en" dir="ltr">Tweet text here.</p>
-          <p>
-            &mdash; Display Name (@user)
-            <a href="https://twitter.com/user/status/123456789012345">May 12, 2020</a>
-          </p>
-        </blockquote>
-      </p>
-    `
-
-    it('should carry every field across despite the split paragraph', async () => {
-      expect(await placeholder(value)).toEqual(fullTweet)
-    })
-  })
-
-  describe('centre-aligned blockquote', () => {
+  describe('Variant #18: centre-aligned blockquote', () => {
     const value = html`
       <center>
         <blockquote class="twitter-tweet">
@@ -299,6 +281,24 @@ describeForEachParser('twitter variants', (parseHtml) => {
     `
 
     it('should carry every field across', async () => {
+      expect(await placeholder(value)).toEqual(fullTweet)
+    })
+  })
+
+  describe('Variant #19: blockquote wrapped in a paragraph, which is illegal but real', () => {
+    const value = html`
+      <p>
+        <blockquote class="twitter-tweet">
+          <p lang="en" dir="ltr">Tweet text here.</p>
+          <p>
+            &mdash; Display Name (@user)
+            <a href="https://twitter.com/user/status/123456789012345">May 12, 2020</a>
+          </p>
+        </blockquote>
+      </p>
+    `
+
+    it('should carry every field across despite the split paragraph', async () => {
       expect(await placeholder(value)).toEqual(fullTweet)
     })
   })
@@ -349,7 +349,7 @@ describeForEachParser('twitter variants', (parseHtml) => {
     })
   })
 
-  describe('the read-more wrapper that borrows the class, a false friend', () => {
+  describe('Variant #17: the read-more wrapper that borrows the class, a false friend', () => {
     // It carries the class but names no tweet. Resolving it would replace a real link with a
     // placeholder pointing at nothing.
     const value = html`
