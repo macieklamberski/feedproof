@@ -1,5 +1,6 @@
 import { parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import { attr, parsePixelSize } from '../utils/dom.js'
 import { createIframeEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^\d+$/
@@ -48,4 +49,39 @@ export const spreakerResolveEmbed = (url: string): EmbedResolverResult | undefin
   }
 }
 
-export const spreakerEmbedResolver = createIframeEmbedResolver(spreakerHosts, spreakerResolveEmbed)
+export const spreakerIframeEmbedResolver = createIframeEmbedResolver(
+  spreakerHosts,
+  spreakerResolveEmbed,
+)
+
+// Spreaker's other embed code is an `<a class="spreaker-player">` beside a `widgets.js` loader
+// that swaps the anchor for the player at runtime. 73 corpus feeds carry that loader and 63 of
+// them have no player iframe anywhere, so what a reader sees is the anchor's fallback text
+// ("Listen to ... on Spreaker") and no player at all.
+//
+// The resource is spelled as a query fragment rather than a url, `data-resource="episode_id=42"`,
+// so it is read by pasting it onto the player url the iframe form already uses. Where the anchor
+// states its own `data-height` that wins over the constant, since the publisher sized this one.
+// `data-resource` is required, not merely read. The class alone is styling anyone can copy, and
+// the anchor already renders as a working link, so resolving one without the attribute would
+// turn an ordinary link into a player on thin evidence. It would also buy nothing: 4 corpus
+// feeds carry the class without the attribute, and none of the 4 ships the loader script that
+// would have made a player of it.
+export const spreakerAnchorEmbedResolver: EmbedResolver = {
+  selector: 'a.spreaker-player[data-resource]',
+  extract: (element): EmbedResolverResult | undefined => {
+    const resource = attr(element, 'data-resource')
+    const result = resource
+      ? spreakerResolveEmbed(`https://widget.spreaker.com/player?${resource}`)
+      : undefined
+
+    if (!result) {
+      return
+    }
+
+    // The anchor states its own size, e.g. `data-height="200px"`.
+    const stated = parsePixelSize(attr(element, 'data-height'))
+
+    return stated ? { ...result, height: stated } : result
+  },
+}

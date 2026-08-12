@@ -185,7 +185,8 @@ export {
 export { spotifyEmbedResolver, spotifyResolveEmbed } from './embeds/spotify.js'
 export {
   extractSpreakerEmbed,
-  spreakerEmbedResolver,
+  spreakerAnchorEmbedResolver,
+  spreakerIframeEmbedResolver,
   spreakerResolveEmbed,
 } from './embeds/spreaker.js'
 export { extractTedTalk, tedEmbedResolver, tedResolveEmbed } from './embeds/ted.js'
