@@ -19,10 +19,18 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
   describe('a single post', () => {
     it('should derive the player and the poster from the id', () => {
       const value = html`
-        <blockquote class="imgur-embed-pub" lang="en" data-id="pVa2rXL">
+        <blockquote
+          class="imgur-embed-pub"
+          lang="en"
+          data-id="pVa2rXL"
+        >
           <a href="//imgur.com/pVa2rXL">View post on imgur.com</a>
         </blockquote>
-        <script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>
+        <script
+          async
+          src="//s.imgur.com/min/embed.js"
+          charset="utf-8"
+        ></script>
       `
       const expected: EmbedResolverResult = {
         provider: 'imgur',
@@ -38,7 +46,12 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
 
     it('should carry whatever the anchor states, including the dialog label', () => {
       const value = html`
-        <blockquote class="imgur-embed-pub" lang="en" data-id="pVa2rXL" data-context="false">
+        <blockquote
+          class="imgur-embed-pub"
+          lang="en"
+          data-id="pVa2rXL"
+          data-context="false"
+        >
           <a href="//imgur.com/pVa2rXL">A cat wearing a tiny hat</a>
         </blockquote>
       `
@@ -56,7 +69,11 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
 
     it('should state no title when the anchor holds none', () => {
       const value = html`
-        <blockquote class="imgur-embed-pub" lang="en" data-id="pVa2rXL">
+        <blockquote
+          class="imgur-embed-pub"
+          lang="en"
+          data-id="pVa2rXL"
+        >
           <a href="//imgur.com/pVa2rXL"></a>
         </blockquote>
       `
@@ -75,10 +92,19 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
   describe('an album', () => {
     it('should keep the prefix that addresses it and state no poster', () => {
       const value = html`
-        <blockquote class="imgur-embed-pub" lang="en" data-id="a/16lVn5E" data-context="false">
+        <blockquote
+          class="imgur-embed-pub"
+          lang="en"
+          data-id="a/16lVn5E"
+          data-context="false"
+        >
           <a href="//imgur.com/a/16lVn5E">Album title</a>
         </blockquote>
-        <script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>
+        <script
+          async
+          src="//s.imgur.com/min/embed.js"
+          charset="utf-8"
+        ></script>
       `
       const expected: EmbedResolverResult = {
         provider: 'imgur',
@@ -95,7 +121,10 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
   describe('sad paths', () => {
     it('should return undefined for an id outside the url-safe alphabet', () => {
       const value = html`
-        <blockquote class="imgur-embed-pub" data-id="../evil"></blockquote>
+        <blockquote
+          class="imgur-embed-pub"
+          data-id="../evil"
+        ></blockquote>
       `
 
       expect(extract(value)).toBeUndefined()
