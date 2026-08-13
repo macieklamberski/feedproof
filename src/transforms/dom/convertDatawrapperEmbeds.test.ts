@@ -10,7 +10,13 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
   }
 
   it('should convert a responsive iframe into a linked static image', async () => {
-    const value = html`<iframe id="datawrapper-chart-bdqZJ" src="https://datawrapper.dwcdn.net/bdqZJ/2/" title="Egg prices"></iframe>`
+    const value = html`
+      <iframe
+        id="datawrapper-chart-bdqZJ"
+        src="https://datawrapper.dwcdn.net/bdqZJ/2/"
+        title="Egg prices"
+      ></iframe>
+    `
     const result = await transform(value)
 
     expect(result).toContain('<a href="https://datawrapper.dwcdn.net/bdqZJ/">')
@@ -98,7 +104,12 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
   // data-frame-src is now materialized into an <iframe> by rebuildDeferredIframes upstream, so
   // a Texas Tribune / @newswire/frames Datawrapper wrapper still becomes an image — end to end.
   it('should convert a data-frame-src datawrapper wrapper end to end', async () => {
-    const value = html`<div data-frame-sandbox="allow-scripts" data-frame-src="https://datawrapper.dwcdn.net/OaEnQ/"></div>`
+    const value = html`
+      <div
+        data-frame-sandbox="allow-scripts"
+        data-frame-src="https://datawrapper.dwcdn.net/OaEnQ/"
+      ></div>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com',
@@ -109,7 +120,11 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
   })
 
   it('should convert the plain-link form', async () => {
-    const value = html`<div class="datawrapper-embed"><a href="https://datawrapper.dwcdn.net/8sk4Y/3/" target="_blank" rel="noopener noreferrer">View Link</a></div>`
+    const value = html`
+      <div class="datawrapper-embed">
+        <a href="https://datawrapper.dwcdn.net/8sk4Y/3/" target="_blank" rel="noopener noreferrer">View Link</a>
+      </div>
+    `
     const result = await transform(value)
 
     expect(result).toContain('<a href="https://datawrapper.dwcdn.net/8sk4Y/">')

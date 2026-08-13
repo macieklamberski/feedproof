@@ -152,7 +152,15 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
 
   describe('happy paths', () => {
     it('should mint the player page from the element attributes', () => {
-      const value = html`<video-js data-account="1234567890" data-player="AbCdEf" data-embed="custom" data-video-id="6098765432" controls></video-js>`
+      const value = html`
+        <video-js
+          data-account="1234567890"
+          data-player="AbCdEf"
+          data-embed="custom"
+          data-video-id="6098765432"
+          controls
+        ></video-js>
+      `
 
       expect(extract(value)).toEqual({
         provider: 'brightcove',

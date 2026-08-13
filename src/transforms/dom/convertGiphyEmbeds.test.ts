@@ -10,7 +10,13 @@ describeForEachParser('convertGiphyEmbeds', (parseHtml) => {
   }
 
   it('should convert the embed iframe into a linked gif', async () => {
-    const value = html`<iframe src="https://giphy.com/embed/3o7TKMt1VVNkHV2PaE" width="480" height="270"></iframe>`
+    const value = html`
+      <iframe
+        src="https://giphy.com/embed/3o7TKMt1VVNkHV2PaE"
+        width="480"
+        height="270"
+      ></iframe>
+    `
     const expected = html`
       <a href="https://giphy.com/gifs/3o7TKMt1VVNkHV2PaE">
         <img src="https://media.giphy.com/media/3o7TKMt1VVNkHV2PaE/giphy.gif">

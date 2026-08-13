@@ -50,7 +50,11 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
       const result = await transform(value)
 
       expect(result).toBe(
-        html`<p><a href="https://substack.com/profile/1">@Ana</a> and <a href="https://substack.com/profile/2">@Ben</a></p>`,
+        html`
+          <p>
+            <a href="https://substack.com/profile/1">@Ana</a> and <a href="https://substack.com/profile/2">@Ben</a>
+          </p>
+        `,
       )
     })
   })
