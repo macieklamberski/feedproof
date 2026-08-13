@@ -34,6 +34,18 @@ describe('slideshareResolveEmbed', () => {
     expect(slideshareResolveEmbed('https://www.slideshare.net/haraldf')).toBeUndefined()
   })
 
+  it('should ignore an embed path that stops before the deck', () => {
+    const value = 'https://www.slideshare.net/slideshow/embed_code/'
+
+    expect(slideshareResolveEmbed(value)).toBeUndefined()
+  })
+
+  it('should ignore a keyed path that stops before the key', () => {
+    const value = 'https://www.slideshare.net/slideshow/embed_code/key/'
+
+    expect(slideshareResolveEmbed(value)).toBeUndefined()
+  })
+
   it('should ignore a key outside the url-safe alphabet', () => {
     expect(
       slideshareResolveEmbed('https://www.slideshare.net/slideshow/embed_code/key/../evil'),
