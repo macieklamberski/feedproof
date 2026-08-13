@@ -1,9 +1,9 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { parsePixelSize } from '../utils/dom.js'
 import { createIframeEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^\d+$/
-const heightRegex = /^\d{2,4}$/
 
 const libsynHosts = ['libsyn.com']
 
@@ -44,7 +44,7 @@ export const extractLibsynEmbed = (
   return {
     kind: segments[1] as string,
     id,
-    height: height && heightRegex.test(height) ? Number(height) : undefined,
+    height: parsePixelSize(height),
   }
 }
 

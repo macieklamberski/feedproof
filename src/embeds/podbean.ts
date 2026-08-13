@@ -1,5 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { parsePixelSize } from '../utils/dom.js'
 import { createIframeEmbedResolver } from '../utils/widgets.js'
 
 // Ids are a slug pair, e.g. `yx4hr-f3d1e1`, and the v2 player appends `-pb` to its own.
@@ -11,8 +12,6 @@ const podbeanHosts = ['podbean.com']
 // corpus: `player-v2` embeds carry 150 in 10 of 11 cases, while the legacy markup states 122
 // for a player Podbean no longer serves. Where the url spells `size=` it wins.
 const defaultPlayerHeight = 150
-
-const heightRegex = /^\d{2,4}$/
 
 export const extractPodbeanId = (link: string): string | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
@@ -52,7 +51,7 @@ export const podbeanResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 
   const stated = parseUrl(url, 'https://example.com')?.searchParams.get('size')
-  const height = stated && heightRegex.test(stated) ? Number(stated) : defaultPlayerHeight
+  const height = parsePixelSize(stated) ?? defaultPlayerHeight
 
   return {
     provider: 'podbean',
