@@ -217,6 +217,11 @@ export {
   transistorResolveEmbed,
 } from './embeds/transistor.js'
 export {
+  typeformIframeEmbedResolver,
+  typeformResolveEmbed,
+  typeformWidgetEmbedResolver,
+} from './embeds/typeform.js'
+export {
   extractVimeoId,
   vimeoEmbedResolver,
   vimeoResolveEmbed,
