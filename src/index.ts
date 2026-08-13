@@ -136,7 +136,8 @@ export {
   imgurIframeEmbedResolver,
 } from './embeds/imgur.js'
 export {
-  instagramEmbedResolver,
+  instagramAmpEmbedResolver,
+  instagramBlockquoteEmbedResolver,
   instagramIframeEmbedResolver,
   instagramLazyEmbedResolver,
 } from './embeds/instagram.js'

@@ -47,7 +47,8 @@ import { flourishEmbedResolver } from './embeds/flourish.js'
 import { geniallyEmbedResolver } from './embeds/genially.js'
 import { imgurBlockquoteEmbedResolver, imgurIframeEmbedResolver } from './embeds/imgur.js'
 import {
-  instagramEmbedResolver,
+  instagramAmpEmbedResolver,
+  instagramBlockquoteEmbedResolver,
   instagramIframeEmbedResolver,
   instagramLazyEmbedResolver,
 } from './embeds/instagram.js'
@@ -418,7 +419,8 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   omnyEmbedResolver,
   nicovideoScriptEmbedResolver,
   nicovideoIframeEmbedResolver,
-  instagramEmbedResolver,
+  instagramBlockquoteEmbedResolver,
+  instagramAmpEmbedResolver,
   instagramLazyEmbedResolver,
   instagramIframeEmbedResolver,
   spotifyEmbedResolver,

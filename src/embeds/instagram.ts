@@ -173,24 +173,11 @@ const readContent = (element: Element): Partial<EmbedResolverResult> => {
   }
 }
 
-// Every carrier a publisher pastes: the blockquote in all its versions and wrappers, and the AMP
-// component, which names the post in an attribute and carries no text at all, so left alone it
-// is dropped as an empty element and the post goes with it.
-export const instagramEmbedResolver: EmbedResolver = {
-  selector: 'blockquote.instagram-media, amp-instagram[data-shortcode], amp-instagram[shortcode]',
+// The blockquote in all its versions and wrappers, which is what the share dialog writes and
+// what every CMS re-wraps.
+export const instagramBlockquoteEmbedResolver: EmbedResolver = {
+  selector: 'blockquote.instagram-media',
   extract: (element): EmbedResolverResult | undefined => {
-    const captioned =
-      element.hasAttribute('data-instgrm-captioned') || element.hasAttribute('data-captioned')
-    const shortcode = attr(element, 'data-shortcode') ?? attr(element, 'shortcode')
-
-    // The AMP component names the media and not the path it lives at, and addresses every
-    // shortcode it is given through `/p/`.
-    if (shortcode) {
-      return safeShortcodeRegex.test(shortcode)
-        ? composeEmbed({ kind: 'p', shortcode }, captioned)
-        : undefined
-    }
-
     const wrapper = readWrapper(element)
     const post = findPost(element) ?? wrapper.post
 
@@ -198,7 +185,26 @@ export const instagramEmbedResolver: EmbedResolver = {
       return
     }
 
-    return composeEmbed(post, captioned, { ...readContent(element), ...wrapper.size })
+    return composeEmbed(post, element.hasAttribute('data-instgrm-captioned'), {
+      ...readContent(element),
+      ...wrapper.size,
+    })
+  },
+}
+
+// The AMP component names the post in an attribute and carries no text at all, so left alone it
+// is dropped as an empty element and the post goes with it. It names the media and not the path
+// the media lives at, and addresses every shortcode it is given through `/p/`.
+export const instagramAmpEmbedResolver: EmbedResolver = {
+  selector: 'amp-instagram[data-shortcode], amp-instagram[shortcode]',
+  extract: (element): EmbedResolverResult | undefined => {
+    const shortcode = attr(element, 'data-shortcode') ?? attr(element, 'shortcode')
+
+    if (!shortcode || !safeShortcodeRegex.test(shortcode)) {
+      return
+    }
+
+    return composeEmbed({ kind: 'p', shortcode }, element.hasAttribute('data-captioned'))
   },
 }
 

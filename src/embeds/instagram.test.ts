@@ -2,17 +2,20 @@ import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
-  instagramEmbedResolver,
+  instagramAmpEmbedResolver,
+  instagramBlockquoteEmbedResolver,
   instagramIframeEmbedResolver,
   instagramLazyEmbedResolver,
   instagramResolveEmbed,
 } from './instagram.js'
 
-describeForEachParser('instagramEmbedResolver', (parseHtml) => {
+describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
   const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(instagramEmbedResolver.selector)
+    const element = parseHtml(value).querySelector(instagramBlockquoteEmbedResolver.selector)
 
-    return element ? (instagramEmbedResolver.extract(element) as EmbedResolverResult) : undefined
+    return element
+      ? (instagramBlockquoteEmbedResolver.extract(element) as EmbedResolverResult)
+      : undefined
   }
 
   describe('the current captioned blockquote', () => {
@@ -357,42 +360,6 @@ describeForEachParser('instagramEmbedResolver', (parseHtml) => {
     })
   })
 
-  describe('the AMP component', () => {
-    it('should build the captioned frame from the shortcode', () => {
-      const value = html`
-        <amp-instagram
-          data-shortcode="CaUsPbUquKV"
-          data-captioned
-          layout="responsive"
-          width="320"
-          height="392"
-        ></amp-instagram>
-      `
-
-      expect(extract(value)).toEqual({
-        provider: 'instagram',
-        id: 'p/CaUsPbUquKV',
-        src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/captioned/',
-        url: 'https://www.instagram.com/p/CaUsPbUquKV/',
-      })
-    })
-
-    it('should read the bare shortcode attribute the component also accepts', () => {
-      const value = html`<amp-instagram shortcode="CaUsPbUquKV" width="320" height="392"></amp-instagram>`
-
-      expect(extract(value)).toMatchObject({
-        id: 'p/CaUsPbUquKV',
-        src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
-      })
-    })
-
-    it('should return undefined for a shortcode outside the url-safe alphabet', () => {
-      const value = html`<amp-instagram data-shortcode="../evil"></amp-instagram>`
-
-      expect(extract(value)).toBeUndefined()
-    })
-  })
-
   describe('sad paths', () => {
     it('should return undefined when nothing names a post', () => {
       const value = html`
@@ -550,5 +517,47 @@ describeForEachParser('instagramLazyEmbedResolver', (parseHtml) => {
 
       expect(extract(value)).toBeUndefined()
     })
+  })
+})
+
+describeForEachParser('instagramAmpEmbedResolver', (parseHtml) => {
+  const extract = (value: string): EmbedResolverResult | undefined => {
+    const element = parseHtml(value).querySelector(instagramAmpEmbedResolver.selector)
+
+    return element ? (instagramAmpEmbedResolver.extract(element) as EmbedResolverResult) : undefined
+  }
+
+  it('should build the captioned frame from the shortcode', () => {
+    const value = html`
+      <amp-instagram
+        data-shortcode="CaUsPbUquKV"
+        data-captioned
+        layout="responsive"
+        width="320"
+        height="392"
+      ></amp-instagram>
+    `
+
+    expect(extract(value)).toEqual({
+      provider: 'instagram',
+      id: 'p/CaUsPbUquKV',
+      src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/captioned/',
+      url: 'https://www.instagram.com/p/CaUsPbUquKV/',
+    })
+  })
+
+  it('should read the bare shortcode attribute the component also accepts', () => {
+    const value = html`<amp-instagram shortcode="CaUsPbUquKV" width="320" height="392"></amp-instagram>`
+
+    expect(extract(value)).toMatchObject({
+      id: 'p/CaUsPbUquKV',
+      src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
+    })
+  })
+
+  it('should return undefined for a shortcode outside the url-safe alphabet', () => {
+    const value = html`<amp-instagram data-shortcode="../evil"></amp-instagram>`
+
+    expect(extract(value)).toBeUndefined()
   })
 })
