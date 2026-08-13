@@ -136,6 +136,11 @@ export {
   imgurIframeEmbedResolver,
 } from './embeds/imgur.js'
 export {
+  instagramEmbedResolver,
+  instagramIframeEmbedResolver,
+  instagramLazyEmbedResolver,
+} from './embeds/instagram.js'
+export {
   issuuIframeEmbedResolver,
   issuuWidgetEmbedResolver,
 } from './embeds/issuu.js'

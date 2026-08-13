@@ -46,6 +46,11 @@ import { firesideEmbedResolver } from './embeds/fireside.js'
 import { flourishEmbedResolver } from './embeds/flourish.js'
 import { geniallyEmbedResolver } from './embeds/genially.js'
 import { imgurBlockquoteEmbedResolver, imgurIframeEmbedResolver } from './embeds/imgur.js'
+import {
+  instagramEmbedResolver,
+  instagramIframeEmbedResolver,
+  instagramLazyEmbedResolver,
+} from './embeds/instagram.js'
 import { issuuIframeEmbedResolver, issuuWidgetEmbedResolver } from './embeds/issuu.js'
 import { ivooxEmbedResolver } from './embeds/ivoox.js'
 import {
@@ -413,6 +418,9 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   omnyEmbedResolver,
   nicovideoScriptEmbedResolver,
   nicovideoIframeEmbedResolver,
+  instagramEmbedResolver,
+  instagramLazyEmbedResolver,
+  instagramIframeEmbedResolver,
   spotifyEmbedResolver,
   spreakerIframeEmbedResolver,
   spreakerAnchorEmbedResolver,
