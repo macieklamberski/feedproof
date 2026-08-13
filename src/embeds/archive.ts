@@ -1,11 +1,7 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import { getPathSegments, parseUrl } from 'trousse'
+import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import {
-  createIframeEmbedResolver,
-  embedCarrierSelector,
-  readCarrierUrl,
-} from '../utils/widgets.js'
+import { createIframeEmbedResolver } from '../utils/widgets.js'
 
 // Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen.
 const safeIdentifierRegex = /^[\w.-]+$/
@@ -97,26 +93,27 @@ const readPlayerConfig = (element: Element): string | undefined => {
   return attr(flashVars, 'value')
 }
 
-export const archiveFlashEmbedResolver: EmbedResolver = {
-  selector: embedCarrierSelector,
-  extract: (element): EmbedResolverResult | undefined => {
-    const parsed = parseUrl(readCarrierUrl(element), 'https://example.com')
+export const archiveFlashResolveEmbed = (
+  src: string,
+  element: Element,
+): EmbedResolverResult | undefined => {
+  const parsed = parseUrl(src, 'https://example.com')
 
-    if (
-      !parsed ||
-      (!isHostOf(parsed, archiveHosts) && !isSubdomainOf(parsed, archiveHosts)) ||
-      !flashPlayerPathRegex.test(parsed.pathname)
-    ) {
-      return
-    }
+  if (!parsed || !flashPlayerPathRegex.test(parsed.pathname)) {
+    return
+  }
 
-    const config = readPlayerConfig(element) ?? parsed.searchParams.get('config')
-    const identifier = config?.match(downloadIdentifierRegex)?.[1]
+  const config = readPlayerConfig(element) ?? parsed.searchParams.get('config')
+  const identifier = config?.match(downloadIdentifierRegex)?.[1]
 
-    if (!identifier || !safeIdentifierRegex.test(identifier)) {
-      return
-    }
+  if (!identifier || !safeIdentifierRegex.test(identifier)) {
+    return
+  }
 
-    return composeEmbedResult(identifier)
-  },
+  return composeEmbedResult(identifier)
 }
+
+export const archiveFlashEmbedResolver = createIframeEmbedResolver(
+  archiveHosts,
+  archiveFlashResolveEmbed,
+)

@@ -1,7 +1,7 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import { getPathSegments, parseUrl } from 'trousse'
+import type { EmbedResolverResult } from '../types.js'
 import { attr, text } from '../utils/dom.js'
-import { embedCarrierSelector, readCarrierUrl } from '../utils/widgets.js'
+import { createIframeEmbedResolver } from '../utils/widgets.js'
 
 // A release is either an album or a single track, and the id is Bandcamp's own numeric one.
 const releaseRegex = /^(album|track)=(\d+)$/
@@ -71,56 +71,57 @@ const parseFallback = (element: Element): Element | null => {
 
   return holder.querySelector('a[href*="bandcamp.com"]')
 }
-export const bandcampEmbedResolver: EmbedResolver = {
-  selector: embedCarrierSelector,
-  extract: (element): EmbedResolverResult | undefined => {
-    const src = readCarrierUrl(element)
-    const parsed = parseUrl(src, 'https://example.com')
+const bandcampHosts = ['bandcamp.com']
 
-    if (!parsed || (!isHostOf(parsed, 'bandcamp.com') && !isSubdomainOf(parsed, 'bandcamp.com'))) {
-      return
-    }
+// The player url is rebuilt from the release rather than kept, but the `size=` preset in the
+// publisher's own url is carried across, because the stated height was measured against the
+// player that preset selects.
+export const bandcampResolveEmbed = (
+  src: string,
+  element: Element,
+): EmbedResolverResult | undefined => {
+  const parsed = parseUrl(src, 'https://example.com')
+  const release = parsed ? extractBandcampRelease(src) : undefined
 
-    const release = extractBandcampRelease(src)
+  if (!parsed || !release) {
+    return
+  }
 
-    if (!release) {
-      return
-    }
+  const [kind, id] = release.split('/')
+  const isVideo = videoPathRegex.test(parsed.pathname)
+  const preset = getPathSegments(parsed)
+    .map((segment) => segment.match(sizeRegex)?.[1])
+    .find(Boolean)
+  const size = preset ? `size=${preset}/` : ''
+  const result: EmbedResolverResult = {
+    provider: 'bandcamp',
+    id: release,
+    src: isVideo
+      ? `https://bandcamp.com/VideoEmbed?${kind}=${id}`
+      : `https://bandcamp.com/EmbeddedPlayer/${kind}=${id}/${size}`,
+  }
 
-    const [kind, id] = release.split('/')
-    const isVideo = videoPathRegex.test(parsed.pathname)
-    const preset = getPathSegments(parsed)
-      .map((segment) => segment.match(sizeRegex)?.[1])
-      .find(Boolean)
-    const size = preset ? `size=${preset}/` : ''
-    const result: EmbedResolverResult = {
-      provider: 'bandcamp',
-      id: release,
-      src: isVideo
-        ? `https://bandcamp.com/VideoEmbed?${kind}=${id}`
-        : `https://bandcamp.com/EmbeddedPlayer/${kind}=${id}/${size}`,
-    }
+  const height = preset ? presetHeights[preset] : undefined
 
-    const height = preset ? presetHeights[preset] : undefined
+  if (height) {
+    result.height = height
+  }
 
-    if (height) {
-      result.height = height
-    }
+  const anchor = parseFallback(element)
+  const url = attr(anchor, 'href')
+  // Bandcamp writes the label as "{title} by {artist}". It is kept whole rather than split
+  // on " by ", which appears inside real titles too.
+  const title = text(anchor)
 
-    const anchor = parseFallback(element)
-    const url = attr(anchor, 'href')
-    // Bandcamp writes the label as "{title} by {artist}". It is kept whole rather than split
-    // on " by ", which appears inside real titles too.
-    const title = text(anchor)
+  if (url) {
+    result.url = url
+  }
 
-    if (url) {
-      result.url = url
-    }
+  if (title) {
+    result.title = title
+  }
 
-    if (title) {
-      result.title = title
-    }
-
-    return result
-  },
+  return result
 }
+
+export const bandcampEmbedResolver = createIframeEmbedResolver(bandcampHosts, bandcampResolveEmbed)

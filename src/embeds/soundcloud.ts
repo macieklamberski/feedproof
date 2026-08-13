@@ -1,7 +1,7 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import { parseUrl } from 'trousse'
+import type { EmbedResolverResult } from '../types.js'
 import { attr, text } from '../utils/dom.js'
-import { embedCarrierSelector, readCarrierUrl } from '../utils/widgets.js'
+import { createIframeEmbedResolver } from '../utils/widgets.js'
 
 // SoundCloud's embed is an iframe whose `url=` query names the track as an
 // `api.soundcloud.com/tracks/{id}` reference, which is not human-clickable, so the iframe
@@ -24,59 +24,59 @@ const classicPlayerHeights: Record<string, number | undefined> = {
   users: 450,
 }
 
-export const soundcloudEmbedResolver: EmbedResolver = {
-  // Any carrier, because the Flash player shipped the same `url=` reference on an `<embed>`
-  // and an `<object>`: `player.soundcloud.com/player.swf?url=api.soundcloud.com/tracks/{id}`.
-  // The host check below is what narrows it, so no player path is spelled in the selector.
-  selector: embedCarrierSelector,
-  extract: (element): EmbedResolverResult | undefined => {
-    const src = readCarrierUrl(element)
-    const parsed = parseUrl(src, 'https://example.com')
+// Any carrier, because the Flash player shipped the same `url=` reference on an `<embed>` and an
+// `<object>`: `player.soundcloud.com/player.swf?url=api.soundcloud.com/tracks/{id}`. The host
+// check the factory applies is what narrows it, so no player path is spelled in a selector.
+const soundcloudHosts = ['soundcloud.com']
 
-    if (
-      !parsed ||
-      (!isHostOf(parsed, 'soundcloud.com') && !isSubdomainOf(parsed, 'soundcloud.com'))
-    ) {
-      return
-    }
+export const soundcloudResolveEmbed = (
+  src: string,
+  element: Element,
+): EmbedResolverResult | undefined => {
+  // The factory has already matched the host, which means the url parsed, so there is no
+  // unparseable case left to guard here.
+  const params = parseUrl(src, 'https://example.com')?.searchParams
+  const reference = params?.get('url')?.match(referenceRegex)
+  const result: EmbedResolverResult = { provider: 'soundcloud', src }
 
-    const reference = parsed.searchParams.get('url')?.match(referenceRegex)
-    const result: EmbedResolverResult = { provider: 'soundcloud', src }
+  if (reference) {
+    result.id = `${reference[1]}/${reference[2]}`
+  }
 
-    if (reference) {
-      result.id = `${reference[1]}/${reference[2]}`
-    }
+  // The visual player is one height whatever it holds, so it needs no reference to size it.
+  const height =
+    params?.get('visual') === 'true'
+      ? visualPlayerHeight
+      : classicPlayerHeights[reference?.[1] ?? '']
 
-    // The visual player is one height whatever it holds, so it needs no reference to size it.
-    const height =
-      parsed.searchParams.get('visual') === 'true'
-        ? visualPlayerHeight
-        : classicPlayerHeights[reference?.[1] ?? '']
+  if (height) {
+    result.height = height
+  }
 
-    if (height) {
-      result.height = height
-    }
+  const title = attr(element, 'title')
 
-    const title = attr(element, 'title')
+  if (title) {
+    result.title = title
+  }
 
-    if (title) {
-      result.title = title
-    }
+  const sibling = element.nextElementSibling
+  const anchors = Array.from(sibling?.querySelectorAll('a[href*="soundcloud.com"]') ?? []).filter(
+    (anchor) => !anchor.getAttribute('href')?.includes('api.soundcloud.com'),
+  )
 
-    const sibling = element.nextElementSibling
-    const anchors = Array.from(sibling?.querySelectorAll('a[href*="soundcloud.com"]') ?? []).filter(
-      (anchor) => !anchor.getAttribute('href')?.includes('api.soundcloud.com'),
-    )
+  // The snippet's shape is fixed: artist first, track second. Anything else is not the
+  // share snippet, so the sibling stays untouched.
+  if (anchors.length === 2) {
+    result.author = text(anchors[0])
+    result.title = text(anchors[1]) ?? result.title
+    result.url = anchors[1].getAttribute('href') ?? undefined
+    sibling?.remove()
+  }
 
-    // The snippet's shape is fixed: artist first, track second. Anything else is not the
-    // share snippet, so the sibling stays untouched.
-    if (anchors.length === 2) {
-      result.author = text(anchors[0])
-      result.title = text(anchors[1]) ?? result.title
-      result.url = anchors[1].getAttribute('href') ?? undefined
-      sibling?.remove()
-    }
-
-    return result
-  },
+  return result
 }
+
+export const soundcloudEmbedResolver = createIframeEmbedResolver(
+  soundcloudHosts,
+  soundcloudResolveEmbed,
+)
