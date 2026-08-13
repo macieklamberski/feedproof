@@ -104,7 +104,10 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
 
     it('should ignore a launcher that also carries a live id', () => {
       const value = html`
-        <div data-tf-live="01HCZ4DNW8JM6PEGNTQWF2PW87" data-tf-sidetab></div>
+        <div
+          data-tf-live="01HCZ4DNW8JM6PEGNTQWF2PW87"
+          data-tf-sidetab
+        ></div>
       `
 
       expect(extract(value)).toBeUndefined()
@@ -126,7 +129,10 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
 
     it('should return undefined for a legacy widget naming another host', () => {
       const value = html`
-        <div class="typeform-widget" data-url="https://typeform.com.evil.test/to/MTt3Pw7K"></div>
+        <div
+          class="typeform-widget"
+          data-url="https://typeform.com.evil.test/to/MTt3Pw7K"
+        ></div>
       `
 
       expect(extract(value)).toBeUndefined()
