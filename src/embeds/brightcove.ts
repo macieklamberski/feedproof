@@ -1,11 +1,7 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import {
-  createIframeEmbedResolver,
-  embedCarrierSelector,
-  readCarrierUrl,
-} from '../utils/widgets.js'
+import { createIframeEmbedResolver } from '../utils/widgets.js'
 
 // Brightcove builds its player page from four ids the in-page embed carries as attributes. The
 // account is usually one of them, but some plugins leave it only in the loader script's url, so
@@ -103,42 +99,44 @@ const readFlashVars = (element: Element): URLSearchParams | undefined => {
   return flashVars ? new URLSearchParams(attr(flashVars, 'value') ?? '') : undefined
 }
 
-export const brightcoveFlashEmbedResolver: EmbedResolver = {
-  selector: embedCarrierSelector,
-  extract: (element): EmbedResolverResult | undefined => {
-    const parsed = parseUrl(readCarrierUrl(element), 'https://example.com')
+export const brightcoveFlashResolveEmbed = (
+  src: string,
+  element: Element,
+): EmbedResolverResult | undefined => {
+  const parsed = parseUrl(src, 'https://example.com')
 
-    if (
-      !parsed ||
-      (!isHostOf(parsed, 'brightcove.com') && !isSubdomainOf(parsed, 'brightcove.com')) ||
-      !federatedPathRegex.test(parsed.pathname)
-    ) {
-      return
-    }
+  if (!parsed || !federatedPathRegex.test(parsed.pathname)) {
+    return
+  }
 
-    const flashVars = readFlashVars(element)
-    // A few embeds put the whole flashVars set in the url query instead.
-    const videoId = flashVars?.get('@videoPlayer') ?? parsed.searchParams.get('@videoPlayer')
-    const account = parsed.searchParams.get('publisherID') ?? flashVars?.get('publisherID')
+  const flashVars = readFlashVars(element)
+  // A few embeds put the whole flashVars set in the url query instead.
+  const videoId = flashVars?.get('@videoPlayer') ?? parsed.searchParams.get('@videoPlayer')
+  const account = parsed.searchParams.get('publisherID') ?? flashVars?.get('publisherID')
 
-    // A reference id (`ref:my-video`) names the video for the account's own API rather than
-    // the player, so anything but a numeric id is left to the generic placeholder.
-    if (
-      !videoId ||
-      !account ||
-      !brightcoveIdRegex.test(videoId) ||
-      !brightcoveIdRegex.test(account)
-    ) {
-      return
-    }
+  // A reference id (`ref:my-video`) names the video for the account's own API rather than
+  // the player, so anything but a numeric id is left to the generic placeholder.
+  if (
+    !videoId ||
+    !account ||
+    !brightcoveIdRegex.test(videoId) ||
+    !brightcoveIdRegex.test(account)
+  ) {
+    return
+  }
 
-    return {
-      provider: 'brightcove',
-      id: videoId,
-      src: `https://players.brightcove.net/${account}/default_default/index.html?videoId=${videoId}`,
-    }
-  },
+  return {
+    provider: 'brightcove',
+    id: videoId,
+    src: `https://players.brightcove.net/${account}/default_default/index.html?videoId=${videoId}`,
+  }
 }
+
+// The legacy player lives on brightcove.com; the modern one below is on brightcove.net.
+export const brightcoveFlashEmbedResolver = createIframeEmbedResolver(
+  ['brightcove.com'],
+  brightcoveFlashResolveEmbed,
+)
 
 // The player page as an ordinary iframe, `players.brightcove.net/{account}/{player}_{embed}
 // /index.html?videoId={id}`. It is the most common Brightcove carrier in the corpus at 243

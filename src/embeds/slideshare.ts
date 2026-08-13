@@ -1,11 +1,7 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { attr, find, text } from '../utils/dom.js'
-import {
-  createIframeEmbedResolver,
-  embedCarrierSelector,
-  readCarrierUrl,
-} from '../utils/widgets.js'
+import { createIframeEmbedResolver } from '../utils/widgets.js'
 
 const slideshareHosts = ['slideshare.net', 'slidesharecdn.com']
 
@@ -101,32 +97,33 @@ const readWrapper = (element: Element): { deck?: string; url?: string; title?: s
 // Flash died in 2020 and these embeds have rendered nothing since, but the markup is still in
 // old posts and their feeds. The numeric id in the wrapper is the same id the modern embed
 // route accepts, so the dead player can be replaced by one that works.
-export const slideshareFlashEmbedResolver: EmbedResolver = {
-  selector: embedCarrierSelector,
-  extract: (element): EmbedResolverResult | undefined => {
-    const parsed = parseUrl(readCarrierUrl(element), 'https://example.com')
+export const slideshareFlashResolveEmbed = (
+  src: string,
+  element: Element,
+): EmbedResolverResult | undefined => {
+  const parsed = parseUrl(src, 'https://example.com')
 
-    if (
-      !parsed ||
-      (!isHostOf(parsed, slideshareHosts) && !isSubdomainOf(parsed, slideshareHosts)) ||
-      !flashPlayerPathRegex.test(parsed.pathname)
-    ) {
-      return
-    }
+  if (!parsed || !flashPlayerPathRegex.test(parsed.pathname)) {
+    return
+  }
 
-    const { deck, url, title } = readWrapper(element)
+  const { deck, url, title } = readWrapper(element)
 
-    if (!deck) {
-      return
-    }
+  if (!deck) {
+    return
+  }
 
-    // The swf query names the deck's owner and slug, which compose the same page the wrapper
-    // links to. It is the fallback for a snippet that kept the player and dropped the wrapper's
-    // anchor.
-    const account = parsed.searchParams.get('userName')
-    const slug = parsed.searchParams.get('stripped_title')
-    const composed = account && slug ? `https://www.slideshare.net/${account}/${slug}` : undefined
+  // The swf query names the deck's owner and slug, which compose the same page the wrapper
+  // links to. It is the fallback for a snippet that kept the player and dropped the wrapper's
+  // anchor.
+  const account = parsed.searchParams.get('userName')
+  const slug = parsed.searchParams.get('stripped_title')
+  const composed = account && slug ? `https://www.slideshare.net/${account}/${slug}` : undefined
 
-    return composeEmbed(deck, url ?? composed, title || undefined)
-  },
+  return composeEmbed(deck, url ?? composed, title || undefined)
 }
+
+export const slideshareFlashEmbedResolver = createIframeEmbedResolver(
+  slideshareHosts,
+  slideshareFlashResolveEmbed,
+)
