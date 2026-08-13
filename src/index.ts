@@ -148,6 +148,11 @@ export {
   firesideResolveEmbed,
 } from './embeds/fireside.js'
 export { flourishEmbedResolver } from './embeds/flourish.js'
+export {
+  extractGeniallyViewId,
+  geniallyEmbedResolver,
+  geniallyResolveEmbed,
+} from './embeds/genially.js'
 export { extractIvooxEpisode, ivooxEmbedResolver, ivooxResolveEmbed } from './embeds/ivoox.js'
 export {
   extractJwplayerId,
