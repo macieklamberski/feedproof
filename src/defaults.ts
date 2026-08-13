@@ -59,7 +59,7 @@ import {
   speakerdeckScriptEmbedResolver,
 } from './embeds/speakerdeck.js'
 import { spotifyEmbedResolver } from './embeds/spotify.js'
-import { spreakerEmbedResolver } from './embeds/spreaker.js'
+import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from './embeds/spreaker.js'
 import { tedEmbedResolver } from './embeds/ted.js'
 import { transistorEmbedResolver } from './embeds/transistor.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
@@ -381,7 +381,8 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   nicovideoScriptEmbedResolver,
   nicovideoIframeEmbedResolver,
   spotifyEmbedResolver,
-  spreakerEmbedResolver,
+  spreakerIframeEmbedResolver,
+  spreakerAnchorEmbedResolver,
   substackMediaResolver,
   weeblyMediaResolver,
   wechatMediaResolver,
