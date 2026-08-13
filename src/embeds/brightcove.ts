@@ -36,13 +36,23 @@ export const composePlayerUrl = (
 }
 
 // Brightcove's in-page embed is a bare `<video-js>` that its loader script turns into a player,
-// so a reader shows nothing: the element is empty and survives as an unknown tag. Video.js is
+// so a reader shows nothing: the element is empty and survives as an unknown tag. The older
+// syntax is a `<video class="video-js">` carrying the identical attributes, which renders as an
+// empty video element instead: all 26 corpus feeds that ship the loader with no `<video-js>`
+// and no iframe are that form. Video.js is
 // only the renderer here; the video is Brightcove's, named by id, which is why this lives with
 // the rest of Brightcove rather than with the generic Video.js rebuild. Brightcove has no public
 // watch page, so the placeholder carries no `url`.
 export const brightcoveVideoJsEmbedResolver: EmbedResolver = {
-  selector: 'video-js[data-video-id]',
+  selector: 'video-js[data-video-id], video[data-video-id]',
   extract: (element): EmbedResolverResult | undefined => {
+    // The older syntax puts the same attributes on a `<video class="video-js">`. Empty, it
+    // renders as a blank video element, so the episode is lost the same way. One carrying a
+    // real file is a working video and stays one: the placeholder would be a downgrade.
+    if (element.querySelector('source') || attr(element, 'src')) {
+      return
+    }
+
     const videoId = attr(element, 'data-video-id')
     const account = videoId ? readPlayerAccount(element) : undefined
 
