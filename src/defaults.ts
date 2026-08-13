@@ -43,6 +43,7 @@ import { captivateEmbedResolver } from './embeds/captivate.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { firesideEmbedResolver } from './embeds/fireside.js'
 import { flourishEmbedResolver } from './embeds/flourish.js'
+import { geniallyEmbedResolver } from './embeds/genially.js'
 import { ivooxEmbedResolver } from './embeds/ivoox.js'
 import { jwplayerIframeEmbedResolver, jwplayerScriptEmbedResolver } from './embeds/jwplayer.js'
 import { libsynEmbedResolver } from './embeds/libsyn.js'
@@ -374,6 +375,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   speakerdeckIframeEmbedResolver,
   firesideEmbedResolver,
   flourishEmbedResolver,
+  geniallyEmbedResolver,
   anchorEmbedResolver,
   appleEmbedResolver,
   archiveEmbedResolver,
