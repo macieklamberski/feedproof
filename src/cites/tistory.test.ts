@@ -109,4 +109,21 @@ describeForEachParser('tistoryCiteResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
   })
+  describe('markup that only borrows the open graph vocabulary', () => {
+    // `data-og-*` is the protocol's naming, not Tistory's, so a card from another theme can
+    // carry the same attributes. The element is what separates them.
+    it('should not cite a div carrying the same attributes', async () => {
+      const value = html`
+        <div
+          data-og-source-url="https://example.com/post"
+          data-og-title="Page title"
+          data-og-description="Preview text"
+        >
+          <a href="https://example.com/post">Page title</a>
+        </div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
 })

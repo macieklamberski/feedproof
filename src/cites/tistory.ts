@@ -11,8 +11,13 @@ import { attr, find, text } from '../utils/dom.js'
 // Every field is duplicated: once as a `data-og-*` attribute on the wrapper and once as an
 // element inside the anchor. The attributes are read first because the elements are absent
 // on the slimmer card variants.
+//
+// The selector names the element as well as the attribute, because `data-og-*` is the Open
+// Graph protocol's own vocabulary rather than something only Tistory could have chosen, and
+// any theme that freezes OG tags into markup would reach for the same names. Tistory writes
+// the card as a `<figure>`, on the full variant and on the slim one that drops the class.
 export const tistoryCiteResolver: CiteResolver = {
-  selector: '[data-og-source-url]',
+  selector: 'figure[data-og-source-url]',
   extract: (element) => {
     return buildCite({
       provider: 'tistory',
