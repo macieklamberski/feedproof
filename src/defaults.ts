@@ -56,6 +56,7 @@ import { omnyEmbedResolver } from './embeds/omny.js'
 import { podbeanEmbedResolver } from './embeds/podbean.js'
 import { podigeeEmbedResolver } from './embeds/podigee.js'
 import { simplecastEmbedResolver } from './embeds/simplecast.js'
+import { slideshareFlashEmbedResolver, slideshareIframeEmbedResolver } from './embeds/slideshare.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 import {
   speakerdeckIframeEmbedResolver,
@@ -371,6 +372,8 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   megaphoneEmbedResolver,
   podigeeEmbedResolver,
   simplecastEmbedResolver,
+  slideshareFlashEmbedResolver,
+  slideshareIframeEmbedResolver,
   soundcloudEmbedResolver,
   speakerdeckScriptEmbedResolver,
   speakerdeckIframeEmbedResolver,
