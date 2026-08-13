@@ -120,6 +120,11 @@ export {
   extractAudioboomPost,
 } from './embeds/audioboom.js'
 export { bandcampEmbedResolver, extractBandcampRelease } from './embeds/bandcamp.js'
+export {
+  bloggerIframeEmbedResolver,
+  bloggerResolveEmbed,
+  extractBloggerToken,
+} from './embeds/blogger.js'
 export { blubrryEmbedResolver, blubrryResolveEmbed, extractBlubrryEmbed } from './embeds/blubrry.js'
 export {
   brightcoveFlashEmbedResolver,
