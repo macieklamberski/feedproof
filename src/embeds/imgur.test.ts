@@ -117,36 +117,52 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
 
 describe('imgurResolveEmbed', () => {
   it('should resolve the frame the script builds', () => {
-    expect(imgurResolveEmbed('https://imgur.com/pVa2rXL/embed?pub=true&w=540')).toEqual({
+    const value = 'https://imgur.com/pVa2rXL/embed?pub=true&w=540'
+    const expected: EmbedResolverResult = {
       provider: 'imgur',
       id: 'pVa2rXL',
       src: 'https://imgur.com/pVa2rXL/embed',
       url: 'https://imgur.com/pVa2rXL',
       thumbnail: 'https://i.imgur.com/pVa2rXLm.jpg',
-    })
+    }
+
+    expect(imgurResolveEmbed(value)).toEqual(expected)
   })
 
   it('should resolve an album frame', () => {
-    expect(imgurResolveEmbed('https://imgur.com/a/16lVn5E/embed')).toEqual({
+    const value = 'https://imgur.com/a/16lVn5E/embed'
+    const expected: EmbedResolverResult = {
       provider: 'imgur',
       id: 'a/16lVn5E',
       src: 'https://imgur.com/a/16lVn5E/embed',
       url: 'https://imgur.com/a/16lVn5E',
-    })
+    }
+
+    expect(imgurResolveEmbed(value)).toEqual(expected)
   })
 
   it('should treat the gallery path as an album', () => {
-    expect(imgurResolveEmbed('https://imgur.com/gallery/CajzWlF')).toMatchObject({
+    const value = 'https://imgur.com/gallery/CajzWlF'
+    const expected: EmbedResolverResult = {
+      provider: 'imgur',
       id: 'a/CajzWlF',
-    })
+      src: 'https://imgur.com/a/CajzWlF/embed',
+      url: 'https://imgur.com/a/CajzWlF',
+    }
+
+    expect(imgurResolveEmbed(value)).toEqual(expected)
   })
 
   it('should ignore an imgur url that names no post', () => {
-    expect(imgurResolveEmbed('https://imgur.com/')).toBeUndefined()
+    const value = 'https://imgur.com/'
+
+    expect(imgurResolveEmbed(value)).toBeUndefined()
   })
 
   it('should ignore another host carrying the post path', () => {
-    expect(imgurResolveEmbed('https://imgur.com.evil.test/pVa2rXL/embed')).toBeUndefined()
+    const value = 'https://imgur.com.evil.test/pVa2rXL/embed'
+
+    expect(imgurResolveEmbed(value)).toBeUndefined()
   })
 })
 
