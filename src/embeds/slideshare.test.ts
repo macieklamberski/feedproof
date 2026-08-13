@@ -104,7 +104,6 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
           </object>
         </div>
       `
-
       const expected: EmbedResolverResult = {
         provider: 'slideshare',
         id: '6435157',
@@ -124,7 +123,6 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
           ></embed>
         </object>
       `
-
       const expected: EmbedResolverResult = {
         provider: 'slideshare',
         id: '6435157',
@@ -191,7 +189,6 @@ describeForEachParser('slideshareIframeEmbedResolver', (parseHtml) => {
         allowfullscreen
       ></iframe>
     `
-
     const expected: EmbedResolverResult = {
       provider: 'slideshare',
       id: '6PCWPGFw9SwsAY',
