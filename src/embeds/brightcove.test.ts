@@ -188,6 +188,50 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
     })
   })
 
+  // The older Brightcove syntax, and the only shape the 26 corpus feeds shipping the loader
+  // without a `<video-js>` element actually use.
+  describe('the video element form', () => {
+    it('should mint the player page from a video element carrying the same attributes', () => {
+      const value = html`
+        <video
+          class="video-js"
+          data-account="1234567890"
+          data-video-id="6098765432"
+          controls
+        ></video>
+      `
+
+      expect(extract(value)).toMatchObject({
+        provider: 'brightcove',
+        id: '6098765432',
+      })
+    })
+
+    // A video carrying a real file is a working video, so a placeholder would be a downgrade.
+    it('should leave a video element that names a file alone', () => {
+      const value = html`
+        <video class="video-js" data-account="1234567890" data-video-id="6098765432">
+          <source src="https://example.com/clip.mp4" type="video/mp4">
+        </video>
+      `
+
+      expect(extract(value)).toBeUndefined()
+    })
+
+    it('should leave a video element with its own src alone', () => {
+      const value = html`
+        <video
+          class="video-js"
+          data-account="1234567890"
+          data-video-id="6098765432"
+          src="https://example.com/clip.mp4"
+        ></video>
+      `
+
+      expect(extract(value)).toBeUndefined()
+    })
+  })
+
   describe('sad paths', () => {
     it('should return undefined when no account can be found', () => {
       expect(extract(html`<video-js data-video-id="6098765432"></video-js>`)).toBeUndefined()
