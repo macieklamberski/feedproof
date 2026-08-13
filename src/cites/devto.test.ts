@@ -74,8 +74,14 @@ describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        thumbnail: 'https://example.com/cover.png',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/page')
+      expect(await extract(value)).toEqual(expected)
     })
 
     // Optional fields pass through raw; createPlaceholder trims every field when it
@@ -92,8 +98,15 @@ describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        publisher: 'example.com',
+        icon: 'https://example.com/favicon.png',
+      }
 
-      expect((await extract(value))?.publisher).toBe('example.com')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -218,10 +231,14 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/post',
+        title: 'Page title',
         icon: 'https://example.com/author.png',
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the date when it spells a year', async () => {
@@ -233,8 +250,14 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        date: 'Aug 21, 2025',
+      }
 
-      expect((await extract(value))?.date).toBe('Aug 21, 2025')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the date unset when it carries no year', async () => {
@@ -246,8 +269,13 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.date).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the description from a context note', async () => {
@@ -264,8 +292,14 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        description: 'Context note text',
+      }
 
-      expect((await extract(value))?.description).toBe('Context note text')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the description from a status preview when there is no context note', async () => {
@@ -277,8 +311,14 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        description: 'Status text',
+      }
 
-      expect((await extract(value))?.description).toBe('Status text')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should fall back to the title link when the navigation link is absent', async () => {
@@ -289,8 +329,13 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/post')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -371,8 +416,15 @@ describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
           </a>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/author/post',
+        title: 'Page title',
+        author: 'Author name',
+        date: "Aug 25 '22",
+      }
 
-      expect((await extract(value))?.author).toBe('Author name')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the author undefined when the byline is missing', async () => {
@@ -383,8 +435,13 @@ describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
           </a>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/author/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.author).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

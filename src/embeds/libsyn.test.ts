@@ -1,47 +1,70 @@
 import { describe, expect, it } from 'bun:test'
+import type { EmbedResolverResult } from '../types.js'
 import { extractLibsynEmbed, libsynResolveEmbed } from './libsyn.js'
 
 describe('extractLibsynEmbed', () => {
   it('should read an episode id and its height from the path', () => {
     const value =
       'https://html5-player.libsyn.com/embed/episode/id/5508311/height/90/width/700/theme/custom/'
+    const expected = {
+      kind: 'episode',
+      id: '5508311',
+      height: 90,
+    }
 
-    expect(extractLibsynEmbed(value)).toEqual({ kind: 'episode', id: '5508311', height: 90 })
+    expect(extractLibsynEmbed(value)).toEqual(expected)
   })
 
   it('should read the modern player host', () => {
     const value =
       'https://play.libsyn.com/embed/episode/id/41612765/height/192/theme/modern/size/large/'
+    const expected = {
+      kind: 'episode',
+      id: '41612765',
+      height: 192,
+    }
 
-    expect(extractLibsynEmbed(value)).toEqual({ kind: 'episode', id: '41612765', height: 192 })
+    expect(extractLibsynEmbed(value)).toEqual(expected)
   })
 
   it('should read a show player', () => {
-    expect(extractLibsynEmbed('https://play.libsyn.com/embed/show/id/12345/height/200/')).toEqual({
+    const value = 'https://play.libsyn.com/embed/show/id/12345/height/200/'
+    const expected = {
       kind: 'show',
       id: '12345',
       height: 200,
-    })
+    }
+
+    expect(extractLibsynEmbed(value)).toEqual(expected)
   })
 
   it('should read an embed that states no height', () => {
-    expect(extractLibsynEmbed('https://play.libsyn.com/embed/episode/id/5508311/')).toEqual({
+    const value = 'https://play.libsyn.com/embed/episode/id/5508311/'
+    const expected = {
       kind: 'episode',
       id: '5508311',
       height: undefined,
-    })
+    }
+
+    expect(extractLibsynEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined for a libsyn url that is not a player', () => {
-    expect(extractLibsynEmbed('https://traffic.libsyn.com/show/episode.mp3')).toBeUndefined()
+    const value = 'https://traffic.libsyn.com/show/episode.mp3'
+
+    expect(extractLibsynEmbed(value)).toBeUndefined()
   })
 
   it('should return undefined for a non-numeric id', () => {
-    expect(extractLibsynEmbed('https://play.libsyn.com/embed/episode/id/abc/')).toBeUndefined()
+    const value = 'https://play.libsyn.com/embed/episode/id/abc/'
+
+    expect(extractLibsynEmbed(value)).toBeUndefined()
   })
 
   it('should return undefined for a url that cannot be parsed', () => {
-    expect(extractLibsynEmbed('https://[')).toBeUndefined()
+    const value = 'https://['
+
+    expect(extractLibsynEmbed(value)).toBeUndefined()
   })
 })
 
@@ -50,7 +73,7 @@ describe('libsynResolveEmbed', () => {
   // rebuilt src is a repair rather than a cosmetic rewrite.
   it('should mint the modern player host and carry the height', () => {
     const value = 'https://html5-player.libsyn.com/embed/episode/id/5508311/height/90/theme/custom/'
-    const expected = {
+    const expected: EmbedResolverResult = {
       provider: 'libsyn',
       id: 'episode/5508311',
       src: 'https://play.libsyn.com/embed/episode/id/5508311/height/90/',
@@ -61,16 +84,19 @@ describe('libsynResolveEmbed', () => {
   })
 
   it('should leave the height out when the player does not state one', () => {
-    const result = libsynResolveEmbed('https://play.libsyn.com/embed/episode/id/5508311/')
-
-    expect(result).toEqual({
+    const value = 'https://play.libsyn.com/embed/episode/id/5508311/'
+    const expected: EmbedResolverResult = {
       provider: 'libsyn',
       id: 'episode/5508311',
       src: 'https://play.libsyn.com/embed/episode/id/5508311/',
-    })
+    }
+
+    expect(libsynResolveEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined for a libsyn url naming no episode', () => {
-    expect(libsynResolveEmbed('https://play.libsyn.com/about')).toBeUndefined()
+    const value = 'https://play.libsyn.com/about'
+
+    expect(libsynResolveEmbed(value)).toBeUndefined()
   })
 })

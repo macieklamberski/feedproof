@@ -79,8 +79,14 @@ describeForEachParser('amebaCiteResolver', (parseHtml) => {
           </a>
         </article>
       `
+      const expected: CiteResolverResult = {
+        provider: 'ameba',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        publisher: 'example.com',
+      }
 
-      expect((await extract(value))?.icon).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

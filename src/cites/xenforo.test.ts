@@ -100,8 +100,13 @@ describeForEachParser('xenforoCiteResolver', (parseHtml) => {
           </h3>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'xenforo',
+        url: 'https://example.com/canonical',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/canonical')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

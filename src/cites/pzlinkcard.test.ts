@@ -87,10 +87,15 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
           </div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'pzlinkcard',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        publisher: 'example.com',
+        icon: 'https://www.google.com/s2/favicons?domain=example.com',
+      }
 
-      expect((await extract(value))?.icon).toBe(
-        'https://www.google.com/s2/favicons?domain=example.com',
-      )
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the printed url when the card has no wrapping anchor', async () => {
@@ -102,8 +107,13 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'pzlinkcard',
+        url: 'https://example.com/page',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/page')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should prefer the wrapping anchor over the printed url', async () => {
@@ -117,8 +127,13 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
           </div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'pzlinkcard',
+        url: 'https://example.com/anchor',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/anchor')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should fall back to the title container when the title-text element is absent', async () => {
@@ -129,8 +144,13 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
           </div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'pzlinkcard',
+        url: 'https://example.com/page',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.title).toBe('Page title')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

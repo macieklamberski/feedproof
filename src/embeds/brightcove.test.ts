@@ -46,12 +46,17 @@ describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
           />
         </object>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'brightcove',
+        id: '19521637001',
+        src: 'https://players.brightcove.net/1660622131/default_default/index.html?videoId=19521637001',
+      }
       const element = parseHtml(value).querySelector('embed')
       const result = element
         ? (brightcoveFlashEmbedResolver.extract(element) as EmbedResolverResult)
         : undefined
 
-      expect(result).toMatchObject({ provider: 'brightcove', id: '19521637001' })
+      expect(result).toEqual(expected)
     })
   })
 
@@ -84,26 +89,37 @@ describe('brightcoveResolveEmbed', () => {
 
   describe('happy paths', () => {
     it('should read the account and video id out of the player url', () => {
-      expect(brightcoveResolveEmbed(playerUrl)).toEqual({
+      const value = playerUrl
+      const expected: EmbedResolverResult = {
         provider: 'brightcove',
         id: '6098765432',
         src: playerUrl,
-      })
+      }
+
+      expect(brightcoveResolveEmbed(value)).toEqual(expected)
     })
 
     it('should keep a named player rather than assuming the default', () => {
       const value =
         'https://players.brightcove.net/1234567890/AbCdEf123_custom/index.html?videoId=6098765432'
-
-      expect(brightcoveResolveEmbed(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'brightcove',
+        id: '6098765432',
         src: 'https://players.brightcove.net/1234567890/AbCdEf123_custom/index.html?videoId=6098765432',
-      })
+      }
+
+      expect(brightcoveResolveEmbed(value)).toEqual(expected)
     })
 
     it('should drop the other player parameters', () => {
       const value = `${playerUrl}&autoplay=true&muted=true`
+      const expected: EmbedResolverResult = {
+        provider: 'brightcove',
+        id: '6098765432',
+        src: playerUrl,
+      }
 
-      expect(brightcoveResolveEmbed(value)).toMatchObject({ src: playerUrl })
+      expect(brightcoveResolveEmbed(value)).toEqual(expected)
     })
   })
 
@@ -136,7 +152,9 @@ describe('brightcoveResolveEmbed', () => {
     })
 
     it('should return undefined for a url that cannot be parsed', () => {
-      expect(brightcoveResolveEmbed('https://[')).toBeUndefined()
+      const value = 'https://['
+
+      expect(brightcoveResolveEmbed(value)).toBeUndefined()
     })
   })
 })
@@ -161,20 +179,24 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
           controls
         ></video-js>
       `
-
-      expect(extract(value)).toEqual({
+      const expected: EmbedResolverResult = {
         provider: 'brightcove',
         id: '6098765432',
         src: 'https://players.brightcove.net/1234567890/AbCdEf_custom/index.html?videoId=6098765432',
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should default the player and embed ids when the element omits them', () => {
       const value = html`<video-js data-account="1234567890" data-video-id="6098765432"></video-js>`
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'brightcove',
+        id: '6098765432',
         src: 'https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432',
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     // Some plugins leave the account only in the loader script's url.
@@ -183,8 +205,13 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
         <video-js data-video-id="6098765432"></video-js>
         <script src="https://players.brightcove.net/1234567890/default_default/index.min.js"></script>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'brightcove',
+        id: '6098765432',
+        src: 'https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432',
+      }
 
-      expect(extract(value)).toMatchObject({ id: '6098765432' })
+      expect(extract(value)).toEqual(expected)
     })
   })
 
@@ -200,11 +227,13 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
           controls
         ></video>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
         provider: 'brightcove',
         id: '6098765432',
-      })
+        src: 'https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432',
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     // A video carrying a real file is a working video, so a placeholder would be a downgrade.
@@ -234,7 +263,9 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined when no account can be found', () => {
-      expect(extract(html`<video-js data-video-id="6098765432"></video-js>`)).toBeUndefined()
+      const value = html`<video-js data-video-id="6098765432"></video-js>`
+
+      expect(extract(value)).toBeUndefined()
     })
 
     // Video.js is a library anyone can use, so ids that are not Brightcove-shaped are left to

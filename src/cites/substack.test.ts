@@ -84,8 +84,13 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
         canonical_url: 'https://thereader.example.com/p/model-drop',
         bylines: [{ name: 'Author name' }],
       })
+      const expected: CiteResolverResult = {
+        provider: 'substack',
+        url: 'https://thereader.example.com/p/model-drop',
+        title: 'Model Drop',
+      }
 
-      expect((await extract(value))?.author).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     // Optional fields pass through raw; createCitePlaceholder trims every field
@@ -221,8 +226,13 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
           </a>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'substack',
+        url: 'https://thereader.example.com/p/model-drop',
+        title: 'Model Drop',
+      }
 
-      expect((await extract(value))?.author).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should return undefined when the card has no anchor', async () => {
@@ -282,10 +292,15 @@ describeForEachParser('substackCrossPostCiteResolver', (parseHtml) => {
       url: 'https://thereader.example.com/p/model-drop',
       bylines: [{ name: 'Author name', photo_url: 'https://cdn.example.com/author.png' }],
     })
-
-    expect(await extract(value)).toMatchObject({
+    const expected: CiteResolverResult = {
+      provider: 'substack',
+      url: 'https://thereader.example.com/p/model-drop',
+      title: 'Model Drop',
+      author: 'Author name',
       icon: 'https://cdn.example.com/author.png',
-    })
+    }
+
+    expect(await extract(value)).toEqual(expected)
   })
 
   it('should ignore the own-post publishedBylines key', async () => {
@@ -294,8 +309,13 @@ describeForEachParser('substackCrossPostCiteResolver', (parseHtml) => {
       url: 'https://thereader.example.com/p/model-drop',
       publishedBylines: [{ name: 'Author name' }],
     })
+    const expected: CiteResolverResult = {
+      provider: 'substack',
+      url: 'https://thereader.example.com/p/model-drop',
+      title: 'Model Drop',
+    }
 
-    expect((await extract(value))?.author).toBeUndefined()
+    expect(await extract(value)).toEqual(expected)
   })
 
   it('should not match the own-post class', async () => {

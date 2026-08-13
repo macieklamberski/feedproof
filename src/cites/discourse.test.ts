@@ -80,11 +80,16 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </article>
         </aside>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://example.com/page',
+        title: 'Page title',
         publisher: 'Example',
         date: '13 Jan 23',
-      })
+        icon: 'https://example.com/favicon.svg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the date unset when the source has no suffix', async () => {
@@ -98,10 +103,14 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </article>
         </aside>
       `
-      const result = await extract(value)
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        publisher: 'Example Forum',
+      }
 
-      expect(result?.publisher).toBe('Example Forum')
-      expect(result?.date).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should prefer the wrapper source over the inner anchor href', async () => {
@@ -112,8 +121,13 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </article>
         </aside>
       `
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://example.com/canonical',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/canonical')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -127,8 +141,14 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </article>
         </aside>
       `
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://example.com/owner/repo/issues/1',
+        title: 'Issue title',
+        description: 'Issue body',
+      }
 
-      expect((await extract(value))?.title).toBe('Issue title')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should extract the author, date, avatar and rejoined body from a GitHub onebox', async () => {
@@ -187,10 +207,15 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </article>
         </aside>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://github.com/owner/repo/tree/main/lib',
+        title: 'repo/lib at main',
         description: 'The repo description text.',
-      })
+        publisher: 'github.com',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read a githubrepo onebox through the generic reads', async () => {
@@ -292,10 +317,15 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </article>
         </aside>
       `
-      const result = await extract(value)
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://news.ycombinator.com/item?id=28680387',
+        title: 'Story title',
+        publisher: 'news.ycombinator.com',
+        icon: 'https://cdn.example.com/y18.svg',
+      }
 
-      expect(result?.title).toBe('Story title')
-      expect(result?.description).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the self-post text over the stats line', async () => {
@@ -316,10 +346,15 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </article>
         </aside>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://news.ycombinator.com/item?id=12759520',
+        title: 'Story title',
         description: 'The text the poster wrote for the self-post.',
-      })
+        publisher: 'news.ycombinator.com',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -401,10 +436,15 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </article>
         </aside>
       `
-      const result = await extract(value)
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://blog.example.com/@author/why-i-did-it-3f2a1b9c',
+        title: 'Why I did it',
+        description: 'Preview text',
+        publisher: 'blog.example.com',
+      }
 
-      expect(result?.title).toBe('Why I did it')
-      expect(result?.url).toBe('https://blog.example.com/@author/why-i-did-it-3f2a1b9c')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should skip a social post whose url only sits on the source anchor', async () => {

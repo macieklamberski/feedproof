@@ -17,18 +17,21 @@ describeForEachParser('podigeeEmbedResolver', (parseHtml) => {
     // The loader's data-configuration is the player url itself, so nothing needs executing.
     it('should take the player url from data-configuration', () => {
       const value = script('https://theshow.podigee.io/42-an-episode/embed?context=external')
-
-      expect(extract(value)).toEqual({
+      const expected: EmbedResolverResult = {
         provider: 'podigee',
         id: 'theshow/42-an-episode',
         src: 'https://theshow.podigee.io/42-an-episode/embed?context=external',
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
     it('should return undefined for a podigee url naming no episode', () => {
-      expect(extract(script('https://theshow.podigee.io/'))).toBeUndefined()
+      const value = script('https://theshow.podigee.io/')
+
+      expect(extract(value)).toBeUndefined()
     })
 
     // 14 of 100 corpus feeds point the attribute at an inline config object instead of a url.
@@ -38,7 +41,9 @@ describeForEachParser('podigeeEmbedResolver', (parseHtml) => {
     })
 
     it('should ignore a configuration url on another host', () => {
-      expect(extract(script('https://example.com/player/embed'))).toBeUndefined()
+      const value = script('https://example.com/player/embed')
+
+      expect(extract(value)).toBeUndefined()
     })
   })
 })

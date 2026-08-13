@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import type { EmbedResolverResult } from '../types.js'
 import { extractOmnyClip, omnyResolveEmbed } from './omny.js'
 
 describe('extractOmnyClip', () => {
@@ -15,15 +16,21 @@ describe('extractOmnyClip', () => {
   })
 
   it('should return undefined for a show page that is not an embed', () => {
-    expect(extractOmnyClip('https://omny.fm/shows/the-show')).toBeUndefined()
+    const value = 'https://omny.fm/shows/the-show'
+
+    expect(extractOmnyClip(value)).toBeUndefined()
   })
 
   it('should return undefined when no clip is named', () => {
-    expect(extractOmnyClip('https://omny.fm/shows/embed')).toBeUndefined()
+    const value = 'https://omny.fm/shows/embed'
+
+    expect(extractOmnyClip(value)).toBeUndefined()
   })
 
   it('should return undefined for a url that cannot be parsed', () => {
-    expect(extractOmnyClip('https://[')).toBeUndefined()
+    const value = 'https://['
+
+    expect(extractOmnyClip(value)).toBeUndefined()
   })
 })
 
@@ -31,16 +38,19 @@ describe('omnyResolveEmbed', () => {
   // style= and size= change the player's shape, so the publisher's query survives the rewrite.
   it('should state the player height and keep the display options', () => {
     const value = 'https://omny.fm/shows/the-show/an-episode/embed?media=audio&style=cover'
-
-    expect(omnyResolveEmbed(value)).toEqual({
+    const expected: EmbedResolverResult = {
       provider: 'omny',
       id: 'the-show/an-episode',
       src: 'https://omny.fm/shows/the-show/an-episode/embed?media=audio&style=cover',
       height: 180,
-    })
+    }
+
+    expect(omnyResolveEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined for a omny url naming no clip', () => {
-    expect(omnyResolveEmbed('https://omny.fm/about')).toBeUndefined()
+    const value = 'https://omny.fm/about'
+
+    expect(omnyResolveEmbed(value)).toBeUndefined()
   })
 })

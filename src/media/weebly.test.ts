@@ -41,28 +41,34 @@ describeForEachParser('weeblyMediaResolver', (parseHtml) => {
       const value = facade(
         '#video-iframe-807467334470573958{ background: url(//cdn2.editmysite.com/images/util/videojs/play.png); } #wsite-video-container-807467334470573958{ background: url(//www.weebly.com/uploads/b/1/clip_176.jpg); }',
       )
-
-      expect(extract(value)).toMatchObject({
+      const expected: MediaResolverResult = {
+        tag: 'video',
         src: 'https://www.weebly.com/uploads/b/1/clip_176.mp4',
-      })
+        poster: 'https://www.weebly.com/uploads/b/1/clip_176.jpg',
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should keep a name whose size suffix looks like an extension', () => {
       const value = facade(
         '#wsite-video-container-807467334470573958{ background: url(//www.weebly.com/uploads/b/1/03.05.2022_12.10.58_rec_649.jpg); }',
       )
-
-      expect(extract(value)).toMatchObject({
+      const expected: MediaResolverResult = {
+        tag: 'video',
         src: 'https://www.weebly.com/uploads/b/1/03.05.2022_12.10.58_rec_649.mp4',
-      })
+        poster: 'https://www.weebly.com/uploads/b/1/03.05.2022_12.10.58_rec_649.jpg',
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
     it('should ignore a facade carrying no poster', () => {
-      expect(
-        extract(facade('#wsite-video-container-807467334470573958{ background: none; }')),
-      ).toBeUndefined()
+      const value = facade('#wsite-video-container-807467334470573958{ background: none; }')
+
+      expect(extract(value)).toBeUndefined()
     })
 
     it('should ignore a poster that is not an upload', () => {

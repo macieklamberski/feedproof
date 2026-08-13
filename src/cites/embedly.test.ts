@@ -32,8 +32,13 @@ describeForEachParser('embedlyCiteResolver', (parseHtml) => {
           <h4><a href="https://example.com/page">Page title</a></h4>
         </blockquote>
       `
+      const expected: CiteResolverResult = {
+        provider: 'embedly',
+        url: 'https://example.com/page',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.description).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

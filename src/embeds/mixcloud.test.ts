@@ -28,7 +28,9 @@ describe('extractMixcloudShow', () => {
   })
 
   it('should return undefined when there is no feed parameter', () => {
-    expect(extractMixcloudShow('https://www.mixcloud.com/discover/house/')).toBeUndefined()
+    const value = 'https://www.mixcloud.com/discover/house/'
+
+    expect(extractMixcloudShow(value)).toBeUndefined()
   })
 
   // A show is exactly user plus slug; anything deeper is a section of the site.
@@ -47,6 +49,7 @@ describe('extractMixcloudShow', () => {
 
 describe('mixcloudResolveEmbed', () => {
   it('should mint the widget and canonical urls from the show', () => {
+    const value = 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F'
     const expected: EmbedResolverResult = {
       provider: 'mixcloud',
       id: 'photogmusic/no-filter',
@@ -54,11 +57,7 @@ describe('mixcloudResolveEmbed', () => {
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
     }
 
-    expect(
-      mixcloudResolveEmbed(
-        'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
-      ),
-    ).toEqual(expected)
+    expect(mixcloudResolveEmbed(value)).toEqual(expected)
   })
 })
 
@@ -93,9 +92,8 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
   })
 
   it('should leave a non-show mixcloud url to the generic placeholder', async () => {
-    const result = await transform(
-      '<iframe src="https://www.mixcloud.com/discover/house/"></iframe>',
-    )
+    const value = '<iframe src="https://www.mixcloud.com/discover/house/"></iframe>'
+    const result = await transform(value)
 
     expect(result).not.toContain('data-embed-provider')
   })

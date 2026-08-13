@@ -110,8 +110,14 @@ describeForEachParser('cocoonCiteResolver', (parseHtml) => {
           <div class="blogcard-snipet">Preview text</div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'cocoon',
+        url: 'https://example.com/post',
+        title: 'Post title',
+        description: 'Preview text',
+      }
 
-      expect((await extract(value))?.description).toBe('Preview text')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should pass the date through in the theme format', async () => {
@@ -121,8 +127,14 @@ describeForEachParser('cocoonCiteResolver', (parseHtml) => {
           <div class="blogcard-post-date">2018.10.14</div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'cocoon',
+        url: 'https://example.com/post',
+        title: 'Post title',
+        date: '2018.10.14',
+      }
 
-      expect((await extract(value))?.date).toBe('2018.10.14')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should fall back to the anchor title attribute when the title element is missing', async () => {
@@ -131,8 +143,14 @@ describeForEachParser('cocoonCiteResolver', (parseHtml) => {
           <div class="blogcard-snippet">Preview text</div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'cocoon',
+        url: 'https://example.com/post',
+        title: 'Title from attribute',
+        description: 'Preview text',
+      }
 
-      expect((await extract(value))?.title).toBe('Title from attribute')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should prefer the title element over the anchor title attribute', async () => {
@@ -141,8 +159,13 @@ describeForEachParser('cocoonCiteResolver', (parseHtml) => {
           <div class="blogcard-title">Title from element</div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'cocoon',
+        url: 'https://example.com/post',
+        title: 'Title from element',
+      }
 
-      expect((await extract(value))?.title).toBe('Title from element')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

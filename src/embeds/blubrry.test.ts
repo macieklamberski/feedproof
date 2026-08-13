@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'bun:test'
+import type { EmbedResolverResult } from '../types.js'
 import { blubrryResolveEmbed, extractBlubrryEmbed } from './blubrry.js'
 
 describe('extractBlubrryEmbed', () => {
   it('should read an episode id', () => {
-    expect(extractBlubrryEmbed('https://player.blubrry.com/id/12345678/')).toBe('12345678')
+    const value = 'https://player.blubrry.com/id/12345678/'
+
+    expect(extractBlubrryEmbed(value)).toBe('12345678')
   })
 
   it('should read a media url', () => {
@@ -14,36 +17,48 @@ describe('extractBlubrryEmbed', () => {
   })
 
   it('should return undefined for a blubrry url naming nothing', () => {
-    expect(extractBlubrryEmbed('https://blubrry.com/pricing')).toBeUndefined()
+    const value = 'https://blubrry.com/pricing'
+
+    expect(extractBlubrryEmbed(value)).toBeUndefined()
   })
 
   it('should return undefined for a url that cannot be parsed', () => {
-    expect(extractBlubrryEmbed('https://[')).toBeUndefined()
+    const value = 'https://['
+
+    expect(extractBlubrryEmbed(value)).toBeUndefined()
   })
 })
 
 describe('blubrryResolveEmbed', () => {
   it('should state the player height for an episode id', () => {
-    expect(blubrryResolveEmbed('https://player.blubrry.com/id/12345678/')).toEqual({
+    const value = 'https://player.blubrry.com/id/12345678/'
+    const expected: EmbedResolverResult = {
       provider: 'blubrry',
       id: '12345678',
       src: 'https://player.blubrry.com/id/12345678/',
       height: 138,
-    })
+    }
+
+    expect(blubrryResolveEmbed(value)).toEqual(expected)
   })
 
   // The raw file stays inside the player url: form fidelity keeps a provider's player an embed.
   it('should keep a media url as a player rather than a native audio element', () => {
     const value =
       'https://player.blubrry.com/?media_url=https%3A%2F%2Fmedia.blubrry.com%2Fshow%2Fep.mp3'
-
-    expect(blubrryResolveEmbed(value)).toMatchObject({
+    const expected: EmbedResolverResult = {
       provider: 'blubrry',
+      id: 'https://media.blubrry.com/show/ep.mp3',
       src: 'https://player.blubrry.com/?media_url=https%3A%2F%2Fmedia.blubrry.com%2Fshow%2Fep.mp3',
-    })
+      height: 138,
+    }
+
+    expect(blubrryResolveEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined for a blubrry url naming no episode', () => {
-    expect(blubrryResolveEmbed('https://blubrry.com/about')).toBeUndefined()
+    const value = 'https://blubrry.com/about'
+
+    expect(blubrryResolveEmbed(value)).toBeUndefined()
   })
 })

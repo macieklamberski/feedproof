@@ -37,21 +37,29 @@ describeForEachParser('flourishEmbedResolver', (parseHtml) => {
           <img src="https://public.flourish.studio/visualisation/29512053/thumbnail" width="100%" alt="tournament visualization" />
         </div>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'flourish',
+        id: '29512053',
+        src: 'https://flo.uri.sh/visualisation/29512053/embed',
+        url: 'https://public.flourish.studio/visualisation/29512053/',
         thumbnail: 'https://public.flourish.studio/visualisation/29512053/thumbnail',
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should accept a data-src with a cache-busting query', () => {
       const value = html`
         <div class="flourish-embed flourish-chart" data-src="visualisation/29310925?431563"></div>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'flourish',
         id: '29310925',
         src: 'https://flo.uri.sh/visualisation/29310925/embed',
-      })
+        url: 'https://public.flourish.studio/visualisation/29310925/',
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
   })
 

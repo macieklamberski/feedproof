@@ -84,8 +84,14 @@ describeForEachParser('hatenaCiteResolver', (parseHtml) => {
           <cite class="hatena-citation"><a href="https://example.com/current">example.com</a></cite>
         </p>
       `
+      const expected: CiteResolverResult = {
+        provider: 'hatena',
+        url: 'https://example.com/current',
+        title: 'Page title',
+        publisher: 'example.com',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/current')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

@@ -52,22 +52,29 @@ describeForEachParser('substackMediaResolver', (parseHtml) => {
         duration: null,
         isEditorNode: true,
       })
+      const expected: MediaResolverResult = { tag: 'video', src: uploadSrc }
 
-      expect(extract(value)?.src).toBe(uploadSrc)
+      expect(extract(value)).toEqual(expected)
     })
   })
 
   describe('edge cases', () => {
     it('should return undefined when data-attrs is absent', () => {
-      expect(extract(makeContainer('native-video-embed'))).toBeUndefined()
+      const value = makeContainer('native-video-embed')
+
+      expect(extract(value)).toBeUndefined()
     })
 
     it('should return undefined when data-attrs is malformed json', () => {
-      expect(extract(makeContainer('native-video-embed', 'not-json'))).toBeUndefined()
+      const value = makeContainer('native-video-embed', 'not-json')
+
+      expect(extract(value)).toBeUndefined()
     })
 
     it('should return undefined when data-attrs is valid json but not an object', () => {
-      expect(extract(makeContainer('native-video-embed', '"just-a-string"'))).toBeUndefined()
+      const value = makeContainer('native-video-embed', '"just-a-string"')
+
+      expect(extract(value)).toBeUndefined()
     })
 
     it('should return undefined when mediaUploadId is missing', () => {
@@ -94,8 +101,9 @@ describeForEachParser('substackMediaResolver', (parseHtml) => {
       const value = makeContainer('native-video-embed native-audio-embed', {
         mediaUploadId: uploadId,
       })
+      const expected: MediaResolverResult = { tag: 'audio', src: uploadSrc }
 
-      expect(extract(value)?.tag).toBe('audio')
+      expect(extract(value)).toEqual(expected)
     })
   })
 })

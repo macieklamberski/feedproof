@@ -43,8 +43,9 @@ describeForEachParser('discourseMediaResolver', (parseHtml) => {
       const value = html`
         <div class="video-placeholder-container" data-video-src="${videoSrc}"></div>
       `
+      const expected: MediaResolverResult = { tag: 'video', src: videoSrc }
 
-      expect(extract(value)).toEqual({ tag: 'video', src: videoSrc })
+      expect(extract(value)).toEqual(expected)
     })
   })
 

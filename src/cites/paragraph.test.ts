@@ -53,8 +53,13 @@ describeForEachParser('paragraphCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'paragraph',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.title).toBe('Page title')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -63,8 +68,13 @@ describeForEachParser('paragraphCiteResolver', (parseHtml) => {
       const value = html`
         <div data-type="embedly" src="http://example.com/typed" data='{"title":"Page title"}'></div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'paragraph',
+        url: 'http://example.com/typed',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe('http://example.com/typed')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should prefer the payload url over the src attribute', async () => {
@@ -76,16 +86,26 @@ describeForEachParser('paragraphCiteResolver', (parseHtml) => {
         >
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'paragraph',
+        url: 'https://example.com/canonical',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/canonical')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should extract a payload with no type', async () => {
       const value = html`
         <div data-type="embedly" data='{"url":"https://example.com/post","title":"Page title"}'></div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'paragraph',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.title).toBe('Page title')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

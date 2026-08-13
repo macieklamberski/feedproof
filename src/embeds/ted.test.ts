@@ -1,44 +1,56 @@
 import { describe, expect, it } from 'bun:test'
+import type { EmbedResolverResult } from '../types.js'
 import { extractTedTalk, tedResolveEmbed } from './ted.js'
 
 describe('extractTedTalk', () => {
   it('should read a talk slug', () => {
-    expect(extractTedTalk('https://embed.ted.com/talks/ethan_zuckerman.html')).toBe(
-      'ethan_zuckerman',
-    )
+    const value = 'https://embed.ted.com/talks/ethan_zuckerman.html'
+
+    expect(extractTedTalk(value)).toBe('ethan_zuckerman')
   })
 
   // The localized player inserts the language between the slug and the path.
   it('should read a talk slug from the localized player', () => {
-    expect(extractTedTalk('https://embed.ted.com/talks/lang/ja/ethan_zuckerman.html')).toBe(
-      'ethan_zuckerman',
-    )
+    const value = 'https://embed.ted.com/talks/lang/ja/ethan_zuckerman.html'
+
+    expect(extractTedTalk(value)).toBe('ethan_zuckerman')
   })
 
   it('should read a slug with no html suffix', () => {
-    expect(extractTedTalk('https://embed.ted.com/talks/ethan_zuckerman')).toBe('ethan_zuckerman')
+    const value = 'https://embed.ted.com/talks/ethan_zuckerman'
+
+    expect(extractTedTalk(value)).toBe('ethan_zuckerman')
   })
 
   it('should return undefined for a ted url that is not a talk', () => {
-    expect(extractTedTalk('https://www.ted.com/playlists/123/something')).toBeUndefined()
+    const value = 'https://www.ted.com/playlists/123/something'
+
+    expect(extractTedTalk(value)).toBeUndefined()
   })
 
   it('should return undefined for a url that cannot be parsed', () => {
-    expect(extractTedTalk('https://[')).toBeUndefined()
+    const value = 'https://['
+
+    expect(extractTedTalk(value)).toBeUndefined()
   })
 })
 
 describe('tedResolveEmbed', () => {
   it('should derive the watch url from the slug', () => {
-    expect(tedResolveEmbed('https://embed.ted.com/talks/lang/ja/ethan_zuckerman.html')).toEqual({
+    const value = 'https://embed.ted.com/talks/lang/ja/ethan_zuckerman.html'
+    const expected: EmbedResolverResult = {
       provider: 'ted',
       id: 'ethan_zuckerman',
       src: 'https://embed.ted.com/embed/ethan_zuckerman',
       url: 'https://www.ted.com/talks/ethan_zuckerman',
-    })
+    }
+
+    expect(tedResolveEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined for a ted url naming no talk', () => {
-    expect(tedResolveEmbed('https://embed.ted.com/about')).toBeUndefined()
+    const value = 'https://embed.ted.com/about'
+
+    expect(tedResolveEmbed(value)).toBeUndefined()
   })
 })

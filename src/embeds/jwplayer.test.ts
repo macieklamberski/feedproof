@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser } from '../tests.js'
+import type { EmbedResolverResult } from '../types.js'
 import {
   extractJwplayerId,
   jwplayerIframeEmbedResolver,
@@ -9,13 +10,15 @@ import {
 
 describe('extractJwplayerId', () => {
   it('should extract the media id from a player url', () => {
-    expect(extractJwplayerId('https://cdn.jwplayer.com/players/H4GXr873-abc12345.html')).toBe(
-      'H4GXr873',
-    )
+    const value = 'https://cdn.jwplayer.com/players/H4GXr873-abc12345.html'
+
+    expect(extractJwplayerId(value)).toBe('H4GXr873')
   })
 
   it('should extract the media id when no player id is present', () => {
-    expect(extractJwplayerId('https://cdn.jwplayer.com/players/H4GXr873.html')).toBe('H4GXr873')
+    const value = 'https://cdn.jwplayer.com/players/H4GXr873.html'
+
+    expect(extractJwplayerId(value)).toBe('H4GXr873')
   })
 
   // Business Insider's feed ships JW Player embeds with an empty player id, leaving a
@@ -23,46 +26,60 @@ describe('extractJwplayerId', () => {
   // not something other providers hit — most embeds carry a well-formed URL. Extracting the
   // media id from the segment recovers it regardless of the missing player id.
   it('should extract the media id from a Business Insider empty-player-id url', () => {
-    expect(extractJwplayerId('https://cdn.jwplayer.com/players/H4GXr873-.html')).toBe('H4GXr873')
+    const value = 'https://cdn.jwplayer.com/players/H4GXr873-.html'
+
+    expect(extractJwplayerId(value)).toBe('H4GXr873')
   })
 
   it('should extract the media id from a jwplatform.com host', () => {
-    expect(extractJwplayerId('https://content.jwplatform.com/players/H4GXr873-abc12345.html')).toBe(
-      'H4GXr873',
-    )
+    const value = 'https://content.jwplatform.com/players/H4GXr873-abc12345.html'
+
+    expect(extractJwplayerId(value)).toBe('H4GXr873')
   })
 
   it('should return undefined for an invalid url', () => {
-    expect(extractJwplayerId('not a url')).toBeUndefined()
+    const value = 'not a url'
+
+    expect(extractJwplayerId(value)).toBeUndefined()
   })
 
   it('should return undefined when the media id is malformed', () => {
-    expect(extractJwplayerId('https://cdn.jwplayer.com/players/short.html')).toBeUndefined()
+    const value = 'https://cdn.jwplayer.com/players/short.html'
+
+    expect(extractJwplayerId(value)).toBeUndefined()
   })
 })
 
 describe('jwplayerResolveEmbed', () => {
   it('should build the embed with a thumbnail', () => {
-    const result = jwplayerResolveEmbed('https://cdn.jwplayer.com/players/H4GXr873-abc12345.html')
-    const expected = {
+    const value = 'https://cdn.jwplayer.com/players/H4GXr873-abc12345.html'
+    const expected: EmbedResolverResult = {
       provider: 'jwplayer',
       id: 'H4GXr873',
       src: 'https://cdn.jwplayer.com/players/H4GXr873.html',
       thumbnail: 'https://cdn.jwplayer.com/v2/media/H4GXr873/poster.jpg',
     }
 
-    expect(result).toEqual(expected)
+    expect(jwplayerResolveEmbed(value)).toEqual(expected)
   })
 
   // The rebuilt src drops the empty player-id segment that 404s in the Business Insider feed.
   it('should rebuild a working src from an empty-player-id url', () => {
-    const result = jwplayerResolveEmbed('https://cdn.jwplayer.com/players/H4GXr873-.html')
+    const value = 'https://cdn.jwplayer.com/players/H4GXr873-.html'
+    const expected: EmbedResolverResult = {
+      provider: 'jwplayer',
+      id: 'H4GXr873',
+      src: 'https://cdn.jwplayer.com/players/H4GXr873.html',
+      thumbnail: 'https://cdn.jwplayer.com/v2/media/H4GXr873/poster.jpg',
+    }
 
-    expect(result?.src).toBe('https://cdn.jwplayer.com/players/H4GXr873.html')
+    expect(jwplayerResolveEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined when no media id can be extracted', () => {
-    expect(jwplayerResolveEmbed('not a url')).toBeUndefined()
+    const value = 'not a url'
+
+    expect(jwplayerResolveEmbed(value)).toBeUndefined()
   })
 })
 
@@ -74,18 +91,21 @@ describeForEachParser('jwplayerIframeEmbedResolver', (parseHtml) => {
   }
 
   it('should resolve a jwplayer iframe', async () => {
-    const result = await resolve(
-      '<iframe src="https://cdn.jwplayer.com/players/H4GXr873-.html"></iframe>',
-    )
+    const value = '<iframe src="https://cdn.jwplayer.com/players/H4GXr873-.html"></iframe>'
+    const expected: EmbedResolverResult = {
+      provider: 'jwplayer',
+      id: 'H4GXr873',
+      src: 'https://cdn.jwplayer.com/players/H4GXr873.html',
+      thumbnail: 'https://cdn.jwplayer.com/v2/media/H4GXr873/poster.jpg',
+    }
 
-    expect(result?.provider).toBe('jwplayer')
-    expect(result?.id).toBe('H4GXr873')
+    expect(await resolve(value)).toEqual(expected)
   })
 
   it('should ignore a non-jwplayer iframe', async () => {
-    const result = await resolve('<iframe src="https://example.com/video"></iframe>')
+    const value = '<iframe src="https://example.com/video"></iframe>'
 
-    expect(result).toBeUndefined()
+    expect(await resolve(value)).toBeUndefined()
   })
 })
 
@@ -99,12 +119,14 @@ describeForEachParser('jwplayerScriptEmbedResolver', (parseHtml) => {
   it('should resolve the script embed to the default-player placeholder', () => {
     const value =
       '<script type="application/javascript" src="https://cdn.jwplayer.com/players/H4GXr873-abc12345.js"></script>'
-
-    expect(extract(value)).toMatchObject({
+    const expected: EmbedResolverResult = {
       provider: 'jwplayer',
       id: 'H4GXr873',
       src: 'https://cdn.jwplayer.com/players/H4GXr873.html',
-    })
+      thumbnail: 'https://cdn.jwplayer.com/v2/media/H4GXr873/poster.jpg',
+    }
+
+    expect(extract(value)).toEqual(expected)
   })
 
   it('should return undefined for a foreign host carrying the player path', () => {

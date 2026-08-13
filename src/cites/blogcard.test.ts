@@ -90,10 +90,13 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
-      const result = await extract(value)
+      const expected: CiteResolverResult = {
+        provider: 'blogcard',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect(result?.url).toBe('https://example.com/post')
-      expect(result?.thumbnail).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the url from the card itself when the card is the anchor', async () => {
@@ -126,10 +129,14 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
           </a>
         </div>
       `
-      const result = await extract(value)
+      const expected: CiteResolverResult = {
+        provider: 'blogcard',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        thumbnail: 'https://example.com/thumb.jpg',
+      }
 
-      expect(result?.url).toBe('https://example.com/post')
-      expect(result?.title).toBe('Page title')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the thumbnail from the wrapper-classed dialect with a bare img', async () => {
@@ -144,10 +151,15 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
           </a>
         </div>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'blogcard',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        description: 'Preview text',
         thumbnail: 'https://example.com/thumb.jpg',
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave optional fields undefined when only the title link is present', async () => {

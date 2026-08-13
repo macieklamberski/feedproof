@@ -106,10 +106,14 @@ describeForEachParser('notecomCiteResolver', (parseHtml) => {
           <a href="https://example.com/page"><strong>Page title</strong><em>example.com</em></a>
         </figure>
       `
-      const result = await extract(value)
+      const expected: CiteResolverResult = {
+        provider: 'notecom',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        publisher: 'example.com',
+      }
 
-      expect(result?.publisher).toBe('example.com')
-      expect(result?.description).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should parse the thumbnail from the background-image style', async () => {
@@ -121,8 +125,14 @@ describeForEachParser('notecomCiteResolver', (parseHtml) => {
           </div>
         </figure>
       `
+      const expected: CiteResolverResult = {
+        provider: 'notecom',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        thumbnail: 'https://cdn.example.com/thumb.jpg',
+      }
 
-      expect((await extract(value))?.thumbnail).toBe('https://cdn.example.com/thumb.jpg')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

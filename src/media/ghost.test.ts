@@ -59,8 +59,13 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
           <div class="kg-video-container"><video src="https://example.com/clip.mp4"></video></div>
         </figure>
       `
+      const expected: MediaResolverResult = {
+        tag: 'video',
+        src: 'https://example.com/clip.mp4',
+        poster: 'https://example.com/custom.jpg',
+      }
 
-      expect(extract(value)?.poster).toBe('https://example.com/custom.jpg')
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should leave the spacer poster behind when no thumbnail is available', () => {
@@ -71,8 +76,9 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
           </div>
         </figure>
       `
+      const expected: MediaResolverResult = { tag: 'video', src: 'https://example.com/clip.mp4' }
 
-      expect(extract(value)?.poster).toBeUndefined()
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should replace the chrome container but keep the author caption', async () => {

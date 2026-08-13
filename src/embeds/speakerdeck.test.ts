@@ -18,11 +18,15 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
     it('should accept a legacy 24-char deck id', () => {
       const value =
         '<script class="speakerdeck-embed" data-id="4f2b3c1d5e6a7b8c9d0e1f2a" src="//speakerdeck.com/assets/embed.js"></script>'
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
         provider: 'speakerdeck',
+        id: '4f2b3c1d5e6a7b8c9d0e1f2a',
         src: 'https://speakerdeck.com/player/4f2b3c1d5e6a7b8c9d0e1f2a',
-      })
+        width: 100,
+        height: 56,
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     // A feed can embed one deck at many slides; without this they collapse into identical
@@ -30,29 +34,43 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
     it('should carry data-slide into the player url', () => {
       const value =
         '<script class="speakerdeck-embed" data-id="40746bbd65b944eb848e90ab1be552c0" data-slide="21" src="//speakerdeck.com/assets/embed.js"></script>'
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'speakerdeck',
         id: '40746bbd65b944eb848e90ab1be552c0/21',
         src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=21',
-      })
+        width: 100,
+        height: 56,
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should read a slide written inside the id attribute', () => {
       const value =
         '<script class="speakerdeck-embed" data-id="40746bbd65b944eb848e90ab1be552c0?slide=69" src="//speakerdeck.com/assets/embed.js"></script>'
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'speakerdeck',
+        id: '40746bbd65b944eb848e90ab1be552c0/69',
         src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=69',
-      })
+        width: 100,
+        height: 56,
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should ignore a non-numeric slide', () => {
       const value =
         '<script class="speakerdeck-embed" data-id="40746bbd65b944eb848e90ab1be552c0" data-slide="last" src="//speakerdeck.com/assets/embed.js"></script>'
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'speakerdeck',
+        id: '40746bbd65b944eb848e90ab1be552c0',
         src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
-      })
+        width: 100,
+        height: 56,
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
   })
 
@@ -87,11 +105,15 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
           src="https://speakerdeck.com/assets/embed.js"
         ></script>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'speakerdeck',
+        id: '198d4fae73df442e89b76766b54e4773',
+        src: 'https://speakerdeck.com/player/198d4fae73df442e89b76766b54e4773',
         width: 100,
         height: 75,
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
   })
 
@@ -125,11 +147,15 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
           src="//speakerdeck.com/assets/embed.js"
         ></script>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'speakerdeck',
+        id: '198d4fae73df442e89b76766b54e4773',
+        src: 'https://speakerdeck.com/player/198d4fae73df442e89b76766b54e4773',
         width: 100,
         height: 56,
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should give the default ratio to a script carrying none', () => {
@@ -140,11 +166,15 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
           src="//speakerdeck.com/assets/embed.js"
         ></script>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'speakerdeck',
+        id: '198d4fae73df442e89b76766b54e4773',
+        src: 'https://speakerdeck.com/player/198d4fae73df442e89b76766b54e4773',
         width: 100,
         height: 56,
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
   })
 
@@ -182,28 +212,39 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
 describe('speakerdeckResolveEmbed', () => {
   it('should resolve a player url', () => {
     const value = 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0'
-
-    expect(speakerdeckResolveEmbed(value)).toMatchObject({
+    const expected: EmbedResolverResult = {
       provider: 'speakerdeck',
       id: '40746bbd65b944eb848e90ab1be552c0',
       src: value,
-    })
+      width: 100,
+      height: 56,
+    }
+
+    expect(speakerdeckResolveEmbed(value)).toEqual(expected)
   })
 
   it('should give a size-less player the default deck ratio', () => {
-    const result = speakerdeckResolveEmbed(
-      'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
-    )
+    const value = 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0'
+    const expected: EmbedResolverResult = {
+      provider: 'speakerdeck',
+      id: '40746bbd65b944eb848e90ab1be552c0',
+      src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
+      width: 100,
+      height: 56,
+    }
 
-    expect(result?.width).toBeDefined()
-    expect(result?.height).toBeDefined()
+    expect(speakerdeckResolveEmbed(value)).toEqual(expected)
   })
 
   it('should ignore a deck page rather than a player', () => {
-    expect(speakerdeckResolveEmbed('https://speakerdeck.com/user/some-deck')).toBeUndefined()
+    const value = 'https://speakerdeck.com/user/some-deck'
+
+    expect(speakerdeckResolveEmbed(value)).toBeUndefined()
   })
 
   it('should ignore a player id that is not a 32-char hex', () => {
-    expect(speakerdeckResolveEmbed('https://speakerdeck.com/player/not-a-deck')).toBeUndefined()
+    const value = 'https://speakerdeck.com/player/not-a-deck'
+
+    expect(speakerdeckResolveEmbed(value)).toBeUndefined()
   })
 })

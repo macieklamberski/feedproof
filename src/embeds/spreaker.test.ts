@@ -10,28 +10,36 @@ import {
 describe('extractSpreakerEmbed', () => {
   it('should read an episode player', () => {
     const value = 'https://widget.spreaker.com/player?episode_id=52842990&theme=dark&playlist=false'
-
-    expect(extractSpreakerEmbed(value)).toEqual({
+    const expected = {
       kind: 'episode',
       param: 'episode_id',
       id: '52842990',
-    })
+    }
+
+    expect(extractSpreakerEmbed(value)).toEqual(expected)
   })
 
   it('should read a show player', () => {
-    expect(extractSpreakerEmbed('https://widget.spreaker.com/player?show_id=1234567')).toEqual({
+    const value = 'https://widget.spreaker.com/player?show_id=1234567'
+    const expected = {
       kind: 'show',
       param: 'show_id',
       id: '1234567',
-    })
+    }
+
+    expect(extractSpreakerEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined when the player names nothing', () => {
-    expect(extractSpreakerEmbed('https://widget.spreaker.com/player?theme=dark')).toBeUndefined()
+    const value = 'https://widget.spreaker.com/player?theme=dark'
+
+    expect(extractSpreakerEmbed(value)).toBeUndefined()
   })
 
   it('should return undefined for a spreaker url that is not a player', () => {
-    expect(extractSpreakerEmbed('https://www.spreaker.com/show/some-show')).toBeUndefined()
+    const value = 'https://www.spreaker.com/show/some-show'
+
+    expect(extractSpreakerEmbed(value)).toBeUndefined()
   })
 })
 
@@ -40,17 +48,20 @@ describe('spreakerResolveEmbed', () => {
   // reader gains beyond the provider label.
   it('should state the documented player height', () => {
     const value = 'https://widget.spreaker.com/player?episode_id=52842990&theme=dark'
-
-    expect(spreakerResolveEmbed(value)).toEqual({
+    const expected: EmbedResolverResult = {
       provider: 'spreaker',
       id: 'episode/52842990',
       src: 'https://widget.spreaker.com/player?episode_id=52842990',
       height: 200,
-    })
+    }
+
+    expect(spreakerResolveEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined for a spreaker url naming no episode', () => {
-    expect(spreakerResolveEmbed('https://widget.spreaker.com/player?x=1')).toBeUndefined()
+    const value = 'https://widget.spreaker.com/player?x=1'
+
+    expect(spreakerResolveEmbed(value)).toBeUndefined()
   })
 })
 
@@ -70,45 +81,78 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
 
   describe('happy paths', () => {
     it('should read the episode out of data-resource', () => {
-      expect(extract(anchor('data-resource="episode_id=42"'))).toEqual({
+      const value = anchor('data-resource="episode_id=42"')
+      const expected: EmbedResolverResult = {
         provider: 'spreaker',
         id: 'episode/42',
         src: 'https://widget.spreaker.com/player?episode_id=42',
         height: 200,
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should read a show resource', () => {
-      expect(extract(anchor('data-resource="show_id=99"'))).toMatchObject({ id: 'show/99' })
+      const value = anchor('data-resource="show_id=99"')
+      const expected: EmbedResolverResult = {
+        provider: 'spreaker',
+        id: 'show/99',
+        src: 'https://widget.spreaker.com/player?show_id=99',
+        height: 200,
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     // The publisher sized this one, so their height wins over the documented constant.
     it('should prefer the stated data-height', () => {
-      expect(extract(anchor('data-resource="episode_id=42" data-height="350px"'))).toMatchObject({
+      const value = anchor('data-resource="episode_id=42" data-height="350px"')
+      const expected: EmbedResolverResult = {
+        provider: 'spreaker',
+        id: 'episode/42',
+        src: 'https://widget.spreaker.com/player?episode_id=42',
         height: 350,
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should accept a bare pixel count', () => {
-      expect(extract(anchor('data-resource="episode_id=42" data-height="120"'))).toMatchObject({
+      const value = anchor('data-resource="episode_id=42" data-height="120"')
+      const expected: EmbedResolverResult = {
+        provider: 'spreaker',
+        id: 'episode/42',
+        src: 'https://widget.spreaker.com/player?episode_id=42',
         height: 120,
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
     it('should keep the constant when data-height is not a pixel count', () => {
-      expect(extract(anchor('data-resource="episode_id=42" data-height="100%"'))).toMatchObject({
+      const value = anchor('data-resource="episode_id=42" data-height="100%"')
+      const expected: EmbedResolverResult = {
+        provider: 'spreaker',
+        id: 'episode/42',
+        src: 'https://widget.spreaker.com/player?episode_id=42',
         height: 200,
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should return undefined when the resource names no id', () => {
-      expect(extract(anchor('data-resource="episode_id=abc"'))).toBeUndefined()
+      const value = anchor('data-resource="episode_id=abc"')
+
+      expect(extract(value)).toBeUndefined()
     })
 
     it('should return undefined for an unknown resource kind', () => {
-      expect(extract(anchor('data-resource="playlist_id=42"'))).toBeUndefined()
+      const value = anchor('data-resource="playlist_id=42"')
+
+      expect(extract(value)).toBeUndefined()
     })
 
     // The class is styling anyone can copy and the anchor already works as a link, so an
