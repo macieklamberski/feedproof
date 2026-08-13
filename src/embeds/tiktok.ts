@@ -77,7 +77,7 @@ export const tiktokEmbedResolver: EmbedResolver = {
       id: videoId,
       src: `https://www.tiktok.com/embed/v2/${videoId}`,
       url,
-      title: text(caption),
+      description: text(caption),
       author,
       ...hydratedSize(element),
     }
@@ -138,7 +138,7 @@ export const tiktokCreatorEmbedResolver: EmbedResolver = {
       src: `https://www.tiktok.com/embed/@${handle}`,
       url: isCitedProfile ? cite : `https://www.tiktok.com/@${handle}`,
       author: `@${handle}`,
-      title: textNode(element),
+      description: textNode(element),
     }
   },
 }

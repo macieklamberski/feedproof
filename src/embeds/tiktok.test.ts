@@ -63,7 +63,7 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
         id: '7001234567890123456',
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
         url: 'https://www.tiktok.com/@cookingwithlynja/video/7001234567890123456',
-        title: 'Midnight pasta #pasta',
+        description: 'Midnight pasta #pasta',
         author: '@cookingwithlynja',
       }
 
@@ -103,7 +103,7 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
         provider: 'tiktok',
         id: '7001234567890123456',
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
-        title: 'Midnight pasta',
+        description: 'Midnight pasta',
         author: '@cookingwithlynja',
       }
 
@@ -124,7 +124,7 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
       `
 
       expect(extract(value)).toMatchObject({
-        title: 'Midnight pasta #pasta',
+        description: 'Midnight pasta #pasta',
         author: '@cookingwithlynja',
       })
     })
@@ -139,13 +139,13 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
         provider: 'tiktok',
         id: '7001234567890123456',
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
-        title: 'Midnight pasta',
+        description: 'Midnight pasta',
       }
 
       expect(extract(value)).toEqual(expected)
     })
 
-    it('should omit the title when the caption paragraph is empty', () => {
+    it('should omit the description when the caption paragraph is empty', () => {
       const value = html`
         <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@user/video/7001234567890123456" data-video-id="7001234567890123456">
           <section>
@@ -221,7 +221,7 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
       const result = await transform(value)
 
       expect(result).toContain('data-embed-provider="tiktok"')
-      expect(result).toContain('data-embed-title="Midnight pasta #pasta"')
+      expect(result).toContain('data-embed-description="Midnight pasta #pasta"')
       expect(result).not.toContain('<blockquote')
       expect(result).not.toContain('<p>Midnight pasta')
     })
@@ -244,7 +244,7 @@ describeForEachParser('tiktok variants', (parseHtml) => {
     id: videoId,
     src: `https://www.tiktok.com/embed/v2/${videoId}`,
     url: `https://www.tiktok.com/@user/video/${videoId}`,
-    title: 'caption text #tag',
+    description: 'caption text #tag',
     author: '@user',
   }
 
@@ -448,7 +448,7 @@ describeForEachParser('tiktok variants', (parseHtml) => {
         src: 'https://www.tiktok.com/embed/@user',
         url: 'https://www.tiktok.com/@user',
         author: '@user',
-        title: 'caption text',
+        description: 'caption text',
       })
     })
   })
