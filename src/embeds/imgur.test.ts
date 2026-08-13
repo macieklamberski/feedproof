@@ -183,7 +183,6 @@ describeForEachParser('imgurIframeEmbedResolver', (parseHtml) => {
         height="500"
       ></iframe>
     `
-
     const expected: EmbedResolverResult = {
       provider: 'imgur',
       id: 'pVa2rXL',
