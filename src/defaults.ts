@@ -708,4 +708,10 @@ export const defaultNonContentSelectors = [
   // Avada's leftover "For privacy reasons … please accept" notice. The gated iframe itself is
   // recovered via data-privacy-src (a lazy attribute); only this consent nag is dead chrome.
   '.fusion-privacy-placeholder', // Avada privacy-embed notice — 19 feeds.
+  // s9e MediaEmbed (forum software) wraps its player in a sizing span. Where the feed generator
+  // stripped the iframe out of it, what survives is the wrapper around the literal word
+  // "iframe", which renders as that word in the middle of the post. 392 feeds. Scoped to a
+  // wrapper holding no player, so the ones whose iframe survived are untouched. The video id is
+  // nowhere in the markup, so there is nothing to recover here, only chrome to remove.
+  'span[data-s9e-mediaembed]:not(:has(iframe, embed, object, video, audio))',
 ]
