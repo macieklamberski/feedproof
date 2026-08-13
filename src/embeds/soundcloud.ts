@@ -33,13 +33,10 @@ export const soundcloudResolveEmbed = (
   src: string,
   element: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(src, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const reference = parsed.searchParams.get('url')?.match(referenceRegex)
+  // The factory has already matched the host, which means the url parsed, so there is no
+  // unparseable case left to guard here.
+  const params = parseUrl(src, 'https://example.com')?.searchParams
+  const reference = params?.get('url')?.match(referenceRegex)
   const result: EmbedResolverResult = { provider: 'soundcloud', src }
 
   if (reference) {
@@ -48,7 +45,7 @@ export const soundcloudResolveEmbed = (
 
   // The visual player is one height whatever it holds, so it needs no reference to size it.
   const height =
-    parsed.searchParams.get('visual') === 'true'
+    params?.get('visual') === 'true'
       ? visualPlayerHeight
       : classicPlayerHeights[reference?.[1] ?? '']
 
