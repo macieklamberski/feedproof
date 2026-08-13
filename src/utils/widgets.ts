@@ -49,9 +49,12 @@ export const readCarrierUrl = (element: Element): string => {
 // This is not a pattern to copy for resolvers generally: it exists because these bodies
 // were already identical. The cite resolvers each read a different shape, so a shared
 // builder there would need a config language and would cost more than it saves.
+// The element travels alongside the url because a carrier can hold more than its src: an
+// iframe's `title` is the one field a publisher's snippet states that the url does not carry.
+// Resolvers that need nothing but the url ignore the second argument.
 export const createIframeEmbedResolver = (
   hosts: Array<string>,
-  resolveEmbed: (url: string) => EmbedResolverResult | undefined,
+  resolveEmbed: (url: string, element: Element) => EmbedResolverResult | undefined,
 ): EmbedResolver => {
   return {
     selector: embedCarrierSelector,
@@ -62,7 +65,7 @@ export const createIframeEmbedResolver = (
         return
       }
 
-      return resolveEmbed(src)
+      return resolveEmbed(src, element)
     },
   }
 }

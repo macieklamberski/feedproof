@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, resolverExtractor } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
+import type { EmbedResolverResult } from '../types.js'
 import { extractVimeoId, vimeoEmbedResolver, vimeoResolveEmbed } from './vimeo.js'
 
 describe('extractVimeoId', () => {
@@ -83,5 +84,63 @@ describeForEachParser('vimeoEmbedResolver', (parseHtml) => {
     const result = await resolve('<iframe src="https://example.com/video"></iframe>')
 
     expect(result).toBeUndefined()
+  })
+
+  describe('the title the share snippet writes', () => {
+    it('should carry the video title across', async () => {
+      const value = html`
+        <iframe
+          src="https://player.vimeo.com/video/76979871"
+          width="640"
+          height="360"
+          title="Scott M. Graffius - Speaker Reel"
+          frameborder="0"
+          allowfullscreen
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: '76979871',
+        src: 'https://player.vimeo.com/video/76979871',
+        url: 'https://vimeo.com/76979871',
+        title: 'Scott M. Graffius - Speaker Reel',
+      }
+
+      expect(await resolve(value)).toEqual(expected)
+    })
+
+    // The label is carried like any other stated title. Half of them are the real thing and the
+    // labels are localised into at least five languages, so filtering would be a list that ages.
+    it('should carry a player label as stated rather than judging it', async () => {
+      const value = html`
+        <iframe
+          src="https://player.vimeo.com/video/76979871"
+          title="Vimeo video player"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: '76979871',
+        src: 'https://player.vimeo.com/video/76979871',
+        url: 'https://vimeo.com/76979871',
+        title: 'Vimeo video player',
+      }
+
+      expect(await resolve(value)).toEqual(expected)
+    })
+
+    it('should state no title when the attribute holds only whitespace', async () => {
+      const value = html`
+        <iframe src="https://player.vimeo.com/video/76979871" title="   "></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: '76979871',
+        src: 'https://player.vimeo.com/video/76979871',
+        url: 'https://vimeo.com/76979871',
+      }
+
+      expect(await resolve(value)).toEqual(expected)
+    })
   })
 })
