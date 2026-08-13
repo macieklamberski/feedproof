@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { bloggerIframeEmbedResolver, bloggerResolveEmbed, extractBloggerToken } from './blogger.js'
+import { bloggerEmbedResolver, bloggerResolveEmbed, extractBloggerToken } from './blogger.js'
 
 const token = 'AD6v5dz1mv6dQ8n4YQ4bC1eGZs9v-x7pK2fQ'
 
@@ -69,13 +69,11 @@ describe('bloggerResolveEmbed', () => {
   })
 })
 
-describeForEachParser('bloggerIframeEmbedResolver', (parseHtml) => {
+describeForEachParser('bloggerEmbedResolver', (parseHtml) => {
   const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(bloggerIframeEmbedResolver.selector)
+    const element = parseHtml(value).querySelector(bloggerEmbedResolver.selector)
 
-    return element
-      ? (bloggerIframeEmbedResolver.extract(element) as EmbedResolverResult)
-      : undefined
+    return element ? (bloggerEmbedResolver.extract(element) as EmbedResolverResult) : undefined
   }
 
   describe('happy paths', () => {

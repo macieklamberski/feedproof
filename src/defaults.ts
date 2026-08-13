@@ -29,7 +29,7 @@ import { appleEmbedResolver } from './embeds/apple.js'
 import { archiveFlashEmbedResolver, archiveIframeEmbedResolver } from './embeds/archive.js'
 import { audioboomEmbedResolver } from './embeds/audioboom.js'
 import { bandcampEmbedResolver } from './embeds/bandcamp.js'
-import { bloggerIframeEmbedResolver } from './embeds/blogger.js'
+import { bloggerEmbedResolver } from './embeds/blogger.js'
 import { blubrryEmbedResolver } from './embeds/blubrry.js'
 import {
   brightcoveFlashEmbedResolver,
@@ -382,7 +382,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   archiveIframeEmbedResolver,
   archiveFlashEmbedResolver,
   bandcampEmbedResolver,
-  bloggerIframeEmbedResolver,
+  bloggerEmbedResolver,
   audioboomEmbedResolver,
   omnyEmbedResolver,
   nicovideoScriptEmbedResolver,

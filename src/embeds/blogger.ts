@@ -45,7 +45,4 @@ export const bloggerResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 }
 
-export const bloggerIframeEmbedResolver = createIframeEmbedResolver(
-  bloggerHosts,
-  bloggerResolveEmbed,
-)
+export const bloggerEmbedResolver = createIframeEmbedResolver(bloggerHosts, bloggerResolveEmbed)
