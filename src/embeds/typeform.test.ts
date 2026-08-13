@@ -97,7 +97,12 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
 
   describe('launchers, which were never article content', () => {
     it('should ignore a popup button', () => {
-      const value = html`<div data-tf-popup="MTt3Pw7K" data-tf-button-text="Take the survey"></div>`
+      const value = html`
+        <div
+          data-tf-popup="MTt3Pw7K"
+          data-tf-button-text="Take the survey"
+        ></div>
+      `
 
       expect(extract(value)).toBeUndefined()
     })
