@@ -173,11 +173,15 @@ describe('typeformResolveEmbed', () => {
   })
 
   it('should ignore a typeform url that names no form', () => {
-    expect(typeformResolveEmbed('https://www.typeform.com/explore')).toBeUndefined()
+    const value = 'https://www.typeform.com/explore'
+
+    expect(typeformResolveEmbed(value)).toBeUndefined()
   })
 
   it('should ignore another host carrying the form path', () => {
-    expect(typeformResolveEmbed('https://evil.test/to/MTt3Pw7K')).toBeUndefined()
+    const value = 'https://evil.test/to/MTt3Pw7K'
+
+    expect(typeformResolveEmbed(value)).toBeUndefined()
   })
 })
 
