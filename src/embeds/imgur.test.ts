@@ -131,7 +131,12 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for an empty id', () => {
-      const value = html`<blockquote class="imgur-embed-pub" data-id=""></blockquote>`
+      const value = html`
+        <blockquote
+          class="imgur-embed-pub"
+          data-id=""
+        ></blockquote>
+      `
 
       expect(extract(value)).toBeUndefined()
     })
