@@ -48,7 +48,15 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
         ></div>
       `
 
-      expect(extract(value)).toMatchObject({ title: 'Booking Form' })
+      const expected: EmbedResolverResult = {
+        provider: 'typeform',
+        id: 'MTt3Pw7K',
+        src: 'https://form.typeform.com/to/MTt3Pw7K',
+        url: 'https://form.typeform.com/to/MTt3Pw7K',
+        title: 'Booking Form',
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
   })
 
@@ -131,27 +139,40 @@ describe('typeformResolveEmbed', () => {
   it('should resolve the canonical form url', () => {
     const value = 'https://form.typeform.com/to/MTt3Pw7K'
 
-    expect(typeformResolveEmbed(value)).toEqual({
+    const expected: EmbedResolverResult = {
       provider: 'typeform',
       id: 'MTt3Pw7K',
       src: value,
       url: value,
-    })
+    }
+
+    expect(typeformResolveEmbed(value)).toEqual(expected)
   })
 
   it('should resolve a per-account subdomain to the canonical form url', () => {
-    expect(typeformResolveEmbed('https://sessionlab.typeform.com/to/WCfVwJTK')).toMatchObject({
+    const value = 'https://sessionlab.typeform.com/to/WCfVwJTK'
+    const expected: EmbedResolverResult = {
+      provider: 'typeform',
+      id: 'WCfVwJTK',
       src: 'https://form.typeform.com/to/WCfVwJTK',
-    })
+      url: 'https://form.typeform.com/to/WCfVwJTK',
+    }
+
+    expect(typeformResolveEmbed(value)).toEqual(expected)
   })
 
   it('should drop the telemetry query the oembed iframe carries', () => {
     const value =
       'https://form.typeform.com/to/MTt3Pw7K?typeform-embed=oembed&typeform-medium=embed'
 
-    expect(typeformResolveEmbed(value)).toMatchObject({
+    const expected: EmbedResolverResult = {
+      provider: 'typeform',
+      id: 'MTt3Pw7K',
       src: 'https://form.typeform.com/to/MTt3Pw7K',
-    })
+      url: 'https://form.typeform.com/to/MTt3Pw7K',
+    }
+
+    expect(typeformResolveEmbed(value)).toEqual(expected)
   })
 
   it('should ignore a typeform url that names no form', () => {
