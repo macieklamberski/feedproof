@@ -31,7 +31,9 @@ describe('slideshareResolveEmbed', () => {
   })
 
   it('should ignore a slideshare url that names no deck', () => {
-    expect(slideshareResolveEmbed('https://www.slideshare.net/haraldf')).toBeUndefined()
+    const value = 'https://www.slideshare.net/haraldf'
+
+    expect(slideshareResolveEmbed(value)).toBeUndefined()
   })
 
   it('should ignore an embed path that stops before the deck', () => {
@@ -47,15 +49,15 @@ describe('slideshareResolveEmbed', () => {
   })
 
   it('should ignore a key outside the url-safe alphabet', () => {
-    expect(
-      slideshareResolveEmbed('https://www.slideshare.net/slideshow/embed_code/key/../evil'),
-    ).toBeUndefined()
+    const value = 'https://www.slideshare.net/slideshow/embed_code/key/../evil'
+
+    expect(slideshareResolveEmbed(value)).toBeUndefined()
   })
 
   it('should ignore another host carrying the embed path', () => {
-    expect(
-      slideshareResolveEmbed('https://slideshare.net.evil.test/slideshow/embed_code/6435157'),
-    ).toBeUndefined()
+    const value = 'https://slideshare.net.evil.test/slideshow/embed_code/6435157'
+
+    expect(slideshareResolveEmbed(value)).toBeUndefined()
   })
 })
 
