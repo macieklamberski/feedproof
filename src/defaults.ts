@@ -570,8 +570,6 @@ export const defaultTrackingHosts = [
   'mailerlite.com', // Newsletter platform.
   'convertkit-mail.com', // Newsletter platform.
   'beehiiv.com', // Newsletter platform.
-  'email.medium.com', // Medium newsletter pixels.
-  'stat-c.medium.com', // Medium reader-stat pixels.
   'googlesyndication.com', // Google AdSense ad pixels.
   'googletagmanager.com', // Google Tag Manager.
   'amazon-adsystem.com', // Amazon ad serving pixels.
@@ -662,7 +660,12 @@ export const defaultNonContentSelectors = [
   '.jetpack_subscription_widget', // Jetpack legacy sidebar subscribe widget — 51 feeds (<0.001%).
   'form[action*="buttondown.email"]', // Buttondown embed-subscribe form — 21 feeds (<0.001%); 1,055 feeds mention the host at all, nearly all as plain links.
   '.sqs-block-newsletter', // Squarespace newsletter block — 3 feeds (<0.001%).
-  '.et_bloom', // Bloom (Elegant Themes) optin — 963 feeds (0.008%).
+  // Bloom (Elegant Themes) optin. The bare `.et_bloom` class does not exist on any element in
+  // the corpus: the tokens are `et_bloom_bottom_trigger` (881 feeds), `et_bloom_fields` and so
+  // on, and a class selector matches whole tokens, so it stripped nothing. Matched on the
+  // prefix instead. Most of what that reaches is the empty trigger span, which stripEmptyTags
+  // already removed; the ~40 feeds carrying the popup form are what this actually gains.
+  '[class*="et_bloom"]',
   '.wpforms-container', // WPForms — 804 feeds (0.006%).
   '[class*="tve-leads"]', // Thrive Leads optin — 232 feeds (0.002%).
 
@@ -674,11 +677,22 @@ export const defaultNonContentSelectors = [
   // Share and call-to-action button clusters.
   '.captioned-button-wrap', // Substack caption + CTA button (Share/Subscribe/Comment) — 1,976 feeds (0.016%).
   '[class*="social-share"]', // Generic social-share button cluster — ≤1,695 feeds (0.013%).
-  '[class*="share-buttons"]', // Generic social-share button cluster — ≤1,853 feeds (0.015%).
+  '[class*="share-buttons"]', // Generic social-share button cluster — 2,153 feeds (0.017%).
   '.sharethis-inline-share-buttons', // ShareThis inline share buttons — 674 feeds (0.005%).
   '.sharedaddy', // Jetpack Sharedaddy share buttons — 588 feeds (0.005%).
   '.feedflare', // FeedBurner share footer ("Share on X / Email this") — 262 feeds (0.002%).
   '.addtoany_share_save_container', // AddToAny share buttons (WordPress) — 157 feeds (0.001%).
+  // The AddToAny anchor itself. Empty in 6,904 of 8,138 feeds, where stripEmptyTags already
+  // removed it; this is for the ~1,170 whose variant carries an image or text and survives as
+  // a "Share" button.
+  'a.addtoany_share_save',
+  // Survives as a live "Tweet" link in the output — 3,002 feeds, 2,807 of them with no other
+  // non-content selector matching anywhere.
+  'a.twitter-share-button',
+  // Drupal Easy Social — 1,652 feeds. Worth more than its count: the widget is chrome, but the
+  // pipeline cannot tell, so its Facebook Like iframe becomes an embed placeholder card and the
+  // chrome is promoted to content.
+  'div.easy_social_box',
   '.a2a_kit', // AddToAny share icons (higher-prevalence marker than the wrapper) — 6,714 feeds (0.053%).
   '[class*="addthis_"]', // AddThis share toolbox — 2,312 feeds (0.018%).
   '.shareaholic-canvas', // Shareaholic share/related widget — 669 feeds (0.005%).
@@ -700,7 +714,7 @@ export const defaultNonContentSelectors = [
   '.fb-comments', // Facebook Comments — 1,050 feeds (0.008%).
 
   // Print / PDF buttons.
-  '.printfriendly', // PrintFriendly print/PDF button — ≤642 feeds (0.005%); ~half are class-scoped.
+  '.printfriendly', // PrintFriendly print/PDF button — 199 feeds (0.002%).
   '.pf-button', // PrintFriendly button — 93 feeds (0.001%).
 
   // Platform UI chrome and non-rendered scaffolding.
