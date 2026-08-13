@@ -93,23 +93,22 @@ export const extractBlueskyPostFromUrl = (link: string): BlueskyPost | undefined
 // endpoint that answers for a post — the AT URI, the permalink, the player — is keyed by the
 // authority as well. So the id is the pair, and both endpoints rebuild from it.
 //
-// The authority is whichever form the markup gave. A handle costs the enricher one extra
-// `com.atproto.identity.resolveHandle` call, because the AppView's `getPosts` answers a
-// handle-form AT URI with an empty result (checked live 2026-08-13).
+// The authority is whichever form the markup gave. `getPostThread` and oEmbed both answer a
+// handle-form post directly, so the id addresses the post either way (checked live
+// 2026-08-13); only `getPosts` needs a DID.
+//
+// The player is composed the same way for both forms, even though it takes a DID today and
+// answers 400 to a handle (checked live 2026-08-13). The handle form is one file in 200 and
+// comes from a single newsletter platform whose custom element carries no DID anywhere, so the
+// alternative is either dropping those posts or writing a url that is a different kind of
+// thing into the field that names the player. Keeping the shape uniform means the day the
+// player resolves handles itself, those embeds start working with no change here.
 const composeEmbedResult = (post: BlueskyPost): EmbedResolverResult => {
-  const url = `https://bsky.app/profile/${post.authority}/post/${post.rkey}`
-
-  // The player takes a DID only — the handle form answers 400 (checked live 2026-08-13) — so
-  // a post named by its handle points at its own page instead.
-  const src = post.authority.startsWith('did:')
-    ? `https://embed.bsky.app/embed/${post.authority}/${postCollection}/${post.rkey}`
-    : url
-
   return {
     provider: 'bluesky',
     id: `${post.authority}/${post.rkey}`,
-    src,
-    url,
+    src: `https://embed.bsky.app/embed/${post.authority}/${postCollection}/${post.rkey}`,
+    url: `https://bsky.app/profile/${post.authority}/post/${post.rkey}`,
   }
 }
 

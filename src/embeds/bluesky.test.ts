@@ -702,8 +702,8 @@ describeForEachParser('blueskyPostElementEmbedResolver', (parseHtml) => {
   const extract = extractWith(parseHtml, blueskyPostElementEmbedResolver)
 
   describe('custom element with a declarative shadow root', () => {
-    // This carrier names the author by handle, which the player rejects, so the placeholder
-    // points at the post's own page instead.
+    // This carrier names the author by handle rather than a did, and is the only one that
+    // does. The player url is composed the same way regardless.
     it('should read the post from the at uri and the fallback quote', () => {
       const value = html`
         <bluesky-post allow-unauthenticated="true" contextless="true" silent="true" src="at://newsroom.example/app.bsky.feed.post/3miq7aeuwbg42">
@@ -723,7 +723,7 @@ describeForEachParser('blueskyPostElementEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'newsroom.example/3miq7aeuwbg42',
-        src: 'https://bsky.app/profile/newsroom.example/post/3miq7aeuwbg42',
+        src: 'https://embed.bsky.app/embed/newsroom.example/app.bsky.feed.post/3miq7aeuwbg42',
         url: 'https://bsky.app/profile/newsroom.example/post/3miq7aeuwbg42',
         description: 'The web component never mounts in a reader.',
         author: 'Newsroom (@newsroom.example)',
