@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { substackCrossPostCiteResolver, substackOwnPostCiteResolver } from './substack.js'
 
@@ -19,7 +19,7 @@ const makeCard = (className: string, attrs?: Record<string, unknown> | string): 
 }
 
 describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, substackOwnPostCiteResolver)
+  const extract = resolverExtractor(parseHtml, substackOwnPostCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete post card', async () => {
@@ -258,7 +258,7 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
 })
 
 describeForEachParser('substackCrossPostCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, substackCrossPostCiteResolver)
+  const extract = resolverExtractor(parseHtml, substackCrossPostCiteResolver)
 
   it('should extract all fields from a complete cross-post card', async () => {
     const value = makeCard('embedded-post-wrap', {

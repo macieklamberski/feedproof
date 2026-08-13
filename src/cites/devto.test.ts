@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import {
   devtoLegacyPostCiteResolver,
@@ -8,7 +8,7 @@ import {
 } from './devto.js'
 
 describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, devtoLinkCiteResolver)
+  const extract = resolverExtractor(parseHtml, devtoLinkCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {
@@ -138,7 +138,7 @@ describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
 })
 
 describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, devtoPostCiteResolver)
+  const extract = resolverExtractor(parseHtml, devtoPostCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a card published under an organization', async () => {
@@ -367,7 +367,7 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
 })
 
 describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, devtoLegacyPostCiteResolver)
+  const extract = resolverExtractor(parseHtml, devtoLegacyPostCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {

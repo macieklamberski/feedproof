@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
-import { baseContext, citeExtractor, describeForEachParser, html } from '../tests.js'
+import { baseContext, describeForEachParser, html, resolverExtractor } from '../tests.js'
 import { convertCiteCards } from '../transforms/dom/convertCiteCards.js'
 import type { CiteResolverResult, TransformContext } from '../types.js'
 import { applyDomTransforms } from '../utils/transforms.js'
 import { mediumCiteResolver } from './medium.js'
 
 describeForEachParser('mediumCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, mediumCiteResolver)
+  const extract = resolverExtractor(parseHtml, mediumCiteResolver)
 
   const transform = (value: string) => {
     const context: TransformContext = { ...baseContext, citeResolvers: [mediumCiteResolver] }

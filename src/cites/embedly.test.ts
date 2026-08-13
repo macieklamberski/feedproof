@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { embedlyCiteResolver } from './embedly.js'
 
 describeForEachParser('embedlyCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, embedlyCiteResolver)
+  const extract = resolverExtractor(parseHtml, embedlyCiteResolver)
 
   describe('happy paths', () => {
     it('should extract url, title and description', async () => {

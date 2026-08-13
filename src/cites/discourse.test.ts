@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { discourseCiteResolver, omittedOneboxClasses, socialPostHosts } from './discourse.js'
 
 describeForEachParser('discourseCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, discourseCiteResolver)
+  const extract = resolverExtractor(parseHtml, discourseCiteResolver)
 
   describe('generic oneboxes', () => {
     it('should extract all fields from a complete card', async () => {

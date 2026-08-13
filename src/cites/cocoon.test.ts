@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { cocoonCiteResolver } from './cocoon.js'
 
 describeForEachParser('cocoonCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, cocoonCiteResolver)
+  const extract = resolverExtractor(parseHtml, cocoonCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {
