@@ -118,6 +118,14 @@ export { bandcampEmbedResolver } from './embeds/bandcamp.js'
 export { bloggerEmbedResolver } from './embeds/blogger.js'
 export { blubrryEmbedResolver } from './embeds/blubrry.js'
 export {
+  blueskyBlockquoteEmbedResolver,
+  blueskyIframeEmbedResolver,
+  blueskyPostElementEmbedResolver,
+  blueskyS9eEmbedResolver,
+  extractBlueskyPost,
+  extractBlueskyPostFromUrl,
+} from './embeds/bluesky.js'
+export {
   brightcoveFlashEmbedResolver,
   brightcoveIframeEmbedResolver,
   brightcoveVideoJsEmbedResolver,
