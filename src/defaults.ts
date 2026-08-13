@@ -26,6 +26,7 @@ import { tumblrCiteResolver } from './cites/tumblr.js'
 import { xenforoCiteResolver } from './cites/xenforo.js'
 import { anchorEmbedResolver } from './embeds/anchor.js'
 import { appleEmbedResolver } from './embeds/apple.js'
+import { archiveEmbedResolver } from './embeds/archive.js'
 import { audioboomEmbedResolver } from './embeds/audioboom.js'
 import { bandcampEmbedResolver } from './embeds/bandcamp.js'
 import { blubrryEmbedResolver } from './embeds/blubrry.js'
@@ -375,6 +376,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   flourishEmbedResolver,
   anchorEmbedResolver,
   appleEmbedResolver,
+  archiveEmbedResolver,
   bandcampEmbedResolver,
   audioboomEmbedResolver,
   omnyEmbedResolver,
