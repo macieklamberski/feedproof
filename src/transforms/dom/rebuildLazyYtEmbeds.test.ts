@@ -18,10 +18,10 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
   })
 
   it('should keep an underscore-bearing video id intact', async () => {
-    const value = html`<div class="lazyYT" data-youtube-id="a_b-c123def45"></div>`
+    const value = html`<div class="lazyYT" data-youtube-id="a_b-c123def"></div>`
     const result = await transform(value)
 
-    expect(result).toContain('https://www.youtube.com/embed/a_b-c123def45')
+    expect(result).toContain('https://www.youtube.com/embed/a_b-c123def')
   })
 
   it('should leave a facade with an empty data-youtube-id untouched', async () => {
@@ -56,6 +56,42 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
     expect(result).toContain('data-embed-thumbnail')
     expect(result).toContain('data-embed-width="480"')
     expect(result).toContain('data-embed-height="270"')
+  })
+
+  // Measured across the corpus: `.youtube-embed[data-video_id]` is the largest facade at 701
+  // feeds, ahead of the `.lazyYT` plugin this transform started with.
+  it('should rebuild the youtube-embed facade', async () => {
+    const value = html`<div class="youtube-embed" data-video_id="dQw4w9WgXcQ"></div>`
+    const result = await transform(value)
+
+    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ">')
+    expect(result).not.toContain('youtube-embed')
+  })
+
+  it('should rebuild a data-youtube-id facade whatever class it carries', async () => {
+    const value = html`<div class="video-wrap" data-youtube-id="dQw4w9WgXcQ"></div>`
+
+    expect(await transform(value)).toContain('https://www.youtube.com/embed/dQw4w9WgXcQ')
+  })
+
+  it('should rebuild a data-youtube facade', async () => {
+    const value = html`<div data-youtube="dQw4w9WgXcQ"></div>`
+
+    expect(await transform(value)).toContain('https://www.youtube.com/embed/dQw4w9WgXcQ')
+  })
+
+  // `data-video_id` is not exclusive to YouTube, so the class has to name the platform.
+  it('should leave a data-video_id div that does not name youtube', async () => {
+    const value = html`<div class="adthrive-video-player" data-video_id="dQw4w9WgXcQ"></div>`
+
+    expect(await transform(value)).toContain('adthrive-video-player')
+  })
+
+  // The id goes straight into a url, so what counts as one stays embeds/youtube.ts's answer.
+  it('should leave a facade whose id is not a youtube id', async () => {
+    const value = html`<div class="youtube-embed" data-video_id="../../etc"></div>`
+
+    expect(await transform(value)).toContain('youtube-embed')
   })
 
   it('should be idempotent', async () => {
