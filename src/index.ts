@@ -107,100 +107,54 @@ export {
   defaultStandardDomTransforms,
   heuristicDomTransforms,
 } from './defaults.js'
-export { anchorEmbedResolver, anchorResolveEmbed, extractAnchorEpisode } from './embeds/anchor.js'
-export { appleEmbedResolver, appleResolveEmbed } from './embeds/apple.js'
+export { anchorEmbedResolver } from './embeds/anchor.js'
+export { appleEmbedResolver } from './embeds/apple.js'
 export {
   archiveFlashEmbedResolver,
   archiveIframeEmbedResolver,
-  archiveResolveEmbed,
-  extractArchiveIdentifier,
 } from './embeds/archive.js'
-export {
-  audioboomEmbedResolver,
-  audioboomResolveEmbed,
-  extractAudioboomPost,
-} from './embeds/audioboom.js'
-export { bandcampEmbedResolver, extractBandcampRelease } from './embeds/bandcamp.js'
-export {
-  bloggerEmbedResolver,
-  bloggerResolveEmbed,
-  extractBloggerToken,
-} from './embeds/blogger.js'
-export { blubrryEmbedResolver, blubrryResolveEmbed, extractBlubrryEmbed } from './embeds/blubrry.js'
+export { audioboomEmbedResolver } from './embeds/audioboom.js'
+export { bandcampEmbedResolver } from './embeds/bandcamp.js'
+export { bloggerEmbedResolver } from './embeds/blogger.js'
+export { blubrryEmbedResolver } from './embeds/blubrry.js'
 export {
   brightcoveFlashEmbedResolver,
   brightcoveIframeEmbedResolver,
-  brightcoveResolveEmbed,
   brightcoveVideoJsEmbedResolver,
 } from './embeds/brightcove.js'
 export {
   buzzsproutIframeEmbedResolver,
-  buzzsproutResolveEmbed,
   buzzsproutScriptEmbedResolver,
 } from './embeds/buzzsprout.js'
-export {
-  captivateEmbedResolver,
-  captivateResolveEmbed,
-  extractCaptivateEmbed,
-} from './embeds/captivate.js'
-export {
-  dailymotionEmbedResolver,
-  dailymotionResolveEmbed,
-  extractDailymotionId,
-} from './embeds/dailymotion.js'
-export {
-  extractFiresideToken,
-  firesideEmbedResolver,
-  firesideResolveEmbed,
-} from './embeds/fireside.js'
+export { captivateEmbedResolver } from './embeds/captivate.js'
+export { dailymotionEmbedResolver } from './embeds/dailymotion.js'
+export { firesideEmbedResolver } from './embeds/fireside.js'
 export { flourishEmbedResolver } from './embeds/flourish.js'
-export {
-  extractGeniallyViewId,
-  geniallyEmbedResolver,
-  geniallyResolveEmbed,
-} from './embeds/genially.js'
+export { geniallyEmbedResolver } from './embeds/genially.js'
 export {
   imgurBlockquoteEmbedResolver,
   imgurIframeEmbedResolver,
-  imgurResolveEmbed,
 } from './embeds/imgur.js'
-export { extractIvooxEpisode, ivooxEmbedResolver, ivooxResolveEmbed } from './embeds/ivoox.js'
+export { ivooxEmbedResolver } from './embeds/ivoox.js'
 export {
-  extractJwplayerId,
   jwplayerIframeEmbedResolver,
-  jwplayerResolveEmbed,
   jwplayerScriptEmbedResolver,
 } from './embeds/jwplayer.js'
-export { extractLibsynEmbed, libsynEmbedResolver, libsynResolveEmbed } from './embeds/libsyn.js'
+export { libsynEmbedResolver } from './embeds/libsyn.js'
 export { mediavineEmbedResolver } from './embeds/mediavine.js'
+export { megaphoneEmbedResolver } from './embeds/megaphone.js'
+export { mixcloudEmbedResolver } from './embeds/mixcloud.js'
 export {
-  extractMegaphoneEmbed,
-  megaphoneEmbedResolver,
-  megaphoneResolveEmbed,
-} from './embeds/megaphone.js'
-export {
-  extractMixcloudShow,
-  mixcloudEmbedResolver,
-  mixcloudResolveEmbed,
-} from './embeds/mixcloud.js'
-export {
-  extractNicovideoId,
   nicovideoIframeEmbedResolver,
-  nicovideoResolveEmbed,
   nicovideoScriptEmbedResolver,
 } from './embeds/nicovideo.js'
-export { extractOmnyClip, omnyEmbedResolver, omnyResolveEmbed } from './embeds/omny.js'
-export { extractPodbeanId, podbeanEmbedResolver, podbeanResolveEmbed } from './embeds/podbean.js'
+export { omnyEmbedResolver } from './embeds/omny.js'
+export { podbeanEmbedResolver } from './embeds/podbean.js'
 export { podigeeEmbedResolver } from './embeds/podigee.js'
-export {
-  extractSimplecastEpisode,
-  simplecastEmbedResolver,
-  simplecastResolveEmbed,
-} from './embeds/simplecast.js'
+export { simplecastEmbedResolver } from './embeds/simplecast.js'
 export {
   slideshareFlashEmbedResolver,
   slideshareIframeEmbedResolver,
-  slideshareResolveEmbed,
 } from './embeds/slideshare.js'
 
 export { soundcloudEmbedResolver } from './embeds/soundcloud.js'
@@ -208,35 +162,22 @@ export {
   speakerdeckIframeEmbedResolver,
   speakerdeckScriptEmbedResolver,
 } from './embeds/speakerdeck.js'
-export { spotifyEmbedResolver, spotifyResolveEmbed } from './embeds/spotify.js'
+export { spotifyEmbedResolver } from './embeds/spotify.js'
 export {
-  extractSpreakerEmbed,
   spreakerAnchorEmbedResolver,
   spreakerIframeEmbedResolver,
-  spreakerResolveEmbed,
 } from './embeds/spreaker.js'
-export { extractTedTalk, tedEmbedResolver, tedResolveEmbed } from './embeds/ted.js'
-export {
-  extractTransistorEmbed,
-  transistorEmbedResolver,
-  transistorResolveEmbed,
-} from './embeds/transistor.js'
+export { tedEmbedResolver } from './embeds/ted.js'
+export { transistorEmbedResolver } from './embeds/transistor.js'
 export {
   typeformIframeEmbedResolver,
-  typeformResolveEmbed,
   typeformWidgetEmbedResolver,
 } from './embeds/typeform.js'
-export {
-  extractVimeoId,
-  vimeoEmbedResolver,
-  vimeoResolveEmbed,
-} from './embeds/vimeo.js'
-export { extractWistiaId, wistiaEmbedResolver, wistiaResolveEmbed } from './embeds/wistia.js'
+export { vimeoEmbedResolver } from './embeds/vimeo.js'
+export { wistiaEmbedResolver } from './embeds/wistia.js'
 export {
   composeThumbnailUrl,
-  extractVideoId,
   youtubeEmbedResolver,
-  youtubeResolveEmbed,
 } from './embeds/youtube.js'
 export { hljsHighlightFn } from './highlighters/hljs.js'
 export { discourseMediaResolver } from './media/discourse.js'
