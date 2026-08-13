@@ -10,22 +10,24 @@ import {
 describe('slideshareResolveEmbed', () => {
   it('should keep the keyed embed the current dialog writes', () => {
     const value = 'https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAY'
-
-    expect(slideshareResolveEmbed(value)).toEqual({
+    const expected: EmbedResolverResult = {
       provider: 'slideshare',
       id: '6PCWPGFw9SwsAY',
       src: value,
-    })
+    }
+
+    expect(slideshareResolveEmbed(value)).toEqual(expected)
   })
 
   it('should keep the numeric embed the keyed one replaced', () => {
-    expect(
-      slideshareResolveEmbed('https://www.slideshare.net/slideshow/embed_code/6435157'),
-    ).toEqual({
+    const value = 'https://www.slideshare.net/slideshow/embed_code/6435157'
+    const expected: EmbedResolverResult = {
       provider: 'slideshare',
       id: '6435157',
       src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
-    })
+    }
+
+    expect(slideshareResolveEmbed(value)).toEqual(expected)
   })
 
   it('should ignore a slideshare url that names no deck', () => {
@@ -103,9 +105,14 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
         </div>
       `
 
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '6435157',
+        src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
         url: 'https://www.slideshare.net/haraldf/business-quotes-for-2011',
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should read the id off the object when the outer div is gone', () => {
@@ -118,10 +125,13 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
         </object>
       `
 
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
         id: '6435157',
         src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
   })
 
@@ -182,11 +192,13 @@ describeForEachParser('slideshareIframeEmbedResolver', (parseHtml) => {
       ></iframe>
     `
 
-    expect(extract(value)).toEqual({
+    const expected: EmbedResolverResult = {
       provider: 'slideshare',
       id: '6PCWPGFw9SwsAY',
       src: 'https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAY',
-    })
+    }
+
+    expect(extract(value)).toEqual(expected)
   })
 
   it('should ignore an iframe on another host', () => {
