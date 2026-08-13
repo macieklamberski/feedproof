@@ -63,7 +63,10 @@ export const archiveResolveEmbed = (url: string): EmbedResolverResult | undefine
   return composeEmbedResult(identifier, query)
 }
 
-export const archiveEmbedResolver = createIframeEmbedResolver(archiveHosts, archiveResolveEmbed)
+export const archiveIframeEmbedResolver = createIframeEmbedResolver(
+  archiveHosts,
+  archiveResolveEmbed,
+)
 
 // The Flash player names no item in its url: the `src` is only the Flowplayer swf under
 // `/flow/`, so the item sits in the player's config instead, which arrives as the `flashvars`

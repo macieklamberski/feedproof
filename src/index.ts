@@ -110,8 +110,8 @@ export {
 export { anchorEmbedResolver, anchorResolveEmbed, extractAnchorEpisode } from './embeds/anchor.js'
 export { appleEmbedResolver, appleResolveEmbed } from './embeds/apple.js'
 export {
-  archiveEmbedResolver,
   archiveFlashEmbedResolver,
+  archiveIframeEmbedResolver,
   archiveResolveEmbed,
   extractArchiveIdentifier,
 } from './embeds/archive.js'
