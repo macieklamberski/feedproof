@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
 
 const typeformHosts = ['typeform.com']
 
@@ -48,9 +48,9 @@ const readTitle = (element: Element): string | undefined => {
 // explore page rather than a form. The id still travels, because `api.typeform.com/
 // single-embed/<liveId>` answers key-free with the real form id, which is an enrichment step
 // and not something a pure extract can do.
-export const typeformWidgetEmbedResolver: EmbedResolver = {
-  selector: 'div[data-tf-widget], div[data-tf-live], div.typeform-widget[data-url]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const typeformWidgetEmbedResolver = createMarkupEmbedResolver(
+  'div[data-tf-widget], div[data-tf-live], div.typeform-widget[data-url]',
+  (element) => {
     if (launcherAttributes.some((name) => element.hasAttribute(name))) {
       return
     }
@@ -65,7 +65,7 @@ export const typeformWidgetEmbedResolver: EmbedResolver = {
     // publisher's own subdomain as often as the canonical host.
     return typeformResolveEmbed(attr(element, 'data-url') ?? '')
   },
-}
+)
 
 // `form.typeform.com/to/<id>` is what the platform's oEmbed emits, and the per-account
 // `<user>.typeform.com/to/<id>` still serves the same form rather than redirecting, so both

@@ -1,7 +1,7 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
 
 // Buzzsprout embeds a podcast episode player two ways: a WordPress shortcode shipping an
 // empty div plus a <script> whose src carries the podcast and episode ids, and a direct
@@ -52,9 +52,9 @@ export const buzzsproutIframeEmbedResolver: EmbedResolver = createIframeEmbedRes
   buzzsproutResolveEmbed,
 )
 
-export const buzzsproutScriptEmbedResolver: EmbedResolver = {
-  selector: 'script[src*="buzzsprout.com"]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const buzzsproutScriptEmbedResolver = createMarkupEmbedResolver(
+  'script[src*="buzzsprout.com"]',
+  (element) => {
     // The selector guarantees a src containing the host substring, so only the host and
     // path checks can reject.
     const url = parseUrl(attr(element, 'src') ?? '', 'https://example.com')
@@ -73,4 +73,4 @@ export const buzzsproutScriptEmbedResolver: EmbedResolver = {
 
     return composeEmbed(podcastId, episodeId)
   },
-}
+)

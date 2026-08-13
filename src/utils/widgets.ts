@@ -53,6 +53,20 @@ export const readCarrierUrl = (element: Element): string => {
 // This is not a pattern to copy for resolvers generally: it exists because these bodies
 // were already identical. The cite resolvers each read a different shape, so a shared
 // builder there would need a config language and would cost more than it saves.
+// A resolver whose selector names the platform's own markup. The size the carrier declares is
+// applied for it, the same way the url-keyed factory does, so neither kind has to remember.
+// A resolver that has measured the platform and means to overrule the markup declares the
+// object literally instead and returns its own size.
+export const createMarkupEmbedResolver = (
+  selector: string,
+  extract: (element: Element) => EmbedResolverResult | undefined,
+): EmbedResolver => {
+  return {
+    selector,
+    extract: (element) => withDeclaredSize(element, extract(element)),
+  }
+}
+
 // The element travels alongside the url because a carrier can hold more than its src: an
 // iframe's `title` is the one field a publisher's snippet states that the url does not carry.
 // Resolvers that need nothing but the url ignore the second argument.
@@ -67,8 +81,12 @@ export const readCarrierUrl = (element: Element): string => {
 // result besides.
 export const withDeclaredSize = (
   element: Element,
-  result: EmbedResolverResult,
-): EmbedResolverResult => {
+  result: EmbedResolverResult | undefined,
+): EmbedResolverResult | undefined => {
+  if (!result) {
+    return
+  }
+
   const { width, height } = getEmbedDimensions(element)
 
   return {
@@ -103,9 +121,7 @@ export const createIframeEmbedResolver = (
         return
       }
 
-      const result = resolveEmbed(src, element)
-
-      return result && withDeclaredSize(element, result)
+      return withDeclaredSize(element, resolveEmbed(src, element))
     },
   }
 }

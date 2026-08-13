@@ -1,6 +1,6 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
+import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
 // Podigee ships a generic loader script whose `data-configuration` is the player url itself,
 // so the embed is recoverable without executing anything. 86 of 100 corpus feeds carry it in
@@ -9,9 +9,9 @@ import { attr } from '../utils/dom.js'
 // resolver deliberately does not read — those keep the generic treatment.
 const podigeeHosts = ['podigee.io', 'podigee.com', 'podigee-cdn.net']
 
-export const podigeeEmbedResolver: EmbedResolver = {
-  selector: 'script.podigee-podcast-player[data-configuration]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const podigeeEmbedResolver = createMarkupEmbedResolver(
+  'script.podigee-podcast-player[data-configuration]',
+  (element) => {
     const configuration = attr(element, 'data-configuration')
     const parsed = configuration ? parseUrl(configuration, 'https://example.com') : undefined
 
@@ -39,4 +39,4 @@ export const podigeeEmbedResolver: EmbedResolver = {
       src: parsed.href,
     }
   },
-}
+)

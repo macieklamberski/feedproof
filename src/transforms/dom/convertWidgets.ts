@@ -1,31 +1,16 @@
 import type { DomTransform, MediaResolverResult } from '../../types.js'
-import {
-  getElementDimensions,
-  getWrapperRatioDimensions,
-  playableElements,
-} from '../../utils/dom.js'
+import { playableElements } from '../../utils/dom.js'
 import { audioFileRegex, resolveOrKeepUrl, videoFileRegex } from '../../utils/urls.js'
 import {
   createEmbedPlaceholder,
   embedCarrierSelector,
+  getEmbedDimensions,
   isMediaResult,
   parseOrKeepDate,
   readCarrierUrl,
 } from '../../utils/widgets.js'
 
 const playableSelector = [...playableElements].join(', ')
-
-// When the iframe carries no usable dimensions, fall back to a responsive wrapper's
-// aspect ratio so the placeholder can still reserve space.
-const getEmbedDimensions = (element: Element): { width?: number; height?: number } => {
-  const dimensions = getElementDimensions(element)
-
-  if (dimensions.width === undefined && dimensions.height === undefined) {
-    return getWrapperRatioDimensions(element) ?? dimensions
-  }
-
-  return dimensions
-}
 
 // The tag a bare URL should play as, or undefined when it is not a media file at all.
 // Streaming manifests (.m3u8, .mpd) are deliberately not matched (see the regexes): they
@@ -198,8 +183,6 @@ export const convertWidgets: DomTransform = (context) => {
           }
         }
 
-        const { width, height } = getEmbedDimensions(element)
-
         // A rebuild transform (e.g. a lazy-load facade) may have recovered the publisher's
         // real poster and stashed it on the element as `data-thumbnail`. Prefer it over the
         // resolver's URL-derived guess, which is only a safe-default size (e.g. YouTube's
@@ -216,8 +199,6 @@ export const convertWidgets: DomTransform = (context) => {
             baseUrl,
           ),
           avatar: resolveOrKeepUrl(metadata.avatar, resolveUrlFn, baseUrl),
-          width: width ?? metadata.width,
-          height: height ?? metadata.height,
           date: parseOrKeepDate(metadata.date, parseDateFn),
         }
 

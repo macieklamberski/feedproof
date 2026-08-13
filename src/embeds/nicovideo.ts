@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
 
 // Video ids are a two-letter kind and a number, `sm9`, `nm12345`, `so67890`.
 const safeVideoIdRegex = /^[a-z]{2}\d+$/
@@ -66,9 +66,9 @@ export const nicovideoIframeEmbedResolver = createIframeEmbedResolver(
   nicovideoResolveEmbed,
 )
 
-export const nicovideoScriptEmbedResolver: EmbedResolver = {
-  selector: 'script[src*="nicovideo.jp/thumb_watch"], script[src*="embed.nicovideo.jp/watch"]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const nicovideoScriptEmbedResolver = createMarkupEmbedResolver(
+  'script[src*="nicovideo.jp/thumb_watch"], script[src*="embed.nicovideo.jp/watch"]',
+  (element) => {
     const source = attr(element, 'src') ?? ''
     const result = nicovideoResolveEmbed(source)
 
@@ -89,4 +89,4 @@ export const nicovideoScriptEmbedResolver: EmbedResolver = {
 
     return { ...result, width, height }
   },
-}
+)

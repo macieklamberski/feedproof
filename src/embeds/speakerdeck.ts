@@ -1,7 +1,7 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { attr, parseRatioDimensions } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
 
 // Ids are lowercase hex, in two lengths. 32 chars is the current dashless UUID; 24 is the
 // legacy Mongo ObjectId Speaker Deck issued around 2011-2012, and those decks still play —
@@ -26,9 +26,9 @@ const defaultDeckRatio = '16/9'
 // reader shows nothing at all. The player page is mintable from the id alone (verified
 // live, 200). The deck's public page needs the author and slug, which the script does not
 // carry, so the placeholder has no `url`.
-export const speakerdeckScriptEmbedResolver: EmbedResolver = {
-  selector: 'script.speakerdeck-embed[data-id]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const speakerdeckScriptEmbedResolver = createMarkupEmbedResolver(
+  'script.speakerdeck-embed[data-id]',
+  (element) => {
     const raw = attr(element, 'data-id') ?? ''
     const inlineSlide = raw.match(slideSuffixRegex)?.[1]
     const deckId = raw.replace(slideSuffixRegex, '')
@@ -55,7 +55,7 @@ export const speakerdeckScriptEmbedResolver: EmbedResolver = {
 
     return { ...result, ...dimensions }
   },
-}
+)
 
 // The player the script above builds at runtime, saved into the feed by a CMS that ran the
 // script first. Same deck, same placeholder: only the carrier differs. A size on the element

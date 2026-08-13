@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
 
 const fileExtensionRegex = /\.[a-z]+$/i
 const safeMediaIdRegex = /^[a-zA-Z0-9]{8}$/
@@ -50,9 +50,9 @@ export const jwplayerIframeEmbedResolver = createIframeEmbedResolver(
 // The script embed ships the same `{mediaId}-{playerId}` pair beside an empty `botr_` div,
 // so a reader shows nothing until it is resolved. It names a player, so it becomes the same
 // placeholder as the iframe form, through the same id extraction.
-export const jwplayerScriptEmbedResolver: EmbedResolver = {
-  selector: 'script[src*="jwplayer.com/players/"], script[src*="jwplatform.com/players/"]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const jwplayerScriptEmbedResolver = createMarkupEmbedResolver(
+  'script[src*="jwplayer.com/players/"], script[src*="jwplatform.com/players/"]',
+  (element) => {
     const src = attr(element, 'src') ?? ''
     const url = parseUrl(src, 'https://example.com')
 
@@ -62,4 +62,4 @@ export const jwplayerScriptEmbedResolver: EmbedResolver = {
 
     return jwplayerResolveEmbed(src)
   },
-}
+)
