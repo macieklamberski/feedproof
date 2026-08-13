@@ -730,4 +730,16 @@ export const defaultNonContentSelectors = [
   // wrapper holding no player, so the ones whose iframe survived are untouched. The video id is
   // nowhere in the markup, so there is nothing to recover here, only chrome to remove.
   'span[data-s9e-mediaembed]:not(:has(iframe, embed, object, video, audio))',
+  // Dead video hosts whose domains have been reassigned to somebody else. This is the one entry
+  // here that is not about chrome: the markup is a perfectly ordinary embed, and the reason to
+  // remove it is that the video is gone and the domain now answers with unrelated content.
+  // blip.tv redirects to disney.com and vid.me to a pornography site (checked 2026-08-13), so a
+  // reader opening a 2013 tech post can land on either. Linkifying would be worse than
+  // stripping, since the link is what leads there.
+  //
+  // Every carrier the corpus shows for them: iframe 499, Flash embed 488 and 442, img 319 and
+  // script 296 for blip.tv, across 1,333 feeds, and 35 feeds for vid.me. Matched with a
+  // trailing slash so a host name inside a path or a query does not count.
+  'iframe[src*="blip.tv/"], embed[src*="blip.tv/"], object[data*="blip.tv/"], img[src*="blip.tv/"], script[src*="blip.tv/"]',
+  'iframe[src*="vid.me/"], embed[src*="vid.me/"], object[data*="vid.me/"], img[src*="vid.me/"], script[src*="vid.me/"]',
 ]

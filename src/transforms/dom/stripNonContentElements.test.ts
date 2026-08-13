@@ -81,6 +81,10 @@ const specimens: Record<string, string | [string, string]> = {
     '<div class="onetrust-css-video-wrapper"><div class="fallback-container"><img class="fallback-bg" src="https://i.ytimg.com/vi/x/maxresdefault.jpg"><p>Enable cookies to view this content.</p></div><iframe class="optanon-category-C0004" data-src="https://www.youtube.com/embed/x"></iframe></div>',
     '<div class="onetrust-css-video-wrapper"><iframe class="optanon-category-C0004" data-src="https://www.youtube.com/embed/x"></iframe></div>',
   ],
+  'iframe[src*="blip.tv/"], embed[src*="blip.tv/"], object[data*="blip.tv/"], img[src*="blip.tv/"], script[src*="blip.tv/"]':
+    '<iframe src="https://blip.tv/play/AYKe3jsC"></iframe>',
+  'iframe[src*="vid.me/"], embed[src*="vid.me/"], object[data*="vid.me/"], img[src*="vid.me/"], script[src*="vid.me/"]':
+    '<iframe src="https://vid.me/e/abc123"></iframe>',
   'span[data-s9e-mediaembed]:not(:has(iframe, embed, object, video, audio))':
     '<span data-s9e-mediaembed="youtube" style="display:inline-block;max-width:640px"><span style="padding-bottom:56.25%"> <strong>iframe</strong> </span></span>',
   '.fusion-privacy-placeholder':
@@ -291,6 +295,26 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
           <span><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></span>
         </span>
       `
+
+      expect(await transform(value)).toBe(value)
+    })
+    // Every carrier the corpus shows for a reassigned host, since the point is that the domain
+    // now answers with somebody else's content whatever element reaches it.
+    it('should strip a reassigned host on any carrier', async () => {
+      const value = html`
+        <p>Before</p>
+        <embed src="https://a.blip.tv/api.swf/blip.tv/play/AYKe3jsC">
+        <img src="https://blip.tv/file/get/thumbnail.jpg">
+        <script src="https://blip.tv/syndication/write_player"></script>
+        <p>After</p>
+      `
+
+      expect(await transform(value)).toBe('<p>Before</p><p>After</p>')
+    })
+
+    // The name has to be the host, not a substring of a path or a query.
+    it('should keep a url that only mentions the host in its path', async () => {
+      const value = html`<a href="https://example.com/history-of-blip.tv/">A post about it</a>`
 
       expect(await transform(value)).toBe(value)
     })
