@@ -45,6 +45,7 @@ import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { firesideEmbedResolver } from './embeds/fireside.js'
 import { flourishEmbedResolver } from './embeds/flourish.js'
 import { geniallyEmbedResolver } from './embeds/genially.js'
+import { imgurBlockquoteEmbedResolver, imgurIframeEmbedResolver } from './embeds/imgur.js'
 import { ivooxEmbedResolver } from './embeds/ivoox.js'
 import { jwplayerIframeEmbedResolver, jwplayerScriptEmbedResolver } from './embeds/jwplayer.js'
 import { libsynEmbedResolver } from './embeds/libsyn.js'
@@ -355,6 +356,8 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   wistiaEmbedResolver,
   captivateEmbedResolver,
   dailymotionEmbedResolver,
+  imgurBlockquoteEmbedResolver,
+  imgurIframeEmbedResolver,
   ivooxEmbedResolver,
   jwplayerIframeEmbedResolver,
   jwplayerScriptEmbedResolver,

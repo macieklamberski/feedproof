@@ -159,6 +159,11 @@ export {
   geniallyEmbedResolver,
   geniallyResolveEmbed,
 } from './embeds/genially.js'
+export {
+  imgurBlockquoteEmbedResolver,
+  imgurIframeEmbedResolver,
+  imgurResolveEmbed,
+} from './embeds/imgur.js'
 export { extractIvooxEpisode, ivooxEmbedResolver, ivooxResolveEmbed } from './embeds/ivoox.js'
 export {
   extractJwplayerId,
