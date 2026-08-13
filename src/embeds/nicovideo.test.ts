@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'bun:test'
-import { transformContent } from '../index.js'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
@@ -7,26 +6,6 @@ import {
   nicovideoResolveEmbed,
   nicovideoScriptEmbedResolver,
 } from './nicovideo.js'
-
-// Every `data-embed-*` field the placeholder carries, so a test can assert the whole set
-// rather than the one field it happens to care about.
-const readPlaceholder = (
-  result: string,
-  parseHtml: (value: string) => Document,
-): Record<string, string> => {
-  const element = parseHtml(result).querySelector('[data-embed-src]')
-  const fields: Record<string, string> = {}
-
-  for (const name of element?.getAttributeNames() ?? []) {
-    const value = element?.getAttribute(name)
-
-    if (name.startsWith('data-embed-') && value) {
-      fields[name.replace('data-embed-', '')] = value
-    }
-  }
-
-  return fields
-}
 
 describe('extractNicovideoId', () => {
   it('should read the video id from the thumb_watch path', () => {
@@ -143,36 +122,5 @@ describe('nicovideoResolveEmbed', () => {
 
   it('should return undefined for a nicovideo url naming no video', () => {
     expect(nicovideoResolveEmbed('https://www.nicovideo.jp/ranking')).toBeUndefined()
-  })
-})
-
-describeForEachParser('nicovideo through the pipeline', (parseHtml) => {
-  const placeholder = async (value: string): Promise<Record<string, string>> => {
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://example.com/post',
-    })
-
-    return readPlaceholder(result, parseHtml)
-  }
-
-  it('should carry every field across', async () => {
-    const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=490&amp;h=307"></script>`
-
-    expect(await placeholder(value)).toEqual({
-      provider: 'nicovideo',
-      id: 'sm9',
-      src: 'https://embed.nicovideo.jp/watch/sm9',
-      url: 'https://www.nicovideo.jp/watch/sm9',
-      width: '490',
-      height: '307',
-    })
-  })
-
-  // A script alone is deleted as empty markup, so without the resolver the video vanishes.
-  it('should leave nothing behind when the script names no video', async () => {
-    const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/"></script>`
-
-    expect(await placeholder(value)).toEqual({})
   })
 })

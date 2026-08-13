@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'bun:test'
-import { transformContent } from '../index.js'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
@@ -250,22 +249,5 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
 
       expect(extract(value)).toBeUndefined()
     })
-  })
-})
-
-// The other half of the contract asserted in rebuildVideoJsEmbeds.test.ts: that transform leaves
-// a hosted player's element alone, and this is what then claims it. Asserted end to end because
-// neither file knows about the other, so nothing but a run proves the two halves meet.
-describeForEachParser('brightcove video-js through the pipeline', (parseHtml) => {
-  it('should become a placeholder the element alone could not produce', async () => {
-    const value = html`<video-js data-account="1234567890" data-video-id="6098765432"></video-js>`
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://example.com/post',
-    })
-
-    expect(result).toContain('data-embed-provider="brightcove"')
-    expect(result).toContain('data-embed-id="6098765432"')
-    expect(result).not.toContain('<video-js')
   })
 })

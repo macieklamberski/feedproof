@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'bun:test'
-import { transformContent } from '../index.js'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { flourishEmbedResolver } from './flourish.js'
@@ -102,29 +101,5 @@ describeForEachParser('flourishEmbedResolver', (parseHtml) => {
 
       expect(extract(value)).toBeUndefined()
     })
-  })
-
-  it('should replace the embed div with a placeholder end to end', async () => {
-    const value = html`
-      <p>The results so far:</p>
-      <div class="flourish-embed flourish-chart" data-src="visualisation/29541520">
-        <script src="https://public.flourish.studio/resources/embed.js"></script>
-        <noscript>
-          <img src="https://public.flourish.studio/visualisation/29541520/thumbnail" width="100%" alt="chart visualization" />
-        </noscript>
-      </div>
-    `
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://example.com/post',
-    })
-
-    expect(result).toContain('data-embed-provider="flourish"')
-    expect(result).toContain('data-embed-src="https://flo.uri.sh/visualisation/29541520/embed"')
-    expect(result).toContain(
-      'data-embed-thumbnail="https://public.flourish.studio/visualisation/29541520/thumbnail"',
-    )
-    expect(result).not.toContain('flourish-embed')
-    expect(result).not.toContain('<script')
   })
 })

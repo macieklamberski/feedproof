@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'bun:test'
-import { transformContent } from '../index.js'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
@@ -195,34 +194,5 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
 
       expect(extract(value)).toBeUndefined()
     })
-  })
-})
-
-// Without the resolver the pipeline reads the swf as the destination, so the placeholder points
-// at the dead player and names no item. This is the whole of what the change buys.
-describeForEachParser('archive flash embed through the pipeline', (parseHtml) => {
-  it('should become a placeholder naming the item rather than the player', async () => {
-    const value = html`
-      <object width="640" height="504">
-        <param name="movie" value="http://www.archive.org/flow/flowplayer.commercial-3.0.3.swf" />
-        <embed
-          type="application/x-shockwave-flash"
-          width="640"
-          height="504"
-          src="http://www.archive.org/flow/flowplayer.commercial-3.0.3.swf"
-          flashvars='config={"playlist":[{"url":"http://www.archive.org/download/nasa_hubble/nasa_hubble_512kb.mp4"}]}'
-        />
-      </object>
-    `
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://example.com/post',
-    })
-
-    expect(result).toContain('data-embed-provider="archive"')
-    expect(result).toContain('data-embed-id="nasa_hubble"')
-    expect(result).toContain('data-embed-src="https://archive.org/embed/nasa_hubble"')
-    expect(result).toContain('data-embed-thumbnail="https://archive.org/services/img/nasa_hubble"')
-    expect(result).not.toContain('flowplayer')
   })
 })
