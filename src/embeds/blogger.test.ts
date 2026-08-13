@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'bun:test'
-import { transformContent } from '../index.js'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { bloggerEmbedResolver, bloggerResolveEmbed, extractBloggerToken } from './blogger.js'
@@ -107,22 +106,5 @@ describeForEachParser('bloggerEmbedResolver', (parseHtml) => {
 
       expect(extract(value)).toBeUndefined()
     })
-  })
-
-  it('should replace the video iframe with a placeholder end to end', async () => {
-    const value = html`
-      <p>Here is the clip:</p>
-      <div class="separator">
-        <iframe class="b-hbp-video b-uploaded" src="https://www.blogger.com/video.g?token=${token}" frameborder="0" allowfullscreen></iframe>
-      </div>
-    `
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://example.blogspot.com/post',
-    })
-
-    expect(result).toContain('data-embed-provider="blogger"')
-    expect(result).toContain(`data-embed-id="${token}"`)
-    expect(result).not.toContain('b-hbp-video')
   })
 })

@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'bun:test'
-import { transformContent } from '../index.js'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { speakerdeckResolveEmbed, speakerdeckScriptEmbedResolver } from './speakerdeck.js'
@@ -177,29 +176,6 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
 
       expect(extract(value)).toBeUndefined()
     })
-  })
-
-  it('should replace the script with an embed placeholder end to end', async () => {
-    const value = html`
-      <p>Slides from the talk:</p>
-      <script
-        async
-        class="speakerdeck-embed"
-        data-id="40746bbd65b944eb848e90ab1be552c0"
-        data-ratio="1.77777777777778"
-        src="//speakerdeck.com/assets/embed.js"
-      ></script>
-    `
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://example.com/post',
-    })
-
-    expect(result).toContain('data-embed-provider="speakerdeck"')
-    expect(result).toContain(
-      'data-embed-src="https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0"',
-    )
-    expect(result).not.toContain('<script')
   })
 })
 

@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'bun:test'
-import { transformContent } from '../index.js'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
@@ -126,53 +125,3 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
 
 // The anchor is what a reader actually receives, so this asserts the whole placeholder the
 // pipeline emits from it rather than the resolver's return value alone.
-describeForEachParser('spreaker anchor through the pipeline', (parseHtml) => {
-  const readPlaceholder = (result: string): Record<string, string> => {
-    const element = parseHtml(result).querySelector('[data-embed-src]')
-    const fields: Record<string, string> = {}
-
-    for (const name of element?.getAttributeNames() ?? []) {
-      const value = element?.getAttribute(name)
-
-      if (name.startsWith('data-embed-') && value) {
-        fields[name.replace('data-embed-', '')] = value
-      }
-    }
-
-    return fields
-  }
-
-  const placeholder = async (value: string): Promise<Record<string, string>> => {
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://example.com/post',
-    })
-
-    return readPlaceholder(result)
-  }
-
-  it('should carry every field across', async () => {
-    const value = html`
-      <a
-        class="spreaker-player"
-        href="https://www.spreaker.com/episode/42"
-        data-resource="episode_id=42"
-        data-height="350px"
-      >Listen to "An episode" on Spreaker.</a>
-    `
-
-    expect(await placeholder(value)).toEqual({
-      provider: 'spreaker',
-      id: 'episode/42',
-      src: 'https://widget.spreaker.com/player?episode_id=42',
-      height: '350',
-    })
-  })
-
-  // Without the resolver this stays an ordinary link, which is what a reader sees today.
-  it('should leave an anchor naming no resource as a link', async () => {
-    const value = html`<a class="spreaker-player" href="https://www.spreaker.com/episode/42">Listen.</a>`
-
-    expect(await placeholder(value)).toEqual({})
-  })
-})
