@@ -119,6 +119,13 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
 
       expect(extract(value)).toBeUndefined()
     })
+
+    // The selector matches on a substring, so another host can carry the path and pass it.
+    it('should return undefined for another host spelling the nicovideo path', () => {
+      const value = html`<script src="https://evil.test/nicovideo.jp/thumb_watch/sm9"></script>`
+
+      expect(extract(value)).toBeUndefined()
+    })
   })
 })
 

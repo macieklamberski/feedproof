@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize } from '../utils/dom.js'
 import { createIframeEmbedResolver } from '../utils/widgets.js'
@@ -28,7 +28,9 @@ const nicovideoHosts = ['nicovideo.jp']
 export const extractNicovideoId = (link: string): string | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
 
-  if (!parsed) {
+  // The script selector matches on a substring, so any host can spell `nicovideo.jp/thumb_watch`
+  // inside its own path and reach this. The path shape alone must not mint a nicovideo url.
+  if (!parsed || (!isHostOf(parsed, nicovideoHosts) && !isSubdomainOf(parsed, nicovideoHosts))) {
     return
   }
 
