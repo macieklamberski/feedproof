@@ -192,6 +192,11 @@ export {
   simplecastEmbedResolver,
   simplecastResolveEmbed,
 } from './embeds/simplecast.js'
+export {
+  slideshareFlashEmbedResolver,
+  slideshareIframeEmbedResolver,
+  slideshareResolveEmbed,
+} from './embeds/slideshare.js'
 
 export { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 export {
