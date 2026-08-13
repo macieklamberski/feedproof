@@ -65,6 +65,7 @@ import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from './embeds/spreaker.js'
 import { tedEmbedResolver } from './embeds/ted.js'
 import { transistorEmbedResolver } from './embeds/transistor.js'
+import { typeformIframeEmbedResolver, typeformWidgetEmbedResolver } from './embeds/typeform.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { wistiaEmbedResolver } from './embeds/wistia.js'
 import { youtubeEmbedResolver } from './embeds/youtube.js'
@@ -350,6 +351,8 @@ export const defaultAllDomTransforms: Array<DomTransform> = defaultStandardDomTr
 export const defaultWidgetResolvers: Array<WidgetResolver> = [
   youtubeEmbedResolver,
   tedEmbedResolver,
+  typeformWidgetEmbedResolver,
+  typeformIframeEmbedResolver,
   transistorEmbedResolver,
   vimeoEmbedResolver,
   wistiaEmbedResolver,
