@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
-import { describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   brightcoveFlashEmbedResolver,
@@ -9,16 +9,10 @@ import {
 } from './brightcove.js'
 
 describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(brightcoveFlashEmbedResolver.selector)
-
-    return element
-      ? (brightcoveFlashEmbedResolver.extract(element) as EmbedResolverResult)
-      : undefined
-  }
+  const extract = resolverExtractor(parseHtml, brightcoveFlashEmbedResolver)
 
   describe('happy paths', () => {
-    it('should read the account from the url and the video id from flashVars', () => {
+    it('should read the account from the url and the video id from flashVars', async () => {
       const value = html`
         <embed
           src="http://c.brightcove.com/services/viewer/federated_f9/19517958001?isVid=1&publisherID=1660622131"
@@ -33,11 +27,11 @@ describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
         src: 'https://players.brightcove.net/1660622131/default_default/index.html?videoId=19521637001',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // The same two ids, split the other way: some embeds park flashVars in a <param>.
-    it('should read flashVars from a sibling param', () => {
+    it('should read flashVars from a sibling param', async () => {
       const value = html`
         <object width="300" height="250">
           <param name="flashVars" value="@videoPlayer=19521637001&domain=embed" />
@@ -51,34 +45,29 @@ describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
         id: '19521637001',
         src: 'https://players.brightcove.net/1660622131/default_default/index.html?videoId=19521637001',
       }
-      const element = parseHtml(value).querySelector('embed')
-      const result = element
-        ? (brightcoveFlashEmbedResolver.extract(element) as EmbedResolverResult)
-        : undefined
-
-      expect(result).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
-    it('should ignore a federated url with no video id anywhere', () => {
+    it('should ignore a federated url with no video id anywhere', async () => {
       const value =
         '<embed src="http://c.brightcove.com/services/viewer/federated_f9/19517958001?publisherID=1660622131">'
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should ignore a video id given as an account reference', () => {
+    it('should ignore a video id given as an account reference', async () => {
       const value =
         '<embed src="http://c.brightcove.com/services/viewer/federated_f9/1?publisherID=1660622131" flashVars="@videoPlayer=ref:my-video">'
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should ignore a brightcove url that is not a federated player', () => {
+    it('should ignore a brightcove url that is not a federated player', async () => {
       const value = '<embed src="http://admin.brightcove.com/viewer/us1/something.swf">'
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })
@@ -160,16 +149,10 @@ describe('brightcoveResolveEmbed', () => {
 })
 
 describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(brightcoveVideoJsEmbedResolver.selector)
-
-    return element
-      ? (brightcoveVideoJsEmbedResolver.extract(element) as EmbedResolverResult)
-      : undefined
-  }
+  const extract = resolverExtractor(parseHtml, brightcoveVideoJsEmbedResolver)
 
   describe('happy paths', () => {
-    it('should mint the player page from the element attributes', () => {
+    it('should mint the player page from the element attributes', async () => {
       const value = html`
         <video-js
           data-account="1234567890"
@@ -185,10 +168,10 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
         src: 'https://players.brightcove.net/1234567890/AbCdEf_custom/index.html?videoId=6098765432',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should default the player and embed ids when the element omits them', () => {
+    it('should default the player and embed ids when the element omits them', async () => {
       const value = html`<video-js data-account="1234567890" data-video-id="6098765432"></video-js>`
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
@@ -196,11 +179,11 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
         src: 'https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // Some plugins leave the account only in the loader script's url.
-    it('should take the account from the loader script when the element has none', () => {
+    it('should take the account from the loader script when the element has none', async () => {
       const value = html`
         <video-js data-video-id="6098765432"></video-js>
         <script src="https://players.brightcove.net/1234567890/default_default/index.min.js"></script>
@@ -211,14 +194,14 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
         src: 'https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   // The older Brightcove syntax, and the only shape the 26 corpus feeds shipping the loader
   // without a `<video-js>` element actually use.
   describe('the video element form', () => {
-    it('should mint the player page from a video element carrying the same attributes', () => {
+    it('should mint the player page from a video element carrying the same attributes', async () => {
       const value = html`
         <video
           class="video-js"
@@ -233,21 +216,21 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
         src: 'https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // A video carrying a real file is a working video, so a placeholder would be a downgrade.
-    it('should leave a video element that names a file alone', () => {
+    it('should leave a video element that names a file alone', async () => {
       const value = html`
         <video class="video-js" data-account="1234567890" data-video-id="6098765432">
           <source src="https://example.com/clip.mp4" type="video/mp4">
         </video>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should leave a video element with its own src alone', () => {
+    it('should leave a video element with its own src alone', async () => {
       const value = html`
         <video
           class="video-js"
@@ -257,29 +240,29 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
         ></video>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 
   describe('sad paths', () => {
-    it('should return undefined when no account can be found', () => {
+    it('should return undefined when no account can be found', async () => {
       const value = html`<video-js data-video-id="6098765432"></video-js>`
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
     // Video.js is a library anyone can use, so ids that are not Brightcove-shaped are left to
     // whoever else emitted them.
-    it('should return undefined when the video id is not a brightcove id', () => {
+    it('should return undefined when the video id is not a brightcove id', async () => {
       const value = html`<video-js data-account="1234567890" data-video-id="my-clip"></video-js>`
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined when the account is not a brightcove account', () => {
+    it('should return undefined when the account is not a brightcove account', async () => {
       const value = html`<video-js data-account="acme" data-video-id="6098765432"></video-js>`
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })

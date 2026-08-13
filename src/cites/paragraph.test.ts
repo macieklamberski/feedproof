@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { paragraphCiteResolver } from './paragraph.js'
 
 describeForEachParser('paragraphCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, paragraphCiteResolver)
+  const extract = resolverExtractor(parseHtml, paragraphCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete payload', async () => {

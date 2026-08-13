@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser } from '../tests.js'
+import { describeForEachParser, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   composeEmbedUrl,
@@ -451,14 +451,10 @@ describe('composeThumbnailUrl', () => {
 })
 
 describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
-  const firstMatch = (html: string): Element | undefined => {
-    return parseHtml(html).querySelector(youtubeEmbedResolver.selector) ?? undefined
-  }
+  const extract = resolverExtractor(parseHtml, youtubeEmbedResolver)
 
-  it('should extract metadata from a youtube iframe', () => {
+  it('should extract metadata from a youtube iframe', async () => {
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
-    const element = firstMatch(value)
-    const result = element ? youtubeEmbedResolver.extract(element) : undefined
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
@@ -467,13 +463,11 @@ describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
 
-    expect(result).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
-  it('should extract metadata from a youtube subdomain iframe', () => {
+  it('should extract metadata from a youtube subdomain iframe', async () => {
     const value = '<iframe src="https://m.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>'
-    const element = firstMatch(value)
-    const result = element ? youtubeEmbedResolver.extract(element) : undefined
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
@@ -482,13 +476,11 @@ describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
 
-    expect(result).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
-  it('should extract metadata from a youtu.be iframe', () => {
+  it('should extract metadata from a youtu.be iframe', async () => {
     const value = '<iframe src="https://youtu.be/dQw4w9WgXcQ"></iframe>'
-    const element = firstMatch(value)
-    const result = element ? youtubeEmbedResolver.extract(element) : undefined
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
@@ -497,32 +489,26 @@ describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
 
-    expect(result).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
-  it('should return undefined for non-youtube iframes', () => {
+  it('should return undefined for non-youtube iframes', async () => {
     const value = '<iframe src="https://example.com/video"></iframe>'
-    const element = firstMatch(value)
-    const result = element ? youtubeEmbedResolver.extract(element) : undefined
 
-    expect(result).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 
   // Regression: a non-youtube host carrying a watch?v=<id> shaped query must
   // not be claimed just because extractVideoId could parse the id from it.
-  it('should reject iframe with valid video id but wrong host', () => {
+  it('should reject iframe with valid video id but wrong host', async () => {
     const value = '<iframe src="https://evil.com/watch?v=dQw4w9WgXcQ"></iframe>'
-    const element = firstMatch(value)
-    const result = element ? youtubeEmbedResolver.extract(element) : undefined
 
-    expect(result).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 
-  it('should return undefined for an iframe with an empty src', () => {
+  it('should return undefined for an iframe with an empty src', async () => {
     const value = '<iframe src=""></iframe>'
-    const element = firstMatch(value)
-    const result = element ? youtubeEmbedResolver.extract(element) : undefined
 
-    expect(result).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 })

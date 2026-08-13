@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser } from '../tests.js'
+import { describeForEachParser, resolverExtractor } from '../tests.js'
 import type { MediaResolverResult } from '../types.js'
 import { substackMediaResolver } from './substack.js'
 
@@ -20,21 +20,17 @@ const makeContainer = (className: string, attrs?: Record<string, unknown> | stri
 }
 
 describeForEachParser('substackMediaResolver', (parseHtml) => {
-  const extract = (value: string): MediaResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(substackMediaResolver.selector)
-
-    return element ? (substackMediaResolver.extract(element) as MediaResolverResult) : undefined
-  }
+  const extract = resolverExtractor(parseHtml, substackMediaResolver)
 
   describe('happy paths', () => {
-    it('should build a video source url from the upload id', () => {
+    it('should build a video source url from the upload id', async () => {
       const value = makeContainer('native-video-embed', { mediaUploadId: uploadId })
       const expected: MediaResolverResult = { tag: 'video', src: uploadSrc }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should build an audio source url through the same endpoint', () => {
+    it('should build an audio source url through the same endpoint', async () => {
       const value = makeContainer('native-audio-embed', {
         label: null,
         mediaUploadId: uploadId,
@@ -43,10 +39,10 @@ describeForEachParser('substackMediaResolver', (parseHtml) => {
       })
       const expected: MediaResolverResult = { tag: 'audio', src: uploadSrc }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should ignore the other payload keys', () => {
+    it('should ignore the other payload keys', async () => {
       const value = makeContainer('native-video-embed', {
         mediaUploadId: uploadId,
         duration: null,
@@ -54,56 +50,56 @@ describeForEachParser('substackMediaResolver', (parseHtml) => {
       })
       const expected: MediaResolverResult = { tag: 'video', src: uploadSrc }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('edge cases', () => {
-    it('should return undefined when data-attrs is absent', () => {
+    it('should return undefined when data-attrs is absent', async () => {
       const value = makeContainer('native-video-embed')
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined when data-attrs is malformed json', () => {
+    it('should return undefined when data-attrs is malformed json', async () => {
       const value = makeContainer('native-video-embed', 'not-json')
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined when data-attrs is valid json but not an object', () => {
+    it('should return undefined when data-attrs is valid json but not an object', async () => {
       const value = makeContainer('native-video-embed', '"just-a-string"')
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined when mediaUploadId is missing', () => {
+    it('should return undefined when mediaUploadId is missing', async () => {
       const value = makeContainer('native-video-embed', { duration: 12 })
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
     // The id is interpolated straight into a url, so a value that is not the shape Substack
     // emits is dropped rather than used to build one.
-    it('should return undefined when mediaUploadId is not a uuid', () => {
+    it('should return undefined when mediaUploadId is not a uuid', async () => {
       const value = makeContainer('native-video-embed', { mediaUploadId: '../../etc/passwd' })
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined when mediaUploadId is empty', () => {
+    it('should return undefined when mediaUploadId is empty', async () => {
       const value = makeContainer('native-video-embed', { mediaUploadId: '' })
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should treat a container carrying both classes as audio', () => {
+    it('should treat a container carrying both classes as audio', async () => {
       const value = makeContainer('native-video-embed native-audio-embed', {
         mediaUploadId: uploadId,
       })
       const expected: MediaResolverResult = { tag: 'audio', src: uploadSrc }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 })

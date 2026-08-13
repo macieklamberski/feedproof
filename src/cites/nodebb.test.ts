@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { nodebbCiteResolver } from './nodebb.js'
 
 describeForEachParser('nodebbCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, nodebbCiteResolver)
+  const extract = resolverExtractor(parseHtml, nodebbCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { ghostCiteResolver } from './ghost.js'
 
 describeForEachParser('ghostCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, ghostCiteResolver)
+  const extract = resolverExtractor(parseHtml, ghostCiteResolver)
 
   describe('happy paths', () => {
     // The author and publisher classes are reversed on purpose: Ghost's renderer puts

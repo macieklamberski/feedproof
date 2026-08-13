@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser } from '../tests.js'
+import { describeForEachParser, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { spotifyEmbedResolver, spotifyResolveEmbed } from './spotify.js'
 
@@ -118,10 +118,7 @@ describe('spotifyResolveEmbed', () => {
 })
 
 describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
-  const resolve = (value: string) => {
-    const element = parseHtml(value).querySelector(spotifyEmbedResolver.selector) ?? undefined
-    return element ? spotifyEmbedResolver.extract(element) : undefined
-  }
+  const resolve = resolverExtractor(parseHtml, spotifyEmbedResolver)
 
   it('should resolve a spotify iframe', async () => {
     const value =

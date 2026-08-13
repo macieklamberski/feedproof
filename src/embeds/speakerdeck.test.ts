@@ -1,21 +1,15 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { speakerdeckResolveEmbed, speakerdeckScriptEmbedResolver } from './speakerdeck.js'
 
 describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(speakerdeckScriptEmbedResolver.selector)
-
-    return element
-      ? (speakerdeckScriptEmbedResolver.extract(element) as EmbedResolverResult)
-      : undefined
-  }
+  const extract = resolverExtractor(parseHtml, speakerdeckScriptEmbedResolver)
 
   // Measured 2026-08-11: 36 corpus feeds carry a 24-char Mongo ObjectId from 2011-2012 and
   // every sampled one still plays. The old 32-char-only rule dropped all of them.
   describe('legacy ids and slides', () => {
-    it('should accept a legacy 24-char deck id', () => {
+    it('should accept a legacy 24-char deck id', async () => {
       const value =
         '<script class="speakerdeck-embed" data-id="4f2b3c1d5e6a7b8c9d0e1f2a" src="//speakerdeck.com/assets/embed.js"></script>'
       const expected: EmbedResolverResult = {
@@ -26,12 +20,12 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         height: 56,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // A feed can embed one deck at many slides; without this they collapse into identical
     // placeholders.
-    it('should carry data-slide into the player url', () => {
+    it('should carry data-slide into the player url', async () => {
       const value =
         '<script class="speakerdeck-embed" data-id="40746bbd65b944eb848e90ab1be552c0" data-slide="21" src="//speakerdeck.com/assets/embed.js"></script>'
       const expected: EmbedResolverResult = {
@@ -42,10 +36,10 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         height: 56,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should read a slide written inside the id attribute', () => {
+    it('should read a slide written inside the id attribute', async () => {
       const value =
         '<script class="speakerdeck-embed" data-id="40746bbd65b944eb848e90ab1be552c0?slide=69" src="//speakerdeck.com/assets/embed.js"></script>'
       const expected: EmbedResolverResult = {
@@ -56,10 +50,10 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         height: 56,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should ignore a non-numeric slide', () => {
+    it('should ignore a non-numeric slide', async () => {
       const value =
         '<script class="speakerdeck-embed" data-id="40746bbd65b944eb848e90ab1be552c0" data-slide="last" src="//speakerdeck.com/assets/embed.js"></script>'
       const expected: EmbedResolverResult = {
@@ -70,12 +64,12 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         height: 56,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('happy paths', () => {
-    it('should mint the player url from the deck id', () => {
+    it('should mint the player url from the deck id', async () => {
       const value = html`
         <script
           async
@@ -93,10 +87,10 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         height: 56,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should convert a taller ratio into the placeholder dimensions', () => {
+    it('should convert a taller ratio into the placeholder dimensions', async () => {
       const value = html`
         <script
           class="speakerdeck-embed"
@@ -113,12 +107,12 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         height: 75,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('edge cases', () => {
-    it('should fall back to the default ratio for a malformed one', () => {
+    it('should fall back to the default ratio for a malformed one', async () => {
       const value = html`
         <script
           class="speakerdeck-embed"
@@ -135,10 +129,10 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         height: 56,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should fall back to the default ratio for a zero one', () => {
+    it('should fall back to the default ratio for a zero one', async () => {
       const value = html`
         <script
           class="speakerdeck-embed"
@@ -155,10 +149,10 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         height: 56,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should give the default ratio to a script carrying none', () => {
+    it('should give the default ratio to a script carrying none', async () => {
       const value = html`
         <script
           class="speakerdeck-embed"
@@ -174,12 +168,12 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         height: 56,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
-    it('should return undefined for an id that is not 32 hex chars', () => {
+    it('should return undefined for an id that is not 32 hex chars', async () => {
       const value = html`
         <script
           class="speakerdeck-embed"
@@ -188,23 +182,23 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         ></script>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for an empty id', () => {
+    it('should return undefined for an empty id', async () => {
       const value = html`
         <script class="speakerdeck-embed" data-id="" src="//speakerdeck.com/assets/embed.js"></script>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should not match a script without the embed class', () => {
+    it('should not match a script without the embed class', async () => {
       const value = html`
         <script data-id="40746bbd65b944eb848e90ab1be552c0" src="//speakerdeck.com/assets/embed.js"></script>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })

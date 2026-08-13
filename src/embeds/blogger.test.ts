@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { bloggerEmbedResolver, bloggerResolveEmbed, extractBloggerToken } from './blogger.js'
 
@@ -85,14 +85,10 @@ describe('bloggerResolveEmbed', () => {
 })
 
 describeForEachParser('bloggerEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(bloggerEmbedResolver.selector)
-
-    return element ? (bloggerEmbedResolver.extract(element) as EmbedResolverResult) : undefined
-  }
+  const extract = resolverExtractor(parseHtml, bloggerEmbedResolver)
 
   describe('happy paths', () => {
-    it('should resolve the uploaded-video iframe', () => {
+    it('should resolve the uploaded-video iframe', async () => {
       const value = html`
         <div class="separator">
           <iframe class="b-hbp-video b-uploaded" src="https://www.blogger.com/video.g?token=${token}" frameborder="0" allowfullscreen></iframe>
@@ -104,23 +100,23 @@ describeForEachParser('bloggerEmbedResolver', (parseHtml) => {
         src: `https://www.blogger.com/video.g?token=${token}`,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
-    it('should return undefined for a host that only carries blogger.com in its path', () => {
+    it('should return undefined for a host that only carries blogger.com in its path', async () => {
       const value = html`
         <iframe class="b-hbp-video" src="https://evil.test/blogger.com/video.g?token=${token}"></iframe>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for a blogger iframe that is not the player', () => {
+    it('should return undefined for a blogger iframe that is not the player', async () => {
       const value = html`<iframe src="https://www.blogger.com/blogger.g?blogID=123"></iframe>`
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })

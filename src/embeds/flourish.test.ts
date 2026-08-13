@@ -1,17 +1,13 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { flourishEmbedResolver } from './flourish.js'
 
 describeForEachParser('flourishEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(flourishEmbedResolver.selector)
-
-    return element ? (flourishEmbedResolver.extract(element) as EmbedResolverResult) : undefined
-  }
+  const extract = resolverExtractor(parseHtml, flourishEmbedResolver)
 
   describe('happy paths', () => {
-    it('should mint the embed url and carry the noscript thumbnail', () => {
+    it('should mint the embed url and carry the noscript thumbnail', async () => {
       const value = html`
         <div class="flourish-embed flourish-chart" data-src="visualisation/29541520">
           <script src="https://public.flourish.studio/resources/embed.js"></script>
@@ -28,10 +24,10 @@ describeForEachParser('flourishEmbedResolver', (parseHtml) => {
         thumbnail: 'https://public.flourish.studio/visualisation/29541520/thumbnail',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should carry a thumbnail img that sits outside a noscript', () => {
+    it('should carry a thumbnail img that sits outside a noscript', async () => {
       const value = html`
         <div class="flourish-embed flourish-tournament" data-src="visualisation/29512053">
           <img src="https://public.flourish.studio/visualisation/29512053/thumbnail" width="100%" alt="tournament visualization" />
@@ -45,10 +41,10 @@ describeForEachParser('flourishEmbedResolver', (parseHtml) => {
         thumbnail: 'https://public.flourish.studio/visualisation/29512053/thumbnail',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should accept a data-src with a cache-busting query', () => {
+    it('should accept a data-src with a cache-busting query', async () => {
       const value = html`
         <div class="flourish-embed flourish-chart" data-src="visualisation/29310925?431563"></div>
       `
@@ -59,12 +55,12 @@ describeForEachParser('flourishEmbedResolver', (parseHtml) => {
         url: 'https://public.flourish.studio/visualisation/29310925/',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('edge cases', () => {
-    it('should omit the thumbnail when the div wraps no img', () => {
+    it('should omit the thumbnail when the div wraps no img', async () => {
       const value = html`<div class="flourish-embed" data-src="visualisation/143199"></div>`
       const expected: EmbedResolverResult = {
         provider: 'flourish',
@@ -73,41 +69,41 @@ describeForEachParser('flourishEmbedResolver', (parseHtml) => {
         url: 'https://public.flourish.studio/visualisation/143199/',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
-    it('should return undefined for a full-url data-src', () => {
+    it('should return undefined for a full-url data-src', async () => {
       const value = html`
         <div class="flourish-embed" data-src="https://evil.test/visualisation/29541520"></div>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for a non-visualisation path', () => {
+    it('should return undefined for a non-visualisation path', async () => {
       const value = html`<div class="flourish-embed" data-src="story/123456"></div>`
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for a non-numeric id', () => {
+    it('should return undefined for a non-numeric id', async () => {
       const value = html`<div class="flourish-embed" data-src="visualisation/../evil"></div>`
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for an empty data-src', () => {
+    it('should return undefined for an empty data-src', async () => {
       const value = html`<div class="flourish-embed" data-src=""></div>`
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should not match a div without data-src', () => {
+    it('should not match a div without data-src', async () => {
       const value = html`<div class="flourish-embed"></div>`
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })

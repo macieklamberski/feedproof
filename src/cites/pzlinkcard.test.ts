@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
-import { baseContext, citeExtractor, describeForEachParser, html } from '../tests.js'
+import { baseContext, describeForEachParser, html, resolverExtractor } from '../tests.js'
 import { convertCiteCards } from '../transforms/dom/convertCiteCards.js'
 import type { CiteResolverResult, TransformContext } from '../types.js'
 import { applyDomTransforms } from '../utils/transforms.js'
 import { pzlinkcardCiteResolver } from './pzlinkcard.js'
 
 describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, pzlinkcardCiteResolver)
+  const extract = resolverExtractor(parseHtml, pzlinkcardCiteResolver)
 
   // Which element gets replaced only exists in the document once the transform runs, so
   // extracting from a parsed element cannot see the wrapping anchor being swapped out.

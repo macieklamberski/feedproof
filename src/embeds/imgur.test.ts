@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   imgurBlockquoteEmbedResolver,
@@ -8,16 +8,10 @@ import {
 } from './imgur.js'
 
 describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(imgurBlockquoteEmbedResolver.selector)
-
-    return element
-      ? (imgurBlockquoteEmbedResolver.extract(element) as EmbedResolverResult)
-      : undefined
-  }
+  const extract = resolverExtractor(parseHtml, imgurBlockquoteEmbedResolver)
 
   describe('a single post', () => {
-    it('should derive the player and the poster from the id', () => {
+    it('should derive the player and the poster from the id', async () => {
       const value = html`
         <blockquote
           class="imgur-embed-pub"
@@ -41,10 +35,10 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
         title: 'View post on imgur.com',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should carry whatever the anchor states, including the dialog label', () => {
+    it('should carry whatever the anchor states, including the dialog label', async () => {
       const value = html`
         <blockquote
           class="imgur-embed-pub"
@@ -64,10 +58,10 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
         title: 'A cat wearing a tiny hat',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should state no title when the anchor holds none', () => {
+    it('should state no title when the anchor holds none', async () => {
       const value = html`
         <blockquote
           class="imgur-embed-pub"
@@ -85,12 +79,12 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
         thumbnail: 'https://i.imgur.com/pVa2rXLm.jpg',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('an album', () => {
-    it('should keep the prefix that addresses it and state no poster', () => {
+    it('should keep the prefix that addresses it and state no poster', async () => {
       const value = html`
         <blockquote
           class="imgur-embed-pub"
@@ -114,12 +108,12 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
         title: 'Album title',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
-    it('should return undefined for an id outside the url-safe alphabet', () => {
+    it('should return undefined for an id outside the url-safe alphabet', async () => {
       const value = html`
         <blockquote
           class="imgur-embed-pub"
@@ -127,10 +121,10 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
         ></blockquote>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for an empty id', () => {
+    it('should return undefined for an empty id', async () => {
       const value = html`
         <blockquote
           class="imgur-embed-pub"
@@ -138,13 +132,13 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
         ></blockquote>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should not match a blockquote without the embed class', () => {
+    it('should not match a blockquote without the embed class', async () => {
       const value = html`<blockquote data-id="pVa2rXL"></blockquote>`
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })
@@ -201,13 +195,9 @@ describe('imgurResolveEmbed', () => {
 })
 
 describeForEachParser('imgurIframeEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(imgurIframeEmbedResolver.selector)
+  const extract = resolverExtractor(parseHtml, imgurIframeEmbedResolver)
 
-    return element ? (imgurIframeEmbedResolver.extract(element) as EmbedResolverResult) : undefined
-  }
-
-  it('should resolve a stored frame back to the post', () => {
+  it('should resolve a stored frame back to the post', async () => {
     const value = html`
       <iframe
         src="https://imgur.com/pVa2rXL/embed?pub=true&amp;ref=https%3A%2F%2Fexample.com&amp;w=540"
@@ -225,12 +215,12 @@ describeForEachParser('imgurIframeEmbedResolver', (parseHtml) => {
       thumbnail: 'https://i.imgur.com/pVa2rXLm.jpg',
     }
 
-    expect(extract(value)).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
-  it('should ignore an iframe on another host', () => {
+  it('should ignore an iframe on another host', async () => {
     const value = html`<iframe src="https://evil.test/pVa2rXL/embed"></iframe>`
 
-    expect(extract(value)).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 })

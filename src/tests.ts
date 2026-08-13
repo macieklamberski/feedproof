@@ -1,5 +1,6 @@
 import { describe, expect } from 'bun:test'
 import { JSDOM } from 'jsdom'
+import type { MaybePromise } from 'trousse'
 import {
   defaultAvatarImageHosts,
   defaultCiteResolvers,
@@ -18,7 +19,7 @@ import {
   defaultWidgetResolvers,
 } from './defaults.js'
 import { parseHtml as parseWithLinkedom } from './parsers/linkedom.js'
-import type { CiteResolver, CiteResolverResult, TransformContext } from './types.js'
+import type { TransformContext } from './types.js'
 
 // Test adapters are synchronous, unlike the public `ParseHtmlFn` which allows a
 // promise — a sync return keeps `parseHtml(html).querySelector(...)` typechecking.
@@ -76,11 +77,17 @@ export const describeForEachParser = (name: string, fn: (parseHtml: ParseHtml) =
   }
 }
 
-// Every cite resolver test runs the same two steps: match the resolver's own selector,
-// then hand the element to its extract. Bound per test file so each one reads as a single
-// `extract(html)` call.
-export const citeExtractor = (parseHtml: ParseHtml, resolver: CiteResolver) => {
-  return async (value: string): Promise<CiteResolverResult | undefined> => {
+// Every resolver test needs the same three lines: parse the fixture, find the element the
+// resolver claims, hand it over. The result type is read off the resolver's own `extract`, so
+// an embed resolver yields an `EmbedResolverResult` and a cite one a `CiteResolverResult`
+// without the call site naming either, and without the cast that spelling it out would need.
+type AnyResolver<Result> = {
+  selector: string
+  extract: (element: Element) => MaybePromise<Result | undefined>
+}
+
+export const resolverExtractor = <Result>(parseHtml: ParseHtml, resolver: AnyResolver<Result>) => {
+  return async (value: string): Promise<Result | undefined> => {
     const element = parseHtml(value).querySelector(resolver.selector)
 
     return element ? await resolver.extract(element) : undefined
