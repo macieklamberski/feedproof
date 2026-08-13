@@ -31,7 +31,6 @@ const specimens: Record<string, string | [string, string]> = {
     '<form action="https://buttondown.email/api/emails/embed-subscribe/foo" method="post"><input name="email"></form>',
   '.sqs-block-newsletter':
     '<div class="sqs-block newsletter-block sqs-block-newsletter"><form><input type="email"></form></div>',
-  '.et_bloom': '<div class="et_bloom"><input type="email"></div>',
   '.wpforms-container': '<div class="wpforms-container"><form></form></div>',
   '[class*="tve-leads"]': '<div class="tve-leads-conversion-object"></div>',
   '.adsbygoogle':
@@ -80,6 +79,15 @@ const specimens: Record<string, string | [string, string]> = {
   '.onetrust-css-video-wrapper .fallback-container': [
     '<div class="onetrust-css-video-wrapper"><div class="fallback-container"><img class="fallback-bg" src="https://i.ytimg.com/vi/x/maxresdefault.jpg"><p>Enable cookies to view this content.</p></div><iframe class="optanon-category-C0004" data-src="https://www.youtube.com/embed/x"></iframe></div>',
     '<div class="onetrust-css-video-wrapper"><iframe class="optanon-category-C0004" data-src="https://www.youtube.com/embed/x"></iframe></div>',
+  ],
+  '[class*="et_bloom"]':
+    '<div class="et_bloom_inline_form"><form><input type="email"><button>Subscribe</button></form></div>',
+  'a.addtoany_share_save': '<a class="a2a_button_facebook addtoany_share_save">Share</a>',
+  'a.twitter-share-button':
+    '<a href="https://twitter.com/share" class="twitter-share-button" data-via="someone">Tweet</a>',
+  'div.easy_social_box': [
+    '<div class="easy_social_box"><div class="easy_social-widget"><iframe src="https://www.facebook.com/plugins/like.php?href=https%3A%2F%2Fexample.com"></iframe></div></div>',
+    '',
   ],
   'span[data-s9e-mediaembed]:not(:has(iframe, embed, object, video, audio))':
     '<span data-s9e-mediaembed="youtube" style="display:inline-block;max-width:640px"><span style="padding-bottom:56.25%"> <strong>iframe</strong> </span></span>',
