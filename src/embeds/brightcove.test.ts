@@ -25,6 +25,8 @@ describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
         provider: 'brightcove',
         id: '19521637001',
         src: 'https://players.brightcove.net/1660622131/default_default/index.html?videoId=19521637001',
+        width: 300,
+        height: 250,
       }
 
       expect(await extract(value)).toEqual(expected)

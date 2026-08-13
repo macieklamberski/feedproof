@@ -96,6 +96,8 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
         src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
         url: 'http://www.slideshare.net/haraldf/business-quotes-for-2011',
         title: 'Business Quotes for 2011',
+        width: 425,
+        height: 355,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -195,6 +197,8 @@ describeForEachParser('slideshareIframeEmbedResolver', (parseHtml) => {
       provider: 'slideshare',
       id: '6PCWPGFw9SwsAY',
       src: 'https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAY',
+      width: 427,
+      height: 356,
     }
 
     expect(await extract(value)).toEqual(expected)

@@ -7,7 +7,11 @@ import type {
   ParseDateFn,
   WidgetResolverResult,
 } from '../types.js'
-import type { GeneratedWrapperType } from './dom.js'
+import {
+  type GeneratedWrapperType,
+  getElementDimensions,
+  getWrapperRatioDimensions,
+} from './dom.js'
 
 // A card's date is whatever string the site chose to display, so the caller gets one chance
 // to normalize it and anything the parser rejects is kept verbatim rather than dropped.
@@ -52,6 +56,40 @@ export const readCarrierUrl = (element: Element): string => {
 // The element travels alongside the url because a carrier can hold more than its src: an
 // iframe's `title` is the one field a publisher's snippet states that the url does not carry.
 // Resolvers that need nothing but the url ignore the second argument.
+// The size a publisher states on the carrier outranks anything a resolver derived, because it
+// was chosen for the player they actually embedded. Resolvers apply it themselves rather than
+// having it applied to them, so one that has measured the platform can decline: a snippet that
+// hardcodes the same height whatever the content is states a number worth overruling.
+//
+// Each dimension is spread only when the element actually states it. getElementDimensions
+// returns both keys whichever way, so spreading it whole would erase a platform's own height
+// with undefined wherever the markup is silent, and would put an undefined-valued key on every
+// result besides.
+export const withDeclaredSize = (
+  element: Element,
+  result: EmbedResolverResult,
+): EmbedResolverResult => {
+  const { width, height } = getEmbedDimensions(element)
+
+  return {
+    ...result,
+    ...(width !== undefined && { width }),
+    ...(height !== undefined && { height }),
+  }
+}
+
+// When the carrier states no usable size, a responsive wrapper's aspect ratio is the next best
+// thing, so the placeholder can still reserve space.
+export const getEmbedDimensions = (element: Element): { width?: number; height?: number } => {
+  const dimensions = getElementDimensions(element)
+
+  if (dimensions.width === undefined && dimensions.height === undefined) {
+    return getWrapperRatioDimensions(element) ?? dimensions
+  }
+
+  return dimensions
+}
+
 export const createIframeEmbedResolver = (
   hosts: Array<string>,
   resolveEmbed: (url: string, element: Element) => EmbedResolverResult | undefined,
@@ -65,7 +103,9 @@ export const createIframeEmbedResolver = (
         return
       }
 
-      return resolveEmbed(src, element)
+      const result = resolveEmbed(src, element)
+
+      return result && withDeclaredSize(element, result)
     },
   }
 }
