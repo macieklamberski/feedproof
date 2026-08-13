@@ -29,16 +29,17 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
         </div>
       `
       const result = extract(value)
-
-      expect(result).toEqual({
+      const expected: EmbedResolverResult = {
         provider: 'soundcloud',
         id: 'tracks/1597257306',
         src: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1597257306&color=%23ff5500',
-        author: 'Anjunadeep',
-        title: 'The Anjunadeep Edition 586',
         url: 'https://soundcloud.com/anjunadeep/the-anjunadeep-edition-586',
         height: 166,
-      })
+        title: 'The Anjunadeep Edition 586',
+        author: 'Anjunadeep',
+      }
+
+      expect(result).toEqual(expected)
     })
 
     it('should remove the consumed sibling so its links do not render twice', async () => {
@@ -58,11 +59,15 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
     it('should read the title from the iframe title attribute', () => {
       const value =
         '<iframe title="Track by Artist" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/292279199&visual=true"></iframe>'
-
-      expect(extract(value)).toMatchObject({
-        title: 'Track by Artist',
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
         id: 'tracks/292279199',
-      })
+        src: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/292279199&visual=true',
+        height: 450,
+        title: 'Track by Artist',
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
   })
 
@@ -72,25 +77,33 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
     it('should read the track reference from an <embed> carrier', () => {
       const value =
         '<embed src="https://player.soundcloud.com/player.swf?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F34695066">'
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
         provider: 'soundcloud',
         id: 'tracks/34695066',
-      })
+        src: 'https://player.soundcloud.com/player.swf?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F34695066',
+        height: 166,
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should read the track reference from an <object> carrier', () => {
       const value =
         '<object data="https://player.soundcloud.com/player.swf?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F34695066"></object>'
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
         provider: 'soundcloud',
         id: 'tracks/34695066',
-      })
+        src: 'https://player.soundcloud.com/player.swf?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F34695066',
+        height: 166,
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should ignore a carrier pointing somewhere else', () => {
-      expect(extract('<embed src="https://example.com/player.swf?url=whatever">')).toBeUndefined()
+      const value = '<embed src="https://example.com/player.swf?url=whatever">'
+
+      expect(extract(value)).toBeUndefined()
     })
   })
 
@@ -111,17 +124,25 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
     it('should give the visual player its own height whatever it holds', () => {
       const value =
         '<iframe src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/292279199&visual=true"></iframe>'
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        id: 'tracks/292279199',
+        src: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/292279199&visual=true',
         height: 450,
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should leave the height out when the player names nothing it can size', () => {
       const value =
         '<iframe src="https://w.soundcloud.com/player/?url=https%3A//example.com/x"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A//example.com/x',
+      }
 
-      expect(extract(value)?.height).toBeUndefined()
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should leave a sibling that is not the share snippet alone', async () => {

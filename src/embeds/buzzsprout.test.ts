@@ -9,6 +9,8 @@ import {
 
 describe('buzzsproutResolveEmbed', () => {
   it('should build the placeholder from an episode player url', () => {
+    const value =
+      'https://www.buzzsprout.com/1735722/episodes/8166676-mahler-symphony?client_source=small_player&iframe=true'
     const expected: EmbedResolverResult = {
       provider: 'buzzsprout',
       id: '1735722/8166676',
@@ -17,21 +19,19 @@ describe('buzzsproutResolveEmbed', () => {
       height: 200,
     }
 
-    expect(
-      buzzsproutResolveEmbed(
-        'https://www.buzzsprout.com/1735722/episodes/8166676-mahler-symphony?client_source=small_player&iframe=true',
-      ),
-    ).toEqual(expected)
+    expect(buzzsproutResolveEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined for a show-level url', () => {
-    expect(buzzsproutResolveEmbed('https://www.buzzsprout.com/1735722')).toBeUndefined()
+    const value = 'https://www.buzzsprout.com/1735722'
+
+    expect(buzzsproutResolveEmbed(value)).toBeUndefined()
   })
 
   it('should return undefined for a lookalike host', () => {
-    expect(
-      buzzsproutResolveEmbed('https://buzzsprout.com.evil.test/1735722/8166676'),
-    ).toBeUndefined()
+    const value = 'https://buzzsprout.com.evil.test/1735722/8166676'
+
+    expect(buzzsproutResolveEmbed(value)).toBeUndefined()
   })
 })
 
@@ -62,8 +62,15 @@ describeForEachParser('buzzsproutScriptEmbedResolver', (parseHtml) => {
     it('should build the placeholder from the episodes-slug form', () => {
       const value =
         '<script charset="utf-8" src="https://www.buzzsprout.com/42610/episodes/19141080-dreampod-150-mike-tucker.js?container_id=buzzsprout-player-19141080"></script>'
+      const expected: EmbedResolverResult = {
+        provider: 'buzzsprout',
+        id: '42610/19141080',
+        src: 'https://www.buzzsprout.com/42610/19141080?iframe=true',
+        url: 'https://www.buzzsprout.com/42610/19141080',
+        height: 200,
+      }
 
-      expect(extract(value)?.src).toBe('https://www.buzzsprout.com/42610/19141080?iframe=true')
+      expect(extract(value)).toEqual(expected)
     })
   })
 
@@ -90,15 +97,25 @@ describeForEachParser('buzzsproutScriptEmbedResolver', (parseHtml) => {
 })
 
 describeForEachParser('buzzsproutIframeEmbedResolver', (parseHtml) => {
+  const extract = (value: string): EmbedResolverResult | undefined => {
+    const element = parseHtml(value).querySelector(buzzsproutIframeEmbedResolver.selector)
+
+    return element
+      ? (buzzsproutIframeEmbedResolver.extract(element) as EmbedResolverResult)
+      : undefined
+  }
+
   it('should resolve a direct player iframe to the same placeholder', () => {
     const value =
       '<iframe src="https://www.buzzsprout.com/1735722/episodes/8166676-mahler-symphony?client_source=small_player&iframe=true" width="100%" height="200"></iframe>'
-    const element = parseHtml(value).querySelector(buzzsproutIframeEmbedResolver.selector)
-    const result = element ? buzzsproutIframeEmbedResolver.extract(element) : undefined
-
-    expect(result).toMatchObject({
+    const expected: EmbedResolverResult = {
       provider: 'buzzsprout',
+      id: '1735722/8166676',
       src: 'https://www.buzzsprout.com/1735722/8166676?iframe=true',
-    })
+      url: 'https://www.buzzsprout.com/1735722/8166676',
+      height: 200,
+    }
+
+    expect(extract(value)).toEqual(expected)
   })
 })

@@ -1,46 +1,59 @@
 import { describe, expect, it } from 'bun:test'
+import type { EmbedResolverResult } from '../types.js'
 import { captivateResolveEmbed, extractCaptivateEmbed } from './captivate.js'
 
 const uuid = '7f2c9a10-3b4d-4e5f-8a9b-0c1d2e3f4a5b'
 
 describe('extractCaptivateEmbed', () => {
   it('should read an episode player', () => {
-    expect(extractCaptivateEmbed(`https://player.captivate.fm/episode/${uuid}/`)).toEqual({
-      kind: 'episode',
-      id: uuid,
-    })
+    const value = `https://player.captivate.fm/episode/${uuid}/`
+    const expected = { kind: 'episode', id: uuid }
+
+    expect(extractCaptivateEmbed(value)).toEqual(expected)
   })
 
   it('should read a show player', () => {
-    expect(extractCaptivateEmbed(`https://player.captivate.fm/show/${uuid}`)).toMatchObject({
-      kind: 'show',
-    })
+    const value = `https://player.captivate.fm/show/${uuid}`
+    const expected = { kind: 'show', id: uuid }
+
+    expect(extractCaptivateEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined for an id that is not a uuid', () => {
-    expect(extractCaptivateEmbed('https://player.captivate.fm/episode/12345')).toBeUndefined()
+    const value = 'https://player.captivate.fm/episode/12345'
+
+    expect(extractCaptivateEmbed(value)).toBeUndefined()
   })
 
   it('should return undefined for a captivate url that is not a player', () => {
-    expect(extractCaptivateEmbed('https://captivate.fm/pricing')).toBeUndefined()
+    const value = 'https://captivate.fm/pricing'
+
+    expect(extractCaptivateEmbed(value)).toBeUndefined()
   })
 
   it('should return undefined for a url that cannot be parsed', () => {
-    expect(extractCaptivateEmbed('https://[')).toBeUndefined()
+    const value = 'https://['
+
+    expect(extractCaptivateEmbed(value)).toBeUndefined()
   })
 })
 
 describe('captivateResolveEmbed', () => {
   it('should state the fixed player height', () => {
-    expect(captivateResolveEmbed(`https://player.captivate.fm/episode/${uuid}/`)).toEqual({
+    const value = `https://player.captivate.fm/episode/${uuid}/`
+    const expected: EmbedResolverResult = {
       provider: 'captivate',
       id: `episode/${uuid}`,
       src: `https://player.captivate.fm/episode/${uuid}`,
       height: 200,
-    })
+    }
+
+    expect(captivateResolveEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined for a captivate url naming no episode', () => {
-    expect(captivateResolveEmbed('https://player.captivate.fm/about')).toBeUndefined()
+    const value = 'https://player.captivate.fm/about'
+
+    expect(captivateResolveEmbed(value)).toBeUndefined()
   })
 })

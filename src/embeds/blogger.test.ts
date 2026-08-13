@@ -7,29 +7,39 @@ const token = 'AD6v5dz1mv6dQ8n4YQ4bC1eGZs9v-x7pK2fQ'
 
 describe('extractBloggerToken', () => {
   it('should read the token from a player url', () => {
-    expect(extractBloggerToken(`https://www.blogger.com/video.g?token=${token}`)).toBe(token)
+    const value = `https://www.blogger.com/video.g?token=${token}`
+
+    expect(extractBloggerToken(value)).toBe(token)
   })
 
   it('should read the token from the draft host', () => {
-    expect(extractBloggerToken(`https://draft.blogger.com/video.g?token=${token}`)).toBe(token)
+    const value = `https://draft.blogger.com/video.g?token=${token}`
+
+    expect(extractBloggerToken(value)).toBe(token)
   })
 
   it('should return undefined for a blogger url that is not the player', () => {
-    expect(
-      extractBloggerToken(`https://www.blogger.com/share-post.g?token=${token}`),
-    ).toBeUndefined()
+    const value = `https://www.blogger.com/share-post.g?token=${token}`
+
+    expect(extractBloggerToken(value)).toBeUndefined()
   })
 
   it('should return undefined for a player url with no token', () => {
-    expect(extractBloggerToken('https://www.blogger.com/video.g')).toBeUndefined()
+    const value = 'https://www.blogger.com/video.g'
+
+    expect(extractBloggerToken(value)).toBeUndefined()
   })
 
   it('should return undefined for a token outside the url-safe base64 alphabet', () => {
-    expect(extractBloggerToken('https://www.blogger.com/video.g?token=../../etc')).toBeUndefined()
+    const value = 'https://www.blogger.com/video.g?token=../../etc'
+
+    expect(extractBloggerToken(value)).toBeUndefined()
   })
 
   it('should return undefined for a url that cannot be parsed', () => {
-    expect(extractBloggerToken('https://[')).toBeUndefined()
+    const value = 'https://['
+
+    expect(extractBloggerToken(value)).toBeUndefined()
   })
 })
 
@@ -37,33 +47,39 @@ describe('bloggerResolveEmbed', () => {
   describe('happy paths', () => {
     // Blogger publishes no watch page and no derivable poster, so provider and id are all there is.
     it('should carry the provider and the token as the id', () => {
+      const value = `https://www.blogger.com/video.g?token=${token}`
       const expected: EmbedResolverResult = {
         provider: 'blogger',
         id: token,
         src: `https://www.blogger.com/video.g?token=${token}`,
       }
 
-      expect(bloggerResolveEmbed(`https://www.blogger.com/video.g?token=${token}`)).toEqual(
-        expected,
-      )
+      expect(bloggerResolveEmbed(value)).toEqual(expected)
     })
 
     it('should mint the canonical player url from the draft host', () => {
-      expect(bloggerResolveEmbed(`https://draft.blogger.com/video.g?token=${token}`)).toMatchObject(
-        {
-          src: `https://www.blogger.com/video.g?token=${token}`,
-        },
-      )
+      const value = `https://draft.blogger.com/video.g?token=${token}`
+      const expected: EmbedResolverResult = {
+        provider: 'blogger',
+        id: token,
+        src: `https://www.blogger.com/video.g?token=${token}`,
+      }
+
+      expect(bloggerResolveEmbed(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
     it('should return undefined for a blogger url that is not the player', () => {
-      expect(bloggerResolveEmbed('https://www.blogger.com/profile/12345')).toBeUndefined()
+      const value = 'https://www.blogger.com/profile/12345'
+
+      expect(bloggerResolveEmbed(value)).toBeUndefined()
     })
 
     it('should return undefined for a url that cannot be parsed', () => {
-      expect(bloggerResolveEmbed('https://[')).toBeUndefined()
+      const value = 'https://['
+
+      expect(bloggerResolveEmbed(value)).toBeUndefined()
     })
   })
 })

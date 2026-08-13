@@ -10,26 +10,34 @@ import {
 
 describe('extractArchiveIdentifier', () => {
   it('should read the identifier from an embed url', () => {
-    expect(extractArchiveIdentifier('https://archive.org/embed/gov.archives.arc.1257628')).toBe(
-      'gov.archives.arc.1257628',
-    )
+    const value = 'https://archive.org/embed/gov.archives.arc.1257628'
+
+    expect(extractArchiveIdentifier(value)).toBe('gov.archives.arc.1257628')
   })
 
   // The details page is the same item by the same name.
   it('should read the identifier from a details url', () => {
-    expect(extractArchiveIdentifier('https://archive.org/details/nasa_hubble')).toBe('nasa_hubble')
+    const value = 'https://archive.org/details/nasa_hubble'
+
+    expect(extractArchiveIdentifier(value)).toBe('nasa_hubble')
   })
 
   it('should return undefined for an archive url naming no item', () => {
-    expect(extractArchiveIdentifier('https://archive.org/about')).toBeUndefined()
+    const value = 'https://archive.org/about'
+
+    expect(extractArchiveIdentifier(value)).toBeUndefined()
   })
 
   it('should return undefined for an identifier that is not the documented shape', () => {
-    expect(extractArchiveIdentifier('https://archive.org/embed/../../etc')).toBeUndefined()
+    const value = 'https://archive.org/embed/../../etc'
+
+    expect(extractArchiveIdentifier(value)).toBeUndefined()
   })
 
   it('should return undefined for a url that cannot be parsed', () => {
-    expect(extractArchiveIdentifier('https://[')).toBeUndefined()
+    const value = 'https://['
+
+    expect(extractArchiveIdentifier(value)).toBeUndefined()
   })
 })
 
@@ -37,38 +45,57 @@ describe('archiveResolveEmbed', () => {
   describe('happy paths', () => {
     // Every item has a thumbnail derivable from the identifier, which is the whole case here.
     it('should carry the poster and the item page', () => {
-      expect(archiveResolveEmbed('https://archive.org/embed/gov.archives.arc.1257628')).toEqual({
+      const value = 'https://archive.org/embed/gov.archives.arc.1257628'
+      const expected: EmbedResolverResult = {
         provider: 'archive',
         id: 'gov.archives.arc.1257628',
         src: 'https://archive.org/embed/gov.archives.arc.1257628',
         url: 'https://archive.org/details/gov.archives.arc.1257628',
         thumbnail: 'https://archive.org/services/img/gov.archives.arc.1257628',
-      })
+      }
+
+      expect(archiveResolveEmbed(value)).toEqual(expected)
     })
 
     // The query says which track or offset the publisher embedded.
     it('should keep the query the publisher wrote', () => {
       const value = 'https://archive.org/embed/some_album?playlist=1&start=42'
-
-      expect(archiveResolveEmbed(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'some_album',
         src: 'https://archive.org/embed/some_album?playlist=1&start=42',
-      })
+        url: 'https://archive.org/details/some_album',
+        thumbnail: 'https://archive.org/services/img/some_album',
+      }
+
+      expect(archiveResolveEmbed(value)).toEqual(expected)
     })
 
     it('should mint the embed url from a details url', () => {
-      expect(archiveResolveEmbed('https://archive.org/details/nasa_hubble')).toMatchObject({
+      const value = 'https://archive.org/details/nasa_hubble'
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'nasa_hubble',
         src: 'https://archive.org/embed/nasa_hubble',
-      })
+        url: 'https://archive.org/details/nasa_hubble',
+        thumbnail: 'https://archive.org/services/img/nasa_hubble',
+      }
+
+      expect(archiveResolveEmbed(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
     it('should return undefined for an archive url naming no item', () => {
-      expect(archiveResolveEmbed('https://archive.org/about')).toBeUndefined()
+      const value = 'https://archive.org/about'
+
+      expect(archiveResolveEmbed(value)).toBeUndefined()
     })
 
     it('should return undefined for a url that cannot be parsed', () => {
-      expect(archiveResolveEmbed('https://[')).toBeUndefined()
+      const value = 'https://['
+
+      expect(archiveResolveEmbed(value)).toBeUndefined()
     })
   })
 })
@@ -109,10 +136,15 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
           flashvars="config={'playlist':[{'url':'EndCameTooSoon-Mixtape.mp3'}],'clip':{'baseUrl':'http://www.archive.org/download/EndCameTooSoon/'}}"
         />
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
         id: 'EndCameTooSoon',
-      })
+        src: 'https://archive.org/embed/EndCameTooSoon',
+        url: 'https://archive.org/details/EndCameTooSoon',
+        thumbnail: 'https://archive.org/services/img/EndCameTooSoon',
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should read the config from a sibling param', () => {
@@ -125,14 +157,19 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
           <embed src="http://www.archive.org/flow/flowplayer.commercial-3.2.1.swf" />
         </object>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'BlackSummerPodcast',
+        src: 'https://archive.org/embed/BlackSummerPodcast',
+        url: 'https://archive.org/details/BlackSummerPodcast',
+        thumbnail: 'https://archive.org/services/img/BlackSummerPodcast',
+      }
       const element = parseHtml(value).querySelector('embed')
       const result = element
         ? (archiveFlashEmbedResolver.extract(element) as EmbedResolverResult)
         : undefined
 
-      expect(result).toMatchObject({
-        id: 'BlackSummerPodcast',
-      })
+      expect(result).toEqual(expected)
     })
 
     // The player that predates flashvars took the same config as a query parameter.
@@ -142,10 +179,15 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
           src="http://www.archive.org/flow/FlowPlayerLight.swf?config=%7BplayList%3A%5B%7Burl%3A%27http%3A%2F%2Fwww.archive.org%2Fdownload%2Fmarkofzorro-1920%2Fmarkofzorro.flv%27%7D%5D%7D"
         />
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
         id: 'markofzorro-1920',
-      })
+        src: 'https://archive.org/embed/markofzorro-1920',
+        url: 'https://archive.org/details/markofzorro-1920',
+        thumbnail: 'https://archive.org/services/img/markofzorro-1920',
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
   })
 

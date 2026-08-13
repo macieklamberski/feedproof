@@ -8,7 +8,9 @@ import { extractWistiaId, wistiaEmbedResolver, wistiaResolveEmbed } from './wist
 
 describe('extractWistiaId', () => {
   it('should extract id from the player iframe url', () => {
-    expect(extractWistiaId('https://fast.wistia.net/embed/iframe/2fg072pftb')).toBe('2fg072pftb')
+    const value = 'https://fast.wistia.net/embed/iframe/2fg072pftb'
+
+    expect(extractWistiaId(value)).toBe('2fg072pftb')
   })
 
   it('should extract id from a player url carrying options', () => {
@@ -18,35 +20,40 @@ describe('extractWistiaId', () => {
   })
 
   it('should extract id from the script form jsonp url', () => {
-    expect(extractWistiaId('https://fast.wistia.com/embed/medias/0inlutl9au.jsonp')).toBe(
-      '0inlutl9au',
-    )
+    const value = 'https://fast.wistia.com/embed/medias/0inlutl9au.jsonp'
+
+    expect(extractWistiaId(value)).toBe('0inlutl9au')
   })
 
   it('should extract id from an account media page', () => {
-    expect(extractWistiaId('https://acme.wistia.com/medias/jjxva47kic')).toBe('jjxva47kic')
+    const value = 'https://acme.wistia.com/medias/jjxva47kic'
+
+    expect(extractWistiaId(value)).toBe('jjxva47kic')
   })
 
   it('should return undefined for an id of the wrong length', () => {
-    expect(extractWistiaId('https://fast.wistia.net/embed/iframe/short')).toBeUndefined()
+    const value = 'https://fast.wistia.net/embed/iframe/short'
+
+    expect(extractWistiaId(value)).toBeUndefined()
   })
 
   it('should return undefined for a wistia url naming no media', () => {
-    expect(extractWistiaId('https://wistia.com/pricing')).toBeUndefined()
+    const value = 'https://wistia.com/pricing'
+
+    expect(extractWistiaId(value)).toBeUndefined()
   })
 })
 
 describe('wistiaResolveEmbed', () => {
   it('should mint the player url from the id', () => {
+    const value = 'https://fast.wistia.net/embed/iframe/2fg072pftb?seo=false'
     const expected: EmbedResolverResult = {
       provider: 'wistia',
       id: '2fg072pftb',
       src: 'https://fast.wistia.net/embed/iframe/2fg072pftb',
     }
 
-    expect(wistiaResolveEmbed('https://fast.wistia.net/embed/iframe/2fg072pftb?seo=false')).toEqual(
-      expected,
-    )
+    expect(wistiaResolveEmbed(value)).toEqual(expected)
   })
 })
 
@@ -81,7 +88,8 @@ describeForEachParser('wistiaEmbedResolver', (parseHtml) => {
   })
 
   it('should leave a non-media wistia url to the generic placeholder', async () => {
-    const result = await transform('<iframe src="https://wistia.com/pricing"></iframe>')
+    const value = '<iframe src="https://wistia.com/pricing"></iframe>'
+    const result = await transform(value)
 
     expect(result).not.toContain('data-embed-provider')
   })

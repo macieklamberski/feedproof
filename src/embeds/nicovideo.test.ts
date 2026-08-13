@@ -30,7 +30,9 @@ const readPlaceholder = (
 
 describe('extractNicovideoId', () => {
   it('should read the video id from the thumb_watch path', () => {
-    expect(extractNicovideoId('https://ext.nicovideo.jp/thumb_watch/sm9?w=490&h=307')).toBe('sm9')
+    const value = 'https://ext.nicovideo.jp/thumb_watch/sm9?w=490&h=307'
+
+    expect(extractNicovideoId(value)).toBe('sm9')
   })
 
   it('should read the other id prefixes', () => {
@@ -39,15 +41,21 @@ describe('extractNicovideoId', () => {
   })
 
   it('should return undefined for a url that cannot be parsed', () => {
-    expect(extractNicovideoId('https://[')).toBeUndefined()
+    const value = 'https://['
+
+    expect(extractNicovideoId(value)).toBeUndefined()
   })
 
   it('should return undefined for a nicovideo url naming no video', () => {
-    expect(extractNicovideoId('https://ext.nicovideo.jp/thumb_watch/')).toBeUndefined()
+    const value = 'https://ext.nicovideo.jp/thumb_watch/'
+
+    expect(extractNicovideoId(value)).toBeUndefined()
   })
 
   it('should return undefined for an id that is not the documented shape', () => {
-    expect(extractNicovideoId('https://ext.nicovideo.jp/thumb_watch/../etc')).toBeUndefined()
+    const value = 'https://ext.nicovideo.jp/thumb_watch/../etc'
+
+    expect(extractNicovideoId(value)).toBeUndefined()
   })
 })
 
@@ -63,55 +71,81 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
   describe('happy paths', () => {
     it('should mint the modern player and carry both dimensions as a ratio', () => {
       const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=490&amp;h=307"></script>`
-
-      expect(extract(value)).toEqual({
+      const expected: EmbedResolverResult = {
         provider: 'nicovideo',
         id: 'sm9',
         src: 'https://embed.nicovideo.jp/watch/sm9',
         url: 'https://www.nicovideo.jp/watch/sm9',
         width: 490,
         height: 307,
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     // The current spelling of the same loader.
     it('should read the modern script form', () => {
       const value = html`<script src="https://embed.nicovideo.jp/watch/sm9/script"></script>`
-
-      expect(extract(value)).toMatchObject({ src: 'https://embed.nicovideo.jp/watch/sm9' })
-    })
-
-    it('should state no size when the script asks for none', () => {
-      const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/sm9"></script>`
-
-      expect(extract(value)).toEqual({
+      const expected: EmbedResolverResult = {
         provider: 'nicovideo',
         id: 'sm9',
         src: 'https://embed.nicovideo.jp/watch/sm9',
         url: 'https://www.nicovideo.jp/watch/sm9',
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
+    })
+
+    it('should state no size when the script asks for none', () => {
+      const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/sm9"></script>`
+      const expected: EmbedResolverResult = {
+        provider: 'nicovideo',
+        id: 'sm9',
+        src: 'https://embed.nicovideo.jp/watch/sm9',
+        url: 'https://www.nicovideo.jp/watch/sm9',
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     // One dimension alone would be read as a fixed height rather than a ratio, so both or
     // neither.
     it('should state no size when only one dimension is given', () => {
       const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/sm9?h=307"></script>`
+      const expected: EmbedResolverResult = {
+        provider: 'nicovideo',
+        id: 'sm9',
+        src: 'https://embed.nicovideo.jp/watch/sm9',
+        url: 'https://www.nicovideo.jp/watch/sm9',
+      }
 
-      expect(extract(value)).not.toHaveProperty('height')
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should read a protocol-relative src', () => {
       const value = html`<script src="//ext.nicovideo.jp/thumb_watch/sm9"></script>`
+      const expected: EmbedResolverResult = {
+        provider: 'nicovideo',
+        id: 'sm9',
+        src: 'https://embed.nicovideo.jp/watch/sm9',
+        url: 'https://www.nicovideo.jp/watch/sm9',
+      }
 
-      expect(extract(value)).toMatchObject({ id: 'sm9' })
+      expect(extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
     it('should state no size when a dimension is not a pixel count', () => {
       const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=100%25&amp;h=307"></script>`
+      const expected: EmbedResolverResult = {
+        provider: 'nicovideo',
+        id: 'sm9',
+        src: 'https://embed.nicovideo.jp/watch/sm9',
+        url: 'https://www.nicovideo.jp/watch/sm9',
+      }
 
-      expect(extract(value)).not.toHaveProperty('height')
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should return undefined for a nicovideo script naming no video', () => {
@@ -134,22 +168,33 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
 describe('nicovideoResolveEmbed', () => {
   // The old card host answers 403 now, so this rewrite repairs an embed that renders nothing.
   it('should rewrite the dead thumb card to the modern player', () => {
-    expect(nicovideoResolveEmbed('https://ext.nicovideo.jp/thumb/sm9')).toEqual({
+    const value = 'https://ext.nicovideo.jp/thumb/sm9'
+    const expected: EmbedResolverResult = {
       provider: 'nicovideo',
       id: 'sm9',
       src: 'https://embed.nicovideo.jp/watch/sm9',
       url: 'https://www.nicovideo.jp/watch/sm9',
-    })
+    }
+
+    expect(nicovideoResolveEmbed(value)).toEqual(expected)
   })
 
   it('should leave a modern player url as it stands', () => {
-    expect(nicovideoResolveEmbed('https://embed.nicovideo.jp/watch/sm9')).toMatchObject({
+    const value = 'https://embed.nicovideo.jp/watch/sm9'
+    const expected: EmbedResolverResult = {
+      provider: 'nicovideo',
+      id: 'sm9',
       src: 'https://embed.nicovideo.jp/watch/sm9',
-    })
+      url: 'https://www.nicovideo.jp/watch/sm9',
+    }
+
+    expect(nicovideoResolveEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined for a nicovideo url naming no video', () => {
-    expect(nicovideoResolveEmbed('https://www.nicovideo.jp/ranking')).toBeUndefined()
+    const value = 'https://www.nicovideo.jp/ranking'
+
+    expect(nicovideoResolveEmbed(value)).toBeUndefined()
   })
 })
 
@@ -165,21 +210,23 @@ describeForEachParser('nicovideo through the pipeline', (parseHtml) => {
 
   it('should carry every field across', async () => {
     const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=490&amp;h=307"></script>`
-
-    expect(await placeholder(value)).toEqual({
+    const expected: Record<string, string> = {
       provider: 'nicovideo',
       id: 'sm9',
       src: 'https://embed.nicovideo.jp/watch/sm9',
       url: 'https://www.nicovideo.jp/watch/sm9',
       width: '490',
       height: '307',
-    })
+    }
+
+    expect(await placeholder(value)).toEqual(expected)
   })
 
   // A script alone is deleted as empty markup, so without the resolver the video vanishes.
   it('should leave nothing behind when the script names no video', async () => {
     const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/"></script>`
+    const expected: Record<string, string> = {}
 
-    expect(await placeholder(value)).toEqual({})
+    expect(await placeholder(value)).toEqual(expected)
   })
 })

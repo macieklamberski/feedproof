@@ -14,9 +14,9 @@ describe('extractBandcampRelease', () => {
   })
 
   it('should read a track from the player path', () => {
-    expect(extractBandcampRelease('https://bandcamp.com/EmbeddedPlayer/track=42/size=small/')).toBe(
-      'track/42',
-    )
+    const value = 'https://bandcamp.com/EmbeddedPlayer/track=42/size=small/'
+
+    expect(extractBandcampRelease(value)).toBe('track/42')
   })
 
   // The video player spells its options as a query string instead.
@@ -27,17 +27,21 @@ describe('extractBandcampRelease', () => {
   })
 
   it('should return undefined when no release is named', () => {
-    expect(
-      extractBandcampRelease('https://bandcamp.com/EmbeddedPlayer/size=small/bgcol=ffffff/'),
-    ).toBeUndefined()
+    const value = 'https://bandcamp.com/EmbeddedPlayer/size=small/bgcol=ffffff/'
+
+    expect(extractBandcampRelease(value)).toBeUndefined()
   })
 
   it('should return undefined for a non-numeric id', () => {
-    expect(extractBandcampRelease('https://bandcamp.com/VideoEmbed?track=abc')).toBeUndefined()
+    const value = 'https://bandcamp.com/VideoEmbed?track=abc'
+
+    expect(extractBandcampRelease(value)).toBeUndefined()
   })
 
   it('should return undefined for a url that cannot be parsed', () => {
-    expect(extractBandcampRelease('https://[')).toBeUndefined()
+    const value = 'https://['
+
+    expect(extractBandcampRelease(value)).toBeUndefined()
   })
 })
 
@@ -71,50 +75,56 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
           </a>
         </iframe>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
         provider: 'bandcamp',
         id: 'album/3373381116',
         src: 'https://bandcamp.com/EmbeddedPlayer/album=3373381116/size=large/',
-        height: 470,
         url: 'http://myexpansiveawareness.bandcamp.com/album/do-you-wanna-be-rich',
+        height: 470,
         title: 'Do You Wanna Be Rich? by My Expansive Awareness',
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should keep the video player form for a video embed', () => {
       const value =
         '<iframe src="https://bandcamp.com/VideoEmbed?track=1959185434&bgcol=ffffff"></iframe>'
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'bandcamp',
         id: 'track/1959185434',
         src: 'https://bandcamp.com/VideoEmbed?track=1959185434',
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should yield provider and id when no fallback anchor exists', () => {
       const value =
         '<iframe src="https://bandcamp.com/EmbeddedPlayer/album=42/size=small/"></iframe>'
-      const result = extract(value)
+      const expected: EmbedResolverResult = {
+        provider: 'bandcamp',
+        id: 'album/42',
+        src: 'https://bandcamp.com/EmbeddedPlayer/album=42/size=small/',
+        height: 42,
+      }
 
-      expect(result).toMatchObject({ provider: 'bandcamp', id: 'album/42', height: 42 })
-      expect(result?.url).toBeUndefined()
+      expect(extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
     it('should ignore a player naming no release', () => {
-      expect(
-        extract(
-          '<iframe src="https://bandcamp.com/EmbeddedPlayer/size=small/bgcol=ffffff/"></iframe>',
-        ),
-      ).toBeUndefined()
+      const value =
+        '<iframe src="https://bandcamp.com/EmbeddedPlayer/size=small/bgcol=ffffff/"></iframe>'
+
+      expect(extract(value)).toBeUndefined()
     })
 
     it('should ignore a carrier pointing somewhere else', () => {
-      expect(
-        extract('<iframe src="https://example.com/EmbeddedPlayer/album=42/"></iframe>'),
-      ).toBeUndefined()
+      const value = '<iframe src="https://example.com/EmbeddedPlayer/album=42/"></iframe>'
+
+      expect(extract(value)).toBeUndefined()
     })
   })
 

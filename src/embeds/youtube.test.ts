@@ -229,32 +229,54 @@ describe('youtubeResolveEmbed', () => {
 
   it('should preserve the start offset', () => {
     const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=90'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=90',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+    }
 
-    expect(youtubeResolveEmbed(value)?.src).toBe(
-      'https://www.youtube.com/embed/dQw4w9WgXcQ?start=90',
-    )
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should preserve the playlist and its position', () => {
     const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+    }
 
-    expect(youtubeResolveEmbed(value)?.src).toBe(
-      'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4',
-    )
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should preserve both halves of a clip', () => {
     const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+    }
 
-    expect(youtubeResolveEmbed(value)?.src).toBe(
-      'https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh',
-    )
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should drop player and tracking parameters', () => {
     const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?si=abc&autoplay=1&rel=0'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+    }
 
-    expect(youtubeResolveEmbed(value)?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ')
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should resolve youtu.be short url', () => {
@@ -309,10 +331,14 @@ describe('youtubeResolveEmbed', () => {
 
   it('should normalize a nocookie playlist embed to youtube.com', () => {
     const value = 'https://www.youtube-nocookie.com/embed/videoseries?list=PLxyz'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'PLxyz',
+      src: 'https://www.youtube.com/embed/videoseries?list=PLxyz',
+      url: 'https://www.youtube.com/playlist?list=PLxyz',
+    }
 
-    expect(youtubeResolveEmbed(value)?.src).toBe(
-      'https://www.youtube.com/embed/videoseries?list=PLxyz',
-    )
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined for a videoseries embed with no list', () => {
@@ -385,29 +411,33 @@ describe('composeEmbedUrl', () => {
   })
 
   it('should append params as a query string', () => {
+    const value = 'dQw4w9WgXcQ'
     const expected = 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=42'
 
-    expect(composeEmbedUrl('dQw4w9WgXcQ', { start: '42' })).toBe(expected)
+    expect(composeEmbedUrl(value, { start: '42' })).toBe(expected)
   })
 
   it('should join several params with an ampersand', () => {
+    const value = 'videoseries'
     const expected = 'https://www.youtube.com/embed/videoseries?list=PL1&index=2'
 
-    expect(composeEmbedUrl('videoseries', { list: 'PL1', index: '2' })).toBe(expected)
+    expect(composeEmbedUrl(value, { list: 'PL1', index: '2' })).toBe(expected)
   })
 
   it('should stay bare for an empty param object', () => {
+    const value = 'dQw4w9WgXcQ'
     const expected = 'https://www.youtube.com/embed/dQw4w9WgXcQ'
 
-    expect(composeEmbedUrl('dQw4w9WgXcQ', {})).toBe(expected)
+    expect(composeEmbedUrl(value, {})).toBe(expected)
   })
 
   // One param whose value happens to contain the separator, not two params. Encoding is what
   // keeps it that way, so a feed cannot smuggle `autoplay` in through a list id.
   it('should encode a separator inside a value instead of starting a new param', () => {
+    const value = 'videoseries'
     const expected = 'https://www.youtube.com/embed/videoseries?list=PL1%26autoplay%3D1'
 
-    expect(composeEmbedUrl('videoseries', { list: 'PL1&autoplay=1' })).toBe(expected)
+    expect(composeEmbedUrl(value, { list: 'PL1&autoplay=1' })).toBe(expected)
   })
 })
 
@@ -426,7 +456,8 @@ describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
   }
 
   it('should extract metadata from a youtube iframe', () => {
-    const element = firstMatch('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>')
+    const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+    const element = firstMatch(value)
     const result = element ? youtubeEmbedResolver.extract(element) : undefined
     const expected: EmbedResolverResult = {
       provider: 'youtube',
@@ -440,7 +471,8 @@ describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
   })
 
   it('should extract metadata from a youtube subdomain iframe', () => {
-    const element = firstMatch('<iframe src="https://m.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>')
+    const value = '<iframe src="https://m.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>'
+    const element = firstMatch(value)
     const result = element ? youtubeEmbedResolver.extract(element) : undefined
     const expected: EmbedResolverResult = {
       provider: 'youtube',
@@ -454,7 +486,8 @@ describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
   })
 
   it('should extract metadata from a youtu.be iframe', () => {
-    const element = firstMatch('<iframe src="https://youtu.be/dQw4w9WgXcQ"></iframe>')
+    const value = '<iframe src="https://youtu.be/dQw4w9WgXcQ"></iframe>'
+    const element = firstMatch(value)
     const result = element ? youtubeEmbedResolver.extract(element) : undefined
     const expected: EmbedResolverResult = {
       provider: 'youtube',
@@ -468,7 +501,8 @@ describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
   })
 
   it('should return undefined for non-youtube iframes', () => {
-    const element = firstMatch('<iframe src="https://example.com/video"></iframe>')
+    const value = '<iframe src="https://example.com/video"></iframe>'
+    const element = firstMatch(value)
     const result = element ? youtubeEmbedResolver.extract(element) : undefined
 
     expect(result).toBeUndefined()
@@ -477,14 +511,16 @@ describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
   // Regression: a non-youtube host carrying a watch?v=<id> shaped query must
   // not be claimed just because extractVideoId could parse the id from it.
   it('should reject iframe with valid video id but wrong host', () => {
-    const element = firstMatch('<iframe src="https://evil.com/watch?v=dQw4w9WgXcQ"></iframe>')
+    const value = '<iframe src="https://evil.com/watch?v=dQw4w9WgXcQ"></iframe>'
+    const element = firstMatch(value)
     const result = element ? youtubeEmbedResolver.extract(element) : undefined
 
     expect(result).toBeUndefined()
   })
 
   it('should return undefined for an iframe with an empty src', () => {
-    const element = firstMatch('<iframe src=""></iframe>')
+    const value = '<iframe src=""></iframe>'
+    const element = firstMatch(value)
     const result = element ? youtubeEmbedResolver.extract(element) : undefined
 
     expect(result).toBeUndefined()
