@@ -30,29 +30,45 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
         src: 'https://imgur.com/pVa2rXL/embed',
         url: 'https://imgur.com/pVa2rXL',
         thumbnail: 'https://i.imgur.com/pVa2rXLm.jpg',
+        title: 'View post on imgur.com',
       }
 
       expect(extract(value)).toEqual(expected)
     })
 
-    it('should carry the post title the anchor states', () => {
+    it('should carry whatever the anchor states, including the dialog label', () => {
       const value = html`
         <blockquote class="imgur-embed-pub" lang="en" data-id="pVa2rXL" data-context="false">
           <a href="//imgur.com/pVa2rXL">A cat wearing a tiny hat</a>
         </blockquote>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'imgur',
+        id: 'pVa2rXL',
+        src: 'https://imgur.com/pVa2rXL/embed',
+        url: 'https://imgur.com/pVa2rXL',
+        thumbnail: 'https://i.imgur.com/pVa2rXLm.jpg',
+        title: 'A cat wearing a tiny hat',
+      }
 
-      expect(extract(value)).toMatchObject({ title: 'A cat wearing a tiny hat' })
+      expect(extract(value)).toEqual(expected)
     })
 
-    it('should not pass the dialog label off as a title', () => {
+    it('should state no title when the anchor holds none', () => {
       const value = html`
         <blockquote class="imgur-embed-pub" lang="en" data-id="pVa2rXL">
-          <a href="//imgur.com/pVa2rXL">View post on imgur.com</a>
+          <a href="//imgur.com/pVa2rXL"></a>
         </blockquote>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'imgur',
+        id: 'pVa2rXL',
+        src: 'https://imgur.com/pVa2rXL/embed',
+        url: 'https://imgur.com/pVa2rXL',
+        thumbnail: 'https://i.imgur.com/pVa2rXLm.jpg',
+      }
 
-      expect(extract(value)).not.toHaveProperty('title')
+      expect(extract(value)).toEqual(expected)
     })
   })
 
@@ -111,9 +127,11 @@ describe('imgurResolveEmbed', () => {
   })
 
   it('should resolve an album frame', () => {
-    expect(imgurResolveEmbed('https://imgur.com/a/16lVn5E/embed')).toMatchObject({
+    expect(imgurResolveEmbed('https://imgur.com/a/16lVn5E/embed')).toEqual({
+      provider: 'imgur',
       id: 'a/16lVn5E',
       src: 'https://imgur.com/a/16lVn5E/embed',
+      url: 'https://imgur.com/a/16lVn5E',
     })
   })
 
@@ -150,11 +168,15 @@ describeForEachParser('imgurIframeEmbedResolver', (parseHtml) => {
       ></iframe>
     `
 
-    expect(extract(value)).toMatchObject({
+    const expected: EmbedResolverResult = {
       provider: 'imgur',
       id: 'pVa2rXL',
       src: 'https://imgur.com/pVa2rXL/embed',
-    })
+      url: 'https://imgur.com/pVa2rXL',
+      thumbnail: 'https://i.imgur.com/pVa2rXLm.jpg',
+    }
+
+    expect(extract(value)).toEqual(expected)
   })
 
   it('should ignore an iframe on another host', () => {

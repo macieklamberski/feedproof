@@ -10,10 +10,6 @@ const imgurHosts = ['imgur.com']
 const safePostIdRegex = /^[a-zA-Z0-9]{5,12}$/
 const albumPrefix = 'a/'
 
-// What the share dialog writes when the author did not title the post. It is a label for the
-// link rather than anything about the picture, so it is not a title.
-const anchorBoilerplate = 'View post on imgur.com'
-
 type ImgurPost = {
   id: string
   isAlbum: boolean
@@ -46,7 +42,7 @@ const composeEmbed = (post: ImgurPost, title?: string): EmbedResolverResult => {
     result.thumbnail = `https://i.imgur.com/${post.id}m.jpg`
   }
 
-  return title && title !== anchorBoilerplate ? { ...result, title } : result
+  return title ? { ...result, title } : result
 }
 
 // Imgur's embed is a blockquote plus `s.imgur.com/min/embed.js`, and the script is what turns it
@@ -63,7 +59,8 @@ export const imgurBlockquoteEmbedResolver: EmbedResolver = {
     }
 
     // The fallback anchor carries the post's title when the author set one, and the dialog's
-    // own label when they did not.
+    // own label when they did not. Both are carried as stated: the label is localised, so any
+    // list of its wordings ages, and what the source says is what the placeholder reports.
     return composeEmbed(post, text(find(element, 'a')))
   },
 }
