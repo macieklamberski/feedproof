@@ -68,8 +68,14 @@ describeForEachParser('nodebbCiteResolver', (parseHtml) => {
           </a>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'nodebb',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        publisher: 'Example',
+      }
 
-      expect((await extract(value))?.publisher).toBe('Example')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should fall back to the image anchor when the title has no link', async () => {
@@ -81,8 +87,14 @@ describeForEachParser('nodebbCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'nodebb',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        thumbnail: 'https://cdn.example.com/cover.png',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/post')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

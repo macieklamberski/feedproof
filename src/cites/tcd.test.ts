@@ -44,9 +44,14 @@ describeForEachParser('tcdCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
-      const result = await extract(value)
+      const expected: CiteResolverResult = {
+        provider: 'tcd',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        date: '2019.05.15',
+      }
 
-      expect(result?.date).toBe('2019.05.15')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -62,9 +67,14 @@ describeForEachParser('tcdCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
-      const result = await extract(value)
+      const expected: CiteResolverResult = {
+        provider: 'tcd',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        thumbnail: 'https://example.com/thumb.jpg',
+      }
 
-      expect(result?.thumbnail).toBe('https://example.com/thumb.jpg')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave optional fields undefined when only the title link is present', async () => {

@@ -59,8 +59,14 @@ describeForEachParser('mediumCiteResolver', (parseHtml) => {
           </a>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'medium',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        thumbnail: 'https://example.com/cover.jpg',
+      }
 
-      expect((await extract(value))?.thumbnail).toBe('https://example.com/cover.jpg')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the thumbnail undefined when the image anchor is empty', async () => {
@@ -72,8 +78,13 @@ describeForEachParser('mediumCiteResolver', (parseHtml) => {
           <a href="https://example.com/page" class="js-mixtapeImage mixtapeImage mixtapeImage--empty"></a>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'medium',
+        url: 'https://example.com/page',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.thumbnail).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should extract a bare anchor, the shape exported archives keep', async () => {
@@ -110,10 +121,13 @@ describeForEachParser('mediumCiteResolver', (parseHtml) => {
           <strong>Page title</strong>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'medium',
+        url: 'https://medium.com/r/?url=https%3A%2F%2Fexample.com%2Fpage',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe(
-        'https://medium.com/r/?url=https%3A%2F%2Fexample.com%2Fpage',
-      )
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the publisher undefined when no host trails the description', async () => {
@@ -122,8 +136,14 @@ describeForEachParser('mediumCiteResolver', (parseHtml) => {
           <strong>Page title</strong><em>Preview text</em>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'medium',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        description: 'Preview text',
+      }
 
-      expect((await extract(value))?.publisher).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the description undefined when the card carries only a title', async () => {

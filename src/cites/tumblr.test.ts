@@ -98,10 +98,13 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
           <a href="https://t.umblr.com/redirect?z=https%3A%2F%2Fexample.com%2Fpost&t=abc">Page title</a>
         </p>
       `
+      const expected: CiteResolverResult = {
+        provider: 'tumblr',
+        url: 'https://t.umblr.com/redirect?z=https%3A%2F%2Fexample.com%2Fpost&t=abc',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe(
-        'https://t.umblr.com/redirect?z=https%3A%2F%2Fexample.com%2Fpost&t=abc',
-      )
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the thumbnail undefined when the poster has no url', async () => {
@@ -113,8 +116,13 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
           <a href="https://example.com/post">Page title</a>
         </p>
       `
+      const expected: CiteResolverResult = {
+        provider: 'tumblr',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.thumbnail).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should fall back to the anchor href when the payload has no url', async () => {
@@ -123,8 +131,13 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
           <a href="https://example.com/post">Page title</a>
         </p>
       `
+      const expected: CiteResolverResult = {
+        provider: 'tumblr',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/post')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should fall back to the anchor text when the payload has no title', async () => {
@@ -133,8 +146,13 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
           <a href="https://example.com/post">Anchor title</a>
         </p>
       `
+      const expected: CiteResolverResult = {
+        provider: 'tumblr',
+        url: 'https://example.com/post',
+        title: 'Anchor title',
+      }
 
-      expect((await extract(value))?.title).toBe('Anchor title')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should trim the description and the publisher', async () => {
@@ -146,10 +164,15 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
           <a href="https://example.com/post">Page title</a>
         </p>
       `
-      const result = await extract(value)
+      const expected: CiteResolverResult = {
+        provider: 'tumblr',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        description: 'Preview text',
+        publisher: 'example.com',
+      }
 
-      expect(result?.description).toBe('Preview text')
-      expect(result?.publisher).toBe('example.com')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

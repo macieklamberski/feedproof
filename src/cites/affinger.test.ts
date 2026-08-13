@@ -109,8 +109,13 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
           <div class="kanren st-cardbox"><p class="st-cardbox-t">Page title</p></div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'affinger',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.title).toBe('Page title')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read an image from src when the lazy attribute is absent', async () => {
@@ -122,8 +127,14 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
           </div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'affinger',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        thumbnail: 'https://example.com/cover.webp',
+      }
 
-      expect((await extract(value))?.thumbnail).toBe('https://example.com/cover.webp')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the label badge as the caption', async () => {
@@ -159,10 +170,14 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
           </dl>
         </div>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'affinger',
+        url: 'https://example.com/post',
+        title: 'Page title',
         description: 'Preview text',
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should tolerate the literal undefined class the theme leaks', async () => {
@@ -173,8 +188,13 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
           </div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'affinger',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.title).toBe('Page title')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
