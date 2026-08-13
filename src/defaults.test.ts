@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'bun:test'
+import { readdirSync } from 'node:fs'
+import { join } from 'node:path'
 import {
   defaultCiteResolvers,
   defaultNonContentSelectors,
@@ -7,6 +9,8 @@ import {
 import * as index from './index.js'
 import { parseHtml } from './parsers/linkedom.js'
 import { createCitePlaceholder } from './utils/widgets.js'
+
+const resolverDirectories = ['embeds', 'media', 'cites']
 
 describe('defaults', () => {
   // A resolver reachable only through the default array cannot be named, so a consumer
@@ -18,6 +22,34 @@ describe('defaults', () => {
     const missing = [...defaultCiteResolvers, ...defaultWidgetResolvers].filter((resolver) => {
       return !exported.has(resolver)
     })
+
+    expect(missing).toEqual([])
+  })
+
+  // The test above starts from the registry, so it cannot see a resolver that never reached
+  // it: that one is absent from the pipeline while its own tests pass in isolation. This
+  // starts from the files instead, which is the only direction that catches it.
+  it('should register every resolver the resolver directories define', async () => {
+    const registered = new Set<unknown>([...defaultCiteResolvers, ...defaultWidgetResolvers])
+    const missing: Array<string> = []
+
+    for (const directory of resolverDirectories) {
+      const path = join(import.meta.dir, directory)
+
+      for (const file of readdirSync(path)) {
+        if (!file.endsWith('.ts') || file.endsWith('.test.ts')) {
+          continue
+        }
+
+        const module = await import(join(path, file))
+
+        for (const [name, value] of Object.entries(module)) {
+          if (name.endsWith('Resolver') && !registered.has(value)) {
+            missing.push(`${directory}/${file}: ${name}`)
+          }
+        }
+      }
+    }
 
     expect(missing).toEqual([])
   })
