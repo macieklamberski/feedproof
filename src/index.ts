@@ -146,6 +146,11 @@ export {
   jwplayerScriptEmbedResolver,
 } from './embeds/jwplayer.js'
 export { libsynEmbedResolver } from './embeds/libsyn.js'
+export {
+  type MastodonStatus,
+  mastodonEmbedResolver,
+  parseMastodonStatus,
+} from './embeds/mastodon.js'
 export { mediavineEmbedResolver } from './embeds/mediavine.js'
 export { megaphoneEmbedResolver } from './embeds/megaphone.js'
 export { mixcloudEmbedResolver } from './embeds/mixcloud.js'

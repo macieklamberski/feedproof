@@ -54,6 +54,7 @@ import {
   jwplayerScriptEmbedResolver,
 } from './embeds/jwplayer.js'
 import { libsynEmbedResolver } from './embeds/libsyn.js'
+import { mastodonEmbedResolver } from './embeds/mastodon.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { megaphoneEmbedResolver } from './embeds/megaphone.js'
 import { mixcloudEmbedResolver } from './embeds/mixcloud.js'
@@ -418,6 +419,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   spreakerAnchorEmbedResolver,
   telegramScriptEmbedResolver,
   telegramIframeEmbedResolver,
+  mastodonEmbedResolver,
   substackMediaResolver,
   weeblyMediaResolver,
   wechatMediaResolver,

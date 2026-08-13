@@ -1,4 +1,5 @@
 import { isHostOf } from 'trousse'
+import { parseMastodonStatus } from '../embeds/mastodon.js'
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, isElement, text } from '../utils/dom.js'
@@ -43,10 +44,9 @@ export const omittedOneboxClasses = [
 export const socialPostHosts = ['bsky.app', 'threads.net', 'threads.com']
 
 // Mastodon posts cannot be told apart by host (any domain can be an instance). Two other
-// signals mark them: a status url is `/@user/<numeric id>` on any instance (no article url
-// ends in a bare number there), and the page titles itself "Display Name (@user@instance)",
-// which the generic onebox renders as its heading.
-const mastodonStatusPathRegex = /\/@[^/]+\/\d{6,}(?:[?#]|$)/
+// signals mark them: the status url shape, read by the same parse the embed resolver uses so
+// the two cannot disagree about what a status is, and the page titling itself "Display Name
+// (@user@instance)", which the generic onebox renders as its heading.
 const fediverseHandleRegex = /@[\w.-]+@[\w-]+(?:\.[\w-]+)+/
 
 // Discourse forums expand a pasted link into a "onebox" card. The engine that built the
@@ -66,7 +66,7 @@ export const discourseCiteResolver: CiteResolver = {
     // Engines differ on the heading level they use for the title.
     const title = text(body, 'h3, h4')
 
-    if (url && (isHostOf(url, socialPostHosts) || mastodonStatusPathRegex.test(url))) {
+    if (url && (isHostOf(url, socialPostHosts) || parseMastodonStatus(url))) {
       return
     }
 
