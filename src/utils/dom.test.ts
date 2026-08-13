@@ -8,6 +8,7 @@ import {
   getWrapperRatioDimensions,
   hasAncestorWithTagName,
   isElementHidden,
+  parsePixelSize,
   parseRatioDimensions,
   removeWithEmptyWrappers,
   text,
@@ -633,5 +634,53 @@ describeForEachParser('bgImage', (parseHtml) => {
 
   it('should return undefined for a nullish element', () => {
     expect(bgImage(undefined)).toBeUndefined()
+  })
+})
+
+describe('parsePixelSize', () => {
+  it('should read a bare pixel count', () => {
+    expect(parsePixelSize('200')).toBe(200)
+  })
+
+  // Publishers write the unit as often as not, and coerceNumber alone rejects it.
+  it('should read a count carrying the px unit', () => {
+    expect(parsePixelSize('350px')).toBe(350)
+  })
+
+  it('should ignore surrounding whitespace', () => {
+    expect(parsePixelSize('  90  ')).toBe(90)
+  })
+
+  it('should return undefined for another unit', () => {
+    expect(parsePixelSize('100%')).toBeUndefined()
+    expect(parsePixelSize('10em')).toBeUndefined()
+  })
+
+  // A stated player height of zero or five digits is a mistake, not a size. One pixel is a
+  // typo too, unlike an image attribute where it is a tracking pixel.
+  it('should return undefined outside the plausible range', () => {
+    expect(parsePixelSize('0')).toBeUndefined()
+    expect(parsePixelSize('1')).toBeUndefined()
+    expect(parsePixelSize('9')).toBeUndefined()
+    expect(parsePixelSize('99999')).toBeUndefined()
+  })
+
+  // A digit count reads `007` as three digits and lets 7 through, which is what the resolvers
+  // were doing before the bound became a range.
+  it('should apply the range to the value, not to how it was written', () => {
+    expect(parsePixelSize('007')).toBeUndefined()
+    expect(parsePixelSize('0000')).toBeUndefined()
+    expect(parsePixelSize('09')).toBeUndefined()
+    expect(parsePixelSize('0200')).toBe(200)
+  })
+
+  it('should return undefined for a fractional size', () => {
+    expect(parsePixelSize('350.5')).toBeUndefined()
+  })
+
+  it('should return undefined for nothing at all', () => {
+    expect(parsePixelSize(undefined)).toBeUndefined()
+    expect(parsePixelSize('')).toBeUndefined()
+    expect(parsePixelSize('abc')).toBeUndefined()
   })
 })

@@ -1,13 +1,12 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
-import { attr } from '../utils/dom.js'
+import { attr, parsePixelSize } from '../utils/dom.js'
 import { createIframeEmbedResolver } from '../utils/widgets.js'
 
 // Video ids are a two-letter kind and a number, `sm9`, `nm12345`, `so67890`.
 const safeVideoIdRegex = /^[a-z]{2}\d+$/
 
 // The script states the size it wants, `?w=490&h=307`.
-const pixelRegex = /^\d{2,4}$/
 
 const nicovideoHosts = ['nicovideo.jp']
 
@@ -79,13 +78,13 @@ export const nicovideoScriptEmbedResolver: EmbedResolver = {
     // script states them: the reader turns a width and height pair into an aspect ratio and
     // scales the player to the column, which is what a video wants.
     const parsed = parseUrl(source, 'https://example.com')
-    const width = parsed?.searchParams.get('w')
-    const height = parsed?.searchParams.get('h')
+    const width = parsePixelSize(parsed?.searchParams.get('w'))
+    const height = parsePixelSize(parsed?.searchParams.get('h'))
 
-    if (!width || !height || !pixelRegex.test(width) || !pixelRegex.test(height)) {
+    if (!width || !height) {
       return result
     }
 
-    return { ...result, width: Number(width), height: Number(height) }
+    return { ...result, width, height }
   },
 }

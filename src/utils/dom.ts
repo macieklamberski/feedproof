@@ -274,6 +274,35 @@ const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*
 const styleHeightRegex =
   /(?:^|;)\s*height\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
 
+// A pixel size as a player url or embed attribute states it: `200`, or `200px` where the
+// publisher wrote the unit. `coerceNumber` alone will not do, because it reads neither the
+// suffix nor a bound, and a stated height of `0` or `99999` is a mistake rather than a size.
+// Two to four digits is what every player in `embeds/` needs and is a sane range for one.
+//
+// Deliberately not shared with `dimensionAttribute` below, which reads a declared width or
+// height attribute and has the opposite requirement: removeTrackingPixels finds a tracking
+// pixel by testing dimensions against `pixelDimensionLimit`, so `0`, `1` and `2` have to parse
+// as numbers there. Routing that through this would make every tracking pixel undetectable.
+const pixelSizeRegex = /^(\d{1,5})(?:px)?$/
+
+// The range is stated as numbers rather than a digit count, which the resolvers had been using
+// as a proxy for it. A count is a leaky one: `\d{2,4}` accepts `007` and `0000`, so the very
+// values the bound exists to reject came through as 7 and 0.
+const minimumPixelSize = 10
+const maximumPixelSize = 9999
+
+export const parsePixelSize = (value: Nullish<string>): number | undefined => {
+  const digits = value?.trim().match(pixelSizeRegex)?.[1]
+
+  if (!digits) {
+    return
+  }
+
+  const size = Number(digits)
+
+  return size >= minimumPixelSize && size <= maximumPixelSize ? size : undefined
+}
+
 // An empty or whitespace-only width/height attribute (`width=""`, common in editor output)
 // is not a declared dimension; coerceNumber treats those as absent.
 const dimensionAttribute = (element: Element, name: string): number | undefined => {
