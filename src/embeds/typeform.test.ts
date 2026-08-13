@@ -172,7 +172,10 @@ describeForEachParser('typeformIframeEmbedResolver', (parseHtml) => {
       : undefined
   }
 
-  it('should resolve the iframe the platform oembed emits', () => {
+  // The size the snippet states stays with the element: convertWidgets reads it off the carrier,
+  // from the inline style here and from `width`/`height` elsewhere, so a resolver that repeated
+  // it would be the second source of one number.
+  it('should resolve the iframe the platform oembed emits, stating no size of its own', () => {
     const value = html`
       <iframe
         src="https://form.typeform.com/to/MTt3Pw7K?typeform-embed=oembed&amp;typeform-medium=embed-oembed"
@@ -180,12 +183,14 @@ describeForEachParser('typeformIframeEmbedResolver', (parseHtml) => {
         allowfullscreen
       ></iframe>
     `
-
-    expect(extract(value)).toMatchObject({
+    const expected: EmbedResolverResult = {
       provider: 'typeform',
       id: 'MTt3Pw7K',
       src: 'https://form.typeform.com/to/MTt3Pw7K',
-    })
+      url: 'https://form.typeform.com/to/MTt3Pw7K',
+    }
+
+    expect(extract(value)).toEqual(expected)
   })
 
   it('should ignore an iframe on another host', () => {
