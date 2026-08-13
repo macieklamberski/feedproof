@@ -94,6 +94,16 @@ export const resolverExtractor = <Result>(parseHtml: ParseHtml, resolver: AnyRes
   }
 }
 
+// Substack writes a component's whole payload as JSON in `data-attrs`, with the inner quotes
+// entity-encoded, which is what survives a parse and serialise roundtrip. The element around it
+// differs per component, so each fixture keeps its own builder and only the encoding is shared.
+// A string payload is written through untouched, which is how a test states malformed JSON.
+export const substackAttrs = (attrs: Record<string, unknown> | string): string => {
+  const raw = typeof attrs === 'string' ? attrs : JSON.stringify(attrs)
+
+  return raw.replace(/"/g, '&quot;')
+}
+
 // Looks up an element that the fixture guarantees to exist, failing loudly instead of returning
 // null (which would otherwise need a cast or optional chaining in every assertion).
 export const queryElement = (document: Document, selector: string): Element => {
