@@ -23,12 +23,15 @@ describeForEachParser('wechatMediaResolver', (parseHtml) => {
   // The element's own src points at a WeChat template page, never at the audio.
   it('should ignore the element src', () => {
     const value = `<mpvoice src="/cgi-bin/readtemplate?t=tmpl/audio_tmpl" voice_encode_fileid="${mediaId}"></mpvoice>`
+    const expected: MediaResolverResult = { tag: 'audio', src: mediaSrc }
 
-    expect(extract(value)?.src).toBe(mediaSrc)
+    expect(extract(value)).toEqual(expected)
   })
 
   it('should return undefined when the id is missing', () => {
-    expect(extract('<mpvoice class="js_editor_audio"></mpvoice>')).toBeUndefined()
+    const value = '<mpvoice class="js_editor_audio"></mpvoice>'
+
+    expect(extract(value)).toBeUndefined()
   })
 
   it('should return undefined when the id is not the shape WeChat emits', () => {

@@ -49,13 +49,14 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
 
   describe('happy paths', () => {
     it('should read the audio file and poster out of the inlined config', () => {
-      const result = extract(makePlayer(episodeConfig))
-
-      expect(result).toEqual({
+      const value = makePlayer(episodeConfig)
+      const expected: MediaResolverResult = {
         tag: 'audio',
         src: 'https://300hertz.de/podlove/file/1036/s/webplayer/c/website/300Hertz_E043.mp3',
         poster: 'https://300hertz.de/podlove/image/deadbeef/500/0/0/300hertz',
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should fall back to the show poster when the episode has none', () => {
@@ -67,12 +68,14 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
           },
         },
       ])
-
-      expect(extract(makePlayer(config))).toEqual({
+      const value = makePlayer(config)
+      const expected: MediaResolverResult = {
         tag: 'audio',
         src: 'https://example.com/e.mp3',
         poster: 'https://example.com/show.jpg',
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should take the first audio entry when several formats are offered', () => {
@@ -86,8 +89,13 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
           },
         },
       ])
+      const value = makePlayer(config)
+      const expected: MediaResolverResult = {
+        tag: 'audio',
+        src: 'https://example.com/e.mp3',
+      }
 
-      expect(extract(makePlayer(config))?.src).toBe('https://example.com/e.mp3')
+      expect(extract(value)).toEqual(expected)
     })
 
     // Safari plays neither, so the order the publisher chose must not decide the file.
@@ -103,8 +111,13 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
           },
         },
       ])
+      const value = makePlayer(config)
+      const expected: MediaResolverResult = {
+        tag: 'audio',
+        src: 'https://example.com/e.m4a',
+      }
 
-      expect(extract(makePlayer(config))?.src).toBe('https://example.com/e.m4a')
+      expect(extract(value)).toEqual(expected)
     })
 
     // Nothing preferred is on offer, so the config's own order stands.
@@ -119,8 +132,13 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
           },
         },
       ])
+      const value = makePlayer(config)
+      const expected: MediaResolverResult = {
+        tag: 'audio',
+        src: 'https://example.com/e.opus',
+      }
 
-      expect(extract(makePlayer(config))?.src).toBe('https://example.com/e.opus')
+      expect(extract(value)).toEqual(expected)
     })
 
     // Several episodes in one item: each player has its own script, and they are not adjacent.
@@ -135,19 +153,25 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
           </script>
         </div>
       `
+      const expected: MediaResolverResult = {
+        tag: 'audio',
+        src: 'https://example.com/one.mp3',
+      }
 
-      expect(extract(value)?.src).toBe('https://example.com/one.mp3')
+      expect(extract(value)).toEqual(expected)
     })
 
     it('should emit no poster when the config states none', () => {
       const config = JSON.stringify([
         { data: { audio: [{ url: 'https://example.com/e.mp3', mimeType: 'audio/mpeg' }] } },
       ])
-
-      expect(extract(makePlayer(config))).toEqual({
+      const value = makePlayer(config)
+      const expected: MediaResolverResult = {
         tag: 'audio',
         src: 'https://example.com/e.mp3',
-      })
+      }
+
+      expect(extract(value)).toEqual(expected)
     })
   })
 
@@ -188,16 +212,18 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
 
     it('should return undefined when no audio entry names a file', () => {
       const config = JSON.stringify([{ data: { audio: [{ mimeType: 'audio/mpeg' }] } }])
+      const value = makePlayer(config)
 
-      expect(extract(makePlayer(config))).toBeUndefined()
+      expect(extract(value)).toBeUndefined()
     })
 
     it('should return undefined when the entry is not audio', () => {
       const config = JSON.stringify([
         { data: { audio: [{ url: 'https://example.com/e.mp4', mimeType: 'video/mp4' }] } },
       ])
+      const value = makePlayer(config)
 
-      expect(extract(makePlayer(config))).toBeUndefined()
+      expect(extract(value)).toBeUndefined()
     })
 
     // The url is interpolated into the document, so a relative or scriptable value is dropped.
@@ -205,8 +231,9 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
       const config = JSON.stringify([
         { data: { audio: [{ url: 'javascript:alert(1)', mimeType: 'audio/mpeg' }] } },
       ])
+      const value = makePlayer(config)
 
-      expect(extract(makePlayer(config))).toBeUndefined()
+      expect(extract(value)).toBeUndefined()
     })
 
     it('should return undefined when the player carries no script', () => {
