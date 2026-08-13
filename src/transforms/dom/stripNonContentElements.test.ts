@@ -81,6 +81,8 @@ const specimens: Record<string, string | [string, string]> = {
     '<div class="onetrust-css-video-wrapper"><div class="fallback-container"><img class="fallback-bg" src="https://i.ytimg.com/vi/x/maxresdefault.jpg"><p>Enable cookies to view this content.</p></div><iframe class="optanon-category-C0004" data-src="https://www.youtube.com/embed/x"></iframe></div>',
     '<div class="onetrust-css-video-wrapper"><iframe class="optanon-category-C0004" data-src="https://www.youtube.com/embed/x"></iframe></div>',
   ],
+  'span[data-s9e-mediaembed]:not(:has(iframe, embed, object, video, audio))':
+    '<span data-s9e-mediaembed="youtube" style="display:inline-block;max-width:640px"><span style="padding-bottom:56.25%"> <strong>iframe</strong> </span></span>',
   '.fusion-privacy-placeholder':
     '<div class="fusion-privacy-placeholder" data-privacy-type="youtube"><div class="fusion-privacy-label">For privacy reasons YouTube needs your permission to be loaded.</div></div>',
 }
@@ -280,6 +282,17 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
       `
 
       expect(await transform(value, context)).toBe(value)
+    })
+    // The same wrapper with its player intact is a working embed, not chrome. Only the shells
+    // whose iframe the feed generator removed are stripped.
+    it('should keep an s9e wrapper whose player survived', async () => {
+      const value = html`
+        <span data-s9e-mediaembed="youtube">
+          <span><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></span>
+        </span>
+      `
+
+      expect(await transform(value)).toBe(value)
     })
   })
 })
