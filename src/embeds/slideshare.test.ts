@@ -73,7 +73,10 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
   describe('the wrapper the flash snippet builds', () => {
     it('should replace the dead player with the embed the id still serves', () => {
       const value = html`
-        <div style="width:425px" id="__ss_6435157">
+        <div
+          style="width:425px"
+          id="__ss_6435157"
+        >
           <strong style="display:block;margin:12px 0 4px">
             <a
               href="http://www.slideshare.net/haraldf/business-quotes-for-2011"
@@ -81,7 +84,11 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
               >Business Quotes for 2011</a
             >
           </strong>
-          <object id="__sse6435157" width="425" height="355">
+          <object
+            id="__sse6435157"
+            width="425"
+            height="355"
+          >
             <param
               name="movie"
               value="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=110103quotes2010-12-110103073149-phpapp01&amp;stripped_title=business-quotes-for-2011&amp;userName=haraldf"
