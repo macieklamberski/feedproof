@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { baseContext, describeForEachParser, html } from '../tests.js'
+import { baseContext, describeForEachParser, html, resolverExtractor } from '../tests.js'
 import { convertWidgets } from '../transforms/dom/convertWidgets.js'
 import type { EmbedResolverResult, TransformContext } from '../types.js'
 import { applyDomTransforms } from '../utils/transforms.js'
@@ -46,11 +46,7 @@ describe('extractBandcampRelease', () => {
 })
 
 describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(bandcampEmbedResolver.selector)
-
-    return element ? (bandcampEmbedResolver.extract(element) as EmbedResolverResult) : undefined
-  }
+  const extract = resolverExtractor(parseHtml, bandcampEmbedResolver)
 
   const transform = (value: string) => {
     return applyDomTransforms(parseHtml(value), [
@@ -64,7 +60,7 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
   describe('happy paths', () => {
     // Bandcamp's own snippet carries the release page and label in a fallback anchor, which is
     // the only place either appears — the player url names the release by number alone.
-    it('should read the canonical url and title from the fallback anchor', () => {
+    it('should read the canonical url and title from the fallback anchor', async () => {
       const value = html`
         <iframe
           src="https://bandcamp.com/EmbeddedPlayer/album=3373381116/size=large/bgcol=ffffff/transparent=true/"
@@ -84,10 +80,10 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
         title: 'Do You Wanna Be Rich? by My Expansive Awareness',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should keep the video player form for a video embed', () => {
+    it('should keep the video player form for a video embed', async () => {
       const value =
         '<iframe src="https://bandcamp.com/VideoEmbed?track=1959185434&bgcol=ffffff"></iframe>'
       const expected: EmbedResolverResult = {
@@ -96,10 +92,10 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
         src: 'https://bandcamp.com/VideoEmbed?track=1959185434',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should yield provider and id when no fallback anchor exists', () => {
+    it('should yield provider and id when no fallback anchor exists', async () => {
       const value =
         '<iframe src="https://bandcamp.com/EmbeddedPlayer/album=42/size=small/"></iframe>'
       const expected: EmbedResolverResult = {
@@ -109,22 +105,22 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
         height: 42,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
-    it('should ignore a player naming no release', () => {
+    it('should ignore a player naming no release', async () => {
       const value =
         '<iframe src="https://bandcamp.com/EmbeddedPlayer/size=small/bgcol=ffffff/"></iframe>'
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should ignore a carrier pointing somewhere else', () => {
+    it('should ignore a carrier pointing somewhere else', async () => {
       const value = '<iframe src="https://example.com/EmbeddedPlayer/album=42/"></iframe>'
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 

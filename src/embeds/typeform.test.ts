@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   typeformIframeEmbedResolver,
@@ -8,16 +8,10 @@ import {
 } from './typeform.js'
 
 describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(typeformWidgetEmbedResolver.selector)
-
-    return element
-      ? (typeformWidgetEmbedResolver.extract(element) as EmbedResolverResult)
-      : undefined
-  }
+  const extract = resolverExtractor(parseHtml, typeformWidgetEmbedResolver)
 
   describe('the share panel snippet', () => {
-    it('should recover the form and its title from an empty div', () => {
+    it('should recover the form and its title from an empty div', async () => {
       const value = html`
         <div
           data-tf-live="01HCZ4DNW8JM6PEGNTQWF2PW87"
@@ -37,10 +31,10 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
         title: 'User Satisfaction Survey',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should read the title out of a props string that carries other options', () => {
+    it('should read the title out of a props string that carries other options', async () => {
       const value = html`
         <div
           data-tf-widget="MTt3Pw7K"
@@ -55,12 +49,12 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
         title: 'Booking Form',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('the direct widget form', () => {
-    it('should recover the form named by its own id', () => {
+    it('should recover the form named by its own id', async () => {
       const value = html`<div data-tf-widget="MTt3Pw7K"></div>`
       const expected: EmbedResolverResult = {
         provider: 'typeform',
@@ -69,12 +63,12 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
         url: 'https://form.typeform.com/to/MTt3Pw7K',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('the legacy typeform-widget class', () => {
-    it('should read the form url the older generation carries whole', () => {
+    it('should read the form url the older generation carries whole', async () => {
       const value = html`
         <div
           class="typeform-widget"
@@ -91,12 +85,12 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
         url: 'https://form.typeform.com/to/WCfVwJTK',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('launchers, which were never article content', () => {
-    it('should ignore a popup button', () => {
+    it('should ignore a popup button', async () => {
       const value = html`
         <div
           data-tf-popup="MTt3Pw7K"
@@ -104,10 +98,10 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
         ></div>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should ignore a launcher that also carries a live id', () => {
+    it('should ignore a launcher that also carries a live id', async () => {
       const value = html`
         <div
           data-tf-live="01HCZ4DNW8JM6PEGNTQWF2PW87"
@@ -115,24 +109,24 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
         ></div>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 
   describe('sad paths', () => {
-    it('should return undefined for an id outside the url-safe alphabet', () => {
+    it('should return undefined for an id outside the url-safe alphabet', async () => {
       const value = html`<div data-tf-widget="../evil"></div>`
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for an empty id', () => {
+    it('should return undefined for an empty id', async () => {
       const value = html`<div data-tf-widget=""></div>`
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for a legacy widget naming another host', () => {
+    it('should return undefined for a legacy widget naming another host', async () => {
       const value = html`
         <div
           class="typeform-widget"
@@ -140,7 +134,7 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
         ></div>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })
@@ -197,18 +191,12 @@ describe('typeformResolveEmbed', () => {
 })
 
 describeForEachParser('typeformIframeEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(typeformIframeEmbedResolver.selector)
-
-    return element
-      ? (typeformIframeEmbedResolver.extract(element) as EmbedResolverResult)
-      : undefined
-  }
+  const extract = resolverExtractor(parseHtml, typeformIframeEmbedResolver)
 
   // The size the snippet states stays with the element: convertWidgets reads it off the carrier,
   // from the inline style here and from `width`/`height` elsewhere, so a resolver that repeated
   // it would be the second source of one number.
-  it('should resolve the iframe the platform oembed emits, stating no size of its own', () => {
+  it('should resolve the iframe the platform oembed emits, stating no size of its own', async () => {
     const value = html`
       <iframe
         src="https://form.typeform.com/to/MTt3Pw7K?typeform-embed=oembed&amp;typeform-medium=embed-oembed"
@@ -223,12 +211,12 @@ describeForEachParser('typeformIframeEmbedResolver', (parseHtml) => {
       url: 'https://form.typeform.com/to/MTt3Pw7K',
     }
 
-    expect(extract(value)).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
-  it('should ignore an iframe on another host', () => {
+  it('should ignore an iframe on another host', async () => {
     const value = html`<iframe src="https://evil.test/to/MTt3Pw7K"></iframe>`
 
-    expect(extract(value)).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 })

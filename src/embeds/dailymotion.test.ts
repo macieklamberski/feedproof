@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser } from '../tests.js'
+import { describeForEachParser, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   dailymotionEmbedResolver,
@@ -106,10 +106,7 @@ describe('dailymotionResolveEmbed', () => {
 })
 
 describeForEachParser('dailymotionEmbedResolver', (parseHtml) => {
-  const resolve = (value: string) => {
-    const element = parseHtml(value).querySelector(dailymotionEmbedResolver.selector) ?? undefined
-    return element ? dailymotionEmbedResolver.extract(element) : undefined
-  }
+  const resolve = resolverExtractor(parseHtml, dailymotionEmbedResolver)
 
   it('should resolve a dailymotion iframe', async () => {
     const value = '<iframe src="https://www.dailymotion.com/embed/video/x7tgad0"></iframe>'

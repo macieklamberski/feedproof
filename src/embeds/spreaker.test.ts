@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   extractSpreakerEmbed,
@@ -66,13 +66,7 @@ describe('spreakerResolveEmbed', () => {
 })
 
 describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(spreakerAnchorEmbedResolver.selector)
-
-    return element
-      ? (spreakerAnchorEmbedResolver.extract(element) as EmbedResolverResult)
-      : undefined
-  }
+  const extract = resolverExtractor(parseHtml, spreakerAnchorEmbedResolver)
 
   // The corpus shape: the loader swaps this anchor for the player, so without it a reader sees
   // the fallback text and nothing else.
@@ -80,7 +74,7 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
     html`<a class="spreaker-player" href="https://www.spreaker.com/episode/42" ${attributes}>Listen to "An episode" on Spreaker.</a>`
 
   describe('happy paths', () => {
-    it('should read the episode out of data-resource', () => {
+    it('should read the episode out of data-resource', async () => {
       const value = anchor('data-resource="episode_id=42"')
       const expected: EmbedResolverResult = {
         provider: 'spreaker',
@@ -89,10 +83,10 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         height: 200,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should read a show resource', () => {
+    it('should read a show resource', async () => {
       const value = anchor('data-resource="show_id=99"')
       const expected: EmbedResolverResult = {
         provider: 'spreaker',
@@ -101,11 +95,11 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         height: 200,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // The publisher sized this one, so their height wins over the documented constant.
-    it('should prefer the stated data-height', () => {
+    it('should prefer the stated data-height', async () => {
       const value = anchor('data-resource="episode_id=42" data-height="350px"')
       const expected: EmbedResolverResult = {
         provider: 'spreaker',
@@ -114,10 +108,10 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         height: 350,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should accept a bare pixel count', () => {
+    it('should accept a bare pixel count', async () => {
       const value = anchor('data-resource="episode_id=42" data-height="120"')
       const expected: EmbedResolverResult = {
         provider: 'spreaker',
@@ -126,12 +120,12 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         height: 120,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
-    it('should keep the constant when data-height is not a pixel count', () => {
+    it('should keep the constant when data-height is not a pixel count', async () => {
       const value = anchor('data-resource="episode_id=42" data-height="100%"')
       const expected: EmbedResolverResult = {
         provider: 'spreaker',
@@ -140,19 +134,19 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         height: 200,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should return undefined when the resource names no id', () => {
+    it('should return undefined when the resource names no id', async () => {
       const value = anchor('data-resource="episode_id=abc"')
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for an unknown resource kind', () => {
+    it('should return undefined for an unknown resource kind', async () => {
       const value = anchor('data-resource="playlist_id=42"')
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
     // The class is styling anyone can copy and the anchor already works as a link, so an

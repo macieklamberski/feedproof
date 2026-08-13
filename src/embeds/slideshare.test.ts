@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   slideshareFlashEmbedResolver,
@@ -62,16 +62,10 @@ describe('slideshareResolveEmbed', () => {
 })
 
 describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(slideshareFlashEmbedResolver.selector)
-
-    return element
-      ? (slideshareFlashEmbedResolver.extract(element) as EmbedResolverResult)
-      : undefined
-  }
+  const extract = resolverExtractor(parseHtml, slideshareFlashEmbedResolver)
 
   describe('the wrapper the flash snippet builds', () => {
-    it('should replace the dead player with the embed the id still serves', () => {
+    it('should replace the dead player with the embed the id still serves', async () => {
       const value = html`
         <div style="width:425px" id="__ss_6435157">
           <strong style="display:block;margin:12px 0 4px">
@@ -104,10 +98,10 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
         title: 'Business Quotes for 2011',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should compose the deck page from the swf query when the wrapper links nowhere', () => {
+    it('should compose the deck page from the swf query when the wrapper links nowhere', async () => {
       const value = html`
         <div id="__ss_6435157">
           <object id="__sse6435157">
@@ -125,10 +119,10 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
         url: 'https://www.slideshare.net/haraldf/business-quotes-for-2011',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should read the id off the object when the outer div is gone', () => {
+    it('should read the id off the object when the outer div is gone', async () => {
       const value = html`
         <object id="__sse6435157">
           <embed
@@ -143,12 +137,12 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
         src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
-    it('should return undefined when no wrapper names the deck', () => {
+    it('should return undefined when no wrapper names the deck', async () => {
       const value = html`
         <embed
           src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=110103quotes"
@@ -156,10 +150,10 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
         ></embed>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for another host serving the same player path', () => {
+    it('should return undefined for another host serving the same player path', async () => {
       const value = html`
         <div id="__ss_6435157">
           <embed
@@ -169,31 +163,25 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
         </div>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for a slideshare player that is not the flash one', () => {
+    it('should return undefined for a slideshare player that is not the flash one', async () => {
       const value = html`
         <div id="__ss_6435157">
           <embed src="https://static.slidesharecdn.com/other/thing.swf"></embed>
         </div>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })
 
 describeForEachParser('slideshareIframeEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(slideshareIframeEmbedResolver.selector)
+  const extract = resolverExtractor(parseHtml, slideshareIframeEmbedResolver)
 
-    return element
-      ? (slideshareIframeEmbedResolver.extract(element) as EmbedResolverResult)
-      : undefined
-  }
-
-  it('should resolve the keyed iframe the current dialog writes', () => {
+  it('should resolve the keyed iframe the current dialog writes', async () => {
     const value = html`
       <iframe
         src="https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAY"
@@ -209,14 +197,14 @@ describeForEachParser('slideshareIframeEmbedResolver', (parseHtml) => {
       src: 'https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAY',
     }
 
-    expect(extract(value)).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
-  it('should ignore an iframe on another host', () => {
+  it('should ignore an iframe on another host', async () => {
     const value = html`
       <iframe src="https://evil.test/slideshow/embed_code/key/6PCWPGFw9SwsAY"></iframe>
     `
 
-    expect(extract(value)).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 })

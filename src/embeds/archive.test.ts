@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
-import { describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   archiveFlashEmbedResolver,
@@ -101,14 +101,10 @@ describe('archiveResolveEmbed', () => {
 })
 
 describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(archiveFlashEmbedResolver.selector)
-
-    return element ? (archiveFlashEmbedResolver.extract(element) as EmbedResolverResult) : undefined
-  }
+  const extract = resolverExtractor(parseHtml, archiveFlashEmbedResolver)
 
   describe('happy paths', () => {
-    it('should read the identifier from a playlist url', () => {
+    it('should read the identifier from a playlist url', async () => {
       const value = html`
         <embed
           type="application/x-shockwave-flash"
@@ -124,11 +120,11 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
         thumbnail: 'https://archive.org/services/img/TheGoodOldGasMask',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // The audio player names the file on its own and puts the item on the clip instead.
-    it('should read the identifier from the clip base url', () => {
+    it('should read the identifier from the clip base url', async () => {
       const value = html`
         <embed
           type="application/x-shockwave-flash"
@@ -144,10 +140,10 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
         thumbnail: 'https://archive.org/services/img/EndCameTooSoon',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should read the config from a sibling param', () => {
+    it('should read the config from a sibling param', async () => {
       const value = html`
         <object width="640" height="504">
           <param
@@ -164,16 +160,11 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
         url: 'https://archive.org/details/BlackSummerPodcast',
         thumbnail: 'https://archive.org/services/img/BlackSummerPodcast',
       }
-      const element = parseHtml(value).querySelector('embed')
-      const result = element
-        ? (archiveFlashEmbedResolver.extract(element) as EmbedResolverResult)
-        : undefined
-
-      expect(result).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // The player that predates flashvars took the same config as a query parameter.
-    it('should read the config from the player query', () => {
+    it('should read the config from the player query', async () => {
       const value = html`
         <embed
           src="http://www.archive.org/flow/FlowPlayerLight.swf?config=%7BplayList%3A%5B%7Burl%3A%27http%3A%2F%2Fwww.archive.org%2Fdownload%2Fmarkofzorro-1920%2Fmarkofzorro.flv%27%7D%5D%7D"
@@ -187,23 +178,23 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
         thumbnail: 'https://archive.org/services/img/markofzorro-1920',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
     // The archive's player will play anybody's file, and somebody else's file is not an item.
-    it('should ignore a config pointing at a file the archive does not host', () => {
+    it('should ignore a config pointing at a file the archive does not host', async () => {
       const value = html`
         <embed
           src="http://www.archive.org/flow/FlowPlayerLight.swf?config=%7BplayList%3A%5B%7Burl%3A%27http%3A%2F%2Ftrailers.labutaca.net%2Fplanet-51-clip-4.flv%27%7D%5D%7D"
         />
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should ignore a player on another host that names an archive file', () => {
+    it('should ignore a player on another host that names an archive file', async () => {
       const value = html`
         <embed
           src="http://evil.test/flow/flowplayer.commercial-3.2.1.swf"
@@ -211,23 +202,23 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
         />
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should ignore an archive url that is not the flash player', () => {
+    it('should ignore an archive url that is not the flash player', async () => {
       const value = '<embed src="https://archive.org/embed/nasa_hubble">'
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should ignore a player carrying no config', () => {
+    it('should ignore a player carrying no config', async () => {
       const value = '<embed src="http://www.archive.org/flow/flowplayer.commercial-3.2.1.swf">'
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
     // A base url on its own names the download endpoint rather than any item under it.
-    it('should ignore a config whose only download url names no item', () => {
+    it('should ignore a config whose only download url names no item', async () => {
       const value = html`
         <embed
           src="http://www.archive.org/flow/FlowPlayerLight.swf"
@@ -235,7 +226,7 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
         />
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })

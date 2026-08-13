@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser } from '../tests.js'
+import { describeForEachParser, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { appleEmbedResolver, appleResolveEmbed } from './apple.js'
 
@@ -165,10 +165,7 @@ describe('appleResolveEmbed', () => {
 })
 
 describeForEachParser('appleEmbedResolver', (parseHtml) => {
-  const resolve = (value: string) => {
-    const element = parseHtml(value).querySelector(appleEmbedResolver.selector) ?? undefined
-    return element ? appleEmbedResolver.extract(element) : undefined
-  }
+  const resolve = resolverExtractor(parseHtml, appleEmbedResolver)
 
   it('should resolve an apple music iframe', async () => {
     const value =

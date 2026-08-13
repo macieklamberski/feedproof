@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser } from '../tests.js'
+import { describeForEachParser, resolverExtractor } from '../tests.js'
 import { extractVimeoId, vimeoEmbedResolver, vimeoResolveEmbed } from './vimeo.js'
 
 describe('extractVimeoId', () => {
@@ -70,10 +70,7 @@ describe('vimeoResolveEmbed', () => {
 })
 
 describeForEachParser('vimeoEmbedResolver', (parseHtml) => {
-  const resolve = (value: string) => {
-    const element = parseHtml(value).querySelector(vimeoEmbedResolver.selector) ?? undefined
-    return element ? vimeoEmbedResolver.extract(element) : undefined
-  }
+  const resolve = resolverExtractor(parseHtml, vimeoEmbedResolver)
 
   it('should resolve a vimeo iframe', async () => {
     const result = await resolve('<iframe src="https://player.vimeo.com/video/76979871"></iframe>')
