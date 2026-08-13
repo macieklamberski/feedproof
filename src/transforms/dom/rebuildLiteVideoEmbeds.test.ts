@@ -54,7 +54,12 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
   })
 
   it('should carry videotitle into the iframe title', async () => {
-    const value = html`<lite-youtube videoid="dQw4w9WgXcQ" videotitle="Never Gonna Give You Up"></lite-youtube>`
+    const value = html`
+      <lite-youtube
+        videoid="dQw4w9WgXcQ"
+        videotitle="Never Gonna Give You Up"
+      ></lite-youtube>
+    `
     const result = await transform(value)
 
     expect(result).toContain('title="Never Gonna Give You Up"')

@@ -26,7 +26,12 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
   })
 
   it('should skip an already-initialized Pym node', async () => {
-    const value = html`<div data-pym-src="https://apps.npr.org/chart/" data-pym-auto-initialized="true"></div>`
+    const value = html`
+      <div
+        data-pym-src="https://apps.npr.org/chart/"
+        data-pym-auto-initialized="true"
+      ></div>
+    `
     const result = await transform(value)
 
     expect(result).not.toContain('<iframe')

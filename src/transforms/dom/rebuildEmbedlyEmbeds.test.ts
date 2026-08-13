@@ -9,7 +9,13 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
   }
 
   it('should unwrap an Embedly media iframe to the inner src and carry the poster', async () => {
-    const value = html`<iframe src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fwww.youtube.com%2Fembed%2FdQw4w9WgXcQ&image=https%3A%2F%2Fi.ytimg.com%2Fvi%2FdQw4w9WgXcQ%2Fhqdefault.jpg&url=https%3A%2F%2Fyoutu.be%2FdQw4w9WgXcQ&schema=youtube" width="640" height="360"></iframe>`
+    const value = html`
+      <iframe
+        src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fwww.youtube.com%2Fembed%2FdQw4w9WgXcQ&image=https%3A%2F%2Fi.ytimg.com%2Fvi%2FdQw4w9WgXcQ%2Fhqdefault.jpg&url=https%3A%2F%2Fyoutu.be%2FdQw4w9WgXcQ&schema=youtube"
+        width="640"
+        height="360"
+      ></iframe>
+    `
     const result = await transform(value)
 
     expect(result).toContain('src="https://www.youtube.com/embed/dQw4w9WgXcQ"')

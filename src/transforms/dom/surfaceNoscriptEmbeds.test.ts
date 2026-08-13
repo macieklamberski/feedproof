@@ -18,7 +18,12 @@ describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {
   })
 
   it('should leave a Google Tag Manager noscript alone', async () => {
-    const value = html`<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXX" height="0" width="0"></iframe></noscript>`
+    const value = html`
+      <noscript>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXX" height="0" width="0">
+        </iframe>
+      </noscript>
+    `
     const result = await transform(value)
 
     expect(result).toContain('<noscript')
