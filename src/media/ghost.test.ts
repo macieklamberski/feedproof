@@ -1,16 +1,12 @@
 import { describe, expect, it } from 'bun:test'
-import { baseContext, describeForEachParser, html } from '../tests.js'
+import { baseContext, describeForEachParser, html, resolverExtractor } from '../tests.js'
 import { convertWidgets } from '../transforms/dom/convertWidgets.js'
 import type { MediaResolverResult } from '../types.js'
 import { applyDomTransforms } from '../utils/transforms.js'
 import { ghostMediaResolver } from './ghost.js'
 
 describeForEachParser('ghostMediaResolver', (parseHtml) => {
-  const extract = (value: string): MediaResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(ghostMediaResolver.selector)
-
-    return element ? (ghostMediaResolver.extract(element) as MediaResolverResult) : undefined
-  }
+  const extract = resolverExtractor(parseHtml, ghostMediaResolver)
 
   const transform = (value: string) => {
     return applyDomTransforms(parseHtml(value), [
@@ -19,7 +15,7 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
   }
 
   describe('video cards', () => {
-    it('should resolve the upload with the figure thumbnail and dimensions', () => {
+    it('should resolve the upload with the figure thumbnail and dimensions', async () => {
       const value = html`
         <figure class="kg-card kg-video-card" data-kg-thumbnail="https://example.com/thumb.jpg">
           <div class="kg-video-container">
@@ -46,10 +42,10 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
         height: 1080,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should prefer the custom thumbnail over the generated one', () => {
+    it('should prefer the custom thumbnail over the generated one', async () => {
       const value = html`
         <figure
           class="kg-video-card"
@@ -65,10 +61,10 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
         poster: 'https://example.com/custom.jpg',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should leave the spacer poster behind when no thumbnail is available', () => {
+    it('should leave the spacer poster behind when no thumbnail is available', async () => {
       const value = html`
         <figure class="kg-video-card">
           <div class="kg-video-container">
@@ -78,7 +74,7 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
       `
       const expected: MediaResolverResult = { tag: 'video', src: 'https://example.com/clip.mp4' }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should replace the chrome container but keep the author caption', async () => {
@@ -99,21 +95,21 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
       expect(result).not.toContain('kg-video-player')
     })
 
-    it('should return undefined for a container without a video element', () => {
+    it('should return undefined for a container without a video element', async () => {
       const value =
         '<figure class="kg-video-card"><div class="kg-video-container"><div class="kg-video-overlay"></div></div></figure>'
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should not match the cleaned form', () => {
+    it('should not match the cleaned form', async () => {
       const value = html`
         <figure class="kg-card kg-video-card">
           <video src="https://example.com/clip.mp4" poster="https://example.com/thumb.jpg" controls></video>
         </figure>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 
@@ -137,10 +133,10 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
       expect(result).not.toContain('125.94')
     })
 
-    it('should return undefined for a card without an audio element', () => {
+    it('should return undefined for a card without an audio element', async () => {
       const value = '<div class="kg-audio-card"><div class="kg-audio-player"></div></div>'
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 

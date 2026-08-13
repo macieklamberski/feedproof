@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { MediaResolverResult } from '../types.js'
 import { podloveMediaResolver } from './podlove.js'
 
@@ -41,14 +41,10 @@ const episodeConfig = JSON.stringify([
 ])
 
 describeForEachParser('podloveMediaResolver', (parseHtml) => {
-  const extract = (value: string): MediaResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(podloveMediaResolver.selector)
-
-    return element ? (podloveMediaResolver.extract(element) as MediaResolverResult) : undefined
-  }
+  const extract = resolverExtractor(parseHtml, podloveMediaResolver)
 
   describe('happy paths', () => {
-    it('should read the audio file and poster out of the inlined config', () => {
+    it('should read the audio file and poster out of the inlined config', async () => {
       const value = makePlayer(episodeConfig)
       const expected: MediaResolverResult = {
         tag: 'audio',
@@ -56,10 +52,10 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
         poster: 'https://300hertz.de/podlove/image/deadbeef/500/0/0/300hertz',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should fall back to the show poster when the episode has none', () => {
+    it('should fall back to the show poster when the episode has none', async () => {
       const config = JSON.stringify([
         {
           data: {
@@ -75,10 +71,10 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
         poster: 'https://example.com/show.jpg',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should take the first audio entry when several formats are offered', () => {
+    it('should take the first audio entry when several formats are offered', async () => {
       const config = JSON.stringify([
         {
           data: {
@@ -95,11 +91,11 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
         src: 'https://example.com/e.mp3',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // Safari plays neither, so the order the publisher chose must not decide the file.
-    it('should skip ogg and opus for a widely playable format listed after them', () => {
+    it('should skip ogg and opus for a widely playable format listed after them', async () => {
       const config = JSON.stringify([
         {
           data: {
@@ -117,11 +113,11 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
         src: 'https://example.com/e.m4a',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // Nothing preferred is on offer, so the config's own order stands.
-    it('should fall back to the first entry when no preferred format is offered', () => {
+    it('should fall back to the first entry when no preferred format is offered', async () => {
       const config = JSON.stringify([
         {
           data: {
@@ -138,11 +134,11 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
         src: 'https://example.com/e.opus',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // Several episodes in one item: each player has its own script, and they are not adjacent.
-    it('should find the config by player id when the script is not the next sibling', () => {
+    it('should find the config by player id when the script is not the next sibling', async () => {
       const value = html`
         <div>
           <div id="player-one" class="podlove-web-player"></div>
@@ -158,10 +154,10 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
         src: 'https://example.com/one.mp3',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should emit no poster when the config states none', () => {
+    it('should emit no poster when the config states none', async () => {
       const config = JSON.stringify([
         { data: { audio: [{ url: 'https://example.com/e.mp3', mimeType: 'audio/mpeg' }] } },
       ])
@@ -171,13 +167,13 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
         src: 'https://example.com/e.mp3',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('rejections', () => {
     // The id lookup runs and finds nothing, which is separate from there being no script.
-    it('should return undefined when no sibling script names the player', () => {
+    it('should return undefined when no sibling script names the player', async () => {
       const value = html`
         <div>
           <div id="player-three" class="podlove-web-player"></div>
@@ -186,11 +182,11 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
         </div>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
     // The endpoint spelling: a config url with no data, which would need a fetch.
-    it('should return undefined for the fetch-based player form', () => {
+    it('should return undefined for the fetch-based player form', async () => {
       const value = html`
         <div id="player-two" class="podlove-web-player"></div>
         <script>
@@ -198,48 +194,48 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
         </script>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined when the config is malformed json', () => {
+    it('should return undefined when the config is malformed json', async () => {
       const value = html`
         <div class="podlove-web-player"></div>
         <script>podlovePlayerCache.add([{"data":{"audio":[}])</script>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined when no audio entry names a file', () => {
+    it('should return undefined when no audio entry names a file', async () => {
       const config = JSON.stringify([{ data: { audio: [{ mimeType: 'audio/mpeg' }] } }])
       const value = makePlayer(config)
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined when the entry is not audio', () => {
+    it('should return undefined when the entry is not audio', async () => {
       const config = JSON.stringify([
         { data: { audio: [{ url: 'https://example.com/e.mp4', mimeType: 'video/mp4' }] } },
       ])
       const value = makePlayer(config)
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
     // The url is interpolated into the document, so a relative or scriptable value is dropped.
-    it('should return undefined for a url that is not absolute', () => {
+    it('should return undefined for a url that is not absolute', async () => {
       const config = JSON.stringify([
         { data: { audio: [{ url: 'javascript:alert(1)', mimeType: 'audio/mpeg' }] } },
       ])
       const value = makePlayer(config)
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined when the player carries no script', () => {
+    it('should return undefined when the player carries no script', async () => {
       const value = html`<div class="podlove-web-player"></div>`
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })
