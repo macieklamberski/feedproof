@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html, resolverExtractor } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { substackCrossPostCiteResolver, substackOwnPostCiteResolver } from './substack.js'
 
@@ -7,15 +7,12 @@ import { substackCrossPostCiteResolver, substackOwnPostCiteResolver } from './su
 // stored in a double-quoted attribute with the inner quotes HTML-encoded — that is what
 // survives a parse/serialise roundtrip. Tests pass the attrs object with Substack's own
 // key names so the wire keys stay visible at the call site.
-const makeCard = (className: string, attrs?: Record<string, unknown> | string): string => {
+const makeContainer = (className: string, attrs?: Record<string, unknown> | string): string => {
   if (attrs === undefined) {
     return `<div class="${className}"></div>`
   }
 
-  const raw = typeof attrs === 'string' ? attrs : JSON.stringify(attrs)
-  const encoded = raw.replace(/"/g, '&quot;')
-
-  return `<div class="${className}" data-attrs="${encoded}"></div>`
+  return `<div class="${className}" data-attrs="${substackAttrs(attrs)}"></div>`
 }
 
 describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
@@ -23,7 +20,7 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
 
   describe('happy paths', () => {
     it('should extract all fields from a complete post card', async () => {
-      const value = makeCard('digest-post-embed', {
+      const value = makeContainer('digest-post-embed', {
         title: 'Why Does Everyone Hate AI?',
         canonical_url: 'https://thereader.example.com/p/why-does-everyone-hate-ai',
         caption: 'A look at the backlash.',
@@ -49,7 +46,7 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
     })
 
     it('should extract a digest card using canonical_url', async () => {
-      const value = makeCard('digest-post-embed', {
+      const value = makeContainer('digest-post-embed', {
         title: 'Model Drop',
         canonical_url: 'https://thereader.example.com/p/model-drop',
         cover_image: 'https://cdn.example.com/cover.webp',
@@ -70,7 +67,7 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
     })
 
     it('should return undefined when only the cross-post url key is present', async () => {
-      const value = makeCard('digest-post-embed', {
+      const value = makeContainer('digest-post-embed', {
         title: 'Model Drop',
         url: 'https://example.com/p/duplicate',
       })
@@ -79,7 +76,7 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
     })
 
     it('should ignore the cross-post bylines key', async () => {
-      const value = makeCard('digest-post-embed', {
+      const value = makeContainer('digest-post-embed', {
         title: 'Model Drop',
         canonical_url: 'https://thereader.example.com/p/model-drop',
         bylines: [{ name: 'Author name' }],
@@ -96,7 +93,7 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
     // Optional fields pass through raw; createCitePlaceholder trims every field
     // when it writes the attributes. Only the guard-checked title is trimmed here.
     it('should trim every text field', async () => {
-      const value = makeCard('digest-post-embed', {
+      const value = makeContainer('digest-post-embed', {
         title: '  Model Drop  ',
         canonical_url: 'https://thereader.example.com/p/model-drop',
         caption: ' A look at the backlash. ',
@@ -118,13 +115,13 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
 
   describe('edge cases', () => {
     it('should return undefined when canonical_url is missing', async () => {
-      const value = makeCard('digest-post-embed', { title: 'Model Drop' })
+      const value = makeContainer('digest-post-embed', { title: 'Model Drop' })
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined when title is missing', async () => {
-      const value = makeCard('digest-post-embed', {
+      const value = makeContainer('digest-post-embed', {
         canonical_url: 'https://thereader.example.com/p/model-drop',
       })
 
@@ -132,7 +129,7 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
     })
 
     it('should return undefined when title is whitespace-only', async () => {
-      const value = makeCard('digest-post-embed', {
+      const value = makeContainer('digest-post-embed', {
         title: '   ',
         canonical_url: 'https://thereader.example.com/p/model-drop',
       })
@@ -141,19 +138,19 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
     })
 
     it('should return undefined when data-attrs is valid JSON but not an object', async () => {
-      const value = makeCard('digest-post-embed', '"Model Drop"')
+      const value = makeContainer('digest-post-embed', '"Model Drop"')
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined when data-attrs is malformed json', async () => {
-      const value = makeCard('digest-post-embed', 'not-json')
+      const value = makeContainer('digest-post-embed', 'not-json')
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined when data-attrs is absent', async () => {
-      const value = makeCard('digest-post-embed')
+      const value = makeContainer('digest-post-embed')
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -261,7 +258,7 @@ describeForEachParser('substackCrossPostCiteResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, substackCrossPostCiteResolver)
 
   it('should extract all fields from a complete cross-post card', async () => {
-    const value = makeCard('embedded-post-wrap', {
+    const value = makeContainer('embedded-post-wrap', {
       title: 'Why Does Everyone Hate AI?',
       url: 'https://thereader.example.com/p/why-does-everyone-hate-ai',
       truncated_body_text: 'A look at the backlash.',
@@ -287,7 +284,7 @@ describeForEachParser('substackCrossPostCiteResolver', (parseHtml) => {
   })
 
   it('should fall back to the byline photo when the publication has no logo', async () => {
-    const value = makeCard('embedded-post-wrap', {
+    const value = makeContainer('embedded-post-wrap', {
       title: 'Model Drop',
       url: 'https://thereader.example.com/p/model-drop',
       bylines: [{ name: 'Author name', photo_url: 'https://cdn.example.com/author.png' }],
@@ -304,7 +301,7 @@ describeForEachParser('substackCrossPostCiteResolver', (parseHtml) => {
   })
 
   it('should ignore the own-post publishedBylines key', async () => {
-    const value = makeCard('embedded-post-wrap', {
+    const value = makeContainer('embedded-post-wrap', {
       title: 'Model Drop',
       url: 'https://thereader.example.com/p/model-drop',
       publishedBylines: [{ name: 'Author name' }],
@@ -319,7 +316,7 @@ describeForEachParser('substackCrossPostCiteResolver', (parseHtml) => {
   })
 
   it('should not match the own-post class', async () => {
-    const value = makeCard('digest-post-embed', {
+    const value = makeContainer('digest-post-embed', {
       title: 'Model Drop',
       canonical_url: 'https://thereader.example.com/p/model-drop',
     })

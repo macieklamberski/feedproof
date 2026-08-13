@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, resolverExtractor } from '../tests.js'
+import { describeForEachParser, resolverExtractor, substackAttrs } from '../tests.js'
 import type { MediaResolverResult } from '../types.js'
 import { substackMediaResolver } from './substack.js'
 
@@ -14,9 +14,7 @@ const makeContainer = (className: string, attrs?: Record<string, unknown> | stri
     return `<div class="${className}"></div>`
   }
 
-  const raw = typeof attrs === 'string' ? attrs : JSON.stringify(attrs)
-
-  return `<div class="${className}" data-attrs="${raw.replace(/"/g, '&quot;')}"></div>`
+  return `<div class="${className}" data-attrs="${substackAttrs(attrs)}"></div>`
 }
 
 describeForEachParser('substackMediaResolver', (parseHtml) => {

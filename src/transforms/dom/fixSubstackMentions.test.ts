@@ -1,15 +1,13 @@
 import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../../index.js'
-import { baseContext, describeForEachParser, html } from '../../tests.js'
+import { baseContext, describeForEachParser, html, substackAttrs } from '../../tests.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { fixSubstackMentions } from './fixSubstackMentions.js'
 
 // Substack stores the mention payload in a double-quoted data-attrs attribute with the
 // inner quotes HTML-encoded, which is what survives a parse and serialise roundtrip.
 const makeMention = (attrs: Record<string, unknown> | string): string => {
-  const raw = typeof attrs === 'string' ? attrs : JSON.stringify(attrs)
-
-  return `<span class="mention-wrap" data-attrs="${raw.replace(/"/g, '&quot;')}" data-component-name="MentionToDOM"></span>`
+  return `<span class="mention-wrap" data-attrs="${substackAttrs(attrs)}" data-component-name="MentionToDOM"></span>`
 }
 
 describeForEachParser('fixSubstackMentions', (parseHtml) => {
