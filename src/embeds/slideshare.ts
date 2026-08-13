@@ -54,17 +54,19 @@ export const slideshareResolveEmbed = (link: string): EmbedResolverResult | unde
     return
   }
 
-  if (isKeyed) {
-    return safeDeckKeyRegex.test(deck)
-      ? {
-          provider: 'slideshare',
-          id: deck,
-          src: `https://www.slideshare.net/slideshow/embed_code/key/${deck}`,
-        }
-      : undefined
+  if (!(isKeyed ? safeDeckKeyRegex : safeDeckIdRegex).test(deck)) {
+    return
   }
 
-  return safeDeckIdRegex.test(deck) ? composeEmbed(deck) : undefined
+  // The keyed url is already the canonical embed, so it is kept whole rather than rebuilt from
+  // the key; the numeric one goes through the same composer as the Flash repair.
+  return isKeyed
+    ? {
+        provider: 'slideshare',
+        id: deck,
+        src: `https://www.slideshare.net/slideshow/embed_code/key/${deck}`,
+      }
+    : composeEmbed(deck)
 }
 
 export const slideshareIframeEmbedResolver = createIframeEmbedResolver(
