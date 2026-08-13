@@ -1,6 +1,11 @@
-import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import { attr } from '../utils/dom.js'
+import {
+  createIframeEmbedResolver,
+  embedCarrierSelector,
+  readCarrierUrl,
+} from '../utils/widgets.js'
 
 // Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen.
 const safeIdentifierRegex = /^[\w.-]+$/
@@ -34,6 +39,16 @@ export const extractArchiveIdentifier = (link: string): string | undefined => {
   }
 }
 
+const composeEmbedResult = (identifier: string, query = ''): EmbedResolverResult => {
+  return {
+    provider: 'archive',
+    id: identifier,
+    src: `https://archive.org/embed/${identifier}${query}`,
+    url: `https://archive.org/details/${identifier}`,
+    thumbnail: `https://archive.org/services/img/${identifier}`,
+  }
+}
+
 export const archiveResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const identifier = extractArchiveIdentifier(url)
 
@@ -45,13 +60,60 @@ export const archiveResolveEmbed = (url: string): EmbedResolverResult | undefine
   // offset, so it goes through rather than being rebuilt away.
   const query = parseUrl(url, 'https://example.com')?.search ?? ''
 
-  return {
-    provider: 'archive',
-    id: identifier,
-    src: `https://archive.org/embed/${identifier}${query}`,
-    url: `https://archive.org/details/${identifier}`,
-    thumbnail: `https://archive.org/services/img/${identifier}`,
-  }
+  return composeEmbedResult(identifier, query)
 }
 
 export const archiveEmbedResolver = createIframeEmbedResolver(archiveHosts, archiveResolveEmbed)
+
+// The Flash player names no item in its url: the `src` is only the Flowplayer swf under
+// `/flow/`, so the item sits in the player's config instead, which arrives as the `flashvars`
+// attribute or, on the player that predates it, as a `config` query parameter on the swf.
+// Both dialects write the file as `archive.org/download/{identifier}/{file}`, on the playlist
+// entry for a video and on the clip's `baseUrl` for audio, so the identifier is the segment
+// after `download/`.
+//
+// Checked live 2026-08-13: identifiers read this way answer 200 on both `embed` and `details`,
+// so the Flash player and the modern one name an item the same way. Two of the nine tried are
+// gone from the archive entirely, which no reading of the markup could have told apart.
+//
+// A config can point the archive's player at a file somebody else hosts, so the identifier is
+// read from the download host rather than from whichever url the config happens to carry.
+const flashPlayerPathRegex = /^\/+flow\//
+const downloadIdentifierRegex = /archive\.org\/download\/([^/'"?&]+)\//
+
+const readPlayerConfig = (element: Element): string | undefined => {
+  const own = attr(element, 'flashvars')
+
+  if (own) {
+    return own
+  }
+
+  const params = Array.from(element.parentElement?.querySelectorAll('param') ?? [])
+  const flashVars = params.find((param) => attr(param, 'name')?.toLowerCase() === 'flashvars')
+
+  return attr(flashVars, 'value')
+}
+
+export const archiveFlashEmbedResolver: EmbedResolver = {
+  selector: embedCarrierSelector,
+  extract: (element): EmbedResolverResult | undefined => {
+    const parsed = parseUrl(readCarrierUrl(element), 'https://example.com')
+
+    if (
+      !parsed ||
+      (!isHostOf(parsed, archiveHosts) && !isSubdomainOf(parsed, archiveHosts)) ||
+      !flashPlayerPathRegex.test(parsed.pathname)
+    ) {
+      return
+    }
+
+    const config = readPlayerConfig(element) ?? parsed.searchParams.get('config')
+    const identifier = config?.match(downloadIdentifierRegex)?.[1]
+
+    if (!identifier || !safeIdentifierRegex.test(identifier)) {
+      return
+    }
+
+    return composeEmbedResult(identifier)
+  },
+}

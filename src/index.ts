@@ -111,6 +111,7 @@ export { anchorEmbedResolver, anchorResolveEmbed, extractAnchorEpisode } from '.
 export { appleEmbedResolver, appleResolveEmbed } from './embeds/apple.js'
 export {
   archiveEmbedResolver,
+  archiveFlashEmbedResolver,
   archiveResolveEmbed,
   extractArchiveIdentifier,
 } from './embeds/archive.js'
