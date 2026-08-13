@@ -122,7 +122,7 @@ export {
 } from './embeds/audioboom.js'
 export { bandcampEmbedResolver, extractBandcampRelease } from './embeds/bandcamp.js'
 export {
-  bloggerIframeEmbedResolver,
+  bloggerEmbedResolver,
   bloggerResolveEmbed,
   extractBloggerToken,
 } from './embeds/blogger.js'
