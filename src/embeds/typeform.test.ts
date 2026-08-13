@@ -47,7 +47,6 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
           data-tf-iframe-props="allow=camera,title=Booking Form,referrerpolicy=no-referrer"
         ></div>
       `
-
       const expected: EmbedResolverResult = {
         provider: 'typeform',
         id: 'MTt3Pw7K',
@@ -138,7 +137,6 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
 describe('typeformResolveEmbed', () => {
   it('should resolve the canonical form url', () => {
     const value = 'https://form.typeform.com/to/MTt3Pw7K'
-
     const expected: EmbedResolverResult = {
       provider: 'typeform',
       id: 'MTt3Pw7K',
@@ -164,7 +162,6 @@ describe('typeformResolveEmbed', () => {
   it('should drop the telemetry query the oembed iframe carries', () => {
     const value =
       'https://form.typeform.com/to/MTt3Pw7K?typeform-embed=oembed&typeform-medium=embed'
-
     const expected: EmbedResolverResult = {
       provider: 'typeform',
       id: 'MTt3Pw7K',
