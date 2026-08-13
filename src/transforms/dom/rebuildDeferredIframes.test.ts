@@ -70,4 +70,25 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
 
     expect(result).toContain('embed.example.org/graphic/')
   })
+  // The Drupal/CKEditor convention. Its value is a watch page rather than a player url, which
+  // the resolvers turn into a player downstream.
+  it('should rebuild an iframe from data-oembed-url', async () => {
+    const value = html`<div data-oembed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></div>`
+
+    expect(await transform(value)).toContain(
+      '<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ">',
+    )
+  })
+
+  // 566 of the 624 corpus wrappers already hold the iframe, and this transform replaces what it
+  // matches, so acting on those would discard a working player and the size it states.
+  it('should leave a data-oembed-url wrapper that already holds a player', async () => {
+    const value = html`
+      <div data-oembed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+        <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" width="640" height="360"></iframe>
+      </div>
+    `
+
+    expect(await transform(value)).toBe(value)
+  })
 })

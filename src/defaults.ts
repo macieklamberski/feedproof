@@ -522,6 +522,19 @@ export const defaultDeferredIframeSources: Array<DeferredIframeSource> = [
   { selector: '[data-pym-src]:not([data-pym-auto-initialized])', attribute: 'data-pym-src' },
   // @newswire/frames (Ryan Murphy; Texas Tribune bundles it as newswireFrames).
   { selector: '[data-frame-src]', attribute: 'data-frame-src' },
+  // The Drupal/CKEditor oEmbed convention parks the source url on the wrapper, so unlike the
+  // two above the value is a watch page rather than a player: `youtube.com/watch` in 321 feeds,
+  // `vimeo.com` in 138, `listen.style/p` in 53. That is fine here, because convertWidgets asks
+  // the resolvers what the url means and they mint the player from it; a host nobody resolves
+  // becomes a placeholder carrying a visible link, which is what those feeds show today anyway.
+  //
+  // Scoped to a wrapper holding no player. In 566 of the 624 feeds the iframe is already inside,
+  // and this transform replaces the element it matches, so an unscoped entry would throw away a
+  // working iframe along with the width and height it states.
+  {
+    selector: '[data-oembed-url]:not(:has(iframe, embed, object, video, audio))',
+    attribute: 'data-oembed-url',
+  },
 ]
 
 export const defaultLazySrcsetAttributes = [
