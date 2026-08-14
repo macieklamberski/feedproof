@@ -50,7 +50,11 @@ export const flickrFlashResolveEmbed = (
 
   return {
     provider: 'flickr',
-    id: `photosets/${setId}`,
+    // The player takes the set alone, but the album's oEmbed is keyed by the page url, which
+    // needs the owner too: it answers `flickr_type: album` with a title, an author and a
+    // thumbnail, all key-free (checked 2026-08-14). So the id carries the pair, or enrichment
+    // cannot address the one endpoint that would give this placeholder a poster.
+    id: `${owner}/${setId}`,
     src: composePlayerUrl(setId, width, height),
     // The album page, kept as the markup spelled it minus the `/show/` suffix that names the
     // slideshow view. `/sets/{id}` is still served and does not redirect to `/albums/{id}`,

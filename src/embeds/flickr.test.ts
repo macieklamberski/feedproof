@@ -25,7 +25,7 @@ describeForEachParser('flickrFlashEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'flickr',
-        id: 'photosets/72157624341',
+        id: '12345678@N00/72157624341',
         src: 'https://embedr.flickr.com/photosets/72157624341?width=400&height=300',
         url: 'https://www.flickr.com/photos/12345678@N00/sets/72157624341',
         width: 400,
@@ -47,7 +47,7 @@ describeForEachParser('flickrFlashEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'flickr',
-        id: 'photosets/72157624341',
+        id: 'bees/72157624341',
         src: 'https://embedr.flickr.com/photosets/72157624341?width=640&height=480',
         url: 'https://www.flickr.com/photos/bees/sets/72157624341',
         width: 640,
@@ -68,7 +68,7 @@ describeForEachParser('flickrFlashEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'flickr',
-        id: 'photosets/72157624341',
+        id: 'bees/72157624341',
         src: 'https://embedr.flickr.com/photosets/72157624341?width=400&height=300',
         url: 'https://www.flickr.com/photos/bees/sets/72157624341',
         width: 400,
