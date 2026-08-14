@@ -27,7 +27,7 @@ describeForEachParser('linkifyFlickrEmbeds', (parseHtml) => {
     const result = await transform(value)
 
     expect(result).toContain(
-      '<a href="https://www.flickr.com/photos/12345678@N00/albums/72157624341">https://www.flickr.com/photos/12345678@N00/albums/72157624341</a>',
+      '<a href="https://www.flickr.com/photos/12345678@N00/sets/72157624341">https://www.flickr.com/photos/12345678@N00/sets/72157624341</a>',
     )
     expect(result).not.toContain('<object')
     expect(result).not.toContain('<embed')
@@ -43,7 +43,7 @@ describeForEachParser('linkifyFlickrEmbeds', (parseHtml) => {
     `
     const result = await transform(value)
 
-    expect(result).toContain('href="https://www.flickr.com/photos/bees/albums/72157624341"')
+    expect(result).toContain('href="https://www.flickr.com/photos/bees/sets/72157624341"')
   })
 
   it('should leave a carrier whose config names no set', async () => {

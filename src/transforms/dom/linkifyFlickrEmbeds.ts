@@ -45,11 +45,14 @@ const readAlbumUrl = (element: Element): string | undefined => {
     return
   }
 
-  // `/sets/` still resolves, but Flickr renamed them albums and redirects there.
+  // The path is kept as the markup spelled it, minus the `/show/` suffix that names the dead
+  // slideshow view. Flickr renamed sets to albums in its own UI, but `/sets/{id}` is still
+  // served and does not redirect (both answer 200, checked 2026-08-14), so rewriting it would
+  // change the publisher's url for no gain.
   const [, owner, setId] = match
 
   return safeOwnerRegex.test(owner)
-    ? `https://www.flickr.com/photos/${owner}/albums/${setId}`
+    ? `https://www.flickr.com/photos/${owner}/sets/${setId}`
     : undefined
 }
 
