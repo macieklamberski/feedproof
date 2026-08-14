@@ -37,6 +37,18 @@ const specimens: Record<string, string | [string, string]> = {
     '<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-x" data-ad-slot="123"></ins>',
   'div[id^="div-gpt-ad"]': '<div id="div-gpt-ad-1234567890"></div>',
   '.adthrive-ad': '<div class="adthrive-ad adthrive-content"></div>',
+  'amp-ad':
+    '<amp-ad width="100vw" height="320" type="adsense" data-ad-client="ca-pub-1234567890123456" data-ad-slot="1234567890" data-auto-format="rspv" data-full-width layout="fixed"></amp-ad>',
+  'amp-auto-ads':
+    '<amp-auto-ads type="adsense" data-ad-client="ca-pub-1234567890123456"></amp-auto-ads>',
+  'amp-sticky-ad':
+    '<amp-sticky-ad layout="nodisplay"><amp-ad width="320" height="50" type="doubleclick" data-slot="/4119129/sticky"></amp-ad></amp-sticky-ad>',
+  'amp-sticky-ad-top-padding':
+    '<amp-sticky-ad-top-padding class="amp-sticky-ad-top-padding"></amp-sticky-ad-top-padding>',
+  'amp-pixel':
+    '<amp-pixel src="https://www16.a8.net/0.gif?a8=abcdef" layout="nodisplay"></amp-pixel>',
+  'amp-analytics':
+    '<amp-analytics type="googleanalytics" data-credentials="include"><script type="application/json">{"vars":{"account":"UA-12345-6"}}</script></amp-analytics>',
   '.captioned-button-wrap':
     '<div class="captioned-button-wrap"><p class="button-wrapper"><a class="button primary" href="https://example.com/p/post?action=share"><span>Share</span></a></p></div>',
   '[class*="social-share"]': '<div class="social-share"><a href="/x">X</a></div>',
@@ -49,6 +61,8 @@ const specimens: Record<string, string | [string, string]> = {
   '.a2a_kit': '<span class="a2a_kit a2a_kit_size_32 addtoany_list"></span>',
   '[class*="addthis_"]': '<div class="addthis_toolbox addthis_default_style"></div>',
   '.shareaholic-canvas': '<div class="shareaholic-canvas" data-app="share_buttons"></div>',
+  'amp-social-share':
+    '<amp-social-share type="twitter" width="60" height="44" data-param-text="Read this"></amp-social-share>',
   '.yarpp-related':
     '<div class="yarpp yarpp-related yarpp-template-list"><h3>Related</h3><ol><li><a href="/a">A</a></li></ol></div>',
   '.jp-relatedposts':
@@ -93,6 +107,8 @@ const specimens: Record<string, string | [string, string]> = {
     '<span data-s9e-mediaembed="youtube" style="display:inline-block;max-width:640px"><span style="padding-bottom:56.25%"> <strong>iframe</strong> </span></span>',
   '.fusion-privacy-placeholder':
     '<div class="fusion-privacy-placeholder" data-privacy-type="youtube"><div class="fusion-privacy-label">For privacy reasons YouTube needs your permission to be loaded.</div></div>',
+  'amp-consent':
+    '<amp-consent id="consent" layout="nodisplay"><script type="application/json">{"consentInstanceId":"abc","promptUI":"consent-ui"}</script><div id="consent-ui"><p>We use cookies to personalise content and ads.</p><button on="tap:consent.accept">Accept</button></div></amp-consent>',
 }
 
 const specimenEntries = Object.entries(specimens)
@@ -116,6 +132,21 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
       expect(await transform(`<p>Before</p>${value}<p>After</p>`)).toBe(
         `<p>Before</p>${expected}<p>After</p>`,
       )
+    })
+
+    // Only the AMP elements that are advertising or tracking by definition are listed. The
+    // rest of the vocabulary renders the publisher's own words and stays.
+    it('should keep AMP elements that carry content', async () => {
+      const value = html`
+        <amp-fx-flying-carpet height="300"><p>A scroll-revealed passage.</p></amp-fx-flying-carpet>
+        <amp-list src="https://example.com/items.json"><template type="amp-mustache">{{title}}</template></amp-list>
+        <amp-accordion><section><h4>Chapter one</h4><p>Body</p></section></amp-accordion>
+        <amp-carousel width="600" height="400"><amp-img src="a.jpg"></amp-img></amp-carousel>
+        <amp-fit-text width="300" height="80">A headline</amp-fit-text>
+        <amp-timeago datetime="2026-08-01T00:00:00Z">1 August 2026</amp-timeago>
+      `
+
+      expect(await transform(value)).toBe(value)
     })
 
     it('should keep a read-more wrapper that holds real content (anchor-scoped)', async () => {

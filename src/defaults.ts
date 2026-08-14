@@ -700,6 +700,14 @@ export const defaultNonContentSelectors = [
   '.adsbygoogle', // Google AdSense ad slot — 11,388 feeds (0.089%).
   'div[id^="div-gpt-ad"]', // Google Ad Manager (GPT) ad slot — 1,748 feeds (0.014%).
   '.adthrive-ad', // AdThrive (Raptive) ad slot — 79 feeds (0.001%).
+  'amp-ad', // AMP ad slot — 97 feeds.
+  'amp-auto-ads', // AMP auto-ads placement marker — 24 feeds.
+  'amp-sticky-ad', // AMP sticky bottom ad bar — 4 feeds.
+  'amp-sticky-ad-top-padding', // AMP runtime spacer holding room for the sticky ad bar — 4 feeds.
+
+  // Tracking beacons, which render nothing at all.
+  'amp-pixel', // AMP tracking pixel — 15 feeds.
+  'amp-analytics', // AMP analytics element, a JSON config for its runtime — 9 feeds.
 
   // Share and call-to-action button clusters.
   '.captioned-button-wrap', // Substack caption + CTA button (Share/Subscribe/Comment) — 1,976 feeds (0.016%).
@@ -723,6 +731,7 @@ export const defaultNonContentSelectors = [
   '.a2a_kit', // AddToAny share icons (higher-prevalence marker than the wrapper) — 6,714 feeds (0.053%).
   '[class*="addthis_"]', // AddThis share toolbox — 2,312 feeds (0.018%).
   '.shareaholic-canvas', // Shareaholic share/related widget — 669 feeds (0.005%).
+  'amp-social-share', // AMP share button — 9 feeds.
 
   // Related-posts widgets.
   '.yarpp-related', // YARPP related-posts widget (WordPress) — 1,243 feeds (0.010%).
@@ -765,6 +774,10 @@ export const defaultNonContentSelectors = [
   // Avada's leftover "For privacy reasons … please accept" notice. The gated iframe itself is
   // recovered via data-privacy-src (a lazy attribute); only this consent nag is dead chrome.
   '.fusion-privacy-placeholder', // Avada privacy-embed notice — 19 feeds.
+  // AMP's own gate follows the same split. The element holds the config and the prompt UI and
+  // nothing else, since whatever it gates carries data-block-on-consent and sits elsewhere in
+  // the document, so removing it takes the nag and leaves the gated element to be recovered.
+  'amp-consent', // AMP consent gate — 3 feeds.
   // s9e MediaEmbed (forum software) wraps its player in a sizing span. Where the feed generator
   // stripped the iframe out of it, what survives is the wrapper around the literal word
   // "iframe", which renders as that word in the middle of the post. 392 feeds. Scoped to a
