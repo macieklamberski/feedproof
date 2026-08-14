@@ -56,6 +56,7 @@ import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from './em
 import { omnyEmbedResolver } from './embeds/omny.js'
 import { podbeanEmbedResolver } from './embeds/podbean.js'
 import { podigeeEmbedResolver } from './embeds/podigee.js'
+import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from './embeds/reddit.js'
 import { simplecastEmbedResolver } from './embeds/simplecast.js'
 import { slideshareFlashEmbedResolver, slideshareIframeEmbedResolver } from './embeds/slideshare.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
@@ -377,6 +378,8 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   podbeanEmbedResolver,
   megaphoneEmbedResolver,
   podigeeEmbedResolver,
+  redditWidgetEmbedResolver,
+  redditIframeEmbedResolver,
   simplecastEmbedResolver,
   slideshareFlashEmbedResolver,
   slideshareIframeEmbedResolver,

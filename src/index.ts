@@ -151,6 +151,7 @@ export {
 export { omnyEmbedResolver } from './embeds/omny.js'
 export { podbeanEmbedResolver } from './embeds/podbean.js'
 export { podigeeEmbedResolver } from './embeds/podigee.js'
+export { redditIframeEmbedResolver, redditWidgetEmbedResolver } from './embeds/reddit.js'
 export { simplecastEmbedResolver } from './embeds/simplecast.js'
 export {
   slideshareFlashEmbedResolver,
