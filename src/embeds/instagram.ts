@@ -1,7 +1,7 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, parsePixelSize, text } from '../utils/dom.js'
-import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Instagram's embed dialog ships a post as `<blockquote class="instagram-media">` holding the
 // permalink, a skeleton of empty divs and an `embed.js` loader beside it. The loader never runs
@@ -223,7 +223,7 @@ export const instagramResolveEmbed = (url: string): EmbedResolverResult | undefi
   return composeEmbed(post, parsed?.pathname.includes('/embed/captioned') === true)
 }
 
-export const instagramIframeEmbedResolver = createIframeEmbedResolver(
+export const instagramIframeEmbedResolver = createUrlEmbedResolver(
   instagramHosts,
   instagramResolveEmbed,
 )
