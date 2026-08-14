@@ -129,7 +129,7 @@ export {
 export { captivateEmbedResolver } from './embeds/captivate.js'
 export { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 export { firesideEmbedResolver } from './embeds/fireside.js'
-export { flickrFlashEmbedResolver } from './embeds/flickr.js'
+export { flickrEmbedResolver } from './embeds/flickr.js'
 export { flourishEmbedResolver } from './embeds/flourish.js'
 export { geniallyEmbedResolver } from './embeds/genially.js'
 export {
