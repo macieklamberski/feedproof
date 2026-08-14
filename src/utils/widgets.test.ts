@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
-import type { CiteResolverResult } from '../types.js'
+import type { CiteResolverResult, EmbedResolverResult } from '../types.js'
 import {
   createCitePlaceholder,
   createEmbedPlaceholder,
+  createIframeEmbedResolver,
+  createMarkupEmbedResolver,
   createPlaceholder,
   normalizeEmbedFields,
   updateCitePlaceholder,
@@ -523,5 +525,58 @@ describeForEachParser('createCitePlaceholder', (parseHtml) => {
     `
 
     expect(element.outerHTML).toEqualHtml(expected)
+  })
+})
+
+describeForEachParser('declaredSize', (parseHtml) => {
+  const stated: EmbedResolverResult = { provider: 'example', id: 'abc', src: 'https://x.test/abc' }
+
+  const resolve = (
+    resolver: { selector: string; extract: (element: Element) => unknown },
+    value: string,
+  ) => {
+    const element = parseHtml(value).querySelector(resolver.selector)
+
+    return element ? resolver.extract(element) : undefined
+  }
+
+  describe('a markup-keyed resolver', () => {
+    it('should take the size the carrier declares by default', () => {
+      const resolver = createMarkupEmbedResolver('div.player', () => stated)
+      const value = html`<div class="player" width="640" height="360"></div>`
+      const expected: EmbedResolverResult = { ...stated, width: 640, height: 360 }
+
+      expect(resolve(resolver, value)).toEqual(expected)
+    })
+
+    it('should keep its own numbers when the declared size is refused', () => {
+      const resolver = createMarkupEmbedResolver('div.player', () => ({ ...stated, height: 200 }), {
+        declaredSize: false,
+      })
+      const value = html`<div class="player" width="640" height="360"></div>`
+      const expected: EmbedResolverResult = { ...stated, height: 200 }
+
+      expect(resolve(resolver, value)).toEqual(expected)
+    })
+  })
+
+  describe('a url-keyed resolver', () => {
+    it('should take the size the carrier declares by default', () => {
+      const resolver = createIframeEmbedResolver(['x.test'], () => stated)
+      const value = html`<iframe src="https://x.test/abc" width="640" height="360"></iframe>`
+      const expected: EmbedResolverResult = { ...stated, width: 640, height: 360 }
+
+      expect(resolve(resolver, value)).toEqual(expected)
+    })
+
+    it('should keep its own numbers when the declared size is refused', () => {
+      const resolver = createIframeEmbedResolver(['x.test'], () => ({ ...stated, height: 200 }), {
+        declaredSize: false,
+      })
+      const value = html`<iframe src="https://x.test/abc" width="640" height="360"></iframe>`
+      const expected: EmbedResolverResult = { ...stated, height: 200 }
+
+      expect(resolve(resolver, value)).toEqual(expected)
+    })
   })
 })
