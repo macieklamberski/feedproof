@@ -71,6 +71,7 @@ import {
 import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from './embeds/spreaker.js'
 import { tedEmbedResolver } from './embeds/ted.js'
+import { telegramIframeEmbedResolver, telegramScriptEmbedResolver } from './embeds/telegram.js'
 import { transistorEmbedResolver } from './embeds/transistor.js'
 import { typeformIframeEmbedResolver, typeformWidgetEmbedResolver } from './embeds/typeform.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
@@ -409,6 +410,8 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   spotifyEmbedResolver,
   spreakerIframeEmbedResolver,
   spreakerAnchorEmbedResolver,
+  telegramScriptEmbedResolver,
+  telegramIframeEmbedResolver,
   substackMediaResolver,
   weeblyMediaResolver,
   wechatMediaResolver,

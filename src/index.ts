@@ -173,6 +173,10 @@ export {
   spreakerIframeEmbedResolver,
 } from './embeds/spreaker.js'
 export { tedEmbedResolver } from './embeds/ted.js'
+export {
+  telegramIframeEmbedResolver,
+  telegramScriptEmbedResolver,
+} from './embeds/telegram.js'
 export { transistorEmbedResolver } from './embeds/transistor.js'
 export {
   typeformIframeEmbedResolver,
