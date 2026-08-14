@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const legacyIdRegex = /^[0-9a-f]{8}$/i
@@ -68,7 +68,7 @@ export const simplecastResolveEmbed = (url: string): EmbedResolverResult | undef
   }
 }
 
-export const simplecastEmbedResolver = createIframeEmbedResolver(
+export const simplecastEmbedResolver = createUrlEmbedResolver(
   simplecastHosts,
   simplecastResolveEmbed,
 )

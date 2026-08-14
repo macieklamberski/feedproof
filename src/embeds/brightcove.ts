@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Brightcove builds its player page from four ids the in-page embed carries as attributes. The
 // account is usually one of them, but some plugins leave it only in the loader script's url, so
@@ -133,7 +133,7 @@ export const brightcoveFlashResolveEmbed = (
 }
 
 // The legacy player lives on brightcove.com; the modern one below is on brightcove.net.
-export const brightcoveFlashEmbedResolver = createIframeEmbedResolver(
+export const brightcoveFlashEmbedResolver = createUrlEmbedResolver(
   ['brightcove.com'],
   brightcoveFlashResolveEmbed,
 )
@@ -181,7 +181,7 @@ export const brightcoveResolveEmbed = (url: string): EmbedResolverResult | undef
   }
 }
 
-export const brightcoveIframeEmbedResolver = createIframeEmbedResolver(
+export const brightcoveIframeEmbedResolver = createUrlEmbedResolver(
   ['brightcove.net'],
   brightcoveResolveEmbed,
 )

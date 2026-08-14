@@ -1,6 +1,6 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^[A-Z0-9]+$/i
 
@@ -47,7 +47,4 @@ export const megaphoneResolveEmbed = (url: string): EmbedResolverResult | undefi
   }
 }
 
-export const megaphoneEmbedResolver = createIframeEmbedResolver(
-  megaphoneHosts,
-  megaphoneResolveEmbed,
-)
+export const megaphoneEmbedResolver = createUrlEmbedResolver(megaphoneHosts, megaphoneResolveEmbed)

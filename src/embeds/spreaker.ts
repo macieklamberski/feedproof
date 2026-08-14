@@ -1,7 +1,7 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize } from '../utils/dom.js'
-import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^\d+$/
 
@@ -49,7 +49,7 @@ export const spreakerResolveEmbed = (url: string): EmbedResolverResult | undefin
   }
 }
 
-export const spreakerIframeEmbedResolver = createIframeEmbedResolver(
+export const spreakerIframeEmbedResolver = createUrlEmbedResolver(
   spreakerHosts,
   spreakerResolveEmbed,
 )

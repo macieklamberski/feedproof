@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { pickUrlParams } from '../utils/urls.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Music and podcasts embed through the same player, served from `embed.music.apple.com` and
 // `embed.podcasts.apple.com`, so both resolve here and only the provider name differs.
@@ -64,4 +64,4 @@ export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined 
   }
 }
 
-export const appleEmbedResolver = createIframeEmbedResolver(appleHosts, appleResolveEmbed)
+export const appleEmbedResolver = createUrlEmbedResolver(appleHosts, appleResolveEmbed)

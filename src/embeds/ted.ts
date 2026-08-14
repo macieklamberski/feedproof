@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Talk slugs are the speaker and title joined by underscores, e.g. `ethan_zuckerman`.
 const safeSlugRegex = /^[a-z0-9_]+$/i
@@ -55,4 +55,4 @@ export const tedResolveEmbed = (url: string): EmbedResolverResult | undefined =>
   }
 }
 
-export const tedEmbedResolver = createIframeEmbedResolver(tedHosts, tedResolveEmbed)
+export const tedEmbedResolver = createUrlEmbedResolver(tedHosts, tedResolveEmbed)
