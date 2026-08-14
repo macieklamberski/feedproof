@@ -110,6 +110,7 @@ import { highlightCode } from './transforms/dom/highlightCode.js'
 import { hoistBlocksFromParagraphs } from './transforms/dom/hoistBlocksFromParagraphs.js'
 import { hoistFigcaptionFromAnchor } from './transforms/dom/hoistFigcaptionFromAnchor.js'
 import { injectEnclosures } from './transforms/dom/injectEnclosures.js'
+import { linkifyFlickrEmbeds } from './transforms/dom/linkifyFlickrEmbeds.js'
 import { linkifyGistEmbeds } from './transforms/dom/linkifyGistEmbeds.js'
 import { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 import { markTimestamps } from './transforms/dom/markTimestamps.js'
@@ -205,6 +206,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // A GitHub Gist embed is a JS-only <script> that renders nothing in a reader; replace it
   // with a link to the gist so the content is at least reachable.
   linkifyGistEmbeds,
+  linkifyFlickrEmbeds,
   // A Substack @-mention is an empty span whose name lives only in its data-attrs JSON;
   // rebuild the anchor before stripEmptyTags deletes the span and the name with it.
   fixSubstackMentions,
