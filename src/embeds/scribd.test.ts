@@ -117,8 +117,8 @@ describeForEachParser('scribdFlashEmbedResolver', (parseHtml) => {
 
   // Flash has rendered nothing since 2020, so without this the placeholder points at the swf
   // itself. The repair is exact because the swf query names the document in the same id space
-  // the modern route reads. Neither case carries a size: the constant the dead player declared
-  // describes a viewer that no longer exists.
+  // the modern route reads. The declared height carries over, since both generations of the
+  // snippet state the same 500; the width is a percentage rather than a pixel count.
   describe('the iPaper viewer', () => {
     it('should repair the dead player to the modern document embed', async () => {
       const value = html`
@@ -136,6 +136,7 @@ describeForEachParser('scribdFlashEmbedResolver', (parseHtml) => {
         id: '108992419',
         src: 'https://www.scribd.com/embeds/108992419/content',
         url: 'https://www.scribd.com/document/108992419',
+        height: 500,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -155,6 +156,7 @@ describeForEachParser('scribdFlashEmbedResolver', (parseHtml) => {
         id: '55715',
         src: 'https://www.scribd.com/embeds/55715/content',
         url: 'https://www.scribd.com/document/55715',
+        height: 500,
       }
 
       expect(await extract(value)).toEqual(expected)

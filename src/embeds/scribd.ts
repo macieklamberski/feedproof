@@ -72,6 +72,9 @@ export const scribdIframeEmbedResolver = createUrlEmbedResolver(scribdHosts, scr
 // and an invented one with "Document Not Found" (checked in a browser 2026-08-13), which is
 // what proves the spaces are shared. A status code cannot: the route answers 200 with an
 // identical body either way.
+//
+// The declared size carries over. Both generations of the snippet state the same 500, so it
+// describes the replacement as well as it described the player it replaces.
 export const scribdFlashResolveEmbed = (link: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
 
@@ -84,8 +87,4 @@ export const scribdFlashResolveEmbed = (link: string): EmbedResolverResult | und
   return document && safeDocumentIdRegex.test(document) ? composeEmbed(document) : undefined
 }
 
-export const scribdFlashEmbedResolver = createUrlEmbedResolver(
-  scribdHosts,
-  scribdFlashResolveEmbed,
-  { declaredSize: false },
-)
+export const scribdFlashEmbedResolver = createUrlEmbedResolver(scribdHosts, scribdFlashResolveEmbed)
