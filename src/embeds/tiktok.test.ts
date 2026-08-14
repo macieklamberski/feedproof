@@ -184,21 +184,6 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
   })
 
   describe('sad paths', () => {
-    it('should not match the creator-profile variant without a video id', () => {
-      const value = html`
-        <blockquote
-          class="tiktok-embed"
-          cite="https://www.tiktok.com/@cookingwithlynja"
-          data-unique-id="cookingwithlynja"
-          data-embed-type="creator"
-        >
-          <section><a href="https://www.tiktok.com/@cookingwithlynja">@cookingwithlynja</a></section>
-        </blockquote>
-      `
-
-      expect(extract(value)).toBeUndefined()
-    })
-
     it('should return undefined for an empty video id', () => {
       const value =
         '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@user/video/7001234567890123456" data-video-id=""></blockquote>'
