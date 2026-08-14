@@ -41,8 +41,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/captioned/',
         url: 'https://www.instagram.com/p/CaUsPbUquKV/',
         author: '@someuser',
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -70,8 +68,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/captioned/',
         url: 'https://www.instagram.com/p/CaUsPbUquKV/',
         author: '@someuser',
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -92,9 +88,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         id: 'p/CaUsPbUquKV',
         src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
         url: 'https://www.instagram.com/p/CaUsPbUquKV/',
-        author: undefined,
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -115,9 +108,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         id: 'reel/DGPdABWz84n',
         src: 'https://www.instagram.com/reel/DGPdABWz84n/embed/',
         url: 'https://www.instagram.com/reel/DGPdABWz84n/',
-        author: undefined,
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -135,9 +125,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         id: 'reel/DGPdABWz84n',
         src: 'https://www.instagram.com/reel/DGPdABWz84n/embed/',
         url: 'https://www.instagram.com/reel/DGPdABWz84n/',
-        author: undefined,
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -158,9 +145,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         id: 'tv/BgPrjlfHcoB',
         src: 'https://www.instagram.com/tv/BgPrjlfHcoB/embed/',
         url: 'https://www.instagram.com/tv/BgPrjlfHcoB/',
-        author: undefined,
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -222,7 +206,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         id: 'p/BgPrjlfHcoB',
         src: 'https://www.instagram.com/p/BgPrjlfHcoB/embed/',
         url: 'https://www.instagram.com/p/BgPrjlfHcoB/',
-        description: undefined,
         author: '@jervoisakl',
         date: 'Mar 21, 2018',
       }
@@ -249,9 +232,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         id: 'p/BXCsBz8AnKt',
         src: 'https://www.instagram.com/p/BXCsBz8AnKt/embed/captioned/',
         url: 'https://www.instagram.com/p/BXCsBz8AnKt/',
-        author: undefined,
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -273,9 +253,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         id: 'p/BXCsBz8AnKt',
         src: 'https://www.instagram.com/p/BXCsBz8AnKt/embed/',
         url: 'https://www.instagram.com/p/BXCsBz8AnKt/',
-        author: undefined,
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -299,8 +276,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
         url: 'https://www.instagram.com/p/CaUsPbUquKV/',
         author: '@someuser',
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -324,9 +299,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         id: 'p/CaUsPbUquKV',
         src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
         url: 'https://www.instagram.com/p/CaUsPbUquKV/',
-        author: undefined,
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -348,9 +320,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         id: 'reel/DGPdABWz84n',
         src: 'https://www.instagram.com/reel/DGPdABWz84n/embed/',
         url: 'https://www.instagram.com/reel/DGPdABWz84n/',
-        author: undefined,
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -375,9 +344,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         id: 'p/CaUsPbUquKV',
         src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
         url: 'https://www.instagram.com/p/CaUsPbUquKV/',
-        author: undefined,
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -408,9 +374,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         url: 'https://www.instagram.com/reel/DGPdABWz84n/',
         width: 540,
         height: 627,
-        author: undefined,
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -431,9 +394,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         id: 'p/CaUsPbUquKV',
         src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
         url: 'https://www.instagram.com/p/CaUsPbUquKV/',
-        author: undefined,
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -457,9 +417,6 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         id: 'p/CaUsPbUquKV',
         src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
         url: 'https://www.instagram.com/p/CaUsPbUquKV/',
-        author: undefined,
-        description: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
