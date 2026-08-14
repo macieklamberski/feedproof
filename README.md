@@ -63,6 +63,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `hoistBlocksFromParagraphs` | Hoist block elements out of enclosing paragraphs, keeping only halves that still render |
 | `wrapCargoGalleryImages` | Wrap Cargo portfolio captions and images in `<figure>` blocks so they stay apart |
 | `injectEnclosures` | Inject feed enclosures as native media or embed placeholders, merging a player page entry with its media file; an image enclosure injects only when the content has no image of its own |
+| `surfaceParkedMarkup` | Dissolve a lazy-loader container (`div.load-later[data-content]`) into the percent-encoded embed markup it holds, whatever platform that turns out to be |
 | `surfaceTemplateEmbeds` | Hoist a video embed out of a lazy-load `<template>` (e.g. Better Core Video Embeds) so it renders in a reader |
 | `surfaceNoscriptEmbeds` | Hoist a video `<iframe>` out of a `<noscript>` lazy-load fallback (e.g. WP Rocket, a3 Lazy Load); ignores non-video noscript iframes like Google Tag Manager |
 | `rebuildEmbedPlusEmbeds` | Rebuild a real `<iframe>` from an "Embed Plus for YouTube" facade (`.epyt-facade[data-facadesrc]`) |

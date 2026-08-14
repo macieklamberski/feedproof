@@ -151,6 +151,7 @@ import { stripMarkdownEscapeBackslashes } from './transforms/dom/stripMarkdownEs
 import { stripNonContentElements } from './transforms/dom/stripNonContentElements.js'
 import { stripWordBreaks } from './transforms/dom/stripWordBreaks.js'
 import { surfaceNoscriptEmbeds } from './transforms/dom/surfaceNoscriptEmbeds.js'
+import { surfaceParkedMarkup } from './transforms/dom/surfaceParkedMarkup.js'
 import { surfaceTemplateEmbeds } from './transforms/dom/surfaceTemplateEmbeds.js'
 import { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
@@ -186,6 +187,11 @@ export const defaultStringTransforms: Array<StringTransform> = [
 
 export const defaultStandardDomTransforms: Array<DomTransform> = [
   decodeDoubleEncodedTags,
+  // Dissolves a lazy-loader container into the original embed markup it holds encoded. Runs at
+  // the head of the cluster because what comes out is ordinary markup of any kind, so every pass
+  // below (comment and hidden-element stripping, the rebuilds, convertWidgets, the cite pass)
+  // has to see it.
+  surfaceParkedMarkup,
   stripComments,
   stripHiddenElements,
   // Normalize lazy-loaded video embeds into a plain <iframe> before the media/embed
