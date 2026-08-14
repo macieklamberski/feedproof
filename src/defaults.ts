@@ -75,7 +75,11 @@ import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from './embe
 import { tedEmbedResolver } from './embeds/ted.js'
 import { telegramIframeEmbedResolver, telegramScriptEmbedResolver } from './embeds/telegram.js'
 import { transistorEmbedResolver } from './embeds/transistor.js'
-import { twitterEmbedResolver, twitterIframeEmbedResolver } from './embeds/twitter.js'
+import {
+  twitterAmpEmbedResolver,
+  twitterBlockquoteEmbedResolver,
+  twitterIframeEmbedResolver,
+} from './embeds/twitter.js'
 import { typeformIframeEmbedResolver, typeformWidgetEmbedResolver } from './embeds/typeform.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { wistiaEmbedResolver } from './embeds/wistia.js'
@@ -363,7 +367,8 @@ export const defaultAllDomTransforms: Array<DomTransform> = defaultStandardDomTr
 export const defaultWidgetResolvers: Array<WidgetResolver> = [
   youtubeIframeEmbedResolver,
   youtubeAmpEmbedResolver,
-  twitterEmbedResolver,
+  twitterBlockquoteEmbedResolver,
+  twitterAmpEmbedResolver,
   twitterIframeEmbedResolver,
   tedEmbedResolver,
   typeformWidgetEmbedResolver,

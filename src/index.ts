@@ -181,7 +181,8 @@ export {
 } from './embeds/telegram.js'
 export { transistorEmbedResolver } from './embeds/transistor.js'
 export {
-  twitterEmbedResolver,
+  twitterAmpEmbedResolver,
+  twitterBlockquoteEmbedResolver,
   twitterIframeEmbedResolver,
 } from './embeds/twitter.js'
 export {

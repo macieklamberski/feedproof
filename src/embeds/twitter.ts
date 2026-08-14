@@ -1,7 +1,7 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { attr, find, text } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A tweet ships as `<blockquote class="twitter-tweet">` holding the tweet text in a `<p>`, then
 // a byline reading "— Display Name (@user)" beside a dated anchor to the status, followed by a
@@ -97,22 +97,31 @@ const composeEmbed = (status: Status, extra: Partial<EmbedResolverResult>): Embe
   }
 }
 
+// Both carriers name the tweet the same four ways and hold their text in the same place, so
+// the reading is one function and only the selector separates them.
+const extractTweet = (element: Element): EmbedResolverResult | undefined => {
+  const found = findStatus(element)
+
+  if (!found) {
+    return
+  }
+
+  return composeEmbed(found.status, readContent(element, found.anchor))
+}
+
 // `twitter-tweet` is matched as a class token, never as the whole attribute: it arrives
 // compounded with a skeleton class, with the rendered marker, and inside every CMS wrapper.
+export const twitterBlockquoteEmbedResolver = createMarkupEmbedResolver(
+  '.twitter-tweet',
+  extractTweet,
+)
+
 // The AMP component names the same tweet in an attribute and carries no text at all, so left
 // alone it is dropped as an empty element.
-export const twitterEmbedResolver: EmbedResolver = {
-  selector: '.twitter-tweet, amp-twitter[data-tweetid]',
-  extract: (element): EmbedResolverResult | undefined => {
-    const found = findStatus(element)
-
-    if (!found) {
-      return
-    }
-
-    return composeEmbed(found.status, readContent(element, found.anchor))
-  },
-}
+export const twitterAmpEmbedResolver = createMarkupEmbedResolver(
+  'amp-twitter[data-tweetid]',
+  extractTweet,
+)
 
 // The player a stored-after-render copy already points at, and the one this resolver mints, so
 // a feed carrying the frame alone still names its provider.
@@ -123,7 +132,7 @@ export const twitterResolveEmbed = (url: string): EmbedResolverResult | undefine
   return id && safeStatusIdRegex.test(id) ? composeEmbed({ handle: '', id }, {}) : undefined
 }
 
-export const twitterIframeEmbedResolver = createIframeEmbedResolver(
+export const twitterIframeEmbedResolver = createUrlEmbedResolver(
   ['platform.twitter.com', 'platform.x.com'],
   twitterResolveEmbed,
 )
