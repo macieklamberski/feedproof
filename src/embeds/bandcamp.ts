@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, text } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A release is either an album or a single track, and the id is Bandcamp's own numeric one.
 const releaseRegex = /^(album|track)=(\d+)$/
@@ -124,4 +124,4 @@ export const bandcampResolveEmbed = (
   return result
 }
 
-export const bandcampEmbedResolver = createIframeEmbedResolver(bandcampHosts, bandcampResolveEmbed)
+export const bandcampEmbedResolver = createUrlEmbedResolver(bandcampHosts, bandcampResolveEmbed)

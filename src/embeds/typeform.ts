@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const typeformHosts = ['typeform.com']
 
@@ -82,7 +82,7 @@ export const typeformResolveEmbed = (url: string): EmbedResolverResult | undefin
   return segments[0] === 'to' && segments[1] ? composeEmbed(segments[1]) : undefined
 }
 
-export const typeformIframeEmbedResolver = createIframeEmbedResolver(
+export const typeformIframeEmbedResolver = createUrlEmbedResolver(
   typeformHosts,
   typeformResolveEmbed,
 )

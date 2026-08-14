@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A show is `{user}/{slug}`, both drawn from the same charset Mixcloud uses in its own urls.
 const safeSegmentRegex = /^[A-Za-z0-9._-]+$/
@@ -56,4 +56,4 @@ export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefin
   }
 }
 
-export const mixcloudEmbedResolver = createIframeEmbedResolver(mixcloudHosts, mixcloudResolveEmbed)
+export const mixcloudEmbedResolver = createUrlEmbedResolver(mixcloudHosts, mixcloudResolveEmbed)

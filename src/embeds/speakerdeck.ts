@@ -1,7 +1,7 @@
 import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, parseRatioDimensions } from '../utils/dom.js'
-import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Ids are lowercase hex, in two lengths. 32 chars is the current dashless UUID; 24 is the
 // legacy Mongo ObjectId Speaker Deck issued around 2011-2012, and those decks still play —
@@ -76,7 +76,7 @@ export const speakerdeckResolveEmbed = (url: string): EmbedResolverResult | unde
   }
 }
 
-export const speakerdeckIframeEmbedResolver = createIframeEmbedResolver(
+export const speakerdeckIframeEmbedResolver = createUrlEmbedResolver(
   ['speakerdeck.com'],
   speakerdeckResolveEmbed,
 )

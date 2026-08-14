@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, text } from '../utils/dom.js'
-import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const imgurHosts = ['imgur.com']
 
@@ -84,4 +84,4 @@ export const imgurResolveEmbed = (url: string): EmbedResolverResult | undefined 
   return post ? composeEmbed(post) : undefined
 }
 
-export const imgurIframeEmbedResolver = createIframeEmbedResolver(imgurHosts, imgurResolveEmbed)
+export const imgurIframeEmbedResolver = createUrlEmbedResolver(imgurHosts, imgurResolveEmbed)

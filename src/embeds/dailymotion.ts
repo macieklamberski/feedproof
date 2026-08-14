@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { pickUrlParams } from '../utils/urls.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9]{5,}$/
 
@@ -61,7 +61,7 @@ export const dailymotionResolveEmbed = (url: string): EmbedResolverResult | unde
   }
 }
 
-export const dailymotionEmbedResolver = createIframeEmbedResolver(
+export const dailymotionEmbedResolver = createUrlEmbedResolver(
   dailymotionHosts,
   dailymotionResolveEmbed,
 )

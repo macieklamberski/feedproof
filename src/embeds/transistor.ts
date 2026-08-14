@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^[0-9a-z]{6,12}$/i
 
@@ -46,7 +46,7 @@ export const transistorResolveEmbed = (url: string): EmbedResolverResult | undef
   }
 }
 
-export const transistorEmbedResolver = createIframeEmbedResolver(
+export const transistorEmbedResolver = createUrlEmbedResolver(
   transistorHosts,
   transistorResolveEmbed,
 )

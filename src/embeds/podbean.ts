@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { parsePixelSize } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Ids are a slug pair, e.g. `yx4hr-f3d1e1`, and the v2 player appends `-pb` to its own.
 const safeIdRegex = /^[a-z0-9]+-[a-z0-9]+(?:-pb)?$/i
@@ -61,4 +61,4 @@ export const podbeanResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 }
 
-export const podbeanEmbedResolver = createIframeEmbedResolver(podbeanHosts, podbeanResolveEmbed)
+export const podbeanEmbedResolver = createUrlEmbedResolver(podbeanHosts, podbeanResolveEmbed)

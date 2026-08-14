@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^\d+$/
 
@@ -55,7 +55,4 @@ export const audioboomResolveEmbed = (url: string): EmbedResolverResult | undefi
   }
 }
 
-export const audioboomEmbedResolver = createIframeEmbedResolver(
-  audioboomHosts,
-  audioboomResolveEmbed,
-)
+export const audioboomEmbedResolver = createUrlEmbedResolver(audioboomHosts, audioboomResolveEmbed)
