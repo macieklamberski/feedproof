@@ -29,6 +29,8 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
         src: 'https://form.typeform.com/to/01HCZ4DNW8JM6PEGNTQWF2PW87',
         url: 'https://form.typeform.com/to/01HCZ4DNW8JM6PEGNTQWF2PW87',
         title: 'User Satisfaction Survey',
+        // The snippet's inline style states the height; its width is a percentage, not pixels.
+        height: 500,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -83,6 +85,7 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
         id: 'WCfVwJTK',
         src: 'https://form.typeform.com/to/WCfVwJTK',
         url: 'https://form.typeform.com/to/WCfVwJTK',
+        height: 500,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -193,10 +196,9 @@ describe('typeformResolveEmbed', () => {
 describeForEachParser('typeformIframeEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, typeformIframeEmbedResolver)
 
-  // The size the snippet states stays with the element: convertWidgets reads it off the carrier,
-  // from the inline style here and from `width`/`height` elsewhere, so a resolver that repeated
-  // it would be the second source of one number.
-  it('should resolve the iframe the platform oembed emits, stating no size of its own', async () => {
+  // The snippet states its size in an inline style rather than in width/height attributes, and
+  // the resolver reads both.
+  it('should resolve the iframe the platform oembed emits, carrying its stated size', async () => {
     const value = html`
       <iframe
         src="https://form.typeform.com/to/MTt3Pw7K?typeform-embed=oembed&amp;typeform-medium=embed-oembed"
@@ -209,6 +211,8 @@ describeForEachParser('typeformIframeEmbedResolver', (parseHtml) => {
       id: 'MTt3Pw7K',
       src: 'https://form.typeform.com/to/MTt3Pw7K',
       url: 'https://form.typeform.com/to/MTt3Pw7K',
+      width: 900,
+      height: 600,
     }
 
     expect(await extract(value)).toEqual(expected)

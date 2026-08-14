@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { attr, find, text } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
 
 const imgurHosts = ['imgur.com']
 
@@ -49,9 +49,9 @@ const composeEmbed = (post: ImgurPost, title?: string): EmbedResolverResult => {
 // into the player. Without the script a reader gets the quote and its link, so the picture never
 // appears. The blockquote is the only shape the platform has issued since the feature shipped in
 // 2015; a bare `i.imgur.com/<id>.jpg` hotlink is an ordinary image and not this.
-export const imgurBlockquoteEmbedResolver: EmbedResolver = {
-  selector: 'blockquote.imgur-embed-pub[data-id]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const imgurBlockquoteEmbedResolver = createMarkupEmbedResolver(
+  'blockquote.imgur-embed-pub[data-id]',
+  (element) => {
     const post = parsePost(attr(element, 'data-id') ?? '')
 
     if (!post) {
@@ -63,7 +63,7 @@ export const imgurBlockquoteEmbedResolver: EmbedResolver = {
     // list of its wordings ages, and what the source says is what the placeholder reports.
     return composeEmbed(post, text(find(element, 'a')))
   },
-}
+)
 
 // The frame the script builds, kept by exports that stored the page after it rendered. Its query
 // describes the embedding page (`pub`, `ref`, `context`, `analytics`, `w`), so the url is rebuilt

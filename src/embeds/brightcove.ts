@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
 
 // Brightcove builds its player page from four ids the in-page embed carries as attributes. The
 // account is usually one of them, but some plugins leave it only in the loader script's url, so
@@ -39,9 +39,9 @@ export const composePlayerUrl = (
 // only the renderer here; the video is Brightcove's, named by id, which is why this lives with
 // the rest of Brightcove rather than with the generic Video.js rebuild. Brightcove has no public
 // watch page, so the placeholder carries no `url`.
-export const brightcoveVideoJsEmbedResolver: EmbedResolver = {
-  selector: 'video-js[data-video-id], video[data-video-id]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const brightcoveVideoJsEmbedResolver = createMarkupEmbedResolver(
+  'video-js[data-video-id], video[data-video-id]',
+  (element) => {
     // The older syntax puts the same attributes on a `<video class="video-js">`. Empty, it
     // renders as a blank video element, so the episode is lost the same way. One carrying a
     // real file is a working video and stays one: the placeholder would be a downgrade.
@@ -77,7 +77,7 @@ export const brightcoveVideoJsEmbedResolver: EmbedResolver = {
       ),
     }
   },
-}
+)
 
 // The Flash player split the same two ids across two places: the account sits in the url as
 // `publisherID`, and the video id in `flashVars`, either on the carrier itself or in a

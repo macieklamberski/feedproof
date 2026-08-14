@@ -1,5 +1,6 @@
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
+import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
 // Every corpus embed points at the relative `visualisation/{numeric id}` path, at most
 // with a cache-busting query. Only the digits reach the minted URLs; a full URL or any
@@ -11,9 +12,9 @@ const visualisationSrcRegex = /^visualisation\/(\d+)(?:\?.*)?$/
 // The embed page is mintable from the id alone (verified live, 200), and so is the public
 // share page the placeholder anchors to. The div usually wraps a static thumbnail img
 // (bare or inside a <noscript>); when present it becomes the placeholder's thumbnail.
-export const flourishEmbedResolver: EmbedResolver = {
-  selector: 'div.flourish-embed[data-src]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const flourishEmbedResolver = createMarkupEmbedResolver(
+  'div.flourish-embed[data-src]',
+  (element) => {
     const match = attr(element, 'data-src')?.match(visualisationSrcRegex)
     const visualisationId = match?.[1]
 
@@ -36,4 +37,4 @@ export const flourishEmbedResolver: EmbedResolver = {
 
     return result
   },
-}
+)

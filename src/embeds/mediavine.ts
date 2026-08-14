@@ -1,13 +1,14 @@
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { attr, parseRatioDimensions } from '../utils/dom.js'
+import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
 // Mediavine ships a video as an empty `<div class="mv-video-target mv-video-id-{id}"
 // data-video-id="{id}">` that its script builds into a player, so a reader shows nothing at
 // all. The embed player page is mintable from the id alone (verified live, 200). Mediavine
 // has no public watch page, so the placeholder carries no `url`.
-export const mediavineEmbedResolver: EmbedResolver = {
-  selector: 'div.mv-video-target[data-video-id]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const mediavineEmbedResolver = createMarkupEmbedResolver(
+  'div.mv-video-target[data-video-id]',
+  (element) => {
     const videoId = attr(element, 'data-video-id')
 
     if (!videoId) {
@@ -29,4 +30,4 @@ export const mediavineEmbedResolver: EmbedResolver = {
 
     return result
   },
-}
+)

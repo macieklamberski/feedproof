@@ -302,6 +302,7 @@ export {
   createCitePlaceholder,
   createEmbedPlaceholder,
   createIframeEmbedResolver,
+  createMarkupEmbedResolver,
   createPlaceholder,
   normalizeCiteFields,
   normalizeEmbedFields,

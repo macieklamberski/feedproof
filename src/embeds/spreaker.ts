@@ -1,7 +1,7 @@
 import { parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^\d+$/
 
@@ -67,9 +67,9 @@ export const spreakerIframeEmbedResolver = createIframeEmbedResolver(
 // turn an ordinary link into a player on thin evidence. It would also buy nothing: 4 corpus
 // feeds carry the class without the attribute, and none of the 4 ships the loader script that
 // would have made a player of it.
-export const spreakerAnchorEmbedResolver: EmbedResolver = {
-  selector: 'a.spreaker-player[data-resource]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
+  'a.spreaker-player[data-resource]',
+  (element) => {
     const resource = attr(element, 'data-resource')
     const result = resource
       ? spreakerResolveEmbed(`https://widget.spreaker.com/player?${resource}`)
@@ -84,4 +84,4 @@ export const spreakerAnchorEmbedResolver: EmbedResolver = {
 
     return stated ? { ...result, height: stated } : result
   },
-}
+)

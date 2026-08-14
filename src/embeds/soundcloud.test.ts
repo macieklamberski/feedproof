@@ -30,7 +30,8 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
         id: 'tracks/1597257306',
         src: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1597257306&color=%23ff5500',
         url: 'https://soundcloud.com/anjunadeep/the-anjunadeep-edition-586',
-        height: 166,
+        // The iframe states 300, which outranks the 166 the track player defaults to.
+        height: 300,
         title: 'The Anjunadeep Edition 586',
         author: 'Anjunadeep',
       }
