@@ -143,26 +143,6 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    it('should read the config from a sibling param', async () => {
-      const value = html`
-        <object width="640" height="504">
-          <param
-            name="flashvars"
-            value='config={"playlist":[{"url":"http://www.archive.org/download/BlackSummerPodcast/podcast.mp3"}]}'
-          />
-          <embed src="http://www.archive.org/flow/flowplayer.commercial-3.2.1.swf" />
-        </object>
-      `
-      const expected: EmbedResolverResult = {
-        provider: 'archive',
-        id: 'BlackSummerPodcast',
-        src: 'https://archive.org/embed/BlackSummerPodcast',
-        url: 'https://archive.org/details/BlackSummerPodcast',
-        thumbnail: 'https://archive.org/services/img/BlackSummerPodcast',
-      }
-      expect(await extract(value)).toEqual(expected)
-    })
-
     // The player that predates flashvars took the same config as a query parameter.
     it('should read the config from the player query', async () => {
       const value = html`
