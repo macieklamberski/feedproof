@@ -387,7 +387,6 @@ describe('twitterResolveEmbed', () => {
       provider: 'twitter',
       id: statusId,
       src: playerUrl,
-      url: undefined,
     }
 
     expect(twitterResolveEmbed(playerUrl)).toEqual(expected)
