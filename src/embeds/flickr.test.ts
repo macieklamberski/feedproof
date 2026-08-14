@@ -97,6 +97,7 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
         provider: 'flickr',
         id: '12345678@N00/72157624341',
         src: 'https://embedr.flickr.com/photosets/72157624341?width=500&height=375',
+        url: 'https://www.flickr.com/photos/12345678@N00/sets/72157624341',
         width: 500,
         height: 375,
       }

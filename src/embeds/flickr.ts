@@ -64,8 +64,15 @@ const readLegacyQuery = (parsed: URL): EmbedResolverResult | undefined => {
   const owner = parsed.searchParams.get('user_id')
 
   if (setId && safeSetIdRegex.test(setId)) {
+    // With the owner beside it the album's own page is mintable too; a set alone names the
+    // player but no page, since the page path starts with the owner.
     return owner && safeOwnerRegex.test(owner)
-      ? { provider: 'flickr', id: `${owner}/${setId}`, src: composeAlbumPlayer(setId) }
+      ? {
+          provider: 'flickr',
+          id: `${owner}/${setId}`,
+          src: composeAlbumPlayer(setId),
+          url: `https://www.flickr.com/photos/${owner}/sets/${setId}`,
+        }
       : { provider: 'flickr', id: `photosets/${setId}`, src: composeAlbumPlayer(setId) }
   }
 
