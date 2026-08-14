@@ -53,6 +53,17 @@ export const readCarrierUrl = (element: Element): string => {
 // This is not a pattern to copy for resolvers generally: it exists because these bodies
 // were already identical. The cite resolvers each read a different shape, so a shared
 // builder there would need a config language and would cost more than it saves.
+// A resolver that has measured the platform can overrule what the carrier declares. Scribd
+// states the same `height="500"` on every document it embeds and keeps the honest ratio in
+// `data-aspect-ratio`, so a number from the markup is not always the better one.
+//
+// The default is to trust the markup, because the publisher chose it for the player they
+// embedded. `declaredSize: false` says the resolver's own numbers stand, and it reads at the
+// registration site rather than being inferred from a missing call.
+export type ResolverOptions = {
+  declaredSize?: boolean
+}
+
 // A resolver whose selector names the platform's own markup. The size the carrier declares is
 // applied for it, the same way the url-keyed factory does, so neither kind has to remember.
 // A resolver that has measured the platform and means to overrule the markup declares the
@@ -60,10 +71,15 @@ export const readCarrierUrl = (element: Element): string => {
 export const createMarkupEmbedResolver = (
   selector: string,
   extract: (element: Element) => EmbedResolverResult | undefined,
+  { declaredSize = true }: ResolverOptions = {},
 ): EmbedResolver => {
   return {
     selector,
-    extract: (element) => withDeclaredSize(element, extract(element)),
+    extract: (element) => {
+      const result = extract(element)
+
+      return declaredSize ? withDeclaredSize(element, result) : result
+    },
   }
 }
 
@@ -111,6 +127,7 @@ export const getEmbedDimensions = (element: Element): { width?: number; height?:
 export const createIframeEmbedResolver = (
   hosts: Array<string>,
   resolveEmbed: (url: string, element: Element) => EmbedResolverResult | undefined,
+  { declaredSize = true }: ResolverOptions = {},
 ): EmbedResolver => {
   return {
     selector: embedCarrierSelector,
@@ -121,7 +138,9 @@ export const createIframeEmbedResolver = (
         return
       }
 
-      return withDeclaredSize(element, resolveEmbed(src, element))
+      const result = resolveEmbed(src, element)
+
+      return declaredSize ? withDeclaredSize(element, result) : result
     },
   }
 }
