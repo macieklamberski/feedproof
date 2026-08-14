@@ -242,6 +242,16 @@ describeForEachParser('issuuIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    // The query is interpolated straight into the minted url, so a name that is not a name has
+    // to stop here.
+    it('should return undefined for a document name holding a traversal', async () => {
+      const value = html`
+        <iframe src="https://e.issuu.com/embed.html?u=ecosistemaurbano&d=../../evil"></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     it('should not claim another host spelling the embed path', async () => {
       const value = html`
         <iframe src="https://evil.test/embed.html?u=ecosistemaurbano&d=paisaje_transversal"></iframe>
