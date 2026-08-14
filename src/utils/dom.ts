@@ -99,6 +99,25 @@ export const attr = (element: Nullish<Element>, name: string): string | undefine
   return element?.getAttribute(name)?.trim() || undefined
 }
 
+// A Flash player's configuration, which is where a `.swf` carrier names what it plays: the
+// url is only the player. The value sits either on the carrier itself, which is how `<embed>`
+// spells it, or in a sibling `<param name="flashvars">`, which is how `<object>` does. Both
+// dialects appear on the same platform and often in the same snippet, so a reader that knows
+// one of them reads half the corpus. Returned raw, because callers disagree about what it
+// holds: a query string for Brightcove and Flickr, a config blob for Archive.
+export const flashVars = (element: Nullish<Element>): string | undefined => {
+  const own = attr(element, 'flashvars')
+
+  if (own) {
+    return own
+  }
+
+  const params = Array.from(element?.parentElement?.querySelectorAll('param') ?? [])
+  const named = params.find((param) => attr(param, 'name')?.toLowerCase() === 'flashvars')
+
+  return attr(named, 'value')
+}
+
 // The first url in an element's inline `background-image`, for cards that paint their
 // thumbnail with CSS instead of an `<img>`. Matches the url with or without quotes.
 const bgImageUrlRegex = /url\(['"]?([^'")]+)/

@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr } from '../utils/dom.js'
+import { attr, flashVars } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Brightcove builds its player page from four ids the in-page embed carries as attributes. The
@@ -86,19 +86,6 @@ export const brightcoveVideoJsEmbedResolver = createMarkupEmbedResolver(
 // 200 while a bogus account 404s.
 const federatedPathRegex = /\/services\/viewer\/federated_/
 
-const readFlashVars = (element: Element): URLSearchParams | undefined => {
-  const own = attr(element, 'flashvars')
-
-  if (own) {
-    return new URLSearchParams(own)
-  }
-
-  const params = Array.from(element.parentElement?.querySelectorAll('param') ?? [])
-  const flashVars = params.find((param) => attr(param, 'name')?.toLowerCase() === 'flashvars')
-
-  return flashVars ? new URLSearchParams(attr(flashVars, 'value') ?? '') : undefined
-}
-
 export const brightcoveFlashResolveEmbed = (
   src: string,
   element: Element,
@@ -109,10 +96,11 @@ export const brightcoveFlashResolveEmbed = (
     return
   }
 
-  const flashVars = readFlashVars(element)
+  const config = flashVars(element)
+  const params = config ? new URLSearchParams(config) : undefined
   // A few embeds put the whole flashVars set in the url query instead.
-  const videoId = flashVars?.get('@videoPlayer') ?? parsed.searchParams.get('@videoPlayer')
-  const account = parsed.searchParams.get('publisherID') ?? flashVars?.get('publisherID')
+  const videoId = params?.get('@videoPlayer') ?? parsed.searchParams.get('@videoPlayer')
+  const account = parsed.searchParams.get('publisherID') ?? params?.get('publisherID')
 
   // A reference id (`ref:my-video`) names the video for the account's own API rather than
   // the player, so anything but a numeric id is left to the generic placeholder.
