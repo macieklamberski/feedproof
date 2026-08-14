@@ -135,6 +135,10 @@ export {
   imgurBlockquoteEmbedResolver,
   imgurIframeEmbedResolver,
 } from './embeds/imgur.js'
+export {
+  issuuIframeEmbedResolver,
+  issuuWidgetEmbedResolver,
+} from './embeds/issuu.js'
 export { ivooxEmbedResolver } from './embeds/ivoox.js'
 export {
   jwplayerIframeEmbedResolver,
