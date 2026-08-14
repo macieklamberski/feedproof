@@ -774,6 +774,9 @@ describeForEachParser('blueskyS9eEmbedResolver', (parseHtml) => {
         id: 'did:plc:hhz4agnyzcrsvpnprxrbjrpa/3mhq7aeuwbg42',
         src: 'https://embed.bsky.app/embed/did:plc:hhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mhq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:hhz4agnyzcrsvpnprxrbjrpa/post/3mhq7aeuwbg42',
+        // The helper page states the box it renders into as an inline style.
+        width: 600,
+        height: 600,
       }
 
       expect(await extract(value)).toEqual(expected)

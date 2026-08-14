@@ -122,8 +122,6 @@ export {
   blueskyIframeEmbedResolver,
   blueskyPostElementEmbedResolver,
   blueskyS9eEmbedResolver,
-  extractBlueskyPost,
-  extractBlueskyPostFromUrl,
 } from './embeds/bluesky.js'
 export {
   brightcoveFlashEmbedResolver,
