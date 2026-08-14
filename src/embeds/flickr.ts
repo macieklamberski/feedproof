@@ -26,7 +26,7 @@ const composePlayerUrl = (setId: string, width: number, height: number): string 
 const defaultWidth = 400
 const defaultHeight = 300
 
-export const flickrFlashResolveEmbed = (
+const flickrFlashResolveEmbed = (
   link: string,
   element: Element,
 ): EmbedResolverResult | undefined => {
