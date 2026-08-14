@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize } from '../utils/dom.js'
-import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Video ids are a two-letter kind and a number, `sm9`, `nm12345`, `so67890`.
 const safeVideoIdRegex = /^[a-z]{2}\d+$/
@@ -61,7 +61,7 @@ export const nicovideoResolveEmbed = (url: string): EmbedResolverResult | undefi
 }
 
 // The dead `ext.nicovideo.jp/thumb/{id}` card, and any modern player already in iframe form.
-export const nicovideoIframeEmbedResolver = createIframeEmbedResolver(
+export const nicovideoIframeEmbedResolver = createUrlEmbedResolver(
   nicovideoHosts,
   nicovideoResolveEmbed,
 )

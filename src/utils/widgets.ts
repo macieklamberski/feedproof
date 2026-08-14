@@ -45,14 +45,6 @@ export const readCarrierUrl = (element: Element): string => {
   return element.getAttribute(embedCarriers[element.localName] ?? 'src') ?? ''
 }
 
-// Every provider matches the same carriers and differs only in which hosts it claims and
-// how it reads an id out of the URL, so the match itself lives here. Keying on the URL
-// rather than on markup is what separates these resolvers from the ones that recognise a
-// platform's own class or attribute, and it is why the name says url and not iframe.
-//
-// This is not a pattern to copy for resolvers generally: it exists because these bodies
-// were already identical. The cite resolvers each read a different shape, so a shared
-// builder there would need a config language and would cost more than it saves.
 // A resolver that has measured the platform can overrule what the carrier declares. Scribd
 // states the same `height="500"` on every document it embeds and keeps the honest ratio in
 // `data-aspect-ratio`, so a number from the markup is not always the better one.
@@ -83,9 +75,6 @@ export const createMarkupEmbedResolver = (
   }
 }
 
-// The element travels alongside the url because a carrier can hold more than its src: an
-// iframe's `title` is the one field a publisher's snippet states that the url does not carry.
-// Resolvers that need nothing but the url ignore the second argument.
 // The size a publisher states on the carrier outranks anything a resolver derived, because it
 // was chosen for the player they actually embedded. Resolvers apply it themselves rather than
 // having it applied to them, so one that has measured the platform can decline: a snippet that
@@ -124,7 +113,19 @@ export const getEmbedDimensions = (element: Element): { width?: number; height?:
   return dimensions
 }
 
-export const createIframeEmbedResolver = (
+// Every provider matches the same carriers and differs only in which hosts it claims and
+// how it reads an id out of the URL, so the match itself lives here. Keying on the URL
+// rather than on markup is what separates these resolvers from the ones that recognise a
+// platform's own class or attribute, and it is why the name says url and not iframe.
+//
+// This is not a pattern to copy for resolvers generally: it exists because these bodies
+// were already identical. The cite resolvers each read a different shape, so a shared
+// builder there would need a config language and would cost more than it saves.
+//
+// The element travels alongside the url because a carrier can hold more than its src: an
+// iframe's `title` is the one field a publisher's snippet states that the url does not carry.
+// Resolvers that need nothing but the url ignore the second argument.
+export const createUrlEmbedResolver = (
   hosts: Array<string>,
   resolveEmbed: (url: string, element: Element) => EmbedResolverResult | undefined,
   { declaredSize = true }: ResolverOptions = {},

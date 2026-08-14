@@ -1,6 +1,6 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The player is fluid-width and fixed-height, and the height depends on what sits inside it:
 // the compact bar for a single item, the taller box for a collection. These are the heights
@@ -54,4 +54,4 @@ export const spotifyResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 }
 
-export const spotifyEmbedResolver = createIframeEmbedResolver([spotifyHost], spotifyResolveEmbed)
+export const spotifyEmbedResolver = createUrlEmbedResolver([spotifyHost], spotifyResolveEmbed)

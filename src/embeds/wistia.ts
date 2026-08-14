@@ -1,6 +1,6 @@
 import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Every id sampled from the corpus is exactly 10 alphanumeric characters. Anything else is
 // left to the generic placeholder rather than interpolated into a player url.
@@ -44,4 +44,4 @@ export const wistiaResolveEmbed = (url: string): EmbedResolverResult | undefined
   }
 }
 
-export const wistiaEmbedResolver = createIframeEmbedResolver(wistiaHosts, wistiaResolveEmbed)
+export const wistiaEmbedResolver = createUrlEmbedResolver(wistiaHosts, wistiaResolveEmbed)

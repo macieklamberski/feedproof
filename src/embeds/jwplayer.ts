@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const fileExtensionRegex = /\.[a-z]+$/i
 const safeMediaIdRegex = /^[a-zA-Z0-9]{8}$/
@@ -42,7 +42,7 @@ export const jwplayerResolveEmbed = (url: string): EmbedResolverResult | undefin
   }
 }
 
-export const jwplayerIframeEmbedResolver = createIframeEmbedResolver(
+export const jwplayerIframeEmbedResolver = createUrlEmbedResolver(
   jwplayerHosts,
   jwplayerResolveEmbed,
 )

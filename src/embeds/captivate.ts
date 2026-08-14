@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -44,7 +44,4 @@ export const captivateResolveEmbed = (url: string): EmbedResolverResult | undefi
   }
 }
 
-export const captivateEmbedResolver = createIframeEmbedResolver(
-  captivateHosts,
-  captivateResolveEmbed,
-)
+export const captivateEmbedResolver = createUrlEmbedResolver(captivateHosts, captivateResolveEmbed)

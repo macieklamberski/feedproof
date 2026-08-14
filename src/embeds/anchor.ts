@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeSegmentRegex = /^[A-Za-z0-9._-]+$/
 
@@ -59,4 +59,4 @@ export const anchorResolveEmbed = (url: string): EmbedResolverResult | undefined
   }
 }
 
-export const anchorEmbedResolver = createIframeEmbedResolver(anchorHosts, anchorResolveEmbed)
+export const anchorEmbedResolver = createUrlEmbedResolver(anchorHosts, anchorResolveEmbed)

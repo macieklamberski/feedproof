@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The token is opaque and url-safe base64, so anything outside that alphabet is not one and is
 // left to the generic iframe path instead of being interpolated into a url.
@@ -45,4 +45,4 @@ export const bloggerResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 }
 
-export const bloggerEmbedResolver = createIframeEmbedResolver(bloggerHosts, bloggerResolveEmbed)
+export const bloggerEmbedResolver = createUrlEmbedResolver(bloggerHosts, bloggerResolveEmbed)
