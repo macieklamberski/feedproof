@@ -1,7 +1,7 @@
 import { coerceNumber, isHostOf, isSubdomainOf, type Nullish, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { attr, find, text } from '../utils/dom.js'
-import { createUrlEmbedResolver } from '../utils/widgets.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Facebook's embed SDK ships a post as `<div class="fb-post" data-href="{post url}">` and a
 // video as `<div class="fb-video" data-href="{video url}">` next to a script that builds the
@@ -69,35 +69,31 @@ const extractEmbed = (
   }
 }
 
-export const facebookPostEmbedResolver: EmbedResolver = {
-  selector: 'div.fb-post[data-href]',
-  extract: (element): EmbedResolverResult | undefined => {
-    return extractEmbed(element, 'post')
+// The SDK widget div, which is one carrier and not two: a post and a video arrive as the same
+// empty `data-href` div and differ only in the class, which is what names the plugin the script
+// would have built. Splitting them into a resolver each would state the same reader twice.
+export const facebookWidgetEmbedResolver = createMarkupEmbedResolver(
+  'div.fb-post[data-href], div.fb-video[data-href]',
+  (element) => {
+    return extractEmbed(element, element.classList.contains('fb-post') ? 'post' : 'video')
   },
-}
-
-export const facebookVideoEmbedResolver: EmbedResolver = {
-  selector: 'div.fb-video[data-href]',
-  extract: (element): EmbedResolverResult | undefined => {
-    return extractEmbed(element, 'video')
-  },
-}
+)
 
 // The pre-SDK XFBML tag, still pasted into old blog templates. It is an empty element with the
 // url in a plain `href`, so left alone it is deleted as an empty tag and the post disappears.
-export const facebookXfbmlEmbedResolver: EmbedResolver = {
-  selector: 'fb\\:post[href]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const facebookXfbmlEmbedResolver = createMarkupEmbedResolver(
+  'fb\\:post[href]',
+  (element) => {
     return extractEmbed(element, 'post', 'href')
   },
-}
+)
 
 // The AMP component, which names which plugin it wants in `data-embed-as` (post, video or
 // comment). A comment thread is page chrome rather than the article's content, so it is left
 // for the non-content pass and only the other two resolve.
-export const facebookAmpEmbedResolver: EmbedResolver = {
-  selector: 'amp-facebook[data-href]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const facebookAmpEmbedResolver = createMarkupEmbedResolver(
+  'amp-facebook[data-href]',
+  (element) => {
     const embedAs = attr(element, 'data-embed-as')
 
     if (embedAs === 'comment') {
@@ -106,7 +102,7 @@ export const facebookAmpEmbedResolver: EmbedResolver = {
 
     return extractEmbed(element, embedAs === 'video' ? 'video' : 'post')
   },
-}
+)
 
 // The plugin url the SDK builds at runtime, which is also what Facebook's own embed dialog
 // hands a publisher to paste. It is the more common of the two forms, so most Facebook embeds
@@ -121,7 +117,7 @@ const safeVideoIdRegex = /^\d+$/
 // copy survives a CMS that strips presentation attributes. It is the publisher's own number,
 // not a guess: a Reel comes out vertical (267x476 and 304x540 are both in the corpus) and a
 // landscape video 560x314, where a shared default would make both 16:9. A size on the element
-// still wins, since the widget pass reads that first.
+// still wins, since the factory applies what the carrier declares over what this returns.
 const querySize = (url: URL): { width?: number; height?: number } => {
   return {
     width: coerceNumber(url.searchParams.get('width')),
@@ -183,13 +179,13 @@ export const facebookIframeEmbedResolver = createUrlEmbedResolver(
 
 // The same fallback blockquote as above, but the publisher kept only it and dropped the widget
 // div, so nothing names the plugin. The url in `cite` does: a video, reel or watch path is the
-// video player, everything else is a post. Registered after the two divs, whose subtree this
+// video player, everything else is a post. Registered after the widget div, whose subtree this
 // would otherwise match a second time.
 const videoPathRegex = /\/(?:videos?|reel|watch)\b/i
 
-export const facebookFallbackEmbedResolver: EmbedResolver = {
-  selector: fallbackSelector,
-  extract: (element): EmbedResolverResult | undefined => {
+export const facebookBlockquoteEmbedResolver = createMarkupEmbedResolver(
+  fallbackSelector,
+  (element) => {
     const cite = attr(element, 'cite')
     const parsed = cite ? parseUrl(cite) : undefined
 
@@ -207,4 +203,4 @@ export const facebookFallbackEmbedResolver: EmbedResolver = {
       ...readFallback(element),
     }
   },
-}
+)

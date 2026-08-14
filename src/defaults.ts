@@ -44,10 +44,9 @@ import { captivateEmbedResolver } from './embeds/captivate.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import {
   facebookAmpEmbedResolver,
-  facebookFallbackEmbedResolver,
+  facebookBlockquoteEmbedResolver,
   facebookIframeEmbedResolver,
-  facebookPostEmbedResolver,
-  facebookVideoEmbedResolver,
+  facebookWidgetEmbedResolver,
   facebookXfbmlEmbedResolver,
 } from './embeds/facebook.js'
 import { firesideEmbedResolver } from './embeds/fireside.js'
@@ -380,10 +379,9 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   buzzsproutIframeEmbedResolver,
   buzzsproutScriptEmbedResolver,
   blubrryEmbedResolver,
-  facebookPostEmbedResolver,
-  facebookVideoEmbedResolver,
+  facebookWidgetEmbedResolver,
   facebookIframeEmbedResolver,
-  facebookFallbackEmbedResolver,
+  facebookBlockquoteEmbedResolver,
   facebookXfbmlEmbedResolver,
   facebookAmpEmbedResolver,
   mediavineEmbedResolver,

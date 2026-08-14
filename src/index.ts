@@ -130,10 +130,9 @@ export { captivateEmbedResolver } from './embeds/captivate.js'
 export { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 export {
   facebookAmpEmbedResolver,
-  facebookFallbackEmbedResolver,
+  facebookBlockquoteEmbedResolver,
   facebookIframeEmbedResolver,
-  facebookPostEmbedResolver,
-  facebookVideoEmbedResolver,
+  facebookWidgetEmbedResolver,
   facebookXfbmlEmbedResolver,
 } from './embeds/facebook.js'
 export { firesideEmbedResolver } from './embeds/fireside.js'
