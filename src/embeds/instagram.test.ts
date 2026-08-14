@@ -5,7 +5,6 @@ import {
   instagramAmpEmbedResolver,
   instagramBlockquoteEmbedResolver,
   instagramIframeEmbedResolver,
-  instagramLazyEmbedResolver,
   instagramResolveEmbed,
 } from './instagram.js'
 
@@ -538,59 +537,6 @@ describe('instagramResolveEmbed', () => {
     const value = 'https://['
 
     expect(instagramResolveEmbed(value)).toBeUndefined()
-  })
-})
-
-describeForEachParser('instagramLazyEmbedResolver', (parseHtml) => {
-  const extract = resolverExtractor(parseHtml, instagramLazyEmbedResolver)
-
-  describe('the deferred blockquote', () => {
-    it('should resolve the parked post and keep its captioned form', async () => {
-      const value = html`
-        <div
-          class="load-later load-later-vendor-wwwinstagramcom"
-          data-url="https://www.instagram.com/p/CaUsPbUquKV/"
-          data-content="%3Cblockquote%20class%3D%22instagram-media%22%20data-instgrm-captioned%3E%3C%2Fblockquote%3E"
-        ></div>
-      `
-      const expected: EmbedResolverResult = {
-        provider: 'instagram',
-        id: 'p/CaUsPbUquKV',
-        src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/captioned/',
-        url: 'https://www.instagram.com/p/CaUsPbUquKV/',
-      }
-
-      expect(await extract(value)).toEqual(expected)
-    })
-
-    it('should mint the plain frame when the parked quote asks for no caption', async () => {
-      const value = html`
-        <div
-          class="load-later load-later-vendor-wwwinstagramcom"
-          data-url="https://www.instagram.com/reel/DGPdABWz84n/"
-          data-content="%3Cblockquote%20class%3D%22instagram-media%22%3E%3C%2Fblockquote%3E"
-        ></div>
-      `
-      const expected: EmbedResolverResult = {
-        provider: 'instagram',
-        id: 'reel/DGPdABWz84n',
-        src: 'https://www.instagram.com/reel/DGPdABWz84n/embed/',
-        url: 'https://www.instagram.com/reel/DGPdABWz84n/',
-      }
-
-      expect(await extract(value)).toEqual(expected)
-    })
-
-    it('should return undefined when the parked url is not an instagram post', async () => {
-      const value = html`
-        <div
-          class="load-later load-later-vendor-wwwinstagramcom"
-          data-url="https://evil.test/www.instagram.com/p/CaUsPbUquKV/"
-        ></div>
-      `
-
-      expect(await extract(value)).toBeUndefined()
-    })
   })
 })
 

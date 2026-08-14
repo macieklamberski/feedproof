@@ -50,7 +50,6 @@ import {
   instagramAmpEmbedResolver,
   instagramBlockquoteEmbedResolver,
   instagramIframeEmbedResolver,
-  instagramLazyEmbedResolver,
 } from './embeds/instagram.js'
 import { issuuIframeEmbedResolver, issuuWidgetEmbedResolver } from './embeds/issuu.js'
 import { ivooxEmbedResolver } from './embeds/ivoox.js'
@@ -421,7 +420,6 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   nicovideoIframeEmbedResolver,
   instagramBlockquoteEmbedResolver,
   instagramAmpEmbedResolver,
-  instagramLazyEmbedResolver,
   instagramIframeEmbedResolver,
   spotifyEmbedResolver,
   spreakerIframeEmbedResolver,

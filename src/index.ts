@@ -139,7 +139,6 @@ export {
   instagramAmpEmbedResolver,
   instagramBlockquoteEmbedResolver,
   instagramIframeEmbedResolver,
-  instagramLazyEmbedResolver,
 } from './embeds/instagram.js'
 export {
   issuuIframeEmbedResolver,

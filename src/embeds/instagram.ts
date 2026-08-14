@@ -227,22 +227,3 @@ export const instagramIframeEmbedResolver = createUrlEmbedResolver(
   instagramHosts,
   instagramResolveEmbed,
 )
-
-// A WordPress lazy-loader that parks the whole blockquote percent-encoded in `data-content` and
-// injects it when the placeholder scrolls into view. Without its script the div stays empty and
-// is deleted as empty markup, so the post disappears leaving nothing behind. The wrapper repeats
-// the post url plain, and the parked copy still spells whether the publisher asked for a caption.
-export const instagramLazyEmbedResolver = createMarkupEmbedResolver(
-  'div.load-later-vendor-wwwinstagramcom[data-url]',
-  (element): EmbedResolverResult | undefined => {
-    const post = readPostUrl(attr(element, 'data-url'))
-
-    if (!post) {
-      return
-    }
-
-    const captioned = attr(element, 'data-content')?.includes('data-instgrm-captioned') === true
-
-    return composeEmbed(post, captioned)
-  },
-)
