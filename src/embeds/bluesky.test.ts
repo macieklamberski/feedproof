@@ -678,11 +678,7 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
         id: 'did:plc:dhz4agnyzcrsvpnprxrbjrpa/3mdq7aeuwbg42',
         src: 'https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:dhz4agnyzcrsvpnprxrbjrpa/post/3mdq7aeuwbg42',
-        description: undefined,
         author: '@author.example',
-        avatar: undefined,
-        thumbnail: undefined,
-        date: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
