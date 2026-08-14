@@ -62,6 +62,7 @@ import { omnyEmbedResolver } from './embeds/omny.js'
 import { podbeanEmbedResolver } from './embeds/podbean.js'
 import { podigeeEmbedResolver } from './embeds/podigee.js'
 import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from './embeds/reddit.js'
+import { scribdFlashEmbedResolver, scribdIframeEmbedResolver } from './embeds/scribd.js'
 import { simplecastEmbedResolver } from './embeds/simplecast.js'
 import { slideshareFlashEmbedResolver, slideshareIframeEmbedResolver } from './embeds/slideshare.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
@@ -392,6 +393,8 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   redditWidgetEmbedResolver,
   redditIframeEmbedResolver,
   simplecastEmbedResolver,
+  scribdFlashEmbedResolver,
+  scribdIframeEmbedResolver,
   slideshareFlashEmbedResolver,
   slideshareIframeEmbedResolver,
   soundcloudEmbedResolver,
