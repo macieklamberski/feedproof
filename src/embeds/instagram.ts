@@ -1,7 +1,7 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { attr, find, parsePixelSize, text } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
 
 // Instagram's embed dialog ships a post as `<blockquote class="instagram-media">` holding the
 // permalink, a skeleton of empty divs and an `embed.js` loader beside it. The loader never runs
@@ -63,8 +63,8 @@ const composeEmbed = (
 }
 
 // Tumblr wraps the quote in a figure that repeats the post url percent-encoded and states the
-// size the embed rendered at. That is the only place an Instagram embed carries a ratio: the
-// blockquote declares a max-width and never a height.
+// size the embed rendered at. That is the only size a blockquote ever comes with: the quote
+// itself declares a max-width and never a height, so the declared-size pass finds nothing on it.
 const wrapperSelector = 'figure[data-provider="instagram"]'
 
 const decodeAttribute = (value: string | undefined): string | undefined => {
@@ -175,9 +175,9 @@ const readContent = (element: Element): Partial<EmbedResolverResult> => {
 
 // The blockquote in all its versions and wrappers, which is what the share dialog writes and
 // what every CMS re-wraps.
-export const instagramBlockquoteEmbedResolver: EmbedResolver = {
-  selector: 'blockquote.instagram-media',
-  extract: (element): EmbedResolverResult | undefined => {
+export const instagramBlockquoteEmbedResolver = createMarkupEmbedResolver(
+  'blockquote.instagram-media',
+  (element): EmbedResolverResult | undefined => {
     const wrapper = readWrapper(element)
     const post = findPost(element) ?? wrapper.post
 
@@ -190,14 +190,14 @@ export const instagramBlockquoteEmbedResolver: EmbedResolver = {
       ...wrapper.size,
     })
   },
-}
+)
 
 // The AMP component names the post in an attribute and carries no text at all, so left alone it
 // is dropped as an empty element and the post goes with it. It names the media and not the path
 // the media lives at, and addresses every shortcode it is given through `/p/`.
-export const instagramAmpEmbedResolver: EmbedResolver = {
-  selector: 'amp-instagram[data-shortcode], amp-instagram[shortcode]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const instagramAmpEmbedResolver = createMarkupEmbedResolver(
+  'amp-instagram[data-shortcode], amp-instagram[shortcode]',
+  (element): EmbedResolverResult | undefined => {
     const shortcode = attr(element, 'data-shortcode') ?? attr(element, 'shortcode')
 
     if (!shortcode || !safeShortcodeRegex.test(shortcode)) {
@@ -206,7 +206,7 @@ export const instagramAmpEmbedResolver: EmbedResolver = {
 
     return composeEmbed({ kind: 'p', shortcode }, element.hasAttribute('data-captioned'))
   },
-}
+)
 
 // The frame `embed.js` builds, which Blogger-style exports store after the page rendered and
 // which iframe generators paste directly. Its query and hash (`cr`, `wp`, `rd`, `rp`) describe
@@ -232,9 +232,9 @@ export const instagramIframeEmbedResolver = createIframeEmbedResolver(
 // injects it when the placeholder scrolls into view. Without its script the div stays empty and
 // is deleted as empty markup, so the post disappears leaving nothing behind. The wrapper repeats
 // the post url plain, and the parked copy still spells whether the publisher asked for a caption.
-export const instagramLazyEmbedResolver: EmbedResolver = {
-  selector: 'div.load-later-vendor-wwwinstagramcom[data-url]',
-  extract: (element): EmbedResolverResult | undefined => {
+export const instagramLazyEmbedResolver = createMarkupEmbedResolver(
+  'div.load-later-vendor-wwwinstagramcom[data-url]',
+  (element): EmbedResolverResult | undefined => {
     const post = readPostUrl(attr(element, 'data-url'))
 
     if (!post) {
@@ -245,4 +245,4 @@ export const instagramLazyEmbedResolver: EmbedResolver = {
 
     return composeEmbed(post, captioned)
   },
-}
+)

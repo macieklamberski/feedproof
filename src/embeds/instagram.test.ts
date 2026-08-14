@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   instagramAmpEmbedResolver,
@@ -10,16 +10,10 @@ import {
 } from './instagram.js'
 
 describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(instagramBlockquoteEmbedResolver.selector)
-
-    return element
-      ? (instagramBlockquoteEmbedResolver.extract(element) as EmbedResolverResult)
-      : undefined
-  }
+  const extract = resolverExtractor(parseHtml, instagramBlockquoteEmbedResolver)
 
   describe('the current captioned blockquote', () => {
-    it('should mint the captioned frame and name the account', () => {
+    it('should mint the captioned frame and name the account', async () => {
       const value = html`
         <blockquote
           class="instagram-media"
@@ -51,12 +45,12 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         date: undefined,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // The skeleton's own "View this post on Instagram" line is the only other text this shape
     // carries, and it is chrome rather than the post.
-    it('should state no description when the quote carries no caption', () => {
+    it('should state no description when the quote carries no caption', async () => {
       const value = html`
         <blockquote
           class="instagram-media"
@@ -70,13 +64,22 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
           </div>
         </blockquote>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'p/CaUsPbUquKV',
+        src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/captioned/',
+        url: 'https://www.instagram.com/p/CaUsPbUquKV/',
+        author: '@someuser',
+        description: undefined,
+        date: undefined,
+      }
 
-      expect(extract(value)?.description).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('the uncaptioned blockquote', () => {
-    it('should mint the plain frame when the caption flag is absent', () => {
+    it('should mint the plain frame when the caption flag is absent', async () => {
       const value = html`
         <blockquote
           class="instagram-media"
@@ -84,8 +87,7 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
           data-instgrm-version="14"
         ></blockquote>
       `
-
-      expect(extract(value)).toEqual({
+      const expected: EmbedResolverResult = {
         provider: 'instagram',
         id: 'p/CaUsPbUquKV',
         src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
@@ -93,12 +95,14 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         author: undefined,
         description: undefined,
         date: undefined,
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('the reel permalink', () => {
-    it('should keep the reel path in the id, the frame and the url', () => {
+    it('should keep the reel path in the id, the frame and the url', async () => {
       const value = html`
         <blockquote
           class="instagram-media"
@@ -106,28 +110,42 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
           data-instgrm-version="14"
         ></blockquote>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
         id: 'reel/DGPdABWz84n',
         src: 'https://www.instagram.com/reel/DGPdABWz84n/embed/',
         url: 'https://www.instagram.com/reel/DGPdABWz84n/',
-      })
+        author: undefined,
+        description: undefined,
+        date: undefined,
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should read the plural reels spelling as the same path', () => {
+    it('should read the plural reels spelling as the same path', async () => {
       const value = html`
         <blockquote
           class="instagram-media"
           data-instgrm-permalink="https://www.instagram.com/reels/DGPdABWz84n/"
         ></blockquote>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'reel/DGPdABWz84n',
+        src: 'https://www.instagram.com/reel/DGPdABWz84n/embed/',
+        url: 'https://www.instagram.com/reel/DGPdABWz84n/',
+        author: undefined,
+        description: undefined,
+        date: undefined,
+      }
 
-      expect(extract(value)).toMatchObject({ id: 'reel/DGPdABWz84n' })
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('the retired IGTV permalink', () => {
-    it('should keep the tv path', () => {
+    it('should keep the tv path', async () => {
       const value = html`
         <blockquote
           class="instagram-media"
@@ -135,16 +153,22 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
           data-instgrm-version="13"
         ></blockquote>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
         id: 'tv/BgPrjlfHcoB',
         src: 'https://www.instagram.com/tv/BgPrjlfHcoB/embed/',
-      })
+        url: 'https://www.instagram.com/tv/BgPrjlfHcoB/',
+        author: undefined,
+        description: undefined,
+        date: undefined,
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('the dated blockquote', () => {
-    it('should lift the caption, the account and the timestamp', () => {
+    it('should lift the caption, the account and the timestamp', async () => {
       const value = html`
         <blockquote
           class="instagram-media"
@@ -178,10 +202,10 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         date: '2018-03-22T01:45:03+00:00',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should fall back to the displayed date when the time states none', () => {
+    it('should fall back to the displayed date when the time states none', async () => {
       const value = html`
         <blockquote
           class="instagram-media"
@@ -193,42 +217,73 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
           </p>
         </blockquote>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'p/BgPrjlfHcoB',
+        src: 'https://www.instagram.com/p/BgPrjlfHcoB/embed/',
+        url: 'https://www.instagram.com/p/BgPrjlfHcoB/',
+        description: undefined,
+        author: '@jervoisakl',
+        date: 'Mar 21, 2018',
+      }
 
-      expect(extract(value)).toMatchObject({ date: 'Mar 21, 2018' })
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('the legacy blockquote without a permalink attribute', () => {
-    it('should recover the post from the inner anchor', () => {
+    it('should recover the post from the inner anchor', async () => {
       const value = html`
-        <blockquote class="instagram-media" data-instgrm-captioned data-instgrm-version="7">
+        <blockquote
+          class="instagram-media"
+          data-instgrm-captioned
+          data-instgrm-version="7"
+        >
           <div style="padding:8px;">
             <a href="https://www.instagram.com/p/BXCsBz8AnKt/" target="_blank">An old caption</a>
           </div>
         </blockquote>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
         id: 'p/BXCsBz8AnKt',
         src: 'https://www.instagram.com/p/BXCsBz8AnKt/embed/captioned/',
-      })
+        url: 'https://www.instagram.com/p/BXCsBz8AnKt/',
+        author: undefined,
+        description: undefined,
+        date: undefined,
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     // Deliberate: with no byline to place it against, a lone line of text is as likely to be the
     // widget's own chrome ("A post shared by @user", "Instagram post") as the post's caption.
-    it('should state no description when nothing marks the byline', () => {
+    it('should state no description when nothing marks the byline', async () => {
       const value = html`
-        <blockquote class="instagram-media" data-instgrm-version="7">
+        <blockquote
+          class="instagram-media"
+          data-instgrm-version="7"
+        >
           <p><a href="https://www.instagram.com/p/BXCsBz8AnKt/">An old caption</a></p>
         </blockquote>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'p/BXCsBz8AnKt',
+        src: 'https://www.instagram.com/p/BXCsBz8AnKt/embed/',
+        url: 'https://www.instagram.com/p/BXCsBz8AnKt/',
+        author: undefined,
+        description: undefined,
+        date: undefined,
+      }
 
-      expect(extract(value)?.description).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('the sanitized blockquote', () => {
-    it('should resolve when every data attribute has been stripped', () => {
+    it('should resolve when every data attribute has been stripped', async () => {
       const value = html`
         <blockquote class="instagram-media">
           <div>
@@ -238,25 +293,33 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
           </div>
         </blockquote>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
         id: 'p/CaUsPbUquKV',
+        src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
+        url: 'https://www.instagram.com/p/CaUsPbUquKV/',
         author: '@someuser',
-      })
+        description: undefined,
+        date: undefined,
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('the newsletter stub', () => {
-    it('should resolve the anchor-only quote a newsletter platform leaves behind', () => {
+    it('should resolve the anchor-only quote a newsletter platform leaves behind', async () => {
       const value = html`
-        <blockquote align="center" class="instagram-media">
+        <blockquote
+          align="center"
+          class="instagram-media"
+        >
           <a href="https://www.instagram.com/p/CaUsPbUquKV/?utm_medium=newsletter">
             <p dir="ltr" lang="en">Instagram post</p>
           </a>
         </blockquote>
       `
-
-      expect(extract(value)).toEqual({
+      const expected: EmbedResolverResult = {
         provider: 'instagram',
         id: 'p/CaUsPbUquKV',
         src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
@@ -264,12 +327,14 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         author: undefined,
         description: undefined,
         date: undefined,
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('the plugin-compounded class', () => {
-    it('should match a quote a plugin gave extra classes', () => {
+    it('should match a quote a plugin gave extra classes', async () => {
       const value = html`
         <blockquote
           class="instagram-media sbi-embed publive-Instagram-block"
@@ -278,13 +343,22 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
           data-instgrm-version="14"
         ></blockquote>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'reel/DGPdABWz84n',
+        src: 'https://www.instagram.com/reel/DGPdABWz84n/embed/',
+        url: 'https://www.instagram.com/reel/DGPdABWz84n/',
+        author: undefined,
+        description: undefined,
+        date: undefined,
+      }
 
-      expect(extract(value)).toMatchObject({ id: 'reel/DGPdABWz84n' })
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('the Gutenberg figure wrapper', () => {
-    it('should resolve the quote inside the block wrapper', () => {
+    it('should resolve the quote inside the block wrapper', async () => {
       const value = html`
         <figure class="wp-block-embed is-type-rich is-provider-instagram wp-block-embed-instagram">
           <div class="wp-block-embed__wrapper">
@@ -296,13 +370,22 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
           </div>
         </figure>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'p/CaUsPbUquKV',
+        src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
+        url: 'https://www.instagram.com/p/CaUsPbUquKV/',
+        author: undefined,
+        description: undefined,
+        date: undefined,
+      }
 
-      expect(extract(value)).toMatchObject({ id: 'p/CaUsPbUquKV' })
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('the Tumblr figure wrapper', () => {
-    it('should carry the size the wrapper states as a ratio', () => {
+    it('should carry the size the wrapper states as a ratio', async () => {
       const value = html`
         <figure
           class="tmblr-embed tmblr-full"
@@ -318,8 +401,7 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
           ></blockquote>
         </figure>
       `
-
-      expect(extract(value)).toEqual({
+      const expected: EmbedResolverResult = {
         provider: 'instagram',
         id: 'reel/DGPdABWz84n',
         src: 'https://www.instagram.com/reel/DGPdABWz84n/embed/',
@@ -329,10 +411,12 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         author: undefined,
         description: undefined,
         date: undefined,
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should recover the post from the wrapper when the quote names none', () => {
+    it('should recover the post from the wrapper when the quote names none', async () => {
       const value = html`
         <figure
           class="tmblr-embed"
@@ -342,36 +426,58 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
           <blockquote class="instagram-media"></blockquote>
         </figure>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'p/CaUsPbUquKV',
+        src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
+        url: 'https://www.instagram.com/p/CaUsPbUquKV/',
+        author: undefined,
+        description: undefined,
+        date: undefined,
+      }
 
-      expect(extract(value)).toMatchObject({ id: 'p/CaUsPbUquKV' })
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should state no size when the wrapper gives only one dimension', () => {
+    it('should state no size when the wrapper gives only one dimension', async () => {
       const value = html`
-        <figure class="tmblr-embed" data-provider="instagram" data-orig-width="540">
+        <figure
+          class="tmblr-embed"
+          data-provider="instagram"
+          data-orig-width="540"
+        >
           <blockquote
             class="instagram-media"
             data-instgrm-permalink="https://www.instagram.com/p/CaUsPbUquKV/"
           ></blockquote>
         </figure>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'p/CaUsPbUquKV',
+        src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
+        url: 'https://www.instagram.com/p/CaUsPbUquKV/',
+        author: undefined,
+        description: undefined,
+        date: undefined,
+      }
 
-      expect(extract(value)?.width).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('sad paths', () => {
-    it('should return undefined when nothing names a post', () => {
+    it('should return undefined when nothing names a post', async () => {
       const value = html`
         <blockquote class="instagram-media">
           <p>Some text and no link at all.</p>
         </blockquote>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for a post path on a lookalike host', () => {
+    it('should return undefined for a post path on a lookalike host', async () => {
       const value = html`
         <blockquote
           class="instagram-media"
@@ -379,32 +485,26 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         ></blockquote>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for an instagram url naming no post', () => {
+    it('should return undefined for an instagram url naming no post', async () => {
       const value = html`
         <blockquote class="instagram-media">
           <a href="https://www.instagram.com/someuser/">Some User</a>
         </blockquote>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })
 
 describeForEachParser('instagramIframeEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(instagramIframeEmbedResolver.selector)
-
-    return element
-      ? (instagramIframeEmbedResolver.extract(element) as EmbedResolverResult)
-      : undefined
-  }
+  const extract = resolverExtractor(parseHtml, instagramIframeEmbedResolver)
 
   describe('the stored-after-render frame', () => {
-    it('should rebuild the frame without the embedding page in its query', () => {
+    it('should rebuild the frame without the embedding page in its query', async () => {
       const value = html`
         <iframe
           class="instagram-media instagram-media-rendered"
@@ -415,68 +515,80 @@ describeForEachParser('instagramIframeEmbedResolver', (parseHtml) => {
           data-instgrm-payload-id="instagram-media-payload-0"
         ></iframe>
       `
-
-      expect(extract(value)).toEqual({
+      const expected: EmbedResolverResult = {
         provider: 'instagram',
         id: 'p/CaUsPbUquKV',
         src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/captioned/',
         url: 'https://www.instagram.com/p/CaUsPbUquKV/',
-      })
+        height: 640,
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should return undefined for another host carrying the post path', () => {
+    it('should return undefined for another host carrying the post path', async () => {
       const value = html`<iframe src="https://evil.test/www.instagram.com/p/CaUsPbUquKV/embed/"></iframe>`
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })
 
 describe('instagramResolveEmbed', () => {
   it('should resolve the frame a generator pastes directly', () => {
-    expect(instagramResolveEmbed('https://www.instagram.com/p/CaUsPbUquKV/embed/')).toEqual({
+    const value = 'https://www.instagram.com/p/CaUsPbUquKV/embed/'
+    const expected: EmbedResolverResult = {
       provider: 'instagram',
       id: 'p/CaUsPbUquKV',
       src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
       url: 'https://www.instagram.com/p/CaUsPbUquKV/',
-    })
+    }
+
+    expect(instagramResolveEmbed(value)).toEqual(expected)
   })
 
   it('should keep the captioned form of the frame', () => {
-    expect(
-      instagramResolveEmbed('https://www.instagram.com/reel/DGPdABWz84n/embed/captioned/'),
-    ).toMatchObject({
+    const value = 'https://www.instagram.com/reel/DGPdABWz84n/embed/captioned/'
+    const expected: EmbedResolverResult = {
+      provider: 'instagram',
+      id: 'reel/DGPdABWz84n',
       src: 'https://www.instagram.com/reel/DGPdABWz84n/embed/captioned/',
-    })
+      url: 'https://www.instagram.com/reel/DGPdABWz84n/',
+    }
+
+    expect(instagramResolveEmbed(value)).toEqual(expected)
   })
 
   it('should read the legacy short host', () => {
-    expect(instagramResolveEmbed('https://instagr.am/p/CaUsPbUquKV/')).toMatchObject({
+    const value = 'https://instagr.am/p/CaUsPbUquKV/'
+    const expected: EmbedResolverResult = {
+      provider: 'instagram',
       id: 'p/CaUsPbUquKV',
       src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
-    })
+      url: 'https://www.instagram.com/p/CaUsPbUquKV/',
+    }
+
+    expect(instagramResolveEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined for a profile frame', () => {
-    expect(instagramResolveEmbed('https://www.instagram.com/someuser/embed/')).toBeUndefined()
+    const value = 'https://www.instagram.com/someuser/embed/'
+
+    expect(instagramResolveEmbed(value)).toBeUndefined()
   })
 
   it('should return undefined for a url that cannot be parsed', () => {
-    expect(instagramResolveEmbed('https://[')).toBeUndefined()
+    const value = 'https://['
+
+    expect(instagramResolveEmbed(value)).toBeUndefined()
   })
 })
 
 describeForEachParser('instagramLazyEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(instagramLazyEmbedResolver.selector)
-
-    return element
-      ? (instagramLazyEmbedResolver.extract(element) as EmbedResolverResult)
-      : undefined
-  }
+  const extract = resolverExtractor(parseHtml, instagramLazyEmbedResolver)
 
   describe('the deferred blockquote', () => {
-    it('should resolve the parked post and keep its captioned form', () => {
+    it('should resolve the parked post and keep its captioned form', async () => {
       const value = html`
         <div
           class="load-later load-later-vendor-wwwinstagramcom"
@@ -484,16 +596,17 @@ describeForEachParser('instagramLazyEmbedResolver', (parseHtml) => {
           data-content="%3Cblockquote%20class%3D%22instagram-media%22%20data-instgrm-captioned%3E%3C%2Fblockquote%3E"
         ></div>
       `
-
-      expect(extract(value)).toEqual({
+      const expected: EmbedResolverResult = {
         provider: 'instagram',
         id: 'p/CaUsPbUquKV',
         src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/captioned/',
         url: 'https://www.instagram.com/p/CaUsPbUquKV/',
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should mint the plain frame when the parked quote asks for no caption', () => {
+    it('should mint the plain frame when the parked quote asks for no caption', async () => {
       const value = html`
         <div
           class="load-later load-later-vendor-wwwinstagramcom"
@@ -501,13 +614,17 @@ describeForEachParser('instagramLazyEmbedResolver', (parseHtml) => {
           data-content="%3Cblockquote%20class%3D%22instagram-media%22%3E%3C%2Fblockquote%3E"
         ></div>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'reel/DGPdABWz84n',
         src: 'https://www.instagram.com/reel/DGPdABWz84n/embed/',
-      })
+        url: 'https://www.instagram.com/reel/DGPdABWz84n/',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should return undefined when the parked url is not an instagram post', () => {
+    it('should return undefined when the parked url is not an instagram post', async () => {
       const value = html`
         <div
           class="load-later load-later-vendor-wwwinstagramcom"
@@ -515,19 +632,15 @@ describeForEachParser('instagramLazyEmbedResolver', (parseHtml) => {
         ></div>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })
 
 describeForEachParser('instagramAmpEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(instagramAmpEmbedResolver.selector)
+  const extract = resolverExtractor(parseHtml, instagramAmpEmbedResolver)
 
-    return element ? (instagramAmpEmbedResolver.extract(element) as EmbedResolverResult) : undefined
-  }
-
-  it('should build the captioned frame from the shortcode', () => {
+  it('should build the captioned frame from the shortcode', async () => {
     const value = html`
       <amp-instagram
         data-shortcode="CaUsPbUquKV"
@@ -537,27 +650,41 @@ describeForEachParser('instagramAmpEmbedResolver', (parseHtml) => {
         height="392"
       ></amp-instagram>
     `
-
-    expect(extract(value)).toEqual({
+    const expected: EmbedResolverResult = {
       provider: 'instagram',
       id: 'p/CaUsPbUquKV',
       src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/captioned/',
       url: 'https://www.instagram.com/p/CaUsPbUquKV/',
-    })
+      width: 320,
+      height: 392,
+    }
+
+    expect(await extract(value)).toEqual(expected)
   })
 
-  it('should read the bare shortcode attribute the component also accepts', () => {
-    const value = html`<amp-instagram shortcode="CaUsPbUquKV" width="320" height="392"></amp-instagram>`
-
-    expect(extract(value)).toMatchObject({
+  it('should read the bare shortcode attribute the component also accepts', async () => {
+    const value = html`
+      <amp-instagram
+        shortcode="CaUsPbUquKV"
+        width="320"
+        height="392"
+      ></amp-instagram>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'instagram',
       id: 'p/CaUsPbUquKV',
       src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
-    })
+      url: 'https://www.instagram.com/p/CaUsPbUquKV/',
+      width: 320,
+      height: 392,
+    }
+
+    expect(await extract(value)).toEqual(expected)
   })
 
-  it('should return undefined for a shortcode outside the url-safe alphabet', () => {
+  it('should return undefined for a shortcode outside the url-safe alphabet', async () => {
     const value = html`<amp-instagram data-shortcode="../evil"></amp-instagram>`
 
-    expect(extract(value)).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 })
