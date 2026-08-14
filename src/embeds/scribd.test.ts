@@ -43,11 +43,18 @@ describeForEachParser('scribdIframeEmbedResolver', (parseHtml) => {
           height="500"
         ></iframe>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'scribd',
+        id: '526446879',
+        src: 'https://www.scribd.com/embeds/526446879/content',
+        url: 'https://www.scribd.com/document/526446879',
+        height: 500,
+      }
 
-      expect(await extract(value)).toMatchObject({ height: 500 })
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should ignore a ratio that is not a number', async () => {
+    it('should fall back to the declared height for a ratio that is not a number', async () => {
       const value = html`
         <iframe
           class="scribd_iframe_embed"
@@ -56,19 +63,29 @@ describeForEachParser('scribdIframeEmbedResolver', (parseHtml) => {
           height="500"
         ></iframe>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'scribd',
+        id: '526446879',
+        src: 'https://www.scribd.com/embeds/526446879/content',
+        url: 'https://www.scribd.com/document/526446879',
+        height: 500,
+      }
 
-      expect(await extract(value)).toMatchObject({ height: 500 })
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('the pre-2018 spelling', () => {
     it('should resolve a document named on the doc path', async () => {
       const value = html`<iframe src="https://www.scribd.com/doc/108992419"></iframe>`
-
-      expect(await extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'scribd',
         id: '108992419',
         src: 'https://www.scribd.com/embeds/108992419/content',
-      })
+        url: 'https://www.scribd.com/document/108992419',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -86,7 +103,9 @@ describeForEachParser('scribdIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for another host carrying the embeds path', async () => {
-      const value = html`<iframe src="https://scribd.com.evil.test/embeds/526446879/content"></iframe>`
+      const value = html`
+        <iframe src="https://scribd.com.evil.test/embeds/526446879/content"></iframe>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -98,7 +117,8 @@ describeForEachParser('scribdFlashEmbedResolver', (parseHtml) => {
 
   // Flash has rendered nothing since 2020, so without this the placeholder points at the swf
   // itself. The repair is exact because the swf query names the document in the same id space
-  // the modern route reads.
+  // the modern route reads. Neither case carries a size: the constant the dead player declared
+  // describes a viewer that no longer exists.
   describe('the iPaper viewer', () => {
     it('should repair the dead player to the modern document embed', async () => {
       const value = html`
@@ -130,23 +150,14 @@ describeForEachParser('scribdFlashEmbedResolver', (parseHtml) => {
           height="500"
         />
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'scribd',
         id: '55715',
         src: 'https://www.scribd.com/embeds/55715/content',
-      })
-    })
+        url: 'https://www.scribd.com/document/55715',
+      }
 
-    it('should not carry the constant height the dead player declared', async () => {
-      const value = html`
-        <object
-          data="http://d1.scribdassets.com/ScribdViewer.swf?document_id=108992419"
-          height="500"
-          width="100%"
-        ></object>
-      `
-
-      expect(await extract(value)).not.toHaveProperty('height')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
