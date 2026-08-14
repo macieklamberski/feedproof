@@ -263,6 +263,7 @@ export { stripMarkdownEscapeBackslashes } from './transforms/dom/stripMarkdownEs
 export { stripNonContentElements } from './transforms/dom/stripNonContentElements.js'
 export { stripWordBreaks } from './transforms/dom/stripWordBreaks.js'
 export { surfaceNoscriptEmbeds } from './transforms/dom/surfaceNoscriptEmbeds.js'
+export { surfaceParkedMarkup } from './transforms/dom/surfaceParkedMarkup.js'
 export { surfaceTemplateEmbeds } from './transforms/dom/surfaceTemplateEmbeds.js'
 export { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 export { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
