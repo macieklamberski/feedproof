@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, isBlockElement, isBr, isElement, jsonAttr, text } from '../utils/dom.js'
-import { createIframeEmbedResolver, createMarkupEmbedResolver } from '../utils/widgets.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const blueskyHosts = ['bsky.app']
 
@@ -253,18 +253,15 @@ const readSubstackFields = (element: Element): Partial<EmbedResolverResult> => {
 // The player the embed script builds at runtime, saved into the feed by a CMS that ran the
 // script first (Substack) or pasted by hand (Ghost, TinyMCE). Same post, same placeholder:
 // only the carrier differs.
-export const blueskyIframeEmbedResolver = createIframeEmbedResolver(
-  blueskyHosts,
-  (url, element) => {
-    const post = extractBlueskyPostFromUrl(url)
+export const blueskyIframeEmbedResolver = createUrlEmbedResolver(blueskyHosts, (url, element) => {
+  const post = extractBlueskyPostFromUrl(url)
 
-    if (!post) {
-      return
-    }
+  if (!post) {
+    return
+  }
 
-    return { ...composeEmbedResult(post), ...readSubstackFields(element) }
-  },
-)
+  return { ...composeEmbedResult(post), ...readSubstackFields(element) }
+})
 
 // Forum software renders a post through the s9e MediaEmbed helper page, which is hosted on
 // `s9e.github.io` rather than on Bluesky. The post is named in the url fragment, so the
