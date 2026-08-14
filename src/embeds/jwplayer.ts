@@ -24,13 +24,7 @@ export const extractJwplayerId = (link: string): string | undefined => {
   }
 }
 
-export const jwplayerResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const mediaId = extractJwplayerId(url)
-
-  if (!mediaId) {
-    return
-  }
-
+const composeJwplayerEmbed = (mediaId: string): EmbedResolverResult => {
   return {
     provider: 'jwplayer',
     id: mediaId,
@@ -40,6 +34,16 @@ export const jwplayerResolveEmbed = (url: string): EmbedResolverResult | undefin
     src: `https://cdn.jwplayer.com/players/${mediaId}.html`,
     thumbnail: `https://cdn.jwplayer.com/v2/media/${mediaId}/poster.jpg`,
   }
+}
+
+export const jwplayerResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+  const mediaId = extractJwplayerId(url)
+
+  if (!mediaId) {
+    return
+  }
+
+  return composeJwplayerEmbed(mediaId)
 }
 
 export const jwplayerIframeEmbedResolver = createUrlEmbedResolver(
@@ -61,5 +65,21 @@ export const jwplayerScriptEmbedResolver = createMarkupEmbedResolver(
     }
 
     return jwplayerResolveEmbed(src)
+  },
+)
+
+// AMP's own JW Player element, which renders nothing without the AMP runtime. It names the
+// media in `data-media-id` beside the account's `data-player-id`; the player id only picks a
+// skin, so the media id alone rebuilds the same player page as the other two forms.
+export const jwplayerAmpEmbedResolver = createMarkupEmbedResolver(
+  'amp-jwplayer[data-media-id]',
+  (element) => {
+    const mediaId = attr(element, 'data-media-id')
+
+    if (!mediaId || !safeMediaIdRegex.test(mediaId)) {
+      return
+    }
+
+    return composeJwplayerEmbed(mediaId)
   },
 )

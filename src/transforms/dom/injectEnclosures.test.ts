@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { youtubeEmbedResolver } from '../../embeds/youtube.js'
+import { youtubeIframeEmbedResolver } from '../../embeds/youtube.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { Enclosure, TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
@@ -8,7 +8,7 @@ import { neutralizeUnsafeUrls } from './neutralizeUnsafeUrls.js'
 
 const withResolver: TransformContext = {
   ...baseContext,
-  widgetResolvers: [youtubeEmbedResolver],
+  widgetResolvers: [youtubeIframeEmbedResolver],
 }
 
 const withEnclosures = (enclosures: Array<Enclosure>): TransformContext => {

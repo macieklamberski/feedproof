@@ -1,7 +1,8 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { attr } from '../utils/dom.js'
 import { pickUrlParams } from '../utils/urls.js'
-import { createUrlEmbedResolver } from '../utils/widgets.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
 
@@ -146,4 +147,40 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 }
 
-export const youtubeEmbedResolver = createUrlEmbedResolver(youtubeHosts, youtubeResolveEmbed)
+export const youtubeIframeEmbedResolver = createUrlEmbedResolver(youtubeHosts, youtubeResolveEmbed)
+
+// AMP's own YouTube element. It renders nothing without the AMP runtime, and the id it names in
+// `data-videoid` is the entire embed. AMP hands player parameters to the iframe as
+// `data-param-{name}`, which are the same query parameters an ordinary embed url spells, so the
+// same set is carried over and the rest is dropped the same way.
+//
+// `data-live-channelid` (the channel-live variant) is deliberately not read: it occurs in no
+// corpus feed, and the element states no video to mint a poster or a watch url from.
+export const youtubeAmpEmbedResolver = createMarkupEmbedResolver(
+  'amp-youtube[data-videoid]',
+  (element) => {
+    const videoId = attr(element, 'data-videoid')
+
+    if (!videoId || !isVideoId(videoId)) {
+      return
+    }
+
+    const params: Record<string, string> = {}
+
+    for (const name of youtubeEmbedParams) {
+      const value = attr(element, `data-param-${name}`)
+
+      if (value) {
+        params[name] = value
+      }
+    }
+
+    return {
+      provider: 'youtube',
+      id: videoId,
+      src: composeEmbedUrl(videoId, params),
+      url: `https://www.youtube.com/watch?v=${videoId}`,
+      thumbnail: composeThumbnailUrl(videoId),
+    }
+  },
+)

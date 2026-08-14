@@ -47,7 +47,11 @@ import { flourishEmbedResolver } from './embeds/flourish.js'
 import { geniallyEmbedResolver } from './embeds/genially.js'
 import { imgurBlockquoteEmbedResolver, imgurIframeEmbedResolver } from './embeds/imgur.js'
 import { ivooxEmbedResolver } from './embeds/ivoox.js'
-import { jwplayerIframeEmbedResolver, jwplayerScriptEmbedResolver } from './embeds/jwplayer.js'
+import {
+  jwplayerAmpEmbedResolver,
+  jwplayerIframeEmbedResolver,
+  jwplayerScriptEmbedResolver,
+} from './embeds/jwplayer.js'
 import { libsynEmbedResolver } from './embeds/libsyn.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { megaphoneEmbedResolver } from './embeds/megaphone.js'
@@ -70,7 +74,7 @@ import { transistorEmbedResolver } from './embeds/transistor.js'
 import { typeformIframeEmbedResolver, typeformWidgetEmbedResolver } from './embeds/typeform.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { wistiaEmbedResolver } from './embeds/wistia.js'
-import { youtubeEmbedResolver } from './embeds/youtube.js'
+import { youtubeAmpEmbedResolver, youtubeIframeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
 import { discourseMediaResolver } from './media/discourse.js'
 import { ghostMediaResolver } from './media/ghost.js'
@@ -81,7 +85,7 @@ import { weeblyMediaResolver } from './media/weebly.js'
 import { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 import { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 import { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
-import { convertAmpElements } from './transforms/dom/convertAmpElements.js'
+import { convertAmpNativeElements } from './transforms/dom/convertAmpNativeElements.js'
 import { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 import { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 import { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
@@ -205,11 +209,12 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // cluster, so wrapBareInlineInParagraphs later sees block boundaries and keeps the
   // caption, images, and PREV/NEXT nav apart instead of gluing them into one paragraph.
   wrapCargoGalleryImages,
-  // Converts AMP custom elements into plain HTML media so the image/embed transforms
-  // below can dimension, placeholder, and proxy them. Runs in this normalize cluster so
-  // an amp-youtube becomes an iframe before convertWidgets, and an
-  // amp-img an <img> before resolveMediaDimensions.
-  convertAmpElements,
+  // Converts AMP custom elements into their native HTML equivalents so the image/embed
+  // transforms below can dimension, placeholder, and proxy them. Runs in this normalize
+  // cluster so an amp-iframe becomes an <iframe> before convertWidgets, and an amp-img an
+  // <img> before resolveMediaDimensions. AMP elements that name a platform are not converted
+  // here: their own resolvers claim them in the widget pass.
+  convertAmpNativeElements,
   // Converts note.com's empty embed figures: media services become plain iframes for the
   // widget pass to classify, own-post embeds become plain links (the figure carries only
   // the post URL). External-article figures stay for the cite pass.
@@ -351,7 +356,8 @@ export const defaultAllDomTransforms: Array<DomTransform> = defaultStandardDomTr
 // claimed iframes can't be re-matched. Place more specific selectors (e.g.
 // meta-providers like Embedly that wrap other providers) before broader ones.
 export const defaultWidgetResolvers: Array<WidgetResolver> = [
-  youtubeEmbedResolver,
+  youtubeIframeEmbedResolver,
+  youtubeAmpEmbedResolver,
   tedEmbedResolver,
   typeformWidgetEmbedResolver,
   typeformIframeEmbedResolver,
@@ -365,6 +371,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   ivooxEmbedResolver,
   jwplayerIframeEmbedResolver,
   jwplayerScriptEmbedResolver,
+  jwplayerAmpEmbedResolver,
   brightcoveFlashEmbedResolver,
   brightcoveIframeEmbedResolver,
   brightcoveVideoJsEmbedResolver,

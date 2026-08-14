@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { defaultWidgetResolvers } from '../../defaults.js'
-import { youtubeEmbedResolver } from '../../embeds/youtube.js'
+import { youtubeIframeEmbedResolver } from '../../embeds/youtube.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { EmbedResolver, MediaResolver, TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
@@ -16,7 +16,7 @@ const stubResolver: EmbedResolver = {
 
 const withResolvers: TransformContext = {
   ...baseContext,
-  widgetResolvers: [youtubeEmbedResolver, stubResolver],
+  widgetResolvers: [youtubeIframeEmbedResolver, stubResolver],
 }
 
 const withNoResolvers: TransformContext = {
