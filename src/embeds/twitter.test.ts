@@ -311,6 +311,217 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
     })
   })
 
+  // The proxy front-ends put the same tweet under their own host, so the same post can arrive
+  // twice over in one corpus. Each resolves to the id and the x.com url the direct form gives, so
+  // one tweet stays one placeholder and one enrichment key whichever host carried it.
+  describe('the proxy front-ends that republish a tweet', () => {
+    describe('nitter.net, the instance the corpus carries most', () => {
+      // The `#m` fragment is what the instance appends for its mobile layout.
+      it('should carry every field across and point at the post itself', async () => {
+        const value = html`
+          <blockquote class="twitter-tweet">
+            <p lang="en" dir="ltr">Tweet text here.</p>
+            <p>
+              &mdash; Display Name (@user)
+              <a href="https://nitter.net/user/status/123456789012345#m">May 12, 2020</a>
+            </p>
+          </blockquote>
+        `
+        const expected: EmbedResolverResult = {
+          provider: 'twitter',
+          id: statusId,
+          src: playerUrl,
+          url: statusUrl,
+          description: 'Tweet text here.',
+          author: 'Display Name',
+          date: 'May 12, 2020',
+        }
+
+        expect(await extract(value)).toEqual(expected)
+      })
+    })
+
+    describe('a self-hosted nitter instance no host list can name', () => {
+      it('should resolve on the name in the leading label', async () => {
+        const value = html`
+          <blockquote class="twitter-tweet">
+            <p>Tweet text here.</p>
+            <p><a href="https://nitter.d420.de/user/status/123456789012345">May 12, 2020</a></p>
+          </blockquote>
+        `
+        const expected: EmbedResolverResult = {
+          provider: 'twitter',
+          id: statusId,
+          src: playerUrl,
+          url: statusUrl,
+          description: 'Tweet text here.',
+          date: 'May 12, 2020',
+        }
+
+        expect(await extract(value)).toEqual(expected)
+      })
+    })
+
+    describe('xcancel.com, an instance under a name of its own', () => {
+      it('should resolve on the named host', async () => {
+        const value = html`
+          <blockquote class="twitter-tweet">
+            <p>Tweet text here.</p>
+            <p><a href="https://xcancel.com/user/status/123456789012345">May 12, 2020</a></p>
+          </blockquote>
+        `
+        const expected: EmbedResolverResult = {
+          provider: 'twitter',
+          id: statusId,
+          src: playerUrl,
+          url: statusUrl,
+          description: 'Tweet text here.',
+          date: 'May 12, 2020',
+        }
+
+        expect(await extract(value)).toEqual(expected)
+      })
+    })
+
+    describe('fxtwitter.com, which sends a browser to x.com itself', () => {
+      it('should resolve to the destination it redirects to', async () => {
+        const value = html`
+          <blockquote class="twitter-tweet">
+            <p>Tweet text here.</p>
+            <p><a href="https://fxtwitter.com/user/status/123456789012345">May 12, 2020</a></p>
+          </blockquote>
+        `
+        const expected: EmbedResolverResult = {
+          provider: 'twitter',
+          id: statusId,
+          src: playerUrl,
+          url: statusUrl,
+          description: 'Tweet text here.',
+          date: 'May 12, 2020',
+        }
+
+        expect(await extract(value)).toEqual(expected)
+      })
+    })
+
+    describe('vxtwitter.com, which serves a page of its own', () => {
+      it('should resolve to the post rather than the mirror', async () => {
+        const value = html`
+          <blockquote class="twitter-tweet">
+            <p>Tweet text here.</p>
+            <p><a href="https://vxtwitter.com/user/status/123456789012345">May 12, 2020</a></p>
+          </blockquote>
+        `
+        const expected: EmbedResolverResult = {
+          provider: 'twitter',
+          id: statusId,
+          src: playerUrl,
+          url: statusUrl,
+          description: 'Tweet text here.',
+          date: 'May 12, 2020',
+        }
+
+        expect(await extract(value)).toEqual(expected)
+      })
+    })
+
+    describe('the rewriter aliases, one service under several names', () => {
+      it('should resolve a fixupx.com status', async () => {
+        const value = html`
+          <blockquote class="twitter-tweet">
+            <p>Tweet text here.</p>
+            <p><a href="https://fixupx.com/user/status/123456789012345">May 12, 2020</a></p>
+          </blockquote>
+        `
+        const expected: EmbedResolverResult = {
+          provider: 'twitter',
+          id: statusId,
+          src: playerUrl,
+          url: statusUrl,
+          description: 'Tweet text here.',
+          date: 'May 12, 2020',
+        }
+
+        expect(await extract(value)).toEqual(expected)
+      })
+
+      it('should resolve a fixvx.com status', async () => {
+        const value = html`
+          <blockquote class="twitter-tweet">
+            <p>Tweet text here.</p>
+            <p><a href="https://fixvx.com/user/status/123456789012345">May 12, 2020</a></p>
+          </blockquote>
+        `
+        const expected: EmbedResolverResult = {
+          provider: 'twitter',
+          id: statusId,
+          src: playerUrl,
+          url: statusUrl,
+          description: 'Tweet text here.',
+          date: 'May 12, 2020',
+        }
+
+        expect(await extract(value)).toEqual(expected)
+      })
+
+      it('should resolve a twittpr.com status', async () => {
+        const value = html`
+          <blockquote class="twitter-tweet">
+            <p>Tweet text here.</p>
+            <p><a href="https://twittpr.com/user/status/123456789012345">May 12, 2020</a></p>
+          </blockquote>
+        `
+        const expected: EmbedResolverResult = {
+          provider: 'twitter',
+          id: statusId,
+          src: playerUrl,
+          url: statusUrl,
+          description: 'Tweet text here.',
+          date: 'May 12, 2020',
+        }
+
+        expect(await extract(value)).toEqual(expected)
+      })
+    })
+
+    describe('what a proxy host on its own does not make a tweet', () => {
+      it('should leave a proxy profile url alone', async () => {
+        const value = html`
+          <blockquote class="twitter-tweet">
+            <p>Tweet text here.</p>
+            <p><a href="https://nitter.net/user">user</a></p>
+          </blockquote>
+        `
+
+        expect(await extract(value)).toBeUndefined()
+      })
+
+      it('should leave the image path an instance serves alone', async () => {
+        const value = html`
+          <blockquote class="twitter-tweet">
+            <p>Tweet text here.</p>
+            <p><a href="https://nitter.net/pic/media%2FABC.jpg">Photo</a></p>
+          </blockquote>
+        `
+
+        expect(await extract(value)).toBeUndefined()
+      })
+
+      it('should leave a host that merely contains the word alone', async () => {
+        const value = html`
+          <blockquote class="twitter-tweet">
+            <p>Tweet text here.</p>
+            <p>
+              <a href="https://theordinaryknitter.net/user/status/123456789012345">May 12, 2020</a>
+            </p>
+          </blockquote>
+        `
+
+        expect(await extract(value)).toBeUndefined()
+      })
+    })
+  })
+
   // The profile widgets carry a twitter class of their own and a status link is ordinary prose,
   // so none of them is claimed. Resolving one would swallow the link or the sentence around it.
   describe('shapes that are not an embed', () => {

@@ -11,10 +11,33 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 //
 // The status id is the only thing the player needs, and it sits in the anchor. `x.com`,
 // `twitter.com` and `mobile.twitter.com` all appear, sometimes several eras in one feed.
-const twitterHosts = ['twitter.com', 'x.com']
+//
+// The proxy front-ends republish a tweet at that same path, so the handle and the id come across
+// unchanged and the placeholder is built from them like any other. The proxy url is dropped in
+// favour of the x.com one: fxtwitter, fixupx and twittpr send a browser there themselves, and the
+// front-ends that do serve their own page are the ones going dark, nitter.net answering with an
+// empty body and nitter.poast.org with a 503.
+const tweetHosts = [
+  'twitter.com',
+  'x.com',
+  'xcancel.com',
+  'fxtwitter.com',
+  'vxtwitter.com',
+  'fixupx.com',
+  'fixvx.com',
+  'twittpr.com',
+]
 
-const isTwitterUrl = (url: URL): boolean => {
-  return isHostOf(url, twitterHosts) || isSubdomainOf(url, twitterHosts)
+// Nitter is self-hosted, so its instances cannot be listed: the corpus holds seven of them and
+// xcancel.com is an eighth under a name of its own. What the rest share is the software's name as
+// a whole host label, so that is the guard, together with the status path a match still needs.
+// Matching `nitter` as a substring would claim theordinaryknitter.net, a real feed host.
+const nitterHostRegex = /(^|\.)nitter\./
+
+const isTweetUrl = (url: URL): boolean => {
+  const isKnownHost = isHostOf(url, tweetHosts) || isSubdomainOf(url, tweetHosts)
+
+  return isKnownHost || nitterHostRegex.test(url.hostname)
 }
 
 // `/{handle}/status/{id}`, with the plural `statuses` form from the earliest era.
@@ -29,7 +52,7 @@ type Status = { handle: string; id: string }
 const readStatusUrl = (value: string | undefined): Status | undefined => {
   const parsed = parseUrl(value ?? '', 'https://example.com')
 
-  if (!parsed || !isTwitterUrl(parsed)) {
+  if (!parsed || !isTweetUrl(parsed)) {
     return
   }
 
