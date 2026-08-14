@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
+import type { EmbedResolverResult } from '../types.js'
 import {
   blueskyBlockquoteEmbedResolver,
   blueskyIframeEmbedResolver,
@@ -8,21 +8,28 @@ import {
   blueskyS9eEmbedResolver,
 } from './bluesky.js'
 
-type ParseHtml = (html: string) => Document
-
-const extractWith = (parseHtml: ParseHtml, resolver: EmbedResolver) => {
-  return (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(resolver.selector)
-
-    return element ? (resolver.extract(element) as EmbedResolverResult) : undefined
-  }
+// Substack wraps the player in a div whose `data-attrs` holds the whole post as JSON, stored in
+// a double-quoted attribute with the inner quotes HTML-encoded, which is what survives a parse
+// and serialise roundtrip. The wrapper states a flex box with an automatic height, which is no
+// size at all, so the placeholder takes none from it.
+const makeContainer = (attrs: Record<string, unknown> | string, player: string): string => {
+  return html`
+    <div
+      class="bluesky-wrap outer"
+      style="height: auto; display: flex; margin-bottom: 24px;"
+      data-attrs="${substackAttrs(attrs)}"
+      data-component-name="BlueskyCreateBlueskyEmbed"
+    >
+      ${player}
+    </div>
+  `
 }
 
 describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
-  const extract = extractWith(parseHtml, blueskyBlockquoteEmbedResolver)
+  const extract = resolverExtractor(parseHtml, blueskyBlockquoteEmbedResolver)
 
   describe('bare canonical blockquote', () => {
-    it('should read the post, its text, its author and its date', () => {
+    it('should read the post, its text, its author and its date', async () => {
       const value = html`
         <blockquote
           class="bluesky-embed"
@@ -48,13 +55,13 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
         date: '2024-04-15T21:48:40.709Z',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('WordPress Gutenberg figure', () => {
     // The footer sits loose in the blockquote here rather than in a paragraph of its own.
-    it('should read a post wrapped in the block-editor figure', () => {
+    it('should read a post wrapped in the block-editor figure', async () => {
       const value = html`
         <figure class="wp-block-embed is-type-rich is-provider-bluesky-social wp-block-embed-bluesky-social">
           <div class="wp-block-embed__wrapper">
@@ -81,12 +88,12 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
         date: '2025-01-02T03:04:05.006Z',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // Three provider slugs are in use — `bluesky-social`, `bluesky-embed` and a bare
     // `bluesky` — but they only ever name the figure, and the blockquote inside is the same.
-    it('should read a post under the bare provider slug', () => {
+    it('should read a post under the bare provider slug', async () => {
       const value = html`
         <figure class="wp-block-embed is-type-rich is-provider-bluesky wp-block-embed-bluesky">
           <div class="wp-block-embed__wrapper">
@@ -107,12 +114,12 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
         description: 'Slug variations live on the figure, not the quote.',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('theme wrapper with an inline loader script', () => {
-    it('should read a post beside the embed script', () => {
+    it('should read a post beside the embed script', async () => {
       const value = html`
         <div class="embed-blueskysocial">
           <blockquote
@@ -140,13 +147,13 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
         date: '2025-02-03T04:05:06.007Z',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('Ghost embed card', () => {
     // Ghost adds `&ref=` to the anchors, which must not stop the permalink being read.
-    it('should read a post inside the card figure', () => {
+    it('should read a post inside the card figure', async () => {
       const value = html`
         <figure class="kg-card kg-embed-card">
           <blockquote
@@ -172,12 +179,12 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
         date: '2025-03-04T05:06:07.008Z',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('display name written outside the profile link', () => {
-    it('should compose the author from both sides of the link', () => {
+    it('should compose the author from both sides of the link', async () => {
       const value = html`
         <div class="raw-embed">
           <blockquote
@@ -201,12 +208,12 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
         date: '2025-04-05T06:07:08.009Z',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('break-separated blockquote with no paragraphs', () => {
-    it('should read the text before the first break and skip the media marker', () => {
+    it('should read the text before the first break and skip the media marker', async () => {
       const value = html`
         <div class="rm-embed embed-media">
           <blockquote
@@ -232,12 +239,12 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
         date: '2025-05-06T07:08:09.010Z',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('page-builder shortcode', () => {
-    it('should drop a media marker written inside the text paragraph', () => {
+    it('should drop a media marker written inside the text paragraph', async () => {
       const value = html`
         <div class="elementor-widget-container">
           <div class="elementor-shortcode">
@@ -264,10 +271,10 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
         date: '2025-06-07T08:09:10.011Z',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should keep post text in any language', () => {
+    it('should keep post text in any language', async () => {
       const value = html`
         <div class="et_pb_code_inner">
           <blockquote
@@ -281,18 +288,24 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
           </blockquote>
         </div>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
+        id: 'did:plc:5rowmpbfyfhbmpmldxtqzcnj/3ln54ry2iwc2x',
+        src: 'https://embed.bsky.app/embed/did:plc:5rowmpbfyfhbmpmldxtqzcnj/app.bsky.feed.post/3ln54ry2iwc2x',
+        url: 'https://bsky.app/profile/did:plc:5rowmpbfyfhbmpmldxtqzcnj/post/3ln54ry2iwc2x',
         description: 'Ein Beitrag auf Deutsch.',
         author: 'Autorin (@autorin.example)',
-      })
+        date: '2025-07-08T09:10:11.012Z',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('editor block carrying an encoded copy of itself', () => {
     // The editor stores the whole snippet a second time, double-encoded, in an attribute on
     // the wrapper. The rendered blockquote beside it is the one worth reading.
-    it('should read the rendered blockquote and not the attribute copy', () => {
+    it('should read the rendered blockquote and not the attribute copy', async () => {
       const value = html`
         <div
           class="dk-editor-embed center-block"
@@ -320,12 +333,12 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
         date: '2025-08-09T10:11:12.013Z',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('deprecated centering wrapper', () => {
-    it('should strip a plain double-hyphen separator from the author', () => {
+    it('should strip a plain double-hyphen separator from the author', async () => {
       const value = html`
         <center>
           <blockquote
@@ -338,18 +351,24 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
           </blockquote>
         </center>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
         id: 'did:plc:hvakvedv6byxhufjl4fwfnyf/3lqmk6ipt5v22',
+        src: 'https://embed.bsky.app/embed/did:plc:hvakvedv6byxhufjl4fwfnyf/app.bsky.feed.post/3lqmk6ipt5v22',
+        url: 'https://bsky.app/profile/did:plc:hvakvedv6byxhufjl4fwfnyf/post/3lqmk6ipt5v22',
+        description: 'An old-fashioned wrapper.',
         author: 'Retro (@retro.example)',
-      })
+        date: '2025-09-10T11:12:13.014Z',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('blockquote with no data attributes', () => {
     // One feed format ships the quote with every `data-bluesky-*` attribute stripped, so the
     // permalink in the footer is the only thing naming the post.
-    it('should fall back to the permalink in the footer', () => {
+    it('should fall back to the permalink in the footer', async () => {
       const value = html`
         <blockquote class="bluesky-embed">
           <p lang="en">Only the class survived the export.</p>
@@ -367,12 +386,12 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
         date: '2025-10-11T12:13:14.015Z',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('blockquote attribute variations', () => {
-    it('should match an extra class token beside the embed class', () => {
+    it('should match an extra class token beside the embed class', async () => {
       const value = html`
         <blockquote
           class="bluesky-embed blockquote"
@@ -381,11 +400,18 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
           <p lang="en">A theme added its own class.</p>
         </blockquote>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
+        id: 'did:plc:3jz4agnyzcrsvpnprxrbjrpa/3lsq7aeuwbg42',
+        src: 'https://embed.bsky.app/embed/did:plc:3jz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lsq7aeuwbg42',
+        url: 'https://bsky.app/profile/did:plc:3jz4agnyzcrsvpnprxrbjrpa/post/3lsq7aeuwbg42',
+        description: 'A theme added its own class.',
+      }
 
-      expect(extract(value)).toMatchObject({ id: 'did:plc:3jz4agnyzcrsvpnprxrbjrpa/3lsq7aeuwbg42' })
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should match a blockquote carrying a deprecated align attribute', () => {
+    it('should match a blockquote carrying a deprecated align attribute', async () => {
       const value = html`
         <blockquote
           align="center"
@@ -395,11 +421,18 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
           <p dir="ltr" lang="en">Aligned the HTML4 way.</p>
         </blockquote>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
+        id: 'did:plc:4hz4agnyzcrsvpnprxrbjrpa/3ltq7aeuwbg42',
+        src: 'https://embed.bsky.app/embed/did:plc:4hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3ltq7aeuwbg42',
+        url: 'https://bsky.app/profile/did:plc:4hz4agnyzcrsvpnprxrbjrpa/post/3ltq7aeuwbg42',
+        description: 'Aligned the HTML4 way.',
+      }
 
-      expect(extract(value)).toMatchObject({ id: 'did:plc:4hz4agnyzcrsvpnprxrbjrpa/3ltq7aeuwbg42' })
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should match a blockquote carrying an inline style', () => {
+    it('should match a blockquote carrying an inline style', async () => {
       const value = html`
         <blockquote
           style="margin:0 auto"
@@ -410,13 +443,20 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
           <p lang="en">Centred with inline css.</p>
         </blockquote>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
+        id: 'did:plc:5hz4agnyzcrsvpnprxrbjrpa/3luq7aeuwbg42',
+        src: 'https://embed.bsky.app/embed/did:plc:5hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3luq7aeuwbg42',
+        url: 'https://bsky.app/profile/did:plc:5hz4agnyzcrsvpnprxrbjrpa/post/3luq7aeuwbg42',
+        description: 'Centred with inline css.',
+      }
 
-      expect(extract(value)).toMatchObject({ id: 'did:plc:5hz4agnyzcrsvpnprxrbjrpa/3luq7aeuwbg42' })
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('nesting the feed exporter produced', () => {
-    it('should match a blockquote wrapped in a paragraph', () => {
+    it('should match a blockquote wrapped in a paragraph', async () => {
       const value = html`
         <p class="wp-block-paragraph">
           <blockquote
@@ -427,11 +467,18 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
           </blockquote>
         </p>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
+        id: 'did:plc:6hz4agnyzcrsvpnprxrbjrpa/3lvq7aeuwbg42',
+        src: 'https://embed.bsky.app/embed/did:plc:6hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lvq7aeuwbg42',
+        url: 'https://bsky.app/profile/did:plc:6hz4agnyzcrsvpnprxrbjrpa/post/3lvq7aeuwbg42',
+        description: 'Invalid nesting, still a post.',
+      }
 
-      expect(extract(value)).toMatchObject({ id: 'did:plc:6hz4agnyzcrsvpnprxrbjrpa/3lvq7aeuwbg42' })
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should match a blockquote under a hashed css-in-js wrapper', () => {
+    it('should match a blockquote under a hashed css-in-js wrapper', async () => {
       const value = html`
         <div class="css-53u6y8">
           <div class="embed-blueskysocial">
@@ -444,11 +491,18 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
           </div>
         </div>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
+        id: 'did:plc:7hz4agnyzcrsvpnprxrbjrpa/3lwq7aeuwbg42',
+        src: 'https://embed.bsky.app/embed/did:plc:7hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lwq7aeuwbg42',
+        url: 'https://bsky.app/profile/did:plc:7hz4agnyzcrsvpnprxrbjrpa/post/3lwq7aeuwbg42',
+        description: 'The hashed class cannot be selected on.',
+      }
 
-      expect(extract(value)).toMatchObject({ id: 'did:plc:7hz4agnyzcrsvpnprxrbjrpa/3lwq7aeuwbg42' })
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should match a blockquote inside a bespoke grid theme', () => {
+    it('should match a blockquote inside a bespoke grid theme', async () => {
       const value = html`
         <section class="grid-main gap-y-4">
           <figure class="col-span-5 sm:col-span-10 md:col-span-8">
@@ -461,13 +515,20 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
           </figure>
         </section>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
+        id: 'did:plc:8hz4agnyzcrsvpnprxrbjrpa/3lxq7aeuwbg42',
+        src: 'https://embed.bsky.app/embed/did:plc:8hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lxq7aeuwbg42',
+        url: 'https://bsky.app/profile/did:plc:8hz4agnyzcrsvpnprxrbjrpa/post/3lxq7aeuwbg42',
+        description: 'A hand-rolled theme.',
+      }
 
-      expect(extract(value)).toMatchObject({ id: 'did:plc:8hz4agnyzcrsvpnprxrbjrpa/3lxq7aeuwbg42' })
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('guards', () => {
-    it('should not read a permalink hosted somewhere else', () => {
+    it('should not read a permalink hosted somewhere else', async () => {
       const value = html`
         <blockquote class="bluesky-embed">
           <p lang="en">A link that only looks like a permalink.</p>
@@ -475,10 +536,10 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
         </blockquote>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should refuse an at uri naming another record type', () => {
+    it('should refuse an at uri naming another record type', async () => {
       const value = html`
         <blockquote
           class="bluesky-embed"
@@ -488,10 +549,10 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
         </blockquote>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should refuse an authority that is neither a did nor a handle', () => {
+    it('should refuse an authority that is neither a did nor a handle', async () => {
       const value = html`
         <blockquote
           class="bluesky-embed"
@@ -501,39 +562,53 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
         </blockquote>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return nothing for a blockquote naming no post at all', () => {
+    it('should return nothing for a blockquote naming no post at all', async () => {
       const value = html`
         <blockquote class="bluesky-embed">
           <p lang="en">The identifier is gone entirely.</p>
         </blockquote>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
     // The same class names a `<div>` wrapping an iframe, which the iframe resolver owns.
-    it('should not claim a div carrying the embed class', () => {
+    it('should not claim a div carrying the embed class', async () => {
       const value = html`
         <div class="bluesky-embed">
           <iframe src="https://embed.bsky.app/embed/did:plc:ahz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3maq7aeuwbg42"></iframe>
         </div>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })
 
 describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
-  const extract = extractWith(parseHtml, blueskyIframeEmbedResolver)
+  const extract = resolverExtractor(parseHtml, blueskyIframeEmbedResolver)
 
   describe('newsletter wrapper carrying the post as JSON', () => {
-    it('should map the whole payload onto the placeholder', () => {
-      const value = html`
-        <div class="bluesky-wrap outer" style="height: auto; display: flex; margin-bottom: 24px;" data-attrs="{&quot;postId&quot;:&quot;3mbq7aeuwbg42&quot;,&quot;authorDid&quot;:&quot;did:plc:bhz4agnyzcrsvpnprxrbjrpa&quot;,&quot;authorName&quot;:&quot;Newsletter Author&quot;,&quot;authorHandle&quot;:&quot;author.example&quot;,&quot;authorAvatarUrl&quot;:&quot;https://cdn.bsky.app/img/avatar/plain/did:plc:bhz4agnyzcrsvpnprxrbjrpa/bafkreiavatar@jpeg&quot;,&quot;text&quot;:&quot;The wrapper carries the post twice over.&quot;,&quot;createdAt&quot;:&quot;2025-12-13T14:15:16.017Z&quot;,&quot;uri&quot;:&quot;at://did:plc:bhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mbq7aeuwbg42&quot;,&quot;imageUrls&quot;:[&quot;https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:bhz4agnyzcrsvpnprxrbjrpa/bafkreithumb@jpeg&quot;]}" data-component-name="BlueskyCreateBlueskyEmbed">
+    it('should map the whole payload onto the placeholder', async () => {
+      const value = makeContainer(
+        {
+          postId: '3mbq7aeuwbg42',
+          authorDid: 'did:plc:bhz4agnyzcrsvpnprxrbjrpa',
+          authorName: 'Newsletter Author',
+          authorHandle: 'author.example',
+          authorAvatarUrl:
+            'https://cdn.bsky.app/img/avatar/plain/did:plc:bhz4agnyzcrsvpnprxrbjrpa/bafkreiavatar@jpeg',
+          text: 'The wrapper carries the post twice over.',
+          createdAt: '2025-12-13T14:15:16.017Z',
+          uri: 'at://did:plc:bhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mbq7aeuwbg42',
+          imageUrls: [
+            'https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:bhz4agnyzcrsvpnprxrbjrpa/bafkreithumb@jpeg',
+          ],
+        },
+        html`
           <iframe
             id="bluesky-3mbq7aeuwbg42"
             data-bluesky-id="1234567890123456"
@@ -542,8 +617,8 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
             frameborder="0"
             scrolling="no"
           ></iframe>
-        </div>
-      `
+        `,
+      )
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:bhz4agnyzcrsvpnprxrbjrpa/3mbq7aeuwbg42',
@@ -558,28 +633,46 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
         date: '2025-12-13T14:15:16.017Z',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should take a video post poster from the video host', () => {
-      const value = html`
-        <div class="bluesky-wrap outer" data-attrs="{&quot;authorName&quot;:&quot;Video Author&quot;,&quot;authorHandle&quot;:&quot;video.example&quot;,&quot;text&quot;:&quot;A post with a clip.&quot;,&quot;createdAt&quot;:&quot;2026-01-14T15:16:17.018Z&quot;,&quot;imageUrls&quot;:[&quot;https://video.bsky.app/watch/did:plc:chz4agnyzcrsvpnprxrbjrpa/bafkreivideo/thumbnail.jpg&quot;]}" data-component-name="BlueskyCreateBlueskyEmbed">
-          <iframe src="https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42?id=1"></iframe>
-        </div>
-      `
-
-      expect(extract(value)).toMatchObject({
+    it('should take a video post poster from the video host', async () => {
+      const value = makeContainer(
+        {
+          authorName: 'Video Author',
+          authorHandle: 'video.example',
+          text: 'A post with a clip.',
+          createdAt: '2026-01-14T15:16:17.018Z',
+          imageUrls: [
+            'https://video.bsky.app/watch/did:plc:chz4agnyzcrsvpnprxrbjrpa/bafkreivideo/thumbnail.jpg',
+          ],
+        },
+        html`<iframe src="https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42?id=1"></iframe>`,
+      )
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
+        id: 'did:plc:chz4agnyzcrsvpnprxrbjrpa/3mcq7aeuwbg42',
+        src: 'https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42',
+        url: 'https://bsky.app/profile/did:plc:chz4agnyzcrsvpnprxrbjrpa/post/3mcq7aeuwbg42',
+        description: 'A post with a clip.',
+        author: 'Video Author (@video.example)',
         thumbnail:
           'https://video.bsky.app/watch/did:plc:chz4agnyzcrsvpnprxrbjrpa/bafkreivideo/thumbnail.jpg',
-      })
+        date: '2026-01-14T15:16:17.018Z',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should ignore media urls served from another host', () => {
-      const value = html`
-        <div class="bluesky-wrap outer" data-attrs="{&quot;authorHandle&quot;:&quot;author.example&quot;,&quot;authorAvatarUrl&quot;:&quot;https://evil.test/cdn.bsky.app/avatar.jpg&quot;,&quot;imageUrls&quot;:[&quot;https://evil.test/cdn.bsky.app/thumb.jpg&quot;]}" data-component-name="BlueskyCreateBlueskyEmbed">
-          <iframe src="https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42?id=1"></iframe>
-        </div>
-      `
+    it('should ignore media urls served from another host', async () => {
+      const value = makeContainer(
+        {
+          authorHandle: 'author.example',
+          authorAvatarUrl: 'https://evil.test/cdn.bsky.app/avatar.jpg',
+          imageUrls: ['https://evil.test/cdn.bsky.app/thumb.jpg'],
+        },
+        html`<iframe src="https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42?id=1"></iframe>`,
+      )
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:dhz4agnyzcrsvpnprxrbjrpa/3mdq7aeuwbg42',
@@ -592,12 +685,12 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
         date: undefined,
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('player iframe pasted on its own', () => {
-    it('should read a post from the player url', () => {
+    it('should read a post from the player url', async () => {
       const value = html`
         <figure class="kg-card kg-embed-card">
           <iframe
@@ -616,10 +709,10 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
         url: 'https://bsky.app/profile/did:plc:ehz4agnyzcrsvpnprxrbjrpa/post/3meq7aeuwbg42',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should read a post from a player url carrying a colour mode', () => {
+    it('should read a post from a player url carrying a colour mode', async () => {
       const value = html`
         <div class="bluesky-embed">
           <iframe
@@ -631,38 +724,41 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
           ></iframe>
         </div>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
         id: 'did:plc:fhz4agnyzcrsvpnprxrbjrpa/3mfq7aeuwbg42',
         src: 'https://embed.bsky.app/embed/did:plc:fhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mfq7aeuwbg42',
-      })
+        url: 'https://bsky.app/profile/did:plc:fhz4agnyzcrsvpnprxrbjrpa/post/3mfq7aeuwbg42',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('guards', () => {
-    it('should not read a player path spelled on another host', () => {
+    it('should not read a player path spelled on another host', async () => {
       const value = html`
         <iframe src="https://evil.test/embed.bsky.app/embed/did:plc:ghz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mgq7aeuwbg42"></iframe>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return nothing for a bluesky url naming no post', () => {
+    it('should return nothing for a bluesky url naming no post', async () => {
       const value = html`
         <iframe src="https://embed.bsky.app/embed/did:plc:ghz4agnyzcrsvpnprxrbjrpa"></iframe>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })
 
 describeForEachParser('blueskyS9eEmbedResolver', (parseHtml) => {
-  const extract = extractWith(parseHtml, blueskyS9eEmbedResolver)
+  const extract = resolverExtractor(parseHtml, blueskyS9eEmbedResolver)
 
   describe('forum helper page', () => {
-    it('should read the post named in the url fragment', () => {
+    it('should read the post named in the url fragment', async () => {
       const value = html`
         <iframe
           data-s9e-mediaembed="bluesky"
@@ -680,12 +776,12 @@ describeForEachParser('blueskyS9eEmbedResolver', (parseHtml) => {
         url: 'https://bsky.app/profile/did:plc:hhz4agnyzcrsvpnprxrbjrpa/post/3mhq7aeuwbg42',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('guards', () => {
-    it('should return nothing when the fragment names no post', () => {
+    it('should return nothing when the fragment names no post', async () => {
       const value = html`
         <iframe
           data-s9e-mediaembed="bluesky"
@@ -693,18 +789,18 @@ describeForEachParser('blueskyS9eEmbedResolver', (parseHtml) => {
         ></iframe>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })
 
 describeForEachParser('blueskyPostElementEmbedResolver', (parseHtml) => {
-  const extract = extractWith(parseHtml, blueskyPostElementEmbedResolver)
+  const extract = resolverExtractor(parseHtml, blueskyPostElementEmbedResolver)
 
   describe('custom element with a declarative shadow root', () => {
     // This carrier names the author by handle rather than a did, and is the only one that
     // does. The player url is composed the same way regardless.
-    it('should read the post from the at uri and the fallback quote', () => {
+    it('should read the post from the at uri and the fallback quote', async () => {
       const value = html`
         <bluesky-post allow-unauthenticated="true" contextless="true" silent="true" src="at://newsroom.example/app.bsky.feed.post/3miq7aeuwbg42">
           <template shadowrootmode="open">
@@ -730,10 +826,10 @@ describeForEachParser('blueskyPostElementEmbedResolver', (parseHtml) => {
         date: '2026-02-15T16:17:18.019Z',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should mint the player url when the at uri names a did', () => {
+    it('should mint the player url when the at uri names a did', async () => {
       const value = html`
         <bluesky-post src="at://did:plc:jhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mjq7aeuwbg42">
           <blockquote>
@@ -741,23 +837,27 @@ describeForEachParser('blueskyPostElementEmbedResolver', (parseHtml) => {
           </blockquote>
         </bluesky-post>
       `
-
-      expect(extract(value)).toMatchObject({
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
         id: 'did:plc:jhz4agnyzcrsvpnprxrbjrpa/3mjq7aeuwbg42',
         src: 'https://embed.bsky.app/embed/did:plc:jhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mjq7aeuwbg42',
-      })
+        url: 'https://bsky.app/profile/did:plc:jhz4agnyzcrsvpnprxrbjrpa/post/3mjq7aeuwbg42',
+        description: 'A did addresses the player directly.',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('guards', () => {
-    it('should return nothing for a src that is not an at uri', () => {
+    it('should return nothing for a src that is not an at uri', async () => {
       const value = html`
         <bluesky-post src="https://bsky.app/profile/newsroom.example/post/3mkq7aeuwbg42">
           <blockquote><p dir="auto">Not the documented form.</p></blockquote>
         </bluesky-post>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })
