@@ -89,6 +89,32 @@ describeForEachParser('convertAmpNativeElements', (parseHtml) => {
     expect(result).not.toContain('<amp-iframe')
   })
 
+  // The src is a player page, not a media file, so a frame is the only thing it can become.
+  it('should convert amp-video-iframe into iframe rather than a native player', async () => {
+    const value = html`
+      <amp-video-iframe
+        src="https://player.example.com/video.html?id=abc"
+        layout="responsive"
+        width="16"
+        height="9"
+        poster="https://cdn.example.com/poster.jpg"
+        dock
+      ></amp-video-iframe>
+    `
+    const expected = html`
+      <iframe
+        src="https://player.example.com/video.html?id=abc"
+        layout="responsive"
+        width="16"
+        height="9"
+        poster="https://cdn.example.com/poster.jpg"
+        dock
+      ></iframe>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
   // Platform-named AMP elements belong to their own resolvers, which run later in the widget
   // pass. Claiming one here would rewrite the markup before that selector ever sees it.
   it('should leave platform-named AMP elements alone', async () => {

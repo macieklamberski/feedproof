@@ -12,6 +12,7 @@ const conversions: Array<AmpConversion> = [
   { selector: 'amp-video', target: 'video', moveChildren: true },
   { selector: 'amp-audio', target: 'audio', moveChildren: true },
   { selector: 'amp-iframe', target: 'iframe' },
+  { selector: 'amp-video-iframe', target: 'iframe' },
 ]
 
 // AMP custom elements (<amp-img>, <amp-video>, …) render nothing without the AMP
@@ -27,6 +28,10 @@ const conversions: Array<AmpConversion> = [
 // tidy: this transform runs in the normalize cluster ahead of convertWidgets, so an
 // amp-{platform} element handled here would rewrite the markup before the platform's own
 // selector ever sees it, and shadow the resolver silently.
+//
+// <amp-video-iframe> falls on the native side of that line despite naming a video. Its src is
+// any page at all that implements AMP's video-iframe protocol, so the provider is unknown, and
+// there is no platform whose resolver it could shadow.
 export const convertAmpNativeElements: DomTransform = () => (document) => {
   for (const conversion of conversions) {
     for (const element of document.querySelectorAll(conversion.selector)) {
