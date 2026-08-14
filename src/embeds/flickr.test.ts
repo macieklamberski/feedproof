@@ -82,6 +82,50 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
   // The other Flash-era carrier: an iframe on `flickr.com/slideshow/index.gne`, whose target
   // 302s to a page that refuses framing, so it renders an empty box today. Its subject is in
   // its own query. Of the 112 corpus feeds carrying it, 94 name a set and 90 name a user.
+  // The rarer flash forms, measured at 5 and 6 feeds: a photostream slideshow whose page path
+  // has no set, and a snippet naming the owner only in user_id.
+  describe('the photostream slideshow swf', () => {
+    it('should map a stream page path onto the stream player', async () => {
+      const value = html`
+        <embed
+          src="https://www.flickr.com/apps/slideshow/show.swf?v=143567"
+          flashvars="offsite=true&amp;page_show_url=%2Fphotos%2F12345678%40N04%2Fshow%2F&amp;user_id=12345678%40N04"
+          width="500"
+          height="500"
+        />
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: 'photostreams/12345678@N04',
+        src: 'https://embedr.flickr.com/photostreams/12345678@N04?width=500&height=500',
+        url: 'https://www.flickr.com/photos/12345678@N04/',
+        width: 500,
+        height: 500,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should fall back to the user the config names when it carries no page path', async () => {
+      const value = html`
+        <embed
+          src="https://www.flickr.com/apps/slideshow/show.swf"
+          flashvars="offsite=true&amp;lang=en-us&amp;user_id=12345678@N02"
+        />
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: 'photostreams/12345678@N02',
+        src: 'https://embedr.flickr.com/photostreams/12345678@N02?width=400&height=300',
+        url: 'https://www.flickr.com/photos/12345678@N02/',
+        width: 400,
+        height: 300,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
   describe('the legacy slideshow iframe', () => {
     it('should map a set slideshow onto the album player', async () => {
       const value = html`
@@ -121,7 +165,9 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    it('should carry the set alone when the query names no user', async () => {
+    // Without the owner the album page path cannot be built, but the platform's short url can:
+    // it is the set id in base58, and flic.kr routes it to the owned page.
+    it('should reach the album through the short url when the query names no user', async () => {
       const value = html`
         <iframe src="https://www.flickr.com/slideshow/index.gne?set_id=72157624341"></iframe>
       `
@@ -129,6 +175,7 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
         provider: 'flickr',
         id: 'photosets/72157624341',
         src: 'https://embedr.flickr.com/photosets/72157624341?width=400&height=300',
+        url: 'https://flic.kr/s/2TWjFMp',
         width: 400,
         height: 300,
       }
@@ -184,6 +231,27 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
       `
 
       expect(await extract(value)).toBeUndefined()
+    })
+
+    // A dots-only owner never reaches a minted path; the set beside it still resolves through
+    // the ownerless shape.
+    it('should keep the set when the owner is a traversal segment', async () => {
+      const value = html`
+        <embed
+          src="https://www.flickr.com/apps/slideshow/show.swf"
+          flashvars="page_show_url=%2Fphotos%2F..%2Fsets%2F72157624341%2Fshow%2F"
+        />
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: 'photosets/72157624341',
+        src: 'https://embedr.flickr.com/photosets/72157624341?width=400&height=300',
+        url: 'https://flic.kr/s/2TWjFMp',
+        width: 400,
+        height: 300,
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should return undefined for a carrier on another host', async () => {

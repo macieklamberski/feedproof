@@ -5,25 +5,34 @@ import { createUrlEmbedResolver, getEmbedDimensions } from '../utils/widgets.js'
 
 const flickrHosts = ['flickr.com']
 
-// Two dead carriers, both from the Flash era. The `<object>`/`<embed>` pair plays the swf, and
-// the iframe points at a page that answers `x-frame-options: SAMEORIGIN` and so renders an
-// empty frame. Neither shows anything today.
-const flashPlayerPathRegex = /^\/apps\/slideshow\//
+// Two dead carriers, both from the Flash era, and both naming either an album or a whole
+// photostream. The `<object>`/`<embed>` pair plays the swf, and the iframe points at a page
+// that answers `x-frame-options: SAMEORIGIN` and so renders an empty frame. Neither shows
+// anything today.
+const flashPlayerPathRegex = /^\/apps\/slideshow\//i
 const legacyPlayerPathRegex = /^\/slideshow\/index\.gne$/i
 
 // The swf url names only the player, with a cache-busting `?v=` that is identical on every
-// slideshow ever pasted. The set is in the flashvars, as a percent-encoded path that
-// `URLSearchParams` decodes: `page_show_url=%2Fphotos%2F{owner}%2Fsets%2F{setId}%2Fshow%2F`.
+// slideshow ever pasted. The subject is in the flashvars, as a percent-encoded page path that
+// `URLSearchParams` decodes: `/photos/{owner}/sets/{setId}/show/` for an album and
+// `/photos/{owner}/show/` for a photostream.
 //
 // Measured across the 534 corpus feeds carrying this carrier: 366 hold `page_show_url` and 316
-// hold `set_id`, and **none holds `set_id` without `page_show_url`**, so this key is a strict
-// superset and the only one that also yields the owner.
+// hold `set_id`, and none holds `set_id` without `page_show_url`, so the path is the one key
+// worth reading and the only one that also yields the owner. The photostream form is rare, 5
+// feeds, plus 6 that name the owner only in `user_id`.
 const setPathRegex = /^\/photos\/([\w.@-]+)\/sets\/(\d+)/
+const streamPathRegex = /^\/photos\/([\w.@-]+)\/show\/?$/
 
 const safeSetIdRegex = /^\d+$/
 
-// An owner is a numeric NSID with its `@N0…` suffix, or the path alias the owner chose.
-const safeOwnerRegex = /^[\w.-]+(?:@N\d\d)?$/
+// An owner is a numeric NSID with its `@N0…` suffix, or the path alias the owner chose. The
+// leading class excludes a dots-only segment, so `..` cannot reach a minted path.
+const safeOwnerRegex = /^[\w-][\w.-]*(?:@N\d\d)?$/
+
+// What a carrier names, whichever carrier and whichever spelling: an album needs its set, a
+// photostream only its owner.
+type FlickrSubject = { setId?: string; owner?: string }
 
 // Flickr's own embed script builds a frameless iframe and writes one of these endpoints into it,
 // so what it fetches is exactly what an `src` can carry. Both discriminate rather than shelling:
@@ -37,46 +46,84 @@ const composeStreamPlayer = (owner: string): string => {
   return `https://embedr.flickr.com/photostreams/${owner}`
 }
 
+// Flickr's short urls are the set id in base58, and `flic.kr/s/{code}` goes through the
+// platform's own redirector to the owned album page, so the page is reachable even when the
+// markup never names the owner. Checked live 2026-08-14: a real set lands on
+// `flickr.com/photos/{owner}/sets/{setId}/` and an invented one answers 404. Set ids exceed
+// 2^53, so the arithmetic is BigInt.
+const base58Alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
+
+const composeShortAlbumUrl = (setId: string): string => {
+  let remaining = BigInt(setId)
+  let encoded = ''
+
+  while (remaining > 0n) {
+    encoded = base58Alphabet[Number(remaining % 58n)] + encoded
+    remaining /= 58n
+  }
+
+  return `https://flic.kr/s/${encoded || base58Alphabet[0]}`
+}
+
 // The endpoint renders `width: NaNpx` when it is given no size, so the dimensions travel in the
 // url rather than being left to the reader. These are the size Flickr's own dialog wrote for
 // years, used only when the carrier states nothing.
 const defaultWidth = 400
 const defaultHeight = 300
 
-const withSize = (player: string, width: number, height: number): string => {
-  return `${player}?width=${width}&height=${height}`
-}
+// The swf carrier names its subject in the flashvars beside it: the page path first, and the
+// bare `user_id` for the few snippets that carry nothing else.
+const readFlashSubject = (element: Element): FlickrSubject => {
+  const config = new URLSearchParams(flashVars(element) ?? '')
+  const page = config.get('page_show_url') ?? ''
+  const set = page.match(setPathRegex)
 
-// The swf carrier, whose set lives in the flashvars beside it.
-const readFlashSet = (element: Element): { owner: string; setId: string } | undefined => {
-  const config = flashVars(element)
-  const match = config && new URLSearchParams(config).get('page_show_url')?.match(setPathRegex)
-
-  return match && safeOwnerRegex.test(match[1]) ? { owner: match[1], setId: match[2] } : undefined
-}
-
-// The iframe carrier, whose subject is in its own query. Of the 112 corpus feeds carrying it,
-// 94 name a set and 90 name a user, so both are worth reading; the 6 naming a group are not,
-// since `embedr.flickr.com/groups/…` answers 404. A set is preferred where both appear, being
-// the narrower of the two.
-const readLegacyQuery = (parsed: URL): EmbedResolverResult | undefined => {
-  const setId = parsed.searchParams.get('set_id')
-  const owner = parsed.searchParams.get('user_id')
-
-  if (setId && safeSetIdRegex.test(setId)) {
-    // With the owner beside it the album's own page is mintable too; a set alone names the
-    // player but no page, since the page path starts with the owner.
-    return owner && safeOwnerRegex.test(owner)
-      ? {
-          provider: 'flickr',
-          id: `${owner}/${setId}`,
-          src: composeAlbumPlayer(setId),
-          url: `https://www.flickr.com/photos/${owner}/sets/${setId}`,
-        }
-      : { provider: 'flickr', id: `photosets/${setId}`, src: composeAlbumPlayer(setId) }
+  if (set) {
+    return { owner: set[1], setId: set[2] }
   }
 
-  if (owner && safeOwnerRegex.test(owner)) {
+  const stream = page.match(streamPathRegex)
+
+  return { owner: stream?.[1] ?? config.get('user_id') ?? undefined }
+}
+
+// The iframe carrier names its subject in its own query. Of the 112 corpus feeds carrying it,
+// 94 name a set and 90 name a user; the 6 naming only a group stay unresolved, since the group
+// player answers 404. A set is preferred where both appear, being the narrower of the two.
+const readLegacySubject = (parsed: URL): FlickrSubject => {
+  return {
+    setId: parsed.searchParams.get('set_id') ?? undefined,
+    owner: parsed.searchParams.get('user_id') ?? undefined,
+  }
+}
+
+// One composer for both carriers. The id takes one of three shapes, and the segment before the
+// slash is what tells them apart: `{owner}/{setId}` when the markup names both, which is what
+// the album's key-free oEmbed needs (it answers `flickr_type: album` with a title, an author
+// and a thumbnail, checked 2026-08-14); `photosets/{setId}` when the owner is absent, which
+// still addresses the player but not oEmbed; and `photostreams/{owner}` for a stream.
+const composeEmbed = (subject: FlickrSubject): EmbedResolverResult | undefined => {
+  const owner = subject.owner && safeOwnerRegex.test(subject.owner) ? subject.owner : undefined
+
+  if (subject.setId && safeSetIdRegex.test(subject.setId)) {
+    // The album page path starts with the owner, and `/sets/{id}` is kept as the markup spells
+    // it: the path is still served and does not redirect to `/albums/` (both 200, 2026-08-14).
+    return owner
+      ? {
+          provider: 'flickr',
+          id: `${owner}/${subject.setId}`,
+          src: composeAlbumPlayer(subject.setId),
+          url: `https://www.flickr.com/photos/${owner}/sets/${subject.setId}`,
+        }
+      : {
+          provider: 'flickr',
+          id: `photosets/${subject.setId}`,
+          src: composeAlbumPlayer(subject.setId),
+          url: composeShortAlbumUrl(subject.setId),
+        }
+  }
+
+  if (owner) {
     return {
       provider: 'flickr',
       id: `photostreams/${owner}`,
@@ -96,27 +143,15 @@ export const flickrResolveEmbed = (
     return
   }
 
-  let result: EmbedResolverResult | undefined
+  let subject: FlickrSubject | undefined
 
   if (flashPlayerPathRegex.test(parsed.pathname)) {
-    const set = readFlashSet(element)
-
-    result = set && {
-      provider: 'flickr',
-      // The player takes the set alone, but the album's oEmbed is keyed by the page url, which
-      // needs the owner too: it answers `flickr_type: album` with a title, an author and a
-      // thumbnail, all key-free (checked 2026-08-14). So the id carries the pair, or enrichment
-      // cannot address the one endpoint that would give this placeholder a poster.
-      id: `${set.owner}/${set.setId}`,
-      src: composeAlbumPlayer(set.setId),
-      // The album page, kept as the markup spelled it minus the `/show/` suffix that names the
-      // slideshow view. `/sets/{id}` is still served and does not redirect to `/albums/{id}`,
-      // so rewriting it would change the publisher's url for no gain (both 200, 2026-08-14).
-      url: `https://www.flickr.com/photos/${set.owner}/sets/${set.setId}`,
-    }
+    subject = readFlashSubject(element)
   } else if (legacyPlayerPathRegex.test(parsed.pathname)) {
-    result = readLegacyQuery(parsed)
+    subject = readLegacySubject(parsed)
   }
+
+  const result = subject && composeEmbed(subject)
 
   if (!result) {
     return
@@ -126,7 +161,7 @@ export const flickrResolveEmbed = (
   const width = declared.width ?? defaultWidth
   const height = declared.height ?? defaultHeight
 
-  return { ...result, src: withSize(result.src, width, height), width, height }
+  return { ...result, src: `${result.src}?width=${width}&height=${height}`, width, height }
 }
 
 // Both carriers render nothing today, and both name something Flickr's current embed endpoint
