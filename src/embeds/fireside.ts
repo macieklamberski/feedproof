@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The token pairs a show with an episode across a `+`, e.g. `DiNRb69N+Dagp3z15`.
 const safeTokenRegex = /^[A-Za-z0-9]+\+[A-Za-z0-9]+$/
@@ -51,4 +51,4 @@ export const firesideResolveEmbed = (url: string): EmbedResolverResult | undefin
   }
 }
 
-export const firesideEmbedResolver = createIframeEmbedResolver(firesideHosts, firesideResolveEmbed)
+export const firesideEmbedResolver = createUrlEmbedResolver(firesideHosts, firesideResolveEmbed)

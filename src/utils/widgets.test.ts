@@ -4,9 +4,9 @@ import type { CiteResolverResult, EmbedResolverResult } from '../types.js'
 import {
   createCitePlaceholder,
   createEmbedPlaceholder,
-  createIframeEmbedResolver,
   createMarkupEmbedResolver,
   createPlaceholder,
+  createUrlEmbedResolver,
   normalizeEmbedFields,
   updateCitePlaceholder,
   updateEmbedPlaceholder,
@@ -562,7 +562,7 @@ describeForEachParser('declaredSize', (parseHtml) => {
 
   describe('a url-keyed resolver', () => {
     it('should take the size the carrier declares by default', () => {
-      const resolver = createIframeEmbedResolver(['x.test'], () => stated)
+      const resolver = createUrlEmbedResolver(['x.test'], () => stated)
       const value = html`<iframe src="https://x.test/abc" width="640" height="360"></iframe>`
       const expected: EmbedResolverResult = { ...stated, width: 640, height: 360 }
 
@@ -570,7 +570,7 @@ describeForEachParser('declaredSize', (parseHtml) => {
     })
 
     it('should keep its own numbers when the declared size is refused', () => {
-      const resolver = createIframeEmbedResolver(['x.test'], () => ({ ...stated, height: 200 }), {
+      const resolver = createUrlEmbedResolver(['x.test'], () => ({ ...stated, height: 200 }), {
         declaredSize: false,
       })
       const value = html`<iframe src="https://x.test/abc" width="640" height="360"></iframe>`

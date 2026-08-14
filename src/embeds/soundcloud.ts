@@ -1,7 +1,7 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, text } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // SoundCloud's embed is an iframe whose `url=` query names the track as an
 // `api.soundcloud.com/tracks/{id}` reference, which is not human-clickable, so the iframe
@@ -76,7 +76,7 @@ export const soundcloudResolveEmbed = (
   return result
 }
 
-export const soundcloudEmbedResolver = createIframeEmbedResolver(
+export const soundcloudEmbedResolver = createUrlEmbedResolver(
   soundcloudHosts,
   soundcloudResolveEmbed,
 )

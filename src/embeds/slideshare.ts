@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, text } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const slideshareHosts = ['slideshare.net', 'slidesharecdn.com']
 
@@ -65,7 +65,7 @@ export const slideshareResolveEmbed = (link: string): EmbedResolverResult | unde
     : composeEmbed(deck)
 }
 
-export const slideshareIframeEmbedResolver = createIframeEmbedResolver(
+export const slideshareIframeEmbedResolver = createUrlEmbedResolver(
   slideshareHosts,
   slideshareResolveEmbed,
 )
@@ -123,7 +123,7 @@ export const slideshareFlashResolveEmbed = (
   return composeEmbed(deck, url ?? composed, title || undefined)
 }
 
-export const slideshareFlashEmbedResolver = createIframeEmbedResolver(
+export const slideshareFlashEmbedResolver = createUrlEmbedResolver(
   slideshareHosts,
   slideshareFlashResolveEmbed,
 )

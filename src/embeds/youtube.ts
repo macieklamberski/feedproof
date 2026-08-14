@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { pickUrlParams } from '../utils/urls.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
 
@@ -146,4 +146,4 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 }
 
-export const youtubeEmbedResolver = createIframeEmbedResolver(youtubeHosts, youtubeResolveEmbed)
+export const youtubeEmbedResolver = createUrlEmbedResolver(youtubeHosts, youtubeResolveEmbed)

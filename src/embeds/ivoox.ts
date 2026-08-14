@@ -1,6 +1,6 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // `playerivoox_ee_{id}_1.html` is the legacy player and `player_ej_{id}_{skin}_1.html` the
 // current one. Both name the episode by the same numeric id.
@@ -55,4 +55,4 @@ export const ivooxResolveEmbed = (url: string): EmbedResolverResult | undefined 
   }
 }
 
-export const ivooxEmbedResolver = createIframeEmbedResolver(ivooxHosts, ivooxResolveEmbed)
+export const ivooxEmbedResolver = createUrlEmbedResolver(ivooxHosts, ivooxResolveEmbed)

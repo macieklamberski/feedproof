@@ -2,7 +2,7 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
 import { pickUrlParams } from '../utils/urls.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeVideoIdRegex = /^\d+$/
 
@@ -62,4 +62,4 @@ export const vimeoResolveEmbed = (
   }
 }
 
-export const vimeoEmbedResolver = createIframeEmbedResolver(vimeoHosts, vimeoResolveEmbed)
+export const vimeoEmbedResolver = createUrlEmbedResolver(vimeoHosts, vimeoResolveEmbed)

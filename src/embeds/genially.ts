@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The view id is a dashless 24-character hex id.
 const safeViewIdRegex = /^[0-9a-f]{24}$/i
@@ -48,4 +48,4 @@ export const geniallyResolveEmbed = (url: string): EmbedResolverResult | undefin
   }
 }
 
-export const geniallyEmbedResolver = createIframeEmbedResolver(geniallyHosts, geniallyResolveEmbed)
+export const geniallyEmbedResolver = createUrlEmbedResolver(geniallyHosts, geniallyResolveEmbed)

@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen.
 const safeIdentifierRegex = /^[\w.-]+$/
@@ -59,10 +59,7 @@ export const archiveResolveEmbed = (url: string): EmbedResolverResult | undefine
   return composeEmbedResult(identifier, query)
 }
 
-export const archiveIframeEmbedResolver = createIframeEmbedResolver(
-  archiveHosts,
-  archiveResolveEmbed,
-)
+export const archiveIframeEmbedResolver = createUrlEmbedResolver(archiveHosts, archiveResolveEmbed)
 
 // The Flash player names no item in its url: the `src` is only the Flowplayer swf under
 // `/flow/`, so the item sits in the player's config instead, which arrives as the `flashvars`
@@ -113,7 +110,7 @@ export const archiveFlashResolveEmbed = (
   return composeEmbedResult(identifier)
 }
 
-export const archiveFlashEmbedResolver = createIframeEmbedResolver(
+export const archiveFlashEmbedResolver = createUrlEmbedResolver(
   archiveHosts,
   archiveFlashResolveEmbed,
 )

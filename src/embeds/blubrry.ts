@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^\d+$/
 
@@ -54,4 +54,4 @@ export const blubrryResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 }
 
-export const blubrryEmbedResolver = createIframeEmbedResolver(blubrryHosts, blubrryResolveEmbed)
+export const blubrryEmbedResolver = createUrlEmbedResolver(blubrryHosts, blubrryResolveEmbed)
