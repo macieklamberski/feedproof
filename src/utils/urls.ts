@@ -17,6 +17,11 @@ export const imageFileRegex = /\.(avif|gif|jpe?g|png|svg|webp)(\?|#|$)/i
 export const videoFileRegex = /\.(mp4|m4v|webm|mov|ogv)(\?|#|$)/i
 export const audioFileRegex = /\.(mp3|m4a|ogg|oga|wav|flac|opus)(\?|#|$)/i
 
+// A file no browser can play. Flash was blocked everywhere in January 2021, and hosts still
+// serve the `.swf` bytes, so a URL that reaches this is one that answers 200 and renders
+// nothing whatever a reader does with it.
+export const flashFileRegex = /\.swf(\?|#|$)/i
+
 // A real, loadable src — not empty and not the `about:blank` lazy placeholder.
 export const isUsableSrc = (src: string | null): src is string => {
   const trimmed = src?.trim()
