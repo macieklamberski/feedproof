@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { scribdFlashEmbedResolver, scribdIframeEmbedResolver } from './scribd.js'
+import {
+  scribdFlashEmbedResolver,
+  scribdFlashResolveEmbed,
+  scribdIframeEmbedResolver,
+  scribdResolveEmbed,
+} from './scribd.js'
 
 describeForEachParser('scribdIframeEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, scribdIframeEmbedResolver)
@@ -187,5 +192,40 @@ describeForEachParser('scribdFlashEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+// Both resolvers reach their url through a factory that has already checked the host, so these
+// guards are only reachable by calling the function itself. They exist because the function is
+// importable on its own.
+describeForEachParser('scribdResolveEmbed', (parseHtml) => {
+  const carrier = (): Element => {
+    return parseHtml(html`<iframe></iframe>`).querySelector('iframe') as Element
+  }
+
+  it('should ignore a url on another host', () => {
+    const value = 'https://evil.test/embeds/526446879/content'
+
+    expect(scribdResolveEmbed(value, carrier())).toBeUndefined()
+  })
+
+  it('should ignore a url that cannot be parsed', () => {
+    const value = 'https://['
+
+    expect(scribdResolveEmbed(value, carrier())).toBeUndefined()
+  })
+})
+
+describe('scribdFlashResolveEmbed', () => {
+  it('should ignore a scribd url that is not the flash player', () => {
+    const value = 'https://www.scribd.com/embeds/526446879/content'
+
+    expect(scribdFlashResolveEmbed(value)).toBeUndefined()
+  })
+
+  it('should ignore a url that cannot be parsed', () => {
+    const value = 'https://['
+
+    expect(scribdFlashResolveEmbed(value)).toBeUndefined()
   })
 })
