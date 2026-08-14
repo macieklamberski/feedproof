@@ -10,83 +10,157 @@ describeForEachParser('convertAmpNativeElements', (parseHtml) => {
   }
 
   it('should convert amp-img into img carrying its image attributes', async () => {
-    const value = '<amp-img src="photo.jpg" alt="A photo" width="640" height="480"></amp-img>'
-    const result = await transform(value)
+    const value = html`
+      <amp-img
+        src="photo.jpg"
+        alt="A photo"
+        width="640"
+        height="480"
+      ></amp-img>
+    `
+    const expected = html`
+      <img
+        src="photo.jpg"
+        alt="A photo"
+        width="640"
+        height="480"
+      >
+    `
 
-    expect(result).toContain('<img')
-    expect(result).toContain('src="photo.jpg"')
-    expect(result).toContain('alt="A photo"')
-    expect(result).toContain('width="640"')
-    expect(result).not.toContain('<amp-img')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should carry AMP layout attributes over and still drop fallback children', async () => {
     const value = html`
-      <amp-img src="photo.jpg" layout="responsive">
-        <img src="fallback.jpg" fallback>
+      <amp-img
+        src="photo.jpg"
+        layout="responsive"
+      >
+        <img
+          src="fallback.jpg"
+          fallback
+        >
       </amp-img>
     `
-    const result = await transform(value)
+    const expected = html`
+      <img
+        src="photo.jpg"
+        layout="responsive"
+      >
+    `
 
-    expect(result).toContain('src="photo.jpg"')
-    expect(result).toContain('layout="responsive"')
-    expect(result).not.toContain('fallback.jpg')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should carry attributes the element type allows beyond the AMP basics', async () => {
     const value = html`
-      <amp-video src="clip.mp4" preload="none" playsinline crossorigin="anonymous"></amp-video>
+      <amp-video
+        src="clip.mp4"
+        preload="none"
+        playsinline
+        crossorigin="anonymous"
+      ></amp-video>
     `
-    const result = await transform(value)
+    const expected = html`
+      <video
+        src="clip.mp4"
+        preload="none"
+        playsinline
+        crossorigin="anonymous"
+      ></video>
+    `
 
-    expect(result).toContain('preload="none"')
-    expect(result).toContain('playsinline')
-    expect(result).toContain('crossorigin="anonymous"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should convert amp-anim into img', async () => {
-    const value = '<amp-anim src="loop.gif" width="200" height="200"></amp-anim>'
-    const result = await transform(value)
+    const value = html`
+      <amp-anim
+        src="loop.gif"
+        width="200"
+        height="200"
+      ></amp-anim>
+    `
+    const expected = html`
+      <img
+        src="loop.gif"
+        width="200"
+        height="200"
+      >
+    `
 
-    expect(result).toContain('<img')
-    expect(result).toContain('src="loop.gif"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should convert amp-video into video and carry its sources', async () => {
     const value = html`
-      <amp-video poster="poster.jpg" width="640" height="360" controls>
-        <source src="clip.mp4" type="video/mp4">
+      <amp-video
+        poster="poster.jpg"
+        width="640"
+        height="360"
+        controls
+      >
+        <source
+          src="clip.mp4"
+          type="video/mp4"
+        >
       </amp-video>
     `
-    const result = await transform(value)
+    const expected = html`
+      <video
+        poster="poster.jpg"
+        width="640"
+        height="360"
+        controls
+      >
+        <source
+          src="clip.mp4"
+          type="video/mp4"
+        >
+      </video>
+    `
 
-    expect(result).toContain('<video')
-    expect(result).toContain('poster="poster.jpg"')
-    expect(result).toContain('<source')
-    expect(result).toContain('src="clip.mp4"')
-    expect(result).not.toContain('<amp-video')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should convert amp-audio into audio and carry its sources', async () => {
     const value = html`
       <amp-audio>
-        <source src="track.mp3" type="audio/mpeg">
+        <source
+          src="track.mp3"
+          type="audio/mpeg"
+        >
       </amp-audio>
     `
-    const result = await transform(value)
+    const expected = html`
+      <audio>
+        <source
+          src="track.mp3"
+          type="audio/mpeg"
+        >
+      </audio>
+    `
 
-    expect(result).toContain('<audio')
-    expect(result).toContain('src="track.mp3"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should convert amp-iframe into iframe', async () => {
-    const value =
-      '<amp-iframe src="https://example.com/embed" width="600" height="400"></amp-iframe>'
-    const result = await transform(value)
+    const value = html`
+      <amp-iframe
+        src="https://example.com/embed"
+        width="600"
+        height="400"
+      ></amp-iframe>
+    `
+    const expected = html`
+      <iframe
+        src="https://example.com/embed"
+        width="600"
+        height="400"
+      ></iframe>
+    `
 
-    expect(result).toContain('<iframe')
-    expect(result).toContain('src="https://example.com/embed"')
-    expect(result).not.toContain('<amp-iframe')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   // The src is a player page, not a media file, so a frame is the only thing it can become.
