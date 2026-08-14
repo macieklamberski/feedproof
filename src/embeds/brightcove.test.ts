@@ -31,24 +31,6 @@ describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
-
-    // The same two ids, split the other way: some embeds park flashVars in a <param>.
-    it('should read flashVars from a sibling param', async () => {
-      const value = html`
-        <object width="300" height="250">
-          <param name="flashVars" value="@videoPlayer=19521637001&domain=embed" />
-          <embed
-            src="http://c.brightcove.com/services/viewer/federated_f9/19517958001?publisherID=1660622131"
-          />
-        </object>
-      `
-      const expected: EmbedResolverResult = {
-        provider: 'brightcove',
-        id: '19521637001',
-        src: 'https://players.brightcove.net/1660622131/default_default/index.html?videoId=19521637001',
-      }
-      expect(await extract(value)).toEqual(expected)
-    })
   })
 
   describe('sad paths', () => {

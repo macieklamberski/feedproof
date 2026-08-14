@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, queryElement } from '../tests.js'
+import { describeForEachParser, html, queryElement } from '../tests.js'
 import {
   attr,
   bgImage,
   find,
+  flashVars,
   getElementDimensions,
   getWrapperRatioDimensions,
   hasAncestorWithTagName,
@@ -592,6 +593,77 @@ describeForEachParser('attr', (parseHtml) => {
 
   it('should return undefined for a nullish element', () => {
     expect(attr(undefined, 'href')).toBeUndefined()
+  })
+})
+
+describeForEachParser('flashVars', (parseHtml) => {
+  // `<embed>` spells the config as its own attribute and `<object>` as a sibling `<param>`,
+  // and the same snippet often carries both so a reader of one dialect sees half the markup.
+  it('should read the value off the carrier itself', () => {
+    const document = parseHtml('<embed src="player.swf" flashvars="config=1&id=2">')
+    const element = queryElement(document, 'embed')
+
+    expect(flashVars(element)).toBe('config=1&id=2')
+  })
+
+  it('should read the value from a sibling param', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="flashvars" value="config=1&id=2" />
+        <embed src="player.swf" />
+      </object>
+    `)
+    const element = queryElement(document, 'embed')
+
+    expect(flashVars(element)).toBe('config=1&id=2')
+  })
+
+  // Brightcove writes `flashVars` and Archive writes `flashvars`, on the same attribute.
+  it('should match the param name whatever its casing', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="flashVars" value="config=1" />
+        <embed src="player.swf" />
+      </object>
+    `)
+    const element = queryElement(document, 'embed')
+
+    expect(flashVars(element)).toBe('config=1')
+  })
+
+  it('should prefer the carrier own attribute over a sibling param', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="flashvars" value="config=sibling" />
+        <embed src="player.swf" flashvars="config=own" />
+      </object>
+    `)
+    const element = queryElement(document, 'embed')
+
+    expect(flashVars(element)).toBe('config=own')
+  })
+
+  it('should ignore a param that names something else', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="movie" value="player.swf" />
+        <embed src="player.swf" />
+      </object>
+    `)
+    const element = queryElement(document, 'embed')
+
+    expect(flashVars(element)).toBeUndefined()
+  })
+
+  it('should return undefined when nothing carries the config', () => {
+    const document = parseHtml('<embed src="player.swf">')
+    const element = queryElement(document, 'embed')
+
+    expect(flashVars(element)).toBeUndefined()
+  })
+
+  it('should return undefined for a nullish element', () => {
+    expect(flashVars(undefined)).toBeUndefined()
   })
 })
 
