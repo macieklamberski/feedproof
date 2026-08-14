@@ -43,6 +43,7 @@ import {
 import { captivateEmbedResolver } from './embeds/captivate.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { firesideEmbedResolver } from './embeds/fireside.js'
+import { flickrEmbedResolver } from './embeds/flickr.js'
 import { flourishEmbedResolver } from './embeds/flourish.js'
 import { geniallyEmbedResolver } from './embeds/genially.js'
 import { imgurBlockquoteEmbedResolver, imgurIframeEmbedResolver } from './embeds/imgur.js'
@@ -401,6 +402,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   speakerdeckScriptEmbedResolver,
   speakerdeckIframeEmbedResolver,
   firesideEmbedResolver,
+  flickrEmbedResolver,
   flourishEmbedResolver,
   geniallyEmbedResolver,
   anchorEmbedResolver,
