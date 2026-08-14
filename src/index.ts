@@ -129,6 +129,7 @@ export {
 export { captivateEmbedResolver } from './embeds/captivate.js'
 export { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 export { firesideEmbedResolver } from './embeds/fireside.js'
+export { flickrFlashEmbedResolver, flickrFlashResolveEmbed } from './embeds/flickr.js'
 export { flourishEmbedResolver } from './embeds/flourish.js'
 export { geniallyEmbedResolver } from './embeds/genially.js'
 export {
@@ -222,7 +223,6 @@ export { detectLanguage, highlightCode } from './transforms/dom/highlightCode.js
 export { hoistBlocksFromParagraphs } from './transforms/dom/hoistBlocksFromParagraphs.js'
 export { hoistFigcaptionFromAnchor } from './transforms/dom/hoistFigcaptionFromAnchor.js'
 export { injectEnclosures } from './transforms/dom/injectEnclosures.js'
-export { linkifyFlickrEmbeds } from './transforms/dom/linkifyFlickrEmbeds.js'
 export { linkifyGistEmbeds } from './transforms/dom/linkifyGistEmbeds.js'
 export { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 export { markTimestamps, parseTimestampSeconds } from './transforms/dom/markTimestamps.js'
