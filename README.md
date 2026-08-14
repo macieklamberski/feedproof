@@ -75,10 +75,10 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `rebuildElementorVideoEmbeds` | Rebuild a real `<iframe>` from an Elementor video widget's deferred `data-settings` (YouTube / Vimeo / Dailymotion / VideoPress) |
 | `rebuildEmbedlyEmbeds` | Unwrap an Embedly media widget to the inner provider iframe, carrying the poster as `data-thumbnail` |
 | `rebuildDeferredIframes` | Rebuild a real `<iframe>` from a URL parked in a `<div>` attribute (Pym.js `data-pym-src`, @newswire/frames `data-frame-src`) |
-| `linkifyGistEmbeds` | Replace a GitHub Gist script embed with a link to the gist |
+| `linkifyGistEmbeds` | Replace a GitHub Gist script embed or `<amp-gist>` with a link to the gist |
 | `fixSubstackMentions` | Rebuild a Substack @-mention (empty `span.mention-wrap`) into an inline `<a>@name</a>` link, so the name survives instead of vanishing mid-sentence |
 | `convertNoteEmbeds` | Convert note.com's empty embed figures (`figure[embedded-service][data-src]`): media services become plain iframes for the widget pass, own-post embeds become plain links |
-| `convertAmpElements` | Convert AMP custom elements (`amp-img`, `amp-youtube`, …) into plain HTML media |
+| `convertAmpNativeElements` | Convert AMP custom elements with a native equivalent (`amp-img`, `amp-anim`, `amp-video`, `amp-audio`, `amp-iframe`) into that element |
 | `convertDatawrapperEmbeds` | Convert Datawrapper chart embeds (iframe, script/noscript, and link forms) into a static image linking to the interactive chart |
 | `convertWidgets` | Convert recognized widgets: embeds become `data-embed-*` placeholders, platform-hosted media becomes a real `<video>`/`<audio>` (from an id template, a media-file src, or a URL parked in a `mediaSrcAttributes` attribute) |
 | `assignVideoPosters` | _Heuristic (opt-in):_ move a redundant video-poster image (inline or an enclosure) onto the embed as its poster, then drop the standalone image |
@@ -120,7 +120,7 @@ import {
   ghostCiteResolver,
   resolveRelativeUrls,
   transformContent,
-  youtubeEmbedResolver,
+  youtubeIframeEmbedResolver,
 } from 'feedsweep'
 import { parseHtml } from 'feedsweep/linkedom'
 import { cleanUrl } from 'urlpurify'
@@ -149,7 +149,7 @@ const result = transformContent(html, {
   highlightFn: (text, language) => myHighlighter.highlight(text, language),
   // Widget resolvers: embed results become placeholders, media results become real
   // <video>/<audio> elements.
-  widgetResolvers: [youtubeEmbedResolver, myEmbedResolver],
+  widgetResolvers: [youtubeIframeEmbedResolver, myEmbedResolver],
   // Resolvers turning link-preview cards into `data-cite-*` placeholders.
   citeResolvers: [ghostCiteResolver, myCiteResolver],
   // Opt into the heuristic transforms. Ignored if a custom domTransforms is set.

@@ -137,6 +137,7 @@ export {
 } from './embeds/imgur.js'
 export { ivooxEmbedResolver } from './embeds/ivoox.js'
 export {
+  jwplayerAmpEmbedResolver,
   jwplayerIframeEmbedResolver,
   jwplayerScriptEmbedResolver,
 } from './embeds/jwplayer.js'
@@ -177,7 +178,8 @@ export { vimeoEmbedResolver } from './embeds/vimeo.js'
 export { wistiaEmbedResolver } from './embeds/wistia.js'
 export {
   composeThumbnailUrl,
-  youtubeEmbedResolver,
+  youtubeAmpEmbedResolver,
+  youtubeIframeEmbedResolver,
 } from './embeds/youtube.js'
 export { hljsHighlightFn } from './highlighters/hljs.js'
 export { discourseMediaResolver } from './media/discourse.js'
@@ -189,7 +191,7 @@ export { weeblyMediaResolver } from './media/weebly.js'
 export { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 export { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 export { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
-export { convertAmpElements } from './transforms/dom/convertAmpElements.js'
+export { convertAmpNativeElements } from './transforms/dom/convertAmpNativeElements.js'
 export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 export { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 export { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'

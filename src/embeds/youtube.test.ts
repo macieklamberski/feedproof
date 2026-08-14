@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, resolverExtractor } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   composeEmbedUrl,
   composeThumbnailUrl,
   extractVideoId,
   isVideoId,
-  youtubeEmbedResolver,
+  youtubeAmpEmbedResolver,
+  youtubeIframeEmbedResolver,
   youtubeResolveEmbed,
 } from './youtube.js'
 
@@ -450,8 +451,8 @@ describe('composeThumbnailUrl', () => {
   })
 })
 
-describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
-  const extract = resolverExtractor(parseHtml, youtubeEmbedResolver)
+describeForEachParser('youtubeIframeEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, youtubeIframeEmbedResolver)
 
   it('should extract metadata from a youtube iframe', async () => {
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
@@ -510,5 +511,132 @@ describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
     const value = '<iframe src=""></iframe>'
 
     expect(await extract(value)).toBeUndefined()
+  })
+})
+
+describeForEachParser('youtubeAmpEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, youtubeAmpEmbedResolver)
+
+  describe('happy paths', () => {
+    it('should extract metadata from the videoid alone', async () => {
+      const value = '<amp-youtube data-videoid="dQw4w9WgXcQ"></amp-youtube>'
+      const expected: EmbedResolverResult = {
+        provider: 'youtube',
+        id: 'dQw4w9WgXcQ',
+        src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should carry the size the element declares', async () => {
+      const value = html`
+        <amp-youtube data-videoid="dQw4w9WgXcQ" width="480" height="270" layout="responsive">
+        </amp-youtube>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'youtube',
+        id: 'dQw4w9WgXcQ',
+        src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        width: 480,
+        height: 270,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should carry the playback window from data-param attributes', async () => {
+      const value = html`
+        <amp-youtube data-videoid="dQw4w9WgXcQ" data-param-start="30" data-param-end="90">
+        </amp-youtube>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'youtube',
+        id: 'dQw4w9WgXcQ',
+        src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=30&end=90',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should carry the playlist and its position from data-param attributes', async () => {
+      const value = html`
+        <amp-youtube
+          data-videoid="dQw4w9WgXcQ"
+          data-param-list="PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf"
+          data-param-index="2"
+        >
+        </amp-youtube>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'youtube',
+        id: 'dQw4w9WgXcQ',
+        src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf&index=2',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The same set the url form keeps, so an AMP embed and an ordinary one resolve alike:
+    // autoplay, rel and the rest change nothing a reader can see from a placeholder.
+    it('should drop data-param attributes outside the carried set', async () => {
+      const value = html`
+        <amp-youtube data-videoid="dQw4w9WgXcQ" data-param-autoplay="1" data-param-rel="0">
+        </amp-youtube>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'youtube',
+        id: 'dQw4w9WgXcQ',
+        src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    it('should return undefined for an element with no videoid', async () => {
+      const value = '<amp-youtube width="480" height="270"></amp-youtube>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for an empty videoid', async () => {
+      const value = '<amp-youtube data-videoid=""></amp-youtube>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // A bogus id would mint a bogus player url and a bogus enrichment key, so the element is
+    // left for the generic handling instead, exactly as the url form treats a malformed id.
+    it('should return undefined for a malformed videoid', async () => {
+      const value = '<amp-youtube data-videoid="../../evil"></amp-youtube>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for an embed path word in the videoid', async () => {
+      const value = '<amp-youtube data-videoid="videoseries"></amp-youtube>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // The channel-live variant states no video, so there is no poster and no watch url to
+    // mint. It occurs in no corpus feed, and is deliberately left unresolved.
+    it('should not claim the live channel variant', async () => {
+      const value = '<amp-youtube data-live-channelid="UCuAXFkgsw1L7xaCfnd5JJOw"></amp-youtube>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
   })
 })

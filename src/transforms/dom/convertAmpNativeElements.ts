@@ -1,4 +1,3 @@
-import { composeEmbedUrl } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 
 type AmpConversion = {
@@ -17,33 +16,18 @@ const conversions: Array<AmpConversion> = [
 
 // AMP custom elements (<amp-img>, <amp-video>, …) render nothing without the AMP
 // runtime, and a reader runs no JS — so the media never appears. Convert each to its
-// plain HTML equivalent so the normal image/embed transforms downstream can dimension,
+// native HTML equivalent so the normal image/embed transforms downstream can dimension,
 // placeholder, and proxy it. <amp-story> is a full-page format, not in-content media,
 // and is left alone.
-export const convertAmpElements: DomTransform = () => (document) => {
-  // <amp-youtube> carries the id in data-videoid; build the embed iframe so the
-  // YouTube resolver downstream recovers the id and thumbnail.
-  for (const element of document.querySelectorAll('amp-youtube')) {
-    const videoId = element.getAttribute('data-videoid')
-
-    if (!videoId) {
-      continue
-    }
-
-    const iframe = document.createElement('iframe')
-    iframe.setAttribute('src', composeEmbedUrl(videoId))
-
-    for (const attribute of ['width', 'height']) {
-      const value = element.getAttribute(attribute)
-
-      if (value) {
-        iframe.setAttribute(attribute, value)
-      }
-    }
-
-    element.replaceWith(iframe)
-  }
-
+//
+// The set stops at AMP elements with a native equivalent, where the provider is unknown or
+// beside the point. An AMP element naming a platform (<amp-youtube>, <amp-jwplayer>,
+// <amp-gist>, …) belongs to that platform's own resolver or transform, which reads its
+// attributes and mints the placeholder directly. That boundary is load-bearing rather than
+// tidy: this transform runs in the normalize cluster ahead of convertWidgets, so an
+// amp-{platform} element handled here would rewrite the markup before the platform's own
+// selector ever sees it, and shadow the resolver silently.
+export const convertAmpNativeElements: DomTransform = () => (document) => {
   for (const conversion of conversions) {
     for (const element of document.querySelectorAll(conversion.selector)) {
       const replacement = document.createElement(conversion.target)

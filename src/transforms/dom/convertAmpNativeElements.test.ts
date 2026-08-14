@@ -2,11 +2,11 @@ import { expect, it } from 'bun:test'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
-import { convertAmpElements } from './convertAmpElements.js'
+import { convertAmpNativeElements } from './convertAmpNativeElements.js'
 
-describeForEachParser('convertAmpElements', (parseHtml) => {
+describeForEachParser('convertAmpNativeElements', (parseHtml) => {
   const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [convertAmpElements(context)])
+    return applyDomTransforms(parseHtml(html), [convertAmpNativeElements(context)])
   }
 
   it('should convert amp-img into img carrying its image attributes', async () => {
@@ -89,28 +89,16 @@ describeForEachParser('convertAmpElements', (parseHtml) => {
     expect(result).not.toContain('<amp-iframe')
   })
 
-  it('should convert amp-youtube into a youtube embed iframe', async () => {
-    const value = '<amp-youtube data-videoid="dQw4w9WgXcQ" width="480" height="270"></amp-youtube>'
-    const result = await transform(value)
+  // Platform-named AMP elements belong to their own resolvers, which run later in the widget
+  // pass. Claiming one here would rewrite the markup before that selector ever sees it.
+  it('should leave platform-named AMP elements alone', async () => {
+    const value = html`
+      <amp-youtube data-videoid="dQw4w9WgXcQ" width="480" height="270"></amp-youtube>
+      <amp-jwplayer data-media-id="BZc9ChcP" data-player-id="uoIbMPm3"></amp-jwplayer>
+      <amp-gist data-gistid="b9bb35bc68df68259af94430f012425f"></amp-gist>
+    `
 
-    expect(result).toContain('<iframe')
-    expect(result).toContain('src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
-  })
-
-  // The id is whatever the publisher wrote. A broken one yields a broken embed, which is what
-  // the source said, and matches every other transform that builds one of these urls.
-  it('should build the embed from a malformed videoid as it stands', async () => {
-    const value = '<amp-youtube data-videoid="../../evil"></amp-youtube>'
-    const result = await transform(value)
-
-    expect(result).toContain('src="https://www.youtube.com/embed/../../evil"')
-  })
-
-  it('should leave amp-youtube without a videoid untouched', async () => {
-    const value = '<amp-youtube></amp-youtube>'
-    const result = await transform(value)
-
-    expect(result).not.toContain('<iframe')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave amp-story alone', async () => {
