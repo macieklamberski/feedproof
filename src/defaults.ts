@@ -46,6 +46,7 @@ import { firesideEmbedResolver } from './embeds/fireside.js'
 import { flourishEmbedResolver } from './embeds/flourish.js'
 import { geniallyEmbedResolver } from './embeds/genially.js'
 import { imgurBlockquoteEmbedResolver, imgurIframeEmbedResolver } from './embeds/imgur.js'
+import { issuuIframeEmbedResolver, issuuWidgetEmbedResolver } from './embeds/issuu.js'
 import { ivooxEmbedResolver } from './embeds/ivoox.js'
 import {
   jwplayerAmpEmbedResolver,
@@ -368,6 +369,8 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   dailymotionEmbedResolver,
   imgurBlockquoteEmbedResolver,
   imgurIframeEmbedResolver,
+  issuuWidgetEmbedResolver,
+  issuuIframeEmbedResolver,
   ivooxEmbedResolver,
   jwplayerIframeEmbedResolver,
   jwplayerScriptEmbedResolver,
