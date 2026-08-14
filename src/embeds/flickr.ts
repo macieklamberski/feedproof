@@ -23,6 +23,7 @@ const legacyPlayerPathRegex = /^\/slideshow\/index\.gne$/i
 // feeds, plus 6 that name the owner only in `user_id`.
 const setPathRegex = /^\/photos\/([\w.@-]+)\/sets\/(\d+)/
 const streamPathRegex = /^\/photos\/([\w.@-]+)\/show\/?$/
+const groupPathRegex = /^\/groups\/(\d+@N\d\d)\/pool\/show\/?$/
 
 const safeSetIdRegex = /^\d+$/
 
@@ -30,9 +31,14 @@ const safeSetIdRegex = /^\d+$/
 // leading class excludes a dots-only segment, so `..` cannot reach a minted path.
 const safeOwnerRegex = /^[\w-][\w.-]*(?:@N\d\d)?$/
 
+// A group only resolves by its NSID: the player answers 200 for `groups/{nsid}` and 404 for a
+// group's path alias (both checked live 2026-08-14), and the corpus spells `group_id` as an
+// NSID in every non-mangled occurrence, 23 feeds.
+const safeGroupRegex = /^\d+@N\d\d$/
+
 // What a carrier names, whichever carrier and whichever spelling: an album needs its set, a
-// photostream only its owner.
-type FlickrSubject = { setId?: string; owner?: string }
+// group pool its NSID, a photostream only its owner.
+type FlickrSubject = { setId?: string; owner?: string; groupId?: string }
 
 // Flickr's own embed script builds a frameless iframe and writes one of these endpoints into it,
 // so what it fetches is exactly what an `src` can carry. Both discriminate rather than shelling:
@@ -44,6 +50,10 @@ const composeAlbumPlayer = (setId: string): string => {
 
 const composeStreamPlayer = (owner: string): string => {
   return `https://embedr.flickr.com/photostreams/${owner}`
+}
+
+const composeGroupPlayer = (groupId: string): string => {
+  return `https://embedr.flickr.com/groups/${groupId}`
 }
 
 // Flickr's short urls are the set id in base58, and `flic.kr/s/{code}` goes through the
@@ -82,26 +92,34 @@ const readFlashSubject = (element: Element): FlickrSubject => {
     return { owner: set[1], setId: set[2] }
   }
 
+  const group = page.match(groupPathRegex)
+
+  if (group) {
+    return { groupId: group[1] }
+  }
+
   const stream = page.match(streamPathRegex)
 
   return { owner: stream?.[1] ?? config.get('user_id') ?? undefined }
 }
 
 // The iframe carrier names its subject in its own query. Of the 112 corpus feeds carrying it,
-// 94 name a set and 90 name a user; the 6 naming only a group stay unresolved, since the group
-// player answers 404. A set is preferred where both appear, being the narrower of the two.
+// 94 name a set and 90 name a user. A set is preferred where several appear, being the
+// narrowest of the three.
 const readLegacySubject = (parsed: URL): FlickrSubject => {
   return {
     setId: parsed.searchParams.get('set_id') ?? undefined,
     owner: parsed.searchParams.get('user_id') ?? undefined,
+    groupId: parsed.searchParams.get('group_id') ?? undefined,
   }
 }
 
-// One composer for both carriers. The id takes one of three shapes, and the segment before the
+// One composer for both carriers. The id takes one of four shapes, and the segment before the
 // slash is what tells them apart: `{owner}/{setId}` when the markup names both, which is what
 // the album's key-free oEmbed needs (it answers `flickr_type: album` with a title, an author
 // and a thumbnail, checked 2026-08-14); `photosets/{setId}` when the owner is absent, which
-// still addresses the player but not oEmbed; and `photostreams/{owner}` for a stream.
+// still addresses the player but not oEmbed; `groups/{nsid}` for a group pool; and
+// `photostreams/{owner}` for a stream.
 const composeEmbed = (subject: FlickrSubject): EmbedResolverResult | undefined => {
   const owner = subject.owner && safeOwnerRegex.test(subject.owner) ? subject.owner : undefined
 
@@ -121,6 +139,15 @@ const composeEmbed = (subject: FlickrSubject): EmbedResolverResult | undefined =
           src: composeAlbumPlayer(subject.setId),
           url: composeShortAlbumUrl(subject.setId),
         }
+  }
+
+  if (subject.groupId && safeGroupRegex.test(subject.groupId)) {
+    return {
+      provider: 'flickr',
+      id: `groups/${subject.groupId}`,
+      src: composeGroupPlayer(subject.groupId),
+      url: `https://www.flickr.com/groups/${subject.groupId}/`,
+    }
   }
 
   if (owner) {

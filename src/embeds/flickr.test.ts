@@ -106,6 +106,27 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should map a group pool page path onto the group player', async () => {
+      const value = html`
+        <embed
+          src="https://www.flickr.com/apps/slideshow/show.swf?v=143567"
+          flashvars="offsite=true&amp;page_show_url=%2Fgroups%2F866523%40N20%2Fpool%2Fshow%2F"
+          width="400"
+          height="300"
+        />
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: 'groups/866523@N20',
+        src: 'https://embedr.flickr.com/groups/866523@N20?width=400&height=300',
+        url: 'https://www.flickr.com/groups/866523@N20/',
+        width: 400,
+        height: 300,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should fall back to the user the config names when it carries no page path', async () => {
       const value = html`
         <embed
@@ -183,10 +204,29 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // The group player answers 404 on embedr, so a group slideshow has no working target.
-    it('should return undefined for a group slideshow', async () => {
+    // A group only resolves by its NSID: the player 404s on a group's path alias but answers
+    // the NSID with the whole pool slideshow, and the corpus spells group_id as an NSID.
+    it('should map a group slideshow onto the group player', async () => {
       const value = html`
-        <iframe src="https://www.flickr.com/slideShow/index.gne?group_id=797770@N21&amp;user_id=&amp;set_id="></iframe>
+        <iframe src="https://www.flickr.com/slideShow/index.gne?group_id=797770@N21&amp;user_id=&amp;set_id=" width="500" height="500"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: 'groups/797770@N21',
+        src: 'https://embedr.flickr.com/groups/797770@N21?width=500&height=500',
+        url: 'https://www.flickr.com/groups/797770@N21/',
+        width: 500,
+        height: 500,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // `group_id=197` appears in the corpus: a mangled value that is not an NSID and would mint
+    // a 404, so it stays unresolved.
+    it('should return undefined for a group id that is not an nsid', async () => {
+      const value = html`
+        <iframe src="https://www.flickr.com/slideshow/index.gne?group_id=197"></iframe>
       `
 
       expect(await extract(value)).toBeUndefined()
