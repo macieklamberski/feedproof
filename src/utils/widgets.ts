@@ -57,9 +57,8 @@ export type ResolverOptions = {
 }
 
 // A resolver whose selector names the platform's own markup. The size the carrier declares is
-// applied for it, the same way the url-keyed factory does, so neither kind has to remember.
-// A resolver that has measured the platform and means to overrule the markup declares the
-// object literally instead and returns its own size.
+// applied for it, the same way the url-keyed factory does, so neither kind has to remember, and
+// `declaredSize: false` is how one that knows better opts out.
 export const createMarkupEmbedResolver = (
   selector: string,
   extract: (element: Element) => EmbedResolverResult | undefined,
@@ -127,7 +126,7 @@ export const getEmbedDimensions = (element: Element): { width?: number; height?:
 // Resolvers that need nothing but the url ignore the second argument.
 export const createUrlEmbedResolver = (
   hosts: Array<string>,
-  resolveEmbed: (url: string, element: Element) => EmbedResolverResult | undefined,
+  extract: (url: string, element: Element) => EmbedResolverResult | undefined,
   { declaredSize = true }: ResolverOptions = {},
 ): EmbedResolver => {
   return {
@@ -139,7 +138,7 @@ export const createUrlEmbedResolver = (
         return
       }
 
-      const result = resolveEmbed(src, element)
+      const result = extract(src, element)
 
       return declaredSize ? withDeclaredSize(element, result) : result
     },
