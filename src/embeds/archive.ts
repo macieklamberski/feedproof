@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr } from '../utils/dom.js'
+import { attr, flashVars } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen.
@@ -77,19 +77,6 @@ export const archiveIframeEmbedResolver = createUrlEmbedResolver(archiveHosts, a
 const flashPlayerPathRegex = /^\/+flow\//
 const downloadIdentifierRegex = /archive\.org\/download\/([^/'"?&]+)\//
 
-const readPlayerConfig = (element: Element): string | undefined => {
-  const own = attr(element, 'flashvars')
-
-  if (own) {
-    return own
-  }
-
-  const params = Array.from(element.parentElement?.querySelectorAll('param') ?? [])
-  const flashVars = params.find((param) => attr(param, 'name')?.toLowerCase() === 'flashvars')
-
-  return attr(flashVars, 'value')
-}
-
 export const archiveFlashResolveEmbed = (
   src: string,
   element: Element,
@@ -100,7 +87,7 @@ export const archiveFlashResolveEmbed = (
     return
   }
 
-  const config = readPlayerConfig(element) ?? parsed.searchParams.get('config')
+  const config = flashVars(element) ?? parsed.searchParams.get('config')
   const identifier = config?.match(downloadIdentifierRegex)?.[1]
 
   if (!identifier || !safeIdentifierRegex.test(identifier)) {
