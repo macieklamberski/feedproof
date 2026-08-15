@@ -327,7 +327,8 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   it('should resolve a spotify-wrap iframe into a spotify embed placeholder', async () => {
-    // The url-keyed spotify resolver claims the iframe; its declared height wins.
+    // The url-keyed spotify resolver claims the iframe and reads the card Substack hangs on it;
+    // the declared height wins. The description holds the type label, which the id already says.
     const episodeAttrs = substackAttrs({
       image: 'https://i.scdn.co/image/ab6765630000ba8a0000000000000000000000ff',
       title: 'Episode 42: Field Recording',
@@ -355,6 +356,9 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-id="episode/aB3dEfGhIjKlMnOpQrStUv"
         data-embed-src="https://open.spotify.com/embed/episode/aB3dEfGhIjKlMnOpQrStUv"
         data-embed-url="https://open.spotify.com/episode/aB3dEfGhIjKlMnOpQrStUv"
+        data-embed-title="Episode 42: Field Recording"
+        data-embed-author="Casey Host"
+        data-embed-thumbnail="https://i.scdn.co/image/ab6765630000ba8a0000000000000000000000ff"
         data-embed-height="232"
       >
         <a

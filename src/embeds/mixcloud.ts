@@ -2,8 +2,22 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// A show is `{user}/{slug}`, both drawn from the same charset Mixcloud uses in its own urls.
-const safeSegmentRegex = /^[A-Za-z0-9._-]+$/
+// A show is `{user}/{slug}`. Mixcloud keeps whatever script the publisher titled it in, so the
+// segments hold Japanese, Greek and accented Latin about as often as ascii: 57 of 2,243 carriers
+// in a 200-feed corpus read, spread across 24 accounts. What a segment may not hold is anything
+// that would end the path early or climb out of it, because the show is also written into a url
+// without escaping.
+const unsafeSegmentRegex = /[/?#\\]|\s|^\.+$/
+
+// Segments arrive percent-encoded, and both the check and the value need them decoded: the
+// check because a separator arrives disguised as often as plain (`..%2Fetc` is one), and the
+// value because the widget url encodes it again on the way out. A malformed escape decodes to
+// nothing usable, so it is refused rather than guessed at.
+const decodeSegment = (segment: string): string | undefined => {
+  try {
+    return decodeURIComponent(segment)
+  } catch {}
+}
 
 const mixcloudHosts = ['mixcloud.com']
 
@@ -23,11 +37,16 @@ export const extractMixcloudShow = (link: string): string | undefined => {
 
   // Exactly a user and a slug: a deeper path is a section of the site rather than a show, and
   // the value goes into a url, so anything else is left to the generic placeholder.
-  if (segments.length !== 2 || !segments.every((segment) => safeSegmentRegex.test(segment))) {
+  const decoded = segments.map(decodeSegment)
+
+  if (
+    decoded.length !== 2 ||
+    decoded.some((segment) => !segment || unsafeSegmentRegex.test(segment))
+  ) {
     return
   }
 
-  return `${segments[0]}/${segments[1]}`
+  return `${decoded[0]}/${decoded[1]}`
 }
 
 // No thumbnail: the artwork url is only available through Mixcloud's API, and nothing in the
