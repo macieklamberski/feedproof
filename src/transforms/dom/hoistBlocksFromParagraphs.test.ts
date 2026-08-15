@@ -42,7 +42,12 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
     })
 
     it('should carry the paragraph attributes onto both halves', async () => {
-      const value = '<p dir="rtl" class="lead">Before <i class="marker">Block</i> after</p>'
+      const value = html`
+        <p
+          dir="rtl"
+          class="lead"
+        >Before <i class="marker">Block</i> after</p>
+      `
       const expected = html`
         <p dir="rtl" class="lead">Before </p>
         <div data-block="">Block</div>

@@ -73,7 +73,12 @@ describeForEachParser('facebookWidgetEmbedResolver', (parseHtml) => {
 
     // The mobile app hands out fb.watch links and publishers paste them into the widget.
     it('should mint the plugin url from an fb.watch short link', async () => {
-      const value = '<div class="fb-video" data-href="https://fb.watch/abcDEF123/"></div>'
+      const value = html`
+        <div
+          class="fb-video"
+          data-href="https://fb.watch/abcDEF123/"
+        ></div>
+      `
       const expected: EmbedResolverResult = {
         provider: 'facebook',
         id: 'https://fb.watch/abcDEF123/',
@@ -139,19 +144,34 @@ describeForEachParser('facebookWidgetEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined for an empty data-href', async () => {
-      const value = '<div class="fb-post" data-href=""></div>'
+      const value = html`
+        <div
+          class="fb-post"
+          data-href=""
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should not match a post div without the data-href attribute', async () => {
-      const value = '<div class="fb-post" data-width="466"></div>'
+      const value = html`
+        <div
+          class="fb-post"
+          data-width="466"
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined for a non-facebook href', async () => {
-      const value = '<div class="fb-post" data-href="https://evil.test/facebook.com/post"></div>'
+      const value = html`
+        <div
+          class="fb-post"
+          data-href="https://evil.test/facebook.com/post"
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -170,13 +190,23 @@ describeForEachParser('facebookWidgetEmbedResolver', (parseHtml) => {
     // The page-promo widgets are chrome rather than article content, the same family as the
     // share buttons, so the selector deliberately stops short of them.
     it('should not match a fb-like button', async () => {
-      const value = '<div class="fb-like" data-href="https://www.facebook.com/PageName"></div>'
+      const value = html`
+        <div
+          class="fb-like"
+          data-href="https://www.facebook.com/PageName"
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should not match a fb-page timeline', async () => {
-      const value = '<div class="fb-page" data-href="https://www.facebook.com/PageName"></div>'
+      const value = html`
+        <div
+          class="fb-page"
+          data-href="https://www.facebook.com/PageName"
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })

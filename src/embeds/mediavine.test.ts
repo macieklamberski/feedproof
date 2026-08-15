@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, resolverExtractor } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { mediavineEmbedResolver } from './mediavine.js'
 
@@ -8,8 +8,14 @@ describeForEachParser('mediavineEmbedResolver', (parseHtml) => {
 
   describe('happy paths', () => {
     it('should mint the embed player url from the video id', async () => {
-      const value =
-        '<div class="mv-video-target mv-video-id-t9z9zameefjmqvtghsvu" data-video-id="t9z9zameefjmqvtghsvu" data-ratio="16:9" data-volume="70"></div>'
+      const value = html`
+        <div
+          class="mv-video-target mv-video-id-t9z9zameefjmqvtghsvu"
+          data-video-id="t9z9zameefjmqvtghsvu"
+          data-ratio="16:9"
+          data-volume="70"
+        ></div>
+      `
       const expected: EmbedResolverResult = {
         provider: 'mediavine',
         id: 't9z9zameefjmqvtghsvu',
@@ -24,8 +30,13 @@ describeForEachParser('mediavineEmbedResolver', (parseHtml) => {
 
   describe('edge cases', () => {
     it('should omit the dimensions for a malformed ratio', async () => {
-      const value =
-        '<div class="mv-video-target mv-video-id-t9z9zameefjmqvtghsvu" data-video-id="t9z9zameefjmqvtghsvu" data-ratio="wide"></div>'
+      const value = html`
+        <div
+          class="mv-video-target mv-video-id-t9z9zameefjmqvtghsvu"
+          data-video-id="t9z9zameefjmqvtghsvu"
+          data-ratio="wide"
+        ></div>
+      `
       const expected: EmbedResolverResult = {
         provider: 'mediavine',
         id: 't9z9zameefjmqvtghsvu',
@@ -38,13 +49,23 @@ describeForEachParser('mediavineEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined for an empty video id', async () => {
-      const value = '<div class="mv-video-target mv-video-id-" data-video-id=""></div>'
+      const value = html`
+        <div
+          class="mv-video-target mv-video-id-"
+          data-video-id=""
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should not match a target div without the video id attribute', async () => {
-      const value = '<div class="mv-video-target" data-ratio="16:9"></div>'
+      const value = html`
+        <div
+          class="mv-video-target"
+          data-ratio="16:9"
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
