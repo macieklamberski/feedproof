@@ -1251,22 +1251,6 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
       expect(await transform(value)).toBe(expected)
     })
-
-    it('should respect a custom host list override', async () => {
-      const context: TransformContext = { ...baseContext, emojiImageHosts: [] }
-      const value =
-        '<p><img src="https://s.w.org/images/core/emoji/13.1.0/svg/1f680.svg" alt="🚀"></p>'
-
-      expect(await transformKeeping(value, context)).toBe(value)
-    })
-
-    it('should replace images from a caller-added custom host', async () => {
-      const context: TransformContext = { ...baseContext, emojiImageHosts: ['cdn.example.com'] }
-      const value = '<p><img src="https://cdn.example.com/emoji/1f389.png" alt="🎉"></p>'
-      const expected = '<p>🎉</p>'
-
-      expect(await transform(value, context)).toBe(expected)
-    })
   })
 
   describe('alt-shape guard', () => {

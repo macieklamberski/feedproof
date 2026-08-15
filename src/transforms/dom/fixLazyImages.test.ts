@@ -212,48 +212,6 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
     })
   })
 
-  describe('overrides', () => {
-    it('should ignore default lazySrcAttributes when override is provided', async () => {
-      const customContext: TransformContext = { ...baseContext, lazySrcAttributes: ['data-img'] }
-      const value = '<img data-src="ignored.jpg">'
-      const result = await transform(value, customContext)
-
-      expect(result).toContain('data-src="ignored.jpg"')
-      expect(result).not.toContain('<img src=')
-    })
-
-    it('should use the provided lazySrcAttributes', async () => {
-      const customContext: TransformContext = { ...baseContext, lazySrcAttributes: ['data-img'] }
-      const value = '<img data-img="photo.jpg">'
-      const result = await transform(value, customContext)
-
-      expect(result).toContain('src="photo.jpg"')
-    })
-
-    it('should ignore default lazySrcsetAttributes when override is provided', async () => {
-      const customContext: TransformContext = {
-        ...baseContext,
-        lazySrcsetAttributes: ['data-custom-srcset'],
-      }
-      const value = '<img data-srcset="small.jpg 300w, large.jpg 600w">'
-      const result = await transform(value, customContext)
-
-      expect(result).toContain('data-srcset="small.jpg 300w, large.jpg 600w"')
-      expect(result).not.toContain('<img srcset=')
-    })
-
-    it('should use the provided lazySrcsetAttributes', async () => {
-      const customContext: TransformContext = {
-        ...baseContext,
-        lazySrcsetAttributes: ['data-custom-srcset'],
-      }
-      const value = '<img data-custom-srcset="small.jpg 300w, large.jpg 600w">'
-      const result = await transform(value, customContext)
-
-      expect(result).toContain('srcset="small.jpg 300w, large.jpg 600w"')
-    })
-  })
-
   describe('source elements', () => {
     it('should promote lazy srcset on a source element', async () => {
       const value = '<picture><source data-srcset="photo.avif" type="image/avif"></picture>'

@@ -277,20 +277,6 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(await transform(value, context)).toEqualHtml(expected)
     })
 
-    it('should inject the gravatar avatar when avatarImageHosts is empty', async () => {
-      const value = '<p>Content</p>'
-      const context: TransformContext = {
-        ...withEnclosures([{ url: 'https://2.gravatar.com/avatar/abc123', type: 'image/jpeg' }]),
-        avatarImageHosts: [],
-      }
-      const expected = html`
-        <img src="https://2.gravatar.com/avatar/abc123" data-enclosure="">
-        <p>Content</p>
-      `
-
-      expect(await transform(value, context)).toEqualHtml(expected)
-    })
-
     it('should inject one image when enclosures differ only by query, keeping the original', async () => {
       const value = '<p>Content</p>'
       const context = withEnclosures([

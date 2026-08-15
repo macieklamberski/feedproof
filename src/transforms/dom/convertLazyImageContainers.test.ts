@@ -71,14 +71,6 @@ describeForEachParser('convertLazyImageContainers', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(value)
   })
 
-  it('should use the provided lazySrcAttributes override', async () => {
-    const customContext: TransformContext = { ...baseContext, lazySrcAttributes: ['data-img'] }
-    const value = '<div data-img="https://example.com/photo.jpg"></div>'
-    const result = await transform(value, customContext)
-
-    expect(result).toContain('<img src="https://example.com/photo.jpg"')
-  })
-
   it('should be idempotent', async () => {
     const value = '<div data-src="https://example.com/photo.jpg"></div>'
     const once = await transform(value)

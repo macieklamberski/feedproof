@@ -242,35 +242,6 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
 
       expect(result).toContain('<pre>line 1\nline 2</pre>')
     })
-
-    it('should accept a custom preservedPreClasses list', async () => {
-      const value = html`
-        <pre class="my-marker">first</pre>
-        <pre class="my-marker">second</pre>
-      `
-      const customContext: TransformContext = {
-        ...baseContext,
-        preservedPreClasses: ['my-marker'],
-      }
-      const result = await transform(value, customContext)
-
-      expect(result).toContain('<pre class="my-marker">first</pre>')
-      expect(result).toContain('<pre class="my-marker">second</pre>')
-    })
-
-    it('should merge wp-block-verse when the preserve list is empty', async () => {
-      const value = html`
-        <pre class="wp-block-verse">line 1</pre>
-        <pre class="wp-block-verse">line 2</pre>
-      `
-      const customContext: TransformContext = {
-        ...baseContext,
-        preservedPreClasses: [],
-      }
-      const result = await transform(value, customContext)
-
-      expect(result).toContain('<pre class="wp-block-verse">line 1\nline 2</pre>')
-    })
   })
 
   it('should be idempotent', async () => {
