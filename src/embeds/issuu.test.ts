@@ -269,6 +269,62 @@ describeForEachParser('issuuIframeEmbedResolver', (parseHtml) => {
     })
   })
 
+  describe('the publication name the snippet states', () => {
+    it('should carry the title across from a query-form iframe', async () => {
+      const value = html`
+        <iframe
+          title="The Beast - July 2026"
+          src="https://e.issuu.com/embed.html?d=the_beast_-_july_2026&u=thebeastmag"
+          allowfullscreen="true"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'issuu',
+        id: 'thebeastmag/the_beast_-_july_2026',
+        src: 'https://e.issuu.com/embed.html?u=thebeastmag&d=the_beast_-_july_2026',
+        url: 'https://issuu.com/thebeastmag/docs/the_beast_-_july_2026',
+        title: 'The Beast - July 2026',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should carry the title across from a hash-form iframe', async () => {
+      const value = html`
+        <iframe
+          title="Vermont Cynic Drug Issue 2026"
+          src="https://e.issuu.com/embed.html#1016421/47623369"
+          frameborder="0"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'issuu',
+        id: '1016421/47623369',
+        src: 'https://e.issuu.com/embed.html#1016421/47623369',
+        title: 'Vermont Cynic Drug Issue 2026',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should state no title when the attribute holds only whitespace', async () => {
+      const value = html`
+        <iframe
+          title="   "
+          src="https://e.issuu.com/embed.html?d=the_beast_-_july_2026&u=thebeastmag"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'issuu',
+        id: 'thebeastmag/the_beast_-_july_2026',
+        src: 'https://e.issuu.com/embed.html?u=thebeastmag&d=the_beast_-_july_2026',
+        url: 'https://issuu.com/thebeastmag/docs/the_beast_-_july_2026',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
   describe('deliberate non-resolutions', () => {
     // 364 corpus feeds carry the Flash viewer and 353 of them have no companion iframe, so those
     // documents are lost. They stay lost: the `documentId` flashvar is a third id space, and
