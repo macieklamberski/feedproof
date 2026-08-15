@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { flourishIframeEmbedResolver, flourishWidgetEmbedResolver } from './flourish.js'
+import {
+  flourishIframeEmbedResolver,
+  flourishResolveEmbed,
+  flourishWidgetEmbedResolver,
+} from './flourish.js'
 
 describeForEachParser('flourishWidgetEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, flourishWidgetEmbedResolver)
@@ -245,5 +249,31 @@ describeForEachParser('flourishIframeEmbedResolver url reading', (parseHtml) => 
     const value = html`<iframe src="https://evil.test/visualisation/29132382/embed"></iframe>`
 
     expect(await extract(value)).toBeUndefined()
+  })
+})
+
+describe('flourishResolveEmbed', () => {
+  it('should resolve a player url', () => {
+    const value = 'https://flo.uri.sh/visualisation/29132382/embed'
+    const expected: EmbedResolverResult = {
+      provider: 'flourish',
+      id: 'visualisation/29132382',
+      src: 'https://flo.uri.sh/visualisation/29132382/embed',
+      url: 'https://public.flourish.studio/visualisation/29132382/',
+    }
+
+    expect(flourishResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should ignore a foreign host carrying the path', () => {
+    const value = 'https://evil.test/visualisation/29132382/embed'
+
+    expect(flourishResolveEmbed(value)).toBeUndefined()
+  })
+
+  it('should ignore a string that is not a url', () => {
+    const value = 'visualisation/29132382/embed'
+
+    expect(flourishResolveEmbed(value)).toBeUndefined()
   })
 })
