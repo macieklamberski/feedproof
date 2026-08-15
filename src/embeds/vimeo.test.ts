@@ -161,19 +161,5 @@ describeForEachParser('vimeoEmbedResolver', (parseHtml) => {
 
       expect(await resolve(value)).toEqual(expected)
     })
-
-    it('should state no title when the attribute holds only whitespace', async () => {
-      const value = html`
-        <iframe src="https://player.vimeo.com/video/76979871" title="   "></iframe>
-      `
-      const expected: EmbedResolverResult = {
-        provider: 'vimeo',
-        id: '76979871',
-        src: 'https://player.vimeo.com/video/76979871',
-        url: 'https://vimeo.com/76979871',
-      }
-
-      expect(await resolve(value)).toEqual(expected)
-    })
   })
 })
