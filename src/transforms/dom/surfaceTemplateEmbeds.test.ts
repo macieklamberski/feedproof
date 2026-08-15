@@ -32,10 +32,9 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
         </div>
       </template>
     `
-    const result = await transform(value)
+    const expected = html`<div data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"></div>`
 
-    expect(result).toContain('data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
-    expect(result).not.toContain('<template')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a template with no embed alone', async () => {
@@ -66,16 +65,25 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
         data-id="yEB6Q3wTKcw"
       ><img class="hd-bcve-thumbnail" src="https://img.youtube.com/vi/yEB6Q3wTKcw/maxresdefault.jpg"></figure><template id="hd-bcve-embed-html-yEB6Q3wTKcw"><figure class="wp-block-embed"><div class="wp-block-embed__wrapper"><iframe src="https://www.youtube.com/embed/yEB6Q3wTKcw?feature=oembed"></iframe></div></figure></template>
     `
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://moby.com',
-      heuristics: true,
-    })
+    const expected = html`
+      <figure class="wp-block-embed">
+        <div
+          data-embed-src="https://www.youtube.com/embed/yEB6Q3wTKcw"
+          data-embed-provider="youtube"
+          data-embed-id="yEB6Q3wTKcw"
+          data-embed-url="https://www.youtube.com/watch?v=yEB6Q3wTKcw"
+          data-embed-thumbnail="https://img.youtube.com/vi/yEB6Q3wTKcw/maxresdefault.jpg"
+        ></div>
+      </figure>
+    `
 
-    expect(result).not.toContain('<img')
-    expect(result).not.toContain('<template')
-    expect(result).toContain('data-embed-provider="youtube"')
-    expect(result).toContain('data-embed-thumbnail')
+    expect(
+      await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://moby.com',
+        heuristics: true,
+      }),
+    ).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {

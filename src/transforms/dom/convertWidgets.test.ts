@@ -34,17 +34,18 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       <p>Text</p>
       <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
     `
-    const result = await transform(value)
+    const expected = html`
+      <p>Text</p>
+      <div
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-src=')
-    expect(result).toContain('data-embed-provider="youtube"')
-    expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
-    expect(result).toContain('data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
-    expect(result).toContain('data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
-    expect(result).toContain(
-      'data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"',
-    )
-    expect(result).not.toContain('<iframe')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should prefer a carried data-thumbnail over the resolver thumbnail', async () => {
@@ -54,30 +55,52 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         data-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
       ></iframe>
     `
-    const result = await transform(value)
+    const expected = html`
+      <div
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+      ></div>
+    `
 
-    expect(result).toContain(
-      'data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"',
-    )
-    expect(result).not.toContain('hqdefault')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should preserve iframe dimensions as data attributes', async () => {
     const value =
       '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" width="640" height="360"></iframe>'
-    const result = await transform(value)
+    const expected = html`
+      <div
+        data-embed-width="640"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-height="360"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-width="640"')
-    expect(result).toContain('data-embed-height="360"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should recover aspect from a responsive wrapper when the iframe is unsized', async () => {
     const value =
       '<div style="padding-bottom:56.25%"><iframe src="https://example.com/embed/xyz"></iframe></div>'
     const result = await transform(value, withNoResolvers)
+    const expected = html`
+      <div style="padding-bottom:56.25%">
+        <div
+          data-embed-width="100"
+          data-embed-src="https://example.com/embed/xyz"
+          data-embed-height="56"
+        ></div>
+      </div>
+    `
 
-    expect(result).toContain('data-embed-width="100"')
-    expect(result).toContain('data-embed-height="56"')
+    expect(result).toEqualHtml(expected)
   })
 
   it('should recover aspect from a wp-embed-aspect class on an ancestor', async () => {
@@ -86,17 +109,34 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     const result = await transform(value, withNoResolvers)
 
     // 16:9 encoded as a 100×N ratio (100 / (16/9) = 56.25 -> 56).
-    expect(result).toContain('data-embed-width="100"')
-    expect(result).toContain('data-embed-height="56"')
+    const expected = html`
+      <figure class="wp-block-embed wp-embed-aspect-16-9">
+        <div class="wp-block-embed__wrapper">
+          <div
+            data-embed-width="100"
+            data-embed-src="https://example.com/embed/xyz"
+            data-embed-height="56"
+          ></div>
+        </div>
+      </figure>
+    `
+
+    expect(result).toEqualHtml(expected)
   })
 
   it('should not recover aspect from out-of-range wrapper values', async () => {
     const value =
       '<figure class="wp-embed-aspect-0-0"><div style="padding-bottom:0%"><iframe src="https://example.com/embed/xyz"></iframe></div></figure>'
     const result = await transform(value, withNoResolvers)
+    const expected = html`
+      <figure class="wp-embed-aspect-0-0">
+        <div style="padding-bottom:0%">
+          <div data-embed-src="https://example.com/embed/xyz"></div>
+        </div>
+      </figure>
+    `
 
-    expect(result).not.toContain('data-embed-width')
-    expect(result).not.toContain('data-embed-height')
+    expect(result).toEqualHtml(expected)
   })
 
   it('should fall back to resolver metadata dimensions when the iframe has none', async () => {
@@ -149,11 +189,21 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
       <iframe src="https://example.com/player/xyz"></iframe>
     `
-    const result = await transform(value)
+    const expected = html`
+      <div
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+      ></div>
+      <div
+        data-embed-src="https://example.com/player/xyz"
+        data-embed-provider="example"
+      ></div>
+    `
 
-    expect(result).not.toContain('<iframe')
-    expect(result).toContain('data-embed-provider="youtube"')
-    expect(result).toContain('data-embed-provider="example"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should preserve surrounding content when replacing media', async () => {
@@ -162,11 +212,19 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
       <p>After</p>
     `
-    const result = await transform(value)
+    const expected = html`
+      <p>Before</p>
+      <div
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+      ></div>
+      <p>After</p>
+    `
 
-    expect(result).toContain('Before')
-    expect(result).toContain('After')
-    expect(result).toContain('data-embed-src=')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should emit data-embed-title, description, author, avatar and duration when handler returns them', async () => {
@@ -184,13 +242,19 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     }
     const customContext: TransformContext = { ...baseContext, widgetResolvers: [customResolver] }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
-    const result = await transform(value, customContext)
+    const expected = html`
+      <div
+        data-embed-title="Sample title"
+        data-embed-src="https://example.com/player/xyz"
+        data-embed-provider="example"
+        data-embed-duration="125"
+        data-embed-description="Sample description"
+        data-embed-avatar="https://example.com/avatar.jpg"
+        data-embed-author="@user"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-title="Sample title"')
-    expect(result).toContain('data-embed-description="Sample description"')
-    expect(result).toContain('data-embed-author="@user"')
-    expect(result).toContain('data-embed-avatar="https://example.com/avatar.jpg"')
-    expect(result).toContain('data-embed-duration="125"')
+    expect(await transform(value, customContext)).toEqualHtml(expected)
   })
 
   // URL safety is neutralizeUnsafeUrls' job (see its tests); this transform only
@@ -206,27 +270,37 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     }
     const customContext: TransformContext = { ...baseContext, widgetResolvers: [customResolver] }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
-    const result = await transform(value, customContext)
+    const expected = html`
+      <div
+        data-embed-src="https://example.com/player/xyz"
+        data-embed-provider="example"
+        data-embed-avatar="javascript:alert(1)"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-avatar="javascript:alert(1)"')
+    expect(await transform(value, customContext)).toEqualHtml(expected)
   })
 
   it('should wrap unknown iframe as generic placeholder without provider', async () => {
     const value = '<iframe src="https://unknown-site.com/123"></iframe>'
-    const result = await transform(value)
+    const expected = html`
+      <div data-embed-src="https://unknown-site.com/123"></div>
+    `
 
-    expect(result).not.toContain('<iframe')
-    expect(result).toContain('data-embed-src=')
-    expect(result).toContain('data-embed-src="https://unknown-site.com/123"')
-    expect(result).not.toContain('data-embed-provider')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should preserve dimensions when wrapping unknown iframe', async () => {
     const value = '<iframe src="https://unknown-site.com/123" width="640" height="360"></iframe>'
-    const result = await transform(value)
+    const expected = html`
+      <div
+        data-embed-width="640"
+        data-embed-src="https://unknown-site.com/123"
+        data-embed-height="360"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-width="640"')
-    expect(result).toContain('data-embed-height="360"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should wrap every generic iframe when several are adjacent', async () => {
@@ -250,57 +324,49 @@ describeForEachParser('convertWidgets', (parseHtml) => {
 
   it('should skip iframe without src attribute', async () => {
     const value = '<iframe></iframe>'
-    const result = await transform(value)
-
-    expect(result).not.toContain('data-embed')
-    expect(result).toContain('<iframe')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should still wrap unknown iframes when widgetResolvers is empty', async () => {
     const value = '<iframe src="https://unknown-site.com/123"></iframe>'
     const result = await transform(value, withNoResolvers)
+    const expected = html`
+      <div data-embed-src="https://unknown-site.com/123"></div>
+    `
 
-    expect(result).not.toContain('<iframe')
-    expect(result).toContain('data-embed-src=')
-    expect(result).not.toContain('data-embed-provider')
+    expect(result).toEqualHtml(expected)
   })
 
   it('should leave video elements untouched', async () => {
     const value = '<video src="https://example.com/clip.mp4"></video>'
-    const result = await transform(value)
-
-    expect(result).toContain('<video')
-    expect(result).not.toContain('data-embed')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should leave audio elements untouched', async () => {
     const value = '<audio src="https://example.com/episode.mp3"></audio>'
-    const result = await transform(value)
-
-    expect(result).toContain('<audio')
-    expect(result).not.toContain('data-embed')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should skip iframe with malformed src url', async () => {
     const value = '<iframe src="not-a-valid-url"></iframe>'
-    const result = await transform(value)
-
-    expect(result).not.toContain('data-embed')
-    expect(result).toContain('<iframe')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should skip iframe with non-http(s) src', async () => {
     const value = '<iframe src="javascript:alert(1)"></iframe>'
-    const result = await transform(value)
-
-    expect(result).not.toContain('data-embed')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should fall through to next handler when first returns undefined', async () => {
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
-    const result = await transform(value)
+    const expected = html`
+      <div
+        data-embed-src="https://example.com/player/xyz"
+        data-embed-provider="example"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-provider="example"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve YouTube via defaultWidgetResolvers export', async () => {
@@ -309,9 +375,17 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       widgetResolvers: defaultWidgetResolvers,
     }
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
-    const result = await transform(value, customContext)
+    const expected = html`
+      <div
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-provider="youtube"')
+    expect(await transform(value, customContext)).toEqualHtml(expected)
   })
 
   it('should skip resolver-claimed iframe when metadata.src is unsafe', async () => {
@@ -324,10 +398,11 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     }
     const customContext: TransformContext = { ...baseContext, widgetResolvers: [unsafeResolver] }
     const value = '<iframe src="https://example.com/x"></iframe>'
-    const result = await transform(value, customContext)
+    const expected = html`
+      <div data-embed-src="https://example.com/x"></div>
+    `
 
-    expect(result).not.toContain('data-embed-provider="evil"')
-    expect(result).not.toContain('javascript:')
+    expect(await transform(value, customContext)).toEqualHtml(expected)
   })
 
   it('should skip resolver-claimed iframe when metadata.url is unsafe', async () => {
@@ -341,10 +416,11 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     }
     const customContext: TransformContext = { ...baseContext, widgetResolvers: [unsafeResolver] }
     const value = '<iframe src="https://example.com/x"></iframe>'
-    const result = await transform(value, customContext)
+    const expected = html`
+      <div data-embed-src="https://example.com/x"></div>
+    `
 
-    expect(result).not.toContain('data-embed-provider="evil"')
-    expect(result).not.toContain('javascript:')
+    expect(await transform(value, customContext)).toEqualHtml(expected)
   })
 
   it('should let consumer override resolveUrlFn to allow non-default schemes', async () => {
@@ -354,9 +430,11 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       resolveUrlFn: (url) => url,
     }
     const value = '<iframe src="custom-scheme://payload"></iframe>'
-    const result = await transform(value, customContext)
+    const expected = html`
+      <div data-embed-src="custom-scheme://payload"></div>
+    `
 
-    expect(result).toContain('data-embed-src="custom-scheme://payload"')
+    expect(await transform(value, customContext)).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
@@ -373,18 +451,20 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   describe('non-iframe carriers', () => {
     it('should replace an <object data> carrier with a placeholder', async () => {
       const value = '<object data="https://example.com/v/x"></object>'
-      const result = await transform(value, withNoResolvers)
+      const expected = html`
+        <div data-embed-src="https://example.com/v/x"></div>
+      `
 
-      expect(result).toContain('data-embed-src="https://example.com/v/x"')
-      expect(result).not.toContain('<object')
+      expect(await transform(value, withNoResolvers)).toEqualHtml(expected)
     })
 
     it('should replace an <embed src> carrier with a placeholder', async () => {
       const value = '<embed src="https://example.com/e/x">'
-      const result = await transform(value, withNoResolvers)
+      const expected = html`
+        <div data-embed-src="https://example.com/e/x"></div>
+      `
 
-      expect(result).toContain('data-embed-src="https://example.com/e/x"')
-      expect(result).not.toContain('<embed')
+      expect(await transform(value, withNoResolvers)).toEqualHtml(expected)
     })
 
     it('should clean a generic iframe src with the provided cleanUrlFn', async () => {
@@ -393,9 +473,11 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         cleanUrlFn: (url) => url.split('?')[0] ?? url,
       }
       const value = '<iframe src="https://widget.example.com/thing?utm_source=feed"></iframe>'
-      const result = await transform(value, context)
+      const expected = html`
+        <div data-embed-src="https://widget.example.com/thing"></div>
+      `
 
-      expect(result).toContain('data-embed-src="https://widget.example.com/thing"')
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     it('should clean a non-iframe carrier src with the provided cleanUrlFn', async () => {
@@ -404,9 +486,11 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         cleanUrlFn: (url) => url.split('?')[0] ?? url,
       }
       const value = '<object data="https://example.com/v/x?utm_source=feed"></object>'
-      const result = await transform(value, context)
+      const expected = html`
+        <div data-embed-src="https://example.com/v/x"></div>
+      `
 
-      expect(result).toContain('data-embed-src="https://example.com/v/x"')
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     // A resolver that carries its url out of the markup rather than minting it from an id
@@ -426,9 +510,15 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         cleanUrlFn: (url) => url.split('?')[0] ?? url,
       }
       const value = '<iframe src="https://example.com/e/x"></iframe>'
-      const result = await transform(value, context)
+      const expected = html`
+        <div
+          data-embed-url="https://example.com/watch/x"
+          data-embed-src="https://example.com/e/x"
+          data-embed-provider="example"
+        ></div>
+      `
 
-      expect(result).toContain('data-embed-url="https://example.com/watch/x"')
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     it('should leave an empty iframe with no recoverable content', async () => {
@@ -448,10 +538,11 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   describe('dead Flash carriers', () => {
     it('should not frame an <embed> pointing at a .swf', async () => {
       const value = '<embed src="https://example.com/player.swf">'
-      const result = await transform(value, withNoResolvers)
+      const expected = html`
+        <embed src="https://example.com/player.swf"></embed>
+      `
 
-      expect(result).not.toContain('data-embed-src')
-      expect(result).toContain('<embed')
+      expect(await transform(value, withNoResolvers)).toEqualHtml(expected)
     })
 
     it('should leave an object and the fallback it holds untouched', async () => {
@@ -461,17 +552,30 @@ describeForEachParser('convertWidgets', (parseHtml) => {
           <a href="https://example.com/watch/1">Watch the video</a>
         </object>
       `
-      const result = await transform(value, withNoResolvers)
+      const expected = html`
+        <object
+          width="400"
+          height="300"
+          data="https://example.com/player.swf"
+        >
+          <param
+            value="https://example.com/player.swf"
+            name="movie"
+          ></param>
+          <a href="https://example.com/watch/1">Watch the video</a>
+        </object>
+      `
 
-      expect(result).not.toContain('data-embed-src')
-      expect(result).toContain('<a href="https://example.com/watch/1">Watch the video</a>')
+      expect(await transform(value, withNoResolvers)).toEqualHtml(expected)
     })
 
     it('should still frame a carrier whose path only mentions swf outside the extension', async () => {
       const value = '<embed src="https://example.com/swfobject/player.html">'
-      const result = await transform(value, withNoResolvers)
+      const expected = html`
+        <div data-embed-src="https://example.com/swfobject/player.html"></div>
+      `
 
-      expect(result).toContain('data-embed-src="https://example.com/swfobject/player.html"')
+      expect(await transform(value, withNoResolvers)).toEqualHtml(expected)
     })
 
     // The ordering contract with the resolvers: a repairable Flash carrier is claimed before
@@ -488,10 +592,19 @@ describeForEachParser('convertWidgets', (parseHtml) => {
           </object>
         </div>
       `
-      const result = await transform(value, baseContext)
+      const expected = html`
+        <div id="__ss_6435157">
+          <div
+            data-embed-width="425"
+            data-embed-src="https://www.slideshare.net/slideshow/embed_code/6435157"
+            data-embed-provider="slideshare"
+            data-embed-id="6435157"
+            data-embed-height="355"
+          ></div>
+        </div>
+      `
 
-      expect(result).toContain('data-embed-provider="slideshare"')
-      expect(result).not.toContain('.swf')
+      expect(await transform(value, baseContext)).toEqualHtml(expected)
     })
 
     it('should be idempotent', async () => {
@@ -508,21 +621,34 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   describe('provider resolution on non-iframe carriers', () => {
     it('should resolve a provider from an <embed src> carrier', async () => {
       const value = '<embed src="https://www.youtube.com/v/dQw4w9WgXcQ" width="425" height="350">'
-      const result = await transform(value)
+      const expected = html`
+        <div
+          data-embed-width="425"
+          data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+          data-embed-provider="youtube"
+          data-embed-id="dQw4w9WgXcQ"
+          data-embed-height="350"
+        ></div>
+      `
 
-      expect(result).toContain('data-embed-provider="youtube"')
-      expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
-      expect(result).toContain('data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
-      expect(result).not.toContain('<embed')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should resolve a provider from an <object data> carrier', async () => {
       const value = '<object data="https://www.youtube.com/v/dQw4w9WgXcQ"></object>'
-      const result = await transform(value)
+      const expected = html`
+        <div
+          data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+          data-embed-provider="youtube"
+          data-embed-id="dQw4w9WgXcQ"
+        ></div>
+      `
 
-      expect(result).toContain('data-embed-provider="youtube"')
-      expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
-      expect(result).not.toContain('<object')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should emit one placeholder for an <object> wrapping an <embed>', async () => {
@@ -539,10 +665,17 @@ describeForEachParser('convertWidgets', (parseHtml) => {
 
     it('should read the Flash parameter form that carries no question mark', async () => {
       const value = '<embed src="https://www.youtube.com/v/dQw4w9WgXcQ&hl=en_US&fs=1">'
-      const result = await transform(value)
+      const expected = html`
+        <div
+          data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+          data-embed-provider="youtube"
+          data-embed-id="dQw4w9WgXcQ"
+        ></div>
+      `
 
-      expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
-      expect(result).toContain('data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should replace the Flash shell rather than the carrier inside it', async () => {
@@ -553,11 +686,19 @@ describeForEachParser('convertWidgets', (parseHtml) => {
           <embed src="https://www.youtube.com/v/dQw4w9WgXcQ" width="425" height="350" />
         </object>
       `
-      const result = await transform(value)
+      const expected = html`
+        <div
+          data-embed-width="425"
+          data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+          data-embed-provider="youtube"
+          data-embed-id="dQw4w9WgXcQ"
+          data-embed-height="350"
+        ></div>
+      `
 
-      expect(result).toContain('data-embed-provider="youtube"')
-      expect(result).not.toContain('<object')
-      expect(result).not.toContain('<param')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should keep a Flash shell that holds the publisher own fallback', async () => {
@@ -568,19 +709,36 @@ describeForEachParser('convertWidgets', (parseHtml) => {
           <p>Your browser cannot play this video.</p>
         </object>
       `
-      const result = await transform(value)
+      const expected = html`
+        <object
+          width="425"
+          height="350"
+        >
+          <param
+            value="https://www.youtube.com/v/dQw4w9WgXcQ"
+            name="src"
+          ></param>
+          <div
+            data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+            data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+            data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+            data-embed-provider="youtube"
+            data-embed-id="dQw4w9WgXcQ"
+          ></div>
+          <p>Your browser cannot play this video.</p>
+        </object>
+      `
 
-      expect(result).toContain('data-embed-provider="youtube"')
-      expect(result).toContain('<object')
-      expect(result).toContain('Your browser cannot play this video.')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave a non-provider carrier to the generic placeholder', async () => {
       const value = '<embed src="https://example.com/player/embed.html">'
-      const result = await transform(value)
+      const expected = html`
+        <div data-embed-src="https://example.com/player/embed.html"></div>
+      `
 
-      expect(result).toContain('data-embed-src="https://example.com/player/embed.html"')
-      expect(result).not.toContain('data-embed-provider')
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 })
@@ -630,10 +788,21 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       <div class="native-video-embed" data-attrs='{"mediaUploadId":"${uploadId}"}'></div>
       <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
     `
-    const result = await transform(value)
+    const expected = html`
+      <video
+        src="https://api.substack.com/api/v1/video/upload/de58e4a3-5505-45a7-8abc-b46c5c0f6e7a/src"
+        controls=""
+      ></video>
+      <div
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+      ></div>
+    `
 
-    expect(result).toContain(`src="${uploadSrc}"`)
-    expect(result).toContain('data-embed-provider="youtube"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should write a poster onto a video', async () => {
@@ -691,28 +860,36 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
     it('should play an iframe framing a video file as a video element', async () => {
       const value =
         '<iframe src="https://cdn.example.com/clip.mp4" width="640" height="360"></iframe>'
-      const result = await transform(value)
+      const expected = html`
+        <video
+          src="https://cdn.example.com/clip.mp4"
+          controls=""
+        ></video>
+      `
 
-      expect(result).toContain('<video')
-      expect(result).toContain('src="https://cdn.example.com/clip.mp4"')
-      expect(result).not.toContain('data-embed-src')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should play an object framing an audio file as an audio element', async () => {
       const value = '<object data="https://cdn.example.com/ep.mp3"></object>'
-      const result = await transform(value)
+      const expected = html`
+        <audio
+          src="https://cdn.example.com/ep.mp3"
+          controls=""
+        ></audio>
+      `
 
-      expect(result).toContain('<audio')
-      expect(result).not.toContain('data-embed-src')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // A manifest plays natively only in Safari, so it stays an embed placeholder.
     it('should keep a streaming manifest as a placeholder', async () => {
       const value = '<iframe src="https://stream.example.com/live/index.m3u8"></iframe>'
-      const result = await transform(value)
+      const expected = html`
+        <div data-embed-src="https://stream.example.com/live/index.m3u8"></div>
+      `
 
-      expect(result).toContain('data-embed-src')
-      expect(result).not.toContain('<video')
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -804,24 +981,44 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
     const value = '<iframe src="https://post.example/embed/1"></iframe>'
 
     it('should write publisher and date as placeholder attributes', async () => {
-      const result = await transform(value, withPostResolver)
+      const expected = html`
+        <div
+          data-embed-src="https://post.example/embed/1"
+          data-embed-publisher="r/example"
+          data-embed-provider="example"
+          data-embed-date="2018.10.14"
+        ></div>
+      `
 
-      expect(result).toContain('data-embed-publisher="r/example"')
-      expect(result).toContain('data-embed-date="2018.10.14"')
+      expect(await transform(value, withPostResolver)).toEqualHtml(expected)
     })
 
     it('should normalize the date through parseDateFn', async () => {
       const parseDateFn = (raw: string) => raw.replaceAll('.', '-')
-      const result = await transform(value, { ...withPostResolver, parseDateFn })
+      const expected = html`
+        <div
+          data-embed-src="https://post.example/embed/1"
+          data-embed-publisher="r/example"
+          data-embed-provider="example"
+          data-embed-date="2018-10-14"
+        ></div>
+      `
 
-      expect(result).toContain('data-embed-date="2018-10-14"')
+      expect(await transform(value, { ...withPostResolver, parseDateFn })).toEqualHtml(expected)
     })
 
     it('should keep the raw date when parseDateFn returns undefined', async () => {
       const parseDateFn = () => undefined
-      const result = await transform(value, { ...withPostResolver, parseDateFn })
+      const expected = html`
+        <div
+          data-embed-src="https://post.example/embed/1"
+          data-embed-publisher="r/example"
+          data-embed-provider="example"
+          data-embed-date="2018.10.14"
+        ></div>
+      `
 
-      expect(result).toContain('data-embed-date="2018.10.14"')
+      expect(await transform(value, { ...withPostResolver, parseDateFn })).toEqualHtml(expected)
     })
   })
 })

@@ -40,13 +40,19 @@ describeForEachParser('rebuildLyteEmbeds', (parseHtml) => {
 
   it('should produce a youtube placeholder end to end', async () => {
     const value = html`<div id="WYL_dQw4w9WgXcQ" class="lyMe"></div>`
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://example.com',
-    })
+    const expected = html`
+      <div
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-provider="youtube"')
-    expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
+    expect(
+      await transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com' }),
+    ).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {

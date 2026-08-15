@@ -68,14 +68,20 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
       }
       return new Map([['youtube:abc', data]])
     }
-    const result = await transform(value, withFn(fn))
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-title="Sample Title"
+        data-embed-description="Sample description"
+        data-embed-author="channel name"
+        data-embed-publisher="r/example"
+        data-embed-date="2026-08-09"
+        data-embed-duration="125"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-title="Sample Title"')
-    expect(result).toContain('data-embed-description="Sample description"')
-    expect(result).toContain('data-embed-author="channel name"')
-    expect(result).toContain('data-embed-publisher="r/example"')
-    expect(result).toContain('data-embed-date="2026-08-09"')
-    expect(result).toContain('data-embed-duration="125"')
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
   it('should write the enriched date normalized through parseDateFn', async () => {
@@ -86,9 +92,15 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     const parseDateFn = (raw: string) => {
       return raw.replaceAll('.', '-')
     }
-    const result = await transform(value, { ...withFn(fn), parseDateFn })
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-date="2018-10-14"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-date="2018-10-14"')
+    expect(await transform(value, { ...withFn(fn), parseDateFn })).toEqualHtml(expected)
   })
 
   it('should keep the raw enriched date when parseDateFn returns undefined', async () => {
@@ -97,9 +109,15 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
       return new Map([['youtube:abc', { date: 'Jul 14' }]])
     }
     const parseDateFn = () => undefined
-    const result = await transform(value, { ...withFn(fn), parseDateFn })
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-date="Jul 14"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-date="Jul 14"')
+    expect(await transform(value, { ...withFn(fn), parseDateFn })).toEqualHtml(expected)
   })
 
   it('should not overwrite existing data-embed-* attributes', async () => {
@@ -114,10 +132,15 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     const fn: EnrichEmbedFn = () => {
       return new Map([['youtube:abc', { title: 'Enrichment Title' }]])
     }
-    const result = await transform(value, withFn(fn))
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-title="Resolver Title"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-title="Resolver Title"')
-    expect(result).not.toContain('Enrichment Title')
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
   it('should propagate an exception thrown by enrichEmbedFn', async () => {
@@ -137,13 +160,19 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     const fn: EnrichEmbedFn = () => {
       return new Map([['youtube:known', { title: 'Found' }]])
     }
-    const result = await transform(value, withFn(fn))
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="known"
+        data-embed-title="Found"
+      ></div>
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="unknown"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-id="known"')
-    expect(result).toContain('data-embed-id="unknown"')
-    expect(result).toContain('data-embed-title="Found"')
-    const titleMatches = result.match(/data-embed-title=/g)
-    expect(titleMatches).toHaveLength(1)
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
   it('should accept async (Promise-returning) enrichEmbedFn', async () => {
@@ -152,9 +181,15 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
       await new Promise((resolve) => setTimeout(resolve, 1))
       return new Map(embeds.map((e) => [`${e.provider}:${e.id}`, { title: `t-${e.id}` }]))
     }
-    const result = await transform(value, withFn(fn))
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-title="t-abc"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-title="t-abc"')
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {

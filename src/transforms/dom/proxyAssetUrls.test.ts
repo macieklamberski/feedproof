@@ -227,10 +227,8 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
 
   it('should not rewrite data-cite-url (navigation, not asset)', async () => {
     const value = '<div data-cite-url="https://example.com/post"></div>'
-    const result = await transform(value, wrapProxy)
 
-    expect(result).toContain('data-cite-url="https://example.com/post"')
-    expect(result).not.toContain('proxy.example.com')
+    expect(await transform(value, wrapProxy)).toBe(value)
   })
 
   it('should leave attributes unchanged when assetProxyFn returns undefined', async () => {

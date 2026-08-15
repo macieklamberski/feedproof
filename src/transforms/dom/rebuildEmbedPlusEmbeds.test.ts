@@ -63,17 +63,20 @@ describeForEachParser('rebuildEmbedPlusEmbeds', (parseHtml) => {
         </div>
       </div>
     `
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://example.com',
-    })
-
-    expect(result).toContain('data-embed-provider="youtube"')
     // The facade's maxres poster wins over the resolver's hqdefault default.
-    expect(result).toContain(
-      'data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"',
-    )
-    expect(result).not.toContain('epyt-facade')
+    const expected = html`
+      <div
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+      ></div>
+    `
+
+    expect(
+      await transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com' }),
+    ).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {

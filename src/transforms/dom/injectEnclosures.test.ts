@@ -65,8 +65,19 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       withEnclosures([{ url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', medium: 'video' }]),
     )
 
-    expect(result).toContain('data-embed-provider="youtube"')
-    expect(result).toContain('data-embed-thumbnail=')
+    const expected = html`
+      <div
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-enclosure=""
+      ></div>
+      <p>Episode notes</p>
+    `
+
+    expect(result).toEqualHtml(expected)
   })
 
   it('should embed a player URL even when no resolver claims it', async () => {
@@ -82,8 +93,16 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       ]),
     )
 
-    expect(result).toContain('data-embed-src="https://player.vimeo.com/video/76979871"')
-    expect(result).toContain('data-embed-thumbnail="https://i.vimeocdn.com/video/76979871.jpg"')
+    const expected = html`
+      <div
+        data-embed-src="https://player.vimeo.com/video/76979871"
+        data-embed-thumbnail="https://i.vimeocdn.com/video/76979871.jpg"
+        data-enclosure=""
+      ></div>
+      <p>Notes</p>
+    `
+
+    expect(result).toEqualHtml(expected)
   })
 
   it('should prefer the player URL over the content URL for resolution', async () => {
@@ -98,7 +117,19 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       ]),
     )
 
-    expect(result).toContain('data-embed-provider="youtube"')
+    const expected = html`
+      <div
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-enclosure=""
+      ></div>
+      <p>Notes</p>
+    `
+
+    expect(result).toEqualHtml(expected)
   })
 
   it('should carry the feed thumbnail onto a resolved embed instead of the composed guess', async () => {
@@ -113,8 +144,19 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       ]),
     )
 
-    expect(result).toContain('data-embed-thumbnail="https://cdn.example.com/feed-thumb.jpg"')
-    expect(result).not.toContain('hqdefault')
+    const expected = html`
+      <div
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://cdn.example.com/feed-thumb.jpg"
+        data-enclosure=""
+      ></div>
+      <p>Notes</p>
+    `
+
+    expect(result).toEqualHtml(expected)
   })
 
   it('should keep the composed thumbnail when the feed provides none', async () => {
@@ -134,7 +176,20 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       ]),
     )
 
-    expect(result).toContain('data-embed-duration="212"')
+    const expected = html`
+      <div
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-duration="212"
+        data-enclosure=""
+      ></div>
+      <p>Notes</p>
+    `
+
+    expect(result).toEqualHtml(expected)
   })
 
   describe('image enclosures', () => {
@@ -500,13 +555,13 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
   it('should do nothing when no enclosures', async () => {
     const value = '<p>Content</p>'
 
-    expect(await transform(value)).not.toContain('data-embed')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should do nothing when enclosures is empty', async () => {
     const value = '<p>Content</p>'
 
-    expect(await transform(value, withEnclosures([]))).not.toContain('data-embed')
+    expect(await transform(value, withEnclosures([]))).toBe(value)
   })
 
   it('should resolve enclosure with unrecognized type through resolver', async () => {
@@ -518,8 +573,19 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       ]),
     )
 
-    expect(result).toContain('data-embed-src=')
-    expect(result).toContain('data-embed-provider="youtube"')
+    const expected = html`
+      <div
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-enclosure=""
+      ></div>
+      <p>Content</p>
+    `
+
+    expect(result).toEqualHtml(expected)
   })
 
   it('should use resolver type over enclosure medium', async () => {
@@ -553,13 +619,10 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
 
   it('should skip enclosure with javascript: url', async () => {
     const value = '<p>Content</p>'
-    const result = await transform(
-      value,
-      withEnclosures([{ url: 'javascript:alert(1)', medium: 'video' }]),
-    )
 
-    expect(result).not.toContain('data-embed')
-    expect(result).not.toContain('javascript:')
+    expect(
+      await transform(value, withEnclosures([{ url: 'javascript:alert(1)', medium: 'video' }])),
+    ).toBe(value)
   })
 
   it('should skip enclosure with data: url', async () => {

@@ -105,14 +105,19 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
         </a>
       </div>
     `
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://example.com',
-    })
+    const expected = html`
+      <div
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-provider="youtube"')
-    expect(result).toContain('data-embed-thumbnail=')
-    expect(result).not.toContain('preview-lazyload')
+    expect(
+      await transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com' }),
+    ).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {

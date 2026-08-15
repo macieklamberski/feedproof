@@ -205,10 +205,17 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
           data="${jsonAttrValue(videoPayload)}"
         ></div>
       `
-      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+      const expected = html`
+        <div
+          data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+          data-embed-provider="youtube"
+          data-embed-id="dQw4w9WgXcQ"
+          data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        ></div>
+      `
 
-      expect(result).toContain('data-embed-provider="youtube"')
-      expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
+      expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
     })
 
     it('should leave a link payload reaching the cite pass end to end', async () => {
@@ -224,10 +231,15 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
           data="${jsonAttrValue(linkPayload)}"
         ></div>
       `
-      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+      const expected = html`
+        <div
+          data-cite-provider="paragraph"
+          data-cite-url="https://example.com/post"
+          data-cite-title="A post"
+        ></div>
+      `
 
-      expect(result).toContain('data-cite-provider="paragraph"')
-      expect(result).toContain('data-cite-title="A post"')
+      expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
     })
   })
 
