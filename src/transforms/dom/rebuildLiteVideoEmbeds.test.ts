@@ -11,53 +11,50 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
 
   it('should rebuild an iframe from a lite-youtube element', async () => {
     const value = html`<lite-youtube videoid="dQw4w9WgXcQ"></lite-youtube>`
-    const result = await transform(value)
+    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
 
-    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ">')
-    expect(result).not.toContain('<lite-youtube')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should rebuild an iframe from a lite-vimeo element', async () => {
     const value = html`<lite-vimeo videoid="76979871"></lite-vimeo>`
-    const result = await transform(value)
+    const expected = html`<iframe src="https://player.vimeo.com/video/76979871"></iframe>`
 
-    expect(result).toContain('<iframe src="https://player.vimeo.com/video/76979871">')
-    expect(result).not.toContain('<lite-vimeo')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should leave a lite-youtube element with no videoid alone', async () => {
     const value = html`<lite-youtube></lite-youtube>`
-    const result = await transform(value)
 
-    expect(result).toContain('<lite-youtube')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should carry a youtube start offset into a query param', async () => {
     const value = html`<lite-youtube videoid="dQw4w9WgXcQ" start="90"></lite-youtube>`
-    const result = await transform(value)
+    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=90"></iframe>`
 
-    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=90">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should carry a vimeo start offset into a time fragment', async () => {
     const value = html`<lite-vimeo videoid="76979871" start="90"></lite-vimeo>`
-    const result = await transform(value)
+    const expected = html`<iframe src="https://player.vimeo.com/video/76979871#t=90s"></iframe>`
 
-    expect(result).toContain('<iframe src="https://player.vimeo.com/video/76979871#t=90s">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should ignore a non-numeric start', async () => {
     const value = html`<lite-youtube videoid="dQw4w9WgXcQ" start="10&autoplay=1"></lite-youtube>`
-    const result = await transform(value)
+    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
 
-    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should carry the whitelisted half of params', async () => {
     const value = html`<lite-youtube videoid="dQw4w9WgXcQ" params="start=10"></lite-youtube>`
-    const result = await transform(value)
+    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10"></iframe>`
 
-    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10">')
+    expect(await transform(value)).toBe(expected)
   })
 
   // The attribute names the same option more specifically than the query string does.
@@ -65,9 +62,9 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     const value = html`
       <lite-youtube videoid="dQw4w9WgXcQ" start="90" params="start=10"></lite-youtube>
     `
-    const result = await transform(value)
+    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=90"></iframe>`
 
-    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=90">')
+    expect(await transform(value)).toBe(expected)
   })
 
   // Anything the iframe path would not carry cannot arrive this way either.
@@ -75,17 +72,26 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     const value = html`
       <lite-youtube videoid="dQw4w9WgXcQ" params="start=10&autoplay=1"></lite-youtube>
     `
-    const result = await transform(value)
+    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10"></iframe>`
 
-    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10">')
-    expect(result).not.toContain('autoplay')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should keep a params offset through the default pipeline', async () => {
     const value = html`<lite-youtube videoid="dQw4w9WgXcQ" params="start=10"></lite-youtube>`
-    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+    const expected = html`
+      <div
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10"
+      >
+        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
+      </div>
+    `
 
-    expect(result).toContain('data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10"')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
   it('should carry videotitle into the iframe title', async () => {
@@ -95,20 +101,35 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
         videotitle="Never Gonna Give You Up"
       ></lite-youtube>
     `
-    const result = await transform(value)
+    const expected = html`
+      <iframe
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        title="Never Gonna Give You Up"
+      ></iframe>
+    `
 
-    expect(result).toContain('title="Never Gonna Give You Up"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should produce a youtube placeholder end to end', async () => {
     const value = html`<lite-youtube videoid="dQw4w9WgXcQ"></lite-youtube>`
+    const expected = html`
+      <div
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+      >
+        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
+      </div>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com',
     })
 
-    expect(result).toContain('data-embed-provider="youtube"')
-    expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
+    expect(result).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {

@@ -10,15 +10,17 @@ const startSecondsPattern = /^\d+$/
 // id in a `videoid` attribute and build the real iframe on click. A reader runs no JS,
 // so the video never appears. Each entry maps the custom tag to the embed URL built
 // from the id, applying the `start` offset the way that platform's player expects.
+type EmbedSource = {
+  params: ReadonlyArray<string>
+  compose: (id: string, params: Record<string, string>) => string
+}
+
 // Each entry states the parameters its own player understands, so a facade's `params` is
 // filtered against that platform rather than against whichever one happens to be first. No test
 // covers the difference because none can: Vimeo's player takes the offset as a `#t=` fragment and
 // reads nothing else, so a name YouTube allows and Vimeo does not is dropped either way today.
 // The split is here so that stops being true silently when a Vimeo parameter is added.
-const embedSources: Record<
-  string,
-  { params: ReadonlyArray<string>; compose: (id: string, params: Record<string, string>) => string }
-> = {
+const embedSources: Record<string, EmbedSource> = {
   'lite-youtube': {
     params: youtubeEmbedParams,
     compose: (id, params) => composeEmbedUrl(id, params),
