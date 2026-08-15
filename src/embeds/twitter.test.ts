@@ -932,6 +932,17 @@ describe('twitterResolveEmbed', () => {
     expect(twitterResolveEmbed(playerUrl)).toEqual(expected)
   })
 
+  it('should resolve the newer player path onto the same placeholder', () => {
+    const value = `https://platform.twitter.com/embed/index.html?dnt=true&embedId=twitter-widget-0&frame=false&id=${statusId}&lang=en&theme=light&width=550px`
+    const expected: EmbedResolverResult = {
+      provider: 'twitter',
+      id: statusId,
+      src: playerUrl,
+    }
+
+    expect(twitterResolveEmbed(value)).toEqual(expected)
+  })
+
   it('should return undefined for another path on the player host', () => {
     expect(twitterResolveEmbed('https://platform.twitter.com/widgets.js')).toBeUndefined()
   })

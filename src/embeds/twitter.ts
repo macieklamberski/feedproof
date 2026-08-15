@@ -223,10 +223,14 @@ export const twitterSubstackEmbedResolver = createMarkupEmbedResolver(
 )
 
 // The player a stored-after-render copy already points at, and the one this resolver mints, so
-// a feed carrying the frame alone still names its provider.
+// a feed carrying the frame alone still names its provider. Two spellings of the same player:
+// `Tweet.html` is what the loader wrote until 2020, `index.html` is what it writes since. The
+// corpus holds both, 1,390 and 161 frames across 445 feeds, with the same `id` query on each.
+const playerPaths = new Set(['/embed/Tweet.html', '/embed/index.html'])
+
 export const twitterResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url)
-  const id = parsed?.pathname === '/embed/Tweet.html' ? parsed.searchParams.get('id') : undefined
+  const id = parsed && playerPaths.has(parsed.pathname) ? parsed.searchParams.get('id') : undefined
 
   return id && safeStatusIdRegex.test(id) ? composeEmbed({ handle: '', id }, {}) : undefined
 }
