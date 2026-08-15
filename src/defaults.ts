@@ -240,8 +240,11 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   rebuildLazyLoadForVideos,
   rebuildLazyYtEmbeds,
   rebuildElementorVideoEmbeds,
-  // Unwraps an Embedly media widget to the inner provider iframe (carrying Embedly's poster as
-  // data-thumbnail), so the provider transforms below handle it instead of a cdn.embedly wrapper.
+  // Unwraps both Embedly carriers to the inner provider iframe (carrying Embedly's poster as
+  // data-thumbnail), so the provider transforms below handle them instead of an Embedly shell:
+  // the rendered cdn.embedly wrapper, and the empty div whose oEmbed payload rides in `data`.
+  // Runs before convertCiteCards so a payload naming `link` still reaches the cite pass, and
+  // before stripEmptyTags, which is what deletes an empty carrier nothing has claimed.
   rebuildEmbedlyEmbeds,
   // A GitHub Gist embed is a JS-only <script> that renders nothing in a reader; replace it
   // with a link to the gist so the content is at least reachable.

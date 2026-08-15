@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
+import { describeForEachParser, html, jsonAttrValue, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { appleEmbedResolver, appleResolveEmbed } from './apple.js'
 
@@ -205,7 +205,7 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
         <div class="apple-podcast-container" data-component-name="ApplePodcastToDom">
           <iframe
             class="apple-podcast episode-list"
-            data-attrs="${substackAttrs(episodeCardAttrs)}"
+            data-attrs="${jsonAttrValue(episodeCardAttrs)}"
             src="https://embed.podcasts.apple.com/us/podcast/undertone/id1693303954?i=1000664459889"
           ></iframe>
         </div>
@@ -245,7 +245,7 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
         <div class="apple-podcast-container" data-component-name="ApplePodcastToDom">
           <iframe
             class="apple-podcast episode-list"
-            data-attrs="${substackAttrs(showCardAttrs)}"
+            data-attrs="${jsonAttrValue(showCardAttrs)}"
             src="https://embed.podcasts.apple.com/us/podcast/boardroom-governance/id1513064579"
           ></iframe>
         </div>
@@ -278,7 +278,7 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
         <div class="apple-podcast-container" data-component-name="ApplePodcastToDom">
           <iframe
             class="apple-podcast episode-list"
-            data-attrs="${substackAttrs(sparseCardAttrs)}"
+            data-attrs="${jsonAttrValue(sparseCardAttrs)}"
             src="https://embed.podcasts.apple.com/gb/podcast/exploaded/id1887512662"
           ></iframe>
         </div>
@@ -325,7 +325,7 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
       const value = html`
         <div>
           <iframe
-            data-attrs="${substackAttrs(foreignCardAttrs)}"
+            data-attrs="${jsonAttrValue(foreignCardAttrs)}"
             src="https://embed.podcasts.apple.com/gb/podcast/exploaded/id1887512662"
           ></iframe>
         </div>
