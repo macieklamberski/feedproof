@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { speakerdeckIframeEmbedResolver, speakerdeckScriptEmbedResolver } from './speakerdeck.js'
+import {
+  speakerdeckIframeEmbedResolver,
+  speakerdeckResolveEmbed,
+  speakerdeckScriptEmbedResolver,
+} from './speakerdeck.js'
 
 describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, speakerdeckScriptEmbedResolver)
@@ -200,6 +204,61 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+describe('speakerdeckResolveEmbed', () => {
+  it('should give a size-less player the default deck ratio', () => {
+    const value = 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0'
+    const expected: EmbedResolverResult = {
+      provider: 'speakerdeck',
+      id: '40746bbd65b944eb848e90ab1be552c0',
+      src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
+      width: 100,
+      height: 56,
+    }
+
+    expect(speakerdeckResolveEmbed(value)).toEqual(expected)
+  })
+
+  // The script form has always kept the slide, so the same deck at two slides collapsed into
+  // one placeholder when it arrived as an iframe instead.
+  it('should carry the slide the player url states', () => {
+    const value = 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=21'
+    const expected: EmbedResolverResult = {
+      provider: 'speakerdeck',
+      id: '40746bbd65b944eb848e90ab1be552c0/21',
+      src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=21',
+      width: 100,
+      height: 56,
+    }
+
+    expect(speakerdeckResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should ignore a slide that is not a number', () => {
+    const value = 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=last'
+    const expected: EmbedResolverResult = {
+      provider: 'speakerdeck',
+      id: '40746bbd65b944eb848e90ab1be552c0',
+      src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
+      width: 100,
+      height: 56,
+    }
+
+    expect(speakerdeckResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should ignore a deck page rather than a player', () => {
+    const value = 'https://speakerdeck.com/user/some-deck'
+
+    expect(speakerdeckResolveEmbed(value)).toBeUndefined()
+  })
+
+  it('should ignore a player id that is not a 32-char hex', () => {
+    const value = 'https://speakerdeck.com/player/not-a-deck'
+
+    expect(speakerdeckResolveEmbed(value)).toBeUndefined()
   })
 })
 

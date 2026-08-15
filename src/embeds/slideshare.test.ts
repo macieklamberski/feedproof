@@ -1,7 +1,54 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { slideshareFlashEmbedResolver, slideshareIframeEmbedResolver } from './slideshare.js'
+import {
+  slideshareFlashEmbedResolver,
+  slideshareIframeEmbedResolver,
+  slideshareResolveEmbed,
+} from './slideshare.js'
+
+describe('slideshareResolveEmbed', () => {
+  it('should keep the numeric embed the keyed one replaced', () => {
+    const value = 'https://www.slideshare.net/slideshow/embed_code/6435157'
+    const expected: EmbedResolverResult = {
+      provider: 'slideshare',
+      id: '6435157',
+      src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
+    }
+
+    expect(slideshareResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should ignore a slideshare url that names no deck', () => {
+    const value = 'https://www.slideshare.net/haraldf'
+
+    expect(slideshareResolveEmbed(value)).toBeUndefined()
+  })
+
+  it('should ignore an embed path that stops before the deck', () => {
+    const value = 'https://www.slideshare.net/slideshow/embed_code/'
+
+    expect(slideshareResolveEmbed(value)).toBeUndefined()
+  })
+
+  it('should ignore a keyed path that stops before the key', () => {
+    const value = 'https://www.slideshare.net/slideshow/embed_code/key/'
+
+    expect(slideshareResolveEmbed(value)).toBeUndefined()
+  })
+
+  it('should ignore a key outside the url-safe alphabet', () => {
+    const value = 'https://www.slideshare.net/slideshow/embed_code/key/../evil'
+
+    expect(slideshareResolveEmbed(value)).toBeUndefined()
+  })
+
+  it('should ignore another host carrying the embed path', () => {
+    const value = 'https://slideshare.net.evil.test/slideshow/embed_code/6435157'
+
+    expect(slideshareResolveEmbed(value)).toBeUndefined()
+  })
+})
 
 describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, slideshareFlashEmbedResolver)

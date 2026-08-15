@@ -77,9 +77,9 @@ export const speakerdeckScriptEmbedResolver = createMarkupEmbedResolver(
 // The player the script above builds at runtime, saved into the feed by a CMS that ran the
 // script first. Same deck, same placeholder: only the carrier differs. A size on the element
 // wins over the default ratio, so the fallback only applies to a size-less embed.
-const speakerdeckResolveEmbed = (
+export const speakerdeckResolveEmbed = (
   url: string,
-  element: Element,
+  element?: Element,
 ): EmbedResolverResult | undefined => {
   const segments = getPathSegments(url)
   const deckId = segments[0] === 'player' ? segments[1] : undefined
@@ -91,7 +91,7 @@ const speakerdeckResolveEmbed = (
   const slide = parseUrl(url, 'https://example.com')?.searchParams.get('slide') ?? undefined
 
   return {
-    ...composeEmbed(deckId, { slide, title: readTitle(element) }),
+    ...composeEmbed(deckId, { slide, title: element ? readTitle(element) : undefined }),
     ...parseRatioDimensions(defaultDeckRatio),
   }
 }

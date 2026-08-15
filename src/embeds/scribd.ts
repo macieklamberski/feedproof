@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, parseRatioDimensions } from '../utils/dom.js'
 import { createUrlEmbedResolver, withDeclaredSize } from '../utils/widgets.js'
@@ -23,8 +23,8 @@ const composeEmbed = (document: string): EmbedResolverResult => {
   }
 }
 
-const readDocumentId = (link: string): string | undefined => {
-  const segments = getPathSegments(link)
+const readDocumentId = (parsed: URL): string | undefined => {
+  const segments = getPathSegments(parsed)
   const marker = segments.findIndex((segment) => {
     return segment === 'embeds' || segment === 'document' || segment === 'doc'
   })
@@ -36,8 +36,17 @@ const readDocumentId = (link: string): string | undefined => {
 // The modern player, `scribd.com/embeds/{id}/content`. `/doc/{id}` is the pre-2018 spelling of
 // the same document and its embed lived at `/embeds/{id}` with no `/content` suffix; both
 // address the id space this composes from.
-const scribdResolveEmbed = (link: string, element: Element): EmbedResolverResult | undefined => {
-  const document = readDocumentId(link)
+export const scribdResolveEmbed = (
+  link: string,
+  element: Element,
+): EmbedResolverResult | undefined => {
+  const parsed = parseUrl(link, 'https://example.com')
+
+  if (!parsed || (!isHostOf(parsed, scribdHosts) && !isSubdomainOf(parsed, scribdHosts))) {
+    return
+  }
+
+  const document = readDocumentId(parsed)
 
   if (!document) {
     return
@@ -67,7 +76,7 @@ export const scribdIframeEmbedResolver = createUrlEmbedResolver(scribdHosts, scr
 //
 // The declared size carries over. Both generations of the snippet state the same 500, so it
 // describes the replacement as well as it described the player it replaces.
-const scribdFlashResolveEmbed = (link: string): EmbedResolverResult | undefined => {
+export const scribdFlashResolveEmbed = (link: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
 
   if (!parsed || !flashPlayerPathRegex.test(parsed.pathname)) {
