@@ -86,25 +86,7 @@ export const extractVideoId = (link: string): string | undefined => {
 // window of a clip (`clip` is the clip id, `clipt` its encoded bounds — a clip embed needs
 // both). Everything else the publisher wrote — autoplay, `rel`, `si` and other tracking — is
 // dropped with the rest of the original query.
-const youtubeEmbedParams = ['start', 'end', 'list', 'index', 'clip', 'clipt']
-
-// A facade that states its player options as one query string rather than as attributes, which
-// is what `lite-youtube` does with `params`. Only the names the iframe path already carries are
-// kept, so a facade cannot smuggle in a parameter the resolver would refuse from a real url.
-export const pickEmbedParams = (query: string): Record<string, string> => {
-  const parsed = new URLSearchParams(query)
-  const params: Record<string, string> = {}
-
-  for (const name of youtubeEmbedParams) {
-    const value = parsed.get(name)
-
-    if (value) {
-      params[name] = value
-    }
-  }
-
-  return params
-}
+export const youtubeEmbedParams = ['start', 'end', 'list', 'index', 'clip', 'clipt']
 
 // Playlist (`list`) and channel (`channel`) ids. A charset guard, not a length/prefix one:
 // it only keeps a stray value out of the rebuilt url and the enrichment key.
