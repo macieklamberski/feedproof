@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { MediaResolverResult } from '../types.js'
 import { podloveMediaResolver } from './podlove.js'
@@ -236,6 +237,26 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
       const value = html`<div class="podlove-web-player"></div>`
 
       expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  // The resolver alone cannot see this. `wrapBareInlineInParagraphs` runs before the widget
+  // pass and puts the bare script in a `<p>`, so the player's sibling is that paragraph rather
+  // than the script, and a player carrying no id has no other route to its config.
+  describe('through the pipeline', () => {
+    it('should recover an episode whose script the paragraph pass has wrapped', async () => {
+      const config = JSON.stringify([
+        { data: { audio: [{ url: 'https://example.com/episode.mp3', mimeType: 'audio/mpeg' }] } },
+      ])
+      const value = html`
+        <div class="podlove-web-player"></div>
+        <script>
+          podlovePlayerCache.add(${config})
+        </script>
+      `
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toContainHtml('<audio src="https://example.com/episode.mp3" controls></audio>')
     })
   })
 })

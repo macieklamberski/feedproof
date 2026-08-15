@@ -29,11 +29,22 @@ type PodloveConfig = Array<{
 
 // The script sits beside the player. Where an item holds several episodes each player has its
 // own script, so the id is what ties the two together when they are not adjacent.
+//
+// The sibling is not always the script itself: `wrapBareInlineInParagraphs` runs before the
+// widget pass and puts a bare script in a `<p>`, so by the time this reads the DOM the sibling
+// is that paragraph. Looking inside it is what keeps a player without an id from losing its
+// episode, since the id fallback below is the only other route.
 const findConfigScript = (element: Element): Element | undefined => {
   const sibling = element.nextElementSibling
 
   if (sibling?.localName === 'script') {
     return sibling
+  }
+
+  const wrapped = sibling?.querySelector('script')
+
+  if (wrapped) {
+    return wrapped
   }
 
   if (!element.id) {
