@@ -192,9 +192,7 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
           data-cite-title="Page title"
           data-cite-url="https://example.com/page"
           data-cite-provider="pzlinkcard"
-        >
-          <a href="https://example.com/page">Page title</a>
-        </div>
+        ></div>
       `
 
       expect(await transform(value)).toEqualHtml(expected)

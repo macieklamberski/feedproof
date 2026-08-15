@@ -230,7 +230,7 @@ export const convertWidgets: DomTransform = (context) => {
       // (which would otherwise resolve to the base URL).
       const resolved = src.trim() ? resolveUrlFn(src, baseUrl) : undefined
       // Unlike a resolver's src, which is rebuilt from the parsed id, this one is the
-      // publisher's own URL and also becomes the fallback anchor's href and link text.
+      // publisher's own URL, so it arrives with whatever tracking params they pasted.
       const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
 
       if (!cleaned) {

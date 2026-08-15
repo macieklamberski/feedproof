@@ -170,9 +170,10 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
 
   it('should preserve a div carrying data-cite attributes', async () => {
     const value = html`
-      <div data-cite-provider="ghost" data-cite-url="https://example.com/x">
-        <a href="https://example.com/x">Title</a>
-      </div>
+      <div
+        data-cite-provider="ghost"
+        data-cite-url="https://example.com/x"
+      ></div>
     `
 
     expect(await transform(value)).toBe(value)

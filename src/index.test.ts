@@ -171,11 +171,7 @@ describeForEachParser('transformContent', (parseHtml) => {
       <div
         data-embed-provider="custom"
         data-embed-src="https://custom-player.example.com/video/123"
-      >
-        <a
-          href="https://custom-player.example.com/video/123"
-        >https://custom-player.example.com/video/123</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
@@ -349,11 +345,7 @@ describeForEachParser('transformContent', (parseHtml) => {
         data-embed-title="Title for dQw4w9WgXcQ"
         data-embed-author="Test Channel"
         data-embed-duration="213"
-      >
-        <a
-          href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        >https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
@@ -379,11 +371,7 @@ describeForEachParser('transformContent', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
-      >
-        <a
-          href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        >https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
@@ -411,9 +399,7 @@ describeForEachParser('transformContent', (parseHtml) => {
         data-cite-url="https://example.com/post"
         data-cite-title="Page title"
         data-cite-thumbnail="https://example.com/cover.png"
-      >
-        <a href="https://example.com/post">Page title</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
@@ -447,11 +433,7 @@ describeForEachParser('transformContent', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
-      >
-        <a
-          href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        >https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
-      </div>
+      ></div>
     `
 
     expect(called).toBe(false)
@@ -854,10 +836,9 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(await transformContent(result, options)).toBe(result)
   })
 
-  // Every transform has its own idempotency case, but nothing pinned the pipeline as a
-  // whole, which is where the placeholder shapes drifted: an embed placeholder is built
-  // after wrapBareInlineInParagraphs and a cite placeholder before it, so re-running the
-  // pipeline used to wrap the embed's fallback link and change the output.
+  // Placeholders are the shape most likely to drift on a second pass: a cite one is built
+  // before wrapBareInlineInParagraphs and an embed one after it, so each meets a different
+  // set of transforms on a re-run.
   it('should be idempotent for embed and cite placeholders', async () => {
     const options = { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' }
     const value = html`

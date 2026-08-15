@@ -372,9 +372,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         <div
           data-embed-src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3"
           data-enclosure=""
-        >
-          <a href="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3">https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3</a>
-        </div>
+        ></div>
         <p>Content</p>
       `
 
@@ -393,9 +391,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
           data-embed-height="165"
           data-embed-duration="843"
           data-enclosure=""
-        >
-          <a href="https://player.example.com/embed?file=https://example.com/ep.mp3">https://player.example.com/embed?file=https://example.com/ep.mp3</a>
-        </div>
+        ></div>
         <p>Content</p>
       `
 
@@ -430,9 +426,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
           data-embed-src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3&amp;modern=1"
           data-embed-height="165"
           data-enclosure=""
-        >
-          <a href="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3&amp;modern=1">https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3&amp;modern=1</a>
-        </div>
+        ></div>
         <p>Content</p>
       `
 
@@ -466,9 +460,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         <div
           data-embed-src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3"
           data-enclosure=""
-        >
-          <a href="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3">https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3</a>
-        </div>
+        ></div>
         <p>Content</p>
       `
 
@@ -557,11 +549,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
         data-enclosure=""
-      >
-        <a
-          href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        >https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
-      </div>
+      ></div>
       <p>Content</p>
     `
 

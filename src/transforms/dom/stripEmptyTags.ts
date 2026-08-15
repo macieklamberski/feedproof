@@ -1,5 +1,5 @@
 import type { DomTransform } from '../../types.js'
-import { isBlockElement, isElement, isText } from '../../utils/dom.js'
+import { isBlockElement, isElement, isGeneratedWrapper, isText } from '../../utils/dom.js'
 
 // Structural cells and definition terms whose slot must survive even when empty,
 // so table columns and definition-list pairs stay aligned. Never dropped or collapsed.
@@ -52,6 +52,12 @@ export const stripEmptyTags: DomTransform = () => {
 
       // Custom elements (Web Components) — emptiness is meaningful.
       if (tagName.includes('-')) {
+        continue
+      }
+
+      // An embed placeholder holds nothing but its `data-embed-*` attributes, which is the
+      // whole widget: a consumer renders it from those.
+      if (isGeneratedWrapper(element)) {
         continue
       }
 
