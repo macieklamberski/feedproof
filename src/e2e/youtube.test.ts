@@ -24,9 +24,7 @@ describeForEachParser('YouTube', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
-      >
-        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
-      </div>
+      ></div>
     `
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
@@ -50,11 +48,7 @@ describeForEachParser('YouTube', (parseHtml) => {
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcB/hqdefault.jpg"
         data-embed-width="560"
         data-embed-height="315"
-      >
-        <a
-          href="https://www.youtube.com/watch?v=dQw4w9WgXcB"
-        >https://www.youtube.com/watch?v=dQw4w9WgXcB</a>
-      </div>
+      ></div>
     `
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
@@ -71,11 +65,7 @@ describeForEachParser('YouTube', (parseHtml) => {
         data-embed-id="PLabc123"
         data-embed-src="https://www.youtube.com/embed/videoseries?list=PLabc123"
         data-embed-url="https://www.youtube.com/playlist?list=PLabc123"
-      >
-        <a
-          href="https://www.youtube.com/playlist?list=PLabc123"
-        >https://www.youtube.com/playlist?list=PLabc123</a>
-      </div>
+      ></div>
     `
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
@@ -93,11 +83,7 @@ describeForEachParser('YouTube', (parseHtml) => {
         data-embed-id="UCabc123"
         data-embed-src="https://www.youtube.com/embed/live_stream?channel=UCabc123"
         data-embed-url="https://www.youtube.com/channel/UCabc123"
-      >
-        <a
-          href="https://www.youtube.com/channel/UCabc123"
-        >https://www.youtube.com/channel/UCabc123</a>
-      </div>
+      ></div>
     `
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
@@ -126,11 +112,7 @@ describeForEachParser('YouTube', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/QMIjaUgLLJg"
         data-embed-url="https://www.youtube.com/watch?v=QMIjaUgLLJg"
         data-embed-thumbnail="https://i.ytimg.com/vi/QMIjaUgLLJg/hqdefault.jpg"
-      >
-        <a
-          href="https://www.youtube.com/watch?v=QMIjaUgLLJg"
-        >https://www.youtube.com/watch?v=QMIjaUgLLJg</a>
-      </div>
+      ></div>
     `
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)

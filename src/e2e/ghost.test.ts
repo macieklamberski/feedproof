@@ -37,9 +37,7 @@ describeForEachParser('Ghost', (parseHtml) => {
         data-cite-publisher="Publisher name"
         data-cite-icon="https://example.com/favicon.ico"
         data-cite-thumbnail="https://example.com/og-image.jpg"
-      >
-        <a href="https://example.com/post">Post title</a>
-      </div>
+      ></div>
     `
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)

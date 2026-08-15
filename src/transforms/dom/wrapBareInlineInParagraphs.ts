@@ -4,7 +4,6 @@ import {
   hasText,
   isBlockElement,
   isElement,
-  isGeneratedWrapper,
   isText,
 } from '../../utils/dom.js'
 
@@ -67,14 +66,6 @@ export const wrapBareInlineInParagraphs: DomTransform = () => {
   return (document) => {
     for (const container of document.querySelectorAll(processContainersSelector)) {
       if (hasAncestorWithTagName(container, inlineHostTags)) {
-        continue
-      }
-
-      // A placeholder's fallback link is its whole content and is replaced wholesale by a
-      // consumer, so wrapping it gains nothing. Skipping also keeps the pipeline stable on
-      // a second run: cite placeholders exist by the time this runs and embed placeholders
-      // do not, so wrapping produced two different shapes and a re-run changed the output.
-      if (isGeneratedWrapper(container)) {
         continue
       }
 
