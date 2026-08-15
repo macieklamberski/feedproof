@@ -62,14 +62,17 @@ const composeEmbedResult = (status: MastodonStatus): EmbedResolverResult => {
 
 // Mastodon has no fixed host: the corpus embeds 121 distinct instances across 352 matches, 83
 // of them exactly once, so a host allowlist would miss most of the network while a bare url
-// shape would claim every site that files posts under an author and a number. Both halves are
-// therefore required — the class the platform's own copy-embed snippet writes on the carrier,
-// and a status path on the url that carrier points at.
+// shape would claim every site that files posts under an author and a number. The status parse
+// is therefore the guard that every carrier goes through: the selector claims the classed
+// carriers the platform's own copy-embed snippet writes, plus any iframe whose src ends in the
+// embed suffix, because publishers also ship the status iframe with no class at all, and only
+// a url the parse reads as a status resolves.
 //
-// Three carriers, one widget. Pre-4.3 instances emit the iframe, 4.3 and later emit a
-// blockquote that `embed.js` swaps for the same iframe at runtime, and WordPress strips that
-// script so the blockquote arrives with only its anchor. The blockquote holds no post text,
-// just the platform logo and a "View on Mastodon" caption, so nothing is lost by replacing it.
+// Three carriers, one widget. Pre-4.3 instances emit the iframe, with or without its class,
+// 4.3 and later emit a blockquote that `embed.js` swaps for the same iframe at runtime, and
+// WordPress strips that script so the blockquote arrives with only its anchor. The blockquote
+// holds no post text, just the platform logo and a "View on Mastodon" caption, so nothing is
+// lost by replacing it.
 //
 // Not matched: `aside.mastodon-embed`, which is a hand-typed quote of a post carrying the real
 // body text and no embed at all, and `div.mastodon-embed`, which only wraps the iframe that is
@@ -79,7 +82,7 @@ const composeEmbedResult = (status: MastodonStatus): EmbedResolverResult => {
 // once it has rendered, so the publisher's markup holds the only height that exists offline, and
 // the factory applies whatever the carrier declares.
 export const mastodonEmbedResolver = createMarkupEmbedResolver(
-  'iframe.mastodon-embed[src], blockquote.mastodon-embed',
+  'iframe.mastodon-embed[src], iframe[src$="/embed"], blockquote.mastodon-embed',
   (element) => {
     const link =
       attr(element, 'src') ??

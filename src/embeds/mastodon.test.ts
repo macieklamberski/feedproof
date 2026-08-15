@@ -273,6 +273,32 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
     })
   })
 
+  describe('status iframe with no platform class', () => {
+    // Found on a live site rather than in the census, which cannot see this shape: its
+    // tokenizer skips path segments starting with `@`, so the prevalence is unmeasured. The
+    // embed suffix claims the iframe and the status parse is the only guard left.
+    it('should resolve a classless iframe through the status parse alone', () => {
+      const value = html`
+        <iframe
+          src="https://mastodon.green/@pvonhellermannn/116798038528869495/embed"
+          width="400"
+          sandbox="allow-scripts allow-same-origin"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'mastodon',
+        id: 'mastodon.green/116798038528869495',
+        src: 'https://mastodon.green/@pvonhellermannn/116798038528869495/embed',
+        url: 'https://mastodon.green/@pvonhellermannn/116798038528869495',
+        width: 400,
+        author: '@pvonhellermannn@mastodon.green',
+        publisher: 'mastodon.green',
+      }
+
+      expect(extract(value)).toEqual(expected)
+    })
+  })
+
   describe('carriers that name no status', () => {
     it('should return undefined for an iframe holding an unrendered template', () => {
       const value = html`
@@ -342,9 +368,11 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
       expect(extract(value)).toBeUndefined()
     })
 
-    it('should ignore an iframe with the status shape but no platform class', () => {
+    // The embed suffix claims classless iframes, so a url the status parse rejects is the
+    // only thing keeping some other site's `/embed` route out of a minted player.
+    it('should ignore an embed-suffixed iframe that names no status', () => {
       const value = html`
-        <iframe src="https://evil.test/@user/116535232552529093/embed" width="400"></iframe>
+        <iframe src="https://blog.example/gallery/slideshow/embed" width="400"></iframe>
       `
 
       expect(extract(value)).toBeUndefined()
