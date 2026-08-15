@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import {
-  scribdFlashEmbedResolver,
-  scribdFlashResolveEmbed,
-  scribdIframeEmbedResolver,
-  scribdResolveEmbed,
-} from './scribd.js'
+import { scribdFlashEmbedResolver, scribdIframeEmbedResolver } from './scribd.js'
 
 describeForEachParser('scribdIframeEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, scribdIframeEmbedResolver)
@@ -207,6 +202,19 @@ describeForEachParser('scribdFlashEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    // The factory hands every carrier on a Scribd host to the Flash reader, including the
+    // modern iframe's, so it has to refuse a url that is not the viewer. The document id sits
+    // in the query here precisely so the path is the only thing that can reject it.
+    it('should return undefined for a scribd url that is not the flash player', async () => {
+      const value = html`
+        <object
+          data="https://www.scribd.com/embeds/526446879/content?document_id=108992419"
+        ></object>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     it('should return undefined for another host serving a viewer of the same name', async () => {
       const value = html`
         <object data="http://evil.test/ScribdViewer.swf?document_id=108992419"></object>
@@ -214,40 +222,5 @@ describeForEachParser('scribdFlashEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
-  })
-})
-
-// Both resolvers reach their url through a factory that has already checked the host, so these
-// guards are only reachable by calling the function itself. They exist because the function is
-// importable on its own.
-describeForEachParser('scribdResolveEmbed', (parseHtml) => {
-  const carrier = (): Element => {
-    return parseHtml(html`<iframe></iframe>`).querySelector('iframe') as Element
-  }
-
-  it('should ignore a url on another host', () => {
-    const value = 'https://evil.test/embeds/526446879/content'
-
-    expect(scribdResolveEmbed(value, carrier())).toBeUndefined()
-  })
-
-  it('should ignore a url that cannot be parsed', () => {
-    const value = 'https://['
-
-    expect(scribdResolveEmbed(value, carrier())).toBeUndefined()
-  })
-})
-
-describe('scribdFlashResolveEmbed', () => {
-  it('should ignore a scribd url that is not the flash player', () => {
-    const value = 'https://www.scribd.com/embeds/526446879/content'
-
-    expect(scribdFlashResolveEmbed(value)).toBeUndefined()
-  })
-
-  it('should ignore a url that cannot be parsed', () => {
-    const value = 'https://['
-
-    expect(scribdFlashResolveEmbed(value)).toBeUndefined()
   })
 })

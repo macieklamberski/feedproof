@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import {
-  speakerdeckIframeEmbedResolver,
-  speakerdeckResolveEmbed,
-  speakerdeckScriptEmbedResolver,
-} from './speakerdeck.js'
+import { speakerdeckIframeEmbedResolver, speakerdeckScriptEmbedResolver } from './speakerdeck.js'
 
 describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, speakerdeckScriptEmbedResolver)
@@ -207,22 +203,14 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
   })
 })
 
-describe('speakerdeckResolveEmbed', () => {
-  it('should resolve a player url', () => {
-    const value = 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0'
-    const expected: EmbedResolverResult = {
-      provider: 'speakerdeck',
-      id: '40746bbd65b944eb848e90ab1be552c0',
-      src: value,
-      width: 100,
-      height: 56,
-    }
+describeForEachParser('speakerdeckIframeEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, speakerdeckIframeEmbedResolver)
 
-    expect(speakerdeckResolveEmbed(value)).toEqual(expected)
-  })
-
-  it('should give a size-less player the default deck ratio', () => {
-    const value = 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0'
+  // The player carrier states no ratio of its own, so a size-less one takes the deck default.
+  it('should give a size-less player the default deck ratio', async () => {
+    const value = html`
+      <iframe src="https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0"></iframe>
+    `
     const expected: EmbedResolverResult = {
       provider: 'speakerdeck',
       id: '40746bbd65b944eb848e90ab1be552c0',
@@ -231,13 +219,15 @@ describe('speakerdeckResolveEmbed', () => {
       height: 56,
     }
 
-    expect(speakerdeckResolveEmbed(value)).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
   // The script form has always kept the slide, so the same deck at two slides collapsed into
   // one placeholder when it arrived as an iframe instead.
-  it('should carry the slide the player url states', () => {
-    const value = 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=21'
+  it('should carry the slide the player url states', async () => {
+    const value = html`
+      <iframe src="https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=21"></iframe>
+    `
     const expected: EmbedResolverResult = {
       provider: 'speakerdeck',
       id: '40746bbd65b944eb848e90ab1be552c0/21',
@@ -246,11 +236,13 @@ describe('speakerdeckResolveEmbed', () => {
       height: 56,
     }
 
-    expect(speakerdeckResolveEmbed(value)).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
-  it('should ignore a slide that is not a number', () => {
-    const value = 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=last'
+  it('should ignore a slide that is not a number', async () => {
+    const value = html`
+      <iframe src="https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=last"></iframe>
+    `
     const expected: EmbedResolverResult = {
       provider: 'speakerdeck',
       id: '40746bbd65b944eb848e90ab1be552c0',
@@ -259,24 +251,20 @@ describe('speakerdeckResolveEmbed', () => {
       height: 56,
     }
 
-    expect(speakerdeckResolveEmbed(value)).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
-  it('should ignore a deck page rather than a player', () => {
-    const value = 'https://speakerdeck.com/user/some-deck'
+  it('should ignore a deck page rather than a player', async () => {
+    const value = html`<iframe src="https://speakerdeck.com/user/some-deck"></iframe>`
 
-    expect(speakerdeckResolveEmbed(value)).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 
-  it('should ignore a player id that is not a 32-char hex', () => {
-    const value = 'https://speakerdeck.com/player/not-a-deck'
+  it('should ignore a player id that is not hex', async () => {
+    const value = html`<iframe src="https://speakerdeck.com/player/not-a-deck"></iframe>`
 
-    expect(speakerdeckResolveEmbed(value)).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
-})
-
-describeForEachParser('speakerdeckIframeEmbedResolver', (parseHtml) => {
-  const extract = resolverExtractor(parseHtml, speakerdeckIframeEmbedResolver)
 
   it('should carry the deck title the carrier states', async () => {
     const value = html`

@@ -45,15 +45,6 @@ export const readCarrierUrl = (element: Element): string => {
   return element.getAttribute(embedCarriers[element.localName] ?? 'src') ?? ''
 }
 
-// The title a publisher's snippet writes on the carrier, which is the one field the url does
-// not carry. Speaker Deck's snippet writes the four-character string `null` when the deck has
-// no title, twice in a 200-file sample, so that spelling is treated as absent.
-export const readCarrierTitle = (element: Element): string | undefined => {
-  const title = element.getAttribute('title')?.trim()
-
-  return title && title !== 'null' ? title : undefined
-}
-
 // A resolver that has measured the platform can overrule what the carrier declares. Scribd
 // states the same `height="500"` on every document it embeds and keeps the honest ratio in
 // `data-aspect-ratio`, so a number from the markup is not always the better one.

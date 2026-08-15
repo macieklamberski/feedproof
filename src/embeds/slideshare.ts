@@ -1,4 +1,4 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, text } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -30,14 +30,8 @@ const composeEmbed = (deck: string, url?: string, title?: string): EmbedResolver
   }
 }
 
-export const slideshareResolveEmbed = (link: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed || (!isHostOf(parsed, slideshareHosts) && !isSubdomainOf(parsed, slideshareHosts))) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+const slideshareResolveEmbed = (link: string): EmbedResolverResult | undefined => {
+  const segments = getPathSegments(link)
   const marker = segments.indexOf('embed_code')
 
   if (marker < 0) {
@@ -100,7 +94,7 @@ const readWrapper = (element: Element): { deck?: string; url?: string; title?: s
 // Flash died in 2020 and these embeds have rendered nothing since, but the markup is still in
 // old posts and their feeds. The numeric id in the wrapper is the same id the modern embed
 // route accepts, so the dead player can be replaced by one that works.
-export const slideshareFlashResolveEmbed = (
+const slideshareFlashResolveEmbed = (
   src: string,
   element: Element,
 ): EmbedResolverResult | undefined => {

@@ -1,65 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import {
-  slideshareFlashEmbedResolver,
-  slideshareIframeEmbedResolver,
-  slideshareResolveEmbed,
-} from './slideshare.js'
-
-describe('slideshareResolveEmbed', () => {
-  it('should keep the keyed embed the current dialog writes', () => {
-    const value = 'https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAY'
-    const expected: EmbedResolverResult = {
-      provider: 'slideshare',
-      id: '6PCWPGFw9SwsAY',
-      src: value,
-    }
-
-    expect(slideshareResolveEmbed(value)).toEqual(expected)
-  })
-
-  it('should keep the numeric embed the keyed one replaced', () => {
-    const value = 'https://www.slideshare.net/slideshow/embed_code/6435157'
-    const expected: EmbedResolverResult = {
-      provider: 'slideshare',
-      id: '6435157',
-      src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
-    }
-
-    expect(slideshareResolveEmbed(value)).toEqual(expected)
-  })
-
-  it('should ignore a slideshare url that names no deck', () => {
-    const value = 'https://www.slideshare.net/haraldf'
-
-    expect(slideshareResolveEmbed(value)).toBeUndefined()
-  })
-
-  it('should ignore an embed path that stops before the deck', () => {
-    const value = 'https://www.slideshare.net/slideshow/embed_code/'
-
-    expect(slideshareResolveEmbed(value)).toBeUndefined()
-  })
-
-  it('should ignore a keyed path that stops before the key', () => {
-    const value = 'https://www.slideshare.net/slideshow/embed_code/key/'
-
-    expect(slideshareResolveEmbed(value)).toBeUndefined()
-  })
-
-  it('should ignore a key outside the url-safe alphabet', () => {
-    const value = 'https://www.slideshare.net/slideshow/embed_code/key/../evil'
-
-    expect(slideshareResolveEmbed(value)).toBeUndefined()
-  })
-
-  it('should ignore another host carrying the embed path', () => {
-    const value = 'https://slideshare.net.evil.test/slideshow/embed_code/6435157'
-
-    expect(slideshareResolveEmbed(value)).toBeUndefined()
-  })
-})
+import { slideshareFlashEmbedResolver, slideshareIframeEmbedResolver } from './slideshare.js'
 
 describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, slideshareFlashEmbedResolver)
@@ -249,6 +191,56 @@ describeForEachParser('slideshareIframeEmbedResolver', (parseHtml) => {
     }
 
     expect(await extract(value)).toEqual(expected)
+  })
+
+  it('should keep the numeric embed the keyed one replaced', async () => {
+    const value = html`
+      <iframe src="https://www.slideshare.net/slideshow/embed_code/6435157"></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'slideshare',
+      id: '6435157',
+      src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
+  it('should ignore a slideshare url that names no deck', async () => {
+    const value = html`<iframe src="https://www.slideshare.net/haraldf"></iframe>`
+
+    expect(await extract(value)).toBeUndefined()
+  })
+
+  it('should ignore an embed path that stops before the deck', async () => {
+    const value = html`<iframe src="https://www.slideshare.net/slideshow/embed_code/"></iframe>`
+
+    expect(await extract(value)).toBeUndefined()
+  })
+
+  it('should ignore a keyed path that stops before the key', async () => {
+    const value = html`
+      <iframe src="https://www.slideshare.net/slideshow/embed_code/key/"></iframe>
+    `
+
+    expect(await extract(value)).toBeUndefined()
+  })
+
+  it('should ignore a key outside the url-safe alphabet', async () => {
+    const value = html`
+      <iframe src="https://www.slideshare.net/slideshow/embed_code/key/../evil"></iframe>
+    `
+
+    expect(await extract(value)).toBeUndefined()
+  })
+
+  // A lookalike host carries the embed path but is not the platform.
+  it('should ignore another host carrying the embed path', async () => {
+    const value = html`
+      <iframe src="https://slideshare.net.evil.test/slideshow/embed_code/6435157"></iframe>
+    `
+
+    expect(await extract(value)).toBeUndefined()
   })
 
   it('should ignore an iframe on another host', async () => {

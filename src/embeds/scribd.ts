@@ -1,7 +1,7 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, parseRatioDimensions } from '../utils/dom.js'
-import { createUrlEmbedResolver, readCarrierTitle, withDeclaredSize } from '../utils/widgets.js'
+import { createUrlEmbedResolver, withDeclaredSize } from '../utils/widgets.js'
 
 const scribdHosts = ['scribd.com', 'scribdassets.com']
 
@@ -23,8 +23,8 @@ const composeEmbed = (document: string): EmbedResolverResult => {
   }
 }
 
-const readDocumentId = (parsed: URL): string | undefined => {
-  const segments = getPathSegments(parsed)
+const readDocumentId = (link: string): string | undefined => {
+  const segments = getPathSegments(link)
   const marker = segments.findIndex((segment) => {
     return segment === 'embeds' || segment === 'document' || segment === 'doc'
   })
@@ -36,23 +36,14 @@ const readDocumentId = (parsed: URL): string | undefined => {
 // The modern player, `scribd.com/embeds/{id}/content`. `/doc/{id}` is the pre-2018 spelling of
 // the same document and its embed lived at `/embeds/{id}` with no `/content` suffix; both
 // address the id space this composes from.
-export const scribdResolveEmbed = (
-  link: string,
-  element: Element,
-): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed || (!isHostOf(parsed, scribdHosts) && !isSubdomainOf(parsed, scribdHosts))) {
-    return
-  }
-
-  const document = readDocumentId(parsed)
+const scribdResolveEmbed = (link: string, element: Element): EmbedResolverResult | undefined => {
+  const document = readDocumentId(link)
 
   if (!document) {
     return
   }
 
-  const title = readCarrierTitle(element)
+  const title = element.getAttribute('title')?.trim()
   const result = { ...composeEmbed(document), ...(title && { title }) }
   const dimensions = parseRatioDimensions(attr(element, aspectRatioAttribute) ?? '')
 
@@ -76,7 +67,7 @@ export const scribdIframeEmbedResolver = createUrlEmbedResolver(scribdHosts, scr
 //
 // The declared size carries over. Both generations of the snippet state the same 500, so it
 // describes the replacement as well as it described the player it replaces.
-export const scribdFlashResolveEmbed = (link: string): EmbedResolverResult | undefined => {
+const scribdFlashResolveEmbed = (link: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
 
   if (!parsed || !flashPlayerPathRegex.test(parsed.pathname)) {
