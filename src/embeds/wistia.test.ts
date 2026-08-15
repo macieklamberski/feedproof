@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { baseContext, describeForEachParser } from '../tests.js'
+import { baseContext, describeForEachParser, html, resolverExtractor } from '../tests.js'
 import { convertWidgets } from '../transforms/dom/convertWidgets.js'
 import { rebuildWistiaEmbeds } from '../transforms/dom/rebuildWistiaEmbeds.js'
 import type { EmbedResolverResult, TransformContext } from '../types.js'
@@ -62,6 +62,34 @@ describe('wistiaResolveEmbed', () => {
 })
 
 describeForEachParser('wistiaEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, wistiaEmbedResolver)
+
+  it('should resolve the native player iframe', async () => {
+    const value = html`
+      <iframe
+        src="https://fast.wistia.net/embed/iframe/2fg072pftb"
+        class="wistia_embed"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'wistia',
+      id: '2fg072pftb',
+      src: 'https://fast.wistia.net/embed/iframe/2fg072pftb',
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
+  it('should leave a non-media wistia url to the generic placeholder', async () => {
+    const value = '<iframe src="https://wistia.com/pricing"></iframe>'
+
+    expect(await extract(value)).toBeUndefined()
+  })
+})
+
+// The JS facade has no iframe at all: rebuildWistiaEmbeds mints one, and the resolver reads it
+// on the same pass, so the two halves have to keep agreeing on the url they build.
+describeForEachParser('wistia facades the rebuild pass materializes', (parseHtml) => {
   const context: TransformContext = { ...baseContext, widgetResolvers: [wistiaEmbedResolver] }
 
   const transform = (value: string) => {
@@ -71,30 +99,20 @@ describeForEachParser('wistiaEmbedResolver', (parseHtml) => {
     ])
   }
 
-  it('should resolve the native player iframe', async () => {
-    const value =
-      '<iframe src="https://fast.wistia.net/embed/iframe/2fg072pftb" class="wistia_embed"></iframe>'
-    const result = await transform(value)
+  it('should resolve a facade into the same placeholder as the native iframe', async () => {
+    const value = html`
+      <div class="wistia_responsive_padding">
+        <div class="wistia_embed wistia_async_2fg072pftb"></div>
+      </div>
+    `
+    const expected = html`
+      <div
+        data-embed-src="https://fast.wistia.net/embed/iframe/2fg072pftb"
+        data-embed-provider="wistia"
+        data-embed-id="2fg072pftb"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-provider="wistia"')
-    expect(result).toContain('data-embed-id="2fg072pftb"')
-  })
-
-  // The JS facade has no iframe at all: rebuildWistiaEmbeds mints one, and the resolver reads
-  // it on the same pass, so the two halves have to keep agreeing on the url they build.
-  it('should resolve a facade the rebuild pass materialized', async () => {
-    const value =
-      '<div class="wistia_responsive_padding"><div class="wistia_embed wistia_async_2fg072pftb"></div></div>'
-    const result = await transform(value)
-
-    expect(result).toContain('data-embed-provider="wistia"')
-    expect(result).toContain('data-embed-id="2fg072pftb"')
-  })
-
-  it('should leave a non-media wistia url to the generic placeholder', async () => {
-    const value = '<iframe src="https://wistia.com/pricing"></iframe>'
-    const result = await transform(value)
-
-    expect(result).not.toContain('data-embed-provider')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 })

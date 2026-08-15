@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { baseContext, describeForEachParser, html, resolverExtractor } from '../tests.js'
-import { convertWidgets } from '../transforms/dom/convertWidgets.js'
-import type { EmbedResolverResult, TransformContext } from '../types.js'
-import { applyDomTransforms } from '../utils/transforms.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
+import type { EmbedResolverResult } from '../types.js'
 import { bandcampEmbedResolver, extractBandcampRelease } from './bandcamp.js'
 
 describe('extractBandcampRelease', () => {
@@ -68,15 +66,6 @@ describe('extractBandcampRelease', () => {
 
 describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, bandcampEmbedResolver)
-
-  const transform = (value: string) => {
-    return applyDomTransforms(parseHtml(value), [
-      convertWidgets({
-        ...baseContext,
-        widgetResolvers: [bandcampEmbedResolver],
-      } as TransformContext),
-    ])
-  }
 
   describe('happy paths', () => {
     // Bandcamp's own snippet carries the release page and label in a fallback anchor, which is
@@ -179,16 +168,5 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
-  })
-
-  it('should replace the iframe with the placeholder', async () => {
-    const value =
-      '<iframe src="https://bandcamp.com/EmbeddedPlayer/album=3373381116/size=large/" width="350" height="470"></iframe>'
-    const result = await transform(value)
-
-    expect(result).toContain('data-embed-provider="bandcamp"')
-    expect(result).toContain('data-embed-id="album/3373381116"')
-    expect(result).toContain('data-embed-height="470"')
-    expect(result).not.toContain('<iframe')
   })
 })

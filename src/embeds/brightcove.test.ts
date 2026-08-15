@@ -262,8 +262,14 @@ describeForEachParser('brightcove video-js through the pipeline', (parseHtml) =>
       baseUrl: 'https://example.com/post',
     })
 
-    expect(result).toContain('data-embed-provider="brightcove"')
-    expect(result).toContain('data-embed-id="6098765432"')
-    expect(result).not.toContain('<video-js')
+    const expected = html`
+      <div
+        data-embed-src="https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432"
+        data-embed-provider="brightcove"
+        data-embed-id="6098765432"
+      ></div>
+    `
+
+    expect(result).toEqualHtml(expected)
   })
 })

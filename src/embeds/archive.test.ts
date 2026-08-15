@@ -234,10 +234,18 @@ describeForEachParser('archive flash embed through the pipeline', (parseHtml) =>
       baseUrl: 'https://example.com/post',
     })
 
-    expect(result).toContain('data-embed-provider="archive"')
-    expect(result).toContain('data-embed-id="nasa_hubble"')
-    expect(result).toContain('data-embed-src="https://archive.org/embed/nasa_hubble"')
-    expect(result).toContain('data-embed-thumbnail="https://archive.org/services/img/nasa_hubble"')
-    expect(result).not.toContain('flowplayer')
+    const expected = html`
+      <div
+        data-embed-src="https://archive.org/embed/nasa_hubble"
+        data-embed-provider="archive"
+        data-embed-id="nasa_hubble"
+        data-embed-url="https://archive.org/details/nasa_hubble"
+        data-embed-thumbnail="https://archive.org/services/img/nasa_hubble"
+        data-embed-width="640"
+        data-embed-height="504"
+      ></div>
+    `
+
+    expect(result).toEqualHtml(expected)
   })
 })
