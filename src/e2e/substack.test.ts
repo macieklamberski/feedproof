@@ -3,6 +3,15 @@ import { transformContent } from '../index.js'
 import { describeForEachParser, html, substackAttrs } from '../tests.js'
 
 describeForEachParser('Substack', (parseHtml) => {
+  // substackOwnPostCiteResolver and substackCrossPostCiteResolver claim the post embeds,
+  // substackMediaResolver rebuilds the video and audio uploads from their id-only divs,
+  // fixSubstackMentions and fixSubstackImageLinks repair the two components that ship broken,
+  // and defaultNonContentSelectors drops the subscribe and publication promos. Everything else
+  // (captioned images, galleries, buttons, footnotes, code, the third-party wraps) reaches its
+  // shape through the generic passes: unwrapWrappers, flattenPictureElements,
+  // stripNonContentElements and convertWidgets. The Twitter, Instagram and Bluesky wraps are
+  // in open PRs #520, #548 and #547; their cases stay todo until those merge.
+
   it('should convert a substack post embed into a cite placeholder', async () => {
     const value = html`
       <p>Intro</p>
