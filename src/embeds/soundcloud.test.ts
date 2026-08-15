@@ -3,8 +3,8 @@ import {
   baseContext,
   describeForEachParser,
   html,
+  jsonAttrValue,
   resolverExtractor,
-  substackAttrs,
 } from '../tests.js'
 import { convertWidgets } from '../transforms/dom/convertWidgets.js'
 import type { EmbedResolverResult } from '../types.js'
@@ -151,7 +151,7 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
         targetUrl: 'https://soundcloud.com/kaliuchis/its-just-us',
       }
       const value = html`
-        <div class="soundcloud-wrap" data-attrs="${substackAttrs(trackCardAttrs)}" data-component-name="SoundcloudToDOM">
+        <div class="soundcloud-wrap" data-attrs="${jsonAttrValue(trackCardAttrs)}" data-component-name="SoundcloudToDOM">
           <iframe src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2088634614"></iframe>
         </div>
       `
@@ -181,7 +181,7 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
         targetUrl: '',
       }
       const value = html`
-        <div class="soundcloud-wrap" data-attrs="${substackAttrs(untitledCardAttrs)}" data-component-name="SoundcloudToDOM">
+        <div class="soundcloud-wrap" data-attrs="${jsonAttrValue(untitledCardAttrs)}" data-component-name="SoundcloudToDOM">
           <iframe src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F948032941"></iframe>
         </div>
       `

@@ -77,6 +77,7 @@ import {
   jwplayerAmpEmbedResolver,
   jwplayerIframeEmbedResolver,
   jwplayerScriptEmbedResolver,
+  jwplayerSetupEmbedResolver,
 } from './embeds/jwplayer.js'
 import { libsynEmbedResolver } from './embeds/libsyn.js'
 import { mastodonEmbedResolver } from './embeds/mastodon.js'
@@ -240,8 +241,11 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   rebuildLazyLoadForVideos,
   rebuildLazyYtEmbeds,
   rebuildElementorVideoEmbeds,
-  // Unwraps an Embedly media widget to the inner provider iframe (carrying Embedly's poster as
-  // data-thumbnail), so the provider transforms below handle it instead of a cdn.embedly wrapper.
+  // Unwraps both Embedly carriers to the inner provider iframe (carrying Embedly's poster as
+  // data-thumbnail), so the provider transforms below handle them instead of an Embedly shell:
+  // the rendered cdn.embedly wrapper, and the empty div whose oEmbed payload rides in `data`.
+  // Runs before convertCiteCards so a payload naming `link` still reaches the cite pass, and
+  // before stripEmptyTags, which is what deletes an empty carrier nothing has claimed.
   rebuildEmbedlyEmbeds,
   // A GitHub Gist embed is a JS-only <script> that renders nothing in a reader; replace it
   // with a link to the gist so the content is at least reachable.
@@ -426,6 +430,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   jwplayerIframeEmbedResolver,
   jwplayerScriptEmbedResolver,
   jwplayerAmpEmbedResolver,
+  jwplayerSetupEmbedResolver,
   brightcoveFlashEmbedResolver,
   brightcoveIframeEmbedResolver,
   brightcoveVideoJsEmbedResolver,
@@ -629,7 +634,7 @@ export const defaultDeferredIframeSources: Array<DeferredIframeSource> = [
   // two above the value is a watch page rather than a player: `youtube.com/watch` in 321 feeds,
   // `vimeo.com` in 138, `listen.style/p` in 53. That is fine here, because convertWidgets asks
   // the resolvers what the url means and they mint the player from it; a host nobody resolves
-  // becomes a placeholder carrying a visible link, which is what those feeds show today anyway.
+  // becomes a placeholder carrying the url, which is what those feeds show today anyway.
   //
   // Scoped to a wrapper holding no player. In 566 of the 624 feeds the iframe is already inside,
   // and this transform replaces the element it matches, so an unscoped entry would throw away a

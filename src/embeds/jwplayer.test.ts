@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, resolverExtractor } from '../tests.js'
+import { transformContent } from '../index.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   extractJwplayerId,
@@ -7,6 +8,7 @@ import {
   jwplayerIframeEmbedResolver,
   jwplayerResolveEmbed,
   jwplayerScriptEmbedResolver,
+  jwplayerSetupEmbedResolver,
 } from './jwplayer.js'
 
 describe('extractJwplayerId', () => {
@@ -165,5 +167,78 @@ describeForEachParser('jwplayerAmpEmbedResolver', (parseHtml) => {
       '<amp-jwplayer data-playlist-id="482jsTAr" data-player-id="abc12345"></amp-jwplayer>'
 
     expect(await extract(value)).toBeUndefined()
+  })
+})
+
+describeForEachParser('jwplayerSetupEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, jwplayerSetupEmbedResolver)
+
+  it('should read the media id out of an inline setup call', async () => {
+    const value = html`
+      <div class="jwplayer" id="botr_hwhuyhFf_h5bP9bKQ_div"></div>
+      <script>
+        jwplayer("botr_hwhuyhFf_h5bP9bKQ_div").setup({"playlist":"https://cdn.jwplayer.com/v2/media/hwhuyhFf"});
+      </script>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'jwplayer',
+      id: 'hwhuyhFf',
+      src: 'https://cdn.jwplayer.com/players/hwhuyhFf.html',
+      thumbnail: 'https://cdn.jwplayer.com/v2/media/hwhuyhFf/poster.jpg',
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
+  // Several players in one item each name their own container, so the id pairs them up.
+  it('should read a script that names the div rather than following it', async () => {
+    const value = html`
+      <div class="jwplayer" id="botr_hwhuyhFf_h5bP9bKQ_div"></div>
+      <p>Between the two.</p>
+      <script>
+        jwplayer("botr_hwhuyhFf_h5bP9bKQ_div").setup({"playlist":"https://cdn.jwplayer.com/v2/media/hwhuyhFf"});
+      </script>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'jwplayer',
+      id: 'hwhuyhFf',
+      src: 'https://cdn.jwplayer.com/players/hwhuyhFf.html',
+      thumbnail: 'https://cdn.jwplayer.com/v2/media/hwhuyhFf/poster.jpg',
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
+  it('should return undefined when the setup call names no media', async () => {
+    const value = html`
+      <div class="jwplayer" id="botr_hwhuyhFf_h5bP9bKQ_div"></div>
+      <script>
+        jwplayer("botr_hwhuyhFf_h5bP9bKQ_div").setup({"file":"https://example.com/video.mp4"});
+      </script>
+    `
+
+    expect(await extract(value)).toBeUndefined()
+  })
+
+  it('should return undefined for a player div carrying no script', async () => {
+    const value = html`<div class="jwplayer"></div>`
+
+    expect(await extract(value)).toBeUndefined()
+  })
+})
+
+// The resolver alone cannot see this: `wrapBareInlineInParagraphs` runs before the widget pass
+// and puts the bare script in a `<p>`, so the div's sibling is that paragraph.
+describeForEachParser('jwplayerSetupEmbedResolver through the pipeline', (parseHtml) => {
+  it('should recover a player whose script the paragraph pass has wrapped', async () => {
+    const value = html`
+      <div class="jwplayer"></div>
+      <script>
+        jwplayer("x").setup({"playlist":"https://cdn.jwplayer.com/v2/media/hwhuyhFf"});
+      </script>
+    `
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContainHtml('data-embed-id="hwhuyhFf"')
   })
 })

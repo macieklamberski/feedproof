@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { baseContext } from '../tests.js'
-import { pickUrlParams, resolveOrKeepUrl } from './urls.js'
+import { pickQueryParams, pickUrlParams, resolveOrKeepUrl } from './urls.js'
 
 describe('resolveOrKeepUrl', () => {
   const { resolveUrlFn } = baseContext
@@ -41,6 +41,45 @@ describe('resolveOrKeepUrl', () => {
 
   it('should return undefined for an undefined url', () => {
     expect(resolveOrKeepUrl(undefined, resolveUrlFn, 'https://example.com')).toBeUndefined()
+  })
+})
+
+describe('pickQueryParams', () => {
+  it('should keep only the named parameters', () => {
+    const value = 'start=90&autoplay=1&list=PLabc'
+    const expected = { start: '90', list: 'PLabc' }
+
+    expect(pickQueryParams(value, ['start', 'list'])).toEqual(expected)
+  })
+
+  it('should state nothing when none are present', () => {
+    const value = 'autoplay=1&rel=0'
+
+    expect(pickQueryParams(value, ['start'])).toEqual({})
+  })
+
+  it('should state nothing for an empty query', () => {
+    expect(pickQueryParams('', ['start'])).toEqual({})
+  })
+
+  it('should skip a parameter present but empty', () => {
+    expect(pickQueryParams('start=', ['start'])).toEqual({})
+  })
+
+  // The query arrives from an attribute, so it may carry the punctuation a url would have
+  // percent-encoded; `URLSearchParams` decodes it the same way either way.
+  it('should decode a value that arrived encoded', () => {
+    const value = 'clipt=a%2Bb%2Fc'
+    const expected = { clipt: 'a+b/c' }
+
+    expect(pickQueryParams(value, ['clipt'])).toEqual(expected)
+  })
+
+  it('should take the first of a repeated parameter', () => {
+    const value = 'start=10&start=90'
+    const expected = { start: '10' }
+
+    expect(pickQueryParams(value, ['start'])).toEqual(expected)
   })
 })
 

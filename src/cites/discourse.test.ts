@@ -194,6 +194,77 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // The comment shape puts the author in a bare span and repeats it in the heading.
+    it('should read the comment author from its span and drop it from the title', async () => {
+      const value = html`
+        <aside class="onebox githubpullrequest" data-onebox-src="https://github.com/owner/repo/pull/12#issuecomment-99">
+          <header class="source">
+            <a href="https://github.com/owner/repo/pull/12" target="_blank" rel="noopener">github.com/owner/repo</a>
+          </header>
+          <article class="onebox-body">
+            <div class="github-row">
+              <div class="github-info-container">
+                <h4><a href="https://github.com/owner/repo/pull/12" target="_blank" rel="noopener">Comment by octocat - Fix the thing</a></h4>
+                <div class="github-info">
+                  <div class="date">
+                    commented <span class="discourse-local-date" data-format="ll" data-date="2025-03-04" data-time="09:12:00" data-timezone="UTC">09:12AM - 04 Mar 25 UTC</span>
+                  </div>
+                  <span>
+                    <a href="https://github.com/octocat" target="_blank" rel="noopener">octocat</a>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="github-row">
+              <p class="github-body-container">The comment body.</p>
+            </div>
+          </article>
+        </aside>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://github.com/owner/repo/pull/12#issuecomment-99',
+        title: 'Fix the thing',
+        description: 'The comment body.',
+        author: 'octocat',
+        publisher: 'github.com/owner/repo',
+        date: '2025-03-04',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should keep a title that does not name the author', async () => {
+      const value = html`
+        <aside class="onebox githubpullrequest" data-onebox-src="https://github.com/owner/repo/pull/12">
+          <header class="source">
+            <a href="https://github.com/owner/repo/pull/12" target="_blank" rel="noopener">github.com/owner/repo</a>
+          </header>
+          <article class="onebox-body">
+            <div class="github-row">
+              <div class="github-info-container">
+                <h4><a href="https://github.com/owner/repo/pull/12" target="_blank" rel="noopener">Fix the thing (#12)</a></h4>
+                <div class="github-info">
+                  <span>
+                    <a href="https://github.com/octocat" target="_blank" rel="noopener">octocat</a>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </article>
+        </aside>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://github.com/owner/repo/pull/12',
+        title: 'Fix the thing (#12)',
+        author: 'octocat',
+        publisher: 'github.com/owner/repo',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should read the folder description from its label span, not the path', async () => {
       const value = html`
         <aside class="onebox githubfolder" data-onebox-src="https://github.com/owner/repo/tree/main/lib">

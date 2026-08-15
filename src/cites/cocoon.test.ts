@@ -65,6 +65,52 @@ describeForEachParser('cocoonCiteResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should carry the label bar as the caption', async () => {
+      const value = html`
+        <a href="https://example.com/post" class="blogcard-wrap internal-blogcard-wrap">
+          <div class="blogcard-label internal-blogcard-label">
+            <span class="blogcard-label-text">関連記事</span>
+          </div>
+          <div class="blogcard internal-blogcard">
+            <div class="blogcard-content internal-blogcard-content">
+              <div class="blogcard-title internal-blogcard-title">Post title</div>
+            </div>
+            <div class="blogcard-domain internal-blogcard-domain">example.com</div>
+          </div>
+        </a>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'cocoon',
+        url: 'https://example.com/post',
+        title: 'Post title',
+        caption: '関連記事',
+        publisher: 'example.com',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should carry an author-written label rather than the stock one', async () => {
+      const value = html`
+        <a href="https://example.com/post" class="blogcard-wrap external-blogcard-wrap">
+          <div class="blogcard-label external-blogcard-label">前にも書いたのですが</div>
+          <div class="blogcard external-blogcard">
+            <div class="blogcard-content external-blogcard-content">
+              <div class="blogcard-title external-blogcard-title">Post title</div>
+            </div>
+          </div>
+        </a>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'cocoon',
+        url: 'https://example.com/post',
+        title: 'Post title',
+        caption: '前にも書いたのですが',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should extract an external card the same way as an internal one', async () => {
       const value = html`
         <a href="https://example.com/post" class="blogcard-wrap external-blogcard-wrap a-wrap cf">

@@ -35,6 +35,27 @@ export const isUrlShaped = (value: string): boolean => {
   return urlShapeRegex.test(value)
 }
 
+// The same pick as `pickUrlParams`, for a query that arrives on its own rather than on a url,
+// which is how a facade states its player options (`lite-youtube`'s `params`). Returns the pairs
+// rather than a string, so a caller can override one from a dedicated attribute before building.
+export const pickQueryParams = (
+  query: string,
+  names: ReadonlyArray<string>,
+): Record<string, string> => {
+  const parsed = new URLSearchParams(query)
+  const picked: Record<string, string> = {}
+
+  for (const name of names) {
+    const value = parsed.get(name)
+
+    if (value) {
+      picked[name] = value
+    }
+  }
+
+  return picked
+}
+
 // The query string an embed resolver carries over when it rebuilds a src from the video id:
 // only the parameters that change what plays. Returns it ready to append, so a src with
 // nothing worth keeping stays bare.

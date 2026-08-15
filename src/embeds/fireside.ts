@@ -2,8 +2,15 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// The token pairs a show with an episode across a `+`, e.g. `DiNRb69N+Dagp3z15`.
-const safeTokenRegex = /^[A-Za-z0-9]+\+[A-Za-z0-9]+$/
+// The token pairs a show with an episode across a `+`, e.g. `DiNRb69N+Dagp3z15`. Both halves are
+// base64url, so `-` and `_` occur: of five tokens read off live shows, three carried one
+// (`I-2by1pi+kf-gXAOz`, `nj9oaFbU+BY9LAva_`, `gs5CXE6m+HQzPSv-Z`, 2026-08-15).
+const safeTokenRegex = /^[A-Za-z0-9_-]+\+[A-Za-z0-9_-]+$/
+
+// The version sits before the token on both hosts: `fireside.fm/player/{version}/{token}` and
+// `player.fireside.fm/{version}/{token}`. v3 is what the platform writes today and v2 still
+// serves, so the publisher's choice is carried through rather than normalised to one of them.
+const playerVersions = new Set(['v2', 'v3'])
 
 const firesideHosts = ['fireside.fm']
 
@@ -13,10 +20,13 @@ const firesideHosts = ['fireside.fm']
 // speakerdeckScriptEmbedResolver states its default deck ratio.
 const playerHeight = 200
 
-// Feeds write `fireside.fm/player/v2/{token}`, which 301s to `player.fireside.fm/v2/{token}`
-// (checked 2026-08-11, the target answers 200). Minting the target spares the reader a hop.
+// Feeds write `fireside.fm/player/{version}/{token}`, which 301s to the same path on
+// `player.fireside.fm` (checked 2026-08-11 and again 2026-08-15). Minting the target spares the
+// reader a hop, and that target discriminates: a real token answers 200 while a fabricated one
+// answers 404, unlike the player shells most podcast hosts serve.
+type FiresidePlayer = { version: string; token: string }
 
-export const extractFiresideToken = (link: string): string | undefined => {
+export const extractFiresideToken = (link: string): FiresidePlayer | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
 
   if (!parsed) {
@@ -24,29 +34,31 @@ export const extractFiresideToken = (link: string): string | undefined => {
   }
 
   const segments = getPathSegments(parsed)
+  const versioned = segments[0] === 'player' ? segments.slice(1) : segments
+  const [version, encodedToken] = versioned
 
-  if (segments[0] !== 'player' || segments[1] !== 'v2') {
+  if (!version || !playerVersions.has(version)) {
     return
   }
 
-  const token = segments[2] ? decodeURIComponent(segments[2]) : undefined
+  const token = encodedToken ? decodeURIComponent(encodedToken) : undefined
 
   if (token && safeTokenRegex.test(token)) {
-    return token
+    return { version, token }
   }
 }
 
 export const firesideResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const token = extractFiresideToken(url)
+  const player = extractFiresideToken(url)
 
-  if (!token) {
+  if (!player) {
     return
   }
 
   return {
     provider: 'fireside',
-    id: token,
-    src: `https://player.fireside.fm/v2/${token}`,
+    id: player.token,
+    src: `https://player.fireside.fm/${player.version}/${player.token}`,
     height: playerHeight,
   }
 }

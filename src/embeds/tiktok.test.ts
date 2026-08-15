@@ -451,9 +451,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
           data-embed-url="https://www.tiktok.com/@user/video/7000000000000000000"
           data-embed-description="caption text #tag"
           data-embed-author="@user"
-        >
-          <a href="https://www.tiktok.com/@user/video/7000000000000000000">https://www.tiktok.com/@user/video/7000000000000000000</a>
-        </div>
+        ></div>
       `
 
       expect(await convert(value)).toEqualHtml(expected)
@@ -472,9 +470,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
           data-embed-url="https://www.tiktok.com/@user/video/7000000000000000000"
           data-embed-description="caption text #tag"
           data-embed-author="@user"
-        >
-          <a href="https://www.tiktok.com/@user/video/7000000000000000000">https://www.tiktok.com/@user/video/7000000000000000000</a>
-        </div>
+        ></div>
       `
 
       expect(await convert(value)).toEqualHtml(expected)
@@ -506,9 +502,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
           data-embed-url="https://www.tiktok.com/@user/video/7000000000000000000"
           data-embed-width="605"
           data-embed-height="758"
-        >
-          <a href="https://www.tiktok.com/@user/video/7000000000000000000">https://www.tiktok.com/@user/video/7000000000000000000</a>
-        </div>
+        ></div>
       `
 
       expect(await convert(value)).toEqualHtml(expected)

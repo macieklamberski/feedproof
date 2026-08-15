@@ -86,7 +86,7 @@ export const extractVideoId = (link: string): string | undefined => {
 // window of a clip (`clip` is the clip id, `clipt` its encoded bounds — a clip embed needs
 // both). Everything else the publisher wrote — autoplay, `rel`, `si` and other tracking — is
 // dropped with the rest of the original query.
-const youtubeEmbedParams = ['start', 'end', 'list', 'index', 'clip', 'clipt']
+export const youtubeEmbedParams = ['start', 'end', 'list', 'index', 'clip', 'clipt']
 
 // Playlist (`list`) and channel (`channel`) ids. A charset guard, not a length/prefix one:
 // it only keeps a stray value out of the rebuilt url and the enrichment key.

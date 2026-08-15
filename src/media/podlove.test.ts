@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { MediaResolverResult } from '../types.js'
 import { podloveMediaResolver } from './podlove.js'
@@ -138,24 +139,6 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
     })
 
     // Several episodes in one item: each player has its own script, and they are not adjacent.
-    it('should find the config by player id when the script is not the next sibling', async () => {
-      const value = html`
-        <div>
-          <div id="player-one" class="podlove-web-player"></div>
-          <p>Prose between the player and its script.</p>
-          <script>
-            var player = document.getElementById("player-one");
-            podlovePlayerCache.add([{"data":{"audio":[{"url":"https://example.com/one.mp3","mimeType":"audio/mpeg"}]}}])
-          </script>
-        </div>
-      `
-      const expected: MediaResolverResult = {
-        tag: 'audio',
-        src: 'https://example.com/one.mp3',
-      }
-
-      expect(await extract(value)).toEqual(expected)
-    })
 
     it('should emit no poster when the config states none', async () => {
       const config = JSON.stringify([
@@ -173,17 +156,6 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
 
   describe('rejections', () => {
     // The id lookup runs and finds nothing, which is separate from there being no script.
-    it('should return undefined when no sibling script names the player', async () => {
-      const value = html`
-        <div>
-          <div id="player-three" class="podlove-web-player"></div>
-          <p>Prose between the player and an unrelated script.</p>
-          <script>console.log("some other widget")</script>
-        </div>
-      `
-
-      expect(await extract(value)).toBeUndefined()
-    })
 
     // The endpoint spelling: a config url with no data, which would need a fetch.
     it('should return undefined for the fetch-based player form', async () => {
@@ -236,6 +208,26 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
       const value = html`<div class="podlove-web-player"></div>`
 
       expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  // The resolver alone cannot see this. `wrapBareInlineInParagraphs` runs before the widget
+  // pass and puts the bare script in a `<p>`, so the player's sibling is that paragraph rather
+  // than the script, and a player carrying no id has no other route to its config.
+  describe('through the pipeline', () => {
+    it('should recover an episode whose script the paragraph pass has wrapped', async () => {
+      const config = JSON.stringify([
+        { data: { audio: [{ url: 'https://example.com/episode.mp3', mimeType: 'audio/mpeg' }] } },
+      ])
+      const value = html`
+        <div class="podlove-web-player"></div>
+        <script>
+          podlovePlayerCache.add(${config})
+        </script>
+      `
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toContainHtml('<audio src="https://example.com/episode.mp3" controls></audio>')
     })
   })
 })

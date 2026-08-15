@@ -1,6 +1,6 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr } from '../utils/dom.js'
+import { attr, findConfigScript } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const fileExtensionRegex = /\.[a-z]+$/i
@@ -83,3 +83,21 @@ export const jwplayerAmpEmbedResolver = createMarkupEmbedResolver(
     return composeJwplayerEmbed(mediaId)
   },
 )
+
+// The third carrier: an empty `<div class="jwplayer">` beside an inline `jwplayer(...).setup()`
+// call. Nothing here names the media in the markup, so without reading the script the div is
+// deleted as an empty tag and the video is gone. The setup object points its playlist at
+// `cdn.jwplayer.com/v2/media/{mediaId}`, which is the same id the other carriers name, so all
+// four resolve to one placeholder.
+const setupPlaylistRegex = /\/v2\/media\/([a-zA-Z0-9]{8})/
+
+export const jwplayerSetupEmbedResolver = createMarkupEmbedResolver('div.jwplayer', (element) => {
+  const config = findConfigScript(element)?.textContent
+  const mediaId = config?.match(setupPlaylistRegex)?.[1]
+
+  if (!mediaId || !safeMediaIdRegex.test(mediaId)) {
+    return
+  }
+
+  return composeJwplayerEmbed(mediaId)
+})

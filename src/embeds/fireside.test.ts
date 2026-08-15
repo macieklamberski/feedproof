@@ -5,16 +5,52 @@ import { extractFiresideToken, firesideResolveEmbed } from './fireside.js'
 describe('extractFiresideToken', () => {
   it('should read the show and episode token', () => {
     const value = 'https://fireside.fm/player/v2/DiNRb69N+Dagp3z15'
-    const expected = 'DiNRb69N+Dagp3z15'
+    const expected = { version: 'v2', token: 'DiNRb69N+Dagp3z15' }
 
-    expect(extractFiresideToken(value)).toBe(expected)
+    expect(extractFiresideToken(value)).toEqual(expected)
   })
 
   it('should read a token whose plus arrived percent-encoded', () => {
     const value = 'https://fireside.fm/player/v2/o5sVQfzy%2BKzqauAdJ'
-    const expected = 'o5sVQfzy+KzqauAdJ'
+    const expected = { version: 'v2', token: 'o5sVQfzy+KzqauAdJ' }
 
-    expect(extractFiresideToken(value)).toBe(expected)
+    expect(extractFiresideToken(value)).toEqual(expected)
+  })
+
+  // The player host omits the `player` segment, and it is what the platform's embed code writes.
+  it('should read a token straight off the player host', () => {
+    const value = 'https://player.fireside.fm/v3/N8LaNbQY+MI2PkJ2g'
+    const expected = { version: 'v3', token: 'N8LaNbQY+MI2PkJ2g' }
+
+    expect(extractFiresideToken(value)).toEqual(expected)
+  })
+
+  it('should read the third player version on the feed-side host', () => {
+    const value = 'https://fireside.fm/player/v3/N8LaNbQY+MI2PkJ2g'
+    const expected = { version: 'v3', token: 'N8LaNbQY+MI2PkJ2g' }
+
+    expect(extractFiresideToken(value)).toEqual(expected)
+  })
+
+  // Both halves are base64url, so three of five tokens read off live shows carry `-` or `_`.
+  it('should read a token carrying base64url punctuation', () => {
+    const value = 'https://player.fireside.fm/v3/I-2by1pi+kf-gXAOz'
+    const expected = { version: 'v3', token: 'I-2by1pi+kf-gXAOz' }
+
+    expect(extractFiresideToken(value)).toEqual(expected)
+  })
+
+  it('should read a token ending in an underscore', () => {
+    const value = 'https://player.fireside.fm/v3/nj9oaFbU+BY9LAva_'
+    const expected = { version: 'v3', token: 'nj9oaFbU+BY9LAva_' }
+
+    expect(extractFiresideToken(value)).toEqual(expected)
+  })
+
+  it('should return undefined for a player version it does not know', () => {
+    const value = 'https://player.fireside.fm/v9/DiNRb69N+Dagp3z15'
+
+    expect(extractFiresideToken(value)).toBeUndefined()
   })
 
   it('should return undefined for a fireside url that is not a player', () => {
@@ -44,6 +80,19 @@ describe('firesideResolveEmbed', () => {
       provider: 'fireside',
       id: 'DiNRb69N+Dagp3z15',
       src: 'https://player.fireside.fm/v2/DiNRb69N+Dagp3z15',
+      height: 200,
+    }
+
+    expect(firesideResolveEmbed(value)).toEqual(expected)
+  })
+
+  // v3 is what the platform writes today, so a publisher on it is not sent back to v2.
+  it('should keep the player version the source states', () => {
+    const value = 'https://player.fireside.fm/v3/I-2by1pi+kf-gXAOz'
+    const expected: EmbedResolverResult = {
+      provider: 'fireside',
+      id: 'I-2by1pi+kf-gXAOz',
+      src: 'https://player.fireside.fm/v3/I-2by1pi+kf-gXAOz',
       height: 200,
     }
 
