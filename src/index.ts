@@ -107,6 +107,7 @@ export {
   defaultStandardDomTransforms,
   heuristicDomTransforms,
 } from './defaults.js'
+export { acastEmbedResolver } from './embeds/acast.js'
 export { anchorEmbedResolver } from './embeds/anchor.js'
 export { appleEmbedResolver } from './embeds/apple.js'
 export {
