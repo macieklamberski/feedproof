@@ -184,6 +184,7 @@ export {
   twitterAmpEmbedResolver,
   twitterBlockquoteEmbedResolver,
   twitterIframeEmbedResolver,
+  twitterSubstackEmbedResolver,
 } from './embeds/twitter.js'
 export {
   typeformIframeEmbedResolver,

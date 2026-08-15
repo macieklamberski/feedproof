@@ -79,6 +79,7 @@ import {
   twitterAmpEmbedResolver,
   twitterBlockquoteEmbedResolver,
   twitterIframeEmbedResolver,
+  twitterSubstackEmbedResolver,
 } from './embeds/twitter.js'
 import { typeformIframeEmbedResolver, typeformWidgetEmbedResolver } from './embeds/typeform.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
@@ -369,6 +370,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   youtubeAmpEmbedResolver,
   twitterBlockquoteEmbedResolver,
   twitterAmpEmbedResolver,
+  twitterSubstackEmbedResolver,
   twitterIframeEmbedResolver,
   tedEmbedResolver,
   typeformWidgetEmbedResolver,

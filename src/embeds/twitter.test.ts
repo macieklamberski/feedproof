@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
-import { describeForEachParser, html, resolverExtractor } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   twitterAmpEmbedResolver,
   twitterBlockquoteEmbedResolver,
   twitterIframeEmbedResolver,
   twitterResolveEmbed,
+  twitterSubstackEmbedResolver,
 } from './twitter.js'
 
 const statusId = '123456789012345'
@@ -653,6 +654,253 @@ describeForEachParser('twitterAmpEmbedResolver', (parseHtml) => {
     }
 
     expect(await extract(value)).toEqual(expected)
+  })
+})
+
+describeForEachParser('twitterSubstackEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, twitterSubstackEmbedResolver)
+
+  // Substack stores the payload in a double-quoted attribute with the inner quotes
+  // entity-encoded, which is what survives a parse and serialise roundtrip. Tests pass the
+  // attrs with Substack's own key names so the wire keys stay visible at the call site.
+  const makeSubstackTweet = (attrs: Record<string, unknown> | string): string => {
+    return html`
+      <div
+        class="twitter-embed"
+        data-attrs="${substackAttrs(attrs)}"
+        data-component-name="Twitter2ToDOM"
+      ></div>
+    `
+  }
+
+  describe('happy paths', () => {
+    it('should build the whole placeholder from a live payload', async () => {
+      const value = makeSubstackTweet({
+        url: 'https://twitter.com/notdetails/status/961570492162494464',
+        full_text:
+          'Hey, I\'m open-sourcing the framework I put together to help me choose between job offers. I hope this helps someone 🤗 <a class="tweet-url" href="https://docs.google.com/spreadsheets/d/1huExwmi7fWgXpci8uM7-kVZx-UHNzYp1ORVscQWuin4/edit?usp=sharing">docs.google.com/spreadsheets/d…</a> ',
+        username: 'notdetails',
+        name: 'Joel Califa',
+        profile_image_url: '',
+        date: 'Thu Feb 08 12:00:45 +0000 2018',
+        photos: [
+          {
+            img_url: 'https://pbs.substack.com/media/DVgu7f1WsAAkNMr.jpg',
+            link_url: 'https://t.co/kJDxilkm4E',
+            alt_text: null,
+          },
+        ],
+        quoted_tweet: {},
+        reply_count: 0,
+        retweet_count: 179,
+        like_count: 968,
+      })
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: '961570492162494464',
+        src: 'https://platform.twitter.com/embed/Tweet.html?id=961570492162494464',
+        url: 'https://x.com/notdetails/status/961570492162494464',
+        description:
+          "Hey, I'm open-sourcing the framework I put together to help me choose between job offers. I hope this helps someone 🤗 docs.google.com/spreadsheets/d…",
+        author: 'Joel Califa',
+        date: 'Thu Feb 08 12:00:45 +0000 2018',
+        thumbnail: 'https://pbs.substack.com/media/DVgu7f1WsAAkNMr.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should resolve the div by component name alone when the class is stripped', async () => {
+      const value = html`
+        <div
+          data-attrs="${substackAttrs({
+            url: 'https://twitter.com/user/status/123456789012345',
+            full_text: 'Tweet text here.',
+            username: 'user',
+            name: 'Display Name',
+          })}"
+          data-component-name="Twitter2ToDOM"
+        ></div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: statusUrl,
+        description: 'Tweet text here.',
+        author: 'Display Name',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should read the payload the same when the div carries children', async () => {
+      const value = html`
+        <div
+          class="twitter-embed"
+          data-attrs="${substackAttrs({
+            url: 'https://twitter.com/user/status/123456789012345',
+            full_text: 'Tweet text here.',
+            username: 'user',
+            name: 'Display Name',
+          })}"
+          data-component-name="Twitter2ToDOM"
+        >
+          <p>Tweet text here.</p>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: statusUrl,
+        description: 'Tweet text here.',
+        author: 'Display Name',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should fall back to the handle when no display name is present', async () => {
+      const value = makeSubstackTweet({
+        url: 'https://twitter.com/user/status/123456789012345',
+        full_text: 'Tweet text here.',
+        username: 'user',
+        name: '',
+      })
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: statusUrl,
+        description: 'Tweet text here.',
+        author: 'user',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should carry the avatar when the payload names one', async () => {
+      const value = makeSubstackTweet({
+        url: 'https://twitter.com/user/status/123456789012345',
+        full_text: 'Tweet text here.',
+        username: 'user',
+        name: 'Display Name',
+        profile_image_url: 'https://pbs.substack.com/media/profile.jpg',
+      })
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: statusUrl,
+        description: 'Tweet text here.',
+        author: 'Display Name',
+        avatar: 'https://pbs.substack.com/media/profile.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('the photos the payload mirrors', () => {
+    it('should claim no thumbnail when the payload carries no photos', async () => {
+      const value = makeSubstackTweet({
+        url: 'https://twitter.com/user/status/123456789012345',
+        full_text: 'Tweet text here.',
+        username: 'user',
+        name: 'Display Name',
+        photos: [],
+      })
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: statusUrl,
+        description: 'Tweet text here.',
+        author: 'Display Name',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should leave a photo url carrying a query for enrichment', async () => {
+      const value = makeSubstackTweet({
+        url: 'https://twitter.com/user/status/123456789012345',
+        full_text: 'Tweet text here.',
+        username: 'user',
+        name: 'Display Name',
+        photos: [{ img_url: 'https://pbs.twimg.com/media/DVgu7f1WsAAkNMr?format=jpg&name=large' }],
+      })
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: statusUrl,
+        description: 'Tweet text here.',
+        author: 'Display Name',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('the quoted tweet the payload nests', () => {
+    it('should resolve the outer tweet and read nothing from the quoted one', async () => {
+      const value = makeSubstackTweet({
+        url: 'https://twitter.com/contactvvr/status/1598464456019021824?s=21&t=m04JJ6S9U_GO3CbafNotrQ',
+        full_text: 'The outer tweet text.',
+        username: 'contactvvr',
+        name: 'Display Name',
+        quoted_tweet: {
+          url: 'https://twitter.com/other/status/961570492162494464',
+          full_text: 'The quoted tweet text.',
+          username: 'other',
+          name: 'Other Name',
+        },
+      })
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: '1598464456019021824',
+        src: 'https://platform.twitter.com/embed/Tweet.html?id=1598464456019021824',
+        url: 'https://x.com/contactvvr/status/1598464456019021824',
+        description: 'The outer tweet text.',
+        author: 'Display Name',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    it('should return undefined when data-attrs is malformed json', async () => {
+      const value = makeSubstackTweet('{not json')
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when data-attrs is absent', async () => {
+      const value = '<div data-component-name="Twitter2ToDOM"></div>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the payload url is not a tweet', async () => {
+      const value = makeSubstackTweet({
+        url: 'https://example.com/user/status/123456789012345',
+        full_text: 'Not a tweet.',
+      })
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a payload url on a lookalike host', async () => {
+      const value = makeSubstackTweet({
+        url: `https://twitter.com.evil.test/user/status/${statusId}`,
+        full_text: 'Tweet text here.',
+      })
+
+      expect(await extract(value)).toBeUndefined()
+    })
   })
 })
 

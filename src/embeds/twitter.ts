@@ -1,6 +1,6 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, find, text } from '../utils/dom.js'
+import { attr, find, jsonAttr, text } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A tweet ships as `<blockquote class="twitter-tweet">` holding the tweet text in a `<p>`, then
@@ -154,6 +154,73 @@ export const twitterAmpEmbedResolver = createMarkupEmbedResolver(
   extractTweet,
 )
 
+// Substack's editor stores a pasted tweet as a component of its own: a div whose `data-attrs`
+// JSON carries the whole tweet, and whose body is rendered client-side, so left alone it is
+// dropped as an empty tag. The keys read here are the ones every live payload carries; the
+// engagement counts ride along in the same blob and are never emitted, and a `quoted_tweet`
+// object nests another payload that is not read: only the outer tweet is resolved.
+type SubstackTweetAttrs = {
+  url?: string
+  full_text?: string
+  name?: string
+  username?: string
+  profile_image_url?: string
+  date?: string
+  photos?: Array<{ img_url?: string }>
+}
+
+// The tweet text arrives as markup, links as `a.tweet-url` anchors and hashtags as
+// `span.tweet-fake-link` spans, so it is parsed and read back as plain text.
+const readTweetText = (element: Element, fullText: string | undefined): string | undefined => {
+  if (!fullText) {
+    return
+  }
+
+  const container = element.ownerDocument.createElement('div')
+  container.innerHTML = fullText
+
+  return text(container)
+}
+
+// The first photo, only when its url carries no query. Substack mirrors tweet media on its
+// own host as a bare `pbs.substack.com/media/{key}.jpg` (checked live 2026-08-15: a real key
+// answers 200 image/jpeg, a made-up one 404), so that form is stable. A signature or expiry
+// token can only sit in the query string, so a url carrying one is left for enrichment.
+const readPhotoUrl = (photos: SubstackTweetAttrs['photos']): string | undefined => {
+  const url = photos?.[0]?.img_url
+  const parsed = parseUrl(url ?? '')
+
+  return parsed && parsed.search === '' ? url : undefined
+}
+
+const extractSubstackTweet = (element: Element): EmbedResolverResult | undefined => {
+  const attrs = jsonAttr<SubstackTweetAttrs>(element, 'data-attrs')
+
+  if (!attrs) {
+    return
+  }
+
+  const status = readStatusUrl(attrs.url)
+
+  if (!status) {
+    return
+  }
+
+  return composeEmbed(status, {
+    description: readTweetText(element, attrs.full_text),
+    author: attrs.name?.trim() || attrs.username?.trim() || undefined,
+    avatar: attrs.profile_image_url?.trim() || undefined,
+    date: attrs.date?.trim() || undefined,
+    thumbnail: readPhotoUrl(attrs.photos),
+  })
+}
+
+// The component name is the second handle on purpose: sanitizers that strip classes keep
+// data attributes, so some feeds carry the div with the name alone.
+export const twitterSubstackEmbedResolver = createMarkupEmbedResolver(
+  'div.twitter-embed[data-attrs], div[data-component-name="Twitter2ToDOM"]',
+  extractSubstackTweet,
+)
 
 // The player a stored-after-render copy already points at, and the one this resolver mints, so
 // a feed carrying the frame alone still names its provider.
