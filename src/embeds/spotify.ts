@@ -54,7 +54,7 @@ const typeLabels = new Set([...Object.keys(spotifyHeights), 'podcast episode'])
 // Substack renders the player inside its own iframe and hangs the item's card on the same
 // element as JSON: the artwork, the title and the act. The description is kept only when it is
 // not one of those labels, which of 41 corpus payloads is one: 39 hold a label or nothing.
-const readSubstackFields = (element: Element): Partial<EmbedResolverResult> => {
+const readSubstackItem = (element: Element): Partial<EmbedResolverResult> => {
   const attributes = jsonAttr<SubstackItemAttributes>(element, 'data-attrs')
 
   if (!attributes) {
@@ -96,7 +96,7 @@ export const spotifyResolveEmbed = (
     return
   }
 
-  const card = element ? readSubstackFields(element) : {}
+  const card = element ? readSubstackItem(element) : {}
   const stated = attr(element, 'title')?.replace(titlePrefixRegex, '').trim()
 
   return {
