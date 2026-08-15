@@ -201,6 +201,10 @@ export {
   telegramIframeEmbedResolver,
   telegramScriptEmbedResolver,
 } from './embeds/telegram.js'
+export {
+  tiktokBlockquoteEmbedResolver,
+  tiktokIframeEmbedResolver,
+} from './embeds/tiktok.js'
 export { transistorEmbedResolver } from './embeds/transistor.js'
 export {
   twitterAmpEmbedResolver,

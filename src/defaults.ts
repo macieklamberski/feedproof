@@ -96,6 +96,7 @@ import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from './embeds/spreaker.js'
 import { tedEmbedResolver } from './embeds/ted.js'
 import { telegramIframeEmbedResolver, telegramScriptEmbedResolver } from './embeds/telegram.js'
+import { tiktokBlockquoteEmbedResolver, tiktokIframeEmbedResolver } from './embeds/tiktok.js'
 import { transistorEmbedResolver } from './embeds/transistor.js'
 import {
   twitterAmpEmbedResolver,
@@ -445,6 +446,8 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   scribdIframeEmbedResolver,
   slideshareFlashEmbedResolver,
   slideshareIframeEmbedResolver,
+  tiktokBlockquoteEmbedResolver,
+  tiktokIframeEmbedResolver,
   soundcloudEmbedResolver,
   speakerdeckScriptEmbedResolver,
   speakerdeckIframeEmbedResolver,
