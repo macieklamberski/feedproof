@@ -69,8 +69,13 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   })
 
   it('should preserve iframe dimensions as data attributes', async () => {
-    const value =
-      '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" width="640" height="360"></iframe>'
+    const value = html`
+      <iframe
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        width="640"
+        height="360"
+      ></iframe>
+    `
     const expected = html`
       <div
         data-embed-width="640"
@@ -87,8 +92,11 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   })
 
   it('should recover aspect from a responsive wrapper when the iframe is unsized', async () => {
-    const value =
-      '<div style="padding-bottom:56.25%"><iframe src="https://example.com/embed/xyz"></iframe></div>'
+    const value = html`
+      <div style="padding-bottom:56.25%">
+        <iframe src="https://example.com/embed/xyz"></iframe>
+      </div>
+    `
     const expected = html`
       <div style="padding-bottom:56.25%">
         <div
@@ -104,8 +112,13 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   })
 
   it('should recover aspect from a wp-embed-aspect class on an ancestor', async () => {
-    const value =
-      '<figure class="wp-block-embed wp-embed-aspect-16-9"><div class="wp-block-embed__wrapper"><iframe src="https://example.com/embed/xyz"></iframe></div></figure>'
+    const value = html`
+      <figure class="wp-block-embed wp-embed-aspect-16-9">
+        <div class="wp-block-embed__wrapper">
+          <iframe src="https://example.com/embed/xyz"></iframe>
+        </div>
+      </figure>
+    `
     const result = await transform(value, withNoResolvers)
 
     // 16:9 encoded as a 100×N ratio (100 / (16/9) = 56.25 -> 56).
@@ -125,8 +138,13 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   })
 
   it('should not recover aspect from out-of-range wrapper values', async () => {
-    const value =
-      '<figure class="wp-embed-aspect-0-0"><div style="padding-bottom:0%"><iframe src="https://example.com/embed/xyz"></iframe></div></figure>'
+    const value = html`
+      <figure class="wp-embed-aspect-0-0">
+        <div style="padding-bottom:0%">
+          <iframe src="https://example.com/embed/xyz"></iframe>
+        </div>
+      </figure>
+    `
     const expected = html`
       <figure class="wp-embed-aspect-0-0">
         <div style="padding-bottom:0%">
@@ -291,7 +309,13 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   })
 
   it('should preserve dimensions when wrapping unknown iframe', async () => {
-    const value = '<iframe src="https://unknown-site.com/123" width="640" height="360"></iframe>'
+    const value = html`
+      <iframe
+        src="https://unknown-site.com/123"
+        width="640"
+        height="360"
+      ></iframe>
+    `
     const expected = html`
       <div
         data-embed-width="640"
@@ -620,7 +644,13 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   // which is the difference between a placeholder holding a dead .swf link and a real one.
   describe('provider resolution on non-iframe carriers', () => {
     it('should resolve a provider from an <embed src> carrier', async () => {
-      const value = '<embed src="https://www.youtube.com/v/dQw4w9WgXcQ" width="425" height="350">'
+      const value = html`
+        <embed
+          src="https://www.youtube.com/v/dQw4w9WgXcQ"
+          width="425"
+          height="350"
+        >
+      `
       const expected = html`
         <div
           data-embed-width="425"
@@ -858,8 +888,13 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
 
   describe('bare media files framed as embeds', () => {
     it('should play an iframe framing a video file as a video element', async () => {
-      const value =
-        '<iframe src="https://cdn.example.com/clip.mp4" width="640" height="360"></iframe>'
+      const value = html`
+        <iframe
+          src="https://cdn.example.com/clip.mp4"
+          width="640"
+          height="360"
+        ></iframe>
+      `
       const expected = html`
         <video
           src="https://cdn.example.com/clip.mp4"
@@ -895,8 +930,12 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
 
   describe('containers parking a media url in an attribute', () => {
     it('should convert a Discourse video placeholder', async () => {
-      const value =
-        '<div class="video-placeholder-container" data-video-src="https://cdn.example.com/clip.mp4"></div>'
+      const value = html`
+        <div
+          class="video-placeholder-container"
+          data-video-src="https://cdn.example.com/clip.mp4"
+        ></div>
+      `
       const result = await transform(value)
 
       expect(result).toContain('<video')
@@ -904,8 +943,12 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
     })
 
     it('should convert an audio url into an audio element', async () => {
-      const value =
-        '<div class="audiofield-wordpress-player" data-src="https://x.example/a.mp3"></div>'
+      const value = html`
+        <div
+          class="audiofield-wordpress-player"
+          data-src="https://x.example/a.mp3"
+        ></div>
+      `
       const result = await transform(value)
 
       expect(result).toContain('<audio')
@@ -947,16 +990,26 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
     })
 
     it('should skip a container that already wraps a player', async () => {
-      const value =
-        '<div data-src="https://x.example/a.mp3"><audio controls src="https://x.example/a.mp3"></audio></div>'
+      const value = html`
+        <div data-src="https://x.example/a.mp3">
+          <audio
+            controls
+            src="https://x.example/a.mp3"
+          ></audio>
+        </div>
+      `
       const result = await transform(value)
 
       expect(result.match(/<audio/g)).toHaveLength(1)
     })
 
     it('should take the first attribute that names a media file', async () => {
-      const value =
-        '<div data-mp4="https://x.example/a.mp4" data-webm="https://x.example/a.webm"></div>'
+      const value = html`
+        <div
+          data-mp4="https://x.example/a.mp4"
+          data-webm="https://x.example/a.webm"
+        ></div>
+      `
       const result = await transform(value)
 
       expect(result).toContain('src="https://x.example/a.mp4"')
