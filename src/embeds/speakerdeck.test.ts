@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { speakerdeckResolveEmbed, speakerdeckScriptEmbedResolver } from './speakerdeck.js'
+import {
+  speakerdeckIframeEmbedResolver,
+  speakerdeckResolveEmbed,
+  speakerdeckScriptEmbedResolver,
+} from './speakerdeck.js'
 
 describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, speakerdeckScriptEmbedResolver)
@@ -230,6 +234,34 @@ describe('speakerdeckResolveEmbed', () => {
     expect(speakerdeckResolveEmbed(value)).toEqual(expected)
   })
 
+  // The script form has always kept the slide, so the same deck at two slides collapsed into
+  // one placeholder when it arrived as an iframe instead.
+  it('should carry the slide the player url states', () => {
+    const value = 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=21'
+    const expected: EmbedResolverResult = {
+      provider: 'speakerdeck',
+      id: '40746bbd65b944eb848e90ab1be552c0/21',
+      src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=21',
+      width: 100,
+      height: 56,
+    }
+
+    expect(speakerdeckResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should ignore a slide that is not a number', () => {
+    const value = 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=last'
+    const expected: EmbedResolverResult = {
+      provider: 'speakerdeck',
+      id: '40746bbd65b944eb848e90ab1be552c0',
+      src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
+      width: 100,
+      height: 56,
+    }
+
+    expect(speakerdeckResolveEmbed(value)).toEqual(expected)
+  })
+
   it('should ignore a deck page rather than a player', () => {
     const value = 'https://speakerdeck.com/user/some-deck'
 
@@ -240,5 +272,49 @@ describe('speakerdeckResolveEmbed', () => {
     const value = 'https://speakerdeck.com/player/not-a-deck'
 
     expect(speakerdeckResolveEmbed(value)).toBeUndefined()
+  })
+})
+
+describeForEachParser('speakerdeckIframeEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, speakerdeckIframeEmbedResolver)
+
+  it('should carry the deck title the carrier states', async () => {
+    const value = html`
+      <iframe
+        src="https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0"
+        title="Designing for the unexpected"
+        width="710"
+        height="399"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'speakerdeck',
+      id: '40746bbd65b944eb848e90ab1be552c0',
+      src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
+      title: 'Designing for the unexpected',
+      width: 710,
+      height: 399,
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
+  // The snippet writes the four-character string rather than omitting the attribute.
+  it('should treat a literal null title as absent', async () => {
+    const value = html`
+      <iframe
+        src="https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0"
+        title="null"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'speakerdeck',
+      id: '40746bbd65b944eb848e90ab1be552c0',
+      src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
+      width: 100,
+      height: 56,
+    }
+
+    expect(await extract(value)).toEqual(expected)
   })
 })

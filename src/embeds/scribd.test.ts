@@ -59,6 +59,28 @@ describeForEachParser('scribdIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should carry the document title the carrier states', async () => {
+      const value = html`
+        <iframe
+          class="scribd_iframe_embed"
+          title="Vermont Cynic Drug Issue 2026"
+          src="https://www.scribd.com/embeds/526446879/content"
+          width="100%"
+          height="500"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'scribd',
+        id: '526446879',
+        src: 'https://www.scribd.com/embeds/526446879/content',
+        url: 'https://www.scribd.com/document/526446879',
+        title: 'Vermont Cynic Drug Issue 2026',
+        height: 500,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should fall back to the declared height for a ratio that is not a number', async () => {
       const value = html`
         <iframe

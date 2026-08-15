@@ -124,6 +124,53 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // The div spells the id with an underscore and the object without one. Every other fixture
+    // here carries both, so only this shape exercises the div's spelling.
+    it('should read the id off the div when the object carries none', async () => {
+      const value = html`
+        <div id="__ss_6435157">
+          <object>
+            <embed
+              src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=110103quotes"
+              type="application/x-shockwave-flash"
+              width="425"
+              height="355"
+            ></embed>
+          </object>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '6435157',
+        src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
+        width: 425,
+        height: 355,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should replace the document player the same way as the presentation one', async () => {
+      const value = html`
+        <div id="__ss_6435157">
+          <object id="__sse6435157">
+            <embed
+              src="http://static.slidesharecdn.com/swf/doc_player.swf?doc=110103quotes&amp;stripped_title=business-quotes-for-2011&amp;userName=haraldf"
+              type="application/x-shockwave-flash"
+            ></embed>
+          </object>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '6435157',
+        src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
+        url: 'https://www.slideshare.net/haraldf/business-quotes-for-2011',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should read the id off the object when the outer div is gone', async () => {
       const value = html`
         <object id="__sse6435157">

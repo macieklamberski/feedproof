@@ -1,7 +1,11 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, parseRatioDimensions } from '../utils/dom.js'
-import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
+import {
+  createMarkupEmbedResolver,
+  createUrlEmbedResolver,
+  readCarrierTitle,
+} from '../utils/widgets.js'
 
 // Ids are lowercase hex, in two lengths. 32 chars is the current dashless UUID; 24 is the
 // legacy Mongo ObjectId Speaker Deck issued around 2011-2012, and those decks still play —
@@ -21,6 +25,18 @@ const safeSlideRegex = /^\d+$/
 // placeholder describes the deck whatever a reader assumes about a size-less embed.
 const defaultDeckRatio = '16/9'
 
+// One feed can embed the same deck at several slides. Without the slide those collapse into
+// identical placeholders, and the player url honours `?slide=`.
+const composeEmbed = (deckId: string, slide: string | undefined): EmbedResolverResult => {
+  const hasSlide = Boolean(slide && safeSlideRegex.test(slide))
+
+  return {
+    provider: 'speakerdeck',
+    id: hasSlide ? `${deckId}/${slide}` : deckId,
+    src: `https://speakerdeck.com/player/${deckId}${hasSlide ? `?slide=${slide}` : ''}`,
+  }
+}
+
 // Speakerdeck ships a deck as a bare `<script class="speakerdeck-embed" data-id="{id}"
 // src="//speakerdeck.com/assets/embed.js">` that builds the player iframe at runtime, so a
 // reader shows nothing at all. The player page is mintable from the id alone (verified
@@ -37,16 +53,7 @@ export const speakerdeckScriptEmbedResolver = createMarkupEmbedResolver(
       return
     }
 
-    // One feed can embed the same deck at several slides. Without the slide those collapse
-    // into identical placeholders, and the player url honours `?slide=`.
-    const slide = inlineSlide ?? attr(element, 'data-slide')
-    const hasSlide = Boolean(slide && safeSlideRegex.test(slide))
-
-    const result: EmbedResolverResult = {
-      provider: 'speakerdeck',
-      id: hasSlide ? `${deckId}/${slide}` : deckId,
-      src: `https://speakerdeck.com/player/${deckId}${hasSlide ? `?slide=${slide}` : ''}`,
-    }
+    const result = composeEmbed(deckId, inlineSlide ?? attr(element, 'data-slide') ?? undefined)
 
     // The script carries the deck's aspect ratio as a bare decimal, e.g. `data-ratio="1.33"`.
     const dimensions =
@@ -60,7 +67,10 @@ export const speakerdeckScriptEmbedResolver = createMarkupEmbedResolver(
 // The player the script above builds at runtime, saved into the feed by a CMS that ran the
 // script first. Same deck, same placeholder: only the carrier differs. A size on the element
 // wins over the default ratio, so the fallback only applies to a size-less embed.
-export const speakerdeckResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+export const speakerdeckResolveEmbed = (
+  url: string,
+  element?: Element,
+): EmbedResolverResult | undefined => {
   const segments = getPathSegments(url)
   const deckId = segments[0] === 'player' ? segments[1] : undefined
 
@@ -68,10 +78,12 @@ export const speakerdeckResolveEmbed = (url: string): EmbedResolverResult | unde
     return
   }
 
+  const slide = parseUrl(url, 'https://example.com')?.searchParams.get('slide')
+  const title = element ? readCarrierTitle(element) : undefined
+
   return {
-    provider: 'speakerdeck',
-    id: deckId,
-    src: `https://speakerdeck.com/player/${deckId}`,
+    ...composeEmbed(deckId, slide ?? undefined),
+    ...(title && { title }),
     ...parseRatioDimensions(defaultDeckRatio),
   }
 }

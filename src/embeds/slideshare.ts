@@ -12,10 +12,13 @@ const safeDeckKeyRegex = /^[A-Za-z0-9]{10,20}$/
 const safeDeckIdRegex = /^\d{4,12}$/
 
 // The Flash wrapper carries the numeric id twice, on the div that holds the player and on the
-// object inside it: `id="__ss_6435157"` and `id="__sse6435157"`.
-const wrapperIdRegex = /^__sse?(\d{4,12})$/
+// object inside it: `id="__ss_6435157"` and `id="__sse6435157"`. The div's spelling is the one
+// that matters: of 65 Flash carriers read across 40 corpus feeds, 22 name the deck on the div
+// alone, so accepting only the object's spelling lost a third of them.
+const wrapperIdRegex = /^__ss[e_]?(\d{4,12})$/
 
-const flashPlayerPathRegex = /\/swf\/ssplayer\d?\.swf$/
+// Two players, the presentation one and the document one, sharing a query.
+const flashPlayerPathRegex = /\/swf\/(?:ssplayer\d?|doc_player)\.swf$/
 
 const composeEmbed = (deck: string, url?: string, title?: string): EmbedResolverResult => {
   return {

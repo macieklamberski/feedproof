@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, parseRatioDimensions } from '../utils/dom.js'
-import { createUrlEmbedResolver, withDeclaredSize } from '../utils/widgets.js'
+import { createUrlEmbedResolver, readCarrierTitle, withDeclaredSize } from '../utils/widgets.js'
 
 const scribdHosts = ['scribd.com', 'scribdassets.com']
 
@@ -52,7 +52,8 @@ export const scribdResolveEmbed = (
     return
   }
 
-  const result = composeEmbed(document)
+  const title = readCarrierTitle(element)
+  const result = { ...composeEmbed(document), ...(title && { title }) }
   const dimensions = parseRatioDimensions(attr(element, aspectRatioAttribute) ?? '')
 
   // The ratio describes the document and the declared height is a constant, so where both are
