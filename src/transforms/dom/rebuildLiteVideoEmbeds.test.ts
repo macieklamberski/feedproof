@@ -53,6 +53,41 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ">')
   })
 
+  it('should carry the whitelisted half of params', async () => {
+    const value = html`<lite-youtube videoid="dQw4w9WgXcQ" params="start=10"></lite-youtube>`
+    const result = await transform(value)
+
+    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10">')
+  })
+
+  // The attribute names the same option more specifically than the query string does.
+  it('should let a start attribute win over the one inside params', async () => {
+    const value = html`
+      <lite-youtube videoid="dQw4w9WgXcQ" start="90" params="start=10"></lite-youtube>
+    `
+    const result = await transform(value)
+
+    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=90">')
+  })
+
+  // Anything the iframe path would not carry cannot arrive this way either.
+  it('should drop a param outside the whitelist', async () => {
+    const value = html`
+      <lite-youtube videoid="dQw4w9WgXcQ" params="start=10&autoplay=1"></lite-youtube>
+    `
+    const result = await transform(value)
+
+    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10">')
+    expect(result).not.toContain('autoplay')
+  })
+
+  it('should keep a params offset through the default pipeline', async () => {
+    const value = html`<lite-youtube videoid="dQw4w9WgXcQ" params="start=10"></lite-youtube>`
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10"')
+  })
+
   it('should carry videotitle into the iframe title', async () => {
     const value = html`
       <lite-youtube
