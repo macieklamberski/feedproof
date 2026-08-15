@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'bun:test'
-import { baseContext, describeForEachParser, html, resolverExtractor } from '../tests.js'
+import {
+  baseContext,
+  describeForEachParser,
+  html,
+  resolverExtractor,
+  substackAttrs,
+} from '../tests.js'
 import { convertWidgets } from '../transforms/dom/convertWidgets.js'
 import type { EmbedResolverResult } from '../types.js'
 import { applyDomTransforms } from '../utils/transforms.js'
@@ -135,8 +141,17 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
 
   describe('the Substack card the wrapper carries', () => {
     it('should take the title, description, artwork, artist and track page', async () => {
+      const trackCardAttrs = {
+        url: 'https://api.soundcloud.com/tracks/2088634614',
+        title: "It's Just Us by Kali Uchis",
+        description: 'A single',
+        thumbnail_url: 'https://i1.sndcdn.com/artworks-t500x500.jpg',
+        author_name: 'Kali Uchis',
+        author_url: 'https://soundcloud.com/kaliuchis',
+        targetUrl: 'https://soundcloud.com/kaliuchis/its-just-us',
+      }
       const value = html`
-        <div class="soundcloud-wrap" data-attrs='{"url":"https://api.soundcloud.com/tracks/2088634614","title":"It&apos;s Just Us by Kali Uchis","description":"A single","thumbnail_url":"https://i1.sndcdn.com/artworks-t500x500.jpg","author_name":"Kali Uchis","author_url":"https://soundcloud.com/kaliuchis","targetUrl":"https://soundcloud.com/kaliuchis/its-just-us"}' data-component-name="SoundcloudToDOM">
+        <div class="soundcloud-wrap" data-attrs="${substackAttrs(trackCardAttrs)}" data-component-name="SoundcloudToDOM">
           <iframe src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2088634614"></iframe>
         </div>
       `
@@ -157,8 +172,16 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
 
     // Both fields are empty in a good share of the payloads, and an empty string is not a value.
     it('should state nothing for an empty description and target url', async () => {
+      const untitledCardAttrs = {
+        url: 'https://api.soundcloud.com/tracks/948032941',
+        title: 'Youth Is A Fugitive',
+        description: '',
+        thumbnail_url: 'https://i1.sndcdn.com/artworks-j4ziiQ-t500x500.jpg',
+        author_name: 'Fonograf Editions',
+        targetUrl: '',
+      }
       const value = html`
-        <div class="soundcloud-wrap" data-attrs='{"url":"https://api.soundcloud.com/tracks/948032941","title":"Youth Is A Fugitive","description":"","thumbnail_url":"https://i1.sndcdn.com/artworks-j4ziiQ-t500x500.jpg","author_name":"Fonograf Editions","targetUrl":""}' data-component-name="SoundcloudToDOM">
+        <div class="soundcloud-wrap" data-attrs="${substackAttrs(untitledCardAttrs)}" data-component-name="SoundcloudToDOM">
           <iframe src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F948032941"></iframe>
         </div>
       `

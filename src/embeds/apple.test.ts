@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html, resolverExtractor } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { appleEmbedResolver, appleResolveEmbed } from './apple.js'
 
@@ -189,11 +189,23 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
 
   describe('the Substack card the container carries', () => {
     it('should take an episode payload, reading its runtime as milliseconds', async () => {
+      const episodeCardAttrs = {
+        url: 'https://embed.podcasts.apple.com/us/podcast/undertone/id1693303954?i=1000664459889',
+        isEpisode: true,
+        imageUrl: 'https://substack-post-media.s3.amazonaws.com/public/images/podcast-episode.jpg',
+        title: 'Henry Oliver',
+        podcastTitle: 'Undertone',
+        podcastByline: '',
+        duration: 4178000,
+        numEpisodes: '',
+        targetUrl: 'https://podcasts.apple.com/us/podcast/undertone/id1693303954?uo=4',
+        releaseDate: '2024-06-19T00:00:00Z',
+      }
       const value = html`
         <div class="apple-podcast-container" data-component-name="ApplePodcastToDom">
           <iframe
             class="apple-podcast episode-list"
-            data-attrs='{"url":"https://embed.podcasts.apple.com/us/podcast/undertone/id1693303954?i=1000664459889","isEpisode":true,"imageUrl":"https://substack-post-media.s3.amazonaws.com/public/images/podcast-episode.jpg","title":"Henry Oliver","podcastTitle":"Undertone","podcastByline":"","duration":4178000,"numEpisodes":"","targetUrl":"https://podcasts.apple.com/us/podcast/undertone/id1693303954?uo=4","releaseDate":"2024-06-19T00:00:00Z"}'
+            data-attrs="${substackAttrs(episodeCardAttrs)}"
             src="https://embed.podcasts.apple.com/us/podcast/undertone/id1693303954?i=1000664459889"
           ></iframe>
         </div>
@@ -217,11 +229,23 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
     // A show states the same number in seconds, so reading both the same way would publish one
     // of them a thousandfold out.
     it('should take a show payload, reading its runtime as seconds', async () => {
+      const showCardAttrs = {
+        url: 'https://embed.podcasts.apple.com/us/podcast/boardroom-governance/id1513064579',
+        isEpisode: false,
+        imageUrl: 'https://substack-post-media.s3.amazonaws.com/public/images/podcast.jpg',
+        title: 'Boardroom Governance',
+        podcastTitle: 'Boardroom Governance',
+        podcastByline: 'Evan Epstein',
+        duration: 3406,
+        numEpisodes: 2,
+        targetUrl: 'https://podcasts.apple.com/us/podcast/boardroom-governance/id1513064579?uo=4',
+        releaseDate: '2026-03-04T00:00:00Z',
+      }
       const value = html`
         <div class="apple-podcast-container" data-component-name="ApplePodcastToDom">
           <iframe
             class="apple-podcast episode-list"
-            data-attrs='{"url":"https://embed.podcasts.apple.com/us/podcast/boardroom-governance/id1513064579","isEpisode":false,"imageUrl":"https://substack-post-media.s3.amazonaws.com/public/images/podcast.jpg","title":"Boardroom Governance","podcastTitle":"Boardroom Governance","podcastByline":"Evan Epstein","duration":3406,"numEpisodes":2,"targetUrl":"https://podcasts.apple.com/us/podcast/boardroom-governance/id1513064579?uo=4","releaseDate":"2026-03-04T00:00:00Z"}'
+            data-attrs="${substackAttrs(showCardAttrs)}"
             src="https://embed.podcasts.apple.com/us/podcast/boardroom-governance/id1513064579"
           ></iframe>
         </div>
@@ -246,11 +270,15 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
     // The payload's own `targetUrl` is this page with an affiliate token on it, so the composed
     // url stands instead of it.
     it('should compose the url rather than take the payload affiliate link', async () => {
+      const sparseCardAttrs = {
+        targetUrl: 'https://podcasts.apple.com/gb/podcast/exploaded/id1887512662?uo=4',
+        title: 'EXPloaded',
+      }
       const value = html`
         <div class="apple-podcast-container" data-component-name="ApplePodcastToDom">
           <iframe
             class="apple-podcast episode-list"
-            data-attrs='{"targetUrl":"https://podcasts.apple.com/gb/podcast/exploaded/id1887512662?uo=4","title":"EXPloaded"}'
+            data-attrs="${substackAttrs(sparseCardAttrs)}"
             src="https://embed.podcasts.apple.com/gb/podcast/exploaded/id1887512662"
           ></iframe>
         </div>
@@ -290,10 +318,14 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
     })
 
     it('should ignore a payload that no Substack container names', async () => {
+      const foreignCardAttrs = {
+        title: 'Not a Substack card',
+        podcastTitle: 'Nor this',
+      }
       const value = html`
         <div>
           <iframe
-            data-attrs='{"title":"Not a Substack card","podcastTitle":"Nor this"}'
+            data-attrs="${substackAttrs(foreignCardAttrs)}"
             src="https://embed.podcasts.apple.com/gb/podcast/exploaded/id1887512662"
           ></iframe>
         </div>
