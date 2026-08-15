@@ -399,9 +399,7 @@ describeForEachParser('transformContent', (parseHtml) => {
         data-cite-url="https://example.com/post"
         data-cite-title="Page title"
         data-cite-thumbnail="https://example.com/cover.png"
-      >
-        <a href="https://example.com/post">Page title</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,

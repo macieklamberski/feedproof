@@ -4,7 +4,6 @@ import {
   hasText,
   isBlockElement,
   isElement,
-  isGeneratedWrapper,
   isText,
 } from '../../utils/dom.js'
 
@@ -67,12 +66,6 @@ export const wrapBareInlineInParagraphs: DomTransform = () => {
   return (document) => {
     for (const container of document.querySelectorAll(processContainersSelector)) {
       if (hasAncestorWithTagName(container, inlineHostTags)) {
-        continue
-      }
-
-      // A cite placeholder's link is its whole content and a consumer replaces the placeholder
-      // wholesale, so wrapping it gains nothing.
-      if (isGeneratedWrapper(container)) {
         continue
       }
 

@@ -135,8 +135,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     const customContext: TransformContext = { ...baseContext, widgetResolvers: [asyncResolver] }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const expected = html`
-      <div data-embed-provider="async" data-embed-src="https://example.com/player/xyz">
-      </div>
+      <div
+        data-embed-provider="async"
+        data-embed-src="https://example.com/player/xyz"
+      ></div>
     `
 
     expect(await transform(value, customContext)).toEqualHtml(expected)

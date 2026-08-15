@@ -431,9 +431,7 @@ describeForEachParser('createCitePlaceholder', (parseHtml) => {
         data-cite-title="Post title"
         data-cite-icon="https://example.com/favicon.ico"
         data-cite-thumbnail="https://example.com/og-image.jpg"
-      >
-        <a href="https://example.com/post">Post title</a>
-      </div>
+      ></div>
     `
 
     expect(element.outerHTML).toEqualHtml(expected)
@@ -455,9 +453,7 @@ describeForEachParser('createCitePlaceholder', (parseHtml) => {
         data-cite-description="Preview text"
         data-cite-url="https://example.com/post"
         data-cite-title="Post title"
-      >
-        <a href="https://example.com/post">Post title</a>
-      </div>
+      ></div>
     `
 
     expect(element.outerHTML).toEqualHtml(expected)
@@ -480,9 +476,7 @@ describeForEachParser('createCitePlaceholder', (parseHtml) => {
         data-cite-title="Post title"
         data-cite-icon="http://example.com/favicon.ico"
         data-cite-thumbnail="http://example.com/og-image.jpg"
-      >
-        <a href="http://example.com/post">Post title</a>
-      </div>
+      ></div>
     `
 
     expect(element.outerHTML).toEqualHtml(expected)
@@ -507,9 +501,7 @@ describeForEachParser('createCitePlaceholder', (parseHtml) => {
         data-cite-title="Post title"
         data-cite-icon="javascript:alert(1)"
         data-cite-thumbnail="data:image/svg+xml;utf8,<svg/>"
-      >
-        <a href="https://example.com/post">Post title</a>
-      </div>
+      ></div>
     `
 
     expect(element.outerHTML).toEqualHtml(expected)

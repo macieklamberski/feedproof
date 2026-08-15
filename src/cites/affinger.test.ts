@@ -267,9 +267,11 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
         </a>
       `
       const expected = html`
-        <div data-cite-title="Page title" data-cite-url="https://example.com/post" data-cite-provider="affinger">
-          <a href="https://example.com/post">Page title</a>
-        </div>
+        <div
+          data-cite-title="Page title"
+          data-cite-url="https://example.com/post"
+          data-cite-provider="affinger"
+        ></div>
       `
 
       expect(await transform(value)).toEqualHtml(expected)

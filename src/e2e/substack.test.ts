@@ -26,9 +26,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-cite-provider="substack"
         data-cite-url="https://thereader.example.com/p/model-drop"
         data-cite-title="Model Drop"
-      >
-        <a href="https://thereader.example.com/p/model-drop">Model Drop</a>
-      </div>
+      ></div>
     `
 
     const result = await transformContent(value, {
@@ -436,9 +434,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-cite-url="https://otherpub.substack.com/p/field-notes-23"
         data-cite-title="Field Notes #23"
         data-cite-icon="https://substackcdn.com/image/fetch/f_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Flogo_1080x1080.png"
-      >
-        <a href="https://otherpub.substack.com/p/field-notes-23">Field Notes #23</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -468,9 +464,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-cite-author="Casey Author"
         data-cite-url="https://examplepub.substack.com/p/model-drop"
         data-cite-title="Model Drop"
-      >
-        <a href="https://examplepub.substack.com/p/model-drop">Model Drop</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 

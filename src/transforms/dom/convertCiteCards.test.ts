@@ -45,7 +45,6 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
       expect(result).toContain('data-cite-provider="stub"')
       expect(result).toContain('data-cite-url="https://example.com"')
       expect(result).toContain('data-cite-title="Title"')
-      expect(result).toContain('<a href="https://example.com">Title</a>')
       expect(result).not.toContain('class="card"')
     })
 
@@ -85,16 +84,12 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
           data-cite-provider="a"
           data-cite-url="https://example.org"
           data-cite-title="A"
-        >
-          <a href="https://example.org">A</a>
-        </div>
+        ></div>
         <div
           data-cite-provider="b"
           data-cite-url="https://example.net"
           data-cite-title="B"
-        >
-          <a href="https://example.net">B</a>
-        </div>
+        ></div>
       `
 
       expect(await transform(value, [resolverA, resolverB])).toEqualHtml(expected)
@@ -114,9 +109,7 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
           data-cite-provider="async"
           data-cite-url="https://example.com/post"
           data-cite-title="Async title"
-        >
-          <a href="https://example.com/post">Async title</a>
-        </div>
+        ></div>
       `
 
       expect(await transform(value, [asyncResolver])).toEqualHtml(expected)
@@ -140,7 +133,6 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
 
       expect(result).toContain('data-cite-url="http://example.com/p"')
       expect(result).toContain('data-cite-icon="http://example.com/i.ico"')
-      expect(result).toContain('<a href="http://example.com/p">')
     })
 
     it('should resolve relative url, icon and thumbnail against the base url', async () => {
@@ -172,7 +164,6 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
       const result = await applyDomTransforms(parseHtml(value), [convertCiteCards(context)])
 
       expect(result).toContain('data-cite-url="https://example.com/p"')
-      expect(result).toContain('<a href="https://example.com/p">')
     })
 
     it('should clean the url after resolving it against the base url', async () => {

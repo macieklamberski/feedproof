@@ -213,8 +213,7 @@ export const updateEmbedPlaceholder = (
 }
 
 // `src` is the one field a placeholder cannot be built without, so it is required inside the
-// metadata rather than passed beside it: a second argument would let the two disagree. The
-// element stays empty, so a consumer renders it entirely from the attributes.
+// metadata rather than passed beside it: a second argument would let the two disagree.
 export const createEmbedPlaceholder = (
   document: Document,
   metadata: Partial<EmbedResolverResult> & Pick<EmbedResolverResult, 'src'>,
@@ -255,12 +254,5 @@ export const createCitePlaceholder = (
   document: Document,
   result: CiteResolverResult,
 ): HTMLElement => {
-  const element = createPlaceholder(document, 'cite', normalizeCiteFields(result))
-
-  const link = document.createElement('a')
-  link.setAttribute('href', result.url.trim())
-  link.textContent = result.title.trim()
-  element.appendChild(link)
-
-  return element
+  return createPlaceholder(document, 'cite', normalizeCiteFields(result))
 }
