@@ -139,6 +139,13 @@ describeForEachParser('notecomIframeEmbedResolver', (parseHtml) => {
     expect(await extract(value)).toBeUndefined()
   })
 
+  // The host alone, with no path to read an id out of.
+  it('should state nothing for the note.com home page', async () => {
+    const value = html`<iframe src="https://note.com/"></iframe>`
+
+    expect(await extract(value)).toBeUndefined()
+  })
+
   it('should state nothing for another note.com page', async () => {
     const value = html`<iframe src="https://note.com/katayuma"></iframe>`
 
