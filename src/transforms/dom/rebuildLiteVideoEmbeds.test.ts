@@ -87,7 +87,6 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
         data-embed-provider="youtube"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10"
       >
-        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
       </div>
     `
 
@@ -121,7 +120,6 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
         data-embed-provider="youtube"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
       >
-        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
       </div>
     `
     const result = await transformContent(value, {

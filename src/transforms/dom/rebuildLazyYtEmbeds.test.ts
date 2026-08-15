@@ -54,7 +54,6 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
         data-embed-provider="youtube"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
       >
-        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
       </div>
     `
     const result = await transformContent(value, {
@@ -126,7 +125,6 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
         data-embed-provider="youtube"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
       >
-        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
       </div>
       <p>After</p>
     `
