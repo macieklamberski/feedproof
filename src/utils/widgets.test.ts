@@ -569,6 +569,15 @@ describeForEachParser('declaredSize', (parseHtml) => {
       expect(resolve(resolver, value)).toEqual(expected)
     })
 
+    // The rest of the pipeline reads `//host` as https, so the host gate has to as well, or a
+    // caller passing no baseUrl loses the provider on every protocol-relative carrier.
+    it('should match its host on a protocol-relative src', () => {
+      const resolver = createUrlEmbedResolver(['x.test'], () => stated)
+      const value = html`<iframe src="//x.test/abc"></iframe>`
+
+      expect(resolve(resolver, value)).toEqual(stated)
+    })
+
     it('should keep its own numbers when the declared size is refused', () => {
       const resolver = createUrlEmbedResolver(['x.test'], () => ({ ...stated, height: 200 }), {
         declaredSize: false,
