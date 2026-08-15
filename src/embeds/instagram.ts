@@ -1,6 +1,6 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, find, parsePixelSize, text } from '../utils/dom.js'
+import { attr, find, jsonAttr, parsePixelSize, text } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Instagram's embed dialog ships a post as `<blockquote class="instagram-media">` holding the
@@ -205,6 +205,67 @@ export const instagramAmpEmbedResolver = createMarkupEmbedResolver(
     }
 
     return composeEmbed({ kind: 'p', shortcode }, element.hasAttribute('data-captioned'))
+  },
+)
+
+// Substack renders an Instagram post server-side and ships the wrapper div childless, with the
+// whole card as JSON in `data-attrs`: the shortcode, the post's page title, the author and a
+// thumbnail Substack rehosted to its own storage. Left alone the div is dropped as empty markup
+// and the post goes with it. Some feeds strip the class and keep the component name, so both
+// halves of the selector name the same div.
+type SubstackPostAttributes = {
+  instagram_id?: string
+  title?: string | null
+  author_name?: string | null
+  thumbnail_url?: string | null
+  profile_pic_url?: string | null
+  timestamp?: string | null
+}
+
+// The `title` is the post page's own title, and its shape changed with Substack's scraper. The
+// earliest payloads carry the bare caption, the current ones wrap it in
+// `{name} on Instagram: "{caption}"`, and the era between wrote only "A post shared by
+// {author}", which duplicates `author_name` and says nothing the byline does not, so that one
+// form is dropped rather than published as the post's text.
+const boilerplateTitleRegex = /^A post shared by\b/
+
+// Substack stamps the filename of every copy it rehosts. The stamp is the guard: the earliest
+// payloads passed Instagram's own CDN url through instead, which is signed and long expired,
+// and a dead thumbnail in a placeholder is worse than none.
+const readRehostedUrl = (url: string | null | undefined): string | undefined => {
+  return url?.includes('__ss-rehost__') ? url : undefined
+}
+
+// The handle arrives bare in the older payloads and `@`-prefixed in the current ones.
+const composeHandle = (handle: string | null | undefined): string | undefined => {
+  if (!handle) {
+    return
+  }
+
+  return handle.startsWith('@') ? handle : `@${handle}`
+}
+
+export const instagramSubstackEmbedResolver = createMarkupEmbedResolver(
+  'div.instagram-embed-wrap[data-attrs], div[data-component-name="InstagramToDOM"]',
+  (element): EmbedResolverResult | undefined => {
+    const attributes = jsonAttr<SubstackPostAttributes>(element, 'data-attrs')
+    const shortcode = attributes?.instagram_id
+
+    if (!shortcode || !safeShortcodeRegex.test(shortcode)) {
+      return
+    }
+
+    const title = attributes.title ?? undefined
+
+    // The payload names the media and not the path it lives at, so like the AMP component the
+    // frame addresses the shortcode through `/p/`.
+    return composeEmbed({ kind: 'p', shortcode }, false, {
+      description: title && !boilerplateTitleRegex.test(title) ? title : undefined,
+      author: composeHandle(attributes.author_name),
+      avatar: readRehostedUrl(attributes.profile_pic_url),
+      thumbnail: readRehostedUrl(attributes.thumbnail_url),
+      date: attributes.timestamp ?? undefined,
+    })
   },
 )
 

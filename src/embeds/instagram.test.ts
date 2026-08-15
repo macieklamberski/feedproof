@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html, resolverExtractor } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   instagramAmpEmbedResolver,
   instagramBlockquoteEmbedResolver,
   instagramIframeEmbedResolver,
   instagramResolveEmbed,
+  instagramSubstackEmbedResolver,
 } from './instagram.js'
 
 describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
@@ -589,5 +590,152 @@ describeForEachParser('instagramAmpEmbedResolver', (parseHtml) => {
     const value = html`<amp-instagram data-shortcode="../evil"></amp-instagram>`
 
     expect(await extract(value)).toBeUndefined()
+  })
+})
+
+describeForEachParser('instagramSubstackEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, instagramSubstackEmbedResolver)
+
+  // Substack ships the wrapper childless, with the whole card as JSON in `data-attrs`, stored
+  // in a double-quoted attribute with the inner quotes HTML-encoded, which is what survives a
+  // parse and serialise roundtrip.
+  const makeContainer = (attrs: Record<string, unknown> | string): string => {
+    return html`
+      <div
+        class="instagram-embed-wrap"
+        data-attrs="${substackAttrs(attrs)}"
+        data-component-name="InstagramToDOM"
+      ></div>
+    `
+  }
+
+  describe('the current payload', () => {
+    it('should read the caption-bearing title, the author and the rehosted images', async () => {
+      const value = makeContainer({
+        instagram_id: 'DZmgID9Eawg',
+        title: 'BBC News on Instagram: "Pakistan\'s prime minister says a peace …',
+        author_name: '@bbcnews',
+        thumbnail_url:
+          'https://substack-post-media.s3.amazonaws.com/public/images/__ss-rehost__IG-snapshot-DZmgID9Eawg.jpg',
+        like_count: 6554,
+        comment_count: 7697,
+        profile_pic_url:
+          'https://substack-post-media.s3.amazonaws.com/public/images/__ss-rehost__IG-profile-pic-DZmgID9Eawg.png',
+        follower_count: null,
+        timestamp: null,
+        belowTheFold: true,
+      })
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'p/DZmgID9Eawg',
+        src: 'https://www.instagram.com/p/DZmgID9Eawg/embed/',
+        url: 'https://www.instagram.com/p/DZmgID9Eawg/',
+        description: 'BBC News on Instagram: "Pakistan\'s prime minister says a peace …',
+        author: '@bbcnews',
+        avatar:
+          'https://substack-post-media.s3.amazonaws.com/public/images/__ss-rehost__IG-profile-pic-DZmgID9Eawg.png',
+        thumbnail:
+          'https://substack-post-media.s3.amazonaws.com/public/images/__ss-rehost__IG-snapshot-DZmgID9Eawg.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('the boilerplate-title payload', () => {
+    // Deliberate: "A post shared by {author}" is the page title's fallback form, duplicating
+    // `author_name`, so publishing it as the post's text would say nothing the byline does not.
+    it('should drop the title and prefix the bare handle', async () => {
+      const value = makeContainer({
+        instagram_id: 'BsozzXrhcLu',
+        title: 'A post shared by @zandercutt',
+        author_name: 'zandercutt',
+        thumbnail_url:
+          'https://bucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com/public/images/__ss-rehost__IG-BsozzXrhcLu.jpg',
+      })
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'p/BsozzXrhcLu',
+        src: 'https://www.instagram.com/p/BsozzXrhcLu/embed/',
+        url: 'https://www.instagram.com/p/BsozzXrhcLu/',
+        author: '@zandercutt',
+        thumbnail:
+          'https://bucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com/public/images/__ss-rehost__IG-BsozzXrhcLu.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('the earliest payload', () => {
+    // Deliberate: this era passed Instagram's own CDN url through un-rehosted. It is signed
+    // and long expired, and a dead thumbnail is worse than none, so only the stamped copies
+    // are kept.
+    it('should keep the bare caption and the date but not the expiring thumbnail', async () => {
+      const value = makeContainer({
+        instagram_id: 'B-aCA0LhRiq',
+        title: 'We can all use some flowers to make us smile. Spring in NYC.',
+        author_name: 'thuyanj1',
+        thumbnail_url:
+          'https://scontent.cdninstagram.com/v/t51.2885-15/e35/s480x480/91252884_606008746674680_2338248453310937580_n.jpg?_nc_ht=scontent.cdninstagram.com&oh=fa18e95a423e5ad00f1c63d96aa7b516&oe=5FC16EAF',
+        timestamp: '2020-03-31T17:40:31.000Z',
+      })
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'p/B-aCA0LhRiq',
+        src: 'https://www.instagram.com/p/B-aCA0LhRiq/embed/',
+        url: 'https://www.instagram.com/p/B-aCA0LhRiq/',
+        description: 'We can all use some flowers to make us smile. Spring in NYC.',
+        author: '@thuyanj1',
+        date: '2020-03-31T17:40:31.000Z',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('the class-stripped div', () => {
+    it('should resolve through the component name when the class is gone', async () => {
+      const value = html`
+        <div
+          data-attrs="${substackAttrs({ instagram_id: 'CdWN1jeOWr0' })}"
+          data-component-name="InstagramToDOM"
+        ></div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'p/CdWN1jeOWr0',
+        src: 'https://www.instagram.com/p/CdWN1jeOWr0/embed/',
+        url: 'https://www.instagram.com/p/CdWN1jeOWr0/',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    it('should return undefined when data-attrs is absent', async () => {
+      const value = html`<div data-component-name="InstagramToDOM"></div>`
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when data-attrs is malformed json', async () => {
+      const value = makeContainer('not-json')
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the payload names no post', async () => {
+      const value = makeContainer({ author_name: 'someuser' })
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a shortcode outside the url-safe alphabet', async () => {
+      const value = makeContainer({ instagram_id: '../evil' })
+
+      expect(await extract(value)).toBeUndefined()
+    })
   })
 })
