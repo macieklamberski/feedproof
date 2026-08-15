@@ -934,10 +934,15 @@ describeForEachParser('transformContent', (parseHtml) => {
 
     it('should convert a VideoPlaceholder upload into a native video element', async () => {
       // substackMediaResolver owns it, minting the api.substack.com upload endpoint.
+      const videoAttrs = substackAttrs({
+        mediaUploadId: uploadId,
+        duration: null,
+        isEditorNode: true,
+      })
       const value = html`
         <div
           class="native-video-embed"
-          data-attrs="${substackAttrs({ mediaUploadId: uploadId, duration: null, isEditorNode: true })}"
+          data-attrs="${videoAttrs}"
           data-component-name="VideoPlaceholder"
         ></div>
         <p>The talk in full.</p>
@@ -979,11 +984,16 @@ describeForEachParser('transformContent', (parseHtml) => {
 
     it('should resolve a Youtube2ToDOM wrap into a youtube embed placeholder', async () => {
       // The host-keyed youtube resolver claims the inner iframe; the wrap divs dissolve.
+      const youtubeAttrs = substackAttrs({
+        videoId: 'ab3DEfGHijk',
+        startTime: null,
+        endTime: null,
+      })
       const value = html`
         <div
           id="youtube2-ab3DEfGHijk"
           class="youtube-wrap"
-          data-attrs="${substackAttrs({ videoId: 'ab3DEfGHijk', startTime: null, endTime: null })}"
+          data-attrs="${youtubeAttrs}"
           data-component-name="Youtube2ToDOM"
         >
           <div class="youtube-inner">
@@ -1163,11 +1173,16 @@ describeForEachParser('transformContent', (parseHtml) => {
     it('should strip a SubscribeWidgetToDOM widget as non-content', async () => {
       // nonContentSelectors owns it (.subscription-widget-wrap-editor): a subscribe CTA is
       // chrome, so removal is the desired end state.
+      const subscribeAttrs = substackAttrs({
+        url: 'https://examplepub.substack.com/subscribe?',
+        text: 'Subscribe',
+        language: 'en',
+      })
       const value = html`
         <p>Thank you for being here.</p>
         <div
           class="subscription-widget-wrap-editor"
-          data-attrs="${substackAttrs({ url: 'https://examplepub.substack.com/subscribe?', text: 'Subscribe', language: 'en' })}"
+          data-attrs="${subscribeAttrs}"
           data-component-name="SubscribeWidgetToDOM"
         >
           <div class="subscription-widget show-subscribe">
@@ -1396,11 +1411,16 @@ describeForEachParser('transformContent', (parseHtml) => {
 
     it('should resolve a VimeoToDOM wrap into a vimeo embed placeholder', async () => {
       // The vimeo resolver claims the inner player iframe; the wrap divs dissolve.
+      const vimeoAttrs = substackAttrs({
+        videoId: '123456789',
+        videoKey: '',
+        belowTheFold: false,
+      })
       const value = html`
         <div
           id="vimeo-123456789"
           class="vimeo-wrap"
-          data-attrs="${substackAttrs({ videoId: '123456789', videoKey: '', belowTheFold: false })}"
+          data-attrs="${vimeoAttrs}"
           data-component-name="VimeoToDOM"
         >
           <div class="vimeo-inner">
@@ -2015,9 +2035,10 @@ describeForEachParser('transformContent', (parseHtml) => {
     it('should drop a PollToDOM embed', async () => {
       // Known loss: the poll ships only its id and votes live on Substack, so stripEmptyTags
       // deletes the empty div; no poll kind exists to park it in.
+      const pollAttrs = substackAttrs({ id: 123456 })
       const value = html`
         <p>Before.</p>
-        <div class="poll-embed" data-attrs="${substackAttrs({ id: 123456 })}" data-component-name="PollToDOM"></div>
+        <div class="poll-embed" data-attrs="${pollAttrs}" data-component-name="PollToDOM"></div>
         <p>After.</p>
       `
       const expected = html`
@@ -2107,10 +2128,11 @@ describeForEachParser('transformContent', (parseHtml) => {
     it('should drop a CashtagToDOM span and its ticker symbol', async () => {
       // Known loss: the ticker lives only in the data-attrs JSON, so the empty span is
       // deleted mid-sentence; no restore is minted for it.
+      const cashtagAttrs = substackAttrs({ symbol: '$RKLB' })
       const value = html`
         <p>Rocket Lab <span
           class="cashtag-wrap"
-          data-attrs="${substackAttrs({ symbol: '$RKLB' })}"
+          data-attrs="${cashtagAttrs}"
           data-component-name="CashtagToDOM"
         ></span> returned 105% from entry.</p>
       `
@@ -2123,11 +2145,12 @@ describeForEachParser('transformContent', (parseHtml) => {
     it('should drop a RecipeToDOM embed', async () => {
       // Known loss: the recipe ships only its id and the card is rendered server-side, so
       // stripEmptyTags deletes the empty div.
+      const recipeAttrs = substackAttrs({ id: 12345 })
       const value = html`
         <h3>Cake Goop</h3>
         <div
           class="recipe-embed"
-          data-attrs="${substackAttrs({ id: 12345 })}"
+          data-attrs="${recipeAttrs}"
           data-component-name="RecipeToDOM"
         ></div>
         <h3>Books</h3>
