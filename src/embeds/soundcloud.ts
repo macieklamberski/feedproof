@@ -47,7 +47,7 @@ type SubstackTrackAttributes = {
   targetUrl?: string
 }
 
-const readSubstackFields = (element: Element): Partial<EmbedResolverResult> => {
+const readSubstackTrack = (element: Element): Partial<EmbedResolverResult> => {
   const wrapper = element.closest('[data-component-name="SoundcloudToDOM"]')
   const attributes = jsonAttr<SubstackTrackAttributes>(wrapper, 'data-attrs')
 
@@ -94,7 +94,7 @@ export const soundcloudResolveEmbed = (
     result.title = title
   }
 
-  Object.assign(result, readSubstackFields(element))
+  Object.assign(result, readSubstackTrack(element))
 
   const sibling = element.nextElementSibling
   const anchors = Array.from(sibling?.querySelectorAll('a[href*="soundcloud.com"]') ?? []).filter(

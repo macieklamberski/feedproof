@@ -92,7 +92,7 @@ const readDuration = (attributes: SubstackPodcastAttributes): number | undefined
 // The component name is on the container while `data-attrs` sits on the iframe inside it, so the
 // two are read from different elements. `targetUrl` is deliberately dropped: it is the same page
 // this resolver already composes, with an affiliate token added.
-const readSubstackFields = (element: Element): Partial<EmbedResolverResult> => {
+const readSubstackPodcast = (element: Element): Partial<EmbedResolverResult> => {
   if (!element.closest('[data-component-name="ApplePodcastToDom"]')) {
     return {}
   }
@@ -116,5 +116,5 @@ const readSubstackFields = (element: Element): Partial<EmbedResolverResult> => {
 export const appleEmbedResolver = createUrlEmbedResolver(appleHosts, (url, element) => {
   const result = appleResolveEmbed(url)
 
-  return result && { ...result, ...readSubstackFields(element) }
+  return result && { ...result, ...readSubstackPodcast(element) }
 })
