@@ -45,10 +45,6 @@ const vimeoEmbedParams = ['h', 't']
 // 277 of those are a label. The labels are not filtered. They are localised into at least five
 // languages and some name a plugin rather than the platform, so any list of them is a list that
 // goes stale, and feedsweep's job is to carry what the source states rather than to judge it.
-const readTitle = (element: Element): string | undefined => {
-  return attr(element, 'title')?.trim() || undefined
-}
-
 export const vimeoResolveEmbed = (
   url: string,
   element?: Element,
@@ -59,7 +55,7 @@ export const vimeoResolveEmbed = (
     return
   }
 
-  const title = element ? readTitle(element) : undefined
+  const title = element ? attr(element, 'title') : undefined
 
   return {
     provider: 'vimeo',
