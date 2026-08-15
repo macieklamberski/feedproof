@@ -154,12 +154,12 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
       outer.innerHTML = '<div data-inner="">Inner</div>'
       marker.replaceWith(outer)
 
-      const result = await applyDomTransforms(document, [hoistBlocksFromParagraphs(baseContext)])
       const expected = html`
         <p>Before </p>
         <div data-block=""><div data-inner="">Inner</div></div>
         <p> after</p>
       `
+      const result = await applyDomTransforms(document, [hoistBlocksFromParagraphs(baseContext)])
 
       expect(result).toEqualHtml(expected)
     })

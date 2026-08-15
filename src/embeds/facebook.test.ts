@@ -643,10 +643,16 @@ describeForEachParser('facebook through the pipeline', (parseHtml) => {
   // pass reaches it or the post disappears with the tag.
   it('should claim the empty fb:post tag before it is dropped as empty', async () => {
     const value = '<fb:post href="https://www.facebook.com/PageName/posts/123"></fb:post>'
-    const result = await convert(value)
+    const expected = html`
+      <div
+        data-embed-src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123"
+        data-embed-provider="facebook"
+        data-embed-id="https://www.facebook.com/PageName/posts/123"
+        data-embed-url="https://www.facebook.com/PageName/posts/123"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-provider="facebook"')
-    expect(result).not.toContain('<fb:post')
+    expect(await convert(value)).toEqualHtml(expected)
   })
 
   // The escaping is undone upstream by decodeDoubleEncodedTags, so the embed only becomes an
@@ -654,10 +660,17 @@ describeForEachParser('facebook through the pipeline', (parseHtml) => {
   it('should resolve an embed that arrives entity-escaped in an Atom payload', async () => {
     const value =
       '&lt;iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123"&gt;&lt;/iframe&gt;'
+    const expected = html`
+      <div
+        data-embed-src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123"
+        data-embed-provider="facebook"
+        data-embed-id="https://www.facebook.com/PageName/posts/123"
+        data-embed-url="https://www.facebook.com/PageName/posts/123"
+      ></div>
+    `
     const result = await convert(value)
 
-    expect(result).toContain('data-embed-provider="facebook"')
-    expect(result).toContain('data-embed-url="https://www.facebook.com/PageName/posts/123"')
+    expect(result).toEqualHtml(expected)
   })
 
   // The SDK loader is scaffolding no resolver looks at: the root div and the script have to be

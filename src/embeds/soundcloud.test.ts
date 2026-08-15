@@ -30,7 +30,6 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
           <a href="https://soundcloud.com/anjunadeep/the-anjunadeep-edition-586" title="The Anjunadeep Edition 586" target="_blank">The Anjunadeep Edition 586</a>
         </div>
       `
-      const result = await extract(value)
       const expected: EmbedResolverResult = {
         provider: 'soundcloud',
         id: 'tracks/1597257306',
@@ -41,6 +40,7 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
         title: 'The Anjunadeep Edition 586',
         author: 'Anjunadeep',
       }
+      const result = await extract(value)
 
       expect(result).toEqual(expected)
     })
@@ -53,10 +53,19 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
           <a href="https://soundcloud.com/artist/track">Track title</a>
         </div>
       `
-      const result = await transform(value)
+      const expected = html`
+        <div
+          data-embed-src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1"
+          data-embed-provider="soundcloud"
+          data-embed-id="tracks/1"
+          data-embed-url="https://soundcloud.com/artist/track"
+          data-embed-height="300"
+          data-embed-title="Track title"
+          data-embed-author="Artist"
+        ></div>
+      `
 
-      expect(result).toContain('data-embed-provider="soundcloud"')
-      expect(result).not.toContain('>Artist</a>')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should read the title from the iframe title attribute', async () => {

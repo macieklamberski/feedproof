@@ -89,7 +89,6 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   it('should recover aspect from a responsive wrapper when the iframe is unsized', async () => {
     const value =
       '<div style="padding-bottom:56.25%"><iframe src="https://example.com/embed/xyz"></iframe></div>'
-    const result = await transform(value, withNoResolvers)
     const expected = html`
       <div style="padding-bottom:56.25%">
         <div
@@ -99,6 +98,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         ></div>
       </div>
     `
+    const result = await transform(value, withNoResolvers)
 
     expect(result).toEqualHtml(expected)
   })
@@ -127,7 +127,6 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   it('should not recover aspect from out-of-range wrapper values', async () => {
     const value =
       '<figure class="wp-embed-aspect-0-0"><div style="padding-bottom:0%"><iframe src="https://example.com/embed/xyz"></iframe></div></figure>'
-    const result = await transform(value, withNoResolvers)
     const expected = html`
       <figure class="wp-embed-aspect-0-0">
         <div style="padding-bottom:0%">
@@ -135,6 +134,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         </div>
       </figure>
     `
+    const result = await transform(value, withNoResolvers)
 
     expect(result).toEqualHtml(expected)
   })
@@ -329,10 +329,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
 
   it('should still wrap unknown iframes when widgetResolvers is empty', async () => {
     const value = '<iframe src="https://unknown-site.com/123"></iframe>'
-    const result = await transform(value, withNoResolvers)
     const expected = html`
       <div data-embed-src="https://unknown-site.com/123"></div>
     `
+    const result = await transform(value, withNoResolvers)
 
     expect(result).toEqualHtml(expected)
   })

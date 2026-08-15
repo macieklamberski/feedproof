@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { baseContext, describeForEachParser } from '../tests.js'
-import { convertWidgets } from '../transforms/dom/convertWidgets.js'
-import type { EmbedResolverResult, TransformContext } from '../types.js'
-import { applyDomTransforms } from '../utils/transforms.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
+import type { EmbedResolverResult } from '../types.js'
 import { extractMixcloudShow, mixcloudEmbedResolver, mixcloudResolveEmbed } from './mixcloud.js'
 
 describe('extractMixcloudShow', () => {
@@ -94,39 +92,46 @@ describe('mixcloudResolveEmbed', () => {
 })
 
 describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
-  const context: TransformContext = { ...baseContext, widgetResolvers: [mixcloudEmbedResolver] }
-
-  const transform = (value: string) => {
-    return applyDomTransforms(parseHtml(value), [convertWidgets(context)])
-  }
+  const extract = resolverExtractor(parseHtml, mixcloudEmbedResolver)
 
   it('should resolve the widget iframe', async () => {
-    const value =
-      '<iframe width="100%" height="400" src="https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F"></iframe>'
-    const result = await transform(value)
+    const value = html`
+      <iframe
+        width="100%"
+        height="400"
+        src="https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'mixcloud',
+      id: 'photogmusic/no-filter',
+      src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
+      url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      height: 400,
+    }
 
-    expect(result).toContain('data-embed-provider="mixcloud"')
-    expect(result).toContain('data-embed-id="photogmusic/no-filter"')
-    expect(result).toContain('data-embed-height="400"')
+    expect(await extract(value)).toEqual(expected)
   })
 
   // The legacy Flash carrier reaches the resolver through the shared carrier selector. Feeds
   // write this src protocol-relative; resolveRelativeUrls makes it absolute earlier in the
-  // pipeline, and this pass runs convertWidgets alone, so the url is absolute here.
+  // pipeline, so the url is absolute by the time the resolver sees it.
   it('should resolve the legacy Flash player', async () => {
     const value =
       '<embed src="https://www.mixcloud.com/media/swf/player/mixcloudLoader.swf?feed=http%3A%2F%2Fwww.mixcloud.com%2FFakeIDRadio%2F4-natty-champs%2F&embed_type=widget_standard">'
-    const result = await transform(value)
+    const expected: EmbedResolverResult = {
+      provider: 'mixcloud',
+      id: 'FakeIDRadio/4-natty-champs',
+      src: 'https://www.mixcloud.com/widget/iframe/?feed=%2FFakeIDRadio%2F4-natty-champs%2F',
+      url: 'https://www.mixcloud.com/FakeIDRadio/4-natty-champs/',
+    }
 
-    expect(result).toContain('data-embed-provider="mixcloud"')
-    expect(result).toContain('data-embed-id="FakeIDRadio/4-natty-champs"')
-    expect(result).not.toContain('<embed')
+    expect(await extract(value)).toEqual(expected)
   })
 
   it('should leave a non-show mixcloud url to the generic placeholder', async () => {
     const value = '<iframe src="https://www.mixcloud.com/discover/house/"></iframe>'
-    const result = await transform(value)
 
-    expect(result).not.toContain('data-embed-provider')
+    expect(await extract(value)).toBeUndefined()
   })
 })
