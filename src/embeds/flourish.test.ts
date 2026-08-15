@@ -98,10 +98,18 @@ describeForEachParser('flourishWidgetEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for an unknown resource kind', async () => {
-      const value = html`<div class="flourish-embed" data-src="dashboard/123456"></div>`
+    // A kind this resolver has not seen is likelier to be a template Flourish added than a
+    // mistake, and the div carrier is empty, so refusing it deletes the chart outright.
+    it('should carry a resource kind it has not seen before', async () => {
+      const value = html`<div class="flourish-embed" data-src="dashboard/29132382"></div>`
+      const expected: EmbedResolverResult = {
+        provider: 'flourish',
+        id: 'dashboard/29132382',
+        src: 'https://flo.uri.sh/dashboard/29132382/embed',
+        url: 'https://public.flourish.studio/dashboard/29132382/',
+      }
 
-      expect(await extract(value)).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should return undefined for a non-numeric id', async () => {
@@ -199,12 +207,6 @@ describeForEachParser('flourishIframeEmbedResolver', (parseHtml) => {
       const value = html`
         <iframe src="https://evil.test/flo.uri.sh/visualisation/29132382/embed"></iframe>
       `
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should return undefined for an unknown resource kind', async () => {
-      const value = html`<iframe src="https://flo.uri.sh/dashboard/29132382/embed"></iframe>`
 
       expect(await extract(value)).toBeUndefined()
     })
