@@ -129,6 +129,7 @@ import { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmb
 import { convertGiphyEmbeds } from './transforms/dom/convertGiphyEmbeds.js'
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 import { convertNoteEmbeds } from './transforms/dom/convertNoteEmbeds.js'
+import { convertParagraphEmbeds } from './transforms/dom/convertParagraphEmbeds.js'
 import { convertWidgets } from './transforms/dom/convertWidgets.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
@@ -267,6 +268,11 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // widget pass to classify, own-post embeds become plain links (the figure carries only
   // the post URL). External-article figures stay for the cite pass.
   convertNoteEmbeds,
+  // Converts the Paragraph embed blocks the cite pass refuses: a non-link oEmbed payload
+  // becomes a plain iframe for the widget pass to classify, an absent or malformed one becomes
+  // a link. Runs before convertCiteCards so the link types it leaves alone still reach it, and
+  // before stripEmptyTags, which is what used to delete the whole empty carrier.
+  convertParagraphEmbeds,
   // Materializes an iframe parked in a <div> attribute (Pym.js, @newswire/frames) so it's
   // placeholdered downstream. Runs before convertDatawrapperEmbeds so a data-frame-src
   // Datawrapper div becomes an iframe that convertDatawrapperEmbeds turns into a static image.

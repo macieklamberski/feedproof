@@ -244,6 +244,7 @@ export { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmb
 export { convertGiphyEmbeds } from './transforms/dom/convertGiphyEmbeds.js'
 export { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 export { convertNoteEmbeds } from './transforms/dom/convertNoteEmbeds.js'
+export { convertParagraphEmbeds } from './transforms/dom/convertParagraphEmbeds.js'
 export { convertWidgets } from './transforms/dom/convertWidgets.js'
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
