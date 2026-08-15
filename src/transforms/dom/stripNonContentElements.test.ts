@@ -17,6 +17,8 @@ const specimens: Record<string, string | [string, string]> = {
     '<div class="subscription-widget-wrap-editor"><div class="subscription-widget"><h2>Keep reading with a 7-day free trial</h2></div></div>',
   '.embedded-publication-wrap':
     '<div class="embedded-publication-wrap"><a href="https://other.substack.com">Other newsletter</a></div>',
+  'iframe[src*=".substack.com/"][src$="/embed"]':
+    '<iframe src="https://other.substack.com/embed" width="480" height="320"></iframe>',
   '.wp-block-jetpack-subscriptions':
     '<div class="wp-block-jetpack-subscriptions"><form><input type="email"></form></div>',
   '.kg-signup-card':
