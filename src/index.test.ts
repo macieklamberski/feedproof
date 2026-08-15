@@ -2202,6 +2202,77 @@ describeForEachParser('transformContent', (parseHtml) => {
     })
   })
 
+  // Disposition todos exist only for platforms whose handling spans several mechanisms,
+  // where a suite is what shows how they divide the work. Platforms a single resolver owns
+  // (Spotify, Vimeo, the podcast hosts) are pinned by that resolver's own tests, so they
+  // get no entry here.
+  describe.todo('Platform e2e: YouTube', () => {
+    // The widest spread. youtubeIframeEmbedResolver and youtubeAmpEmbedResolver claim the
+    // carriers and amp-youtube elements (youtubeHosts includes youtube.googleapis.com, the
+    // Flash-era host Blogger feeds still ship). Each plugin facade has its own rebuild:
+    // rebuildLazyYtEmbeds, rebuildLyteEmbeds, rebuildRocketYoutubePreviews,
+    // rebuildLiteVideoEmbeds, rebuildEmbedPlusEmbeds, rebuildElementorVideoEmbeds and
+    // rebuildLazyLoadForVideos. surfaceParkedMarkup recovers iframes parked percent-encoded
+    // in data-content, extractVideoId strips the stray bbcode quote Steam news leaks into
+    // embed srcs, and defaultNonContentSelectors drops the Steam poster gif shown before
+    // its script swaps the real iframe in.
+  })
+
+  describe.todo('Platform e2e: Discourse', () => {
+    // discourseCiteResolver turns generic onebox cards into cites, passing through the
+    // engines in omittedOneboxClasses and the social posts recognized via socialPostHosts
+    // and the Mastodon status signals. discourseMediaResolver rebuilds uploaded videos from
+    // their placeholder divs, and the engines that emit bare iframes are left to the
+    // host-keyed embed resolvers.
+  })
+
+  describe.todo('Platform e2e: WordPress', () => {
+    // convertWidgets claims the embed carriers inside the oEmbed wrapper figures, with
+    // getWrapperRatioDimensions reading their wp-embed-aspect-* classes when the carrier
+    // states no size. fixLazyIframes and fixLazyImages recover the consent-gate and
+    // lazy-loader attribute stashes (defaultLazyIframeAttributes, defaultLazySrcAttributes).
+    // The plugin facades are rebuilt by rebuildLyteEmbeds, rebuildRocketYoutubePreviews,
+    // rebuildLazyLoadForVideos, rebuildEmbedPlusEmbeds and rebuildElementorVideoEmbeds.
+    // wp-embedded-content post embeds are in open PR #361; add that clause when it merges.
+  })
+
+  describe.todo('Platform e2e: Ghost', () => {
+    // ghostMediaResolver rebuilds the kg-video-card and kg-audio-card players and
+    // ghostCiteResolver converts kg-bookmark-card bookmarks. kg-file-card has no owner
+    // while the file kind stays parked, and galleries are in open PR #129; add that clause
+    // when it merges.
+  })
+
+  describe.todo('Platform e2e: Tumblr', () => {
+    // tumblrCiteResolver owns both NPF link shapes: the bare .npf_link anchor with its
+    // data-npf JSON and the .npf-link-block card painted as markup. Unwrapping the
+    // t.umblr.com and href.li redirectors stays with the injected cleanUrlFn on purpose.
+  })
+
+  describe.todo('Platform e2e: Twitter', () => {
+    // Multi-carrier resolvers are in open PR #520; the suite becomes writable when it merges.
+  })
+
+  describe.todo('Platform e2e: Instagram', () => {
+    // Multi-carrier resolvers are in open PR #548; the suite becomes writable when it merges.
+  })
+
+  describe.todo('Platform e2e: Facebook', () => {
+    // Multi-carrier resolvers are in open PR #483; the suite becomes writable when it merges.
+  })
+
+  describe.todo('Platform e2e: Bluesky', () => {
+    // Multi-carrier resolvers are in open PR #547; the suite becomes writable when it merges.
+  })
+
+  describe.todo('Platform e2e: Mastodon', () => {
+    // Multi-carrier resolvers are in open PR #546; the suite becomes writable when it merges.
+  })
+
+  describe.todo('Platform e2e: TikTok', () => {
+    // The blockquote resolver is in open PR #471; the suite becomes writable when it merges.
+  })
+
   it.todo('should propagate an error thrown by a dom transform', () => {
     // A custom domTransforms entry that throws should reject the transformContent promise.
   })
