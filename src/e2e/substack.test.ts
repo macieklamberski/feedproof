@@ -748,7 +748,8 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   it('should resolve an ApplePodcastToDom iframe into an applepodcasts placeholder', async () => {
-    // The apple resolver claims the embed iframe and states the episode player height.
+    // The apple resolver claims the embed iframe, states the episode player height and takes the
+    // card the container carries, whose runtime is in milliseconds because this is an episode.
     const podcastAttrs = substackAttrs({
       url: 'https://embed.podcasts.apple.com/au/podcast/the-art-of/id1234567890?i=1000500600700',
       isEpisode: true,
@@ -778,7 +779,12 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-id="podcast/1000500600700"
         data-embed-src="https://embed.podcasts.apple.com/au/podcast/the-art-of/id1234567890?i=1000500600700"
         data-embed-url="https://podcasts.apple.com/au/podcast/the-art-of/id1234567890?i=1000500600700"
+        data-embed-thumbnail="https://substack-post-media.s3.amazonaws.com/public/images/podcast-episode_1000500600700.jpg"
         data-embed-height="175"
+        data-embed-title="The art of storytelling"
+        data-embed-publisher="Example Show"
+        data-embed-date="2021-04-04T14:51:00Z"
+        data-embed-duration="4419"
       >
         <a
           href="https://podcasts.apple.com/au/podcast/the-art-of/id1234567890?i=1000500600700"
@@ -870,7 +876,9 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   it('should resolve a SoundcloudToDOM wrap into a soundcloud embed placeholder', async () => {
-    // The soundcloud resolver claims the player iframe and reads the track id off its url.
+    // The soundcloud resolver claims the player iframe, reads the track id off its url and takes
+    // the card the wrapper carries. The fallback anchor then points at the track page rather than
+    // at the player, since the payload is the only place that url appears.
     const soundcloudAttrs = substackAttrs({
       title: 'Mix 4',
       description: 'Tracklist',
@@ -899,11 +907,14 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-provider="soundcloud"
         data-embed-id="tracks/123456789"
         data-embed-src="https://w.soundcloud.com/player/?auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=true&show_comments=false&show_playcount=false&show_user=true&hide_related=true&visual=false&start_track=0&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F123456789"
+        data-embed-url="https://soundcloud.com/exampleradio/mix-4"
+        data-embed-thumbnail="https://i1.sndcdn.com/artworks-abc-t500x500.jpg"
         data-embed-height="166"
+        data-embed-title="Mix 4"
+        data-embed-description="Tracklist"
+        data-embed-author="Example Radio"
       >
-        <a
-          href="https://w.soundcloud.com/player/?auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=true&show_comments=false&show_playcount=false&show_user=true&hide_related=true&visual=false&start_track=0&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F123456789"
-        >https://w.soundcloud.com/player/?auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=true&show_comments=false&show_playcount=false&show_user=true&hide_related=true&visual=false&start_track=0&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F123456789</a>
+        <a href="https://soundcloud.com/exampleradio/mix-4">https://soundcloud.com/exampleradio/mix-4</a>
       </div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })

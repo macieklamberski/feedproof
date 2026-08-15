@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, resolverExtractor } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { appleEmbedResolver, appleResolveEmbed } from './apple.js'
 
@@ -185,5 +185,106 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
     const value = '<iframe src="https://example.com/us/album/thriller/1440857781"></iframe>'
 
     expect(await resolve(value)).toBeUndefined()
+  })
+
+  describe('the Substack card the container carries', () => {
+    it('should take an episode payload, reading its runtime as milliseconds', async () => {
+      const value = html`
+        <div class="apple-podcast-container" data-component-name="ApplePodcastToDom">
+          <iframe
+            class="apple-podcast episode-list"
+            data-attrs='{"url":"https://embed.podcasts.apple.com/us/podcast/undertone/id1693303954?i=1000664459889","isEpisode":true,"imageUrl":"https://substack-post-media.s3.amazonaws.com/public/images/podcast-episode.jpg","title":"Henry Oliver","podcastTitle":"Undertone","podcastByline":"","duration":4178000,"numEpisodes":"","targetUrl":"https://podcasts.apple.com/us/podcast/undertone/id1693303954?uo=4","releaseDate":"2024-06-19T00:00:00Z"}'
+            src="https://embed.podcasts.apple.com/us/podcast/undertone/id1693303954?i=1000664459889"
+          ></iframe>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'applepodcasts',
+        id: 'podcast/1000664459889',
+        src: 'https://embed.podcasts.apple.com/us/podcast/undertone/id1693303954?i=1000664459889',
+        url: 'https://podcasts.apple.com/us/podcast/undertone/id1693303954?i=1000664459889',
+        height: 175,
+        title: 'Henry Oliver',
+        publisher: 'Undertone',
+        thumbnail: 'https://substack-post-media.s3.amazonaws.com/public/images/podcast-episode.jpg',
+        date: '2024-06-19T00:00:00Z',
+        duration: 4178,
+      }
+
+      expect(await resolve(value)).toEqual(expected)
+    })
+
+    // A show states the same number in seconds, so reading both the same way would publish one
+    // of them a thousandfold out.
+    it('should take a show payload, reading its runtime as seconds', async () => {
+      const value = html`
+        <div class="apple-podcast-container" data-component-name="ApplePodcastToDom">
+          <iframe
+            class="apple-podcast episode-list"
+            data-attrs='{"url":"https://embed.podcasts.apple.com/us/podcast/boardroom-governance/id1513064579","isEpisode":false,"imageUrl":"https://substack-post-media.s3.amazonaws.com/public/images/podcast.jpg","title":"Boardroom Governance","podcastTitle":"Boardroom Governance","podcastByline":"Evan Epstein","duration":3406,"numEpisodes":2,"targetUrl":"https://podcasts.apple.com/us/podcast/boardroom-governance/id1513064579?uo=4","releaseDate":"2026-03-04T00:00:00Z"}'
+            src="https://embed.podcasts.apple.com/us/podcast/boardroom-governance/id1513064579"
+          ></iframe>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'applepodcasts',
+        id: 'podcast/1513064579',
+        src: 'https://embed.podcasts.apple.com/us/podcast/boardroom-governance/id1513064579',
+        url: 'https://podcasts.apple.com/us/podcast/boardroom-governance/id1513064579',
+        height: 450,
+        title: 'Boardroom Governance',
+        publisher: 'Boardroom Governance',
+        author: 'Evan Epstein',
+        thumbnail: 'https://substack-post-media.s3.amazonaws.com/public/images/podcast.jpg',
+        date: '2026-03-04T00:00:00Z',
+        duration: 3406,
+      }
+
+      expect(await resolve(value)).toEqual(expected)
+    })
+
+    // The payload's own `targetUrl` is this page with an affiliate token on it, so the composed
+    // url stands instead of it.
+    it('should compose the url rather than take the payload affiliate link', async () => {
+      const value = html`
+        <div class="apple-podcast-container" data-component-name="ApplePodcastToDom">
+          <iframe
+            class="apple-podcast episode-list"
+            data-attrs='{"targetUrl":"https://podcasts.apple.com/gb/podcast/exploaded/id1887512662?uo=4","title":"EXPloaded"}'
+            src="https://embed.podcasts.apple.com/gb/podcast/exploaded/id1887512662"
+          ></iframe>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'applepodcasts',
+        id: 'podcast/1887512662',
+        src: 'https://embed.podcasts.apple.com/gb/podcast/exploaded/id1887512662',
+        url: 'https://podcasts.apple.com/gb/podcast/exploaded/id1887512662',
+        height: 450,
+        title: 'EXPloaded',
+      }
+
+      expect(await resolve(value)).toEqual(expected)
+    })
+
+    it('should ignore a payload that no Substack container names', async () => {
+      const value = html`
+        <div>
+          <iframe
+            data-attrs='{"title":"Not a Substack card","podcastTitle":"Nor this"}'
+            src="https://embed.podcasts.apple.com/gb/podcast/exploaded/id1887512662"
+          ></iframe>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'applepodcasts',
+        id: 'podcast/1887512662',
+        src: 'https://embed.podcasts.apple.com/gb/podcast/exploaded/id1887512662',
+        url: 'https://podcasts.apple.com/gb/podcast/exploaded/id1887512662',
+        height: 450,
+      }
+
+      expect(await resolve(value)).toEqual(expected)
+    })
   })
 })

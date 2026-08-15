@@ -104,6 +104,78 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
     })
   })
 
+  describe('the URN reference some feeds write instead of a bare id', () => {
+    // The colons arrive percent-encoded twice over, since the reference is itself a query value.
+    it('should read the id out of a percent-encoded URN', async () => {
+      const value =
+        '<iframe src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2262754046"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        id: 'tracks/2262754046',
+        src: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2262754046',
+        height: 166,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should read the id out of a plain URN', async () => {
+      const value =
+        '<iframe src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%3Aplaylists%3A1953831"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        id: 'playlists/1953831',
+        src: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%3Aplaylists%3A1953831',
+        height: 450,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('the Substack card the wrapper carries', () => {
+    it('should take the title, description, artwork, artist and track page', async () => {
+      const value = html`
+        <div class="soundcloud-wrap" data-attrs='{"url":"https://api.soundcloud.com/tracks/2088634614","title":"It&apos;s Just Us by Kali Uchis","description":"A single","thumbnail_url":"https://i1.sndcdn.com/artworks-t500x500.jpg","author_name":"Kali Uchis","author_url":"https://soundcloud.com/kaliuchis","targetUrl":"https://soundcloud.com/kaliuchis/its-just-us"}' data-component-name="SoundcloudToDOM">
+          <iframe src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2088634614"></iframe>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        id: 'tracks/2088634614',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2088634614',
+        url: 'https://soundcloud.com/kaliuchis/its-just-us',
+        height: 166,
+        title: "It's Just Us by Kali Uchis",
+        description: 'A single',
+        thumbnail: 'https://i1.sndcdn.com/artworks-t500x500.jpg',
+        author: 'Kali Uchis',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Both fields are empty in a good share of the payloads, and an empty string is not a value.
+    it('should state nothing for an empty description and target url', async () => {
+      const value = html`
+        <div class="soundcloud-wrap" data-attrs='{"url":"https://api.soundcloud.com/tracks/948032941","title":"Youth Is A Fugitive","description":"","thumbnail_url":"https://i1.sndcdn.com/artworks-j4ziiQ-t500x500.jpg","author_name":"Fonograf Editions","targetUrl":""}' data-component-name="SoundcloudToDOM">
+          <iframe src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F948032941"></iframe>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        id: 'tracks/948032941',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F948032941',
+        height: 166,
+        title: 'Youth Is A Fugitive',
+        thumbnail: 'https://i1.sndcdn.com/artworks-j4ziiQ-t500x500.jpg',
+        author: 'Fonograf Editions',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
   describe('edge cases', () => {
     it('should yield only the src, id and height for a bare iframe', async () => {
       const value =

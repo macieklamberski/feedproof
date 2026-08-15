@@ -1,6 +1,6 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, text } from '../utils/dom.js'
+import { attr, jsonAttr, text } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // SoundCloud's embed is an iframe whose `url=` query names the track as an
@@ -11,7 +11,13 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // placeholder's author and canonical url, and the div is removed so the reader does not see
 // the placeholder and the same links twice. Gutenberg embeds instead carry the title on the
 // iframe itself ("Track by Artist").
-const referenceRegex = /api\.soundcloud\.com\/(tracks|playlists|users)\/(\d+)/
+// The reference names the id twice in some feeds, as a bare number under the path and again as
+// a `soundcloud:tracks:{id}` URN in place of it. The colons arrive percent-encoded because the
+// whole reference is itself a query value, so both spellings are accepted here. Roughly one
+// SoundCloud feed in ten carries the URN form and nothing else, which left every embed in it
+// with no id at all.
+const referenceRegex =
+  /api\.soundcloud\.com\/(tracks|playlists|users)\/(?:soundcloud(?::|%3A)\w+(?::|%3A))?(\d+)/i
 
 // The player is fluid-width and fixed-height. The classic one is a bar for a single track and
 // a scrolling list for anything holding several, and `visual=true` swaps both for one big
@@ -28,6 +34,35 @@ const classicPlayerHeights: Record<string, number | undefined> = {
 // `<object>`: `player.soundcloud.com/player.swf?url=api.soundcloud.com/tracks/{id}`. The host
 // check the factory applies is what narrows it, so no player path is spelled in a selector.
 const soundcloudHosts = ['soundcloud.com']
+
+// Substack renders a SoundCloud track as an iframe inside its own wrapper, and the wrapper
+// carries the card as JSON: the track title, its description, the artwork and the artist. The
+// `targetUrl` is the human-facing track page, which is the only place the Substack shape names
+// it, since it ships none of the sibling anchors the platform's own snippet uses.
+type SubstackTrackAttributes = {
+  title?: string
+  description?: string
+  thumbnail_url?: string
+  author_name?: string
+  targetUrl?: string
+}
+
+const readSubstackFields = (element: Element): Partial<EmbedResolverResult> => {
+  const wrapper = element.closest('[data-component-name="SoundcloudToDOM"]')
+  const attributes = jsonAttr<SubstackTrackAttributes>(wrapper, 'data-attrs')
+
+  if (!attributes) {
+    return {}
+  }
+
+  return {
+    title: attributes.title || undefined,
+    description: attributes.description || undefined,
+    thumbnail: attributes.thumbnail_url || undefined,
+    author: attributes.author_name || undefined,
+    url: attributes.targetUrl || undefined,
+  }
+}
 
 export const soundcloudResolveEmbed = (
   src: string,
@@ -58,6 +93,8 @@ export const soundcloudResolveEmbed = (
   if (title) {
     result.title = title
   }
+
+  Object.assign(result, readSubstackFields(element))
 
   const sibling = element.nextElementSibling
   const anchors = Array.from(sibling?.querySelectorAll('a[href*="soundcloud.com"]') ?? []).filter(

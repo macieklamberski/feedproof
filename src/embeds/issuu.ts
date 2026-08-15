@@ -94,23 +94,34 @@ export const issuuWidgetEmbedResolver = createMarkupEmbedResolver(
 // The Flash viewer, `static.issuu.com/webembed/…/IssuuReader.swf`, reaches here and is left
 // alone. Its `documentId` flashvar is a third id space that neither url form accepts, so there is
 // nothing to mint from and the generic fallback keeps it.
-export const issuuResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+export const issuuResolveEmbed = (
+  url: string,
+  element?: Element,
+): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url)
 
   if (!parsed || !isAnyOf(getPathSegments(parsed)[0] ?? '', embedPaths)) {
     return
   }
 
+  // The publication name is the only thing an Issuu carrier states that neither url form holds,
+  // and the current share snippet writes it on the iframe.
+  const title = attr(element, 'title')?.trim() || undefined
   const configEmbed = composeConfigEmbed(parsed.hash.replace('#', ''))
 
   if (configEmbed) {
-    return configEmbed
+    return { ...configEmbed, title }
   }
 
   const publisher = parsed.searchParams.get('u') ?? undefined
   const documentName = parsed.searchParams.get('d') ?? undefined
+  const documentEmbed = composeDocumentEmbed(
+    publisher,
+    documentName,
+    parsed.searchParams.get('p') ?? undefined,
+  )
 
-  return composeDocumentEmbed(publisher, documentName, parsed.searchParams.get('p') ?? undefined)
+  return documentEmbed && { ...documentEmbed, title }
 }
 
 export const issuuIframeEmbedResolver = createUrlEmbedResolver(issuuHosts, issuuResolveEmbed)
