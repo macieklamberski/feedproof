@@ -1308,7 +1308,11 @@ describeForEachParser('transformContent', (parseHtml) => {
         language: 'markdown',
         nodeId: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
       })
-      const value = `<div class="highlighted_code_block" data-attrs="${codeAttrs}" data-component-name="HighlightedCodeBlockToDOM"><pre class="shiki"><code class="language-markdown">- [ ] Onboarding form\n- [ ] Wins feed</code></pre></div>`
+      const value = `<div
+        class="highlighted_code_block"
+        data-attrs="${codeAttrs}"
+        data-component-name="HighlightedCodeBlockToDOM"
+      ><pre class="shiki"><code class="language-markdown">- [ ] Onboarding form\n- [ ] Wins feed</code></pre></div>`
       const expected = `<pre data-pre-label="Markdown" data-pre-language="markdown" class="shiki"><code class="language-markdown hljs"><span class="hljs-bullet">-</span> [ ] Onboarding form\n<span class="hljs-bullet">-</span> [ ] Wins feed</code></pre>`
       const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -1879,7 +1883,14 @@ describeForEachParser('transformContent', (parseHtml) => {
         uuid: 'dd2eaf1a-f79e-4c2a-8de6-23ff6123e0ea',
       })
       const value = html`
-        <p>As <span data-state="closed"><a class="mention-pnpTE1" href="https://open.substack.com/users/123456-casey-author?utm_source=mentions" target="_blank" rel="noopener" data-attrs="${mentionUserAttrs}" data-component-name="MentionUser">Casey Author</a></span> wrote.</p>
+        <p>As <span data-state="closed"><a
+          class="mention-pnpTE1"
+          href="https://open.substack.com/users/123456-casey-author?utm_source=mentions"
+          target="_blank"
+          rel="noopener"
+          data-attrs="${mentionUserAttrs}"
+          data-component-name="MentionUser"
+        >Casey Author</a></span> wrote.</p>
       `
       const expected = value
       const result = await transformContent(value, { parseHtmlFn: parseHtml })
@@ -1962,7 +1973,11 @@ describeForEachParser('transformContent', (parseHtml) => {
         <img class="install-substack-app-embed-img" src="https://substackcdn.com/image/fetch/f_auto/icon.png">
         <p>Get more from Casey Author in the Substack app</p>
         <p>Available for iOS and Android</p>
-        <p><a href="https://substack.com/app/app-store-redirect?utm_campaign=app-marketing" target="_blank" class="install-substack-app-embed-link"><button class="install-substack-app-embed-btn button primary">Get the app</button></a></p>
+        <p><a
+          href="https://substack.com/app/app-store-redirect?utm_campaign=app-marketing"
+          target="_blank"
+          class="install-substack-app-embed-link"
+        ><button class="install-substack-app-embed-btn button primary">Get the app</button></a></p>
         <p>After.</p>
       `
       const result = await transformContent(value, { parseHtmlFn: parseHtml })
@@ -2093,7 +2108,11 @@ describeForEachParser('transformContent', (parseHtml) => {
       // Known loss: the ticker lives only in the data-attrs JSON, so the empty span is
       // deleted mid-sentence; no restore is minted for it.
       const value = html`
-        <p>Rocket Lab <span class="cashtag-wrap" data-attrs="${substackAttrs({ symbol: '$RKLB' })}" data-component-name="CashtagToDOM"></span> returned 105% from entry.</p>
+        <p>Rocket Lab <span
+          class="cashtag-wrap"
+          data-attrs="${substackAttrs({ symbol: '$RKLB' })}"
+          data-component-name="CashtagToDOM"
+        ></span> returned 105% from entry.</p>
       `
       const expected = html`<p>Rocket Lab  returned 105% from entry.</p>`
       const result = await transformContent(value, { parseHtmlFn: parseHtml })
@@ -2106,7 +2125,11 @@ describeForEachParser('transformContent', (parseHtml) => {
       // stripEmptyTags deletes the empty div.
       const value = html`
         <h3>Cake Goop</h3>
-        <div class="recipe-embed" data-attrs="${substackAttrs({ id: 12345 })}" data-component-name="RecipeToDOM"></div>
+        <div
+          class="recipe-embed"
+          data-attrs="${substackAttrs({ id: 12345 })}"
+          data-component-name="RecipeToDOM"
+        ></div>
         <h3>Books</h3>
       `
       const expected = html`
