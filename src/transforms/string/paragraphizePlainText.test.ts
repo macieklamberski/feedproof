@@ -59,6 +59,45 @@ describe('paragraphizePlainText', () => {
     expect(paragraphize(value)).toBe(value)
   })
 
+  // A tag name carrying a namespace prefix or a hyphen is still a tag. Reading one as plain
+  // text autops the markup around it: a paragraph per blank line and a <br /> per newline.
+  describe('tag names that are not plain letters', () => {
+    // Atom type="xhtml" content reaches the pipeline with the prefixes the spec declares.
+    it('should not autop a namespace-prefixed tag', () => {
+      const value =
+        '<xhtml:div>\n  <xhtml:p>First</xhtml:p>\n\n  <xhtml:p>Second</xhtml:p>\n</xhtml:div>'
+
+      expect(paragraphize(value)).toBe(value)
+    })
+
+    // Facebook's pre-SDK snippet, which the widget pass claims later.
+    it('should not autop a prefixed tag that carries only attributes', () => {
+      const value = '<fb:post href="https://example.com/PageName/posts/123"></fb:post>'
+
+      expect(paragraphize(value)).toBe(value)
+    })
+
+    it('should not autop a hyphenated custom element', () => {
+      const value = '<amp-img src="photo.jpg" width="600" height="400"></amp-img>'
+
+      expect(paragraphize(value)).toBe(value)
+    })
+
+    it('should not autop a custom element carrying more than one hyphen', () => {
+      const value = '<my-video-player src="clip.mp4"></my-video-player>'
+
+      expect(paragraphize(value)).toBe(value)
+    })
+
+    // The prefix has to name something: a bare colon or hyphen after the `<` is prose.
+    it('should autop text where the angle bracket leads nowhere', () => {
+      const value = 'ratio <:1 and range <-5'
+      const expected = '<p>ratio <:1 and range <-5</p>\n'
+
+      expect(paragraphize(value)).toBe(expected)
+    })
+  })
+
   it('should handle empty string', () => {
     expect(paragraphize('')).toBe('')
   })
