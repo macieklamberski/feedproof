@@ -9,22 +9,25 @@ describe('extractMixcloudShow', () => {
   it('should read a feed parameter holding a path', () => {
     const value =
       'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter-may-28-2018-hour-one%2F'
+    const expected = 'photogmusic/no-filter-may-28-2018-hour-one'
 
-    expect(extractMixcloudShow(value)).toBe('photogmusic/no-filter-may-28-2018-hour-one')
+    expect(extractMixcloudShow(value)).toBe(expected)
   })
 
   it('should read a feed parameter holding a whole url', () => {
     const value =
       'http://www.mixcloud.com/media/swf/player/mixcloudLoader.swf?feed=http%3A%2F%2Fwww.mixcloud.com%2Ffrederik%2Foct-2011-exclusive-set%2F&embed_type=widget_standard'
+    const expected = 'frederik/oct-2011-exclusive-set'
 
-    expect(extractMixcloudShow(value)).toBe('frederik/oct-2011-exclusive-set')
+    expect(extractMixcloudShow(value)).toBe(expected)
   })
 
   it('should read the widget on its own host', () => {
     const value =
       'https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&light=1&feed=%2Fdjgavinboyd%2Fsoul-has-no-tempo%2F'
+    const expected = 'djgavinboyd/soul-has-no-tempo'
 
-    expect(extractMixcloudShow(value)).toBe('djgavinboyd/soul-has-no-tempo')
+    expect(extractMixcloudShow(value)).toBe(expected)
   })
 
   it('should return undefined when there is no feed parameter', () => {

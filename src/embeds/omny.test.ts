@@ -5,14 +5,16 @@ import { extractOmnyClip, omnyResolveEmbed } from './omny.js'
 describe('extractOmnyClip', () => {
   it('should read a clip', () => {
     const value = 'https://omny.fm/shows/the-show/an-episode-title/embed?style=cover'
+    const expected = 'the-show/an-episode-title'
 
-    expect(extractOmnyClip(value)).toBe('the-show/an-episode-title')
+    expect(extractOmnyClip(value)).toBe(expected)
   })
 
   it('should read a playlist', () => {
     const value = 'https://omny.fm/shows/the-show/playlists/highlights/embed'
+    const expected = 'the-show/playlists/highlights'
 
-    expect(extractOmnyClip(value)).toBe('the-show/playlists/highlights')
+    expect(extractOmnyClip(value)).toBe(expected)
   })
 
   it('should return undefined for a show page that is not an embed', () => {

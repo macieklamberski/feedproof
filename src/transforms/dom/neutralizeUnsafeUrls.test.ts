@@ -12,46 +12,53 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
   describe('dangerous-scheme floor (no isSafeUrlFn)', () => {
     it('should neutralize a javascript: link to the link sentinel', async () => {
       const value = '<a href="javascript:alert(1)">x</a>'
+      const expected = '<a href="#unsafe-link">x</a>'
 
-      expect(await transform(value)).toBe('<a href="#unsafe-link">x</a>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should neutralize a vbscript: link', async () => {
       const value = '<a href="vbscript:msgbox(1)">x</a>'
+      const expected = '<a href="#unsafe-link">x</a>'
 
-      expect(await transform(value)).toBe('<a href="#unsafe-link">x</a>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should neutralize a data:text/html link', async () => {
       const value = '<a href="data:text/html,hello">x</a>'
+      const expected = '<a href="#unsafe-link">x</a>'
 
-      expect(await transform(value)).toBe('<a href="#unsafe-link">x</a>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should neutralize a javascript: image to the media sentinel', async () => {
       const value = '<img src="javascript:alert(1)">'
+      const expected = '<img src="about:blank">'
 
-      expect(await transform(value)).toBe('<img src="about:blank">')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should see through leading whitespace and control chars in the scheme', async () => {
       const value = '<a href="  java\tscript:alert(1)">x</a>'
+      const expected = '<a href="#unsafe-link">x</a>'
 
-      expect(await transform(value)).toBe('<a href="#unsafe-link">x</a>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should see through a leading C0 control byte that \\s does not match', async () => {
       // A leading \x01 survives HTML parsing and a browser strips it before reading the
       // scheme, so `\x01javascript:` runs — but \s never matched it.
       const value = '<a href="\x01javascript:alert(1)">x</a>'
+      const expected = '<a href="#unsafe-link">x</a>'
 
-      expect(await transform(value)).toBe('<a href="#unsafe-link">x</a>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should match the scheme case-insensitively', async () => {
       const value = '<a href="JaVaScRiPt:alert(1)">x</a>'
+      const expected = '<a href="#unsafe-link">x</a>'
 
-      expect(await transform(value)).toBe('<a href="#unsafe-link">x</a>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should leave a safe http link untouched', async () => {
@@ -87,8 +94,9 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
 
     it('should neutralize a data:image/svg+xml link', async () => {
       const value = '<a href="data:image/svg+xml;base64,PHN2Zy8+">x</a>'
+      const expected = '<a href="#unsafe-link">x</a>'
 
-      expect(await transform(value)).toBe('<a href="#unsafe-link">x</a>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should neutralize a javascript: xlink:href on an svg anchor', async () => {
@@ -109,8 +117,9 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
 
     it('should neutralize a javascript: formaction', async () => {
       const value = '<button formaction="javascript:alert(1)">go</button>'
+      const expected = '<button formaction="#unsafe-link">go</button>'
 
-      expect(await transform(value)).toBe('<button formaction="#unsafe-link">go</button>')
+      expect(await transform(value)).toBe(expected)
     })
   })
 
@@ -123,15 +132,17 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
     it('should neutralize a link the policy rejects', async () => {
       const context: TransformContext = { ...baseContext, isSafeUrlFn: blockHost('evil.test') }
       const value = '<a href="https://evil.test/x">x</a>'
+      const expected = '<a href="#unsafe-link">x</a>'
 
-      expect(await transform(value, context)).toBe('<a href="#unsafe-link">x</a>')
+      expect(await transform(value, context)).toBe(expected)
     })
 
     it('should neutralize an image the policy rejects', async () => {
       const context: TransformContext = { ...baseContext, isSafeUrlFn: blockHost('evil.test') }
       const value = '<img src="https://evil.test/p.jpg">'
+      const expected = '<img src="about:blank">'
 
-      expect(await transform(value, context)).toBe('<img src="about:blank">')
+      expect(await transform(value, context)).toBe(expected)
     })
 
     it('should keep a url the policy allows', async () => {
@@ -164,14 +175,16 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
     it('should drop only the unsafe candidates', async () => {
       const context: TransformContext = { ...baseContext, isSafeUrlFn: blockHost('evil.test') }
       const value = '<img srcset="https://ok.test/a.jpg 1x, https://evil.test/b.jpg 2x">'
+      const expected = '<img srcset="https://ok.test/a.jpg 1x">'
 
-      expect(await transform(value, context)).toBe('<img srcset="https://ok.test/a.jpg 1x">')
+      expect(await transform(value, context)).toBe(expected)
     })
 
     it('should fall back to the media sentinel when every candidate is unsafe', async () => {
       const value = '<img srcset="javascript:a 1x, javascript:b 2x">'
+      const expected = '<img srcset="about:blank">'
 
-      expect(await transform(value)).toBe('<img srcset="about:blank">')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should leave an empty srcset untouched', async () => {

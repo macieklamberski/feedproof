@@ -31,8 +31,9 @@ const readPlaceholder = (
 describe('extractNicovideoId', () => {
   it('should read the video id from the thumb_watch path', () => {
     const value = 'https://ext.nicovideo.jp/thumb_watch/sm9?w=490&h=307'
+    const expected = 'sm9'
 
-    expect(extractNicovideoId(value)).toBe('sm9')
+    expect(extractNicovideoId(value)).toBe(expected)
   })
 
   it('should read the other id prefixes', () => {

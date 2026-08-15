@@ -1010,8 +1010,9 @@ describeForEachParser('highlightCode', (parseHtml) => {
   describe('pre>code structure', () => {
     it('should wrap a bare pre content in a code', async () => {
       const value = '<pre>plain preformatted text</pre>'
+      const expected = '<pre><code>plain preformatted text</code></pre>'
 
-      expect(await transform(value)).toBe('<pre><code>plain preformatted text</code></pre>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should leave a pre whose only child is a code unchanged', async () => {
