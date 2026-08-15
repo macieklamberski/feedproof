@@ -752,6 +752,9 @@ export const defaultNonContentSelectors = [
   // Subscribe and newsletter signup forms.
   '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget — 7,718 feeds (0.061%).
   '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA — 7,648 feeds (0.060%).
+  // The same subscribe form as the wrap below, arriving as Substack's other snippet. The path is
+  // anchored so a post embed (`/embed/post/{id}`) is not caught by it. 348 feeds.
+  'iframe[src*=".substack.com/"][src$="/embed"]',
   '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 527 feeds (0.004%). Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
   '.wp-block-jetpack-subscriptions', // Jetpack Gutenberg subscribe block — 245 feeds (0.002%).
   '.kg-signup-card', // Ghost (Koenig) signup card — 266 feeds (0.002%).

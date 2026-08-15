@@ -39,6 +39,18 @@ describeForEachParser('Substack', (parseHtml) => {
     expect(result).toEqualHtml(expected)
   })
 
+  // The same subscribe form as the wrap above, arriving as Substack's other snippet. Both are
+  // chrome, so both go; before this the iframe became a click-to-load placeholder instead.
+  it('should strip the subscribe iframe as non-content too', async () => {
+    const value = html`
+      <p>Text</p>
+      <iframe src="https://other.substack.com/embed" width="480" height="320"></iframe>
+    `
+    const expected = html`<p>Text</p>`
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
   it('should strip substack publication embeds as non-content', async () => {
     const value = `<p>Text</p><div class="embedded-publication-wrap" data-attrs='{"name":"Other Pub","base_url":"https://other.substack.com","hero_text":"A great read"}'></div>`
     const result = await transformContent(value, {
