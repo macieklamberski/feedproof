@@ -346,13 +346,6 @@ describeForEachParser('substackPostEmbedCiteResolver', (parseHtml) => {
         url: 'https://thereader.example.com/p/the-quiet-part',
         title: 'The Quiet Part',
         description: 'What the numbers actually said.',
-        caption: undefined,
-        author: undefined,
-        publisher: undefined,
-        date: undefined,
-        icon: undefined,
-        thumbnail: undefined,
-        kind: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -373,13 +366,6 @@ describeForEachParser('substackPostEmbedCiteResolver', (parseHtml) => {
         url: 'https://www.example-custom.com/p/model-drop',
         title: 'Model Drop by The Reader',
         description: 'Subtitle.',
-        caption: undefined,
-        author: undefined,
-        publisher: undefined,
-        date: undefined,
-        icon: undefined,
-        thumbnail: undefined,
-        kind: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -398,14 +384,6 @@ describeForEachParser('substackPostEmbedCiteResolver', (parseHtml) => {
         provider: 'substack',
         url: 'https://thereader.example.com/p/the-quiet-part',
         title: 'The Quiet Part',
-        description: undefined,
-        caption: undefined,
-        author: undefined,
-        publisher: undefined,
-        date: undefined,
-        icon: undefined,
-        thumbnail: undefined,
-        kind: undefined,
       }
 
       expect(await extract(value)).toEqual(expected)
