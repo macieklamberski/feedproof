@@ -106,6 +106,7 @@ import { fixLazyAudios } from './transforms/dom/fixLazyAudios.js'
 import { fixLazyIframes } from './transforms/dom/fixLazyIframes.js'
 import { fixLazyImages } from './transforms/dom/fixLazyImages.js'
 import { fixLazyVideos } from './transforms/dom/fixLazyVideos.js'
+import { fixSubstackImageLinks } from './transforms/dom/fixSubstackImageLinks.js'
 import { fixSubstackMentions } from './transforms/dom/fixSubstackMentions.js'
 import { flattenPictureElements } from './transforms/dom/flattenPictureElements.js'
 import { highlightCode } from './transforms/dom/highlightCode.js'
@@ -216,6 +217,10 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // A Substack @-mention is an empty span whose name lives only in its data-attrs JSON;
   // rebuild the anchor before stripEmptyTags deletes the span and the name with it.
   fixSubstackMentions,
+  // A Substack lightbox anchor can arrive with its <img> child stripped; remint the image
+  // from the anchor's own href before stripEmptyTags deletes the empty anchor, so the
+  // image passes below dimension and proxy it like any other.
+  fixSubstackImageLinks,
   // Wraps Cargo (cargo.site) portfolio images in <figure> here in the normalize
   // cluster, so wrapBareInlineInParagraphs later sees block boundaries and keeps the
   // caption, images, and PREV/NEXT nav apart instead of gluing them into one paragraph.
