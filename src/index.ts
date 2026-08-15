@@ -135,6 +135,13 @@ export {
 } from './embeds/buzzsprout.js'
 export { captivateEmbedResolver } from './embeds/captivate.js'
 export { dailymotionEmbedResolver } from './embeds/dailymotion.js'
+export {
+  facebookAmpEmbedResolver,
+  facebookBlockquoteEmbedResolver,
+  facebookIframeEmbedResolver,
+  facebookWidgetEmbedResolver,
+  facebookXfbmlEmbedResolver,
+} from './embeds/facebook.js'
 export { firesideEmbedResolver } from './embeds/fireside.js'
 export { flickrEmbedResolver } from './embeds/flickr.js'
 export { flourishEmbedResolver } from './embeds/flourish.js'

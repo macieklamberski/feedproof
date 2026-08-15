@@ -49,6 +49,13 @@ import {
 } from './embeds/buzzsprout.js'
 import { captivateEmbedResolver } from './embeds/captivate.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
+import {
+  facebookAmpEmbedResolver,
+  facebookBlockquoteEmbedResolver,
+  facebookIframeEmbedResolver,
+  facebookWidgetEmbedResolver,
+  facebookXfbmlEmbedResolver,
+} from './embeds/facebook.js'
 import { firesideEmbedResolver } from './embeds/fireside.js'
 import { flickrEmbedResolver } from './embeds/flickr.js'
 import { flourishEmbedResolver } from './embeds/flourish.js'
@@ -421,6 +428,11 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   buzzsproutIframeEmbedResolver,
   buzzsproutScriptEmbedResolver,
   blubrryEmbedResolver,
+  facebookWidgetEmbedResolver,
+  facebookIframeEmbedResolver,
+  facebookBlockquoteEmbedResolver,
+  facebookXfbmlEmbedResolver,
+  facebookAmpEmbedResolver,
   mediavineEmbedResolver,
   mixcloudEmbedResolver,
   podbeanEmbedResolver,
