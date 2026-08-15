@@ -1,40 +1,81 @@
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { createMarkupEmbedResolver } from '../utils/widgets.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// Every corpus embed points at the relative `visualisation/{numeric id}` path, at most
-// with a cache-busting query. Only the digits reach the minted URLs; a full URL or any
-// other path shape is dropped.
-const visualisationSrcRegex = /^visualisation\/(\d+)(?:\?.*)?$/
+const flourishHosts = ['flo.uri.sh', 'public.flourish.studio']
 
-// Flourish ships a chart as `<div class="flourish-embed" data-src="visualisation/{id}">`
-// plus an SDK script that builds the iframe at runtime, so a reader shows nothing at all.
-// The embed page is mintable from the id alone (verified live, 200), and so is the public
-// share page the placeholder anchors to. The div usually wraps a static thumbnail img
-// (bare or inside a <noscript>); when present it becomes the placeholder's thumbnail.
-export const flourishEmbedResolver = createMarkupEmbedResolver(
+// The resource segment is carried, not checked against a list. `visualisation` (a single chart)
+// and `story` (a narrated sequence) are the two the corpus holds, 72 and 11 of 83 occurrences
+// across 40 feeds, and the endpoint validates the pair: a real id answers 200 and a wrong kind,
+// unknown kind or fabricated id all answer 403 (probed 2026-08-15). Enumerating them anyway
+// would be the more dangerous choice. The div carrier is an empty element, so a kind this
+// resolver refuses is not left as markup: `stripEmptyTags` deletes it and the chart is gone.
+// Flourish names these after its own templates, so a kind we have not seen is likelier to be a
+// new template than a typo, and losing a real chart beats a placeholder that fails to load.
+
+const safeResourceRegex = /^[a-z][a-z-]*$/
+const safeIdRegex = /^\d+$/
+
+// The div names its chart by a relative `{resource}/{id}` path, at most with a cache-busting
+// query. A full URL or any other shape is dropped.
+const widgetSrcRegex = /^([a-z]+)\/(\d+)(?:\?.*)?$/
+
+// `flo.uri.sh` is the canonical player: `public.flourish.studio/{resource}/{id}/embed` answers
+// with a shim whose only job is to rewrite the location to it. Both hosts are matched on the
+// way in and only the canonical one is minted.
+//
+// The id carries its resource because the two share an id space in the url and not in the
+// platform, so a bare number addresses neither endpoint on its own, and `EnrichEmbedFn`
+// receives nothing but the provider and the id.
+const composeEmbed = (resource: string, id: string): EmbedResolverResult | undefined => {
+  if (!safeResourceRegex.test(resource) || !safeIdRegex.test(id)) {
+    return
+  }
+
+  return {
+    provider: 'flourish',
+    id: `${resource}/${id}`,
+    src: `https://flo.uri.sh/${resource}/${id}/embed`,
+    url: `https://public.flourish.studio/${resource}/${id}/`,
+  }
+}
+
+// Flourish ships a chart as `<div class="flourish-embed" data-src="{resource}/{id}">` plus an
+// SDK script that builds the iframe at runtime, so a reader shows nothing at all. The div
+// usually wraps a static thumbnail img (bare or inside a <noscript>); when present it becomes
+// the placeholder's thumbnail.
+export const flourishWidgetEmbedResolver = createMarkupEmbedResolver(
   'div.flourish-embed[data-src]',
   (element) => {
-    const match = attr(element, 'data-src')?.match(visualisationSrcRegex)
-    const visualisationId = match?.[1]
+    const match = attr(element, 'data-src')?.match(widgetSrcRegex)
 
-    if (!visualisationId) {
+    if (!match) {
       return
     }
 
-    const result: EmbedResolverResult = {
-      provider: 'flourish',
-      id: visualisationId,
-      src: `https://flo.uri.sh/visualisation/${visualisationId}/embed`,
-      url: `https://public.flourish.studio/visualisation/${visualisationId}/`,
-    }
-
+    const result = composeEmbed(match[1], match[2])
     const thumbnail = attr(element.querySelector('img'), 'src')
 
-    if (thumbnail) {
+    if (result && thumbnail) {
       return { ...result, thumbnail }
     }
 
     return result
   },
+)
+
+// The rendered form, which reaches a feed when the publisher pasted the iframe rather than the
+// script snippet. The WordPress oEmbed wrapper points at the same url with a `#?secret=`
+// fragment appended; that belongs to WordPress's postMessage handshake rather than to the
+// player, so the minted url drops it.
+const flourishResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+  const segments = getPathSegments(url)
+
+  return segments[2] === 'embed' ? composeEmbed(segments[0], segments[1]) : undefined
+}
+
+export const flourishIframeEmbedResolver = createUrlEmbedResolver(
+  flourishHosts,
+  flourishResolveEmbed,
 )

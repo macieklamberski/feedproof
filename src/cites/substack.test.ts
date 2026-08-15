@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
-import { substackCrossPostCiteResolver, substackOwnPostCiteResolver } from './substack.js'
+import {
+  substackCrossPostCiteResolver,
+  substackOwnPostCiteResolver,
+  substackPostEmbedCiteResolver,
+} from './substack.js'
 
 // Substack ships these cards as empty divs whose data lives in a `data-attrs` JSON blob,
 // stored in a double-quoted attribute with the inner quotes HTML-encoded — that is what
@@ -322,5 +326,105 @@ describeForEachParser('substackCrossPostCiteResolver', (parseHtml) => {
     })
 
     expect(await extract(value)).toBeUndefined()
+  })
+})
+
+describeForEachParser('substackPostEmbedCiteResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, substackPostEmbedCiteResolver)
+
+  describe('happy paths', () => {
+    it('should read the title, subtitle and link out of the markup', async () => {
+      const value = html`
+        <div class="substack-post-embed">
+          <p lang="en">The Quiet Part</p>
+          <p>What the numbers actually said.</p>
+          <a data-post-link href="https://thereader.example.com/p/the-quiet-part">Read on Substack</a>
+        </div>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'substack',
+        url: 'https://thereader.example.com/p/the-quiet-part',
+        title: 'The Quiet Part',
+        description: 'What the numbers actually said.',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // A publication on a custom domain still serves the standard post path, and the href is
+    // used as given, so no host check is involved.
+    it('should keep a custom-domain href', async () => {
+      const value = html`
+        <div class="substack-post-embed">
+          <p lang="en">Model Drop by The Reader</p>
+          <p>Subtitle.</p>
+          <a data-post-link href="https://www.example-custom.com/p/model-drop">Read on Substack</a>
+        </div>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'substack',
+        url: 'https://www.example-custom.com/p/model-drop',
+        title: 'Model Drop by The Reader',
+        description: 'Subtitle.',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should state no description when the card carries only a title', async () => {
+      const value = html`
+        <div class="substack-post-embed">
+          <p lang="en">The Quiet Part</p>
+          <a data-post-link href="https://thereader.example.com/p/the-quiet-part">Read on Substack</a>
+        </div>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'substack',
+        url: 'https://thereader.example.com/p/the-quiet-part',
+        title: 'The Quiet Part',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    // A Note is the same shell with a comment link, and it has no title: its first paragraph
+    // is the note's body. A cite states a title by contract, and calling body text a title
+    // would be a worse answer than the paragraphs and link the card already reads as.
+    it('should leave a note card alone', async () => {
+      const value = html`
+        <div class="substack-post-embed">
+          <p lang="en">Note text body, taken verbatim.</p>
+          <p> - Author Display Name</p>
+          <a data-comment-link href="https://substack.com/@handle/note/c-12345">Read on Substack</a>
+        </div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the card names no post', async () => {
+      const value = html`
+        <div class="substack-post-embed">
+          <p lang="en">The Quiet Part</p>
+          <p>What the numbers actually said.</p>
+        </div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the card carries no title', async () => {
+      const value = html`
+        <div class="substack-post-embed">
+          <a data-post-link href="https://thereader.example.com/p/the-quiet-part">Read on Substack</a>
+        </div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
   })
 })

@@ -94,6 +94,7 @@ export { pzlinkcardCiteResolver } from './cites/pzlinkcard.js'
 export {
   substackCrossPostCiteResolver,
   substackOwnPostCiteResolver,
+  substackPostEmbedCiteResolver,
 } from './cites/substack.js'
 export { swellCiteResolver } from './cites/swell.js'
 export { tcdCiteResolver } from './cites/tcd.js'
@@ -144,7 +145,10 @@ export {
 } from './embeds/facebook.js'
 export { firesideEmbedResolver } from './embeds/fireside.js'
 export { flickrEmbedResolver } from './embeds/flickr.js'
-export { flourishEmbedResolver } from './embeds/flourish.js'
+export {
+  flourishIframeEmbedResolver,
+  flourishWidgetEmbedResolver,
+} from './embeds/flourish.js'
 export { geniallyEmbedResolver } from './embeds/genially.js'
 export {
   imgurBlockquoteEmbedResolver,
