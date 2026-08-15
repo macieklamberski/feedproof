@@ -62,14 +62,15 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
 
   describe('the payload div, where a refusal costs the whole block', () => {
     it('should convert a video payload into an iframe naming its url', async () => {
+      const videoPayload = {
+        type: 'video',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      }
       const value = html`
         <div
           data-type="embedly"
           src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-          data="${jsonAttrValue({
-            type: 'video',
-            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-          })}"
+          data="${jsonAttrValue(videoPayload)}"
         ></div>
       `
       const expected = html`<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>`
@@ -78,15 +79,16 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
     })
 
     it('should carry the payload thumbnail onto the iframe', async () => {
+      const thumbnailPayload = {
+        type: 'video',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        thumbnail_url: 'https://img.example.com/poster.jpg',
+      }
       const value = html`
         <div
           data-type="embedly"
           src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-          data="${jsonAttrValue({
-            type: 'video',
-            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            thumbnail_url: 'https://img.example.com/poster.jpg',
-          })}"
+          data="${jsonAttrValue(thumbnailPayload)}"
         ></div>
       `
       const expected = html`
@@ -100,14 +102,15 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
     })
 
     it('should convert a rich payload the same way', async () => {
+      const richPayload = {
+        type: 'rich',
+        url: 'https://example.com/widget',
+      }
       const value = html`
         <div
           data-type="embedly"
           src="https://example.com/thing"
-          data="${jsonAttrValue({
-            type: 'rich',
-            url: 'https://example.com/widget',
-          })}"
+          data="${jsonAttrValue(richPayload)}"
         ></div>
       `
       const expected = html`<iframe src="https://example.com/widget"></iframe>`
@@ -136,15 +139,16 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
     })
 
     it('should leave a link payload for the cite pass', async () => {
+      const linkPayload = {
+        type: 'link',
+        url: 'https://example.com/post',
+        title: 'A post',
+      }
       const value = html`
         <div
           data-type="embedly"
           src="https://example.com/post"
-          data="${jsonAttrValue({
-            type: 'link',
-            url: 'https://example.com/post',
-            title: 'A post',
-          })}"
+          data="${jsonAttrValue(linkPayload)}"
         ></div>
       `
 
@@ -152,14 +156,15 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
     })
 
     it('should leave a payload naming no type for the cite pass', async () => {
+      const typelessPayload = {
+        url: 'https://example.com/post',
+        title: 'A post',
+      }
       const value = html`
         <div
           data-type="embedly"
           src="https://example.com/post"
-          data="${jsonAttrValue({
-            url: 'https://example.com/post',
-            title: 'A post',
-          })}"
+          data="${jsonAttrValue(typelessPayload)}"
         ></div>
       `
 
@@ -167,14 +172,15 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
     })
 
     it('should leave a video payload whose url is not http', async () => {
+      const unsafeUrlPayload = {
+        type: 'video',
+        url: 'javascript:alert(1)',
+      }
       const value = html`
         <div
           data-type="embedly"
           src="https://example.com/thing"
-          data="${jsonAttrValue({
-            type: 'video',
-            url: 'javascript:alert(1)',
-          })}"
+          data="${jsonAttrValue(unsafeUrlPayload)}"
         ></div>
       `
 
@@ -188,14 +194,15 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
     })
 
     it('should produce a youtube placeholder end to end', async () => {
+      const videoPayload = {
+        type: 'video',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      }
       const value = html`
         <div
           data-type="embedly"
           src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-          data="${jsonAttrValue({
-            type: 'video',
-            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-          })}"
+          data="${jsonAttrValue(videoPayload)}"
         ></div>
       `
       const result = await transformContent(value, { parseHtmlFn: parseHtml })
@@ -205,15 +212,16 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
     })
 
     it('should leave a link payload reaching the cite pass end to end', async () => {
+      const linkPayload = {
+        type: 'link',
+        url: 'https://example.com/post',
+        title: 'A post',
+      }
       const value = html`
         <div
           data-type="embedly"
           src="https://example.com/post"
-          data="${jsonAttrValue({
-            type: 'link',
-            url: 'https://example.com/post',
-            title: 'A post',
-          })}"
+          data="${jsonAttrValue(linkPayload)}"
         ></div>
       `
       const result = await transformContent(value, { parseHtmlFn: parseHtml })
