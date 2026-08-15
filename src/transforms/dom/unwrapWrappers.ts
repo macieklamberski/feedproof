@@ -1,35 +1,33 @@
 import type { DomTransform } from '../../types.js'
 import { isGeneratedWrapper } from '../../utils/dom.js'
 
-const wrapperTags = new Set(['div', 'article', 'section', 'main', 'header', 'footer'])
+// A figure reduced to one text-only link: an oEmbed block whose provider call failed keeps its
+// `<figure>` shell around the bare url, which linkifyUrls has turned into an anchor by the time
+// this runs. The clauses read as: the anchor hangs off the figure through at most two wrapper
+// tags, no element inside has an element sibling (so the content is one chain), the anchor
+// holds no element (so a linked image stays a figure), and no placeholder sits in the chain.
+// Every `:has` stands on its own because jsdom rejects one nested in another, and the wrapper
+// tags are spelled as positive chains because jsdom misreads `:has(:not(div, p, span, a))`
+// once the figure itself has a parent wrapper.
+const linkWrapper = ':is(div, p, span)'
+const linkOnlyFigureSelector = [
+  `figure:is(:has(> a), :has(> ${linkWrapper} > a), :has(> ${linkWrapper} > ${linkWrapper} > a))`,
+  ':not(:has(* ~ *))',
+  ':not(:has(a *))',
+  ':not(:has([data-embed-provider], [data-cite-provider]))',
+].join('')
 
-// The tags a figure may hold and still be nothing but a link: an oEmbed block whose provider
-// call failed keeps its `<figure>` shell around the bare url, which linkifyUrls has turned into
-// an anchor by the time this runs. Anything else inside (an image, a placeholder, a caption)
-// makes it a real figure.
-const linkOnlyFigureTags = new Set(['p', 'div', 'span', 'a'])
+const wrapperSelectors = [
+  'div',
+  'article',
+  'section',
+  'main',
+  'header',
+  'footer',
+  linkOnlyFigureSelector,
+]
 
-const isLinkOnlyFigure = (element: Element): boolean => {
-  const anchors = element.querySelectorAll('a')
-
-  if (anchors.length !== 1) {
-    return false
-  }
-
-  for (const descendant of element.querySelectorAll('*')) {
-    if (!linkOnlyFigureTags.has(descendant.localName) || isGeneratedWrapper(descendant)) {
-      return false
-    }
-  }
-
-  return true
-}
-
-const isWrapper = (element: Element): boolean => {
-  return element.localName === 'figure'
-    ? isLinkOnlyFigure(element)
-    : wrapperTags.has(element.localName)
-}
+const wrapperSelector = wrapperSelectors.join(', ')
 
 // Collects the ids that in-page anchors (`<a href="#id">`) point at, so wrappers
 // that are those anchors' scroll targets (e.g. a `<div class="footnote-definition"
@@ -57,15 +55,10 @@ const collectReferencedFragments = (document: Document): Set<string> => {
 export const unwrapWrappers: DomTransform = () => {
   return (document) => {
     const referencedFragments = collectReferencedFragments(document)
-    const candidates = document.body.querySelectorAll('*')
+    const candidates = document.body.querySelectorAll(wrapperSelector)
 
     for (let i = 0, n = candidates.length; i < n; i++) {
       const element = candidates[i]
-
-      if (!isWrapper(element)) {
-        continue
-      }
-
       const parent = element.parentNode
 
       if (!parent) {
