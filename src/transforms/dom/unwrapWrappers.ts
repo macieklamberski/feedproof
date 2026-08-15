@@ -3,6 +3,34 @@ import { isGeneratedWrapper } from '../../utils/dom.js'
 
 const wrapperTags = new Set(['div', 'article', 'section', 'main', 'header', 'footer'])
 
+// The tags a figure may hold and still be nothing but a link: an oEmbed block whose provider
+// call failed keeps its `<figure>` shell around the bare url, which linkifyUrls has turned into
+// an anchor by the time this runs. Anything else inside (an image, a placeholder, a caption)
+// makes it a real figure.
+const linkOnlyFigureTags = new Set(['p', 'div', 'span', 'a'])
+
+const isLinkOnlyFigure = (element: Element): boolean => {
+  const anchors = element.querySelectorAll('a')
+
+  if (anchors.length !== 1) {
+    return false
+  }
+
+  for (const descendant of element.querySelectorAll('*')) {
+    if (!linkOnlyFigureTags.has(descendant.localName) || isGeneratedWrapper(descendant)) {
+      return false
+    }
+  }
+
+  return true
+}
+
+const isWrapper = (element: Element): boolean => {
+  return element.localName === 'figure'
+    ? isLinkOnlyFigure(element)
+    : wrapperTags.has(element.localName)
+}
+
 // Collects the ids that in-page anchors (`<a href="#id">`) point at, so wrappers
 // that are those anchors' scroll targets (e.g. a `<div class="footnote-definition"
 // id="1">`) are not dissolved along with their id.
@@ -34,7 +62,7 @@ export const unwrapWrappers: DomTransform = () => {
     for (let i = 0, n = candidates.length; i < n; i++) {
       const element = candidates[i]
 
-      if (!wrapperTags.has(element.localName)) {
+      if (!isWrapper(element)) {
         continue
       }
 

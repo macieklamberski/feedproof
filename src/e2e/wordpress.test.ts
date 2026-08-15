@@ -9,7 +9,26 @@ describeForEachParser('WordPress', (parseHtml) => {
   // lazy-loader attribute stashes (defaultLazyIframeAttributes, defaultLazySrcAttributes).
   // The plugin facades are rebuilt by rebuildLyteEmbeds, rebuildRocketYoutubePreviews,
   // rebuildLazyLoadForVideos, rebuildEmbedPlusEmbeds and rebuildElementorVideoEmbeds.
+  // An oEmbed block whose provider call failed ships the bare url alone; linkifyUrls makes it a
+  // link and unwrapWrappers drops the figure shell around it.
   // wp-embedded-content post embeds are in open PR #361; add that clause when it merges.
+
+  it('should reduce a failed oEmbed block to its linkified url', async () => {
+    const value = html`
+      <p>Look:</p>
+      <figure class="wp-block-embed is-type-rich is-provider-twitter wp-block-embed-twitter">
+        <div class="wp-block-embed__wrapper">
+          https://twitter.com/someone/status/1234567890123456789
+        </div>
+      </figure>
+    `
+    const expected = html`
+      <p>Look:</p>
+      <p> <a href="https://twitter.com/someone/status/1234567890123456789">https://twitter.com/someone/status/1234567890123456789</a> </p>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
 
   describe('Avada privacy embed without a dedicated transform', () => {
     // Avada gates a video behind a consent notice: a hidden <iframe> parks the real URL in

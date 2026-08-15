@@ -206,6 +206,47 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
     expect(await transform(value)).toBe(expected)
   })
 
+  it('should unwrap a figure reduced to a lone link', async () => {
+    const value = html`
+      <figure class="wp-block-embed is-provider-twitter wp-block-embed-twitter">
+        <div class="wp-block-embed__wrapper">
+          <a href="https://twitter.com/someone/status/1234567890123456789">https://twitter.com/someone/status/1234567890123456789</a>
+        </div>
+      </figure>
+    `
+    const expected = html`
+      <a href="https://twitter.com/someone/status/1234567890123456789">https://twitter.com/someone/status/1234567890123456789</a>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should keep a figure whose link wraps an image', async () => {
+    const value = html`
+      <figure><a href="https://example.com/full.jpg"><img src="https://example.com/thumb.jpg"></a></figure>
+    `
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
+  it('should keep a figure whose link sits next to a caption', async () => {
+    const value = html`
+      <figure><a href="https://example.com/post">Post</a><figcaption>A caption</figcaption></figure>
+    `
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
+  it('should keep a figure holding a placeholder next to its link', async () => {
+    const value = html`
+      <figure>
+        <div data-embed-provider="youtube" data-embed-src="https://www.youtube.com/embed/abc"><a href="https://www.youtube.com/watch?v=abc">Watch</a></div>
+      </figure>
+    `
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
   it('should be idempotent', async () => {
     const value = '<div><article><p>Content</p></article></div>'
     const once = await transform(value)
