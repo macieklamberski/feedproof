@@ -52,6 +52,7 @@ import {
   buzzsproutScriptEmbedResolver,
 } from './embeds/buzzsprout.js'
 import { captivateEmbedResolver } from './embeds/captivate.js'
+import { codepenIframeEmbedResolver, codepenWidgetEmbedResolver } from './embeds/codepen.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import {
   facebookAmpEmbedResolver,
@@ -420,6 +421,8 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   vimeoEmbedResolver,
   wistiaEmbedResolver,
   captivateEmbedResolver,
+  codepenWidgetEmbedResolver,
+  codepenIframeEmbedResolver,
   dailymotionEmbedResolver,
   imgurBlockquoteEmbedResolver,
   imgurIframeEmbedResolver,
