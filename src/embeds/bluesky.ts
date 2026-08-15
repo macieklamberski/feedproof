@@ -211,9 +211,11 @@ const readQuotedPost = (
 // replaced, so no wrapper needs naming here.
 //
 // The AT URI is the declared identifier, but one feed shape ships the blockquote with the
-// data attributes stripped, so the permalink in the footer is read as a second source.
+// data attributes stripped, so the permalink in the footer is read as a second source. The
+// opposite stripping happens too: some feeds drop the class and keep the attributes, so the
+// second selector half claims the quote by its declared AT URI.
 export const blueskyBlockquoteEmbedResolver = createMarkupEmbedResolver(
-  'blockquote.bluesky-embed',
+  'blockquote.bluesky-embed, blockquote[data-bluesky-uri]',
   (element) => {
     const quoted = readQuotedPost(element)
     const post = extractBlueskyPost(attr(element, 'data-bluesky-uri') ?? '') ?? quoted.post

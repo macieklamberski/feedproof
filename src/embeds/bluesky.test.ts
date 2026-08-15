@@ -390,6 +390,31 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
     })
   })
 
+  describe('blockquote with the class stripped', () => {
+    // The opposite stripping: some feeds drop the class and keep the attributes, so the
+    // declared AT URI is the only thing marking the quote as Bluesky's.
+    it('should match through the declared AT URI when no class survives', async () => {
+      const value = html`
+        <blockquote data-bluesky-uri="at://did:plc:6kz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lvq7aeuwbg42">
+          <p lang="en">Only the attributes survived the export.</p>
+          — Classless (<a href="https://bsky.app/profile/did:plc:6kz4agnyzcrsvpnprxrbjrpa?ref_src=embed">@classless.example</a>)
+          <a href="https://bsky.app/profile/did:plc:6kz4agnyzcrsvpnprxrbjrpa/post/3lvq7aeuwbg42?ref_src=embed">2025-11-12T13:14:15.016Z</a>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
+        id: 'did:plc:6kz4agnyzcrsvpnprxrbjrpa/3lvq7aeuwbg42',
+        src: 'https://embed.bsky.app/embed/did:plc:6kz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lvq7aeuwbg42',
+        url: 'https://bsky.app/profile/did:plc:6kz4agnyzcrsvpnprxrbjrpa/post/3lvq7aeuwbg42',
+        description: 'Only the attributes survived the export.',
+        author: 'Classless (@classless.example)',
+        date: '2025-11-12T13:14:15.016Z',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
   describe('blockquote attribute variations', () => {
     it('should match an extra class token beside the embed class', async () => {
       const value = html`
