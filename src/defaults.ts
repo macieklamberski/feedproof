@@ -24,6 +24,7 @@ import { tcdCiteResolver } from './cites/tcd.js'
 import { tistoryCiteResolver } from './cites/tistory.js'
 import { tumblrCiteResolver } from './cites/tumblr.js'
 import { xenforoCiteResolver } from './cites/xenforo.js'
+import { acastEmbedResolver } from './embeds/acast.js'
 import { anchorEmbedResolver } from './embeds/anchor.js'
 import { appleEmbedResolver } from './embeds/apple.js'
 import { archiveFlashEmbedResolver, archiveIframeEmbedResolver } from './embeds/archive.js'
@@ -416,6 +417,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   flickrEmbedResolver,
   flourishEmbedResolver,
   geniallyEmbedResolver,
+  acastEmbedResolver,
   anchorEmbedResolver,
   appleEmbedResolver,
   archiveIframeEmbedResolver,

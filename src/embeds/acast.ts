@@ -1,0 +1,71 @@
+import { getPathSegments, parseUrl } from 'trousse'
+import type { EmbedResolverResult } from '../types.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
+
+// A show is a 24-hex object id, a UUID or the alias the publisher chose; an episode is an
+// object id or a slug. Every form is one run of word characters and hyphens, so a single class
+// covers them all and keeps `..` and `/` out of the minted path.
+const safeIdRegex = /^[\w-]+$/
+
+const acastHosts = ['embed.acast.com', 'player.acast.com']
+
+// Every carrier form redirects to the one current player, and that player is 190 tall: Acast's
+// share code writes `height="190px"` and its pages state `twitter:player:height` 190. Recent
+// snippets in the corpus agree (78 of 188 sampled iframes across 43 feeds, 2026-08-15); the
+// other runs, 110 (44, mostly the retired `player.acast.com` host) and 120 (17, one feed),
+// sized players that no longer exist. So the resolver's height stands over what a carrier
+// states.
+const playerHeight = 190
+
+// The three spellings a feed carries all redirect to the plain `embed.acast.com/{show}/{episode}`
+// form (checked live 2026-08-15): the current embed code `embed.acast.com/$/{show}/{episode}`,
+// the same path without the `$`, and the older `player.acast.com/{show}/episodes/{episode}`.
+// A show alone on the embed host, with or without the `$`, is the playlist player.
+const extractAcastEmbed = (link: string): { show: string; episode?: string } | undefined => {
+  const parsed = parseUrl(link, 'https://example.com')
+
+  if (!parsed) {
+    return
+  }
+
+  const allSegments = getPathSegments(parsed)
+  const segments = allSegments[0] === '$' ? allSegments.slice(1) : allSegments
+  const isPlayerHost = parsed.hostname === 'player.acast.com'
+  const show = segments[0]
+  const episode = isPlayerHost ? segments[2] : segments[1]
+
+  if (!show || !safeIdRegex.test(show)) {
+    return
+  }
+
+  if (isPlayerHost && (segments[1] !== 'episodes' || !episode)) {
+    return
+  }
+
+  if (episode !== undefined && !safeIdRegex.test(episode)) {
+    return
+  }
+
+  return { show, episode }
+}
+
+const acastResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+  const embed = extractAcastEmbed(url)
+
+  if (!embed) {
+    return
+  }
+
+  const path = embed.episode ? `${embed.show}/${embed.episode}` : embed.show
+
+  return {
+    provider: 'acast',
+    id: path,
+    src: `https://embed.acast.com/${path}`,
+    height: playerHeight,
+  }
+}
+
+export const acastEmbedResolver = createUrlEmbedResolver(acastHosts, acastResolveEmbed, {
+  declaredSize: false,
+})
