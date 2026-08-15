@@ -2,13 +2,13 @@ import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { tiktokEmbedResolver } from './tiktok.js'
+import { tiktokBlockquoteEmbedResolver, tiktokIframeEmbedResolver } from './tiktok.js'
 
 // One test per shape the corpus survey found, so a shape nobody handles is visible here as a
 // missing test. Each asserts the whole result, since the point is that every shape maps to the
 // same fields and not merely that it is recognised.
-describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
-  const extract = resolverExtractor(parseHtml, tiktokEmbedResolver)
+describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, tiktokBlockquoteEmbedResolver)
 
   const convert = (value: string) => {
     return transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' })
@@ -387,6 +387,36 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // The measurement must not depend on which player url the CMS stored, so the hydrated
+    // iframe is matched by the same paths the direct carrier resolver claims.
+    it('should keep the hydrated measurement when the stored iframe uses the first-generation path', async () => {
+      const value = html`
+        <blockquote
+          class="tiktok-embed"
+          cite="https://www.tiktok.com/@user/video/7000000000000000000"
+          data-video-id="7000000000000000000"
+          style="max-width: 605px;"
+        >
+          <p>
+            <iframe
+              src="https://www.tiktok.com/embed/7000000000000000000"
+              style="width: 100%;height: 758px"
+            ></iframe>
+          </p>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '@user/video/7000000000000000000',
+        src: 'https://www.tiktok.com/embed/v2/7000000000000000000',
+        url: 'https://www.tiktok.com/@user/video/7000000000000000000',
+        width: 605,
+        height: 758,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   // What only the whole pipeline shows: the snippet arrives as a blockquote plus a loader
@@ -448,6 +478,119 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
       `
 
       expect(await convert(value)).toEqualHtml(expected)
+    })
+
+    // A hydrated blockquote carries the player iframe inside it, which the url-keyed resolver
+    // would also claim, so the pass must leave one placeholder and not two.
+    it('should leave one placeholder for a hydrated blockquote and its inner player', async () => {
+      const value = html`
+        <blockquote
+          class="tiktok-embed"
+          cite="https://www.tiktok.com/@user/video/7000000000000000000"
+          data-video-id="7000000000000000000"
+          style="max-width: 605px;"
+        >
+          <p>
+            <iframe
+              src="https://www.tiktok.com/embed/v2/7000000000000000000?lang=es-ES"
+              style="width: 100%;height: 758px"
+            ></iframe>
+          </p>
+        </blockquote>
+      `
+      const expected = html`
+        <div
+          data-embed-provider="tiktok"
+          data-embed-id="@user/video/7000000000000000000"
+          data-embed-src="https://www.tiktok.com/embed/v2/7000000000000000000"
+          data-embed-url="https://www.tiktok.com/@user/video/7000000000000000000"
+          data-embed-width="605"
+          data-embed-height="758"
+        >
+          <a href="https://www.tiktok.com/@user/video/7000000000000000000">https://www.tiktok.com/@user/video/7000000000000000000</a>
+        </div>
+      `
+
+      expect(await convert(value)).toEqualHtml(expected)
+    })
+  })
+})
+
+// The player iframe pasted directly, with no blockquote around it: 62 corpus feeds carry the
+// embed paths and 5 the player path, 40 of them with no blockquote fallback at all.
+describeForEachParser('tiktokIframeEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, tiktokIframeEmbedResolver)
+
+  describe('happy paths', () => {
+    // The declared 560x400 is the snippet's landscape box on a vertical player, wrong on both
+    // axes, so the result carries no size at all.
+    it('should resolve the pasted v2 player and decline its landscape size', async () => {
+      const value = html`
+        <iframe
+          src="https://www.tiktok.com/embed/v2/7520573541146692886"
+          width="560"
+          height="400"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '7520573541146692886',
+        src: 'https://www.tiktok.com/embed/v2/7520573541146692886',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should resolve the first-generation embed path', async () => {
+      const value = html`<iframe src="https://www.tiktok.com/embed/7520573541146692886"></iframe>`
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '7520573541146692886',
+        src: 'https://www.tiktok.com/embed/7520573541146692886',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should keep the player url with the query the publisher chose', async () => {
+      const value = html`
+        <iframe
+          src="https://www.tiktok.com/player/v1/7520573541146692886?music_info=1&description=1"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '7520573541146692886',
+        src: 'https://www.tiktok.com/player/v1/7520573541146692886?music_info=1&description=1',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    // A watch page refuses framing, so an iframe pointing at it is left to the generic
+    // fallback rather than claimed as a player.
+    it('should return undefined for a watch page framed directly', async () => {
+      const value = html`
+        <iframe src="https://www.tiktok.com/@user/video/7520573541146692886"></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a foreign host carrying the player path', async () => {
+      const value = html`
+        <iframe src="https://evil.test/www.tiktok.com/embed/v2/7520573541146692886"></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the player path holds no numeric id', async () => {
+      const value = html`<iframe src="https://www.tiktok.com/embed/v2/latest"></iframe>`
+
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })

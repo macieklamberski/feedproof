@@ -1,7 +1,7 @@
 import { coerceNumber, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, text, textNode } from '../utils/dom.js'
-import { createMarkupEmbedResolver } from '../utils/widgets.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // TikTok's oEmbed snippet is a `<blockquote class="tiktok-embed">` wrapping a section with
 // the author's @handle anchor, the caption paragraph and a sound-line anchor, followed by
@@ -16,6 +16,11 @@ const isTiktokUrl = (url: URL): boolean => {
 // A handle is the same character set TikTok allows at signup.
 const safeHandleRegex = /^[a-zA-Z0-9_.]{1,24}$/
 const safeVideoIdRegex = /^\d+$/
+
+// Every player url TikTok has issued frames the clip by its numeric id: `/embed/{id}` and
+// `/embed/v2/{id}` from the oEmbed loader's eras, `/player/v1/{id}` from the current player.
+// All three still serve (probed 2026-08-15; both embed paths answer 400 on a fabricated id).
+const playerPathRegex = /^\/(?:embed(?:\/v2)?|player\/v1)\/(\d+)\/?$/
 
 // A watch url names the clip's owner and the clip: `/@handle/video/{id}`. Sanitized copies
 // sometimes keep only the `/video/{id}` half, so the handle is optional.
@@ -44,7 +49,13 @@ const styleHeightRegex = /(?:^|;)\s*height\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*px/i
 const styleMaxWidthRegex = /(?:^|;)\s*max-width\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*px/i
 
 const hydratedSize = (element: Element): { width?: number; height?: number } => {
-  const frame = find(element, 'iframe[src*="/embed/v2/"]')
+  // The stored iframe is matched by the same player paths the direct carrier resolver claims,
+  // so a hydrated copy keeps its measurement whichever player url the CMS wrote.
+  const frame = find(element, 'iframe[src]', (iframe) => {
+    const parsed = parseUrl(attr(iframe, 'src') ?? '', 'https://example.com')
+
+    return Boolean(parsed && isTiktokUrl(parsed) && playerPathRegex.test(parsed.pathname))
+  })
   const height = coerceNumber(attr(frame, 'style')?.match(styleHeightRegex)?.[1])
 
   if (!height) {
@@ -176,11 +187,38 @@ const resolveAccount = (element: Element): EmbedResolverResult | undefined => {
   }
 }
 
-// One carrier, so one resolver. Every shape TikTok issues is this blockquote and they differ
-// only in what the markup still names. The clip is the more specific claim and is tried first;
-// the account is what a blockquote naming no video anywhere still identifies, so it is never a
-// substitute for a clip but the only content left in the markup.
-export const tiktokEmbedResolver = createMarkupEmbedResolver(
+// Every oEmbed shape TikTok issues is this blockquote, and the shapes differ only in what the
+// markup still names. The clip is the more specific claim and is tried first; the account is
+// what a blockquote naming no clip anywhere still identifies, so it is never a substitute for
+// a clip but the only content left in the markup.
+export const tiktokBlockquoteEmbedResolver = createMarkupEmbedResolver(
   'blockquote.tiktok-embed',
   (element) => resolveClip(element) ?? resolveAccount(element),
+)
+
+// The pasted player itself, with no blockquote around it. The src is kept as the publisher
+// wrote it, query and all. A player url names no handle, so the id stays the bare video id:
+// it still names the player, but the oEmbed endpoint, which takes the watch url, cannot be
+// rebuilt from it.
+//
+// `declaredSize: false` because the pasted snippets state a landscape box (560x400 in the
+// wild) on a player taller than it is wide. A wrong ratio reserves worse space than none,
+// and the blockquote carrier likewise ships no size short of a hydrated measurement.
+export const tiktokIframeEmbedResolver = createUrlEmbedResolver(
+  [tiktokHost],
+  (src) => {
+    const parsed = parseUrl(src, 'https://example.com')
+    const videoId = parsed?.pathname.match(playerPathRegex)?.[1]
+
+    if (!videoId) {
+      return
+    }
+
+    return {
+      provider: 'tiktok',
+      id: videoId,
+      src,
+    }
+  },
+  { declaredSize: false },
 )
