@@ -533,6 +533,25 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // The dialog never writes a zero, so one is a mangled copy and not a measurement. Each
+    // dimension is judged on its own, so the honest height survives.
+    it('should reject a zero width from the plugin query and keep the height', async () => {
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/plugins/video.php?width=0&height=314&href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/videos/123/',
+        src: 'https://www.facebook.com/plugins/video.php?width=0&height=314&href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F',
+        url: 'https://www.facebook.com/PageName/videos/123/',
+        height: 314,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {

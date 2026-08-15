@@ -1,6 +1,6 @@
-import { coerceNumber, isHostOf, isSubdomainOf, type Nullish, parseUrl } from 'trousse'
+import { isHostOf, isSubdomainOf, type Nullish, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, find, text } from '../utils/dom.js'
+import { attr, find, parsePixelSize, text } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Facebook's embed SDK ships a post as `<div class="fb-post" data-href="{post url}">` and a
@@ -122,8 +122,8 @@ const safeVideoIdRegex = /^\d+$/
 // still wins, since the factory applies what the carrier declares over what this returns.
 const querySize = (url: URL): { width?: number; height?: number } => {
   return {
-    width: coerceNumber(url.searchParams.get('width')),
-    height: coerceNumber(url.searchParams.get('height')),
+    width: parsePixelSize(url.searchParams.get('width')),
+    height: parsePixelSize(url.searchParams.get('height')),
   }
 }
 
