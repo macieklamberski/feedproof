@@ -33,6 +33,39 @@ describe('extractTransistorEmbed', () => {
     expect(extractTransistorEmbed(value)).toEqual(expected)
   })
 
+  // Real Transistor examples. Dropping the mode segment would mint `/e/{slug}`, which asks for
+  // an episode by a show's name and answers 404.
+  it('should read a show latest player as its own subject', () => {
+    const value = 'https://share.transistor.fm/e/megamaker/latest'
+    const expected = {
+      kind: 'latest',
+      id: 'megamaker',
+    } as const
+
+    expect(extractTransistorEmbed(value)).toEqual(expected)
+  })
+
+  it('should read a show playlist player as its own subject', () => {
+    const value = 'https://share.transistor.fm/e/megamaker/playlist'
+    const expected = {
+      kind: 'playlist',
+      id: 'megamaker',
+    } as const
+
+    expect(extractTransistorEmbed(value)).toEqual(expected)
+  })
+
+  // A show slug is the publisher's own words, so it hyphenates where an episode id never does.
+  it('should read a hyphenated show slug', () => {
+    const value = 'https://share.transistor.fm/e/build-your-saas/latest'
+    const expected = {
+      kind: 'latest',
+      id: 'build-your-saas',
+    } as const
+
+    expect(extractTransistorEmbed(value)).toEqual(expected)
+  })
+
   it('should return undefined for a transistor url naming nothing', () => {
     const value = 'https://share.transistor.fm/pricing'
 
@@ -66,6 +99,31 @@ describe('transistorResolveEmbed', () => {
       provider: 'transistor',
       id: 'show/9f8e7d6c',
       src: 'https://share.transistor.fm/s/9f8e7d6c',
+      height: 390,
+    }
+
+    expect(transistorResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should keep the mode segment a show player needs', () => {
+    const value = 'https://share.transistor.fm/e/megamaker/latest'
+    const expected: EmbedResolverResult = {
+      provider: 'transistor',
+      id: 'latest/megamaker',
+      src: 'https://share.transistor.fm/e/megamaker/latest',
+      height: 180,
+    }
+
+    expect(transistorResolveEmbed(value)).toEqual(expected)
+  })
+
+  // The whole show rather than one episode, so it takes the taller player.
+  it('should size a show playlist player taller', () => {
+    const value = 'https://share.transistor.fm/e/build-your-saas/playlist'
+    const expected: EmbedResolverResult = {
+      provider: 'transistor',
+      id: 'playlist/build-your-saas',
+      src: 'https://share.transistor.fm/e/build-your-saas/playlist',
       height: 390,
     }
 
