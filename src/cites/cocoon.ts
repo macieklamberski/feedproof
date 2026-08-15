@@ -18,6 +18,11 @@ export const cocoonCiteResolver: CiteResolver = {
       // Both spellings of the snippet class ship in the wild: `blogcard-snippet` in 1,289
       // corpus feeds and the misspelled `blogcard-snipet` in another 40.
       description: text(element, '.blogcard-snippet, .blogcard-snipet'),
+      // The bar above the card, holding either the theme's stock wording or the author's own
+      // note about the link. Carried whichever it is, the way SWELL carries its equivalent:
+      // the stock label is still what the author's page shows, and the publisher is read from
+      // the domain here rather than from this bar, so a generic label cannot pollute it.
+      caption: text(element, '.blogcard-label'),
       publisher: text(element, '.blogcard-domain'),
       // A theme-formatted date such as "2018.10.14", not ISO. Passed through as-is for
       // the consumer to parse, since the format follows the site's date settings.
