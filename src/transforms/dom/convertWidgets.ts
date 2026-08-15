@@ -175,8 +175,13 @@ export const convertWidgets: DomTransform = (context) => {
 
         let resolvedUrl: string | undefined
 
+        // Cleaned like every other url the pass emits. Most resolvers mint this one from a
+        // parsed id, where there is nothing to strip, but some carry it out of the markup
+        // whole (a payload's `targetUrl`, a sibling anchor's href) and that arrives with
+        // whatever tracking params the publisher pasted.
         if (metadata.url) {
-          resolvedUrl = resolveUrlFn(metadata.url, baseUrl)
+          const resolved = resolveUrlFn(metadata.url, baseUrl)
+          resolvedUrl = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
 
           if (!resolvedUrl) {
             continue
