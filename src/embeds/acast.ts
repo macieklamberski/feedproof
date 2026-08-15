@@ -23,14 +23,9 @@ const playerHeight = 190
 // A show alone on the embed host, with or without the `$`, is the playlist player.
 const extractAcastEmbed = (link: string): { show: string; episode?: string } | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const allSegments = getPathSegments(parsed)
+  const allSegments = parsed ? getPathSegments(parsed) : []
   const segments = allSegments[0] === '$' ? allSegments.slice(1) : allSegments
-  const isPlayerHost = parsed.hostname === 'player.acast.com'
+  const isPlayerHost = parsed?.hostname === 'player.acast.com'
   const show = segments[0]
   const episode = isPlayerHost ? segments[2] : segments[1]
 
