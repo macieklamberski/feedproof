@@ -113,7 +113,7 @@ describe('dailymotionResolveEmbed', () => {
 })
 
 describeForEachParser('dailymotionEmbedResolver', (parseHtml) => {
-  const resolve = resolverExtractor(parseHtml, dailymotionEmbedResolver)
+  const extract = resolverExtractor(parseHtml, dailymotionEmbedResolver)
 
   it('should resolve a dailymotion iframe', async () => {
     const value = '<iframe src="https://www.dailymotion.com/embed/video/x7tgad0"></iframe>'
@@ -125,12 +125,12 @@ describeForEachParser('dailymotionEmbedResolver', (parseHtml) => {
       thumbnail: 'https://www.dailymotion.com/thumbnail/video/x7tgad0',
     }
 
-    expect(await resolve(value)).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
   it('should ignore a non-dailymotion iframe', async () => {
     const value = '<iframe src="https://example.com/video"></iframe>'
 
-    expect(await resolve(value)).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 })

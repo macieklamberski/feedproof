@@ -208,10 +208,20 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
           <div class="lkc-url">https://example.com/two</div>
         </div>
       `
-      const result = await transform(value)
+      const expected = html`
+        <div
+          data-cite-provider="pzlinkcard"
+          data-cite-url="https://example.com/one"
+          data-cite-title="One"
+        ></div>
+        <div
+          data-cite-provider="pzlinkcard"
+          data-cite-url="https://example.com/two"
+          data-cite-title="Two"
+        ></div>
+      `
 
-      expect((result.match(/data-cite-provider="/g) ?? []).length).toBe(2)
-      expect(result).not.toContain('class="lkc-card"')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave an anchor that wraps no card alone', async () => {

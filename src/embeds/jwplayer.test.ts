@@ -91,7 +91,7 @@ describe('jwplayerResolveEmbed', () => {
 })
 
 describeForEachParser('jwplayerIframeEmbedResolver', (parseHtml) => {
-  const resolve = resolverExtractor(parseHtml, jwplayerIframeEmbedResolver)
+  const extract = resolverExtractor(parseHtml, jwplayerIframeEmbedResolver)
 
   it('should resolve a jwplayer iframe', async () => {
     const value = '<iframe src="https://cdn.jwplayer.com/players/H4GXr873-.html"></iframe>'
@@ -102,13 +102,13 @@ describeForEachParser('jwplayerIframeEmbedResolver', (parseHtml) => {
       thumbnail: 'https://cdn.jwplayer.com/v2/media/H4GXr873/poster.jpg',
     }
 
-    expect(await resolve(value)).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
   it('should ignore a non-jwplayer iframe', async () => {
     const value = '<iframe src="https://example.com/video"></iframe>'
 
-    expect(await resolve(value)).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 })
 

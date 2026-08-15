@@ -79,17 +79,19 @@ describeForEachParser('discourseMediaResolver', (parseHtml) => {
         data-thumbnail-src="${thumbnailSrc}"
       ></div>
     `
+    const expected = html`
+      <p>Watch this:</p>
+      <video
+        src="${videoSrc}"
+        poster="${thumbnailSrc}"
+        controls
+      ></video>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://forum.example.com/t/1',
     })
 
-    // The two parsers serialize the video's attributes in different orders, so each is
-    // asserted on its own.
-    expect(result).toContain('<video')
-    expect(result).toContain(`src="${videoSrc}"`)
-    expect(result).toContain(`poster="${thumbnailSrc}"`)
-    expect(result).toContain('controls')
-    expect(result).not.toContain('video-placeholder-container')
+    expect(result).toEqualHtml(expected)
   })
 })

@@ -147,7 +147,7 @@ describe('spotifyResolveEmbed', () => {
 })
 
 describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
-  const resolve = resolverExtractor(parseHtml, spotifyEmbedResolver)
+  const extract = resolverExtractor(parseHtml, spotifyEmbedResolver)
 
   it('should resolve a spotify iframe', async () => {
     const value =
@@ -160,7 +160,7 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
       height: 152,
     }
 
-    expect(await resolve(value)).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
   // The snippet states the item's name in the iframe title, prefixed with the widget's own name.
@@ -180,7 +180,7 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
       title: 'Cemetry Gates - 2011 Remaster',
     }
 
-    expect(await resolve(value)).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
   describe('the card Substack hangs on the player', () => {
@@ -211,7 +211,7 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
         thumbnail: 'https://i.scdn.co/image/ab67616d0000b273',
       }
 
-      expect(await resolve(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // The card prints the type where a description would go, which the id already states.
@@ -238,7 +238,7 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
         author: 'A host',
       }
 
-      expect(await resolve(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should keep a description that says something the type does not', async () => {
@@ -263,7 +263,7 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
         description: 'Nine years since it came out',
       }
 
-      expect(await resolve(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // An artwork url is only trusted when it comes from Spotify's own image host.
@@ -288,13 +288,13 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
         title: 'A track',
       }
 
-      expect(await resolve(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   it('should ignore a non-spotify iframe', async () => {
     const value = '<iframe src="https://example.com/embed/track/4cOdK2wGLETKBW3PvgPWqT"></iframe>'
 
-    expect(await resolve(value)).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 })

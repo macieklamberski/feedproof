@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { mastodonEmbedResolver, parseMastodonStatus } from './mastodon.js'
+import { type MastodonStatus, mastodonEmbedResolver, parseMastodonStatus } from './mastodon.js'
 
 describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
   const extract = (value: string): EmbedResolverResult | undefined => {
@@ -392,32 +392,39 @@ describe('parseMastodonStatus', () => {
   // The network has no fixed host: 121 distinct instances appear across the corpus matches and
   // 83 of them exactly once, so the host is read rather than checked against a list.
   it('should accept any instance host', () => {
-    expect(parseMastodonStatus('https://sonomu.club/@musician/109876543210987654')).toEqual({
+    const value = 'https://sonomu.club/@musician/109876543210987654'
+    const expected: MastodonStatus = {
       origin: 'https://sonomu.club',
       host: 'sonomu.club',
       user: 'musician',
       id: '109876543210987654',
-    })
+    }
+
+    expect(parseMastodonStatus(value)).toEqual(expected)
   })
 
   it('should read the status behind the embed suffix', () => {
-    expect(parseMastodonStatus('https://en.osm.town/@mapper/111222333444555666/embed')).toEqual({
+    const value = 'https://en.osm.town/@mapper/111222333444555666/embed'
+    const expected: MastodonStatus = {
       origin: 'https://en.osm.town',
       host: 'en.osm.town',
       user: 'mapper',
       id: '111222333444555666',
-    })
+    }
+
+    expect(parseMastodonStatus(value)).toEqual(expected)
   })
 
   it('should ignore a query and a trailing slash', () => {
-    expect(
-      parseMastodonStatus('https://todon.eu/@user/109000000000000000/?utm_source=feed'),
-    ).toEqual({
+    const value = 'https://todon.eu/@user/109000000000000000/?utm_source=feed'
+    const expected: MastodonStatus = {
       origin: 'https://todon.eu',
       host: 'todon.eu',
       user: 'user',
       id: '109000000000000000',
-    })
+    }
+
+    expect(parseMastodonStatus(value)).toEqual(expected)
   })
 
   it('should reject a profile url', () => {

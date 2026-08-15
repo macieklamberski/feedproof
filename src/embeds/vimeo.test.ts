@@ -70,51 +70,73 @@ describe('extractVimeoId', () => {
 
 describe('vimeoResolveEmbed', () => {
   it('should build the embed without a thumbnail', () => {
-    const result = vimeoResolveEmbed('https://vimeo.com/76979871')
-    const expected = {
+    const value = 'https://vimeo.com/76979871'
+    const expected: EmbedResolverResult = {
       provider: 'vimeo',
       id: '76979871',
       src: 'https://player.vimeo.com/video/76979871',
       url: 'https://vimeo.com/76979871',
     }
 
-    expect(result).toEqual(expected)
-    expect(result?.thumbnail).toBeUndefined()
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
   })
 
   it('should preserve an unlisted hash', () => {
-    const result = vimeoResolveEmbed('https://player.vimeo.com/video/76979871?h=abc123')
+    const value = 'https://player.vimeo.com/video/76979871?h=abc123'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871',
+      src: 'https://player.vimeo.com/video/76979871?h=abc123',
+      url: 'https://vimeo.com/76979871',
+    }
 
-    expect(result?.src).toBe('https://player.vimeo.com/video/76979871?h=abc123')
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
   })
 
   it('should preserve the start offset', () => {
-    const result = vimeoResolveEmbed('https://player.vimeo.com/video/76979871?t=30s')
+    const value = 'https://player.vimeo.com/video/76979871?t=30s'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871',
+      src: 'https://player.vimeo.com/video/76979871?t=30s',
+      url: 'https://vimeo.com/76979871',
+    }
 
-    expect(result?.src).toBe('https://player.vimeo.com/video/76979871?t=30s')
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
   })
 
   it('should drop tracking parameters', () => {
-    const result = vimeoResolveEmbed('https://player.vimeo.com/video/76979871?utm_source=feed')
+    const value = 'https://player.vimeo.com/video/76979871?utm_source=feed'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871',
+      src: 'https://player.vimeo.com/video/76979871',
+      url: 'https://vimeo.com/76979871',
+    }
 
-    expect(result?.src).toBe('https://player.vimeo.com/video/76979871')
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
   })
 })
 
 describeForEachParser('vimeoEmbedResolver', (parseHtml) => {
-  const resolve = resolverExtractor(parseHtml, vimeoEmbedResolver)
+  const extract = resolverExtractor(parseHtml, vimeoEmbedResolver)
 
   it('should resolve a vimeo iframe', async () => {
-    const result = await resolve('<iframe src="https://player.vimeo.com/video/76979871"></iframe>')
+    const value = '<iframe src="https://player.vimeo.com/video/76979871"></iframe>'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871',
+      src: 'https://player.vimeo.com/video/76979871',
+      url: 'https://vimeo.com/76979871',
+    }
 
-    expect(result?.provider).toBe('vimeo')
-    expect(result?.id).toBe('76979871')
+    expect(await extract(value)).toEqual(expected)
   })
 
   it('should ignore a non-vimeo iframe', async () => {
-    const result = await resolve('<iframe src="https://example.com/video"></iframe>')
+    const value = '<iframe src="https://example.com/video"></iframe>'
 
-    expect(result).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 
   describe('the title the share snippet writes', () => {
@@ -139,7 +161,7 @@ describeForEachParser('vimeoEmbedResolver', (parseHtml) => {
         height: 360,
       }
 
-      expect(await resolve(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // The label is carried like any other stated title. Half of them are the real thing and the
@@ -159,7 +181,7 @@ describeForEachParser('vimeoEmbedResolver', (parseHtml) => {
         title: 'Vimeo video player',
       }
 
-      expect(await resolve(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 })
