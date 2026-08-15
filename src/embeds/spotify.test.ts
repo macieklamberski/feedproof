@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, resolverExtractor } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { spotifyEmbedResolver, spotifyResolveEmbed } from './spotify.js'
 
@@ -70,6 +70,35 @@ describe('spotifyResolveEmbed', () => {
       expect(spotifyResolveEmbed(value)).toEqual(expected)
     })
 
+    // A playlist is named through its owner, so the type and id are the last pair in the uri
+    // rather than the only one.
+    it('should resolve a legacy uri naming a playlist through its owner', () => {
+      const value =
+        'https://embed.spotify.com/?uri=spotify:user:ga8:playlist:2QyFr1UfIduAkWZI0A5fnC'
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'playlist/2QyFr1UfIduAkWZI0A5fnC',
+        src: 'https://open.spotify.com/embed/playlist/2QyFr1UfIduAkWZI0A5fnC',
+        url: 'https://open.spotify.com/playlist/2QyFr1UfIduAkWZI0A5fnC',
+        height: 352,
+      }
+
+      expect(spotifyResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should resolve the same ownership spelled as a path', () => {
+      const value = 'https://open.spotify.com/embed/user/ga8/playlist/2QyFr1UfIduAkWZI0A5fnC'
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'playlist/2QyFr1UfIduAkWZI0A5fnC',
+        src: 'https://open.spotify.com/embed/playlist/2QyFr1UfIduAkWZI0A5fnC',
+        url: 'https://open.spotify.com/playlist/2QyFr1UfIduAkWZI0A5fnC',
+        height: 352,
+      }
+
+      expect(spotifyResolveEmbed(value)).toEqual(expected)
+    })
+
     it('should ignore what follows the id', () => {
       const value = 'https://open.spotify.com/embed/show/4rOoJ6Egrf8K2IrywzwOMk/video'
       const expected: EmbedResolverResult = {
@@ -132,6 +161,135 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
     }
 
     expect(await resolve(value)).toEqual(expected)
+  })
+
+  // The snippet states the item's name in the iframe title, prefixed with the widget's own name.
+  it('should take the name out of the stated title', async () => {
+    const value = html`
+      <iframe
+        src="https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t"
+        title="Spotify Embed: Cemetry Gates - 2011 Remaster"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'spotify',
+      id: 'track/03yOjwHoOPDlTUg0NRxN6t',
+      src: 'https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t',
+      url: 'https://open.spotify.com/track/03yOjwHoOPDlTUg0NRxN6t',
+      height: 152,
+      title: 'Cemetry Gates - 2011 Remaster',
+    }
+
+    expect(await resolve(value)).toEqual(expected)
+  })
+
+  describe('the card Substack hangs on the player', () => {
+    it('should carry the artwork, the name and the act across', async () => {
+      const trackCardAttrs = {
+        image: 'https://i.scdn.co/image/ab67616d0000b273',
+        title: 'Cemetry Gates',
+        subtitle: 'The Smiths',
+        description: '',
+        url: 'https://open.spotify.com/track/03yOjwHoOPDlTUg0NRxN6t',
+      }
+      const value = html`
+        <iframe
+          class="spotify-wrap"
+          data-attrs="${substackAttrs(trackCardAttrs)}"
+          src="https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t"
+          data-component-name="Spotify2ToDOM"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'track/03yOjwHoOPDlTUg0NRxN6t',
+        src: 'https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t',
+        url: 'https://open.spotify.com/track/03yOjwHoOPDlTUg0NRxN6t',
+        height: 152,
+        title: 'Cemetry Gates',
+        author: 'The Smiths',
+        thumbnail: 'https://i.scdn.co/image/ab67616d0000b273',
+      }
+
+      expect(await resolve(value)).toEqual(expected)
+    })
+
+    // The card prints the type where a description would go, which the id already states.
+    it('should state no description when the card holds only the type', async () => {
+      const typeOnlyCardAttrs = {
+        title: 'An interview',
+        subtitle: 'A host',
+        description: 'Episode',
+      }
+      const value = html`
+        <iframe
+          class="spotify-wrap podcast"
+          data-attrs="${substackAttrs(typeOnlyCardAttrs)}"
+          src="https://open.spotify.com/embed/episode/1taJsFyMEbsljV14QAt409"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'episode/1taJsFyMEbsljV14QAt409',
+        src: 'https://open.spotify.com/embed/episode/1taJsFyMEbsljV14QAt409',
+        url: 'https://open.spotify.com/episode/1taJsFyMEbsljV14QAt409',
+        height: 152,
+        title: 'An interview',
+        author: 'A host',
+      }
+
+      expect(await resolve(value)).toEqual(expected)
+    })
+
+    it('should keep a description that says something the type does not', async () => {
+      const describedCardAttrs = {
+        title: 'A memoir',
+        description: 'Nine years since it came out',
+      }
+      const value = html`
+        <iframe
+          class="spotify-wrap"
+          data-attrs="${substackAttrs(describedCardAttrs)}"
+          src="https://open.spotify.com/embed/episode/1taJsFyMEbsljV14QAt409"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'episode/1taJsFyMEbsljV14QAt409',
+        src: 'https://open.spotify.com/embed/episode/1taJsFyMEbsljV14QAt409',
+        url: 'https://open.spotify.com/episode/1taJsFyMEbsljV14QAt409',
+        height: 152,
+        title: 'A memoir',
+        description: 'Nine years since it came out',
+      }
+
+      expect(await resolve(value)).toEqual(expected)
+    })
+
+    // An artwork url is only trusted when it comes from Spotify's own image host.
+    it('should ignore artwork hosted somewhere else', async () => {
+      const foreignArtworkAttrs = {
+        title: 'A track',
+        image: 'https://evil.test/i.scdn.co/image/x',
+      }
+      const value = html`
+        <iframe
+          class="spotify-wrap"
+          data-attrs="${substackAttrs(foreignArtworkAttrs)}"
+          src="https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'track/03yOjwHoOPDlTUg0NRxN6t',
+        src: 'https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t',
+        url: 'https://open.spotify.com/track/03yOjwHoOPDlTUg0NRxN6t',
+        height: 152,
+        title: 'A track',
+      }
+
+      expect(await resolve(value)).toEqual(expected)
+    })
   })
 
   it('should ignore a non-spotify iframe', async () => {

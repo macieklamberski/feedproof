@@ -29,6 +29,24 @@ describe('extractBandcampRelease', () => {
     expect(extractBandcampRelease(value)).toBe(expected)
   })
 
+  // A player pointing into an album names both, and whichever kind the url spells first is the
+  // one the id keeps.
+  it('should read the album from a track-within-album path', () => {
+    const value =
+      'https://bandcamp.com/EmbeddedPlayer/album=1578579597/size=large/artwork=small/track=1637967854/'
+    const expected = 'album/1578579597'
+
+    expect(extractBandcampRelease(value)).toBe(expected)
+  })
+
+  it('should read the track from the legacy path that names it first', () => {
+    const value =
+      'https://bandcamp.com/EmbeddedPlayer/v=2/track=2747530839/album=2568747696/size=large/'
+    const expected = 'track/2747530839'
+
+    expect(extractBandcampRelease(value)).toBe(expected)
+  })
+
   it('should return undefined when no release is named', () => {
     const value = 'https://bandcamp.com/EmbeddedPlayer/size=small/bgcol=ffffff/'
 
@@ -81,6 +99,42 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
         url: 'http://myexpansiveawareness.bandcamp.com/album/do-you-wanna-be-rich',
         height: 470,
         title: 'Do You Wanna Be Rich? by My Expansive Awareness',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Dropping the track leaves an album player, which opens on the album's first track rather
+    // than the one the publisher linked.
+    it('should keep the track a player opens an album at', async () => {
+      const value = html`
+        <iframe
+          src="https://bandcamp.com/EmbeddedPlayer/album=1578579597/size=large/bgcol=333333/tracklist=false/artwork=small/track=1637967854/transparent=true/"
+          seamless
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'bandcamp',
+        id: 'album/1578579597',
+        src: 'https://bandcamp.com/EmbeddedPlayer/album=1578579597/track=1637967854/size=large/',
+        height: 470,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The legacy player spells the track before the album, and means the same thing.
+    it('should keep both releases when the legacy path names the track first', async () => {
+      const value = html`
+        <iframe
+          src="https://bandcamp.com/EmbeddedPlayer/v=2/track=2747530839/album=2568747696/size=large/bgcol=ffffff/"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'bandcamp',
+        id: 'track/2747530839',
+        src: 'https://bandcamp.com/EmbeddedPlayer/album=2568747696/track=2747530839/size=large/',
+        height: 470,
       }
 
       expect(await extract(value)).toEqual(expected)

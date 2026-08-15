@@ -31,18 +31,29 @@ const numericIdRegex = /^\d+$/
 // back at their shortest working form, verified live 2026-08-11, both 200.
 const videoPathRegex = /\/videoembed/i
 
-export const extractBandcampRelease = (link: string): string | undefined => {
+// Every release a player url names, in the order it spells them. A player pointing at a track
+// inside an album names both, and the two orders both occur: the modern path writes `album=`
+// first and the legacy `v=2/` path writes `track=` first. The track segment also moves around
+// within the path, so the whole url is read before anything is decided.
+const readReleases = (link: string): Array<[string, string]> => {
   const parsed = parseUrl(link, 'https://example.com')
+  const releases: Array<[string, string]> = []
 
   if (!parsed) {
-    return
+    return releases
+  }
+
+  const claim = (kind: string, id: string) => {
+    if (!releases.some(([named]) => named === kind)) {
+      releases.push([kind, id])
+    }
   }
 
   for (const segment of getPathSegments(parsed)) {
     const match = segment.match(releaseRegex)
 
     if (match) {
-      return `${match[1]}/${match[2]}`
+      claim(match[1], match[2])
     }
   }
 
@@ -50,9 +61,17 @@ export const extractBandcampRelease = (link: string): string | undefined => {
     const id = parsed.searchParams.get(kind)
 
     if (id && numericIdRegex.test(id)) {
-      return `${kind}/${id}`
+      claim(kind, id)
     }
   }
+
+  return releases
+}
+
+export const extractBandcampRelease = (link: string): string | undefined => {
+  const [release] = readReleases(link)
+
+  return release ? `${release[0]}/${release[1]}` : undefined
 }
 
 // Bandcamp's own embed snippet puts a fallback anchor inside the iframe, and that anchor is
@@ -81,24 +100,32 @@ export const bandcampResolveEmbed = (
   element: Element,
 ): EmbedResolverResult | undefined => {
   const parsed = parseUrl(src, 'https://example.com')
-  const release = parsed ? extractBandcampRelease(src) : undefined
+  const releases = parsed ? readReleases(src) : []
+  const [release] = releases
 
   if (!parsed || !release) {
     return
   }
 
-  const [kind, id] = release.split('/')
+  const [kind, id] = release
   const isVideo = videoPathRegex.test(parsed.pathname)
   const preset = getPathSegments(parsed)
     .map((segment) => segment.match(sizeRegex)?.[1])
     .find(Boolean)
   const size = preset ? `size=${preset}/` : ''
+  // Every release the url named, album before track, which is the order the player writes today.
+  // Keeping the track is what makes the player open on it: given the album alone it starts at
+  // the first track instead.
+  const selection = releaseKinds
+    .flatMap((wanted) => releases.filter(([named]) => named === wanted))
+    .map(([named, value]) => `${named}=${value}/`)
+    .join('')
   const result: EmbedResolverResult = {
     provider: 'bandcamp',
-    id: release,
+    id: `${kind}/${id}`,
     src: isVideo
       ? `https://bandcamp.com/VideoEmbed?${kind}=${id}`
-      : `https://bandcamp.com/EmbeddedPlayer/${kind}=${id}/${size}`,
+      : `https://bandcamp.com/EmbeddedPlayer/${selection}${size}`,
   }
 
   const height = preset ? presetHeights[preset] : undefined
