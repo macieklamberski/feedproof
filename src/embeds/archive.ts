@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, flashVars } from '../utils/dom.js'
+import { flashVars } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen.

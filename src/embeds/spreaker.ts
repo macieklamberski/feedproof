@@ -21,7 +21,7 @@ export const extractSpreakerEmbed = (
 ): { kind: string; param: string; id: string } | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
 
-  if (!parsed || !parsed.pathname.includes('/player')) {
+  if (!parsed?.pathname.includes('/player')) {
     return
   }
 

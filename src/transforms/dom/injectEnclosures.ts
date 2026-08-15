@@ -2,7 +2,6 @@ import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type {
   CleanUrlFn,
   DomTransform,
-  EmbedResolver,
   EmbedResolverResult,
   Enclosure,
   TransformContext,

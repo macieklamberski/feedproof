@@ -205,7 +205,6 @@ import type {
   CiteResolver,
   DeferredIframeSource,
   DomTransform,
-  EmbedResolver,
   ResolveUrlFn,
   StringTransform,
   WidgetResolver,
