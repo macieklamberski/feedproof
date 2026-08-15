@@ -8,8 +8,19 @@ const safeVideoIdRegex = /^\d+$/
 
 const vimeoHosts = ['vimeo.com', 'player.vimeo.com']
 
+// Paths whose numeric id is not a video: a showcase is a playlist and an event is a livestream,
+// and both live in their own id space, so the first numeric segment would mint a player for an
+// unrelated video. 43 corpus feeds carry the two between them. Neither is resolved rather than
+// resolved wrongly, since a showcase player and an event player take urls this resolver does not
+// build.
+const collectionPaths = new Set(['showcase', 'event'])
+
 export const extractVimeoId = (link: string): string | undefined => {
   const segments = getPathSegments(link)
+
+  if (collectionPaths.has(segments[0])) {
+    return
+  }
 
   // player.vimeo.com/video/{id}; otherwise the first numeric segment, which covers
   // vimeo.com/{id}, /channels/{name}/{id}, and /groups/{name}/videos/{id}. The Flash player

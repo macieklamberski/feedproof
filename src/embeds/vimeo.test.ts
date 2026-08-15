@@ -32,6 +32,16 @@ describe('extractVimeoId', () => {
     expect(extractVimeoId('http://vimeo.com/moogaloop.swf?server=vimeo.com')).toBeUndefined()
   })
 
+  // A showcase is a playlist and an event is a livestream, both in their own id space, so the
+  // numeric segment would name an unrelated video.
+  it('should return undefined for a showcase url', () => {
+    expect(extractVimeoId('https://vimeo.com/showcase/7060635')).toBeUndefined()
+  })
+
+  it('should return undefined for an event url', () => {
+    expect(extractVimeoId('https://player.vimeo.com/event/1234567')).toBeUndefined()
+  })
+
   it('should return undefined when there is no numeric id', () => {
     expect(extractVimeoId('https://vimeo.com/user/profile')).toBeUndefined()
   })
