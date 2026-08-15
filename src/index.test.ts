@@ -165,32 +165,6 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
-  it('should allow custom widgetResolvers', async () => {
-    const value = '<iframe src="https://custom-player.example.com/video/123"></iframe>'
-    const expected = html`
-      <div
-        data-embed-provider="custom"
-        data-embed-src="https://custom-player.example.com/video/123"
-      ></div>
-    `
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      widgetResolvers: [
-        {
-          selector: 'iframe[src]',
-          extract: (element) => {
-            const src = element.getAttribute('src') ?? ''
-            if (src.includes('custom-player.example.com')) {
-              return { provider: 'custom', src }
-            }
-          },
-        },
-      ],
-    })
-
-    expect(result).toEqualHtml(expected)
-  })
-
   it('should inject audio/video enclosures as native media elements', async () => {
     const value = '<p>Content</p>'
     const expected = html`

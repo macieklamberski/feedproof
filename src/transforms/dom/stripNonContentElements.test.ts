@@ -265,65 +265,7 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
     })
   })
 
-  describe('with caller-supplied selectors', () => {
-    it('should remove elements matching a custom tag selector', async () => {
-      const context: TransformContext = { ...baseContext, nonContentSelectors: ['custom-widget'] }
-      const value = html`
-        <p>before</p>
-        <custom-widget data-x="1"></custom-widget>
-        <p>after</p>
-      `
-      const expected = html`
-        <p>before</p>
-        <p>after</p>
-      `
-
-      expect(await transform(value, context)).toBe(expected)
-    })
-
-    it('should remove elements matching a custom class selector', async () => {
-      const context: TransformContext = { ...baseContext, nonContentSelectors: ['.ad-slot'] }
-      const value = html`
-        <p>before</p>
-        <div class="ad-slot">ad</div>
-        <p>after</p>
-      `
-      const expected = html`
-        <p>before</p>
-        <p>after</p>
-      `
-
-      expect(await transform(value, context)).toBe(expected)
-    })
-
-    it('should remove elements matching any of several selectors', async () => {
-      const context: TransformContext = {
-        ...baseContext,
-        nonContentSelectors: ['.promo-box', 'newsletter-signup'],
-      }
-      const value = html`
-        <div class="promo-box">Try our app</div>
-        <p>keep</p>
-        <newsletter-signup></newsletter-signup>
-        <div class="other">keep</div>
-      `
-      const expected = html`
-        <p>keep</p>
-        <div class="other">keep</div>
-      `
-
-      expect(await transform(value, context)).toBe(expected)
-    })
-
-    it('should no-op when selector list is empty', async () => {
-      const context: TransformContext = { ...baseContext, nonContentSelectors: [] }
-      const value = html`
-        <div class="image-link-expand"><button></button></div>
-        <p>kept</p>
-      `
-
-      expect(await transform(value, context)).toBe(value)
-    })
+  describe('scoped selectors', () => {
     // The same wrapper with its player intact is a working embed, not chrome. Only the shells
     // whose iframe the feed generator removed are stripped.
     it('should keep an s9e wrapper whose player survived', async () => {

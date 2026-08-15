@@ -195,19 +195,6 @@ export type TransformContentOptions = {
   baseUrl?: string
   sameSiteUrls?: Array<string>
   enclosures?: Array<Enclosure>
-  widgetResolvers?: Array<WidgetResolver>
-  citeResolvers?: Array<CiteResolver>
-  mediaSrcAttributes?: Array<string>
-  lazySrcAttributes?: Array<string>
-  lazySrcsetAttributes?: Array<string>
-  lazyIframeAttributes?: Array<string>
-  deferredIframeSources?: Array<DeferredIframeSource>
-  trackingHosts?: Array<string>
-  trackingPathSegments?: Array<string>
-  emojiImageHosts?: Array<string>
-  avatarImageHosts?: Array<string>
-  nonContentSelectors?: Array<string>
-  preservedPreClasses?: Array<string>
   resolveUrlFn?: ResolveUrlFn
   cleanUrlFn?: CleanUrlFn
   assetProxyFn?: AssetProxyFn

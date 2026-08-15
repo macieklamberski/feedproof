@@ -82,7 +82,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `convertNoteEmbeds` | Convert note.com's empty embed figures (`figure[embedded-service][data-src]`): media services become plain iframes for the widget pass, own-post embeds become plain links |
 | `convertAmpNativeElements` | Convert AMP custom elements with a native equivalent (`amp-img`, `amp-anim`, `amp-video`, `amp-audio`, `amp-iframe`) into that element |
 | `convertDatawrapperEmbeds` | Convert Datawrapper chart embeds (iframe, script/noscript, and link forms) into a static image linking to the interactive chart |
-| `convertWidgets` | Convert recognized widgets: embeds become `data-embed-*` placeholders, platform-hosted media becomes a real `<video>`/`<audio>` (from an id template, a media-file src, or a URL parked in a `mediaSrcAttributes` attribute) |
+| `convertWidgets` | Convert recognized widgets: embeds become `data-embed-*` placeholders, platform-hosted media becomes a real `<video>`/`<audio>` (from an id template, a media-file src, or a URL parked in a lazy media attribute) |
 | `assignVideoPosters` | _Heuristic (opt-in):_ move a redundant video-poster image (inline or an enclosure) onto the embed as its poster, then drop the standalone image |
 | `stripDuplicateEnclosures` | _Heuristic (opt-in):_ remove an injected enclosure that duplicates inline content (image size-variants, exact audio/video/embed) |
 | `stripDuplicateLeadingImages` | _Heuristic (opt-in):_ remove a leading image the body repeats as the very next image (featured-image prepends), keeping the larger copy |
@@ -117,13 +117,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 ## Options
 
 ```typescript
-import {
-  fixLazyImages,
-  ghostCiteResolver,
-  resolveRelativeUrls,
-  transformContent,
-  youtubeIframeEmbedResolver,
-} from 'feedsweep'
+import { fixLazyImages, resolveRelativeUrls, transformContent } from 'feedsweep'
 import { parseHtml } from 'feedsweep/linkedom'
 import { cleanUrl } from 'urlpurify'
 
@@ -149,11 +143,6 @@ const result = transformContent(html, {
   parseDateFn: (raw) => parseDate(raw),
   // Swap the code highlighter (defaults to highlight.js; may be async).
   highlightFn: (text, language) => myHighlighter.highlight(text, language),
-  // Widget resolvers: embed results become placeholders, media results become real
-  // <video>/<audio> elements.
-  widgetResolvers: [youtubeIframeEmbedResolver, myEmbedResolver],
-  // Resolvers turning link-preview cards into `data-cite-*` placeholders.
-  citeResolvers: [ghostCiteResolver, myCiteResolver],
   // Opt into the heuristic transforms. Ignored if a custom domTransforms is set.
   heuristics: true,
   // Run a custom DOM transform pipeline (omit to use defaults).
@@ -167,7 +156,7 @@ Code blocks are highlighted only when they declare a language (`language-*` clas
 
 The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. The `heuristics` flag (default `false`) selects between two exported DOM pipelines: `defaultStandardDomTransforms` (the safe defaults) and `defaultAllDomTransforms` (standard plus `heuristicDomTransforms` spliced in after `injectEnclosures`). Setting `domTransforms` explicitly overrides `heuristics`. Every transform and pipeline is also exported individually from `feedsweep`, so you can compose any pipeline — list transforms explicitly, or spread `defaultStandardDomTransforms` / `heuristicDomTransforms` to extend or filter the defaults.
 
-`widgetResolvers` and `citeResolvers` each fully replace their default resolver list when provided; omit them for the defaults. Every resolver is exported individually from `feedsweep`, so a custom list is composed by naming the built-ins you want alongside your own.
+The platforms feedsweep recognizes, the hosts it treats as trackers, the selectors it strips as non-content and the lazy-loading attributes it reads are all built in and not configurable. A platform or attribute that is missing belongs in the library: open an issue or a pull request.
 
 Embed resolvers are named `{service}EmbedResolver` where a service ships one, and `{service}{Carrier}EmbedResolver` where it ships several, since the carrier is the only thing that differs between them: `buzzsproutIframeEmbedResolver` beside `buzzsproutScriptEmbedResolver`, `brightcoveVideoJsEmbedResolver` beside `brightcoveFlashEmbedResolver`.
 

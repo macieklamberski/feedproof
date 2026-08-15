@@ -785,13 +785,6 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       expect(result).toContain('src="https://x.example/a.mp4"')
       expect(result).not.toContain('src="https://x.example/a.webm"')
     })
-
-    it('should do nothing when no attributes are configured', async () => {
-      const value = '<div data-video-src="https://x.example/clip.mp4"></div>'
-      const result = await transform(value, { ...baseContext, mediaSrcAttributes: [] })
-
-      expect(result).not.toContain('<video')
-    })
   })
 
   describe('post fields', () => {
