@@ -62,14 +62,6 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     expect(result).not.toContain('hqdefault')
   })
 
-  it('should include fallback link with canonical url', async () => {
-    const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
-    const result = await transform(value)
-
-    expect(result).toContain('<a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">')
-    expect(result).toContain('https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>')
-  })
-
   it('should preserve iframe dimensions as data attributes', async () => {
     const value =
       '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" width="640" height="360"></iframe>'
@@ -125,9 +117,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         data-embed-src="https://example.com/player/xyz"
         data-embed-width="480"
         data-embed-height="270"
-      >
-        <a href="https://example.com/player/xyz">https://example.com/player/xyz</a>
-      </div>
+      ></div>
     `
 
     expect(await transform(value, customContext)).toEqualHtml(expected)
@@ -146,7 +136,6 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const expected = html`
       <div data-embed-provider="async" data-embed-src="https://example.com/player/xyz">
-        <a href="https://example.com/player/xyz">https://example.com/player/xyz</a>
       </div>
     `
 
@@ -250,13 +239,11 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     expect(result.match(/data-embed-src=/g)).toHaveLength(3)
   })
 
-  it('should include fallback link when wrapping unknown iframe', async () => {
+  it('should leave the placeholder empty when wrapping unknown iframe', async () => {
     const value = '<iframe src="https://unknown-site.com/123"></iframe>'
-    const result = await transform(value)
+    const expected = html`<div data-embed-src="https://unknown-site.com/123"></div>`
 
-    expect(result).toContain(
-      '<a href="https://unknown-site.com/123">https://unknown-site.com/123</a>',
-    )
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should skip iframe without src attribute', async () => {
@@ -407,7 +394,6 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       const result = await transform(value, context)
 
       expect(result).toContain('data-embed-src="https://widget.example.com/thing"')
-      expect(result).toContain('<a href="https://widget.example.com/thing">')
     })
 
     it('should clean a non-iframe carrier src with the provided cleanUrlFn', async () => {

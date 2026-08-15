@@ -13,27 +13,15 @@ import {
 } from './widgets.js'
 
 describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
-  describe('fallback link', () => {
-    it('should use url when present', () => {
-      const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, {
-        provider: 'custom',
-        src: 'https://embed.example/abc',
-        url: 'https://canonical.example/abc',
-      })
-
-      expect(element.querySelector('a')?.getAttribute('href')).toBe('https://canonical.example/abc')
+  it('should leave the placeholder empty', () => {
+    const document = parseHtml('')
+    const element = createEmbedPlaceholder(document, {
+      provider: 'custom',
+      src: 'https://embed.example/abc',
+      url: 'https://canonical.example/abc',
     })
 
-    it('should fall back to src when url is absent', () => {
-      const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, {
-        provider: 'custom',
-        src: 'https://embed.example/abc',
-      })
-
-      expect(element.querySelector('a')?.getAttribute('href')).toBe('https://embed.example/abc')
-    })
+    expect(element.childNodes.length).toBe(0)
   })
 
   describe('src wiring', () => {
@@ -56,8 +44,7 @@ describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
   })
 
   it.todo('should write the full metadata as data-embed-* attributes', () => {
-    // Pass every EmbedResolverResult field and assert the complete placeholder
-    // markup: all data-embed-* attributes plus the fallback anchor.
+    // Pass every EmbedResolverResult field and assert the complete placeholder markup.
   })
 })
 
@@ -452,7 +439,7 @@ describeForEachParser('createCitePlaceholder', (parseHtml) => {
     expect(element.outerHTML).toEqualHtml(expected)
   })
 
-  it('should trim raw field values in attributes and the fallback link', () => {
+  it('should trim raw field values in attributes and the link', () => {
     const document = parseHtml('')
     const value: CiteResolverResult = {
       provider: 'ghost',

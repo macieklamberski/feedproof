@@ -202,16 +202,9 @@ describeForEachParser('wrapBareInlineInParagraphs', (parseHtml) => {
   })
 
   describe('skipped contexts', () => {
-    it('should not wrap the fallback link inside a generated placeholder', async () => {
+    it('should not wrap the link inside a cite placeholder', async () => {
       const value =
         '<div data-cite-provider="ghost" data-cite-url="https://example.com/post" data-cite-title="Post title"><a href="https://example.com/post">Post title</a></div>'
-
-      expect(await transform(value)).toBe(value)
-    })
-
-    it('should not wrap inside an embed placeholder either', async () => {
-      const value =
-        '<div data-embed-provider="youtube" data-embed-src="https://www.youtube.com/embed/abc"><a href="https://www.youtube.com/watch?v=abc">https://www.youtube.com/watch?v=abc</a></div>'
 
       expect(await transform(value)).toBe(value)
     })

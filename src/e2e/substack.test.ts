@@ -329,9 +329,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-thumbnail="https://i.ytimg.com/vi/ab3DEfGHijk/hqdefault.jpg"
         data-embed-width="728"
         data-embed-height="409"
-      >
-        <a href="https://www.youtube.com/watch?v=ab3DEfGHijk">https://www.youtube.com/watch?v=ab3DEfGHijk</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -372,11 +370,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-author="Casey Host"
         data-embed-thumbnail="https://i.scdn.co/image/ab6765630000ba8a0000000000000000000000ff"
         data-embed-height="232"
-      >
-        <a
-          href="https://open.spotify.com/episode/aB3dEfGhIjKlMnOpQrStUv"
-        >https://open.spotify.com/episode/aB3dEfGhIjKlMnOpQrStUv</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -754,9 +748,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-id="123456789"
         data-embed-src="https://player.vimeo.com/video/123456789"
         data-embed-url="https://vimeo.com/123456789"
-      >
-        <a href="https://vimeo.com/123456789">https://vimeo.com/123456789</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -801,11 +793,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-publisher="Example Show"
         data-embed-date="2021-04-04T14:51:00Z"
         data-embed-duration="4419"
-      >
-        <a
-          href="https://podcasts.apple.com/au/podcast/the-art-of/id1234567890?i=1000500600700"
-        >https://podcasts.apple.com/au/podcast/the-art-of/id1234567890?i=1000500600700</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -880,11 +868,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-id="track/1234567890"
         data-embed-src="https://bandcamp.com/EmbeddedPlayer/track=1234567890/size=large/"
         data-embed-height="470"
-      >
-        <a
-          href="https://bandcamp.com/EmbeddedPlayer/track=1234567890/size=large/"
-        >https://bandcamp.com/EmbeddedPlayer/track=1234567890/size=large/</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -893,8 +877,7 @@ describeForEachParser('Substack', (parseHtml) => {
 
   it('should resolve a SoundcloudToDOM wrap into a soundcloud embed placeholder', async () => {
     // The soundcloud resolver claims the player iframe, reads the track id off its url and takes
-    // the card the wrapper carries. The fallback anchor then points at the track page rather than
-    // at the player, since the payload is the only place that url appears.
+    // the card the wrapper carries.
     const soundcloudAttrs = substackAttrs({
       title: 'Mix 4',
       description: 'Tracklist',
@@ -929,9 +912,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-title="Mix 4"
         data-embed-description="Tracklist"
         data-embed-author="Example Radio"
-      >
-        <a href="https://soundcloud.com/exampleradio/mix-4">https://soundcloud.com/exampleradio/mix-4</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -987,11 +968,7 @@ describeForEachParser('Substack', (parseHtml) => {
     const expected = html`
       <div
         data-embed-src="https://cdn.iframe.ly/api/iframe?media=1&app=1&url=https%3A%2F%2Fwww.tiktok.com%2F%40caseyhandle%2Fvideo%2F7123456789012345678&key=abc123"
-      >
-        <a
-          href="https://cdn.iframe.ly/api/iframe?media=1&app=1&url=https%3A%2F%2Fwww.tiktok.com%2F%40caseyhandle%2Fvideo%2F7123456789012345678&key=abc123"
-        >https://cdn.iframe.ly/api/iframe?media=1&amp;app=1&amp;url=https%3A%2F%2Fwww.tiktok.com%2F%40caseyhandle%2Fvideo%2F7123456789012345678&amp;key=abc123</a>
-      </div>
+      ></div>
       <a href="https://www.tiktok.com/@caseyhandle/video/7123456789012345678" target="_blank">
         <img
           width="1080"
@@ -1032,9 +1009,6 @@ describeForEachParser('Substack', (parseHtml) => {
     `
     const expected = html`
       <div data-embed-src="https://manifold.markets/embed/ExampleUser/will-the-thing-happen">
-        <a
-          href="https://manifold.markets/embed/ExampleUser/will-the-thing-happen"
-        >https://manifold.markets/embed/ExampleUser/will-the-thing-happen</a>
       </div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })

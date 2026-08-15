@@ -70,10 +70,8 @@ export const wrapBareInlineInParagraphs: DomTransform = () => {
         continue
       }
 
-      // A placeholder's fallback link is its whole content and is replaced wholesale by a
-      // consumer, so wrapping it gains nothing. Skipping also keeps the pipeline stable on
-      // a second run: cite placeholders exist by the time this runs and embed placeholders
-      // do not, so wrapping produced two different shapes and a re-run changed the output.
+      // A cite placeholder's link is its whole content and a consumer replaces the placeholder
+      // wholesale, so wrapping it gains nothing.
       if (isGeneratedWrapper(container)) {
         continue
       }
