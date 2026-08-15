@@ -833,6 +833,7 @@ describeForEachParser('transformContent', (parseHtml) => {
       expect(result).not.toContain('I Accept')
     })
   })
+
   describe('platform e2e', () => {
     // Where each Substack component ends up under the default pipeline. Most are owned by a
     // generic pass rather than a Substack-specific one, so without these cases a delegation
