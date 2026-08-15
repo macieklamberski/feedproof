@@ -85,6 +85,30 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should join every paragraph of a long tweet into the description', async () => {
+      const value = html`
+        <blockquote class="twitter-tweet">
+          <p lang="en" dir="ltr">First paragraph of a long tweet.</p>
+          <p lang="en" dir="ltr">Second paragraph of the same tweet.</p>
+          <p>
+            &mdash; Display Name (@user)
+            <a href="https://twitter.com/user/status/123456789012345">May 12, 2020</a>
+          </p>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: statusUrl,
+        description: 'First paragraph of a long tweet.\nSecond paragraph of the same tweet.',
+        author: 'Display Name',
+        date: 'May 12, 2020',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {

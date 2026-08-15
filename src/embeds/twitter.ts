@@ -92,8 +92,9 @@ const findStatus = (element: Element): { status: Status; anchor?: Element } | un
     : undefined
 }
 
-// The tweet text and the byline, which by this point are two sibling paragraphs: whatever shape
+// The tweet text and the byline, which by this point are sibling paragraphs: whatever shape
 // the source used, the bare byline has been wrapped into a paragraph of its own upstream.
+// A long tweet spans several paragraphs, so every one that is not the byline is tweet text.
 const readContent = (element: Element, anchor: Element | undefined) => {
   const byline = anchor?.parentElement
   const bylineText = byline
@@ -101,10 +102,14 @@ const readContent = (element: Element, anchor: Element | undefined) => {
         ?.replace(text(anchor) ?? '', '')
         .trim()
     : undefined
-  const body = find(element, 'p', (paragraph) => paragraph !== byline)
+  const body = Array.from(element.querySelectorAll('p'))
+    .filter((paragraph) => paragraph !== byline)
+    .map((paragraph) => text(paragraph))
+    .filter((value) => !!value)
+    .join('\n')
 
   return {
-    description: text(body),
+    description: body || undefined,
     author: bylineText?.match(bylineRegex)?.[1] ?? (bylineText || undefined),
     date: text(anchor),
   }
@@ -145,6 +150,7 @@ export const twitterAmpEmbedResolver = createMarkupEmbedResolver(
   'amp-twitter[data-tweetid]',
   extractTweet,
 )
+
 
 // The player a stored-after-render copy already points at, and the one this resolver mints, so
 // a feed carrying the frame alone still names its provider.
