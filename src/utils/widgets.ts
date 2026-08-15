@@ -41,16 +41,8 @@ export const embedCarrierSelector = Object.entries(embedCarriers)
   .map(([tag, attribute]) => `${tag}[${attribute}]`)
   .join(', ')
 
-// A protocol-relative src is given its scheme here rather than left as the markup wrote it. The
-// rest of the pipeline already reads `//host/path` as https: feedcanon's `resolveUrl` gives it
-// that scheme when the caller passes no `baseUrl`, so the generic fallback emits an https
-// placeholder either way. Only the host gate in `createUrlEmbedResolver` saw the raw string, and
-// it rejected every such carrier, which cost the provider on any feed a caller ran without a
-// `baseUrl`.
 export const readCarrierUrl = (element: Element): string => {
-  const url = element.getAttribute(embedCarriers[element.localName] ?? 'src') ?? ''
-
-  return url.startsWith('//') ? `https:${url}` : url
+  return element.getAttribute(embedCarriers[element.localName] ?? 'src') ?? ''
 }
 
 // A resolver that has measured the platform can overrule what the carrier declares. Scribd
