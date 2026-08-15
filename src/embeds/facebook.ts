@@ -106,8 +106,10 @@ export const facebookAmpEmbedResolver = createMarkupEmbedResolver(
 
 // The plugin url the SDK builds at runtime, which is also what Facebook's own embed dialog
 // hands a publisher to paste. It is the more common of the two forms, so most Facebook embeds
-// arrive already pointing at a working player and only need naming.
-const pluginPathRegex = /^\/plugins\/(?:post|video)\.php$/
+// arrive already pointing at a working player and only need naming. Older SDKs prefixed the
+// path with their Graph API version (`/v2.5/plugins/post.php`), and those urls still serve
+// the same plugin, so the version segment is accepted and ignored.
+const pluginPathRegex = /^(?:\/v\d+(?:\.\d+)?)?\/plugins\/(?:post|video)\.php$/
 // The pre-plugins video frame from old posts, which names its video in `video_id` instead of an
 // encoded href. It is rebuilt onto the current plugin, pointed at the watch page.
 const legacyVideoPathRegex = /^\/video\/embed$/

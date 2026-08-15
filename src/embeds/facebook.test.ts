@@ -390,6 +390,40 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // Older SDKs built the plugin url with their Graph API version in the path, and those
+    // copies still serve the same plugin.
+    it('should accept the versioned post plugin path', async () => {
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/v2.5/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/posts/123',
+        src: 'https://www.facebook.com/v2.5/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123',
+        url: 'https://www.facebook.com/PageName/posts/123',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should accept the versioned video plugin path with a two-digit version', async () => {
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/v17.0/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/videos/123/',
+        src: 'https://www.facebook.com/v17.0/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fvideos%2F123%2F',
+        url: 'https://www.facebook.com/PageName/videos/123/',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // The pre-plugins endpoint from old posts, which names its video in `video_id` rather than
     // an encoded href, so the current plugin url has to be built from scratch.
     it('should rebuild a legacy video frame onto the current plugin', async () => {
@@ -529,6 +563,28 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
       const value = html`
         <iframe
           src="https://www.facebook.com/plugins/comments.php?href=https%3A%2F%2Fexample.com%2Fpost"
+        ></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // The version segment widens the path match, not the plugin set: a like button and a page
+    // timeline stay chrome whichever SDK era wrote them.
+    it('should return undefined for a versioned like plugin', async () => {
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/v2.5/plugins/like.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName"
+        ></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a versioned page plugin', async () => {
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/v2.5/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName"
         ></iframe>
       `
 
