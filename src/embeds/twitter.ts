@@ -238,14 +238,30 @@ export const twitterSubstackEmbedResolver = createMarkupEmbedResolver(
 // same `id` query: the corpus holds 1,390 `Tweet.html` and 161 `index.html` frames across 445 feeds.
 const playerPaths = new Set(['/embed/Tweet.html', '/embed/index.html'])
 
+// A carrier framing the status page rather than the player, which is what a wrapper writes when
+// it stores the url the author pasted: note.com puts `x.com/{handle}/status/{id}` in every one of
+// its Twitter figures. That page cannot be framed at all (`x-frame-options: SAMEORIGIN`, checked
+// 2026-08-15), so left unclaimed it reaches a reader as a placeholder pointing at a page that
+// renders nothing. The status id is all the player needs and the path already states it, so the
+// same placeholder the blockquote carrier builds is mintable from the url alone.
 export const twitterResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url)
   const id = parsed && playerPaths.has(parsed.pathname) ? parsed.searchParams.get('id') : undefined
 
-  return id && safeStatusIdRegex.test(id) ? composeEmbed({ handle: '', id }, {}) : undefined
+  if (id && safeStatusIdRegex.test(id)) {
+    return composeEmbed({ handle: '', id }, {})
+  }
+
+  const status = readStatusUrl(url)
+
+  return status ? composeEmbed(status, {}) : undefined
 }
 
+// `twitter.com` and `x.com` cover the player hosts too, since `platform.twitter.com` and
+// `platform.x.com` are subdomains of them and the host gate matches a subdomain as well as the
+// host itself. The proxy front-ends stay out: `readStatusUrl` would accept their paths, but a
+// framed proxy page is a page like any other and several of them are going dark.
 export const twitterIframeEmbedResolver = createUrlEmbedResolver(
-  ['platform.twitter.com', 'platform.x.com'],
+  ['twitter.com', 'x.com'],
   twitterResolveEmbed,
 )
