@@ -160,6 +160,7 @@ export {
   jwplayerScriptEmbedResolver,
 } from './embeds/jwplayer.js'
 export { libsynEmbedResolver } from './embeds/libsyn.js'
+export { mastodonEmbedResolver } from './embeds/mastodon.js'
 export { mediavineEmbedResolver } from './embeds/mediavine.js'
 export { megaphoneEmbedResolver } from './embeds/megaphone.js'
 export { mixcloudEmbedResolver } from './embeds/mixcloud.js'
