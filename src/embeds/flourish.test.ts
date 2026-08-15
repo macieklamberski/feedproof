@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { flourishIframeEmbedResolver, flourishWidgetEmbedResolver } from './flourish.js'
+import {
+  flourishIframeEmbedResolver,
+  flourishResolveEmbed,
+  flourishWidgetEmbedResolver,
+} from './flourish.js'
 
 describeForEachParser('flourishWidgetEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, flourishWidgetEmbedResolver)
@@ -221,5 +225,29 @@ describeForEachParser('flourishIframeEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+// The exported url reader, which the iframe resolver wraps. The factory gates the host before
+// this runs, so these cover the contract it states for a caller composing its own list.
+describe('flourishResolveEmbed', () => {
+  it('should resolve a player url', () => {
+    const value = 'https://flo.uri.sh/visualisation/29132382/embed'
+    const expected: EmbedResolverResult = {
+      provider: 'flourish',
+      id: 'visualisation/29132382',
+      src: value,
+      url: 'https://public.flourish.studio/visualisation/29132382/',
+    }
+
+    expect(flourishResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should return undefined for a foreign host', () => {
+    expect(flourishResolveEmbed('https://evil.test/visualisation/29132382/embed')).toBeUndefined()
+  })
+
+  it('should return undefined for a string that is not a url', () => {
+    expect(flourishResolveEmbed('visualisation/29132382/embed')).toBeUndefined()
   })
 })
