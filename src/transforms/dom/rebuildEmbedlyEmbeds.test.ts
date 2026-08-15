@@ -4,14 +4,6 @@ import { baseContext, describeForEachParser, html, jsonAttrValue } from '../../t
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { rebuildEmbedlyEmbeds } from './rebuildEmbedlyEmbeds.js'
 
-// The unrendered carrier: an empty div whose oEmbed payload rides in `data`, which is what a
-// publishing platform ships when only its own client fills the block in.
-const makeBlock = (source: string, payload?: Record<string, unknown> | string): string => {
-  const data = payload === undefined ? '' : ` data="${jsonAttrValue(payload)}"`
-
-  return `<div data-type="embedly" src="${source}"${data}></div>`
-}
-
 describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
   const transform = (value: string) => {
     return applyDomTransforms(parseHtml(value), [rebuildEmbedlyEmbeds(baseContext)])
@@ -70,21 +62,33 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
 
   describe('the payload div, where a refusal costs the whole block', () => {
     it('should convert a video payload into an iframe naming its url', async () => {
-      const value = makeBlock('https://www.youtube.com/watch?v=dQw4w9WgXcQ', {
-        type: 'video',
-        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      })
+      const value = html`
+        <div
+          data-type="embedly"
+          src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          data="${jsonAttrValue({
+            type: 'video',
+            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          })}"
+        ></div>
+      `
       const expected = html`<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>`
 
       expect(await transform(value)).toBe(expected)
     })
 
     it('should carry the payload thumbnail onto the iframe', async () => {
-      const value = makeBlock('https://www.youtube.com/watch?v=dQw4w9WgXcQ', {
-        type: 'video',
-        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        thumbnail_url: 'https://img.example.com/poster.jpg',
-      })
+      const value = html`
+        <div
+          data-type="embedly"
+          src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          data="${jsonAttrValue({
+            type: 'video',
+            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            thumbnail_url: 'https://img.example.com/poster.jpg',
+          })}"
+        ></div>
+      `
       const expected = html`
         <iframe
           src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
@@ -96,68 +100,104 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
     })
 
     it('should convert a rich payload the same way', async () => {
-      const value = makeBlock('https://example.com/thing', {
-        type: 'rich',
-        url: 'https://example.com/widget',
-      })
+      const value = html`
+        <div
+          data-type="embedly"
+          src="https://example.com/thing"
+          data="${jsonAttrValue({
+            type: 'rich',
+            url: 'https://example.com/widget',
+          })}"
+        ></div>
+      `
       const expected = html`<iframe src="https://example.com/widget"></iframe>`
 
       expect(await transform(value)).toBe(expected)
     })
 
     it('should convert a block with no payload into a link to its own src', async () => {
-      const value = makeBlock('https://example.com/thing')
+      const value = html`<div data-type="embedly" src='https://example.com/thing'></div>`
       const expected = html`<a href="https://example.com/thing">https://example.com/thing</a>`
 
       expect(await transform(value)).toBe(expected)
     })
 
     it('should convert a block with a malformed payload the same way', async () => {
-      const value = makeBlock('https://example.com/thing', '{not json')
+      const value = html`
+        <div
+          data-type="embedly"
+          src="https://example.com/thing"
+          data="${jsonAttrValue('{not json')}"
+        ></div>
+      `
       const expected = html`<a href="https://example.com/thing">https://example.com/thing</a>`
 
       expect(await transform(value)).toBe(expected)
     })
 
     it('should leave a link payload for the cite pass', async () => {
-      const value = makeBlock('https://example.com/post', {
-        type: 'link',
-        url: 'https://example.com/post',
-        title: 'A post',
-      })
+      const value = html`
+        <div
+          data-type="embedly"
+          src="https://example.com/post"
+          data="${jsonAttrValue({
+            type: 'link',
+            url: 'https://example.com/post',
+            title: 'A post',
+          })}"
+        ></div>
+      `
 
       expect(await transform(value)).toBe(value)
     })
 
     it('should leave a payload naming no type for the cite pass', async () => {
-      const value = makeBlock('https://example.com/post', {
-        url: 'https://example.com/post',
-        title: 'A post',
-      })
+      const value = html`
+        <div
+          data-type="embedly"
+          src="https://example.com/post"
+          data="${jsonAttrValue({
+            url: 'https://example.com/post',
+            title: 'A post',
+          })}"
+        ></div>
+      `
 
       expect(await transform(value)).toBe(value)
     })
 
     it('should leave a video payload whose url is not http', async () => {
-      const value = makeBlock('https://example.com/thing', {
-        type: 'video',
-        url: 'javascript:alert(1)',
-      })
+      const value = html`
+        <div
+          data-type="embedly"
+          src="https://example.com/thing"
+          data="${jsonAttrValue({
+            type: 'video',
+            url: 'javascript:alert(1)',
+          })}"
+        ></div>
+      `
 
       expect(await transform(value)).toBe(value)
     })
 
     it('should leave a payloadless block whose src is not http', async () => {
-      const value = makeBlock('javascript:alert(1)')
+      const value = html`<div data-type="embedly" src="javascript:alert(1)"></div>`
 
       expect(await transform(value)).toBe(value)
     })
 
     it('should produce a youtube placeholder end to end', async () => {
-      const value = makeBlock('https://www.youtube.com/watch?v=dQw4w9WgXcQ', {
-        type: 'video',
-        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      })
+      const value = html`
+        <div
+          data-type="embedly"
+          src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          data="${jsonAttrValue({
+            type: 'video',
+            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          })}"
+        ></div>
+      `
       const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
       expect(result).toContain('data-embed-provider="youtube"')
@@ -165,11 +205,17 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
     })
 
     it('should leave a link payload reaching the cite pass end to end', async () => {
-      const value = makeBlock('https://example.com/post', {
-        type: 'link',
-        url: 'https://example.com/post',
-        title: 'A post',
-      })
+      const value = html`
+        <div
+          data-type="embedly"
+          src="https://example.com/post"
+          data="${jsonAttrValue({
+            type: 'link',
+            url: 'https://example.com/post',
+            title: 'A post',
+          })}"
+        ></div>
+      `
       const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
       expect(result).toContain('data-cite-provider="paragraph"')
@@ -180,8 +226,14 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
   it('should be idempotent', async () => {
     const value = [
       html`<iframe src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fexample.com%2Fembed&image=https%3A%2F%2Fexample.com%2Fp.jpg"></iframe>`,
-      makeBlock('https://example.com/thing', { type: 'video', url: 'https://example.com/widget' }),
-      makeBlock('https://example.com/thing'),
+      html`
+        <div
+          data-type="embedly"
+          src="https://example.com/thing"
+          data="${jsonAttrValue({ type: 'video', url: 'https://example.com/widget' })}"
+        ></div>
+      `,
+      html`<div data-type="embedly" src='https://example.com/thing'></div>`,
     ].join('')
     const once = await transform(value)
     const twice = await applyDomTransforms(parseHtml(once), [rebuildEmbedlyEmbeds(baseContext)])
