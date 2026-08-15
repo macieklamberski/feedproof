@@ -33,6 +33,12 @@ import { bandcampEmbedResolver } from './embeds/bandcamp.js'
 import { bloggerEmbedResolver } from './embeds/blogger.js'
 import { blubrryEmbedResolver } from './embeds/blubrry.js'
 import {
+  blueskyBlockquoteEmbedResolver,
+  blueskyIframeEmbedResolver,
+  blueskyPostElementEmbedResolver,
+  blueskyS9eEmbedResolver,
+} from './embeds/bluesky.js'
+import {
   brightcoveFlashEmbedResolver,
   brightcoveIframeEmbedResolver,
   brightcoveVideoJsEmbedResolver,
@@ -430,6 +436,10 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   archiveFlashEmbedResolver,
   bandcampEmbedResolver,
   bloggerEmbedResolver,
+  blueskyBlockquoteEmbedResolver,
+  blueskyIframeEmbedResolver,
+  blueskyS9eEmbedResolver,
+  blueskyPostElementEmbedResolver,
   audioboomEmbedResolver,
   omnyEmbedResolver,
   nicovideoScriptEmbedResolver,
