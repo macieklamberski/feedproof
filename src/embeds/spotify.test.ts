@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html, resolverExtractor } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { spotifyEmbedResolver, spotifyResolveEmbed } from './spotify.js'
 
@@ -185,10 +185,17 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
 
   describe('the card Substack hangs on the player', () => {
     it('should carry the artwork, the name and the act across', async () => {
+      const trackCardAttrs = {
+        image: 'https://i.scdn.co/image/ab67616d0000b273',
+        title: 'Cemetry Gates',
+        subtitle: 'The Smiths',
+        description: '',
+        url: 'https://open.spotify.com/track/03yOjwHoOPDlTUg0NRxN6t',
+      }
       const value = html`
         <iframe
           class="spotify-wrap"
-          data-attrs='{"image":"https://i.scdn.co/image/ab67616d0000b273","title":"Cemetry Gates","subtitle":"The Smiths","description":"","url":"https://open.spotify.com/track/03yOjwHoOPDlTUg0NRxN6t"}'
+          data-attrs="${substackAttrs(trackCardAttrs)}"
           src="https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t"
           data-component-name="Spotify2ToDOM"
         ></iframe>
@@ -209,10 +216,15 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
 
     // The card prints the type where a description would go, which the id already states.
     it('should state no description when the card holds only the type', async () => {
+      const typeOnlyCardAttrs = {
+        title: 'An interview',
+        subtitle: 'A host',
+        description: 'Episode',
+      }
       const value = html`
         <iframe
           class="spotify-wrap podcast"
-          data-attrs='{"title":"An interview","subtitle":"A host","description":"Episode"}'
+          data-attrs="${substackAttrs(typeOnlyCardAttrs)}"
           src="https://open.spotify.com/embed/episode/1taJsFyMEbsljV14QAt409"
         ></iframe>
       `
@@ -230,10 +242,14 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
     })
 
     it('should keep a description that says something the type does not', async () => {
+      const describedCardAttrs = {
+        title: 'A memoir',
+        description: 'Nine years since it came out',
+      }
       const value = html`
         <iframe
           class="spotify-wrap"
-          data-attrs='{"title":"A memoir","description":"Nine years since it came out"}'
+          data-attrs="${substackAttrs(describedCardAttrs)}"
           src="https://open.spotify.com/embed/episode/1taJsFyMEbsljV14QAt409"
         ></iframe>
       `
@@ -252,10 +268,14 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
 
     // An artwork url is only trusted when it comes from Spotify's own image host.
     it('should ignore artwork hosted somewhere else', async () => {
+      const foreignArtworkAttrs = {
+        title: 'A track',
+        image: 'https://evil.test/i.scdn.co/image/x',
+      }
       const value = html`
         <iframe
           class="spotify-wrap"
-          data-attrs='{"title":"A track","image":"https://evil.test/i.scdn.co/image/x"}'
+          data-attrs="${substackAttrs(foreignArtworkAttrs)}"
           src="https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t"
         ></iframe>
       `

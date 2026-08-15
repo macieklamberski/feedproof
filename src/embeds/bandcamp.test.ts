@@ -34,15 +34,17 @@ describe('extractBandcampRelease', () => {
   it('should read the album from a track-within-album path', () => {
     const value =
       'https://bandcamp.com/EmbeddedPlayer/album=1578579597/size=large/artwork=small/track=1637967854/'
+    const expected = 'album/1578579597'
 
-    expect(extractBandcampRelease(value)).toBe('album/1578579597')
+    expect(extractBandcampRelease(value)).toBe(expected)
   })
 
   it('should read the track from the legacy path that names it first', () => {
     const value =
       'https://bandcamp.com/EmbeddedPlayer/v=2/track=2747530839/album=2568747696/size=large/'
+    const expected = 'track/2747530839'
 
-    expect(extractBandcampRelease(value)).toBe('track/2747530839')
+    expect(extractBandcampRelease(value)).toBe(expected)
   })
 
   it('should return undefined when no release is named', () => {

@@ -48,14 +48,16 @@ describe('extractMixcloudShow', () => {
   it('should read a show titled outside the ascii range', () => {
     const value =
       'https://www.mixcloud.com/widget/iframe/?feed=%2Ffunairacing%2F9-%E3%81%82%E3%81%B9c%E9%96%A2%E6%9D%B1%2F'
+    const expected = 'funairacing/9-あべc関東'
 
-    expect(extractMixcloudShow(value)).toBe('funairacing/9-あべc関東')
+    expect(extractMixcloudShow(value)).toBe(expected)
   })
 
   it('should read an accented user name', () => {
     const value = 'https://www.mixcloud.com/widget/iframe/?feed=%2Fszita-j%25C3%25A1nos%2Fshow%2F'
+    const expected = 'szita-jános/show'
 
-    expect(extractMixcloudShow(value)).toBe('szita-jános/show')
+    expect(extractMixcloudShow(value)).toBe(expected)
   })
 
   it('should return undefined for a segment that climbs out of the path', () => {
