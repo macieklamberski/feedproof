@@ -1,7 +1,21 @@
 import type { DomTransform } from '../../types.js'
 import { isGeneratedWrapper } from '../../utils/dom.js'
 
-const wrapperTags = new Set(['div', 'article', 'section', 'main', 'header', 'footer'])
+const wrapperSelectors = [
+  'div',
+  'article',
+  'section',
+  'main',
+  'header',
+  'footer',
+  // A figure reduced to one text-only link, what an oEmbed block leaves when the provider call
+  // failed and linkifyUrls has since turned its bare url into an anchor: no element inside has a
+  // sibling (the content is one chain), that chain ends in a leaf anchor, and no placeholder sits
+  // in it. jsdom rejects a `:has` nested in another, so each stands on its own.
+  'figure:has(a):not(:has(* ~ *)):not(:has(a *)):not(:has([data-embed-provider], [data-cite-provider]))',
+]
+
+const wrapperSelector = wrapperSelectors.join(', ')
 
 // Collects the ids that in-page anchors (`<a href="#id">`) point at, so wrappers
 // that are those anchors' scroll targets (e.g. a `<div class="footnote-definition"
@@ -29,15 +43,10 @@ const collectReferencedFragments = (document: Document): Set<string> => {
 export const unwrapWrappers: DomTransform = () => {
   return (document) => {
     const referencedFragments = collectReferencedFragments(document)
-    const candidates = document.body.querySelectorAll('*')
+    const candidates = document.body.querySelectorAll(wrapperSelector)
 
     for (let i = 0, n = candidates.length; i < n; i++) {
       const element = candidates[i]
-
-      if (!wrapperTags.has(element.localName)) {
-        continue
-      }
-
       const parent = element.parentNode
 
       if (!parent) {
