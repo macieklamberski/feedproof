@@ -80,6 +80,43 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
     expect(await transform(value)).toContain('https://www.youtube.com/embed/dQw4w9WgXcQ')
   })
 
+  it('should rebuild a youtube-player facade naming its id', async () => {
+    const value = html`<div class="youtube-player" data-id="dQw4w9WgXcQ"></div>`
+    const result = await transform(value)
+
+    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ">')
+    expect(result).not.toContain('youtube-player')
+  })
+
+  it('should rebuild a youtube-player facade naming its embed', async () => {
+    const value = html`<div class="youtube-player" data-embed="dQw4w9WgXcQ"></div>`
+    const result = await transform(value)
+
+    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ">')
+    expect(result).not.toContain('youtube-player')
+  })
+
+  // `data-id` says nothing about a platform, so the class is what has to name one.
+  it('should leave a data-id div that does not name youtube', async () => {
+    const value = html`<div class="wp-block-gallery" data-id="dQw4w9WgXcQ"></div>`
+
+    expect(await transform(value)).toContain('wp-block-gallery')
+  })
+
+  // The facade div holds nothing, so an unrecognised one is not an empty box on the page:
+  // stripEmptyTags removes it downstream and the video leaves the item altogether.
+  it('should keep a youtube-player facade through the default pipeline', async () => {
+    const value = html`
+      <p>Before</p>
+      <div class="youtube-player" data-id="dQw4w9WgXcQ"></div>
+      <p>After</p>
+    `
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContain('data-embed-provider="youtube"')
+    expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
+  })
+
   // `data-video_id` is not exclusive to YouTube, so the class has to name the platform.
   it('should leave a data-video_id div that does not name youtube', async () => {
     const value = html`<div class="adthrive-video-player" data-video_id="dQw4w9WgXcQ"></div>`
