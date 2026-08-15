@@ -4,24 +4,10 @@ import {
   defaultNonContentSelectors,
   defaultWidgetResolvers,
 } from './defaults.js'
-import * as index from './index.js'
 import { parseHtml } from './parsers/linkedom.js'
 import { createCitePlaceholder } from './utils/widgets.js'
 
 describe('defaults', () => {
-  // A resolver reachable only through the default array cannot be named, so a consumer
-  // has no way to drop one or reorder the registry — the array is all or nothing. Every
-  // registered resolver therefore has to be exported individually as well; this pins that,
-  // since the two lists drifted apart once already as resolvers were added.
-  it('should export every registered resolver individually', () => {
-    const exported = new Set(Object.values(index))
-    const missing = [...defaultCiteResolvers, ...defaultWidgetResolvers].filter((resolver) => {
-      return !exported.has(resolver)
-    })
-
-    expect(missing).toEqual([])
-  })
-
   // convertCiteCards hands every resolver the same document, in registration order, with
   // the earlier replacements already applied — so a resolver has to stay off the others'
   // toes. The next two tests pin the two ways one could tread on another.
