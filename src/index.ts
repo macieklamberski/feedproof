@@ -196,6 +196,12 @@ export {
 } from './embeds/telegram.js'
 export { transistorEmbedResolver } from './embeds/transistor.js'
 export {
+  twitterAmpEmbedResolver,
+  twitterBlockquoteEmbedResolver,
+  twitterIframeEmbedResolver,
+  twitterSubstackEmbedResolver,
+} from './embeds/twitter.js'
+export {
   typeformIframeEmbedResolver,
   typeformWidgetEmbedResolver,
 } from './embeds/typeform.js'
