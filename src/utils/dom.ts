@@ -95,6 +95,35 @@ export const textNode = (element: Nullish<Element>): string | undefined => {
 }
 
 // Trimmed value of an attribute on the element itself.
+// The inline `<script>` that configures a player sitting beside it, which several platforms use
+// instead of an iframe. Two things make it awkward to reach. `wrapBareInlineInParagraphs` runs
+// before the widget pass and puts a bare script in a `<p>`, so by then the player's sibling is
+// that paragraph rather than the script. And where one item holds several players, each script
+// names its own container, so the element's id is what pairs them when they are not adjacent.
+export const findConfigScript = (element: Element): Element | undefined => {
+  const sibling = element.nextElementSibling
+
+  if (sibling?.localName === 'script') {
+    return sibling
+  }
+
+  const wrapped = sibling?.querySelector('script')
+
+  if (wrapped) {
+    return wrapped
+  }
+
+  if (!element.id) {
+    return
+  }
+
+  for (const script of element.parentElement?.querySelectorAll('script') ?? []) {
+    if (script.textContent?.includes(element.id)) {
+      return script
+    }
+  }
+}
+
 export const attr = (element: Nullish<Element>, name: string): string | undefined => {
   return element?.getAttribute(name)?.trim() || undefined
 }

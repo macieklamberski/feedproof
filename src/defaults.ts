@@ -77,6 +77,7 @@ import {
   jwplayerAmpEmbedResolver,
   jwplayerIframeEmbedResolver,
   jwplayerScriptEmbedResolver,
+  jwplayerSetupEmbedResolver,
 } from './embeds/jwplayer.js'
 import { libsynEmbedResolver } from './embeds/libsyn.js'
 import { mastodonEmbedResolver } from './embeds/mastodon.js'
@@ -426,6 +427,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   jwplayerIframeEmbedResolver,
   jwplayerScriptEmbedResolver,
   jwplayerAmpEmbedResolver,
+  jwplayerSetupEmbedResolver,
   brightcoveFlashEmbedResolver,
   brightcoveIframeEmbedResolver,
   brightcoveVideoJsEmbedResolver,
