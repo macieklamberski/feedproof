@@ -37,15 +37,22 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
 
   describe('happy paths', () => {
     it('should replace a matched element with a cite placeholder', async () => {
-      const result = await transform(
-        '<div class="card" data-url="https://example.com" data-title="Title"></div>',
-        [cardResolver],
-      )
+      const value = html`
+        <div
+          class="card"
+          data-url="https://example.com"
+          data-title="Title"
+        ></div>
+      `
+      const expected = html`
+        <div
+          data-cite-provider="stub"
+          data-cite-url="https://example.com"
+          data-cite-title="Title"
+        ></div>
+      `
 
-      expect(result).toContain('data-cite-provider="stub"')
-      expect(result).toContain('data-cite-url="https://example.com"')
-      expect(result).toContain('data-cite-title="Title"')
-      expect(result).not.toContain('class="card"')
+      expect(await transform(value, [cardResolver])).toEqualHtml(expected)
     })
 
     it('should emit sibling placeholders for multiple matches without a list wrapper', async () => {
