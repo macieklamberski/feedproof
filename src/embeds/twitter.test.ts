@@ -800,6 +800,23 @@ describeForEachParser('twitterSubstackEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should resolve a payload that carries no text, and claim no description', async () => {
+      const value = makeSubstackTweet({
+        url: 'https://twitter.com/user/status/123456789012345',
+        username: 'user',
+        name: 'Display Name',
+      })
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: statusUrl,
+        author: 'Display Name',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('the photos the payload mirrors', () => {
