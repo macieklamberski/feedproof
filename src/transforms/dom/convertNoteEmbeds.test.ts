@@ -216,13 +216,24 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
         embedded-content-key="emb123"
       ></figure>
     `
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://note.com/user/n/n1234',
-    })
+    const expected = html`
+      <div
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-provider="youtube"')
-    expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
+    // The two parsers write these five attributes in opposite orders, jsdom keeping the order
+    // they were set in and linkedom reversing it, so the comparison has to ignore order.
+    expect(
+      await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://note.com/user/n/n1234',
+      }),
+    ).toEqualHtml(expected)
   })
 
   it('should surface an unknown service as a link end to end', async () => {
