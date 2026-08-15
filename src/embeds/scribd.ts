@@ -52,7 +52,8 @@ export const scribdResolveEmbed = (
     return
   }
 
-  const result = composeEmbed(document)
+  const title = element.getAttribute('title')?.trim()
+  const result = { ...composeEmbed(document), ...(title && { title }) }
   const dimensions = parseRatioDimensions(attr(element, aspectRatioAttribute) ?? '')
 
   // The ratio describes the document and the declared height is a constant, so where both are

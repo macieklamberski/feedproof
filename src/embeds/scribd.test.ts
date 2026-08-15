@@ -59,6 +59,28 @@ describeForEachParser('scribdIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should carry the document title the carrier states', async () => {
+      const value = html`
+        <iframe
+          class="scribd_iframe_embed"
+          title="Vermont Cynic Drug Issue 2026"
+          src="https://www.scribd.com/embeds/526446879/content"
+          width="100%"
+          height="500"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'scribd',
+        id: '526446879',
+        src: 'https://www.scribd.com/embeds/526446879/content',
+        url: 'https://www.scribd.com/document/526446879',
+        title: 'Vermont Cynic Drug Issue 2026',
+        height: 500,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should fall back to the declared height for a ratio that is not a number', async () => {
       const value = html`
         <iframe
@@ -185,6 +207,19 @@ describeForEachParser('scribdFlashEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    // The factory hands every carrier on a Scribd host to the Flash reader, including the
+    // modern iframe's, so it has to refuse a url that is not the viewer. The document id sits
+    // in the query here precisely so the path is the only thing that can reject it.
+    it('should return undefined for a scribd url that is not the flash player', async () => {
+      const value = html`
+        <object
+          data="https://www.scribd.com/embeds/526446879/content?document_id=108992419"
+        ></object>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     it('should return undefined for another host serving a viewer of the same name', async () => {
       const value = html`
         <object data="http://evil.test/ScribdViewer.swf?document_id=108992419"></object>
@@ -195,9 +230,6 @@ describeForEachParser('scribdFlashEmbedResolver', (parseHtml) => {
   })
 })
 
-// Both resolvers reach their url through a factory that has already checked the host, so these
-// guards are only reachable by calling the function itself. They exist because the function is
-// importable on its own.
 describeForEachParser('scribdResolveEmbed', (parseHtml) => {
   const carrier = (): Element => {
     return parseHtml(html`<iframe></iframe>`).querySelector('iframe') as Element
