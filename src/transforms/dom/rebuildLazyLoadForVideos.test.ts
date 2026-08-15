@@ -114,10 +114,12 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
       ></div>
     `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com',
+    })
 
-    expect(
-      await transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com' }),
-    ).toEqualHtml(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {

@@ -82,9 +82,12 @@ describeForEachParser('convertGiphyEmbeds', (parseHtml) => {
       </a>
     `
 
-    expect(
-      await transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://x.test/p' }),
-    ).toBe(expected)
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://x.test/p',
+    })
+
+    expect(result).toBe(expected)
   })
 
   it('should leave a giphy url naming no gif alone', async () => {

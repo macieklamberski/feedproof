@@ -97,13 +97,12 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
       ></div>
     `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://note.com/user/n/n1234',
+    })
 
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        baseUrl: 'https://note.com/user/n/n1234',
-      }),
-    ).toEqualHtml(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {

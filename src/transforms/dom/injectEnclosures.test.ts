@@ -620,9 +620,12 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
   it('should skip enclosure with javascript: url', async () => {
     const value = '<p>Content</p>'
 
-    expect(
-      await transform(value, withEnclosures([{ url: 'javascript:alert(1)', medium: 'video' }])),
-    ).toBe(value)
+    const result = await transform(
+      value,
+      withEnclosures([{ url: 'javascript:alert(1)', medium: 'video' }]),
+    )
+
+    expect(result).toBe(value)
   })
 
   it('should skip enclosure with data: url', async () => {

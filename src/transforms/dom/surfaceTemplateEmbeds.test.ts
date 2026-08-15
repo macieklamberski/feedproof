@@ -76,14 +76,13 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
         ></div>
       </figure>
     `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://moby.com',
+      heuristics: true,
+    })
 
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        baseUrl: 'https://moby.com',
-        heuristics: true,
-      }),
-    ).toEqualHtml(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
