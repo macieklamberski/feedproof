@@ -139,7 +139,7 @@ const playerPathRegex = /^([^_]+)_(.+)$/
 export const brightcoveResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url, 'https://example.com')
 
-  if (!parsed || !parsed.hostname.startsWith('players.')) {
+  if (!parsed?.hostname.startsWith('players.')) {
     return
   }
 
