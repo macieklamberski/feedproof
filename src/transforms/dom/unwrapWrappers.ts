@@ -1,22 +1,10 @@
 import type { DomTransform } from '../../types.js'
 import { isGeneratedWrapper } from '../../utils/dom.js'
 
-// A figure reduced to one text-only link: an oEmbed block whose provider call failed keeps its
-// `<figure>` shell around the bare url, which linkifyUrls has turned into an anchor by the time
-// this runs. The clauses read as: the anchor hangs off the figure through at most two wrapper
-// tags, no element inside has an element sibling (so the content is one chain), the anchor
-// holds no element (so a linked image stays a figure), and no placeholder sits in the chain.
-// Every `:has` stands on its own because jsdom rejects one nested in another, and the wrapper
-// tags are spelled as positive chains because jsdom misreads `:has(:not(div, p, span, a))`
-// once the figure itself has a parent wrapper.
-const linkWrapper = ':is(div, p, span)'
-const linkOnlyFigureSelector = [
-  `figure:is(:has(> a), :has(> ${linkWrapper} > a), :has(> ${linkWrapper} > ${linkWrapper} > a))`,
-  ':not(:has(* ~ *))',
-  ':not(:has(a *))',
-  ':not(:has([data-embed-provider], [data-cite-provider]))',
-].join('')
-
+// The last entry is a figure reduced to one text-only link, what an oEmbed block leaves when the
+// provider call failed and linkifyUrls has since turned its bare url into an anchor: no element
+// inside has a sibling (the content is one chain), that chain ends in a leaf anchor, and no
+// placeholder sits in it. jsdom rejects a `:has` nested in another, so each stands on its own.
 const wrapperSelectors = [
   'div',
   'article',
@@ -24,7 +12,7 @@ const wrapperSelectors = [
   'main',
   'header',
   'footer',
-  linkOnlyFigureSelector,
+  'figure:has(a):not(:has(* ~ *)):not(:has(a *)):not(:has([data-embed-provider], [data-cite-provider]))',
 ]
 
 const wrapperSelector = wrapperSelectors.join(', ')
