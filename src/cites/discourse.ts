@@ -12,6 +12,14 @@ const publisherDateSeparator = ' – '
 // before it is visible and the `.excerpt.hidden` span holds the rest of the same sentence.
 // Reading the paragraph's textContent whole would inject the ellipsis mid-word, so the
 // expander is skipped and the halves rejoined.
+// `Comment by USER - Real title`, which the comment shapes write into the heading. The author is
+// already its own field, so only the title half is kept.
+const stripCommentPrefix = (title: string | undefined, author: string): string | undefined => {
+  return title?.startsWith(`Comment by ${author} - `)
+    ? title.slice(`Comment by ${author} - `.length)
+    : title
+}
+
 const githubDescription = (paragraph: Element): string | undefined => {
   let result = ''
 
@@ -95,6 +103,13 @@ export const discourseCiteResolver: CiteResolver = {
       description = text(find(body, 'p', (paragraph) => !find(paragraph, 'a.author')))
     }
 
+    // The pull request and commit engines render a comment as a second shape: the author sits in
+    // a bare `span` rather than under `.user`, and the heading repeats it as `Comment by USER - `
+    // in front of the real title. Reading the span recovers the author, and dropping the prefix
+    // leaves the title stating only the title.
+    const githubAuthor =
+      text(element, '.github-info .user a') ?? text(element, '.github-info span a')
+
     // The Stack Exchange onebox writes "asked by <author> on <date>" as two anchors in its
     // `.date` div.
     const dateAnchors = Array.from(body?.querySelectorAll('.date a') ?? [])
@@ -102,9 +117,9 @@ export const discourseCiteResolver: CiteResolver = {
     return buildCite({
       provider: 'discourse',
       url,
-      title,
+      title: githubAuthor ? stripCommentPrefix(title, githubAuthor) : title,
       description,
-      author: text(element, '.github-info .user a') ?? text(dateAnchors[0]),
+      author: githubAuthor ?? text(dateAnchors[0]),
       publisher,
       date: date ?? attr(githubDate, 'data-date') ?? text(githubDate) ?? text(dateAnchors[1]),
       // GitHub oneboxes render no site icon; the inline author avatar stands in for it.
