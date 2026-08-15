@@ -139,8 +139,11 @@ const extractTweet = (element: Element): EmbedResolverResult | undefined => {
 
 // `twitter-tweet` is matched as a class token, never as the whole attribute: it arrives
 // compounded with a skeleton class, with the rendered marker, and inside every CMS wrapper.
+// A video tweet gets `twitter-video` from the embed dialog instead, on a blockquote whose
+// insides are the same, so it reads through the same extraction. That one stays scoped to
+// the blockquote the dialog writes, so a stray class on some other element is not claimed.
 export const twitterBlockquoteEmbedResolver = createMarkupEmbedResolver(
-  '.twitter-tweet',
+  '.twitter-tweet, blockquote.twitter-video',
   extractTweet,
 )
 

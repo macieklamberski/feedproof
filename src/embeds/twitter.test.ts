@@ -287,6 +287,46 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
     })
   })
 
+  // The class the embed dialog writes on a video tweet. The inner markup is the ordinary
+  // blockquote: text paragraph, byline, dated status anchor.
+  describe('the twitter-video class of a video tweet', () => {
+    it('should carry every field across', async () => {
+      const value = html`
+        <blockquote
+          class="twitter-video"
+          data-lang="de"
+        >
+          <p lang="en" dir="ltr">Tweet text with a video. <a href="https://t.co/mjQaqccCMe">pic.twitter.com/mjQaqccCMe</a></p>
+          <p>
+            — niner (@itsniner)
+            <a href="https://twitter.com/itsniner/status/698590349225287682">13. Februar 2016</a>
+          </p>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: '698590349225287682',
+        src: 'https://platform.twitter.com/embed/Tweet.html?id=698590349225287682',
+        url: 'https://x.com/itsniner/status/698590349225287682',
+        description: 'Tweet text with a video. pic.twitter.com/mjQaqccCMe',
+        author: 'niner',
+        date: '13. Februar 2016',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should leave the class on anything but a blockquote alone', async () => {
+      const value = html`
+        <div class="twitter-video">
+          <a href="https://twitter.com/itsniner/status/698590349225287682">13. Februar 2016</a>
+        </div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
   describe('the eras of the status url', () => {
     it('should read the x.com era', async () => {
       const value = html`
