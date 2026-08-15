@@ -1,4 +1,4 @@
-import { getPathSegments, isHostOf, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
@@ -70,13 +70,7 @@ export const flourishWidgetEmbedResolver = createMarkupEmbedResolver(
 // fragment appended; that belongs to WordPress's postMessage handshake rather than to the
 // player, so the minted url drops it.
 const flourishResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(url)
-
-  if (!parsed || !isHostOf(parsed, flourishHosts)) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const segments = getPathSegments(url)
 
   return segments[2] === 'embed' ? composeEmbed(segments[0], segments[1]) : undefined
 }
