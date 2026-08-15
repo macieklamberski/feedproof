@@ -59,7 +59,9 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
   })
 
   describe('own-post embeds', () => {
-    it('should convert a note figure into a plain link', async () => {
+    // The figure naming note.com itself belongs to `notecomFigureEmbedResolver`, which mints
+    // the player from its id, so this pass leaves it for the widget pass to claim.
+    it('should leave a note figure for its own resolver', async () => {
       const value = html`
         <figure
           name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
@@ -69,11 +71,8 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
           embedded-content-key="emb123"
         ></figure>
       `
-      const expected = html`
-        <a href="https://note.com/info/n/ne5fc6bd602c8">https://note.com/info/n/ne5fc6bd602c8</a>
-      `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toBe(value)
     })
   })
 

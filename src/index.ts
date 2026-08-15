@@ -180,6 +180,10 @@ export {
   nicovideoIframeEmbedResolver,
   nicovideoScriptEmbedResolver,
 } from './embeds/nicovideo.js'
+export {
+  notecomFigureEmbedResolver,
+  notecomIframeEmbedResolver,
+} from './embeds/notecom.js'
 export { omnyEmbedResolver } from './embeds/omny.js'
 export { podbeanEmbedResolver } from './embeds/podbean.js'
 export { podigeeEmbedResolver } from './embeds/podigee.js'
