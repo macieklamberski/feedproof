@@ -23,15 +23,19 @@ describeForEachParser('WordPress', (parseHtml) => {
         </div>
       </figure>
     `
-    const expected = figure
-      >html`
+    const expected = html`
       <p>Look:</p>
       <p> <a href="https://twitter.com/someone/status/1234567890123456789">https://twitter.com/someone/status/1234567890123456789</a> </p>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
 
   it('should convert a wordpress gallery and keep the placeholder through unwrapWrappers', async () => {
-    const value = html` class="wp-block-gallery has-nested-images columns-2 is-cropped">
+    const value = html`
+      <figure class="wp-block-gallery has-nested-images columns-2 is-cropped">
         <figure class="wp-block-image">
-          <a href="https://example.com/a.jpg"><img src="https://example.com/a-large.jpg" alt=</a><"Sunset" 
+          <a href="https://example.com/a.jpg"><img src="https://example.com/a-large.jpg" alt="Sunset"></a>
           <figcaption>Day one</figcaption>
         </figure>
         <figure class="wp-block-image"><img src="https://example.com/b-large.jpg"></figure>
@@ -64,7 +68,7 @@ describeForEachParser('WordPress', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
-  describe('Avada privacy embed without a dedicated transform', () => 
+  describe('Avada privacy embed without a dedicated transform', () => {
     // Avada gates a video behind a consent notice: a hidden <iframe> parks the real URL in
     // data-privacy-src, and a sibling .fusion-privacy-placeholder shows "please accept". No
     // single transform owns this — fixLazyIframes recovers the iframe (then the youtube
@@ -88,5 +92,6 @@ describeForEachParser('WordPress', (parseHtml) => {
       expect(result).not.toContain('fusion-privacy-placeholder')
       expect(result).not.toContain('For privacy reasons')
       expect(result).not.toContain('I Accept')
-    }))
+    })
+  })
 })
