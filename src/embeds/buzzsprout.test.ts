@@ -68,14 +68,25 @@ describeForEachParser('buzzsproutScriptEmbedResolver', (parseHtml) => {
     })
   })
 
-  describe('edge cases', () => {
-    // The show-level embed carries no episode id, so there is nothing to resolve it to.
-    it('should return undefined for the show-level script', async () => {
-      const value = '<script src="https://www.buzzsprout.com/231452.js?player=large"></script>'
+  describe('happy paths, show player', () => {
+    // The div this script fills is empty, so refusing it deletes the player outright rather than
+    // leaving a generic placeholder the way the url-keyed resolver does.
+    it('should build the show placeholder from a script naming the podcast alone', async () => {
+      const value =
+        '<script src="https://www.buzzsprout.com/231452.js?container_id=buzzsprout-large-player&player=large"></script>'
+      const expected: EmbedResolverResult = {
+        provider: 'buzzsprout',
+        id: '231452',
+        src: 'https://www.buzzsprout.com/231452?iframe=true',
+        url: 'https://www.buzzsprout.com/231452',
+        height: 375,
+      }
 
-      expect(await extract(value)).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
+  })
 
+  describe('edge cases', () => {
     it('should return undefined for a lookalike host', async () => {
       const value = '<script src="https://buzzsprout.com.evil.test/231452/19565923.js"></script>'
 
