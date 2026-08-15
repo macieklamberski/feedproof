@@ -4,6 +4,7 @@ import {
   attr,
   bgImage,
   find,
+  findConfigScript,
   flashVars,
   getElementDimensions,
   getWrapperRatioDimensions,
@@ -303,6 +304,86 @@ describeForEachParser('getWrapperRatioDimensions', (parseHtml) => {
     const iframe = queryElement(document, 'iframe')
 
     expect(getWrapperRatioDimensions(iframe)).toBeUndefined()
+  })
+})
+
+// The lookup several platforms need to reach the inline `<script>` that configures a player:
+// Podlove and JW Player both use it, so the branches are pinned here rather than through
+// whichever caller happens to exercise them.
+describeForEachParser('findConfigScript', (parseHtml) => {
+  const find = (markup: string) => {
+    const document = parseHtml(markup)
+
+    return findConfigScript(queryElement(document, '.player'))
+  }
+
+  it('should take the script sitting directly beside the player', () => {
+    const value = html`
+      <div>
+        <div class="player" id="player"></div>
+        <script>config()</script>
+      </div>
+    `
+
+    expect(find(value)?.textContent).toBe('config()')
+  })
+
+  // `wrapBareInlineInParagraphs` runs before the widget pass, so by then a bare script is
+  // inside a paragraph and the player's sibling is that paragraph rather than the script.
+  it('should look inside a sibling that wraps the script', () => {
+    const value = html`
+      <div>
+        <div class="player" id="player"></div>
+        <p><script>config()</script></p>
+      </div>
+    `
+
+    expect(find(value)?.textContent).toBe('config()')
+  })
+
+  // Where one item holds several players, each script names its own container, so the id is
+  // what pairs them once they are no longer adjacent.
+  it('should match a distant script by the player id it names', () => {
+    const value = html`
+      <div>
+        <div class="player" id="player"></div>
+        <p>Prose between the player and its script.</p>
+        <script>setup("player")</script>
+      </div>
+    `
+
+    expect(find(value)?.textContent).toBe('setup("player")')
+  })
+
+  it('should state nothing when a distant script names another player', () => {
+    const value = html`
+      <div>
+        <div class="player" id="player"></div>
+        <p>Prose.</p>
+        <script>setup("other")</script>
+      </div>
+    `
+
+    expect(find(value)).toBeUndefined()
+  })
+
+  // With no id there is nothing to pair a distant script against, so the walk stops.
+  it('should state nothing when the player carries no id', () => {
+    const value = html`
+      <div>
+        <div class="player"></div>
+        <p>Prose.</p>
+        <script>setup("player")</script>
+      </div>
+    `
+
+    expect(find(value)).toBeUndefined()
+  })
+
+  it('should state nothing when there is no script at all', () => {
+    const value = html`<div><div class="player" id="player"></div></div>`
+
+    expect(find(value)).toBeUndefined()
   })
 })
 

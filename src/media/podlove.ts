@@ -1,5 +1,6 @@
 import { isAnyOf } from 'trousse'
 import type { MediaResolver, MediaResolverResult } from '../types.js'
+import { findConfigScript } from '../utils/dom.js'
 
 // Podlove Publisher ships the episode as a `<div class="podlove-web-player">` holding nothing
 // but custom elements (`<tab-chapters>`, `<icon>`, `<subscribe-button>`), with a sibling
@@ -26,26 +27,6 @@ type PodloveConfig = Array<{
     show?: { poster?: string }
   }
 }>
-
-// The script sits beside the player. Where an item holds several episodes each player has its
-// own script, so the id is what ties the two together when they are not adjacent.
-const findConfigScript = (element: Element): Element | undefined => {
-  const sibling = element.nextElementSibling
-
-  if (sibling?.localName === 'script') {
-    return sibling
-  }
-
-  if (!element.id) {
-    return
-  }
-
-  for (const script of element.parentElement?.querySelectorAll('script') ?? []) {
-    if (script.textContent?.includes(element.id)) {
-      return script
-    }
-  }
-}
 
 const parseConfig = (script: Element): PodloveConfig | undefined => {
   const raw = script.textContent?.match(configRegex)?.[1]

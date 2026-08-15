@@ -169,6 +169,7 @@ export {
   jwplayerAmpEmbedResolver,
   jwplayerIframeEmbedResolver,
   jwplayerScriptEmbedResolver,
+  jwplayerSetupEmbedResolver,
 } from './embeds/jwplayer.js'
 export { libsynEmbedResolver } from './embeds/libsyn.js'
 export { mastodonEmbedResolver } from './embeds/mastodon.js'
