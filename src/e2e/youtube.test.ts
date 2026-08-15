@@ -13,6 +13,25 @@ describeForEachParser('YouTube', (parseHtml) => {
   // embed srcs, and defaultNonContentSelectors drops the Steam poster gif shown before
   // its script swaps the real iframe in.
 
+  // The carrier names its host but no scheme, and no baseUrl is stated, so the placeholder
+  // depends on the pipeline giving it one before the resolver reads the host.
+  it('should resolve a protocol-relative carrier with no baseUrl stated', async () => {
+    const value = html`<iframe src="//www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+      >
+        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
+      </div>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
   it('should use built-in YouTube embed resolver', async () => {
     const value = html`
       <iframe

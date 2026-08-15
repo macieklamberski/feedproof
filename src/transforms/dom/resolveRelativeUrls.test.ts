@@ -211,6 +211,21 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     expect(await transform(value, defaultContext)).toBe(value)
   })
 
+  // A protocol-relative url names its host already and needs only a scheme, so it is absolutised
+  // whether or not the caller states a base.
+  it('should give a protocol-relative url a scheme when baseUrl is missing', async () => {
+    const value = html`
+      <a href="//other.test/page">link</a>
+      <img src="//cdn.test/photo.jpg">
+    `
+    const expected = html`
+      <a href="https://other.test/page">link</a>
+      <img src="https://cdn.test/photo.jpg">
+    `
+
+    expect(await transform(value, defaultContext)).toEqualHtml(expected)
+  })
+
   it('should not modify html with no resolvable attributes', async () => {
     const value = '<p>No links or images</p>'
 
