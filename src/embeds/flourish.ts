@@ -65,7 +65,7 @@ export const flourishWidgetEmbedResolver = createMarkupEmbedResolver(
 // script snippet. The WordPress oEmbed wrapper points at the same url with a `#?secret=`
 // fragment appended; that belongs to WordPress's postMessage handshake rather than to the
 // player, so the minted url drops it.
-export const flourishResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+const flourishResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url)
 
   if (!parsed || !isHostOf(parsed, flourishHosts)) {

@@ -147,7 +147,6 @@ export { firesideEmbedResolver } from './embeds/fireside.js'
 export { flickrEmbedResolver } from './embeds/flickr.js'
 export {
   flourishIframeEmbedResolver,
-  flourishResolveEmbed,
   flourishWidgetEmbedResolver,
 } from './embeds/flourish.js'
 export { geniallyEmbedResolver } from './embeds/genially.js'

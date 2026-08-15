@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import {
-  flourishIframeEmbedResolver,
-  flourishResolveEmbed,
-  flourishWidgetEmbedResolver,
-} from './flourish.js'
+import { flourishIframeEmbedResolver, flourishWidgetEmbedResolver } from './flourish.js'
 
 describeForEachParser('flourishWidgetEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, flourishWidgetEmbedResolver)
@@ -228,26 +224,24 @@ describeForEachParser('flourishIframeEmbedResolver', (parseHtml) => {
   })
 })
 
-// The exported url reader, which the iframe resolver wraps. The factory gates the host before
-// this runs, so these cover the contract it states for a caller composing its own list.
-describe('flourishResolveEmbed', () => {
-  it('should resolve a player url', () => {
-    const value = 'https://flo.uri.sh/visualisation/29132382/embed'
+describeForEachParser('flourishIframeEmbedResolver url reading', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, flourishIframeEmbedResolver)
+
+  it('should resolve a player url', async () => {
+    const value = html`<iframe src="https://flo.uri.sh/visualisation/29132382/embed"></iframe>`
     const expected: EmbedResolverResult = {
       provider: 'flourish',
       id: 'visualisation/29132382',
-      src: value,
+      src: 'https://flo.uri.sh/visualisation/29132382/embed',
       url: 'https://public.flourish.studio/visualisation/29132382/',
     }
 
-    expect(flourishResolveEmbed(value)).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
-  it('should return undefined for a foreign host', () => {
-    expect(flourishResolveEmbed('https://evil.test/visualisation/29132382/embed')).toBeUndefined()
-  })
+  it('should not resolve a foreign host carrying the path', async () => {
+    const value = html`<iframe src="https://evil.test/visualisation/29132382/embed"></iframe>`
 
-  it('should return undefined for a string that is not a url', () => {
-    expect(flourishResolveEmbed('visualisation/29132382/embed')).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 })
