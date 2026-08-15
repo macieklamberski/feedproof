@@ -47,14 +47,16 @@ describe('resolveOrKeepUrl', () => {
 describe('pickUrlParams', () => {
   it('should keep only the named parameters, in the order given', () => {
     const value = 'https://example.com/e/x?utm_source=feed&index=4&list=PLabc&start=90'
+    const expected = '?start=90&list=PLabc&index=4'
 
-    expect(pickUrlParams(value, ['start', 'list', 'index'])).toBe('?start=90&list=PLabc&index=4')
+    expect(pickUrlParams(value, ['start', 'list', 'index'])).toBe(expected)
   })
 
   it('should return an empty string when none are present', () => {
     const value = 'https://example.com/e/x?utm_source=feed'
+    const expected = ''
 
-    expect(pickUrlParams(value, ['start'])).toBe('')
+    expect(pickUrlParams(value, ['start'])).toBe(expected)
   })
 
   it('should return an empty string when there is no query', () => {
@@ -71,7 +73,8 @@ describe('pickUrlParams', () => {
 
   it('should encode a value that needs it', () => {
     const value = 'https://example.com/e/x?clipt=a%2Bb%2Fc'
+    const expected = '?clipt=a%2Bb%2Fc'
 
-    expect(pickUrlParams(value, ['clipt'])).toBe('?clipt=a%2Bb%2Fc')
+    expect(pickUrlParams(value, ['clipt'])).toBe(expected)
   })
 })

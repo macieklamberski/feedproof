@@ -130,8 +130,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     it('should resolve a Tango icon-set filename once the face- prefix is dropped', async () => {
       const value =
         '<p><img class="wp-smiley" src="/wp-content/plugins/tango-smilies/tango/face-smile.png" alt=":)"></p>'
+      const expected = '<p>🙂</p>'
 
-      expect(await transform(value)).toBe('<p>🙂</p>')
+      expect(await transform(value)).toBe(expected)
     })
   })
 
@@ -241,8 +242,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
           >
         </p>
       `
+      const expected = '<p>😛</p>'
 
-      expect(await transform(value)).toBe('<p>😛</p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     // The theme directory differs per board, so the `smilies` directory is what identifies a
@@ -572,8 +574,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     it('should replace an emoji named only by its path', async () => {
       const value =
         '<p><img class="emoji" alt="smiley" src="https://cdn.artstation.com/mailer/emoji/smiley.png"></p>'
+      const expected = '<p>🙂</p>'
 
-      expect(await transform(value)).toBe('<p>🙂</p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should leave an emoji whose name is not in the table alone', async () => {

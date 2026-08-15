@@ -8,8 +8,9 @@ describe('stripOversizedBase64Sources', () => {
   it('should strip base64 src exceeding the threshold', async () => {
     const largeData = 'A'.repeat(60 * 1024)
     const value = `<img src="data:image/png;base64,${largeData}">`
+    const expected = '<img src="">'
 
-    expect(await transform(value)).toBe('<img src="">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should preserve base64 src under the threshold', async () => {
@@ -24,8 +25,9 @@ describe('stripOversizedBase64Sources', () => {
   it('should strip a source whose match is exactly at the threshold', async () => {
     const largeData = 'A'.repeat(51172)
     const value = `<img src="data:image/png;base64,${largeData}">`
+    const expected = '<img src="">'
 
-    expect(await transform(value)).toBe('<img src="">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should preserve a source one character under the threshold', async () => {
@@ -38,15 +40,17 @@ describe('stripOversizedBase64Sources', () => {
   it('should strip oversized base64 srcset', async () => {
     const largeData = 'A'.repeat(60 * 1024)
     const value = `<source srcset="data:image/webp;base64,${largeData}">`
+    const expected = '<source srcset="">'
 
-    expect(await transform(value)).toBe('<source srcset="">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should strip oversized base64 poster', async () => {
     const largeData = 'A'.repeat(60 * 1024)
     const value = `<video poster="data:image/jpeg;base64,${largeData}">`
+    const expected = '<video poster="">'
 
-    expect(await transform(value)).toBe('<video poster="">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should strip only oversized sources when mixed with small ones', async () => {

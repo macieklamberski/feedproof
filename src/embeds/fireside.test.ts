@@ -5,14 +5,16 @@ import { extractFiresideToken, firesideResolveEmbed } from './fireside.js'
 describe('extractFiresideToken', () => {
   it('should read the show and episode token', () => {
     const value = 'https://fireside.fm/player/v2/DiNRb69N+Dagp3z15'
+    const expected = 'DiNRb69N+Dagp3z15'
 
-    expect(extractFiresideToken(value)).toBe('DiNRb69N+Dagp3z15')
+    expect(extractFiresideToken(value)).toBe(expected)
   })
 
   it('should read a token whose plus arrived percent-encoded', () => {
     const value = 'https://fireside.fm/player/v2/o5sVQfzy%2BKzqauAdJ'
+    const expected = 'o5sVQfzy+KzqauAdJ'
 
-    expect(extractFiresideToken(value)).toBe('o5sVQfzy+KzqauAdJ')
+    expect(extractFiresideToken(value)).toBe(expected)
   })
 
   it('should return undefined for a fireside url that is not a player', () => {

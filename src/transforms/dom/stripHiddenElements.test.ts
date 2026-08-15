@@ -12,26 +12,30 @@ describeForEachParser('stripHiddenElements', (parseHtml) => {
   describe('removes hidden elements', () => {
     it('should remove an element with the hidden attribute', async () => {
       const value = '<p>Keep</p><div hidden>Gone</div>'
+      const expected = '<p>Keep</p>'
 
-      expect(await transform(value)).toBe('<p>Keep</p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove an element with inline display:none', async () => {
       const value = '<p>Keep</p><div style="display:none">Gone</div>'
+      const expected = '<p>Keep</p>'
 
-      expect(await transform(value)).toBe('<p>Keep</p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove an element with inline visibility:hidden', async () => {
       const value = '<p>Keep</p><span style="visibility:hidden">Gone</span>'
+      const expected = '<p>Keep</p>'
 
-      expect(await transform(value)).toBe('<p>Keep</p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove the whole hidden subtree', async () => {
       const value = '<div style="display:none"><p>a</p><img src="x.jpg"></div><p>Keep</p>'
+      const expected = '<p>Keep</p>'
 
-      expect(await transform(value)).toBe('<p>Keep</p>')
+      expect(await transform(value)).toBe(expected)
     })
   })
 

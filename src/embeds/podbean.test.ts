@@ -5,14 +5,16 @@ import { extractPodbeanId, podbeanResolveEmbed } from './podbean.js'
 describe('extractPodbeanId', () => {
   it('should read the id from the legacy player path', () => {
     const value = 'https://www.podbean.com/media/player/yx4hr-f3d1e1?from=pb6admin&download=1'
+    const expected = 'yx4hr-f3d1e1'
 
-    expect(extractPodbeanId(value)).toBe('yx4hr-f3d1e1')
+    expect(extractPodbeanId(value)).toBe(expected)
   })
 
   it('should read the id from the v2 player query', () => {
     const value = 'https://www.podbean.com/player-v2/?i=wyvke-1aefb6c-pb&share=1&fonts=Arial'
+    const expected = 'wyvke-1aefb6c-pb'
 
-    expect(extractPodbeanId(value)).toBe('wyvke-1aefb6c-pb')
+    expect(extractPodbeanId(value)).toBe(expected)
   })
 
   it('should return undefined for a podbean url naming no episode', () => {

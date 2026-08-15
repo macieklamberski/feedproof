@@ -5,20 +5,23 @@ import { anchorResolveEmbed, extractAnchorEpisode } from './anchor.js'
 describe('extractAnchorEpisode', () => {
   it('should read the original anchor.fm form', () => {
     const value = 'https://anchor.fm/myshow/embed/episodes/my-title-e123'
+    const expected = 'myshow/my-title-e123'
 
-    expect(extractAnchorEpisode(value)).toBe('myshow/my-title-e123')
+    expect(extractAnchorEpisode(value)).toBe(expected)
   })
 
   it('should read the podcasters.spotify.com form', () => {
     const value = 'https://podcasters.spotify.com/pod/show/myshow/embed/episodes/my-title-e123'
+    const expected = 'myshow/my-title-e123'
 
-    expect(extractAnchorEpisode(value)).toBe('myshow/my-title-e123')
+    expect(extractAnchorEpisode(value)).toBe(expected)
   })
 
   it('should read the creators.spotify.com form', () => {
     const value = 'https://creators.spotify.com/pod/profile/me/embed/episodes/my-title-e1/a-abc'
+    const expected = 'me/my-title-e1'
 
-    expect(extractAnchorEpisode(value)).toBe('me/my-title-e1')
+    expect(extractAnchorEpisode(value)).toBe(expected)
   })
 
   it('should return undefined for a show page rather than an embed', () => {

@@ -9,26 +9,30 @@ import { extractWistiaId, wistiaEmbedResolver, wistiaResolveEmbed } from './wist
 describe('extractWistiaId', () => {
   it('should extract id from the player iframe url', () => {
     const value = 'https://fast.wistia.net/embed/iframe/2fg072pftb'
+    const expected = '2fg072pftb'
 
-    expect(extractWistiaId(value)).toBe('2fg072pftb')
+    expect(extractWistiaId(value)).toBe(expected)
   })
 
   it('should extract id from a player url carrying options', () => {
     const value = 'https://fast.wistia.net/embed/iframe/2fg072pftb?web_component=true&seo=false'
+    const expected = '2fg072pftb'
 
-    expect(extractWistiaId(value)).toBe('2fg072pftb')
+    expect(extractWistiaId(value)).toBe(expected)
   })
 
   it('should extract id from the script form jsonp url', () => {
     const value = 'https://fast.wistia.com/embed/medias/0inlutl9au.jsonp'
+    const expected = '0inlutl9au'
 
-    expect(extractWistiaId(value)).toBe('0inlutl9au')
+    expect(extractWistiaId(value)).toBe(expected)
   })
 
   it('should extract id from an account media page', () => {
     const value = 'https://acme.wistia.com/medias/jjxva47kic'
+    const expected = 'jjxva47kic'
 
-    expect(extractWistiaId(value)).toBe('jjxva47kic')
+    expect(extractWistiaId(value)).toBe(expected)
   })
 
   it('should return undefined for an id of the wrong length', () => {

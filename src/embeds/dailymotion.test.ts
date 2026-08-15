@@ -10,45 +10,52 @@ import {
 describe('extractDailymotionId', () => {
   it('should extract id from a video url', () => {
     const value = 'https://www.dailymotion.com/video/x7tgad0'
+    const expected = 'x7tgad0'
 
-    expect(extractDailymotionId(value)).toBe('x7tgad0')
+    expect(extractDailymotionId(value)).toBe(expected)
   })
 
   it('should extract id from a dai.ly short url', () => {
     const value = 'https://dai.ly/x7tgad0'
+    const expected = 'x7tgad0'
 
-    expect(extractDailymotionId(value)).toBe('x7tgad0')
+    expect(extractDailymotionId(value)).toBe(expected)
   })
 
   it('should extract id from an embed url', () => {
     const value = 'https://www.dailymotion.com/embed/video/x7tgad0'
+    const expected = 'x7tgad0'
 
-    expect(extractDailymotionId(value)).toBe('x7tgad0')
+    expect(extractDailymotionId(value)).toBe(expected)
   })
 
   // Both forms the Flash player shipped.
   it('should extract id from the swf player url', () => {
     const value = 'http://www.dailymotion.com/swf/x7tgad0'
+    const expected = 'x7tgad0'
 
-    expect(extractDailymotionId(value)).toBe('x7tgad0')
+    expect(extractDailymotionId(value)).toBe(expected)
   })
 
   it('should extract id from the swf player url carrying a video segment', () => {
     const value = 'http://www.dailymotion.com/swf/video/x7tgad0'
+    const expected = 'x7tgad0'
 
-    expect(extractDailymotionId(value)).toBe('x7tgad0')
+    expect(extractDailymotionId(value)).toBe(expected)
   })
 
   it('should extract id from the geo player url', () => {
     const value = 'https://geo.dailymotion.com/player.html?video=x7tgad0'
+    const expected = 'x7tgad0'
 
-    expect(extractDailymotionId(value)).toBe('x7tgad0')
+    expect(extractDailymotionId(value)).toBe(expected)
   })
 
   it('should strip a title slug suffix', () => {
     const value = 'https://www.dailymotion.com/video/x7tgad0_some-title'
+    const expected = 'x7tgad0'
 
-    expect(extractDailymotionId(value)).toBe('x7tgad0')
+    expect(extractDailymotionId(value)).toBe(expected)
   })
 
   it('should return undefined for an invalid url', () => {

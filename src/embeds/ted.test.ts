@@ -5,21 +5,24 @@ import { extractTedTalk, tedResolveEmbed } from './ted.js'
 describe('extractTedTalk', () => {
   it('should read a talk slug', () => {
     const value = 'https://embed.ted.com/talks/ethan_zuckerman.html'
+    const expected = 'ethan_zuckerman'
 
-    expect(extractTedTalk(value)).toBe('ethan_zuckerman')
+    expect(extractTedTalk(value)).toBe(expected)
   })
 
   // The localized player inserts the language between the slug and the path.
   it('should read a talk slug from the localized player', () => {
     const value = 'https://embed.ted.com/talks/lang/ja/ethan_zuckerman.html'
+    const expected = 'ethan_zuckerman'
 
-    expect(extractTedTalk(value)).toBe('ethan_zuckerman')
+    expect(extractTedTalk(value)).toBe(expected)
   })
 
   it('should read a slug with no html suffix', () => {
     const value = 'https://embed.ted.com/talks/ethan_zuckerman'
+    const expected = 'ethan_zuckerman'
 
-    expect(extractTedTalk(value)).toBe('ethan_zuckerman')
+    expect(extractTedTalk(value)).toBe(expected)
   })
 
   it('should return undefined for a ted url that is not a talk', () => {

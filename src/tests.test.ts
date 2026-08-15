@@ -43,8 +43,9 @@ describe('html', () => {
       <ul><li>a</li></ul>
       <ol><li>b</li></ol>
     `
+    const expected = '<ul><li>a</li></ul><ol><li>b</li></ol>'
 
-    expect(value).toBe('<ul><li>a</li></ul><ol><li>b</li></ol>')
+    expect(value).toBe(expected)
   })
 
   it('should join attribute lines with a space and glue a standalone closing bracket', () => {
@@ -56,8 +57,9 @@ describe('html', () => {
         <span>text</span>
       </div>
     `
+    const expected = '<div class="card" id="post"><span>text</span></div>'
 
-    expect(value).toBe('<div class="card" id="post"><span>text</span></div>')
+    expect(value).toBe(expected)
   })
 
   it('should join a standalone self-closing bracket with a space', () => {
@@ -66,8 +68,9 @@ describe('html', () => {
         src="photo.jpg"
       />
     `
+    const expected = '<img src="photo.jpg" />'
 
-    expect(value).toBe('<img src="photo.jpg" />')
+    expect(value).toBe(expected)
   })
 
   it('should interpolate values', () => {
@@ -75,8 +78,9 @@ describe('html', () => {
     const value = html`
       <img src="${source}">
     `
+    const expected = '<img src="photo.jpg">'
 
-    expect(value).toBe('<img src="photo.jpg">')
+    expect(value).toBe(expected)
   })
 })
 

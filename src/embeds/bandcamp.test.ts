@@ -9,21 +9,24 @@ describe('extractBandcampRelease', () => {
   it('should read an album from the player path', () => {
     const value =
       'https://bandcamp.com/EmbeddedPlayer/album=3373381116/size=large/bgcol=ffffff/transparent=true/'
+    const expected = 'album/3373381116'
 
-    expect(extractBandcampRelease(value)).toBe('album/3373381116')
+    expect(extractBandcampRelease(value)).toBe(expected)
   })
 
   it('should read a track from the player path', () => {
     const value = 'https://bandcamp.com/EmbeddedPlayer/track=42/size=small/'
+    const expected = 'track/42'
 
-    expect(extractBandcampRelease(value)).toBe('track/42')
+    expect(extractBandcampRelease(value)).toBe(expected)
   })
 
   // The video player spells its options as a query string instead.
   it('should read a track from the video query', () => {
     const value = 'https://bandcamp.com/VideoEmbed?track=1959185434&bgcol=ffffff&linkcol=7137dc'
+    const expected = 'track/1959185434'
 
-    expect(extractBandcampRelease(value)).toBe('track/1959185434')
+    expect(extractBandcampRelease(value)).toBe(expected)
   })
 
   it('should return undefined when no release is named', () => {

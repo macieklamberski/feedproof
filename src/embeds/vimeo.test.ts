@@ -24,8 +24,9 @@ describe('extractVimeoId', () => {
   it('should extract id from a moogaloop.swf url carrying player options', () => {
     const value =
       'http://vimeo.com/moogaloop.swf?clip_id=43301601&force_embed=1&server=vimeo.com&color=00adef'
+    const expected = '43301601'
 
-    expect(extractVimeoId(value)).toBe('43301601')
+    expect(extractVimeoId(value)).toBe(expected)
   })
 
   it('should return undefined for a moogaloop.swf url with no clip id', () => {

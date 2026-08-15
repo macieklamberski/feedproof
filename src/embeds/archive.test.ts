@@ -11,15 +11,17 @@ import {
 describe('extractArchiveIdentifier', () => {
   it('should read the identifier from an embed url', () => {
     const value = 'https://archive.org/embed/gov.archives.arc.1257628'
+    const expected = 'gov.archives.arc.1257628'
 
-    expect(extractArchiveIdentifier(value)).toBe('gov.archives.arc.1257628')
+    expect(extractArchiveIdentifier(value)).toBe(expected)
   })
 
   // The details page is the same item by the same name.
   it('should read the identifier from a details url', () => {
     const value = 'https://archive.org/details/nasa_hubble'
+    const expected = 'nasa_hubble'
 
-    expect(extractArchiveIdentifier(value)).toBe('nasa_hubble')
+    expect(extractArchiveIdentifier(value)).toBe(expected)
   })
 
   it('should return undefined for an archive url naming no item', () => {

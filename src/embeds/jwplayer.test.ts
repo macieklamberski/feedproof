@@ -12,14 +12,16 @@ import {
 describe('extractJwplayerId', () => {
   it('should extract the media id from a player url', () => {
     const value = 'https://cdn.jwplayer.com/players/H4GXr873-abc12345.html'
+    const expected = 'H4GXr873'
 
-    expect(extractJwplayerId(value)).toBe('H4GXr873')
+    expect(extractJwplayerId(value)).toBe(expected)
   })
 
   it('should extract the media id when no player id is present', () => {
     const value = 'https://cdn.jwplayer.com/players/H4GXr873.html'
+    const expected = 'H4GXr873'
 
-    expect(extractJwplayerId(value)).toBe('H4GXr873')
+    expect(extractJwplayerId(value)).toBe(expected)
   })
 
   // Business Insider's feed ships JW Player embeds with an empty player id, leaving a
@@ -28,14 +30,16 @@ describe('extractJwplayerId', () => {
   // media id from the segment recovers it regardless of the missing player id.
   it('should extract the media id from a Business Insider empty-player-id url', () => {
     const value = 'https://cdn.jwplayer.com/players/H4GXr873-.html'
+    const expected = 'H4GXr873'
 
-    expect(extractJwplayerId(value)).toBe('H4GXr873')
+    expect(extractJwplayerId(value)).toBe(expected)
   })
 
   it('should extract the media id from a jwplatform.com host', () => {
     const value = 'https://content.jwplatform.com/players/H4GXr873-abc12345.html'
+    const expected = 'H4GXr873'
 
-    expect(extractJwplayerId(value)).toBe('H4GXr873')
+    expect(extractJwplayerId(value)).toBe(expected)
   })
 
   it('should return undefined for an invalid url', () => {

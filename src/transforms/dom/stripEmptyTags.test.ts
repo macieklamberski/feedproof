@@ -56,8 +56,9 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
 
   it('should preserve significant indentation inside pre', async () => {
     const value = '<pre><span>    </span><span>x</span></pre>'
+    const expected = '<pre>    <span>x</span></pre>'
 
-    expect(await transform(value)).toBe('<pre>    <span>x</span></pre>')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should preserve inline word boundaries', async () => {
@@ -112,8 +113,9 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
       <p></p>
       <span></span>
     `
+    const expected = ''
 
-    expect(await transform(value)).toBe('')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should strip empty tags around content', async () => {
@@ -122,8 +124,9 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
       <p>Keep</p>
       <div></div>
     `
+    const expected = '<p>Keep</p>'
 
-    expect(await transform(value)).toBe('<p>Keep</p>')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should preserve tags with text content', async () => {
@@ -279,8 +282,9 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
     // scripting is enabled in the consumer). linkedom parses it as normal
     // HTML, so the walk visits its descendants.
     const value = '<noscript><div></div></noscript>'
+    const expected = ''
 
-    expect(await transform(value)).toBe('')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should preserve <noscript> with meaningful children', async () => {
