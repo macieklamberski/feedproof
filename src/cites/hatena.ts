@@ -15,10 +15,27 @@ import { attr, find, text } from '../utils/dom.js'
 // The two elements carry different halves of the card. The iframe's `title` attribute holds
 // the page title and its `src` carries the target as a `url` query parameter; the citation
 // holds the same target unencoded, plus the domain as its text.
+//
+// The card renderer's host is matched beside the class because the class is not dependable:
+// of 756 corpus feeds framing that host, 684 spell `embed-card` and the remaining 72 spell
+// `hatenablogcard`, `wp-embedded-content`, a theme's own class, or nothing at all. Those were
+// reaching the generic embed path, which is the outcome this resolver exists to prevent: a
+// placeholder pointing at the card renderer, with the citation orphaned beside it.
+const cardIframeSelector = [
+  'iframe.embed-card',
+  'iframe.hatenablogcard',
+  'iframe[src*="hatenablog-parts.com/embed"]',
+].join(', ')
+
+const cardParagraphSelector = cardIframeSelector
+  .split(', ')
+  .map((selector) => `p:has(> ${selector})`)
+  .join(', ')
+
 export const hatenaCiteResolver: CiteResolver = {
-  selector: 'p:has(> iframe.embed-card)',
+  selector: cardParagraphSelector,
   extract: (element) => {
-    const iframe = find(element, 'iframe.embed-card')
+    const iframe = find(element, cardIframeSelector)
     const citationLink = find(element, 'cite.hatena-citation a')
 
     // Prefer the citation's href: it is the plain target, so it needs no decoding.

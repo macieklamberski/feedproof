@@ -8,14 +8,20 @@ import { attr, parsePixelSize } from '../../utils/dom.js'
 // and `.lazyYT` (the jQuery plugin this transform started with) at 155.
 //
 // `data-youtube-id` and `data-youtube` are matched on the attribute alone because the name says
-// the platform. `data-video_id` is not exclusive to anyone, so it is matched only beside the
-// `youtube-embed` class that names one. Either way the value has to pass `isVideoId`, so what
-// counts as a video id stays a single answer in `embeds/youtube.ts`.
+// the platform. `data-video_id`, `data-id` and `data-embed` are not exclusive to anyone, so each
+// is matched only beside the class that names one. Either way the value has to pass `isVideoId`,
+// so what counts as a video id stays a single answer in `embeds/youtube.ts`.
+//
+// The `youtube-player` pair is the Lyte and Embed Plus family, 147 feeds. Its div holds nothing,
+// so leaving it unmatched is not an empty box on the page: `stripEmptyTags` removes it and the
+// video is gone from the item entirely.
 const facadeSources: Array<{ selector: string; attribute: string }> = [
   { selector: 'div.lazyYT[data-youtube-id]', attribute: 'data-youtube-id' },
   { selector: 'div[data-youtube-id]', attribute: 'data-youtube-id' },
   { selector: 'div[data-youtube]', attribute: 'data-youtube' },
   { selector: 'div.youtube-embed[data-video_id]', attribute: 'data-video_id' },
+  { selector: 'div.youtube-player[data-id]', attribute: 'data-id' },
+  { selector: 'div.youtube-player[data-embed]', attribute: 'data-embed' },
 ]
 
 export const rebuildLazyYtEmbeds: DomTransform = () => (document) => {

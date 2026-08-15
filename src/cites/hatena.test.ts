@@ -51,6 +51,49 @@ describeForEachParser('hatenaCiteResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // Of 756 corpus feeds framing the card renderer, 72 spell something other than
+    // `embed-card`, so the host is what identifies the card rather than the class.
+    it('should extract a card whose iframe carries no class', async () => {
+      const value = html`
+        <p>
+          <iframe
+            src="https://hatenablog-parts.com/embed?url=https%3A%2F%2Fexample.com%2Fentry"
+            title="Page title"
+          ></iframe>
+          <cite class="hatena-citation"><a href="https://example.com/entry">example.com</a></cite>
+        </p>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'hatena',
+        url: 'https://example.com/entry',
+        title: 'Page title',
+        publisher: 'example.com',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should extract a card spelling its class hatenablogcard', async () => {
+      const value = html`
+        <p>
+          <iframe
+            src="https://hatenablog-parts.com/embed?url=https%3A%2F%2Fexample.com%2Fentry"
+            title="Page title"
+            class="hatenablogcard"
+          ></iframe>
+          <cite class="hatena-citation"><a href="https://example.com/entry">example.com</a></cite>
+        </p>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'hatena',
+        url: 'https://example.com/entry',
+        title: 'Page title',
+        publisher: 'example.com',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('edge cases', () => {
