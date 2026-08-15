@@ -267,6 +267,28 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
       expect(await resolve(value)).toEqual(expected)
     })
 
+    // The container survives sanitisers that strip data attributes, so it can arrive with the
+    // card gone.
+    it('should resolve the iframe alone when the container carries no card', async () => {
+      const value = html`
+        <div class="apple-podcast-container" data-component-name="ApplePodcastToDom">
+          <iframe
+            class="apple-podcast"
+            src="https://embed.podcasts.apple.com/gb/podcast/exploaded/id1887512662"
+          ></iframe>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'applepodcasts',
+        id: 'podcast/1887512662',
+        src: 'https://embed.podcasts.apple.com/gb/podcast/exploaded/id1887512662',
+        url: 'https://podcasts.apple.com/gb/podcast/exploaded/id1887512662',
+        height: 450,
+      }
+
+      expect(await resolve(value)).toEqual(expected)
+    })
+
     it('should ignore a payload that no Substack container names', async () => {
       const value = html`
         <div>
