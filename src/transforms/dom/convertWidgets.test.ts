@@ -451,6 +451,70 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     })
   })
 
+  // Flash has been unplayable in every browser since 2021, so a placeholder pointing at a
+  // `.swf` is a click-to-load button for a file that can never run, and minting it would also
+  // discard the object's fallback content. The carrier is left alone instead: a browser
+  // renders an object's fallback children when it cannot run the object, and an allowlist
+  // sanitizer that drops the shell keeps them the same way. The Flash resolvers run first and
+  // still claim what they can repair.
+  describe('dead Flash carriers', () => {
+    it('should not frame an <embed> pointing at a .swf', async () => {
+      const value = '<embed src="https://example.com/player.swf">'
+      const result = await transform(value, withNoResolvers)
+
+      expect(result).not.toContain('data-embed-src')
+      expect(result).toContain('<embed')
+    })
+
+    it('should leave an object and the fallback it holds untouched', async () => {
+      const value = html`
+        <object width="400" height="300" data="https://example.com/player.swf">
+          <param name="movie" value="https://example.com/player.swf" />
+          <a href="https://example.com/watch/1">Watch the video</a>
+        </object>
+      `
+      const result = await transform(value, withNoResolvers)
+
+      expect(result).not.toContain('data-embed-src')
+      expect(result).toContain('<a href="https://example.com/watch/1">Watch the video</a>')
+    })
+
+    it('should still frame a carrier whose path only mentions swf outside the extension', async () => {
+      const value = '<embed src="https://example.com/swfobject/player.html">'
+      const result = await transform(value, withNoResolvers)
+
+      expect(result).toContain('data-embed-src="https://example.com/swfobject/player.html"')
+    })
+
+    // The ordering contract with the resolvers: a repairable Flash carrier is claimed before
+    // this skip ever sees it, so only what nothing could repair stays raw.
+    it('should let a resolver claim a repairable .swf before the skip', async () => {
+      const value = html`
+        <div id="__ss_6435157">
+          <object id="__sse6435157" width="425" height="355">
+            <embed
+              src="https://static.slidesharecdn.com/swf/ssplayer2.swf?doc=deck"
+              width="425"
+              height="355"
+            ></embed>
+          </object>
+        </div>
+      `
+      const result = await transform(value, baseContext)
+
+      expect(result).toContain('data-embed-provider="slideshare"')
+      expect(result).not.toContain('.swf')
+    })
+
+    it('should be idempotent', async () => {
+      const value = '<p>Before</p><embed src="https://example.com/player.swf"><p>After</p>'
+      const once = await transform(value, withNoResolvers)
+      const twice = await transform(once, withNoResolvers)
+
+      expect(twice).toBe(once)
+    })
+  })
+
   // A url-keyed resolver claims these before the provider-less fallback above sees them,
   // which is the difference between a placeholder holding a dead .swf link and a real one.
   describe('provider resolution on non-iframe carriers', () => {
@@ -524,10 +588,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     })
 
     it('should leave a non-provider carrier to the generic placeholder', async () => {
-      const value = '<embed src="https://example.com/player.swf">'
+      const value = '<embed src="https://example.com/player/embed.html">'
       const result = await transform(value)
 
-      expect(result).toContain('data-embed-src="https://example.com/player.swf"')
+      expect(result).toContain('data-embed-src="https://example.com/player/embed.html"')
       expect(result).not.toContain('data-embed-provider')
     })
   })

@@ -1,6 +1,11 @@
 import type { DomTransform, MediaResolverResult } from '../../types.js'
 import { playableElements } from '../../utils/dom.js'
-import { audioFileRegex, resolveOrKeepUrl, videoFileRegex } from '../../utils/urls.js'
+import {
+  audioFileRegex,
+  flashFileRegex,
+  resolveOrKeepUrl,
+  videoFileRegex,
+} from '../../utils/urls.js'
 import {
   createEmbedPlaceholder,
   embedCarrierSelector,
@@ -229,6 +234,19 @@ export const convertWidgets: DomTransform = (context) => {
       const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
 
       if (!cleaned) {
+        continue
+      }
+
+      // A carrier still pointing at a `.swf` is left alone rather than framed. A placeholder
+      // would be the worst option: it reads as resolved, so a reader draws a click-to-load
+      // button for a file no browser has been able to run since 2021, and minting it here
+      // would also discard the `<object>`'s fallback content. Untouched, the markup degrades
+      // by the platform's own rules instead — a browser renders an object's fallback children
+      // when it cannot run the object, and an allowlist sanitizer that drops the shell keeps
+      // them the same way. The Flash resolvers run above this and are unaffected: each reads
+      // a real id out of its carrier and mints a modern player, so only what nothing could
+      // repair gets here.
+      if (flashFileRegex.test(cleaned)) {
         continue
       }
 
