@@ -249,8 +249,10 @@ describeForEachParser('scribdResolveEmbed', (parseHtml) => {
 })
 
 describe('scribdFlashResolveEmbed', () => {
+  // The document id is present so the path is the only thing that can reject this: without it
+  // the guard below would never be what returns undefined.
   it('should ignore a scribd url that is not the flash player', () => {
-    const value = 'https://www.scribd.com/embeds/526446879/content'
+    const value = 'https://www.scribd.com/embeds/526446879/content?document_id=526446879'
 
     expect(scribdFlashResolveEmbed(value)).toBeUndefined()
   })
