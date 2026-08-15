@@ -43,8 +43,11 @@ const isTweetUrl = (url: URL): boolean => {
 // `/{handle}/status/{id}`, with the plural `statuses` form from the earliest era.
 const statusPathRegex = /^\/([a-zA-Z0-9_]{1,15})\/status(?:es)?\/(\d+)/
 // The byline the embed dialog writes, whose parenthesised handle is dropped: the display name
-// is the readable half and the handle is already in the url.
-const bylineRegex = /^[—–-]\s*(.+?)\s*\(@[a-zA-Z0-9_]{1,15}\)\s*$/
+// is the readable half and the handle is already in the url. The handle may be empty because a
+// skeleton blockquote keeps the byline's punctuation and fills in neither half, so what it holds
+// is `—  (@)`. That matches here and yields an empty name, which is how it gets dropped instead
+// of being carried through as an author.
+const bylineRegex = /^[—–-]\s*(.*?)\s*\(@[a-zA-Z0-9_]{0,15}\)\s*$/
 const safeStatusIdRegex = /^\d+$/
 
 type Status = { handle: string; id: string }
@@ -92,6 +95,14 @@ const findStatus = (element: Element): { status: Status; anchor?: Element } | un
     : undefined
 }
 
+// A byline the embed dialog wrote gives up its display name; anything else is taken whole, since
+// a publisher who hand-wrote the line still named someone.
+const readAuthor = (bylineText: string | undefined): string | undefined => {
+  const byline = bylineText?.match(bylineRegex)
+
+  return byline ? byline[1] || undefined : bylineText || undefined
+}
+
 // The tweet text and the byline, which by this point are sibling paragraphs: whatever shape
 // the source used, the bare byline has been wrapped into a paragraph of its own upstream.
 // A long tweet spans several paragraphs, so every one that is not the byline is tweet text.
@@ -110,7 +121,7 @@ const readContent = (element: Element, anchor: Element | undefined) => {
 
   return {
     description: body || undefined,
-    author: bylineText?.match(bylineRegex)?.[1] ?? (bylineText || undefined),
+    author: readAuthor(bylineText),
     date: text(anchor),
   }
 }

@@ -5,35 +5,66 @@ import { extractVimeoId, vimeoEmbedResolver, vimeoResolveEmbed } from './vimeo.j
 
 describe('extractVimeoId', () => {
   it('should extract id from a vimeo.com url', () => {
-    expect(extractVimeoId('https://vimeo.com/76979871')).toBe('76979871')
+    const value = 'https://vimeo.com/76979871'
+    const expected = '76979871'
+
+    expect(extractVimeoId(value)).toBe(expected)
   })
 
   it('should extract id from a player embed url', () => {
-    expect(extractVimeoId('https://player.vimeo.com/video/76979871')).toBe('76979871')
+    const value = 'https://player.vimeo.com/video/76979871'
+    const expected = '76979871'
+
+    expect(extractVimeoId(value)).toBe(expected)
   })
 
   it('should extract id from a channel url', () => {
-    expect(extractVimeoId('https://vimeo.com/channels/staffpicks/76979871')).toBe('76979871')
+    const value = 'https://vimeo.com/channels/staffpicks/76979871'
+    const expected = '76979871'
+
+    expect(extractVimeoId(value)).toBe(expected)
   })
 
   // The Flash player carried no id in the path at all.
   it('should extract id from the moogaloop.swf url', () => {
-    expect(extractVimeoId('http://vimeo.com/moogaloop.swf?clip_id=43301601')).toBe('43301601')
+    const value = 'http://vimeo.com/moogaloop.swf?clip_id=43301601'
+    const expected = '43301601'
+
+    expect(extractVimeoId(value)).toBe(expected)
   })
 
   it('should extract id from a moogaloop.swf url carrying player options', () => {
     const value =
       'http://vimeo.com/moogaloop.swf?clip_id=43301601&force_embed=1&server=vimeo.com&color=00adef'
+    const expected = '43301601'
 
-    expect(extractVimeoId(value)).toBe('43301601')
+    expect(extractVimeoId(value)).toBe(expected)
   })
 
   it('should return undefined for a moogaloop.swf url with no clip id', () => {
-    expect(extractVimeoId('http://vimeo.com/moogaloop.swf?server=vimeo.com')).toBeUndefined()
+    const value = 'http://vimeo.com/moogaloop.swf?server=vimeo.com'
+
+    expect(extractVimeoId(value)).toBeUndefined()
+  })
+
+  // A showcase is a playlist and an event is a livestream, both in their own id space, so the
+  // numeric segment would name an unrelated video.
+  it('should return undefined for a showcase url', () => {
+    const value = 'https://vimeo.com/showcase/7060635'
+
+    expect(extractVimeoId(value)).toBeUndefined()
+  })
+
+  it('should return undefined for an event url', () => {
+    const value = 'https://player.vimeo.com/event/1234567'
+
+    expect(extractVimeoId(value)).toBeUndefined()
   })
 
   it('should return undefined when there is no numeric id', () => {
-    expect(extractVimeoId('https://vimeo.com/user/profile')).toBeUndefined()
+    const value = 'https://vimeo.com/user/profile'
+
+    expect(extractVimeoId(value)).toBeUndefined()
   })
 })
 

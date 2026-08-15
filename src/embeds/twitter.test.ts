@@ -219,6 +219,28 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
       })
     })
 
+    describe('Variant #10a: skeleton blockquote keeping the byline punctuation only', () => {
+      // The skeleton fills in neither half of the byline, so what survives is the dash and an
+      // empty handle. Carrying that through would state it as the author.
+      it('should state no author for a byline naming nobody', async () => {
+        const value = html`
+          <blockquote class="twitter-tweet">
+            <p></p>
+            <p>&mdash;  (@) <a href="https://twitter.com/user/status/123456789012345">May 1, 2024</a></p>
+          </blockquote>
+        `
+        const expected: EmbedResolverResult = {
+          provider: 'twitter',
+          id: statusId,
+          src: playerUrl,
+          url: statusUrl,
+          date: 'May 1, 2024',
+        }
+
+        expect(await extract(value)).toEqual(expected)
+      })
+    })
+
     describe('Variant #17: the read-more wrapper that borrows the class, a false friend', () => {
       // It carries the class but names no tweet. Resolving it would replace a real link with a
       // placeholder pointing at nothing.
