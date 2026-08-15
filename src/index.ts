@@ -138,6 +138,12 @@ export {
   imgurIframeEmbedResolver,
 } from './embeds/imgur.js'
 export {
+  instagramAmpEmbedResolver,
+  instagramBlockquoteEmbedResolver,
+  instagramIframeEmbedResolver,
+  instagramSubstackEmbedResolver,
+} from './embeds/instagram.js'
+export {
   issuuIframeEmbedResolver,
   issuuWidgetEmbedResolver,
 } from './embeds/issuu.js'
