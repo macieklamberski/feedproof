@@ -69,7 +69,8 @@ const readReleases = (link: string): Array<[string, string]> => {
 }
 
 export const extractBandcampRelease = (link: string): string | undefined => {
-  const [release] = readReleases(link)
+  const releases = readReleases(link)
+  const release = releases.find(([kind]) => kind === 'track') ?? releases[0]
 
   return release ? `${release[0]}/${release[1]}` : undefined
 }
@@ -101,7 +102,11 @@ export const bandcampResolveEmbed = (
 ): EmbedResolverResult | undefined => {
   const parsed = parseUrl(src, 'https://example.com')
   const releases = parsed ? readReleases(src) : []
-  const [release] = releases
+  // A player naming both is a track inside an album, which is what the builder writes when the
+  // publisher picks a track from an album page. The track is what they linked, so it names the
+  // placeholder. Taking whichever id the url spelled first made the same track come out as the
+  // album from one snippet and the track from another, and gave two tracks off one album one id.
+  const release = releases.find(([kind]) => kind === 'track') ?? releases[0]
 
   if (!parsed || !release) {
     return

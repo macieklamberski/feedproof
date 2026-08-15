@@ -31,15 +31,15 @@ describe('extractBandcampRelease', () => {
 
   // A player pointing into an album names both, and whichever kind the url spells first is the
   // one the id keeps.
-  it('should read the album from a track-within-album path', () => {
+  it('should read the track from a track-within-album path', () => {
     const value =
       'https://bandcamp.com/EmbeddedPlayer/album=1578579597/size=large/artwork=small/track=1637967854/'
-    const expected = 'album/1578579597'
+    const expected = 'track/1637967854'
 
     expect(extractBandcampRelease(value)).toBe(expected)
   })
 
-  it('should read the track from the legacy path that names it first', () => {
+  it('should read the track from the legacy path that names the album second', () => {
     const value =
       'https://bandcamp.com/EmbeddedPlayer/v=2/track=2747530839/album=2568747696/size=large/'
     const expected = 'track/2747530839'
@@ -115,7 +115,7 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'bandcamp',
-        id: 'album/1578579597',
+        id: 'track/1637967854',
         src: 'https://bandcamp.com/EmbeddedPlayer/album=1578579597/track=1637967854/size=large/',
         height: 470,
       }
