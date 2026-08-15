@@ -231,7 +231,7 @@ export const blueskyBlockquoteEmbedResolver = createMarkupEmbedResolver(
 // Substack renders every Bluesky embed as an iframe inside its own wrapper, and that wrapper
 // carries the whole post as JSON: the text, the author, their avatar, the timestamp and the
 // media. None of it survives the generic iframe path, and none of it needs a network call.
-const readSubstackFields = (element: Element): Partial<EmbedResolverResult> => {
+const readSubstackPost = (element: Element): Partial<EmbedResolverResult> => {
   const wrapper = element.closest('[data-component-name="BlueskyCreateBlueskyEmbed"]')
   const attributes = jsonAttr<SubstackPostAttributes>(wrapper, 'data-attrs')
 
@@ -262,7 +262,7 @@ export const blueskyIframeEmbedResolver = createUrlEmbedResolver(blueskyHosts, (
     return
   }
 
-  return { ...composeEmbedResult(post), ...readSubstackFields(element) }
+  return { ...composeEmbedResult(post), ...readSubstackPost(element) }
 })
 
 // Forum software renders a post through the s9e MediaEmbed helper page, which is hosted on
