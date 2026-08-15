@@ -150,15 +150,13 @@ const result = transformContent(html, {
 })
 ```
 
-All caller-provided functions (`parseHtmlFn`, `resolveUrlFn`, `cleanUrlFn`, `assetProxyFn`, `isSafeUrlFn`, `enrichEmbedFn`, `parseDateFn`, `highlightFn`, and resolver extracts) must not throw — an exception is not caught and rejects the `transformContent` promise.
+All caller-provided functions (`parseHtmlFn`, `resolveUrlFn`, `cleanUrlFn`, `assetProxyFn`, `isSafeUrlFn`, `enrichEmbedFn`, `parseDateFn`, `highlightFn`) must not throw — an exception is not caught and rejects the `transformContent` promise.
 
 Code blocks are highlighted only when they declare a language (`language-*` class, `data-language`, Pandoc/Rouge/Expressive Code/etc.); unlabeled blocks are left plain rather than guessed at. The default highlighter is highlight.js (exported as `defaultHighlightFn` / `hljsHighlightFn`); replace it with `highlightFn`.
 
 The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. The `heuristics` flag (default `false`) selects between two exported DOM pipelines: `defaultStandardDomTransforms` (the safe defaults) and `defaultAllDomTransforms` (standard plus `heuristicDomTransforms` spliced in after `injectEnclosures`). Setting `domTransforms` explicitly overrides `heuristics`. Every transform and pipeline is also exported individually from `feedsweep`, so you can compose any pipeline — list transforms explicitly, or spread `defaultStandardDomTransforms` / `heuristicDomTransforms` to extend or filter the defaults.
 
 The platforms feedsweep recognizes, the hosts it treats as trackers, the selectors it strips as non-content and the lazy-loading attributes it reads are all built in and not configurable. A platform or attribute that is missing belongs in the library: open an issue or a pull request.
-
-Embed resolvers are named `{service}EmbedResolver` where a service ships one, and `{service}{Carrier}EmbedResolver` where it ships several, since the carrier is the only thing that differs between them: `buzzsproutIframeEmbedResolver` beside `buzzsproutScriptEmbedResolver`, `brightcoveVideoJsEmbedResolver` beside `brightcoveFlashEmbedResolver`.
 
 ## DOM library
 
