@@ -94,11 +94,12 @@ export const resolverExtractor = <Result>(parseHtml: ParseHtml, resolver: AnyRes
   }
 }
 
-// Substack writes a component's whole payload as JSON in `data-attrs`, with the inner quotes
-// entity-encoded, which is what survives a parse and serialise roundtrip. The element around it
+// The value side of `jsonAttr`: a JSON payload written into an attribute with its inner quotes
+// entity-encoded, which is what survives a parse and serialise roundtrip. Several platforms ship
+// whole cards this way, Substack in `data-attrs` and Embedly in `data`, and the element around it
 // differs per component, so each fixture keeps its own builder and only the encoding is shared.
 // A string payload is written through untouched, which is how a test states malformed JSON.
-export const substackAttrs = (attrs: Record<string, unknown> | string): string => {
+export const jsonAttrValue = (attrs: Record<string, unknown> | string): string => {
   const raw = typeof attrs === 'string' ? attrs : JSON.stringify(attrs)
 
   return raw.replace(/"/g, '&quot;')

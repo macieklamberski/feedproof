@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
+import { describeForEachParser, html, jsonAttrValue, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   instagramAmpEmbedResolver,
@@ -623,7 +623,7 @@ describeForEachParser('instagramSubstackEmbedResolver', (parseHtml) => {
     return html`
       <div
         class="instagram-embed-wrap"
-        data-attrs="${substackAttrs(attrs)}"
+        data-attrs="${jsonAttrValue(attrs)}"
         data-component-name="InstagramToDOM"
       ></div>
     `
@@ -718,7 +718,7 @@ describeForEachParser('instagramSubstackEmbedResolver', (parseHtml) => {
     it('should resolve through the component name when the class is gone', async () => {
       const value = html`
         <div
-          data-attrs="${substackAttrs({ instagram_id: 'CdWN1jeOWr0' })}"
+          data-attrs="${jsonAttrValue({ instagram_id: 'CdWN1jeOWr0' })}"
           data-component-name="InstagramToDOM"
         ></div>
       `

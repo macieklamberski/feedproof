@@ -129,7 +129,6 @@ import { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmb
 import { convertGiphyEmbeds } from './transforms/dom/convertGiphyEmbeds.js'
 import { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 import { convertNoteEmbeds } from './transforms/dom/convertNoteEmbeds.js'
-import { convertParagraphEmbeds } from './transforms/dom/convertParagraphEmbeds.js'
 import { convertWidgets } from './transforms/dom/convertWidgets.js'
 import { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from './transforms/dom/demoteHeadings.js'
@@ -241,8 +240,11 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   rebuildLazyLoadForVideos,
   rebuildLazyYtEmbeds,
   rebuildElementorVideoEmbeds,
-  // Unwraps an Embedly media widget to the inner provider iframe (carrying Embedly's poster as
-  // data-thumbnail), so the provider transforms below handle it instead of a cdn.embedly wrapper.
+  // Unwraps both Embedly carriers to the inner provider iframe (carrying Embedly's poster as
+  // data-thumbnail), so the provider transforms below handle them instead of an Embedly shell:
+  // the rendered cdn.embedly wrapper, and the empty div whose oEmbed payload rides in `data`.
+  // Runs before convertCiteCards so a payload naming `link` still reaches the cite pass, and
+  // before stripEmptyTags, which is what deletes an empty carrier nothing has claimed.
   rebuildEmbedlyEmbeds,
   // A GitHub Gist embed is a JS-only <script> that renders nothing in a reader; replace it
   // with a link to the gist so the content is at least reachable.
@@ -268,11 +270,6 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // widget pass to classify, own-post embeds become plain links (the figure carries only
   // the post URL). External-article figures stay for the cite pass.
   convertNoteEmbeds,
-  // Converts the Paragraph embed blocks the cite pass refuses: a non-link oEmbed payload
-  // becomes a plain iframe for the widget pass to classify, an absent or malformed one becomes
-  // a link. Runs before convertCiteCards so the link types it leaves alone still reach it, and
-  // before stripEmptyTags, which is what used to delete the whole empty carrier.
-  convertParagraphEmbeds,
   // Materializes an iframe parked in a <div> attribute (Pym.js, @newswire/frames) so it's
   // placeholdered downstream. Runs before convertDatawrapperEmbeds so a data-frame-src
   // Datawrapper div becomes an iframe that convertDatawrapperEmbeds turns into a static image.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
+import { describeForEachParser, html, jsonAttrValue, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { spotifyEmbedResolver, spotifyResolveEmbed } from './spotify.js'
 
@@ -195,7 +195,7 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
       const value = html`
         <iframe
           class="spotify-wrap"
-          data-attrs="${substackAttrs(trackCardAttrs)}"
+          data-attrs="${jsonAttrValue(trackCardAttrs)}"
           src="https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t"
           data-component-name="Spotify2ToDOM"
         ></iframe>
@@ -224,7 +224,7 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
       const value = html`
         <iframe
           class="spotify-wrap podcast"
-          data-attrs="${substackAttrs(typeOnlyCardAttrs)}"
+          data-attrs="${jsonAttrValue(typeOnlyCardAttrs)}"
           src="https://open.spotify.com/embed/episode/1taJsFyMEbsljV14QAt409"
         ></iframe>
       `
@@ -249,7 +249,7 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
       const value = html`
         <iframe
           class="spotify-wrap"
-          data-attrs="${substackAttrs(describedCardAttrs)}"
+          data-attrs="${jsonAttrValue(describedCardAttrs)}"
           src="https://open.spotify.com/embed/episode/1taJsFyMEbsljV14QAt409"
         ></iframe>
       `
@@ -275,7 +275,7 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
       const value = html`
         <iframe
           class="spotify-wrap"
-          data-attrs="${substackAttrs(foreignArtworkAttrs)}"
+          data-attrs="${jsonAttrValue(foreignArtworkAttrs)}"
           src="https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t"
         ></iframe>
       `

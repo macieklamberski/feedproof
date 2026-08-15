@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
+import { describeForEachParser, html, jsonAttrValue, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import {
   substackCrossPostCiteResolver,
@@ -16,7 +16,7 @@ const makeContainer = (className: string, attrs?: Record<string, unknown> | stri
     return `<div class="${className}"></div>`
   }
 
-  return `<div class="${className}" data-attrs="${substackAttrs(attrs)}"></div>`
+  return `<div class="${className}" data-attrs="${jsonAttrValue(attrs)}"></div>`
 }
 
 describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {

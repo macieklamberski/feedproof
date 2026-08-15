@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
-import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
+import { describeForEachParser, html, jsonAttrValue, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   twitterAmpEmbedResolver,
@@ -689,7 +689,7 @@ describeForEachParser('twitterSubstackEmbedResolver', (parseHtml) => {
     return html`
       <div
         class="twitter-embed"
-        data-attrs="${substackAttrs(attrs)}"
+        data-attrs="${jsonAttrValue(attrs)}"
         data-component-name="Twitter2ToDOM"
       ></div>
     `
@@ -735,7 +735,7 @@ describeForEachParser('twitterSubstackEmbedResolver', (parseHtml) => {
     it('should resolve the div by component name alone when the class is stripped', async () => {
       const value = html`
         <div
-          data-attrs="${substackAttrs({
+          data-attrs="${jsonAttrValue({
             url: 'https://twitter.com/user/status/123456789012345',
             full_text: 'Tweet text here.',
             username: 'user',
@@ -760,7 +760,7 @@ describeForEachParser('twitterSubstackEmbedResolver', (parseHtml) => {
       const value = html`
         <div
           class="twitter-embed"
-          data-attrs="${substackAttrs({
+          data-attrs="${jsonAttrValue({
             url: 'https://twitter.com/user/status/123456789012345',
             full_text: 'Tweet text here.',
             username: 'user',

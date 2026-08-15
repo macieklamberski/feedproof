@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
+import { describeForEachParser, html, jsonAttrValue, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   blueskyBlockquoteEmbedResolver,
@@ -17,7 +17,7 @@ const makeContainer = (attrs: Record<string, unknown> | string, player: string):
     <div
       class="bluesky-wrap outer"
       style="height: auto; display: flex; margin-bottom: 24px;"
-      data-attrs="${substackAttrs(attrs)}"
+      data-attrs="${jsonAttrValue(attrs)}"
       data-component-name="BlueskyCreateBlueskyEmbed"
     >
       ${player}
