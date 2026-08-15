@@ -421,6 +421,28 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       expect(result).toContain('data-embed-src="https://example.com/v/x"')
     })
 
+    // A resolver that carries its url out of the markup rather than minting it from an id
+    // hands over whatever the publisher pasted, so it is cleaned like every other url here.
+    it('should clean a resolver url with the provided cleanUrlFn', async () => {
+      const urlResolver: EmbedResolver = {
+        selector: 'iframe[src*="example.com"]',
+        extract: () => ({
+          provider: 'example',
+          src: 'https://example.com/e/x',
+          url: 'https://example.com/watch/x?utm_source=feed',
+        }),
+      }
+      const context: TransformContext = {
+        ...baseContext,
+        widgetResolvers: [urlResolver],
+        cleanUrlFn: (url) => url.split('?')[0] ?? url,
+      }
+      const value = '<iframe src="https://example.com/e/x"></iframe>'
+      const result = await transform(value, context)
+
+      expect(result).toContain('data-embed-url="https://example.com/watch/x"')
+    })
+
     it('should leave an empty iframe with no recoverable content', async () => {
       const value = '<iframe src="about:blank"></iframe>'
       const result = await transform(value, withNoResolvers)
