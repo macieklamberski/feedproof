@@ -33,7 +33,7 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'tiktok',
-        id: '7001234567890123456',
+        id: '@cookingwithlynja/video/7001234567890123456',
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
         url: 'https://www.tiktok.com/@cookingwithlynja/video/7001234567890123456',
         description: 'Midnight pasta #pasta',
@@ -58,7 +58,7 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'tiktok',
-        id: '7001234567890123456',
+        id: '@cookingwithlynja/video/7001234567890123456',
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
         url: 'https://www.tiktok.com/@cookingwithlynja/video/7001234567890123456',
         description: 'Midnight pasta',
@@ -89,7 +89,7 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'tiktok',
-        id: '7000000000000000000',
+        id: '@user/video/7000000000000000000',
         src: 'https://www.tiktok.com/embed/v2/7000000000000000000',
         url: 'https://www.tiktok.com/@user/video/7000000000000000000',
         description: 'caption text #tag',
@@ -110,10 +110,30 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'tiktok',
-        id: '7001234567890123456',
+        id: '@cookingwithlynja/video/7001234567890123456',
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
         description: 'Midnight pasta',
         author: '@cookingwithlynja',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // A sanitizer that empties the attribute leaves the cite intact, so the clip is still
+    // named and the id chain recovers it there.
+    it('should recover the clip from the cite when the video id attribute is empty', async () => {
+      const value = html`
+        <blockquote
+          class="tiktok-embed"
+          cite="https://www.tiktok.com/@user/video/7001234567890123456"
+          data-video-id=""
+        ></blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '@user/video/7001234567890123456',
+        src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
+        url: 'https://www.tiktok.com/@user/video/7001234567890123456',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -133,7 +153,7 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'tiktok',
-        id: '7001234567890123456',
+        id: '@cookingwithlynja/video/7001234567890123456',
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
         url: 'https://www.tiktok.com/@cookingwithlynja/video/7001234567890123456',
         description: 'Midnight pasta #pasta',
@@ -167,7 +187,7 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'tiktok',
-        id: '7000000000000000000',
+        id: '@user/video/7000000000000000000',
         src: 'https://www.tiktok.com/embed/v2/7000000000000000000',
         url: 'https://www.tiktok.com/@user/video/7000000000000000000',
         width: 605,
@@ -228,9 +248,9 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
   })
 
   describe('sad paths', () => {
-    it('should return undefined when the video id is empty and no account is named', async () => {
+    it('should return undefined when the video id is empty and no clip or account is named', async () => {
       const value =
-        '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@user/video/7001234567890123456" data-video-id=""></blockquote>'
+        '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/" data-video-id=""></blockquote>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -248,6 +268,45 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
   })
 
   describe('edge cases', () => {
+    // The attribute and the cite are both gone, so the caption's own watch anchor is the last
+    // source in the id chain that still names the clip.
+    it('should recover the clip from a watch anchor when the attribute and cite are stripped', async () => {
+      const value = html`
+        <blockquote class="tiktok-embed">
+          <section>
+            <a href="https://www.tiktok.com/@user/video/7001234567890123456">Watch on TikTok</a>
+          </section>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '@user/video/7001234567890123456',
+        src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The video id is interpolated into the player url, so anything non-numeric is refused,
+    // and the cite still names the clip.
+    it('should ignore a data-video-id that is not numeric and read the cite', async () => {
+      const value = html`
+        <blockquote
+          class="tiktok-embed"
+          cite="https://www.tiktok.com/@user/video/7001234567890123456"
+          data-video-id="../evil"
+        ></blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '@user/video/7001234567890123456',
+        src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
+        url: 'https://www.tiktok.com/@user/video/7001234567890123456',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // The handle is interpolated into the viewer url, so anything outside TikTok's own
     // character set is refused. The profile anchor still names the account, so it wins.
     it('should ignore a data-unique-id that is not a handle and read the anchor', async () => {
@@ -272,7 +331,10 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    it('should omit the url for a cite on a foreign host', async () => {
+    // A foreign cite names neither the url nor a handle, and nothing else in the markup does
+    // either, so the id stays the bare video id: the player is still mintable, only the
+    // enrichment key is out of reach.
+    it('should fall back to the bare video id for a cite on a foreign host', async () => {
       const value = html`
         <blockquote class="tiktok-embed" cite="https://example.com/@user/video/7001234567890123456" data-video-id="7001234567890123456">
           <section><p>Midnight pasta</p></section>
@@ -299,7 +361,7 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'tiktok',
-        id: '7001234567890123456',
+        id: '@user/video/7001234567890123456',
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
         url: 'https://www.tiktok.com/@user/video/7001234567890123456',
         author: '@user',
@@ -318,7 +380,7 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'tiktok',
-        id: '7001234567890123456',
+        id: '@user/video/7001234567890123456',
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
         url: 'https://www.tiktok.com/@user/video/7001234567890123456',
       }
@@ -354,7 +416,7 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
       const expected = html`
         <div
           data-embed-provider="tiktok"
-          data-embed-id="7000000000000000000"
+          data-embed-id="@user/video/7000000000000000000"
           data-embed-src="https://www.tiktok.com/embed/v2/7000000000000000000"
           data-embed-url="https://www.tiktok.com/@user/video/7000000000000000000"
           data-embed-description="caption text #tag"
@@ -375,7 +437,7 @@ describeForEachParser('tiktokEmbedResolver', (parseHtml) => {
       const expected = html`
         <div
           data-embed-provider="tiktok"
-          data-embed-id="7000000000000000000"
+          data-embed-id="@user/video/7000000000000000000"
           data-embed-src="https://www.tiktok.com/embed/v2/7000000000000000000"
           data-embed-url="https://www.tiktok.com/@user/video/7000000000000000000"
           data-embed-description="caption text #tag"

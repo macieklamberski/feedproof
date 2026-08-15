@@ -15,6 +15,25 @@ const isTiktokUrl = (url: URL): boolean => {
 
 // A handle is the same character set TikTok allows at signup.
 const safeHandleRegex = /^[a-zA-Z0-9_.]{1,24}$/
+const safeVideoIdRegex = /^\d+$/
+
+// A watch url names the clip's owner and the clip: `/@handle/video/{id}`. Sanitized copies
+// sometimes keep only the `/video/{id}` half, so the handle is optional.
+const watchPathRegex = /^(?:\/@([a-zA-Z0-9_.]{1,24}))?\/video\/(\d+)\/?$/
+
+type Clip = { handle?: string; videoId?: string }
+
+const readWatchUrl = (url: string | undefined): Clip => {
+  const parsed = parseUrl(url ?? '', 'https://example.com')
+
+  if (!parsed || !isTiktokUrl(parsed)) {
+    return {}
+  }
+
+  const [, handle, videoId] = parsed.pathname.match(watchPathRegex) ?? []
+
+  return { handle, videoId }
+}
 
 // A blockquote declares only `max-width` and `min-width`, never a height, so a TikTok normally
 // reaches the reader with no size and is drawn as a video-shaped box, which is wrong for a
@@ -39,22 +58,33 @@ const hydratedSize = (element: Element): { width?: number; height?: number } => 
   return width ? { width, height } : {}
 }
 
-// The clip a blockquote names. The player page is mintable from `data-video-id` alone. The
-// `cite` normally names the watch page, but sanitized copies truncate it to the bare host, so
-// it becomes the placeholder url only when it still names a video.
+// The clip a blockquote names. The player page is mintable from the video id, which is read
+// from the sources in declaration order: the `data-video-id` attribute, the `cite`'s watch
+// path, then a watch-page anchor in the body. Sanitizers empty or strip the attribute while
+// leaving the cite or a caption link intact, so no single source is trusted alone. The `cite`
+// becomes the placeholder url only when it still names a watch page: sanitized copies truncate
+// it to the bare host, and that links nothing worth keeping.
 const resolveClip = (element: Element): EmbedResolverResult | undefined => {
-  const videoId = attr(element, 'data-video-id')
+  const declared = attr(element, 'data-video-id')
+  const cite = attr(element, 'cite')
+  const cited = readWatchUrl(cite)
+
+  let linked: Clip = {}
+
+  for (const anchor of element.querySelectorAll('a[href]')) {
+    const clip = readWatchUrl(attr(anchor, 'href'))
+
+    if (clip.videoId) {
+      linked = clip
+      break
+    }
+  }
+
+  const declaredId = declared && safeVideoIdRegex.test(declared) ? declared : undefined
+  const videoId = declaredId ?? cited.videoId ?? linked.videoId
 
   if (!videoId) {
     return
-  }
-
-  let url: string | undefined
-  const cite = attr(element, 'cite')
-  const parsedCite = parseUrl(cite ?? '', 'https://example.com')
-
-  if (cite && parsedCite && isTiktokUrl(parsedCite) && parsedCite.pathname.includes('/video/')) {
-    url = cite
   }
 
   // By the time convertWidgets runs, wrapBareInlineInParagraphs has wrapped the section's
@@ -71,11 +101,23 @@ const resolveClip = (element: Element): EmbedResolverResult | undefined => {
     return Boolean(value && value !== author && !value.startsWith('♬'))
   })
 
+  // The placeholder id doubles as the enrichment key, and TikTok's oEmbed endpoint takes the
+  // watch url, which needs the handle beside the video id. So the id is the watch page's own
+  // path, `@handle/video/{id}`: prefixing `https://www.tiktok.com/` rebuilds the url, and the
+  // account shape's `@handle` id is the same convention one level up. A clip whose markup
+  // keeps no handle anywhere falls back to the bare video id, which still names the player
+  // but cannot address the endpoint.
+  const authorHandle = author?.slice(1)
+  const handle =
+    cited.handle ??
+    linked.handle ??
+    (authorHandle && safeHandleRegex.test(authorHandle) ? authorHandle : undefined)
+
   return {
     provider: 'tiktok',
-    id: videoId,
+    id: handle ? `@${handle}/video/${videoId}` : videoId,
     src: `https://www.tiktok.com/embed/v2/${videoId}`,
-    url,
+    url: cited.videoId ? cite : undefined,
     description: text(caption),
     author,
     ...hydratedSize(element),
