@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { defaultStandardDomTransforms } from './defaults.js'
 import { transformContent } from './index.js'
-import { describeForEachParser, html } from './tests.js'
+import { describeForEachParser, html, substackAttrs } from './tests.js'
 import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 
 const lineBreakAfterBraceRegex = /\{\n\s+/
@@ -831,6 +831,399 @@ describeForEachParser('transformContent', (parseHtml) => {
       expect(result).not.toContain('fusion-privacy-placeholder')
       expect(result).not.toContain('For privacy reasons')
       expect(result).not.toContain('I Accept')
+    })
+  })
+
+  // Where each Substack component ends up under the default pipeline. Most are owned by a
+  // generic pass rather than a Substack-specific one, so without these cases a delegation
+  // would read as a coverage gap. Fixtures are real feed markup, anonymized.
+  describe('substack component dispositions', () => {
+    const uploadId = 'de58e4a3-5505-45a7-8abc-b46c5c0f6e7a'
+    const lightboxHref =
+      'https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fa1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d_1200x864.png'
+    const renditionSrc =
+      'https://substackcdn.com/image/fetch/w_1456,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fa1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d_1200x864.png'
+
+    it('should keep a populated Image2ToDOM anchor as a dimensioned, proxied image', async () => {
+      // The generic image pipeline owns it: unwrapWrappers dissolves the containers,
+      // stripNonContentElements drops the restack chrome, proxyAssetUrls rewrites the src.
+      const value = html`
+        <div class="captioned-image-container">
+          <figure>
+            <a
+              class="image-link image2 is-viewable-img"
+              target="_blank"
+              href="${lightboxHref}"
+              data-component-name="Image2ToDOM"
+            >
+              <div class="image2-inset">
+                <img
+                  src="${renditionSrc}"
+                  width="1200"
+                  height="864"
+                  class="sizing-normal"
+                  alt=""
+                >
+                <div class="image-link-expand">
+                  <button type="button" class="pencraft icon-container restack-image"></button>
+                </div>
+              </div>
+            </a>
+            <figcaption class="image-caption">The caption</figcaption>
+          </figure>
+        </div>
+      `
+      const expected = html`
+        <figure>
+          <a
+            class="image-link image2 is-viewable-img"
+            target="_blank"
+            href="${lightboxHref}"
+            data-component-name="Image2ToDOM"
+          >
+            <img
+              src="https://proxy.example.com/image/${encodeURIComponent(renditionSrc)}"
+              data-proxied-src="${renditionSrc}"
+              width="1200"
+              height="864"
+              class="sizing-normal"
+              alt=""
+            >
+          </a>
+          <figcaption class="image-caption">The caption</figcaption>
+        </figure>
+      `
+      const result = await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        assetProxyFn: (url, type) => `https://proxy.example.com/${type}/${encodeURIComponent(url)}`,
+      })
+
+      expect(result).toEqualHtml(expected)
+    })
+
+    it('should recover an emptied Image2ToDOM anchor as an image minted from its href', async () => {
+      // fixSubstackImageLinks owns it: the anchor arrives with its <img> child stripped.
+      const value = html`
+        <figure>
+          <a
+            class="image-link image2 is-viewable-img"
+            target="_blank"
+            href="${lightboxHref}"
+            data-component-name="Image2ToDOM"
+          ></a>
+        </figure>
+      `
+      const expected = html`
+        <figure>
+          <a
+            class="image-link image2 is-viewable-img"
+            target="_blank"
+            href="${lightboxHref}"
+            data-component-name="Image2ToDOM"
+          >
+            <img src="${lightboxHref}" width="1200" height="864">
+          </a>
+        </figure>
+      `
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toEqualHtml(expected)
+    })
+
+    it('should convert a VideoPlaceholder upload into a native video element', async () => {
+      // substackMediaResolver owns it, minting the api.substack.com upload endpoint.
+      const value = html`
+        <div
+          class="native-video-embed"
+          data-attrs="${substackAttrs({ mediaUploadId: uploadId, duration: null, isEditorNode: true })}"
+          data-component-name="VideoPlaceholder"
+        ></div>
+        <p>The talk in full.</p>
+      `
+      const expected = html`
+        <video src="https://api.substack.com/api/v1/video/upload/${uploadId}/src" controls></video>
+        <p>The talk in full.</p>
+      `
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toEqualHtml(expected)
+    })
+
+    it('should convert an AudioPlaceholder upload into a native audio element', async () => {
+      // substackMediaResolver owns it, through the same upload endpoint as video.
+      const audioAttrs = substackAttrs({
+        label: '',
+        mediaUploadId: uploadId,
+        duration: 714.031,
+        downloadable: false,
+        isEditorNode: true,
+      })
+      const value = html`
+        <div
+          class="native-audio-embed"
+          data-component-name="AudioPlaceholder"
+          data-attrs="${audioAttrs}"
+        ></div>
+        <p>Interview companion audio.</p>
+      `
+      const expected = html`
+        <audio src="https://api.substack.com/api/v1/video/upload/${uploadId}/src" controls></audio>
+        <p>Interview companion audio.</p>
+      `
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toEqualHtml(expected)
+    })
+
+    it('should resolve a Youtube2ToDOM wrap into a youtube embed placeholder', async () => {
+      // The host-keyed youtube resolver claims the inner iframe; the wrap divs dissolve.
+      const value = html`
+        <div
+          id="youtube2-ab3DEfGHijk"
+          class="youtube-wrap"
+          data-attrs="${substackAttrs({ videoId: 'ab3DEfGHijk', startTime: null, endTime: null })}"
+          data-component-name="Youtube2ToDOM"
+        >
+          <div class="youtube-inner">
+            <iframe
+              src="https://www.youtube-nocookie.com/embed/ab3DEfGHijk?rel=0&amp;autoplay=0&amp;showinfo=0&amp;enablejsapi=0"
+              frameborder="0"
+              loading="lazy"
+              gesture="media"
+              allow="autoplay; fullscreen"
+              allowautoplay="true"
+              allowfullscreen="true"
+              width="728"
+              height="409"
+            ></iframe>
+          </div>
+        </div>
+      `
+      const expected = html`
+        <div
+          data-embed-provider="youtube"
+          data-embed-id="ab3DEfGHijk"
+          data-embed-src="https://www.youtube.com/embed/ab3DEfGHijk"
+          data-embed-url="https://www.youtube.com/watch?v=ab3DEfGHijk"
+          data-embed-thumbnail="https://i.ytimg.com/vi/ab3DEfGHijk/hqdefault.jpg"
+          data-embed-width="728"
+          data-embed-height="409"
+        >
+          <a href="https://www.youtube.com/watch?v=ab3DEfGHijk">https://www.youtube.com/watch?v=ab3DEfGHijk</a>
+        </div>
+      `
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toEqualHtml(expected)
+    })
+
+    it('should resolve a spotify-wrap iframe into a spotify embed placeholder', async () => {
+      // The url-keyed spotify resolver claims the iframe; its declared height wins.
+      const episodeAttrs = substackAttrs({
+        image: 'https://i.scdn.co/image/ab6765630000ba8a0000000000000000000000ff',
+        title: 'Episode 42: Field Recording',
+        subtitle: 'Casey Host',
+        description: 'Episode',
+        url: 'https://open.spotify.com/episode/aB3dEfGhIjKlMnOpQrStUv',
+        belowTheFold: true,
+        noScroll: false,
+      })
+      const value = html`
+        <iframe
+          class="spotify-wrap podcast"
+          data-attrs="${episodeAttrs}"
+          src="https://open.spotify.com/embed/episode/aB3dEfGhIjKlMnOpQrStUv"
+          frameborder="0"
+          gesture="media"
+          allowfullscreen="true"
+          width="100%"
+          height="232"
+        ></iframe>
+      `
+      const expected = html`
+        <div
+          data-embed-provider="spotify"
+          data-embed-id="episode/aB3dEfGhIjKlMnOpQrStUv"
+          data-embed-src="https://open.spotify.com/embed/episode/aB3dEfGhIjKlMnOpQrStUv"
+          data-embed-url="https://open.spotify.com/episode/aB3dEfGhIjKlMnOpQrStUv"
+          data-embed-height="232"
+        >
+          <a
+            href="https://open.spotify.com/episode/aB3dEfGhIjKlMnOpQrStUv"
+          >https://open.spotify.com/episode/aB3dEfGhIjKlMnOpQrStUv</a>
+        </div>
+      `
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toEqualHtml(expected)
+    })
+
+    it('should rebuild a MentionToDOM span into an inline profile link', async () => {
+      // fixSubstackMentions owns it: the name lives only in the data-attrs JSON.
+      const mentionAttrs = substackAttrs({
+        name: 'Jane Miller',
+        id: 123456,
+        type: 'user',
+        url: null,
+      })
+      const mention = `<span class="mention-wrap" data-attrs="${mentionAttrs}" data-component-name="MentionToDOM"></span>`
+      const value = html`<p>Thanks to ${mention} for the idea.</p>`
+      const expected = html`
+        <p>Thanks to <a href="https://substack.com/profile/123456">@Jane Miller</a> for the idea.</p>
+      `
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toEqualHtml(expected)
+    })
+
+    it('should convert an EmbeddedPostToDOM cross-post card into a cite placeholder', async () => {
+      // substackCrossPostCiteResolver owns it in the cite pass.
+      const crossPostAttrs = substackAttrs({
+        id: 203084323,
+        url: 'https://otherpub.substack.com/p/field-notes-23',
+        publication_id: 6115088,
+        publication_name: 'Other Pub',
+        publication_logo_url:
+          'https://substackcdn.com/image/fetch/f_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Flogo_1080x1080.png',
+        title: 'Field Notes #23',
+        truncated_body_text: 'The preview text.',
+        date: '2026-06-22T13:20:17.562Z',
+        like_count: 7,
+        comment_count: 1,
+        bylines: [
+          {
+            id: 1,
+            name: 'Casey Author',
+            photo_url: 'https://substack-post-media.s3.amazonaws.com/public/images/photo.jpeg',
+          },
+        ],
+      })
+      const value = html`
+        <p>Intro</p>
+        <div
+          class="embedded-post-wrap"
+          data-attrs="${crossPostAttrs}"
+          data-component-name="EmbeddedPostToDOM"
+        ></div>
+      `
+      const expected = html`
+        <p>Intro</p>
+        <div
+          data-cite-provider="substack"
+          data-cite-description="The preview text."
+          data-cite-author="Casey Author"
+          data-cite-publisher="Other Pub"
+          data-cite-date="2026-06-22T13:20:17.562Z"
+          data-cite-url="https://otherpub.substack.com/p/field-notes-23"
+          data-cite-title="Field Notes #23"
+          data-cite-icon="https://substackcdn.com/image/fetch/f_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Flogo_1080x1080.png"
+        >
+          <a href="https://otherpub.substack.com/p/field-notes-23">Field Notes #23</a>
+        </div>
+      `
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toEqualHtml(expected)
+    })
+
+    it('should convert a DigestPostEmbed own-post card into a cite placeholder', async () => {
+      // substackOwnPostCiteResolver owns it in the cite pass.
+      const ownPostAttrs = substackAttrs({
+        nodeId: 1,
+        title: 'Model Drop',
+        caption: 'The excerpt of the linked post.',
+        canonical_url: 'https://examplepub.substack.com/p/model-drop',
+        publishedBylines: [{ name: 'Casey Author' }],
+      })
+      const value = html`
+        <div
+          class="digest-post-embed"
+          data-attrs="${ownPostAttrs}"
+          data-component-name="DigestPostEmbed"
+        ></div>
+      `
+      const expected = html`
+        <div
+          data-cite-provider="substack"
+          data-cite-description="The excerpt of the linked post."
+          data-cite-author="Casey Author"
+          data-cite-url="https://examplepub.substack.com/p/model-drop"
+          data-cite-title="Model Drop"
+        >
+          <a href="https://examplepub.substack.com/p/model-drop">Model Drop</a>
+        </div>
+      `
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toEqualHtml(expected)
+    })
+
+    it('should strip a SubscribeWidgetToDOM widget as non-content', async () => {
+      // nonContentSelectors owns it (.subscription-widget-wrap-editor): a subscribe CTA is
+      // chrome, so removal is the desired end state.
+      const value = html`
+        <p>Thank you for being here.</p>
+        <div
+          class="subscription-widget-wrap-editor"
+          data-attrs="${substackAttrs({ url: 'https://examplepub.substack.com/subscribe?', text: 'Subscribe', language: 'en' })}"
+          data-component-name="SubscribeWidgetToDOM"
+        >
+          <div class="subscription-widget show-subscribe">
+            <div class="preamble">
+              <p class="cta-caption">Subscribe for free to receive new posts.</p>
+            </div>
+            <form class="subscription-widget-subscribe">
+              <input type="email" placeholder="Type your email...">
+              <input type="submit" value="Subscribe">
+            </form>
+          </div>
+        </div>
+      `
+      const expected = html`<p>Thank you for being here.</p>`
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toEqualHtml(expected)
+    })
+
+    it('should drop DirectMessageToDOM and CommunityChatRenderPlaceholder divs', async () => {
+      // stripEmptyTags owns them: both ship childless, hold no content to recover, and
+      // point at interactions that only work on Substack, so removal is the desired end state.
+      const directMessageAttrs = substackAttrs({
+        userId: 123456,
+        userName: 'Sam Fields',
+        canDm: null,
+        dmUpgradeOptions: null,
+        isEditorNode: true,
+      })
+      const communityChatAttrs = substackAttrs({
+        url: 'https://open.substack.com/pub/examplepub/chat?utm_source=chat_embed',
+        subdomain: 'examplepub',
+      })
+      const value = html`
+        <p>Come say hi.</p>
+        <div
+          class="directMessage button"
+          data-attrs="${directMessageAttrs}"
+          data-component-name="DirectMessageToDOM"
+        ></div>
+        <div
+          class="community-chat"
+          data-attrs="${communityChatAttrs}"
+          data-component-name="CommunityChatRenderPlaceholder"
+        ></div>
+      `
+      const expected = html`<p>Come say hi.</p>`
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toEqualHtml(expected)
+    })
+
+    it.todo('should resolve a Twitter2ToDOM tweet once its resolver lands', () => {
+      // The twitter resolver is in an open PR; add the disposition when it merges.
+    })
+
+    it.todo('should resolve an InstagramToDOM post once its resolver lands', () => {
+      // The instagram resolver is in an open PR; add the disposition when it merges.
     })
   })
 
