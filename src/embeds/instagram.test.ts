@@ -399,6 +399,26 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should read the url as written when its percent-encoding is malformed', async () => {
+      const value = html`
+        <figure
+          class="tmblr-embed"
+          data-provider="instagram"
+          data-url="https://www.instagram.com/p/CaUsPbUquKV/?x=%ZZ"
+        >
+          <blockquote class="instagram-media"></blockquote>
+        </figure>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'p/CaUsPbUquKV',
+        src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
+        url: 'https://www.instagram.com/p/CaUsPbUquKV/',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should state no size when the wrapper gives only one dimension', async () => {
       const value = html`
         <figure
