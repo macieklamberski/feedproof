@@ -57,6 +57,30 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
+  it('should remove a 0x0 tracking pixel', async () => {
+    // resolveMediaDimensions drops any width/height that is not a positive integer, so it used
+    // to delete the zeros before removeTrackingPixels could read them. The pixel pass keys on
+    // a declared 0 (see hasContentImageSignal), and 0x0 is the dominant beacon convention.
+    // The host is not a known tracker, so only the size heuristic can catch this one.
+    const value = html`
+      <p>Text</p>
+      <img width="0" height="0" src="https://cdn.example.com/spacer.gif">
+    `
+    const expected = '<p>Text</p>'
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
+  })
+
+  it('should keep a 0x0 raster image, which is content rather than a beacon', async () => {
+    const value = html`
+      <p>Text</p>
+      <img width="0" height="0" src="https://cdn.example.com/photo.jpg">
+    `
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContainHtml('<img')
+  })
+
   it('should normalize a standalone code block to a scrollable pre, not a paragraph', async () => {
     const value = '<code>function greet(name) {\n  return name\n}</code>'
     // highlightCode promotes the bare block to <pre><code> before wrapBareInlineInParagraphs

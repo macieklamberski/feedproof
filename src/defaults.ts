@@ -306,6 +306,10 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // the promoted src/poster is dimensioned, neutralized, and proxied like any other.
   fixLazyVideos,
   fixLazyAudios,
+  // Runs after the lazy passes so a beacon is judged on its real src, and before
+  // resolveMediaDimensions, which drops any width/height that is not a positive integer. A
+  // declared `0` is what marks the dominant beacon shape, so reading it has to happen first.
+  removeTrackingPixels,
   resolveMediaDimensions,
   flattenPictureElements,
   hoistFigcaptionFromAnchor,
@@ -321,7 +325,6 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   normalizeAnchoredHeadings,
   stripDeadAnchors,
   convertCiteCards,
-  removeTrackingPixels,
   unwrapEmojiImages,
   // Empties lone-backslash paragraphs (`<p>\</p>`); runs before stripEmptyTags so
   // the now-empty paragraphs are removed by it.
