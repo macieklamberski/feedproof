@@ -17,9 +17,10 @@ const hasStatedUrl = (holder: Element): boolean => {
   return false
 }
 
-// A lazy loader replaces every third-party embed with `<div class="load-later" data-url data-content>`
-// and rebuilds it on scroll. A reader runs no JS, so the div renders nothing, and because it holds
-// no text either, stripEmptyTags deletes it and the embed reaches a reader as nothing at all.
+// A lazy loader replaces every third-party embed with
+// `<div class="load-later" data-url data-content>` and rebuilds it on scroll. A reader runs no
+// JS, so the div renders nothing, and because it holds no text either, stripEmptyTags deletes it
+// and the embed reaches a reader as nothing at all.
 //
 // `data-content` is the complete original element, percent-encoded: the YouTube iframe with its
 // size and player parameters, the tweet blockquote with its text, author and date, the TikTok and

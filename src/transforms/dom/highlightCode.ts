@@ -205,14 +205,13 @@ const labelForLanguage = (language: string): string => {
 // code line each, with no newline character between them.
 const blockLineWrappers = new Set(['div', 'p', 'li', 'tr'])
 
-// Read a code block to text, treating those block-level line wrappers as line
-// breaks. Reading textContent alone would flatten every wrapped line onto one
-// row, because textContent just concatenates without honoring the layout. A
-// break is added when a wrapper opens, skipped when the text is empty (so there
-// is no leading break) or already ends with one (so nested wrappers like
-// <div><div>line</div></div> and blank spacer lines collapse back to a single
-// break). Blocks that carry real newlines, and inline highlighters, are
-// unaffected: with no wrappers to open, the result equals textContent.
+// Read a code block to text, treating those block-level line wrappers as line breaks. Reading
+// textContent alone would flatten every wrapped line onto one row, because it concatenates
+// without honoring the layout. A break is added when a wrapper opens, skipped when the text is
+// empty (so there is no leading break) or already ends with one (so nested wrappers like
+// <div><div>line</div></div> and blank spacer lines collapse back to a single break). Blocks that
+// carry real newlines, and inline highlighters, are unaffected: with no wrappers to open, the
+// result equals textContent.
 const getCodeBlockText = (target: Element): string => {
   let text = ''
 

@@ -11,9 +11,9 @@ const sentinels: Record<UrlRole, string> = {
 
 // Browsers strip leading C0 control characters and ASCII whitespace from a URL before reading
 // its scheme, so `\x01javascript:` and `java\tscript:` both resolve to `javascript:` and run.
-// `\s` catches the whitespace cases but misses the other C0 controls (`\x01`-`\x08`, `\x0e`-`\x1f`),
-// so strip the whole C0 range first. The floor must hold on its own: a DOM-only pipeline has no
-// stripControlChars upstream, so it can't depend on `\s` alone.
+// `\s` catches the whitespace cases but misses the other C0 controls (`\x01`-`\x08`,
+// `\x0e`-`\x1f`), so strip the whole C0 range first. The floor must hold on its own: a DOM-only
+// pipeline has no stripControlChars upstream, so it can't depend on `\s` alone.
 //
 // Built via new RegExp so the control-char escapes live in strings rather than in a regex literal.
 const urlIgnorableRanges = [

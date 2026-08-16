@@ -7,8 +7,8 @@ import { attr, find, text } from '../utils/dom.js'
 // in the class names refers to Open Graph, but the markup is Ameba's own: the card is
 // frozen into the post at publish time rather than fetched from the linked page.
 //
-// Note the icon: `img.ogpCard_icon` is a generic grey link glyph from Ameba's own asset
-// host (editor_link.svg), not the linked site's favicon, so it is deliberately not mapped.
+// `img.ogpCard_icon` is a generic grey link glyph from Ameba's own asset host
+// (editor_link.svg), not the linked site's favicon, so it is deliberately not mapped.
 export const amebaCiteResolver: CiteResolver = {
   selector: '.ogpCard_wrap',
   extract: (element) => {

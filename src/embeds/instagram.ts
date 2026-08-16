@@ -7,7 +7,7 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // Instagram's embed dialog ships a post as `<blockquote class="instagram-media">` holding the
 // permalink, a skeleton of empty divs and an `embed.js` loader beside it. The loader never runs
 // in a reader, so the quote arrives as its own chrome: a "View this post on Instagram" line and
-// an "A post shared by" byline: with no picture and no player.
+// an "A post shared by" byline, with no picture and no player.
 //
 // The frame that loader builds is mintable from the permalink alone,
 // `instagram.com/{p|reel|tv}/{shortcode}/embed/[captioned/]`, which is also what the AMP

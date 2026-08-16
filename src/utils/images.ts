@@ -76,7 +76,7 @@ const bareHostSource = (capture: string): string => {
 // path-anchored to a single CDN and captures the wrapped source (a url= query param, a
 // full URL at the end of the path, or a bare host+path for Photon). toSource turns that
 // capture into an absolute URL. Deliberately an explicit list rather than a generic
-// catch-all, so it stays auditable: an unlisted proxy is simply left as-is.
+// catch-all, so it stays auditable: an unlisted proxy is left as-is.
 type ImageProxy = {
   pattern: RegExp
   toSource: (capture: string, proxy: URL) => string | undefined

@@ -37,7 +37,7 @@ const parseRedditPath = (value: string | undefined): Array<string> | undefined =
 // build `embed.reddit.com/user/{name}/` from a bare profile link and that address answers 404,
 // while `/user/{name}/comments/{id}/` is a profile post and renders like any other.
 //
-// The subreddit in a post path is not checked by the player: the post id alone selects the
+// The subreddit in a post path is not checked by the player, since the post id alone selects the
 // post, but it is not optional either: `embed.reddit.com/comments/{id}/` serves the not-found
 // shell. So the whole path travels as the id, which is also what lets the id address Reddit's
 // oEmbed endpoint, the one enrichment source that answers without a key.

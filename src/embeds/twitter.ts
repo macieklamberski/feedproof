@@ -234,8 +234,9 @@ export const twitterSubstackEmbedResolver = createMarkupEmbedResolver(
 )
 
 // The player a stored-after-render copy already points at, and the one this resolver mints, so
-// a feed carrying the frame alone still names its provider. The player has two spellings with the
-// same `id` query: the corpus holds 1,390 `Tweet.html` and 161 `index.html` frames across 445 feeds.
+// a feed carrying the frame alone still names its provider. The player has two spellings with
+// the same `id` query: the corpus holds 1,390 `Tweet.html` and 161 `index.html` frames across
+// 445 feeds.
 const playerPaths = new Set(['/embed/Tweet.html', '/embed/index.html'])
 
 // A carrier framing the status page rather than the player, which is what a wrapper writes when
