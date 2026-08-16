@@ -14,9 +14,7 @@ import { getImageFingerprint, getUrlSizeHint, pickLargerImageUrl } from '../../u
 //
 // The copy with the smaller rendition goes. Most pairs are byte-identical and the choice
 // is moot, but either side can be the scaled-down variant of the other, and dropping by
-// position alone can keep a thumbnail while deleting the full image. A src that encodes
-// no size at all is the unscaled original, so it outranks any sized rendition; position
-// breaks ties, keeping the later copy where the author placed it.
+// position alone can keep a thumbnail while deleting the full image.
 const pickRemovableIndex = (firstSrc: string, secondSrc: string): number => {
   const larger = pickLargerImageUrl(firstSrc, secondSrc)
 

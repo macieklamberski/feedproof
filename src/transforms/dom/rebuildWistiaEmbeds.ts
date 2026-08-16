@@ -37,19 +37,13 @@ const readMediaId = (element: Element): string | undefined => {
   return element.className.match(wistiaIdPattern)?.[1]
 }
 
-// Wistia's JS-API inline embed is a `<div class="wistia_embed wistia_async_{id} ...">` (usually
-// wrapped in `wistia_responsive_padding` / `wistia_responsive_wrapper` divs) with no iframe — JS
-// builds the player on load. A reader runs no JS, so the video never appears. Rebuild a plain
-// <iframe> from the id so the embed renders; `wistiaEmbedResolver` then reads that same url and
-// gives it a provider and an id. No thumbnail either way, since Wistia's poster needs the media
-// JSON hop.
-//
-// The `<wistia-player media-id="{id}" aspect="1.77">` custom element is the same loss in the
-// current syntax: an unknown element renders as nothing at all. Its `aspect` is a bare decimal,
-// so the ratio survives into the rebuilt iframe.
+// Rebuilding a plain <iframe> from the id makes the embed render, and `wistiaEmbedResolver` then
+// reads that same url and gives it a provider and an id. No thumbnail either way, since Wistia's
+// poster needs the media JSON hop. The custom element's `aspect` is a bare decimal, so the ratio
+// survives into the rebuilt iframe.
 //
 // A lone `<script>` is rebuilt only when nothing else on the page already names that media.
-// Where a feed ships the loader beside the facade div — the common case — the div is the better
+// Where a feed ships the loader beside the facade div (the common case), the div is the better
 // carrier and the script would otherwise mint a duplicate player.
 export const rebuildWistiaEmbeds: DomTransform = () => (document) => {
   const elements = Array.from(document.querySelectorAll(wistiaSelector))

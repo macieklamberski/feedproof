@@ -15,11 +15,10 @@ const conversions: Array<AmpConversion> = [
   { selector: 'amp-video-iframe', target: 'iframe' },
 ]
 
-// AMP custom elements (<amp-img>, <amp-video>, …) render nothing without the AMP
-// runtime, and a reader runs no JS — so the media never appears. Convert each to its
-// native HTML equivalent so the normal image/embed transforms downstream can dimension,
-// placeholder, and proxy it. <amp-story> is a full-page format, not in-content media,
-// and is left alone.
+// AMP custom elements (<amp-img>, <amp-video>, …) render nothing without the AMP runtime, and a
+// reader runs no JS, so the media never appears. Converting each to its native equivalent puts
+// it back in reach of the downstream image and embed transforms, which dimension, placeholder
+// and proxy it. <amp-story> is a full-page format, not in-content media, and is left alone.
 //
 // The set stops at AMP elements with a native equivalent, where the provider is unknown or
 // beside the point. An AMP element naming a platform (<amp-youtube>, <amp-jwplayer>,

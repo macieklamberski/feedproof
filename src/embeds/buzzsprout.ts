@@ -15,11 +15,6 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // url-keyed resolver deliberately leaves the show-level *page* url unmatched: there it falls
 // through to the generic fallback, which still renders a placeholder. The script carrier has no
 // such fallback, so the same shape costs the whole player.
-//
-// The observed script forms:
-//   https://www.buzzsprout.com/{podcast}/{episode}.js?container_id=…
-//   https://www.buzzsprout.com/{podcast}/episodes/{episode}-{slug}.js?container_id=…
-//   https://www.buzzsprout.com/{podcast}.js?container_id=…&player=large
 const buzzsproutHost = 'buzzsprout.com'
 const episodeScriptPathRegex = /^\/(\d+)\/(?:episodes\/)?(\d+)(?:-[^/]*)?\.js$/
 const showScriptPathRegex = /^\/(\d+)\.js$/

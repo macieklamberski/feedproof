@@ -8,11 +8,10 @@ import { attr, hasText } from '../../utils/dom.js'
 // silent in the output rather than visible in it. Giving the url an <iframe> carrier is what puts
 // it back on the pipeline, where `convertWidgets` treats it like any other frame.
 //
-// Every figure with an http(s) `data-src` becomes an iframe, with no check on where it points.
 // The carrier is emitted on the strength of what note.com says the figure is, not on a guess
-// about whether a given host will frame. Any guess available here is the wrong one anyway: a
-// registry lookup answers "does a resolver rewrite this url", which is not the same question as
-// "does this page frame", and the two disagree in both directions. `adventar.org` sends neither
+// about whether a given host will frame. Any guess available here is the wrong one: a registry
+// lookup answers "does a resolver rewrite this url", which is not the same question as "does
+// this page frame", and the two disagree in both directions. `adventar.org` sends neither
 // `x-frame-options` nor a CSP and no resolver claims it, so a registry check would have degraded
 // a url that frames fine. Answering the real question needs a network round trip, which
 // `extract` may not do.
@@ -23,8 +22,8 @@ import { attr, hasText } from '../../utils/dom.js'
 // Instagram post arrives as `oembed` and an Instagram reel as `external-article`. So the url is
 // the only honest signal, and it is passed on untouched.
 //
-// This leans on the embed resolvers rather than replacing them. `data-src` is always a canonical
-// page url, never a player: across 1,213 figures sampled from live articles, none carried one.
+// `data-src` is always a canonical page url, never a player: across 1,213 figures sampled from
+// live articles, none carried one.
 // Those pages overwhelmingly refuse framing (YouTube, X, TikTok, Instagram and stand.fm answer
 // SAMEORIGIN or DENY, Spotify sends a restrictive frame-ancestors), so a figure only reaches a
 // reader as something watchable when a resolver reads the page url off the carrier and mints the

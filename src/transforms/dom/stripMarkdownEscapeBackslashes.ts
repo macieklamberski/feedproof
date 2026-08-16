@@ -9,9 +9,8 @@ import { isText } from '../../utils/dom.js'
 // is left alone: there it is overwhelmingly real content (Windows paths ending in
 // `\`, shell line continuations, LaTeX), not the markdown leak.
 //
-// Leading whitespace, then a lone `\` that is the paragraph's content or is
-// followed by whitespace. The `(?=\s|$)` lookahead excludes `\(`, `\textbf`,
-// `\n`, `\/` and other real escapes/code where the backslash trails a non-space.
+// The `(?=\s|$)` lookahead excludes `\(`, `\textbf`, `\n`, `\/` and other real
+// escapes and code where the backslash trails a non-space.
 const leadingBlockBackslash = /^(\s*)\\(?=\s|$)/
 
 export const stripMarkdownEscapeBackslashes: DomTransform = () => {
