@@ -113,6 +113,7 @@ import {
   twitterSubstackEmbedResolver,
 } from './embeds/twitter.js'
 import { typeformIframeEmbedResolver, typeformWidgetEmbedResolver } from './embeds/typeform.js'
+import { videopressFlashEmbedResolver, videopressIframeEmbedResolver } from './embeds/videopress.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { wistiaEmbedResolver } from './embeds/wistia.js'
 import { youtubeAmpEmbedResolver, youtubeIframeEmbedResolver } from './embeds/youtube.js'
@@ -421,6 +422,8 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   typeformIframeEmbedResolver,
   transistorEmbedResolver,
   vimeoEmbedResolver,
+  videopressIframeEmbedResolver,
+  videopressFlashEmbedResolver,
   wistiaEmbedResolver,
   captivateEmbedResolver,
   codepenWidgetEmbedResolver,
