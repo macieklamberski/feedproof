@@ -1,6 +1,7 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments, isSubdomainOf } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, jsonAttr } from '../utils/dom.js'
+import { parseHostedUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The player is fluid-width and fixed-height, and the height depends on what sits inside it:
@@ -78,9 +79,9 @@ export const spotifyResolveEmbed = (
   url: string,
   element?: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(url)
+  const parsed = parseHostedUrl(url, spotifyHost)
 
-  if (!parsed || (!isHostOf(parsed, spotifyHost) && !isSubdomainOf(parsed, spotifyHost))) {
+  if (!parsed) {
     return
   }
 

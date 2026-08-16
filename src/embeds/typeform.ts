@@ -1,6 +1,7 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
+import { parseHostedUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const typeformHosts = ['typeform.com']
@@ -71,9 +72,9 @@ export const typeformWidgetEmbedResolver = createMarkupEmbedResolver(
 // `<user>.typeform.com/to/<id>` still serves the same form rather than redirecting, so both
 // reach here. The query is telemetry (`typeform-embed`, `typeform-medium`) and is dropped.
 export const typeformResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(url)
+  const parsed = parseHostedUrl(url, typeformHosts)
 
-  if (!parsed || (!isHostOf(parsed, typeformHosts) && !isSubdomainOf(parsed, typeformHosts))) {
+  if (!parsed) {
     return
   }
 

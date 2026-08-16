@@ -1,6 +1,7 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments, isSubdomainOf } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, isBlockElement, isBr, isElement, jsonAttr, text } from '../utils/dom.js'
+import { parseHostedUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const blueskyHosts = ['bsky.app']
@@ -68,9 +69,9 @@ const extractBlueskyPost = (uri: string): BlueskyPost | undefined => {
 // builds. The host is checked rather than the path shape, so a url that merely spells one of
 // these paths on its own host names no post.
 const extractBlueskyPostFromUrl = (link: string): BlueskyPost | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseHostedUrl(link, blueskyHosts)
 
-  if (!parsed || (!isHostOf(parsed, blueskyHosts) && !isSubdomainOf(parsed, blueskyHosts))) {
+  if (!parsed) {
     return
   }
 

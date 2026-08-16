@@ -1,6 +1,7 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, parseRatioDimensions } from '../utils/dom.js'
+import { attr, parseRatioDimensions, readMatching } from '../utils/dom.js'
+import { parseHostedUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver, withDeclaredSize } from '../utils/widgets.js'
 
 const scribdHosts = ['scribd.com', 'scribdassets.com']
@@ -30,7 +31,7 @@ const readDocumentId = (parsed: URL): string | undefined => {
   })
   const document = marker < 0 ? undefined : segments[marker + 1]
 
-  return document && safeDocumentIdRegex.test(document) ? document : undefined
+  return readMatching(document, safeDocumentIdRegex)
 }
 
 // The modern player, `scribd.com/embeds/{id}/content`. `/doc/{id}` is the pre-2018 spelling of
@@ -40,9 +41,9 @@ export const scribdResolveEmbed = (
   link: string,
   element: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseHostedUrl(link, scribdHosts)
 
-  if (!parsed || (!isHostOf(parsed, scribdHosts) && !isSubdomainOf(parsed, scribdHosts))) {
+  if (!parsed) {
     return
   }
 

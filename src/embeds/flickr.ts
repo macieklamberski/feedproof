@@ -1,6 +1,6 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { flashVars } from '../utils/dom.js'
+import { flashVars, readMatching } from '../utils/dom.js'
 import { createUrlEmbedResolver, getEmbedDimensions } from '../utils/widgets.js'
 
 const flickrHosts = ['flickr.com']
@@ -121,7 +121,7 @@ const readLegacySubject = (parsed: URL): FlickrSubject => {
 // still addresses the player but not oEmbed; `groups/{nsid}` for a group pool; and
 // `photostreams/{owner}` for a stream.
 const composeEmbed = (subject: FlickrSubject): EmbedResolverResult | undefined => {
-  const owner = subject.owner && safeOwnerRegex.test(subject.owner) ? subject.owner : undefined
+  const owner = readMatching(subject.owner, safeOwnerRegex)
 
   if (subject.setId && safeSetIdRegex.test(subject.setId)) {
     // The album page path starts with the owner, and `/sets/{id}` is kept as the markup spells

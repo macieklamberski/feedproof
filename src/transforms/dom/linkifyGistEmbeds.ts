@@ -1,4 +1,5 @@
 import type { DomTransform } from '../../types.js'
+import { readMatching } from '../../utils/dom.js'
 
 // A GitHub Gist embeds as `<script src="https://gist.github.com/<user>/<id>.js">`, which its JS
 // turns into the rendered gist. A reader runs no JS, so it renders nothing. AMP's <amp-gist> is
@@ -15,7 +16,7 @@ const readGistPath = (element: Element): string | undefined => {
   if (element.localName === 'amp-gist') {
     const gistId = element.getAttribute('data-gistid')
 
-    return gistId && gistIdRegex.test(gistId) ? gistId : undefined
+    return readMatching(gistId, gistIdRegex)
   }
 
   const match = element.getAttribute('src')?.match(gistScriptRegex)

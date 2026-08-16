@@ -1,6 +1,7 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize, text } from '../utils/dom.js'
+import { parseHostedUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const redditHosts = ['reddit.com', 'redditmedia.com']
@@ -23,9 +24,9 @@ type RedditTarget = {
 // A relative href has no host to check, so it falls out here rather than being resolved
 // against the feed's own base: a permalink is always written in full.
 const parseRedditPath = (value: string | undefined): Array<string> | undefined => {
-  const parsed = parseUrl(value ?? '', 'https://example.com')
+  const parsed = parseHostedUrl(value, redditHosts)
 
-  if (!parsed || (!isHostOf(parsed, redditHosts) && !isSubdomainOf(parsed, redditHosts))) {
+  if (!parsed) {
     return
   }
 

@@ -12,6 +12,7 @@ import {
   isElementHidden,
   parsePixelSize,
   parseRatioDimensions,
+  readMatching,
   removeWithEmptyWrappers,
   text,
   textNode,
@@ -835,5 +836,23 @@ describe('parsePixelSize', () => {
     expect(parsePixelSize(undefined)).toBeUndefined()
     expect(parsePixelSize('')).toBeUndefined()
     expect(parsePixelSize('abc')).toBeUndefined()
+  })
+})
+
+const safeIdRegex = /^\d+$/
+
+describe('readMatching', () => {
+  it('should keep a value that fits the shape', () => {
+    expect(readMatching('12345', safeIdRegex)).toBe('12345')
+  })
+
+  it('should drop a value that does not fit', () => {
+    expect(readMatching('12a45', safeIdRegex)).toBeUndefined()
+  })
+
+  it('should drop an empty or nullish value', () => {
+    expect(readMatching('', safeIdRegex)).toBeUndefined()
+    expect(readMatching(null, safeIdRegex)).toBeUndefined()
+    expect(readMatching(undefined, safeIdRegex)).toBeUndefined()
   })
 })

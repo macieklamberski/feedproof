@@ -1,6 +1,6 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
+import { parseHostedUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Buzzsprout embeds a player two ways: a WordPress shortcode shipping an empty div plus a
@@ -43,9 +43,9 @@ const composeEmbed = (podcastId: string, episodeId?: string): EmbedResolverResul
 }
 
 export const buzzsproutResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(url, 'https://example.com')
+  const parsed = parseHostedUrl(url, buzzsproutHost)
 
-  if (!parsed || (!isHostOf(parsed, buzzsproutHost) && !isSubdomainOf(parsed, buzzsproutHost))) {
+  if (!parsed) {
     return
   }
 
@@ -70,9 +70,9 @@ export const buzzsproutScriptEmbedResolver = createMarkupEmbedResolver(
   (element) => {
     // The selector guarantees a src containing the host substring, so only the host and
     // path checks can reject.
-    const url = parseUrl(attr(element, 'src') ?? '', 'https://example.com')
+    const url = parseHostedUrl(attr(element, 'src'), buzzsproutHost)
 
-    if (!url || (!isHostOf(url, buzzsproutHost) && !isSubdomainOf(url, buzzsproutHost))) {
+    if (!url) {
       return
     }
 

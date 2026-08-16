@@ -128,6 +128,12 @@ export const attr = (element: Nullish<Element>, name: string): string | undefine
   return element?.getAttribute(name)?.trim() || undefined
 }
 
+// A value read straight out of an attribute or a url, kept only when it fits the shape expected
+// of it: an id, a handle, a token. Anything else is dropped before it can reach a minted url.
+export const readMatching = (value: Nullish<string>, regex: RegExp): string | undefined => {
+  return value && regex.test(value) ? value : undefined
+}
+
 // A Flash player's configuration, which is where a `.swf` carrier names what it plays: the
 // url is only the player. The value sits either on the carrier itself, which is how `<embed>`
 // spells it, or in a sibling `<param name="flashvars">`, which is how `<object>` does. Both
