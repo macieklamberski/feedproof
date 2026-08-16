@@ -14,6 +14,16 @@ const playerVersions = new Set(['v2', 'v3'])
 
 const firesideHosts = ['fireside.fm']
 
+const decodeSegment = (segment: string | undefined): string | undefined => {
+  if (!segment) {
+    return
+  }
+
+  try {
+    return decodeURIComponent(segment)
+  } catch {}
+}
+
 // Fireside's player is one fixed size: `height="200"` in **28 of 28** sampled corpus iframes.
 // That is the whole case for this resolver: the embed carries no metadata, no thumbnail and
 // no canonical episode url, so stating the height is what a reader gains, the same way
@@ -41,7 +51,9 @@ export const extractFiresideToken = (link: string): FiresidePlayer | undefined =
     return
   }
 
-  const token = encodedToken ? decodeURIComponent(encodedToken) : undefined
+  // The `+` joining the two halves arrives as `%2B` from some feeds, so the segment is decoded
+  // before it is tested. A malformed escape throws, and an unreadable token is no token.
+  const token = decodeSegment(encodedToken)
 
   if (token && safeTokenRegex.test(token)) {
     return { version, token }

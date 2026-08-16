@@ -162,6 +162,16 @@ describeForEachParser('hatenaCiteResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    it('should return undefined when the iframe src cannot be parsed', async () => {
+      const value = html`
+        <p>
+          <iframe src="http://[" title="Page title" class="embed-card"></iframe>
+        </p>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     it('should not match a paragraph without an embed card', async () => {
       const value = html`
         <p>

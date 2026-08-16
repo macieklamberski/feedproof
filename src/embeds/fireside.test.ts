@@ -70,6 +70,18 @@ describe('extractFiresideToken', () => {
 
     expect(extractFiresideToken(value)).toBeUndefined()
   })
+
+  it('should return undefined for a player url naming a version and no token', () => {
+    const value = 'https://fireside.fm/player/v3'
+
+    expect(extractFiresideToken(value)).toBeUndefined()
+  })
+
+  it('should return undefined for a token holding a malformed percent escape', () => {
+    const value = 'https://fireside.fm/player/v3/%'
+
+    expect(extractFiresideToken(value)).toBeUndefined()
+  })
 })
 
 describe('firesideResolveEmbed', () => {
