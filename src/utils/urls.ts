@@ -51,9 +51,9 @@ export const parseUrlOnHosts = (
   }
 }
 
-// The same pick as `pickUrlParams`, for a query that arrives on its own rather than on a url,
-// which is how a facade states its player options (`lite-youtube`'s `params`). Returns the pairs
-// rather than a string, so a caller can override one from a dedicated attribute before building.
+// The same pick as `pickUrlParams`, for a query that arrives on its own, not on a url, which is
+// how a facade states its player options (`lite-youtube`'s `params`). Returns the pairs instead
+// of a string, so a caller can override one from a dedicated attribute before building.
 export const pickQueryParams = (
   query: string,
   names: ReadonlyArray<string>,

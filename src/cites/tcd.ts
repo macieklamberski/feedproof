@@ -8,8 +8,8 @@ import { attr, find, text } from '../utils/dom.js'
 // from the class either way. The card's footer ships empty, so there is no publisher to read.
 //
 // Half the sites emitting these cards close the thumbnail's anchor before its wrapping div, and
-// the parser recovers by ending the card early: `cardlink_content` lands as the card's sibling
-// rather than its child, taking the title with it. Those cards are left alone. Converting them
+// the parser recovers by ending the card early: `cardlink_content` lands as the card's sibling,
+// not its child, taking the title with it. Those cards are left alone. Converting them
 // would need the sibling consumed too, which a resolver cannot do, and replacing the card without
 // it would leave the title and excerpt behind as loose text beside the placeholder.
 export const tcdCiteResolver: CiteResolver = {

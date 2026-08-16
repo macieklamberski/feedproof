@@ -96,7 +96,7 @@ export const textNode = (element: Nullish<Element>): string | undefined => {
 // The inline `<script>` that configures a player sitting beside it, which several platforms use
 // instead of an iframe. Two things make it awkward to reach. `wrapBareInlineInParagraphs` runs
 // before the widget pass and puts a bare script in a `<p>`, so by then the player's sibling is
-// that paragraph rather than the script. And where one item holds several players, each script
+// that paragraph, not the script. And where one item holds several players, each script
 // names its own container, so the element's id is what pairs them when they are not adjacent.
 export const findConfigScript = (element: Element): Element | undefined => {
   const sibling = element.nextElementSibling
@@ -261,10 +261,10 @@ export const isMediaElement = (node: Node): boolean => {
 // a player is already built around it.
 export const playableElements = new Set(['audio', 'embed', 'iframe', 'object', 'source', 'video'])
 
-// Collects a subtree's text nodes via an iterative depth-first walk (an explicit stack
-// rather than recursion) so a deeply nested document can't overflow the call stack.
-// Children are pushed in reverse so they pop in document order. An element for which
-// shouldPruneElement returns true prunes its whole subtree.
+// Collects a subtree's text nodes via an iterative depth-first walk (an explicit stack, not
+// recursion) so a deeply nested document can't overflow the call stack. Children are pushed in
+// reverse so they pop in document order. An element for which shouldPruneElement returns true
+// prunes its whole subtree.
 export const collectTextNodes = (
   root: Node,
   shouldPruneElement: (element: Element) => boolean,

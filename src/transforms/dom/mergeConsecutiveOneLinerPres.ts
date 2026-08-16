@@ -9,7 +9,7 @@ const surroundingNewlinesRegex = /^\n+|\n+$/g
 const classTokenSeparatorRegex = /\s+/
 
 // Read from a sole <code> child so consecutive <pre><code> lines merge into one
-// block rather than a stack of <code> elements.
+// block instead of a stack of <code> elements.
 const contentElement = (element: Element): Element => {
   const children = element.children
 

@@ -38,9 +38,9 @@ const whitespaceRegex = /\s+/
 const interactiveClassRegex = /accordion|collaps|toggl|panel-title|panel-heading|tta-panel/i
 const interactiveAttrRegex = /toggle|accordion|collapse/i
 
-// An anchor child is a decorative permalink marker: to be dropped rather than
-// kept as heading text: when its text is empty, a lone glyph, or the inline
-// `#fragment` form some generators render (e.g. `<span class="anchor">#intro</span>`).
+// An anchor child is a decorative permalink marker, to be dropped and never kept as heading
+// text, when its text is empty, a lone glyph, or the inline `#fragment` form some generators
+// render (e.g. `<span class="anchor">#intro</span>`).
 const isGlyphMarker = (text: string, fragment: string): boolean => {
   const trimmed = text.trim()
 

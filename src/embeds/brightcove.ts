@@ -5,7 +5,7 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 // Brightcove builds its player page from four ids the in-page embed carries as attributes. The
 // account is usually one of them, but some plugins leave it only in the loader script's url, so
-// both places are read here rather than by whoever holds the element.
+// both places are read here instead of by whoever holds the element.
 const brightcoveIdRegex = /^\d{5,}$/
 const accountScriptSelector = 'script[src*="players.brightcove.net"]'
 const accountScriptRegex = /players\.brightcove\.net\/(\d+)\//
@@ -101,8 +101,8 @@ export const brightcoveFlashResolveEmbed = (
   const videoId = params?.get('@videoPlayer') ?? parsed.searchParams.get('@videoPlayer')
   const account = parsed.searchParams.get('publisherID') ?? params?.get('publisherID')
 
-  // A reference id (`ref:my-video`) names the video for the account's own API rather than
-  // the player, so anything but a numeric id is left to the generic placeholder.
+  // A reference id (`ref:my-video`) names the video for the account's own API, not the
+  // player, so anything but a numeric id is left to the generic placeholder.
   if (
     !videoId ||
     !account ||
@@ -155,7 +155,7 @@ export const brightcoveResolveEmbed = (url: string): EmbedResolverResult | undef
     return
   }
 
-  // A reference id names the video for the account's own api rather than the player, the same
+  // A reference id names the video for the account's own api, not the player, the same
   // exclusion the Flash form makes.
   if (!brightcoveIdRegex.test(videoId)) {
     return

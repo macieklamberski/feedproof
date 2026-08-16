@@ -48,8 +48,8 @@ const promotableDimensions = (element: Element): { width: number; height: number
 // A valid width/height attribute value: a positive integer of pixels.
 const positiveIntegerRegex = /^[1-9]\d*$/
 
-// An <img> often declares its size on the wrapping <picture>/<source> rather than
-// itself. First <source> carrying both dimensions wins, else the <picture> element.
+// An <img> often leaves its size to the wrapping <picture>/<source>. First <source> carrying
+// both dimensions wins, else the <picture> element.
 const pictureDimensions = (picture: Element): { width: number; height: number } | undefined => {
   for (const source of picture.querySelectorAll('source')) {
     const dimensions = promotableDimensions(source)

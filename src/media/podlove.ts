@@ -5,7 +5,7 @@ import { findConfigScript } from '../utils/dom.js'
 // Podlove Publisher ships the episode as a `<div class="podlove-web-player">` holding nothing
 // but custom elements (`<tab-chapters>`, `<icon>`, `<subscribe-button>`), with a sibling
 // `<script>` that builds the player on load. None of it renders in a reader, so the episode is
-// lost outright. The script body carries the whole config inline rather than a url to fetch,
+// lost outright. The script body carries the whole config inline, not a url to fetch,
 // which is what makes this recoverable without a network hop:
 //
 //   podlovePlayerCache.add([{"url":"…","data":{"audio":[{"url":"…mp3","mimeType":"audio/mpeg"}],
@@ -59,7 +59,7 @@ export const podloveMediaResolver: MediaResolver = {
     const source = file?.url
 
     // The config is interpolated straight into the element, so anything that is not an
-    // absolute url is dropped rather than emitted.
+    // absolute url is dropped.
     if (!source?.startsWith('http')) {
       return
     }

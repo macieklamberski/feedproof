@@ -3,11 +3,11 @@ import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
 // Cocoon, a widely used WordPress theme, renders link cards for both external links and
-// same-site posts. The wrapping element is the anchor itself, so the URL comes
-// from the matched element rather than a descendant, and the anchor's `title` attribute
-// repeats the card title as a fallback. Internal (same-site) cards are treated like
-// external ones: the author places them in the editor, unlike the related-posts widgets
-// we strip, which themes append to every post automatically.
+// same-site posts. The wrapping element is the anchor itself, so the URL comes from the matched
+// element instead of a descendant, and the anchor's `title` attribute repeats the card title as
+// a fallback. Internal (same-site) cards are treated like external ones: the author places them
+// in the editor, unlike the related-posts widgets we strip, which themes append to every post
+// automatically.
 export const cocoonCiteResolver: CiteResolver = {
   selector: '.blogcard-wrap',
   extract: (element) => {

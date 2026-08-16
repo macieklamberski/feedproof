@@ -89,7 +89,7 @@ export const facebookXfbmlEmbedResolver = createMarkupEmbedResolver(
 )
 
 // The AMP component, which names which plugin it wants in `data-embed-as` (post, video or
-// comment). A comment thread is page chrome rather than the article's content, so it is left
+// comment). A comment thread is page chrome, not the article's content, so it is left
 // for the non-content pass and only the other two resolve.
 export const facebookAmpEmbedResolver = createMarkupEmbedResolver(
   'amp-facebook[data-href]',

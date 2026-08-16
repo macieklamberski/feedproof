@@ -185,10 +185,9 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
   }
 }
 
-// highlight.js resolves these to its "Plain text" grammar, which only escapes the
-// text: no tokens, no real language. A block declared as one of them is left
-// untouched rather than badged "Plain text", which says nothing a code block does
-// not already convey.
+// highlight.js resolves these to its "Plain text" grammar, which only escapes the text: no
+// tokens, no real language. A block declared as one of them is left untouched instead of being
+// badged "Plain text", which says nothing a code block does not already convey.
 const plaintextLanguages = new Set(['plaintext', 'text', 'txt'])
 
 const preTag = new Set(['pre'])

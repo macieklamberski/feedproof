@@ -4,7 +4,7 @@ const httpUrlRegex = /^https?:\/\//i
 
 // Whether the recovered markup names an address of its own, in any attribute. Anything the
 // downstream passes can resolve, link or placeholder is an http(s) URL in some attribute, and
-// which attribute it is differs per platform, so every one is read rather than a listed few.
+// which attribute it is differs per platform, so every one is read instead of a listed few.
 const hasStatedUrl = (holder: Element): boolean => {
   for (const element of holder.querySelectorAll('*')) {
     for (const attribute of element.attributes) {
@@ -29,7 +29,7 @@ const hasStatedUrl = (holder: Element): boolean => {
 // nothing here knows which platform that turns out to be.
 //
 // The decoded string still carries HTML entities in its attribute values, so it goes back through
-// the parser rather than being read with a regex.
+// the parser, not a regex.
 export const surfaceParkedMarkup: DomTransform = () => (document) => {
   for (const container of document.querySelectorAll('div.load-later[data-content]')) {
     const encoded = container.getAttribute('data-content')

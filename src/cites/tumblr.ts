@@ -6,7 +6,7 @@ import { attr, bgImage, find, jsonAttr, text } from '../utils/dom.js'
 // bare anchor with the whole card alongside it in `data-npf`, as scraped Open Graph data.
 // The visible markup carries only the link, so everything except the URL comes from the
 // JSON. `.npf-link-block` is the card painted as markup instead, with the poster as a CSS
-// `background-image` rather than an `<img>`.
+// `background-image` and no `<img>` anywhere.
 //
 // The URL is usually wrapped in one of Tumblr's outbound redirectors (`t.umblr.com/redirect`
 // or `href.li`), sometimes nested. Unwrapping is left to the injected cleanUrlFn, which

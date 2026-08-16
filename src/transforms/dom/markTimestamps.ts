@@ -12,7 +12,7 @@ const timestampToken = '(?:\\d{1,2}:)?\\d{1,2}:\\d{2}'
 // The token is captured in one of two groups: at a line start (optional whitespace
 // prefix consumed ahead of it) or before a line end (trailing whitespace in a zero-width
 // lookahead). The prefix is consumed, not matched in a variable-length lookbehind, so a
-// long whitespace run is scanned once rather than re-scanned per position.
+// long whitespace run is scanned once, with no re-scan per position.
 const lineBoundaryTimestampRegex = new RegExp(
   `(?:^|\\n)[ \\t]*(${timestampToken})|(${timestampToken})(?=[ \\t]*(?:\\n|$))`,
   'g',

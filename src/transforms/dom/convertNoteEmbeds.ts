@@ -5,7 +5,7 @@ import { attr, hasText } from '../../utils/dom.js'
 // note.com ships every embed as an empty <figure> that only its web client hydrates, naming the
 // target in `data-src`. Nothing renders it in a reader, so the embed is lost: the figure survives
 // `stripEmptyTags` because note.com writes a uuid into `name` and `id`, which means the loss is
-// silent in the output rather than visible in it. Giving the url an <iframe> carrier is what puts
+// silent in the output, not visible in it. Giving the url an <iframe> carrier is what puts
 // it back on the pipeline, where `convertWidgets` treats it like any other frame.
 //
 // The carrier is emitted on the strength of what note.com says the figure is, not on a guess

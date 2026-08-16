@@ -15,7 +15,7 @@ const sentinels: Record<UrlRole, string> = {
 // `\x0e`-`\x1f`), so strip the whole C0 range first. The floor must hold on its own: a DOM-only
 // pipeline has no stripControlChars upstream, so it can't depend on `\s` alone.
 //
-// Built via new RegExp so the control-char escapes live in strings rather than in a regex literal.
+// Built via new RegExp so the control-char escapes live in strings instead of a regex literal.
 const urlIgnorableRanges = [
   '\\s', // ASCII + Unicode whitespace.
   '\\x00-\\x1F', // C0 controls (NUL etc.) that `\\s` misses.

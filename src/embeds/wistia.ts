@@ -4,10 +4,10 @@ import { keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Every id sampled from the corpus is exactly 10 alphanumeric characters. Anything else is
-// left to the generic placeholder rather than interpolated into a player url.
+// left to the generic placeholder instead of interpolated into a player url.
 const safeMediaIdRegex = /^[a-zA-Z0-9]{10}$/
 
-// The script form names the media as a JSONP callback rather than a page.
+// The script form names the media through a JSONP callback, with no page in the url.
 const jsonpSuffixRegex = /\.jsonp$/
 
 const wistiaHosts = ['wistia.net', 'wistia.com']

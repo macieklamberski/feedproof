@@ -167,10 +167,10 @@ const dimensionLeaf = /^(.*__)?\d{1,5}x\d{1,5}(\.[a-z0-9]+)?$/i
 // width-only "_800x" and retina "@2x" shapes stay out, each below 0.1% of feeds.
 const dimensionSuffix = /[-_]\d{1,5}x\d{1,5}(\.[a-z0-9]+)$/i
 
-// If the URL is a known image-proxy wrapper, return its inner source URL so the key
-// is built from the real image rather than the proxy's render params. Loops so a
-// proxy that wraps another proxy (e.g. a Cloudinary fetch of a Cloudinary upload)
-// fully unwraps. The depth cap and same-value check stop any runaway.
+// If the URL is a known image-proxy wrapper, return its inner source URL so the key is built
+// from the real image, not the proxy's render params. Loops so a proxy that wraps another proxy
+// (e.g. a Cloudinary fetch of a Cloudinary upload) fully unwraps. The depth cap and same-value
+// check stop any runaway.
 const unwrapProxiedImage = (url: string): string => {
   let current = url
 

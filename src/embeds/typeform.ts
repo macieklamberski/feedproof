@@ -18,7 +18,7 @@ const titlePropRegex = /(?:^|,)title=([^,]+)/
 
 // Four of the five embed types are launchers: a button that opens the form in an overlay.
 // Those are chrome that was never article content, and each carries the same id as the
-// widget, so they have to be excluded before the id is read rather than after.
+// widget, so they have to be excluded before the id is read.
 const launcherAttributes = ['data-tf-popup', 'data-tf-slider', 'data-tf-popover', 'data-tf-sidetab']
 
 const composeEmbed = (id: string, title?: string): EmbedResolverResult | undefined => {
@@ -46,7 +46,7 @@ const readTitle = (element: Element): string | undefined => {
 // `typeform-widget` class whose loader is still served.
 //
 // A `data-tf-live` id is not a form id: `form.typeform.com/to/<liveId>` 301s to Typeform's
-// explore page rather than a form. The id still travels, because `api.typeform.com/
+// explore page, not a form. The id still travels, because `api.typeform.com/
 // single-embed/<liveId>` answers key-free with the real form id, which is an enrichment step
 // and not something a pure extract can do.
 export const typeformWidgetEmbedResolver = createMarkupEmbedResolver(
@@ -69,7 +69,7 @@ export const typeformWidgetEmbedResolver = createMarkupEmbedResolver(
 )
 
 // `form.typeform.com/to/<id>` is what the platform's oEmbed emits, and the per-account
-// `<user>.typeform.com/to/<id>` still serves the same form rather than redirecting, so both
+// `<user>.typeform.com/to/<id>` still serves the same form without redirecting, so both
 // reach here. The query is telemetry (`typeform-embed`, `typeform-medium`) and is dropped.
 export const typeformResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, typeformHosts)
