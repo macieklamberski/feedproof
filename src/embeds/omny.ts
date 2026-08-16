@@ -43,9 +43,9 @@ export const omnyResolveEmbed = (url: string): EmbedResolverResult | undefined =
     return
   }
 
-  // The query is carried through rather than dropped. `style=cover` and `size=` change the
-  // player's shape, so rebuilding a bare url would hand the publisher a different embed than
-  // the one they chose, and the height stated below was measured on specimens that had them.
+  // The query is carried through. `style=cover` and `size=` change the player's shape, so
+  // rebuilding a bare url would hand the publisher a different embed than the one they chose,
+  // and the height stated below was measured on specimens that had them.
   const query = parseUrl(url, 'https://example.com')?.search ?? ''
 
   return {

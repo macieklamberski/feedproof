@@ -40,10 +40,9 @@ const iframeSources: Record<string, (settings: Record<string, unknown>) => strin
 }
 
 // Rebuilds a real <iframe> from an Elementor video widget that defers a YouTube, Vimeo,
-// Dailymotion, or VideoPress embed, so the later convertWidgets turns it into
-// a placeholder (YouTube and Dailymotion gain a thumbnail; Vimeo and VideoPress stay
-// posterless). Malformed
-// `data-settings` or an unrecoverable id skips the widget rather than throwing.
+// Dailymotion, or VideoPress embed, so the later convertWidgets turns it into a placeholder
+// (YouTube and Dailymotion gain a thumbnail; Vimeo and VideoPress stay posterless). Malformed
+// `data-settings` or an unrecoverable id skips the widget instead of throwing.
 export const rebuildElementorVideoEmbeds: DomTransform = () => (document) => {
   for (const widget of document.querySelectorAll('.elementor-widget-video[data-settings]')) {
     // The attribute reads back as decoded JSON, since the parser unescapes the entities.

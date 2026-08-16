@@ -183,14 +183,16 @@ const resolve = (media: Element): Resolution | undefined => {
   }
 }
 
-// Canonicalizes explicit media alignment (WordPress align* classes, deprecated
-// align attribute, <center>, inline text-align, image auto-margins) into a single
-// data-align="center|left|right" hook on the media (or its <figure>). Purely
-// additive: it only attaches the hook and never mutates the existing markup, so
-// native rendering keeps working until a renderer adopts data-align. Text alignment
-// on prose is left untouched. Runs before flattenPictureElements and unwrapWrappers
-// so a signal on a soon-dissolved <picture>/<div> lands on the surviving media.
-// Idempotent: a media element already carrying data-align is skipped.
+// Canonicalizes explicit media alignment (WordPress align* classes, deprecated align attribute,
+// <center>, inline text-align, image auto-margins) into a single data-align="center|left|right"
+// hook on the media (or its <figure>). Text alignment on prose is left untouched.
+//
+// Purely additive: it only attaches the hook and never mutates the existing markup, so native
+// rendering keeps working until a renderer adopts data-align. Idempotent too: a media element
+// already carrying data-align is skipped.
+//
+// Runs before flattenPictureElements and unwrapWrappers, so a signal on a soon-dissolved
+// <picture>/<div> lands on the surviving media.
 export const canonicalizeAlignment: DomTransform = () => {
   return (document) => {
     for (const media of document.querySelectorAll('img, video, audio, iframe')) {

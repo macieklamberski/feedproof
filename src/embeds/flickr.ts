@@ -76,7 +76,7 @@ const composeShortAlbumUrl = (setId: string): string => {
 }
 
 // The endpoint renders `width: NaNpx` when it is given no size, so the dimensions travel in the
-// url rather than being left to the reader. These are the size Flickr's own dialog wrote for
+// url instead of being left to the reader. These are the size Flickr's own dialog wrote for
 // years, used only when the carrier states nothing.
 const defaultWidth = 400
 const defaultHeight = 300

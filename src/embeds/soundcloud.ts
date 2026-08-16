@@ -4,18 +4,11 @@ import { attr, jsonAttr, text } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // SoundCloud's embed is an iframe whose `url=` query names the track as an
-// `api.soundcloud.com/tracks/{id}` reference, which is not human-clickable, so the iframe
-// alone yields a placeholder with no canonical url. The human-facing URLs live beside it:
-// the platform's "Copy embed" snippet ships a sibling div with two anchors, the artist page
-// and the track page ("Artist · Track"). When that sibling is present its links become the
-// placeholder's author and canonical url, and the div is removed so the reader does not see
-// the placeholder and the same links twice. Gutenberg embeds instead carry the title on the
-// iframe itself ("Track by Artist").
-// The reference names the id twice in some feeds, as a bare number under the path and again as
-// a `soundcloud:tracks:{id}` URN in place of it. The colons arrive percent-encoded because the
-// whole reference is itself a query value, so both spellings are accepted here. Roughly one
-// SoundCloud feed in ten carries the URN form and nothing else, which left every embed in it
-// with no id at all.
+// `api.soundcloud.com/tracks/{id}` reference. Some feeds name the id twice in it, as a bare
+// number under the path and again as a `soundcloud:tracks:{id}` URN in place of it. The colons
+// arrive percent-encoded because the whole reference is itself a query value, so both spellings
+// are accepted here. Roughly one SoundCloud feed in ten carries the URN form and nothing else,
+// which without the second spelling leaves every embed in it with no id at all.
 const referenceRegex =
   /api\.soundcloud\.com\/(tracks|playlists|users)\/(?:soundcloud(?::|%3A)\w+(?::|%3A))?(\d+)/i
 
@@ -64,6 +57,12 @@ const readSubstackTrack = (element: Element): Partial<EmbedResolverResult> => {
   }
 }
 
+// The reference the iframe names the track by is not human-clickable, so the iframe alone yields
+// a placeholder with no canonical url. The human-facing URLs live beside it: the platform's
+// "Copy embed" snippet ships a sibling div with two anchors, the artist page and the track page
+// ("Artist · Track"). When that sibling is present its links become the placeholder's author and
+// canonical url, and the div is removed so the reader does not see the placeholder and the same
+// links twice. Gutenberg embeds instead carry the title on the iframe itself ("Track by Artist").
 export const soundcloudResolveEmbed = (
   src: string,
   element: Element,

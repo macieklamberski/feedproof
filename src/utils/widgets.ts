@@ -73,7 +73,7 @@ export const createMarkupEmbedResolver = (
 // Replaces a resolver's derived size with the one the carrier states.
 //
 // The two numbers travel together, because a placeholder's width and height read as an aspect
-// ratio rather than as pixels. So whichever source is used, both come from it: taking the width
+// ratio, not as pixels. So whichever source is used, both come from it: taking the width
 // a publisher stated and the height a resolver derived describes a shape neither of them meant,
 // and 16:9 paired with a 400px height that way reads as 1:4.
 //
@@ -212,7 +212,7 @@ export const updateEmbedPlaceholder = (
 }
 
 // `src` is the one field a placeholder cannot be built without, so it is required inside the
-// metadata rather than passed beside it: a second argument would let the two disagree.
+// metadata instead of passed beside it: a second argument would let the two disagree.
 export const createEmbedPlaceholder = (
   document: Document,
   metadata: Partial<EmbedResolverResult> & Pick<EmbedResolverResult, 'src'>,

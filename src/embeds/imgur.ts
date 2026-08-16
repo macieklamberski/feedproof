@@ -68,7 +68,7 @@ export const imgurBlockquoteEmbedResolver = createMarkupEmbedResolver(
 
 // The frame the script builds, kept by exports that stored the page after it rendered. Its query
 // describes the embedding page (`pub`, `ref`, `context`, `analytics`, `w`), so the url is rebuilt
-// from the path rather than carried across.
+// from the path instead of carried across.
 export const imgurResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, imgurHosts)
 

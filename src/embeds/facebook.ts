@@ -11,7 +11,7 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 //   https://www.facebook.com/plugins/post.php?href={encoded href}
 //   https://www.facebook.com/plugins/video.php?href={encoded href}
 // `fb.watch` is the short-link host the mobile app hands out, and it turns up inside both
-// widget divs, so it is a Facebook url for our purposes even though the plugin lives elsewhere.
+// widget divs, so it is treated as a Facebook url even though the plugin lives elsewhere.
 const facebookHosts = ['facebook.com', 'fb.watch']
 
 // Posts live on the apex and on `web.`/`m.`/`business.` alike, so both checks are the guard,
@@ -89,7 +89,7 @@ export const facebookXfbmlEmbedResolver = createMarkupEmbedResolver(
 )
 
 // The AMP component, which names which plugin it wants in `data-embed-as` (post, video or
-// comment). A comment thread is page chrome rather than the article's content, so it is left
+// comment). A comment thread is page chrome, not the article's content, so it is left
 // for the non-content pass and only the other two resolve.
 export const facebookAmpEmbedResolver = createMarkupEmbedResolver(
   'amp-facebook[data-href]',

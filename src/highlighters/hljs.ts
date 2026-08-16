@@ -40,13 +40,13 @@ import vim from 'highlight.js/lib/languages/vim'
 import x86asm from 'highlight.js/lib/languages/x86asm'
 import type { HighlightFn } from '../types.js'
 
-// Languages absent from highlight.js's common build but common in feed code
-// blocks (ranked by real-corpus hint frequency). Registering them lets an
-// explicit class/attribute hint resolve to a grammar. A block with no match is
-// left as plain text. Built-in aliases (hs->haskell, clj->clojure, ...) come
-// along for free.
-// Mathematica is deliberately left out for now: its grammar is ~148 KB (a
-// built-in symbol table), too heavy for the ~0.006% of blocks that declare it.
+// Languages absent from highlight.js's common build but common in feed code blocks (ranked by
+// real-corpus hint frequency). Registering them lets an explicit class/attribute hint resolve to
+// a grammar. A block with no match is left as plain text. Built-in aliases (hs->haskell,
+// clj->clojure, ...) come along for free.
+//
+// Mathematica is deliberately left out for now: its grammar is ~148 KB (a built-in symbol
+// table), too heavy for the ~0.006% of blocks that declare it.
 export const extraLanguages: Record<string, LanguageFn> = {
   applescript,
   arduino,

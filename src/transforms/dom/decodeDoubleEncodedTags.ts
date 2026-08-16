@@ -36,7 +36,7 @@ export const decodeDoubleEncodedTags: DomTransform = () => {
       tempDiv.innerHTML = node.data
 
       // An escaped `<pre>`/`<code>` is a code sample: decode the wrapper into a real code block,
-      // but re-escape its contents so the sample's tags show as text rather than render as markup.
+      // but re-escape its contents so the sample's tags show as text instead of rendering.
       for (const element of tempDiv.querySelectorAll('code')) {
         element.textContent = element.innerHTML
       }

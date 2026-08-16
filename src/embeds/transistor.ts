@@ -3,7 +3,7 @@ import type { EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^[0-9a-z]{6,12}$/i
-// A show slug is the publisher's own words rather than a generated id, so it runs longer and
+// A show slug is the publisher's own words, not a generated id, so it runs longer and
 // hyphenates. The leading class keeps a slug from opening with a hyphen or reaching a dot, so
 // it cannot climb out of the minted path.
 const safeSlugRegex = /^[0-9a-z][0-9a-z-]{1,60}$/i
@@ -11,7 +11,7 @@ const safeSlugRegex = /^[0-9a-z][0-9a-z-]{1,60}$/i
 const transistorHosts = ['transistor.fm']
 
 // Fixed at 180 across 49 of 49 sampled corpus iframes, and Transistor's own oEmbed agrees.
-// The playlist embed is taller, so the two kinds are sized apart rather than averaged. A
+// The playlist embed is taller, so the two kinds are sized apart instead of averaged. A
 // `/latest` player holds one episode and matches the episode height. `/playlist` holds the
 // whole show and matches the show one.
 const playerHeights = { e: 180, s: 390, latest: 180, playlist: 390 }
