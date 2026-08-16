@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { flashVars } from '../utils/dom.js'
+import { flashVars, keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen.
@@ -30,9 +30,7 @@ export const extractArchiveIdentifier = (link: string): string | undefined => {
   const segments = getPathSegments(parsed)
   const identifier = segments[0] === 'embed' || segments[0] === 'details' ? segments[1] : undefined
 
-  if (identifier && safeIdentifierRegex.test(identifier)) {
-    return identifier
-  }
+  return keepIfMatches(identifier, safeIdentifierRegex)
 }
 
 const composeEmbedResult = (identifier: string, query = ''): EmbedResolverResult => {

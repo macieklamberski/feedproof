@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, parsePixelSize } from '../utils/dom.js'
+import { attr, keepIfMatches, parsePixelSize } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -41,9 +41,7 @@ export const extractNicovideoId = (link: string): string | undefined => {
   })
   const videoId = marker < 0 ? undefined : segments[marker + 1]
 
-  if (videoId && safeVideoIdRegex.test(videoId)) {
-    return videoId
-  }
+  return keepIfMatches(videoId, safeVideoIdRegex)
 }
 
 export const nicovideoResolveEmbed = (url: string): EmbedResolverResult | undefined => {

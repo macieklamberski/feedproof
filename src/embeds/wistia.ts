@@ -1,5 +1,6 @@
 import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Every id sampled from the corpus is exactly 10 alphanumeric characters. Anything else is
@@ -22,9 +23,7 @@ export const extractWistiaId = (link: string): string | undefined => {
     segments[start] === 'iframe' || segments[start] === 'medias' ? segments[start + 1] : undefined
   const cleaned = id?.replace(jsonpSuffixRegex, '')
 
-  if (cleaned && safeMediaIdRegex.test(cleaned)) {
-    return cleaned
-  }
+  return keepIfMatches(cleaned, safeMediaIdRegex)
 }
 
 // No thumbnail and no canonical url: the poster needs Wistia's media JSON hop, and the public
