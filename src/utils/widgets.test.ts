@@ -559,4 +559,156 @@ describeForEachParser('declaredSize', (parseHtml) => {
       expect(resolve(resolver, value)).toEqual(expected)
     })
   })
+
+  // The pair is an aspect ratio, so both numbers have to describe the same box. A resolver that
+  // states 16:9 as 100x56 and a carrier that states a 400px height are talking about different
+  // things, and pairing them reads as 1:4. Every combination below asks the same question: can
+  // the result end up holding one number from each side?
+  describe('where the two numbers come from', () => {
+    const ratio: EmbedResolverResult = { ...stated, width: 100, height: 56 }
+    const fixedHeight: EmbedResolverResult = { ...stated, height: 300 }
+
+    const build = (result: EmbedResolverResult, markup: string) => {
+      return resolve(
+        createMarkupEmbedResolver('div.player', () => result),
+        markup,
+      )
+    }
+
+    describe('a resolver that states a ratio', () => {
+      it('should keep the ratio when the carrier states nothing', () => {
+        const value = html`<div class="player"></div>`
+
+        expect(build(ratio, value)).toEqual(ratio)
+      })
+
+      it('should drop the ratio when the carrier states a height alone', () => {
+        const value = html`
+          <div
+            class="player"
+            height="400"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...stated, height: 400 }
+
+        expect(build(ratio, value)).toEqual(expected)
+      })
+
+      it('should drop the ratio when the carrier states a width alone', () => {
+        const value = html`
+          <div
+            class="player"
+            width="640"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...stated, width: 640 }
+
+        expect(build(ratio, value)).toEqual(expected)
+      })
+
+      it('should take the carrier ratio whole when it states both', () => {
+        const value = html`
+          <div
+            class="player"
+            width="640"
+            height="360"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...stated, width: 640, height: 360 }
+
+        expect(build(ratio, value)).toEqual(expected)
+      })
+    })
+
+    describe('a resolver that states a fixed height', () => {
+      it('should keep the height when the carrier states nothing', () => {
+        const value = html`<div class="player"></div>`
+
+        expect(build(fixedHeight, value)).toEqual(fixedHeight)
+      })
+
+      // The carrier names a width and nothing else, so the resolver's height must not fill the
+      // gap: 640 by 300 is a ratio no one stated.
+      it('should not pair its height with a width the carrier states', () => {
+        const value = html`
+          <div
+            class="player"
+            width="640"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...stated, width: 640 }
+
+        expect(build(fixedHeight, value)).toEqual(expected)
+      })
+
+      it('should let the carrier overrule the height it states', () => {
+        const value = html`
+          <div
+            class="player"
+            height="400"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...stated, height: 400 }
+
+        expect(build(fixedHeight, value)).toEqual(expected)
+      })
+    })
+
+    // A carrier states its size three ways, and each one has to replace the pair rather than
+    // merge into it.
+    describe('whichever way the carrier states it', () => {
+      it('should replace the pair from an inline style', () => {
+        const value = html`
+          <div
+            class="player"
+            style="height: 400px"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...stated, height: 400 }
+
+        expect(build(ratio, value)).toEqual(expected)
+      })
+
+      it('should replace the pair from data-image-dimensions', () => {
+        const value = html`
+          <div
+            class="player"
+            data-image-dimensions="640x360"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...stated, width: 640, height: 360 }
+
+        expect(build(ratio, value)).toEqual(expected)
+      })
+
+      // A responsive wrapper states a ratio of its own, and it names both numbers, so there is
+      // nothing of the resolver's left to mix with.
+      it('should replace the pair from a responsive wrapper', () => {
+        const value = html`
+          <div style="padding-bottom: 50%">
+            <div class="player"></div>
+          </div>
+        `
+        const expected: EmbedResolverResult = { ...stated, width: 100, height: 50 }
+
+        expect(build(ratio, value)).toEqual(expected)
+      })
+    })
+
+    // A size the carrier states in a form nothing can read is the same as stating none, so the
+    // resolver's own pair survives intact.
+    describe('a size the carrier states unreadably', () => {
+      it('should keep the ratio for a fluid width and an automatic height', () => {
+        const value = html`
+          <div
+            class="player"
+            width="100%"
+            height="auto"
+          ></div>
+        `
+
+        expect(build(ratio, value)).toEqual(ratio)
+      })
+    })
+  })
 })
