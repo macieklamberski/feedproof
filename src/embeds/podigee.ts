@@ -1,5 +1,5 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import { attr } from '../utils/dom.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
 // Podigee ships a generic loader script whose `data-configuration` is the player url itself,
@@ -13,14 +13,10 @@ export const podigeeEmbedResolver = createMarkupEmbedResolver(
   'script.podigee-podcast-player[data-configuration]',
   (element) => {
     const configuration = attr(element, 'data-configuration')
-    const parsed = configuration ? parseUrl(configuration, 'https://example.com') : undefined
+    const parsed = parseUrlOnHosts(configuration, podigeeHosts)
 
     // Only a real player url counts; the inline-config spellings are not urls.
     if (!parsed || !configuration?.includes('//')) {
-      return
-    }
-
-    if (!isHostOf(parsed, podigeeHosts) && !isSubdomainOf(parsed, podigeeHosts)) {
       return
     }
 

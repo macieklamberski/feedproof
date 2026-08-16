@@ -1,4 +1,4 @@
-import { parseUrl } from 'trousse'
+import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { ResolveUrlFn } from '../types.js'
 
 // Matches any URL that already carries a scheme (the URL-spec scheme grammar) — i.e.
@@ -33,6 +33,22 @@ export const isUsableSrc = (src: string | null): src is string => {
 // libraries park on otherwise-lazy attribute names; a real URL carries a `:`, `/`, or `.`.
 export const isUrlShaped = (value: string): boolean => {
   return urlShapeRegex.test(value)
+}
+
+// Parses the url and keeps it only when it sits on one of the hosts, exactly or on a subdomain,
+// which is the check every resolver keyed on a platform makes before reading an id out of it.
+// The base is what lets a protocol-relative url still name its host; a relative path lands on
+// the placeholder host and fails the check, so a bare `/watch/123` never passes as the
+// platform's own.
+export const parseUrlOnHosts = (
+  url: string | undefined,
+  hosts: string | ReadonlyArray<string>,
+): URL | undefined => {
+  const parsed = url ? parseUrl(url, 'https://example.com') : undefined
+
+  if (parsed && (isHostOf(parsed, hosts) || isSubdomainOf(parsed, hosts))) {
+    return parsed
+  }
 }
 
 // The same pick as `pickUrlParams`, for a query that arrives on its own rather than on a url,

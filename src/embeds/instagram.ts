@@ -1,6 +1,7 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, parsePixelSize, text } from '../utils/dom.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Instagram's embed dialog ships a post as `<blockquote class="instagram-media">` holding the
@@ -15,10 +16,6 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // `instagr.am` is the short host the pre-2013 snippets and Jetpack's own matcher still accept.
 const instagramHosts = ['instagram.com', 'instagr.am']
 
-const isInstagramUrl = (url: URL): boolean => {
-  return isHostOf(url, instagramHosts) || isSubdomainOf(url, instagramHosts)
-}
-
 // The paths one post is addressed by: the post, the reel (singular and plural spellings) and
 // the retired IGTV route. They are not interchangeable — a live photo serves its picture at
 // `/p/{shortcode}/media/` and answers 404 at `/reel/{shortcode}/media/` (checked 2026-08-13) —
@@ -29,9 +26,9 @@ const safeShortcodeRegex = /^[A-Za-z0-9_-]+$/
 type Post = { kind: string; shortcode: string }
 
 const readPostUrl = (value: string | undefined): Post | undefined => {
-  const parsed = parseUrl(value ?? '', 'https://example.com')
+  const parsed = parseUrlOnHosts(value, instagramHosts)
 
-  if (!parsed || !isInstagramUrl(parsed)) {
+  if (!parsed) {
     return
   }
 
@@ -128,9 +125,9 @@ const bareHandleRegex = /@([A-Za-z0-9_.]{1,30})/
 
 const readProfileHandle = (element: Element): string | undefined => {
   for (const anchor of element.querySelectorAll('a[href]')) {
-    const parsed = parseUrl(attr(anchor, 'href') ?? '', 'https://example.com')
+    const parsed = parseUrlOnHosts(attr(anchor, 'href'), instagramHosts)
 
-    if (!parsed || !isInstagramUrl(parsed)) {
+    if (!parsed) {
       continue
     }
 

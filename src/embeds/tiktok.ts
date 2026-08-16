@@ -1,6 +1,6 @@
 import { coerceNumber, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, find, text, textNode } from '../utils/dom.js'
+import { attr, find, keepIfMatches, text, textNode } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // TikTok's oEmbed snippet is a `<blockquote class="tiktok-embed">` wrapping a section with
@@ -91,7 +91,7 @@ const resolveClip = (element: Element): EmbedResolverResult | undefined => {
     }
   }
 
-  const declaredId = declared && safeVideoIdRegex.test(declared) ? declared : undefined
+  const declaredId = keepIfMatches(declared, safeVideoIdRegex)
   const videoId = declaredId ?? cited.videoId ?? linked.videoId
 
   if (!videoId) {
@@ -119,10 +119,7 @@ const resolveClip = (element: Element): EmbedResolverResult | undefined => {
   // keeps no handle anywhere falls back to the bare video id, which still names the player
   // but cannot address the endpoint.
   const authorHandle = author?.slice(1)
-  const handle =
-    cited.handle ??
-    linked.handle ??
-    (authorHandle && safeHandleRegex.test(authorHandle) ? authorHandle : undefined)
+  const handle = cited.handle ?? linked.handle ?? keepIfMatches(authorHandle, safeHandleRegex)
 
   return {
     provider: 'tiktok',

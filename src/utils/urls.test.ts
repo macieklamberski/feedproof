@@ -1,6 +1,49 @@
 import { describe, expect, it } from 'bun:test'
 import { baseContext } from '../tests.js'
-import { pickQueryParams, pickUrlParams, resolveOrKeepUrl } from './urls.js'
+import { parseUrlOnHosts, pickQueryParams, pickUrlParams, resolveOrKeepUrl } from './urls.js'
+
+describe('parseUrlOnHosts', () => {
+  const hosts = ['platform.example', 'other.example']
+
+  it('should return the parsed url when it is on one of the hosts', () => {
+    const value = 'https://platform.example/watch/123?v=1'
+
+    expect(parseUrlOnHosts(value, hosts)?.pathname).toBe('/watch/123')
+  })
+
+  it('should accept a subdomain of a host', () => {
+    const value = 'https://open.platform.example/track/123'
+
+    expect(parseUrlOnHosts(value, hosts)?.hostname).toBe('open.platform.example')
+  })
+
+  it('should accept a protocol-relative url on a host', () => {
+    const value = '//platform.example/watch/123'
+
+    expect(parseUrlOnHosts(value, hosts)?.hostname).toBe('platform.example')
+  })
+
+  it('should return undefined for a url on another host', () => {
+    expect(parseUrlOnHosts('https://elsewhere.example/watch/123', hosts)).toBeUndefined()
+  })
+
+  it('should return undefined for a host that only ends with the name', () => {
+    expect(parseUrlOnHosts('https://notplatform.example/watch/123', hosts)).toBeUndefined()
+  })
+
+  it('should return undefined for a relative path', () => {
+    expect(parseUrlOnHosts('/watch/123', hosts)).toBeUndefined()
+  })
+
+  it('should return undefined for an unparseable url', () => {
+    expect(parseUrlOnHosts('http://[', hosts)).toBeUndefined()
+  })
+
+  it('should return undefined for an empty or undefined url', () => {
+    expect(parseUrlOnHosts('', hosts)).toBeUndefined()
+    expect(parseUrlOnHosts(undefined, hosts)).toBeUndefined()
+  })
+})
 
 describe('resolveOrKeepUrl', () => {
   const { resolveUrlFn } = baseContext

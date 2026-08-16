@@ -1,6 +1,7 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize } from '../utils/dom.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Video ids are a two-letter kind and a number, `sm9`, `nm12345`, `so67890`.
@@ -26,11 +27,11 @@ const nicovideoHosts = ['nicovideo.jp']
 // status code means something: a real id answers 200 with the video's title in the document, an
 // invented one answers 500.
 export const extractNicovideoId = (link: string): string | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
   // The script selector matches on a substring, so any host can spell `nicovideo.jp/thumb_watch`
   // inside its own path and reach this. The path shape alone must not mint a nicovideo url.
-  if (!parsed || (!isHostOf(parsed, nicovideoHosts) && !isSubdomainOf(parsed, nicovideoHosts))) {
+  const parsed = parseUrlOnHosts(link, nicovideoHosts)
+
+  if (!parsed) {
     return
   }
 

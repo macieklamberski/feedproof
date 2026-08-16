@@ -128,6 +128,12 @@ export const attr = (element: Nullish<Element>, name: string): string | undefine
   return element?.getAttribute(name)?.trim() || undefined
 }
 
+// Keeps a value read out of an attribute or a url when it fits the shape expected of it, an id,
+// a handle or a token, and drops it otherwise, so nothing malformed reaches a minted url.
+export const keepIfMatches = (value: Nullish<string>, regex: RegExp): string | undefined => {
+  return value && regex.test(value) ? value : undefined
+}
+
 // A Flash player's configuration, which is where a `.swf` carrier names what it plays: the
 // url is only the player. The value sits either on the carrier itself, which is how `<embed>`
 // spells it, or in a sibling `<param name="flashvars">`, which is how `<object>` does. Both
