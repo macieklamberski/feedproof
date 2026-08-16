@@ -211,6 +211,14 @@ export const isBlockElement = (node: Node): boolean => {
   return isElement(node) && blockElements.has(node.localName)
 }
 
+// An element a reader sees nothing of: no child elements and no text beyond whitespace.
+// Attributes are not content, so an element carrying only a src or an href still counts as
+// empty here. This is not the test stripEmptyTags applies, which keeps some empty elements
+// and tells whitespace-only apart from no content at all.
+export const isEmptyElement = (element: Element): boolean => {
+  return element.children.length === 0 && !hasText(element)
+}
+
 // Remove an element along with any wrapper (a/figure) it leaves empty, so a
 // removed image doesn't leave a dangling link or empty figure behind.
 export const removeWithEmptyWrappers = (element: Element): void => {
@@ -224,8 +232,7 @@ export const removeWithEmptyWrappers = (element: Element): void => {
       break
     }
 
-    const isEmpty = parent.children.length === 0 && (parent.textContent ?? '').trim() === ''
-    if (!isEmpty) {
+    if (!isEmptyElement(parent)) {
       break
     }
 

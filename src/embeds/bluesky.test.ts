@@ -8,23 +8,6 @@ import {
   blueskyS9eEmbedResolver,
 } from './bluesky.js'
 
-// Substack wraps the player in a div whose `data-attrs` holds the whole post as JSON, stored in
-// a double-quoted attribute with the inner quotes HTML-encoded, which is what survives a parse
-// and serialise roundtrip. The wrapper states a flex box with an automatic height, which is no
-// size at all, so the placeholder takes none from it.
-const makeContainer = (attrs: Record<string, unknown> | string, player: string): string => {
-  return html`
-    <div
-      class="bluesky-wrap outer"
-      style="height: auto; display: flex; margin-bottom: 24px;"
-      data-attrs="${jsonAttrValue(attrs)}"
-      data-component-name="BlueskyCreateBlueskyEmbed"
-    >
-      ${player}
-    </div>
-  `
-}
-
 describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, blueskyBlockquoteEmbedResolver)
 
@@ -616,24 +599,33 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
 describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, blueskyIframeEmbedResolver)
 
+  // Substack wraps the player in a div whose `data-attrs` holds the whole post as JSON, stored in
+  // a double-quoted attribute with the inner quotes HTML-encoded, which is what survives a parse
+  // and serialise roundtrip. The wrapper states a flex box with an automatic height, which is no
+  // size at all, so the placeholder takes none from it.
   describe('newsletter wrapper carrying the post as JSON', () => {
     it('should map the whole payload onto the placeholder', async () => {
-      const value = makeContainer(
-        {
-          postId: '3mbq7aeuwbg42',
-          authorDid: 'did:plc:bhz4agnyzcrsvpnprxrbjrpa',
-          authorName: 'Newsletter Author',
-          authorHandle: 'author.example',
-          authorAvatarUrl:
-            'https://cdn.bsky.app/img/avatar/plain/did:plc:bhz4agnyzcrsvpnprxrbjrpa/bafkreiavatar@jpeg',
-          text: 'The wrapper carries the post twice over.',
-          createdAt: '2025-12-13T14:15:16.017Z',
-          uri: 'at://did:plc:bhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mbq7aeuwbg42',
-          imageUrls: [
-            'https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:bhz4agnyzcrsvpnprxrbjrpa/bafkreithumb@jpeg',
-          ],
-        },
-        html`
+      const payload = {
+        postId: '3mbq7aeuwbg42',
+        authorDid: 'did:plc:bhz4agnyzcrsvpnprxrbjrpa',
+        authorName: 'Newsletter Author',
+        authorHandle: 'author.example',
+        authorAvatarUrl:
+          'https://cdn.bsky.app/img/avatar/plain/did:plc:bhz4agnyzcrsvpnprxrbjrpa/bafkreiavatar@jpeg',
+        text: 'The wrapper carries the post twice over.',
+        createdAt: '2025-12-13T14:15:16.017Z',
+        uri: 'at://did:plc:bhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mbq7aeuwbg42',
+        imageUrls: [
+          'https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:bhz4agnyzcrsvpnprxrbjrpa/bafkreithumb@jpeg',
+        ],
+      }
+      const value = html`
+        <div
+          class="bluesky-wrap outer"
+          style="height: auto; display: flex; margin-bottom: 24px;"
+          data-attrs="${jsonAttrValue(payload)}"
+          data-component-name="BlueskyCreateBlueskyEmbed"
+        >
           <iframe
             id="bluesky-3mbq7aeuwbg42"
             data-bluesky-id="1234567890123456"
@@ -642,8 +634,8 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
             frameborder="0"
             scrolling="no"
           ></iframe>
-        `,
-      )
+        </div>
+      `
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:bhz4agnyzcrsvpnprxrbjrpa/3mbq7aeuwbg42',
@@ -662,18 +654,25 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should take a video post poster from the video host', async () => {
-      const value = makeContainer(
-        {
-          authorName: 'Video Author',
-          authorHandle: 'video.example',
-          text: 'A post with a clip.',
-          createdAt: '2026-01-14T15:16:17.018Z',
-          imageUrls: [
-            'https://video.bsky.app/watch/did:plc:chz4agnyzcrsvpnprxrbjrpa/bafkreivideo/thumbnail.jpg',
-          ],
-        },
-        '<iframe src="https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42?id=1"></iframe>',
-      )
+      const payload = {
+        authorName: 'Video Author',
+        authorHandle: 'video.example',
+        text: 'A post with a clip.',
+        createdAt: '2026-01-14T15:16:17.018Z',
+        imageUrls: [
+          'https://video.bsky.app/watch/did:plc:chz4agnyzcrsvpnprxrbjrpa/bafkreivideo/thumbnail.jpg',
+        ],
+      }
+      const value = html`
+        <div
+          class="bluesky-wrap outer"
+          style="height: auto; display: flex; margin-bottom: 24px;"
+          data-attrs="${jsonAttrValue(payload)}"
+          data-component-name="BlueskyCreateBlueskyEmbed"
+        >
+          <iframe src="https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42?id=1"></iframe>
+        </div>
+      `
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:chz4agnyzcrsvpnprxrbjrpa/3mcq7aeuwbg42',
@@ -690,14 +689,21 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should ignore media urls served from another host', async () => {
-      const value = makeContainer(
-        {
-          authorHandle: 'author.example',
-          authorAvatarUrl: 'https://evil.test/cdn.bsky.app/avatar.jpg',
-          imageUrls: ['https://evil.test/cdn.bsky.app/thumb.jpg'],
-        },
-        '<iframe src="https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42?id=1"></iframe>',
-      )
+      const payload = {
+        authorHandle: 'author.example',
+        authorAvatarUrl: 'https://evil.test/cdn.bsky.app/avatar.jpg',
+        imageUrls: ['https://evil.test/cdn.bsky.app/thumb.jpg'],
+      }
+      const value = html`
+        <div
+          class="bluesky-wrap outer"
+          style="height: auto; display: flex; margin-bottom: 24px;"
+          data-attrs="${jsonAttrValue(payload)}"
+          data-component-name="BlueskyCreateBlueskyEmbed"
+        >
+          <iframe src="https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42?id=1"></iframe>
+        </div>
+      `
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:dhz4agnyzcrsvpnprxrbjrpa/3mdq7aeuwbg42',
