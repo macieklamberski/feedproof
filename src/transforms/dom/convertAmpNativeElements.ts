@@ -24,10 +24,9 @@ const conversions: Array<AmpConversion> = [
 // The set stops at AMP elements with a native equivalent, where the provider is unknown or
 // beside the point. An AMP element naming a platform (<amp-youtube>, <amp-jwplayer>,
 // <amp-gist>, …) belongs to that platform's own resolver or transform, which reads its
-// attributes and mints the placeholder directly. That boundary is load-bearing rather than
-// tidy: this transform runs in the normalize cluster ahead of convertWidgets, so an
-// amp-{platform} element handled here would rewrite the markup before the platform's own
-// selector ever sees it, and shadow the resolver silently.
+// attributes and mints the placeholder directly. This transform runs in the normalize cluster
+// ahead of convertWidgets, so an amp-{platform} element handled here would rewrite the markup
+// before the platform's own selector ever sees it, and shadow the resolver silently.
 //
 // <amp-video-iframe> falls on the native side of that line despite naming a video. Its src is
 // any page at all that implements AMP's video-iframe protocol, so the provider is unknown, and
@@ -38,9 +37,9 @@ export const convertAmpNativeElements: DomTransform = () => (document) => {
       const replacement = document.createElement(conversion.target)
 
       // Everything the publisher wrote rides along. AMP's own layout attributes (layout, on,
-      // placeholder, …) come with it and mean nothing on a plain element, but picking a subset
-      // costs more than it saves: the allow-list silently dropped ordinary HTML like `preload`
-      // and `loading`, and it has to grow every time HTML does.
+      // placeholder, …) come with it and mean nothing on a plain element. The allow-list that
+      // picked a subset instead silently dropped ordinary HTML like `preload` and `loading`,
+      // and it has to grow every time HTML does.
       for (const attribute of Array.from(element.attributes)) {
         replacement.setAttribute(attribute.name, attribute.value)
       }

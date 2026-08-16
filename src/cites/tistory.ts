@@ -12,12 +12,11 @@ import { attr, find, text } from '../utils/dom.js'
 // element inside the anchor. The attributes are read first because the elements are absent
 // on the slimmer card variants.
 //
-// The selector names the attribute alone, and that is deliberate rather than an oversight.
-// Qualifying it as `figure[data-og-source-url]` was considered and rejected: it would miss any
-// variant built from another element, and the collision it guards against does not occur. Of
-// 801 occurrences measured across 1,590,608 feeds, every one carries the same `data-og-*`
-// family and none belongs to another platform. The names come from the Open Graph protocol,
-// but the card is this editor's.
+// The selector names the attribute alone. Qualifying it as `figure[data-og-source-url]` would
+// miss any variant built from another element, and the collision it guards against does not
+// occur: of 801 occurrences measured across 1,590,608 feeds, every one carries the same
+// `data-og-*` family and none belongs to another platform. The names come from the Open Graph
+// protocol, but the card is this editor's.
 export const tistoryCiteResolver: CiteResolver = {
   selector: '[data-og-source-url]',
   extract: (element) => {

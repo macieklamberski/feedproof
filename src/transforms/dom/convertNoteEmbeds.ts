@@ -9,13 +9,13 @@ import { attr, hasText } from '../../utils/dom.js'
 // it back on the pipeline, where `convertWidgets` treats it like any other frame.
 //
 // Every figure with an http(s) `data-src` becomes an iframe, with no check on where it points.
-// Producing normalized data is this package's job and rendering is the consumer's, so the carrier
-// is emitted on the strength of what note.com says the figure is, not on a guess about whether a
-// given host will frame. Any guess available here is the wrong one anyway: a registry lookup
-// answers "does a resolver rewrite this url", which is not the same question as "does this page
-// frame", and the two disagree in both directions. `adventar.org` sends neither `x-frame-options`
-// nor a CSP and no resolver claims it, so a registry check would have degraded a url that frames
-// fine. Answering the real question needs a network round trip, which `extract` may not do.
+// The carrier is emitted on the strength of what note.com says the figure is, not on a guess
+// about whether a given host will frame. Any guess available here is the wrong one anyway: a
+// registry lookup answers "does a resolver rewrite this url", which is not the same question as
+// "does this page frame", and the two disagree in both directions. `adventar.org` sends neither
+// `x-frame-options` nor a CSP and no resolver claims it, so a registry check would have degraded
+// a url that frames fine. Answering the real question needs a network round trip, which
+// `extract` may not do.
 //
 // `embedded-service` names the platform but is not read, only matched on. It is an unpublished
 // vocabulary note.com controls, spelled inconsistently (`githubRepository`, `tiktok-web`,

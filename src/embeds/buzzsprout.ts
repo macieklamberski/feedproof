@@ -12,9 +12,9 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // episode id is decorative.
 //
 // A script naming the podcast alone is the show player, which carries every episode. The
-// url-keyed resolver deliberately leaves the show-level *page* url unmatched, and that decision
-// stands: there it falls through to the generic fallback, which still renders a placeholder. The
-// script carrier has no such fallback, so the same shape costs the whole player.
+// url-keyed resolver deliberately leaves the show-level *page* url unmatched: there it falls
+// through to the generic fallback, which still renders a placeholder. The script carrier has no
+// such fallback, so the same shape costs the whole player.
 //
 // The observed script forms:
 //   https://www.buzzsprout.com/{podcast}/{episode}.js?container_id=…

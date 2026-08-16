@@ -41,8 +41,7 @@ const vimeoEmbedParams = ['h', 't']
 // The `title` a share snippet writes is the video's own title about half the time and a player
 // label the rest: measured across 1,590,608 corpus feeds, 2,165 Vimeo iframes state a title and
 // 277 of those are a label. The labels are not filtered. They are localised into at least five
-// languages and some name a plugin rather than the platform, so any list of them is a list that
-// goes stale, and feedsweep's job is to carry what the source states rather than to judge it.
+// languages and some name a plugin rather than the platform, so any list of them goes stale.
 export const vimeoResolveEmbed = (
   url: string,
   element?: Element,

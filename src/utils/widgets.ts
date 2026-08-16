@@ -50,8 +50,7 @@ export const readCarrierUrl = (element: Element): string => {
 // `data-aspect-ratio`, so a number from the markup is not always the better one.
 //
 // The default is to trust the markup, because the publisher chose it for the player they
-// embedded. `declaredSize: false` says the resolver's own numbers stand, and it reads at the
-// registration site rather than being inferred from a missing call.
+// embedded. `declaredSize: false` says the resolver's own numbers stand.
 export type ResolverOptions = {
   declaredSize?: boolean
 }
@@ -75,9 +74,9 @@ export const createMarkupEmbedResolver = (
 }
 
 // The size a publisher states on the carrier outranks anything a resolver derived, because it
-// was chosen for the player they actually embedded. Resolvers apply it themselves rather than
-// having it applied to them, so one that has measured the platform can decline: a snippet that
-// hardcodes the same height whatever the content is states a number worth overruling.
+// was chosen for the player they actually embedded. A resolver that has measured the platform
+// can decline: a snippet that hardcodes the same height whatever the content is states a number
+// worth overruling.
 //
 // The two numbers travel together, because a placeholder's width and height read as an aspect
 // ratio rather than as pixels. So whichever source is used, both come from it: taking the width
@@ -126,10 +125,6 @@ export const getEmbedDimensions = (element: Element): { width?: number; height?:
 // how it reads an id out of the URL, so the match itself lives here. Keying on the URL
 // rather than on markup is what separates these resolvers from the ones that recognise a
 // platform's own class or attribute, and it is why the name says url and not iframe.
-//
-// This is not a pattern to copy for resolvers generally: it exists because these bodies
-// were already identical. The cite resolvers each read a different shape, so a shared
-// builder there would need a config language and would cost more than it saves.
 //
 // The element travels alongside the url because a carrier can hold more than its src: an
 // iframe's `title` is the one field a publisher's snippet states that the url does not carry.

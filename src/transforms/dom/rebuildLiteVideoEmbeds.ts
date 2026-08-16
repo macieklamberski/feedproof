@@ -16,10 +16,9 @@ type EmbedSource = {
 }
 
 // Each entry states the parameters its own player understands, so a facade's `params` is
-// filtered against that platform rather than against whichever one happens to be first. No test
-// covers the difference because none can: Vimeo's player takes the offset as a `#t=` fragment and
-// reads nothing else, so a name YouTube allows and Vimeo does not is dropped either way today.
-// The split is here so that stops being true silently when a Vimeo parameter is added.
+// filtered against that platform rather than against whichever one happens to be first. Vimeo's
+// player takes the offset as a `#t=` fragment and reads nothing else, so a name YouTube allows
+// and Vimeo does not is dropped either way today.
 const embedSources: Record<string, EmbedSource> = {
   'lite-youtube': {
     params: youtubeEmbedParams,
