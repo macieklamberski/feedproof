@@ -45,19 +45,16 @@ export const readCarrierUrl = (element: Element): string => {
   return element.getAttribute(embedCarriers[element.localName] ?? 'src') ?? ''
 }
 
-// A resolver that has measured the platform can overrule what the carrier declares. Scribd
-// states the same `height="500"` on every document it embeds and keeps the honest ratio in
-// `data-aspect-ratio`, so a number from the markup is not always the better one.
-//
-// The default is to trust the markup, because the publisher chose it for the player they
-// embedded. `declaredSize: false` says the resolver's own numbers stand.
+// The size a publisher states on the carrier is trusted by default, because they chose it for the
+// player they actually embedded. A resolver that has measured the platform can overrule that with
+// `declaredSize: false`: Scribd states the same `height="500"` on every document it embeds and
+// keeps the honest ratio in `data-aspect-ratio`, so a number from the markup is not always the
+// better one.
 export type ResolverOptions = {
   declaredSize?: boolean
 }
 
-// A resolver whose selector names the platform's own markup. The size the carrier declares is
-// applied for it, the same way the url-keyed factory does, so neither kind has to remember, and
-// `declaredSize: false` is how one that knows better opts out.
+// A resolver whose selector names the platform's own markup.
 export const createMarkupEmbedResolver = (
   selector: string,
   extract: (element: Element) => EmbedResolverResult | undefined,
@@ -73,10 +70,7 @@ export const createMarkupEmbedResolver = (
   }
 }
 
-// The size a publisher states on the carrier outranks anything a resolver derived, because it
-// was chosen for the player they actually embedded. A resolver that has measured the platform
-// can decline: a snippet that hardcodes the same height whatever the content is states a number
-// worth overruling.
+// Replaces a resolver's derived size with the one the carrier states.
 //
 // The two numbers travel together, because a placeholder's width and height read as an aspect
 // ratio rather than as pixels. So whichever source is used, both come from it: taking the width
