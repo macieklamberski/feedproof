@@ -1,5 +1,6 @@
-import { getPathSegments, isHostOf, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A note id is `n` followed by lowercase hex, e.g. `nf938ce640465`.
@@ -44,13 +45,8 @@ const composeEmbed = (noteId: string, pageUrl?: string): EmbedResolverResult | u
 type NoteUrl = { noteId: string; kind: 'post' | 'player' }
 
 const readNoteUrl = (link: string): NoteUrl | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed || !isHostOf(parsed, notecomHosts)) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const parsed = parseUrlOnHosts(link, notecomHosts)
+  const segments = parsed ? getPathSegments(parsed) : []
   const noteId = segments.at(-1)
 
   if (!noteId) {
