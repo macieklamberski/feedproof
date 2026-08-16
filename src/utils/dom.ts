@@ -333,6 +333,13 @@ const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*
 const styleHeightRegex =
   /(?:^|;)\s*height\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
 
+// The same grammar for the caps, which are read as a ratio rather than as a size. `max-width`
+// alone says nothing about shape, so both have to be present for either to count.
+const styleMaxWidthRegex =
+  /(?:^|;)\s*max-width\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
+const styleMaxHeightRegex =
+  /(?:^|;)\s*max-height\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
+
 // A pixel size as a player url or embed attribute states it: `200`, or `200px` where the
 // publisher wrote the unit. `coerceNumber` alone will not do, because it reads neither the
 // suffix nor a bound, and a stated height of `0` or `99999` is a mistake, not a size.
@@ -398,11 +405,16 @@ export const getElementDimensions = (element: Element): { width?: number; height
 
 // How many ancestors above the element to also check for a responsive wrapper.
 const maxWrapperAncestorDepth = 3
-// The ways an element can declare its aspect ratio. Every source reads the raw `style`
-// or `class` attribute instead of the CSSOM API, because linkedom returns `undefined`
-// for unset properties and both DOM parsers drop style declarations whose property name
-// is not lowercase. A case-insensitive regex still matches those, the same way
-// getElementDimensions reads its styles.
+// The ways an element can declare its aspect ratio. Every source reads the raw `style` or
+// `class` attribute instead of the CSSOM API, because both parsers drop a style declaration
+// whose property name is not lowercase. CSS property names are case-insensitive, so
+// `MAX-WIDTH:800px` is a declaration a browser honours and `.style` loses, while a
+// case-insensitive regex still matches it, the same way getElementDimensions reads its styles.
+// That is the only reason: both parsers do implement `.style`, and they agree with each other
+// on everything else, including reading an unset property as `''` (checked 2026-08-16).
+//
+// TODO: measure whether uppercase property names occur in feed markup at all. If they do not,
+// `getPropertyValue` is the simpler read and these regexes lose their last justification.
 const elementRatioSources: Array<{
   attribute: string
   regex: RegExp
@@ -433,6 +445,21 @@ const elementRatioSources: Array<{
       if (percent > 0 && percent < 1000) {
         return ratioDimensions(100 / percent)
       }
+    },
+  },
+  {
+    // A pair of caps (`max-width:800px;max-height:600px`). Neither is a size the element
+    // takes, only the box it may not exceed, so together they encode a ratio and nothing
+    // more. Last in this list because it is the weakest reading: anything above states a
+    // ratio outright, while this one infers it. A real width or height never competes,
+    // since getElementDimensions reads those and getEmbedDimensions consults this table
+    // only when it found none.
+    attribute: 'style',
+    regex: styleMaxWidthRegex,
+    extract: (match) => {
+      const height = styleMaxHeightRegex.exec(match.input)?.[1]
+
+      return height ? parseRatioDimensions(`${match[1]}:${height}`) : undefined
     },
   },
 ]

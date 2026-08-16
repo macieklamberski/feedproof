@@ -219,6 +219,53 @@ describeForEachParser('getWrapperRatioDimensions reading only the element itself
     expect(getWrapperRatioDimensions(div, 0)).toEqual({ width: 100, height: 25 })
   })
 
+  it('should read a max-width and max-height pair as a ratio', () => {
+    const document = parseHtml('<iframe style="max-width:800px;max-height:600px"></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperRatioDimensions(iframe, 0)).toEqual({ width: 100, height: 75 })
+  })
+
+  it('should ignore a lone max-width, which says nothing about shape', () => {
+    const document = parseHtml('<iframe style="max-width:800px;min-width:325px"></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperRatioDimensions(iframe, 0)).toBeUndefined()
+  })
+
+  it('should ignore a lone max-height', () => {
+    const document = parseHtml('<iframe style="max-height:600px"></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperRatioDimensions(iframe, 0)).toBeUndefined()
+  })
+
+  // The caps are the weakest source, so a stated ratio on the same element outranks them.
+  it('should prefer a stated aspect-ratio over the caps', () => {
+    const document = parseHtml(
+      '<iframe style="aspect-ratio: 21 / 9;max-width:800px;max-height:600px"></iframe>',
+    )
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperRatioDimensions(iframe, 0)).toEqual({ width: 100, height: 43 })
+  })
+
+  it('should prefer a padding hack over the caps', () => {
+    const document = parseHtml(
+      '<div style="padding-bottom:25%;max-width:800px;max-height:600px"></div>',
+    )
+    const div = queryElement(document, 'div')
+
+    expect(getWrapperRatioDimensions(div, 0)).toEqual({ width: 100, height: 25 })
+  })
+
+  it('should ignore caps stated in a unit that is not pixels', () => {
+    const document = parseHtml('<iframe style="max-width:80em;max-height:60em"></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperRatioDimensions(iframe, 0)).toBeUndefined()
+  })
+
   it('should return undefined when the element declares no ratio', () => {
     const document = parseHtml('<iframe></iframe>')
     const iframe = queryElement(document, 'iframe')
