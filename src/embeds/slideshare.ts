@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, text } from '../utils/dom.js'
-import { parseHostedUrl } from '../utils/urls.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const slideshareHosts = ['slideshare.net', 'slidesharecdn.com']
@@ -32,7 +32,7 @@ const composeEmbed = (deck: string, url?: string, title?: string): EmbedResolver
 }
 
 export const slideshareResolveEmbed = (link: string): EmbedResolverResult | undefined => {
-  const parsed = parseHostedUrl(link, slideshareHosts)
+  const parsed = parseUrlOnHosts(link, slideshareHosts)
 
   if (!parsed) {
     return

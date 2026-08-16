@@ -128,9 +128,9 @@ export const attr = (element: Nullish<Element>, name: string): string | undefine
   return element?.getAttribute(name)?.trim() || undefined
 }
 
-// A value read straight out of an attribute or a url, kept only when it fits the shape expected
-// of it: an id, a handle, a token. Anything else is dropped before it can reach a minted url.
-export const readMatching = (value: Nullish<string>, regex: RegExp): string | undefined => {
+// Keeps a value read out of an attribute or a url when it fits the shape expected of it, an id,
+// a handle or a token, and drops it otherwise, so nothing malformed reaches a minted url.
+export const keepIfMatches = (value: Nullish<string>, regex: RegExp): string | undefined => {
   return value && regex.test(value) ? value : undefined
 }
 

@@ -1,7 +1,7 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, parsePixelSize, text } from '../utils/dom.js'
-import { parseHostedUrl } from '../utils/urls.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Instagram's embed dialog ships a post as `<blockquote class="instagram-media">` holding the
@@ -26,7 +26,7 @@ const safeShortcodeRegex = /^[A-Za-z0-9_-]+$/
 type Post = { kind: string; shortcode: string }
 
 const readPostUrl = (value: string | undefined): Post | undefined => {
-  const parsed = parseHostedUrl(value, instagramHosts)
+  const parsed = parseUrlOnHosts(value, instagramHosts)
 
   if (!parsed) {
     return
@@ -125,7 +125,7 @@ const bareHandleRegex = /@([A-Za-z0-9_.]{1,30})/
 
 const readProfileHandle = (element: Element): string | undefined => {
   for (const anchor of element.querySelectorAll('a[href]')) {
-    const parsed = parseHostedUrl(attr(anchor, 'href'), instagramHosts)
+    const parsed = parseUrlOnHosts(attr(anchor, 'href'), instagramHosts)
 
     if (!parsed) {
       continue

@@ -1,6 +1,6 @@
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
-import { attr, find, readMatching, text, textNode } from '../utils/dom.js'
+import { attr, find, keepIfMatches, text, textNode } from '../utils/dom.js'
 
 // Forem renders the card date without a year when the post's year matched the embedding
 // article's save year ("Jul 25"), and the save year itself is unrecoverable later, so only
@@ -8,7 +8,7 @@ import { attr, find, readMatching, text, textNode } from '../utils/dom.js'
 const yearRegex = /\b(19|20)\d{2}\b|'\d{2}\b/
 
 const dateWithYear = (value: string | undefined): string | undefined => {
-  return readMatching(value, yearRegex)
+  return keepIfMatches(value, yearRegex)
 }
 
 // dev.to (Forem) turns a pasted link into an embed card. Forem compiles its liquid tags to

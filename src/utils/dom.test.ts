@@ -10,9 +10,9 @@ import {
   getWrapperRatioDimensions,
   hasAncestorWithTagName,
   isElementHidden,
+  keepIfMatches,
   parsePixelSize,
   parseRatioDimensions,
-  readMatching,
   removeWithEmptyWrappers,
   text,
   textNode,
@@ -841,18 +841,18 @@ describe('parsePixelSize', () => {
 
 const safeIdRegex = /^\d+$/
 
-describe('readMatching', () => {
+describe('keepIfMatches', () => {
   it('should keep a value that fits the shape', () => {
-    expect(readMatching('12345', safeIdRegex)).toBe('12345')
+    expect(keepIfMatches('12345', safeIdRegex)).toBe('12345')
   })
 
   it('should drop a value that does not fit', () => {
-    expect(readMatching('12a45', safeIdRegex)).toBeUndefined()
+    expect(keepIfMatches('12a45', safeIdRegex)).toBeUndefined()
   })
 
   it('should drop an empty or nullish value', () => {
-    expect(readMatching('', safeIdRegex)).toBeUndefined()
-    expect(readMatching(null, safeIdRegex)).toBeUndefined()
-    expect(readMatching(undefined, safeIdRegex)).toBeUndefined()
+    expect(keepIfMatches('', safeIdRegex)).toBeUndefined()
+    expect(keepIfMatches(null, safeIdRegex)).toBeUndefined()
+    expect(keepIfMatches(undefined, safeIdRegex)).toBeUndefined()
   })
 })

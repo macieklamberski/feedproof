@@ -1,7 +1,7 @@
 import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, findConfigScript } from '../utils/dom.js'
-import { parseHostedUrl } from '../utils/urls.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const fileExtensionRegex = /\.[a-z]+$/i
@@ -60,7 +60,7 @@ export const jwplayerScriptEmbedResolver = createMarkupEmbedResolver(
   (element) => {
     const src = attr(element, 'src') ?? ''
 
-    if (!parseHostedUrl(src, jwplayerHosts)) {
+    if (!parseUrlOnHosts(src, jwplayerHosts)) {
       return
     }
 

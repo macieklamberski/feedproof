@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, isSubdomainOf } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { jsonAttr } from '../utils/dom.js'
-import { parseHostedUrl, pickUrlParams } from '../utils/urls.js'
+import { parseUrlOnHosts, pickUrlParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Music and podcasts embed through the same player, served from `embed.music.apple.com` and
@@ -33,7 +33,7 @@ const appleHeights: Record<string, number | undefined> = {
 }
 
 export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseHostedUrl(url, appleHosts)
+  const parsed = parseUrlOnHosts(url, appleHosts)
 
   if (!parsed) {
     return

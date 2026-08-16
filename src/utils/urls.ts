@@ -35,11 +35,12 @@ export const isUrlShaped = (value: string): boolean => {
   return urlShapeRegex.test(value)
 }
 
-// The url a resolver keyed on a platform reads its id out of, parsed once and kept only when it
-// lives on one of the hosts, exactly or on a subdomain. The base is what lets a protocol-relative
-// url still name its host; a relative path lands on the placeholder host and fails the check, so
-// a bare `/watch/123` never passes as the platform's own.
-export const parseHostedUrl = (
+// Parses the url and keeps it only when it sits on one of the hosts, exactly or on a subdomain,
+// which is the check every resolver keyed on a platform makes before reading an id out of it.
+// The base is what lets a protocol-relative url still name its host; a relative path lands on
+// the placeholder host and fails the check, so a bare `/watch/123` never passes as the
+// platform's own.
+export const parseUrlOnHosts = (
   url: string | undefined,
   hosts: string | ReadonlyArray<string>,
 ): URL | undefined => {

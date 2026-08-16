@@ -1,7 +1,7 @@
 import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, text } from '../utils/dom.js'
-import { parseHostedUrl } from '../utils/urls.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const imgurHosts = ['imgur.com']
@@ -70,7 +70,7 @@ export const imgurBlockquoteEmbedResolver = createMarkupEmbedResolver(
 // describes the embedding page (`pub`, `ref`, `context`, `analytics`, `w`), so the url is rebuilt
 // from the path rather than carried across.
 export const imgurResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseHostedUrl(url, imgurHosts)
+  const parsed = parseUrlOnHosts(url, imgurHosts)
 
   if (!parsed) {
     return

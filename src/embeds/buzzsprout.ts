@@ -1,6 +1,6 @@
 import type { EmbedResolver, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { parseHostedUrl } from '../utils/urls.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Buzzsprout embeds a player two ways: a WordPress shortcode shipping an empty div plus a
@@ -43,7 +43,7 @@ const composeEmbed = (podcastId: string, episodeId?: string): EmbedResolverResul
 }
 
 export const buzzsproutResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseHostedUrl(url, buzzsproutHost)
+  const parsed = parseUrlOnHosts(url, buzzsproutHost)
 
   if (!parsed) {
     return
@@ -70,7 +70,7 @@ export const buzzsproutScriptEmbedResolver = createMarkupEmbedResolver(
   (element) => {
     // The selector guarantees a src containing the host substring, so only the host and
     // path checks can reject.
-    const url = parseHostedUrl(attr(element, 'src'), buzzsproutHost)
+    const url = parseUrlOnHosts(attr(element, 'src'), buzzsproutHost)
 
     if (!url) {
       return

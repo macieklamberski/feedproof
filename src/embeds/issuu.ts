@@ -1,7 +1,7 @@
 import { getPathSegments, isAnyOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { parseHostedUrl } from '../utils/urls.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const issuuHosts = ['issuu.com']
@@ -58,7 +58,7 @@ const composeDocumentEmbed = (
 
 // A reader url, `issuu.com/{publisher}/docs/{document}` with an optional page number after it.
 const readDocumentUrl = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseHostedUrl(url, issuuHosts)
+  const parsed = parseUrlOnHosts(url, issuuHosts)
 
   if (!parsed) {
     return
