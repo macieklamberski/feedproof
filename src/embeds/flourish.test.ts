@@ -126,6 +126,19 @@ describeForEachParser('flourishWidgetEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // `template` is a real kind with real ids, but it has no embed form: the id below is a
+    // live one and `flo.uri.sh/template/110934/embed` answers 403.
+    it('should refuse a template, which the platform never embeds', async () => {
+      const value = html`
+        <div
+          class="flourish-embed"
+          data-src="template/110934"
+        ></div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     it('should return undefined for a non-numeric id', async () => {
       const value = html`
         <div
