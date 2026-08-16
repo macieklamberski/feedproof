@@ -10,6 +10,7 @@ import {
   getWrapperRatioDimensions,
   hasAncestorWithTagName,
   isElementHidden,
+  isEmptyElement,
   keepIfMatches,
   parsePixelSize,
   parseRatioDimensions,
@@ -478,6 +479,50 @@ describeForEachParser('hasAncestorWithTagName', (parseHtml) => {
     const pre = queryElement(document, 'pre')
 
     expect(hasAncestorWithTagName(span, tagSet, pre)).toBe(false)
+  })
+})
+
+describeForEachParser('isEmptyElement', (parseHtml) => {
+  it('should treat an element with no children and no text as empty', () => {
+    const document = parseHtml('<div></div>')
+    const element = queryElement(document, 'div')
+
+    expect(isEmptyElement(element)).toBe(true)
+  })
+
+  it('should treat an element carrying only attributes as empty', () => {
+    const document = parseHtml('<div id="embed-1" data-src="https://example.com/post"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(isEmptyElement(element)).toBe(true)
+  })
+
+  it('should treat whitespace-only text as empty', () => {
+    const document = parseHtml('<div>\n  \n</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isEmptyElement(element)).toBe(true)
+  })
+
+  it('should treat an element holding text as not empty', () => {
+    const document = parseHtml('<div>Example</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isEmptyElement(element)).toBe(false)
+  })
+
+  it('should treat an element holding a child element as not empty', () => {
+    const document = parseHtml('<div><img src="https://example.com/a.jpg"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(isEmptyElement(element)).toBe(false)
+  })
+
+  it('should treat an element whose only child is itself empty as not empty', () => {
+    const document = parseHtml('<div><span></span></div>')
+    const element = queryElement(document, 'div')
+
+    expect(isEmptyElement(element)).toBe(false)
   })
 })
 
