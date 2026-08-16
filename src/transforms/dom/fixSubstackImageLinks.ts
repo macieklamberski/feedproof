@@ -1,4 +1,5 @@
 import type { DomTransform } from '../../types.js'
+import { isEmptyElement } from '../../utils/dom.js'
 import { imageFileRegex } from '../../utils/urls.js'
 
 // A Substack lightbox anchor (`a.image-link`, the Image2ToDOM/ImageToDOM components) can
@@ -8,7 +9,7 @@ import { imageFileRegex } from '../../utils/urls.js'
 // minted <img> like any other.
 export const fixSubstackImageLinks: DomTransform = () => (document) => {
   for (const element of document.querySelectorAll('a.image-link')) {
-    if (element.children.length > 0 || element.textContent?.trim()) {
+    if (!isEmptyElement(element)) {
       continue
     }
 
