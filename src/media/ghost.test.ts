@@ -88,11 +88,17 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
           <figcaption>Watch the full demo below</figcaption>
         </figure>
       `
-      const result = await transform(value)
+      const expected = html`
+        <figure class="kg-card kg-video-card kg-card-hascaption">
+          <video
+            src="https://example.com/clip.mp4"
+            controls
+          ></video>
+          <figcaption>Watch the full demo below</figcaption>
+        </figure>
+      `
 
-      expect(result).toContain('<figcaption>Watch the full demo below</figcaption>')
-      expect(result).toContain('controls')
-      expect(result).not.toContain('kg-video-player')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should return undefined for a container without a video element', async () => {
@@ -125,12 +131,14 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
           </div>
         </div>
       `
-      const result = await transform(value)
+      const expected = html`
+        <audio
+          src="https://example.com/content/media/track.mp3"
+          controls
+        ></audio>
+      `
 
-      expect(result).toContain('src="https://example.com/content/media/track.mp3"')
-      expect(result).toContain('controls')
-      expect(result).not.toContain('kg-audio')
-      expect(result).not.toContain('125.94')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should return undefined for a card without an audio element', async () => {

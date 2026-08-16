@@ -251,9 +251,17 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
         <iframe src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1"></iframe>
         <p>A caption the author wrote with one <a href="https://soundcloud.com/artist">link</a>.</p>
       `
-      const result = await transform(value)
+      const expected = html`
+        <div
+          data-embed-src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1"
+          data-embed-provider="soundcloud"
+          data-embed-id="tracks/1"
+          data-embed-height="166"
+        ></div>
+        <p>A caption the author wrote with one <a href="https://soundcloud.com/artist">link</a>.</p>
+      `
 
-      expect(result).toContain('A caption the author wrote')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should return undefined for a foreign host carrying the player path', async () => {

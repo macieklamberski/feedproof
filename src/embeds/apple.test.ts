@@ -165,7 +165,7 @@ describe('appleResolveEmbed', () => {
 })
 
 describeForEachParser('appleEmbedResolver', (parseHtml) => {
-  const resolve = resolverExtractor(parseHtml, appleEmbedResolver)
+  const extract = resolverExtractor(parseHtml, appleEmbedResolver)
 
   it('should resolve an apple music iframe', async () => {
     const value =
@@ -178,13 +178,13 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
       height: 450,
     }
 
-    expect(await resolve(value)).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
   it('should ignore a non-apple iframe', async () => {
     const value = '<iframe src="https://example.com/us/album/thriller/1440857781"></iframe>'
 
-    expect(await resolve(value)).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 
   describe('the Substack card the container carries', () => {
@@ -223,7 +223,7 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
         duration: 4178,
       }
 
-      expect(await resolve(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // A show states the same number in seconds, so reading both the same way would publish one
@@ -264,7 +264,7 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
         duration: 3406,
       }
 
-      expect(await resolve(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // The payload's own `targetUrl` is this page with an affiliate token on it, so the composed
@@ -292,7 +292,7 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
         title: 'EXPloaded',
       }
 
-      expect(await resolve(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // The container survives sanitisers that strip data attributes, so it can arrive with the
@@ -314,7 +314,7 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
         height: 450,
       }
 
-      expect(await resolve(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should ignore a payload that no Substack container names', async () => {
@@ -338,7 +338,7 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
         height: 450,
       }
 
-      expect(await resolve(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 })
