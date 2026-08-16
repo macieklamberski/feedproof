@@ -202,6 +202,7 @@ export {
   spreakerAnchorEmbedResolver,
   spreakerIframeEmbedResolver,
 } from './embeds/spreaker.js'
+export { standfmEmbedResolver } from './embeds/standfm.js'
 export { tedEmbedResolver } from './embeds/ted.js'
 export {
   telegramIframeEmbedResolver,

@@ -100,6 +100,7 @@ import {
 } from './embeds/speakerdeck.js'
 import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from './embeds/spreaker.js'
+import { standfmEmbedResolver } from './embeds/standfm.js'
 import { tedEmbedResolver } from './embeds/ted.js'
 import { telegramIframeEmbedResolver, telegramScriptEmbedResolver } from './embeds/telegram.js'
 import { tiktokBlockquoteEmbedResolver, tiktokIframeEmbedResolver } from './embeds/tiktok.js'
@@ -487,6 +488,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   instagramSubstackEmbedResolver,
   instagramIframeEmbedResolver,
   spotifyEmbedResolver,
+  standfmEmbedResolver,
   spreakerIframeEmbedResolver,
   spreakerAnchorEmbedResolver,
   telegramScriptEmbedResolver,
