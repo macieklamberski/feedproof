@@ -28,7 +28,7 @@ describeForEachParser('rebuildVideoJsEmbeds', (parseHtml) => {
         sources: [{ src: 'https://example.com/clip.mp4', type: 'video/mp4' }],
         poster: 'https://example.com/poster.jpg',
       })
-      const result = await transform(html`<video-js data-setup='${config}'></video-js>`)
+      const result = await transform(`<video-js data-setup='${config}'></video-js>`)
 
       expect(result).toContain('src="https://example.com/clip.mp4"')
       expect(result).toContain('poster="https://example.com/poster.jpg"')
@@ -64,26 +64,37 @@ describeForEachParser('rebuildVideoJsEmbeds', (parseHtml) => {
     // assertion is on the whole markup: an attribute quietly dropped here would strand the
     // element with nothing able to read it.
     it('should leave an element that names a hosted player rather than a file', async () => {
-      const value = html`<video-js data-account="1234567890" data-video-id="6098765432"></video-js>`
+      const value = html`
+        <video-js
+          data-account="1234567890"
+          data-video-id="6098765432"
+        ></video-js>
+      `
 
       expect(await transform(value)).toBe(value)
     })
 
     it('should leave an element naming no file at all', async () => {
-      const value = html`<video-js class="vjs-big-play-centered" preload="auto"></video-js>`
+      const value = html`
+        <video-js
+          class="vjs-big-play-centered"
+          preload="auto"
+        ></video-js>
+      `
 
       expect(await transform(value)).toContain('<video-js')
     })
 
     it('should leave an element whose data-setup is malformed json', async () => {
-      const value = html`<video-js data-setup='{"sources":['></video-js>`
+      const value = `<video-js data-setup='{"sources":['></video-js>`
 
       expect(await transform(value)).toContain('<video-js')
     })
   })
 
   it('should be idempotent', async () => {
-    const value = html`<video-js><source src="https://example.com/clip.mp4" type="video/mp4"></video-js>`
+    const value =
+      '<video-js><source src="https://example.com/clip.mp4" type="video/mp4"></video-js>'
     const once = await transform(value)
     const twice = await transform(once)
 

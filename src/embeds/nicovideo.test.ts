@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
-import { describeForEachParser, html, resolverExtractor } from '../tests.js'
+import { describeForEachParser, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   extractNicovideoId,
@@ -65,7 +65,8 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
 
   describe('happy paths', () => {
     it('should mint the modern player and carry both dimensions as a ratio', async () => {
-      const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=490&amp;h=307"></script>`
+      const value =
+        '<script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=490&amp;h=307"></script>'
       const expected: EmbedResolverResult = {
         provider: 'nicovideo',
         id: 'sm9',
@@ -80,7 +81,7 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
 
     // The current spelling of the same loader.
     it('should read the modern script form', async () => {
-      const value = html`<script src="https://embed.nicovideo.jp/watch/sm9/script"></script>`
+      const value = '<script src="https://embed.nicovideo.jp/watch/sm9/script"></script>'
       const expected: EmbedResolverResult = {
         provider: 'nicovideo',
         id: 'sm9',
@@ -92,7 +93,7 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
     })
 
     it('should state no size when the script asks for none', async () => {
-      const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/sm9"></script>`
+      const value = '<script src="https://ext.nicovideo.jp/thumb_watch/sm9"></script>'
       const expected: EmbedResolverResult = {
         provider: 'nicovideo',
         id: 'sm9',
@@ -106,7 +107,7 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
     // One dimension alone would be read as a fixed height rather than a ratio, so both or
     // neither.
     it('should state no size when only one dimension is given', async () => {
-      const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/sm9?h=307"></script>`
+      const value = '<script src="https://ext.nicovideo.jp/thumb_watch/sm9?h=307"></script>'
       const expected: EmbedResolverResult = {
         provider: 'nicovideo',
         id: 'sm9',
@@ -118,7 +119,7 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
     })
 
     it('should read a protocol-relative src', async () => {
-      const value = html`<script src="//ext.nicovideo.jp/thumb_watch/sm9"></script>`
+      const value = '<script src="//ext.nicovideo.jp/thumb_watch/sm9"></script>'
       const expected: EmbedResolverResult = {
         provider: 'nicovideo',
         id: 'sm9',
@@ -132,7 +133,8 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should state no size when a dimension is not a pixel count', async () => {
-      const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=100%25&amp;h=307"></script>`
+      const value =
+        '<script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=100%25&amp;h=307"></script>'
       const expected: EmbedResolverResult = {
         provider: 'nicovideo',
         id: 'sm9',
@@ -144,14 +146,14 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for a nicovideo script naming no video', async () => {
-      const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/"></script>`
+      const value = '<script src="https://ext.nicovideo.jp/thumb_watch/"></script>'
 
       expect(await extract(value)).toBeUndefined()
     })
 
     // The selector matches on a substring, so another host can carry the path and pass it.
     it('should return undefined for another host spelling the nicovideo path', async () => {
-      const value = html`<script src="https://evil.test/nicovideo.jp/thumb_watch/sm9"></script>`
+      const value = '<script src="https://evil.test/nicovideo.jp/thumb_watch/sm9"></script>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -204,7 +206,7 @@ describeForEachParser('nicovideo through the pipeline', (parseHtml) => {
   }
 
   it('should carry every field across', async () => {
-    const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=490&amp;h=307"></script>`
+    const value = '<script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=490&amp;h=307"></script>'
     const expected: Record<string, string> = {
       provider: 'nicovideo',
       id: 'sm9',
@@ -219,7 +221,7 @@ describeForEachParser('nicovideo through the pipeline', (parseHtml) => {
 
   // A script alone is deleted as empty markup, so without the resolver the video vanishes.
   it('should leave nothing behind when the script names no video', async () => {
-    const value = html`<script src="https://ext.nicovideo.jp/thumb_watch/"></script>`
+    const value = '<script src="https://ext.nicovideo.jp/thumb_watch/"></script>'
     const expected: Record<string, string> = {}
 
     expect(await placeholder(value)).toEqual(expected)

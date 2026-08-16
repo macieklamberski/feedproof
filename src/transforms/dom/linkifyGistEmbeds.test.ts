@@ -9,7 +9,7 @@ describeForEachParser('linkifyGistEmbeds', (parseHtml) => {
   }
 
   it('should replace a gist script with a link to the gist', async () => {
-    const value = html`<script src="https://gist.github.com/octocat/6cad326836d38bd3a7ae.js"></script>`
+    const value = '<script src="https://gist.github.com/octocat/6cad326836d38bd3a7ae.js"></script>'
     const result = await transform(value)
 
     expect(result).toContain(
@@ -19,14 +19,15 @@ describeForEachParser('linkifyGistEmbeds', (parseHtml) => {
   })
 
   it('should handle a user-less gist url', async () => {
-    const value = html`<script src="https://gist.github.com/6cad326836d38bd3a7ae.js"></script>`
+    const value = '<script src="https://gist.github.com/6cad326836d38bd3a7ae.js"></script>'
     const result = await transform(value)
 
     expect(result).toContain('href="https://gist.github.com/6cad326836d38bd3a7ae"')
   })
 
   it('should drop a trailing ?file= query when building the link', async () => {
-    const value = html`<script src="https://gist.github.com/octocat/6cad326836d38bd3a7ae.js?file=demo.py"></script>`
+    const value =
+      '<script src="https://gist.github.com/octocat/6cad326836d38bd3a7ae.js?file=demo.py"></script>'
     const result = await transform(value)
 
     expect(result).toContain('href="https://gist.github.com/octocat/6cad326836d38bd3a7ae"')
@@ -34,7 +35,13 @@ describeForEachParser('linkifyGistEmbeds', (parseHtml) => {
   })
 
   it('should replace an amp-gist with a link built from the bare gist id', async () => {
-    const value = html`<amp-gist data-gistid="b9bb35bc68df68259af94430f012425f" layout="fixed-height" height="225"></amp-gist>`
+    const value = html`
+      <amp-gist
+        data-gistid="b9bb35bc68df68259af94430f012425f"
+        layout="fixed-height"
+        height="225"
+      ></amp-gist>
+    `
     const result = await transform(value)
 
     expect(result).toContain(
@@ -44,7 +51,7 @@ describeForEachParser('linkifyGistEmbeds', (parseHtml) => {
   })
 
   it('should leave an amp-gist with a malformed gist id untouched', async () => {
-    const value = html`<amp-gist data-gistid="../../evil"></amp-gist>`
+    const value = '<amp-gist data-gistid="../../evil"></amp-gist>'
     const result = await transform(value)
 
     expect(result).toContain('<amp-gist')
@@ -52,7 +59,7 @@ describeForEachParser('linkifyGistEmbeds', (parseHtml) => {
   })
 
   it('should leave an amp-gist with an empty gist id untouched', async () => {
-    const value = html`<amp-gist data-gistid=""></amp-gist>`
+    const value = '<amp-gist data-gistid=""></amp-gist>'
     const result = await transform(value)
 
     expect(result).toContain('<amp-gist')
@@ -62,7 +69,7 @@ describeForEachParser('linkifyGistEmbeds', (parseHtml) => {
   // A script pointing at the gist page rather than its `.js` embed names no gist to link to,
   // so nothing is minted from it.
   it('should leave a gist script that names no embed untouched', async () => {
-    const value = html`<script src="https://gist.github.com/octocat"></script>`
+    const value = '<script src="https://gist.github.com/octocat"></script>'
     const result = await transform(value)
 
     expect(result).toContain('<script')
@@ -70,7 +77,7 @@ describeForEachParser('linkifyGistEmbeds', (parseHtml) => {
   })
 
   it('should leave a non-gist script untouched', async () => {
-    const value = html`<script src="https://example.com/widget.js"></script>`
+    const value = '<script src="https://example.com/widget.js"></script>'
     const result = await transform(value)
 
     expect(result).toContain('<script')
@@ -78,7 +85,7 @@ describeForEachParser('linkifyGistEmbeds', (parseHtml) => {
   })
 
   it('should be idempotent', async () => {
-    const value = html`<script src="https://gist.github.com/octocat/6cad326836d38bd3a7ae.js"></script>`
+    const value = '<script src="https://gist.github.com/octocat/6cad326836d38bd3a7ae.js"></script>'
     const once = await transform(value)
     const twice = await applyDomTransforms(parseHtml(once), [linkifyGistEmbeds(baseContext)])
 

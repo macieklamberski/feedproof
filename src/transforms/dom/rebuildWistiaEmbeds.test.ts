@@ -25,14 +25,14 @@ describeForEachParser('rebuildWistiaEmbeds', (parseHtml) => {
   })
 
   it('should rebuild an iframe from a standalone embed div with no wrapper', async () => {
-    const value = html`<div class="wistia_embed wistia_async_zyl6xrmj10"></div>`
+    const value = '<div class="wistia_embed wistia_async_zyl6xrmj10"></div>'
     const result = await transform(value)
 
     expect(result).toContain('<iframe src="https://fast.wistia.net/embed/iframe/zyl6xrmj10">')
   })
 
   it('should leave an element without a recoverable id untouched', async () => {
-    const value = html`<div class="wistia_embed wistia_async_"></div>`
+    const value = '<div class="wistia_embed wistia_async_"></div>'
     const result = await transform(value)
 
     expect(result).not.toContain('<iframe')
@@ -54,7 +54,12 @@ describeForEachParser('rebuildWistiaEmbeds', (parseHtml) => {
   })
 
   it('should rebuild an iframe from the wistia-player custom element', async () => {
-    const value = html`<wistia-player media-id="zyl6xrmj10" aspect="1.7777777777777777"></wistia-player>`
+    const value = html`
+      <wistia-player
+        media-id="zyl6xrmj10"
+        aspect="1.7777777777777777"
+      ></wistia-player>
+    `
     const result = await transform(value)
 
     expect(result).toContain('src="https://fast.wistia.net/embed/iframe/zyl6xrmj10"')
@@ -64,7 +69,7 @@ describeForEachParser('rebuildWistiaEmbeds', (parseHtml) => {
   })
 
   it('should rebuild the custom element without an aspect, stating no size', async () => {
-    const value = html`<wistia-player media-id="zyl6xrmj10"></wistia-player>`
+    const value = '<wistia-player media-id="zyl6xrmj10"></wistia-player>'
     const result = await transform(value)
 
     expect(result).toContain('<iframe src="https://fast.wistia.net/embed/iframe/zyl6xrmj10">')
@@ -72,7 +77,7 @@ describeForEachParser('rebuildWistiaEmbeds', (parseHtml) => {
   })
 
   it('should rebuild an iframe from a lone loader script', async () => {
-    const value = html`<script src="https://fast.wistia.com/embed/medias/zyl6xrmj10.jsonp"></script>`
+    const value = '<script src="https://fast.wistia.com/embed/medias/zyl6xrmj10.jsonp"></script>'
     const result = await transform(value)
 
     expect(result).toContain('<iframe src="https://fast.wistia.net/embed/iframe/zyl6xrmj10">')

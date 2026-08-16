@@ -156,7 +156,12 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
     })
 
     it('should default the player and embed ids when the element omits them', async () => {
-      const value = html`<video-js data-account="1234567890" data-video-id="6098765432"></video-js>`
+      const value = html`
+        <video-js
+          data-account="1234567890"
+          data-video-id="6098765432"
+        ></video-js>
+      `
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
         id: '6098765432',
@@ -230,7 +235,7 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined when no account can be found', async () => {
-      const value = html`<video-js data-video-id="6098765432"></video-js>`
+      const value = '<video-js data-video-id="6098765432"></video-js>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -238,13 +243,23 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
     // Video.js is a library anyone can use, so ids that are not Brightcove-shaped are left to
     // whoever else emitted them.
     it('should return undefined when the video id is not a brightcove id', async () => {
-      const value = html`<video-js data-account="1234567890" data-video-id="my-clip"></video-js>`
+      const value = html`
+        <video-js
+          data-account="1234567890"
+          data-video-id="my-clip"
+        ></video-js>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined when the account is not a brightcove account', async () => {
-      const value = html`<video-js data-account="acme" data-video-id="6098765432"></video-js>`
+      const value = html`
+        <video-js
+          data-account="acme"
+          data-video-id="6098765432"
+        ></video-js>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -256,7 +271,12 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
 // neither file knows about the other, so nothing but a run proves the two halves meet.
 describeForEachParser('brightcove video-js through the pipeline', (parseHtml) => {
   it('should become a placeholder the element alone could not produce', async () => {
-    const value = html`<video-js data-account="1234567890" data-video-id="6098765432"></video-js>`
+    const value = html`
+      <video-js
+        data-account="1234567890"
+        data-video-id="6098765432"
+      ></video-js>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com/post',

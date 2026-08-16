@@ -41,7 +41,13 @@ describeForEachParser('rebuildEmbedPlusEmbeds', (parseHtml) => {
   })
 
   it('should leave the element untouched when data-facadesrc is empty', async () => {
-    const value = html`<div class="epyt-facade no-lazyload" data-facadesrc=""></div>`
+    const value = html`
+      <div
+        class="epyt-facade
+        no-lazyload"
+        data-facadesrc=""
+      ></div>
+    `
     const result = await transform(value)
 
     expect(result).toContain('epyt-facade')

@@ -136,7 +136,7 @@ describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
     })
 
     it('should not match a blockquote without the embed class', async () => {
-      const value = html`<blockquote data-id="pVa2rXL"></blockquote>`
+      const value = '<blockquote data-id="pVa2rXL"></blockquote>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -221,7 +221,7 @@ describeForEachParser('imgurIframeEmbedResolver', (parseHtml) => {
   })
 
   it('should ignore an iframe on another host', async () => {
-    const value = html`<iframe src="https://evil.test/pVa2rXL/embed"></iframe>`
+    const value = '<iframe src="https://evil.test/pVa2rXL/embed"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
   })

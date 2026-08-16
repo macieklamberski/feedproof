@@ -246,7 +246,7 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for a carrier with no config at all', async () => {
-      const value = html`<embed src="https://www.flickr.com/apps/slideshow/show.swf?v=143567" />`
+      const value = '<embed src="https://www.flickr.com/apps/slideshow/show.swf?v=143567" />'
 
       expect(await extract(value)).toBeUndefined()
     })

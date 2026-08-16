@@ -40,7 +40,12 @@ describeForEachParser('rebuildRocketYoutubePreviews', (parseHtml) => {
   })
 
   it('should leave the element untouched when there is no data-src', async () => {
-    const value = html`<div class="rll-youtube-player" data-id="dQw4w9WgXcQ"></div>`
+    const value = html`
+      <div
+        class="rll-youtube-player"
+        data-id="dQw4w9WgXcQ"
+      ></div>
+    `
     const result = await transform(value)
 
     expect(result).toContain('rll-youtube-player')

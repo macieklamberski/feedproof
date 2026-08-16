@@ -81,28 +81,39 @@ describeForEachParser('fixSubstackImageLinks', (parseHtml) => {
     })
 
     it('should leave an anchor holding text untouched', async () => {
-      const value = html`<a class="image-link" href="${imageHref}">View image</a>`
+      const value = html`
+        <a
+          class="image-link"
+          href="${imageHref}"
+        >View image</a>
+      `
       const result = await transform(value)
 
       expect(result).toEqualHtml(value)
     })
 
     it('should leave an anchor whose href is not an image file untouched', async () => {
-      const value = html`<a class="image-link image2" href="https://example.com/p/post"></a>`
+      const value = html`
+        <a
+          class="image-link
+          image2"
+          href="https://example.com/p/post"
+        ></a>
+      `
       const result = await transform(value)
 
       expect(result).toEqualHtml(value)
     })
 
     it('should leave an anchor without an href untouched', async () => {
-      const value = html`<a class="image-link image2"></a>`
+      const value = '<a class="image-link image2"></a>'
       const result = await transform(value)
 
       expect(result).toEqualHtml(value)
     })
 
     it('should leave an empty anchor without the image-link class untouched', async () => {
-      const value = html`<a href="https://cdn.example.com/photo.jpeg"></a>`
+      const value = '<a href="https://cdn.example.com/photo.jpeg"></a>'
       const result = await transform(value)
 
       expect(result).toEqualHtml(value)
@@ -143,7 +154,13 @@ describeForEachParser('fixSubstackImageLinks', (parseHtml) => {
   })
 
   it('should be idempotent', async () => {
-    const value = html`<a class="image-link image2" href="${imageHref}"></a>`
+    const value = html`
+      <a
+        class="image-link
+        image2"
+        href="${imageHref}"
+      ></a>
+    `
     const once = await transform(value)
     const twice = await transform(once)
 

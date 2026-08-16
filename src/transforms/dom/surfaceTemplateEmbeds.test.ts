@@ -32,13 +32,13 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
         </div>
       </template>
     `
-    const expected = html`<div data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"></div>`
+    const expected = '<div data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"></div>'
 
     expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a template with no embed alone', async () => {
-    const value = html`<template><p>placeholder text</p></template>`
+    const value = '<template><p>placeholder text</p></template>'
     const result = await transform(value)
 
     expect(result).toContain('<template')

@@ -26,7 +26,7 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
   })
 
   it('should convert an iframe with no title (no alt attribute)', async () => {
-    const value = html`<iframe src="https://datawrapper.dwcdn.net/t4fiQ/3/"></iframe>`
+    const value = '<iframe src="https://datawrapper.dwcdn.net/t4fiQ/3/"></iframe>'
     const result = await transform(value)
 
     expect(result).toContain('<a href="https://datawrapper.dwcdn.net/t4fiQ/">')
@@ -35,7 +35,7 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
   })
 
   it('should accept a version-less iframe url', async () => {
-    const value = html`<iframe src="https://datawrapper.dwcdn.net/M9ROR/"></iframe>`
+    const value = '<iframe src="https://datawrapper.dwcdn.net/M9ROR/"></iframe>'
     const result = await transform(value)
 
     expect(result).toContain('src="https://datawrapper.dwcdn.net/M9ROR/full.png"')
@@ -65,7 +65,7 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
   })
 
   it('should leave the secret preview iframe for the generic placeholder', async () => {
-    const value = html`<iframe src="https://datawrapper.dwcdn.net/AbCdE/2/#?secret=tok3n"></iframe>`
+    const value = '<iframe src="https://datawrapper.dwcdn.net/AbCdE/2/#?secret=tok3n"></iframe>'
     const result = await transform(value)
 
     expect(result).toContain('<iframe')
@@ -133,7 +133,13 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
   })
 
   it('should leave a standalone static image untouched', async () => {
-    const value = html`<img decoding="async" src="https://datawrapper.dwcdn.net/AbCdE/full.png" width="600">`
+    const value = html`
+      <img
+        decoding="async"
+        src="https://datawrapper.dwcdn.net/AbCdE/full.png"
+        width="600"
+      >
+    `
     const result = await transform(value)
 
     expect(result).toContain('src="https://datawrapper.dwcdn.net/AbCdE/full.png"')
@@ -141,7 +147,7 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
   })
 
   it('should leave a non-datawrapper iframe untouched', async () => {
-    const value = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
+    const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     const result = await transform(value)
 
     expect(result).toContain('youtube.com/embed/dQw4w9WgXcQ')
@@ -172,7 +178,13 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
   })
 
   it('should survive into the output end to end', async () => {
-    const value = html`<iframe src="https://datawrapper.dwcdn.net/bdqZJ/2/" title="Egg prices"></iframe>`
+    const value = html`
+      <iframe
+        src="https://datawrapper.dwcdn.net/bdqZJ/2/"
+        title="Egg
+        prices"
+      ></iframe>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com',

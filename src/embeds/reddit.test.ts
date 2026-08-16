@@ -429,7 +429,7 @@ describeForEachParser('redditIframeEmbedResolver', (parseHtml) => {
   })
 
   it('should ignore an iframe on another host', async () => {
-    const value = html`<iframe src="https://evil.test/r/pics/comments/dq4m1v/my_garden/"></iframe>`
+    const value = '<iframe src="https://evil.test/r/pics/comments/dq4m1v/my_garden/"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
   })

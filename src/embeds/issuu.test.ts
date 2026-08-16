@@ -29,7 +29,12 @@ describeForEachParser('issuuWidgetEmbedResolver', (parseHtml) => {
     })
 
     it('should resolve a div that states no size', async () => {
-      const value = html`<div class="issuuembed" data-configid="1016421/47623369"></div>`
+      const value = html`
+        <div
+          class="issuuembed"
+          data-configid="1016421/47623369"
+        ></div>
+      `
       const expected: EmbedResolverResult = {
         provider: 'issuu',
         id: '1016421/47623369',
@@ -100,13 +105,23 @@ describeForEachParser('issuuWidgetEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined for a config id that is not a counter pair', async () => {
-      const value = html`<div class="issuuembed" data-configid="../evil/1"></div>`
+      const value = html`
+        <div
+          class="issuuembed"
+          data-configid="../evil/1"
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined for an empty config id', async () => {
-      const value = html`<div class="issuuembed" data-configid=""></div>`
+      const value = html`
+        <div
+          class="issuuembed"
+          data-configid=""
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -128,14 +143,14 @@ describeForEachParser('issuuWidgetEmbedResolver', (parseHtml) => {
     })
 
     it('should not match a div carrying neither attribute', async () => {
-      const value = html`<div class="issuuembed"></div>`
+      const value = '<div class="issuuembed"></div>'
 
       expect(await extract(value)).toBeUndefined()
     })
 
     // The bare attribute is not the platform: the class is the other half of the guard.
     it('should not match a data-configid div without the issuu class', async () => {
-      const value = html`<div data-configid="1016421/47623369"></div>`
+      const value = '<div data-configid="1016421/47623369"></div>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -229,7 +244,7 @@ describeForEachParser('issuuIframeEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined for an issuu url naming no document', async () => {
-      const value = html`<iframe src="https://e.issuu.com/embed.html"></iframe>`
+      const value = '<iframe src="https://e.issuu.com/embed.html"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })

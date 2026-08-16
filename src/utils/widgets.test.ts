@@ -523,7 +523,13 @@ describeForEachParser('declaredSize', (parseHtml) => {
   describe('a markup-keyed resolver', () => {
     it('should take the size the carrier declares by default', () => {
       const resolver = createMarkupEmbedResolver('div.player', () => stated)
-      const value = html`<div class="player" width="640" height="360"></div>`
+      const value = html`
+        <div
+          class="player"
+          width="640"
+          height="360"
+        ></div>
+      `
       const expected: EmbedResolverResult = { ...stated, width: 640, height: 360 }
 
       expect(resolve(resolver, value)).toEqual(expected)
@@ -533,7 +539,13 @@ describeForEachParser('declaredSize', (parseHtml) => {
       const resolver = createMarkupEmbedResolver('div.player', () => ({ ...stated, height: 200 }), {
         declaredSize: false,
       })
-      const value = html`<div class="player" width="640" height="360"></div>`
+      const value = html`
+        <div
+          class="player"
+          width="640"
+          height="360"
+        ></div>
+      `
       const expected: EmbedResolverResult = { ...stated, height: 200 }
 
       expect(resolve(resolver, value)).toEqual(expected)
@@ -543,7 +555,13 @@ describeForEachParser('declaredSize', (parseHtml) => {
   describe('a url-keyed resolver', () => {
     it('should take the size the carrier declares by default', () => {
       const resolver = createUrlEmbedResolver(['x.test'], () => stated)
-      const value = html`<iframe src="https://x.test/abc" width="640" height="360"></iframe>`
+      const value = html`
+        <iframe
+          src="https://x.test/abc"
+          width="640"
+          height="360"
+        ></iframe>
+      `
       const expected: EmbedResolverResult = { ...stated, width: 640, height: 360 }
 
       expect(resolve(resolver, value)).toEqual(expected)
@@ -553,7 +571,13 @@ describeForEachParser('declaredSize', (parseHtml) => {
       const resolver = createUrlEmbedResolver(['x.test'], () => ({ ...stated, height: 200 }), {
         declaredSize: false,
       })
-      const value = html`<iframe src="https://x.test/abc" width="640" height="360"></iframe>`
+      const value = html`
+        <iframe
+          src="https://x.test/abc"
+          width="640"
+          height="360"
+        ></iframe>
+      `
       const expected: EmbedResolverResult = { ...stated, height: 200 }
 
       expect(resolve(resolver, value)).toEqual(expected)

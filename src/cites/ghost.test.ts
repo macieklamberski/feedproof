@@ -208,7 +208,7 @@ describeForEachParser('ghostCiteResolver', (parseHtml) => {
     })
 
     it('should return undefined when no bookmark card is present', async () => {
-      const value = html`<p>Regular content</p>`
+      const value = '<p>Regular content</p>'
 
       expect(await extract(value)).toBeUndefined()
     })

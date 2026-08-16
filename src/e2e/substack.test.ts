@@ -44,7 +44,7 @@ describeForEachParser('Substack', (parseHtml) => {
       <p>Text</p>
       <iframe src="https://other.substack.com/embed" width="480" height="320"></iframe>
     `
-    const expected = html`<p>Text</p>`
+    const expected = '<p>Text</p>'
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
@@ -384,7 +384,7 @@ describeForEachParser('Substack', (parseHtml) => {
       url: null,
     })
     const mention = `<span class="mention-wrap" data-attrs="${mentionAttrs}" data-component-name="MentionToDOM"></span>`
-    const value = html`<p>Thanks to ${mention} for the idea.</p>`
+    const value = `<p>Thanks to ${mention} for the idea.</p>`
     const expected = html`
       <p>Thanks to <a href="https://substack.com/profile/123456">@Jane Miller</a> for the idea.</p>
     `
@@ -497,7 +497,7 @@ describeForEachParser('Substack', (parseHtml) => {
         </div>
       </div>
     `
-    const expected = html`<p>Thank you for being here.</p>`
+    const expected = '<p>Thank you for being here.</p>'
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
     expect(result).toEqualHtml(expected)
@@ -530,7 +530,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-component-name="CommunityChatRenderPlaceholder"
       ></div>
     `
-    const expected = html`<p>Come say hi.</p>`
+    const expected = '<p>Come say hi.</p>'
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
     expect(result).toEqualHtml(expected)
@@ -582,7 +582,7 @@ describeForEachParser('Substack', (parseHtml) => {
         ><a class="button primary" href="https://examplepub.substack.com/p/the-post?action=share"><span>Share</span></a></p>
       </div>
     `
-    const expected = html`<p>Before.</p>`
+    const expected = '<p>Before.</p>'
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
     expect(result).toEqualHtml(expected)
@@ -1238,7 +1238,7 @@ describeForEachParser('Substack', (parseHtml) => {
         </div>
       </div>
     `
-    const expected = html`<p>Before.</p>`
+    const expected = '<p>Before.</p>'
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
     expect(result).toEqualHtml(expected)
@@ -1428,7 +1428,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-component-name="CashtagToDOM"
       ></span> returned 105% from entry.</p>
     `
-    const expected = html`<p>Rocket Lab  returned 105% from entry.</p>`
+    const expected = '<p>Rocket Lab  returned 105% from entry.</p>'
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
     expect(result).toEqualHtml(expected)

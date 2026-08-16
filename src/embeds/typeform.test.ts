@@ -57,7 +57,7 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
 
   describe('the direct widget form', () => {
     it('should recover the form named by its own id', async () => {
-      const value = html`<div data-tf-widget="MTt3Pw7K"></div>`
+      const value = '<div data-tf-widget="MTt3Pw7K"></div>'
       const expected: EmbedResolverResult = {
         provider: 'typeform',
         id: 'MTt3Pw7K',
@@ -118,13 +118,13 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined for an id outside the url-safe alphabet', async () => {
-      const value = html`<div data-tf-widget="../evil"></div>`
+      const value = '<div data-tf-widget="../evil"></div>'
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined for an empty id', async () => {
-      const value = html`<div data-tf-widget=""></div>`
+      const value = '<div data-tf-widget=""></div>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -219,7 +219,7 @@ describeForEachParser('typeformIframeEmbedResolver', (parseHtml) => {
   })
 
   it('should ignore an iframe on another host', async () => {
-    const value = html`<iframe src="https://evil.test/to/MTt3Pw7K"></iframe>`
+    const value = '<iframe src="https://evil.test/to/MTt3Pw7K"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
   })

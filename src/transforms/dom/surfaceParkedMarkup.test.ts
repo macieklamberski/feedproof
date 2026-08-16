@@ -178,7 +178,7 @@ describeForEachParser('surfaceParkedMarkup', (parseHtml) => {
           data-content="%3Cblockquote%20class%3D%22instagram-media%22%3E%3C%2Fblockquote%3E"
         ></div>
       `
-      const expected = html`<blockquote class="instagram-media"></blockquote>`
+      const expected = '<blockquote class="instagram-media"></blockquote>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
@@ -186,8 +186,8 @@ describeForEachParser('surfaceParkedMarkup', (parseHtml) => {
 
   describe('containers left alone', () => {
     it('should leave a container that holds neither markup nor a url', async () => {
-      const value = html`<div class="load-later"></div>`
-      const expected = html`<div class="load-later"></div>`
+      const value = '<div class="load-later"></div>'
+      const expected = '<div class="load-later"></div>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })

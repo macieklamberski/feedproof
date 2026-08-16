@@ -58,13 +58,18 @@ describeForEachParser('discourseMediaResolver', (parseHtml) => {
     })
 
     it('should return undefined when the src is empty', async () => {
-      const value = html`<div class="video-placeholder-container" data-video-src=""></div>`
+      const value = html`
+        <div
+          class="video-placeholder-container"
+          data-video-src=""
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should not match a container without data-video-src', async () => {
-      const value = html`<div class="video-placeholder-container"></div>`
+      const value = '<div class="video-placeholder-container"></div>'
 
       expect(await extract(value)).toBeUndefined()
     })

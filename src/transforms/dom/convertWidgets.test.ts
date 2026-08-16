@@ -341,7 +341,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
 
   it('should leave the placeholder empty when wrapping unknown iframe', async () => {
     const value = '<iframe src="https://unknown-site.com/123"></iframe>'
-    const expected = html`<div data-embed-src="https://unknown-site.com/123"></div>`
+    const expected = '<div data-embed-src="https://unknown-site.com/123"></div>'
 
     expect(await transform(value)).toEqualHtml(expected)
   })

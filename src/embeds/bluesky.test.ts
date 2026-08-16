@@ -672,7 +672,7 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
             'https://video.bsky.app/watch/did:plc:chz4agnyzcrsvpnprxrbjrpa/bafkreivideo/thumbnail.jpg',
           ],
         },
-        html`<iframe src="https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42?id=1"></iframe>`,
+        '<iframe src="https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42?id=1"></iframe>',
       )
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
@@ -696,7 +696,7 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
           authorAvatarUrl: 'https://evil.test/cdn.bsky.app/avatar.jpg',
           imageUrls: ['https://evil.test/cdn.bsky.app/thumb.jpg'],
         },
-        html`<iframe src="https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42?id=1"></iframe>`,
+        '<iframe src="https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42?id=1"></iframe>',
       )
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
