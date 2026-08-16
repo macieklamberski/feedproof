@@ -27,10 +27,9 @@ export const countSrcsetCandidates = (srcset: string): number => {
 }
 
 // Size words a feed uses as a whole filename for a scaled variant, e.g.
-// .../{id}/large.jpg vs .../{id}/small.jpg. Defined with provenance (like urlpurify's
-// tracking-param literals): the keys join into the leaf matcher, and the rank orders two
-// variants of one image so pickLargerImageUrl can keep the larger. Rank 0 means the word
-// dedups but is too ambiguous to win or lose a size comparison.
+// .../{id}/large.jpg vs .../{id}/small.jpg. The keys join into the leaf matcher, and the rank
+// orders two variants of one image so pickLargerImageUrl can keep the larger. Rank 0 means the
+// word dedups but is too ambiguous to win or lose a size comparison.
 //
 // Conservative on purpose: "main"/"cover"/"default"/"wide"/"full" are left out. They
 // read as size hints but turn up as real content filenames often enough that a false

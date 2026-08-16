@@ -94,7 +94,6 @@ export const textNode = (element: Nullish<Element>): string | undefined => {
   return result.trim() || undefined
 }
 
-// Trimmed value of an attribute on the element itself.
 // The inline `<script>` that configures a player sitting beside it, which several platforms use
 // instead of an iframe. Two things make it awkward to reach. `wrapBareInlineInParagraphs` runs
 // before the widget pass and puts a bare script in a `<p>`, so by then the player's sibling is
@@ -124,6 +123,7 @@ export const findConfigScript = (element: Element): Element | undefined => {
   }
 }
 
+// Trimmed value of an attribute on the element itself.
 export const attr = (element: Nullish<Element>, name: string): string | undefined => {
   return element?.getAttribute(name)?.trim() || undefined
 }

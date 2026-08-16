@@ -13,8 +13,8 @@ const thumbnailIdPattern = /\/vi\/([a-zA-Z0-9_-]{11})\//
 // Markers in an iframe/embed src that mean a video player, used to spot a video-led
 // item whose image enclosure is really the video's poster. A host list is needed
 // because players without a feedsweep resolver (e.g. JW Player) carry no
-// data-embed-provider. Listed with provenance as plain substrings, then escaped and
-// joined into one matcher like urlpurify's tracking lists.
+// data-embed-provider. Each host is a plain substring with its own note, escaped and joined
+// into one matcher.
 const videoHostFragments = [
   'youtube.com', // YouTube.
   'youtu.be', // YouTube share links.

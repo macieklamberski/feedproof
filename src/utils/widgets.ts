@@ -155,14 +155,14 @@ export const createUrlEmbedResolver = (
   }
 }
 
-// Writes a field record as `data-{type}-*` attributes, leaving the ones already on the
-// element alone so a resolver's own values always survive an enrichment pass.
 // Tells a media result apart from an embed result in the widget pass: only media results
 // carry the element tag to mint.
 export const isMediaResult = (result: WidgetResolverResult): result is MediaResolverResult => {
   return 'tag' in result
 }
 
+// Writes a field record as `data-{type}-*` attributes, leaving the ones already on the
+// element alone so a resolver's own values always survive an enrichment pass.
 export const updatePlaceholder = <Type extends object>(
   element: Element,
   type: GeneratedWrapperType,

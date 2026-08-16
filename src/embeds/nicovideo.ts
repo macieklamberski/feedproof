@@ -7,8 +7,6 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // Video ids are a two-letter kind and a number, `sm9`, `nm12345`, `so67890`.
 const safeVideoIdRegex = /^[a-z]{2}\d+$/
 
-// The script states the size it wants, `?w=490&h=307`.
-
 const nicovideoHosts = ['nicovideo.jp']
 
 // Three spellings, one video, and the legacy two are dead or dying.

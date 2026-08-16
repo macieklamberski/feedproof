@@ -354,7 +354,7 @@ export const highlightCode: DomTransform = ({ highlightFn }) => {
 
     // Some editors emit a block of code as a standalone <code> with no <pre> wrapper.
     // Promote those to <pre><code> first so the loop below treats them like any other
-    // block: highlighted by a declared hint (or detected JSON), and rendered as a
+    // block: highlighted when a hint declares the language, and rendered as a
     // block (a loose <code> renders inline, collapsing the newlines). The signal
     // is two or more non-empty lines, not just any newline: feeds often pretty-print
     // their HTML, wrapping an inline <code>word</code> as `<code>\n  word\n </code>`,

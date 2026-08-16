@@ -51,7 +51,8 @@ export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined 
   const host = isPodcast ? applePodcastsHost : 'music.apple.com'
   // `i` names the track inside an album or the episode inside a show, so where it is present
   // it is the thing being embedded, and the player is the song one whatever the path says.
-  // Either way the id is the numeric one a lookup takes.
+  // Where it is absent the id is the path's own, which is numeric for music, `pl.`/`ra.`
+  // prefixed for a playlist or station, and `id`-prefixed for a podcast.
   const trackId = parsed.searchParams.get('i')
   const id = trackId ?? pathId.replace(podcastIdPrefixRegex, '')
   const query = pickUrlParams(url, ['i'])

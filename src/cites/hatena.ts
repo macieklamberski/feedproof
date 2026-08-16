@@ -38,7 +38,6 @@ export const hatenaCiteResolver: CiteResolver = {
     const iframe = find(element, cardIframeSelector)
     const citationLink = find(element, 'cite.hatena-citation a')
 
-    // Prefer the citation's href: it is the plain target, so it needs no decoding.
     const embedUrl = attr(iframe, 'src')
     const embeddedUrl = embedUrl
       ? new URL(embedUrl, 'https://example.invalid').searchParams.get('url')
@@ -46,6 +45,7 @@ export const hatenaCiteResolver: CiteResolver = {
 
     return buildCite({
       provider: 'hatena',
+      // The citation's href comes first: it is the plain target, so it needs no decoding.
       url: attr(citationLink, 'href') ?? embeddedUrl,
       title: attr(iframe, 'title'),
       publisher: text(citationLink),

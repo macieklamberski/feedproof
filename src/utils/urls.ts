@@ -1,12 +1,12 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { ResolveUrlFn } from '../types.js'
 
-// Matches any URL that already carries a scheme (the URL-spec scheme grammar) — i.e.
-// already absolute, so resolution must leave it byte-identical. Protocol-relative URLs
-// (`//host/path`) have no scheme and are intentionally not matched, so they resolve to
-// the base URL's scheme. Shared with resolveRelativeUrls so both treat URLs identically.
 const urlShapeRegex = /[:/.]/
 
+// Matches any URL that already carries a scheme (the URL-spec scheme grammar), so it is
+// already absolute and resolution must leave it byte-identical. Protocol-relative URLs
+// (`//host/path`) have no scheme and are intentionally not matched, so they resolve to
+// the base URL's scheme. Shared with resolveRelativeUrls so both treat URLs identically.
 export const absoluteUrlRegex = /^[a-z][a-z0-9+.-]*:/i
 
 // Whether a URL names a media file of each kind, by extension, tolerating a query or
