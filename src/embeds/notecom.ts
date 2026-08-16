@@ -1,7 +1,6 @@
 import { getPathSegments, isHostOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr } from '../utils/dom.js'
-import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A note id is `n` followed by lowercase hex, e.g. `nf938ce640465`.
 const safeNoteIdRegex = /^n[0-9a-f]+$/
@@ -67,34 +66,18 @@ const readNoteUrl = (link: string): NoteUrl | undefined => {
   }
 }
 
-// note.com ships an own-post embed as an empty `<figure>` that only its web client hydrates,
-// naming the post in `data-src`. Nothing renders it in a reader, so the note is lost. The figure
-// also carries the id alone in `data-identifier`, which is deliberately not read: it always
-// repeats what the url states, so preferring it would only create a way for the id and the url
-// on one placeholder to disagree.
-//
-// A figure whose `data-src` already points at the player is the same embed a step further along,
-// and is claimed here too: minting the same player from it is what stops it becoming a link to
-// an embed page, which is what it degraded to before.
-export const notecomFigureEmbedResolver = createMarkupEmbedResolver(
-  'figure[embedded-service="note"][data-src]',
-  (element) => {
-    const source = attr(element, 'data-src')
-    const target = source ? readNoteUrl(source) : undefined
-
-    if (!target) {
-      return
-    }
-
-    return composeEmbed(target.noteId, target.kind === 'post' ? source : undefined)
-  },
-)
-
-// The player the figure's script builds at runtime, saved into a feed by a CMS that ran it
-// first, plus the hand-written form. 255 corpus feeds carry it and every one of them reached a
-// provider-less generic placeholder before this resolver existed.
+// Two carriers, one resolver. The player is what the figure's script builds at runtime and what
+// a CMS that ran the script first saves into a feed: 255 corpus feeds carry it and every one of
+// them reached a provider-less generic placeholder before this resolver existed. The post url is
+// what note.com's own embed figure names, and `convertNoteEmbeds` frames it so this claims it
+// there too, which is why the figure needs no resolver of its own.
 export const notecomIframeEmbedResolver = createUrlEmbedResolver(notecomHosts, (url) => {
   const target = readNoteUrl(url)
 
-  return target?.kind === 'player' ? composeEmbed(target.noteId) : undefined
+  if (!target) {
+    return
+  }
+
+  // Only the post form names the user, so only it can state the canonical url outright.
+  return composeEmbed(target.noteId, target.kind === 'post' ? url : undefined)
 })

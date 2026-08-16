@@ -9,91 +9,9 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
     return applyDomTransforms(parseHtml(value), [convertNoteEmbeds(baseContext)])
   }
 
-  describe('media services', () => {
-    it('should convert a youtube figure into an iframe', async () => {
-      const value = html`
-        <figure
-          name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
-          data-src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-          data-identifier="n1234"
-          embedded-service="youtube"
-          embedded-content-key="emb123"
-        ></figure>
-      `
-      const expected = html`<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>`
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should convert a spotify figure into an iframe', async () => {
-      const value = html`
-        <figure
-          name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
-          data-src="https://open.spotify.com/embed-podcast/episode/2H7N34Z"
-          data-identifier="n1234"
-          embedded-service="spotify"
-          embedded-content-key="emb123"
-        ></figure>
-      `
-      const expected = html`
-        <iframe src="https://open.spotify.com/embed-podcast/episode/2H7N34Z"></iframe>
-      `
-
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should convert an oembed figure into an iframe', async () => {
-      const value = html`
-        <figure
-          name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
-          data-src="https://adventar.org/calendars/11560"
-          data-identifier="n1234"
-          embedded-service="oembed"
-          embedded-content-key="emb123"
-        ></figure>
-      `
-      const expected = html`<iframe src="https://adventar.org/calendars/11560"></iframe>`
-
-      expect(await transform(value)).toBe(expected)
-    })
-  })
-
-  describe('own-post embeds', () => {
-    // The figure naming note.com itself belongs to `notecomFigureEmbedResolver`, which mints
-    // the player from its id, so this pass leaves it for the widget pass to claim.
-    it('should leave a note figure for its own resolver', async () => {
-      const value = html`
-        <figure
-          name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
-          data-src="https://note.com/info/n/ne5fc6bd602c8"
-          data-identifier="n1234"
-          embedded-service="note"
-          embedded-content-key="emb123"
-        ></figure>
-      `
-
-      expect(await transform(value)).toBe(value)
-    })
-  })
-
-  describe('services the transform does not know', () => {
-    // note.com owns the service list and grows it without warning, so an unrecognised figure
-    // degrades to its url rather than reaching a reader as a figure that renders nothing.
-    it('should convert a twitter figure into a plain link', async () => {
-      const value = html`
-        <figure
-          name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
-          data-src="https://x.com/hoxai/status/2040742008386634171"
-          data-identifier="n1234"
-          embedded-service="twitter"
-          embedded-content-key="emb123"
-        ></figure>
-      `
-      const expected = html`<a href="https://x.com/hoxai/status/2040742008386634171">https://x.com/hoxai/status/2040742008386634171</a>`
-
-      expect(await transform(value)).toBe(expected)
-    })
-
+  describe('services no resolver claims', () => {
+    // note.com owns the service list and grows it without warning, so a figure whose url nothing
+    // claims degrades to that url rather than reaching a reader as a figure that renders nothing.
     it('should convert a threads figure into a plain link', async () => {
       const value = html`
         <figure
@@ -120,6 +38,26 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
         ></figure>
       `
       const expected = html`<a href="https://codepen.io/oclockten/pen/zxqLGrz">https://codepen.io/oclockten/pen/zxqLGrz</a>`
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    // A registry check is not a framability check. This page frames fine, so the old allowlist
+    // reached a working placeholder for it and this degrades it to a link. Framability needs a
+    // network round trip, which `extract` may not do, so the trade is accepted rather than solved.
+    it('should degrade a framable url no resolver claims to a link', async () => {
+      const value = html`
+        <figure
+          name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
+          data-src="https://adventar.org/calendars/11560"
+          data-identifier="n1234"
+          embedded-service="oembed"
+          embedded-content-key="emb123"
+        ></figure>
+      `
+      const expected = html`
+        <a href="https://adventar.org/calendars/11560">https://adventar.org/calendars/11560</a>
+      `
 
       expect(await transform(value)).toBe(expected)
     })
@@ -151,6 +89,95 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
       `
 
       expect(await transform(value)).toBe(value)
+    })
+  })
+
+  describe('services a resolver claims', () => {
+    it('should convert a youtube figure into an iframe', async () => {
+      const value = html`
+        <figure
+          name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
+          data-src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          data-identifier="n1234"
+          embedded-service="youtube"
+          embedded-content-key="emb123"
+        ></figure>
+      `
+      const expected = html`<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>`
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    // Spotify reaches a feed as `oembed`, not as a service of its own: it did not appear once
+    // under its own name across 2,496 sampled articles.
+    it('should convert a spotify url arriving as oembed into an iframe', async () => {
+      const value = html`
+        <figure
+          name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
+          data-src="https://open.spotify.com/track/03yOjwHoOPDlTUg0NRxN6t"
+          data-identifier="n1234"
+          embedded-service="oembed"
+          embedded-content-key="emb123"
+        ></figure>
+      `
+      const expected = html`
+        <iframe src="https://open.spotify.com/track/03yOjwHoOPDlTUg0NRxN6t"></iframe>
+      `
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    // The second-largest embed kind note.com ships after its own posts and YouTube. The status
+    // page url is a carrier the twitter resolver reads, so the figure becomes the frame it claims
+    // instead of the link it used to degrade to.
+    it('should convert a twitter figure into an iframe', async () => {
+      const value = html`
+        <figure
+          name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
+          data-src="https://x.com/hoxai/status/2040742008386634171"
+          data-identifier="n1234"
+          embedded-service="twitter"
+          embedded-content-key="emb123"
+        ></figure>
+      `
+      const expected = html`
+        <iframe src="https://x.com/hoxai/status/2040742008386634171"></iframe>
+      `
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    // `embedded-service` is matched on but never read, so a value nobody has catalogued behaves
+    // exactly like a known one: the url decides.
+    it('should convert a figure whose service it has never seen', async () => {
+      const value = html`
+        <figure
+          name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
+          data-src="https://vimeo.com/76979871"
+          data-identifier="n1234"
+          embedded-service="somethingNoOneHasCatalogued"
+          embedded-content-key="emb123"
+        ></figure>
+      `
+      const expected = html`<iframe src="https://vimeo.com/76979871"></iframe>`
+
+      expect(await transform(value)).toBe(expected)
+    })
+
+    // The own-post figure is no longer special: its url is a carrier the note.com resolver reads.
+    it('should convert a note figure into an iframe', async () => {
+      const value = html`
+        <figure
+          name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
+          data-src="https://note.com/info/n/ne5fc6bd602c8"
+          data-identifier="n1234"
+          embedded-service="note"
+          embedded-content-key="emb123"
+        ></figure>
+      `
+      const expected = html`<iframe src="https://note.com/info/n/ne5fc6bd602c8"></iframe>`
+
+      expect(await transform(value)).toBe(expected)
     })
   })
 

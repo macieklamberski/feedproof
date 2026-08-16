@@ -85,7 +85,7 @@ import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { megaphoneEmbedResolver } from './embeds/megaphone.js'
 import { mixcloudEmbedResolver } from './embeds/mixcloud.js'
 import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from './embeds/nicovideo.js'
-import { notecomFigureEmbedResolver, notecomIframeEmbedResolver } from './embeds/notecom.js'
+import { notecomIframeEmbedResolver } from './embeds/notecom.js'
 import { omnyEmbedResolver } from './embeds/omny.js'
 import { podbeanEmbedResolver } from './embeds/podbean.js'
 import { podigeeEmbedResolver } from './embeds/podigee.js'
@@ -481,7 +481,6 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   omnyEmbedResolver,
   nicovideoScriptEmbedResolver,
   nicovideoIframeEmbedResolver,
-  notecomFigureEmbedResolver,
   notecomIframeEmbedResolver,
   instagramBlockquoteEmbedResolver,
   instagramAmpEmbedResolver,

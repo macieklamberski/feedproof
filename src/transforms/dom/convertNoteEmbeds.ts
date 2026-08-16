@@ -1,63 +1,80 @@
 import { startsWithAnyOf } from 'trousse'
-import type { DomTransform } from '../../types.js'
+import type { DomTransform, WidgetResolver } from '../../types.js'
 import { attr, hasText } from '../../utils/dom.js'
 
-// note.com ships every embed as an empty <figure> that only its web client hydrates: the
-// target URL sits in `data-src` and the provider name in `embedded-service`. The media
-// services become plain iframes here in the normalize cluster, so the widget pass
-// classifies each by its URL (YouTube through its resolver, the rest through the generic
-// fallback). `external-article` figures belong to the cite pass and a `note` own-post figure
-// to `notecomFigureEmbedResolver`, so both are left for their own pass and neither is touched
-// here. That split follows the same boundary `convertAmpNativeElements` draws: generic
-// recovery here, and a figure naming a platform to that platform's own resolver, which reads
-// its attributes and mints the placeholder directly.
-//
-// This is an allowlist of services where note.com puts a directly embeddable URL in
-// `data-src`, not a list of the services we recognise. Nothing in the markup says whether a
-// `data-src` is a player URL or a page URL, and the two are indistinguishable by shape, so a
-// service nobody has measured is left alone rather than framed. The obvious-looking change
-// here is to iframe anything carrying an http URL: that would frame a full webpage, which
-// looks resolved and renders either the whole page or an X-Frame-Options refusal.
-//
-// Any service outside the allowlist degrades to a plain link, so the reference stays
-// reachable. Without it an unrecognised figure reaches a reader as an empty <figure> that
-// renders nothing at all: it survives the pass rather than being stripped, because note.com
-// writes a uuid into `name` and `id` and `stripEmptyTags` keeps anything carrying either, so
-// the loss is silent in the output rather than visible in it.
-const iframeServices = new Set(['youtube', 'spotify', 'oembed'])
-
-export const convertNoteEmbeds: DomTransform = () => (document) => {
-  for (const element of document.querySelectorAll('figure[embedded-service][data-src]')) {
-    const service = attr(element, 'embedded-service')
-    const source = attr(element, 'data-src')
-
-    if (!service || !source || !startsWithAnyOf(source, ['http://', 'https://'])) {
+// Whether a registered resolver would claim an iframe on this url, asked of the real registry
+// rather than guessed from a list. The candidate is the element that gets inserted on a hit, so
+// what is tested is what ships. Only the registry is asked: `convertWidgets` also has a generic
+// fallback that placeholders any carrier with a src, but that lives inside the pass rather than
+// in `widgetResolvers`, and it is exactly what this check exists to avoid falling into, since it
+// would answer yes for every url.
+const isClaimedByResolver = async (
+  candidate: Element,
+  widgetResolvers: Array<WidgetResolver>,
+): Promise<boolean> => {
+  for (const resolver of widgetResolvers) {
+    if (!candidate.matches(resolver.selector)) {
       continue
     }
 
-    if (iframeServices.has(service)) {
+    if (await resolver.extract(candidate)) {
+      return true
+    }
+  }
+
+  return false
+}
+
+// note.com ships every embed as an empty <figure> that only its web client hydrates, naming the
+// target in `data-src`. Nothing renders it in a reader, so the embed is lost: the figure survives
+// `stripEmptyTags` because note.com writes a uuid into `name` and `id`, which means the loss is
+// silent in the output rather than visible in it.
+//
+// `embedded-service` names the platform but is not read, only matched on. It is an unpublished
+// vocabulary note.com controls, spelled inconsistently (`githubRepository`, `tiktok-web`,
+// `note-qa`), and the same platform lands in different values depending on the url shape: an
+// Instagram post arrives as `oembed` and an Instagram reel as `external-article`. So the url is
+// the only honest signal, and the registry is asked about it directly.
+//
+// `data-src` is always a canonical page url, never a player: across 1,213 figures sampled from
+// live articles, none carried one. That is what makes the link fallback load-bearing rather than
+// defensive. Those pages overwhelmingly refuse framing (YouTube, X, TikTok, Instagram and
+// stand.fm answer SAMEORIGIN or DENY, Spotify sends a restrictive frame-ancestors), so framing
+// one that no resolver rewrites produces a placeholder that looks resolved and shows nothing.
+// A link always works, so anything unclaimed becomes one.
+//
+// A registry check is not a framability check, and the two disagree in one direction. A page no
+// resolver claims can still frame fine, and it becomes a link here where framing it would have
+// rendered: `adventar.org` is one, sending neither `x-frame-options` nor a CSP. Deciding it
+// properly needs a network round trip, which `extract` may not do, so the trade is accepted
+// rather than solved. Nothing in the 1,213-figure sample fell into that class.
+export const convertNoteEmbeds: DomTransform =
+  ({ widgetResolvers }) =>
+  async (document) => {
+    for (const element of document.querySelectorAll('figure[embedded-service][data-src]')) {
+      const source = attr(element, 'data-src')
+
+      if (!source || !startsWithAnyOf(source, ['http://', 'https://'])) {
+        continue
+      }
+
+      // A figure already holding markup is showing the reader something, which is how an
+      // `external-article` card arrives, so only an empty one is worth replacing.
+      if (element.firstElementChild || hasText(element)) {
+        continue
+      }
+
       const iframe = document.createElement('iframe')
       iframe.setAttribute('src', source)
-      element.replaceWith(iframe)
 
-      continue
-    }
+      if (await isClaimedByResolver(iframe, widgetResolvers)) {
+        element.replaceWith(iframe)
+        continue
+      }
 
-    // A figure naming note.com itself belongs to `notecomFigureEmbedResolver`, which mints the
-    // player from its id, so this pass leaves it for the widget pass to claim.
-    if (service === 'note') {
-      continue
-    }
-
-    // A figure already holding markup is showing the reader something, which is how an
-    // `external-article` card arrives, so only an empty one is worth replacing.
-    const isEmpty = !element.firstElementChild && !hasText(element)
-
-    if (isEmpty) {
       const link = document.createElement('a')
       link.setAttribute('href', source)
       link.textContent = source
       element.replaceWith(link)
     }
   }
-}
