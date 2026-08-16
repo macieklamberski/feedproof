@@ -10,27 +10,42 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
   }
 
   it('should rebuild an iframe from a lazyYT facade', async () => {
-    const value = html`<div class="lazyYT" data-youtube-id="dQw4w9WgXcQ"></div>`
-    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
+    const value = html`
+      <div
+        class="lazyYT"
+        data-youtube-id="dQw4w9WgXcQ"
+      ></div>
+    `
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should keep an underscore-bearing video id intact', async () => {
-    const value = html`<div class="lazyYT" data-youtube-id="a_b-c123def"></div>`
-    const expected = html`<iframe src="https://www.youtube.com/embed/a_b-c123def"></iframe>`
+    const value = html`
+      <div
+        class="lazyYT"
+        data-youtube-id="a_b-c123def"
+      ></div>
+    `
+    const expected = '<iframe src="https://www.youtube.com/embed/a_b-c123def"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should leave a facade with an empty data-youtube-id untouched', async () => {
-    const value = html`<div class="lazyYT" data-youtube-id=""></div>`
+    const value = html`
+      <div
+        class="lazyYT"
+        data-youtube-id=""
+      ></div>
+    `
 
     expect(await transform(value)).toBe(value)
   })
 
   it('should leave a facade with no data-youtube-id untouched', async () => {
-    const value = html`<div class="lazyYT"></div>`
+    const value = '<div class="lazyYT"></div>'
 
     expect(await transform(value)).toBe(value)
   })
@@ -67,43 +82,68 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
   // Measured across the corpus: `.youtube-embed[data-video_id]` is the largest facade at 701
   // feeds, ahead of the `.lazyYT` plugin this transform started with.
   it('should rebuild the youtube-embed facade', async () => {
-    const value = html`<div class="youtube-embed" data-video_id="dQw4w9WgXcQ"></div>`
-    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
+    const value = html`
+      <div
+        class="youtube-embed"
+        data-video_id="dQw4w9WgXcQ"
+      ></div>
+    `
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should rebuild a data-youtube-id facade whatever class it carries', async () => {
-    const value = html`<div class="video-wrap" data-youtube-id="dQw4w9WgXcQ"></div>`
-    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
+    const value = html`
+      <div
+        class="video-wrap"
+        data-youtube-id="dQw4w9WgXcQ"
+      ></div>
+    `
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should rebuild a data-youtube facade', async () => {
-    const value = html`<div data-youtube="dQw4w9WgXcQ"></div>`
-    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
+    const value = '<div data-youtube="dQw4w9WgXcQ"></div>'
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should rebuild a youtube-player facade naming its id', async () => {
-    const value = html`<div class="youtube-player" data-id="dQw4w9WgXcQ"></div>`
-    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
+    const value = html`
+      <div
+        class="youtube-player"
+        data-id="dQw4w9WgXcQ"
+      ></div>
+    `
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should rebuild a youtube-player facade naming its embed', async () => {
-    const value = html`<div class="youtube-player" data-embed="dQw4w9WgXcQ"></div>`
-    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
+    const value = html`
+      <div
+        class="youtube-player"
+        data-embed="dQw4w9WgXcQ"
+      ></div>
+    `
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
 
   // `data-id` says nothing about a platform, so the class is what has to name one.
   it('should leave a data-id div that does not name youtube', async () => {
-    const value = html`<div class="wp-block-gallery" data-id="dQw4w9WgXcQ"></div>`
+    const value = html`
+      <div
+        class="wp-block-gallery"
+        data-id="dQw4w9WgXcQ"
+      ></div>
+    `
 
     expect(await transform(value)).toBe(value)
   })
@@ -134,20 +174,35 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
 
   // `data-video_id` is not exclusive to YouTube, so the class has to name the platform.
   it('should leave a data-video_id div that does not name youtube', async () => {
-    const value = html`<div class="adthrive-video-player" data-video_id="dQw4w9WgXcQ"></div>`
+    const value = html`
+      <div
+        class="adthrive-video-player"
+        data-video_id="dQw4w9WgXcQ"
+      ></div>
+    `
 
     expect(await transform(value)).toBe(value)
   })
 
   // The id goes straight into a url, so what counts as one stays embeds/youtube.ts's answer.
   it('should leave a facade whose id is not a youtube id', async () => {
-    const value = html`<div class="youtube-embed" data-video_id="../../etc"></div>`
+    const value = html`
+      <div
+        class="youtube-embed"
+        data-video_id="../../etc"
+      ></div>
+    `
 
     expect(await transform(value)).toBe(value)
   })
 
   it('should be idempotent', async () => {
-    const value = html`<div class="lazyYT" data-youtube-id="dQw4w9WgXcQ"></div>`
+    const value = html`
+      <div
+        class="lazyYT"
+        data-youtube-id="dQw4w9WgXcQ"
+      ></div>
+    `
     const once = await transform(value)
     const twice = await transform(once)
 

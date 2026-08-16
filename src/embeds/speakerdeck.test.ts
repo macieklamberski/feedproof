@@ -314,13 +314,13 @@ describeForEachParser('speakerdeckIframeEmbedResolver', (parseHtml) => {
   })
 
   it('should ignore a deck page rather than a player', async () => {
-    const value = html`<iframe src="https://speakerdeck.com/user/some-deck"></iframe>`
+    const value = '<iframe src="https://speakerdeck.com/user/some-deck"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
   })
 
   it('should ignore a player id that is not hex', async () => {
-    const value = html`<iframe src="https://speakerdeck.com/player/not-a-deck"></iframe>`
+    const value = '<iframe src="https://speakerdeck.com/player/not-a-deck"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
   })

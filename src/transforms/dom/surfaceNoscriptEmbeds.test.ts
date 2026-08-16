@@ -10,7 +10,8 @@ describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {
   }
 
   it('should surface a video iframe trapped in a noscript', async () => {
-    const value = html`<noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>`
+    const value =
+      '<noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>'
     const result = await transform(value)
 
     expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ">')
@@ -31,14 +32,15 @@ describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {
   })
 
   it('should leave a noscript without an iframe alone', async () => {
-    const value = html`<noscript><p>Enable JavaScript</p></noscript>`
+    const value = '<noscript><p>Enable JavaScript</p></noscript>'
     const result = await transform(value)
 
     expect(result).toContain('<noscript')
   })
 
   it('should produce a youtube placeholder end to end', async () => {
-    const value = html`<noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>`
+    const value =
+      '<noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>'
     const expected = html`
       <div
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
@@ -57,7 +59,8 @@ describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {
   })
 
   it('should be idempotent', async () => {
-    const value = html`<noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>`
+    const value =
+      '<noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>'
     const once = await transform(value)
     const twice = await transform(once)
 

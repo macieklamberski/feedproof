@@ -16,7 +16,7 @@ describeForEachParser('YouTube', (parseHtml) => {
   // The carrier names its host but no scheme, and no baseUrl is stated, so the placeholder
   // depends on the pipeline giving it one before the resolver reads the host.
   it('should resolve a protocol-relative carrier with no baseUrl stated', async () => {
-    const value = html`<iframe src="//www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
+    const value = '<iframe src="//www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     const expected = html`
       <div
         data-embed-provider="youtube"

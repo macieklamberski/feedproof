@@ -10,49 +10,69 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
   }
 
   it('should rebuild an iframe from a lite-youtube element', async () => {
-    const value = html`<lite-youtube videoid="dQw4w9WgXcQ"></lite-youtube>`
-    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
+    const value = '<lite-youtube videoid="dQw4w9WgXcQ"></lite-youtube>'
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should rebuild an iframe from a lite-vimeo element', async () => {
-    const value = html`<lite-vimeo videoid="76979871"></lite-vimeo>`
-    const expected = html`<iframe src="https://player.vimeo.com/video/76979871"></iframe>`
+    const value = '<lite-vimeo videoid="76979871"></lite-vimeo>'
+    const expected = '<iframe src="https://player.vimeo.com/video/76979871"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should leave a lite-youtube element with no videoid alone', async () => {
-    const value = html`<lite-youtube></lite-youtube>`
+    const value = '<lite-youtube></lite-youtube>'
 
     expect(await transform(value)).toBe(value)
   })
 
   it('should carry a youtube start offset into a query param', async () => {
-    const value = html`<lite-youtube videoid="dQw4w9WgXcQ" start="90"></lite-youtube>`
-    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=90"></iframe>`
+    const value = html`
+      <lite-youtube
+        videoid="dQw4w9WgXcQ"
+        start="90"
+      ></lite-youtube>
+    `
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=90"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should carry a vimeo start offset into a time fragment', async () => {
-    const value = html`<lite-vimeo videoid="76979871" start="90"></lite-vimeo>`
-    const expected = html`<iframe src="https://player.vimeo.com/video/76979871#t=90s"></iframe>`
+    const value = html`
+      <lite-vimeo
+        videoid="76979871"
+        start="90"
+      ></lite-vimeo>
+    `
+    const expected = '<iframe src="https://player.vimeo.com/video/76979871#t=90s"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should ignore a non-numeric start', async () => {
-    const value = html`<lite-youtube videoid="dQw4w9WgXcQ" start="10&autoplay=1"></lite-youtube>`
-    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
+    const value = html`
+      <lite-youtube
+        videoid="dQw4w9WgXcQ"
+        start="10&autoplay=1"
+      ></lite-youtube>
+    `
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should carry the whitelisted half of params', async () => {
-    const value = html`<lite-youtube videoid="dQw4w9WgXcQ" params="start=10"></lite-youtube>`
-    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10"></iframe>`
+    const value = html`
+      <lite-youtube
+        videoid="dQw4w9WgXcQ"
+        params="start=10"
+      ></lite-youtube>
+    `
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
@@ -62,7 +82,7 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     const value = html`
       <lite-youtube videoid="dQw4w9WgXcQ" start="90" params="start=10"></lite-youtube>
     `
-    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=90"></iframe>`
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=90"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
@@ -72,13 +92,18 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     const value = html`
       <lite-youtube videoid="dQw4w9WgXcQ" params="start=10&autoplay=1"></lite-youtube>
     `
-    const expected = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10"></iframe>`
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10"></iframe>'
 
     expect(await transform(value)).toBe(expected)
   })
 
   it('should keep a params offset through the default pipeline', async () => {
-    const value = html`<lite-youtube videoid="dQw4w9WgXcQ" params="start=10"></lite-youtube>`
+    const value = html`
+      <lite-youtube
+        videoid="dQw4w9WgXcQ"
+        params="start=10"
+      ></lite-youtube>
+    `
     const expected = html`
       <div
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
@@ -111,7 +136,7 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
   })
 
   it('should produce a youtube placeholder end to end', async () => {
-    const value = html`<lite-youtube videoid="dQw4w9WgXcQ"></lite-youtube>`
+    const value = '<lite-youtube videoid="dQw4w9WgXcQ"></lite-youtube>'
     const expected = html`
       <div
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
@@ -131,7 +156,7 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
   })
 
   it('should be idempotent', async () => {
-    const value = html`<lite-youtube videoid="dQw4w9WgXcQ"></lite-youtube>`
+    const value = '<lite-youtube videoid="dQw4w9WgXcQ"></lite-youtube>'
     const once = await transform(value)
     const twice = await transform(once)
 

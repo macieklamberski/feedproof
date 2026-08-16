@@ -221,7 +221,7 @@ describeForEachParser('jwplayerSetupEmbedResolver', (parseHtml) => {
   })
 
   it('should return undefined for a player div carrying no script', async () => {
-    const value = html`<div class="jwplayer"></div>`
+    const value = '<div class="jwplayer"></div>'
 
     expect(await extract(value)).toBeUndefined()
   })

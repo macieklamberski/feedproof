@@ -114,7 +114,7 @@ describeForEachParser('bloggerEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for a blogger iframe that is not the player', async () => {
-      const value = html`<iframe src="https://www.blogger.com/blogger.g?blogID=123"></iframe>`
+      const value = '<iframe src="https://www.blogger.com/blogger.g?blogID=123"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })

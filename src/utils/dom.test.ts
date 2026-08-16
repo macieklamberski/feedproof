@@ -381,7 +381,7 @@ describeForEachParser('findConfigScript', (parseHtml) => {
   })
 
   it('should state nothing when there is no script at all', () => {
-    const value = html`<div><div class="player" id="player"></div></div>`
+    const value = '<div><div class="player" id="player"></div></div>'
 
     expect(find(value)).toBeUndefined()
   })

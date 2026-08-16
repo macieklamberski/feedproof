@@ -18,7 +18,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
       const value = makeFigure('youtube', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
       const result = await transform(value)
 
-      expect(result).toBe(html`<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>`)
+      expect(result).toBe('<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>')
     })
 
     it('should convert a spotify figure into an iframe', async () => {
@@ -26,7 +26,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
       const result = await transform(value)
 
       expect(result).toBe(
-        html`<iframe src="https://open.spotify.com/embed-podcast/episode/2H7N34Z"></iframe>`,
+        '<iframe src="https://open.spotify.com/embed-podcast/episode/2H7N34Z"></iframe>',
       )
     })
 
@@ -34,7 +34,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
       const value = makeFigure('oembed', 'https://adventar.org/calendars/11560')
       const result = await transform(value)
 
-      expect(result).toBe(html`<iframe src="https://adventar.org/calendars/11560"></iframe>`)
+      expect(result).toBe('<iframe src="https://adventar.org/calendars/11560"></iframe>')
     })
   })
 
@@ -44,7 +44,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
       const result = await transform(value)
 
       expect(result).toBe(
-        html`<a href="https://note.com/info/n/ne5fc6bd602c8">https://note.com/info/n/ne5fc6bd602c8</a>`,
+        '<a href="https://note.com/info/n/ne5fc6bd602c8">https://note.com/info/n/ne5fc6bd602c8</a>',
       )
     })
   })
@@ -79,7 +79,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
     })
 
     it('should leave a figure without embedded-service untouched', async () => {
-      const value = html`<figure data-src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></figure>`
+      const value = '<figure data-src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></figure>'
       const result = await transform(value)
 
       expect(result).toContain('<figure')

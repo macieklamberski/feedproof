@@ -711,7 +711,7 @@ describeForEachParser('facebook through the pipeline', (parseHtml) => {
       <script async defer src="https://connect.facebook.net/en_US/sdk.js#xfbml=1"></script>
       <p>Article text.</p>
     `
-    const expected = html`<p>Article text.</p>`
+    const expected = '<p>Article text.</p>'
 
     expect(await convert(value)).toEqualHtml(expected)
   })

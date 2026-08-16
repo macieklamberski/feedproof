@@ -205,7 +205,7 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
     })
 
     it('should return undefined when the player carries no script', async () => {
-      const value = html`<div class="podlove-web-player"></div>`
+      const value = '<div class="podlove-web-player"></div>'
 
       expect(await extract(value)).toBeUndefined()
     })

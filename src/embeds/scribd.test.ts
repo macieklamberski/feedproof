@@ -104,7 +104,7 @@ describeForEachParser('scribdIframeEmbedResolver', (parseHtml) => {
 
   describe('the pre-2018 spelling', () => {
     it('should resolve a document named on the doc path', async () => {
-      const value = html`<iframe src="https://www.scribd.com/doc/108992419"></iframe>`
+      const value = '<iframe src="https://www.scribd.com/doc/108992419"></iframe>'
       const expected: EmbedResolverResult = {
         provider: 'scribd',
         id: '108992419',
@@ -118,13 +118,13 @@ describeForEachParser('scribdIframeEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined for a scribd url naming no document', async () => {
-      const value = html`<iframe src="https://www.scribd.com/explore"></iframe>`
+      const value = '<iframe src="https://www.scribd.com/explore"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined for a document id that is not numeric', async () => {
-      const value = html`<iframe src="https://www.scribd.com/embeds/../evil/content"></iframe>`
+      const value = '<iframe src="https://www.scribd.com/embeds/../evil/content"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -232,7 +232,7 @@ describeForEachParser('scribdFlashEmbedResolver', (parseHtml) => {
 
 describeForEachParser('scribdResolveEmbed', (parseHtml) => {
   const carrier = (): Element => {
-    return parseHtml(html`<iframe></iframe>`).querySelector('iframe') as Element
+    return parseHtml('<iframe></iframe>').querySelector('iframe') as Element
   }
 
   it('should ignore a url on another host', () => {

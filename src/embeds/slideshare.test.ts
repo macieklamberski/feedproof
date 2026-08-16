@@ -254,13 +254,13 @@ describeForEachParser('slideshareIframeEmbedResolver', (parseHtml) => {
   })
 
   it('should ignore a slideshare url that names no deck', async () => {
-    const value = html`<iframe src="https://www.slideshare.net/haraldf"></iframe>`
+    const value = '<iframe src="https://www.slideshare.net/haraldf"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
   })
 
   it('should ignore an embed path that stops before the deck', async () => {
-    const value = html`<iframe src="https://www.slideshare.net/slideshow/embed_code/"></iframe>`
+    const value = '<iframe src="https://www.slideshare.net/slideshow/embed_code/"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
   })

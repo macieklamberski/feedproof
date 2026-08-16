@@ -174,7 +174,12 @@ describeForEachParser('notecomCiteResolver', (parseHtml) => {
     })
 
     it('should not match an internal note embed', async () => {
-      const value = html`<figure embedded-service="note" data-src="https://note.com/x/n/y"></figure>`
+      const value = html`
+        <figure
+          embedded-service="note"
+          data-src="https://note.com/x/n/y"
+        ></figure>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })

@@ -504,7 +504,8 @@ describeForEachParser('instagramIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for another host carrying the post path', async () => {
-      const value = html`<iframe src="https://evil.test/www.instagram.com/p/CaUsPbUquKV/embed/"></iframe>`
+      const value =
+        '<iframe src="https://evil.test/www.instagram.com/p/CaUsPbUquKV/embed/"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -607,7 +608,7 @@ describeForEachParser('instagramAmpEmbedResolver', (parseHtml) => {
   })
 
   it('should return undefined for a shortcode outside the url-safe alphabet', async () => {
-    const value = html`<amp-instagram data-shortcode="../evil"></amp-instagram>`
+    const value = '<amp-instagram data-shortcode="../evil"></amp-instagram>'
 
     expect(await extract(value)).toBeUndefined()
   })
@@ -735,7 +736,7 @@ describeForEachParser('instagramSubstackEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined when data-attrs is absent', async () => {
-      const value = html`<div data-component-name="InstagramToDOM"></div>`
+      const value = '<div data-component-name="InstagramToDOM"></div>'
 
       expect(await extract(value)).toBeUndefined()
     })

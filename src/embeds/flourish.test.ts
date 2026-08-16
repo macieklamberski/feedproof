@@ -81,7 +81,12 @@ describeForEachParser('flourishWidgetEmbedResolver', (parseHtml) => {
 
   describe('edge cases', () => {
     it('should omit the thumbnail when the div wraps no img', async () => {
-      const value = html`<div class="flourish-embed" data-src="visualisation/143199"></div>`
+      const value = html`
+        <div
+          class="flourish-embed"
+          data-src="visualisation/143199"
+        ></div>
+      `
       const expected: EmbedResolverResult = {
         provider: 'flourish',
         id: 'visualisation/143199',
@@ -105,7 +110,12 @@ describeForEachParser('flourishWidgetEmbedResolver', (parseHtml) => {
     // A kind this resolver has not seen is likelier to be a template Flourish added than a
     // mistake, and the div carrier is empty, so refusing it deletes the chart outright.
     it('should carry a resource kind it has not seen before', async () => {
-      const value = html`<div class="flourish-embed" data-src="dashboard/29132382"></div>`
+      const value = html`
+        <div
+          class="flourish-embed"
+          data-src="dashboard/29132382"
+        ></div>
+      `
       const expected: EmbedResolverResult = {
         provider: 'flourish',
         id: 'dashboard/29132382',
@@ -117,19 +127,29 @@ describeForEachParser('flourishWidgetEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for a non-numeric id', async () => {
-      const value = html`<div class="flourish-embed" data-src="visualisation/../evil"></div>`
+      const value = html`
+        <div
+          class="flourish-embed"
+          data-src="visualisation/../evil"
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined for an empty data-src', async () => {
-      const value = html`<div class="flourish-embed" data-src=""></div>`
+      const value = html`
+        <div
+          class="flourish-embed"
+          data-src=""
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should not match a div without data-src', async () => {
-      const value = html`<div class="flourish-embed"></div>`
+      const value = '<div class="flourish-embed"></div>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -157,7 +177,7 @@ describeForEachParser('flourishIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should resolve a story player', async () => {
-      const value = html`<iframe src="https://flo.uri.sh/story/3689731/embed"></iframe>`
+      const value = '<iframe src="https://flo.uri.sh/story/3689731/embed"></iframe>'
       const expected: EmbedResolverResult = {
         provider: 'flourish',
         id: 'story/3689731',
@@ -216,14 +236,14 @@ describeForEachParser('flourishIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for a non-numeric id', async () => {
-      const value = html`<iframe src="https://flo.uri.sh/visualisation/evil/embed"></iframe>`
+      const value = '<iframe src="https://flo.uri.sh/visualisation/evil/embed"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })
 
     // The share page is the thing the placeholder links to, not a player to frame.
     it('should return undefined for a share page', async () => {
-      const value = html`<iframe src="https://public.flourish.studio/visualisation/29541520/"></iframe>`
+      const value = '<iframe src="https://public.flourish.studio/visualisation/29541520/"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -234,7 +254,7 @@ describeForEachParser('flourishIframeEmbedResolver url reading', (parseHtml) => 
   const extract = resolverExtractor(parseHtml, flourishIframeEmbedResolver)
 
   it('should resolve a player url', async () => {
-    const value = html`<iframe src="https://flo.uri.sh/visualisation/29132382/embed"></iframe>`
+    const value = '<iframe src="https://flo.uri.sh/visualisation/29132382/embed"></iframe>'
     const expected: EmbedResolverResult = {
       provider: 'flourish',
       id: 'visualisation/29132382',
@@ -246,7 +266,7 @@ describeForEachParser('flourishIframeEmbedResolver url reading', (parseHtml) => 
   })
 
   it('should not resolve a foreign host carrying the path', async () => {
-    const value = html`<iframe src="https://evil.test/visualisation/29132382/embed"></iframe>`
+    const value = '<iframe src="https://evil.test/visualisation/29132382/embed"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
   })

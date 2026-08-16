@@ -10,7 +10,12 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
   }
 
   it('should rebuild an iframe from a Pym.js data-pym-src div', async () => {
-    const value = html`<div id="chart" data-pym-src="https://apps.npr.org/chart/">Loading…</div>`
+    const value = html`
+      <div
+        id="chart"
+        data-pym-src="https://apps.npr.org/chart/"
+      >Loading…</div>
+    `
     const result = await transform(value)
 
     expect(result).toContain('<iframe src="https://apps.npr.org/chart/">')
@@ -18,7 +23,7 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
   })
 
   it('should rebuild an iframe from a @newswire/frames data-frame-src div', async () => {
-    const value = html`<div data-frame-src="https://embed.example.org/graphic/"></div>`
+    const value = '<div data-frame-src="https://embed.example.org/graphic/"></div>'
     const result = await transform(value)
 
     expect(result).toContain('<iframe src="https://embed.example.org/graphic/">')
@@ -39,14 +44,14 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
   })
 
   it('should leave a div whose attribute is not a URL untouched', async () => {
-    const value = html`<div data-frame-src="not a url"></div>`
+    const value = '<div data-frame-src="not a url"></div>'
     const result = await transform(value)
 
     expect(result).not.toContain('<iframe')
   })
 
   it('should leave an unrelated div untouched', async () => {
-    const value = html`<div class="content">Hello</div>`
+    const value = '<div class="content">Hello</div>'
     const result = await transform(value)
 
     expect(result).not.toContain('<iframe')
@@ -54,7 +59,7 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
   })
 
   it('should be idempotent', async () => {
-    const value = html`<div data-frame-src="https://embed.example.org/graphic/"></div>`
+    const value = '<div data-frame-src="https://embed.example.org/graphic/"></div>'
     const once = await transform(value)
     const twice = await applyDomTransforms(parseHtml(once), [rebuildDeferredIframes(baseContext)])
 
@@ -62,7 +67,7 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
   })
 
   it('should surface a deferred embed into a placeholder end to end', async () => {
-    const value = html`<div data-frame-src="https://embed.example.org/graphic/"></div>`
+    const value = '<div data-frame-src="https://embed.example.org/graphic/"></div>'
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com',
@@ -73,7 +78,7 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
   // The Drupal/CKEditor convention. Its value is a watch page rather than a player url, which
   // the resolvers turn into a player downstream.
   it('should rebuild an iframe from data-oembed-url', async () => {
-    const value = html`<div data-oembed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></div>`
+    const value = '<div data-oembed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></div>'
 
     expect(await transform(value)).toContain(
       '<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ">',

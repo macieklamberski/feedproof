@@ -536,7 +536,7 @@ describeForEachParser('tiktokIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should resolve the first-generation embed path', async () => {
-      const value = html`<iframe src="https://www.tiktok.com/embed/7520573541146692886"></iframe>`
+      const value = '<iframe src="https://www.tiktok.com/embed/7520573541146692886"></iframe>'
       const expected: EmbedResolverResult = {
         provider: 'tiktok',
         id: '7520573541146692886',
@@ -582,7 +582,7 @@ describeForEachParser('tiktokIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined when the player path holds no numeric id', async () => {
-      const value = html`<iframe src="https://www.tiktok.com/embed/v2/latest"></iframe>`
+      const value = '<iframe src="https://www.tiktok.com/embed/v2/latest"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })

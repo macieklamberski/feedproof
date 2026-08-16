@@ -25,7 +25,8 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
   })
 
   it('should unwrap an Embedly-wrapped Datawrapper chart', async () => {
-    const value = html`<iframe src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fdatawrapper.dwcdn.net%2FAbCdE%2F4%2F&image=https%3A%2F%2Fdatawrapper.dwcdn.net%2FAbCdE%2Fplain-s.png&schema=dwcdn"></iframe>`
+    const value =
+      '<iframe src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fdatawrapper.dwcdn.net%2FAbCdE%2F4%2F&image=https%3A%2F%2Fdatawrapper.dwcdn.net%2FAbCdE%2Fplain-s.png&schema=dwcdn"></iframe>'
     const result = await transform(value)
 
     expect(result).toContain('src="https://datawrapper.dwcdn.net/AbCdE/4/"')
@@ -33,14 +34,16 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
   })
 
   it('should handle a protocol-relative embedly src', async () => {
-    const value = html`<iframe src="//cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fvimeo.com%2F76979871"></iframe>`
+    const value =
+      '<iframe src="//cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fvimeo.com%2F76979871"></iframe>'
     const result = await transform(value)
 
     expect(result).toContain('src="https://vimeo.com/76979871"')
   })
 
   it('should omit data-thumbnail when there is no image param', async () => {
-    const value = html`<iframe src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fexample.com%2Fembed"></iframe>`
+    const value =
+      '<iframe src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fexample.com%2Fembed"></iframe>'
     const result = await transform(value)
 
     expect(result).toContain('src="https://example.com/embed"')
@@ -48,14 +51,15 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
   })
 
   it('should leave an embedly iframe with no src param untouched', async () => {
-    const value = html`<iframe src="https://cdn.embedly.com/widgets/media.html?url=https%3A%2F%2Fexample.com"></iframe>`
+    const value =
+      '<iframe src="https://cdn.embedly.com/widgets/media.html?url=https%3A%2F%2Fexample.com"></iframe>'
     const result = await transform(value)
 
     expect(result).toContain('cdn.embedly.com')
   })
 
   it('should leave a non-embedly iframe untouched', async () => {
-    const value = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
+    const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
     expect(await transform(value)).toContain('youtube.com/embed/dQw4w9WgXcQ')
   })
@@ -73,7 +77,7 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
           data="${jsonAttrValue(videoPayload)}"
         ></div>
       `
-      const expected = html`<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>`
+      const expected = '<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>'
 
       expect(await transform(value)).toBe(expected)
     })
@@ -113,14 +117,19 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
           data="${jsonAttrValue(richPayload)}"
         ></div>
       `
-      const expected = html`<iframe src="https://example.com/widget"></iframe>`
+      const expected = '<iframe src="https://example.com/widget"></iframe>'
 
       expect(await transform(value)).toBe(expected)
     })
 
     it('should convert a block with no payload into a link to its own src', async () => {
-      const value = html`<div data-type="embedly" src='https://example.com/thing'></div>`
-      const expected = html`<a href="https://example.com/thing">https://example.com/thing</a>`
+      const value = html`
+        <div
+          data-type="embedly"
+          src='https://example.com/thing'
+        ></div>
+      `
+      const expected = '<a href="https://example.com/thing">https://example.com/thing</a>'
 
       expect(await transform(value)).toBe(expected)
     })
@@ -133,7 +142,7 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
           data="${jsonAttrValue('{not json')}"
         ></div>
       `
-      const expected = html`<a href="https://example.com/thing">https://example.com/thing</a>`
+      const expected = '<a href="https://example.com/thing">https://example.com/thing</a>'
 
       expect(await transform(value)).toBe(expected)
     })
@@ -188,7 +197,12 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
     })
 
     it('should leave a payloadless block whose src is not http', async () => {
-      const value = html`<div data-type="embedly" src="javascript:alert(1)"></div>`
+      const value = html`
+        <div
+          data-type="embedly"
+          src="javascript:alert(1)"
+        ></div>
+      `
 
       expect(await transform(value)).toBe(value)
     })
@@ -245,7 +259,7 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
 
   it('should be idempotent', async () => {
     const value = [
-      html`<iframe src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fexample.com%2Fembed&image=https%3A%2F%2Fexample.com%2Fp.jpg"></iframe>`,
+      '<iframe src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fexample.com%2Fembed&image=https%3A%2F%2Fexample.com%2Fp.jpg"></iframe>',
       html`
         <div
           data-type="embedly"
@@ -253,7 +267,12 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
           data="${jsonAttrValue({ type: 'video', url: 'https://example.com/widget' })}"
         ></div>
       `,
-      html`<div data-type="embedly" src='https://example.com/thing'></div>`,
+      html`
+        <div
+          data-type="embedly"
+          src='https://example.com/thing'
+        ></div>
+      `,
     ].join('')
     const once = await transform(value)
     const twice = await applyDomTransforms(parseHtml(once), [rebuildEmbedlyEmbeds(baseContext)])
