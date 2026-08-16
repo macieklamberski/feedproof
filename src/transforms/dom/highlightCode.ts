@@ -1,5 +1,5 @@
 import type { DomTransform } from '../../types.js'
-import { hasAncestorWithTagName, isElement, isText, walkElements } from '../../utils/dom.js'
+import { hasAncestorWithTagName, isElement, isText, text, walkElements } from '../../utils/dom.js'
 // Token -> display-label map for the languages feedsweep recognizes (canonical
 // names plus common aliases). Read from here so detecting and labelling a code
 // block needs no highlight.js import: the only place that touches hljs is the
@@ -129,7 +129,7 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
 
   if (isElement(figure) && figure.localName === 'figure') {
     const figcaption = figure.querySelector('figcaption')
-    const extension = figcaption?.textContent?.trim().match(filenameRegex)?.[1]
+    const extension = text(figcaption)?.match(filenameRegex)?.[1]
 
     if (extension) {
       return extension

@@ -1,5 +1,5 @@
 import type { DomTransform } from '../../types.js'
-import { attr } from '../../utils/dom.js'
+import { attr, jsonAttr } from '../../utils/dom.js'
 import { videoFileRegex } from '../../utils/urls.js'
 
 type SetupConfig = {
@@ -8,15 +8,7 @@ type SetupConfig = {
 }
 
 const readSetup = (element: Element): SetupConfig | undefined => {
-  const raw = attr(element, 'data-setup')
-
-  if (!raw) {
-    return
-  }
-
-  try {
-    return JSON.parse(raw)
-  } catch {}
+  return jsonAttr<SetupConfig>(element, 'data-setup')
 }
 
 // The file sits either in a `<source>` child or in the

@@ -1,5 +1,5 @@
 import type { DomTransform, MediaResolverResult } from '../../types.js'
-import { playableElements } from '../../utils/dom.js'
+import { attr, hasText, playableElements } from '../../utils/dom.js'
 import {
   audioFileRegex,
   flashFileRegex,
@@ -61,7 +61,7 @@ const findParkedMedia = (
   attributes: Array<string>,
 ): MediaResolverResult | undefined => {
   for (const attribute of attributes) {
-    const value = element.getAttribute(attribute)?.trim()
+    const value = attr(element, attribute)
 
     if (!value) {
       continue
@@ -83,7 +83,7 @@ const findParkedMedia = (
 const carrierOrShell = (element: Element): Element => {
   const parent = element.parentElement
 
-  if (parent?.localName !== 'object' || parent.textContent?.trim()) {
+  if (parent?.localName !== 'object' || hasText(parent)) {
     return element
   }
 
@@ -197,7 +197,7 @@ export const convertWidgets: DomTransform = (context) => {
         // real poster and stashed it on the element as `data-thumbnail`. Prefer it over the
         // resolver's URL-derived guess, which is only a safe-default size (e.g. YouTube's
         // hqdefault): the carried poster is the exact frame the publisher chose.
-        const carriedThumbnail = element.getAttribute('data-thumbnail') || undefined
+        const carriedThumbnail = attr(element, 'data-thumbnail')
 
         const placeholderMetadata = {
           ...metadata,
