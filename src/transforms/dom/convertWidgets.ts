@@ -129,7 +129,7 @@ export const convertWidgets: DomTransform = (context) => {
     // placeholder divs the guard would no longer recognize.
     for (const element of document.querySelectorAll('div, figure, span, li')) {
       // A container that already wraps something playable is chrome around a real player,
-      // and the attribute belongs to that player rather than to a missing element.
+      // and the attribute belongs to that player, not to a missing element.
       if (element.querySelector(playableSelector)) {
         continue
       }
@@ -237,7 +237,7 @@ export const convertWidgets: DomTransform = (context) => {
         continue
       }
 
-      // A carrier still pointing at a `.swf` is left alone rather than framed. A placeholder
+      // A carrier still pointing at a `.swf` is left alone, not framed. A placeholder
       // would be the worst option: it reads as resolved, so a reader draws a click-to-load
       // button for a file no browser has been able to run since 2021, and minting it here
       // would also discard the `<object>`'s fallback content. Untouched, the markup degrades

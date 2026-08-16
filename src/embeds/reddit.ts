@@ -120,7 +120,7 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
     // The post's title sits on the anchor naming the post: a comment widget links the comment
     // first and the discussion it came from second, and only the second carries a title. The
     // first anchor of a comment widget reads "Comment", a label the dialog writes in the
-    // reader's own language, which is why the kind decides this rather than the position.
+    // reader's own language, which is why the kind decides this, not the position.
     if (anchorTarget?.kind === 'post') {
       title ??= text(anchor)
     }

@@ -5,7 +5,7 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 // `blog.codepen.io` is the marketing blog and `cdpn.io` serves a pen's raw output, so neither
 // names an embeddable pen. Only the bare host and its `www.` spelling do, which is why the url
-// is checked with `isHostOf` alone rather than through `parseUrlOnHosts`: that one admits every
+// is checked with `isHostOf` alone, not through `parseUrlOnHosts`: that one admits every
 // subdomain, and the blog would come through with it.
 const codepenHosts = ['codepen.io', 'www.codepen.io']
 
@@ -42,7 +42,7 @@ const anonymousUser = 'anon'
 // carrier that states a size of its own replaces it, and takes the whole pair when it does.
 const defaultPenHeight = 300
 
-// Titles the snippet writes when the pen has none. They name the carrier rather than the pen,
+// Titles the snippet writes when the pen has none. They name the carrier, not the pen,
 // so they are worse than no title at all.
 const placeholderTitles = new Set(['codepen embed', 'untitled', 'codepen'])
 
@@ -169,7 +169,7 @@ const composeQuery = (target: CodepenTarget, forPlayer: boolean): string => {
 // CDN-cached, and a placeholder does not need more.
 //
 // The service answers 200 with a picture of CodePen's own 404 page once a pen is gone or private,
-// so a dead pen shows a dead pen rather than nothing.
+// so a dead pen shows a dead pen, not nothing.
 const composeThumbnail = (target: CodepenTarget): string => {
   return `https://shots.codepen.io/${target.user ?? anonymousUser}/pen/${target.slug}-512.jpg`
 }
@@ -231,7 +231,7 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
 
   const { slug } = reference
   // The loader reads a signed token off the block and appends it to the player it builds, so a
-  // private pen embedded this way names its own key here rather than in a url.
+  // private pen embedded this way names its own key here, not in a url.
   const token = keepIfMatches(attr(element, 'data-token'), privateParamRegex)
   const grants = token ? { ...reference.grants, token } : reference.grants
   let user = reference.user

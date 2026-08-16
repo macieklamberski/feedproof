@@ -42,7 +42,7 @@ export const blockElements = new Set([
 ])
 
 // Extraction helpers, used mainly by the cite resolvers to pull one field out of a card.
-// Each accepts a nullable element and returns `undefined` rather than `null` or `''`, so
+// Each accepts a nullable element and returns `undefined`, not `null` or `''`, so
 // they compose (`attr(find(element, selector), 'src')`) and chain (`a() ?? b()`) without
 // optional-chaining noise, and so a blank value fails a `!value` guard.
 
@@ -335,7 +335,7 @@ const styleHeightRegex =
 
 // A pixel size as a player url or embed attribute states it: `200`, or `200px` where the
 // publisher wrote the unit. `coerceNumber` alone will not do, because it reads neither the
-// suffix nor a bound, and a stated height of `0` or `99999` is a mistake rather than a size.
+// suffix nor a bound, and a stated height of `0` or `99999` is a mistake, not a size.
 // Two to four digits is what every player in `embeds/` needs and is a sane range for one.
 //
 // Deliberately not shared with `dimensionAttribute` below, which reads a declared width or
