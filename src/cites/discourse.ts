@@ -8,18 +8,16 @@ import { attr, find, isElement, text } from '../utils/dom.js'
 // text ("Whonix – 13 Jan 23") behind this spaced en dash.
 const publisherDateSeparator = ' – '
 
-// The GitHub onebox splits its body preview around a "…" show-more expander: the text
-// before it is visible and the `.excerpt.hidden` span holds the rest of the same sentence.
-// Reading the paragraph's textContent whole would inject the ellipsis mid-word, so the
-// expander is skipped and the halves rejoined.
-// `Comment by USER - Real title`, which the comment shapes write into the heading. The author is
-// already its own field, so only the title half is kept.
 const stripCommentPrefix = (title: string | undefined, author: string): string | undefined => {
   return title?.startsWith(`Comment by ${author} - `)
     ? title.slice(`Comment by ${author} - `.length)
     : title
 }
 
+// The GitHub onebox splits its body preview around a "…" show-more expander: the text
+// before it is visible and the `.excerpt.hidden` span holds the rest of the same sentence.
+// Reading the paragraph's textContent whole would inject the ellipsis mid-word, so the
+// expander is skipped and the halves rejoined.
 const githubDescription = (paragraph: Element): string | undefined => {
   let result = ''
 
