@@ -107,7 +107,7 @@ export const issuuResolveEmbed = (
 
   // The publication name is the only thing an Issuu carrier states that neither url form holds,
   // and the current share snippet writes it on the iframe.
-  const title = attr(element, 'title')?.trim() || undefined
+  const title = attr(element, 'title')
   const configEmbed = composeConfigEmbed(parsed.hash.replace('#', ''))
 
   if (configEmbed) {

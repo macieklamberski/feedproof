@@ -106,7 +106,7 @@ export const soundcloudResolveEmbed = (
   if (anchors.length === 2) {
     result.author = text(anchors[0])
     result.title = text(anchors[1]) ?? result.title
-    result.url = anchors[1].getAttribute('href') ?? undefined
+    result.url = attr(anchors[1], 'href')
     sibling?.remove()
   }
 

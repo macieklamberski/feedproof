@@ -24,9 +24,9 @@ const defaultDeckRatio = '16/9'
 // four-character string `null` when the deck has no title, twice in a 200-file sample, so that
 // spelling is treated as absent.
 const readTitle = (element: Element): string | undefined => {
-  const title = element.getAttribute('title')?.trim()
+  const title = attr(element, 'title')
 
-  return title && title !== 'null' ? title : undefined
+  return title !== 'null' ? title : undefined
 }
 
 // One feed can embed the same deck at several slides. Without the slide those collapse into

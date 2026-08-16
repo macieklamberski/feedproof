@@ -53,7 +53,7 @@ export const scribdResolveEmbed = (
     return
   }
 
-  const title = element.getAttribute('title')?.trim()
+  const title = attr(element, 'title')
   const result = { ...composeEmbed(document), ...(title && { title }) }
   const dimensions = parseRatioDimensions(attr(element, aspectRatioAttribute) ?? '')
 
