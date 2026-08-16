@@ -67,7 +67,7 @@ export const jwplayerScriptEmbedResolver = createMarkupEmbedResolver(
 )
 
 // AMP's own JW Player element, which renders nothing without the AMP runtime. It names the
-// media in `data-media-id` beside the account's `data-player-id`; the player id only picks a
+// media in `data-media-id` beside the account's `data-player-id`. The player id only picks a
 // skin, so the media id alone rebuilds the same player page as the other two forms.
 export const jwplayerAmpEmbedResolver = createMarkupEmbedResolver(
   'amp-jwplayer[data-media-id]',

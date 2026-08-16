@@ -163,7 +163,7 @@ export const updatePlaceholder = <Type extends object>(
   type: GeneratedWrapperType,
   fields: Type,
 ): void => {
-  // Trimming here lets resolvers pass extracted text as-is; a value that is only
+  // Trimming here lets resolvers pass extracted text as-is. A value that is only
   // whitespace trims to an empty string and is skipped with the other empty fields.
   for (const [key, value] of Object.entries(fields)) {
     const name = `data-${type}-${key}`

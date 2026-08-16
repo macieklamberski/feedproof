@@ -16,7 +16,7 @@ const leadingBlockBackslash = /^(\s*)\\(?=\s|$)/
 export const stripMarkdownEscapeBackslashes: DomTransform = () => {
   return (document) => {
     // A lone-backslash paragraph (`<p>\</p>`) is emptied here and removed later by
-    // stripEmptyTags; a leading `\` (`<p>\ text`) just loses the backslash.
+    // stripEmptyTags. A leading `\` (`<p>\ text`) just loses the backslash.
     for (const block of document.querySelectorAll('p')) {
       const first = block.firstChild
 

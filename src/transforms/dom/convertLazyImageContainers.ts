@@ -14,7 +14,7 @@ export const convertLazyImageContainers: DomTransform = (context) => {
 
   return (document) => {
     for (const element of document.querySelectorAll('div, figure')) {
-      // A container that already wraps media is a layout wrapper; the lazy attribute
+      // A container that already wraps media is a layout wrapper. The lazy attribute
       // belongs to the inner element, not to a missing image.
       if (element.querySelector('img, picture, video, iframe, source')) {
         continue

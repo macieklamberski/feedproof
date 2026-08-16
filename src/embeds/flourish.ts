@@ -52,7 +52,7 @@ const composeEmbed = (resource: string, id: string): EmbedResolverResult | undef
 
 // Flourish ships a chart as `<div class="flourish-embed" data-src="{resource}/{id}">` plus an
 // SDK script that builds the iframe at runtime, so a reader shows nothing at all. The div
-// usually wraps a static thumbnail img (bare or inside a <noscript>); when present it becomes
+// usually wraps a static thumbnail img (bare or inside a <noscript>). When present it becomes
 // the placeholder's thumbnail.
 export const flourishWidgetEmbedResolver = createMarkupEmbedResolver(
   'div.flourish-embed[data-src]',
@@ -76,7 +76,7 @@ export const flourishWidgetEmbedResolver = createMarkupEmbedResolver(
 
 // The rendered form, which reaches a feed when the publisher pasted the iframe rather than the
 // script snippet. The WordPress oEmbed wrapper points at the same url with a `#?secret=`
-// fragment appended; that belongs to WordPress's postMessage handshake rather than to the
+// fragment appended. That belongs to WordPress's postMessage handshake rather than to the
 // player, so the minted url drops it.
 export const flourishResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url)

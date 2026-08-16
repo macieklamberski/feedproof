@@ -35,7 +35,7 @@ const readDocumentId = (parsed: URL): string | undefined => {
 }
 
 // The modern player, `scribd.com/embeds/{id}/content`. `/doc/{id}` is the pre-2018 spelling of
-// the same document and its embed lived at `/embeds/{id}` with no `/content` suffix; both
+// the same document and its embed lived at `/embeds/{id}` with no `/content` suffix. Both
 // address the id space this composes from.
 export const scribdResolveEmbed = (
   link: string,

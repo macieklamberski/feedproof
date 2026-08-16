@@ -12,10 +12,10 @@ import { attr, bgImage, find, text, textNode } from '../utils/dom.js'
 // exported Medium archives republished on personal sites, where the generator passes the
 // stored HTML through verbatim, so the shape is frozen rather than drifting.
 //
-// The href is sometimes Medium's own `medium.com/r/?url=` redirector; that is left alone
+// The href is sometimes Medium's own `medium.com/r/?url=` redirector. That is left alone
 // here and unwrapped by the injected `cleanUrlFn`, as every other redirect wrapper is.
 export const mediumCiteResolver: CiteResolver = {
-  // Medium wraps the pair in `.graf--mixtapeEmbed`; matching that replaces both anchors and
+  // Medium wraps the pair in `.graf--mixtapeEmbed`. Matching that replaces both anchors and
   // leaves no empty image anchor behind. Exports drop the wrapper, so the bare anchor is the
   // second arm, excluded inside a wrapper so the two never match the same card.
   selector: '.graf--mixtapeEmbed, a.markup--mixtapeEmbed-anchor:not(.graf--mixtapeEmbed a)',

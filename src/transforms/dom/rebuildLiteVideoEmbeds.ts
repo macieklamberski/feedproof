@@ -2,7 +2,7 @@ import { composeEmbedUrl, youtubeEmbedParams } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 import { pickQueryParams } from '../../utils/urls.js'
 
-// `start` carries a whole-second offset; guard it so only digits reach the URL and a
+// `start` carries a whole-second offset. Guard it so only digits reach the URL and a
 // crafted value can't inject extra query params.
 const startSecondsPattern = /^\d+$/
 

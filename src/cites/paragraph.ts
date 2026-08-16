@@ -33,7 +33,7 @@ export const paragraphCiteResolver: CiteResolver = {
 
     return buildCite({
       provider: 'paragraph',
-      // `url` is Embedly's canonical form; the `src` attribute holds what the author typed
+      // `url` is Embedly's canonical form. The `src` attribute holds what the author typed
       // and can differ (a bare http:// host, or an entirely different slug), so it is only
       // the fallback.
       url: data.url ?? attr(element, 'src'),

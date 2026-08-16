@@ -35,7 +35,7 @@ export const extractOmnyClip = (link: string): string | undefined => {
 }
 
 // Omny publishes a registry oEmbed, so tagging provider and id is what lets the enricher fetch
-// a title and artwork later; offline this states the height the markup often omits.
+// a title and artwork later. Offline this states the height the markup often omits.
 export const omnyResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const clip = extractOmnyClip(url)
 

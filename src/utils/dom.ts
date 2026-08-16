@@ -3,7 +3,7 @@ import { coerceNumber, isNonEmptyString, type Nullish, startsWithAnyOf } from 't
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
 
-// NodeFilter is not globally available in Bun; mirror the DOM-spec constants.
+// NodeFilter is not globally available in Bun. These are the DOM-spec constants.
 export const NodeFilter = { SHOW_ELEMENT: 0x1, SHOW_TEXT: 0x4, SHOW_COMMENT: 0x80 } as const
 
 export const blockElements = new Set([
@@ -363,7 +363,7 @@ export const parsePixelSize = (value: Nullish<string>): number | undefined => {
 }
 
 // An empty or whitespace-only width/height attribute (`width=""`, common in editor output)
-// is not a declared dimension; coerceNumber treats those as absent.
+// is not a declared dimension. coerceNumber treats those as absent.
 const dimensionAttribute = (element: Element, name: string): number | undefined => {
   return coerceNumber(element.getAttribute(name))
 }
@@ -417,7 +417,7 @@ const elementRatioSources: Array<{
   },
   {
     // WordPress responsive embeds carry the ratio as a class (`wp-embed-aspect-16-9`),
-    // styled by an external stylesheet feedsweep never sees; the class itself encodes it.
+    // styled by an external stylesheet feedsweep never sees. The class itself encodes it.
     attribute: 'class',
     regex: /wp-embed-aspect-(\d+)-(\d+)/,
     extract: (match) => parseRatioDimensions(`${match[1]}:${match[2]}`),
@@ -518,7 +518,7 @@ export const parseRatioDimensions = (
 }
 
 // A width or height at or below this many pixels marks a tracking pixel, not real
-// content. removeTrackingPixels strips images at or below it; resolveMediaDimensions
+// content. removeTrackingPixels strips images at or below it. resolveMediaDimensions
 // won't promote a dimension at or below it.
 export const pixelDimensionLimit = 2
 
@@ -543,7 +543,7 @@ export const isElementHidden = (element: Element): boolean => {
 // querySelectorAll compiles its selector (via css-select) on every call, so
 // replacing a per-document query with this walk avoids that repeated compile.
 // Template subtrees are skipped, the same as querySelectorAll does. Return true
-// from `visit` to stop early; walkElements then also returns true.
+// from `visit` to stop early. walkElements then also returns true.
 export const walkElements = (
   document: Document,
   visit: (element: Element) => boolean | undefined,

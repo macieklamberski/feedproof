@@ -149,8 +149,8 @@ const findByline = (element: Element): Element | undefined => {
 // The dialog used to write a byline that linked the account and dated the post: "A post shared
 // by {name} (@handle) on {date}", and to put the caption in a paragraph above it. The current
 // one writes neither: its only text is the skeleton's own chrome and an undated byline. So the
-// caption is read only where that byline marks the paragraph above it as the post's own text;
-// taking it from the modern shape would publish "View this post on Instagram" as the caption.
+// caption is read only where that byline marks the paragraph above it as the post's own text.
+// Taking it from the modern shape would publish "View this post on Instagram" as the caption.
 const readContent = (element: Element): Partial<EmbedResolverResult> => {
   const byline = findByline(element)
   const caption = byline ? find(element, 'p', (paragraph) => paragraph !== byline) : undefined

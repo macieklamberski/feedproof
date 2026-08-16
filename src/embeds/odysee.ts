@@ -8,7 +8,7 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 const odyseeHosts = ['odysee.com', 'lbry.tv']
 
 // A claim is `{name}:{claim id}`, the id being a hex prefix of any length that disambiguates
-// the name; a channel is the same with `@` in front. The name is whatever the publisher typed,
+// the name. A channel is the same with `@` in front. The name is whatever the publisher typed,
 // so only what would break the minted path or smuggle a second url segment is refused.
 const claimRegex = /^@?[^\s/?#<>"'\\:]+:[0-9a-f]+$/i
 
@@ -16,7 +16,7 @@ const claimRegex = /^@?[^\s/?#<>"'\\:]+:[0-9a-f]+$/i
 // spellings. The current share code writes the channel and the claim as two segments,
 // `@channel:x/name:y`, and lately percent-encodes the whole path, `$` and `/` included, so
 // the pathname is decoded before it is split. The older code, and the lbry.tv redirect,
-// wrote the claim as `{name}/{claim id}` with a slash between the two halves; the same claim
+// wrote the claim as `{name}/{claim id}` with a slash between the two halves. The same claim
 // spelled `{name}:{claim id}` answers the same page (both forms checked live 2026-08-16), and
 // that colon form is what odysee.com uses as the page path, so it is what the id is
 // normalized to. The id is then the page path itself, which is what makes it self-sufficient

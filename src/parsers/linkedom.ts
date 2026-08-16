@@ -59,8 +59,8 @@ const normalizeAttributeCase = (document: Document): void => {
 // root cause as the self-close issue below), it lowercases camelCase SVG element names:
 // `<linearGradient>`/`<feGaussianBlur>`/`<clipPath>` serialize as `<lineargradient>` etc.,
 // which browsers won't render as gradients/filters. There's no upstream issue or fix for
-// this, and recasing on output would mean maintaining a list of every camelCase SVG element;
-// inline SVG with gradients/filters is rare in feed bodies, so it's left as-is. Consumers
+// this, and recasing on output would mean maintaining a list of every camelCase SVG element.
+// Inline SVG with gradients/filters is rare in feed bodies, so it's left as-is. Consumers
 // that need it should parse with jsdom (case-preserving) instead of the bundled linkedom.
 //
 // Linkedom (#326) doesn't switch to XML mode for SVG subtrees when parsing

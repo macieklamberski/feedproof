@@ -74,7 +74,7 @@ const bareHostSource = (capture: string): string => {
 // entry per service. We key on the inner source so different render params of the same
 // image (width, format, quality, crop) collapse to one. Each pattern is host- or
 // path-anchored to a single CDN and captures the wrapped source (a url= query param, a
-// full URL at the end of the path, or a bare host+path for Photon); toSource turns that
+// full URL at the end of the path, or a bare host+path for Photon). toSource turns that
 // capture into an absolute URL. Deliberately an explicit list rather than a generic
 // catch-all, so it stays auditable: an unlisted proxy is simply left as-is.
 type ImageProxy = {
@@ -170,7 +170,7 @@ const dimensionSuffix = /[-_]\d{1,5}x\d{1,5}(\.[a-z0-9]+)$/i
 // If the URL is a known image-proxy wrapper, return its inner source URL so the key
 // is built from the real image rather than the proxy's render params. Loops so a
 // proxy that wraps another proxy (e.g. a Cloudinary fetch of a Cloudinary upload)
-// fully unwraps; the depth cap and same-value check stop any runaway.
+// fully unwraps. The depth cap and same-value check stop any runaway.
 const unwrapProxiedImage = (url: string): string => {
   let current = url
 
@@ -221,8 +221,8 @@ const unwrapProxiedImage = (url: string): string => {
 // root-level files like /large.jpg and /small.jpg are never collapsed.
 export const getImageFingerprint = (rawUrl: string, cleanUrlFn?: CleanUrlFn): string => {
   const cleaned = unwrapProxiedImage(cleanUrlFn ? cleanUrlFn(rawUrl) : rawUrl)
-  // Keep the protocol (stripProtocol off) so the result stays a parseable URL;
-  // it is dropped below when the key is assembled from host + path.
+  // Keep the protocol (stripProtocol off) so the result stays a parseable URL.
+  // It is dropped below when the key is assembled from host + path.
   const normalized = normalizeUrl(cleaned, {
     stripWww: true,
     stripHash: true,
@@ -330,7 +330,7 @@ const leafExtensionRegex = /\.[a-z0-9]+$/i
 // fingerprint: the comparison is then within one host's own directory naming, where
 // small vs large is unambiguous, not a cross-CDN convention.
 export const getSizeKeywordRank = (url: string): number => {
-  // The base only anchors a relative src so its leaf can be read; it never surfaces.
+  // The base only anchors a relative src so its leaf can be read. It never surfaces.
   const parsed = parseUrl(url, 'https://example.com')
 
   if (!parsed) {
@@ -352,8 +352,8 @@ export const getSizeKeywordRank = (url: string): number => {
   return 0
 }
 
-// Picks the strictly larger of two same-image URLs. Encoded dimensions decide first;
-// when neither side encodes any, two ranked size-keyword file names (large.jpg beside
+// Picks the strictly larger of two same-image URLs. Encoded dimensions decide first.
+// When neither side encodes any, two ranked size-keyword file names (large.jpg beside
 // small.jpg) decide instead. Returns undefined on a tie or when only one side carries
 // a signal: a URL that encodes no size may be the unscaled original or just
 // unmeasurable, and which way to read that is the caller's tie policy, not this

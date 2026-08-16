@@ -8,7 +8,7 @@ import { attr } from '../utils/dom.js'
 // spacer gif (the real thumbnail sits in `data-kg-thumbnail`/`data-kg-custom-thumbnail` on
 // the figure), and the card's scripted player chrome survives as junk. Resolving the inner
 // element into a fresh native one drops the chrome wholesale. The video selector matches
-// the chrome container, not the figure, so the author's figcaption beside it survives; the
+// the chrome container, not the figure, so the author's figcaption beside it survives. The
 // audio card is matched whole since Ghost's own cleanup keeps nothing else from it.
 // Cleaned feeds carry no `.kg-video-container`, so their video cards are left alone.
 export const ghostMediaResolver: MediaResolver = {

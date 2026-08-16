@@ -42,7 +42,7 @@ import type { HighlightFn } from '../types.js'
 
 // Languages absent from highlight.js's common build but common in feed code
 // blocks (ranked by real-corpus hint frequency). Registering them lets an
-// explicit class/attribute hint resolve to a grammar; a block with no match is
+// explicit class/attribute hint resolve to a grammar. A block with no match is
 // left as plain text. Built-in aliases (hs->haskell, clj->clojure, ...) come
 // along for free.
 // Mathematica is deliberately left out for now: its grammar is ~148 KB (a

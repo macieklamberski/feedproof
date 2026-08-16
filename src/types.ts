@@ -60,8 +60,8 @@ export type DeferredIframeSource = {
 }
 
 // The relationship a citation expresses toward the linked work. Sparse: only sources that
-// carry a real relationship set it (today just microformats h-cite, via its `u-*-of` class);
-// every platform card leaves it unset, meaning a plain link preview with no relationship.
+// carry a real relationship set it (today just microformats h-cite, via its `u-*-of` class).
+// Every platform card leaves it unset, meaning a plain link preview with no relationship.
 export type CiteKind = 'bookmark' | 'repost' | 'like' | 'reply' | 'read' | 'listen' | 'watch'
 
 export type CiteResolverResult = {
@@ -120,7 +120,7 @@ export type MediaResolver = {
 
 // One registry for everything the widget pass recognizes. A resolver keeps a single honest
 // contract (an EmbedResolver only ever returns embed results), and the union describes what
-// the array accepts; the pass discriminates on the result shape to emit either an opaque
+// the array accepts. The pass discriminates on the result shape to emit either an opaque
 // placeholder or a real media element. Cite resolvers stay out: their pass reads card markup
 // earlier in the pipeline, before link and prose normalization can disturb it.
 export type WidgetResolver = EmbedResolver | MediaResolver
@@ -134,7 +134,7 @@ export type CleanUrlFn = (url: string) => string
 export type UrlRole = 'media' | 'link'
 
 // Whether a URL is safe to emit for its role. Optional consumer policy (e.g. SSRF or a
-// scheme allowlist); feedsweep always enforces its own dangerous-scheme floor regardless.
+// scheme allowlist). Feedsweep always enforces its own dangerous-scheme floor regardless.
 export type IsSafeUrlFn = (url: string, type: UrlRole) => boolean
 
 export type AssetType = 'image' | 'video' | 'audio'

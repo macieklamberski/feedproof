@@ -44,7 +44,7 @@ export const mergeFragmentedLists: DomTransform = () => {
       }
 
       // Whitespace between fragments moves INTO the target so it keeps acting
-      // as a textContent boundary; without it, the last item of one fragment
+      // as a textContent boundary. Without it, the last item of one fragment
       // would fuse with the first item of the next.
       const target = run[0]
 

@@ -40,7 +40,7 @@ const isVisuallyEmpty = (node: Node): boolean => {
 }
 
 // Caps the descent into nested edge wrappers. Real content never nests inline
-// wrappers anywhere near this deep; the bound keeps a pathologically nested
+// wrappers anywhere near this deep. The bound keeps a pathologically nested
 // document from overflowing the call stack (the deepest wrappers simply keep
 // their boundary <br>s, which is invisible).
 const maxEdgeWrapperDepth = 200

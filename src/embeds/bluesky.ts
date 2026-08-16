@@ -19,7 +19,7 @@ const postCollection = 'app.bsky.feed.post'
 const atUriRegex = /^at:\/\/([^/]+)\/([^/]+)\/([^/?#]+)/
 
 // The authority is either a DID (`did:plc:…`, `did:web:…`) or a handle, which is a domain
-// name. The record key is base32-sortable in practice; the wider charset here is the whole
+// name. The record key is base32-sortable in practice. The wider charset here is the whole
 // of what a record key may hold. Both are interpolated into urls, so anything outside these
 // alphabets is refused, not escaped.
 const safeAuthorityRegex = /^(?:did:[a-z]+:[\w.:%-]+|[a-z\d-]+(?:\.[a-z\d-]+)+)$/i
@@ -96,7 +96,7 @@ const extractBlueskyPostFromUrl = (link: string): BlueskyPost | undefined => {
 //
 // The authority is whichever form the markup gave. `getPostThread` and oEmbed both answer a
 // handle-form post directly, so the id addresses the post either way (checked live
-// 2026-08-13); only `getPosts` needs a DID.
+// 2026-08-13). Only `getPosts` needs a DID.
 //
 // The player is composed the same way for both forms, even though it takes a DID today and
 // answers 400 to a handle (checked live 2026-08-13). The handle form is one file in 200 and
@@ -158,7 +158,7 @@ const readAuthor = (anchor: Element): string | undefined => {
 }
 
 const readPostText = (element: Element, postAnchor: Element | undefined): string | undefined => {
-  // The post text is a paragraph of its own wherever the markup has paragraphs at all; the
+  // The post text is a paragraph of its own wherever the markup has paragraphs at all. The
   // one holding the date link is the footer, not the text.
   const paragraph = find(element, 'p', (node) => !postAnchor || !node.contains(postAnchor))
   const container = paragraph ?? element

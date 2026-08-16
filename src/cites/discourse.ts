@@ -33,7 +33,7 @@ const githubDescription = (paragraph: Element): string | undefined => {
 }
 
 // Onebox engines whose cards are not link previews, so a cite would misrepresent what the
-// author linked; their markup passes through untouched. Only engines that render as
+// author linked. Their markup passes through untouched. Only engines that render as
 // `aside.onebox` need listing: the other social engines (TikTok, Reddit, Facebook,
 // Twitch) emit bare iframes, and Mastodon links go through the generic engine.
 export const omittedOneboxClasses = [
@@ -67,7 +67,7 @@ export const discourseCiteResolver: CiteResolver = {
     const source = find(element, 'header.source a')
 
     // Old-generation oneboxes (the Stack Exchange shape among them) carry no
-    // data-onebox-src; their canonical url is the source anchor's.
+    // data-onebox-src. Their canonical url is the source anchor's.
     const url = attr(element, 'data-onebox-src') ?? attr(source, 'href')
     // Engines differ on the heading level they use for the title.
     const title = text(body, 'h3, h4')
@@ -87,7 +87,7 @@ export const discourseCiteResolver: CiteResolver = {
     const githubBody = find(body, 'p.github-body-container')
     const githubDate = find(element, '.github-info .date .discourse-local-date')
 
-    // The folder onebox's first paragraph is the path link, not an excerpt; its repo
+    // The folder onebox's first paragraph is the path link, not an excerpt. Its repo
     // description sits in a `span.label1` after it.
     let description = text(body, 'p')
 
@@ -97,7 +97,7 @@ export const discourseCiteResolver: CiteResolver = {
       description = text(body, 'p span.label1')
     } else if (element.classList.contains('hackernews')) {
       // The Hacker News onebox always ends on a stats paragraph (points, comments, author,
-      // timestamp); only self-posts put a real text paragraph before it.
+      // timestamp). Only self-posts put a real text paragraph before it.
       description = text(find(body, 'p', (paragraph) => !find(paragraph, 'a.author')))
     }
 
@@ -120,7 +120,7 @@ export const discourseCiteResolver: CiteResolver = {
       author: githubAuthor ?? text(dateAnchors[0]),
       publisher,
       date: date ?? attr(githubDate, 'data-date') ?? text(githubDate) ?? text(dateAnchors[1]),
-      // GitHub oneboxes render no site icon; the inline author avatar stands in for it.
+      // GitHub oneboxes render no site icon. The inline author avatar stands in for it.
       icon:
         attr(find(element, 'img.site-icon'), 'src') ??
         attr(find(element, 'img.onebox-avatar-inline'), 'src'),

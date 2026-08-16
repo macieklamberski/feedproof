@@ -46,7 +46,7 @@ export const slideshareResolveEmbed = (link: string): EmbedResolverResult | unde
   }
 
   // `/slideshow/embed_code/key/{key}` is the current form and `/slideshow/embed_code/{id}` the
-  // one it replaced. The key form is left as it stands; the numeric one is already canonical.
+  // one it replaced. The key form is left as it stands. The numeric one is already canonical.
   const isKeyed = segments[marker + 1] === 'key'
   const deck = isKeyed ? segments[marker + 2] : segments[marker + 1]
 
@@ -59,7 +59,7 @@ export const slideshareResolveEmbed = (link: string): EmbedResolverResult | unde
   }
 
   // The keyed url is already the canonical embed, so it is kept whole rather than rebuilt from
-  // the key; the numeric one goes through the same composer as the Flash repair.
+  // the key. The numeric one goes through the same composer as the Flash repair.
   return isKeyed
     ? {
         provider: 'slideshare',

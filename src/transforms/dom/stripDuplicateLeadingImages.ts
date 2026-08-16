@@ -27,7 +27,7 @@ const pickRemovableIndex = (firstSrc: string, secondSrc: string): number => {
   }
 
   // No strict winner. A src with no encoded size is the unscaled original and outranks
-  // a sized rendition; otherwise position decides and the later copy stays.
+  // a sized rendition. Otherwise position decides and the later copy stays.
   if (getUrlSizeHint(firstSrc) === 0 && getUrlSizeHint(secondSrc) > 0) {
     return 1
   }

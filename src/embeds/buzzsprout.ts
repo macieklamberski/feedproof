@@ -6,9 +6,9 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // Buzzsprout embeds a player two ways: a WordPress shortcode shipping an empty div plus a
 // <script> whose src carries the ids, and a direct player iframe. Both name the same player, so
 // both resolve to the same placeholder. The script never runs in a reader and its div dies as an
-// empty tag, so without resolving it the player vanishes; blog feeds carrying the shortcode have
+// empty tag, so without resolving it the player vanishes. Blog feeds carrying the shortcode have
 // no enclosure for the episode either (verified across the corpus carriers). The slug-less player
-// URL resolves with no key (verified 2026-08-08, 200 on a live episode); any slug after the
+// URL resolves with no key (verified 2026-08-08, 200 on a live episode). Any slug after the
 // episode id is decorative.
 //
 // A script naming the podcast alone is the show player, which carries every episode. The

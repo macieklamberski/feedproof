@@ -2,7 +2,7 @@ import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
-// The theme's stock caption label. Authors can replace it; when they have not, it says
+// The theme's stock caption label. Authors can replace it. When they have not, it says
 // nothing about the linked site, so an external card showing it yields no publisher.
 const defaultCaptionLabel = 'あわせて読みたい'
 

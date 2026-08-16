@@ -6,7 +6,7 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 const redditHosts = ['reddit.com', 'redditmedia.com']
 
-// Subreddit and account names are letters, digits, underscore and hyphen; posts and comments
+// Subreddit and account names are letters, digits, underscore and hyphen. Posts and comments
 // are named by a base36 id. Both are interpolated into the minted url, so both are bounded.
 const safeNameRegex = /^[A-Za-z0-9_-]{1,32}$/
 const safeThingIdRegex = /^[a-z0-9]{4,13}$/i

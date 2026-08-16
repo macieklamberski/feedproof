@@ -185,7 +185,7 @@ const resolveAccount = (element: Element): EmbedResolverResult | undefined => {
 }
 
 // Every oEmbed shape TikTok issues is this blockquote, and the shapes differ only in what the
-// markup still names. The clip is the more specific claim and is tried first; the account is
+// markup still names. The clip is the more specific claim and is tried first. The account is
 // what a blockquote naming no clip anywhere still identifies, so it is never a substitute for
 // a clip but the only content left in the markup.
 export const tiktokBlockquoteEmbedResolver = createMarkupEmbedResolver(

@@ -22,7 +22,7 @@ const videopressEmbedParams = ['at', 'hd', 'loop']
 // embed (`VideoPress Video Player`, localised), and the older shortcode iframe states none, so
 // on this platform the attribute never names the video. The title lives behind
 // `public-api.wordpress.com/rest/v1.1/videos/{guid}`, which answers with no key and is what
-// the enrichment key here is for; the poster is behind the same call, since its file name is
+// the enrichment key here is for. The poster is behind the same call, since its file name is
 // not derivable from the guid.
 const composeEmbed = (guid: string, query = ''): EmbedResolverResult => {
   return {

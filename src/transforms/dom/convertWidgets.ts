@@ -95,7 +95,7 @@ const carrierOrShell = (element: Element): Element => {
 }
 
 // The widget pass: one registry of resolvers whose result shape decides the output. An
-// embed result becomes an opaque `data-embed-*` placeholder; a media result becomes a real
+// embed result becomes an opaque `data-embed-*` placeholder. A media result becomes a real
 // <video>/<audio> that the later passes then neutralize, proxy and deduplicate against the
 // enclosures like any other. The generic tiers below apply the same split to embeds no
 // resolver claims: a src that names a media file plays directly instead of being framed.
@@ -226,7 +226,7 @@ export const convertWidgets: DomTransform = (context) => {
 
       const src = readCarrierUrl(element)
 
-      // resolveUrlFn rejects `about:blank`; the trim drops empty/whitespace placeholders
+      // resolveUrlFn rejects `about:blank`. The trim drops empty/whitespace placeholders
       // (which would otherwise resolve to the base URL).
       const resolved = src.trim() ? resolveUrlFn(src, baseUrl) : undefined
       // Unlike a resolver's src, which is rebuilt from the parsed id, this one is the

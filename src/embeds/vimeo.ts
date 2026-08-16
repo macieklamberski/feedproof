@@ -34,7 +34,7 @@ export const extractVimeoId = (link: string): string | undefined => {
   return keepIfMatches(id, safeVideoIdRegex)
 }
 
-// Unlisted videos embed with a `?h={hash}` token; the player rejects them without it. `t`
+// Unlisted videos embed with a `?h={hash}` token. The player rejects them without it. `t`
 // is the start offset, in Vimeo's `{n}s` form.
 const vimeoEmbedParams = ['h', 't']
 

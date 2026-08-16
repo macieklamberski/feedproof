@@ -12,12 +12,12 @@ import type { MediaResolver, MediaResolverResult } from '../types.js'
 //
 // Two different ids are in play and only one addresses the file. The
 // `wsite-video-container-{id}` / `video-iframe-{id}` number is the *element* id, which Weebly
-// passes to `apps/generateVideo.php?elementid={id}&user={site}` to get the player JS; as a
+// passes to `apps/generateVideo.php?elementid={id}&user={site}` to get the player JS. As a
 // file name in the upload directory it 404s. The upload path carries its own, different id,
 // `/uploads/b/{user}-{pathId}/{name}`, reachable only through the poster url.
 const posterUrlRegex = /url\(\s*['"]?([^'")]*\/uploads\/[^'")]+)['"]?\s*\)/
 
-// The stored name keeps its `_NNN` suffix; only the extension changes between the two files.
+// The stored name keeps its `_NNN` suffix. Only the extension changes between the two files.
 const extensionRegex = /\.[a-z0-9]+$/i
 
 // A wrapper already holding a real player is a third-party embed sitting in Weebly's video

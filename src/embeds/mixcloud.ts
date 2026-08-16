@@ -57,7 +57,7 @@ export const extractMixcloudShow = (link: string): string | undefined => {
 // artwork player is 400 or 480, and every sampled iframe carries its own `height`, which the
 // widget pass prefers over anything a resolver supplies.
 //
-// The `www` widget url is what publishers write and what Mixcloud documents; it 301s to
+// The `www` widget url is what publishers write and what Mixcloud documents. It 301s to
 // `player-widget.mixcloud.com`, so it is kept rather than pre-resolved to a host that is one
 // redirect away from changing.
 export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefined => {

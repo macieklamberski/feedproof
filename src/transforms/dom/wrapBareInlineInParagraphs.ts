@@ -31,7 +31,7 @@ const inlineHostTags = new Set([
 const mediaSelector = 'img, picture, video, audio, iframe, embed, object'
 
 // Standalone media at a run's edge (bare or wrapped in a textless anchor/span)
-// renders as a block of its own; pulling it into the text's paragraph would glue
+// renders as a block of its own. Pulling it into the text's paragraph would glue
 // the text to it and hide it from media-specific styling.
 const isMediaBoundary = (node: Node): boolean => {
   if (isText(node)) {
@@ -81,7 +81,7 @@ export const wrapBareInlineInParagraphs: DomTransform = () => {
       }
 
       // Non-dissolving containers (li, td, blockquote, aside) only get paragraphs
-      // when content is split by a block sibling; a plain single-run cell or item
+      // when content is split by a block sibling. A plain single-run cell or item
       // is left as-is, mirroring convertBreaksToParagraphs' single-chunk skip.
       const shouldWrap =
         alwaysWrapTags.has(container.localName) ||

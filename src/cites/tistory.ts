@@ -21,7 +21,7 @@ export const tistoryCiteResolver: CiteResolver = {
     return buildCite({
       provider: 'tistory',
       // `data-og-source-url` is the link the author added, which is what the card's own
-      // anchor points at; `data-og-url` is the canonical target it resolves to.
+      // anchor points at. `data-og-url` is the canonical target it resolves to.
       url:
         attr(element, 'data-og-source-url') ??
         attr(element, 'data-og-url') ??

@@ -53,7 +53,7 @@ const parsers: Record<string, ParseHtml> = {
   jsdom: parseWithJsdom,
 }
 
-// A bare `bun test` exercises every suite under all parsers; `DOM_LIBRARY` narrows
+// A bare `bun test` exercises every suite under all parsers. `DOM_LIBRARY` narrows
 // to one for focused debugging.
 export const selectParsers = (selected: string | undefined): Array<[string, ParseHtml]> => {
   if (selected !== undefined && !(selected in parsers)) {
@@ -118,7 +118,7 @@ export const queryElement = (document: Document, selector: string): Element => {
 }
 
 // Lets long HTML fixtures be written multi-line and indented while producing the exact compact
-// string. Each line is trimmed; lines are joined with nothing where a tag ends and the next begins
+// string. Each line is trimmed. Lines are joined with nothing where a tag ends and the next begins
 // (> meets <) or where a line starts with the closing > of a multi-attribute tag, and with a single
 // space otherwise. Long tags therefore break one attribute per line with the closing > on its own
 // line (a standalone /> joins with a space, matching the ` />` form). Whitespace that matters to

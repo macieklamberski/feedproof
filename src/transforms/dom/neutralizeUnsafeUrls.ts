@@ -111,7 +111,7 @@ const hrefTagRoles: Record<string, UrlRole> = { a: 'link', image: 'media' }
 export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
   return (document) => {
     walkElements(document, (element) => {
-      // Skip elements with no attributes; hasAttributes is O(1) in linkedom.
+      // Skip elements with no attributes. hasAttributes is O(1) in linkedom.
       if (!element.hasAttributes()) {
         return
       }
