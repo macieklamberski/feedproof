@@ -10,9 +10,9 @@ const archiveHosts = ['archive.org']
 
 // The Internet Archive embeds an item as `archive.org/embed/{identifier}`, in 1,530 corpus
 // feeds. The iframe renders on its own, so what this adds is the poster: every item has a
-// thumbnail at `archive.org/services/img/{identifier}`, derivable from the identifier with no
-// network call, which is the whole of the class 1 case. It also has a real page to open, at
-// `archive.org/details/{identifier}`.
+// thumbnail at `archive.org/services/img/{identifier}`, filled from the identifier alone with no
+// network call, which is what earns a resolver over the generic iframe placeholder. It also has a
+// real page to open, at `archive.org/details/{identifier}`.
 //
 // Checked live 2026-08-13 with a browser user agent, which matters here: the earlier attempt
 // used curl's default and read the service as unavailable. A real identifier answers 200
