@@ -7,7 +7,7 @@ import { isEscapedHtmlFragment } from '../../utils/html.js'
 const opaqueTags = new Set(['code', 'pre', 'script', 'style', 'textarea', 'noscript'])
 
 // Decodes HTML that a buggy feed generator entity-escaped so it shipped as visible text.
-// Only a whole escaped fragment is decoded; an escaped tag embedded in prose, a lone tag,
+// Only a whole escaped fragment is decoded. An escaped tag embedded in prose, a lone tag,
 // or non-HTML markup is left as text, since those are ambiguous and likely intentional.
 export const decodeDoubleEncodedTags: DomTransform = () => {
   return (document) => {

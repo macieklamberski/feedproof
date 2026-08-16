@@ -83,7 +83,7 @@ export const rebuildWistiaEmbeds: DomTransform = () => (document) => {
     }
 
     // Replace the outermost Wistia wrapper so the padding/sizing divs go with it. The
-    // padding div is the outer of the two, so prefer it; fall back to the wrapper, then
+    // padding div is the outer of the two, so prefer it. Fall back to the wrapper, then
     // to the embed div when there is no responsive wrapper around it.
     const padding = element.closest('.wistia_responsive_padding')
     const wrapper = element.closest('.wistia_responsive_wrapper')

@@ -3,7 +3,7 @@ import type { DomTransform } from '../../types.js'
 const chartIdRegex = /datawrapper\.dwcdn\.net\/([A-Za-z0-9]+)/
 const visWrapperIdRegex = /^datawrapper-vis-([A-Za-z0-9]+)$/
 // Datawrapper ships a resize listener next to its iframes: pure noise once the chart is a
-// static image. Every modern minified variant postMessages on `datawrapper-height`; the
+// static image. Every modern minified variant postMessages on `datawrapper-height`. The
 // pre-2017 form keys a `window.datawrapper[<id>]` object instead.
 const resizeScriptRegex = /datawrapper-height|window\.datawrapper/
 
@@ -14,7 +14,7 @@ const getChartId = (url: string | null | undefined): string | undefined => {
 // Datawrapper publishes a complete static PNG render of every chart at
 // `dwcdn.net/<id>/full.png`, derivable from the chart id alone, and names that same file in
 // the `<noscript>` of its own embed, so this is the platform's declared fallback rather than
-// a guess. The script form shows nothing without JS; the iframe form does render, but only by
+// a guess. The script form shows nothing without JS. The iframe form does render, but only by
 // loading a third-party frame the reader may not allow. The static render shows the chart
 // immediately either way. Emit a linked <img>: the chart inline, its interactive version one
 // click away, so the image transforms downstream dimension and proxy it like any other image.
@@ -36,7 +36,7 @@ const buildChartImage = (document: Document, chartId: string, alt: string | null
 export const convertDatawrapperEmbeds: DomTransform = () => (document) => {
   // Responsive iframe (the dominant form): `<iframe src="dwcdn.net/<id>/<ver>/">`. The alt
   // comes from the iframe's title. Skip `#?secret=` preview URLs: the chart is unpublished,
-  // so full.png 404s; leave those for the generic iframe placeholder, which keeps the secret.
+  // so full.png 404s. Leave those for the generic iframe placeholder, which keeps the secret.
   for (const iframe of document.querySelectorAll('iframe[src*="datawrapper.dwcdn.net/"]')) {
     const src = iframe.getAttribute('src')
     const chartId = getChartId(src)
@@ -51,7 +51,7 @@ export const convertDatawrapperEmbeds: DomTransform = () => (document) => {
   // Script / web-component form: `<div id="datawrapper-vis-<id>">` wrapping the embed.js loader
   // and a `<noscript><img full.png>` fallback. The id segment carries the chart id, so this
   // works whether or not the noscript survived. Replace the whole wrapper (loader script and
-  // fallback go with it); take the alt from the fallback img when present.
+  // fallback go with it). Take the alt from the fallback img when present.
   for (const wrapper of document.querySelectorAll('[id^="datawrapper-vis-"]')) {
     const chartId = wrapper.id.match(visWrapperIdRegex)?.[1]
 

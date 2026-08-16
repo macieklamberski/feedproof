@@ -35,10 +35,9 @@ export const composePlayerUrl = (
 // so a reader shows nothing: the element is empty and survives as an unknown tag. The older
 // syntax is a `<video class="video-js">` carrying the identical attributes, which renders as an
 // empty video element instead: all 26 corpus feeds that ship the loader with no `<video-js>`
-// and no iframe are that form. Video.js is
-// only the renderer here; the video is Brightcove's, named by id, which is why this lives with
-// the rest of Brightcove rather than with the generic Video.js rebuild. Brightcove has no public
-// watch page, so the placeholder carries no `url`.
+// and no iframe are that form. Video.js is only the renderer here. The video is Brightcove's,
+// named by id, which is why this lives with the rest of Brightcove rather than with the generic
+// Video.js rebuild. Brightcove has no public watch page, so the placeholder carries no `url`.
 export const brightcoveVideoJsEmbedResolver = createMarkupEmbedResolver(
   'video-js[data-video-id], video[data-video-id]',
   (element) => {
@@ -120,7 +119,7 @@ export const brightcoveFlashResolveEmbed = (
   }
 }
 
-// The legacy player lives on brightcove.com; the modern one below is on brightcove.net.
+// The legacy player lives on brightcove.com. The modern one below is on brightcove.net.
 export const brightcoveFlashEmbedResolver = createUrlEmbedResolver(
   ['brightcove.com'],
   brightcoveFlashResolveEmbed,
@@ -150,7 +149,7 @@ export const brightcoveResolveEmbed = (url: string): EmbedResolverResult | undef
     return
   }
 
-  // `{player}_{embed}` is one segment holding two ids; a segment shaped otherwise is not a
+  // `{player}_{embed}` is one segment holding two ids. A segment shaped otherwise is not a
   // player path.
   if (!brightcoveIdRegex.test(account) || !playerPathRegex.test(player)) {
     return

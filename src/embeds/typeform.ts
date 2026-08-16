@@ -7,7 +7,7 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 const typeformHosts = ['typeform.com']
 
 // Two id generations share one url template. A form id is short and mixed case
-// (`MTt3Pw7K`); a live-embed id is a 26-char Crockford base32 ULID
+// (`MTt3Pw7K`). A live-embed id is a 26-char Crockford base32 ULID
 // (`01HCZ4DNW8JM6PEGNTQWF2PW87`). Both are alphanumeric, which is what keeps them safe to
 // interpolate.
 const safeIdRegex = /^[A-Za-z0-9]{6,26}$/

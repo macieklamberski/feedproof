@@ -28,7 +28,7 @@ const preserveWhenEmpty = new Set([
 ])
 
 // Removes elements with no non-whitespace text and no element children. A
-// whitespace-only block (e.g. a `<div>&nbsp;</div>` spacer) is removed; a
+// whitespace-only block (e.g. a `<div>&nbsp;</div>` spacer) is removed. A
 // whitespace-only inline element is unwrapped to its own whitespace, so a word
 // boundary survives in normal flow (the browser collapses it) while significant
 // indentation inside <pre> (e.g. a Pygments `<span class="w">    </span>` token)
@@ -62,9 +62,9 @@ export const stripEmptyTags: DomTransform = () => {
       }
 
       // Empty elements carrying an id or name are in-page anchor / ARIA targets
-      // (`<a name="x">`, `<span id="x">`, …); other content links to them via
+      // (`<a name="x">`, `<span id="x">`, …). Other content links to them via
       // `#fragment` or `aria-*`. Removing them breaks that navigation, so keep
-      // them even when empty. Mirrors the guard in stripDeadAnchors.
+      // them even when empty.
       if (element.hasAttribute('id') || element.hasAttribute('name')) {
         continue
       }

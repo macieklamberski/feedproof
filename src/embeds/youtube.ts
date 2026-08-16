@@ -16,7 +16,7 @@ const strayLeadingQuoteRegex = /^(?:%22|")/
 // `videoseries` (playlist embeds) and `live_stream` (channel live embeds) are YouTube embed
 // path-words, not video ids, but each is coincidentally 11 valid id chars, so it passes
 // safeVideoIdRegex. Excluded here so extractVideoId never mistakes one for a video (a bogus
-// watch url and thumbnail); youtubeResolveEmbed handles them as playlist/live embeds below.
+// watch url and thumbnail). youtubeResolveEmbed handles them as playlist/live embeds below.
 const nonVideoIds = new Set(['videoseries', 'live_stream'])
 
 // The Flash player took its parameters with `&` and no `?`, so `/v/{id}&hl=en_US&fs=1`

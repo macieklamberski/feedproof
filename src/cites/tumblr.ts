@@ -3,8 +3,8 @@ import { buildCite } from '../utils/cites.js'
 import { attr, bgImage, find, jsonAttr, text } from '../utils/dom.js'
 
 // Tumblr's NPF (Neue Post Format) link block reaches feeds in two shapes. `.npf_link` is a
-// bare anchor with the whole card alongside it in `data-npf`, as scraped Open Graph data;
-// the visible markup carries only the link, so everything except the URL comes from the
+// bare anchor with the whole card alongside it in `data-npf`, as scraped Open Graph data.
+// The visible markup carries only the link, so everything except the URL comes from the
 // JSON. `.npf-link-block` is the card painted as markup instead, with the poster as a CSS
 // `background-image` rather than an `<img>`.
 //
@@ -67,8 +67,8 @@ export const tumblrCiteResolver: CiteResolver = {
       description: data.description,
       author: data.author,
       publisher: data.site_name,
-      // Recent posts describe the poster by `media_key` only, with no URL to resolve it to;
-      // older ones carry a real one.
+      // Recent posts describe the poster by `media_key` only, with no URL to resolve it to.
+      // Older ones carry a real one.
       thumbnail: data.poster?.find((poster) => poster.url)?.url,
     })
   },

@@ -76,7 +76,7 @@ export const substackOwnPostCiteResolver: CiteResolver = {
     if (!attrs) {
       return buildCite({
         provider: 'substack',
-        // The card's own anchor comes first; the byline anchor below it points at the
+        // The card's own anchor comes first. The byline anchor below it points at the
         // author's Substack profile, on custom domains too.
         url: attr(find(element, 'a[href]'), 'href'),
         title: text(element, 'h4'),
@@ -101,7 +101,7 @@ export const substackOwnPostCiteResolver: CiteResolver = {
 
 // The card Substack's Embed button generates for pasting elsewhere, so unlike the two above it
 // arrives in other publishers' feeds rather than Substack's own. The SDK it ships with rewrites
-// the div into the branded card; without it the markup is already readable, three paragraphs
+// the div into the branded card. Without it the markup is already readable, three paragraphs
 // and a link, which is why this is a normalization rather than a repair.
 //
 // Everything the card states sits in the markup: the first paragraph is the title, sometimes

@@ -2,7 +2,7 @@ import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
-// Embedly's platform.js turns an `.embedly-card` element into an iframe on the live page; in
+// Embedly's platform.js turns an `.embedly-card` element into an iframe on the live page. In
 // a feed the static form survives. Two shapes share the class, and only the blockquote is
 // converted:
 //

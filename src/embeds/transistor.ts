@@ -12,7 +12,7 @@ const transistorHosts = ['transistor.fm']
 
 // Fixed at 180 across 49 of 49 sampled corpus iframes, and Transistor's own oEmbed agrees.
 // The playlist embed is taller, so the two kinds are sized apart rather than averaged. A
-// `/latest` player holds one episode and matches the episode height; `/playlist` holds the
+// `/latest` player holds one episode and matches the episode height. `/playlist` holds the
 // whole show and matches the show one.
 const playerHeights = { e: 180, s: 390, latest: 180, playlist: 390 }
 

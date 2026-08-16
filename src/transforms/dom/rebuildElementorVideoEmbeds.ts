@@ -68,7 +68,7 @@ export const rebuildElementorVideoEmbeds: DomTransform = () => (document) => {
     const iframe = document.createElement('iframe')
     iframe.setAttribute('src', source)
 
-    // Replace the empty `.elementor-video` player div if present; otherwise fall back to
+    // Replace the empty `.elementor-video` player div if present. Otherwise fall back to
     // the widget container so the rebuilt player still lands in the right place.
     const target =
       widget.querySelector('.elementor-video') ??

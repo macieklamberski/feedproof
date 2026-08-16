@@ -51,7 +51,7 @@ const composeEmbedResult = (status: MastodonStatus): EmbedResolverResult => {
     id: `${status.host}/${status.id}`,
     src: `${status.origin}/@${status.user}/${status.id}/embed`,
     url: `${status.origin}/@${status.user}/${status.id}`,
-    // A local post names its user alone and takes the instance from the url; a remote one is
+    // A local post names its user alone and takes the instance from the url. A remote one is
     // already filed under a full handle that carries its own.
     author: status.user.includes('@') ? `@${status.user}` : `@${status.user}@${status.host}`,
     // On a federated network the instance is the thing that published the post, and it is

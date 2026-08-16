@@ -65,7 +65,7 @@ const readStatusUrl = (value: string | undefined): Status | undefined => {
 }
 
 // Where the tweet is named, in the order the shapes provide it. The dated anchor is the usual
-// answer; a skeleton blockquote that carries no text names the tweet in an attribute instead,
+// answer. A skeleton blockquote that carries no text names the tweet in an attribute instead,
 // and a stored-after-render copy names it in the player it already built.
 const findStatus = (element: Element): { status: Status; anchor?: Element } | undefined => {
   const anchors = Array.from(element.querySelectorAll('a[href]')).reverse()
@@ -95,7 +95,7 @@ const findStatus = (element: Element): { status: Status; anchor?: Element } | un
     : undefined
 }
 
-// A byline the embed dialog wrote gives up its display name; anything else is taken whole, since
+// A byline the embed dialog wrote gives up its display name. Anything else is taken whole, since
 // a publisher who hand-wrote the line still named someone.
 const readAuthor = (bylineText: string | undefined): string | undefined => {
   const byline = bylineText?.match(bylineRegex)
@@ -167,7 +167,7 @@ export const twitterAmpEmbedResolver = createMarkupEmbedResolver(
 
 // Substack's editor stores a pasted tweet as a component of its own: a div whose `data-attrs`
 // JSON carries the whole tweet, and whose body is rendered client-side, so left alone it is
-// dropped as an empty tag. The keys read here are the ones every live payload carries; the
+// dropped as an empty tag. The keys read here are the ones every live payload carries. The
 // engagement counts ride along in the same blob and are never emitted, and a `quoted_tweet`
 // object nests another payload that is not read: only the outer tweet is resolved.
 type SubstackTweetAttrs = {

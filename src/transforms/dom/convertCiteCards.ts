@@ -15,7 +15,7 @@ export const convertCiteCards: DomTransform = (context) => {
         }
 
         // cleanAnchorUrls runs earlier, so the resolvers that read their url from an anchor
-        // href get it already cleaned; the ones reading an attribute or a JSON blob (Tumblr,
+        // href get it already cleaned. The ones reading an attribute or a JSON blob (Tumblr,
         // Substack, Discourse, XenForo, Tistory, Paragraph) never pass through it, so their
         // redirect wrappers are unwrapped here. Re-cleaning an already-clean url is a no-op.
         const resolvedUrl = resolveOrKeepUrl(result.url, resolveUrlFn, baseUrl)

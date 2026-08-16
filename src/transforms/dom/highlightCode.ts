@@ -15,20 +15,20 @@ const isSupportedLanguage = (token: string): boolean => {
 }
 
 const languageRegex = /(?:language|lang)-(\S+)/
-// data-language/-lang cover most editors and renderers; data-enlighter-language is
+// data-language/-lang cover most editors and renderers. data-enlighter-language is
 // EnlighterJS (WordPress). EnlighterJS's "generic" value maps to no grammar, so such
 // a block stays plain, which is the intent (it means "no specific language").
 const languageAttributes = ['data-language', 'data-lang', 'data-enlighter-language']
 const brushRegex = /brush:\s*([\w#+-]+)/
 const crayonRegex = /\blang[:_]([\w#+-]+)/
 const whitespaceRegex = /\s+/
-// Pandoc emits class="sourceCode LANG"; these tokens are structural, not the language.
+// Pandoc emits class="sourceCode LANG". These tokens are structural, not the language.
 const pandocStructuralClasses = new Set(['sourceCode', 'numberLines'])
 // Jekyll/Rouge and similar wrap the block, putting the language-* class on an
 // ancestor div, not on the pre/code. Look at most this many levels up.
 const maxLanguageAncestorDepth = 3
-// Expressive Code (Astro/Starlight) titles its blocks with the source filename;
-// a whitespace-free name ending in an extension yields the language token (the
+// Expressive Code (Astro/Starlight) titles its blocks with the source filename.
+// A whitespace-free name ending in an extension yields the language token (the
 // last extension, so paths like .vscode/settings.json resolve to json).
 const filenameRegex = /^\S+\.(\w+)$/
 // GitHub/Linguist wrapper class: highlight-source-LANG / highlight-text-LANG (the
@@ -156,7 +156,7 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
   // (<div class="highlight-LANG">) name the language in a wrapper class. Accept it
   // only when it resolves to a grammar. The bare Sphinx form also needs a 2+ char
   // token, since one-letter classes (highlight-c, highlight-r) collide with CSS
-  // utilities; GitHub's source-/text- prefix is signal enough to skip that guard.
+  // utilities. GitHub's source-/text- prefix is signal enough to skip that guard.
   for (const element of candidates) {
     const tokens = element?.className.split(whitespaceRegex) ?? []
 
@@ -173,7 +173,7 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
   // Bare language-name class: class="haskell", class="python": older or hand-rolled
   // templates name the language as a standalone class, with no prefix or wrapper token.
   // Checked last so every explicit convention above wins. Accept a token that resolves
-  // to a grammar; require 3+ chars so the short aliases (c, r, go, js, md) that double
+  // to a grammar. Require 3+ chars so the short aliases (c, r, go, js, md) that double
   // as CSS utility classes cannot match.
   for (const element of candidates) {
     const tokens = element?.className.split(whitespaceRegex) ?? []
@@ -218,7 +218,7 @@ const getCodeBlockText = (target: Element): string => {
 
   // Iterative pre-order walk (explicit stack, not recursion) so a deeply nested code
   // block can't overflow the call stack. Children are pushed in reverse so they pop in
-  // document order; a block wrapper is visited before its children, matching the
+  // document order. A block wrapper is visited before its children, matching the
   // recursive order in which the leading newline was inserted.
   const stack: Array<Node> = [target]
 
@@ -436,7 +436,7 @@ export const highlightCode: DomTransform = ({ highlightFn }) => {
     // defeats trimPreWhitespace (its first line would start with a <code> tag, so
     // the common indent reads as zero and the block is never de-indented). This
     // covers Pygments' stray leading empty <span> (<pre><span></span><code>…) and
-    // code buried under wrapper <div>s alike; the empty <span> is dropped later by
+    // code buried under wrapper <div>s alike. The empty <span> is dropped later by
     // stripEmptyTags.
     const presToWrap = Array.from(document.querySelectorAll('pre')).filter(
       (pre) => !pre.querySelector('code'),

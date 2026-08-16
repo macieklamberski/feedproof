@@ -352,8 +352,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   stripWordBreaks,
   linkifyUrls,
   markTimestamps,
-  // Promotes lazy/consent-gated iframe srcs into `src` so convertWidgets
-  // sees a resolvable iframe. Mirrors fixLazyImages for <img>.
+  // Promotes lazy/consent-gated iframe srcs into `src` so convertWidgets sees a resolvable iframe.
   fixLazyIframes,
   convertWidgets,
   injectEnclosures,
@@ -514,7 +513,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
 ]
 
 // Order matters here too: a resolver replaces the element it matches, so a later one never
-// sees it. No two selectors below overlap today, so nothing depends on the current order; keep
+// sees it. No two selectors below overlap today, so nothing depends on the current order. Keep
 // the more specific one first if that ever changes.
 export const defaultCiteResolvers: Array<CiteResolver> = [
   ghostCiteResolver,
@@ -546,7 +545,7 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
 
 // Attributes that park a media file URL on a container which then builds the player with JS,
 // so the media never appears for a reader. Counts are feeds in a 1/32 corpus sample
-// (397,652 files) unless noted; the shapes were verified in live markup 2026-08-01.
+// (397,652 files) unless noted. The shapes were verified in live markup 2026-08-01.
 export const defaultMediaSrcAttributes = [
   'data-src', // Drupal audiofield (`.audiofield-wordpress-player`) and assorted themes: 40 feeds.
   'data-video-src', // Discourse video placeholders, Discourse 3.2+: 1 feed, but every forum on that version emits it.

@@ -196,7 +196,7 @@ const composeEmbed = (
   }
 }
 
-// Which pen the block names. `data-slug-hash` is what the dialog writes today; `data-href` is
+// Which pen the block names. `data-slug-hash` is what the dialog writes today. `data-href` is
 // what it wrote before that, holding the pen's whole url, and the loader still maps the one onto
 // the other. A prefill block carries neither and resolves to nothing on purpose: its code lives
 // in the `<pre>` children and no saved pen sits behind it.

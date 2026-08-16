@@ -49,7 +49,7 @@ const composeEmbed = (post: ImgurPost, title?: string): EmbedResolverResult => {
 // Imgur's embed is a blockquote plus `s.imgur.com/min/embed.js`, and the script is what turns it
 // into the player. Without the script a reader gets the quote and its link, so the picture never
 // appears. The blockquote is the only shape the platform has issued since the feature shipped in
-// 2015; a bare `i.imgur.com/<id>.jpg` hotlink is an ordinary image and not this.
+// 2015. A bare `i.imgur.com/<id>.jpg` hotlink is an ordinary image and not this.
 export const imgurBlockquoteEmbedResolver = createMarkupEmbedResolver(
   'blockquote.imgur-embed-pub[data-id]',
   (element) => {

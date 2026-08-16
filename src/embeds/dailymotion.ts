@@ -34,7 +34,7 @@ export const extractDailymotionId = (link: string): string | undefined => {
     id = url.searchParams.get('video') ?? undefined
   }
 
-  // Share URLs append a "_title-slug" to the id; keep only the id.
+  // Share URLs append a "_title-slug" to the id. Keep only the id.
   id = id?.split('_')[0]
 
   return keepIfMatches(id, safeVideoIdRegex)

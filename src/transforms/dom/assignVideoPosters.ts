@@ -78,7 +78,7 @@ const findVideoElement = (document: Document): Element | undefined => {
 }
 
 // Give the video its poster, then drop the now-redundant standalone image. By default an
-// existing poster is kept (e.g. a YouTube resolver thumbnail); pass overwrite to replace it
+// existing poster is kept (e.g. a YouTube resolver thumbnail). Pass overwrite to replace it
 // with a better one.
 const moveImageToVideoPoster = (image: Element, video: Element, overwrite = false): void => {
   const url = image.getAttribute('src')

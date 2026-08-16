@@ -36,8 +36,8 @@ export const paragraphizePlainText: StringTransform = () => {
       return html
     }
 
-    // The appended newline mirrors autop: it turns end-of-text whitespace into
-    // its own (dropped) chunk instead of an inline break.
+    // The appended newline matches what autop does: it turns end-of-text whitespace
+    // into its own (dropped) chunk instead of an inline break.
     const chunks = `${html.replace(carriageReturnRegex, '\n')}\n`.split(paragraphSeparatorRegex)
     const paragraphs: Array<string> = []
 

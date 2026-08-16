@@ -60,7 +60,7 @@ const shouldSkipElement = (element: Element): boolean => {
 
 // Wraps line-boundary YouTube-style timestamps (e.g. "01:21 - Title" or
 // "Title - 01:21") in a span carrying the time in seconds, so the reader can
-// later seek a player to that point. The visible text is left as-is; only the
+// later seek a player to that point. The visible text is left as-is. Only the
 // seconds attribute is added.
 export const markTimestamps: DomTransform = () => {
   return (document) => {
@@ -95,7 +95,7 @@ export const markTimestamps: DomTransform = () => {
         }
 
         // The line-start branch consumes a whitespace prefix, so the token sits at
-        // the end of the overall match; derive its offset from the match end.
+        // the end of the overall match. Derive its offset from the match end.
         const tokenStart = (match.index ?? 0) + match[0].length - token.length
 
         if (tokenStart > lastIndex) {

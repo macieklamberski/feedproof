@@ -22,7 +22,7 @@ export const extractAudioboomPost = (
   }
 
   const segments = getPathSegments(parsed)
-  // `/posts/{id}/embed[/v4]` is current; `/boos/{id}/embed` is the pre-rename spelling.
+  // `/posts/{id}/embed[/v4]` is current. `/boos/{id}/embed` is the pre-rename spelling.
   const marker = segments.findIndex((segment) => segment === 'posts' || segment === 'boos')
   const id = marker >= 0 ? segments[marker + 1] : undefined
 

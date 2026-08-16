@@ -9,7 +9,7 @@ const libsynHosts = ['libsyn.com']
 
 // Libsyn spells its player options as path segments rather than a query string:
 // `/embed/episode/id/{id}/height/{px}/theme/{name}/thumbnail/{yes|no}/…`. `episode` and `show`
-// are the two kinds; a show player plays the latest episode.
+// are the two kinds. A show player plays the latest episode.
 const embedKinds = ['episode', 'show', 'destination']
 
 const readPathOption = (segments: Array<string>, name: string): string | undefined => {

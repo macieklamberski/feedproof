@@ -83,7 +83,7 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => 
         if (srcset) {
           const entries = parseSrcset(srcset)
           const hasRelative = entries.some((entry) => !absoluteUrlRegex.test(entry.url))
-          // parseSrcset drops malformed descriptor-only candidates; rewriting when it did
+          // parseSrcset drops malformed descriptor-only candidates. Rewriting when it did
           // keeps them out of the attribute even when no url needed resolving.
           const droppedCandidate = entries.length < countSrcsetCandidates(srcset)
 

@@ -34,7 +34,7 @@ const collectFragmentTargets = (document: Document): Set<string> => {
 //
 // A link on the item's own page (`baseUrl`) is always shortened. Some feeds,
 // notably HTML-to-Atom bridges, instead absolutize in-page fragments against the
-// feed's site or feed page (`sameSiteUrls`) rather than the item permalink; those
+// feed's site or feed page (`sameSiteUrls`) rather than the item permalink. Those
 // are shortened only when the fragment names a target that exists in this content,
 // so genuine links to another of the site's pages, and self-consistent third-party
 // embeds, are left alone.

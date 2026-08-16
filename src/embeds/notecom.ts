@@ -20,7 +20,7 @@ const composePlayer = (noteId: string): string => {
 }
 
 // `note.com/notes/{id}` 301s to the canonical `note.com/{user}/n/{id}` (checked 2026-08-15).
-// A carrier that names the user gives the canonical url directly; one that names only the id
+// A carrier that names the user gives the canonical url directly. One that names only the id
 // gets this form, which reaches the same post without inventing a user.
 const composePostUrl = (noteId: string, pageUrl: string | undefined): string => {
   return pageUrl ?? `https://note.com/notes/${noteId}`

@@ -53,7 +53,7 @@ export const linkifyUrls: DomTransform = (context) => {
         const cleaned = cleanUrlFn?.(link.href) ?? link.href
         const anchor = document.createElement('a')
         anchor.setAttribute('href', cleaned)
-        // The text is the URL as written; show the cleaned one instead when cleaning
+        // The text is the URL as written. Show the cleaned one instead when cleaning
         // changed it, so a visible URL never points somewhere else.
         anchor.textContent = cleaned === link.href ? link.value : cleaned
         parts.push(anchor)

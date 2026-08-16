@@ -4,7 +4,7 @@ import { attr, parsePixelSize } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A channel and a message id, the pair the widget spells `channel/111424`. Telegram usernames
-// are 5 to 32 characters, start with a letter and hold letters, digits and underscores; a
+// are 5 to 32 characters, start with a letter and hold letters, digits and underscores. A
 // message id is a plain counter. A forum channel writes a third segment for the topic, and that
 // shape is left alone: no corpus specimen carries one and the census stores only the first path
 // segment, so the url could not be checked.

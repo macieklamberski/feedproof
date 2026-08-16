@@ -151,7 +151,7 @@ const mergeEnclosureMetadata = (
 // Whether `incoming` is a better variant of the same image to keep than `kept`. A URL
 // with no size encoded in it (`hint === 0`) is treated as the full-res original and
 // preferred over any sized copy (a bare `photo.jpg` outranks `photo-800x450.jpg`).
-// Between two sized variants the larger wins; on a true tie the no-query URL wins, else
+// Between two sized variants the larger wins. On a true tie the no-query URL wins, else
 // the first stays.
 const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
   const incomingUrl = incoming.url ?? ''
@@ -243,7 +243,7 @@ const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): En
   container.innerHTML = playerEmbed
 
   // In real feeds (corpus sample, July 2026) rawvoice:embed is an iframe player in 36 of
-  // 40 feeds; the rest wrap a native <audio> for the same file as the enclosure, or plain
+  // 40 feeds. The rest wrap a native <audio> for the same file as the enclosure, or plain
   // text. Only frame-able elements count as players, so those others fall through and the
   // enclosure itself still renders.
   const frame = container.querySelector('iframe[src], embed[src]')
@@ -370,7 +370,7 @@ export const injectEnclosures: DomTransform = (context) => {
       // when no resolver claims it), produces an embed placeholder.
       if (resolved || enclosure.playerUrl) {
         const src = resolveOrKeepUrl(embedSource, context.resolveUrlFn, context.baseUrl)
-        // A resolver rebuilds the src from the parsed id; without one the enclosure's own
+        // A resolver rebuilds the src from the parsed id. Without one the enclosure's own
         // URL stands in.
         const metadata = mergeEnclosureMetadata(resolved, enclosure)
         created.push(createEmbedPlaceholder(document, { ...metadata, src: metadata.src ?? src }))
@@ -427,7 +427,7 @@ export const injectEnclosures: DomTransform = (context) => {
       element.setAttribute(enclosureMarker, '')
     }
 
-    // Prepend ahead of the existing content while preserving enclosure order; a
+    // Prepend ahead of the existing content while preserving enclosure order. A
     // per-item prepend would reverse the order of multi-enclosure items.
     for (let index = injected.length - 1; index >= 0; index--) {
       document.body.prepend(injected[index])

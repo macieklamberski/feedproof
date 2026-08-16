@@ -11,7 +11,7 @@ const placeholderPageRegexes = [
 
 // Promote a lazy/consent-gated iframe src (the real embed URL parked in a data-*
 // attribute) into `src` when the src itself is empty or `about:blank`, so the
-// downstream embed transform sees a resolvable iframe. Mirrors fixLazyImages.
+// downstream embed transform sees a resolvable iframe.
 export const fixLazyIframes: DomTransform = (context) => {
   const { lazyIframeAttributes } = context
 

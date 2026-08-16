@@ -43,7 +43,7 @@ export const convertAmpNativeElements: DomTransform = () => (document) => {
         replacement.setAttribute(attribute.name, attribute.value)
       }
 
-      // Carry the playable sources over; AMP placeholder/fallback children are dropped.
+      // Carry the playable sources over. AMP placeholder/fallback children are dropped.
       if (conversion.moveChildren) {
         for (const child of [...element.children]) {
           if (child.localName === 'source' || child.localName === 'track') {

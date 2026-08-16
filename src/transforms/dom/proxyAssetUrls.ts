@@ -138,7 +138,7 @@ export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
           proxyAttribute(element, 'src', sourceTypeFromParent(element), assetProxyFn)
           break
         }
-        // SVG2 uses `href`; legacy SVG1 uses `xlink:href`.
+        // SVG2 uses `href`. Legacy SVG1 uses `xlink:href`.
         case 'image': {
           const attribute = element.hasAttribute('href') ? 'href' : 'xlink:href'
           proxyAttribute(element, attribute, 'image', assetProxyFn)

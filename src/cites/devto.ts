@@ -14,7 +14,7 @@ const dateWithYear = (value: string | undefined): string | undefined => {
 // dev.to (Forem) turns a pasted link into an embed card. Forem compiles its liquid tags to
 // HTML when the article is saved, so the card is already in the stored body by the time the
 // feed renders, and the feed sanitizer's allowlist keeps `div`, `class` and `id` intact.
-// An external link becomes `.c-embed`; a link to another dev.to post becomes one of the two
+// An external link becomes `.c-embed`. A link to another dev.to post becomes one of the two
 // shapes below.
 export const devtoLinkCiteResolver: CiteResolver = {
   selector: '.c-embed',
@@ -51,7 +51,7 @@ export const devtoPostCiteResolver: CiteResolver = {
         attr(find(heading, 'a'), 'href'),
       title: text(heading, 'a'),
       // Only posts carrying a context note or a status preview have any text beside the
-      // title; an ordinary post card has none.
+      // title. An ordinary post card has none.
       description:
         text(element, '.crayons-article__context-note') ??
         text(element, '.crayons-story__contentpreview'),

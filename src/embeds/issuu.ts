@@ -7,7 +7,7 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 const issuuHosts = ['issuu.com']
 
 // Two id spaces, and neither converts into the other. A config id is a pair of counters
-// (`1016421/47623369`) and addresses the reader through the url hash; a publisher and document
+// (`1016421/47623369`) and addresses the reader through the url hash. A publisher and document
 // name pair addresses the same reader through the query. Each has its own url, which is what
 // makes both resolvable with nothing fetched.
 const configIdRegex = /^\d+\/\d+$/

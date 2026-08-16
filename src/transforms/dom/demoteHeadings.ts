@@ -22,7 +22,7 @@ export const demoteHeadings: DomTransform = () => {
 
       const replacement = document.createElement(nextTagName)
 
-      // linkedom yields attributes in reverse declaration order; reverse the
+      // linkedom yields attributes in reverse declaration order. Reverse the
       // list so the serialized output matches the source ordering.
       for (const name of heading.getAttributeNames().reverse()) {
         const value = heading.getAttribute(name)
