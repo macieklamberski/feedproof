@@ -197,6 +197,35 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // The style is read with parsePixelSize, which bounds a declared pixel size to 10..9999 and
+    // rejects a fraction. A hydrated height of `758.53px` is not a measurement a reader can put
+    // in a width/height attribute, and a `1px` or `99999px` box is not one the player rendered.
+    it('should ignore a hydrated size outside the pixel bounds', async () => {
+      const value = html`
+        <blockquote
+          class="tiktok-embed"
+          cite="https://www.tiktok.com/@user/video/7000000000000000000"
+          data-video-id="7000000000000000000"
+          style="max-width: 605px;"
+        >
+          <p>
+            <iframe
+              src="https://www.tiktok.com/embed/v2/7000000000000000000"
+              style="width: 100%;height: 758.53px"
+            ></iframe>
+          </p>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '@user/video/7000000000000000000',
+        src: 'https://www.tiktok.com/embed/v2/7000000000000000000',
+        url: 'https://www.tiktok.com/@user/video/7000000000000000000',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // The creator widget names an account and no clip at all, so a selector keyed on a video
     // id silently misses it.
     it('should resolve the creator widget to the profile viewer', async () => {
