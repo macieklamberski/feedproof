@@ -93,6 +93,7 @@ import { podigeeEmbedResolver } from './embeds/podigee.js'
 import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from './embeds/reddit.js'
 import { scribdFlashEmbedResolver, scribdIframeEmbedResolver } from './embeds/scribd.js'
 import { simplecastEmbedResolver } from './embeds/simplecast.js'
+import { sketchfabEmbedResolver } from './embeds/sketchfab.js'
 import { slideshareFlashEmbedResolver, slideshareIframeEmbedResolver } from './embeds/slideshare.js'
 import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
 import {
@@ -459,6 +460,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   scribdIframeEmbedResolver,
   slideshareFlashEmbedResolver,
   slideshareIframeEmbedResolver,
+  sketchfabEmbedResolver,
   tiktokBlockquoteEmbedResolver,
   tiktokIframeEmbedResolver,
   soundcloudEmbedResolver,
