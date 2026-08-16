@@ -10,12 +10,17 @@ const flourishHosts = ['flo.uri.sh', 'public.flourish.studio']
 // across 40 feeds, and the endpoint validates the pair: a real id answers 200 and a wrong kind,
 // unknown kind or fabricated id all answer 403 (probed 2026-08-15). Enumerating them anyway
 // would be the more dangerous choice. The div carrier is an empty element, so a kind this
-// resolver refuses is not left as markup: `stripEmptyTags` deletes it and the chart is gone.
-// Flourish names these after its own templates, so a kind we have not seen is likelier to be a
-// new template than a typo, and losing a real chart beats a placeholder that fails to load.
-
+// resolver refuses is not left as markup: `stripEmptyTags` deletes it and the chart is gone,
+// and losing a real chart beats a placeholder that fails to load.
 const safeResourceRegex = /^[a-z][a-z-]*$/
 const safeIdRegex = /^\d+$/
+
+// `template` is the exception: a real kind on the platform that has no embed form at all.
+// `flo.uri.sh/template/{id}/embed` answers 403 for a real template id, and the SDK routes the
+// kind to `app.flourish.studio/template/{id}/preview` instead of building an iframe (probed
+// 2026-08-16). Carrying it would mint a placeholder that cannot load, which is the one case
+// where refusing beats carrying.
+const nonEmbeddableResource = 'template'
 
 // The div names its chart by a relative `{resource}/{id}` path, at most with a cache-busting
 // query. A full URL or any other shape is dropped.
@@ -29,7 +34,11 @@ const widgetSrcRegex = /^([a-z]+)\/(\d+)(?:\?.*)?$/
 // platform, so a bare number addresses neither endpoint on its own, and `EnrichEmbedFn`
 // receives nothing but the provider and the id.
 const composeEmbed = (resource: string, id: string): EmbedResolverResult | undefined => {
-  if (!safeResourceRegex.test(resource) || !safeIdRegex.test(id)) {
+  if (!safeResourceRegex.test(resource) || resource === nonEmbeddableResource) {
+    return
+  }
+
+  if (!safeIdRegex.test(id)) {
     return
   }
 
