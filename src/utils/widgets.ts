@@ -79,10 +79,14 @@ export const createMarkupEmbedResolver = (
 // having it applied to them, so one that has measured the platform can decline: a snippet that
 // hardcodes the same height whatever the content is states a number worth overruling.
 //
-// Each dimension is spread only when the element actually states it. getElementDimensions
-// returns both keys whichever way, so spreading it whole would erase a platform's own height
-// with undefined wherever the markup is silent, and would put an undefined-valued key on every
-// result besides.
+// The two numbers travel together, because a placeholder's width and height read as an aspect
+// ratio rather than as pixels. So whichever source is used, both come from it: taking the width
+// a publisher stated and the height a resolver derived describes a shape neither of them meant,
+// and 16:9 paired with a 400px height that way reads as 1:4.
+//
+// A carrier that states nothing leaves the resolver's numbers alone. Anything else replaces them
+// outright, keeping only the dimensions the carrier really named, so a lone stated height stays
+// a lone height instead of gaining a width from elsewhere.
 export const withDeclaredSize = (
   element: Element,
   result: EmbedResolverResult | undefined,
@@ -93,8 +97,14 @@ export const withDeclaredSize = (
 
   const { width, height } = getEmbedDimensions(element)
 
+  if (width === undefined && height === undefined) {
+    return result
+  }
+
+  const { width: _width, height: _height, ...rest } = result
+
   return {
-    ...result,
+    ...rest,
     ...(width !== undefined && { width }),
     ...(height !== undefined && { height }),
   }
