@@ -34,6 +34,7 @@ import { appleEmbedResolver } from './embeds/apple.js'
 import { archiveFlashEmbedResolver, archiveIframeEmbedResolver } from './embeds/archive.js'
 import { audioboomEmbedResolver } from './embeds/audioboom.js'
 import { bandcampEmbedResolver } from './embeds/bandcamp.js'
+import { bitchuteEmbedResolver } from './embeds/bitchute.js'
 import { bloggerEmbedResolver } from './embeds/blogger.js'
 import { blubrryEmbedResolver } from './embeds/blubrry.js'
 import {
@@ -481,6 +482,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   archiveIframeEmbedResolver,
   archiveFlashEmbedResolver,
   bandcampEmbedResolver,
+  bitchuteEmbedResolver,
   bloggerEmbedResolver,
   blueskyBlockquoteEmbedResolver,
   blueskyIframeEmbedResolver,
