@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { unwrapDoublyNestedLists } from './unwrapDoublyNestedLists.js'
 
 describeForEachParser('unwrapDoublyNestedLists', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [unwrapDoublyNestedLists(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [unwrapDoublyNestedLists(context)])
   }
 
   describe('happy paths', () => {
@@ -86,8 +86,9 @@ describeForEachParser('unwrapDoublyNestedLists', (parseHtml) => {
     })
 
     it('should drop the outer list class and id', async () => {
-      const value =
-        '<ul class="outer" id="o"><li><ul class="inner" id="i"><li>A</li></ul></li></ul>'
+      const value = html`
+        <ul class="outer" id="o"><li><ul class="inner" id="i"><li>A</li></ul></li></ul>
+      `
       const expected = '<ul class="inner" id="i"><li>A</li></ul>'
 
       expect(await transform(value)).toBe(expected)
@@ -139,10 +140,8 @@ describeForEachParser('unwrapDoublyNestedLists', (parseHtml) => {
 
     it('should not unwrap when the outer holds a non-li element', async () => {
       const value = '<ul><div><ul><li>A</li></ul></div></ul>'
-      const result = await transform(value)
 
-      expect(result).toContain('<div>')
-      expect(result).toContain('<ul><li>A</li></ul>')
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave a flat single-item list alone', async () => {

@@ -102,8 +102,11 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
     })
 
     it('should return undefined for a container without a video element', async () => {
-      const value =
-        '<figure class="kg-video-card"><div class="kg-video-container"><div class="kg-video-overlay"></div></div></figure>'
+      const value = html`
+        <figure class="kg-video-card">
+          <div class="kg-video-container"><div class="kg-video-overlay"></div></div>
+        </figure>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })

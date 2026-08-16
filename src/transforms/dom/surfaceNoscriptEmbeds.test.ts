@@ -10,12 +10,12 @@ describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {
   }
 
   it('should surface a video iframe trapped in a noscript', async () => {
-    const value =
-      '<noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>'
-    const result = await transform(value)
+    const value = html`
+      <noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>
+    `
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ">')
-    expect(result).not.toContain('<noscript')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should leave a Google Tag Manager noscript alone', async () => {
@@ -25,22 +25,20 @@ describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {
         </iframe>
       </noscript>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('<noscript')
-    expect(result).toContain('googletagmanager.com')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should leave a noscript without an iframe alone', async () => {
     const value = '<noscript><p>Enable JavaScript</p></noscript>'
-    const result = await transform(value)
 
-    expect(result).toContain('<noscript')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should produce a youtube placeholder end to end', async () => {
-    const value =
-      '<noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>'
+    const value = html`
+      <noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>
+    `
     const expected = html`
       <div
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
@@ -59,8 +57,9 @@ describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {
   })
 
   it('should be idempotent', async () => {
-    const value =
-      '<noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>'
+    const value = html`
+      <noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>
+    `
     const once = await transform(value)
     const twice = await transform(once)
 

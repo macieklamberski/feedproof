@@ -116,8 +116,12 @@ describeForEachParser('jwplayerScriptEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, jwplayerScriptEmbedResolver)
 
   it('should resolve the script embed to the default-player placeholder', async () => {
-    const value =
-      '<script type="application/javascript" src="https://cdn.jwplayer.com/players/H4GXr873-abc12345.js"></script>'
+    const value = html`
+      <script
+        type="application/javascript"
+        src="https://cdn.jwplayer.com/players/H4GXr873-abc12345.js"
+      ></script>
+    `
     const expected: EmbedResolverResult = {
       provider: 'jwplayer',
       id: 'H4GXr873',
@@ -129,8 +133,9 @@ describeForEachParser('jwplayerScriptEmbedResolver', (parseHtml) => {
   })
 
   it('should return undefined for a foreign host carrying the player path', async () => {
-    const value =
-      '<script src="https://evil.test/jwplayer.com/players/H4GXr873-abc12345.js"></script>'
+    const value = html`
+      <script src="https://evil.test/jwplayer.com/players/H4GXr873-abc12345.js"></script>
+    `
 
     expect(await extract(value)).toBeUndefined()
   })
@@ -140,8 +145,14 @@ describeForEachParser('jwplayerAmpEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, jwplayerAmpEmbedResolver)
 
   it('should resolve the AMP element to the default-player placeholder', async () => {
-    const value =
-      '<amp-jwplayer data-media-id="H4GXr873" data-player-id="abc12345" width="16" height="9"></amp-jwplayer>'
+    const value = html`
+      <amp-jwplayer
+        data-media-id="H4GXr873"
+        data-player-id="abc12345"
+        width="16"
+        height="9"
+      ></amp-jwplayer>
+    `
     const expected: EmbedResolverResult = {
       provider: 'jwplayer',
       id: 'H4GXr873',
@@ -155,16 +166,18 @@ describeForEachParser('jwplayerAmpEmbedResolver', (parseHtml) => {
   })
 
   it('should return undefined for a malformed media id', async () => {
-    const value =
-      '<amp-jwplayer data-media-id="../../evil" data-player-id="abc12345"></amp-jwplayer>'
+    const value = html`
+      <amp-jwplayer data-media-id="../../evil" data-player-id="abc12345"></amp-jwplayer>
+    `
 
     expect(await extract(value)).toBeUndefined()
   })
 
   // A playlist names no single media, so there is no poster and no player page to mint.
   it('should not claim the playlist variant', async () => {
-    const value =
-      '<amp-jwplayer data-playlist-id="482jsTAr" data-player-id="abc12345"></amp-jwplayer>'
+    const value = html`
+      <amp-jwplayer data-playlist-id="482jsTAr" data-player-id="abc12345"></amp-jwplayer>
+    `
 
     expect(await extract(value)).toBeUndefined()
   })

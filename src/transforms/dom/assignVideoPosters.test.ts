@@ -75,10 +75,8 @@ describeForEachParser('assignVideoPosters', (parseHtml) => {
       <img src="https://example.com/content.jpg">
       <div data-embed-src="https://cdn.jwplayer.com/players/abc123.html"></div>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('poster.png')
-    expect(result).toContain('content.jpg')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should leave a standalone enclosure image when there is no video', async () => {
@@ -86,9 +84,8 @@ describeForEachParser('assignVideoPosters', (parseHtml) => {
       <img src="https://example.com/poster.png" data-enclosure="">
       <p>Just text.</p>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('poster.png')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should set the poster on a native video and remove the enclosure image', async () => {
@@ -96,10 +93,13 @@ describeForEachParser('assignVideoPosters', (parseHtml) => {
       <img src="https://example.com/poster.png" data-enclosure="">
       <video><source src="https://example.com/clip.mp4"></video>
     `
-    const result = await transform(value)
+    const expected = html`
+      <video poster="https://example.com/poster.png">
+        <source src="https://example.com/clip.mp4">
+      </video>
+    `
 
-    expect(result).not.toContain('<img')
-    expect(result).toContain('poster="https://example.com/poster.png"')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should keep an unrelated image that is not a video poster', async () => {
@@ -107,9 +107,8 @@ describeForEachParser('assignVideoPosters', (parseHtml) => {
       <img src="https://example.com/photo.jpg">
       <div data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"></div>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('photo.jpg')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should be idempotent', async () => {

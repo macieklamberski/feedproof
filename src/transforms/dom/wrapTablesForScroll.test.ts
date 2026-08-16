@@ -12,8 +12,9 @@ describeForEachParser('wrapTablesForScroll', (parseHtml) => {
   describe('happy paths', () => {
     it('should wrap a table in a div data-table', async () => {
       const value = '<table><tbody><tr><td>Cell</td></tr></tbody></table>'
-      const expected =
-        '<div data-table=""><table><tbody><tr><td>Cell</td></tr></tbody></table></div>'
+      const expected = html`
+        <div data-table=""><table><tbody><tr><td>Cell</td></tr></tbody></table></div>
+      `
 
       expect(await transform(value)).toBe(expected)
     })
@@ -74,8 +75,9 @@ describeForEachParser('wrapTablesForScroll', (parseHtml) => {
 
     it('should not stack wrappers when applied multiple times to the same document', async () => {
       const value = '<table><tbody><tr><td>Cell</td></tr></tbody></table>'
-      const expected =
-        '<div data-table=""><table><tbody><tr><td>Cell</td></tr></tbody></table></div>'
+      const expected = html`
+        <div data-table=""><table><tbody><tr><td>Cell</td></tr></tbody></table></div>
+      `
       const context = baseContext
       const result = await applyDomTransforms(parseHtml(value), [
         wrapTablesForScroll(context),
@@ -93,8 +95,9 @@ describeForEachParser('wrapTablesForScroll', (parseHtml) => {
     })
 
     it('should add its own wrapper around a table inside an author div', async () => {
-      const value =
-        '<div class="responsive"><table><tbody><tr><td>Cell</td></tr></tbody></table></div>'
+      const value = html`
+        <div class="responsive"><table><tbody><tr><td>Cell</td></tr></tbody></table></div>
+      `
       const expected = html`
         <div class="responsive"><div data-table=""><table><tbody><tr><td>Cell</td></tr></tbody>
         </table></div></div>

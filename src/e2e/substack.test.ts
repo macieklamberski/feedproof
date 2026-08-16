@@ -46,19 +46,18 @@ describeForEachParser('Substack', (parseHtml) => {
     `
     const expected = '<p>Text</p>'
 
-    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it('should strip substack publication embeds as non-content', async () => {
     const value = `<p>Text</p><div class="embedded-publication-wrap" data-attrs='{"name":"Other Pub","base_url":"https://other.substack.com","hero_text":"A great read"}'></div>`
+    const expected = '<p>Text</p>'
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com/',
     })
 
-    expect(result).toContain('<p>Text</p>')
-    expect(result).not.toContain('embedded-publication-wrap')
-    expect(result).not.toContain('Other Pub')
+    expect(result).toBe(expected)
   })
 
   // Markup that reaches a clean shape through the interaction of generic transforms alone,

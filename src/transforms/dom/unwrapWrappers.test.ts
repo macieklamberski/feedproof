@@ -61,8 +61,9 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
     // Tailwind-style arbitrary-value selectors contain `>` inside the class
     // attribute. The old regex misparsed this; the DOM version handles it
     // correctly because linkedom parses attribute values as one unit.
-    const value =
-      '<section class="[&amp;:has([data-x])>*]:pointer-events-auto"><p>Article</p></section>'
+    const value = html`
+      <section class="[&amp;:has([data-x])>*]:pointer-events-auto"><p>Article</p></section>
+    `
     const expected = '<p>Article</p>'
 
     expect(await transform(value)).toBe(expected)
@@ -150,10 +151,12 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
   })
 
   it('should unwrap a div between an anchor and its sole media child (Substack)', async () => {
-    const value =
-      '<figure><a href="x"><div><picture></picture></div></a><figcaption>cap</figcaption></figure>'
-    const expected =
-      '<figure><a href="x"><picture></picture></a><figcaption>cap</figcaption></figure>'
+    const value = html`
+      <figure><a href="x"><div><picture></picture></div></a><figcaption>cap</figcaption></figure>
+    `
+    const expected = html`
+      <figure><a href="x"><picture></picture></a><figcaption>cap</figcaption></figure>
+    `
 
     expect(await transform(value)).toBe(expected)
   })

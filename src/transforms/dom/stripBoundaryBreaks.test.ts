@@ -6,8 +6,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripBoundaryBreaks } from './stripBoundaryBreaks.js'
 
 describeForEachParser('stripBoundaryBreaks', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripBoundaryBreaks(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripBoundaryBreaks(context)])
   }
 
   describe('happy paths', () => {

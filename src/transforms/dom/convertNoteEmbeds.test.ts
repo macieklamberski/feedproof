@@ -217,12 +217,12 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
 
     // The two parsers write these five attributes in opposite orders, jsdom keeping the order
     // they were set in and linkedom reversing it, so the comparison has to ignore order.
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        baseUrl: 'https://note.com/user/n/n1234',
-      }),
-    ).toEqualHtml(expected)
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://note.com/user/n/n1234',
+    })
+
+    expect(result).toEqualHtml(expected)
   })
 
   it('should surface a service no resolver claims as a generic placeholder end to end', async () => {

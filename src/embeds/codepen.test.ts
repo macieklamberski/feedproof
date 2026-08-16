@@ -1087,8 +1087,9 @@ describeForEachParser('codepen shapes the pipeline settles first', (parseHtml) =
     // Plain pen links are 28.5% of the corpus and bare-text urls another 41.5%. Replacing either
     // would turn a sentence in a tutorial into a player.
     it('should leave a pen link in prose alone', async () => {
-      const value =
-        '<p>Look at <a href="https://codepen.io/argyleink/pen/XJpKqXm">this pen</a>.</p>'
+      const value = html`
+        <p>Look at <a href="https://codepen.io/argyleink/pen/XJpKqXm">this pen</a>.</p>
+      `
 
       expect(await convert(value)).toBe(value)
     })
@@ -1097,8 +1098,9 @@ describeForEachParser('codepen shapes the pipeline settles first', (parseHtml) =
     // suite's. What matters is that no resolver turns a url pasted into show notes into a player.
     it('should not build a placeholder from a bare pen url', async () => {
       const value = '<p>Demo: https://codepen.io/argyleink/pen/XJpKqXm</p>'
+      const expected: Record<string, string> = {}
 
-      expect(await placeholder(value)).toEqual({})
+      expect(await placeholder(value)).toEqual(expected)
     })
   })
 })

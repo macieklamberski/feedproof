@@ -5,15 +5,17 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { hoistFigcaptionFromAnchor } from './hoistFigcaptionFromAnchor.js'
 
 describeForEachParser('hoistFigcaptionFromAnchor', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [hoistFigcaptionFromAnchor(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [hoistFigcaptionFromAnchor(context)])
   }
 
   it('should move figcaption out of a figure wrapping anchor', async () => {
-    const value =
-      '<figure><a href="big.jpg"><img src="small.jpg"><figcaption>caption</figcaption></a></figure>'
-    const expected =
-      '<figure><a href="big.jpg"><img src="small.jpg"></a><figcaption>caption</figcaption></figure>'
+    const value = html`
+      <figure><a href="big.jpg"><img src="small.jpg"><figcaption>caption</figcaption></a></figure>
+    `
+    const expected = html`
+      <figure><a href="big.jpg"><img src="small.jpg"></a><figcaption>caption</figcaption></figure>
+    `
 
     expect(await transform(value)).toBe(expected)
   })
@@ -36,12 +38,12 @@ describeForEachParser('hoistFigcaptionFromAnchor', (parseHtml) => {
       <figure><a href="big.jpg" target="_blank"><img src="small.jpg" alt="art">
       <figcaption>caption</figcaption></a></figure>
     `
-    const result = await transform(value)
+    const expected = html`
+      <figure><a href="big.jpg" target="_blank"><img src="small.jpg" alt="art"></a>
+      <figcaption>caption</figcaption></figure>
+    `
 
-    expect(result).toContain(
-      '<a href="big.jpg" target="_blank"><img src="small.jpg" alt="art"></a>',
-    )
-    expect(result).toContain('</a><figcaption>caption</figcaption>')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should hoist captions from multiple figures', async () => {
@@ -65,8 +67,9 @@ describeForEachParser('hoistFigcaptionFromAnchor', (parseHtml) => {
   })
 
   it('should leave a normal figure untouched (caption already a sibling)', async () => {
-    const value =
-      '<figure><a href="big.jpg"><img src="small.jpg"></a><figcaption>caption</figcaption></figure>'
+    const value = html`
+      <figure><a href="big.jpg"><img src="small.jpg"></a><figcaption>caption</figcaption></figure>
+    `
 
     expect(await transform(value)).toBe(value)
   })
@@ -87,8 +90,9 @@ describeForEachParser('hoistFigcaptionFromAnchor', (parseHtml) => {
   })
 
   it('should leave a wrapping anchor outside any figure untouched', async () => {
-    const value =
-      '<div><a href="big.jpg"><img src="small.jpg"><figcaption>caption</figcaption></a></div>'
+    const value = html`
+      <div><a href="big.jpg"><img src="small.jpg"><figcaption>caption</figcaption></a></div>
+    `
 
     expect(await transform(value)).toBe(value)
   })
@@ -103,8 +107,9 @@ describeForEachParser('hoistFigcaptionFromAnchor', (parseHtml) => {
   })
 
   it('should be idempotent', async () => {
-    const value =
-      '<figure><a href="big.jpg"><img src="small.jpg"><figcaption>caption</figcaption></a></figure>'
+    const value = html`
+      <figure><a href="big.jpg"><img src="small.jpg"><figcaption>caption</figcaption></a></figure>
+    `
     const once = await transform(value)
     const twice = await transform(once)
 

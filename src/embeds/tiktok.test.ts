@@ -249,8 +249,13 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined when the video id is empty and no clip or account is named', async () => {
-      const value =
-        '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/" data-video-id=""></blockquote>'
+      const value = html`
+        <blockquote
+          class="tiktok-embed"
+          cite="https://www.tiktok.com/"
+          data-video-id=""
+        ></blockquote>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })

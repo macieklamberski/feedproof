@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
-import { describeForEachParser, resolverExtractor } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   extractNicovideoId,
@@ -65,8 +65,9 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
 
   describe('happy paths', () => {
     it('should mint the modern player and carry both dimensions as a ratio', async () => {
-      const value =
-        '<script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=490&amp;h=307"></script>'
+      const value = html`
+        <script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=490&amp;h=307"></script>
+      `
       const expected: EmbedResolverResult = {
         provider: 'nicovideo',
         id: 'sm9',
@@ -133,8 +134,9 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should state no size when a dimension is not a pixel count', async () => {
-      const value =
-        '<script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=100%25&amp;h=307"></script>'
+      const value = html`
+        <script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=100%25&amp;h=307"></script>
+      `
       const expected: EmbedResolverResult = {
         provider: 'nicovideo',
         id: 'sm9',

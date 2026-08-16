@@ -1034,17 +1034,22 @@ describeForEachParser('twitterIframeEmbedResolver', (parseHtml) => {
     // to agree on it. Both results are stated whole: the only difference is the url, which the
     // page states a handle for and the player does not.
     it('should give a page carrier the id its player carrier states', async () => {
-      const player: EmbedResolverResult = {
+      const playerValue = html`<iframe src="${playerUrl}"></iframe>`
+      const pageValue = html`<iframe src="${statusUrl}"></iframe>`
+      const expectedPlayer: EmbedResolverResult = {
         provider: 'twitter',
         id: statusId,
         src: playerUrl,
       }
-
-      expect(await extract(html`<iframe src="${playerUrl}"></iframe>`)).toEqual(player)
-      expect(await extract(html`<iframe src="${statusUrl}"></iframe>`)).toEqual({
-        ...player,
+      const expectedPage: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
         url: statusUrl,
-      })
+      }
+
+      expect(await extract(playerValue)).toEqual(expectedPlayer)
+      expect(await extract(pageValue)).toEqual(expectedPage)
     })
   })
 

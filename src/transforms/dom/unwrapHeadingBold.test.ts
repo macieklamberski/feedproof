@@ -135,8 +135,12 @@ describeForEachParser('unwrapHeadingBold', (parseHtml) => {
     })
 
     it('should keep the bold when the sibling element holds media', async () => {
-      const value =
-        '<h2><strong>Title</strong><a href="https://example.com"><img src="https://example.com/icon.png"></a></h2>'
+      const value = html`
+        <h2>
+          <strong>Title</strong>
+          <a href="https://example.com"><img src="https://example.com/icon.png"></a>
+        </h2>
+      `
 
       expect(await transform(value)).toBe(value)
     })

@@ -5,31 +5,29 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { convertLazyImageContainers } from './convertLazyImageContainers.js'
 
 describeForEachParser('convertLazyImageContainers', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [convertLazyImageContainers(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [convertLazyImageContainers(context)])
   }
 
   it('should convert a media-less div carrying an image-shaped lazy src into an img', async () => {
     const value = '<div class="cesis_gallery_img" data-src="https://example.com/photo.jpg"></div>'
-    const result = await transform(value)
+    const expected = '<img src="https://example.com/photo.jpg">'
 
-    expect(result).toContain('<img src="https://example.com/photo.jpg"')
-    expect(result).not.toContain('<div')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should convert a figure container the same way', async () => {
     const value = '<figure data-lazy-src="https://example.com/photo.png"></figure>'
-    const result = await transform(value)
+    const expected = '<img src="https://example.com/photo.png">'
 
-    expect(result).toContain('<img src="https://example.com/photo.png"')
-    expect(result).not.toContain('<figure')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should keep an image-shaped src with a query string', async () => {
     const value = '<div data-src="https://example.com/photo.jpg?w=600"></div>'
-    const result = await transform(value)
+    const expected = '<img src="https://example.com/photo.jpg?w=600">'
 
-    expect(result).toContain('<img src="https://example.com/photo.jpg?w=600"')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should leave a div that already wraps an image', async () => {
@@ -38,19 +36,16 @@ describeForEachParser('convertLazyImageContainers', (parseHtml) => {
         <img src="https://example.com/real.jpg">
       </div>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('<div')
-    expect(result).toContain('src="https://example.com/real.jpg"')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should leave a wrapper around a lazy video iframe', async () => {
-    const value =
-      '<div data-src="https://example.com/x.jpg"><iframe src="about:blank"></iframe></div>'
-    const result = await transform(value)
+    const value = html`
+      <div data-src="https://example.com/x.jpg"><iframe src="about:blank"></iframe></div>
+    `
 
-    expect(result).toContain('<iframe')
-    expect(result).toContain('<div')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not convert a non-image lazy src like an AJAX content URL', async () => {

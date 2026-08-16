@@ -82,22 +82,27 @@ describeForEachParser('odyseeEmbedResolver', (parseHtml) => {
     })
 
     it('should ignore a claim without a hex id', async () => {
-      const value =
-        '<iframe src="https://odysee.com/$/embed/@corbettreport:0/webb-repersoning:zz"></iframe>'
+      const value = html`
+        <iframe src="https://odysee.com/$/embed/@corbettreport:0/webb-repersoning:zz"></iframe>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should ignore two claims where the first is not a channel', async () => {
-      const value =
-        '<iframe src="https://odysee.com/$/embed/corbettreport:0/webb-repersoning:7"></iframe>'
+      const value = html`
+        <iframe src="https://odysee.com/$/embed/corbettreport:0/webb-repersoning:7"></iframe>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should ignore a path with more segments than a channel and a claim', async () => {
-      const value =
-        '<iframe src="https://odysee.com/$/embed/@corbettreport:0/webb-repersoning:7/extra:1"></iframe>'
+      const value = html`
+        <iframe
+          src="https://odysee.com/$/embed/@corbettreport:0/webb-repersoning:7/extra:1"
+        ></iframe>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -109,8 +114,11 @@ describeForEachParser('odyseeEmbedResolver', (parseHtml) => {
     })
 
     it('should ignore a foreign host carrying the same path', async () => {
-      const value =
-        '<iframe src="https://evil.test/odysee.com/$/embed/@corbettreport:0/webb-repersoning:7"></iframe>'
+      const value = html`
+        <iframe
+          src="https://evil.test/odysee.com/$/embed/@corbettreport:0/webb-repersoning:7"
+        ></iframe>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -118,8 +126,9 @@ describeForEachParser('odyseeEmbedResolver', (parseHtml) => {
 
   describe('the older spellings of a claim', () => {
     it('should join a legacy name and claim id pair into the page path', async () => {
-      const value =
-        '<iframe src="https://odysee.com/$/embed/webb-repersoning/7?sunset=lbrytv"></iframe>'
+      const value = html`
+        <iframe src="https://odysee.com/$/embed/webb-repersoning/7?sunset=lbrytv"></iframe>
+      `
       const expected: EmbedResolverResult = {
         provider: 'odysee',
         id: 'webb-repersoning:7',

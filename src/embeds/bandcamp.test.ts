@@ -130,8 +130,9 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
     })
 
     it('should keep the video player form for a video embed', async () => {
-      const value =
-        '<iframe src="https://bandcamp.com/VideoEmbed?track=1959185434&bgcol=ffffff"></iframe>'
+      const value = html`
+        <iframe src="https://bandcamp.com/VideoEmbed?track=1959185434&bgcol=ffffff"></iframe>
+      `
       const expected: EmbedResolverResult = {
         provider: 'bandcamp',
         id: 'track/1959185434',
@@ -142,8 +143,9 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
     })
 
     it('should yield provider and id when no fallback anchor exists', async () => {
-      const value =
-        '<iframe src="https://bandcamp.com/EmbeddedPlayer/album=42/size=small/"></iframe>'
+      const value = html`
+        <iframe src="https://bandcamp.com/EmbeddedPlayer/album=42/size=small/"></iframe>
+      `
       const expected: EmbedResolverResult = {
         provider: 'bandcamp',
         id: 'album/42',
@@ -157,8 +159,9 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should ignore a player naming no release', async () => {
-      const value =
-        '<iframe src="https://bandcamp.com/EmbeddedPlayer/size=small/bgcol=ffffff/"></iframe>'
+      const value = html`
+        <iframe src="https://bandcamp.com/EmbeddedPlayer/size=small/bgcol=ffffff/"></iframe>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })

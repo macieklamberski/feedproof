@@ -167,8 +167,9 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
   })
 
   it('should preserve empty iframe with src', async () => {
-    const value =
-      '<iframe src="https://www.youtube-nocookie.com/embed/abc123" frameborder="0"></iframe>'
+    const value = html`
+      <iframe src="https://www.youtube-nocookie.com/embed/abc123" frameborder="0"></iframe>
+    `
 
     expect(await transform(value)).toBe(value)
   })

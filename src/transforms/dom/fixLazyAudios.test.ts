@@ -1,19 +1,24 @@
 import { expect, it } from 'bun:test'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { fixLazyAudios } from './fixLazyAudios.js'
 
 describeForEachParser('fixLazyAudios', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [fixLazyAudios(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [fixLazyAudios(context)])
   }
 
   it('should promote a lazy data-src into src on a sourceless audio', async () => {
     const value = '<audio data-src="https://example.com/track.mp3"></audio>'
-    const result = await transform(value)
+    const expected = html`
+      <audio
+        src="https://example.com/track.mp3"
+        data-src="https://example.com/track.mp3"
+      ></audio>
+    `
 
-    expect(result).toContain(' src="https://example.com/track.mp3"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not promote a src when a source child is present', async () => {

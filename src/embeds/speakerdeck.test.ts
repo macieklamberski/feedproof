@@ -14,8 +14,13 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
   // every sampled one still plays. The old 32-char-only rule dropped all of them.
   describe('legacy ids and slides', () => {
     it('should accept a legacy 24-char deck id', async () => {
-      const value =
-        '<script class="speakerdeck-embed" data-id="4f2b3c1d5e6a7b8c9d0e1f2a" src="//speakerdeck.com/assets/embed.js"></script>'
+      const value = html`
+        <script
+          class="speakerdeck-embed"
+          data-id="4f2b3c1d5e6a7b8c9d0e1f2a"
+          src="//speakerdeck.com/assets/embed.js"
+        ></script>
+      `
       const expected: EmbedResolverResult = {
         provider: 'speakerdeck',
         id: '4f2b3c1d5e6a7b8c9d0e1f2a',
@@ -30,8 +35,14 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
     // A feed can embed one deck at many slides; without this they collapse into identical
     // placeholders.
     it('should carry data-slide into the player url', async () => {
-      const value =
-        '<script class="speakerdeck-embed" data-id="40746bbd65b944eb848e90ab1be552c0" data-slide="21" src="//speakerdeck.com/assets/embed.js"></script>'
+      const value = html`
+        <script
+          class="speakerdeck-embed"
+          data-id="40746bbd65b944eb848e90ab1be552c0"
+          data-slide="21"
+          src="//speakerdeck.com/assets/embed.js"
+        ></script>
+      `
       const expected: EmbedResolverResult = {
         provider: 'speakerdeck',
         id: '40746bbd65b944eb848e90ab1be552c0/21',
@@ -44,8 +55,13 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
     })
 
     it('should read a slide written inside the id attribute', async () => {
-      const value =
-        '<script class="speakerdeck-embed" data-id="40746bbd65b944eb848e90ab1be552c0?slide=69" src="//speakerdeck.com/assets/embed.js"></script>'
+      const value = html`
+        <script
+          class="speakerdeck-embed"
+          data-id="40746bbd65b944eb848e90ab1be552c0?slide=69"
+          src="//speakerdeck.com/assets/embed.js"
+        ></script>
+      `
       const expected: EmbedResolverResult = {
         provider: 'speakerdeck',
         id: '40746bbd65b944eb848e90ab1be552c0/69',
@@ -58,8 +74,14 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
     })
 
     it('should ignore a non-numeric slide', async () => {
-      const value =
-        '<script class="speakerdeck-embed" data-id="40746bbd65b944eb848e90ab1be552c0" data-slide="last" src="//speakerdeck.com/assets/embed.js"></script>'
+      const value = html`
+        <script
+          class="speakerdeck-embed"
+          data-id="40746bbd65b944eb848e90ab1be552c0"
+          data-slide="last"
+          src="//speakerdeck.com/assets/embed.js"
+        ></script>
+      `
       const expected: EmbedResolverResult = {
         provider: 'speakerdeck',
         id: '40746bbd65b944eb848e90ab1be552c0',

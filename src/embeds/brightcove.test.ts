@@ -35,15 +35,22 @@ describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should ignore a federated url with no video id anywhere', async () => {
-      const value =
-        '<embed src="http://c.brightcove.com/services/viewer/federated_f9/19517958001?publisherID=1660622131">'
+      const value = html`
+        <embed
+          src="http://c.brightcove.com/services/viewer/federated_f9/19517958001?publisherID=1660622131"
+        >
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should ignore a video id given as an account reference', async () => {
-      const value =
-        '<embed src="http://c.brightcove.com/services/viewer/federated_f9/1?publisherID=1660622131" flashVars="@videoPlayer=ref:my-video">'
+      const value = html`
+        <embed
+          src="http://c.brightcove.com/services/viewer/federated_f9/1?publisherID=1660622131"
+          flashVars="@videoPlayer=ref:my-video"
+        >
+      `
 
       expect(await extract(value)).toBeUndefined()
     })

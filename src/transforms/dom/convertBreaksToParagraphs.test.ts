@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { convertBreaksToParagraphs } from './convertBreaksToParagraphs.js'
 
 describeForEachParser('convertBreaksToParagraphs', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [convertBreaksToParagraphs(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [convertBreaksToParagraphs(context)])
   }
 
   describe('happy paths', () => {
@@ -73,10 +73,13 @@ describeForEachParser('convertBreaksToParagraphs', (parseHtml) => {
       expect(await transform(value)).toBe(expected)
     })
 
+    // The tbody is written out because linkedom leaves the markup as authored while jsdom
+    // inserts the element the HTML parsing spec requires.
     it('should process <td> as a loose container', async () => {
-      const value = '<table><tr><td>One<br><br>Two</td></tr></table>'
+      const value = '<table><tbody><tr><td>One<br><br>Two</td></tr></tbody></table>'
+      const expected = '<table><tbody><tr><td><p>One</p><p>Two</p></td></tr></tbody></table>'
 
-      expect(await transform(value)).toContain('<td><p>One</p><p>Two</p></td>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should process nested loose containers independently', async () => {

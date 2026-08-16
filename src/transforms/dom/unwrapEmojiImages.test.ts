@@ -11,14 +11,14 @@ const asciiLetterRegex = /[a-zA-Z]/
 const conflictingNameRegex = /happy/
 
 describeForEachParser('unwrapEmojiImages', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [unwrapEmojiImages(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [unwrapEmojiImages(context)])
   }
 
   // An emoji image that keeps its picture is also marked. The marker has its own describe block
   // below, so it is dropped here to keep each case about the reason the image was kept.
-  const transformKeeping = async (html: string, context: TransformContext = baseContext) => {
-    return (await transform(html, context)).replaceAll(' data-emoji=""', '')
+  const transformKeeping = async (value: string, context: TransformContext = baseContext) => {
+    return (await transform(value, context)).replaceAll(' data-emoji=""', '')
   }
 
   describe('WordPress (wp-smiley class + s.w.org host)', () => {
@@ -91,8 +91,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
 
     it('should replace no-class WP variant matched by s.w.org URL', async () => {
-      const value =
-        '<p><img src="https://s.w.org/images/core/emoji/13.1.0/svg/1f680.svg" alt="🚀"></p>'
+      const value = html`
+        <p><img src="https://s.w.org/images/core/emoji/13.1.0/svg/1f680.svg" alt="🚀"></p>
+      `
       const expected = '<p>🚀</p>'
 
       expect(await transform(value)).toBe(expected)
@@ -128,8 +129,15 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
 
     it('should resolve a Tango icon-set filename once the face- prefix is dropped', async () => {
-      const value =
-        '<p><img class="wp-smiley" src="/wp-content/plugins/tango-smilies/tango/face-smile.png" alt=":)"></p>'
+      const value = html`
+        <p>
+          <img
+            class="wp-smiley"
+            src="/wp-content/plugins/tango-smilies/tango/face-smile.png"
+            alt=":)"
+          >
+        </p>
+      `
       const expected = '<p>🙂</p>'
 
       expect(await transform(value)).toBe(expected)
@@ -202,10 +210,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
           >
         </p>
       `
-      const result = await transform(value)
+      const expected = '<p>😕</p>'
 
-      expect(result).toBe('<p>😕</p>')
-      expect(result).not.toContain('Confused')
+      expect(await transform(value)).toBe(expected)
     })
 
     // Pre-2.2 boards and modified templates omit data-shortname. The image still paints
@@ -283,8 +290,14 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
   describe('JoyPixels CDN (host list)', () => {
     it('should replace an image whose alt is already the glyph', async () => {
-      const value =
-        '<p><img src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/1f642.png" alt="🙂"></p>'
+      const value = html`
+        <p>
+          <img
+            src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/1f642.png"
+            alt="🙂"
+          >
+        </p>
+      `
       const expected = '<p>🙂</p>'
 
       expect(await transform(value)).toBe(expected)
@@ -369,8 +382,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
 
     it('should leave an unmapped smilie with its working image', async () => {
-      const value =
-        '<p><img class="smilies" src="/images/smilies/icon_mrgreen.gif" alt=":mrgreen:"></p>'
+      const value = html`
+        <p><img class="smilies" src="/images/smilies/icon_mrgreen.gif" alt=":mrgreen:"></p>
+      `
 
       expect(await transformKeeping(value)).toBe(value)
     })
@@ -472,16 +486,22 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
 
     it('should resolve a filename carrying a resolution variant suffix', async () => {
-      const value =
-        '<p><img data-emoticon="" src="https://example.com/uploads/emoticons/biggrin@2x.png" alt=""></p>'
+      const value = html`
+        <p>
+          <img data-emoticon="" src="https://example.com/uploads/emoticons/biggrin@2x.png" alt="">
+        </p>
+      `
       const expected = '<p>😃</p>'
 
       expect(await transform(value)).toBe(expected)
     })
 
     it('should leave a site-custom emoticon with its working image', async () => {
-      const value =
-        '<p><img alt=":yahoo:" data-emoticon="" src="https://example.com/uploads/emoticons/yahoo.png"></p>'
+      const value = html`
+        <p>
+          <img alt=":yahoo:" data-emoticon="" src="https://example.com/uploads/emoticons/yahoo.png">
+        </p>
+      `
 
       expect(await transformKeeping(value)).toBe(value)
     })
@@ -516,8 +536,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
 
     it('should replace a French-labelled smilie from its stock filename', async () => {
-      const value =
-        '<p><img src="https://example.com/img/smilies/big_smile.png" alt="fou" width="15"></p>'
+      const value = html`
+        <p><img src="https://example.com/img/smilies/big_smile.png" alt="fou" width="15"></p>
+      `
       const expected = '<p>😃</p>'
 
       expect(await transform(value)).toBe(expected)
@@ -525,16 +546,18 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
     // base64 may contain `/`, so a stem parsed out of a data URI is a slice of the payload.
     it('should not answer an unmapped sprite from its own base64 payload', async () => {
-      const value =
-        '<p><img src="data:image/gif;base64,AAA/smile" data-shortname=":totally_custom:"></p>'
+      const value = html`
+        <p><img src="data:image/gif;base64,AAA/smile" data-shortname=":totally_custom:"></p>
+      `
       const expected = '<p><span data-emoji="">:totally_custom:</span></p>'
 
       expect(await transform(value)).toBe(expected)
     })
 
     it('should leave a smilie from a custom theme pack with its working image', async () => {
-      const value =
-        '<p><img src="https://example.com/forum/img/smilies/haku/haku-smirk.svg" alt="壞笑"></p>'
+      const value = html`
+        <p><img src="https://example.com/forum/img/smilies/haku/haku-smirk.svg" alt="壞笑"></p>
+      `
 
       expect(await transformKeeping(value)).toBe(value)
     })
@@ -572,16 +595,26 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     // The generic class is read for a glyph alt and never for a shortcode, so the path is what
     // lets the filename be looked up.
     it('should replace an emoji named only by its path', async () => {
-      const value =
-        '<p><img class="emoji" alt="smiley" src="https://cdn.artstation.com/mailer/emoji/smiley.png"></p>'
+      const value = html`
+        <p>
+          <img class="emoji" alt="smiley" src="https://cdn.artstation.com/mailer/emoji/smiley.png">
+        </p>
+      `
       const expected = '<p>🙂</p>'
 
       expect(await transform(value)).toBe(expected)
     })
 
     it('should leave an emoji whose name is not in the table alone', async () => {
-      const value =
-        '<p><img class="emoji" alt="partying" src="https://cdn.artstation.com/mailer/emoji/partying.png"></p>'
+      const value = html`
+        <p>
+          <img
+            class="emoji"
+            alt="partying"
+            src="https://cdn.artstation.com/mailer/emoji/partying.png"
+          >
+        </p>
+      `
 
       expect(await transformKeeping(value)).toBe(value)
     })
@@ -814,8 +847,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     })
 
     it('should replace several elements in one paragraph', async () => {
-      const value =
-        '<p><tg-emoji emoji-id="1">🔥</tg-emoji><tg-emoji emoji-id="2">🎉</tg-emoji></p>'
+      const value = html`
+        <p><tg-emoji emoji-id="1">🔥</tg-emoji><tg-emoji emoji-id="2">🎉</tg-emoji></p>
+      `
       const expected = '<p>🔥🎉</p>'
 
       expect(await transform(value)).toBe(expected)
@@ -1079,42 +1113,49 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
   describe('data-emoji marker', () => {
     // Custom sets have no glyph to become, so the marker is the only thing a reader can act on.
-    const markedCases: Array<[string, string]> = [
+    const markedCases: Array<[string, string, string]> = [
       [
         'Mastodon custom emoji',
         '<img class="emojione" alt=":catjam:" src="https://files.mastodon.social/custom_emojis/images/000/224/097/d9c.gif">',
+        '<img data-emoji="" class="emojione" alt=":catjam:" src="https://files.mastodon.social/custom_emojis/images/000/224/097/d9c.gif">',
       ],
       [
         'Weibo emoticon',
         '<img alt="[微笑]" src="https://h5.sinaimg.cn/m/emoticon/icon/default/d_weixiao.png">',
+        '<img data-emoji="" alt="[微笑]" src="https://h5.sinaimg.cn/m/emoticon/icon/default/d_weixiao.png">',
       ],
       [
         'phpBB smilie with no mapping',
         '<img class="smilies" src="/images/smilies/x.gif" alt=":mrgreen:">',
+        '<img data-emoji="" class="smilies" src="/images/smilies/x.gif" alt=":mrgreen:">',
       ],
       [
         'IPS emoticon with no mapping',
         '<img data-emoticon="" src="/uploads/emoticons/yahoo.png" alt=":yahoo:">',
+        '<img data-emoji="" data-emoticon="" src="/uploads/emoticons/yahoo.png" alt=":yahoo:">',
       ],
       [
         'emoji CDN image with no usable alt',
         '<img src="https://s.w.org/images/core/emoji/14/72x72/1f642.png" alt="?">',
+        '<img data-emoji="" src="https://s.w.org/images/core/emoji/14/72x72/1f642.png" alt="?">',
       ],
       [
         'Ameba built-in char image',
         '<img src="https://stat100.ameba.jp/blog/ucs/img/char/char3/004.png" alt="ウインク" width="24" height="24">',
+        '<img data-emoji="" src="https://stat100.ameba.jp/blog/ucs/img/char/char3/004.png" alt="ウインク" width="24" height="24">',
       ],
       [
         'Ameba author-uploaded emoji',
         '<img src="https://emoji.ameba.jp/img/user/sa/sayu74/118238.gif" alt="カナダ" border="0">',
+        '<img data-emoji="" src="https://emoji.ameba.jp/img/user/sa/sayu74/118238.gif" alt="カナダ" border="0">',
       ],
     ]
 
-    it.each(markedCases)('should mark a %s', async (_label, tag) => {
-      const result = await transform(`<p>${tag}</p>`)
+    it.each(markedCases)('should mark a %s', async (_label, tag, marked) => {
+      const value = `<p>${tag}</p>`
+      const expected = `<p>${marked}</p>`
 
-      expect(result).toContain('data-emoji=""')
-      expect(result).toContain('<img')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // A smilie directory is matched loosely on purpose, so evidence that rests only on the path
@@ -1138,10 +1179,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
     it('should not mark an image it converted', async () => {
       const value = '<p><img class="wp-smiley" alt="\u{1F642}"></p>'
-      const result = await transform(value)
+      const expected = '<p>🙂</p>'
 
-      expect(result).not.toContain('data-emoji')
-      expect(result).not.toContain('<img')
+      expect(await transform(value)).toBe(expected)
     })
 
     // Marking a glyph would style two identical emoji differently in one sentence, since an

@@ -504,8 +504,9 @@ describeForEachParser('instagramIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for another host carrying the post path', async () => {
-      const value =
-        '<iframe src="https://evil.test/www.instagram.com/p/CaUsPbUquKV/embed/"></iframe>'
+      const value = html`
+        <iframe src="https://evil.test/www.instagram.com/p/CaUsPbUquKV/embed/"></iframe>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })

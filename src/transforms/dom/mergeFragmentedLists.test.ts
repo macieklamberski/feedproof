@@ -252,8 +252,9 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
         <ul><li>third item</li></ul>
       </div>
     `
-    const expected =
-      '<div><ul><li>first item</li><li>second item</li><li>third item</li></ul></div>'
+    const expected = html`
+      <div><ul><li>first item</li><li>second item</li><li>third item</li></ul></div>
+    `
 
     expect(await transform(value)).toBe(expected)
   })

@@ -168,8 +168,12 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, appleEmbedResolver)
 
   it('should resolve an apple music iframe', async () => {
-    const value =
-      '<iframe src="https://embed.music.apple.com/us/album/thriller/1440857781" height="450"></iframe>'
+    const value = html`
+      <iframe
+        src="https://embed.music.apple.com/us/album/thriller/1440857781"
+        height="450"
+      ></iframe>
+    `
     const expected: EmbedResolverResult = {
       provider: 'applemusic',
       id: 'album/1440857781',

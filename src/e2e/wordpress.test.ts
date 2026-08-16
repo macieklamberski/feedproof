@@ -45,15 +45,19 @@ describeForEachParser('WordPress', (parseHtml) => {
           </div>
         </div>
       `
-      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+      const expected = html`
+        <div
+          data-embed-height="315"
+          data-embed-width="560"
+          data-embed-thumbnail="https://i.ytimg.com/vi/0OqYNLrUoes/hqdefault.jpg"
+          data-embed-url="https://www.youtube.com/watch?v=0OqYNLrUoes"
+          data-embed-id="0OqYNLrUoes"
+          data-embed-provider="youtube"
+          data-embed-src="https://www.youtube.com/embed/0OqYNLrUoes"
+        ></div>
+      `
 
-      // Video recovered into a YouTube placeholder.
-      expect(result).toContain('data-embed-provider="youtube"')
-      expect(result).toContain('data-embed-src="https://www.youtube.com/embed/0OqYNLrUoes"')
-      // Consent notice and its text gone.
-      expect(result).not.toContain('fusion-privacy-placeholder')
-      expect(result).not.toContain('For privacy reasons')
-      expect(result).not.toContain('I Accept')
+      expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
     })
   })
 })
