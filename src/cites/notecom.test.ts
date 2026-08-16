@@ -87,7 +87,8 @@ describeForEachParser('notecomCiteResolver', (parseHtml) => {
     it('should read only the title and url from a stripped card with bare text runs', async () => {
       const value = html`
         <figure embedded-service="external-article" name="abc" data-identifier="null">
-          <a href="https://example.com/page" target="_blank" rel="nofollow"><strong>Page title</strong>Preview text example.com</a>
+          <a href="https://example.com/page" target="_blank" rel="nofollow">
+            <strong>Page title</strong>Preview text example.com</a>
           <a href="https://example.com/page" target="_blank" rel="nofollow"></a>
         </figure>
       `
@@ -103,7 +104,10 @@ describeForEachParser('notecomCiteResolver', (parseHtml) => {
     it('should read a lone em as the publisher with no description', async () => {
       const value = html`
         <figure embedded-service="external-article">
-          <a href="https://example.com/page"><strong>Page title</strong><em>example.com</em></a>
+          <a href="https://example.com/page">
+            <strong>Page title</strong>
+            <em>example.com</em>
+          </a>
         </figure>
       `
       const expected: CiteResolverResult = {
@@ -120,7 +124,9 @@ describeForEachParser('notecomCiteResolver', (parseHtml) => {
       const value = html`
         <figure embedded-service="external-article">
           <div class="external-article-widget">
-            <a href="https://example.com/page"><strong class="external-article-widget-title">Page title</strong></a>
+            <a href="https://example.com/page">
+              <strong class="external-article-widget-title">Page title</strong>
+            </a>
             <a class="external-article-widget-image" style="background-image: url(https://cdn.example.com/thumb.jpg);"></a>
           </div>
         </figure>
@@ -154,7 +160,9 @@ describeForEachParser('notecomCiteResolver', (parseHtml) => {
     it('should return undefined for a stripped shopping card with no anchor', async () => {
       const value = html`
         <figure name="abc" id="abc" data-identifier="null" embedded-service="external-article" embedded-content-key="emb123">
-          <strong>Product title</strong><em></em><em>amzn.to</em> <em>1,980円</em>(2026年05月12日 11:31時点詳しくはこちら) Amazon.co.jpで購入する
+          <strong>Product title</strong>
+          <em></em>
+          <em>amzn.to</em> <em>1,980円</em>(2026年05月12日 11:31時点詳しくはこちら) Amazon.co.jpで購入する
         </figure>
       `
 

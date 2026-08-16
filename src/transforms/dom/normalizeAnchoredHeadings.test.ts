@@ -38,7 +38,10 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
 
     it('should remove a GitHub octicon anchor (empty text, svg glyph)', async () => {
       const value = html`
-        <h2 id="intro"><a class="anchor" aria-hidden="true" href="#intro"><svg class="octicon octicon-link"></svg></a>Intro</h2>
+        <h2 id="intro">
+          <a class="anchor" aria-hidden="true" href="#intro">
+            <svg class="octicon octicon-link"></svg>
+          </a>Intro</h2>
       `
       const expected = '<h2><a id="intro" href="#intro"></a>Intro</h2>'
 
@@ -144,7 +147,9 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
 
     it('should leave an off-page link untouched even when the slug matches', async () => {
       const value = html`
-        <h2><a href="https://thu-le.com/blog/other-post#the-system">The system</a></h2>
+        <h2>
+          <a href="https://thu-le.com/blog/other-post#the-system">The system</a>
+        </h2>
       `
 
       expect(await transform(value, samePageContext)).toEqualHtml(value)
@@ -159,7 +164,10 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
 
     it('should drop an inline #fragment glyph span and keep the title', async () => {
       const value = html`
-        <h2 id="utility"><a href="#utility">Utility<span class="anchor">#utility</span></a></h2>
+        <h2 id="utility">
+          <a href="#utility">Utility<span class="anchor">#utility</span>
+          </a>
+        </h2>
       `
       const expected = '<h2><a id="utility" href="#utility"></a>Utility</h2>'
 
@@ -168,7 +176,10 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
 
     it('should treat an anchor holding only a #fragment glyph as symbol-only', async () => {
       const value = html`
-        <h2 id="intro">Intro<a href="#intro"><span class="anchor">#intro</span></a></h2>
+        <h2 id="intro">Intro<a href="#intro">
+            <span class="anchor">#intro</span>
+          </a>
+        </h2>
       `
       const expected = '<h2><a id="intro" href="#intro"></a>Intro</h2>'
 
@@ -194,7 +205,8 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
     it('should keep the bare target fragment even when the heading has its own id', async () => {
       const value = '<h2 id="section-2"><a name="legacy-anchor"></a>Section</h2>'
       const expected = html`
-        <h2 id="section-2"><a id="legacy-anchor" href="#legacy-anchor"></a>Section</h2>
+        <h2 id="section-2">
+          <a id="legacy-anchor" href="#legacy-anchor"></a>Section</h2>
       `
 
       expect(await transform(value)).toEqualHtml(expected)
@@ -224,7 +236,9 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
     it('should keep a real content link beside the promoted permalink', async () => {
       const value = '<h3 id="refs">See <a href="https://example.com">docs</a></h3>'
       const expected = html`
-        <h3><a id="refs" href="#refs"></a>See <a href="https://example.com">docs</a></h3>
+        <h3>
+          <a id="refs" href="#refs"></a>See <a href="https://example.com">docs</a>
+        </h3>
       `
 
       expect(await transform(value)).toEqualHtml(expected)
@@ -282,7 +296,9 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
 
     it('should leave an accordion control even when its fragment matches the title', async () => {
       const value = html`
-        <h3 class="wpb_accordion_header ui-accordion-header"><a href="#what-is-x">What is X</a></h3>
+        <h3 class="wpb_accordion_header ui-accordion-header">
+          <a href="#what-is-x">What is X</a>
+        </h3>
       `
 
       expect(await transform(value)).toEqualHtml(value)
@@ -290,7 +306,9 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
 
     it('should leave a WPBakery tab control (data-vc-accordion attribute)', async () => {
       const value = html`
-        <h4 class="vc_tta-panel-title"><a href="#manifesto" data-vc-accordion>Manifesto</a></h4>
+        <h4 class="vc_tta-panel-title">
+          <a href="#manifesto" data-vc-accordion>Manifesto</a>
+        </h4>
       `
 
       expect(await transform(value)).toEqualHtml(value)
@@ -313,7 +331,9 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
 
     it('should leave an absolute link untouched when no baseUrl is set', async () => {
       const value = html`
-        <h2><a href="https://thu-le.com/blog/how-i-track-my-finances#the-system">The system</a></h2>
+        <h2>
+          <a href="https://thu-le.com/blog/how-i-track-my-finances#the-system">The system</a>
+        </h2>
       `
 
       expect(await transform(value)).toEqualHtml(value)
@@ -350,7 +370,9 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
         </h2>
       `
       const expected = html`
-        <h2><a id="section" href="#section"></a><a href="https://example.com/x">External</a> </h2>
+        <h2>
+          <a id="section" href="#section"></a>
+          <a href="https://example.com/x">External</a> </h2>
       `
 
       expect(await transform(value)).toEqualHtml(expected)
@@ -359,8 +381,10 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
 
   it('should be idempotent', async () => {
     const value = html`
-      <h2>The system<a href="#the-system">#</a></h2>
-      <h3 id="setup"><a href="#setup" class="headerlink"></a>Setup</h3>
+      <h2>The system<a href="#the-system">#</a>
+      </h2>
+      <h3 id="setup">
+        <a href="#setup" class="headerlink"></a>Setup</h3>
     `
     const once = await transform(value)
     const twice = await transform(once)

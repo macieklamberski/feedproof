@@ -278,7 +278,9 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
 
   it('should remove an empty wrapping figure left behind', async () => {
     const value = html`
-      <figure><img src="https://example.com/photo.jpg" data-enclosure=""></figure>
+      <figure>
+        <img src="https://example.com/photo.jpg" data-enclosure="">
+      </figure>
       <img src="https://example.com/photo.jpg">
     `
     const expected = '<img src="https://example.com/photo.jpg">'

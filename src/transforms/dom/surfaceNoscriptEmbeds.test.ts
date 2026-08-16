@@ -11,7 +11,9 @@ describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {
 
   it('should surface a video iframe trapped in a noscript', async () => {
     const value = html`
-      <noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>
+      <noscript>
+        <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+      </noscript>
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
@@ -37,7 +39,9 @@ describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {
 
   it('should produce a youtube placeholder end to end', async () => {
     const value = html`
-      <noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>
+      <noscript>
+        <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+      </noscript>
     `
     const expected = html`
       <div
@@ -58,7 +62,9 @@ describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {
 
   it('should be idempotent', async () => {
     const value = html`
-      <noscript><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></noscript>
+      <noscript>
+        <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+      </noscript>
     `
     const once = await transform(value)
     const twice = await transform(once)

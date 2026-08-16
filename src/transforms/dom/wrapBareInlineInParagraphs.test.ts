@@ -19,10 +19,14 @@ describeForEachParser('wrapBareInlineInParagraphs', (parseHtml) => {
 
     it('should preserve inline formatting inside the paragraph', async () => {
       const value = html`
-        <div>text with <a href="https://example.com">a link</a> and <em>emphasis</em></div>
+        <div>text with <a href="https://example.com">a link</a> and <em>emphasis</em>
+        </div>
       `
       const expected = html`
-        <div><p>text with <a href="https://example.com">a link</a> and <em>emphasis</em></p></div>
+        <div>
+          <p>text with <a href="https://example.com">a link</a> and <em>emphasis</em>
+          </p>
+        </div>
       `
 
       expect(await transform(value)).toBe(expected)
@@ -144,7 +148,11 @@ describeForEachParser('wrapBareInlineInParagraphs', (parseHtml) => {
     it('should wrap bare text between an image and a figcaption', async () => {
       const value = '<figure><img src="x.jpg">Description<figcaption>Credit</figcaption></figure>'
       const expected = html`
-        <figure><img src="x.jpg"><p>Description</p><figcaption>Credit</figcaption></figure>
+        <figure>
+          <img src="x.jpg">
+          <p>Description</p>
+          <figcaption>Credit</figcaption>
+        </figure>
       `
 
       expect(await transform(value)).toBe(expected)
@@ -153,7 +161,12 @@ describeForEachParser('wrapBareInlineInParagraphs', (parseHtml) => {
     it('should keep a linked image out of the wrapped paragraph', async () => {
       const value = '<figure><a href="https://example.com"><img src="x.jpg"></a>Caption</figure>'
       const expected = html`
-        <figure><a href="https://example.com"><img src="x.jpg"></a><p>Caption</p></figure>
+        <figure>
+          <a href="https://example.com">
+            <img src="x.jpg">
+          </a>
+          <p>Caption</p>
+        </figure>
       `
 
       expect(await transform(value)).toBe(expected)
@@ -241,8 +254,14 @@ describeForEachParser('wrapBareInlineInParagraphs', (parseHtml) => {
     it('should not wrap inside a table caption', async () => {
       const value = html`
         <table>
-          <caption><div>Quarterly results</div></caption>
-          <tbody><tr><td>1</td></tr></tbody>
+          <caption>
+            <div>Quarterly results</div>
+          </caption>
+          <tbody>
+            <tr>
+              <td>1</td>
+            </tr>
+          </tbody>
         </table>
       `
 

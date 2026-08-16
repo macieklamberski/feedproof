@@ -27,9 +27,14 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
               playsinline
               preload="metadata"
             ></video>
-            <div class="kg-video-overlay"><button class="kg-video-large-play-icon"></button></div>
+            <div class="kg-video-overlay">
+              <button class="kg-video-large-play-icon"></button>
+            </div>
             <div class="kg-video-player-container">
-              <div class="kg-video-player"><span>0:00</span><span>1:24</span></div>
+              <div class="kg-video-player">
+                <span>0:00</span>
+                <span>1:24</span>
+              </div>
             </div>
           </div>
         </figure>
@@ -52,7 +57,9 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
           data-kg-thumbnail="https://example.com/auto.jpg"
           data-kg-custom-thumbnail="https://example.com/custom.jpg"
         >
-          <div class="kg-video-container"><video src="https://example.com/clip.mp4"></video></div>
+          <div class="kg-video-container">
+            <video src="https://example.com/clip.mp4"></video>
+          </div>
         </figure>
       `
       const expected: MediaResolverResult = {
@@ -83,7 +90,9 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
           <div class="kg-video-container">
             <video src="https://example.com/clip.mp4"></video>
             <div class="kg-video-overlay"></div>
-            <div class="kg-video-player-container"><div class="kg-video-player"></div></div>
+            <div class="kg-video-player-container">
+              <div class="kg-video-player"></div>
+            </div>
           </div>
           <figcaption>Watch the full demo below</figcaption>
         </figure>
@@ -104,7 +113,9 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
     it('should return undefined for a container without a video element', async () => {
       const value = html`
         <figure class="kg-video-card">
-          <div class="kg-video-container"><div class="kg-video-overlay"></div></div>
+          <div class="kg-video-container">
+            <div class="kg-video-overlay"></div>
+          </div>
         </figure>
       `
 
@@ -130,7 +141,10 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
           <div class="kg-audio-player-container">
             <audio src="https://example.com/content/media/track.mp3" preload="metadata"></audio>
             <div class="kg-audio-title">Track title</div>
-            <div class="kg-audio-player"><span>0:00</span><span>125.94</span></div>
+            <div class="kg-audio-player">
+              <span>0:00</span>
+              <span>125.94</span>
+            </div>
           </div>
         </div>
       `

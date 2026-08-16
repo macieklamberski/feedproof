@@ -66,7 +66,15 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
       <figure
         class="hd-bcve-wrapper is--youtube"
         data-id="yEB6Q3wTKcw"
-      ><img class="hd-bcve-thumbnail" src="https://img.youtube.com/vi/yEB6Q3wTKcw/maxresdefault.jpg"></figure><template id="hd-bcve-embed-html-yEB6Q3wTKcw"><figure class="wp-block-embed"><div class="wp-block-embed__wrapper"><iframe src="https://www.youtube.com/embed/yEB6Q3wTKcw?feature=oembed"></iframe></div></figure></template>
+      ><img class="hd-bcve-thumbnail" src="https://img.youtube.com/vi/yEB6Q3wTKcw/maxresdefault.jpg">
+      </figure>
+      <template id="hd-bcve-embed-html-yEB6Q3wTKcw">
+        <figure class="wp-block-embed">
+          <div class="wp-block-embed__wrapper">
+            <iframe src="https://www.youtube.com/embed/yEB6Q3wTKcw?feature=oembed"></iframe>
+          </div>
+        </figure>
+      </template>
     `
     const expected = html`
       <figure class="wp-block-embed">
@@ -113,13 +121,17 @@ describeForEachParser('surfaceTemplateEmbeds (media)', (parseHtml) => {
     const value = html`
       <deferred-media data-media-id="1">
         <template>
-          <video controls><source src="https://cdn.example.com/clip.mp4" type="video/mp4"></video>
+          <video controls>
+            <source src="https://cdn.example.com/clip.mp4" type="video/mp4">
+          </video>
         </template>
       </deferred-media>
     `
     const expected = html`
       <deferred-media data-media-id="1">
-        <video controls><source src="https://cdn.example.com/clip.mp4" type="video/mp4"></video>
+        <video controls>
+          <source src="https://cdn.example.com/clip.mp4" type="video/mp4">
+        </video>
       </deferred-media>
     `
 
@@ -128,7 +140,11 @@ describeForEachParser('surfaceTemplateEmbeds (media)', (parseHtml) => {
 
   it('should surface an audio parked in a template', async () => {
     const value = html`
-      <div><template><audio controls src="https://cdn.example.com/ep.mp3"></audio></template></div>
+      <div>
+        <template>
+          <audio controls src="https://cdn.example.com/ep.mp3"></audio>
+        </template>
+      </div>
     `
     const expected = '<div><audio controls src="https://cdn.example.com/ep.mp3"></audio></div>'
 

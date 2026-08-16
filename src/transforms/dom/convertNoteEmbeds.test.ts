@@ -139,7 +139,10 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
           data-identifier="n1234"
           embedded-service="external-article"
           embedded-content-key="emb123"
-        ><a href="https://example.com/article"><strong>A title</strong></a></figure>
+        ><a href="https://example.com/article">
+            <strong>A title</strong>
+          </a>
+        </figure>
       `
 
       expect(await transform(value)).toBe(value)
@@ -154,7 +157,8 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
           data-identifier="n1234"
           embedded-service="shopping"
           embedded-content-key="emb123"
-        ><a href="https://example.com/item">An item</a></figure>
+        ><a href="https://example.com/item">An item</a>
+        </figure>
       `
 
       expect(await transform(value)).toBe(value)

@@ -33,7 +33,8 @@ describeForEachParser('rebuildLyteEmbeds', (parseHtml) => {
       <div
         id="WYL_dQw4w9WgXcQ"
         class="lyMe"
-      ><div id="lyte_dQw4w9WgXcQ"></div></div>
+      ><div id="lyte_dQw4w9WgXcQ"></div>
+      </div>
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
@@ -76,7 +77,8 @@ describeForEachParser('rebuildLyteEmbeds', (parseHtml) => {
       <div
         id="WYL_dQw4w9WgXcQ"
         class="lyMe"
-      ><div id="lyte_dQw4w9WgXcQ"></div></div>
+      ><div id="lyte_dQw4w9WgXcQ"></div>
+      </div>
     `
     const once = await transform(value)
     const twice = await transform(once)

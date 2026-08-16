@@ -91,7 +91,9 @@ describeForEachParser('assignVideoPosters', (parseHtml) => {
   it('should set the poster on a native video and remove the enclosure image', async () => {
     const value = html`
       <img src="https://example.com/poster.png" data-enclosure="">
-      <video><source src="https://example.com/clip.mp4"></video>
+      <video>
+        <source src="https://example.com/clip.mp4">
+      </video>
     `
     const expected = html`
       <video poster="https://example.com/poster.png">

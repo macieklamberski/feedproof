@@ -67,10 +67,12 @@ describeForEachParser('redditWidgetEmbedResolver', (parseHtml) => {
     it('should embed the comment a comment widget quotes, titled by its discussion', async () => {
       const value = html`
         <blockquote class="reddit-embed-bq">
-          <a href="https://www.reddit.com/r/Birdwatching/comments/1x9y8z7/comment/wq8t4nz/">Comment</a><br>
+          <a href="https://www.reddit.com/r/Birdwatching/comments/1x9y8z7/comment/wq8t4nz/">Comment</a>
+          <br>
           by
           <a href="https://www.reddit.com/user/sample_reader/">u/sample_reader</a> from discussion
-          <a href="https://www.reddit.com/r/Birdwatching/comments/1x9y8z7/heron_at_dawn/">Birdwatching Rising Poster</a><br>
+          <a href="https://www.reddit.com/r/Birdwatching/comments/1x9y8z7/heron_at_dawn/">Birdwatching Rising Poster</a>
+          <br>
           in
           <a href="https://www.reddit.com/r/Birdwatching/">Birdwatching</a>
         </blockquote>
@@ -91,10 +93,12 @@ describeForEachParser('redditWidgetEmbedResolver', (parseHtml) => {
     it('should state no title when the dialog leaves the discussion link empty', async () => {
       const value = html`
         <blockquote class="reddit-embed-bq">
-          <a href="https://www.reddit.com/r/Birdwatching/comments/1x9y8z7/comment/wq8t4nz/">Comment</a><br>
+          <a href="https://www.reddit.com/r/Birdwatching/comments/1x9y8z7/comment/wq8t4nz/">Comment</a>
+          <br>
           by
           <a href="https://www.reddit.com/user/sample_reader/">u/sample_reader</a> from discussion
-          <a href="https://www.reddit.com/r/Birdwatching/comments/1x9y8z7/heron_at_dawn/"></a><br>
+          <a href="https://www.reddit.com/r/Birdwatching/comments/1x9y8z7/heron_at_dawn/"></a>
+          <br>
           in
           <a href="https://www.reddit.com/r/Birdwatching/">Birdwatching</a>
         </blockquote>
@@ -117,7 +121,8 @@ describeForEachParser('redditWidgetEmbedResolver', (parseHtml) => {
           class="reddit-embed-bq"
           style="height:500px"
         >
-          <a href="https://www.reddit.com/user/photo_poster/comments/hj7k2p/a_long_exposure_test/">Everything in balance</a><br>
+          <a href="https://www.reddit.com/user/photo_poster/comments/hj7k2p/a_long_exposure_test/">Everything in balance</a>
+          <br>
           by
           <a href="https://www.reddit.com/user/photo_poster/">u/photo_poster</a> in
           <a href="https://www.reddit.com/user/photo_poster/">u_photo_poster</a>

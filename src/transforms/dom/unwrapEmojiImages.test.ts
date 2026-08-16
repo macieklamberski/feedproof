@@ -25,11 +25,11 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     it('should replace wp-smiley image with alt emoji', async () => {
       const value = html`
         <p>Hello
-        <img
-          src="https://s.w.org/images/core/emoji/17.0.2/72x72/1f609.png"
-          alt="😉"
-          class="wp-smiley"
-        >
+          <img
+            src="https://s.w.org/images/core/emoji/17.0.2/72x72/1f609.png"
+            alt="😉"
+            class="wp-smiley"
+          >
         </p>
       `
       const expected = '<p>Hello 😉</p>'
@@ -92,7 +92,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
     it('should replace no-class WP variant matched by s.w.org URL', async () => {
       const value = html`
-        <p><img src="https://s.w.org/images/core/emoji/13.1.0/svg/1f680.svg" alt="🚀"></p>
+        <p>
+          <img src="https://s.w.org/images/core/emoji/13.1.0/svg/1f680.svg" alt="🚀">
+        </p>
       `
       const expected = '<p>🚀</p>'
 
@@ -383,7 +385,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
     it('should leave an unmapped smilie with its working image', async () => {
       const value = html`
-        <p><img class="smilies" src="/images/smilies/icon_mrgreen.gif" alt=":mrgreen:"></p>
+        <p>
+          <img class="smilies" src="/images/smilies/icon_mrgreen.gif" alt=":mrgreen:">
+        </p>
       `
 
       expect(await transformKeeping(value)).toBe(value)
@@ -537,7 +541,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
     it('should replace a French-labelled smilie from its stock filename', async () => {
       const value = html`
-        <p><img src="https://example.com/img/smilies/big_smile.png" alt="fou" width="15"></p>
+        <p>
+          <img src="https://example.com/img/smilies/big_smile.png" alt="fou" width="15">
+        </p>
       `
       const expected = '<p>😃</p>'
 
@@ -547,7 +553,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     // base64 may contain `/`, so a stem parsed out of a data URI is a slice of the payload.
     it('should not answer an unmapped sprite from its own base64 payload', async () => {
       const value = html`
-        <p><img src="data:image/gif;base64,AAA/smile" data-shortname=":totally_custom:"></p>
+        <p>
+          <img src="data:image/gif;base64,AAA/smile" data-shortname=":totally_custom:">
+        </p>
       `
       const expected = '<p><span data-emoji="">:totally_custom:</span></p>'
 
@@ -556,7 +564,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
     it('should leave a smilie from a custom theme pack with its working image', async () => {
       const value = html`
-        <p><img src="https://example.com/forum/img/smilies/haku/haku-smirk.svg" alt="壞笑"></p>
+        <p>
+          <img src="https://example.com/forum/img/smilies/haku/haku-smirk.svg" alt="壞笑">
+        </p>
       `
 
       expect(await transformKeeping(value)).toBe(value)
@@ -848,7 +858,10 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
     it('should replace several elements in one paragraph', async () => {
       const value = html`
-        <p><tg-emoji emoji-id="1">🔥</tg-emoji><tg-emoji emoji-id="2">🎉</tg-emoji></p>
+        <p>
+          <tg-emoji emoji-id="1">🔥</tg-emoji>
+          <tg-emoji emoji-id="2">🎉</tg-emoji>
+        </p>
       `
       const expected = '<p>🔥🎉</p>'
 

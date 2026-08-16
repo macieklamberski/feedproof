@@ -323,7 +323,9 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
 
   it('should rewrite track src using parent media type', async () => {
     const value = html`
-      <video><track src="https://cdn.example.com/captions.vtt" kind="subtitles"></video>
+      <video>
+        <track src="https://cdn.example.com/captions.vtt" kind="subtitles">
+      </video>
     `
     const expected = html`
       <video>
@@ -340,7 +342,9 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
 
   it('should rewrite track src inside audio as audio', async () => {
     const value = html`
-      <audio><track src="https://cdn.example.com/chapters.vtt" kind="chapters"></audio>
+      <audio>
+        <track src="https://cdn.example.com/chapters.vtt" kind="chapters">
+      </audio>
     `
     const expected = html`
       <audio>

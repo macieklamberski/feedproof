@@ -297,7 +297,9 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
 
     it('should not inject an image enclosure when content has a picture element', async () => {
       const value = html`
-        <picture><img src="https://example.com/inline.jpg"></picture>
+        <picture>
+          <img src="https://example.com/inline.jpg">
+        </picture>
       `
       const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
 

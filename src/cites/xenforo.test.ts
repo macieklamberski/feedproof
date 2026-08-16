@@ -72,7 +72,9 @@ describeForEachParser('xenforoCiteResolver', (parseHtml) => {
         <div class="bbCodeBlock bbCodeBlock--unfurl" data-url="https://example.com/page" data-host="example.com">
           <div class="contentRow">
             <div class="contentRow-main">
-              <h3 class="contentRow-title"><a href="https://example.com/page">Page title</a></h3>
+              <h3 class="contentRow-title">
+                <a href="https://example.com/page">Page title</a>
+              </h3>
               <div class="contentRow-snippet">Preview text</div>
             </div>
           </div>

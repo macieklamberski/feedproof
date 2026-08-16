@@ -76,7 +76,9 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
       const value = html`
         <div class="npf-link-block">
           <a href="https://example.com/post">
-            <div class="bottom"><div class="title">Page title</div></div>
+            <div class="bottom">
+              <div class="title">Page title</div>
+            </div>
           </a>
         </div>
       `
@@ -232,7 +234,9 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
 
     it('should return undefined when the data attribute is missing', async () => {
       const value = html`
-        <p class="npf_link"><a href="https://example.com/post">Page title</a></p>
+        <p class="npf_link">
+          <a href="https://example.com/post">Page title</a>
+        </p>
       `
 
       expect(await extract(value)).toBeUndefined()
@@ -240,7 +244,9 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
 
     it('should return undefined when the data attribute is not valid JSON', async () => {
       const value = html`
-        <p class="npf_link" data-npf='{"type":"link","url":'><a href="https://example.com/post">Page title</a></p>
+        <p class="npf_link" data-npf='{"type":"link","url":'>
+          <a href="https://example.com/post">Page title</a>
+        </p>
       `
 
       expect(await extract(value)).toBeUndefined()
@@ -248,7 +254,9 @@ describeForEachParser('tumblrCiteResolver', (parseHtml) => {
 
     it('should return undefined for a rendered link block with no title', async () => {
       const value = html`
-        <div class="npf-link-block"><a href="https://example.com/post"></a></div>
+        <div class="npf-link-block">
+          <a href="https://example.com/post"></a>
+        </div>
       `
 
       expect(await extract(value)).toBeUndefined()

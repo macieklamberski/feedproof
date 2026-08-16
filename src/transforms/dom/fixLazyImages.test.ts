@@ -30,7 +30,9 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
   it('should extract image from noscript when sibling is lazy placeholder', async () => {
     const value = html`
       <img data-src="lazy.jpg">
-      <noscript><img src="real.jpg"></noscript>
+      <noscript>
+        <img src="real.jpg">
+      </noscript>
     `
     const expected = '<img src="real.jpg">'
 
@@ -40,7 +42,9 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
   it('should normalize attribute case on images extracted from noscript', async () => {
     const value = html`
       <img data-src="lazy.jpg">
-      <noscript><IMG SRC="real.jpg"></noscript>
+      <noscript>
+        <IMG SRC="real.jpg">
+      </noscript>
     `
     const expected = '<img src="real.jpg">'
 
@@ -50,7 +54,9 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
   it('should not extract noscript when sibling is not an image', async () => {
     const value = html`
       <div>text</div>
-      <noscript><img src="real.jpg"></noscript>
+      <noscript>
+        <img src="real.jpg">
+      </noscript>
     `
 
     expect(await transform(value)).toBe(value)

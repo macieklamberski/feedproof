@@ -150,7 +150,10 @@ describeForEachParser('transformContent', (parseHtml) => {
     // id to plain text. The whole url must become one working link.
     const value = '<p>Watch <span>https://youtu.be/<wbr></wbr>HnLpU5vd5rI</span></p>'
     const expected = html`
-      <p>Watch <span><a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/HnLpU5vd5rI</a></span></p>
+      <p>Watch <span>
+          <a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/HnLpU5vd5rI</a>
+        </span>
+      </p>
     `
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
@@ -158,10 +161,14 @@ describeForEachParser('transformContent', (parseHtml) => {
 
   it('should keep an anchored wbr url working and drop the break hint', async () => {
     const value = html`
-      <p><a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/<wbr></wbr>HnLpU5vd5rI</a></p>
+      <p>
+        <a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/<wbr></wbr>HnLpU5vd5rI</a>
+      </p>
     `
     const expected = html`
-      <p><a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/HnLpU5vd5rI</a></p>
+      <p>
+        <a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/HnLpU5vd5rI</a>
+      </p>
     `
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
@@ -227,7 +234,9 @@ describeForEachParser('transformContent', (parseHtml) => {
   it('should remove paragraphs left empty after boundary br stripping', async () => {
     const value = html`
       <p>Hello</p>
-      <p><br></p>
+      <p>
+        <br>
+      </p>
       <p>World</p>
     `
     const expected = html`
@@ -241,7 +250,9 @@ describeForEachParser('transformContent', (parseHtml) => {
   it('should preserve empty paragraphs when stripEmptyTags is removed from the pipeline', async () => {
     const value = html`
       <p>Hello</p>
-      <p><br></p>
+      <p>
+        <br>
+      </p>
       <p>World</p>
     `
     const expected = html`
@@ -472,7 +483,9 @@ describeForEachParser('transformContent', (parseHtml) => {
     const value = html`
       <p>
         <img src="https://example.com/placeholder.gif">
-        <noscript><img src="https://example.com/real-1024x768.jpg"></noscript>
+        <noscript>
+          <img src="https://example.com/real-1024x768.jpg">
+        </noscript>
       </p>
     `
     const expected = html`
@@ -593,9 +606,15 @@ describeForEachParser('transformContent', (parseHtml) => {
   it('should collapse rules left touching by a stripped subscribe widget', async () => {
     const value = html`
       <p>Article text</p>
-      <div><hr></div>
-      <div class="subscription-widget-wrap-editor"><p>Subscribe now</p></div>
-      <div><hr></div>
+      <div>
+        <hr>
+      </div>
+      <div class="subscription-widget-wrap-editor">
+        <p>Subscribe now</p>
+      </div>
+      <div>
+        <hr>
+      </div>
       <p>More text</p>
     `
     // The rules bracket the widget in the feed, so removing it as non-content is what
@@ -842,11 +861,19 @@ describeForEachParser('transformContent', (parseHtml) => {
   it('should unwrap the heading bold once junk siblings are cleaned', async () => {
     const options = { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' }
     const value = html`
-      <h2><a href="https://example.com/post#anchored"><strong>Anchored</strong></a></h2>
-      <h3><strong>Shared</strong><span class="sharedaddy">Share this</span></h3>
+      <h2>
+        <a href="https://example.com/post#anchored">
+          <strong>Anchored</strong>
+        </a>
+      </h2>
+      <h3>
+        <strong>Shared</strong>
+        <span class="sharedaddy">Share this</span>
+      </h3>
     `
     const expected = html`
-      <h2><a id="anchored" href="#anchored"></a>Anchored</h2>
+      <h2>
+        <a id="anchored" href="#anchored"></a>Anchored</h2>
       <h3>Shared</h3>
     `
     const result = await transformContent(value, options)
@@ -898,7 +925,9 @@ describeForEachParser('transformContent', (parseHtml) => {
   it('should leave no embed placeholder inside a paragraph', async () => {
     const value = html`
       <p>Watch <iframe src="https://www.youtube.com/embed/abc123"></iframe> inline</p>
-      <p>Wrapped <span><iframe src="https://www.youtube.com/embed/def456"></iframe></span> after</p>
+      <p>Wrapped <span>
+          <iframe src="https://www.youtube.com/embed/def456"></iframe>
+        </span> after</p>
     `
     const expected = html`
       <p>Watch </p>

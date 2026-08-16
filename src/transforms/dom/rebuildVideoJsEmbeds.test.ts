@@ -105,7 +105,9 @@ describeForEachParser('rebuildVideoJsEmbeds', (parseHtml) => {
 
   it('should be idempotent', async () => {
     const value = html`
-      <video-js><source src="https://example.com/clip.mp4" type="video/mp4"></video-js>
+      <video-js>
+        <source src="https://example.com/clip.mp4" type="video/mp4">
+      </video-js>
     `
     const once = await transform(value)
     const twice = await transform(once)

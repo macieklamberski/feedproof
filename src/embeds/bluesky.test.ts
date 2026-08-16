@@ -205,8 +205,10 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
             data-bluesky-embed-color-mode="system"
             data-bluesky-uri="at://did:plc:tgudj2fjmgcl2w7qzruzxfmy/app.bsky.feed.post/3lj7bvrr4yk2l"
           >
-            A post with a picture attached.<br /><br />
-            <a href="https://bsky.app/profile/did:plc:tgudj2fjmgcl2w7qzruzxfmy/post/3lj7bvrr4yk2l?ref_src=embed">[image or embed]</a><br />
+            A post with a picture attached.<br />
+            <br />
+            <a href="https://bsky.app/profile/did:plc:tgudj2fjmgcl2w7qzruzxfmy/post/3lj7bvrr4yk2l?ref_src=embed">[image or embed]</a>
+            <br />
             — Newsroom (<a href="https://bsky.app/profile/did:plc:tgudj2fjmgcl2w7qzruzxfmy?ref_src=embed">@newsroom.example</a>)
             <a href="https://bsky.app/profile/did:plc:tgudj2fjmgcl2w7qzruzxfmy/post/3lj7bvrr4yk2l?ref_src=embed">2025-05-06T07:08:09.010Z</a>
           </blockquote>
@@ -235,7 +237,8 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
               class="bluesky-embed"
               data-bluesky-uri="at://did:plc:6xkqmwpqhsbnvmqvdvbjzcyz/app.bsky.feed.post/3lm4lzkrnk22d"
             >
-              <p lang="en">Attached media sits in the same paragraph.<br /><br />
+              <p lang="en">Attached media sits in the same paragraph.<br />
+                <br />
                 <a href="https://bsky.app/profile/did:plc:6xkqmwpqhsbnvmqvdvbjzcyz/post/3lm4lzkrnk22d?ref_src=embed">[image or embed]</a>
               </p>
               &mdash; Builder (<a href="https://bsky.app/profile/did:plc:6xkqmwpqhsbnvmqvdvbjzcyz?ref_src=embed">@builder.example</a>)
@@ -883,7 +886,9 @@ describeForEachParser('blueskyPostElementEmbedResolver', (parseHtml) => {
     it('should return nothing for a src that is not an at uri', async () => {
       const value = html`
         <bluesky-post src="https://bsky.app/profile/newsroom.example/post/3mkq7aeuwbg42">
-          <blockquote><p dir="auto">Not the documented form.</p></blockquote>
+          <blockquote>
+            <p dir="auto">Not the documented form.</p>
+          </blockquote>
         </bluesky-post>
       `
 

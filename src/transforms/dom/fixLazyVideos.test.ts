@@ -23,13 +23,16 @@ describeForEachParser('fixLazyVideos', (parseHtml) => {
 
   it('should promote a lazy data-poster even when a source is present', async () => {
     const value = html`
-      <video data-poster="https://example.com/still.jpg"><source src="clip.mp4"></video>
+      <video data-poster="https://example.com/still.jpg">
+        <source src="clip.mp4">
+      </video>
     `
     const expected = html`
       <video
         poster="https://example.com/still.jpg"
         data-poster="https://example.com/still.jpg"
-      ><source src="clip.mp4"></video>
+      ><source src="clip.mp4">
+      </video>
     `
 
     expect(await transform(value)).toEqualHtml(expected)

@@ -18,7 +18,9 @@ describeForEachParser('hatenaCiteResolver', (parseHtml) => {
             frameborder="0"
             loading="lazy"
           ></iframe>
-          <cite class="hatena-citation"><a href="https://example.com/spirit/">example.com</a></cite>
+          <cite class="hatena-citation">
+            <a href="https://example.com/spirit/">example.com</a>
+          </cite>
         </p>
       `
       const expected: CiteResolverResult = {
@@ -39,7 +41,9 @@ describeForEachParser('hatenaCiteResolver', (parseHtml) => {
             title="Page title"
             class="embed-card embed-blogcard"
           ></iframe>
-          <cite class="hatena-citation"><a href="https://example.com/entry">example.com</a></cite>
+          <cite class="hatena-citation">
+            <a href="https://example.com/entry">example.com</a>
+          </cite>
         </p>
       `
       const expected: CiteResolverResult = {
@@ -61,7 +65,9 @@ describeForEachParser('hatenaCiteResolver', (parseHtml) => {
             src="https://hatenablog-parts.com/embed?url=https%3A%2F%2Fexample.com%2Fentry"
             title="Page title"
           ></iframe>
-          <cite class="hatena-citation"><a href="https://example.com/entry">example.com</a></cite>
+          <cite class="hatena-citation">
+            <a href="https://example.com/entry">example.com</a>
+          </cite>
         </p>
       `
       const expected: CiteResolverResult = {
@@ -82,7 +88,9 @@ describeForEachParser('hatenaCiteResolver', (parseHtml) => {
             title="Page title"
             class="hatenablogcard"
           ></iframe>
-          <cite class="hatena-citation"><a href="https://example.com/entry">example.com</a></cite>
+          <cite class="hatena-citation">
+            <a href="https://example.com/entry">example.com</a>
+          </cite>
         </p>
       `
       const expected: CiteResolverResult = {
@@ -124,7 +132,9 @@ describeForEachParser('hatenaCiteResolver', (parseHtml) => {
             title="Page title"
             class="embed-card"
           ></iframe>
-          <cite class="hatena-citation"><a href="https://example.com/current">example.com</a></cite>
+          <cite class="hatena-citation">
+            <a href="https://example.com/current">example.com</a>
+          </cite>
         </p>
       `
       const expected: CiteResolverResult = {
@@ -165,7 +175,9 @@ describeForEachParser('hatenaCiteResolver', (parseHtml) => {
     it('should not match a paragraph without an embed card', async () => {
       const value = html`
         <p>
-          <cite class="hatena-citation"><a href="https://example.com/a">example.com</a></cite>
+          <cite class="hatena-citation">
+            <a href="https://example.com/a">example.com</a>
+          </cite>
         </p>
       `
 

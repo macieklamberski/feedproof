@@ -176,8 +176,12 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
       <iframe src="https://datawrapper.dwcdn.net/BBBBB/1/"></iframe>
     `
     const expected = html`
-      <a href="https://datawrapper.dwcdn.net/AAAAA/"><img src="https://datawrapper.dwcdn.net/AAAAA/full.png"></a>
-      <a href="https://datawrapper.dwcdn.net/BBBBB/"><img src="https://datawrapper.dwcdn.net/BBBBB/full.png"></a>
+      <a href="https://datawrapper.dwcdn.net/AAAAA/">
+        <img src="https://datawrapper.dwcdn.net/AAAAA/full.png">
+      </a>
+      <a href="https://datawrapper.dwcdn.net/BBBBB/">
+        <img src="https://datawrapper.dwcdn.net/BBBBB/full.png">
+      </a>
     `
 
     expect(await transform(value)).toBe(expected)

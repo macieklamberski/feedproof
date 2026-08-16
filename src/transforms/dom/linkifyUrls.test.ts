@@ -43,7 +43,8 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
     const value = '<p>See https://example.com and https://example.org</p>'
     const expected = html`
       <p>See <a href="https://example.com">https://example.com</a>
-        and <a href="https://example.org">https://example.org</a></p>
+        and <a href="https://example.org">https://example.org</a>
+      </p>
     `
 
     expect(await transform(value)).toEqualHtml(expected)
@@ -55,8 +56,10 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
       <p>And https://example.org</p>
     `
     const expected = html`
-      <p>See <a href="https://example.com">https://example.com</a></p>
-      <p>And <a href="https://example.org">https://example.org</a></p>
+      <p>See <a href="https://example.com">https://example.com</a>
+      </p>
+      <p>And <a href="https://example.org">https://example.org</a>
+      </p>
     `
 
     expect(await transform(value)).toEqualHtml(expected)
@@ -86,7 +89,9 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
     const expected = html`
       <div>
         <section>
-          <p><em>See <a href="https://example.com">https://example.com</a> here</em></p>
+          <p>
+            <em>See <a href="https://example.com">https://example.com</a> here</em>
+          </p>
         </section>
       </div>
     `

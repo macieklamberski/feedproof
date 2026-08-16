@@ -32,8 +32,12 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
 
   it('should unwrap header and footer wrappers', async () => {
     const value = html`
-      <header><p>Intro</p></header>
-      <footer><p>Outro</p></footer>
+      <header>
+        <p>Intro</p>
+      </header>
+      <footer>
+        <p>Outro</p>
+      </footer>
     `
     const expected = html`
       <p>Intro</p>
@@ -62,7 +66,9 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
     // attribute. The old regex misparsed this; the DOM version handles it
     // correctly because linkedom parses attribute values as one unit.
     const value = html`
-      <section class="[&amp;:has([data-x])>*]:pointer-events-auto"><p>Article</p></section>
+      <section class="[&amp;:has([data-x])>*]:pointer-events-auto">
+        <p>Article</p>
+      </section>
     `
     const expected = '<p>Article</p>'
 
@@ -74,8 +80,12 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
     // pipeline, so unwrapping sibling wrappers does not cascade into merging
     // the now-adjacent inner elements.
     const value = html`
-      <div><p>First</p></div>
-      <div><p>Second</p></div>
+      <div>
+        <p>First</p>
+      </div>
+      <div>
+        <p>Second</p>
+      </div>
     `
     const expected = html`
       <p>First</p>
@@ -152,10 +162,22 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
 
   it('should unwrap a div between an anchor and its sole media child (Substack)', async () => {
     const value = html`
-      <figure><a href="x"><div><picture></picture></div></a><figcaption>cap</figcaption></figure>
+      <figure>
+        <a href="x">
+          <div>
+            <picture></picture>
+          </div>
+        </a>
+        <figcaption>cap</figcaption>
+      </figure>
     `
     const expected = html`
-      <figure><a href="x"><picture></picture></a><figcaption>cap</figcaption></figure>
+      <figure>
+        <a href="x">
+          <picture></picture>
+        </a>
+        <figcaption>cap</figcaption>
+      </figure>
     `
 
     expect(await transform(value)).toBe(expected)
@@ -196,8 +218,14 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
 
   it('should preserve a wrapper that is the target of an in-page fragment link', async () => {
     const value = html`
-      <p><sup><a href="#fn-1">1</a></sup></p>
-      <div class="footnote-definition" id="fn-1"><p>The note.</p></div>
+      <p>
+        <sup>
+          <a href="#fn-1">1</a>
+        </sup>
+      </p>
+      <div class="footnote-definition" id="fn-1">
+        <p>The note.</p>
+      </div>
     `
 
     expect(await transform(value)).toBe(value)
@@ -227,7 +255,11 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
 
   it('should keep a figure whose link wraps an image', async () => {
     const value = html`
-      <figure><a href="https://example.com/full.jpg"><img src="https://example.com/thumb.jpg"></a></figure>
+      <figure>
+        <a href="https://example.com/full.jpg">
+          <img src="https://example.com/thumb.jpg">
+        </a>
+      </figure>
     `
 
     expect(await transform(value)).toEqualHtml(value)
@@ -235,7 +267,10 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
 
   it('should keep a figure whose link sits next to a caption', async () => {
     const value = html`
-      <figure><a href="https://example.com/post">Post</a><figcaption>A caption</figcaption></figure>
+      <figure>
+        <a href="https://example.com/post">Post</a>
+        <figcaption>A caption</figcaption>
+      </figure>
     `
 
     expect(await transform(value)).toEqualHtml(value)
@@ -244,7 +279,9 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
   it('should keep a figure holding a placeholder next to its link', async () => {
     const value = html`
       <figure>
-        <div data-embed-provider="youtube" data-embed-src="https://www.youtube.com/embed/abc"><a href="https://www.youtube.com/watch?v=abc">Watch</a></div>
+        <div data-embed-provider="youtube" data-embed-src="https://www.youtube.com/embed/abc">
+          <a href="https://www.youtube.com/watch?v=abc">Watch</a>
+        </div>
       </figure>
     `
 

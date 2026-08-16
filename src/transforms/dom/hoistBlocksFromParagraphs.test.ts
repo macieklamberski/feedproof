@@ -90,9 +90,11 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
     it('should split through an inline ancestor without keeping its husk', async () => {
       const value = '<p>Before <em>emphasised <i class="marker">Block</i> after</em>.</p>'
       const expected = html`
-        <p>Before <em>emphasised </em></p>
+        <p>Before <em>emphasised </em>
+        </p>
         <div data-block="">Block</div>
-        <p><em> after</em>.</p>
+        <p>
+          <em> after</em>.</p>
       `
 
       expect(await transform(value)).toEqualHtml(expected)
@@ -144,7 +146,8 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
       const expected = html`
         <p>Before </p>
         <div data-block="">Block</div>
-        <p> <img src="a.jpg"></p>
+        <p> <img src="a.jpg">
+        </p>
       `
 
       expect(await transform(value)).toBe(expected)
@@ -168,7 +171,9 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
 
       const expected = html`
         <p>Before </p>
-        <div data-block=""><div data-inner="">Inner</div></div>
+        <div data-block="">
+          <div data-inner="">Inner</div>
+        </div>
         <p> after</p>
       `
       const result = await applyDomTransforms(document, [hoistBlocksFromParagraphs(baseContext)])

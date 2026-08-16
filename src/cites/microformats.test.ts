@@ -13,7 +13,9 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
           <a class="u-url" href="https://example.com/post">
             <span class="p-name">Page title</span>
           </a>
-          by <span class="p-author h-card"><span class="p-name">Author name</span></span>
+          by <span class="p-author h-card">
+            <span class="p-name">Author name</span>
+          </span>
           <details open>
             <summary>Post details</summary>
             <blockquote class="p-summary">Preview text</blockquote>
@@ -37,7 +39,9 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
     it('should extract the date and the publisher of a cited article', async () => {
       const value = html`
         <span class="h-cite">
-          <a class="u-url" href="https://example.com/article"><span class="p-name">Article title</span></a>
+          <a class="u-url" href="https://example.com/article">
+            <span class="p-name">Article title</span>
+          </a>
           <time class="dt-published" datetime="2026-03-04T09:15:00Z">March 4, 2026</time>
           in <cite class="p-publication">The Journal</cite>
         </span>
@@ -73,10 +77,14 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
     it('should not take the author url or name when the author is a nested h-card', async () => {
       const value = html`
         <span class="u-read-of h-cite">
-          <a class="u-url" href="https://example.com/book"><span class="p-name">Book title</span></a>
+          <a class="u-url" href="https://example.com/book">
+            <span class="p-name">Book title</span>
+          </a>
           by
           <span class="p-author h-card">
-            <a class="u-url" href="https://example.com/author"><span class="p-name">Author name</span></a>
+            <a class="u-url" href="https://example.com/author">
+              <span class="p-name">Author name</span>
+            </a>
           </span>
         </span>
       `
@@ -270,7 +278,9 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
       const value = html`
         <div class="u-like-of h-cite">
           <a class="u-url p-name" href="https://example.com/post">Page title</a>
-          <div class="e-content"><p>The cited post's body.</p></div>
+          <div class="e-content">
+            <p>The cited post's body.</p>
+          </div>
         </div>
       `
       const expected: CiteResolverResult = {
@@ -289,7 +299,9 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
         <div class="h-cite">
           <a class="u-url p-name" href="https://example.com/post">Page title</a>
           <p class="p-summary">Short summary.</p>
-          <div class="e-content"><p>The much longer body.</p></div>
+          <div class="e-content">
+            <p>The much longer body.</p>
+          </div>
         </div>
       `
       const expected: CiteResolverResult = {
@@ -306,7 +318,9 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
       const value = html`
         <div class="h-cite">
           <a class="u-url p-name" href="https://example.com/post">Page title</a>
-          <div class="e-content"><p>The much longer body.</p></div>
+          <div class="e-content">
+            <p>The much longer body.</p>
+          </div>
           <p class="p-summary">Short summary.</p>
         </div>
       `
@@ -379,7 +393,9 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
       const value = html`
         <span class="h-cite">
           <span class="p-author h-card">
-            <a class="u-url" href="https://example.com/author"><span class="p-name">Author name</span></a>
+            <a class="u-url" href="https://example.com/author">
+              <span class="p-name">Author name</span>
+            </a>
           </span>
         </span>
       `

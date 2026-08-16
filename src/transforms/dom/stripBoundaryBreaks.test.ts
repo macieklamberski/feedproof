@@ -54,8 +54,12 @@ describeForEachParser('stripBoundaryBreaks', (parseHtml) => {
 
     it('should process multiple paragraphs independently', async () => {
       const value = html`
-        <p><br>First<br></p>
-        <p><br>Second<br></p>
+        <p>
+          <br>First<br>
+        </p>
+        <p>
+          <br>Second<br>
+        </p>
       `
       const expected = html`
         <p>First</p>
@@ -131,8 +135,12 @@ describeForEachParser('stripBoundaryBreaks', (parseHtml) => {
 
     it('should strip from both p and sibling div', async () => {
       const value = html`
-        <p><br>Para<br></p>
-        <div><br>Div<br></div>
+        <p>
+          <br>Para<br>
+        </p>
+        <div>
+          <br>Div<br>
+        </div>
       `
       const expected = html`
         <p>Para</p>

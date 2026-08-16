@@ -226,7 +226,8 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
         const value = html`
           <blockquote class="twitter-tweet">
             <p></p>
-            <p>&mdash;  (@) <a href="https://twitter.com/user/status/123456789012345">May 1, 2024</a></p>
+            <p>&mdash;  (@) <a href="https://twitter.com/user/status/123456789012345">May 1, 2024</a>
+            </p>
           </blockquote>
         `
         const expected: EmbedResolverResult = {
@@ -319,7 +320,8 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
           class="twitter-video"
           data-lang="de"
         >
-          <p lang="en" dir="ltr">Tweet text with a video. <a href="https://t.co/mjQaqccCMe">pic.twitter.com/mjQaqccCMe</a></p>
+          <p lang="en" dir="ltr">Tweet text with a video. <a href="https://t.co/mjQaqccCMe">pic.twitter.com/mjQaqccCMe</a>
+          </p>
           <p>
             — niner (@itsniner)
             <a href="https://twitter.com/itsniner/status/698590349225287682">13. Februar 2016</a>
@@ -433,7 +435,9 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
         const value = html`
           <blockquote class="twitter-tweet">
             <p>Tweet text here.</p>
-            <p><a href="https://nitter.d420.de/user/status/123456789012345">May 12, 2020</a></p>
+            <p>
+              <a href="https://nitter.d420.de/user/status/123456789012345">May 12, 2020</a>
+            </p>
           </blockquote>
         `
         const expected: EmbedResolverResult = {
@@ -454,7 +458,9 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
         const value = html`
           <blockquote class="twitter-tweet">
             <p>Tweet text here.</p>
-            <p><a href="https://xcancel.com/user/status/123456789012345">May 12, 2020</a></p>
+            <p>
+              <a href="https://xcancel.com/user/status/123456789012345">May 12, 2020</a>
+            </p>
           </blockquote>
         `
         const expected: EmbedResolverResult = {
@@ -475,7 +481,9 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
         const value = html`
           <blockquote class="twitter-tweet">
             <p>Tweet text here.</p>
-            <p><a href="https://fxtwitter.com/user/status/123456789012345">May 12, 2020</a></p>
+            <p>
+              <a href="https://fxtwitter.com/user/status/123456789012345">May 12, 2020</a>
+            </p>
           </blockquote>
         `
         const expected: EmbedResolverResult = {
@@ -496,7 +504,9 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
         const value = html`
           <blockquote class="twitter-tweet">
             <p>Tweet text here.</p>
-            <p><a href="https://vxtwitter.com/user/status/123456789012345">May 12, 2020</a></p>
+            <p>
+              <a href="https://vxtwitter.com/user/status/123456789012345">May 12, 2020</a>
+            </p>
           </blockquote>
         `
         const expected: EmbedResolverResult = {
@@ -517,7 +527,9 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
         const value = html`
           <blockquote class="twitter-tweet">
             <p>Tweet text here.</p>
-            <p><a href="https://fixupx.com/user/status/123456789012345">May 12, 2020</a></p>
+            <p>
+              <a href="https://fixupx.com/user/status/123456789012345">May 12, 2020</a>
+            </p>
           </blockquote>
         `
         const expected: EmbedResolverResult = {
@@ -536,7 +548,9 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
         const value = html`
           <blockquote class="twitter-tweet">
             <p>Tweet text here.</p>
-            <p><a href="https://fixvx.com/user/status/123456789012345">May 12, 2020</a></p>
+            <p>
+              <a href="https://fixvx.com/user/status/123456789012345">May 12, 2020</a>
+            </p>
           </blockquote>
         `
         const expected: EmbedResolverResult = {
@@ -555,7 +569,9 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
         const value = html`
           <blockquote class="twitter-tweet">
             <p>Tweet text here.</p>
-            <p><a href="https://twittpr.com/user/status/123456789012345">May 12, 2020</a></p>
+            <p>
+              <a href="https://twittpr.com/user/status/123456789012345">May 12, 2020</a>
+            </p>
           </blockquote>
         `
         const expected: EmbedResolverResult = {
@@ -576,7 +592,9 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
         const value = html`
           <blockquote class="twitter-tweet">
             <p>Tweet text here.</p>
-            <p><a href="https://nitter.net/user">user</a></p>
+            <p>
+              <a href="https://nitter.net/user">user</a>
+            </p>
           </blockquote>
         `
 
@@ -587,7 +605,9 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
         const value = html`
           <blockquote class="twitter-tweet">
             <p>Tweet text here.</p>
-            <p><a href="https://nitter.net/pic/media%2FABC.jpg">Photo</a></p>
+            <p>
+              <a href="https://nitter.net/pic/media%2FABC.jpg">Photo</a>
+            </p>
           </blockquote>
         `
 

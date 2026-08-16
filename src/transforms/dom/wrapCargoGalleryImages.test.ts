@@ -34,7 +34,9 @@ describeForEachParser('wrapCargoGalleryImages', (parseHtml) => {
 
     it('should wrap the enclosing textless link', async () => {
       const value = html`
-        <a href="https://example.com/project"><img src="https://freight.cargo.site/i/aaa/1.jpg"></a>
+        <a href="https://example.com/project">
+          <img src="https://freight.cargo.site/i/aaa/1.jpg">
+        </a>
       `
       const expected = html`
         <figure>

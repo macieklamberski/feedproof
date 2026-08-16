@@ -37,7 +37,9 @@ describeForEachParser('WordPress', (parseHtml) => {
     // resolver placeholders it) while stripNonContentElements removes the notice.
     it('should recover the gated video and strip the "please accept" notice', async () => {
       const value = html`
-        <p><iframe class="fusion-hidden" data-privacy-type="youtube" src="" title="YouTube video player" data-privacy-src="https://www.youtube.com/embed/0OqYNLrUoes?si=ZEdmlrLKAggBE_AS" width="560" height="315"></iframe></p>
+        <p>
+          <iframe class="fusion-hidden" data-privacy-type="youtube" src="" title="YouTube video player" data-privacy-src="https://www.youtube.com/embed/0OqYNLrUoes?si=ZEdmlrLKAggBE_AS" width="560" height="315"></iframe>
+        </p>
         <div class="fusion-privacy-placeholder" style="width:560px; height:315px;" data-privacy-type="youtube">
           <div class="fusion-privacy-placeholder-content">
             <div class="fusion-privacy-label">For privacy reasons YouTube needs your permission to be loaded.</div>

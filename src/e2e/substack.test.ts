@@ -121,8 +121,12 @@ describeForEachParser('Substack', (parseHtml) => {
           <figure>
             <a class="image-link image2" href="https://cdn.example.com/full.png" data-component-name="Image2ToDOM">
               <div class="image2-inset">
-                <picture><img src="https://cdn.example.com/img.png" width="600" height="400" alt="" /></picture>
-                <div class="image-link-expand"><button class="restack-image">restack</button></div>
+                <picture>
+                  <img src="https://cdn.example.com/img.png" width="600" height="400" alt="" />
+                </picture>
+                <div class="image-link-expand">
+                  <button class="restack-image">restack</button>
+                </div>
               </div>
             </a>
           </figure>
@@ -591,15 +595,21 @@ describeForEachParser('Substack', (parseHtml) => {
     // Passes through: the footnote kind is parked, so the anchor stays inline and the
     // footnote body unwraps into ordinary paragraphs that keep the back link.
     const value = html`
-      <p>A claim in the body.<a class="footnote-anchor" data-component-name="FootnoteAnchorToDOM" id="footnote-anchor-1" href="#footnote-1" target="_self">1</a></p>
+      <p>A claim in the body.<a class="footnote-anchor" data-component-name="FootnoteAnchorToDOM" id="footnote-anchor-1" href="#footnote-1" target="_self">1</a>
+      </p>
       <div class="footnote" data-component-name="FootnoteToDOM">
         <a id="footnote-1" href="#footnote-anchor-1" class="footnote-number" contenteditable="false" target="_self">1</a>
-        <div class="footnote-content"><p>The footnote text.</p></div>
+        <div class="footnote-content">
+          <p>The footnote text.</p>
+        </div>
       </div>
     `
     const expected = html`
-      <p>A claim in the body.<a class="footnote-anchor" data-component-name="FootnoteAnchorToDOM" id="footnote-anchor-1" href="#footnote-1" target="_self">1</a></p>
-      <p><a id="footnote-1" href="#footnote-anchor-1" class="footnote-number" contenteditable="false" target="_self">1</a></p>
+      <p>A claim in the body.<a class="footnote-anchor" data-component-name="FootnoteAnchorToDOM" id="footnote-anchor-1" href="#footnote-1" target="_self">1</a>
+      </p>
+      <p>
+        <a id="footnote-1" href="#footnote-anchor-1" class="footnote-number" contenteditable="false" target="_self">1</a>
+      </p>
       <p>The footnote text.</p>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
@@ -664,9 +674,17 @@ describeForEachParser('Substack', (parseHtml) => {
     const expected = html`
       <link rel="stylesheet" href="https://github.githubassets.com/assets/gist-embed-b1ee75c43dbe.css">
       <div data-table="">
-        <table class="highlight"><tbody><tr><td class="blob-code">print("hello")</td></tr></tbody></table>
+        <table class="highlight">
+          <tbody>
+            <tr>
+              <td class="blob-code">print("hello")</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <p><a href="https://gist.github.com/caseyauthor/abc123/raw/">view raw</a> hosted with ❤ by <a href="https://github.com">GitHub</a></p>
+      <p>
+        <a href="https://gist.github.com/caseyauthor/abc123/raw/">view raw</a> hosted with ❤ by <a href="https://github.com">GitHub</a>
+      </p>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -688,12 +706,14 @@ describeForEachParser('Substack', (parseHtml) => {
             <a
               class="file-embed-button wide"
               href="https://examplepub.substack.com/api/v1/file/2b9c5d1e-4f3a-4b6c-8d7e-9f0a1b2c3d4e.pdf"
-            ><span class="file-embed-button-text">Download</span></a>
+            ><span class="file-embed-button-text">Download</span>
+            </a>
           </div>
           <a
             class="file-embed-button narrow"
             href="https://examplepub.substack.com/api/v1/file/2b9c5d1e-4f3a-4b6c-8d7e-9f0a1b2c3d4e.pdf"
-          ><span class="file-embed-button-text">Download</span></a>
+          ><span class="file-embed-button-text">Download</span>
+          </a>
         </div>
       </div>
     `
@@ -701,8 +721,16 @@ describeForEachParser('Substack', (parseHtml) => {
       <p>Before.</p>
       <p>Three Poems</p>
       <p>31.9KB ∙ PDF file</p>
-      <p><a class="file-embed-button wide" href="https://examplepub.substack.com/api/v1/file/2b9c5d1e-4f3a-4b6c-8d7e-9f0a1b2c3d4e.pdf"><span class="file-embed-button-text">Download</span></a></p>
-      <p><a class="file-embed-button narrow" href="https://examplepub.substack.com/api/v1/file/2b9c5d1e-4f3a-4b6c-8d7e-9f0a1b2c3d4e.pdf"><span class="file-embed-button-text">Download</span></a></p>
+      <p>
+        <a class="file-embed-button wide" href="https://examplepub.substack.com/api/v1/file/2b9c5d1e-4f3a-4b6c-8d7e-9f0a1b2c3d4e.pdf">
+          <span class="file-embed-button-text">Download</span>
+        </a>
+      </p>
+      <p>
+        <a class="file-embed-button narrow" href="https://examplepub.substack.com/api/v1/file/2b9c5d1e-4f3a-4b6c-8d7e-9f0a1b2c3d4e.pdf">
+          <span class="file-embed-button-text">Download</span>
+        </a>
+      </p>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -1093,10 +1121,12 @@ describeForEachParser('Substack', (parseHtml) => {
     // resolveMediaDimensions owns it: the bare v1 img carries its size only in the
     // extension-less _WxH filename suffix.
     const value = html`
-      <p>Text before. <img style="" src="https://substackcdn.com/image/fetch/w_1100,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2Faa11bb22-cc33-4d44-8e55-ff6677889900_240x298" data-component-name="ImageToDOM"></p>
+      <p>Text before. <img style="" src="https://substackcdn.com/image/fetch/w_1100,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2Faa11bb22-cc33-4d44-8e55-ff6677889900_240x298" data-component-name="ImageToDOM">
+      </p>
     `
     const expected = html`
-      <p>Text before. <img width="240" height="298" src="https://substackcdn.com/image/fetch/w_1100,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2Faa11bb22-cc33-4d44-8e55-ff6677889900_240x298" data-component-name="ImageToDOM"></p>
+      <p>Text before. <img width="240" height="298" src="https://substackcdn.com/image/fetch/w_1100,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2Faa11bb22-cc33-4d44-8e55-ff6677889900_240x298" data-component-name="ImageToDOM">
+      </p>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -1249,7 +1279,11 @@ describeForEachParser('Substack', (parseHtml) => {
     const value = html`
       <p>Before.</p>
       <div class="subscribe-widget is-signed-up is-fully-subscribed" data-component-name="SubscribeWidget">
-        <p class="button-wrapper"><a class="button primary" href="https://examplepub.substack.com/subscribe"><span>Subscribe</span></a></p>
+        <p class="button-wrapper">
+          <a class="button primary" href="https://examplepub.substack.com/subscribe">
+            <span>Subscribe</span>
+          </a>
+        </p>
       </div>
       <p>After.</p>
     `
@@ -1284,11 +1318,14 @@ describeForEachParser('Substack', (parseHtml) => {
       <img class="install-substack-app-embed-img" src="https://substackcdn.com/image/fetch/f_auto/icon.png">
       <p>Get more from Casey Author in the Substack app</p>
       <p>Available for iOS and Android</p>
-      <p><a
-        href="https://substack.com/app/app-store-redirect?utm_campaign=app-marketing"
-        target="_blank"
-        class="install-substack-app-embed-link"
-      ><button class="install-substack-app-embed-btn button primary">Get the app</button></a></p>
+      <p>
+        <a
+          href="https://substack.com/app/app-store-redirect?utm_campaign=app-marketing"
+          target="_blank"
+          class="install-substack-app-embed-link"
+        ><button class="install-substack-app-embed-btn button primary">Get the app</button>
+        </a>
+      </p>
       <p>After.</p>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })

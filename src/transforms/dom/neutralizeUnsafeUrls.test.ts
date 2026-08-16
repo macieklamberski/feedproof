@@ -69,7 +69,9 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
 
     it('should leave mailto, tel and fragment links untouched', async () => {
       const value = html`
-        <a href="mailto:a@b.com">mail</a><a href="tel:+123">call</a><a href="#section">jump</a>
+        <a href="mailto:a@b.com">mail</a>
+        <a href="tel:+123">call</a>
+        <a href="#section">jump</a>
       `
 
       expect(await transform(value)).toBe(value)

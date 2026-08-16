@@ -42,7 +42,9 @@ describeForEachParser('convertLazyImageContainers', (parseHtml) => {
 
   it('should leave a wrapper around a lazy video iframe', async () => {
     const value = html`
-      <div data-src="https://example.com/x.jpg"><iframe src="about:blank"></iframe></div>
+      <div data-src="https://example.com/x.jpg">
+        <iframe src="about:blank"></iframe>
+      </div>
     `
 
     expect(await transform(value)).toBe(value)

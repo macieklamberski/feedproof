@@ -461,7 +461,8 @@ describeForEachParser('codepenWidgetEmbedResolver', (parseHtml) => {
           data-height="300"
           data-href="https://codepen.io/argyleink/pen/XJpKqXm"
         >
-          <span>See the Pen <a href="https://codepen.io/argyleink/pen/XJpKqXm">Parallax</a></span>
+          <span>See the Pen <a href="https://codepen.io/argyleink/pen/XJpKqXm">Parallax</a>
+          </span>
         </p>
       `
       const expected: EmbedResolverResult = {

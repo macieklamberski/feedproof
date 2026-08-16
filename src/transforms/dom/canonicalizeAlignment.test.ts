@@ -85,7 +85,9 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
     it('should relocate a picture-level signal onto the inner image', async () => {
       const value = '<picture class="aligncenter"><img src="a.jpg"></picture>'
       const expected = html`
-        <picture class="aligncenter"><img src="a.jpg" data-align="center"></picture>
+        <picture class="aligncenter">
+          <img src="a.jpg" data-align="center">
+        </picture>
       `
 
       expect(await transform(value)).toEqualHtml(expected)
@@ -104,7 +106,9 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
       const value = '<div class="aligncenter"><img src="a.jpg"><img src="b.jpg"></div>'
       const expected = html`
         <div class="aligncenter">
-        <img src="a.jpg" data-align="center"><img src="b.jpg" data-align="center"></div>
+          <img src="a.jpg" data-align="center">
+          <img src="b.jpg" data-align="center">
+        </div>
       `
 
       expect(await transform(value)).toEqualHtml(expected)

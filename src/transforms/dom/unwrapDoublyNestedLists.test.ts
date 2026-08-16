@@ -12,8 +12,14 @@ describeForEachParser('unwrapDoublyNestedLists', (parseHtml) => {
   describe('happy paths', () => {
     it('should unwrap a wp-block-list ul wrapper', async () => {
       const value = html`
-        <ul class="wp-block-list"><li style="list-style-type: none;"><ul><li>A</li><li>B</li></ul>
-        </li></ul>
+        <ul class="wp-block-list">
+          <li style="list-style-type: none;">
+            <ul>
+              <li>A</li>
+              <li>B</li>
+            </ul>
+          </li>
+        </ul>
       `
       const expected = '<ul><li>A</li><li>B</li></ul>'
 
@@ -22,8 +28,14 @@ describeForEachParser('unwrapDoublyNestedLists', (parseHtml) => {
 
     it('should unwrap a wp-block-list ol wrapper', async () => {
       const value = html`
-        <ol class="wp-block-list"><li style="list-style-type: none;"><ol><li>One</li><li>Two</li>
-        </ol></li></ol>
+        <ol class="wp-block-list">
+          <li style="list-style-type: none;">
+            <ol>
+              <li>One</li>
+              <li>Two</li>
+            </ol>
+          </li>
+        </ol>
       `
       const expected = '<ol><li>One</li><li>Two</li></ol>'
 
@@ -74,12 +86,28 @@ describeForEachParser('unwrapDoublyNestedLists', (parseHtml) => {
 
     it('should unwrap multiple sibling wrapper lists independently', async () => {
       const value = html`
-        <ul><li><ul><li>A</li></ul></li></ul>
-        <ol><li><ol><li>One</li></ol></li></ol>
+        <ul>
+          <li>
+            <ul>
+              <li>A</li>
+            </ul>
+          </li>
+        </ul>
+        <ol>
+          <li>
+            <ol>
+              <li>One</li>
+            </ol>
+          </li>
+        </ol>
       `
       const expected = html`
-        <ul><li>A</li></ul>
-        <ol><li>One</li></ol>
+        <ul>
+          <li>A</li>
+        </ul>
+        <ol>
+          <li>One</li>
+        </ol>
       `
 
       expect(await transform(value)).toBe(expected)
@@ -87,7 +115,13 @@ describeForEachParser('unwrapDoublyNestedLists', (parseHtml) => {
 
     it('should drop the outer list class and id', async () => {
       const value = html`
-        <ul class="outer" id="o"><li><ul class="inner" id="i"><li>A</li></ul></li></ul>
+        <ul class="outer" id="o">
+          <li>
+            <ul class="inner" id="i">
+              <li>A</li>
+            </ul>
+          </li>
+        </ul>
       `
       const expected = '<ul class="inner" id="i"><li>A</li></ul>'
 

@@ -26,8 +26,12 @@ describeForEachParser('unwrapHeadingBold', (parseHtml) => {
 
     it('should unwrap across heading levels', async () => {
       const value = html`
-        <h1><strong>One</strong></h1>
-        <h4><b>Four</b></h4>
+        <h1>
+          <strong>One</strong>
+        </h1>
+        <h4>
+          <b>Four</b>
+        </h4>
       `
       const expected = html`
         <h1>One</h1>
@@ -119,10 +123,18 @@ describeForEachParser('unwrapHeadingBold', (parseHtml) => {
 
     it('should unwrap past an inline element holding neither text nor media', async () => {
       const value = html`
-        <h4><strong><a href="https://example.com/work">Work</a></strong><a href="https://example.com/work"> </a></h4>
+        <h4>
+          <strong>
+            <a href="https://example.com/work">Work</a>
+          </strong>
+          <a href="https://example.com/work"> </a>
+        </h4>
       `
       const expected = html`
-        <h4><a href="https://example.com/work">Work</a><a href="https://example.com/work"> </a></h4>
+        <h4>
+          <a href="https://example.com/work">Work</a>
+          <a href="https://example.com/work"> </a>
+        </h4>
       `
 
       expect(await transform(value)).toBe(expected)
@@ -138,7 +150,9 @@ describeForEachParser('unwrapHeadingBold', (parseHtml) => {
       const value = html`
         <h2>
           <strong>Title</strong>
-          <a href="https://example.com"><img src="https://example.com/icon.png"></a>
+          <a href="https://example.com">
+            <img src="https://example.com/icon.png">
+          </a>
         </h2>
       `
 
