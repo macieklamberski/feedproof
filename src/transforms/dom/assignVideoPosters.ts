@@ -123,8 +123,8 @@ export const assignVideoPosters: DomTransform = () => (document) => {
     }
   }
 
-  // (B) An injected image enclosure on a video-led item — a video is embedded and
-  // the item has no inline image of its own — is the video's poster.
+  // (B) An injected image enclosure on a video-led item: a video is embedded and
+  // the item has no inline image of its own: is the video's poster.
   const video = findVideoElement(document)
   if (!video || document.querySelector(`img[src]:not([${enclosureMarker}])`)) {
     return

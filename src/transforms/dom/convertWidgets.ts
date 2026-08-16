@@ -196,7 +196,7 @@ export const convertWidgets: DomTransform = (context) => {
         // A rebuild transform (e.g. a lazy-load facade) may have recovered the publisher's
         // real poster and stashed it on the element as `data-thumbnail`. Prefer it over the
         // resolver's URL-derived guess, which is only a safe-default size (e.g. YouTube's
-        // hqdefault) — the carried poster is the exact frame the publisher chose.
+        // hqdefault): the carried poster is the exact frame the publisher chose.
         const carriedThumbnail = element.getAttribute('data-thumbnail') || undefined
 
         const placeholderMetadata = {
@@ -241,7 +241,7 @@ export const convertWidgets: DomTransform = (context) => {
       // would be the worst option: it reads as resolved, so a reader draws a click-to-load
       // button for a file no browser has been able to run since 2021, and minting it here
       // would also discard the `<object>`'s fallback content. Untouched, the markup degrades
-      // by the platform's own rules instead — a browser renders an object's fallback children
+      // by the platform's own rules instead: a browser renders an object's fallback children
       // when it cannot run the object, and an allowlist sanitizer that drops the shell keeps
       // them the same way. The Flash resolvers run above this and are unaffected: each reads
       // a real id out of its carrier and mints a modern player, so only what nothing could

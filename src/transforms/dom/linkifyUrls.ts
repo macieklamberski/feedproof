@@ -48,7 +48,7 @@ export const linkifyUrls: DomTransform = (context) => {
         }
 
         // These anchors are minted long after cleanAnchorUrls, so they are the one link
-        // shape the caller's cleanUrlFn would otherwise never reach — including for the
+        // shape the caller's cleanUrlFn would otherwise never reach: including for the
         // safety pass, which would judge a bare redirect wrapper by its own host.
         const cleaned = cleanUrlFn?.(link.href) ?? link.href
         const anchor = document.createElement('a')

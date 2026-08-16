@@ -91,7 +91,7 @@ const extractBlueskyPostFromUrl = (link: string): BlueskyPost | undefined => {
 
 // `EnrichEmbedFn` is handed `{provider, id}` and nothing else, so the id has to address the
 // post on its own. A record key does not: it is unique only within one repository, and every
-// endpoint that answers for a post — the AT URI, the permalink, the player — is keyed by the
+// endpoint that answers for a post, the AT URI, the permalink, the player, is keyed by the
 // authority as well. So the id is the pair, and both endpoints rebuild from it.
 //
 // The authority is whichever form the markup gave. `getPostThread` and oEmbed both answer a

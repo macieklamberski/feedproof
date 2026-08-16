@@ -34,7 +34,7 @@ const githubDescription = (paragraph: Element): string | undefined => {
 
 // Onebox engines whose cards are not link previews, so a cite would misrepresent what the
 // author linked; their markup passes through untouched. Only engines that render as
-// `aside.onebox` need listing — the other social engines (TikTok, Reddit, Facebook,
+// `aside.onebox` need listing: the other social engines (TikTok, Reddit, Facebook,
 // Twitch) emit bare iframes, and Mastodon links go through the generic engine.
 export const omittedOneboxClasses = [
   'twitterstatus', // A social post: the heading is the author and the body the post text.

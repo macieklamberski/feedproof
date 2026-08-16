@@ -75,7 +75,7 @@ export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses
       }
 
       // Skip runs that contain a <pre> marked as author-distinct content
-      // (poetry stanzas, scriptural verses, leader-dotted ToCs) — those
+      // (poetry stanzas, scriptural verses, leader-dotted ToCs): those
       // are meant to render as separate blocks even when single-line.
       if (run.some(isPreserved)) {
         continue

@@ -47,7 +47,7 @@ const maxEdgeWrapperDepth = 200
 
 // Strip boundary <br>s from one edge of `container`, descending through inline
 // wrappers. A buffered run of skippables (whitespace, comments, <br>) is removed
-// only when it actually contained a <br> — so whitespace alone is left intact.
+// only when it actually contained a <br>, so whitespace alone is left intact.
 const stripEdge = (container: Node, trailing: boolean, depth = 0): void => {
   if (depth > maxEdgeWrapperDepth) {
     return
@@ -87,7 +87,7 @@ const stripEdge = (container: Node, trailing: boolean, depth = 0): void => {
       sawBr = false
       stripEdge(node, trailing, depth + 1)
 
-      // An emptied wrapper is transparent — keep walking outward past it.
+      // An emptied wrapper is transparent: keep walking outward past it.
       if (isVisuallyEmpty(node)) {
         node = next
         continue

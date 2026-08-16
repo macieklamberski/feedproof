@@ -7,14 +7,14 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
 
 // Some feeds (Steam news) leak the opening quote of the source `[previewyoutube="id]`
-// bbcode into the embed src, so it arrives as `/embed/"{id}` — the quote reaches the id
+// bbcode into the embed src, so it arrives as `/embed/"{id}`: the quote reaches the id
 // as a literal `"` (from a param) or percent-encoded `%22` (from a path segment). Strip a
 // leading stray quote so the real 11-char id still resolves instead of the video being
 // dropped to the generic iframe handler.
 const strayLeadingQuoteRegex = /^(?:%22|")/
 
 // `videoseries` (playlist embeds) and `live_stream` (channel live embeds) are YouTube embed
-// path-words, not video ids — but each is coincidentally 11 valid id chars, so it passes
+// path-words, not video ids, but each is coincidentally 11 valid id chars, so it passes
 // safeVideoIdRegex. Excluded here so extractVideoId never mistakes one for a video (a bogus
 // watch url and thumbnail); youtubeResolveEmbed handles them as playlist/live embeds below.
 const nonVideoIds = new Set(['videoseries', 'live_stream'])
@@ -39,7 +39,7 @@ export const isVideoId = (value: string): boolean => {
 // hqdefault always exists for a video, so it's the safe default. Higher-res variants
 // (maxresdefault, sddefault) give a sharper poster but only exist for some videos, so
 // we can't pick them blindly.
-// TODO: detect and prefer a higher-res thumbnail when present — the best available
+// TODO: detect and prefer a higher-res thumbnail when present. The best available
 // resolution varies per video, so it needs a probe (HEAD request) rather than a guess.
 export const composeThumbnailUrl = (videoId: string): string => {
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
@@ -83,8 +83,8 @@ export const extractVideoId = (link: string): string | undefined => {
 
 // Parameters that change what the player shows, so a rebuilt src has to carry them: where
 // playback starts and ends, which playlist the video sits in and at which position, and the
-// window of a clip (`clip` is the clip id, `clipt` its encoded bounds — a clip embed needs
-// both). Everything else the publisher wrote — autoplay, `rel`, `si` and other tracking — is
+// window of a clip (`clip` is the clip id, `clipt` its encoded bounds: a clip embed needs
+// both). Everything else the publisher wrote, autoplay, `rel`, `si` and other tracking, is
 // dropped with the rest of the original query.
 export const youtubeEmbedParams = ['start', 'end', 'list', 'index', 'clip', 'clipt']
 
@@ -98,7 +98,7 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
 
   // A playlist or channel live embed is not a single video: it has no video id, no single
   // poster, and no `watch?v=` page. Keep the working src and give a canonical playlist/channel
-  // url, posterless. The id is the list/channel id — kept as the enrichment key (a playlist
+  // url, posterless. The id is the list/channel id: kept as the enrichment key (a playlist
   // resolves title + poster via YouTube's keyless oEmbed; a channel via the Data API).
   if (segments[0] === 'embed' && parsed) {
     if (segments[1] === 'videoseries') {

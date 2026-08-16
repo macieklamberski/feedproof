@@ -5,7 +5,7 @@ const headingSelector = 'h1, h2, h3, h4, h5'
 // When feed content contains an <h1>, the article body's heading hierarchy
 // collides with the reader's own page-level <h1> (article title). Shift every
 // heading down by one level (h1→h2, h2→h3, … , h5→h6) so the body sits below
-// the reader chrome. Bodies that already start at <h2> are left alone — no
+// the reader chrome. Bodies that already start at <h2> are left alone: no
 // gratuitous rewrites. <h6> stays as <h6> (no level seven to demote into;
 // collisions with the demoted-from-<h5> are accepted as harmless).
 export const demoteHeadings: DomTransform = () => {

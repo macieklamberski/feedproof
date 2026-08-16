@@ -45,7 +45,7 @@ const composeEmbedResult = (status: MastodonStatus): EmbedResolverResult => {
   return {
     provider: 'mastodon',
     // `EnrichEmbedFn` is handed `{provider, id}` and nothing else, and a status id is unique
-    // only within the instance that minted it — two instances number their posts from the
+    // only within the instance that minted it: two instances number their posts from the
     // same sequence. So the instance travels inside the id, or no lookup can be addressed
     // from a placeholder at all.
     id: `${status.host}/${status.id}`,

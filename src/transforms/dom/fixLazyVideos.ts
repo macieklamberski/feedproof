@@ -15,7 +15,7 @@ export const fixLazyVideos: DomTransform = (context) => (document) => {
       }
     }
 
-    // Promote a lazy src only when the element itself has nothing to play from — a
+    // Promote a lazy src only when the element itself has nothing to play from: a
     // usable src or a <source> child means the clip already resolves.
     if (isUsableSrc(video.getAttribute('src')) || video.querySelector('source')) {
       continue

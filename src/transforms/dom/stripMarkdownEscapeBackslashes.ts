@@ -3,8 +3,8 @@ import { isText } from '../../utils/dom.js'
 
 // Markdown's escape backslash leaks into some feeds' HTML as a literal `\` at the
 // very start of a paragraph, which the browser then renders as stray text:
-//   `<p>\</p>`        — a `\` on its own line that became a lone-backslash paragraph
-//   `<p>\ Let’s say…` — a `\` leaked at the start of a paragraph's text
+//   `<p>\</p>`       : a `\` on its own line that became a lone-backslash paragraph
+//   `<p>\ Let’s say…`: a `\` leaked at the start of a paragraph's text
 // Only a paragraph-leading backslash is touched. A `\` mid-text or before a <br>
 // is left alone: there it is overwhelmingly real content (Windows paths ending in
 // `\`, shell line continuations, LaTeX), not the markdown leak.

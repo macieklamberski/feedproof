@@ -19,12 +19,12 @@ const buildMediaKey = (element: Element, cleanUrlFn?: CleanUrlFn): string => {
   return cleanUrlFn ? cleanUrlFn(src) : src
 }
 
-// Removes an injected enclosure media element that duplicates inline content —
+// Removes an injected enclosure media element that duplicates inline content:
 // an image already present (in any size variant) or an audio/video/embed with the
 // same URL. Runs after injectEnclosures, which marks the elements it injects.
 export const stripDuplicateEnclosures: DomTransform = (context) => (document) => {
-  // Look for injected enclosures first (see walkElements). When there are none —
-  // the common case — skip the media scan and fingerprinting altogether.
+  // Look for injected enclosures first (see walkElements). When there are none:
+  // the common case: skip the media scan and fingerprinting altogether.
   const injected: Array<Element> = []
 
   walkElements(document, (element) => {
@@ -53,7 +53,7 @@ export const stripDuplicateEnclosures: DomTransform = (context) => (document) =>
       continue
     }
 
-    // Keep it — but drop the marker so it doesn't leak into the output.
+    // Keep it, but drop the marker so it doesn't leak into the output.
     element.removeAttribute(enclosureMarker)
   }
 }

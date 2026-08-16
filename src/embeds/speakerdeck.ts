@@ -4,7 +4,7 @@ import { attr, parseRatioDimensions } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Ids are lowercase hex, in two lengths. 32 chars is the current dashless UUID; 24 is the
-// legacy Mongo ObjectId Speaker Deck issued around 2011-2012, and those decks still play —
+// legacy Mongo ObjectId Speaker Deck issued around 2011-2012, and those decks still play:
 // every sampled one returns 200 on the player url. Accepting only the 32-char form costs 36
 // feeds, 25 of them resolving to nothing (measured 2026-08-11).
 const deckIdRegex = /^[0-9a-f]{24}(?:[0-9a-f]{8})?$/

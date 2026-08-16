@@ -46,8 +46,8 @@ export const audioboomResolveEmbed = (url: string): EmbedResolverResult | undefi
     provider: 'audioboom',
     id: post.id,
     // The form is preserved rather than upgraded. Minting v4 for a legacy embed would put a
-    // 300px player inside the 95px the publisher chose, and neither form can be probed —
-    // Audioboom 403s every user agent — so the safe move is to keep what the feed states.
+    // 300px player inside the 95px the publisher chose, and neither form can be probed:
+    // Audioboom 403s every user agent, so the safe move is to keep what the feed states.
     src: post.isCurrent
       ? `https://embeds.audioboom.com/posts/${post.id}/embed/v4`
       : `https://embeds.audioboom.com/posts/${post.id}/embed`,

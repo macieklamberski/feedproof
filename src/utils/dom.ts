@@ -307,12 +307,12 @@ export const hasAncestorWithTagName = (node: Node, tagSet: Set<string>, stopAt?:
   return false
 }
 
-// The registry of wrapper types this package generates — embed and cite placeholders,
+// The registry of wrapper types this package generates: embed and cite placeholders,
 // the table scroll wrapper, the code-block wrapper. A wrapper carries its contract in
 // `data-{type}-*` attributes and its children are a fixed shape a consumer reads or
 // replaces wholesale, so transforms that restructure containers treat it as opaque.
 // createPlaceholder only accepts these types, so a new widget fails to compile until it
-// is added here — and adding it makes the wrapper opaque everywhere at once. `table` and
+// is added here, and adding it makes the wrapper opaque everywhere at once. `table` and
 // `pre` are not minted through the factory (wrapTablesForScroll and highlightCode set
 // their attributes directly) and stay manual entries.
 export const generatedWrapperTypes = ['embed', 'cite', 'table', 'pre'] as const
@@ -325,7 +325,7 @@ export const isGeneratedWrapper = (element: Element): boolean => {
   return element.getAttributeNames().some((name) => startsWithAnyOf(name, generatedWrapperPrefixes))
 }
 
-// Matches `<prop>: <number>[px];` — px is optional, other units (em/rem/%) don't match.
+// Matches `<prop>: <number>[px];`: px is optional, other units (em/rem/%) don't match.
 // The numeric group gives each digit a single parse (`[0-9]+(?:\.[0-9]+)?|\.[0-9]+`, not
 // `[0-9]*\.?[0-9]+`): the ambiguous form backtracks quadratically on a long digit run
 // followed by a non-terminator, which `style` (an unbounded untrusted attribute) can carry.
@@ -369,7 +369,7 @@ const dimensionAttribute = (element: Element, name: string): number | undefined 
 }
 
 // Squarespace stamps the intrinsic size on `data-image-dimensions="2500x1695"`, and for
-// its gallery images (`img.thumb-image`) that is the only place the size exists — the
+// its gallery images (`img.thumb-image`) that is the only place the size exists: the
 // `src` is a resized CDN URL and there are no width/height attributes. It carries the same
 // value as the real attributes when both are present, so it is read as their fallback.
 const imageDimensionsRegex = /^\s*([0-9]+)\s*x\s*([0-9]+)\s*$/i
@@ -454,7 +454,7 @@ const getElementRatioDimensions = (
 }
 
 // Walks the element and its ancestors (the element plus up to `maxDepth` levels) and returns the
-// first ratio dimensions any of them declares — for an element whose own dimensions are unknown
+// first ratio dimensions any of them declares: for an element whose own dimensions are unknown
 // but which sits in a responsive wrapper. Only ascends into a parent that wraps this element
 // alone: a parent with other element children sizes the whole group, so its ratio isn't this
 // element's. Pass maxDepth 0 to read only the element itself.
@@ -484,7 +484,7 @@ export const getWrapperRatioDimensions = (
 }
 
 // Encodes an aspect ratio as placeholder dimensions: the 100×N pair encodes the ratio, not
-// absolute pixels. Private on purpose — every consumer wants the dimensions, never the raw
+// absolute pixels. Private on purpose: every consumer wants the dimensions, never the raw
 // ratio, so the parsers below are the only way in.
 const ratioDimensions = (ratio: number): { width: number; height: number } => {
   return { width: 100, height: Math.round(100 / ratio) }
@@ -527,7 +527,7 @@ const styleVisibilityHiddenRegex = /(?:^|;)\s*visibility\s*:\s*hidden/i
 
 // An element hidden from view: the `hidden` attribute, inline `display:none`, or
 // inline `visibility:hidden`. These are unambiguous. Other "hidden" signals are
-// overloaded and stay with their callers — `opacity:0` is usually a fade-in and
+// overloaded and stay with their callers: `opacity:0` is usually a fade-in and
 // `0×0` is the lazy-placeholder convention, both handled in removeTrackingPixels.
 export const isElementHidden = (element: Element): boolean => {
   if (element.hasAttribute('hidden')) {

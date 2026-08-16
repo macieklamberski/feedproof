@@ -8,7 +8,7 @@ import { jsonAttr } from '../../utils/dom.js'
 // Dailymotion, VideoPress): the real URL lives only in the widget's `data-settings` JSON and
 // the `.elementor-video` div is left empty for JS to fill at runtime. A reader runs no JS, so
 // the video never appears. Each entry takes the parsed settings and returns the URL the
-// matching platform's iframe player loads. The self-hosted source is the exception — it is
+// matching platform's iframe player loads. The self-hosted source is the exception: it is
 // rendered server-side as a real `<video>`, so it already works in a reader and is skipped.
 const iframeSources: Record<string, (settings: Record<string, unknown>) => string | undefined> = {
   youtube: (settings) => {

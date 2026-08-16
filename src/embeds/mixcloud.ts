@@ -52,9 +52,9 @@ export const extractMixcloudShow = (link: string): string | undefined => {
 // No thumbnail: the artwork url is only available through Mixcloud's API, and nothing in the
 // embed carries it.
 //
-// No height either. It is not a property of the show but of the embed's display options —
+// No height either. It is not a property of the show but of the embed's display options:
 // sampled from the corpus, `mini=1` is 60, `hide_cover=1` is 120 (sometimes 180) and the
-// artwork player is 400 or 480 — and every sampled iframe carries its own `height`, which the
+// artwork player is 400 or 480, and every sampled iframe carries its own `height`, which the
 // widget pass prefers over anything a resolver supplies.
 //
 // The `www` widget url is what publishers write and what Mixcloud documents; it 301s to

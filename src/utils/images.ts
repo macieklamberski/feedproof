@@ -6,8 +6,8 @@ import { pixelDimensionLimit } from './dom.js'
 
 // A candidate whose url is only a width/density descriptor (`225w`, `2x`), which a real
 // image url never is. The `srcset` parser is lenient: when a feed drops the urls and
-// leaves bare descriptors — a Jetpack/WordPress bug that ships `…768w, 225w, 563w` with
-// only the first url present — it reads each stray descriptor as a candidate whose url
+// leaves bare descriptors: a Jetpack/WordPress bug that ships `…768w, 225w, 563w` with
+// only the first url present: it reads each stray descriptor as a candidate whose url
 // IS the descriptor. Resolving that against the base url or handing it to an asset proxy
 // produces a request for a page that does not exist, so the wrapper below drops them.
 const descriptorOnlyUrl = /^\d+(?:\.\d+)?[wx]$/i
@@ -70,13 +70,13 @@ const bareHostSource = (capture: string): string => {
   return addMissingProtocol(decodeUrlPart(capture))
 }
 
-// Image CDNs/proxies that wrap the real source URL inside their own request — one
+// Image CDNs/proxies that wrap the real source URL inside their own request: one
 // entry per service. We key on the inner source so different render params of the same
 // image (width, format, quality, crop) collapse to one. Each pattern is host- or
 // path-anchored to a single CDN and captures the wrapped source (a url= query param, a
 // full URL at the end of the path, or a bare host+path for Photon); toSource turns that
 // capture into an absolute URL. Deliberately an explicit list rather than a generic
-// catch-all, so it stays auditable — an unlisted proxy is simply left as-is.
+// catch-all, so it stays auditable: an unlisted proxy is simply left as-is.
 type ImageProxy = {
   pattern: RegExp
   toSource: (capture: string, proxy: URL) => string | undefined
@@ -136,17 +136,17 @@ const pathTransforms: Array<PathTransform> = [
     strip: /=(?:s\d{1,4}|w\d{1,4}-h\d{1,4})(?:-[a-z]{1,3})*$/i,
     replace: '',
   },
-  // Wix: media/{id}~mv2.{ext}/v1/{transform}/{file} — key on the id before /v1/.
+  // Wix: media/{id}~mv2.{ext}/v1/{transform}/{file}: key on the id before /v1/.
   { host: /wixstatic\.com$/i, strip: /\/v1\/.+$/i, replace: '' },
-  // Ghost (self-hosted): /content/images/size/w{N}/... — drop the size directory.
+  // Ghost (self-hosted): /content/images/size/w{N}/...: drop the size directory.
   { strip: /\/content\/images\/size\/w\d+(?:h\d+)?\//i, replace: '/content/images/' },
   // Cloudinary upload (self-hosted, host-agnostic): /image/upload/{signature?}/
-  // {transforms?}/... — strip the signature and comma-joined transform segments.
+  // {transforms?}/...: strip the signature and comma-joined transform segments.
   {
     strip: /\/image\/upload\/(?:s--[^/]+--\/)?(?:[a-z]{1,3}_[^/,]+(?:,[a-z]{1,3}_[^/,]+)*\/)*/i,
     replace: '/image/upload/',
   },
-  // Medium: miro.medium.com/v2/{transforms}/{id}(-{width}).{ext} — key on the bare id.
+  // Medium: miro.medium.com/v2/{transforms}/{id}(-{width}).{ext}: key on the bare id.
   { host: /miro\.medium\.com$/i, strip: /\/v2\/(?:[^/]+\/)+/i, replace: '/' },
   { host: /miro\.medium\.com$/i, strip: /(?:-\d{2,4})?\.[a-z]+$/i, replace: '' },
 ]
@@ -163,7 +163,7 @@ const scriptLeaf = new RegExp(`\\.(?:${scriptExtensionLiterals.join('|')})$`, 'i
 const dimensionLeaf = /^(.*__)?\d{1,5}x\d{1,5}(\.[a-z0-9]+)?$/i
 // A dimension suffix on an otherwise-shared stem: a scaled copy, e.g.
 // "photo-800x450.jpg" or "photo_800x450.jpg" of "photo.jpg". Both separators occur
-// in the corpus — hyphen (WordPress) on ~10% of feeds, underscore on ~1.5%. The
+// in the corpus: hyphen (WordPress) on ~10% of feeds, underscore on ~1.5%. The
 // width-only "_800x" and retina "@2x" shapes stay out, each below 0.1% of feeds.
 const dimensionSuffix = /[-_]\d{1,5}x\d{1,5}(\.[a-z0-9]+)$/i
 
@@ -212,7 +212,7 @@ const unwrapProxiedImage = (url: string): string => {
 //     leading www., lowercase the host (DNS is case-insensitive), and normalize
 //     percent-encoding/unicode/duplicate slashes. The key is host + path with no
 //     protocol, so http and https collapse together too. The path's case is left
-//     alone — it is case-sensitive on most servers.
+//     alone: it is case-sensitive on most servers.
 //   - drop the query (cache-busters and ?w=/?width= render params), except on a script
 //     endpoint, where the query names the image instead of describing a rendition
 //   - collapse a -WxH or _WxH dimension suffix back to the base filename
