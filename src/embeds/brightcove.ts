@@ -127,7 +127,7 @@ export const brightcoveFlashEmbedResolver = createUrlEmbedResolver(
 
 // The player page as an ordinary iframe, `players.brightcove.net/{account}/{player}_{embed}
 // /index.html?videoId={id}`. It is the most common Brightcove carrier in the corpus at 243
-// feeds, more than the `<video-js>` element, and until now it fell through to the generic
+// feeds, more than the `<video-js>` element, and unclaimed it falls through to the generic
 // placeholder with no provider and no id.
 //
 // The account and video id are read back out, not the url passed through whole, because

@@ -11,13 +11,14 @@ const getChartId = (url: string | null | undefined): string | undefined => {
   return url?.match(chartIdRegex)?.[1]
 }
 
-// Datawrapper publishes a complete static PNG render of every chart at
-// `dwcdn.net/<id>/full.png`, derivable from the chart id alone, and names that same file in
-// the `<noscript>` of its own embed, so this is the platform's declared fallback rather than
-// a guess. The script form shows nothing without JS. The iframe form does render, but only by
-// loading a third-party frame the reader may not allow. The static render shows the chart
-// immediately either way. Emit a linked <img>: the chart inline, its interactive version one
-// click away, so the image transforms downstream dimension and proxy it like any other image.
+// Builds the chart as a linked <img>: the chart inline, its interactive version one click away,
+// so the image transforms downstream dimension and proxy it like any other image.
+//
+// Datawrapper publishes a complete static PNG render of every chart at `dwcdn.net/<id>/full.png`,
+// derivable from the chart id alone, and names that same file in the `<noscript>` of its own
+// embed, so this is the platform's declared fallback rather than a guess. It shows the chart
+// immediately whichever carrier the feed used: the script form shows nothing without JS, and the
+// iframe form renders only by loading a third-party frame the reader may not allow.
 const buildChartImage = (document: Document, chartId: string, alt: string | null): HTMLElement => {
   const image = document.createElement('img')
   image.setAttribute('src', `https://datawrapper.dwcdn.net/${chartId}/full.png`)

@@ -14,6 +14,7 @@ const sentinels: Record<UrlRole, string> = {
 // `\s` catches the whitespace cases but misses the other C0 controls (`\x01`-`\x08`, `\x0e`-`\x1f`),
 // so strip the whole C0 range first. The floor must hold on its own: a DOM-only pipeline has no
 // stripControlChars upstream, so it can't depend on `\s` alone.
+//
 // Built via new RegExp so the control-char escapes live in strings rather than in a regex literal.
 const urlIgnorableRanges = [
   '\\s', // ASCII + Unicode whitespace.
@@ -102,12 +103,13 @@ const srcsetTags = new Set(['img', 'source'])
 // colon in xlink:href is invalid in a CSS attribute selector.
 const hrefTagRoles: Record<string, UrlRole> = { a: 'link', image: 'media' }
 
-// Replaces unsafe URLs with an inert, role-appropriate sentinel while keeping the
-// element. Always enforces a dangerous-scheme floor (javascript:/vbscript:/data:text/html),
-// plus the caller's isSafeUrlFn policy when provided. Runs after URLs are resolved and
-// embeds/cites are placeholdered, and before proxyAssetUrls.
-// One walk covers every attribute the transform used to reach through ~20 separate
-// querySelectorAll calls (see walkElements).
+// Replaces unsafe URLs with an inert, role-appropriate sentinel while keeping the element.
+// Always enforces a dangerous-scheme floor (javascript:/vbscript:/data:text/html), plus the
+// caller's isSafeUrlFn policy when provided. Runs after URLs are resolved and embeds/cites are
+// placeholdered, and before proxyAssetUrls.
+//
+// One walk covers every attribute (see walkElements), instead of a querySelectorAll per
+// attribute: there are around 20 of them.
 export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
   return (document) => {
     walkElements(document, (element) => {

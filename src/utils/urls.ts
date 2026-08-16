@@ -97,13 +97,8 @@ export const pickUrlParams = (url: string, names: ReadonlyArray<string>): string
   return query ? `?${query}` : ''
 }
 
-// Resolves a relative URL against the base URL, keeping the original otherwise:
-// an already-absolute/opaque URL, or a relative one that can't be resolved (no
-// base). A placeholder URL is treated the same as a content URL: nothing is
-// normalized and nothing is dropped.
-// Overloaded so a definite URL returns a string (no undefined fallback needed at the
-// call site). Only a possibly-undefined input widens the result. The cast is needed
-// because the body's `string | undefined` doesn't satisfy the string-returning signature.
+// Overloaded so a definite URL returns a string, with no undefined fallback needed at the call
+// site. Only a possibly-undefined input widens the result.
 type ResolveOrKeepUrl = {
   (url: string, resolveUrlFn: ResolveUrlFn, baseUrl: string | undefined): string
   (
@@ -113,6 +108,11 @@ type ResolveOrKeepUrl = {
   ): string | undefined
 }
 
+// Resolves a relative URL against the base URL, keeping the original otherwise: an
+// already-absolute/opaque URL, or a relative one that can't be resolved (no base). A placeholder
+// URL is treated the same as a content URL: nothing is normalized and nothing is dropped. The
+// cast is needed because the body's `string | undefined` doesn't satisfy the string-returning
+// signature.
 export const resolveOrKeepUrl: ResolveOrKeepUrl = ((url, resolveUrlFn, baseUrl) => {
   if (!url || absoluteUrlRegex.test(url)) {
     return url || undefined

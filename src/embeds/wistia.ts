@@ -13,9 +13,9 @@ const jsonpSuffixRegex = /\.jsonp$/
 const wistiaHosts = ['wistia.net', 'wistia.com']
 
 // Three shapes, one id: `/embed/iframe/{id}` is the player, `/embed/medias/{id}.jsonp` the
-// script form's payload, and `/medias/{id}` the account page. rebuildWistiaEmbeds already
-// normalizes the JS facade into the first of those, so a facade that used to end as a
-// provider-less placeholder now resolves here too.
+// script form's payload, and `/medias/{id}` the account page. rebuildWistiaEmbeds normalizes the
+// JS facade into the first of those, so a facade resolves here too instead of ending as a
+// provider-less placeholder.
 export const extractWistiaId = (link: string): string | undefined => {
   const segments = getPathSegments(link)
   const start = segments[0] === 'embed' ? 1 : 0

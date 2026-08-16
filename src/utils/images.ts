@@ -4,12 +4,12 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { CleanUrlFn } from '../types.js'
 import { pixelDimensionLimit } from './dom.js'
 
-// A candidate whose url is only a width/density descriptor (`225w`, `2x`), which a real
-// image url never is. The `srcset` parser is lenient: when a feed drops the urls and
-// leaves bare descriptors: a Jetpack/WordPress bug that ships `…768w, 225w, 563w` with
-// only the first url present: it reads each stray descriptor as a candidate whose url
-// IS the descriptor. Resolving that against the base url or handing it to an asset proxy
-// produces a request for a page that does not exist, so the wrapper below drops them.
+// A candidate whose url is only a width/density descriptor (`225w`, `2x`), which a real image
+// url never is. The `srcset` parser is lenient: where a feed leaves a bare descriptor with no
+// url, it reads the descriptor itself as that candidate's url. A Jetpack/WordPress bug ships
+// `…768w, 225w, 563w` with only the first url present. Resolving such a candidate against the
+// base url, or handing it to an asset proxy, requests a page that does not exist, so the wrapper
+// below drops them.
 const descriptorOnlyUrl = /^\d+(?:\.\d+)?[wx]$/i
 // The lenient parser can leave a trailing comma on a malformed candidate's url.
 const trailingComma = /,$/

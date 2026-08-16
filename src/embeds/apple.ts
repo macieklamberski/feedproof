@@ -17,11 +17,11 @@ const safeIdRegex = /^(?:id\d+|\d+|[a-z]{2}\.[a-z0-9-]+)$/i
 const podcastIdPrefixRegex = /^id/
 
 // The player is fluid-width and fixed-height, and one item gets a much shorter box than a
-// collection. These are the heights the players render at, measured across widths. A music
-// video is the one kind that keeps a 16:9 picture instead, so it has none. Apple's own embed
-// code declares 150 for a song, which cuts 25px off the player it opens. They are a fallback
-// for the shapes that ship no size at all: a height the markup declares is the publisher's
-// choice and wins over these. The map doubles as the set of kinds that embed.
+// collection. These are the heights the players render at, measured across widths, and they are
+// a fallback for the shapes that ship no size at all: a height the markup declares is the
+// publisher's choice and wins over these. Apple's own embed code declares 150 for a song, which
+// cuts 25px off the player it opens. A music video is the one kind that keeps a 16:9 picture
+// instead, so it has none. The map doubles as the set of kinds that embed.
 const appleHeights: Record<string, number | undefined> = {
   album: 450,
   artist: 450,
