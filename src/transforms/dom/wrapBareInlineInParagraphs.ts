@@ -82,7 +82,7 @@ export const wrapBareInlineInParagraphs: DomTransform = () => {
 
       // Non-dissolving containers (li, td, blockquote, aside) only get paragraphs
       // when content is split by a block sibling. A plain single-run cell or item
-      // is left as-is, mirroring convertBreaksToParagraphs' single-chunk skip.
+      // is left as-is.
       const shouldWrap =
         alwaysWrapTags.has(container.localName) ||
         dissolvingTags.has(container.localName) ||

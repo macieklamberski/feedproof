@@ -51,10 +51,9 @@ const createMediaElement = (document: Document, result: MediaResolverResult): HT
   return media
 }
 
-// A container that parks its media URL in an attribute and builds the player with JS, so a
-// reader shows nothing (Discourse video placeholders, Beaver Builder row backgrounds, the
-// Drupal audio field, several WordPress audio players). Mirrors convertLazyImageContainers,
-// which does the same for an image: the value has to name a media file, which is what keeps
+// A container that parks its media URL in an attribute and builds the player with JS, so a reader
+// shows nothing (Discourse video placeholders, Beaver Builder row backgrounds, the Drupal audio
+// field, several WordPress audio players). The value has to name a media file, which is what keeps
 // a generic attribute like `data-src` from matching something that is not media.
 const findParkedMedia = (
   element: Element,
@@ -229,8 +228,8 @@ export const convertWidgets: DomTransform = (context) => {
       // resolveUrlFn rejects `about:blank`. The trim drops empty/whitespace placeholders
       // (which would otherwise resolve to the base URL).
       const resolved = src.trim() ? resolveUrlFn(src, baseUrl) : undefined
-      // Unlike a resolver's src, which is rebuilt from the parsed id, this one is the
-      // publisher's own URL, so it arrives with whatever tracking params they pasted.
+      // This src is the publisher's own URL rather than one minted from a parsed id, so it arrives
+      // with whatever tracking params they pasted.
       const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
 
       if (!cleaned) {

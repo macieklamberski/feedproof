@@ -85,12 +85,11 @@ export type CiteResolverResult = {
   kind?: CiteKind
 }
 
-// Fills in the fields a card's markup does not carry (e.g. a Tumblr link block naming its
-// poster by a media key that only Tumblr's own media service resolves), keyed by the cited
-// url. Unlike an embed's `provider:id`, the provider is not part of the key: it names the
-// platform the card was scraped from, not the linked page, so two cards from different
-// platforms pointing at one url share a single entry. It stays in the payload because an
-// implementation still dispatches on it.
+// Fills in the fields a card's markup does not carry (e.g. a Tumblr link block naming its poster by
+// a media key that only Tumblr's own media service resolves), keyed by the cited url. The provider
+// is not part of the key: it names the platform the card was scraped from, not the linked page, so
+// two cards from different platforms pointing at one url share a single entry. It stays in the
+// payload because an implementation still dispatches on it.
 export type EnrichCiteFn = (
   cites: Array<{ provider: string; url: string }>,
 ) => MaybePromise<Map<string, Partial<CiteResolverResult>>>
@@ -100,11 +99,10 @@ export type CiteResolver = {
   extract: (element: Element) => MaybePromise<CiteResolverResult | undefined>
 }
 
-// A platform that ships its own media as a container naming the file by an id, with no url
-// anywhere in the markup, so the element renders as nothing until the id is turned into a
-// url. Unlike the embed and cite resolvers, which mint opaque placeholders, this one
-// produces an ordinary <video>/<audio> that the later media passes then treat as any other:
-// dimensioned, proxied and deduplicated against the enclosures.
+// A platform that ships its own media as a container naming the file by an id, with no url anywhere
+// in the markup, so the element renders as nothing until the id is turned into a url. The result is
+// an ordinary <video>/<audio>, not an opaque placeholder, so the later media passes treat it as any
+// other: dimensioned, proxied and deduplicated against the enclosures.
 export type MediaResolverResult = {
   tag: 'video' | 'audio'
   src: string

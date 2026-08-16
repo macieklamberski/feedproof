@@ -13,10 +13,10 @@ import {
   getWrapperRatioDimensions,
 } from './dom.js'
 
-// A card's date is whatever string the site chose to display, so the caller gets one chance
-// to normalize it and anything the parser rejects is kept verbatim, not dropped.
-// Mirrors resolveOrKeepUrl's contract for URLs: every path that writes a date uses this, so
-// resolver output and enrichment payloads are treated identically.
+// A card's date is whatever string the site chose to display, so the caller gets one chance to
+// normalize it and anything the parser rejects is kept verbatim, not dropped. Every path that
+// writes a date goes through this, so resolver output and enrichment payloads are treated
+// identically.
 export const parseOrKeepDate = (
   date: string | undefined,
   parseDateFn: ParseDateFn | undefined,

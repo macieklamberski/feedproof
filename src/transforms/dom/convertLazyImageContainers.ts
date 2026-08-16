@@ -7,8 +7,7 @@ import { imageFileRegex } from '../../utils/urls.js'
 // data-* attribute and builds the <img> with JS on load (e.g. gallery widgets that
 // render `<div class="…_gallery_img" data-src="…">`). A reader runs no JS, so the
 // image never appears. Replace the container with a plain <img> when it directly
-// carries an image-shaped lazy src and wraps no media of its own. Mirrors how
-// fixLazyImages recovers a real src, but for a container that holds no <img> at all.
+// carries an image-shaped lazy src and wraps no media of its own.
 export const convertLazyImageContainers: DomTransform = (context) => {
   const { lazySrcAttributes } = context
 

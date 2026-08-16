@@ -352,8 +352,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   stripWordBreaks,
   linkifyUrls,
   markTimestamps,
-  // Promotes lazy/consent-gated iframe srcs into `src` so convertWidgets
-  // sees a resolvable iframe. Mirrors fixLazyImages for <img>.
+  // Promotes lazy/consent-gated iframe srcs into `src` so convertWidgets sees a resolvable iframe.
   fixLazyIframes,
   convertWidgets,
   injectEnclosures,
