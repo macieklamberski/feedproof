@@ -562,13 +562,65 @@ describeForEachParser('tiktokIframeEmbedResolver', (parseHtml) => {
     })
   })
 
-  describe('sad paths', () => {
-    // A watch page refuses framing, so an iframe pointing at it is left to the generic
-    // fallback rather than claimed as a player.
-    it('should return undefined for a watch page framed directly', async () => {
+  describe('the watch page a wrapper frames instead of the player', () => {
+    // This was pinned as a non-resolution, on the grounds that the watch page refuses framing.
+    // It does, which is why it is claimed now: unclaimed it becomes a placeholder pointing at a
+    // page that renders nothing, and the path names the clip well enough to mint the player.
+    it('should mint the player from a framed watch page', async () => {
       const value = html`
         <iframe src="https://www.tiktok.com/@user/video/7520573541146692886"></iframe>
       `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '@user/video/7520573541146692886',
+        src: 'https://www.tiktok.com/embed/v2/7520573541146692886',
+        url: 'https://www.tiktok.com/@user/video/7520573541146692886',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // A sanitizer that drops the handle leaves the bare `/video/{id}` half, which still names
+    // the clip. With no handle to carry, the id is the same bare video id the player carrier
+    // states for the same clip.
+    it('should mint the player from a handle-less watch page', async () => {
+      const value = html`
+        <iframe src="https://www.tiktok.com/video/7520573541146692886"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '7520573541146692886',
+        src: 'https://www.tiktok.com/embed/v2/7520573541146692886',
+        url: 'https://www.tiktok.com/video/7520573541146692886',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    // The host is TikTok's and the resolver now reads more than the player path, so every
+    // shape that is not a clip has to be refused by name rather than by the host gate.
+    it('should return undefined for a profile page framed directly', async () => {
+      const value = html`<iframe src="https://www.tiktok.com/@user"></iframe>`
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a hashtag page', async () => {
+      const value = html`<iframe src="https://www.tiktok.com/tag/dance"></iframe>`
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a search page', async () => {
+      const value = html`<iframe src="https://www.tiktok.com/search?q=dance"></iframe>`
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for the site root', async () => {
+      const value = html`<iframe src="https://www.tiktok.com/"></iframe>`
 
       expect(await extract(value)).toBeUndefined()
     })

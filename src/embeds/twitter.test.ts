@@ -1001,6 +1001,80 @@ describeForEachParser('twitterIframeEmbedResolver', (parseHtml) => {
 
     expect(await extract(value)).toBeUndefined()
   })
+
+  // The url a wrapper writes when it stores what the author pasted rather than the player, which
+  // is every Twitter figure note.com ships. The page refuses framing, so unclaimed it becomes a
+  // placeholder pointing at nothing a reader can load.
+  describe('the status page a wrapper frames instead of the player', () => {
+    it('should mint the player from a framed status page', async () => {
+      const value = html`<iframe src="${statusUrl}"></iframe>`
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: statusUrl,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should mint the same player from the twitter.com spelling', async () => {
+      const value = html`<iframe src="https://twitter.com/user/status/${statusId}"></iframe>`
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: statusUrl,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The id is the enrichment key, so a page carrier and a player carrier naming one tweet have
+    // to agree on it. Both results are stated whole: the only difference is the url, which the
+    // page states a handle for and the player does not.
+    it('should give a page carrier the id its player carrier states', async () => {
+      const player: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+      }
+
+      expect(await extract(html`<iframe src="${playerUrl}"></iframe>`)).toEqual(player)
+      expect(await extract(html`<iframe src="${statusUrl}"></iframe>`)).toEqual({
+        ...player,
+        url: statusUrl,
+      })
+    })
+  })
+
+  // The host is Twitter's and the resolver now reads more than the player path, so every shape
+  // that is not a status has to be refused by name rather than by the host gate.
+  describe('shapes on the host that are not a tweet', () => {
+    it('should return undefined for a bare profile', async () => {
+      const value = html`<iframe src="https://x.com/user"></iframe>`
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a search page', async () => {
+      const value = html`<iframe src="https://x.com/search?q=feeds"></iframe>`
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a hashtag page', async () => {
+      const value = html`<iframe src="https://x.com/hashtag/feeds"></iframe>`
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for the site root', async () => {
+      const value = html`<iframe src="https://x.com/"></iframe>`
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
 })
 
 // The three survey shapes whose markup the resolver cannot read as published: the byline is a
