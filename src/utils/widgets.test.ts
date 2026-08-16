@@ -43,6 +43,66 @@ describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
     })
   })
 
+  describe('a size and a shape together', () => {
+    it('should write the ratio when nothing measured the player', () => {
+      const document = parseHtml('')
+      const element = createEmbedPlaceholder(document, {
+        src: 'https://embed.example/abc',
+        ratio: '16/9',
+      })
+
+      const expected = html`
+        <div
+          data-embed-src="https://embed.example/abc"
+          data-embed-ratio="16/9"
+        >
+        </div>
+      `
+
+      expect(element.outerHTML).toEqualHtml(expected)
+    })
+
+    it('should drop the ratio when the metadata also states a size', () => {
+      const document = parseHtml('')
+      const element = createEmbedPlaceholder(document, {
+        src: 'https://embed.example/abc',
+        width: 560,
+        height: 315,
+        ratio: '16/9',
+      })
+
+      const expected = html`
+        <div
+          data-embed-src="https://embed.example/abc"
+          data-embed-width="560"
+          data-embed-height="315"
+        >
+        </div>
+      `
+
+      expect(element.outerHTML).toEqualHtml(expected)
+    })
+
+    it('should drop the ratio when the metadata states a height alone', () => {
+      const document = parseHtml('')
+      const element = createEmbedPlaceholder(document, {
+        src: 'https://embed.example/abc',
+        height: 200,
+        ratio: '16/9',
+      })
+
+      const expected = html`
+        <div
+          data-embed-src="https://embed.example/abc"
+          data-embed-height="200"
+        >
+        </div>
+      `
+
+      expect(element.outerHTML).toEqualHtml(expected)
+    })
+  })
+
   it.todo('should write the full metadata as data-embed-* attributes', () => {
     // Pass every EmbedResolverResult field and assert the complete placeholder markup.
   })
@@ -94,6 +154,47 @@ describeForEachParser('updateEmbedPlaceholder', (parseHtml) => {
     const expected = '<div data-embed-title="Video title"></div>'
 
     expect(element.outerHTML).toEqualHtml(expected)
+  })
+
+  // The one field an enrichment pass may replace rather than only fill in. A ratio is there
+  // because nothing had measured the player, so a size that arrives from an oEmbed call is
+  // the better answer and the two must not sit side by side.
+  describe('a size arriving beside an inferred shape', () => {
+    it('should replace the ratio with a size the enrichment brings', () => {
+      const document = parseHtml('')
+      const element = document.createElement('div')
+      element.setAttribute('data-embed-ratio', '16/9')
+
+      updateEmbedPlaceholder(element, { width: 560, height: 315 })
+
+      const expected = html`
+        <div
+          data-embed-width="560"
+          data-embed-height="315"
+        >
+        </div>
+      `
+
+      expect(element.outerHTML).toEqualHtml(expected)
+    })
+
+    it('should ignore a ratio when the placeholder already states a size', () => {
+      const document = parseHtml('')
+      const element = document.createElement('div')
+      element.setAttribute('data-embed-height', '200')
+
+      updateEmbedPlaceholder(element, { ratio: '16/9', title: 'Episode title' })
+
+      const expected = html`
+        <div
+          data-embed-height="200"
+          data-embed-title="Episode title"
+        >
+        </div>
+      `
+
+      expect(element.outerHTML).toEqualHtml(expected)
+    })
   })
 })
 
@@ -252,6 +353,7 @@ describe('normalizeEmbedFields', () => {
         thumbnail: 'https://cdn.example/t.jpg',
         width: 1,
         height: 2,
+        ratio: '16/9',
         title: 't',
         description: 'd',
         author: 'a',
@@ -269,6 +371,7 @@ describe('normalizeEmbedFields', () => {
         'thumbnail',
         'width',
         'height',
+        'ratio',
         'title',
         'description',
         'author',
@@ -584,12 +687,12 @@ describeForEachParser('declaredSize', (parseHtml) => {
     })
   })
 
-  // The pair is an aspect ratio, so both numbers have to describe the same box. A resolver that
-  // states 16:9 as 100x56 and a carrier that states a 400px height are talking about different
-  // things, and pairing them reads as 1:4. Every combination below asks the same question: can
-  // the result end up holding one number from each side?
+  // A ratio and a pixel size describe different things, so a result must never end up holding
+  // one of each: a resolver that infers 16/9 and a carrier that states a 400px height are
+  // talking past each other. Every combination below asks the same question: can the result end
+  // up holding one number from each side?
   describe('where the two numbers come from', () => {
-    const ratio: EmbedResolverResult = { ...stated, width: 100, height: 56 }
+    const ratio: EmbedResolverResult = { ...stated, ratio: '16/9' }
     const fixedHeight: EmbedResolverResult = { ...stated, height: 300 }
 
     const build = (result: EmbedResolverResult, markup: string) => {
@@ -630,7 +733,7 @@ describeForEachParser('declaredSize', (parseHtml) => {
         expect(build(ratio, value)).toEqual(expected)
       })
 
-      it('should take the carrier ratio whole when it states both', () => {
+      it('should take the carrier pair whole when it states both', () => {
         const value = html`
           <div
             class="player"
@@ -705,15 +808,15 @@ describeForEachParser('declaredSize', (parseHtml) => {
         expect(build(ratio, value)).toEqual(expected)
       })
 
-      // A responsive wrapper states a ratio of its own, and it names both numbers, so there is
-      // nothing of the resolver's left to mix with.
-      it('should replace the pair from a responsive wrapper', () => {
+      // A responsive wrapper states a shape of its own, which replaces the resolver's rather
+      // than merging with it.
+      it('should replace the ratio from a responsive wrapper', () => {
         const value = html`
           <div style="padding-bottom: 50%">
             <div class="player"></div>
           </div>
         `
-        const expected: EmbedResolverResult = { ...stated, width: 100, height: 50 }
+        const expected: EmbedResolverResult = { ...stated, ratio: '100/50' }
 
         expect(build(ratio, value)).toEqual(expected)
       })

@@ -1,5 +1,5 @@
 import type { EmbedResolverResult } from '../types.js'
-import { attr, parseRatioDimensions } from '../utils/dom.js'
+import { attr, parseRatio } from '../utils/dom.js'
 import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
 // Mediavine ships a video as an empty `<div class="mv-video-target mv-video-id-{id}"
@@ -22,10 +22,10 @@ export const mediavineEmbedResolver = createMarkupEmbedResolver(
     }
 
     // The div carries the player's aspect ratio as `data-ratio="{w}:{h}"`.
-    const dimensions = parseRatioDimensions(attr(element, 'data-ratio') ?? '')
+    const ratio = parseRatio(attr(element, 'data-ratio') ?? '')
 
-    if (dimensions) {
-      return { ...result, ...dimensions }
+    if (ratio) {
+      return { ...result, ratio }
     }
 
     return result

@@ -4,7 +4,7 @@ import { describeForEachParser, html } from '../tests.js'
 
 describeForEachParser('WordPress', (parseHtml) => {
   // convertWidgets claims the embed carriers inside the oEmbed wrapper figures, with
-  // getWrapperRatioDimensions reading their wp-embed-aspect-* classes when the carrier
+  // getWrapperRatio reading their wp-embed-aspect-* classes when the carrier
   // states no size. fixLazyIframes and fixLazyImages recover the consent-gate and
   // lazy-loader attribute stashes (defaultLazyIframeAttributes, defaultLazySrcAttributes).
   // The plugin facades are rebuilt by rebuildLyteEmbeds, rebuildRocketYoutubePreviews,

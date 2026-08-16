@@ -783,8 +783,8 @@ describeForEachParser('codepenIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // The pair reads as an aspect ratio, so a carrier that states a width and no height must not
-    // be given one: 800 by the default would describe a shape the publisher never asked for.
+    // A carrier that states a width and no height must not be given one: 800 by the default
+    // height would describe a box the publisher never asked for.
     it('should not pair the default with a width the carrier stated', async () => {
       const value = '<iframe width="800" src="https://codepen.io/argyleink/embed/XJpKqXm"></iframe>'
       const expected: EmbedResolverResult = {
@@ -800,8 +800,8 @@ describeForEachParser('codepenIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // A responsive wrapper states a ratio as a width and height pair. Adding the default beside
-    // the width it yields would turn that pair into a ratio nobody stated.
+    // A responsive wrapper states the shape and no size at all, so the default height has
+    // nothing to sit beside: keeping both would hand a reader a measurement nobody took.
     it('should leave a wrapper ratio alone rather than default over it', async () => {
       const value = html`
         <div style="padding-bottom:56.25%">
@@ -815,8 +815,7 @@ describeForEachParser('codepenIframeEmbedResolver', (parseHtml) => {
         url: 'https://codepen.io/argyleink/pen/XJpKqXm',
         thumbnail: 'https://shots.codepen.io/argyleink/pen/XJpKqXm-512.jpg',
         author: '@argyleink',
-        width: 100,
-        height: 56,
+        ratio: '100/56.25',
       }
 
       expect(await extract(value)).toEqual(expected)
