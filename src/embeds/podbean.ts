@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { parsePixelSize } from '../utils/dom.js'
+import { keepIfMatches, parsePixelSize } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Ids are a slug pair, e.g. `yx4hr-f3d1e1`, and the v2 player appends `-pb` to its own.
@@ -27,9 +27,7 @@ export const extractPodbeanId = (link: string): string | undefined => {
       ? segments[2]
       : (parsed.searchParams.get('i') ?? undefined)
 
-  if (id && safeIdRegex.test(id)) {
-    return id
-  }
+  return keepIfMatches(id, safeIdRegex)
 }
 
 // Podbean serves one player behind two urls: `/media/player/{id}` **301s to**

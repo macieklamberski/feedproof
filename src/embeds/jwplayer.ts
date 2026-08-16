@@ -1,6 +1,6 @@
 import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, findConfigScript } from '../utils/dom.js'
+import { attr, findConfigScript, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -20,9 +20,7 @@ export const extractJwplayerId = (link: string): string | undefined => {
   // first dash, with the file extension dropped.
   const mediaId = lastSegment.replace(fileExtensionRegex, '').split('-')[0]
 
-  if (mediaId && safeMediaIdRegex.test(mediaId)) {
-    return mediaId
-  }
+  return keepIfMatches(mediaId, safeMediaIdRegex)
 }
 
 const composeJwplayerEmbed = (mediaId: string): EmbedResolverResult => {

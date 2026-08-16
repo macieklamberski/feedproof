@@ -1,5 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Talk slugs are the speaker and title joined by underscores, e.g. `ethan_zuckerman`.
@@ -26,9 +27,7 @@ export const extractTedTalk = (link: string): string | undefined => {
 
   const slug = (segments[1] === 'lang' ? segments[3] : segments[1])?.replace(htmlSuffixRegex, '')
 
-  if (slug && safeSlugRegex.test(slug)) {
-    return slug
-  }
+  return keepIfMatches(slug, safeSlugRegex)
 }
 
 // Feeds carry a short slug (`ethan_zuckerman`) and TED redirects it to the full one

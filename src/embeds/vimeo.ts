@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr } from '../utils/dom.js'
+import { attr, keepIfMatches } from '../utils/dom.js'
 import { pickUrlParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -31,9 +31,7 @@ export const extractVimeoId = (link: string): string | undefined => {
       : (segments.find((segment) => safeVideoIdRegex.test(segment)) ??
         parseUrl(link)?.searchParams.get('clip_id'))
 
-  if (id && safeVideoIdRegex.test(id)) {
-    return id
-  }
+  return keepIfMatches(id, safeVideoIdRegex)
 }
 
 // Unlisted videos embed with a `?h={hash}` token; the player rejects them without it. `t`

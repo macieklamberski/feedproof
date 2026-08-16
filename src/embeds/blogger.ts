@@ -1,5 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The token is opaque and url-safe base64, so anything outside that alphabet is not one and is
@@ -26,9 +27,7 @@ export const extractBloggerToken = (link: string): string | undefined => {
 
   const token = parsed.searchParams.get('token')
 
-  if (token && safeTokenRegex.test(token)) {
-    return token
-  }
+  return keepIfMatches(token, safeTokenRegex)
 }
 
 export const bloggerResolveEmbed = (url: string): EmbedResolverResult | undefined => {

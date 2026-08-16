@@ -1,5 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The view id is a dashless 24-character hex id.
@@ -29,9 +30,7 @@ export const extractGeniallyViewId = (link: string): string | undefined => {
   const segments = getPathSegments(parsed)
   const viewId = segments[0] === 'view' ? segments[1] : segments[0]
 
-  if (viewId && safeViewIdRegex.test(viewId)) {
-    return viewId
-  }
+  return keepIfMatches(viewId, safeViewIdRegex)
 }
 
 export const geniallyResolveEmbed = (url: string): EmbedResolverResult | undefined => {

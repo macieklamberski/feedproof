@@ -1,5 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { keepIfMatches } from '../utils/dom.js'
 import { pickUrlParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -36,9 +37,7 @@ export const extractDailymotionId = (link: string): string | undefined => {
   // Share URLs append a "_title-slug" to the id; keep only the id.
   id = id?.split('_')[0]
 
-  if (id && safeVideoIdRegex.test(id)) {
-    return id
-  }
+  return keepIfMatches(id, safeVideoIdRegex)
 }
 
 // Where playback starts, and the playlist the video sits in. The rest of the publisher's
