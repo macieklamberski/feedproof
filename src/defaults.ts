@@ -86,6 +86,7 @@ import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { megaphoneEmbedResolver } from './embeds/megaphone.js'
 import { mixcloudEmbedResolver } from './embeds/mixcloud.js'
 import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from './embeds/nicovideo.js'
+import { notecomIframeEmbedResolver } from './embeds/notecom.js'
 import { omnyEmbedResolver } from './embeds/omny.js'
 import { podbeanEmbedResolver } from './embeds/podbean.js'
 import { podigeeEmbedResolver } from './embeds/podigee.js'
@@ -100,6 +101,7 @@ import {
 } from './embeds/speakerdeck.js'
 import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from './embeds/spreaker.js'
+import { standfmEmbedResolver } from './embeds/standfm.js'
 import { tedEmbedResolver } from './embeds/ted.js'
 import { telegramIframeEmbedResolver, telegramScriptEmbedResolver } from './embeds/telegram.js'
 import { tiktokBlockquoteEmbedResolver, tiktokIframeEmbedResolver } from './embeds/tiktok.js'
@@ -479,9 +481,11 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   blueskyS9eEmbedResolver,
   blueskyPostElementEmbedResolver,
   audioboomEmbedResolver,
+  notecomIframeEmbedResolver,
   omnyEmbedResolver,
   nicovideoScriptEmbedResolver,
   nicovideoIframeEmbedResolver,
+  standfmEmbedResolver,
   instagramBlockquoteEmbedResolver,
   instagramAmpEmbedResolver,
   instagramSubstackEmbedResolver,
