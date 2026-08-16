@@ -69,8 +69,6 @@ export const stripEmptyTags: DomTransform = () => {
         continue
       }
 
-      // Structural cells/terms keep their slot even when empty, so table columns
-      // and definition-list pairs stay aligned.
       if (structuralTags.has(tagName)) {
         continue
       }

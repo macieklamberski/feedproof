@@ -69,7 +69,6 @@ export const find = (
   }
 }
 
-// Trimmed text of a descendant, or of the element itself when no selector is given.
 export const text = (element: Nullish<Element>, selector?: string): string | undefined => {
   const target = selector ? find(element, selector) : element
 
@@ -123,7 +122,6 @@ export const findConfigScript = (element: Element): Element | undefined => {
   }
 }
 
-// Trimmed value of an attribute on the element itself.
 export const attr = (element: Nullish<Element>, name: string): string | undefined => {
   return element?.getAttribute(name)?.trim() || undefined
 }
@@ -154,7 +152,7 @@ export const flashVars = (element: Nullish<Element>): string | undefined => {
 }
 
 // The first url in an element's inline `background-image`, for cards that paint their
-// thumbnail with CSS instead of an `<img>`. Matches the url with or without quotes.
+// thumbnail with CSS instead of an `<img>`.
 const bgImageUrlRegex = /url\(['"]?([^'")]+)/
 
 export const bgImage = (element: Nullish<Element>): string | undefined => {
@@ -384,9 +382,6 @@ export const getElementDimensions = (element: Element): { width?: number; height
     return { width, height }
   }
 
-  // `data-image-dimensions` holds both sizes in one `WxH` attribute, so it is matched once
-  // and each dimension picks its own capture group, the same way `style` is read once and
-  // `fromStyle` picks each property.
   const dimensions = imageDimensionsRegex.exec(element.getAttribute('data-image-dimensions') ?? '')
   const style = element.getAttribute('style')
 
@@ -442,8 +437,6 @@ const elementRatioSources: Array<{
   },
 ]
 
-// The ratio dimensions a single element declares — via the `aspect-ratio` property, a
-// `wp-embed-aspect-*` class, or the padding hack — or undefined.
 const getElementRatioDimensions = (
   element: Element,
 ): { width: number; height: number } | undefined => {

@@ -85,7 +85,6 @@ export const convertDatawrapperEmbeds: DomTransform = () => (document) => {
     wrapper.replaceWith(buildChartImage(document, chartId, null))
   }
 
-  // Drop the now-orphaned resize listener script — noise for a reader once the chart is an image.
   for (const script of document.querySelectorAll('script')) {
     if (resizeScriptRegex.test(script.textContent ?? '')) {
       script.remove()

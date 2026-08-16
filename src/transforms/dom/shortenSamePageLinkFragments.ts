@@ -57,7 +57,6 @@ export const shortenSamePageLinkFragments: DomTransform = ({
     for (const anchor of document.querySelectorAll('a[href]')) {
       const href = anchor.getAttribute('href')
 
-      // Already local, or not an in-page anchor at all.
       if (!href || href.startsWith('#')) {
         continue
       }

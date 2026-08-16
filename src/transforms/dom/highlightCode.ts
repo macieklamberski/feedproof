@@ -294,7 +294,6 @@ const stripCodeGutters = (document: Document): void => {
       continue
     }
 
-    // The code <pre> is the largest one that isn't itself the line-number column.
     const codePre = pres
       .filter((pre) => !isLineNumberText(pre.textContent ?? ''))
       .sort((a, b) => (b.textContent?.length ?? 0) - (a.textContent?.length ?? 0))[0]
@@ -384,8 +383,7 @@ export const highlightCode: DomTransform = ({ highlightFn }) => {
 
     for (const pre of document.querySelectorAll('pre')) {
       // A <pre> usually wraps a <code>, but some editors put the code directly in
-      // the <pre> with the language hint on the <pre> itself. Highlight the <code>
-      // when present, otherwise the <pre> itself.
+      // the <pre> with the language hint on the <pre> itself.
       const code = pre.querySelector('code')
       const target = code ?? pre
 
@@ -405,7 +403,6 @@ export const highlightCode: DomTransform = ({ highlightFn }) => {
         continue
       }
 
-      // A block explicitly marked as plain text is just text — leave it untouched.
       if (plaintextLanguages.has(language.toLowerCase())) {
         continue
       }

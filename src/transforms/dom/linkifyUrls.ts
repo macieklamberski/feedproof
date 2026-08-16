@@ -29,7 +29,6 @@ export const linkifyUrls: DomTransform = (context) => {
         continue
       }
 
-      // Detect bare URLs, keeping only http(s) protocol links.
       const links = linkifyFind(text).filter(
         (link) => link.type === 'url' && urlProtocolRegex.test(link.value),
       )
@@ -65,7 +64,6 @@ export const linkifyUrls: DomTransform = (context) => {
         parts.push(document.createTextNode(text.slice(lastIndex)))
       }
 
-      // Replace the original text node with the split parts.
       node.replaceWith(...parts)
     }
   }

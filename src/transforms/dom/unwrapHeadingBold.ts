@@ -27,7 +27,6 @@ const isIgnorableNode = (node: Node): boolean => {
   )
 }
 
-// Returns the heading's only meaningful child when that child is an element, else null.
 const soleContentElement = (heading: Element): Element | null => {
   let found: Element | null = null
 

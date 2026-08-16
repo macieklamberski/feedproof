@@ -97,7 +97,6 @@ const getOwnDirection = (element: Element): Direction | 'none' | undefined => {
     }
   }
 
-  // The <center> element is itself a center signal.
   if (element.localName === 'center') {
     return 'center'
   }
