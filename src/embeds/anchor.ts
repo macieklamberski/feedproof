@@ -41,7 +41,7 @@ export const extractAnchorEpisode = (link: string): string | undefined => {
 
 // No offline metadata: the player carries none and Anchor's old oEmbed endpoint is gone, so
 // what this states is the provider, the episode and a height the markup often omits. The src
-// keeps its own host — the three generations are not known to be interchangeable, and minting
+// keeps its own host: the three generations are not known to be interchangeable, and minting
 // an unverified rewrite would risk a working embed.
 export const anchorResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const episode = extractAnchorEpisode(url)

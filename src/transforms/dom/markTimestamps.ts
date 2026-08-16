@@ -3,7 +3,7 @@ import { collectTextNodes } from '../../utils/dom.js'
 
 const timestampIgnoreTags = new Set(['a', 'pre', 'code', 'kbd', 'samp', 'var', 'script', 'style'])
 
-// Matches a timestamp anchored to a line boundary — either starting the line
+// Matches a timestamp anchored to a line boundary: either starting the line
 // (optionally after leading whitespace) or ending it (optionally before
 // trailing whitespace): MM:SS or HH:MM:SS, with the seconds always two digits.
 // Anchoring to a boundary avoids turning incidental "12:30" mentions in the

@@ -2,22 +2,19 @@ import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
-// Tistory renders a pasted link as a card built from the linked page's Open Graph tags.
-// The `data-og-*` attribute names and the `og-*` class names below are Tistory's, but they
-// map straight onto the Open Graph protocol (https://ogp.me): `og:title`, `og:description`,
-// `og:image`, `og:url`. Tistory has simply frozen the page's OG metadata into the post at
-// publish time instead of leaving it in the linked page's <head>.
+// Tistory renders a pasted link as a card built from the linked page's Open Graph tags. The
+// `data-og-*` attribute names and the `og-*` class names below are Tistory's, but they map
+// straight onto the Open Graph protocol (https://ogp.me): Tistory has frozen the page's OG
+// metadata into the post at publish time instead of leaving it in the linked page's <head>.
 //
 // Every field is duplicated: once as a `data-og-*` attribute on the wrapper and once as an
 // element inside the anchor. The attributes are read first because the elements are absent
 // on the slimmer card variants.
 //
-// The selector names the attribute alone, and that is deliberate rather than an oversight.
-// Qualifying it as `figure[data-og-source-url]` was considered and rejected: it would miss any
-// variant built from another element, and the collision it guards against does not occur. Of
-// 801 occurrences measured across 1,590,608 feeds, every one carries the same `data-og-*`
-// family and none belongs to another platform. The names come from the Open Graph protocol,
-// but the card is this editor's.
+// The selector names the attribute alone. Qualifying it as `figure[data-og-source-url]` would
+// miss any variant built from another element, and the collision it guards against does not
+// occur: of 801 occurrences measured across 1,590,608 feeds, every one carries the same
+// `data-og-*` family and none belongs to another platform.
 export const tistoryCiteResolver: CiteResolver = {
   selector: '[data-og-source-url]',
   extract: (element) => {

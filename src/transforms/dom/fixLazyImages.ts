@@ -16,7 +16,7 @@ export const fixLazyImages: DomTransform = (context) => {
 
   return (document) => {
     // <source> is included so lazy srcset on <picture><source> is promoted before
-    // flattenPictureElements reads it — otherwise the modern AVIF/WebP source is dropped.
+    // flattenPictureElements reads it: otherwise the modern AVIF/WebP source is dropped.
     const elements = document.querySelectorAll('img, source')
 
     for (const element of elements) {

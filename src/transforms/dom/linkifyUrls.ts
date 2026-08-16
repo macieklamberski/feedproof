@@ -29,7 +29,6 @@ export const linkifyUrls: DomTransform = (context) => {
         continue
       }
 
-      // Detect bare URLs, keeping only http(s) protocol links.
       const links = linkifyFind(text).filter(
         (link) => link.type === 'url' && urlProtocolRegex.test(link.value),
       )
@@ -49,7 +48,7 @@ export const linkifyUrls: DomTransform = (context) => {
         }
 
         // These anchors are minted long after cleanAnchorUrls, so they are the one link
-        // shape the caller's cleanUrlFn would otherwise never reach — including for the
+        // shape the caller's cleanUrlFn would otherwise never reach: including for the
         // safety pass, which would judge a bare redirect wrapper by its own host.
         const cleaned = cleanUrlFn?.(link.href) ?? link.href
         const anchor = document.createElement('a')
@@ -65,7 +64,6 @@ export const linkifyUrls: DomTransform = (context) => {
         parts.push(document.createTextNode(text.slice(lastIndex)))
       }
 
-      // Replace the original text node with the split parts.
       node.replaceWith(...parts)
     }
   }

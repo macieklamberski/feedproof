@@ -51,7 +51,7 @@ export type EmbedResolver = {
 }
 
 // A convention that parks an iframe's real URL in a `<div>` attribute and builds the iframe
-// with JS at runtime — Pym.js (`data-pym-src`) and @newswire/frames (`data-frame-src`) are the
+// with JS at runtime: Pym.js (`data-pym-src`) and @newswire/frames (`data-frame-src`) are the
 // two seen in the wild. A reader runs no JS, so `rebuildDeferredIframes` materializes the iframe
 // from `attribute` on each `selector` match.
 export type DeferredIframeSource = {
@@ -78,7 +78,7 @@ export type CiteResolverResult = {
   // source carries one (Substack's JSON payload), a site-formatted string where it does not
   // (Cocoon renders the blog's own date setting, e.g. "2018.10.14"). So it is displayable
   // but not reliably parseable, and a resolver skips it rather than guessing when the card
-  // shows only a partial date — dev.to's "Jul 14" carries no year to recover.
+  // shows only a partial date: dev.to's "Jul 14" carries no year to recover.
   date?: string
   icon?: string
   thumbnail?: string

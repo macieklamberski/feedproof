@@ -6,7 +6,7 @@ import { isUrlShaped, isUsableSrc } from '../../utils/urls.js'
 // itself; lazy <source> children are already handled by fixLazyImages.
 export const fixLazyAudios: DomTransform = (context) => (document) => {
   for (const audio of document.querySelectorAll('audio')) {
-    // Promote a lazy src only when the element itself has nothing to play from — a
+    // Promote a lazy src only when the element itself has nothing to play from: a
     // usable src or a <source> child means the clip already resolves.
     if (isUsableSrc(audio.getAttribute('src')) || audio.querySelector('source')) {
       continue

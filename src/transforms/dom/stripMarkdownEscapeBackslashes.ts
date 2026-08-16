@@ -3,15 +3,14 @@ import { isText } from '../../utils/dom.js'
 
 // Markdown's escape backslash leaks into some feeds' HTML as a literal `\` at the
 // very start of a paragraph, which the browser then renders as stray text:
-//   `<p>\</p>`        — a `\` on its own line that became a lone-backslash paragraph
-//   `<p>\ Let’s say…` — a `\` leaked at the start of a paragraph's text
+//   `<p>\</p>`       : a `\` on its own line that became a lone-backslash paragraph
+//   `<p>\ Let’s say…`: a `\` leaked at the start of a paragraph's text
 // Only a paragraph-leading backslash is touched. A `\` mid-text or before a <br>
 // is left alone: there it is overwhelmingly real content (Windows paths ending in
 // `\`, shell line continuations, LaTeX), not the markdown leak.
 //
-// Leading whitespace, then a lone `\` that is the paragraph's content or is
-// followed by whitespace. The `(?=\s|$)` lookahead excludes `\(`, `\textbf`,
-// `\n`, `\/` and other real escapes/code where the backslash trails a non-space.
+// The `(?=\s|$)` lookahead excludes `\(`, `\textbf`, `\n`, `\/` and other real
+// escapes and code where the backslash trails a non-space.
 const leadingBlockBackslash = /^(\s*)\\(?=\s|$)/
 
 export const stripMarkdownEscapeBackslashes: DomTransform = () => {

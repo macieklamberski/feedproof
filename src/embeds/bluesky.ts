@@ -21,7 +21,7 @@ const atUriRegex = /^at:\/\/([^/]+)\/([^/]+)\/([^/?#]+)/
 // The authority is either a DID (`did:plc:…`, `did:web:…`) or a handle, which is a domain
 // name. The record key is base32-sortable in practice; the wider charset here is the whole
 // of what a record key may hold. Both are interpolated into urls, so anything outside these
-// alphabets is refused rather than escaped.
+// alphabets is refused, not escaped.
 const safeAuthorityRegex = /^(?:did:[a-z]+:[\w.:%-]+|[a-z\d-]+(?:\.[a-z\d-]+)+)$/i
 const safeRecordKeyRegex = /^[\w.~-]+$/
 
@@ -91,7 +91,7 @@ const extractBlueskyPostFromUrl = (link: string): BlueskyPost | undefined => {
 
 // `EnrichEmbedFn` is handed `{provider, id}` and nothing else, so the id has to address the
 // post on its own. A record key does not: it is unique only within one repository, and every
-// endpoint that answers for a post — the AT URI, the permalink, the player — is keyed by the
+// endpoint that answers for a post, the AT URI, the permalink, the player, is keyed by the
 // authority as well. So the id is the pair, and both endpoints rebuild from it.
 //
 // The authority is whichever form the markup gave. `getPostThread` and oEmbed both answer a
@@ -159,7 +159,7 @@ const readAuthor = (anchor: Element): string | undefined => {
 
 const readPostText = (element: Element, postAnchor: Element | undefined): string | undefined => {
   // The post text is a paragraph of its own wherever the markup has paragraphs at all; the
-  // one holding the date link is the footer rather than the text.
+  // one holding the date link is the footer, not the text.
   const paragraph = find(element, 'p', (node) => !postAnchor || !node.contains(postAnchor))
   const container = paragraph ?? element
   let body = ''
@@ -267,7 +267,7 @@ export const blueskyIframeEmbedResolver = createUrlEmbedResolver(blueskyHosts, (
 })
 
 // Forum software renders a post through the s9e MediaEmbed helper page, which is hosted on
-// `s9e.github.io` rather than on Bluesky. The post is named in the url fragment, so the
+// `s9e.github.io`, not on Bluesky. The post is named in the url fragment, so the
 // placeholder points back at Bluesky's own player like every other carrier.
 export const blueskyS9eEmbedResolver = createMarkupEmbedResolver(
   'iframe[data-s9e-mediaembed="bluesky"]',

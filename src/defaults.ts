@@ -370,14 +370,14 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   proxyAssetUrls,
   stripEmptyTags,
   // Judges whether a bold spans the whole heading, so it runs after everything that
-  // removes heading junk — stripNonContentElements (share buttons), normalizeAnchoredHeadings
-  // (permalink wrappers), stripEmptyTags — or the decision is made against siblings that
+  // removes heading junk: stripNonContentElements (share buttons), normalizeAnchoredHeadings
+  // (permalink wrappers), stripEmptyTags, or the decision is made against siblings that
   // are about to disappear and the unwrap only fires on a re-run.
   unwrapHeadingBold,
   unwrapWrappers,
   // Compares rules against their siblings, so it runs last: stripNonContentElements and
   // stripEmptyTags have to have removed whatever sat between them, and unwrapWrappers has
-  // to have dissolved the per-rule <div> a feed wraps each one in — until then the rules
+  // to have dissolved the per-rule <div> a feed wraps each one in: until then the rules
   // are not siblings at all and the run is invisible.
   stripDuplicateRules,
   wrapTablesForScroll,
@@ -398,7 +398,7 @@ export const heuristicDomTransforms: Array<DomTransform> = [
 ]
 
 // The standard pipeline with the heuristic transforms spliced in right after
-// injectEnclosures — they must run after injection (stripDuplicateEnclosures reads
+// injectEnclosures: they must run after injection (stripDuplicateEnclosures reads
 // the markers it leaves) and before proxyAssetUrls rewrites media URLs.
 export const defaultAllDomTransforms: Array<DomTransform> = defaultStandardDomTransforms.flatMap(
   (transform) => {
@@ -539,17 +539,17 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
 // so the media never appears for a reader. Counts are feeds in a 1/32 corpus sample
 // (397,652 files) unless noted; the shapes were verified in live markup 2026-08-01.
 export const defaultMediaSrcAttributes = [
-  'data-src', // Drupal audiofield (`.audiofield-wordpress-player`) and assorted themes — 40 feeds.
-  'data-video-src', // Discourse video placeholders, Discourse 3.2+ — 1 feed, but every forum on that version emits it.
+  'data-src', // Drupal audiofield (`.audiofield-wordpress-player`) and assorted themes: 40 feeds.
+  'data-video-src', // Discourse video placeholders, Discourse 3.2+: 1 feed, but every forum on that version emits it.
   'data-mp4', // Beaver Builder row background video (`.fl-bg-video`).
   'data-webm', // The same widget's second source.
-  'data-audiopath', // Sonaar MP3 Audio Player, ~100k WordPress installs — 2 feeds.
-  'data-qtmplayer-file', // QTM Player — 1 feed.
-  'data-asset-url', // Squarespace audio block, Squarespace-hosted — 12 feeds.
+  'data-audiopath', // Sonaar MP3 Audio Player, ~100k WordPress installs: 2 feeds.
+  'data-qtmplayer-file', // QTM Player: 1 feed.
+  'data-asset-url', // Squarespace audio block, Squarespace-hosted: 12 feeds.
   'data-nectar-video-src', // Salient theme.
   'data-videolazy-id', // Tilda, page markup only.
   'data-mp4video', // Tilda Zero Block, page markup only.
-  'data-pswp-video-src', // PhotoSwipe video support — 1 feed.
+  'data-pswp-video-src', // PhotoSwipe video support: 1 feed.
 ]
 
 export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(url, baseUrl)
@@ -558,29 +558,29 @@ export const defaultResolveUrlFn: ResolveUrlFn = (url, baseUrl) => resolveUrl(ur
 export const defaultHighlightFn = hljsHighlightFn
 
 export const defaultLazySrcAttributes = [
-  'data-src', // lazysizes / vanilla-lazyload / lozad / Drupal Blazy / a3 Lazy Load / Smush / EWWW / generic — 360k hits.
-  'data-original', // Legacy jquery_lazyload (tuupola v1) — 19k hits, large legacy footprint.
-  'data-lazy-src', // Jetpack Lazy Images / WP Rocket / BJ Lazy Load — 31k hits.
-  'data-url', // Generic, observed across multiple lazy-loaders — 343k hits.
-  'data-image', // Squarespace ImageLoader — 2M hits, the highest-volume real-world variant.
-  'data-orig-file', // WordPress unscaled original (Jetpack media library) — 1.75M hits.
-  'data-large-file', // WordPress responsive variant — 1.75M hits.
-  'data-medium-file', // WordPress responsive medium fallback — 1.67M hits.
-  'data-thumb', // WordPress thumbnail variant — 18k hits.
-  'data-thumb-src', // WordPress thumbnail src variant — 11k hits.
-  'data-original-src', // Legacy lazy-loaders / pika.page CDN — 9k hits.
-  'data-image-src', // Legacy Atlassian-style CMS — 4k hits.
-  'data-canonical-src', // YouTube / retina-aware renderers — 2k hits, <0.1% of feeds.
-  'data-img-url', // Amazon affiliate widgets / generic — 0.9k hits, <0.1% of feeds.
-  'nitro-lazy-src', // NitroPack — 222 hits, <0.01% of feeds. Non-`data-*` prefix.
-  'data-orig', // Generic original-source variant — 27 hits, <0.01% of feeds.
-  'data-runner-src', // Amazon affiliate / generic — 42 hits, <0.01% of feeds.
-  'fifu-data-src', // "Featured Image From URL" WP plugin — 2.1k hits, <0.01% of feeds.
-  'data-cfsrc', // Cloudflare Mirage edge rewrite — 641 hits, <0.01% of feeds.
-  'data-echo', // echo.js lazy-loader — 901 hits, <0.01% of feeds.
-  'data-opt-src', // Optimole image CDN — 390 hits, <0.01% of feeds.
-  'data-normal', // Future plc / generic CDN lazy-loader — 294 hits, <0.01% of feeds.
-  'data-original-mos', // CMS lazy-image variant — ~1.4k hits, <0.01% of feeds.
+  'data-src', // lazysizes / vanilla-lazyload / lozad / Drupal Blazy / a3 Lazy Load / Smush / EWWW / generic: 360k hits.
+  'data-original', // Legacy jquery_lazyload (tuupola v1): 19k hits, large legacy footprint.
+  'data-lazy-src', // Jetpack Lazy Images / WP Rocket / BJ Lazy Load: 31k hits.
+  'data-url', // Generic, observed across multiple lazy-loaders: 343k hits.
+  'data-image', // Squarespace ImageLoader: 2M hits, the highest-volume real-world variant.
+  'data-orig-file', // WordPress unscaled original (Jetpack media library): 1.75M hits.
+  'data-large-file', // WordPress responsive variant: 1.75M hits.
+  'data-medium-file', // WordPress responsive medium fallback: 1.67M hits.
+  'data-thumb', // WordPress thumbnail variant: 18k hits.
+  'data-thumb-src', // WordPress thumbnail src variant: 11k hits.
+  'data-original-src', // Legacy lazy-loaders / pika.page CDN: 9k hits.
+  'data-image-src', // Legacy Atlassian-style CMS: 4k hits.
+  'data-canonical-src', // YouTube / retina-aware renderers: 2k hits, <0.1% of feeds.
+  'data-img-url', // Amazon affiliate widgets / generic: 0.9k hits, <0.1% of feeds.
+  'nitro-lazy-src', // NitroPack: 222 hits, <0.01% of feeds. Non-`data-*` prefix.
+  'data-orig', // Generic original-source variant: 27 hits, <0.01% of feeds.
+  'data-runner-src', // Amazon affiliate / generic: 42 hits, <0.01% of feeds.
+  'fifu-data-src', // "Featured Image From URL" WP plugin: 2.1k hits, <0.01% of feeds.
+  'data-cfsrc', // Cloudflare Mirage edge rewrite: 641 hits, <0.01% of feeds.
+  'data-echo', // echo.js lazy-loader: 901 hits, <0.01% of feeds.
+  'data-opt-src', // Optimole image CDN: 390 hits, <0.01% of feeds.
+  'data-normal', // Future plc / generic CDN lazy-loader: 294 hits, <0.01% of feeds.
+  'data-original-mos', // CMS lazy-image variant: ~1.4k hits, <0.01% of feeds.
 ]
 
 // Attributes that hold a lazy/consent-gated iframe src (the real embed URL) when the
@@ -588,21 +588,21 @@ export const defaultLazySrcAttributes = [
 export const defaultLazyIframeAttributes = [
   'data-lazy-src', // Generic lazy loaders.
   'data-src', // Generic lazy loaders.
-  'data-url', // Generic lazy loaders — 20 feeds carry it on empty-src iframes.
+  'data-url', // Generic lazy loaders: 20 feeds carry it on empty-src iframes.
   'data-litespeed-src', // LiteSpeed Cache.
   'data-mce-src', // TinyMCE editor output.
-  'data-orig', // Lazy-video facades (iframe id="_ytid_*") parking the embed URL with empty src — 337 feeds.
+  'data-orig', // Lazy-video facades (iframe id="_ytid_*") parking the embed URL with empty src: 337 feeds.
   'data-original-src', // Generic lazy loaders.
   'data-opt-src', // Image/embed optimizers.
   // Invision Community forums defer embeds two ways: an iframe with no src at all, or one whose
   // src points at the forum's own blank interface page; fixLazyIframes treats that page as a
   // placeholder so this attribute wins in both shapes.
-  'data-embed-src', // Invision Community deferred embeds — 24 feeds in a 1/64 sample.
-  // Avada's privacy-embed facade (data-privacy-type is a taxonomy — YouTube, Vimeo, …), NOT a
+  'data-embed-src', // Invision Community deferred embeds: 24 feeds in a 1/64 sample.
+  // Avada's privacy-embed facade (data-privacy-type is a taxonomy: YouTube, Vimeo, …), NOT a
   // cookie banner: it defers a real video the author embedded. Recovering it yields a privacy-safe
   // click-to-load placeholder; stripping would just delete the video. The visible Avada notice
   // (.fusion-privacy-placeholder) is stripped separately in defaultNonContentSelectors.
-  'data-privacy-src', // Avada privacy-embed facade — 19 feeds.
+  'data-privacy-src', // Avada privacy-embed facade: 19 feeds.
   // Cookie-consent gates (CMPs) sit on the same recover side of that line. Each plugin rewrites
   // the author's embed iframe in place, dropping src and parking the real URL in its own
   // attribute, and feed bodies carry no consent flow: the gated iframe is the whole embed, and
@@ -613,26 +613,26 @@ export const defaultLazyIframeAttributes = [
   // attribute is listed first and wins. OneTrust, CookieFirst and Cookie Script park theirs in
   // data-src, already listed above. Gated <script> tags and the notice elements a few plugins
   // serialize next to the iframe stay stripped in defaultNonContentSelectors.
-  'consent-original-src', // Consent wrappers (generic form) — 0 feeds, kept beside the suffixed form.
-  'consent-original-src-_', // Real Cookie Banner — 186 feeds.
-  'consent-click-original-src-_', // Real Cookie Banner click-to-load variant — fallback only.
-  'src-consent', // Borlabs Cookie — 2 feeds.
-  'data-cookieblock-src', // Cookiebot — 34 feeds; the attribute is the only URL copy.
-  'data-src-cmplz', // Complianz — 13 feeds; src holds the plugin's placeholder video or about:blank.
-  'data-consent-src', // Cookie Information / Publii Embed Consent — 4 feeds.
-  'data-wpconsent-src', // WPConsent — 0 feeds.
-  'data-suppressedsrc', // iubenda — 0 feeds.
-  'data-uc-src', // Usercentrics — 0 feeds.
-  'data-gdpr-iframesrc', // Moove GDPR Cookie Compliance — 1 feed.
+  'consent-original-src', // Consent wrappers (generic form): 0 feeds, kept beside the suffixed form.
+  'consent-original-src-_', // Real Cookie Banner: 186 feeds.
+  'consent-click-original-src-_', // Real Cookie Banner click-to-load variant: fallback only.
+  'src-consent', // Borlabs Cookie: 2 feeds.
+  'data-cookieblock-src', // Cookiebot: 34 feeds; the attribute is the only URL copy.
+  'data-src-cmplz', // Complianz: 13 feeds; src holds the plugin's placeholder video or about:blank.
+  'data-consent-src', // Cookie Information / Publii Embed Consent: 4 feeds.
+  'data-wpconsent-src', // WPConsent: 0 feeds.
+  'data-suppressedsrc', // iubenda: 0 feeds.
+  'data-uc-src', // Usercentrics: 0 feeds.
+  'data-gdpr-iframesrc', // Moove GDPR Cookie Compliance: 1 feed.
   // EmbedPlus parks the deferred player's URL here; the plugin's facade shape is rebuilt by
   // rebuildEmbedPlusEmbeds.
-  'data-ep-src', // EmbedPlus YouTube deferred player — 14 feeds.
+  'data-ep-src', // EmbedPlus YouTube deferred player: 14 feeds.
   // Below the 1/64 sample resolution; the count is from an older full-corpus walk.
-  'data-lazy-load', // JetElements / Woodmart / Elementor lazy video widgets — 82 feeds.
+  'data-lazy-load', // JetElements / Woodmart / Elementor lazy video widgets: 82 feeds.
 ]
 
 export const defaultDeferredIframeSources: Array<DeferredIframeSource> = [
-  // Pym.js (NPR) — the established responsive-embed convention; skip already-initialized nodes.
+  // Pym.js (NPR): the established responsive-embed convention; skip already-initialized nodes.
   { selector: '[data-pym-src]:not([data-pym-auto-initialized])', attribute: 'data-pym-src' },
   // @newswire/frames (Ryan Murphy; Texas Tribune bundles it as newswireFrames).
   { selector: '[data-frame-src]', attribute: 'data-frame-src' },
@@ -652,21 +652,21 @@ export const defaultDeferredIframeSources: Array<DeferredIframeSource> = [
 ]
 
 export const defaultLazySrcsetAttributes = [
-  'data-srcset', // lazysizes / vanilla-lazyload / lozad / bLazy / generic — 119k hits.
-  'data-tf-srcset', // Avada / Fusion ThemeBuilder — 17k hits.
-  'data-lazy-srcset', // Jetpack Lazy Images / WP Rocket / BJ Lazy Load — 5k hits.
-  'data-image-srcset', // Generic / Squarespace-style — 2.5k hits, often empty.
-  'data-modal-srcset', // Modal / lightbox component — 1.3k hits.
-  'data-splide-lazy-srcset', // Splide.js carousel — 922 hits.
-  'data-alt-srcset', // Generic alternate variant — 816 hits.
-  'fifu-data-srcset', // "Featured Image From URL" WP plugin — 682 hits, often empty.
-  'data-thumb-srcset', // WordPress thumbnail variant — 616 hits, often empty.
-  'data-vp-popup-img-srcset', // Visual Portfolio popup — 395 hits.
-  'data-original-srcset', // Legacy lazy-loaders — 220 hits, often empty.
-  'data-pswp-srcset', // PhotoSwipe lightbox — 196 hits.
-  'data-nectar-img-srcset', // Salient theme (Nectar) — 176 hits.
-  'nitro-lazy-srcset', // NitroPack — 109 hits, <0.01% of feeds. Non-`data-*` prefix.
-  'data-flickity-lazyload-srcset', // Flickity carousel — 63 hits, <0.01% of feeds.
+  'data-srcset', // lazysizes / vanilla-lazyload / lozad / bLazy / generic: 119k hits.
+  'data-tf-srcset', // Avada / Fusion ThemeBuilder: 17k hits.
+  'data-lazy-srcset', // Jetpack Lazy Images / WP Rocket / BJ Lazy Load: 5k hits.
+  'data-image-srcset', // Generic / Squarespace-style: 2.5k hits, often empty.
+  'data-modal-srcset', // Modal / lightbox component: 1.3k hits.
+  'data-splide-lazy-srcset', // Splide.js carousel: 922 hits.
+  'data-alt-srcset', // Generic alternate variant: 816 hits.
+  'fifu-data-srcset', // "Featured Image From URL" WP plugin: 682 hits, often empty.
+  'data-thumb-srcset', // WordPress thumbnail variant: 616 hits, often empty.
+  'data-vp-popup-img-srcset', // Visual Portfolio popup: 395 hits.
+  'data-original-srcset', // Legacy lazy-loaders: 220 hits, often empty.
+  'data-pswp-srcset', // PhotoSwipe lightbox: 196 hits.
+  'data-nectar-img-srcset', // Salient theme (Nectar): 176 hits.
+  'nitro-lazy-srcset', // NitroPack: 109 hits, <0.01% of feeds. Non-`data-*` prefix.
+  'data-flickity-lazyload-srcset', // Flickity carousel: 63 hits, <0.01% of feeds.
 ]
 
 export const defaultTrackingHosts = [
@@ -725,14 +725,14 @@ export const defaultTrackingPathSegments = ['pixel', 'beacon', 'count', 'impress
 // plans/analysis/scans/emoji-full/report.md). The earlier figures here were measured on a
 // ~2.7M-feed corpus and are not comparable, so every entry was re-measured together.
 export const defaultEmojiImageHosts = [
-  's.w.org/images/core/emoji/', // WordPress core wp-emoji-release output — 76,256 feeds (0.599%).
-  's0.wp.com/wp-content/mu-plugins/wpcom-smileys/', // WordPress.com Twemoji assets — 9,863 feeds (0.078%).
-  'fbcdn.net/images/emoji.php/', // Facebook embedded posts — 8,446 feeds (0.066%).
-  'cdn.jsdelivr.net/gh/twitter/twemoji', // Twemoji via jsDelivr, used by IPS and others — 2,350 feeds (0.018%).
-  'cdn.jsdelivr.net/joypixels/assets/', // JoyPixels CDN, incl. XenForo emoji mode — 1,895 feeds (0.015%).
-  'twemoji.maxcdn.com/', // Twemoji's retired CDN, still linked from older posts — 816 feeds (0.006%).
-  'abs.twimg.com/emoji/', // Twitter / X embedded tweets — 149 feeds.
-  'githubassets.com/images/icons/emoji/', // GitHub README scrapings — 39 feeds.
+  's.w.org/images/core/emoji/', // WordPress core wp-emoji-release output, 76,256 feeds (0.599%).
+  's0.wp.com/wp-content/mu-plugins/wpcom-smileys/', // WordPress.com Twemoji assets, 9,863 feeds (0.078%).
+  'fbcdn.net/images/emoji.php/', // Facebook embedded posts, 8,446 feeds (0.066%).
+  'cdn.jsdelivr.net/gh/twitter/twemoji', // Twemoji via jsDelivr, used by IPS and others, 2,350 feeds (0.018%).
+  'cdn.jsdelivr.net/joypixels/assets/', // JoyPixels CDN, incl. XenForo emoji mode, 1,895 feeds (0.015%).
+  'twemoji.maxcdn.com/', // Twemoji's retired CDN, still linked from older posts, 816 feeds (0.006%).
+  'abs.twimg.com/emoji/', // Twitter / X embedded tweets, 149 feeds.
+  'githubassets.com/images/icons/emoji/', // GitHub README scrapings, 39 feeds.
   'assets.github.com/images/icons/emoji/', // GitHub's pre-2018 asset host; seen in archived feeds, not separately counted.
 ]
 
@@ -750,10 +750,10 @@ export const defaultAvatarImageHosts = [
 // carries one of these tokens. Of all
 // matching runs, `wp-block-verse` and `wp-block-preformatted` dominate
 // the false-positive cases (split poems, ToCs), while `wp-block-code`
-// stays out — fragmented code blocks are the merge's intended target.
+// stays out: fragmented code blocks are the merge's intended target.
 export const defaultPreservedPreClasses = [
-  'wp-block-verse', // WordPress Gutenberg Verse block — poems, lyrics, scripture stanzas.
-  'wp-block-preformatted', // WordPress Gutenberg Preformatted block — author-chosen distinct blocks (ToCs, quotes, numbered headings).
+  'wp-block-verse', // WordPress Gutenberg Verse block: poems, lyrics, scripture stanzas.
+  'wp-block-preformatted', // WordPress Gutenberg Preformatted block: author-chosen distinct blocks (ToCs, quotes, numbered headings).
 ]
 
 // Feed counts below are distinct feeds in the 12,724,862-feed corpus, from one full walk on
@@ -761,99 +761,99 @@ export const defaultPreservedPreClasses = [
 // while the selector here is narrower, so the true figure is lower by an unmeasured margin.
 export const defaultNonContentSelectors = [
   // Subscribe and newsletter signup forms.
-  '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget — 7,718 feeds (0.061%).
-  '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA — 7,648 feeds (0.060%).
+  '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget: 7,718 feeds (0.061%).
+  '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA: 7,648 feeds (0.060%).
   // The same subscribe form as the wrap below, arriving as Substack's other snippet. The path is
   // anchored so a post embed (`/embed/post/{id}`) is not caught by it. 348 feeds.
   'iframe[src*=".substack.com/"][src$="/embed"]',
-  '.embedded-publication-wrap', // Substack cross-publication subscribe promo — 527 feeds (0.004%). Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
-  '.wp-block-jetpack-subscriptions', // Jetpack Gutenberg subscribe block — 245 feeds (0.002%).
-  '.kg-signup-card', // Ghost (Koenig) signup card — 266 feeds (0.002%).
-  '.mc4wp-form', // Mailchimp for WordPress plugin form — 214 feeds (0.002%).
-  '.formkit-form', // ConvertKit / Kit subscribe form — 152 feeds (0.001%).
-  'iframe[src*="embeds.beehiiv.com"]', // Beehiiv embed iframe — 61 feeds (<0.001%).
-  '.jetpack_subscription_widget', // Jetpack legacy sidebar subscribe widget — 51 feeds (<0.001%).
-  'form[action*="buttondown.email"]', // Buttondown embed-subscribe form — 21 feeds (<0.001%); 1,055 feeds mention the host at all, nearly all as plain links.
-  '.sqs-block-newsletter', // Squarespace newsletter block — 3 feeds (<0.001%).
+  '.embedded-publication-wrap', // Substack cross-publication subscribe promo: 527 feeds (0.004%). Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
+  '.wp-block-jetpack-subscriptions', // Jetpack Gutenberg subscribe block: 245 feeds (0.002%).
+  '.kg-signup-card', // Ghost (Koenig) signup card: 266 feeds (0.002%).
+  '.mc4wp-form', // Mailchimp for WordPress plugin form: 214 feeds (0.002%).
+  '.formkit-form', // ConvertKit / Kit subscribe form: 152 feeds (0.001%).
+  'iframe[src*="embeds.beehiiv.com"]', // Beehiiv embed iframe: 61 feeds (<0.001%).
+  '.jetpack_subscription_widget', // Jetpack legacy sidebar subscribe widget: 51 feeds (<0.001%).
+  'form[action*="buttondown.email"]', // Buttondown embed-subscribe form: 21 feeds (<0.001%); 1,055 feeds mention the host at all, nearly all as plain links.
+  '.sqs-block-newsletter', // Squarespace newsletter block: 3 feeds (<0.001%).
   // Bloom (Elegant Themes) optin. The bare `.et_bloom` class does not exist on any element in
   // the corpus: the tokens are `et_bloom_bottom_trigger` (881 feeds), `et_bloom_fields` and so
   // on, and a class selector matches whole tokens, so it stripped nothing. Matched on the
   // prefix instead. Most of what that reaches is the empty trigger span, which stripEmptyTags
   // already removed; the ~40 feeds carrying the popup form are what this actually gains.
   '[class*="et_bloom"]',
-  '.wpforms-container', // WPForms — 804 feeds (0.006%).
-  '[class*="tve-leads"]', // Thrive Leads optin — 232 feeds (0.002%).
+  '.wpforms-container', // WPForms: 804 feeds (0.006%).
+  '[class*="tve-leads"]', // Thrive Leads optin: 232 feeds (0.002%).
 
   // Ad slots.
-  '.adsbygoogle', // Google AdSense ad slot — 11,388 feeds (0.089%).
-  'div[id^="div-gpt-ad"]', // Google Ad Manager (GPT) ad slot — 1,748 feeds (0.014%).
-  '.adthrive-ad', // AdThrive (Raptive) ad slot — 79 feeds (0.001%).
-  'amp-ad', // AMP ad slot — 97 feeds.
-  'amp-auto-ads', // AMP auto-ads placement marker — 24 feeds.
-  'amp-sticky-ad', // AMP sticky bottom ad bar — 4 feeds.
-  'amp-sticky-ad-top-padding', // AMP runtime spacer holding room for the sticky ad bar — 4 feeds.
+  '.adsbygoogle', // Google AdSense ad slot: 11,388 feeds (0.089%).
+  'div[id^="div-gpt-ad"]', // Google Ad Manager (GPT) ad slot: 1,748 feeds (0.014%).
+  '.adthrive-ad', // AdThrive (Raptive) ad slot: 79 feeds (0.001%).
+  'amp-ad', // AMP ad slot: 97 feeds.
+  'amp-auto-ads', // AMP auto-ads placement marker: 24 feeds.
+  'amp-sticky-ad', // AMP sticky bottom ad bar: 4 feeds.
+  'amp-sticky-ad-top-padding', // AMP runtime spacer holding room for the sticky ad bar: 4 feeds.
 
   // Tracking beacons, which render nothing at all.
-  'amp-pixel', // AMP tracking pixel — 15 feeds.
-  'amp-analytics', // AMP analytics element, a JSON config for its runtime — 9 feeds.
+  'amp-pixel', // AMP tracking pixel: 15 feeds.
+  'amp-analytics', // AMP analytics element, a JSON config for its runtime: 9 feeds.
 
   // Share and call-to-action button clusters.
-  '.captioned-button-wrap', // Substack caption + CTA button (Share/Subscribe/Comment) — 1,976 feeds (0.016%).
-  '[class*="social-share"]', // Generic social-share button cluster — ≤1,695 feeds (0.013%).
-  '[class*="share-buttons"]', // Generic social-share button cluster — 2,153 feeds (0.017%).
-  '.sharethis-inline-share-buttons', // ShareThis inline share buttons — 674 feeds (0.005%).
-  '.sharedaddy', // Jetpack Sharedaddy share buttons — 588 feeds (0.005%).
-  '.feedflare', // FeedBurner share footer ("Share on X / Email this") — 262 feeds (0.002%).
-  '.addtoany_share_save_container', // AddToAny share buttons (WordPress) — 157 feeds (0.001%).
+  '.captioned-button-wrap', // Substack caption + CTA button (Share/Subscribe/Comment): 1,976 feeds (0.016%).
+  '[class*="social-share"]', // Generic social-share button cluster: ≤1,695 feeds (0.013%).
+  '[class*="share-buttons"]', // Generic social-share button cluster: 2,153 feeds (0.017%).
+  '.sharethis-inline-share-buttons', // ShareThis inline share buttons: 674 feeds (0.005%).
+  '.sharedaddy', // Jetpack Sharedaddy share buttons: 588 feeds (0.005%).
+  '.feedflare', // FeedBurner share footer ("Share on X / Email this"): 262 feeds (0.002%).
+  '.addtoany_share_save_container', // AddToAny share buttons (WordPress): 157 feeds (0.001%).
   // The AddToAny anchor itself. Empty in 6,904 of 8,138 feeds, where stripEmptyTags already
   // removed it; this is for the ~1,170 whose variant carries an image or text and survives as
   // a "Share" button.
   'a.addtoany_share_save',
-  // Survives as a live "Tweet" link in the output — 3,002 feeds, 2,807 of them with no other
+  // Survives as a live "Tweet" link in the output: 3,002 feeds, 2,807 of them with no other
   // non-content selector matching anywhere.
   'a.twitter-share-button',
-  // Drupal Easy Social — 1,652 feeds. Worth more than its count: the widget is chrome, but the
+  // Drupal Easy Social: 1,652 feeds. Worth more than its count: the widget is chrome, but the
   // pipeline cannot tell, so its Facebook Like iframe becomes an embed placeholder card and the
   // chrome is promoted to content.
   'div.easy_social_box',
-  '.a2a_kit', // AddToAny share icons (higher-prevalence marker than the wrapper) — 6,714 feeds (0.053%).
-  '[class*="addthis_"]', // AddThis share toolbox — 2,312 feeds (0.018%).
-  '.shareaholic-canvas', // Shareaholic share/related widget — 669 feeds (0.005%).
-  'amp-social-share', // AMP share button — 9 feeds.
+  '.a2a_kit', // AddToAny share icons (higher-prevalence marker than the wrapper): 6,714 feeds (0.053%).
+  '[class*="addthis_"]', // AddThis share toolbox: 2,312 feeds (0.018%).
+  '.shareaholic-canvas', // Shareaholic share/related widget: 669 feeds (0.005%).
+  'amp-social-share', // AMP share button: 9 feeds.
 
   // Related-posts widgets.
-  '.yarpp-related', // YARPP related-posts widget (WordPress) — 1,243 feeds (0.010%).
-  '.jp-relatedposts', // Jetpack related-posts carousel — 427 feeds (0.003%).
-  '.crp_related', // Contextual Related Posts WordPress plugin — 207 feeds (0.002%).
+  '.yarpp-related', // YARPP related-posts widget (WordPress): 1,243 feeds (0.010%).
+  '.jp-relatedposts', // Jetpack related-posts carousel: 427 feeds (0.003%).
+  '.crp_related', // Contextual Related Posts WordPress plugin: 207 feeds (0.002%).
 
   // Author bio blocks.
-  '.wp-block-post-author', // WordPress Gutenberg author bio block — 244 feeds (0.002%).
-  '.saboxplugin-wrap', // Simple Author Box WordPress plugin — 352 feeds (0.003%).
+  '.wp-block-post-author', // WordPress Gutenberg author bio block: 244 feeds (0.002%).
+  '.saboxplugin-wrap', // Simple Author Box WordPress plugin: 352 feeds (0.003%).
 
   // Excerpt-truncation links. Anchor-scoped so wrappers holding real content survive.
-  'a[class*="read-more"]', // "Read more" excerpt-truncation links — ≤44,947 feeds (0.353%).
-  'a[class*="continue-reading"]', // "Continue reading" excerpt-truncation links — ≤1,822 feeds (0.014%).
+  'a[class*="read-more"]', // "Read more" excerpt-truncation links: ≤44,947 feeds (0.353%).
+  'a[class*="continue-reading"]', // "Continue reading" excerpt-truncation links: ≤1,822 feeds (0.014%).
 
   // Comment-system embeds (JS mounts that render nothing without their loader script).
-  '.fb-comments', // Facebook Comments — 1,050 feeds (0.008%).
+  '.fb-comments', // Facebook Comments: 1,050 feeds (0.008%).
 
   // Print / PDF buttons.
-  '.printfriendly', // PrintFriendly print/PDF button — 199 feeds (0.002%).
-  '.pf-button', // PrintFriendly button — 93 feeds (0.001%).
+  '.printfriendly', // PrintFriendly print/PDF button: 199 feeds (0.002%).
+  '.pf-button', // PrintFriendly button: 93 feeds (0.001%).
 
   // Platform UI chrome and non-rendered scaffolding.
-  '.image-link-expand', // Substack restack/zoom buttons next to images — 11,319 feeds (0.089%).
-  'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets — 13,345 feeds (0.105%).
-  '.mcnPreviewText', // Mailchimp hidden email preheader text — 276 feeds (0.002%).
+  '.image-link-expand', // Substack restack/zoom buttons next to images: 11,319 feeds (0.089%).
+  'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets: 13,345 feeds (0.105%).
+  '.mcnPreviewText', // Mailchimp hidden email preheader text: 276 feeds (0.002%).
   '.tmblr-alt-text-helper', // Tumblr badge rendering a stray "ALT" beside an image that keeps its own alt attribute. 311 feeds (0.002%).
-  'img[src*="steamcommunity.com"][src*="placeholder"]', // Steam news static poster gif shown before its JS swaps in the YouTube iframe — ≤2,331 feeds (0.018%).
+  'img[src*="steamcommunity.com"][src*="placeholder"]', // Steam news static poster gif shown before its JS swaps in the YouTube iframe: ≤2,331 feeds (0.018%).
 
   // GDPR/consent-gated embeds are recovered, not stripped: each CMP parks the author's embed
   // URL on the iframe itself, so fixLazyIframes promotes it back into src (see the CMP block in
   // defaultLazyIframeAttributes). What stays stripped here is the part that renders as chrome.
   // Real Cookie Banner also gates <script> tags (adsbygoogle, Vimeo player.js). Script-scoped so
   // the gated scripts still go while the gated iframes are recovered.
-  'script[consent-original-src-_]', // Real Cookie Banner gated scripts — 14 occurrences.
+  'script[consent-original-src-_]', // Real Cookie Banner gated scripts: 14 occurrences.
   '.cookieconsent-optout-marketing', // Cookiebot "please accept marketing cookies" notice beside the gated iframe.
   '.pec-overlay', // Publii Embed Consent click-to-accept overlay beside the gated iframe.
   // OneTrust video fallback: thumbnail plus "enable cookies to view this content" text and a
@@ -861,11 +861,11 @@ export const defaultNonContentSelectors = [
   '.onetrust-css-video-wrapper .fallback-container', // OneTrust video fallback notice.
   // Avada's leftover "For privacy reasons … please accept" notice. The gated iframe itself is
   // recovered via data-privacy-src (a lazy attribute); only this consent nag is dead chrome.
-  '.fusion-privacy-placeholder', // Avada privacy-embed notice — 19 feeds.
+  '.fusion-privacy-placeholder', // Avada privacy-embed notice: 19 feeds.
   // AMP's own gate follows the same split. The element holds the config and the prompt UI and
   // nothing else, since whatever it gates carries data-block-on-consent and sits elsewhere in
   // the document, so removing it takes the nag and leaves the gated element to be recovered.
-  'amp-consent', // AMP consent gate — 3 feeds.
+  'amp-consent', // AMP consent gate: 3 feeds.
   // s9e MediaEmbed (forum software) wraps its player in a sizing span. Where the feed generator
   // stripped the iframe out of it, what survives is the wrapper around the literal word
   // "iframe", which renders as that word in the middle of the post. 392 feeds. Scoped to a

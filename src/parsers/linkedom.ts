@@ -56,7 +56,7 @@ const normalizeAttributeCase = (document: Document): void => {
 }
 
 // Known limitation (not worked around): because linkedom parses SVG in HTML mode (same
-// root cause as the self-close issue below), it lowercases camelCase SVG element names —
+// root cause as the self-close issue below), it lowercases camelCase SVG element names:
 // `<linearGradient>`/`<feGaussianBlur>`/`<clipPath>` serialize as `<lineargradient>` etc.,
 // which browsers won't render as gradients/filters. There's no upstream issue or fix for
 // this, and recasing on output would mean maintaining a list of every camelCase SVG element;
@@ -65,7 +65,7 @@ const normalizeAttributeCase = (document: Document): void => {
 //
 // Linkedom (#326) doesn't switch to XML mode for SVG subtrees when parsing
 // HTML, so `<svg><title /><path…></svg>` is parsed as `<svg><title><path…/>
-// </title></svg>` — the `<path>` becomes a CHILD of `<title>` because the
+// </title></svg>`: the `<path>` becomes a CHILD of `<title>` because the
 // self-close on a non-void HTML element is ignored. We pre-process the source
 // to expand any `<tag />` inside `<svg>…</svg>` into `<tag></tag>` so the
 // parser produces the structure SVG actually has.

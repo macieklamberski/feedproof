@@ -1,12 +1,12 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { ResolveUrlFn } from '../types.js'
 
-// Matches any URL that already carries a scheme (the URL-spec scheme grammar) — i.e.
-// already absolute, so resolution must leave it byte-identical. Protocol-relative URLs
-// (`//host/path`) have no scheme and are intentionally not matched, so they resolve to
-// the base URL's scheme. Shared with resolveRelativeUrls so both treat URLs identically.
 const urlShapeRegex = /[:/.]/
 
+// Matches any URL that already carries a scheme (the URL-spec scheme grammar), so it is
+// already absolute and resolution must leave it byte-identical. Protocol-relative URLs
+// (`//host/path`) have no scheme and are intentionally not matched, so they resolve to
+// the base URL's scheme. Shared with resolveRelativeUrls so both treat URLs identically.
 export const absoluteUrlRegex = /^[a-z][a-z0-9+.-]*:/i
 
 // Whether a URL names a media file of each kind, by extension, tolerating a query or
@@ -22,7 +22,7 @@ export const audioFileRegex = /\.(mp3|m4a|ogg|oga|wav|flac|opus)(\?|#|$)/i
 // nothing whatever a reader does with it.
 export const flashFileRegex = /\.swf(\?|#|$)/i
 
-// A real, loadable src — not empty and not the `about:blank` lazy placeholder.
+// A real, loadable src, not empty and not the `about:blank` lazy placeholder.
 export const isUsableSrc = (src: string | null): src is string => {
   const trimmed = src?.trim()
 
@@ -97,7 +97,7 @@ export const pickUrlParams = (url: string, names: ReadonlyArray<string>): string
   return query ? `?${query}` : ''
 }
 
-// Resolves a relative URL against the base URL, keeping the original otherwise —
+// Resolves a relative URL against the base URL, keeping the original otherwise:
 // an already-absolute/opaque URL, or a relative one that can't be resolved (no
 // base). Mirrors resolveRelativeUrls' per-URL contract, so placeholder URLs are
 // treated identically to content URLs without normalizing or dropping them.
@@ -123,7 +123,7 @@ export const resolveOrKeepUrl: ResolveOrKeepUrl = ((url, resolveUrlFn, baseUrl) 
 
 // Whether an anchor href points at the same page as the post. A bare `#fragment`
 // is inherently same-page; an absolute href counts only when it resolves to the
-// same origin and path as `baseUrl` — guarding against a fragment that points to
+// same origin and path as `baseUrl`: guarding against a fragment that points to
 // (or coincidentally matches) a section on a different page.
 export const isSamePage = (
   href: string,

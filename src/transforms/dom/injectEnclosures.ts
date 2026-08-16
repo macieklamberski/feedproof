@@ -172,7 +172,7 @@ const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
   return keptUrl.includes('?') && !incomingUrl.includes('?')
 }
 
-// Collapse image enclosures that are the same picture at a different size or render —
+// Collapse image enclosures that are the same picture at a different size or render:
 // a scaled copy, a CDN-proxied variant, or just a `?w=` query (a feed often lists one
 // image as a native enclosure plus a media:content). Without this they each inject as a
 // stacked copy. Keyed by getImageFingerprint (the same size-agnostic key the duplicate

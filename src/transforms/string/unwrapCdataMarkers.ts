@@ -10,9 +10,8 @@ import type { StringTransform } from '../../types.js'
 // entire value. A bare `<![CDATA[` in the middle of content is a legitimate
 // example (e.g. an XML tutorial) and must survive verbatim.
 //
-// The regex is anchored at both ends, so a non-match bails at the start without
-// scanning or copying the whole string; the inner string is only built when a
-// wrapper actually matches.
+// The wrapper regex is anchored at both ends so a non-match bails at the start,
+// without scanning or copying the whole string.
 const cdataStart = '<![CDATA['
 const cdataEnd = ']]>'
 const wrapperRegex = /^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/

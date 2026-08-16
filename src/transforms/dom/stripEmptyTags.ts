@@ -12,7 +12,7 @@ const preserveWhenEmpty = new Set([
   'audio',
   'img',
   'source',
-  // Void elements per HTML5 — cannot have content.
+  // Void elements per HTML5: cannot have content.
   'area',
   'base',
   'br',
@@ -50,7 +50,7 @@ export const stripEmptyTags: DomTransform = () => {
         continue
       }
 
-      // Custom elements (Web Components) — emptiness is meaningful.
+      // Custom elements (Web Components): emptiness is meaningful.
       if (tagName.includes('-')) {
         continue
       }
@@ -69,8 +69,6 @@ export const stripEmptyTags: DomTransform = () => {
         continue
       }
 
-      // Structural cells/terms keep their slot even when empty, so table columns
-      // and definition-list pairs stay aligned.
       if (structuralTags.has(tagName)) {
         continue
       }

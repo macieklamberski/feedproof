@@ -22,7 +22,7 @@ import { parseHtml as parseWithLinkedom } from './parsers/linkedom.js'
 import type { TransformContext } from './types.js'
 
 // Test adapters are synchronous, unlike the public `ParseHtmlFn` which allows a
-// promise — a sync return keeps `parseHtml(html).querySelector(...)` typechecking.
+// promise: a sync return keeps `parseHtml(html).querySelector(...)` typechecking.
 type ParseHtml = (html: string) => Document
 
 export const baseContext: TransformContext = {

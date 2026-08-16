@@ -37,8 +37,8 @@ const parseRedditPath = (value: string | undefined): Array<string> | undefined =
 // build `embed.reddit.com/user/{name}/` from a bare profile link and that address answers 404,
 // while `/user/{name}/comments/{id}/` is a profile post and renders like any other.
 //
-// The subreddit in a post path is not checked by the player — the post id alone selects the
-// post — but it is not optional either: `embed.reddit.com/comments/{id}/` serves the not-found
+// The subreddit in a post path is not checked by the player: the post id alone selects the
+// post, but it is not optional either: `embed.reddit.com/comments/{id}/` serves the not-found
 // shell. So the whole path travels as the id, which is also what lets the id address Reddit's
 // oEmbed endpoint, the one enrichment source that answers without a key.
 const parseTarget = (value: string | undefined): RedditTarget | undefined => {
@@ -120,7 +120,7 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
     // The post's title sits on the anchor naming the post: a comment widget links the comment
     // first and the discussion it came from second, and only the second carries a title. The
     // first anchor of a comment widget reads "Comment", a label the dialog writes in the
-    // reader's own language, which is why the kind decides this rather than the position.
+    // reader's own language, which is why the kind decides this, not the position.
     if (anchorTarget?.kind === 'post') {
       title ??= text(anchor)
     }

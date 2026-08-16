@@ -198,13 +198,13 @@ export const tiktokBlockquoteEmbedResolver = createMarkupEmbedResolver(
 // it still names the player, but the oEmbed endpoint, which takes the watch url, cannot be
 // rebuilt from it.
 //
-// A carrier framing the watch page instead is the other half, and it used to be left alone on
-// the grounds that the page refuses framing. It does (`x-frame-options: SAMEORIGIN`, checked
-// 2026-08-15), which is the reason to claim it rather than to skip it: unclaimed it becomes a
-// placeholder pointing at a page that renders nothing, while the path already names the clip
-// and the player is mintable from it. That is the url a wrapper writes when it stores what the
-// author pasted. The handle rides in the same path, so the id is the composite the blockquote
-// carrier builds, and the watch page becomes the placeholder's url.
+// A carrier framing the watch page instead is the other half. The page refuses framing
+// (`x-frame-options: SAMEORIGIN`, checked 2026-08-15), which is the reason to claim it rather
+// than to skip it: unclaimed it becomes a placeholder pointing at a page that renders nothing,
+// while the path already names the clip and the player is mintable from it. That is the url a
+// wrapper writes when it stores what the author pasted. The handle rides in the same path, so
+// the id is the composite the blockquote carrier builds, and the watch page becomes the
+// placeholder's url.
 //
 // `declaredSize: false` because the pasted snippets state a landscape box (560x400 in the
 // wild) on a player taller than it is wide. A wrong ratio reserves worse space than none,

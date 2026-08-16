@@ -38,7 +38,7 @@ export const extractPodbeanId = (link: string): string | undefined => {
 // off the v2 player proves nothing by itself, since it answers 200 to any id.
 //
 // No metadata worth having. `api.podbean.com/v1/oembed` does answer key-free, but its whole
-// payload is `version, provider_name, provider_url, width, height, type, html` — no title, no
+// payload is `version, provider_name, provider_url, width, height, type, html`: no title, no
 // thumbnail, no author (checked 2026-08-11). So height and the repaired url are what this
 // resolver is for, and enrichment would add nothing.
 export const podbeanResolveEmbed = (url: string): EmbedResolverResult | undefined => {

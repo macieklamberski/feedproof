@@ -131,7 +131,7 @@ export const brightcoveFlashEmbedResolver = createUrlEmbedResolver(
 // feeds, more than the `<video-js>` element, and until now it fell through to the generic
 // placeholder with no provider and no id.
 //
-// The account and video id are read back out rather than the url passed through whole, because
+// The account and video id are read back out, not the url passed through whole, because
 // the pair is what an enricher would key on later, and because a player url carrying neither is
 // not a video worth naming.
 const playerPathRegex = /^([^_]+)_(.+)$/

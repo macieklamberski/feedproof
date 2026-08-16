@@ -7,17 +7,14 @@ import type { MediaResolver, MediaResolverResult } from '../types.js'
 // video is `…/{name}.mp4`. Verified live 2026-08-11 against 12 posters sampled from the
 // corpus, all 200.
 //
-// An earlier version of this resolver also demanded the file name from `title="Video: …"` and
-// used the poster only for its directory. That title is absent from practically every feed —
-// measured 0 of 40 corpus feeds carrying both — and absent from the live page too, so the
-// resolver never fired. The poster alone carries both halves.
+// The file name cannot come from `title="Video: …"`: 0 of 40 corpus feeds carry both, and the
+// live page omits that title too.
 //
 // Two different ids are in play and only one addresses the file. The
 // `wsite-video-container-{id}` / `video-iframe-{id}` number is the *element* id, which Weebly
 // passes to `apps/generateVideo.php?elementid={id}&user={site}` to get the player JS; as a
-// file name in the upload directory it 404s. The upload path carries its own, different id —
-// `/uploads/b/{user}-{pathId}/{name}` — and that one is reachable only through the poster url,
-// which is another reason the poster is the single input worth reading.
+// file name in the upload directory it 404s. The upload path carries its own, different id,
+// `/uploads/b/{user}-{pathId}/{name}`, reachable only through the poster url.
 const posterUrlRegex = /url\(\s*['"]?([^'")]*\/uploads\/[^'")]+)['"]?\s*\)/
 
 // The stored name keeps its `_NNN` suffix; only the extension changes between the two files.

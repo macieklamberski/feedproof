@@ -13,7 +13,7 @@ const boldTags = new Set(['b', 'strong'])
 
 const mediaSelector = [...mediaElements].join(', ')
 
-// Whitespace, comments, and inline elements holding neither text nor media — the nodes
+// Whitespace, comments, and inline elements holding neither text nor media: the nodes
 // stripEmptyTags later removes. Judging the heading against them keeps the unwrap aligned
 // with the final content: a whitespace-only anchor beside the bold used to block it here,
 // only for stripEmptyTags to delete that anchor and leave the unwrap to a second run.
@@ -27,7 +27,6 @@ const isIgnorableNode = (node: Node): boolean => {
   )
 }
 
-// Returns the heading's only meaningful child when that child is an element, else null.
 const soleContentElement = (heading: Element): Element | null => {
   let found: Element | null = null
 

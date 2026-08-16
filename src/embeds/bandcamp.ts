@@ -81,7 +81,7 @@ export const extractBandcampRelease = (link: string): string | undefined => {
 //
 // Reading it takes one step, because the two parsers disagree about what an iframe contains.
 // Fallback content is raw text per the spec, which is what jsdom produces, while linkedom
-// exposes it as child elements — so `querySelector` reaches the anchor in one and not the
+// exposes it as child elements, so `querySelector` reaches the anchor in one and not the
 // other. `innerHTML` is the view they agree on, and re-parsing it into a throwaway element
 // turns it back into a real anchor in both. That also makes the parser the entity decoder,
 // so the label arrives as `Sam & Dave – Hold On` rather than its escaped form.

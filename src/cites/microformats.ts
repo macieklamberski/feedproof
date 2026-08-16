@@ -22,7 +22,7 @@ const responsePrefixes = ['u-', 'p-']
 
 // h-cite is the microformats2 citation format (https://microformats.org/wiki/h-cite): a
 // standard, cross-site way to mark up a reference to another work. Unlike every other
-// cite source here it is not a platform convention — any mf2-emitting theme (IndieWeb
+// cite source here it is not a platform convention: any mf2-emitting theme (IndieWeb
 // sites, Hugo microblog themes) renders the same classes, so one resolver covers all of
 // them. An IndieWeb post commonly wraps the citation in a response class (`u-repost-of`,
 // `u-bookmark-of`, `p-in-reply-to`, …) naming the kind of reference; that becomes the `kind`.

@@ -29,7 +29,7 @@ const composeJwplayerEmbed = (mediaId: string): EmbedResolverResult => {
     id: mediaId,
     // Rebuilt from the id, so the empty player-id segment some feeds ship
     // (`{mediaId}-.html`, which 404s) is dropped and the URL loads the default player.
-    // JW Player has no public watch page, so no `url` — the placeholder anchors to the src.
+    // JW Player has no public watch page, so no `url`: the placeholder anchors to the src.
     src: `https://cdn.jwplayer.com/players/${mediaId}.html`,
     thumbnail: `https://cdn.jwplayer.com/v2/media/${mediaId}/poster.jpg`,
   }

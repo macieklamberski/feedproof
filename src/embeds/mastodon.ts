@@ -45,7 +45,7 @@ const composeEmbedResult = (status: MastodonStatus): EmbedResolverResult => {
   return {
     provider: 'mastodon',
     // `EnrichEmbedFn` is handed `{provider, id}` and nothing else, and a status id is unique
-    // only within the instance that minted it — two instances number their posts from the
+    // only within the instance that minted it: two instances number their posts from the
     // same sequence. So the instance travels inside the id, or no lookup can be addressed
     // from a placeholder at all.
     id: `${status.host}/${status.id}`,
@@ -63,16 +63,13 @@ const composeEmbedResult = (status: MastodonStatus): EmbedResolverResult => {
 // Mastodon has no fixed host: the corpus embeds 121 distinct instances across 352 matches, 83
 // of them exactly once, so a host allowlist would miss most of the network while a bare url
 // shape would claim every site that files posts under an author and a number. The status parse
-// is therefore the guard that every carrier goes through: the selector claims the classed
-// carriers the platform's own copy-embed snippet writes, plus any iframe whose src ends in the
-// embed suffix, because publishers also ship the status iframe with no class at all, and only
-// a url the parse reads as a status resolves.
+// is therefore the guard that every carrier goes through, which lets the selector stay loose
+// enough to take a class-less status iframe, since publishers ship those too.
 //
-// Three carriers, one widget. Pre-4.3 instances emit the iframe, with or without its class,
-// 4.3 and later emit a blockquote that `embed.js` swaps for the same iframe at runtime, and
-// WordPress strips that script so the blockquote arrives with only its anchor. The blockquote
-// holds no post text, just the platform logo and a "View on Mastodon" caption, so nothing is
-// lost by replacing it.
+// Pre-4.3 instances emit the iframe, with or without its class, 4.3 and later emit a blockquote
+// that `embed.js` swaps for the same iframe at runtime, and WordPress strips that script so the
+// blockquote arrives with only its anchor. The blockquote holds no post text, just the platform
+// logo and a "View on Mastodon" caption, so nothing is lost by replacing it.
 //
 // Not matched: `aside.mastodon-embed`, which is a hand-typed quote of a post carrying the real
 // body text and no embed at all, and `div.mastodon-embed`, which only wraps the iframe that is

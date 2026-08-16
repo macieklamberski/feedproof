@@ -48,7 +48,7 @@ export const rebuildEmbedlyEmbeds: DomTransform = () => (document) => {
   for (const element of document.querySelectorAll(embedlyCarrierSelector)) {
     if (element.localName === 'iframe') {
       // URLSearchParams reads (and percent-decodes) the query without throwing on a malformed src,
-      // so no full URL parse is needed — the protocol-relative `//cdn.embedly.com` form works too.
+      // so no full URL parse is needed: the protocol-relative `//cdn.embedly.com` form works too.
       const params = new URLSearchParams(attr(element, 'src')?.split('?')[1] ?? '')
       const inner = params.get('src')
 

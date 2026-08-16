@@ -6,8 +6,8 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 // Instagram's embed dialog ships a post as `<blockquote class="instagram-media">` holding the
 // permalink, a skeleton of empty divs and an `embed.js` loader beside it. The loader never runs
-// in a reader, so the quote arrives as its own chrome — a "View this post on Instagram" line and
-// an "A post shared by" byline — with no picture and no player.
+// in a reader, so the quote arrives as its own chrome: a "View this post on Instagram" line and
+// an "A post shared by" byline: with no picture and no player.
 //
 // The frame that loader builds is mintable from the permalink alone,
 // `instagram.com/{p|reel|tv}/{shortcode}/embed/[captioned/]`, which is also what the AMP
@@ -17,8 +17,8 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 const instagramHosts = ['instagram.com', 'instagr.am']
 
 // The paths one post is addressed by: the post, the reel (singular and plural spellings) and
-// the retired IGTV route. They are not interchangeable — a live photo serves its picture at
-// `/p/{shortcode}/media/` and answers 404 at `/reel/{shortcode}/media/` (checked 2026-08-13) —
+// the retired IGTV route. They are not interchangeable: a live photo serves its picture at
+// `/p/{shortcode}/media/` and answers 404 at `/reel/{shortcode}/media/` (checked 2026-08-13),
 // so the path stays part of the id rather than being normalized away.
 const postPathRegex = /^\/(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/
 const safeShortcodeRegex = /^[A-Za-z0-9_-]+$/
@@ -146,8 +146,8 @@ const findByline = (element: Element): Element | undefined => {
   })
 }
 
-// The dialog used to write a byline that linked the account and dated the post — "A post shared
-// by {name} (@handle) on {date}" — and to put the caption in a paragraph above it. The current
+// The dialog used to write a byline that linked the account and dated the post: "A post shared
+// by {name} (@handle) on {date}", and to put the caption in a paragraph above it. The current
 // one writes neither: its only text is the skeleton's own chrome and an undated byline. So the
 // caption is read only where that byline marks the paragraph above it as the post's own text;
 // taking it from the modern shape would publish "View this post on Instagram" as the caption.
