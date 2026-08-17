@@ -10,8 +10,8 @@ import { attr, find, text } from '../utils/dom.js'
 // Two traps. `kanren` (関連, "related") is the theme's related-posts *listing*, a multi-entry
 // block of the site's own posts, but it is also co-classed on real cards, so it is useless as
 // a signal in either direction: the match keys on `st-cardbox` and never on `kanren`.
-// And `st-cardlink-card`/`st-cardlink-img` belong to the unrelated header-card grid, so the
-// anchor is matched by what it contains rather than by an `st-cardlink` prefix.
+// And `st-cardlink-card`/`st-cardlink-img` belong to the unrelated header-card grid, so an
+// `st-cardlink` prefix is no use as a match: the anchor is matched by what it contains.
 //
 // Images carry `src` in feeds but `data-src` on rendered pages, since the theme skips its
 // lazy-loading in feed context.

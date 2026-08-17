@@ -103,7 +103,7 @@ export const convertWidgets: DomTransform = (context) => {
     context
 
   return async (document) => {
-    // One query per distinct selector rather than per resolver: every url-keyed resolver
+    // One query per distinct selector instead of per resolver: every url-keyed resolver
     // shares the same one, and the fallback at the end reuses that same result, so the
     // registry and the fallback can never disagree about what a carrier is. The arrays are
     // static because both loops replace elements, and a live collection would shrink
@@ -142,8 +142,8 @@ export const convertWidgets: DomTransform = (context) => {
       const resolved = resolveOrKeepUrl(parked.src, resolveUrlFn, baseUrl)
       const cleaned = cleanUrlFn?.(resolved) ?? resolved
 
-      // The container often holds a caption or a track title, which is content rather than
-      // player chrome, so the media goes in front of it instead of replacing it.
+      // The container often holds a caption or a track title, which is content, not player
+      // chrome, so the media goes in front of it instead of replacing it.
       element.prepend(createMediaElement(document, { tag: parked.tag, src: cleaned }))
     }
 
@@ -228,7 +228,7 @@ export const convertWidgets: DomTransform = (context) => {
       // resolveUrlFn rejects `about:blank`. The trim drops empty/whitespace placeholders
       // (which would otherwise resolve to the base URL).
       const resolved = src.trim() ? resolveUrlFn(src, baseUrl) : undefined
-      // This src is the publisher's own URL rather than one minted from a parsed id, so it arrives
+      // This src is the publisher's own URL, not one minted from a parsed id, so it arrives
       // with whatever tracking params they pasted.
       const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
 

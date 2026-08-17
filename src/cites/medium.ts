@@ -4,7 +4,7 @@ import { attr, bgImage, find, text, textNode } from '../utils/dom.js'
 
 // Medium's "mixtape" link card. Two sibling anchors inside a `.graf--mixtapeEmbed` block:
 // the text one carries url, title, description and host, and `a.mixtapeImage` carries the
-// thumbnail as a CSS `background-image` rather than an `<img>`. That anchor is often empty
+// thumbnail as a CSS `background-image`, with no `<img>` at all. That anchor is often empty
 // (Medium adds `mixtapeImage--empty` and no background), so the thumbnail is optional.
 //
 // This is legacy markup. Medium's current feeds carry plain semantic HTML with no card at
@@ -30,8 +30,8 @@ export const mediumCiteResolver: CiteResolver = {
       title: text(anchor, 'strong'),
       description: text(anchor, 'em'),
       thumbnail: bgImage(find(element, '.mixtapeImage')),
-      // The host trails the description as a bare text node rather than sitting in an
-      // element of its own, so it is read from text nodes only.
+      // The host trails the description as a bare text node with no element of its own, so
+      // it is read from text nodes only.
       publisher: textNode(anchor),
     })
   },

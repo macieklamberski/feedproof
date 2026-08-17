@@ -27,8 +27,8 @@ export const devtoLinkCiteResolver: CiteResolver = {
       url: attr(find(body, 'h2 a'), 'href') ?? attr(find(element, '.c-embed__cover a'), 'href'),
       title: text(body, 'h2'),
       description: text(body, 'p'),
-      // The publisher is a bare text node beside the favicon image rather than an element
-      // of its own, so it is read from the favicon's parent, text nodes only.
+      // The publisher is a bare text node beside the favicon image, with no element of its
+      // own, so it is read from the favicon's parent, text nodes only.
       publisher: textNode(favicon?.parentElement),
       icon: attr(favicon, 'src'),
       thumbnail: attr(find(element, '.c-embed__cover img'), 'src'),

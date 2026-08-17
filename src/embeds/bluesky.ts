@@ -66,7 +66,7 @@ const extractBlueskyPost = (uri: string): BlueskyPost | undefined => {
 // The two url spellings of the same post: `bsky.app/profile/{authority}/post/{rkey}` is the
 // permalink the blockquote's own anchors carry, and
 // `embed.bsky.app/embed/{authority}/app.bsky.feed.post/{rkey}` is the player the embed script
-// builds. The host is checked rather than the path shape, so a url that merely spells one of
+// builds. The host is checked, not the path shape, so a url that merely spells one of
 // these paths on its own host names no post.
 const extractBlueskyPostFromUrl = (link: string): BlueskyPost | undefined => {
   const parsed = parseUrlOnHosts(link, blueskyHosts)
@@ -285,8 +285,8 @@ export const blueskyS9eEmbedResolver = createMarkupEmbedResolver(
 )
 
 // A newsletter platform ships the post as a custom element with a declarative shadow root,
-// which no reader mounts. Its `src` is an AT URI written with the author's handle rather than
-// their DID, and the fallback blockquote inside it holds the post text.
+// which no reader mounts. Its `src` is an AT URI written with the author's handle, not their
+// DID, and the fallback blockquote inside it holds the post text.
 export const blueskyPostElementEmbedResolver = createMarkupEmbedResolver(
   'bluesky-post[src]',
   (element) => {

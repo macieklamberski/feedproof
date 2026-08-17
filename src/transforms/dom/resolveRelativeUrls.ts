@@ -3,7 +3,7 @@ import type { DomTransform } from '../../types.js'
 import { countSrcsetCandidates, parseSrcset } from '../../utils/images.js'
 import { absoluteUrlRegex } from '../../utils/urls.js'
 
-// Runs without a `baseUrl` too. A protocol-relative url needs a scheme rather than a base, and
+// Runs without a `baseUrl` too. A protocol-relative url needs a scheme, not a base, and
 // `resolveUrlFn` supplies one, so those are absolutised for every caller. Anything genuinely
 // relative resolves to nothing without a base and is left as it stands, which is what the
 // `if (resolved)` guards below already express.

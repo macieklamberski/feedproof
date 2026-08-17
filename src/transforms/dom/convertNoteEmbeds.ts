@@ -5,7 +5,7 @@ import { attr, hasText } from '../../utils/dom.js'
 // note.com ships every embed as an empty <figure> that only its web client hydrates, naming the
 // target in `data-src`. Nothing renders it in a reader, so the embed is lost: the figure survives
 // `stripEmptyTags` because note.com writes a uuid into `name` and `id`, which means the loss is
-// silent in the output rather than visible in it. Giving the url an <iframe> carrier is what puts
+// silent in the output, not visible in it. Giving the url an <iframe> carrier is what puts
 // it back on the pipeline, where `convertWidgets` treats it like any other frame.
 //
 // The carrier is emitted on the strength of what note.com says the figure is, not on a guess
@@ -23,12 +23,12 @@ import { attr, hasText } from '../../utils/dom.js'
 // the only honest signal, and it is passed on untouched.
 //
 // `data-src` is always a canonical page url, never a player: across 1,213 figures sampled from
-// live articles, none carried one.
-// Those pages overwhelmingly refuse framing (YouTube, X, TikTok, Instagram and stand.fm answer
-// SAMEORIGIN or DENY, Spotify sends a restrictive frame-ancestors), so a figure only reaches a
-// reader as something watchable when a resolver reads the page url off the carrier and mints the
-// player url from it. That is what `notecomIframeEmbedResolver` and the page-url branches of the
-// twitter, tiktok and stand.fm resolvers exist for, and this transform is what feeds them.
+// live articles, none carried one. Those pages overwhelmingly refuse framing (YouTube, X, TikTok,
+// Instagram and stand.fm answer SAMEORIGIN or DENY, Spotify sends a restrictive frame-ancestors),
+// so a figure only reaches a reader as something watchable when a resolver reads the page url off
+// the carrier and mints the player url from it. That is what `notecomIframeEmbedResolver` and the
+// page-url branches of the twitter, tiktok and stand.fm resolvers exist for, and this transform
+// is what feeds them.
 export const convertNoteEmbeds: DomTransform = () => (document) => {
   for (const element of document.querySelectorAll('figure[embedded-service][data-src]')) {
     const source = attr(element, 'data-src')

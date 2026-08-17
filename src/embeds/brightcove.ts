@@ -5,7 +5,7 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 // Brightcove builds its player page from four ids the in-page embed carries as attributes. The
 // account is usually one of them, but some plugins leave it only in the loader script's url, so
-// both places are read here rather than by whoever holds the element.
+// both places are read here instead of by whoever holds the element.
 const brightcoveIdRegex = /^\d{5,}$/
 const accountScriptSelector = 'script[src*="players.brightcove.net"]'
 const accountScriptRegex = /players\.brightcove\.net\/(\d+)\//
@@ -101,8 +101,8 @@ export const brightcoveFlashResolveEmbed = (
   const videoId = params?.get('@videoPlayer') ?? parsed.searchParams.get('@videoPlayer')
   const account = parsed.searchParams.get('publisherID') ?? params?.get('publisherID')
 
-  // A reference id (`ref:my-video`) names the video for the account's own API rather than
-  // the player, so anything but a numeric id is left to the generic placeholder.
+  // A reference id (`ref:my-video`) names the video for the account's own API, not the
+  // player, so anything but a numeric id is left to the generic placeholder.
   if (
     !videoId ||
     !account ||
@@ -127,7 +127,7 @@ export const brightcoveFlashEmbedResolver = createUrlEmbedResolver(
 
 // The player page as an ordinary iframe, `players.brightcove.net/{account}/{player}_{embed}
 // /index.html?videoId={id}`. It is the most common Brightcove carrier in the corpus at 243
-// feeds, more than the `<video-js>` element, and until now it fell through to the generic
+// feeds, more than the `<video-js>` element, and unclaimed it falls through to the generic
 // placeholder with no provider and no id.
 //
 // The account and video id are read back out, not the url passed through whole, because
@@ -155,7 +155,7 @@ export const brightcoveResolveEmbed = (url: string): EmbedResolverResult | undef
     return
   }
 
-  // A reference id names the video for the account's own api rather than the player, the same
+  // A reference id names the video for the account's own api, not the player, the same
   // exclusion the Flash form makes.
   if (!brightcoveIdRegex.test(videoId)) {
     return

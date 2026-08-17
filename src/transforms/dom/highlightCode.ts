@@ -185,10 +185,9 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
   }
 }
 
-// highlight.js resolves these to its "Plain text" grammar, which only escapes the
-// text: no tokens, no real language. A block declared as one of them is left
-// untouched rather than badged "Plain text", which says nothing a code block does
-// not already convey.
+// highlight.js resolves these to its "Plain text" grammar, which only escapes the text: no
+// tokens, no real language. A block declared as one of them is left untouched instead of being
+// badged "Plain text", which says nothing a code block does not already convey.
 const plaintextLanguages = new Set(['plaintext', 'text', 'txt'])
 
 const preTag = new Set(['pre'])
@@ -205,14 +204,13 @@ const labelForLanguage = (language: string): string => {
 // code line each, with no newline character between them.
 const blockLineWrappers = new Set(['div', 'p', 'li', 'tr'])
 
-// Read a code block to text, treating those block-level line wrappers as line
-// breaks. Reading textContent alone would flatten every wrapped line onto one
-// row, because textContent just concatenates without honoring the layout. A
-// break is added when a wrapper opens, skipped when the text is empty (so there
-// is no leading break) or already ends with one (so nested wrappers like
-// <div><div>line</div></div> and blank spacer lines collapse back to a single
-// break). Blocks that carry real newlines, and inline highlighters, are
-// unaffected: with no wrappers to open, the result equals textContent.
+// Read a code block to text, treating those block-level line wrappers as line breaks. Reading
+// textContent alone would flatten every wrapped line onto one row, because it concatenates
+// without honoring the layout. A break is added when a wrapper opens, skipped when the text is
+// empty (so there is no leading break) or already ends with one (so nested wrappers like
+// <div><div>line</div></div> and blank spacer lines collapse back to a single break). Blocks that
+// carry real newlines, and inline highlighters, are unaffected: with no wrappers to open, the
+// result equals textContent.
 const getCodeBlockText = (target: Element): string => {
   let text = ''
 

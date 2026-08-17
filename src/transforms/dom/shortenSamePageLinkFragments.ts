@@ -25,19 +25,17 @@ const collectFragmentTargets = (document: Document): Set<string> => {
   return targets
 }
 
-// The inverse of resolveRelativeUrls: once hrefs are absolute, an in-page anchor
-// to the post itself (e.g. a heading permalink `https://site/post#sec`) still
-// reads as a cross-page link. The downstream reader strips the page's origin
-// context, so such a link navigates away instead of scrolling to its target.
-// This rewrites a same-page href back to its bare `#fragment` so it stays local.
-// Off-page fragment links (a different post or site) are left untouched.
+// Rewrites a same-page href back to its bare `#fragment` so it stays local. This is the inverse
+// of resolveRelativeUrls: once hrefs are absolute, an in-page anchor to the post itself (e.g. a
+// heading permalink `https://site/post#sec`) reads as a cross-page link, and the downstream
+// reader strips the page's origin context, so it navigates away instead of scrolling to its
+// target. Off-page fragment links (a different post or site) are left untouched.
 //
-// A link on the item's own page (`baseUrl`) is always shortened. Some feeds,
-// notably HTML-to-Atom bridges, instead absolutize in-page fragments against the
-// feed's site or feed page (`sameSiteUrls`) rather than the item permalink. Those
-// are shortened only when the fragment names a target that exists in this content,
-// so genuine links to another of the site's pages, and self-consistent third-party
-// embeds, are left alone.
+// A link on the item's own page (`baseUrl`) is always shortened. Some feeds, notably
+// HTML-to-Atom bridges, instead absolutize in-page fragments against the feed's site or feed
+// page (`sameSiteUrls`) rather than the item permalink. Those are shortened only when the
+// fragment names a target that exists in this content, so genuine links to another of the site's
+// pages, and self-consistent third-party embeds, are left alone.
 export const shortenSamePageLinkFragments: DomTransform = ({
   baseUrl,
   sameSiteUrls = [],

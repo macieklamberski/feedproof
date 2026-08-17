@@ -14,9 +14,10 @@ const boldTags = new Set(['b', 'strong'])
 const mediaSelector = [...mediaElements].join(', ')
 
 // Whitespace, comments, and inline elements holding neither text nor media: the nodes
-// stripEmptyTags later removes. Judging the heading against them keeps the unwrap aligned
-// with the final content: a whitespace-only anchor beside the bold used to block it here,
-// only for stripEmptyTags to delete that anchor and leave the unwrap to a second run.
+// stripEmptyTags later removes. Judging the heading against them keeps the unwrap aligned with
+// the final content. Counting them instead would let a whitespace-only anchor beside the bold
+// block the unwrap here, only for stripEmptyTags to delete that anchor and leave the unwrap to a
+// second run.
 const isIgnorableNode = (node: Node): boolean => {
   if (isWhitespaceText(node) || isComment(node)) {
     return true

@@ -287,7 +287,7 @@ export const codepenWidgetEmbedResolver = createMarkupEmbedResolver(
 
 // The player, either written by hand or left behind by a CMS that ran `ei.js` before exporting.
 // The publisher's own query selects which panes open and which theme they use, so their url is
-// kept whole rather than rebuilt from the slug.
+// kept whole instead of rebuilt from the slug.
 export const codepenResolveEmbed = (
   url: string,
   element?: Element,

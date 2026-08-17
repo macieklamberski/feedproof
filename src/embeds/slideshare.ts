@@ -58,7 +58,7 @@ export const slideshareResolveEmbed = (link: string): EmbedResolverResult | unde
     return
   }
 
-  // The keyed url is already the canonical embed, so it is kept whole rather than rebuilt from
+  // The keyed url is already the canonical embed, so it is kept whole instead of rebuilt from
   // the key. The numeric one goes through the same composer as the Flash repair.
   return isKeyed
     ? {

@@ -38,9 +38,9 @@ const whitespaceRegex = /\s+/
 const interactiveClassRegex = /accordion|collaps|toggl|panel-title|panel-heading|tta-panel/i
 const interactiveAttrRegex = /toggle|accordion|collapse/i
 
-// An anchor child is a decorative permalink marker: to be dropped rather than
-// kept as heading text: when its text is empty, a lone glyph, or the inline
-// `#fragment` form some generators render (e.g. `<span class="anchor">#intro</span>`).
+// An anchor child is a decorative permalink marker, to be dropped and never kept as heading
+// text, when its text is empty, a lone glyph, or the inline `#fragment` form some generators
+// render (e.g. `<span class="anchor">#intro</span>`).
 const isGlyphMarker = (text: string, fragment: string): boolean => {
   const trimmed = text.trim()
 
@@ -57,13 +57,12 @@ const slugify = (value: string): string => {
     .replace(/^-+|-+$/g, '')
 }
 
-// Headings carry in-page permalinks ("anchors") in many shapes: the whole
-// heading wrapped in a `#fragment` link, a trailing `#`/`¶` glyph, a generator's
-// empty `headerlink`/`hash-link` anchor, a bare `<a name>`/`<a id>` scroll target,
-// a plain `id` on the heading itself, and so on. This collapses every shape to
-// one canonical affordance: plain heading text plus a single empty, self-referential
-// anchor (`<a id="fragment" href="#fragment">`) as the heading's first child: the
-// fragment rides on the anchor's `id` (the scroll target), so the reader can paint a
+// Headings carry in-page permalinks ("anchors") in many shapes: the whole heading wrapped in a
+// `#fragment` link, a trailing `#`/`¶` glyph, a generator's empty `headerlink`/`hash-link`
+// anchor, a bare `<a name>`/`<a id>` scroll target, a plain `id` on the heading itself, and so
+// on. This collapses every shape to one: plain heading text plus a single empty,
+// self-referential anchor (`<a id="fragment" href="#fragment">`) as the heading's first child.
+// The fragment rides on the anchor's `id` (the scroll target), so the reader can paint a
 // clickable permalink glyph (e.g. `::before { content: '#' }`) without any script.
 export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn }) => {
   return (document) => {

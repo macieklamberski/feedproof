@@ -159,7 +159,7 @@ export type TransformContext = {
   // Other URLs that also stand for this item's own page (e.g. the feed's site
   // page and feed URL, alongside the item permalink in `baseUrl`). Some feeds,
   // notably HTML-to-Atom bridges, absolutize in-page fragments against one of
-  // these rather than the permalink, so transforms that recognize self-page
+  // these, not the permalink, so transforms that recognize self-page
   // links check these too. See `shortenSamePageLinkFragments`.
   sameSiteUrls?: Array<string>
   enclosures?: Array<Enclosure>

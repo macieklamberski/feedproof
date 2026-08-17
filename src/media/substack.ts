@@ -30,7 +30,7 @@ export const substackMediaResolver: MediaResolver = {
     const mediaUploadId = attrs?.mediaUploadId
 
     // The id goes straight into a url, so anything that is not the shape Substack emits is
-    // dropped rather than interpolated.
+    // dropped.
     if (!mediaUploadId || !uuidRegex.test(mediaUploadId)) {
       return
     }

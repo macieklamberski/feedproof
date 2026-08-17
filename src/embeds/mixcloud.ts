@@ -12,7 +12,7 @@ const unsafeSegmentRegex = /[/?#\\]|\s|^\.+$/
 // Segments arrive percent-encoded, and both the check and the value need them decoded: the
 // check because a separator arrives disguised as often as plain (`..%2Fetc` is one), and the
 // value because the widget url encodes it again on the way out. A malformed escape decodes to
-// nothing usable, so it is refused rather than guessed at.
+// nothing usable, so it is refused.
 const decodeSegment = (segment: string): string | undefined => {
   try {
     return decodeURIComponent(segment)
@@ -35,7 +35,7 @@ export const extractMixcloudShow = (link: string): string | undefined => {
 
   const segments = getPathSegments(feed.startsWith('http') ? feed : `https://example.com${feed}`)
 
-  // Exactly a user and a slug: a deeper path is a section of the site rather than a show, and
+  // Exactly a user and a slug: a deeper path is a section of the site, not a show, and
   // the value goes into a url, so anything else is left to the generic placeholder.
   const decoded = segments.map(decodeSegment)
 
@@ -58,7 +58,7 @@ export const extractMixcloudShow = (link: string): string | undefined => {
 // widget pass prefers over anything a resolver supplies.
 //
 // The `www` widget url is what publishers write and what Mixcloud documents. It 301s to
-// `player-widget.mixcloud.com`, so it is kept rather than pre-resolved to a host that is one
+// `player-widget.mixcloud.com`, so it is kept instead of pre-resolved to a host that is one
 // redirect away from changing.
 export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const show = extractMixcloudShow(url)

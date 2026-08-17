@@ -9,7 +9,7 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // feeds, 25 of them resolving to nothing (measured 2026-08-11).
 const deckIdRegex = /^[0-9a-f]{24}(?:[0-9a-f]{8})?$/
 
-// A few feeds put the slide inside the id attribute rather than beside it.
+// A few feeds fold the slide number into the id attribute itself.
 const slideSuffixRegex = /\?slide=(\d+)$/
 const safeSlideRegex = /^\d+$/
 

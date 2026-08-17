@@ -4,12 +4,12 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { CleanUrlFn } from '../types.js'
 import { pixelDimensionLimit } from './dom.js'
 
-// A candidate whose url is only a width/density descriptor (`225w`, `2x`), which a real
-// image url never is. The `srcset` parser is lenient: when a feed drops the urls and
-// leaves bare descriptors: a Jetpack/WordPress bug that ships `…768w, 225w, 563w` with
-// only the first url present: it reads each stray descriptor as a candidate whose url
-// IS the descriptor. Resolving that against the base url or handing it to an asset proxy
-// produces a request for a page that does not exist, so the wrapper below drops them.
+// A candidate whose url is only a width/density descriptor (`225w`, `2x`), which a real image
+// url never is. The `srcset` parser is lenient: where a feed leaves a bare descriptor with no
+// url, it reads the descriptor itself as that candidate's url. A Jetpack/WordPress bug ships
+// `…768w, 225w, 563w` with only the first url present. Resolving such a candidate against the
+// base url, or handing it to an asset proxy, requests a page that does not exist, so the wrapper
+// below drops them.
 const descriptorOnlyUrl = /^\d+(?:\.\d+)?[wx]$/i
 // The lenient parser can leave a trailing comma on a malformed candidate's url.
 const trailingComma = /,$/
@@ -76,7 +76,7 @@ const bareHostSource = (capture: string): string => {
 // path-anchored to a single CDN and captures the wrapped source (a url= query param, a
 // full URL at the end of the path, or a bare host+path for Photon). toSource turns that
 // capture into an absolute URL. Deliberately an explicit list rather than a generic
-// catch-all, so it stays auditable: an unlisted proxy is simply left as-is.
+// catch-all, so it stays auditable: an unlisted proxy is left as-is.
 type ImageProxy = {
   pattern: RegExp
   toSource: (capture: string, proxy: URL) => string | undefined
@@ -167,10 +167,10 @@ const dimensionLeaf = /^(.*__)?\d{1,5}x\d{1,5}(\.[a-z0-9]+)?$/i
 // width-only "_800x" and retina "@2x" shapes stay out, each below 0.1% of feeds.
 const dimensionSuffix = /[-_]\d{1,5}x\d{1,5}(\.[a-z0-9]+)$/i
 
-// If the URL is a known image-proxy wrapper, return its inner source URL so the key
-// is built from the real image rather than the proxy's render params. Loops so a
-// proxy that wraps another proxy (e.g. a Cloudinary fetch of a Cloudinary upload)
-// fully unwraps. The depth cap and same-value check stop any runaway.
+// If the URL is a known image-proxy wrapper, return its inner source URL so the key is built
+// from the real image, not the proxy's render params. Loops so a proxy that wraps another proxy
+// (e.g. a Cloudinary fetch of a Cloudinary upload) fully unwraps. The depth cap and same-value
+// check stop any runaway.
 const unwrapProxiedImage = (url: string): string => {
   let current = url
 
