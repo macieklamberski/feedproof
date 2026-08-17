@@ -16,6 +16,7 @@ import {
   parsePixelSize,
   parseRatio,
   removeWithEmptyWrappers,
+  styleLength,
   text,
   textNode,
   walkElements,
@@ -905,6 +906,64 @@ describeForEachParser('bgImage', (parseHtml) => {
 
   it('should return undefined for a nullish element', () => {
     expect(bgImage(undefined)).toBeUndefined()
+  })
+})
+
+describeForEachParser('styleLength', (parseHtml) => {
+  it('should read the digits of the named property', () => {
+    const document = parseHtml('<div style="max-width: 605px; min-width: 325px"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleLength(element, 'max-width')).toBe('605')
+  })
+
+  it('should read a unitless value and a fraction', () => {
+    const document = parseHtml('<div style="height: 758.53"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleLength(element, 'height')).toBe('758.53')
+  })
+
+  // The value is returned as digits, not a number, so each caller picks its own parser:
+  // getElementDimensions needs 0 to come through for removeTrackingPixels, and a resolver
+  // reading a player's own size runs it through parsePixelSize, which would reject 0.
+  it('should return the digits unparsed', () => {
+    const document = parseHtml('<img style="width: 0">')
+    const element = queryElement(document, 'img')
+
+    expect(styleLength(element, 'width')).toBe('0')
+  })
+
+  it('should not confuse a property with a longer one that contains it', () => {
+    const document = parseHtml('<div style="max-width: 605px"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleLength(element, 'width')).toBeUndefined()
+  })
+
+  it('should match a property name whatever its case', () => {
+    const document = parseHtml('<div style="MAX-WIDTH: 605px"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleLength(element, 'max-width')).toBe('605')
+  })
+
+  it('should ignore a value in a unit that is not pixels', () => {
+    const document = parseHtml('<div style="max-width: 80em"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleLength(element, 'max-width')).toBeUndefined()
+  })
+
+  it('should return undefined when the element has no style', () => {
+    const document = parseHtml('<div></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleLength(element, 'width')).toBeUndefined()
+  })
+
+  it('should return undefined for a nullish element', () => {
+    expect(styleLength(undefined, 'width')).toBeUndefined()
   })
 })
 

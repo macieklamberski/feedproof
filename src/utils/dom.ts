@@ -325,20 +325,25 @@ export const isGeneratedWrapper = (element: Element): boolean => {
   return element.getAttributeNames().some((name) => startsWithAnyOf(name, generatedWrapperPrefixes))
 }
 
-// Matches `<prop>: <number>[px];`: px is optional, other units (em/rem/%) don't match.
-// The numeric group gives each digit a single parse (`[0-9]+(?:\.[0-9]+)?|\.[0-9]+`, not
-// `[0-9]*\.?[0-9]+`): the ambiguous form backtracks quadratically on a long digit run
-// followed by a non-terminator, which `style` (an unbounded untrusted attribute) can carry.
-const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
-export const styleHeightRegex =
-  /(?:^|;)\s*height\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
+// Matches `<property>: <number>[px];` at a declaration boundary, so `width` cannot match inside
+// `max-width`. px is optional and any other unit (em/rem/%) fails to match. The numeric group
+// gives each digit a single parse (`[0-9]+(?:\.[0-9]+)?|\.[0-9]+`, not `[0-9]*\.?[0-9]+`): the
+// ambiguous form backtracks quadratically on a long digit run followed by a non-terminator, which
+// `style` (an unbounded untrusted attribute) can carry.
+const styleLengthRegex = (property: string): RegExp => {
+  return new RegExp(
+    `(?:^|;)\\s*${property}\\s*:\\s*([0-9]+(?:\\.[0-9]+)?|\\.[0-9]+)\\s*(?:px)?\\s*(?:;|$)`,
+    'i',
+  )
+}
 
-// The same grammar for the caps, which are read as a ratio rather than as a size. `max-width`
-// alone says nothing about shape, so both have to be present for either to count.
-export const styleMaxWidthRegex =
-  /(?:^|;)\s*max-width\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
-const styleMaxHeightRegex =
-  /(?:^|;)\s*max-height\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
+// The digits an inline style states for one length property, or undefined when it states none.
+// Returned unparsed on purpose: the callers want different bounds on the same read. A resolver
+// taking a player's own size runs it through parsePixelSize, while getElementDimensions has to
+// keep 0, 1 and 2 for removeTrackingPixels, which that bound would reject.
+export const styleLength = (element: Nullish<Element>, property: string): string | undefined => {
+  return attr(element, 'style')?.match(styleLengthRegex(property))?.[1]
+}
 
 // A pixel size as a player url or embed attribute states it: `200`, or `200px` where the
 // publisher wrote the unit. `coerceNumber` alone will not do, because it reads neither the
@@ -390,16 +395,10 @@ export const getElementDimensions = (element: Element): { width?: number; height
   }
 
   const dimensions = imageDimensionsRegex.exec(element.getAttribute('data-image-dimensions') ?? '')
-  const style = element.getAttribute('style')
-
-  const fromStyle = (regex: RegExp): number | undefined => {
-    const match = style ? regex.exec(style) : null
-    return match ? coerceNumber(match[1]) : undefined
-  }
 
   return {
-    width: width ?? coerceNumber(dimensions?.[1]) ?? fromStyle(styleWidthRegex),
-    height: height ?? coerceNumber(dimensions?.[2]) ?? fromStyle(styleHeightRegex),
+    width: width ?? coerceNumber(dimensions?.[1]) ?? coerceNumber(styleLength(element, 'width')),
+    height: height ?? coerceNumber(dimensions?.[2]) ?? coerceNumber(styleLength(element, 'height')),
   }
 }
 
@@ -455,9 +454,9 @@ const elementRatioSources: Array<{
     // since getElementDimensions reads those and getEmbedSize consults this table only
     // when it found none.
     attribute: 'style',
-    regex: styleMaxWidthRegex,
+    regex: styleLengthRegex('max-width'),
     extract: (match) => {
-      const height = styleMaxHeightRegex.exec(match.input)?.[1]
+      const height = styleLengthRegex('max-height').exec(match.input)?.[1]
 
       return height ? parseRatio(`${match[1]}:${height}`) : undefined
     },
