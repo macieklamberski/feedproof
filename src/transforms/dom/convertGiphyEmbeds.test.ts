@@ -26,23 +26,27 @@ describeForEachParser('convertGiphyEmbeds', (parseHtml) => {
     expect(await transform(value)).toBe(expected)
   })
 
-  // Asserted piecewise rather than whole: the two parsers serialise the added `alt` on
-  // opposite sides of the existing `src`, so a full-output comparison passes under one and
-  // fails under the other.
+  // Compared with `toEqualHtml`: the two parsers serialise the added `alt` on opposite sides
+  // of the existing `src`, so only an attribute-order-insensitive comparison holds under both.
   it('should carry the iframe title across as alt text', async () => {
-    const result = await transform(
-      html`
-        <iframe
-          src="https://giphy.com/embed/abc123"
-          title="a
-          cat
-          waving"
-        ></iframe>
-      `,
-    )
+    const value = html`
+      <iframe
+        src="https://giphy.com/embed/abc123"
+        title="a
+        cat
+        waving"
+      ></iframe>
+    `
+    const expected = html`
+      <a href="https://giphy.com/gifs/abc123">
+        <img
+          alt="a cat waving"
+          src="https://media.giphy.com/media/abc123/giphy.gif"
+        >
+      </a>
+    `
 
-    expect(result).toContain('alt="a cat waving"')
-    expect(result).toContain('src="https://media.giphy.com/media/abc123/giphy.gif"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   // Some feeds put the media url itself in the iframe rather than the embed page.
@@ -99,9 +103,8 @@ describeForEachParser('convertGiphyEmbeds', (parseHtml) => {
 
   it('should leave a giphy url naming no gif alone', async () => {
     const value = '<iframe src="https://giphy.com/about"></iframe>'
-    const result = await transform(value)
 
-    expect(result).toContain('<iframe')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should be idempotent', async () => {

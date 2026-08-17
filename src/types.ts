@@ -32,6 +32,11 @@ export type EmbedResolverResult = {
   thumbnail?: string
   width?: number
   height?: number
+  // The shape the embed was inferred to have, as CSS spells it (`16/9`), for the case where
+  // nothing states a size at all. It is the alternative to `width`/`height`, never a companion
+  // to them: a real dimension is a measurement of this player, and a ratio only stands in for
+  // one, so a placeholder carries the one or the other.
+  ratio?: string
   title?: string
   description?: string
   author?: string
@@ -154,7 +159,7 @@ export type TransformContext = {
   // Other URLs that also stand for this item's own page (e.g. the feed's site
   // page and feed URL, alongside the item permalink in `baseUrl`). Some feeds,
   // notably HTML-to-Atom bridges, absolutize in-page fragments against one of
-  // these rather than the permalink, so transforms that recognize self-page
+  // these, not the permalink, so transforms that recognize self-page
   // links check these too. See `shortenSamePageLinkFragments`.
   sameSiteUrls?: Array<string>
   enclosures?: Array<Enclosure>

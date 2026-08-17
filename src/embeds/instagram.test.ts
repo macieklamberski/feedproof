@@ -58,7 +58,9 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
         >
           <div>
             <a href="https://www.instagram.com/p/CaUsPbUquKV/">View this post on Instagram</a>
-            <p><a href="https://www.instagram.com/p/CaUsPbUquKV/">A post shared by X (@someuser)</a></p>
+            <p>
+              <a href="https://www.instagram.com/p/CaUsPbUquKV/">A post shared by X (@someuser)</a>
+            </p>
           </div>
         </blockquote>
       `
@@ -161,7 +163,9 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
           data-instgrm-version="8"
         >
           <div style="padding:8px;">
-            <div style="background:#F8F8F8;"><div style="height:44px;"></div></div>
+            <div style="background:#F8F8F8;">
+              <div style="height:44px;"></div>
+            </div>
             <p style="margin:8px 0 0 0;">
               <a href="https://www.instagram.com/p/BgPrjlfHcoB/" target="_blank">
                 Bring some friends, a special one, or them all.
@@ -245,7 +249,9 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
           class="instagram-media"
           data-instgrm-version="7"
         >
-          <p><a href="https://www.instagram.com/p/BXCsBz8AnKt/">An old caption</a></p>
+          <p>
+            <a href="https://www.instagram.com/p/BXCsBz8AnKt/">An old caption</a>
+          </p>
         </blockquote>
       `
       const expected: EmbedResolverResult = {
@@ -351,7 +357,7 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
   })
 
   describe('the Tumblr figure wrapper', () => {
-    it('should carry the size the wrapper states as a ratio', async () => {
+    it('should carry the size the wrapper states', async () => {
       const value = html`
         <figure
           class="tmblr-embed tmblr-full"
@@ -504,8 +510,9 @@ describeForEachParser('instagramIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for another host carrying the post path', async () => {
-      const value =
-        '<iframe src="https://evil.test/www.instagram.com/p/CaUsPbUquKV/embed/"></iframe>'
+      const value = html`
+        <iframe src="https://evil.test/www.instagram.com/p/CaUsPbUquKV/embed/"></iframe>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })

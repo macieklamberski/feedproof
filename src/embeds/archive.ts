@@ -18,7 +18,7 @@ const archiveHosts = ['archive.org']
 // used curl's default and read the service as unavailable. A real identifier answers 200
 // image/jpeg and its details page 200, while an invented one answers 404 for both embed and
 // details. The thumbnail service is the exception, answering 200 for anything: an unknown
-// identifier gets a generic 2,212-byte png rather than an error, so a poster that turns out
+// identifier gets a generic 2,212-byte png, not an error, so a poster that turns out
 // to be the placeholder is the one failure this cannot rule out.
 export const extractArchiveIdentifier = (link: string): string | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
@@ -51,7 +51,7 @@ export const archiveResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 
   // The query carries what the publisher chose to embed, a track within a playlist or a start
-  // offset, so it goes through rather than being rebuilt away.
+  // offset, so it goes through untouched.
   const query = parseUrl(url, 'https://example.com')?.search ?? ''
 
   return composeEmbedResult(identifier, query)

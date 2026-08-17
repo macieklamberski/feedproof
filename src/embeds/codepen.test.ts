@@ -461,7 +461,8 @@ describeForEachParser('codepenWidgetEmbedResolver', (parseHtml) => {
           data-height="300"
           data-href="https://codepen.io/argyleink/pen/XJpKqXm"
         >
-          <span>See the Pen <a href="https://codepen.io/argyleink/pen/XJpKqXm">Parallax</a></span>
+          <span>See the Pen <a href="https://codepen.io/argyleink/pen/XJpKqXm">Parallax</a>
+          </span>
         </p>
       `
       const expected: EmbedResolverResult = {
@@ -782,8 +783,8 @@ describeForEachParser('codepenIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // The pair reads as an aspect ratio, so a carrier that states a width and no height must not
-    // be given one: 800 by the default would describe a shape the publisher never asked for.
+    // A carrier that states a width and no height must not be given one: 800 by the default
+    // height would describe a box the publisher never asked for.
     it('should not pair the default with a width the carrier stated', async () => {
       const value = '<iframe width="800" src="https://codepen.io/argyleink/embed/XJpKqXm"></iframe>'
       const expected: EmbedResolverResult = {
@@ -799,8 +800,8 @@ describeForEachParser('codepenIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // A responsive wrapper states a ratio as a width and height pair. Adding the default beside
-    // the width it yields would turn that pair into a ratio nobody stated.
+    // A responsive wrapper states the shape and no size at all, so the default height has
+    // nothing to sit beside: keeping both would hand a reader a measurement nobody took.
     it('should leave a wrapper ratio alone rather than default over it', async () => {
       const value = html`
         <div style="padding-bottom:56.25%">
@@ -814,8 +815,7 @@ describeForEachParser('codepenIframeEmbedResolver', (parseHtml) => {
         url: 'https://codepen.io/argyleink/pen/XJpKqXm',
         thumbnail: 'https://shots.codepen.io/argyleink/pen/XJpKqXm-512.jpg',
         author: '@argyleink',
-        width: 100,
-        height: 56,
+        ratio: '100/56.25',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -1087,8 +1087,9 @@ describeForEachParser('codepen shapes the pipeline settles first', (parseHtml) =
     // Plain pen links are 28.5% of the corpus and bare-text urls another 41.5%. Replacing either
     // would turn a sentence in a tutorial into a player.
     it('should leave a pen link in prose alone', async () => {
-      const value =
-        '<p>Look at <a href="https://codepen.io/argyleink/pen/XJpKqXm">this pen</a>.</p>'
+      const value = html`
+        <p>Look at <a href="https://codepen.io/argyleink/pen/XJpKqXm">this pen</a>.</p>
+      `
 
       expect(await convert(value)).toBe(value)
     })
@@ -1097,8 +1098,9 @@ describeForEachParser('codepen shapes the pipeline settles first', (parseHtml) =
     // suite's. What matters is that no resolver turns a url pasted into show notes into a player.
     it('should not build a placeholder from a bare pen url', async () => {
       const value = '<p>Demo: https://codepen.io/argyleink/pen/XJpKqXm</p>'
+      const expected: Record<string, string> = {}
 
-      expect(await placeholder(value)).toEqual({})
+      expect(await placeholder(value)).toEqual(expected)
     })
   })
 })

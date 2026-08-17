@@ -13,10 +13,10 @@ describe('paragraphizePlainText', () => {
   })
 
   it('should wrap multiple paragraphs separated by double newlines', () => {
-    const result = paragraphize('First paragraph\n\nSecond paragraph')
+    const value = 'First paragraph\n\nSecond paragraph'
+    const expected = '<p>First paragraph</p>\n<p>Second paragraph</p>\n'
 
-    expect(result).toContain('<p>First paragraph</p>')
-    expect(result).toContain('<p>Second paragraph</p>')
+    expect(paragraphize(value)).toBe(expected)
   })
 
   it('should convert single newlines to line breaks', () => {

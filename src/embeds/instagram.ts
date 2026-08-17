@@ -7,7 +7,7 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // Instagram's embed dialog ships a post as `<blockquote class="instagram-media">` holding the
 // permalink, a skeleton of empty divs and an `embed.js` loader beside it. The loader never runs
 // in a reader, so the quote arrives as its own chrome: a "View this post on Instagram" line and
-// an "A post shared by" byline: with no picture and no player.
+// an "A post shared by" byline, with no picture and no player.
 //
 // The frame that loader builds is mintable from the permalink alone,
 // `instagram.com/{p|reel|tv}/{shortcode}/embed/[captioned/]`, which is also what the AMP
@@ -19,7 +19,7 @@ const instagramHosts = ['instagram.com', 'instagr.am']
 // The paths one post is addressed by: the post, the reel (singular and plural spellings) and
 // the retired IGTV route. They are not interchangeable: a live photo serves its picture at
 // `/p/{shortcode}/media/` and answers 404 at `/reel/{shortcode}/media/` (checked 2026-08-13),
-// so the path stays part of the id rather than being normalized away.
+// so the path stays part of the id.
 const postPathRegex = /^\/(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/
 const safeShortcodeRegex = /^[A-Za-z0-9_-]+$/
 
@@ -90,8 +90,8 @@ const readWrapper = (
 
   return {
     post: readPostUrl(decodeAttribute(attr(figure, 'data-url'))),
-    // Stated together or not at all: the pair reads downstream as an aspect ratio, and one
-    // alone would claim a fixed height the embed does not have.
+    // Stated together or not at all: a lone height would claim a fixed box the embed does
+    // not have.
     size: width && height ? { width, height } : {},
   }
 }
@@ -223,7 +223,7 @@ type SubstackPostAttributes = {
 // earliest payloads carry the bare caption, the current ones wrap it in
 // `{name} on Instagram: "{caption}"`, and the era between wrote only "A post shared by
 // {author}", which duplicates `author_name` and says nothing the byline does not, so that one
-// form is dropped rather than published as the post's text.
+// form is dropped instead of published as the post's text.
 const boilerplateTitleRegex = /^A post shared by\b/
 
 // Substack stamps the filename of every copy it rehosts. The stamp is the guard: the earliest
@@ -268,7 +268,7 @@ export const instagramSubstackEmbedResolver = createMarkupEmbedResolver(
 
 // The frame `embed.js` builds, which Blogger-style exports store after the page rendered and
 // which iframe generators paste directly. Its query and hash (`cr`, `wp`, `rd`, `rp`) describe
-// the embedding page rather than the player, so the url is rebuilt from the path instead of kept.
+// the embedding page, not the player, so the url is rebuilt from the path instead of kept.
 export const instagramResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const post = readPostUrl(url)
 

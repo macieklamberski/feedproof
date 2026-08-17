@@ -9,10 +9,20 @@ const safeTokenRegex = /^[A-Za-z0-9_-]+\+[A-Za-z0-9_-]+$/
 
 // The version sits before the token on both hosts: `fireside.fm/player/{version}/{token}` and
 // `player.fireside.fm/{version}/{token}`. v3 is what the platform writes today and v2 still
-// serves, so the publisher's choice is carried through rather than normalised to one of them.
+// serves, so the publisher's choice is carried through instead of normalised to one of them.
 const playerVersions = new Set(['v2', 'v3'])
 
 const firesideHosts = ['fireside.fm']
+
+const decodeSegment = (segment: string | undefined): string | undefined => {
+  if (!segment) {
+    return
+  }
+
+  try {
+    return decodeURIComponent(segment)
+  } catch {}
+}
 
 // Fireside's player is one fixed size: `height="200"` in **28 of 28** sampled corpus iframes.
 // That is the whole case for this resolver: the embed carries no metadata, no thumbnail and
@@ -41,7 +51,9 @@ export const extractFiresideToken = (link: string): FiresidePlayer | undefined =
     return
   }
 
-  const token = encodedToken ? decodeURIComponent(encodedToken) : undefined
+  // The `+` joining the two halves arrives as `%2B` from some feeds, so the segment is decoded
+  // before it is tested. A malformed escape throws, and an unreadable token is no token.
+  const token = decodeSegment(encodedToken)
 
   if (token && safeTokenRegex.test(token)) {
     return { version, token }

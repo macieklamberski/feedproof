@@ -17,51 +17,68 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
         height="360"
       ></iframe>
     `
-    const result = await transform(value)
+    const expected = html`
+      <iframe
+        data-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+      ></iframe>
+    `
 
-    expect(result).toContain('src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
-    expect(result).toContain('data-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"')
-    expect(result).not.toContain('cdn.embedly.com')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should unwrap an Embedly-wrapped Datawrapper chart', async () => {
-    const value =
-      '<iframe src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fdatawrapper.dwcdn.net%2FAbCdE%2F4%2F&image=https%3A%2F%2Fdatawrapper.dwcdn.net%2FAbCdE%2Fplain-s.png&schema=dwcdn"></iframe>'
-    const result = await transform(value)
+    const value = html`
+      <iframe
+        src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fdatawrapper.dwcdn.net%2FAbCdE%2F4%2F&image=https%3A%2F%2Fdatawrapper.dwcdn.net%2FAbCdE%2Fplain-s.png&schema=dwcdn"
+      ></iframe>
+    `
+    const expected = html`
+      <iframe
+        data-thumbnail="https://datawrapper.dwcdn.net/AbCdE/plain-s.png"
+        src="https://datawrapper.dwcdn.net/AbCdE/4/"
+      ></iframe>
+    `
 
-    expect(result).toContain('src="https://datawrapper.dwcdn.net/AbCdE/4/"')
-    expect(result).not.toContain('cdn.embedly.com')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should handle a protocol-relative embedly src', async () => {
-    const value =
-      '<iframe src="//cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fvimeo.com%2F76979871"></iframe>'
-    const result = await transform(value)
+    const value = html`
+      <iframe
+        src="//cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fvimeo.com%2F76979871"
+      ></iframe>
+    `
+    const expected = '<iframe src="https://vimeo.com/76979871"></iframe>'
 
-    expect(result).toContain('src="https://vimeo.com/76979871"')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should omit data-thumbnail when there is no image param', async () => {
-    const value =
-      '<iframe src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fexample.com%2Fembed"></iframe>'
-    const result = await transform(value)
+    const value = html`
+      <iframe
+        src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fexample.com%2Fembed"
+      ></iframe>
+    `
+    const expected = '<iframe src="https://example.com/embed"></iframe>'
 
-    expect(result).toContain('src="https://example.com/embed"')
-    expect(result).not.toContain('data-thumbnail')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should leave an embedly iframe with no src param untouched', async () => {
-    const value =
-      '<iframe src="https://cdn.embedly.com/widgets/media.html?url=https%3A%2F%2Fexample.com"></iframe>'
-    const result = await transform(value)
+    const value = html`
+      <iframe
+        src="https://cdn.embedly.com/widgets/media.html?url=https%3A%2F%2Fexample.com"
+      ></iframe>
+    `
 
-    expect(result).toContain('cdn.embedly.com')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should leave a non-embedly iframe untouched', async () => {
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toContain('youtube.com/embed/dQw4w9WgXcQ')
+    expect(await transform(value)).toBe(value)
   })
 
   describe('the payload div, where a refusal costs the whole block', () => {

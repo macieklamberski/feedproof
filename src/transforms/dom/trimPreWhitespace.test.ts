@@ -4,11 +4,9 @@ import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { trimPreWhitespace } from './trimPreWhitespace.js'
 
-const trailingNewlineBeforeCodeRegex = /\n<\/code>/
-
 describeForEachParser('trimPreWhitespace', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [trimPreWhitespace(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [trimPreWhitespace(context)])
   }
 
   it('should trim trailing newlines from code inside pre', async () => {
@@ -69,10 +67,10 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
   it('should trim trailing whitespace from highlighted code', async () => {
     const value =
       '<pre><code class="hljs"><span class="hljs-keyword">const</span> x = 1\n\n</code></pre>'
-    const result = await transform(value)
+    const expected =
+      '<pre><code class="hljs"><span class="hljs-keyword">const</span> x = 1</code></pre>'
 
-    expect(result).toContain('<span class="hljs-keyword">const</span> x = 1</code>')
-    expect(result).not.toMatch(trailingNewlineBeforeCodeRegex)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should dedent common leading indentation', async () => {
@@ -156,10 +154,9 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
 
   it('should handle multiple pre blocks', async () => {
     const value = '<pre><code>first\n</code></pre><pre><code>second\n</code></pre>'
-    const result = await transform(value)
+    const expected = '<pre><code>first</code></pre><pre><code>second</code></pre>'
 
-    expect(result).toContain('<code>first</code>')
-    expect(result).toContain('<code>second</code>')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should handle html with no pre blocks', async () => {

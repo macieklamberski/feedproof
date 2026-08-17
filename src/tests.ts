@@ -118,13 +118,20 @@ export const queryElement = (document: Document, selector: string): Element => {
 }
 
 // Lets long HTML fixtures be written multi-line and indented while producing the exact compact
-// string. Each line is trimmed. Lines are joined with nothing where a tag ends and the next begins
-// (> meets <) or where a line starts with the closing > of a multi-attribute tag, and with a single
-// space otherwise. Long tags therefore break one attribute per line with the closing > on its own
-// line (a standalone /> joins with a space, matching the ` />` form). Whitespace that matters to
-// the assertion must stay inside a line. Built from the cooked template strings, not String.raw:
-// Bun transpiles non-ASCII source characters into \u escapes, and the raw strings would contain
-// those escapes as literal text.
+// string. Each line is trimmed. Lines are joined with nothing where a tag ends and the next
+// begins (> meets <) or where a line starts with the closing > of a multi-attribute tag, and with
+// a single space otherwise. Long tags therefore break one attribute per line with the closing >
+// on its own line (a standalone /> joins with a space, matching the ` />` form). Whitespace that
+// matters to the assertion must stay inside a line.
+//
+// Built from the cooked template strings, not String.raw: Bun transpiles non-ASCII source
+// characters into \u escapes, and the raw strings would contain those escapes as literal text.
+//
+// A fixture is written one of two ways: on a single line, or broken one element per line with the
+// nesting shown by indentation. It is never broken to fit a width, because a break at an arbitrary
+// point implies a structure the markup does not have. A break may only sit where a `>` meets a `<`.
+// Anywhere else the join puts in a space that was not in the string, so text content stays glued to
+// its tags: `<p>Hello world</p>` is one line, and only the seams between elements become breaks.
 export const html = (strings: TemplateStringsArray, ...values: Array<unknown>): string => {
   let joined = strings[0] ?? ''
 

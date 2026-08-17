@@ -40,8 +40,12 @@ describe('queryElement', () => {
 describe('html', () => {
   it('should join lines with nothing at tag boundaries', () => {
     const value = html`
-      <ul><li>a</li></ul>
-      <ol><li>b</li></ol>
+      <ul>
+        <li>a</li>
+      </ul>
+      <ol>
+        <li>b</li>
+      </ol>
     `
     const expected = '<ul><li>a</li></ul><ol><li>b</li></ol>'
 

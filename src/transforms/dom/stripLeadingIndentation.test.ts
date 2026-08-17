@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripLeadingIndentation } from './stripLeadingIndentation.js'
 
 describeForEachParser('stripLeadingIndentation', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripLeadingIndentation(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripLeadingIndentation(context)])
   }
 
   it('should strip a leading nbsp run from a paragraph', async () => {
@@ -37,14 +37,16 @@ describeForEachParser('stripLeadingIndentation', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
-  it('should apply to divs, headings, list items, blockquotes and definitions', async () => {
-    expect(await transform('<div>&nbsp;&nbsp;Block</div>')).toContain('<div>Block</div>')
-    expect(await transform('<h2>&nbsp;&nbsp;Title</h2>')).toContain('<h2>Title</h2>')
-    expect(await transform('<li>&nbsp;Item</li>')).toContain('<li>Item</li>')
-    expect(await transform('<blockquote>&nbsp;Quote</blockquote>')).toContain(
-      '<blockquote>Quote</blockquote>',
-    )
-    expect(await transform('<dd>&nbsp;Definition</dd>')).toContain('<dd>Definition</dd>')
+  const blockCases: Array<[string, string]> = [
+    ['<div>&nbsp;&nbsp;Block</div>', '<div>Block</div>'],
+    ['<h2>&nbsp;&nbsp;Title</h2>', '<h2>Title</h2>'],
+    ['<li>&nbsp;Item</li>', '<li>Item</li>'],
+    ['<blockquote>&nbsp;Quote</blockquote>', '<blockquote>Quote</blockquote>'],
+    ['<dd>&nbsp;Definition</dd>', '<dd>Definition</dd>'],
+  ]
+
+  it.each(blockCases)('should strip the leading run from %s', async (value, expected) => {
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should not cross a nested block when a div wraps child blocks', async () => {

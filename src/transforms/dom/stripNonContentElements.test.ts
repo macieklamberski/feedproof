@@ -140,10 +140,21 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
     // rest of the vocabulary renders the publisher's own words and stays.
     it('should keep AMP elements that carry content', async () => {
       const value = html`
-        <amp-fx-flying-carpet height="300"><p>A scroll-revealed passage.</p></amp-fx-flying-carpet>
-        <amp-list src="https://example.com/items.json"><template type="amp-mustache">{{title}}</template></amp-list>
-        <amp-accordion><section><h4>Chapter one</h4><p>Body</p></section></amp-accordion>
-        <amp-carousel width="600" height="400"><amp-img src="a.jpg"></amp-img></amp-carousel>
+        <amp-fx-flying-carpet height="300">
+          <p>A scroll-revealed passage.</p>
+        </amp-fx-flying-carpet>
+        <amp-list src="https://example.com/items.json">
+          <template type="amp-mustache">{{title}}</template>
+        </amp-list>
+        <amp-accordion>
+          <section>
+            <h4>Chapter one</h4>
+            <p>Body</p>
+          </section>
+        </amp-accordion>
+        <amp-carousel width="600" height="400">
+          <amp-img src="a.jpg"></amp-img>
+        </amp-carousel>
         <amp-fit-text width="300" height="80">A headline</amp-fit-text>
         <amp-timeago datetime="2026-08-01T00:00:00Z">1 August 2026</amp-timeago>
       `
@@ -159,8 +170,12 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
 
     it('should remove image-link-expand carrying additional classes', async () => {
       const value = html`
-        <picture><img src="x.jpg"></picture>
-        <div class="image-link-expand extra-class"><button></button></div>
+        <picture>
+          <img src="x.jpg">
+        </picture>
+        <div class="image-link-expand extra-class">
+          <button></button>
+        </div>
       `
       const expected = '<picture><img src="x.jpg"></picture>'
 
@@ -170,11 +185,15 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
     it('should remove the Tumblr alt-text badge and keep the image alt it labels', async () => {
       const value = html`
         <figure class="tmblr-full" data-orig-height="814" data-orig-width="1000">
-          <img src="photo.jpg" alt="A cat asleep on a windowsill"><span class="tmblr-alt-text-helper">ALT</span>
+          <img src="photo.jpg" alt="A cat asleep on a windowsill">
+          <span class="tmblr-alt-text-helper">ALT</span>
         </figure>
       `
-      const expected =
-        '<figure class="tmblr-full" data-orig-height="814" data-orig-width="1000"><img src="photo.jpg" alt="A cat asleep on a windowsill"></figure>'
+      const expected = html`
+        <figure class="tmblr-full" data-orig-height="814" data-orig-width="1000">
+          <img src="photo.jpg" alt="A cat asleep on a windowsill">
+        </figure>
+      `
 
       expect(await transform(value)).toBe(expected)
     })
@@ -198,7 +217,9 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
     it('should leave unrelated iframes and forms untouched', async () => {
       const value = html`
         <iframe src="https://example.com/embed"></iframe>
-        <form action="/search"><input name="q"></form>
+        <form action="/search">
+          <input name="q">
+        </form>
       `
 
       expect(await transform(value)).toBe(value)
@@ -206,8 +227,12 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
 
     it('should remove both Substack and Drupal markers in the same document', async () => {
       const value = html`
-        <picture><img src="x.jpg"></picture>
-        <div class="image-link-expand"><button></button></div>
+        <picture>
+          <img src="x.jpg">
+        </picture>
+        <div class="image-link-expand">
+          <button></button>
+        </div>
         <p>article</p>
         <drupal-render-placeholder
           callback="comment.lazy_builders:renderLinks"
@@ -215,7 +240,9 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
         </drupal-render-placeholder>
       `
       const expected = html`
-        <picture><img src="x.jpg"></picture>
+        <picture>
+          <img src="x.jpg">
+        </picture>
         <p>article</p>
       `
 
@@ -224,8 +251,12 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
 
     it('should remove multiple matches of the same selector', async () => {
       const value = html`
-        <div class="image-link-expand"><button>1</button></div>
-        <div class="image-link-expand"><button>2</button></div>
+        <div class="image-link-expand">
+          <button>1</button>
+        </div>
+        <div class="image-link-expand">
+          <button>2</button>
+        </div>
       `
       const expected = ''
 
@@ -235,7 +266,9 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
     it('should leave document untouched when no non-content elements are present', async () => {
       const value = html`
         <p>article text</p>
-        <figure><img src="x.jpg"></figure>
+        <figure>
+          <img src="x.jpg">
+        </figure>
       `
 
       expect(await transform(value)).toBe(value)
@@ -255,8 +288,14 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
 
     it('should be idempotent', async () => {
       const value = html`
-        <picture><img src="x.jpg"></picture>
-        <div class="image-link-expand"><button><svg></svg></button></div>
+        <picture>
+          <img src="x.jpg">
+        </picture>
+        <div class="image-link-expand">
+          <button>
+            <svg></svg>
+          </button>
+        </div>
       `
       const once = await transform(value)
       const twice = await transform(once)
@@ -271,7 +310,9 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
     it('should keep an s9e wrapper whose player survived', async () => {
       const value = html`
         <span data-s9e-mediaembed="youtube">
-          <span><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></span>
+          <span>
+            <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+          </span>
         </span>
       `
 

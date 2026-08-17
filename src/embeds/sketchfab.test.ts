@@ -67,22 +67,29 @@ describeForEachParser('sketchfabEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should ignore a uid that is not thirty-two hex characters', async () => {
-      const value =
-        '<iframe src="https://sketchfab.com/models/00b8203bcdc2464bbac4b159be66e83/embed"></iframe>'
+      const value = html`
+        <iframe src="https://sketchfab.com/models/00b8203bcdc2464bbac4b159be66e83/embed"></iframe>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should ignore a models path with a segment that is not the viewer', async () => {
-      const value =
-        '<iframe src="https://sketchfab.com/models/00b8203bcdc2464bbac4b159be66e838/comments"></iframe>'
+      const value = html`
+        <iframe
+          src="https://sketchfab.com/models/00b8203bcdc2464bbac4b159be66e838/comments"
+        ></iframe>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should ignore a foreign host carrying the same path', async () => {
-      const value =
-        '<iframe src="https://evil.test/sketchfab.com/models/00b8203bcdc2464bbac4b159be66e838/embed"></iframe>'
+      const value = html`
+        <iframe
+          src="https://evil.test/sketchfab.com/models/00b8203bcdc2464bbac4b159be66e838/embed"
+        ></iframe>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -90,8 +97,9 @@ describeForEachParser('sketchfabEmbedResolver', (parseHtml) => {
 
   describe('the retired spellings and the page url', () => {
     it('should resolve the retired viewer path', async () => {
-      const value =
-        '<iframe src="https://sketchfab.com/embed/00b8203bcdc2464bbac4b159be66e838"></iframe>'
+      const value = html`
+        <iframe src="https://sketchfab.com/embed/00b8203bcdc2464bbac4b159be66e838"></iframe>
+      `
       const expected: EmbedResolverResult = {
         provider: 'sketchfab',
         id: '00b8203bcdc2464bbac4b159be66e838',
@@ -103,8 +111,9 @@ describeForEachParser('sketchfabEmbedResolver', (parseHtml) => {
     })
 
     it('should resolve the retired page path', async () => {
-      const value =
-        '<iframe src="https://sketchfab.com/show/00b8203bcdc2464bbac4b159be66e838"></iframe>'
+      const value = html`
+        <iframe src="https://sketchfab.com/show/00b8203bcdc2464bbac4b159be66e838"></iframe>
+      `
       const expected: EmbedResolverResult = {
         provider: 'sketchfab',
         id: '00b8203bcdc2464bbac4b159be66e838',
@@ -116,8 +125,9 @@ describeForEachParser('sketchfabEmbedResolver', (parseHtml) => {
     })
 
     it('should resolve the unslugged page url', async () => {
-      const value =
-        '<iframe src="https://sketchfab.com/models/00b8203bcdc2464bbac4b159be66e838"></iframe>'
+      const value = html`
+        <iframe src="https://sketchfab.com/models/00b8203bcdc2464bbac4b159be66e838"></iframe>
+      `
       const expected: EmbedResolverResult = {
         provider: 'sketchfab',
         id: '00b8203bcdc2464bbac4b159be66e838',
@@ -129,8 +139,11 @@ describeForEachParser('sketchfabEmbedResolver', (parseHtml) => {
     })
 
     it('should read the uid off the end of the slugged page url', async () => {
-      const value =
-        '<iframe src="https://sketchfab.com/3d-models/borodyanka-ukraine-war-banksy-00b8203bcdc2464bbac4b159be66e838"></iframe>'
+      const value = html`
+        <iframe
+          src="https://sketchfab.com/3d-models/borodyanka-ukraine-war-banksy-00b8203bcdc2464bbac4b159be66e838"
+        ></iframe>
+      `
       const expected: EmbedResolverResult = {
         provider: 'sketchfab',
         id: '00b8203bcdc2464bbac4b159be66e838',

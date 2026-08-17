@@ -150,8 +150,13 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, spotifyEmbedResolver)
 
   it('should resolve a spotify iframe', async () => {
-    const value =
-      '<iframe src="https://open.spotify.com/embed/episode/3POP8fAw3I2qhiIWIJEUNr" width="100%" height="152"></iframe>'
+    const value = html`
+      <iframe
+        src="https://open.spotify.com/embed/episode/3POP8fAw3I2qhiIWIJEUNr"
+        width="100%"
+        height="152"
+      ></iframe>
+    `
     const expected: EmbedResolverResult = {
       provider: 'spotify',
       id: 'episode/3POP8fAw3I2qhiIWIJEUNr',

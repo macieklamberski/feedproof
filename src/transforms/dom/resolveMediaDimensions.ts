@@ -48,8 +48,8 @@ const promotableDimensions = (element: Element): { width: number; height: number
 // A valid width/height attribute value: a positive integer of pixels.
 const positiveIntegerRegex = /^[1-9]\d*$/
 
-// An <img> often declares its size on the wrapping <picture>/<source> rather than
-// itself. First <source> carrying both dimensions wins, else the <picture> element.
+// An <img> often leaves its size to the wrapping <picture>/<source>. First <source> carrying
+// both dimensions wins, else the <picture> element.
 const pictureDimensions = (picture: Element): { width: number; height: number } | undefined => {
   for (const source of picture.querySelectorAll('source')) {
     const dimensions = promotableDimensions(source)
@@ -62,14 +62,13 @@ const pictureDimensions = (picture: Element): { width: number; height: number } 
   return promotableDimensions(picture)
 }
 
-// Backfills width/height attributes on media that lacks them, from (in order) the
-// element's own inline style, a size encoded in its src URL, or: for an <img> in a
-// <picture>: the wrapping picture/source. The width/height attributes drive the
-// browser's `aspect-ratio: auto w/h`, so space is reserved and the ratio survives
-// under reader CSS like `img { height: auto }`.
-// Runs after fixLazyImages, so a lazy image's real URL is already in src and is read
-// like any other, and before flattenPictureElements, so the picture/source carriers it
-// reads still exist.
+// Backfills width/height attributes on media that lacks them, from (in order) the element's own
+// inline style, a size encoded in its src URL, or, for an <img> in a <picture>, the wrapping
+// picture/source. The width/height attributes drive the browser's `aspect-ratio: auto w/h`, so
+// space is reserved and the ratio survives under reader CSS like `img { height: auto }`.
+//
+// Runs after fixLazyImages, so a lazy image's real URL is already in src and is read like any
+// other, and before flattenPictureElements, so the picture/source carriers it reads still exist.
 export const resolveMediaDimensions: DomTransform = () => {
   return (document) => {
     for (const element of document.querySelectorAll('img, video')) {

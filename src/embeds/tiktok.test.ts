@@ -26,7 +26,8 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
         >
           <section>
             <a target="_blank" title="@cookingwithlynja" href="https://www.tiktok.com/@cookingwithlynja">@cookingwithlynja</a>
-            <p>Midnight pasta <a title="#pasta" target="_blank" href="https://www.tiktok.com/tag/pasta">#pasta</a></p>
+            <p>Midnight pasta <a title="#pasta" target="_blank" href="https://www.tiktok.com/tag/pasta">#pasta</a>
+            </p>
             <a target="_blank" title="original sound" href="https://www.tiktok.com/music/original-sound-7001234567890123456">♬ original sound - Lynja</a>
           </section>
         </blockquote>
@@ -81,7 +82,8 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
             >
               <section>
                 <a target="_blank" href="https://www.tiktok.com/@user?refer=embed">@user</a>
-                <p>caption text <a href="https://www.tiktok.com/tag/tag?refer=embed">#tag</a></p>
+                <p>caption text <a href="https://www.tiktok.com/tag/tag?refer=embed">#tag</a>
+                </p>
               </section>
             </blockquote>
           </div>
@@ -145,9 +147,14 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
       const value = html`
         <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@cookingwithlynja/video/7001234567890123456" data-video-id="7001234567890123456">
           <section>
-            <p><a href="https://www.tiktok.com/@cookingwithlynja">@cookingwithlynja</a></p>
-            <p>Midnight pasta <a href="https://www.tiktok.com/tag/pasta">#pasta</a></p>
-            <p><a href="https://www.tiktok.com/music/original-sound-7001234567890123456">♬ original sound - Lynja</a></p>
+            <p>
+              <a href="https://www.tiktok.com/@cookingwithlynja">@cookingwithlynja</a>
+            </p>
+            <p>Midnight pasta <a href="https://www.tiktok.com/tag/pasta">#pasta</a>
+            </p>
+            <p>
+              <a href="https://www.tiktok.com/music/original-sound-7001234567890123456">♬ original sound - Lynja</a>
+            </p>
           </section>
         </blockquote>
       `
@@ -278,8 +285,13 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined when the video id is empty and no clip or account is named', async () => {
-      const value =
-        '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/" data-video-id=""></blockquote>'
+      const value = html`
+        <blockquote
+          class="tiktok-embed"
+          cite="https://www.tiktok.com/"
+          data-video-id=""
+        ></blockquote>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -346,7 +358,9 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
           data-unique-id="../evil"
           data-embed-type="creator"
         >
-          <section><a href="https://www.tiktok.com/@user">@user</a></section>
+          <section>
+            <a href="https://www.tiktok.com/@user">@user</a>
+          </section>
         </blockquote>
       `
       const expected: EmbedResolverResult = {
@@ -366,7 +380,9 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
     it('should fall back to the bare video id for a cite on a foreign host', async () => {
       const value = html`
         <blockquote class="tiktok-embed" cite="https://example.com/@user/video/7001234567890123456" data-video-id="7001234567890123456">
-          <section><p>Midnight pasta</p></section>
+          <section>
+            <p>Midnight pasta</p>
+          </section>
         </blockquote>
       `
       const expected: EmbedResolverResult = {

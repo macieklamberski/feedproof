@@ -72,8 +72,9 @@ describeForEachParser('YouTube', (parseHtml) => {
   })
 
   it('should resolve a YouTube channel live embed to a posterless youtube placeholder', async () => {
-    const value =
-      '<iframe src="https://www.youtube.com/embed/live_stream?channel=UCabc123"></iframe>'
+    const value = html`
+      <iframe src="https://www.youtube.com/embed/live_stream?channel=UCabc123"></iframe>
+    `
     // `live_stream` is a channel live embed, not a video: the `channel` param is preserved
     // (resolving it as a video would drop it and leave a dead `embed/live_stream`), the url
     // points at the channel, and there is no thumbnail. The channel id is the enrichment key.

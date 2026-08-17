@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, keepIfMatches, parseRatioDimensions } from '../utils/dom.js'
+import { attr, keepIfMatches, parseRatio } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver, withDeclaredSize } from '../utils/widgets.js'
 
@@ -55,12 +55,12 @@ export const scribdResolveEmbed = (
 
   const title = attr(element, 'title')
   const result = { ...composeEmbed(document), ...(title && { title }) }
-  const dimensions = parseRatioDimensions(attr(element, aspectRatioAttribute) ?? '')
+  const ratio = parseRatio(attr(element, aspectRatioAttribute) ?? '')
 
   // The ratio describes the document and the declared height is a constant, so where both are
   // present the ratio wins. Where the snippet states no ratio the declared size is all there
   // is, and it is read here rather than by the factory because that would overwrite the ratio.
-  return dimensions ? { ...result, ...dimensions } : withDeclaredSize(element, result)
+  return ratio ? { ...result, ratio } : withDeclaredSize(element, result)
 }
 
 export const scribdIframeEmbedResolver = createUrlEmbedResolver(scribdHosts, scribdResolveEmbed, {

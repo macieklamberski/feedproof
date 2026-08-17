@@ -45,9 +45,9 @@ export const composeThumbnailUrl = (videoId: string): string => {
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
 }
 
-// The player url every transform that recovers an id has to build. Params are given as values
-// rather than a ready query string so they get encoded here, and one carrying an `&` cannot
-// open a parameter of its own.
+// The player url every transform that recovers an id has to build. Params are given as values,
+// not as a ready query string, so they get encoded here, and one carrying an `&` cannot open a
+// parameter of its own.
 export const composeEmbedUrl = (videoId: string, params?: Record<string, string>): string => {
   const query = params && Object.keys(params).length ? `?${new URLSearchParams(params)}` : ''
 

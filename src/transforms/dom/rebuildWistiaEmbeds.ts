@@ -1,5 +1,5 @@
 import type { DomTransform } from '../../types.js'
-import { attr, parseRatioDimensions } from '../../utils/dom.js'
+import { attr, parseRatio } from '../../utils/dom.js'
 
 // Pulls the hashed id out of the `wistia_async_{id}` class the facade carries.
 const wistiaIdPattern = /\bwistia_async_([A-Za-z0-9]+)/
@@ -75,11 +75,13 @@ export const rebuildWistiaEmbeds: DomTransform = () => (document) => {
     const iframe = document.createElement('iframe')
     iframe.setAttribute('src', `https://fast.wistia.net/embed/iframe/${mediaId}`)
 
-    const dimensions = parseRatioDimensions(attr(element, 'aspect') ?? '')
+    const ratio = parseRatio(attr(element, 'aspect') ?? '')
 
-    if (dimensions) {
-      iframe.setAttribute('width', String(dimensions.width))
-      iframe.setAttribute('height', String(dimensions.height))
+    // Written as the CSS property it is, not as width and height attributes: the facade states
+    // a shape and never a size, and the widget pass reads `aspect-ratio` off the rebuilt iframe
+    // the same as it reads one off any responsive wrapper.
+    if (ratio) {
+      iframe.setAttribute('style', `aspect-ratio: ${ratio}`)
     }
 
     // Replace the outermost Wistia wrapper so the padding/sizing divs go with it. The

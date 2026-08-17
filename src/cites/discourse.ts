@@ -102,7 +102,7 @@ export const discourseCiteResolver: CiteResolver = {
     }
 
     // The pull request and commit engines render a comment as a second shape: the author sits in
-    // a bare `span` rather than under `.user`, and the heading repeats it as `Comment by USER - `
+    // a bare `span` instead of under `.user`, and the heading repeats it as `Comment by USER - `
     // in front of the real title. Reading the span recovers the author, and dropping the prefix
     // leaves the title stating only the title.
     const githubAuthor =
@@ -124,8 +124,8 @@ export const discourseCiteResolver: CiteResolver = {
       icon:
         attr(find(element, 'img.site-icon'), 'src') ??
         attr(find(element, 'img.onebox-avatar-inline'), 'src'),
-      // The Stack Exchange avatar sits as a bare `img.thumbnail` in the body rather than
-      // under `.aspect-image`.
+      // The Stack Exchange avatar sits as a bare `img.thumbnail` in the body, not under
+      // `.aspect-image`.
       thumbnail:
         attr(find(element, '.aspect-image img'), 'src') ?? attr(find(body, 'img.thumbnail'), 'src'),
     })

@@ -59,10 +59,12 @@ describe('stripOversizedBase64Sources', () => {
       <img src="data:image/png;base64,small=">
       <img src="data:image/png;base64,${largeData}">
     `
-    const result = await transform(value)
+    const expected = html`
+      <img src="data:image/png;base64,small=">
+      <img src="">
+    `
 
-    expect(result).toContain('data:image/png;base64,small=')
-    expect(result).not.toContain(largeData)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should not modify regular url src attributes', async () => {
@@ -86,8 +88,9 @@ describe('stripOversizedBase64Sources', () => {
   it('should handle single-quoted attributes', async () => {
     const largeData = 'A'.repeat(60 * 1024)
     const value = `<img src='data:image/png;base64,${largeData}'>`
+    const expected = "<img src=''>"
 
-    expect(await transform(value)).toBe("<img src=''>")
+    expect(await transform(value)).toBe(expected)
   })
 
   // The attribute regex is case-sensitive, so an uppercase SRC= slips through

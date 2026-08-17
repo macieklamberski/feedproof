@@ -1,3 +1,4 @@
+import { parseUrl } from 'trousse'
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
@@ -32,9 +33,7 @@ export const hatenaCiteResolver: CiteResolver = {
     const citationLink = find(element, 'cite.hatena-citation a')
 
     const embedUrl = attr(iframe, 'src')
-    const embeddedUrl = embedUrl
-      ? new URL(embedUrl, 'https://example.invalid').searchParams.get('url')
-      : null
+    const embeddedUrl = parseUrl(embedUrl ?? '', 'https://example.invalid')?.searchParams.get('url')
 
     return buildCite({
       provider: 'hatena',

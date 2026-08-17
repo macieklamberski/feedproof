@@ -133,7 +133,8 @@ describeForEachParser('mediumCiteResolver', (parseHtml) => {
     it('should leave the publisher undefined when no host trails the description', async () => {
       const value = html`
         <a href="https://example.com/page" class="markup--mixtapeEmbed-anchor">
-          <strong>Page title</strong><em>Preview text</em>
+          <strong>Page title</strong>
+          <em>Preview text</em>
         </a>
       `
       const expected: CiteResolverResult = {
@@ -195,7 +196,8 @@ describeForEachParser('mediumCiteResolver', (parseHtml) => {
       const value = html`
         <div class="graf graf--mixtapeEmbed">
           <a href="https://example.com/page" class="markup--mixtapeEmbed-anchor">
-            <strong>Page title</strong><em>Preview text</em>example.com
+            <strong>Page title</strong>
+            <em>Preview text</em>example.com
           </a>
           <a href="https://example.com/page" class="js-mixtapeImage mixtapeImage u-ignoreBlock"></a>
         </div>

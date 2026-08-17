@@ -1,7 +1,7 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { flashVars, keepIfMatches } from '../utils/dom.js'
-import { createUrlEmbedResolver, getEmbedDimensions } from '../utils/widgets.js'
+import { flashVars, getElementDimensions, keepIfMatches } from '../utils/dom.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const flickrHosts = ['flickr.com']
 
@@ -76,7 +76,7 @@ const composeShortAlbumUrl = (setId: string): string => {
 }
 
 // The endpoint renders `width: NaNpx` when it is given no size, so the dimensions travel in the
-// url rather than being left to the reader. These are the size Flickr's own dialog wrote for
+// url instead of being left to the reader. These are the size Flickr's own dialog wrote for
 // years, used only when the carrier states nothing.
 const defaultWidth = 400
 const defaultHeight = 300
@@ -184,7 +184,7 @@ export const flickrResolveEmbed = (
     return
   }
 
-  const declared = getEmbedDimensions(element)
+  const declared = getElementDimensions(element)
   const width = declared.width ?? defaultWidth
   const height = declared.height ?? defaultHeight
 

@@ -25,10 +25,10 @@ const safeIdRegex = /^[a-zA-Z0-9]{22}$/
 const pathPrefixRegex = /^(?:embed|embed-podcast|intl-[a-z]{2})$/
 // The pre-2017 snippet framed `embed.spotify.com/?uri=spotify:{type}:{id}`, naming the track
 // in a query parameter instead of the path. That host still serves a player, so these resolve
-// to the modern URL rather than falling through to the generic iframe path. A playlist is
-// named through its owner (`spotify:user:{handle}:playlist:{id}`), so the type and id are the
-// last pair rather than the only one: of 50 sampled occurrences of the query form, 41 are that
-// four-token shape.
+// to the modern URL instead of falling through to the generic iframe path. A playlist is named
+// through its owner (`spotify:user:{handle}:playlist:{id}`), so the type and id are the last
+// pair, not the only one: of 50 sampled occurrences of the query form, 41 are that four-token
+// shape.
 const legacyUriRegex = /^spotify:(?:.*:)?([a-z]+):([a-zA-Z0-9]+)$/
 // The same ownership spelled as a path, `/embed/user/{handle}/playlist/{id}`.
 const ownerSegment = 'user'

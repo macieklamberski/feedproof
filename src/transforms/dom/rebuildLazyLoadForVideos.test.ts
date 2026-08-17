@@ -20,10 +20,9 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
         </a>
       </div>
     `
-    const result = await transform(value)
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ">')
-    expect(result).not.toContain('preview-lazyload')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should rebuild an iframe from a vimeo facade', async () => {
@@ -37,10 +36,9 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
         </a>
       </div>
     `
-    const result = await transform(value)
+    const expected = '<iframe src="https://player.vimeo.com/video/76979871"></iframe>'
 
-    expect(result).toContain('<iframe src="https://player.vimeo.com/video/76979871">')
-    expect(result).not.toContain('preview-lazyload')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should preserve a vimeo unlisted hash', async () => {
@@ -50,9 +48,9 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
         class="preview-lazyload preview-vimeo"
       ></a>
     `
-    const result = await transform(value)
+    const expected = '<iframe src="https://player.vimeo.com/video/76979871?h=abc123def4"></iframe>'
 
-    expect(result).toContain('<iframe src="https://player.vimeo.com/video/76979871?h=abc123def4">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should prefer data-video-uri over href', async () => {
@@ -63,9 +61,9 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
         data-video-uri="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
       ></a>
     `
-    const result = await transform(value)
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ">')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should carry data-video-title into the iframe title', async () => {
@@ -76,9 +74,14 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
         data-video-title="Never Gonna Give You Up"
       ></a>
     `
-    const result = await transform(value)
+    const expected = html`
+      <iframe
+        title="Never Gonna Give You Up"
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+      ></iframe>
+    `
 
-    expect(result).toContain('title="Never Gonna Give You Up"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave the facade untouched when no id is recoverable', async () => {
@@ -88,10 +91,8 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
         class="preview-lazyload preview-youtube"
       ></a>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('preview-lazyload')
-    expect(result).not.toContain('<iframe')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should produce a youtube placeholder end to end', async () => {

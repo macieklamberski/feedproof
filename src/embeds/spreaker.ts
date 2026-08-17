@@ -59,7 +59,7 @@ export const spreakerIframeEmbedResolver = createUrlEmbedResolver(
 // them have no player iframe anywhere, so what a reader sees is the anchor's fallback text
 // ("Listen to ... on Spreaker") and no player at all.
 //
-// The resource is spelled as a query fragment rather than a url, `data-resource="episode_id=42"`,
+// The resource is spelled as a query fragment, not a url, `data-resource="episode_id=42"`,
 // so it is read by pasting it onto the player url the iframe form already uses. Where the anchor
 // states its own `data-height` that wins over the constant, since the publisher sized this one.
 // `data-resource` is required, not merely read. The class alone is styling anyone can copy, and

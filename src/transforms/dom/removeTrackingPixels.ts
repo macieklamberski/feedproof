@@ -80,7 +80,7 @@ const hasContentImageSignal = (
 }
 
 // An `opacity:0` image is a tracking-beacon trick. It's image-specific: a generic
-// `opacity:0` is often a fade-in animation, so it stays here rather than in the shared
+// `opacity:0` is often a fade-in animation, so it stays here instead of in the shared
 // isElementHidden check (which covers `display:none`/`visibility:hidden`/`[hidden]`).
 const hasZeroOpacity = (image: Element): boolean => {
   const style = image.getAttribute('style')

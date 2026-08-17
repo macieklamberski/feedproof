@@ -15,12 +15,15 @@ describeForEachParser('rebuildVideoJsEmbeds', (parseHtml) => {
           <source src="https://example.com/clip.mp4" type="video/mp4">
         </video-js>
       `
-      const result = await transform(value)
+      const expected = html`
+        <video
+          poster="https://example.com/poster.jpg"
+          controls
+          src="https://example.com/clip.mp4"
+        ></video>
+      `
 
-      expect(result).toContain('<video')
-      expect(result).toContain('src="https://example.com/clip.mp4"')
-      expect(result).toContain('poster="https://example.com/poster.jpg"')
-      expect(result).not.toContain('<video-js')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should rebuild from the data-setup sources when there is no source child', async () => {
@@ -28,10 +31,16 @@ describeForEachParser('rebuildVideoJsEmbeds', (parseHtml) => {
         sources: [{ src: 'https://example.com/clip.mp4', type: 'video/mp4' }],
         poster: 'https://example.com/poster.jpg',
       })
-      const result = await transform(`<video-js data-setup='${config}'></video-js>`)
+      const value = `<video-js data-setup='${config}'></video-js>`
+      const expected = html`
+        <video
+          poster="https://example.com/poster.jpg"
+          controls
+          src="https://example.com/clip.mp4"
+        ></video>
+      `
 
-      expect(result).toContain('src="https://example.com/clip.mp4"')
-      expect(result).toContain('poster="https://example.com/poster.jpg"')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should skip past a source it cannot play to one it can', async () => {
@@ -41,8 +50,9 @@ describeForEachParser('rebuildVideoJsEmbeds', (parseHtml) => {
           <source src="https://example.com/clip.mp4" type="video/mp4">
         </video-js>
       `
+      const expected = '<video controls src="https://example.com/clip.mp4"></video>'
 
-      expect(await transform(value)).toContain('src="https://example.com/clip.mp4"')
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -56,7 +66,7 @@ describeForEachParser('rebuildVideoJsEmbeds', (parseHtml) => {
         </video-js>
       `
 
-      expect(await transform(value)).toContain('<video-js')
+      expect(await transform(value)).toBe(value)
     })
 
     // A hosted player's element names an id and no file, so it survives this pass untouched and
@@ -82,19 +92,23 @@ describeForEachParser('rebuildVideoJsEmbeds', (parseHtml) => {
         ></video-js>
       `
 
-      expect(await transform(value)).toContain('<video-js')
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave an element whose data-setup is malformed json', async () => {
       const value = `<video-js data-setup='{"sources":['></video-js>`
+      const expected = '<video-js data-setup="{&quot;sources&quot;:["></video-js>'
 
-      expect(await transform(value)).toContain('<video-js')
+      expect(await transform(value)).toBe(expected)
     })
   })
 
   it('should be idempotent', async () => {
-    const value =
-      '<video-js><source src="https://example.com/clip.mp4" type="video/mp4"></video-js>'
+    const value = html`
+      <video-js>
+        <source src="https://example.com/clip.mp4" type="video/mp4">
+      </video-js>
+    `
     const once = await transform(value)
     const twice = await transform(once)
 

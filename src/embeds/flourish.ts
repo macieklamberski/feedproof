@@ -76,8 +76,8 @@ export const flourishWidgetEmbedResolver = createMarkupEmbedResolver(
 
 // The rendered form, which reaches a feed when the publisher pasted the iframe rather than the
 // script snippet. The WordPress oEmbed wrapper points at the same url with a `#?secret=`
-// fragment appended. That belongs to WordPress's postMessage handshake rather than to the
-// player, so the minted url drops it.
+// fragment appended. That belongs to WordPress's postMessage handshake, not to the player, so
+// the minted url drops it.
 export const flourishResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url)
 

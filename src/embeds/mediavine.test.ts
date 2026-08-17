@@ -20,8 +20,7 @@ describeForEachParser('mediavineEmbedResolver', (parseHtml) => {
         provider: 'mediavine',
         id: 't9z9zameefjmqvtghsvu',
         src: 'https://embed.mediavine.com/videos/t9z9zameefjmqvtghsvu',
-        width: 100,
-        height: 56,
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -29,7 +28,7 @@ describeForEachParser('mediavineEmbedResolver', (parseHtml) => {
   })
 
   describe('edge cases', () => {
-    it('should omit the dimensions for a malformed ratio', async () => {
+    it('should state no shape for a malformed ratio', async () => {
       const value = html`
         <div
           class="mv-video-target mv-video-id-t9z9zameefjmqvtghsvu"

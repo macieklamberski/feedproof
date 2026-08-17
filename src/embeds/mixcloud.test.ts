@@ -117,8 +117,11 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
   // write this src protocol-relative; resolveRelativeUrls makes it absolute earlier in the
   // pipeline, so the url is absolute by the time the resolver sees it.
   it('should resolve the legacy Flash player', async () => {
-    const value =
-      '<embed src="https://www.mixcloud.com/media/swf/player/mixcloudLoader.swf?feed=http%3A%2F%2Fwww.mixcloud.com%2FFakeIDRadio%2F4-natty-champs%2F&embed_type=widget_standard">'
+    const value = html`
+      <embed
+        src="https://www.mixcloud.com/media/swf/player/mixcloudLoader.swf?feed=http%3A%2F%2Fwww.mixcloud.com%2FFakeIDRadio%2F4-natty-champs%2F&embed_type=widget_standard"
+      >
+    `
     const expected: EmbedResolverResult = {
       provider: 'mixcloud',
       id: 'FakeIDRadio/4-natty-champs',

@@ -5,7 +5,6 @@ import { describeForEachParser, html } from './tests.js'
 import { enrichEmbedPlaceholders } from './transforms/dom/enrichEmbedPlaceholders.js'
 
 const lineBreakAfterBraceRegex = /\{\n\s+/
-const blockInParagraphRegex = /<p[^>]*>(?:[^<]|<(?!\/p>|p[\s>]))*<(?:div|pre|figure|table)[\s>]/
 
 describeForEachParser('transformContent', (parseHtml) => {
   it('should apply all default transforms', async () => {
@@ -55,6 +54,30 @@ describeForEachParser('transformContent', (parseHtml) => {
     const expected = '<p>Text</p>'
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
+  })
+
+  it('should remove a 0x0 tracking pixel', async () => {
+    // resolveMediaDimensions drops any width/height that is not a positive integer, so it used
+    // to delete the zeros before removeTrackingPixels could read them. The pixel pass keys on
+    // a declared 0 (see hasContentImageSignal), and 0x0 is the dominant beacon convention.
+    // The host is not a known tracker, so only the size heuristic can catch this one.
+    const value = html`
+      <p>Text</p>
+      <img width="0" height="0" src="https://cdn.example.com/spacer.gif">
+    `
+    const expected = '<p>Text</p>'
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
+  })
+
+  it('should keep a 0x0 raster image, which is content rather than a beacon', async () => {
+    const value = html`
+      <p>Text</p>
+      <img width="0" height="0" src="https://cdn.example.com/photo.jpg">
+    `
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toContainHtml('<img')
   })
 
   it('should normalize a standalone code block to a scrollable pre, not a paragraph', async () => {
@@ -150,17 +173,27 @@ describeForEachParser('transformContent', (parseHtml) => {
     // first, linkifyUrls sees only `https://youtu.be/` and makes a dead stub, dropping the
     // id to plain text. The whole url must become one working link.
     const value = '<p>Watch <span>https://youtu.be/<wbr></wbr>HnLpU5vd5rI</span></p>'
-    const expected =
-      '<p>Watch <span><a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/HnLpU5vd5rI</a></span></p>'
+    const expected = html`
+      <p>Watch <span>
+          <a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/HnLpU5vd5rI</a>
+        </span>
+      </p>
+    `
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
   it('should keep an anchored wbr url working and drop the break hint', async () => {
-    const value =
-      '<p><a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/<wbr></wbr>HnLpU5vd5rI</a></p>'
-    const expected =
-      '<p><a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/HnLpU5vd5rI</a></p>'
+    const value = html`
+      <p>
+        <a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/<wbr></wbr>HnLpU5vd5rI</a>
+      </p>
+    `
+    const expected = html`
+      <p>
+        <a href="https://youtu.be/HnLpU5vd5rI">https://youtu.be/HnLpU5vd5rI</a>
+      </p>
+    `
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
@@ -195,8 +228,8 @@ describeForEachParser('transformContent', (parseHtml) => {
       heuristics: true,
     })
 
-    expect(standard).not.toContain('photo-800x450.jpg')
-    expect(heuristic).not.toContain('photo-800x450.jpg')
+    expect(standard).toBe(value)
+    expect(heuristic).toBe(value)
   })
 
   it('should strip a duplicate enclosure media only when heuristics are enabled', async () => {
@@ -205,6 +238,11 @@ describeForEachParser('transformContent', (parseHtml) => {
     // its keep, and only under heuristics.
     const value = '<p>Content</p><audio src="https://example.com/episode.mp3"></audio>'
     const enclosures = [{ url: 'https://example.com/episode.mp3', type: 'audio/mpeg' }]
+    const expectedStandard = html`
+      <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
+      <p>Content</p>
+      <audio src="https://example.com/episode.mp3"></audio>
+    `
 
     const standard = await transformContent(value, { parseHtmlFn: parseHtml, enclosures })
     const heuristic = await transformContent(value, {
@@ -213,14 +251,16 @@ describeForEachParser('transformContent', (parseHtml) => {
       heuristics: true,
     })
 
-    expect(standard).toContain('data-enclosure')
-    expect(heuristic).not.toContain('data-enclosure')
+    expect(standard).toEqualHtml(expectedStandard)
+    expect(heuristic).toBe(value)
   })
 
   it('should remove paragraphs left empty after boundary br stripping', async () => {
     const value = html`
       <p>Hello</p>
-      <p><br></p>
+      <p>
+        <br>
+      </p>
       <p>World</p>
     `
     const expected = html`
@@ -234,7 +274,9 @@ describeForEachParser('transformContent', (parseHtml) => {
   it('should preserve empty paragraphs when stripEmptyTags is removed from the pipeline', async () => {
     const value = html`
       <p>Hello</p>
-      <p><br></p>
+      <p>
+        <br>
+      </p>
       <p>World</p>
     `
     const expected = html`
@@ -416,14 +458,22 @@ describeForEachParser('transformContent', (parseHtml) => {
 
   it('should dimension a lazy image from its resolved URL', async () => {
     const value = '<p><img data-src="https://example.com/photo-1024x768.jpg"></p>'
+    const expected = html`
+      <p>
+        <img
+          data-src="https://example.com/photo-1024x768.jpg"
+          src="https://example.com/photo-1024x768.jpg"
+          width="1024"
+          height="768"
+        >
+      </p>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com/',
     })
 
-    expect(result).toContain('src="https://example.com/photo-1024x768.jpg"')
-    expect(result).toContain('width="1024"')
-    expect(result).toContain('height="768"')
+    expect(result).toEqualHtml(expected)
   })
 
   it('should let a picture modern source win over a lazy data-src', async () => {
@@ -435,21 +485,14 @@ describeForEachParser('transformContent', (parseHtml) => {
         </picture>
       </p>
     `
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://example.com/',
-    })
-
-    expect(result).toContain('src="https://example.com/a-800x600.webp"')
     // The superseded data-src is left in place (fixLazyImages no longer strips it).
-    expect(result).toContain('data-src="https://example.com/a.jpg"')
-  })
-
-  it('should dimension an image surfaced from a noscript fallback', async () => {
-    const value = html`
+    const expected = html`
       <p>
-        <img src="https://example.com/placeholder.gif">
-        <noscript><img src="https://example.com/real-1024x768.jpg"></noscript>
+        <img
+          data-src="https://example.com/a.jpg"
+          src="https://example.com/a-800x600.webp"
+          srcset="https://example.com/a-800x600.webp"
+        >
       </p>
     `
     const result = await transformContent(value, {
@@ -457,10 +500,33 @@ describeForEachParser('transformContent', (parseHtml) => {
       baseUrl: 'https://example.com/',
     })
 
-    expect(result).toContain('src="https://example.com/real-1024x768.jpg"')
-    expect(result).toContain('width="1024"')
-    expect(result).toContain('height="768"')
-    expect(result).not.toContain('placeholder.gif')
+    expect(result).toEqualHtml(expected)
+  })
+
+  it('should dimension an image surfaced from a noscript fallback', async () => {
+    const value = html`
+      <p>
+        <img src="https://example.com/placeholder.gif">
+        <noscript>
+          <img src="https://example.com/real-1024x768.jpg">
+        </noscript>
+      </p>
+    `
+    const expected = html`
+      <p>
+        <img
+          src="https://example.com/real-1024x768.jpg"
+          width="1024"
+          height="768"
+        >
+      </p>
+    `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/',
+    })
+
+    expect(result).toEqualHtml(expected)
   })
 
   it('should carry picture dimensions onto the flattened image', async () => {
@@ -472,14 +538,22 @@ describeForEachParser('transformContent', (parseHtml) => {
         </picture>
       </p>
     `
+    const expected = html`
+      <p>
+        <img
+          src="https://example.com/a.webp"
+          width="277"
+          height="530"
+          srcset="https://example.com/a.webp 1000w"
+        >
+      </p>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com/',
     })
 
-    expect(result).toContain('width="277"')
-    expect(result).toContain('height="530"')
-    expect(result).toContain('src="https://example.com/a.webp"')
+    expect(result).toEqualHtml(expected)
   })
 
   it.todo('should propagate an error thrown by a dom transform', () => {
@@ -516,19 +590,16 @@ describeForEachParser('transformContent', (parseHtml) => {
 
   it('should remove hidden elements', async () => {
     const value = '<p>Keep</p><div hidden>Gone</div><p style="display:none">Also gone</p>'
-    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+    const expected = '<p>Keep</p>'
 
-    expect(result).toContain('Keep')
-    expect(result).not.toContain('Gone')
-    expect(result).not.toContain('Also gone')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it('should strip non-content widget elements', async () => {
     const value = '<p>Article text</p><div class="adsbygoogle">Ad slot</div>'
-    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+    const expected = '<p>Article text</p>'
 
-    expect(result).toContain('Article text')
-    expect(result).not.toContain('Ad slot')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it('should collapse rules left touching by an emptied block between them', async () => {
@@ -559,9 +630,15 @@ describeForEachParser('transformContent', (parseHtml) => {
   it('should collapse rules left touching by a stripped subscribe widget', async () => {
     const value = html`
       <p>Article text</p>
-      <div><hr></div>
-      <div class="subscription-widget-wrap-editor"><p>Subscribe now</p></div>
-      <div><hr></div>
+      <div>
+        <hr>
+      </div>
+      <div class="subscription-widget-wrap-editor">
+        <p>Subscribe now</p>
+      </div>
+      <div>
+        <hr>
+      </div>
       <p>More text</p>
     `
     // The rules bracket the widget in the feed, so removing it as non-content is what
@@ -577,93 +654,100 @@ describeForEachParser('transformContent', (parseHtml) => {
 
   it('should strip comments outside pre blocks', async () => {
     const value = '<p>Text<!-- leaked build note --></p>'
-    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+    const expected = '<p>Text</p>'
 
-    expect(result).toContain('Text')
-    expect(result).not.toContain('leaked build note')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it('should replace an emoji image with its alt text', async () => {
     const value =
       '<p>Hello <img src="https://s.w.org/images/core/emoji/17.0.2/72x72/1f609.png" alt="\u{1F609}" class="wp-smiley"> world</p>'
-    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+    const expected = '<p>Hello \u{1F609} world</p>'
 
-    expect(result).toContain('\u{1F609}')
-    expect(result).not.toContain('<img')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it('should convert amp-img into a plain image', async () => {
-    const value =
-      '<amp-img src="https://example.com/photo.jpg" alt="A photo" width="640" height="480"></amp-img>'
-    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+    const value = html`
+      <amp-img src="https://example.com/photo.jpg" alt="A photo" width="640" height="480"></amp-img>
+    `
+    const expected = html`
+      <img
+        src="https://example.com/photo.jpg"
+        alt="A photo"
+        width="640"
+        height="480"
+      >
+    `
 
-    expect(result).toContain('<img')
-    expect(result).toContain('src="https://example.com/photo.jpg"')
-    expect(result).not.toContain('amp-img')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
   it('should canonicalize an alignment class into data-align', async () => {
     const value = '<img class="aligncenter" src="https://example.com/a.jpg">'
-    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+    const expected = '<img class="aligncenter" src="https://example.com/a.jpg" data-align="center">'
 
-    expect(result).toContain('data-align="center"')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
   it('should promote style dimensions to width and height attributes', async () => {
     const value = '<img src="https://example.com/photo.jpg" style="width:300px;height:200px">'
-    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+    const expected = html`
+      <img
+        src="https://example.com/photo.jpg"
+        style="width:300px;height:200px"
+        width="300"
+        height="200"
+      >
+    `
 
-    expect(result).toContain('width="300"')
-    expect(result).toContain('height="200"')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
   it('should linkify a bare url in text', async () => {
     const value = '<p>See https://example.com/page for details</p>'
-    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+    const expected = html`
+      <p>See <a href="https://example.com/page">https://example.com/page</a> for details</p>
+    `
 
-    expect(result).toContain('<a href="https://example.com/page"')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it('should mark a line-leading timestamp', async () => {
     const value = '<p>01:21 - Intro</p>'
-    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+    const expected = '<p><span data-timestamp="81">01:21</span> - Intro</p>'
 
-    expect(result).toContain('<span data-timestamp="81">01:21</span>')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   // A javascript: anchor is unwrapped by stripDeadAnchors before neutralizeUnsafeUrls
   // runs, so the pipeline outcome for links is removal, not the sentinel.
   it('should unwrap an unsafe link and keep its text', async () => {
     const value = '<p><a href="javascript:alert(1)">x</a></p>'
-    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+    const expected = '<p>x</p>'
 
-    expect(result).toContain('x')
-    expect(result).not.toContain('javascript:')
-    expect(result).not.toContain('<a')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it('should neutralize an unsafe image src to the media sentinel', async () => {
     const value = '<p>Text</p><img src="javascript:alert(1)">'
-    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+    const expected = '<p>Text</p><img src="about:blank">'
 
-    expect(result).toContain('src="about:blank"')
-    expect(result).not.toContain('javascript:')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it('should wrap a table in a scroll container', async () => {
     const value = '<table><tbody><tr><td>Cell</td></tr></tbody></table>'
-    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+    const expected = '<div data-table=""><table><tbody><tr><td>Cell</td></tr></tbody></table></div>'
 
-    expect(result).toContain('data-table')
-    expect(result).toContain('<table>')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it('should demote a lone h1 to h2', async () => {
     const value = '<h1>Section</h1><p>Body</p>'
-    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+    const expected = '<h2>Section</h2><p>Body</p>'
 
-    expect(result).toContain('<h2>Section</h2>')
-    expect(result).not.toContain('<h1>')
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
   it.todo('should strip control characters from the raw input', () => {
@@ -801,12 +885,24 @@ describeForEachParser('transformContent', (parseHtml) => {
   it('should unwrap the heading bold once junk siblings are cleaned', async () => {
     const options = { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' }
     const value = html`
-      <h2><a href="https://example.com/post#anchored"><strong>Anchored</strong></a></h2>
-      <h3><strong>Shared</strong><span class="sharedaddy">Share this</span></h3>
+      <h2>
+        <a href="https://example.com/post#anchored">
+          <strong>Anchored</strong>
+        </a>
+      </h2>
+      <h3>
+        <strong>Shared</strong>
+        <span class="sharedaddy">Share this</span>
+      </h3>
+    `
+    const expected = html`
+      <h2>
+        <a id="anchored" href="#anchored"></a>Anchored</h2>
+      <h3>Shared</h3>
     `
     const result = await transformContent(value, options)
 
-    expect(result).not.toContain('<strong>')
+    expect(result).toEqualHtml(expected)
     expect(await transformContent(result, options)).toBe(result)
   })
 
@@ -827,11 +923,22 @@ describeForEachParser('transformContent', (parseHtml) => {
         </a>
       </figure>
     `
+    const expected = html`
+      <p>Intro</p>
+      <div data-embed-src="https://www.youtube.com/embed/abc123"></div>
+      <p>Watch </p>
+      <div data-embed-src="https://www.youtube.com/embed/def456"></div>
+      <p> inline</p>
+      <div
+        data-cite-provider="ghost"
+        data-cite-url="https://example.com/linked"
+        data-cite-title="Linked post"
+      ></div>
+    `
     const once = await transformContent(value, options)
     const twice = await transformContent(once, options)
 
-    expect(once).toContain('data-embed-src=')
-    expect(once).toContain('data-cite-provider="ghost"')
+    expect(once).toEqualHtml(expected)
     expect(twice).toBe(once)
   })
 
@@ -842,29 +949,37 @@ describeForEachParser('transformContent', (parseHtml) => {
   it('should leave no embed placeholder inside a paragraph', async () => {
     const value = html`
       <p>Watch <iframe src="https://www.youtube.com/embed/abc123"></iframe> inline</p>
-      <p>Wrapped <span><iframe src="https://www.youtube.com/embed/def456"></iframe></span> after</p>
+      <p>Wrapped <span>
+          <iframe src="https://www.youtube.com/embed/def456"></iframe>
+        </span> after</p>
+    `
+    const expected = html`
+      <p>Watch </p>
+      <div data-embed-src="https://www.youtube.com/embed/abc123"></div>
+      <p> inline</p>
+      <p>Wrapped </p>
+      <div data-embed-src="https://www.youtube.com/embed/def456"></div>
+      <p> after</p>
     `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com/post',
     })
 
-    expect(result).toContain('<p>Watch </p>')
-    expect(result).toContain('<p>Wrapped </p>')
-    expect(result).not.toMatch(blockInParagraphRegex)
+    expect(result).toBe(expected)
   })
 
   // The <code> holds a real newline, so it is promoted to a block <pre> rather than left
   // inline. The html tag collapses whitespace, which would drop the promotion.
   it('should leave no promoted code block inside a paragraph', async () => {
     const value = '<p>Install <code>npm install feedsweep\nbun add feedsweep</code> and done</p>'
+    const expected =
+      '<p>Install </p><pre><code>npm install feedsweep\nbun add feedsweep</code></pre><p> and done</p>'
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com/post',
     })
 
-    expect(result).toContain('<p>Install </p>')
-    expect(result).toContain('<pre>')
-    expect(result).not.toMatch(blockInParagraphRegex)
+    expect(result).toBe(expected)
   })
 })

@@ -1,27 +1,41 @@
 import { expect, it } from 'bun:test'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { fixLazyVideos } from './fixLazyVideos.js'
 
 describeForEachParser('fixLazyVideos', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [fixLazyVideos(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [fixLazyVideos(context)])
   }
 
   it('should promote a lazy data-poster into poster', async () => {
     const value = '<video data-poster="https://example.com/still.jpg"></video>'
-    const result = await transform(value)
+    const expected = html`
+      <video
+        poster="https://example.com/still.jpg"
+        data-poster="https://example.com/still.jpg"
+      ></video>
+    `
 
-    expect(result).toContain(' poster="https://example.com/still.jpg"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should promote a lazy data-poster even when a source is present', async () => {
-    const value =
-      '<video data-poster="https://example.com/still.jpg"><source src="clip.mp4"></video>'
-    const result = await transform(value)
+    const value = html`
+      <video data-poster="https://example.com/still.jpg">
+        <source src="clip.mp4">
+      </video>
+    `
+    const expected = html`
+      <video
+        poster="https://example.com/still.jpg"
+        data-poster="https://example.com/still.jpg"
+      ><source src="clip.mp4">
+      </video>
+    `
 
-    expect(result).toContain(' poster="https://example.com/still.jpg"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not overwrite an existing poster', async () => {
@@ -32,9 +46,14 @@ describeForEachParser('fixLazyVideos', (parseHtml) => {
 
   it('should promote a lazy data-src into src on a sourceless video', async () => {
     const value = '<video data-src="https://example.com/clip.mp4"></video>'
-    const result = await transform(value)
+    const expected = html`
+      <video
+        src="https://example.com/clip.mp4"
+        data-src="https://example.com/clip.mp4"
+      ></video>
+    `
 
-    expect(result).toContain(' src="https://example.com/clip.mp4"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not promote a src when a source child is present', async () => {

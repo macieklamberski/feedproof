@@ -84,7 +84,7 @@ export const extractBandcampRelease = (link: string): string | undefined => {
 // exposes it as child elements, so `querySelector` reaches the anchor in one and not the
 // other. `innerHTML` is the view they agree on, and re-parsing it into a throwaway element
 // turns it back into a real anchor in both. That also makes the parser the entity decoder,
-// so the label arrives as `Sam & Dave – Hold On` rather than its escaped form.
+// so the label arrives decoded, as `Sam & Dave – Hold On`.
 const parseFallback = (element: Element): Element | null => {
   const holder = element.ownerDocument.createElement('div')
   holder.innerHTML = element.innerHTML
@@ -141,7 +141,7 @@ export const bandcampResolveEmbed = (
 
   const anchor = parseFallback(element)
   const url = attr(anchor, 'href')
-  // Bandcamp writes the label as "{title} by {artist}". It is kept whole rather than split
+  // Bandcamp writes the label as "{title} by {artist}". It is kept whole instead of split
   // on " by ", which appears inside real titles too.
   const title = text(anchor)
 

@@ -50,7 +50,9 @@ describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
       const value = html`
         <div class="c-embed">
           <div class="c-embed__body">
-            <h2><a href="https://example.com/page">Page title</a></h2>
+            <h2>
+              <a href="https://example.com/page">Page title</a>
+            </h2>
           </div>
         </div>
       `
@@ -68,7 +70,11 @@ describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
     it('should fall back to the cover link when the title has no href', async () => {
       const value = html`
         <div class="c-embed">
-          <div class="c-embed__cover"><a href="https://example.com/page"><img src="https://example.com/cover.png" /></a></div>
+          <div class="c-embed__cover">
+            <a href="https://example.com/page">
+              <img src="https://example.com/cover.png" />
+            </a>
+          </div>
           <div class="c-embed__body">
             <h2>Page title</h2>
           </div>
@@ -90,7 +96,9 @@ describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
       const value = html`
         <div class="c-embed">
           <div class="c-embed__body">
-            <h2><a href="https://example.com/page">Page title</a></h2>
+            <h2>
+              <a href="https://example.com/page">Page title</a>
+            </h2>
             <div class="color-secondary">
               <img class="c-embed__favicon" src="https://example.com/favicon.png" />
               example.com
@@ -201,7 +209,9 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
               <div>
                 <a href="/author" class="crayons-story__secondary fw-medium">Author name</a>
               </div>
-              <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+              <h2 class="crayons-story__title">
+                <a href="https://example.com/post">Page title</a>
+              </h2>
             </div>
           </div>
         </div>
@@ -227,7 +237,9 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
                 <img src="https://example.com/author.png" alt="author profile" class="crayons-avatar__image" />
               </a>
             </div>
-            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+            <h2 class="crayons-story__title">
+              <a href="https://example.com/post">Page title</a>
+            </h2>
           </div>
         </div>
       `
@@ -245,8 +257,12 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
       const value = html`
         <div class="ltag__link--embedded">
           <div class="crayons-story ">
-            <a href="https://example.com/post" class="crayons-story__tertiary fs-xs"><time>Aug 21, 2025</time></a>
-            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+            <a href="https://example.com/post" class="crayons-story__tertiary fs-xs">
+              <time>Aug 21, 2025</time>
+            </a>
+            <h2 class="crayons-story__title">
+              <a href="https://example.com/post">Page title</a>
+            </h2>
           </div>
         </div>
       `
@@ -264,8 +280,13 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
       const value = html`
         <div class="ltag__link--embedded">
           <div class="crayons-story ">
-            <a href="https://example.com/post" class="crayons-story__tertiary fs-xs"><time>Jul 25</time><span class="time-ago-indicator-initial-placeholder"></span></a>
-            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+            <a href="https://example.com/post" class="crayons-story__tertiary fs-xs">
+              <time>Jul 25</time>
+              <span class="time-ago-indicator-initial-placeholder"></span>
+            </a>
+            <h2 class="crayons-story__title">
+              <a href="https://example.com/post">Page title</a>
+            </h2>
           </div>
         </div>
       `
@@ -288,7 +309,9 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
             >
               Context note text
             </a>
-            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+            <h2 class="crayons-story__title">
+              <a href="https://example.com/post">Page title</a>
+            </h2>
           </div>
         </div>
       `
@@ -306,7 +329,9 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
       const value = html`
         <div class="ltag__link--embedded">
           <div class="crayons-story ">
-            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+            <h2 class="crayons-story__title">
+              <a href="https://example.com/post">Page title</a>
+            </h2>
             <div class="crayons-story__contentpreview">Status text</div>
           </div>
         </div>
@@ -325,7 +350,9 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
       const value = html`
         <div class="ltag__link--embedded">
           <div class="crayons-story ">
-            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+            <h2 class="crayons-story__title">
+              <a href="https://example.com/post">Page title</a>
+            </h2>
           </div>
         </div>
       `
@@ -411,7 +438,9 @@ describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
             <div class="ltag__link__content">
               <h2>Page title</h2>
               <h3>Author name ・ Aug 25 '22 ・ 5 min read</h3>
-              <div class="ltag__link__taglist"><span class="ltag__link__tag">#git</span></div>
+              <div class="ltag__link__taglist">
+                <span class="ltag__link__tag">#git</span>
+              </div>
             </div>
           </a>
         </div>
@@ -431,7 +460,9 @@ describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
       const value = html`
         <div class="ltag__link">
           <a href="https://example.com/author/post" class="ltag__link__link">
-            <div class="ltag__link__content"><h2>Page title</h2></div>
+            <div class="ltag__link__content">
+              <h2>Page title</h2>
+            </div>
           </a>
         </div>
       `
@@ -466,7 +497,9 @@ describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
       const value = html`
         <div class="ltag__link">
           <div class="ltag__link__content">
-            <div class="missing"><h2>Post not found or has been removed.</h2></div>
+            <div class="missing">
+              <h2>Post not found or has been removed.</h2>
+            </div>
           </div>
         </div>
       `
@@ -478,7 +511,9 @@ describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
       const value = html`
         <div class="ltag__link">
           <a href="https://example.com/author/post" class="ltag__link__link">
-            <div class="ltag__link__content"><h3>Author name ・ Aug 25 '22</h3></div>
+            <div class="ltag__link__content">
+              <h3>Author name ・ Aug 25 '22</h3>
+            </div>
           </a>
         </div>
       `

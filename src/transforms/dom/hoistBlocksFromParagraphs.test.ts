@@ -90,9 +90,11 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
     it('should split through an inline ancestor without keeping its husk', async () => {
       const value = '<p>Before <em>emphasised <i class="marker">Block</i> after</em>.</p>'
       const expected = html`
-        <p>Before <em>emphasised </em></p>
+        <p>Before <em>emphasised </em>
+        </p>
         <div data-block="">Block</div>
-        <p><em> after</em>.</p>
+        <p>
+          <em> after</em>.</p>
       `
 
       expect(await transform(value)).toEqualHtml(expected)
@@ -111,12 +113,13 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
 
     it('should walk husk removal up through nested emptied wrappers', async () => {
       const value = '<p>Before <em><span><i class="marker">Block</i></span></em> after.</p>'
-      const result = await transform(value)
+      const expected = html`
+        <p>Before </p>
+        <div data-block="">Block</div>
+        <p> after.</p>
+      `
 
-      expect(result).not.toContain('<em>')
-      expect(result).not.toContain('<span>')
-      expect(result).toContain('<p>Before </p>')
-      expect(result).toContain('<p> after.</p>')
+      expect(await transform(value)).toBe(expected)
     })
   })
 
@@ -130,17 +133,24 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
 
     it('should drop the trailing half when nothing renderable follows', async () => {
       const value = '<p>Watch this: <i class="marker">Block</i> </p>'
-      const result = await transform(value)
+      const expected = html`
+        <p>Watch this: </p>
+        <div data-block="">Block</div>
+      `
 
-      expect(result).toContain('<p>Watch this: </p>')
-      expect((result.match(/<p/g) ?? []).length).toBe(1)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should keep a trailing half holding only media', async () => {
       const value = '<p>Before <i class="marker">Block</i> <img src="a.jpg"></p>'
-      const result = await transform(value)
+      const expected = html`
+        <p>Before </p>
+        <div data-block="">Block</div>
+        <p> <img src="a.jpg">
+        </p>
+      `
 
-      expect(result).toContain('<p> <img src="a.jpg"></p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     // Both blocks match the selector, so the inner one gets its turn after the outer has
@@ -161,7 +171,9 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
 
       const expected = html`
         <p>Before </p>
-        <div data-block=""><div data-inner="">Inner</div></div>
+        <div data-block="">
+          <div data-inner="">Inner</div>
+        </div>
         <p> after</p>
       `
       const result = await applyDomTransforms(document, [hoistBlocksFromParagraphs(baseContext)])

@@ -7,7 +7,7 @@ const safeIdRegex = /^\d+$/
 
 const libsynHosts = ['libsyn.com']
 
-// Libsyn spells its player options as path segments rather than a query string:
+// Libsyn spells its player options as path segments, not a query string:
 // `/embed/episode/id/{id}/height/{px}/theme/{name}/thumbnail/{yes|no}/…`. `episode` and `show`
 // are the two kinds. A show player plays the latest episode.
 const embedKinds = ['episode', 'show', 'destination']
@@ -56,7 +56,7 @@ export const extractLibsynEmbed = (
 //
 // No thumbnail and no canonical url. There is an `oembed.libsyn.com` endpoint, but it does not
 // answer for what the markup gives us: `?item_id={id}` returns `No valid media found` and
-// `?url={player url}` returns an HTML page rather than JSON (both checked 2026-08-11). The
+// `?url={player url}` returns an HTML page, not JSON (both checked 2026-08-11). The
 // episode title lives on the player page and artwork needs an authenticated api call.
 export const libsynResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const embed = extractLibsynEmbed(url)

@@ -422,7 +422,7 @@ export const injectEnclosures: DomTransform = (context) => {
     })
 
     // Tag each injected element so the optional stripDuplicateEnclosures pass can
-    // recognize it as injected media rather than the item's own content.
+    // recognize it as injected media, not the item's own content.
     for (const element of injected) {
       element.setAttribute(enclosureMarker, '')
     }
