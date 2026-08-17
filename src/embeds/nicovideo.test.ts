@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
-import { describeForEachParser, resolverExtractor } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   extractNicovideoId,
@@ -65,8 +65,9 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
 
   describe('happy paths', () => {
     it('should mint the modern player and carry both dimensions as a ratio', async () => {
-      const value =
-        '<script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=490&amp;h=307"></script>'
+      const value = html`
+        <script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=490&amp;h=307"></script>
+      `
       const expected: EmbedResolverResult = {
         provider: 'nicovideo',
         id: 'sm9',
@@ -104,8 +105,7 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // One dimension alone would be read as a fixed height rather than a ratio, so both or
-    // neither.
+    // A lone height reads as the fixed box this player is not, so it is both or neither.
     it('should state no size when only one dimension is given', async () => {
       const value = '<script src="https://ext.nicovideo.jp/thumb_watch/sm9?h=307"></script>'
       const expected: EmbedResolverResult = {
@@ -133,8 +133,9 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should state no size when a dimension is not a pixel count', async () => {
-      const value =
-        '<script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=100%25&amp;h=307"></script>'
+      const value = html`
+        <script src="https://ext.nicovideo.jp/thumb_watch/sm9?w=100%25&amp;h=307"></script>
+      `
       const expected: EmbedResolverResult = {
         provider: 'nicovideo',
         id: 'sm9',

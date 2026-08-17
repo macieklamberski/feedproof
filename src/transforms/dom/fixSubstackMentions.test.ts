@@ -19,11 +19,11 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
     it('should link a user mention to the profile url minted from its id', async () => {
       const mention = makeMention({ name: 'Jane Miller', id: 123456, type: 'user', url: null })
       const value = `<p>Thanks to ${mention} for the idea.</p>`
-      const result = await transform(value)
+      const expected = html`
+        <p>Thanks to <a href="https://substack.com/profile/123456">@Jane Miller</a> for the idea.</p>
+      `
 
-      expect(result).toBe(
-        '<p>Thanks to <a href="https://substack.com/profile/123456">@Jane Miller</a> for the idea.</p>',
-      )
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should link a publication mention to its payload url', async () => {
@@ -34,26 +34,24 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
         url: 'https://open.substack.com/pub/morningletters',
       })
       const value = `<p>She hosts ${mention} now.</p>`
-      const result = await transform(value)
+      const expected = html`
+        <p>She hosts <a href="https://open.substack.com/pub/morningletters">@Morning Letters</a> now.</p>
+      `
 
-      expect(result).toBe(
-        '<p>She hosts <a href="https://open.substack.com/pub/morningletters">@Morning Letters</a> now.</p>',
-      )
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should convert every mention in a paragraph', async () => {
       const first = makeMention({ name: 'Ana', id: 1, type: 'user', url: null })
       const second = makeMention({ name: 'Ben', id: 2, type: 'user', url: null })
       const value = `<p>${first} and ${second}</p>`
-      const result = await transform(value)
+      const expected = html`
+        <p>
+          <a href="https://substack.com/profile/1">@Ana</a> and <a href="https://substack.com/profile/2">@Ben</a>
+        </p>
+      `
 
-      expect(result).toBe(
-        html`
-          <p>
-            <a href="https://substack.com/profile/1">@Ana</a> and <a href="https://substack.com/profile/2">@Ben</a>
-          </p>
-        `,
-      )
+      expect(await transform(value)).toBe(expected)
     })
   })
 
@@ -61,9 +59,9 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
     it('should keep the name as plain text when neither url nor id is usable', async () => {
       const mention = makeMention({ name: 'Sam Fields', id: null, type: 'user', url: null })
       const value = `<p>With ${mention} on stage.</p>`
-      const result = await transform(value)
+      const expected = '<p>With @Sam Fields on stage.</p>'
 
-      expect(result).toBe('<p>With @Sam Fields on stage.</p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should fall back to the profile url when the payload url is not http', async () => {
@@ -74,52 +72,52 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
         url: 'javascript:alert(1)',
       })
       const value = `<p>${mention}</p>`
-      const result = await transform(value)
+      const expected = '<p><a href="https://substack.com/profile/42">@Ana</a></p>'
 
-      expect(result).toBe('<p><a href="https://substack.com/profile/42">@Ana</a></p>')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should not interpolate an id that is not a positive integer', async () => {
       const mention = makeMention({ name: 'Ana', id: -1, type: 'user', url: null })
       const value = `<p>${mention}</p>`
-      const result = await transform(value)
+      const expected = '<p>@Ana</p>'
 
-      expect(result).toBe('<p>@Ana</p>')
+      expect(await transform(value)).toBe(expected)
     })
   })
 
   describe('leave-alone cases', () => {
     it('should leave a span without data-attrs untouched', async () => {
       const value = '<p><span class="mention-wrap" data-component-name="MentionToDOM"></span></p>'
-      const result = await transform(value)
 
-      expect(result).toContain('mention-wrap')
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave a span with malformed data-attrs untouched', async () => {
       const value = `<p>${makeMention('{"name":"Ana"')}</p>`
-      const result = await transform(value)
 
-      expect(result).toContain('mention-wrap')
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave a span without a name untouched', async () => {
       const value = `<p>${makeMention({ id: 123456, type: 'user', url: null })}</p>`
-      const result = await transform(value)
 
-      expect(result).toContain('mention-wrap')
+      expect(await transform(value)).toBe(value)
     })
   })
 
   it('should keep the mention through the default pipeline end to end', async () => {
     const mention = makeMention({ name: 'Jane Miller', id: 123456, type: 'user', url: null })
     const value = `<p>Thanks to ${mention} for the idea.</p>`
+    const expected = html`
+      <p>Thanks to <a href="https://substack.com/profile/123456">@Jane Miller</a> for the idea.</p>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com',
     })
 
-    expect(result).toContain('<a href="https://substack.com/profile/123456">@Jane Miller</a>')
+    expect(result).toBe(expected)
   })
 
   it('should be idempotent', async () => {

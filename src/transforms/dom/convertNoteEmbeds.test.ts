@@ -139,7 +139,10 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
           data-identifier="n1234"
           embedded-service="external-article"
           embedded-content-key="emb123"
-        ><a href="https://example.com/article"><strong>A title</strong></a></figure>
+        ><a href="https://example.com/article">
+            <strong>A title</strong>
+          </a>
+        </figure>
       `
 
       expect(await transform(value)).toBe(value)
@@ -154,7 +157,8 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
           data-identifier="n1234"
           embedded-service="shopping"
           embedded-content-key="emb123"
-        ><a href="https://example.com/item">An item</a></figure>
+        ><a href="https://example.com/item">An item</a>
+        </figure>
       `
 
       expect(await transform(value)).toBe(value)
@@ -217,12 +221,12 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
 
     // The two parsers write these five attributes in opposite orders, jsdom keeping the order
     // they were set in and linkedom reversing it, so the comparison has to ignore order.
-    expect(
-      await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        baseUrl: 'https://note.com/user/n/n1234',
-      }),
-    ).toEqualHtml(expected)
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://note.com/user/n/n1234',
+    })
+
+    expect(result).toEqualHtml(expected)
   })
 
   it('should surface a service no resolver claims as a generic placeholder end to end', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, resolverExtractor } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   buzzsproutIframeEmbedResolver,
@@ -40,8 +40,11 @@ describeForEachParser('buzzsproutScriptEmbedResolver', (parseHtml) => {
 
   describe('happy paths', () => {
     it('should build the placeholder from the plain script form', async () => {
-      const value =
-        '<script src="https://www.buzzsprout.com/231452/19565923.js?container_id=buzzsprout-player-19565923&player=small"></script>'
+      const value = html`
+        <script
+          src="https://www.buzzsprout.com/231452/19565923.js?container_id=buzzsprout-player-19565923&player=small"
+        ></script>
+      `
       const expected: EmbedResolverResult = {
         provider: 'buzzsprout',
         id: '231452/19565923',
@@ -54,8 +57,12 @@ describeForEachParser('buzzsproutScriptEmbedResolver', (parseHtml) => {
     })
 
     it('should build the placeholder from the episodes-slug form', async () => {
-      const value =
-        '<script charset="utf-8" src="https://www.buzzsprout.com/42610/episodes/19141080-dreampod-150-mike-tucker.js?container_id=buzzsprout-player-19141080"></script>'
+      const value = html`
+        <script
+          charset="utf-8"
+          src="https://www.buzzsprout.com/42610/episodes/19141080-dreampod-150-mike-tucker.js?container_id=buzzsprout-player-19141080"
+        ></script>
+      `
       const expected: EmbedResolverResult = {
         provider: 'buzzsprout',
         id: '42610/19141080',
@@ -72,8 +79,11 @@ describeForEachParser('buzzsproutScriptEmbedResolver', (parseHtml) => {
     // The div this script fills is empty, so refusing it deletes the player outright rather than
     // leaving a generic placeholder the way the url-keyed resolver does.
     it('should build the show placeholder from a script naming the podcast alone', async () => {
-      const value =
-        '<script src="https://www.buzzsprout.com/231452.js?container_id=buzzsprout-large-player&player=large"></script>'
+      const value = html`
+        <script
+          src="https://www.buzzsprout.com/231452.js?container_id=buzzsprout-large-player&player=large"
+        ></script>
+      `
       const expected: EmbedResolverResult = {
         provider: 'buzzsprout',
         id: '231452',
@@ -105,8 +115,13 @@ describeForEachParser('buzzsproutIframeEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, buzzsproutIframeEmbedResolver)
 
   it('should resolve a direct player iframe to the same placeholder', async () => {
-    const value =
-      '<iframe src="https://www.buzzsprout.com/1735722/episodes/8166676-mahler-symphony?client_source=small_player&iframe=true" width="100%" height="200"></iframe>'
+    const value = html`
+      <iframe
+        src="https://www.buzzsprout.com/1735722/episodes/8166676-mahler-symphony?client_source=small_player&iframe=true"
+        width="100%"
+        height="200"
+      ></iframe>
+    `
     const expected: EmbedResolverResult = {
       provider: 'buzzsprout',
       id: '1735722/8166676',

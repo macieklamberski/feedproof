@@ -68,8 +68,11 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
     })
 
     it('should leave mailto, tel and fragment links untouched', async () => {
-      const value =
-        '<a href="mailto:a@b.com">mail</a><a href="tel:+123">call</a><a href="#section">jump</a>'
+      const value = html`
+        <a href="mailto:a@b.com">mail</a>
+        <a href="tel:+123">call</a>
+        <a href="#section">jump</a>
+      `
 
       expect(await transform(value)).toBe(value)
     })
@@ -100,19 +103,17 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
     })
 
     it('should neutralize a javascript: xlink:href on an svg anchor', async () => {
-      const result = await transform(
-        '<svg><a xlink:href="javascript:alert(1)"><text>x</text></a></svg>',
-      )
+      const value = '<svg><a xlink:href="javascript:alert(1)"><text>x</text></a></svg>'
+      const expected = '<svg><a xlink:href="#unsafe-link"><text>x</text></a></svg>'
 
-      expect(result).toContain('#unsafe-link')
-      expect(result).not.toContain('javascript:')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should neutralize a javascript: href on an svg anchor', async () => {
-      const result = await transform('<svg><a href="javascript:alert(1)"><text>x</text></a></svg>')
+      const value = '<svg><a href="javascript:alert(1)"><text>x</text></a></svg>'
+      const expected = '<svg><a href="#unsafe-link"><text>x</text></a></svg>'
 
-      expect(result).toContain('#unsafe-link')
-      expect(result).not.toContain('javascript:')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should neutralize a javascript: formaction', async () => {
@@ -159,10 +160,14 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
         return true
       }
       const context: TransformContext = { ...baseContext, isSafeUrlFn }
-      await transform('<a href="https://a.test"></a><img src="https://b.test">', context)
+      const value = '<a href="https://a.test"></a><img src="https://b.test">'
+      const expected: Array<[string, string]> = [
+        ['https://a.test', 'link'],
+        ['https://b.test', 'media'],
+      ]
+      await transform(value, context)
 
-      expect(seen).toContainEqual(['https://a.test', 'link'])
-      expect(seen).toContainEqual(['https://b.test', 'media'])
+      expect(seen).toEqual(expected)
     })
   })
 
@@ -244,17 +249,17 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
 
   describe('svg image', () => {
     it('should neutralize a javascript: href on an svg image', async () => {
-      const result = await transform('<svg><image href="javascript:alert(1)"></image></svg>')
+      const value = '<svg><image href="javascript:alert(1)"></image></svg>'
+      const expected = '<svg><image href="about:blank"></image></svg>'
 
-      expect(result).toContain('about:blank')
-      expect(result).not.toContain('javascript:')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should neutralize a javascript: xlink:href on an svg image', async () => {
-      const result = await transform('<svg><image xlink:href="javascript:alert(1)"></image></svg>')
+      const value = '<svg><image xlink:href="javascript:alert(1)"></image></svg>'
+      const expected = '<svg><image xlink:href="about:blank"></image></svg>'
 
-      expect(result).toContain('about:blank')
-      expect(result).not.toContain('javascript:')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should neutralize an svg image the policy rejects', async () => {
@@ -262,18 +267,16 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
         ...baseContext,
         isSafeUrlFn: (url) => !url.includes('evil.test'),
       }
-      const result = await transform(
-        '<svg><image href="https://evil.test/a.png"></image></svg>',
-        context,
-      )
+      const value = '<svg><image href="https://evil.test/a.png"></image></svg>'
+      const expected = '<svg><image href="about:blank"></image></svg>'
 
-      expect(result).toContain('about:blank')
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     it('should keep a safe svg image href', async () => {
-      const result = await transform('<svg><image href="https://ok.test/a.png"></image></svg>')
+      const value = '<svg><image href="https://ok.test/a.png"></image></svg>'
 
-      expect(result).toContain('https://ok.test/a.png')
+      expect(await transform(value)).toEqualHtml(value)
     })
   })
 

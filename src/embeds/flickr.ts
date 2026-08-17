@@ -1,7 +1,7 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { flashVars, keepIfMatches } from '../utils/dom.js'
-import { createUrlEmbedResolver, getEmbedDimensions } from '../utils/widgets.js'
+import { flashVars, getElementDimensions, keepIfMatches } from '../utils/dom.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const flickrHosts = ['flickr.com']
 
@@ -184,7 +184,7 @@ export const flickrResolveEmbed = (
     return
   }
 
-  const declared = getEmbedDimensions(element)
+  const declared = getElementDimensions(element)
   const width = declared.width ?? defaultWidth
   const height = declared.height ?? defaultHeight
 

@@ -9,7 +9,7 @@ import {
 import {
   createEmbedPlaceholder,
   embedCarrierSelector,
-  getEmbedDimensions,
+  getEmbedSize,
   isMediaResult,
   parseOrKeepDate,
   readCarrierUrl,
@@ -261,7 +261,7 @@ export const convertWidgets: DomTransform = (context) => {
       }
 
       carrierOrShell(element).replaceWith(
-        createEmbedPlaceholder(document, { src: cleaned, ...getEmbedDimensions(element) }),
+        createEmbedPlaceholder(document, { src: cleaned, ...getEmbedSize(element) }),
       )
     }
   }

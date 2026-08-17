@@ -39,7 +39,7 @@ const anonymousUser = 'anon'
 // `data-height="300"`, its docs call every attribute but the slug and user an optional override,
 // and 300 is the commonest value in the corpus. Stated here rather than left to the consumer's
 // default, so the placeholder reserves the right space for a player that declares none. A
-// carrier that states a size of its own replaces it, and takes the whole pair when it does.
+// carrier that states a size or a shape of its own replaces it outright.
 const defaultPenHeight = 300
 
 // Titles the snippet writes when the pen has none. They name the carrier, not the pen,

@@ -6,8 +6,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { removeTrackingPixels } from './removeTrackingPixels.js'
 
 describeForEachParser('removeTrackingPixels', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [removeTrackingPixels(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [removeTrackingPixels(context)])
   }
 
   describe('size-based detection', () => {
@@ -16,10 +16,9 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
         <p>Text</p>
         <img src="tracker.gif" width="1" height="1">
       `
-      const result = await transform(value)
+      const expected = '<p>Text</p>'
 
-      expect(result).toContain('<p>Text</p>')
-      expect(result).not.toContain('tracker.gif')
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove 2x2 pixel images', async () => {
@@ -67,15 +66,17 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
 
   describe('content-image guard', () => {
     it('should keep a 0x0 image whose src is a real raster file', async () => {
-      const value =
-        '<img src="https://img.cdn.example.com/abc.jpg" width="0" height="0" alt="Photo">'
+      const value = html`
+        <img src="https://img.cdn.example.com/abc.jpg" width="0" height="0" alt="Photo">
+      `
 
       expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should keep a 0x0 image whose src carries a raster format query', async () => {
-      const value =
-        '<img src="https://img.cdn.example.com/abc?width=1300&format=jpeg" width="0" height="0">'
+      const value = html`
+        <img src="https://img.cdn.example.com/abc?width=1300&format=jpeg" width="0" height="0">
+      `
 
       expect(await transform(value)).toEqualHtml(value)
     })
@@ -87,8 +88,9 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
     })
 
     it('should still remove a 0x0 beacon whose src is not a real image', async () => {
-      const value =
-        '<img src="https://stat.example.com/piwik.php?idsite=1&rec=1" width="0" height="0">'
+      const value = html`
+        <img src="https://stat.example.com/piwik.php?idsite=1&rec=1" width="0" height="0">
+      `
 
       expect(await transform(value)).toEqualHtml('')
     })
@@ -106,8 +108,9 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
     })
 
     it('should still remove an opacity:0 image even with a real raster src', async () => {
-      const value =
-        '<img src="https://example.com/photo.jpg" style="opacity:0" width="0" height="0">'
+      const value = html`
+        <img src="https://example.com/photo.jpg" style="opacity:0" width="0" height="0">
+      `
 
       expect(await transform(value)).toEqualHtml('')
     })

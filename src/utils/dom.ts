@@ -418,21 +418,21 @@ const maxWrapperAncestorDepth = 3
 const elementRatioSources: Array<{
   attribute: string
   regex: RegExp
-  extract: (match: RegExpExecArray) => { width: number; height: number } | undefined
+  extract: (match: RegExpExecArray) => string | undefined
 }> = [
   {
     // Modern CSS: the whole `aspect-ratio` value (`16 / 9`, or a single number), parsed
     // like any other ratio string.
     attribute: 'style',
     regex: /aspect-ratio:\s*(?:auto\s+)?([\d.\s/]+)/i,
-    extract: (match) => parseRatioDimensions(match[1]),
+    extract: (match) => parseRatio(match[1]),
   },
   {
     // WordPress responsive embeds carry the ratio as a class (`wp-embed-aspect-16-9`),
     // styled by an external stylesheet feedsweep never sees. The class itself encodes it.
     attribute: 'class',
     regex: /wp-embed-aspect-(\d+)-(\d+)/,
-    extract: (match) => parseRatioDimensions(`${match[1]}:${match[2]}`),
+    extract: (match) => parseRatio(`${match[1]}:${match[2]}`),
   },
   {
     // The legacy inline padding hack (`padding-bottom:56.25%`): the percent is the
@@ -443,7 +443,7 @@ const elementRatioSources: Array<{
       const percent = Number(match[1])
 
       if (percent > 0 && percent < 1000) {
-        return ratioDimensions(100 / percent)
+        return formatRatio(100, percent)
       }
     },
   },
@@ -452,51 +452,49 @@ const elementRatioSources: Array<{
     // takes, only the box it may not exceed, so together they encode a ratio and nothing
     // more. Last in this list because it is the weakest reading: anything above states a
     // ratio outright, while this one infers it. A real width or height never competes,
-    // since getElementDimensions reads those and getEmbedDimensions consults this table
-    // only when it found none.
+    // since getElementDimensions reads those and getEmbedSize consults this table only
+    // when it found none.
     attribute: 'style',
     regex: styleMaxWidthRegex,
     extract: (match) => {
       const height = styleMaxHeightRegex.exec(match.input)?.[1]
 
-      return height ? parseRatioDimensions(`${match[1]}:${height}`) : undefined
+      return height ? parseRatio(`${match[1]}:${height}`) : undefined
     },
   },
 ]
 
-const getElementRatioDimensions = (
-  element: Element,
-): { width: number; height: number } | undefined => {
+const getElementRatio = (element: Element): string | undefined => {
   for (const source of elementRatioSources) {
     const match = source.regex.exec(element.getAttribute(source.attribute) ?? '')
 
     if (match) {
-      const dimensions = source.extract(match)
+      const ratio = source.extract(match)
 
-      if (dimensions) {
-        return dimensions
+      if (ratio) {
+        return ratio
       }
     }
   }
 }
 
 // Walks the element and its ancestors (the element plus up to `maxDepth` levels) and returns the
-// first ratio dimensions any of them declares: for an element whose own dimensions are unknown
-// but which sits in a responsive wrapper. Only ascends into a parent that wraps this element
-// alone: a parent with other element children sizes the whole group, so its ratio isn't this
-// element's. Pass maxDepth 0 to read only the element itself.
-export const getWrapperRatioDimensions = (
+// first aspect ratio any of them declares: for an element whose own dimensions are unknown but
+// which sits in a responsive wrapper. Only ascends into a parent that wraps this element alone:
+// a parent with other element children sizes the whole group, so its ratio isn't this element's.
+// Pass maxDepth 0 to read only the element itself.
+export const getWrapperRatio = (
   element: Element,
   maxDepth = maxWrapperAncestorDepth,
-): { width: number; height: number } | undefined => {
+): string | undefined => {
   let current: Element | null = element
   let depth = 0
 
   while (current && depth <= maxDepth) {
-    const dimensions = getElementRatioDimensions(current)
+    const ratio = getElementRatio(current)
 
-    if (dimensions) {
-      return dimensions
+    if (ratio) {
+      return ratio
     }
 
     const parent: Element | null = current.parentElement
@@ -510,11 +508,13 @@ export const getWrapperRatioDimensions = (
   }
 }
 
-// Encodes an aspect ratio as placeholder dimensions: the 100×N pair encodes the ratio, not
-// absolute pixels. Private on purpose: every consumer wants the dimensions, never the raw
-// ratio, so the parsers below are the only way in.
-const ratioDimensions = (ratio: number): { width: number; height: number } => {
-  return { width: 100, height: Math.round(100 / ratio) }
+// A ratio written the way CSS wants it, `W/H`, from the numbers the source stated. Nothing is
+// reduced or approximated: `800:600` stays `800/600`, and a bare decimal is written over one.
+// CSS renders every spelling of a shape identically, so tidying one up buys a consumer nothing,
+// while every attempt at it needed a threshold (a denominator bound, a tolerance, a digit count)
+// where the output changed for reasons unrelated to the ratio.
+export const formatRatio = (width: number, height = 1): string => {
+  return `${width}/${height}`
 }
 
 const ratioRegexes = [
@@ -524,10 +524,8 @@ const ratioRegexes = [
 ]
 
 // The one string-ratio grammar: a colon or slash width:height pair, or a bare decimal
-// (a pair with an implied height of 1), returned as the encoded placeholder dimensions.
-export const parseRatioDimensions = (
-  value: string,
-): { width: number; height: number } | undefined => {
+// (a pair with an implied height of 1), returned reduced and in the `W/H` spelling.
+export const parseRatio = (value: string): string | undefined => {
   for (const regex of ratioRegexes) {
     const match = value.match(regex)
 
@@ -539,7 +537,7 @@ export const parseRatioDimensions = (
     const height = match[2] === undefined ? 1 : Number(match[2])
 
     if (Number.isFinite(width) && width > 0 && height > 0) {
-      return ratioDimensions(width / height)
+      return formatRatio(width, height)
     }
   }
 }

@@ -25,7 +25,9 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
               </dt>
               <dd>
                 <h5 class="st-cardbox-t">Page title</h5>
-                <div class="st-card-excerpt smanone"><p>Preview text</p></div>
+                <div class="st-card-excerpt smanone">
+                  <p>Preview text</p>
+                </div>
                 <p class="st-cardbox-site">
                   <span class="st-cardbox-favicon">
                     <img data-src="https://www.google.com/s2/favicons?domain=example.com" width="16" height="16" alt="" />
@@ -55,12 +57,20 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
         <div class="kanren st-cardbox">
           <dl class="clearfix">
             <dt>
-              <a href="https://example.com/post"><img width="300" height="204" src="https://example.com/cover.jpg" class="attachment-300x300 size-300x300 wp-post-image" alt="" /></a>
+              <a href="https://example.com/post">
+                <img width="300" height="204" src="https://example.com/cover.jpg" class="attachment-300x300 size-300x300 wp-post-image" alt="" />
+              </a>
             </dt>
             <dd>
-              <h5 class="st-cardbox-t"><a href="https://example.com/post">Page title</a></h5>
-              <div class="smanone"><p>Preview text</p></div>
-              <p class="cardbox-more"><a href="https://example.com/post">More</a></p>
+              <h5 class="st-cardbox-t">
+                <a href="https://example.com/post">Page title</a>
+              </h5>
+              <div class="smanone">
+                <p>Preview text</p>
+              </div>
+              <p class="cardbox-more">
+                <a href="https://example.com/post">More</a>
+              </p>
             </dd>
           </dl>
         </div>
@@ -81,10 +91,14 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
         <a href="https://example.com/post" class="st-cardlink st-embed-cardlink">
           <div class="kanren st-cardbox">
             <dl class="clearfix">
-              <dt class="st-card-img"><img src="https://example.com/cover.webp" /></dt>
+              <dt class="st-card-img">
+                <img src="https://example.com/cover.webp" />
+              </dt>
               <dd>
                 <p class="st-cardbox-t">Page title</p>
-                <div class="st-card-excerpt smanone"><p>Preview text</p></div>
+                <div class="st-card-excerpt smanone">
+                  <p>Preview text</p>
+                </div>
               </dd>
             </dl>
           </div>
@@ -106,7 +120,9 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
     it('should read the title from a p element as well as an h5', async () => {
       const value = html`
         <a href="https://example.com/post" class="st-cardlink">
-          <div class="kanren st-cardbox"><p class="st-cardbox-t">Page title</p></div>
+          <div class="kanren st-cardbox">
+            <p class="st-cardbox-t">Page title</p>
+          </div>
         </a>
       `
       const expected: CiteResolverResult = {
@@ -122,7 +138,9 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
       const value = html`
         <a href="https://example.com/post" class="st-cardlink">
           <div class="kanren st-cardbox">
-            <dt class="st-card-img"><img src="https://example.com/cover.webp" /></dt>
+            <dt class="st-card-img">
+              <img src="https://example.com/cover.webp" />
+            </dt>
             <h5 class="st-cardbox-t">Page title</h5>
           </div>
         </a>
@@ -141,7 +159,9 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
       const value = html`
         <a href="https://example.com/post" class="st-cardlink">
           <div class="kanren st-cardbox">
-            <div class="st-cardbox-label"><span class="st-cardbox-label-text">Recommended</span></div>
+            <div class="st-cardbox-label">
+              <span class="st-cardbox-label-text">Recommended</span>
+            </div>
             <h5 class="st-cardbox-t">Page title</h5>
           </div>
         </a>
@@ -161,10 +181,14 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
         <div class="kanren st-cardbox">
           <dl class="clearfix">
             <dd>
-              <h5 class="st-cardbox-t"><a href="https://example.com/post">Page title</a></h5>
+              <h5 class="st-cardbox-t">
+                <a href="https://example.com/post">Page title</a>
+              </h5>
               <div class="smanone2">
                 <p>Preview text</p>
-                <p class="cardbox-more"><a href="https://example.com/post">More</a></p>
+                <p class="cardbox-more">
+                  <a href="https://example.com/post">More</a>
+                </p>
               </div>
             </dd>
           </dl>
@@ -203,12 +227,28 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
       const value = html`
         <div class="kanren" data-st-load-more-id="3519e768">
           <dl class="clearfix">
-            <dt><a href="https://example.com/one"><img src="https://example.com/one.webp" /></a></dt>
-            <dd><h5 class="kanren-t"><a href="https://example.com/one">One</a></h5></dd>
+            <dt>
+              <a href="https://example.com/one">
+                <img src="https://example.com/one.webp" />
+              </a>
+            </dt>
+            <dd>
+              <h5 class="kanren-t">
+                <a href="https://example.com/one">One</a>
+              </h5>
+            </dd>
           </dl>
           <dl class="clearfix">
-            <dt><a href="https://example.com/two"><img src="https://example.com/two.webp" /></a></dt>
-            <dd><h5 class="kanren-t"><a href="https://example.com/two">Two</a></h5></dd>
+            <dt>
+              <a href="https://example.com/two">
+                <img src="https://example.com/two.webp" />
+              </a>
+            </dt>
+            <dd>
+              <h5 class="kanren-t">
+                <a href="https://example.com/two">Two</a>
+              </h5>
+            </dd>
           </dl>
         </div>
       `
@@ -231,7 +271,9 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
 
     it('should return undefined when the card has no link', async () => {
       const value = html`
-        <div class="kanren st-cardbox"><h5 class="st-cardbox-t">Page title</h5></div>
+        <div class="kanren st-cardbox">
+          <h5 class="st-cardbox-t">Page title</h5>
+        </div>
       `
 
       expect(await extract(value)).toBeUndefined()
@@ -251,7 +293,11 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
     it('should return undefined when the title is missing', async () => {
       const value = html`
         <a href="https://example.com/post" class="st-cardlink">
-          <div class="kanren st-cardbox"><div class="st-card-excerpt"><p>Preview text</p></div></div>
+          <div class="kanren st-cardbox">
+            <div class="st-card-excerpt">
+              <p>Preview text</p>
+            </div>
+          </div>
         </a>
       `
 
@@ -263,7 +309,9 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
     it('should replace the wrapping anchor along with the card', async () => {
       const value = html`
         <a href="https://example.com/post" class="st-cardlink">
-          <div class="kanren st-cardbox"><h5 class="st-cardbox-t">Page title</h5></div>
+          <div class="kanren st-cardbox">
+            <h5 class="st-cardbox-t">Page title</h5>
+          </div>
         </a>
       `
       const expected = html`
@@ -282,7 +330,9 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
     it('should be idempotent', async () => {
       const value = html`
         <a href="https://example.com/post" class="st-cardlink">
-          <div class="kanren st-cardbox"><h5 class="st-cardbox-t">Page title</h5></div>
+          <div class="kanren st-cardbox">
+            <h5 class="st-cardbox-t">Page title</h5>
+          </div>
         </a>
       `
       const once = await transform(value)
@@ -293,7 +343,13 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
     it('should leave the related-posts listing in place', async () => {
       const value = html`
         <div class="kanren" data-st-load-more-id="3519e768">
-          <dl class="clearfix"><dd><h5 class="kanren-t"><a href="https://example.com/one">One</a></h5></dd></dl>
+          <dl class="clearfix">
+            <dd>
+              <h5 class="kanren-t">
+                <a href="https://example.com/one">One</a>
+              </h5>
+            </dd>
+          </dl>
         </div>
       `
 

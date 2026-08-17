@@ -27,8 +27,10 @@ describeForEachParser('shortenSamePageLinkFragments', (parseHtml) => {
     })
 
     it('should shorten the canonical heading-permalink anchor', async () => {
-      const value =
-        '<h2><a name="the-system" href="https://example.com/blog/post#the-system"></a>The system</h2>'
+      const value = html`
+        <h2>
+          <a name="the-system" href="https://example.com/blog/post#the-system"></a>The system</h2>
+      `
       const expected = '<h2><a name="the-system" href="#the-system"></a>The system</h2>'
 
       expect(await transform(value)).toEqualHtml(expected)
@@ -74,16 +76,24 @@ describeForEachParser('shortenSamePageLinkFragments', (parseHtml) => {
     }
 
     it('should shorten a link to another self page when its target is in the content', async () => {
-      const value =
-        '<p><a href="https://example.com/longform#note-1">note</a></p><div id="note-1">The note.</div>'
+      const value = html`
+        <p>
+          <a href="https://example.com/longform#note-1">note</a>
+        </p>
+        <div id="note-1">The note.</div>
+      `
       const expected = '<p><a href="#note-1">note</a></p><div id="note-1">The note.</div>'
 
       expect(await transform(value, siteContext)).toEqualHtml(expected)
     })
 
     it('should match an a[name] target as well as an id', async () => {
-      const value =
-        '<p><a href="https://example.com/longform#note-1">note</a></p><a name="note-1"></a>'
+      const value = html`
+        <p>
+          <a href="https://example.com/longform#note-1">note</a>
+        </p>
+        <a name="note-1"></a>
+      `
       const expected = '<p><a href="#note-1">note</a></p><a name="note-1"></a>'
 
       expect(await transform(value, siteContext)).toEqualHtml(expected)
@@ -96,8 +106,12 @@ describeForEachParser('shortenSamePageLinkFragments', (parseHtml) => {
     })
 
     it('should leave a link to a non-self page even when its fragment id is in the content', async () => {
-      const value =
-        '<p><a href="https://example.org/passage#note-1">verse</a></p><div id="note-1">The note.</div>'
+      const value = html`
+        <p>
+          <a href="https://example.org/passage#note-1">verse</a>
+        </p>
+        <div id="note-1">The note.</div>
+      `
 
       expect(await transform(value, siteContext)).toEqualHtml(value)
     })
@@ -112,8 +126,11 @@ describeForEachParser('shortenSamePageLinkFragments', (parseHtml) => {
 
   it('should be idempotent', async () => {
     const value = html`
-      <h2><a name="sec" href="https://example.com/blog/post#sec"></a>Section</h2>
-      <p><a href="https://example.org/page#x">out</a></p>
+      <h2>
+        <a name="sec" href="https://example.com/blog/post#sec"></a>Section</h2>
+      <p>
+        <a href="https://example.org/page#x">out</a>
+      </p>
     `
     const once = await transform(value)
     const twice = await transform(once)

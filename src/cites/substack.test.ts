@@ -179,7 +179,9 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
                   <div class="pencraft pc-reset">·</div>
                   <div class="pencraft pc-reset">October 5, 2025</div>
                 </div>
-                <a href="https://thereader.example.com/p/model-drop"><span>Read full story</span></a>
+                <a href="https://thereader.example.com/p/model-drop">
+                  <span>Read full story</span>
+                </a>
               </div>
             </div>
           </a>

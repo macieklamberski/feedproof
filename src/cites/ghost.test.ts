@@ -115,7 +115,9 @@ describeForEachParser('ghostCiteResolver', (parseHtml) => {
           <a class="kg-bookmark-container" href="https://example.com/post">
             <div class="kg-bookmark-content">
               <div class="kg-bookmark-title">Post title</div>
-              <div class="kg-bookmark-description"><small>Preview text</small></div>
+              <div class="kg-bookmark-description">
+                <small>Preview text</small>
+              </div>
             </div>
           </a>
         </figure>

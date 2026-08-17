@@ -10,7 +10,9 @@ describeForEachParser('embedlyCiteResolver', (parseHtml) => {
     it('should extract url, title and description', async () => {
       const value = html`
         <blockquote class="embedly-card" data-card-controls="0">
-          <h4><a href="https://example.com/docs">Documentation</a></h4>
+          <h4>
+            <a href="https://example.com/docs">Documentation</a>
+          </h4>
           <p>The best documentation.</p>
         </blockquote>
       `
@@ -29,7 +31,9 @@ describeForEachParser('embedlyCiteResolver', (parseHtml) => {
     it('should leave the description undefined without a paragraph', async () => {
       const value = html`
         <blockquote class="embedly-card">
-          <h4><a href="https://example.com/page">Page title</a></h4>
+          <h4>
+            <a href="https://example.com/page">Page title</a>
+          </h4>
         </blockquote>
       `
       const expected: CiteResolverResult = {
@@ -59,7 +63,9 @@ describeForEachParser('embedlyCiteResolver', (parseHtml) => {
     it('should return undefined when the anchor has no href', async () => {
       const value = html`
         <blockquote class="embedly-card">
-          <h4><a>Page title</a></h4>
+          <h4>
+            <a>Page title</a>
+          </h4>
         </blockquote>
       `
 
@@ -69,7 +75,9 @@ describeForEachParser('embedlyCiteResolver', (parseHtml) => {
     it('should return undefined when there is no title', async () => {
       const value = html`
         <blockquote class="embedly-card">
-          <h4><a href="https://example.com/page"></a></h4>
+          <h4>
+            <a href="https://example.com/page"></a>
+          </h4>
         </blockquote>
       `
 

@@ -21,7 +21,7 @@ type RedditTarget = {
   publisher: string
 }
 
-// A relative href has no host to check, so it falls out here instead of being resolved
+// A relative href has no host to check, so it falls out here rather than being resolved
 // against the feed's own base: a permalink is always written in full.
 const parseRedditPath = (value: string | undefined): Array<string> | undefined => {
   const parsed = parseUrlOnHosts(value, redditHosts)
@@ -37,7 +37,7 @@ const parseRedditPath = (value: string | undefined): Array<string> | undefined =
 // build `embed.reddit.com/user/{name}/` from a bare profile link and that address answers 404,
 // while `/user/{name}/comments/{id}/` is a profile post and renders like any other.
 //
-// The subreddit in a post path is not checked by the player, since the post id alone selects the
+// The subreddit in a post path is not checked by the player: the post id alone selects the
 // post, but it is not optional either: `embed.reddit.com/comments/{id}/` serves the not-found
 // shell. So the whole path travels as the id, which is also what lets the id address Reddit's
 // oEmbed endpoint, the one enrichment source that answers without a key.
@@ -134,8 +134,8 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
 
   // The height Reddit's own dialog states, which the loader passes to the player. The modern
   // widget spells it as an inline style as well, and the declared-size pass reads that one for
-  // free. Neither states a width and the placeholder must not invent one: a pair would read as
-  // a ratio, not as the fixed box the player is.
+  // free. Neither states a width and the placeholder must not invent one: a lone height is the
+  // fixed box this player is, and a made-up number beside it describes a box nobody measured.
   const height = parsePixelSize(attr(element, 'data-embed-height'))
 
   return composeEmbed(target, {
@@ -161,7 +161,7 @@ export const redditWidgetEmbedResolver = createMarkupEmbedResolver(
 
 // The frame the loader builds, kept by exports that stored the page after it rendered. The
 // legacy host redirects to the modern one path for path, so both mint the same player, and
-// the query it carries describes only the embedding page.
+// the query it carries describes the embedding page rather than the post.
 export const redditResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const target = parseTarget(url)
 

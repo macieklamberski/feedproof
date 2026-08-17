@@ -4,8 +4,6 @@ import { baseContext, describeForEachParser, html } from '../../tests.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { surfaceTemplateEmbeds } from './surfaceTemplateEmbeds.js'
 
-const hoistedInPlaceRegex = /before<\/p>.*<iframe.*<p>after/s
-
 describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
   const transform = (value: string) => {
     return applyDomTransforms(parseHtml(value), [surfaceTemplateEmbeds(baseContext)])
@@ -19,10 +17,12 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
         </iframe>
       </template>
     `
-    const result = await transform(value)
+    const expected = html`
+      <p>thumb</p>
+      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+    `
 
-    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ">')
-    expect(result).not.toContain('<template')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should surface a data-embed-src placeholder trapped in a template', async () => {
@@ -39,9 +39,8 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
 
   it('should leave a template with no embed alone', async () => {
     const value = '<template><p>placeholder text</p></template>'
-    const result = await transform(value)
 
-    expect(result).toContain('<template')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should hoist the content in place of the template', async () => {
@@ -53,9 +52,13 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
       </template>
       <p>after</p>
     `
-    const result = await transform(value)
+    const expected = html`
+      <p>before</p>
+      <iframe src="https://www.youtube.com/embed/x"></iframe>
+      <p>after</p>
+    `
 
-    expect(result).toMatch(hoistedInPlaceRegex)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should collapse the hd-bcve shape into one connected player', async () => {
@@ -63,7 +66,15 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
       <figure
         class="hd-bcve-wrapper is--youtube"
         data-id="yEB6Q3wTKcw"
-      ><img class="hd-bcve-thumbnail" src="https://img.youtube.com/vi/yEB6Q3wTKcw/maxresdefault.jpg"></figure><template id="hd-bcve-embed-html-yEB6Q3wTKcw"><figure class="wp-block-embed"><div class="wp-block-embed__wrapper"><iframe src="https://www.youtube.com/embed/yEB6Q3wTKcw?feature=oembed"></iframe></div></figure></template>
+      ><img class="hd-bcve-thumbnail" src="https://img.youtube.com/vi/yEB6Q3wTKcw/maxresdefault.jpg">
+      </figure>
+      <template id="hd-bcve-embed-html-yEB6Q3wTKcw">
+        <figure class="wp-block-embed">
+          <div class="wp-block-embed__wrapper">
+            <iframe src="https://www.youtube.com/embed/yEB6Q3wTKcw?feature=oembed"></iframe>
+          </div>
+        </figure>
+      </template>
     `
     const expected = html`
       <figure class="wp-block-embed">
@@ -101,8 +112,8 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
 })
 
 describeForEachParser('surfaceTemplateEmbeds (media)', (parseHtml) => {
-  const transform = (html: string) => {
-    return applyDomTransforms(parseHtml(html), [surfaceTemplateEmbeds(baseContext)])
+  const transform = (value: string) => {
+    return applyDomTransforms(parseHtml(value), [surfaceTemplateEmbeds(baseContext)])
   }
 
   // Shopify's default theme ships correct markup parked inside an inert <template>.
@@ -110,30 +121,39 @@ describeForEachParser('surfaceTemplateEmbeds (media)', (parseHtml) => {
     const value = html`
       <deferred-media data-media-id="1">
         <template>
-          <video controls><source src="https://cdn.example.com/clip.mp4" type="video/mp4"></video>
+          <video controls>
+            <source src="https://cdn.example.com/clip.mp4" type="video/mp4">
+          </video>
         </template>
       </deferred-media>
     `
-    const result = await transform(value)
+    const expected = html`
+      <deferred-media data-media-id="1">
+        <video controls>
+          <source src="https://cdn.example.com/clip.mp4" type="video/mp4">
+        </video>
+      </deferred-media>
+    `
 
-    expect(result).toContain('<video')
-    expect(result).toContain('https://cdn.example.com/clip.mp4')
-    expect(result).not.toContain('<template')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should surface an audio parked in a template', async () => {
-    const value =
-      '<div><template><audio controls src="https://cdn.example.com/ep.mp3"></audio></template></div>'
-    const result = await transform(value)
+    const value = html`
+      <div>
+        <template>
+          <audio controls src="https://cdn.example.com/ep.mp3"></audio>
+        </template>
+      </div>
+    `
+    const expected = '<div><audio controls src="https://cdn.example.com/ep.mp3"></audio></div>'
 
-    expect(result).toContain('<audio')
-    expect(result).not.toContain('<template')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a template holding no media or embed alone', async () => {
     const value = '<div><template><span class="skeleton"></span></template></div>'
-    const result = await transform(value)
 
-    expect(result).toContain('<template')
+    expect(await transform(value)).toBe(value)
   })
 })

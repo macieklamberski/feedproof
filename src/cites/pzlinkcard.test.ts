@@ -30,8 +30,12 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
               </div>
             </div>
             <div class="lkc-content">
-              <figure class="lkc-thumbnail"><img class="lkc-thumbnail-img" src="https://cdn.example.com/thumb.jpg" alt="" /></figure>
-              <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
+              <figure class="lkc-thumbnail">
+                <img class="lkc-thumbnail-img" src="https://cdn.example.com/thumb.jpg" alt="" />
+              </figure>
+              <div class="lkc-title">
+                <div class="lkc-title-text">Page title</div>
+              </div>
               <div class="lkc-date">
                 <img src="https://s.w.org/images/core/emoji/17.0.2/72x72/1f552.png" alt="🕒" class="wp-smiley" style="height: 1em; max-height: 1em;" />2023年6月8日
               </div>
@@ -58,7 +62,9 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
       const value = html`
         <a href="https://example.com/page">
           <div class="lkc-card">
-            <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
+            <div class="lkc-title">
+              <div class="lkc-title-text">Page title</div>
+            </div>
           </div>
         </a>
       `
@@ -83,7 +89,9 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
               </div>
               <div class="lkc-domain">example.com</div>
             </div>
-            <div class="lkc-content"><div class="lkc-title">Page title</div></div>
+            <div class="lkc-content">
+              <div class="lkc-title">Page title</div>
+            </div>
           </div>
         </a>
       `
@@ -102,8 +110,12 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
       const value = html`
         <div class="lkc-card">
           <div class="lkc-content">
-            <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
-            <div class="lkc-url"><strike>https://example.com/page</strike></div>
+            <div class="lkc-title">
+              <div class="lkc-title-text">Page title</div>
+            </div>
+            <div class="lkc-url">
+              <strike>https://example.com/page</strike>
+            </div>
           </div>
         </div>
       `
@@ -122,7 +134,9 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
           <div class="lkc-card">
             <div class="lkc-content">
               <div class="lkc-title">Page title</div>
-              <div class="lkc-url"><strike>https://example.com/printed</strike></div>
+              <div class="lkc-url">
+                <strike>https://example.com/printed</strike>
+              </div>
             </div>
           </div>
         </a>
@@ -158,7 +172,9 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
     it('should return undefined when there is no wrapping link', async () => {
       const value = html`
         <div class="lkc-card">
-          <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
+          <div class="lkc-title">
+            <div class="lkc-title-text">Page title</div>
+          </div>
         </div>
       `
 
@@ -183,7 +199,9 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
       const value = html`
         <a href="https://example.com/page">
           <div class="lkc-card">
-            <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
+            <div class="lkc-title">
+              <div class="lkc-title-text">Page title</div>
+            </div>
           </div>
         </a>
       `
@@ -201,7 +219,9 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
     it('should emit one placeholder per card', async () => {
       const value = html`
         <a href="https://example.com/one">
-          <div class="lkc-card"><div class="lkc-title">One</div></div>
+          <div class="lkc-card">
+            <div class="lkc-title">One</div>
+          </div>
         </a>
         <div class="lkc-card">
           <div class="lkc-title">Two</div>
@@ -235,7 +255,9 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
     it('should be idempotent', async () => {
       const value = html`
         <a href="https://example.com/page">
-          <div class="lkc-card"><div class="lkc-title">Page title</div></div>
+          <div class="lkc-card">
+            <div class="lkc-title">Page title</div>
+          </div>
         </a>
       `
       const once = await transform(value)

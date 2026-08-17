@@ -18,10 +18,9 @@ describeForEachParser('rebuildRocketYoutubePreviews', (parseHtml) => {
         data-alt="Title"
       ></div>
     `
-    const result = await transform(value)
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ">')
-    expect(result).not.toContain('rll-youtube-player')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should carry the data-query through as a query string', async () => {
@@ -32,11 +31,11 @@ describeForEachParser('rebuildRocketYoutubePreviews', (parseHtml) => {
         data-query="feature=oembed"
       ></div>
     `
-    const result = await transform(value)
+    const expected = html`
+      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed"></iframe>
+    `
 
-    expect(result).toContain(
-      '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed">',
-    )
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should leave the element untouched when there is no data-src', async () => {
@@ -46,10 +45,8 @@ describeForEachParser('rebuildRocketYoutubePreviews', (parseHtml) => {
         data-id="dQw4w9WgXcQ"
       ></div>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('rll-youtube-player')
-    expect(result).not.toContain('<iframe')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should produce a youtube placeholder end to end', async () => {

@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, parseRatioDimensions } from '../utils/dom.js'
+import { attr, parseRatio } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Ids are lowercase hex, in two lengths. 32 chars is the current dashless UUID. 24 is the
@@ -65,11 +65,9 @@ export const speakerdeckScriptEmbedResolver = createMarkupEmbedResolver(
     const result = composeEmbed(deckId, { slide })
 
     // The script carries the deck's aspect ratio as a bare decimal, e.g. `data-ratio="1.33"`.
-    const dimensions =
-      parseRatioDimensions(attr(element, 'data-ratio') ?? '') ??
-      parseRatioDimensions(defaultDeckRatio)
+    const ratio = parseRatio(attr(element, 'data-ratio') ?? '') ?? defaultDeckRatio
 
-    return { ...result, ...dimensions }
+    return { ...result, ratio }
   },
 )
 
@@ -91,7 +89,7 @@ export const speakerdeckResolveEmbed = (
 
   return {
     ...composeEmbed(deckId, { slide, title: element ? readTitle(element) : undefined }),
-    ...parseRatioDimensions(defaultDeckRatio),
+    ratio: defaultDeckRatio,
   }
 }
 

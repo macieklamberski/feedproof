@@ -64,7 +64,12 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
 
     it('should remove heading when the title still carries HTML entities', async () => {
       const value = html`
-        <h1><b><i>Let ‘em laugh</i></b><b>: Country’s last word 🪕</b></h1>
+        <h1>
+          <b>
+            <i>Let ‘em laugh</i>
+          </b>
+          <b>: Country’s last word 🪕</b>
+        </h1>
         <p>Article body.</p>
       `
       const context: TransformContext = {
@@ -196,7 +201,8 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
 
     it('should skip removal when the heading contains an img', async () => {
       const value = html`
-        <h1>Logo<img src="logo.png"></h1>
+        <h1>Logo<img src="logo.png">
+        </h1>
         <p>Body.</p>
       `
       const context: TransformContext = { ...baseContext, articleTitle: 'Logo' }
@@ -206,7 +212,8 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
 
     it('should skip removal when the heading contains a video', async () => {
       const value = html`
-        <h1>Title<video src="x.mp4"></video></h1>
+        <h1>Title<video src="x.mp4"></video>
+        </h1>
         <p>Body.</p>
       `
       const context: TransformContext = { ...baseContext, articleTitle: 'Title' }
@@ -227,7 +234,9 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       queryElement(document, 'h2').appendChild(inner)
       const transforms = [stripDuplicateTitleHeading(context)]
       const expected = html`
-        <h2><h1>Breaking News Today</h1></h2>
+        <h2>
+          <h1>Breaking News Today</h1>
+        </h2>
         <p>Body.</p>
       `
 

@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripDeadAnchors } from './stripDeadAnchors.js'
 
 describeForEachParser('stripDeadAnchors', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripDeadAnchors(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripDeadAnchors(context)])
   }
 
   it('should unwrap anchor with empty href', async () => {
@@ -54,31 +54,31 @@ describeForEachParser('stripDeadAnchors', (parseHtml) => {
   it('should preserve anchor with fragment href pointing to a section', async () => {
     const value = '<p><a href="#section">jump</a></p>'
 
-    expect(await transform(value)).toContain('<a href="#section">jump</a>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should preserve anchor with absolute http href', async () => {
     const value = '<p><a href="https://example.com">link</a></p>'
 
-    expect(await transform(value)).toContain('<a href="https://example.com">link</a>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should preserve anchor with mailto: href', async () => {
     const value = '<p><a href="mailto:hi@example.com">email</a></p>'
 
-    expect(await transform(value)).toContain('<a href="mailto:hi@example.com">email</a>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should preserve anchor without href attribute (named anchor target)', async () => {
     const value = '<p><a id="top">top</a></p>'
 
-    expect(await transform(value)).toContain('<a id="top">top</a>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should preserve anchor with name attribute and no href (legacy target)', async () => {
     const value = '<p><a name="top">top</a></p>'
 
-    expect(await transform(value)).toContain('<a name="top">top</a>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should preserve nested children when unwrapping', async () => {
@@ -90,10 +90,9 @@ describeForEachParser('stripDeadAnchors', (parseHtml) => {
 
   it('should preserve image inside dead anchor', async () => {
     const value = '<a href="javascript:void(0)"><img src="x.jpg"></a>'
-    const result = await transform(value)
+    const expected = '<img src="x.jpg">'
 
-    expect(result).toContain('<img src="x.jpg">')
-    expect(result).not.toContain('<a ')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should remove empty dead anchors entirely', async () => {
@@ -105,10 +104,9 @@ describeForEachParser('stripDeadAnchors', (parseHtml) => {
 
   it('should leave non-anchor content untouched', async () => {
     const value = '<p>before <a href="#">dead</a> after <a href="https://example.com">live</a></p>'
-    const result = await transform(value)
+    const expected = '<p>before dead after <a href="https://example.com">live</a></p>'
 
-    expect(result).toContain('before dead after')
-    expect(result).toContain('<a href="https://example.com">live</a>')
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should handle multiple dead anchors in one document', async () => {
@@ -121,7 +119,7 @@ describeForEachParser('stripDeadAnchors', (parseHtml) => {
   it('should not affect anchors with hash followed by query/path', async () => {
     const value = '<a href="#!/path">spa link</a>'
 
-    expect(await transform(value)).toContain('<a href="#!/path">spa link</a>')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should preserve anchor with id even when href is dead', async () => {

@@ -55,8 +55,9 @@ describeForEachParser('videopressIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should keep the start offset and the loop flag', async () => {
-      const value =
-        '<iframe src="https://videopress.com/embed/FLEAXUMB?at=42&loop=1&muted=1"></iframe>'
+      const value = html`
+        <iframe src="https://videopress.com/embed/FLEAXUMB?at=42&loop=1&muted=1"></iframe>
+      `
       const expected: EmbedResolverResult = {
         provider: 'videopress',
         id: 'FLEAXUMB',
@@ -94,8 +95,9 @@ describeForEachParser('videopressIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should ignore a wordpress.com blog framing its own post', async () => {
-      const value =
-        '<iframe src="https://example.wordpress.com/2024/01/01/embed/FLEAXUMB/embed/"></iframe>'
+      const value = html`
+        <iframe src="https://example.wordpress.com/2024/01/01/embed/FLEAXUMB/embed/"></iframe>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })

@@ -4,7 +4,7 @@ import { describeForEachParser, html } from '../tests.js'
 
 describeForEachParser('WordPress', (parseHtml) => {
   // convertWidgets claims the embed carriers inside the oEmbed wrapper figures, with
-  // getWrapperRatioDimensions reading their wp-embed-aspect-* classes when the carrier
+  // getWrapperRatio reading their wp-embed-aspect-* classes when the carrier
   // states no size. fixLazyIframes and fixLazyImages recover the consent-gate and
   // lazy-loader attribute stashes (defaultLazyIframeAttributes, defaultLazySrcAttributes).
   // The plugin facades are rebuilt by rebuildLyteEmbeds, rebuildRocketYoutubePreviews,
@@ -37,7 +37,9 @@ describeForEachParser('WordPress', (parseHtml) => {
     // resolver placeholders it) while stripNonContentElements removes the notice.
     it('should recover the gated video and strip the "please accept" notice', async () => {
       const value = html`
-        <p><iframe class="fusion-hidden" data-privacy-type="youtube" src="" title="YouTube video player" data-privacy-src="https://www.youtube.com/embed/0OqYNLrUoes?si=ZEdmlrLKAggBE_AS" width="560" height="315"></iframe></p>
+        <p>
+          <iframe class="fusion-hidden" data-privacy-type="youtube" src="" title="YouTube video player" data-privacy-src="https://www.youtube.com/embed/0OqYNLrUoes?si=ZEdmlrLKAggBE_AS" width="560" height="315"></iframe>
+        </p>
         <div class="fusion-privacy-placeholder" style="width:560px; height:315px;" data-privacy-type="youtube">
           <div class="fusion-privacy-placeholder-content">
             <div class="fusion-privacy-label">For privacy reasons YouTube needs your permission to be loaded.</div>
@@ -45,15 +47,19 @@ describeForEachParser('WordPress', (parseHtml) => {
           </div>
         </div>
       `
-      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+      const expected = html`
+        <div
+          data-embed-height="315"
+          data-embed-width="560"
+          data-embed-thumbnail="https://i.ytimg.com/vi/0OqYNLrUoes/hqdefault.jpg"
+          data-embed-url="https://www.youtube.com/watch?v=0OqYNLrUoes"
+          data-embed-id="0OqYNLrUoes"
+          data-embed-provider="youtube"
+          data-embed-src="https://www.youtube.com/embed/0OqYNLrUoes"
+        ></div>
+      `
 
-      // Video recovered into a YouTube placeholder.
-      expect(result).toContain('data-embed-provider="youtube"')
-      expect(result).toContain('data-embed-src="https://www.youtube.com/embed/0OqYNLrUoes"')
-      // Consent notice and its text gone.
-      expect(result).not.toContain('fusion-privacy-placeholder')
-      expect(result).not.toContain('For privacy reasons')
-      expect(result).not.toContain('I Accept')
+      expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
     })
   })
 })

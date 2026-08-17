@@ -6,14 +6,15 @@ import {
   find,
   findConfigScript,
   flashVars,
+  formatRatio,
   getElementDimensions,
-  getWrapperRatioDimensions,
+  getWrapperRatio,
   hasAncestorWithTagName,
   isElementHidden,
   isEmptyElement,
   keepIfMatches,
   parsePixelSize,
-  parseRatioDimensions,
+  parseRatio,
   removeWithEmptyWrappers,
   text,
   textNode,
@@ -197,47 +198,47 @@ describeForEachParser('isElementHidden', (parseHtml) => {
   })
 })
 
-describeForEachParser('getWrapperRatioDimensions reading only the element itself', (parseHtml) => {
+describeForEachParser('getWrapperRatio reading only the element itself', (parseHtml) => {
   it('should read the aspect-ratio property from the element itself', () => {
     const document = parseHtml('<iframe style="aspect-ratio: 21 / 9"></iframe>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe, 0)).toEqual({ width: 100, height: 43 })
+    expect(getWrapperRatio(iframe, 0)).toBe('21/9')
   })
 
   it('should read a wp-embed-aspect class from the element itself', () => {
     const document = parseHtml('<figure class="wp-embed-aspect-4-3"></figure>')
     const figure = queryElement(document, 'figure')
 
-    expect(getWrapperRatioDimensions(figure, 0)).toEqual({ width: 100, height: 75 })
+    expect(getWrapperRatio(figure, 0)).toBe('4/3')
   })
 
   it('should read a padding hack from the element itself', () => {
     const document = parseHtml('<div style="padding-bottom:25%"></div>')
     const div = queryElement(document, 'div')
 
-    expect(getWrapperRatioDimensions(div, 0)).toEqual({ width: 100, height: 25 })
+    expect(getWrapperRatio(div, 0)).toBe('100/25')
   })
 
   it('should read a max-width and max-height pair as a ratio', () => {
     const document = parseHtml('<iframe style="max-width:800px;max-height:600px"></iframe>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe, 0)).toEqual({ width: 100, height: 75 })
+    expect(getWrapperRatio(iframe, 0)).toBe('800/600')
   })
 
   it('should ignore a lone max-width, which says nothing about shape', () => {
     const document = parseHtml('<iframe style="max-width:800px;min-width:325px"></iframe>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe, 0)).toBeUndefined()
+    expect(getWrapperRatio(iframe, 0)).toBeUndefined()
   })
 
   it('should ignore a lone max-height', () => {
     const document = parseHtml('<iframe style="max-height:600px"></iframe>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe, 0)).toBeUndefined()
+    expect(getWrapperRatio(iframe, 0)).toBeUndefined()
   })
 
   // The caps are the weakest source, so a stated ratio on the same element outranks them.
@@ -247,7 +248,7 @@ describeForEachParser('getWrapperRatioDimensions reading only the element itself
     )
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe, 0)).toEqual({ width: 100, height: 43 })
+    expect(getWrapperRatio(iframe, 0)).toBe('21/9')
   })
 
   it('should prefer a padding hack over the caps', () => {
@@ -256,67 +257,67 @@ describeForEachParser('getWrapperRatioDimensions reading only the element itself
     )
     const div = queryElement(document, 'div')
 
-    expect(getWrapperRatioDimensions(div, 0)).toEqual({ width: 100, height: 25 })
+    expect(getWrapperRatio(div, 0)).toBe('100/25')
   })
 
   it('should ignore caps stated in a unit that is not pixels', () => {
     const document = parseHtml('<iframe style="max-width:80em;max-height:60em"></iframe>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe, 0)).toBeUndefined()
+    expect(getWrapperRatio(iframe, 0)).toBeUndefined()
   })
 
   it('should return undefined when the element declares no ratio', () => {
     const document = parseHtml('<iframe></iframe>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe, 0)).toBeUndefined()
+    expect(getWrapperRatio(iframe, 0)).toBeUndefined()
   })
 
   it('should return undefined for an out-of-range aspect-ratio value', () => {
     const document = parseHtml('<div style="aspect-ratio: 0 / 0"></div>')
     const div = queryElement(document, 'div')
 
-    expect(getWrapperRatioDimensions(div, 0)).toBeUndefined()
+    expect(getWrapperRatio(div, 0)).toBeUndefined()
   })
 })
 
-describeForEachParser('getWrapperRatioDimensions', (parseHtml) => {
+describeForEachParser('getWrapperRatio', (parseHtml) => {
   it('should read the ratio from a wp-embed-aspect class on an ancestor', () => {
     const document = parseHtml(
       '<figure class="wp-block-embed wp-embed-aspect-4-3"><div class="wp-block-embed__wrapper"><iframe></iframe></div></figure>',
     )
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe)).toEqual({ width: 100, height: 75 })
+    expect(getWrapperRatio(iframe)).toBe('4/3')
   })
 
   it('should read the ratio from an inline aspect-ratio property', () => {
     const document = parseHtml('<div style="aspect-ratio: 16 / 9"><iframe></iframe></div>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe)).toEqual({ width: 100, height: 56 })
+    expect(getWrapperRatio(iframe)).toBe('16/9')
   })
 
   it('should read a single-number aspect-ratio as width over height', () => {
     const document = parseHtml('<div style="aspect-ratio: 1.5"><iframe></iframe></div>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe)).toEqual({ width: 100, height: 67 })
+    expect(getWrapperRatio(iframe)).toBe('1.5/1')
   })
 
   it('should read the ratio from an inline padding hack on an ancestor', () => {
     const document = parseHtml('<div style="padding-bottom:50%"><iframe></iframe></div>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe)).toEqual({ width: 100, height: 50 })
+    expect(getWrapperRatio(iframe)).toBe('100/50')
   })
 
   it('should return undefined when no ancestor carries an aspect signal', () => {
     const document = parseHtml('<p><iframe></iframe></p>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe)).toBeUndefined()
+    expect(getWrapperRatio(iframe)).toBeUndefined()
   })
 
   it('should return undefined for out-of-range wrapper values', () => {
@@ -325,7 +326,7 @@ describeForEachParser('getWrapperRatioDimensions', (parseHtml) => {
     )
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe)).toBeUndefined()
+    expect(getWrapperRatio(iframe)).toBeUndefined()
   })
 
   it('should not look beyond the ancestor depth limit', () => {
@@ -334,7 +335,7 @@ describeForEachParser('getWrapperRatioDimensions', (parseHtml) => {
     )
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe)).toBeUndefined()
+    expect(getWrapperRatio(iframe)).toBeUndefined()
   })
 
   it('should honor a custom maxDepth argument', () => {
@@ -342,8 +343,8 @@ describeForEachParser('getWrapperRatioDimensions', (parseHtml) => {
     const iframe = queryElement(document, 'iframe')
 
     // maxDepth 0 checks only the element itself; the wrapper is one level up.
-    expect(getWrapperRatioDimensions(iframe, 0)).toBeUndefined()
-    expect(getWrapperRatioDimensions(iframe, 1)).toEqual({ width: 100, height: 50 })
+    expect(getWrapperRatio(iframe, 0)).toBeUndefined()
+    expect(getWrapperRatio(iframe, 1)).toBe('100/50')
   })
 
   it('should not read a wrapper that holds the element plus siblings', () => {
@@ -352,7 +353,7 @@ describeForEachParser('getWrapperRatioDimensions', (parseHtml) => {
     )
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperRatioDimensions(iframe)).toBeUndefined()
+    expect(getWrapperRatio(iframe)).toBeUndefined()
   })
 })
 
@@ -436,41 +437,65 @@ describeForEachParser('findConfigScript', (parseHtml) => {
   })
 })
 
-describe('parseRatioDimensions', () => {
+// Nothing is reduced or approximated: the numbers a source stated are the numbers written, so a
+// reader can trace the value back. CSS renders every spelling of a shape identically.
+describe('formatRatio', () => {
+  it('should write a pair as stated, without reducing it', () => {
+    expect(formatRatio(800, 600)).toBe('800/600')
+    expect(formatRatio(16, 9)).toBe('16/9')
+  })
+
+  it('should keep the padding hack percentage as a decimal denominator', () => {
+    expect(formatRatio(100, 56.25)).toBe('100/56.25')
+  })
+
+  it('should write a bare decimal over one', () => {
+    expect(formatRatio(1.33333333333333)).toBe('1.33333333333333/1')
+    expect(formatRatio(4)).toBe('4/1')
+  })
+
+  it('should state a portrait ratio with the larger number second', () => {
+    expect(formatRatio(9, 16)).toBe('9/16')
+  })
+})
+
+describe('parseRatio', () => {
   it('should parse the colon form', () => {
-    expect(parseRatioDimensions('16:9')).toEqual({ width: 100, height: 56 })
+    expect(parseRatio('16:9')).toBe('16/9')
   })
 
   it('should parse the slash form', () => {
-    expect(parseRatioDimensions('16/9')).toEqual({ width: 100, height: 56 })
+    expect(parseRatio('16/9')).toBe('16/9')
   })
 
   it('should allow spaces around the separator', () => {
-    expect(parseRatioDimensions('16 : 9')).toEqual({ width: 100, height: 56 })
-    expect(parseRatioDimensions('690 / 362')).toEqual({ width: 100, height: 52 })
+    expect(parseRatio('16 : 9')).toBe('16/9')
+    expect(parseRatio('690 / 362')).toBe('690/362')
   })
 
+  // A short decimal still reduces, since scaling it up stays inside the bound: 1.5 becomes
+  // 15/10 and then 3/2. A long one does not, and is written over one as stated.
   it('should parse a bare decimal as width over height', () => {
-    expect(parseRatioDimensions('1.77777777777778')).toEqual({ width: 100, height: 56 })
-    expect(parseRatioDimensions('1.5')).toEqual({ width: 100, height: 67 })
+    expect(parseRatio('1.5')).toBe('1.5/1')
+    expect(parseRatio('1.77777777777778')).toBe('1.77777777777778/1')
   })
 
-  it('should encode a portrait ratio with a height above 100', () => {
-    expect(parseRatioDimensions('9:16')).toEqual({ width: 100, height: 178 })
+  it('should keep a portrait ratio in the order it was stated', () => {
+    expect(parseRatio('9:16')).toBe('9/16')
   })
 
   it('should reject a zero part', () => {
-    expect(parseRatioDimensions('0:9')).toBeUndefined()
-    expect(parseRatioDimensions('0')).toBeUndefined()
+    expect(parseRatio('0:9')).toBeUndefined()
+    expect(parseRatio('0')).toBeUndefined()
   })
 
   it('should reject a non-numeric value', () => {
-    expect(parseRatioDimensions('wide')).toBeUndefined()
-    expect(parseRatioDimensions('1.2.3')).toBeUndefined()
+    expect(parseRatio('wide')).toBeUndefined()
+    expect(parseRatio('1.2.3')).toBeUndefined()
   })
 
   it('should reject an empty string', () => {
-    expect(parseRatioDimensions('')).toBeUndefined()
+    expect(parseRatio('')).toBeUndefined()
   })
 })
 

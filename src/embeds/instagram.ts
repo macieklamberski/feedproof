@@ -90,8 +90,8 @@ const readWrapper = (
 
   return {
     post: readPostUrl(decodeAttribute(attr(figure, 'data-url'))),
-    // Stated together or not at all: the pair reads downstream as an aspect ratio, and one
-    // alone would claim a fixed height the embed does not have.
+    // Stated together or not at all: a lone height would claim a fixed box the embed does
+    // not have.
     size: width && height ? { width, height } : {},
   }
 }

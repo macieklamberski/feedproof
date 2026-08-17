@@ -25,8 +25,8 @@ const withNoResolvers: TransformContext = {
 }
 
 describeForEachParser('convertWidgets', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = withResolvers) => {
-    return applyDomTransforms(parseHtml(html), [convertWidgets(context)])
+  const transform = (value: string, context: TransformContext = withResolvers) => {
+    return applyDomTransforms(parseHtml(value), [convertWidgets(context)])
   }
 
   it('should replace iframe with rich-metadata placeholder when handler returns metadata', async () => {
@@ -100,9 +100,8 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     const expected = html`
       <div style="padding-bottom:56.25%">
         <div
-          data-embed-width="100"
           data-embed-src="https://example.com/embed/xyz"
-          data-embed-height="56"
+          data-embed-ratio="100/56.25"
         ></div>
       </div>
     `
@@ -121,14 +120,12 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     `
     const result = await transform(value, withNoResolvers)
 
-    // 16:9 encoded as a 100×N ratio (100 / (16/9) = 56.25 -> 56).
     const expected = html`
       <figure class="wp-block-embed wp-embed-aspect-16-9">
         <div class="wp-block-embed__wrapper">
           <div
-            data-embed-width="100"
             data-embed-src="https://example.com/embed/xyz"
-            data-embed-height="56"
+            data-embed-ratio="16/9"
           ></div>
         </div>
       </figure>
@@ -333,10 +330,13 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       <iframe src="https://b-site.com/2"></iframe>
       <iframe src="https://c-site.com/3"></iframe>
     `
-    const result = await transform(value)
+    const expected = html`
+      <div data-embed-src="https://a-site.com/1"></div>
+      <div data-embed-src="https://b-site.com/2"></div>
+      <div data-embed-src="https://c-site.com/3"></div>
+    `
 
-    expect(result).not.toContain('<iframe')
-    expect(result.match(/data-embed-src=/g)).toHaveLength(3)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should leave the placeholder empty when wrapping unknown iframe', async () => {
@@ -547,9 +547,8 @@ describeForEachParser('convertWidgets', (parseHtml) => {
 
     it('should leave an empty iframe with no recoverable content', async () => {
       const value = '<iframe src="about:blank"></iframe>'
-      const result = await transform(value, withNoResolvers)
 
-      expect(result).toContain('<iframe')
+      expect(await transform(value, withNoResolvers)).toBe(value)
     })
   })
 
@@ -687,10 +686,17 @@ describeForEachParser('convertWidgets', (parseHtml) => {
           <embed src="https://www.youtube.com/v/dQw4w9WgXcQ" />
         </object>
       `
-      const result = await transform(value)
+      const expected = html`
+        <div
+          data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+          data-embed-provider="youtube"
+          data-embed-id="dQw4w9WgXcQ"
+        ></div>
+      `
 
-      expect(result.match(/data-embed-provider="youtube"/g)).toHaveLength(1)
-      expect(result).not.toContain('<embed')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should read the Flash parameter form that carries no question mark', async () => {
@@ -776,41 +782,35 @@ describeForEachParser('convertWidgets', (parseHtml) => {
 const uploadId = 'de58e4a3-5505-45a7-8abc-b46c5c0f6e7a'
 const uploadSrc = `https://api.substack.com/api/v1/video/upload/${uploadId}/src`
 
+// The two parsers order attributes differently and serialize `controls` with and without a
+// value, so a case that mints a media element compares through the normalizing matcher.
 describeForEachParser('convertWidgets (media results)', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [convertWidgets(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [convertWidgets(context)])
   }
 
   const withResolver = (resolver: MediaResolver): TransformContext => {
     return { ...baseContext, widgetResolvers: [resolver] }
   }
 
-  // The two parsers order attributes differently and serialize `controls` with and without
-  // a value, so each piece is asserted on its own rather than as one rendered tag.
   it('should replace a container with a video element carrying controls', async () => {
     const value = `<div class="native-video-embed" data-attrs='{"mediaUploadId":"${uploadId}"}'></div>`
-    const result = await transform(value)
+    const expected = `<video src="${uploadSrc}" controls></video>`
 
-    expect(result).toContain('<video')
-    expect(result).toContain(`src="${uploadSrc}"`)
-    expect(result).toContain('controls')
-    expect(result).not.toContain('native-video-embed')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should replace an audio container with an audio element', async () => {
     const value = `<div class="native-audio-embed" data-attrs='{"mediaUploadId":"${uploadId}"}'></div>`
-    const result = await transform(value)
+    const expected = `<audio src="${uploadSrc}" controls></audio>`
 
-    expect(result).toContain('<audio')
-    expect(result).not.toContain('<video')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a container its resolver rejects', async () => {
     const value = '<div class="native-video-embed"></div>'
-    const result = await transform(value)
 
-    expect(result).toContain('native-video-embed')
-    expect(result).not.toContain('<video')
+    expect(await transform(value)).toBe(value)
   })
 
   it('should run media and embed resolvers from the one array', async () => {
@@ -845,9 +845,15 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       }),
     }
     const value = '<div class="poster-embed"></div>'
-    const result = await transform(value, withResolver(posterResolver))
+    const expected = html`
+      <video
+        src="https://example.com/clip.mp4"
+        controls
+        poster="https://example.com/still.jpg"
+      ></video>
+    `
 
-    expect(result).toContain('poster="https://example.com/still.jpg"')
+    expect(await transform(value, withResolver(posterResolver))).toEqualHtml(expected)
   })
 
   it('should not write a poster onto an audio element', async () => {
@@ -860,10 +866,9 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       }),
     }
     const value = '<div class="poster-embed"></div>'
-    const result = await transform(value, withResolver(posterResolver))
+    const expected = '<audio src="https://example.com/track.mp3" controls></audio>'
 
-    expect(result).toContain('<audio')
-    expect(result).not.toContain('poster')
+    expect(await transform(value, withResolver(posterResolver))).toEqualHtml(expected)
   })
 
   it('should await an async media resolver', async () => {
@@ -872,10 +877,9 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       extract: async () => ({ tag: 'video', src: 'https://example.com/clip.mp4' }),
     }
     const value = '<div class="async-embed"></div>'
-    const result = await transform(value, withResolver(asyncResolver))
+    const expected = '<video src="https://example.com/clip.mp4" controls></video>'
 
-    expect(result).toContain('<video')
-    expect(result).toContain('https://example.com/clip.mp4')
+    expect(await transform(value, withResolver(asyncResolver))).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
@@ -936,10 +940,9 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
           data-video-src="https://cdn.example.com/clip.mp4"
         ></div>
       `
-      const result = await transform(value)
+      const expected = '<video src="https://cdn.example.com/clip.mp4" controls></video>'
 
-      expect(result).toContain('<video')
-      expect(result).toContain('src="https://cdn.example.com/clip.mp4"')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should convert an audio url into an audio element', async () => {
@@ -949,44 +952,48 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
           data-src="https://x.example/a.mp3"
         ></div>
       `
-      const result = await transform(value)
+      const expected = html`
+        <div class="audiofield-wordpress-player" data-src="https://x.example/a.mp3">
+          <audio src="https://x.example/a.mp3" controls></audio>
+        </div>
+      `
 
-      expect(result).toContain('<audio')
-      expect(result).toContain('src="https://x.example/a.mp3"')
-      expect(result).not.toContain('<video')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should keep the container and its text, adding the media in front', async () => {
       const value = '<li data-audiopath="https://x.example/track.mp3">Track one</li>'
-      const result = await transform(value)
+      const expected = html`
+        <li
+          data-audiopath="https://x.example/track.mp3"
+        ><audio src="https://x.example/track.mp3" controls></audio>Track one</li>
+      `
 
-      expect(result).toContain('<audio')
-      expect(result).toContain('Track one')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should resolve a relative parked url against the base url', async () => {
       const value = '<div data-video-src="/uploads/clip.mp4"></div>'
-      const result = await transform(value, {
-        ...baseContext,
-        baseUrl: 'https://forum.example/t/1',
-      })
+      const context = { ...baseContext, baseUrl: 'https://forum.example/t/1' }
+      const expected = html`
+        <div data-video-src="/uploads/clip.mp4">
+          <video src="https://forum.example/uploads/clip.mp4" controls></video>
+        </div>
+      `
 
-      expect(result).toContain('src="https://forum.example/uploads/clip.mp4"')
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     it('should skip a streaming manifest', async () => {
       const value = '<div data-video-src="https://x.example/index.m3u8"></div>'
-      const result = await transform(value)
 
-      expect(result).not.toContain('<video')
+      expect(await transform(value)).toBe(value)
     })
 
     it('should skip a value that names an image', async () => {
       const value = '<div data-src="https://x.example/photo.jpg"></div>'
-      const result = await transform(value)
 
-      expect(result).not.toContain('<video')
-      expect(result).not.toContain('<audio')
+      expect(await transform(value)).toBe(value)
     })
 
     it('should skip a container that already wraps a player', async () => {
@@ -998,9 +1005,8 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
           ></audio>
         </div>
       `
-      const result = await transform(value)
 
-      expect(result.match(/<audio/g)).toHaveLength(1)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should take the first attribute that names a media file', async () => {
@@ -1010,10 +1016,13 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
           data-webm="https://x.example/a.webm"
         ></div>
       `
-      const result = await transform(value)
+      const expected = html`
+        <div data-mp4="https://x.example/a.mp4" data-webm="https://x.example/a.webm">
+          <video src="https://x.example/a.mp4" controls></video>
+        </div>
+      `
 
-      expect(result).toContain('src="https://x.example/a.mp4"')
-      expect(result).not.toContain('src="https://x.example/a.webm"')
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
