@@ -330,12 +330,12 @@ export const isGeneratedWrapper = (element: Element): boolean => {
 // `[0-9]*\.?[0-9]+`): the ambiguous form backtracks quadratically on a long digit run
 // followed by a non-terminator, which `style` (an unbounded untrusted attribute) can carry.
 const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
-const styleHeightRegex =
+export const styleHeightRegex =
   /(?:^|;)\s*height\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
 
 // The same grammar for the caps, which are read as a ratio rather than as a size. `max-width`
 // alone says nothing about shape, so both have to be present for either to count.
-const styleMaxWidthRegex =
+export const styleMaxWidthRegex =
   /(?:^|;)\s*max-width\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
 const styleMaxHeightRegex =
   /(?:^|;)\s*max-height\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i

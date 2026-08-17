@@ -1,6 +1,15 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, find, keepIfMatches, parsePixelSize, text, textNode } from '../utils/dom.js'
+import {
+  attr,
+  find,
+  keepIfMatches,
+  parsePixelSize,
+  styleHeightRegex,
+  styleMaxWidthRegex,
+  text,
+  textNode,
+} from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // TikTok's oEmbed snippet is a `<blockquote class="tiktok-embed">` wrapping a section with
@@ -45,9 +54,6 @@ const readWatchUrl = (url: string | undefined): Clip => {
 // vertical clip on both axes. One shape does carry a real one: where a CMS stored the page
 // after `embed.js` ran, the hydrated iframe keeps the height it rendered at in its inline
 // style. That is a measurement of this clip at this width, so it is taken when it is there.
-const styleHeightRegex = /(?:^|;)\s*height\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*px/i
-const styleMaxWidthRegex = /(?:^|;)\s*max-width\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*px/i
-
 const hydratedSize = (element: Element): { width?: number; height?: number } => {
   // The stored iframe is matched by the same player paths the direct carrier resolver claims,
   // so a hydrated copy keeps its measurement whichever player url the CMS wrote.
