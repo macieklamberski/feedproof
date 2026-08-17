@@ -21,8 +21,7 @@ describeForEachParser('odyseeEmbedResolver', (parseHtml) => {
         id: '@corbettreport:0/webb-repersoning:7',
         src: 'https://odysee.com/$/embed/@corbettreport:0/webb-repersoning:7',
         url: 'https://odysee.com/@corbettreport:0/webb-repersoning:7',
-        width: 100,
-        height: 56,
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)

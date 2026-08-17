@@ -114,6 +114,8 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `unwrapCdataMarkers` | Unwrap a whole-value `<![CDATA[ … ]]>` marker so content isn't dropped |
 | `stripControlChars` | Strip rendering-hostile control characters before parsing |
 
+An embed placeholder states how big it is in one of two ways, never both. Where something really measured the player, it carries `data-embed-width` and `data-embed-height` in pixels, or just one of them where that is all the platform states (a podcast player 200 pixels tall has no width worth naming). Where nothing measured it and only the shape is known, from a responsive wrapper or the platform's own ratio attribute, it carries `data-embed-ratio` instead: a CSS aspect-ratio value written from the numbers the source stated, such as `16/9`, `800/600` or `1.7777777777777777/1`, and ready to assign to `style.aspectRatio` as it stands. Nothing is reduced or rounded, so the value traces back to what the markup said.
+
 ## Options
 
 ```typescript

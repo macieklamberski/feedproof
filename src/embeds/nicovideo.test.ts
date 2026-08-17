@@ -105,8 +105,7 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // One dimension alone would be read as a fixed height rather than a ratio, so both or
-    // neither.
+    // A lone height reads as the fixed box this player is not, so it is both or neither.
     it('should state no size when only one dimension is given', async () => {
       const value = '<script src="https://ext.nicovideo.jp/thumb_watch/sm9?h=307"></script>'
       const expected: EmbedResolverResult = {

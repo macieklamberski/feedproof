@@ -66,8 +66,7 @@ describeForEachParser('rebuildWistiaEmbeds', (parseHtml) => {
     const expected = html`
       <iframe
         src="https://fast.wistia.net/embed/iframe/zyl6xrmj10"
-        width="100"
-        height="56"
+        style="aspect-ratio: 1.7777777777777777/1"
       ></iframe>
     `
 

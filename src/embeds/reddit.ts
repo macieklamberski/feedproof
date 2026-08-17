@@ -134,8 +134,8 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
 
   // The height Reddit's own dialog states, which the loader passes to the player. The modern
   // widget spells it as an inline style as well, and the declared-size pass reads that one for
-  // free. Neither states a width and the placeholder must not invent one: a pair would read as
-  // a ratio rather than as the fixed box the player is.
+  // free. Neither states a width and the placeholder must not invent one: a lone height is the
+  // fixed box this player is, and a made-up number beside it describes a box nobody measured.
   const height = parsePixelSize(attr(element, 'data-embed-height'))
 
   return composeEmbed(target, {

@@ -357,7 +357,7 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
   })
 
   describe('the Tumblr figure wrapper', () => {
-    it('should carry the size the wrapper states as a ratio', async () => {
+    it('should carry the size the wrapper states', async () => {
       const value = html`
         <figure
           class="tmblr-embed tmblr-full"

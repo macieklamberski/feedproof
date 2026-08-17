@@ -100,9 +100,8 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     const expected = html`
       <div style="padding-bottom:56.25%">
         <div
-          data-embed-width="100"
           data-embed-src="https://example.com/embed/xyz"
-          data-embed-height="56"
+          data-embed-ratio="100/56.25"
         ></div>
       </div>
     `
@@ -121,14 +120,12 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     `
     const result = await transform(value, withNoResolvers)
 
-    // 16:9 encoded as a 100×N ratio (100 / (16/9) = 56.25 -> 56).
     const expected = html`
       <figure class="wp-block-embed wp-embed-aspect-16-9">
         <div class="wp-block-embed__wrapper">
           <div
-            data-embed-width="100"
             data-embed-src="https://example.com/embed/xyz"
-            data-embed-height="56"
+            data-embed-ratio="16/9"
           ></div>
         </div>
       </figure>

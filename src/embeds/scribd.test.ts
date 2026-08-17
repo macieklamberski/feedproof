@@ -32,8 +32,7 @@ describeForEachParser('scribdIframeEmbedResolver', (parseHtml) => {
         id: '526446879',
         src: 'https://www.scribd.com/embeds/526446879/content',
         url: 'https://www.scribd.com/document/526446879',
-        width: 100,
-        height: 129,
+        ratio: '0.7729220222793488/1',
       }
 
       expect(await extract(value)).toEqual(expected)

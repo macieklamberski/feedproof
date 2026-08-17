@@ -25,8 +25,7 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         provider: 'speakerdeck',
         id: '4f2b3c1d5e6a7b8c9d0e1f2a',
         src: 'https://speakerdeck.com/player/4f2b3c1d5e6a7b8c9d0e1f2a',
-        width: 100,
-        height: 56,
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -47,8 +46,7 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         provider: 'speakerdeck',
         id: '40746bbd65b944eb848e90ab1be552c0/21',
         src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=21',
-        width: 100,
-        height: 56,
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -66,8 +64,7 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         provider: 'speakerdeck',
         id: '40746bbd65b944eb848e90ab1be552c0/69',
         src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=69',
-        width: 100,
-        height: 56,
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -86,8 +83,7 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         provider: 'speakerdeck',
         id: '40746bbd65b944eb848e90ab1be552c0',
         src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
-        width: 100,
-        height: 56,
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -109,14 +105,13 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         provider: 'speakerdeck',
         id: '40746bbd65b944eb848e90ab1be552c0',
         src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
-        width: 100,
-        height: 56,
+        ratio: '1.77777777777778/1',
       }
 
       expect(await extract(value)).toEqual(expected)
     })
 
-    it('should convert a taller ratio into the placeholder dimensions', async () => {
+    it('should carry a taller ratio the script states', async () => {
       const value = html`
         <script
           class="speakerdeck-embed"
@@ -129,8 +124,7 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         provider: 'speakerdeck',
         id: '198d4fae73df442e89b76766b54e4773',
         src: 'https://speakerdeck.com/player/198d4fae73df442e89b76766b54e4773',
-        width: 100,
-        height: 75,
+        ratio: '1.33333333333333/1',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -151,8 +145,7 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         provider: 'speakerdeck',
         id: '198d4fae73df442e89b76766b54e4773',
         src: 'https://speakerdeck.com/player/198d4fae73df442e89b76766b54e4773',
-        width: 100,
-        height: 56,
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -171,8 +164,7 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         provider: 'speakerdeck',
         id: '198d4fae73df442e89b76766b54e4773',
         src: 'https://speakerdeck.com/player/198d4fae73df442e89b76766b54e4773',
-        width: 100,
-        height: 56,
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -190,8 +182,7 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
         provider: 'speakerdeck',
         id: '198d4fae73df442e89b76766b54e4773',
         src: 'https://speakerdeck.com/player/198d4fae73df442e89b76766b54e4773',
-        width: 100,
-        height: 56,
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -236,8 +227,7 @@ describe('speakerdeckResolveEmbed', () => {
       provider: 'speakerdeck',
       id: '40746bbd65b944eb848e90ab1be552c0',
       src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
-      width: 100,
-      height: 56,
+      ratio: '16/9',
     }
 
     expect(speakerdeckResolveEmbed(value)).toEqual(expected)
@@ -251,8 +241,7 @@ describe('speakerdeckResolveEmbed', () => {
       provider: 'speakerdeck',
       id: '40746bbd65b944eb848e90ab1be552c0/21',
       src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=21',
-      width: 100,
-      height: 56,
+      ratio: '16/9',
     }
 
     expect(speakerdeckResolveEmbed(value)).toEqual(expected)
@@ -264,8 +253,7 @@ describe('speakerdeckResolveEmbed', () => {
       provider: 'speakerdeck',
       id: '40746bbd65b944eb848e90ab1be552c0',
       src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
-      width: 100,
-      height: 56,
+      ratio: '16/9',
     }
 
     expect(speakerdeckResolveEmbed(value)).toEqual(expected)
@@ -296,8 +284,7 @@ describeForEachParser('speakerdeckIframeEmbedResolver', (parseHtml) => {
       provider: 'speakerdeck',
       id: '40746bbd65b944eb848e90ab1be552c0',
       src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
-      width: 100,
-      height: 56,
+      ratio: '16/9',
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -313,8 +300,7 @@ describeForEachParser('speakerdeckIframeEmbedResolver', (parseHtml) => {
       provider: 'speakerdeck',
       id: '40746bbd65b944eb848e90ab1be552c0/21',
       src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0?slide=21',
-      width: 100,
-      height: 56,
+      ratio: '16/9',
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -328,8 +314,7 @@ describeForEachParser('speakerdeckIframeEmbedResolver', (parseHtml) => {
       provider: 'speakerdeck',
       id: '40746bbd65b944eb848e90ab1be552c0',
       src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
-      width: 100,
-      height: 56,
+      ratio: '16/9',
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -380,8 +365,7 @@ describeForEachParser('speakerdeckIframeEmbedResolver', (parseHtml) => {
       provider: 'speakerdeck',
       id: '40746bbd65b944eb848e90ab1be552c0',
       src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0',
-      width: 100,
-      height: 56,
+      ratio: '16/9',
     }
 
     expect(await extract(value)).toEqual(expected)

@@ -32,6 +32,11 @@ export type EmbedResolverResult = {
   thumbnail?: string
   width?: number
   height?: number
+  // The shape the embed was inferred to have, as CSS spells it (`16/9`), for the case where
+  // nothing states a size at all. It is the alternative to `width`/`height`, never a companion
+  // to them: a real dimension is a measurement of this player, and a ratio only stands in for
+  // one, so a placeholder carries the one or the other.
+  ratio?: string
   title?: string
   description?: string
   author?: string

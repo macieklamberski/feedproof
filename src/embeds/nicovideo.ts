@@ -73,9 +73,9 @@ export const nicovideoScriptEmbedResolver = createMarkupEmbedResolver(
       return
     }
 
-    // A player is a ratio rather than a fixed box, so both dimensions are carried when the
-    // script states them: the reader turns a width and height pair into an aspect ratio and
-    // scales the player to the column, which is what a video wants.
+    // A player scales to the column rather than sitting in a fixed box, so both dimensions are
+    // carried when the script states them: the pair is what a reader scales by, and a lone
+    // height would claim a fixed box the player does not have.
     const parsed = parseUrl(source, 'https://example.com')
     const width = parsePixelSize(parsed?.searchParams.get('w'))
     const height = parsePixelSize(parsed?.searchParams.get('h'))
