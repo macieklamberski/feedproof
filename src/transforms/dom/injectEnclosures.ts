@@ -10,7 +10,7 @@ import type {
 import { getElementDimensions } from '../../utils/dom.js'
 import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
 import { absoluteUrlRegex, resolveOrKeepUrl } from '../../utils/urls.js'
-import { createEmbedPlaceholder, isMediaResult } from '../../utils/widgets.js'
+import { createEmbedPlaceholder, hasDimensions, isMediaResult } from '../../utils/widgets.js'
 
 // Marks an injected element so a repeat run skips it and stripDuplicateEnclosures (an
 // opt-in heuristic) can tell it from the item's own inline content. Exported because
@@ -133,17 +133,23 @@ const injectImageEnclosure = (
 // composed hqdefault thumbnail), while the feed carries the publisher's real thumbnail,
 // title, dimensions, and duration. Identity fields (provider/id/src/url) stay from the
 // resolver.
+//
+// The dimensions come from one side whole, never a width from one and a height from the other:
+// a feed that states only a width beside a resolver's fixed player height would describe a box
+// nobody measured (320 beside Acast's 190 came out of that once, for a fluid-width bar).
 const mergeEnclosureMetadata = (
   resolved: EmbedResolverResult | undefined,
   enclosure: Enclosure,
 ): Partial<EmbedResolverResult> => {
+  const dimensions = hasDimensions(enclosure) ? enclosure : resolved
+
   return {
     ...resolved,
     thumbnail: enclosure.thumbnails?.[0]?.url ?? resolved?.thumbnail,
     title: enclosure.title ?? resolved?.title,
     description: enclosure.description ?? resolved?.description,
-    width: enclosure.width ?? resolved?.width,
-    height: enclosure.height ?? resolved?.height,
+    width: dimensions?.width,
+    height: dimensions?.height,
     duration: enclosure.duration ?? resolved?.duration,
   }
 }

@@ -120,7 +120,9 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     expect(await transform(value, { ...withFn(fn), parseDateFn })).toEqualHtml(expected)
   })
 
-  it('should not overwrite existing data-embed-* attributes', async () => {
+  // The enricher is the platform's own API answering about this exact embed, so what it sets
+  // beats what a resolver read off the markup, for every field it chooses to set.
+  it('should overwrite existing data-embed-* attributes', async () => {
     const value = html`
       <div
         data-embed-provider="youtube"
@@ -136,7 +138,57 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
       <div
         data-embed-provider="youtube"
         data-embed-id="abc"
+        data-embed-title="Enrichment Title"
+      ></div>
+    `
+
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
+  })
+
+  it('should leave an attribute the enricher does not set', async () => {
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
         data-embed-title="Resolver Title"
+      >
+      </div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ author: 'Channel' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-title="Resolver Title"
+        data-embed-author="Channel"
+      ></div>
+    `
+
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
+  })
+
+  // A resolver's fixed height or a wrapper's guessed shape is the pipeline's best effort before
+  // the API answered. Once it does, its size replaces that whole, never half of it.
+  it('should replace a resolver size with the size the enricher brings', async () => {
+    const value = html`
+      <div
+        data-embed-provider="acast"
+        data-embed-id="show/episode"
+        data-embed-height="190"
+      >
+      </div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ width: 560, height: 315 }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="acast"
+        data-embed-id="show/episode"
+        data-embed-width="560"
+        data-embed-height="315"
       ></div>
     `
 

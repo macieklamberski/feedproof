@@ -88,10 +88,7 @@ const moveImageToVideoPoster = (image: Element, video: Element, overwrite = fals
       if (overwrite || !video.hasAttribute('poster')) {
         video.setAttribute('poster', url)
       }
-    } else {
-      if (overwrite) {
-        video.removeAttribute('data-embed-thumbnail')
-      }
+    } else if (overwrite || !video.hasAttribute('data-embed-thumbnail')) {
       updateEmbedPlaceholder(video, { thumbnail: url })
     }
   }

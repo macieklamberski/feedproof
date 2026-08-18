@@ -132,7 +132,9 @@ describeForEachParser('enrichCitePlaceholders', (parseHtml) => {
     expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
-  it('should not overwrite existing data-cite-* attributes', async () => {
+  // The enricher answers from the cited page itself, so what it sets beats what a resolver read
+  // off the card markup, for every field it chooses to set.
+  it('should overwrite existing data-cite-* attributes', async () => {
     const value = html`
       <div
         data-cite-provider="tumblr"
@@ -148,7 +150,7 @@ describeForEachParser('enrichCitePlaceholders', (parseHtml) => {
       <div
         data-cite-provider="tumblr"
         data-cite-url="https://example.com/post"
-        data-cite-title="Resolver title"
+        data-cite-title="Enrichment title"
       ></div>
     `
 
