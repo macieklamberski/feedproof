@@ -145,6 +145,26 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // The archive serves the file itself from whichever storage node holds the item.
+    it('should read the identifier from a download url on a storage node', async () => {
+      const value = html`
+        <embed
+          type="application/x-shockwave-flash"
+          src="http://www.archive.org/flow/flowplayer.commercial-3.2.1.swf"
+          flashvars='config={"playlist":[{"url":"http://ia801234.us.archive.org/download/nasa_hubble/clip.mp4"}]}'
+        />
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'nasa_hubble',
+        src: 'https://archive.org/embed/nasa_hubble',
+        url: 'https://archive.org/details/nasa_hubble',
+        thumbnail: 'https://archive.org/services/img/nasa_hubble',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // The player that predates flashvars took the same config as a query parameter.
     it('should read the config from the player query', async () => {
       const value = html`
@@ -170,6 +190,18 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
       const value = html`
         <embed
           src="http://www.archive.org/flow/FlowPlayerLight.swf?config=%7BplayList%3A%5B%7Burl%3A%27http%3A%2F%2Ftrailers.labutaca.net%2Fplanet-51-clip-4.flv%27%7D%5D%7D"
+        />
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // A host that only ends in the archive's name is somebody else's host.
+    it('should ignore a config whose download host merely looks like the archive', async () => {
+      const value = html`
+        <embed
+          src="http://www.archive.org/flow/flowplayer.commercial-3.2.1.swf"
+          flashvars='config={"playlist":[{"url":"http://example-archive.org/download/nasa_hubble/clip.mp4"}]}'
         />
       `
 
