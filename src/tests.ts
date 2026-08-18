@@ -185,7 +185,108 @@ const normalizeHtml = (html: string): string => {
   return document.body.innerHTML
 }
 
+// Elements that never carry a closing tag, so a missing one is correct rather than a repair.
+const voidTags = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
+])
+
+const tagRegex = /<(\/?)([a-zA-Z][\w:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g
+// Consumes the value along with the name, so words inside a quoted value are never read as names.
+const attributeRegex = /([a-zA-Z_:][\w:.-]*)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*))?/g
+
+// The open and close tags a serialized string states, in order, with self-closing forms expanded
+// so `<image/>` and `<image></image>` read alike. Comparing this against the same sequence taken
+// after a parse is what makes a repair visible: closing an unclosed tag or dropping a stray one
+// changes the sequence, while none of the parser dialect differences do.
+const getTagSequence = (value: string): Array<string> => {
+  const tokens: Array<string> = []
+
+  for (const match of value.matchAll(tagRegex)) {
+    const [, closing, name, , selfClosing] = match
+    const tag = name.toLowerCase()
+
+    if (closing) {
+      tokens.push(`/${tag}`)
+      continue
+    }
+
+    tokens.push(tag)
+
+    if (selfClosing && !voidTags.has(tag)) {
+      tokens.push(`/${tag}`)
+    }
+  }
+
+  return tokens
+}
+
+// Attribute names stated twice on one tag. A parser keeps the first and discards the rest, so a
+// duplicate is gone by the time the string has been through a DOM.
+const getDuplicateAttributes = (value: string): Array<string> => {
+  const duplicates: Array<string> = []
+
+  for (const match of value.matchAll(tagRegex)) {
+    if (match[1]) {
+      continue
+    }
+
+    const seen = new Set<string>()
+
+    for (const [, name] of match[3].matchAll(attributeRegex)) {
+      const attribute = name.toLowerCase()
+
+      if (seen.has(attribute)) {
+        duplicates.push(`${match[2].toLowerCase()}@${attribute}`)
+      }
+
+      seen.add(attribute)
+    }
+  }
+
+  return duplicates
+}
+
+// What a parse would silently repair in this string, if anything. `normalizeHtml` runs both sides
+// through a parser, so without this check every repair happens to both and the assertion passes on
+// malformed output: an unclosed tag, a stray closing tag and a duplicate attribute all survive.
+const getMalformation = (value: string): string | undefined => {
+  const duplicates = getDuplicateAttributes(value)
+
+  if (duplicates.length) {
+    return `duplicate attribute: ${duplicates.join(', ')}`
+  }
+
+  const stated = getTagSequence(value).join(' ')
+  const parsed = getTagSequence(normalizeHtml(value)).join(' ')
+
+  if (stated !== parsed) {
+    return `tags repaired by the parser\n    stated: ${stated}\n    parsed: ${parsed}`
+  }
+}
+
 const toEqualHtml = (received: unknown, expected: string) => {
+  const malformation = getMalformation(received as string)
+
+  if (malformation) {
+    return {
+      pass: false,
+      message: () => `received HTML is malformed\n  ${malformation}\n  received: ${received}`,
+    }
+  }
+
   const normalizedReceived = normalizeHtml(received as string)
   const normalizedExpected = normalizeHtml(expected)
   const pass = normalizedReceived === normalizedExpected
