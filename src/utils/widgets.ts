@@ -66,20 +66,32 @@ export const createMarkupEmbedResolver = (
   }
 }
 
-// What a carrier says about its size: the pixels it declares, or the shape a responsive wrapper
-// implies when it declares none. Never both, which is the rule the placeholder carries too.
+// What a carrier says about its size: the dimensions it declares, or the ratio a responsive
+// wrapper implies when it declares none. Never both, which is the rule the placeholder carries too.
 export type EmbedSize = Pick<EmbedResolverResult, 'width' | 'height' | 'ratio'>
 
-// Replaces a resolver's derived size with the one the carrier states.
+// The two questions asked of a size wherever one is merged: does it carry any dimension, and does
+// it carry anything at all. Named once so every merge reads as the rule it applies. Typed on the
+// field names alone so the normalized string record and the numeric result both qualify.
+type SizeFields = { width?: unknown; height?: unknown; ratio?: unknown }
+
+export const hasDimensions = (size: SizeFields): boolean => {
+  return size.width !== undefined || size.height !== undefined
+}
+
+export const hasSize = (size: SizeFields): boolean => {
+  return hasDimensions(size) || size.ratio !== undefined
+}
+
+// Replaces a resolver's size with what the carrier declares on itself, whole: its dimensions, or
+// a ratio of its own. A carrier that declares nothing leaves the resolver's size alone.
 //
-// Everything the resolver said about the size goes when the carrier says anything at all, the
-// inferred ratio included. Mixing the two sources describes something neither meant: a width the
-// publisher stated beside a height the resolver derived is a box nobody measured, and a stated
-// height beside an inferred 16/9 is two answers to one question.
-//
-// A carrier that states nothing leaves the resolver's numbers alone. Anything else replaces them
-// outright, keeping only what the carrier really named, so a lone stated height stays a lone
-// height instead of gaining a width from elsewhere.
+// Whole, because mixing the two sources describes something neither meant: a width the publisher
+// stated beside a height the resolver derived is a box nobody measured. And on itself, because a
+// ratio inferred from an ancestor's responsive wrapper says what shape the box around the player
+// is, not what shape the player is. Read at full depth here it once turned a platform's own 9:16
+// into a theme's blanket 16:9. The ancestor walk stays for the unclaimed carrier, where no
+// resolver size exists to beat.
 export const withDeclaredSize = (
   element: Element,
   result: EmbedResolverResult | undefined,
@@ -88,31 +100,32 @@ export const withDeclaredSize = (
     return
   }
 
-  const size = getEmbedSize(element)
+  const declared = getEmbedSize(element, 0)
 
-  if (!Object.keys(size).length) {
+  if (!hasSize(declared)) {
     return result
   }
 
   const { width: _width, height: _height, ratio: _ratio, ...rest } = result
 
-  return { ...rest, ...size }
+  return { ...rest, ...declared }
 }
 
-// When the carrier states no usable size, a responsive wrapper's aspect ratio is the next best
-// thing, so the placeholder can still reserve space. A stated width or height outranks it: that
-// is a measurement of this player, while the wrapper only says what shape the box around it is.
-export const getEmbedSize = (element: Element): EmbedSize => {
-  const { width, height } = getElementDimensions(element)
+// The size a carrier states: its dimensions where it declares any, else the ratio a responsive
+// wrapper implies, so the placeholder can still reserve space. Dimensions outrank the ratio: they
+// measure this player, while the wrapper only says what shape the box around it is. `wrapperDepth`
+// bounds how far up the wrapper is looked for; 0 reads only the carrier itself.
+export const getEmbedSize = (element: Element, wrapperDepth?: number): EmbedSize => {
+  const dimensions = getElementDimensions(element)
 
-  if (width !== undefined || height !== undefined) {
+  if (hasDimensions(dimensions)) {
     return {
-      ...(width !== undefined && { width }),
-      ...(height !== undefined && { height }),
+      ...(dimensions.width !== undefined && { width: dimensions.width }),
+      ...(dimensions.height !== undefined && { height: dimensions.height }),
     }
   }
 
-  const ratio = getWrapperRatio(element)
+  const ratio = getWrapperRatio(element, wrapperDepth)
 
   return ratio ? { ratio } : {}
 }
@@ -152,8 +165,10 @@ export const isMediaResult = (result: WidgetResolverResult): result is MediaReso
   return 'tag' in result
 }
 
-// Writes a field record as `data-{type}-*` attributes, leaving the ones already on the
-// element alone so a resolver's own values always survive an enrichment pass.
+// Writes a field record as `data-{type}-*` attributes, replacing any the element already carries.
+// A later pass that sets a field means it: an enrichment pass is the platform's own API answering
+// about this exact embed, and that beats whatever a resolver read off the markup. A pass that
+// wants to keep an existing value checks for it before calling, as assignVideoPosters does.
 export const updatePlaceholder = <Type extends object>(
   element: Element,
   type: GeneratedWrapperType,
@@ -165,7 +180,7 @@ export const updatePlaceholder = <Type extends object>(
     const name = `data-${type}-${key}`
     const cleaned = typeof value === 'string' ? value.trim() : value
 
-    if (cleaned && !element.hasAttribute(name)) {
+    if (cleaned) {
       element.setAttribute(name, cleaned)
     }
   }
@@ -207,23 +222,27 @@ export const normalizeEmbedFields = (
   }
 }
 
-// A placeholder states the size something was measured at or the shape it was inferred to have,
-// never both: the ratio is there only because no width and no height were found, so a real one
-// arriving later takes its place. Every embed placeholder is written through here, creation and
-// enrichment alike, which is what keeps the two from ever landing on the same element.
+// A placeholder states its size as dimensions or as a ratio, never both, and the size moves as a
+// unit. Every embed placeholder is written through here, creation and enrichment alike, which is
+// what keeps the two from ever landing on the same element.
+//
+// A write that carries any size clears the whole size slot first, so what it brings lands whole.
+// Writing width and height as independent attributes once let an enricher's width sit next to a
+// resolver's height, a box neither of them measured (560 beside a fixed 190). Where a write
+// brings both dimensions and a ratio, the dimensions win as the more specific claim.
 export const updateEmbedPlaceholder = (
   element: Element,
   metadata: Partial<EmbedResolverResult>,
 ): void => {
   const fields = normalizeEmbedFields(metadata)
-  const hasSize =
-    fields.width !== undefined ||
-    fields.height !== undefined ||
-    element.hasAttribute('data-embed-width') ||
-    element.hasAttribute('data-embed-height')
 
-  if (hasSize) {
+  if (hasSize(fields)) {
+    element.removeAttribute('data-embed-width')
+    element.removeAttribute('data-embed-height')
     element.removeAttribute('data-embed-ratio')
+  }
+
+  if (hasDimensions(fields)) {
     fields.ratio = undefined
   }
 

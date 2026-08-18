@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { acastEmbedResolver } from '../../embeds/acast.js'
 import { youtubeIframeEmbedResolver } from '../../embeds/youtube.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { Enclosure, TransformContext } from '../../types.js'
@@ -447,6 +448,51 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
           data-embed-src="https://player.example.com/embed?file=https://example.com/ep.mp3"
           data-embed-height="165"
           data-embed-duration="843"
+          data-enclosure=""
+        ></div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    // Width and height are one measurement and come from one side. A feed stating only a width
+    // beside a resolver's fixed player height once produced 320x190 for a fluid-width bar, a box
+    // nobody measured. The feed's pair now stands whole where it states any part of one.
+    it('should take the size from the feed as a pair rather than merge it with the resolver height', async () => {
+      const value = '<p>Content</p>'
+      const context: TransformContext = {
+        ...withEnclosures([
+          { url: 'https://embed.acast.com/myshow/myepisode', type: 'text/html', width: 320 },
+        ]),
+        widgetResolvers: [acastEmbedResolver],
+      }
+      const expected = html`
+        <div
+          data-embed-src="https://embed.acast.com/myshow/myepisode"
+          data-embed-provider="acast"
+          data-embed-id="myshow/myepisode"
+          data-embed-width="320"
+          data-enclosure=""
+        ></div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should keep the resolver height when the feed states no size at all', async () => {
+      const value = '<p>Content</p>'
+      const context: TransformContext = {
+        ...withEnclosures([{ url: 'https://embed.acast.com/myshow/myepisode', type: 'text/html' }]),
+        widgetResolvers: [acastEmbedResolver],
+      }
+      const expected = html`
+        <div
+          data-embed-src="https://embed.acast.com/myshow/myepisode"
+          data-embed-provider="acast"
+          data-embed-id="myshow/myepisode"
+          data-embed-height="190"
           data-enclosure=""
         ></div>
         <p>Content</p>

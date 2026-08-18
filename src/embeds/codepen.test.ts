@@ -800,9 +800,11 @@ describeForEachParser('codepenIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // A responsive wrapper states the shape and no size at all, so the default height has
-    // nothing to sit beside: keeping both would hand a reader a measurement nobody took.
-    it('should leave a wrapper ratio alone rather than default over it', async () => {
+    // A ratio inferred from an ancestor's responsive wrapper ranks below what a resolver states.
+    // The default height is a resolver statement, a corpus-typical value for a pen that declares
+    // none, so it stands over the wrapper the same as a measured height would. Only the carrier
+    // itself outranks the resolver, and a wrapper is not the carrier.
+    it('should keep the default height over a ratio inferred from a wrapper', async () => {
       const value = html`
         <div style="padding-bottom:56.25%">
           <iframe src="https://codepen.io/argyleink/embed/XJpKqXm"></iframe>
@@ -815,7 +817,7 @@ describeForEachParser('codepenIframeEmbedResolver', (parseHtml) => {
         url: 'https://codepen.io/argyleink/pen/XJpKqXm',
         thumbnail: 'https://shots.codepen.io/argyleink/pen/XJpKqXm-512.jpg',
         author: '@argyleink',
-        ratio: '100/56.25',
+        height: 300,
       }
 
       expect(await extract(value)).toEqual(expected)
