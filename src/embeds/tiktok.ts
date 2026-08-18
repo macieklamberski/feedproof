@@ -5,8 +5,7 @@ import {
   find,
   keepIfMatches,
   parsePixelSize,
-  styleHeightRegex,
-  styleMaxWidthRegex,
+  styleLength,
   text,
   textNode,
 } from '../utils/dom.js'
@@ -62,7 +61,7 @@ const hydratedSize = (element: Element): { width?: number; height?: number } => 
 
     return Boolean(parsed && isTiktokUrl(parsed) && playerPathRegex.test(parsed.pathname))
   })
-  const height = parsePixelSize(attr(frame, 'style')?.match(styleHeightRegex)?.[1])
+  const height = parsePixelSize(styleLength(frame, 'height'))
 
   if (!height) {
     return {}
@@ -70,7 +69,7 @@ const hydratedSize = (element: Element): { width?: number; height?: number } => 
 
   // The iframe is `width: 100%` inside the blockquote's own `max-width`, so that box is the
   // width the height was measured against.
-  const width = parsePixelSize(attr(element, 'style')?.match(styleMaxWidthRegex)?.[1])
+  const width = parsePixelSize(styleLength(element, 'max-width'))
 
   return width ? { width, height } : {}
 }
