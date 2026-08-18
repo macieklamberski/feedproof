@@ -46,9 +46,22 @@ export type EmbedResolverResult = {
   duration?: number
 }
 
+// What the pipeline hands an enricher: the two attributes that name a placeholder's embed, and
+// nothing else. The id must be enough to rebuild the platform's endpoint on its own, which is why
+// TikTok's carries the handle beside the video id.
+export type EmbedRef = { provider: string; id: string }
+
+// Fills in the fields a resolver could not read off the markup, from the platform's own API. One
+// call per document, every embed at once, so an implementation can batch, cache or dedupe as the
+// platform allows.
+//
+// The answer is positional: one entry per embed sent, in the same order, the way `Promise.all`
+// returns. An entry is whatever was found for that embed, or `undefined` for nothing, and the
+// placeholder is then left as it was. Reassembling a batched response into input order is the
+// implementation's job, since only it knows how it batched.
 export type EnrichEmbedFn = (
-  embeds: Array<{ provider: string; id: string }>,
-) => MaybePromise<Map<string, Partial<EmbedResolverResult>>>
+  embeds: Array<EmbedRef>,
+) => MaybePromise<Array<Partial<EmbedResolverResult> | undefined>>
 
 export type EmbedResolver = {
   selector: string
@@ -90,14 +103,23 @@ export type CiteResolverResult = {
   kind?: CiteKind
 }
 
+// What the pipeline hands a cite enricher. The url is what identifies the card: the provider names
+// the platform the card was scraped from, not the linked page, so two cards from different
+// platforms pointing at one url are the same cite. It stays in the payload because an
+// implementation still dispatches on it.
+export type CiteRef = { provider: string; url: string }
+
 // Fills in the fields a card's markup does not carry (e.g. a Tumblr link block naming its poster by
-// a media key that only Tumblr's own media service resolves), keyed by the cited url. The provider
-// is not part of the key: it names the platform the card was scraped from, not the linked page, so
-// two cards from different platforms pointing at one url share a single entry. It stays in the
-// payload because an implementation still dispatches on it.
+// a media key that only Tumblr's own media service resolves). One call per document, every cite at
+// once.
+//
+// The answer is positional: one entry per cite sent, in the same order, the way `Promise.all`
+// returns, or `undefined` where nothing was found. Two placeholders citing one url arrive as two
+// entries and expect two answers; an implementation that fetches each url once fills both slots
+// from the one result.
 export type EnrichCiteFn = (
-  cites: Array<{ provider: string; url: string }>,
-) => MaybePromise<Map<string, Partial<CiteResolverResult>>>
+  cites: Array<CiteRef>,
+) => MaybePromise<Array<Partial<CiteResolverResult> | undefined>>
 
 export type CiteResolver = {
   selector: string

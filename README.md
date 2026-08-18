@@ -136,10 +136,10 @@ const result = transformContent(html, {
   assetProxyFn: (url, type) => `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`,
   // Extra URL safety policy (e.g. SSRF/allowlist); return `false` to neutralize. A dangerous-scheme floor always applies.
   isSafeUrlFn: (url, type) => isSafe(url, type),
-  // Populate embed placeholder metadata from a remote source (e.g. YouTube oEmbed).
-  enrichEmbedFn: async (embeds) => {
-    return new Map(embeds.map(({ provider, id }) => [`${provider}:${id}`, { title: '…' }]))
-  },
+  // Populate embed placeholder metadata from a remote source (e.g. YouTube oEmbed). Called once
+  // per document with every embed; answer positionally, one entry per embed in the same order,
+  // undefined where nothing was found.
+  enrichEmbedFn: (embeds) => Promise.all(embeds.map(({ provider, id }) => fetchMetadata(provider, id))),
   // Normalize a cite card's site-formatted display date (e.g. "2018.10.14"); return
   // undefined to keep the raw string verbatim.
   parseDateFn: (raw) => parseDate(raw),

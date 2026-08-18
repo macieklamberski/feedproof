@@ -1,4 +1,4 @@
-import type { DomTransform } from '../../types.js'
+import type { CiteRef, DomTransform } from '../../types.js'
 import { parseOrKeepDate, updateCitePlaceholder } from '../../utils/widgets.js'
 
 export const enrichCitePlaceholders: DomTransform = (context) => {
@@ -16,7 +16,7 @@ export const enrichCitePlaceholders: DomTransform = (context) => {
       return
     }
 
-    const cites: Array<{ provider: string; url: string }> = new Array(count)
+    const cites: Array<CiteRef> = new Array(count)
     for (let i = 0; i < count; i++) {
       const element = placeholders[i]
 
@@ -26,10 +26,12 @@ export const enrichCitePlaceholders: DomTransform = (context) => {
       }
     }
 
+    // Positional: the answer for placeholders[i] is enriched[i], undefined where the enricher
+    // found nothing.
     const enriched = await enrichCiteFn(cites)
 
     for (let i = 0; i < count; i++) {
-      const data = enriched.get(cites[i].url)
+      const data = enriched[i]
 
       if (!data) {
         continue

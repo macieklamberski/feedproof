@@ -27,7 +27,7 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     let called = false
     const fn: EnrichEmbedFn = () => {
       called = true
-      return new Map()
+      return []
     }
 
     await transform(value, withFn(fn))
@@ -43,7 +43,7 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     const calls: Array<Array<{ provider: string; id: string }>> = []
     const fn: EnrichEmbedFn = (embeds) => {
       calls.push(embeds)
-      return new Map()
+      return []
     }
 
     await transform(value, withFn(fn))
@@ -66,7 +66,7 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
         date: '2026-08-09',
         duration: 125,
       }
-      return new Map([['youtube:abc', data]])
+      return [{ ...data }]
     }
     const expected = html`
       <div
@@ -87,7 +87,7 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
   it('should write the enriched date normalized through parseDateFn', async () => {
     const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
     const fn: EnrichEmbedFn = () => {
-      return new Map([['youtube:abc', { date: '2018.10.14' }]])
+      return [{ date: '2018.10.14' }]
     }
     const parseDateFn = (raw: string) => {
       return raw.replaceAll('.', '-')
@@ -106,7 +106,7 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
   it('should keep the raw enriched date when parseDateFn returns undefined', async () => {
     const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
     const fn: EnrichEmbedFn = () => {
-      return new Map([['youtube:abc', { date: 'Jul 14' }]])
+      return [{ date: 'Jul 14' }]
     }
     const parseDateFn = () => undefined
     const expected = html`
@@ -130,7 +130,7 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
       </div>
     `
     const fn: EnrichEmbedFn = () => {
-      return new Map([['youtube:abc', { title: 'Enrichment Title' }]])
+      return [{ title: 'Enrichment Title' }]
     }
     const expected = html`
       <div
@@ -152,13 +152,14 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     await expect(transform(value, withFn(fn))).rejects.toThrow('boom')
   })
 
-  it('should silently skip placeholders missing from the returned map', async () => {
+  // The answer is positional, so nothing found for a placeholder is an undefined in its slot.
+  it('should leave a placeholder alone when its slot is undefined', async () => {
     const value = html`
       <div data-embed-provider="youtube" data-embed-id="known"></div>
       <div data-embed-provider="youtube" data-embed-id="unknown"></div>
     `
     const fn: EnrichEmbedFn = () => {
-      return new Map([['youtube:known', { title: 'Found' }]])
+      return [{ title: 'Found' }, undefined]
     }
     const expected = html`
       <div
@@ -175,11 +176,36 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
+  // An enricher that answers for fewer embeds than it was sent leaves the tail untouched rather
+  // than failing the whole pass.
+  it('should treat a short answer as nothing for the placeholders past its end', async () => {
+    const value = html`
+      <div data-embed-provider="youtube" data-embed-id="first"></div>
+      <div data-embed-provider="youtube" data-embed-id="second"></div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ title: 'Found' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="first"
+        data-embed-title="Found"
+      ></div>
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="second"
+      ></div>
+    `
+
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
+  })
+
   it('should accept async (Promise-returning) enrichEmbedFn', async () => {
     const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
     const fn: EnrichEmbedFn = async (embeds) => {
       await new Promise((resolve) => setTimeout(resolve, 1))
-      return new Map(embeds.map((e) => [`${e.provider}:${e.id}`, { title: `t-${e.id}` }]))
+      return embeds.map((embed) => ({ title: `t-${embed.id}` }))
     }
     const expected = html`
       <div
@@ -201,7 +227,7 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
         author: 'channel name',
         duration: 125,
       }
-      return new Map([['youtube:abc', data]])
+      return [{ ...data }]
     }
     const once = await transform(value, withFn(fn))
     const twice = await transform(once, withFn(fn))
