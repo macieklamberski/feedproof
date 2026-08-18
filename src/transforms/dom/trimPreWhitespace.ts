@@ -1,8 +1,6 @@
 import type { DomTransform } from '../../types.js'
 import { isText } from '../../utils/dom.js'
 
-// Trims trailing whitespace and removes common leading indentation from <pre> blocks.
-// Feeds sometimes indent code to match surrounding HTML, adding unwanted whitespace.
 const trailingWhitespaceRegex = /\s+$/
 const leadingBlankLinesRegex = /^(\s*\n)+/
 
@@ -36,6 +34,8 @@ const splitIndent = (line: string): LineIndent => {
   return { tags, units, rest }
 }
 
+// Trims trailing whitespace and removes common leading indentation from <pre> blocks.
+// Feeds sometimes indent code to match surrounding HTML, adding unwanted whitespace.
 export const trimPreWhitespace: DomTransform = () => {
   return (document) => {
     for (const pre of document.querySelectorAll('pre')) {

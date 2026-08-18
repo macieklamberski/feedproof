@@ -10,8 +10,7 @@ const safeTokenRegex = /^[\w-]+$/
 const bloggerHosts = ['blogger.com']
 
 // Blogger's own hosted video, `iframe.b-hbp-video.b-uploaded` pointing at
-// `blogger.com/video.g?token={token}`, in 16,118 corpus feeds. The iframe renders on its own,
-// so this states provider and id and nothing else.
+// `blogger.com/video.g?token={token}`, in 16,118 corpus feeds.
 //
 // There is no poster to derive and no page to open. The player paints its poster as a css
 // background image on `i9.ytimg.com/vi_blogger/{internalId}/1.jpg`, and that internal id is in
@@ -30,6 +29,7 @@ export const extractBloggerToken = (link: string): string | undefined => {
   return keepIfMatches(token, safeTokenRegex)
 }
 
+// The iframe renders on its own, so this states provider and id and nothing else.
 export const bloggerResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const token = extractBloggerToken(url)
 

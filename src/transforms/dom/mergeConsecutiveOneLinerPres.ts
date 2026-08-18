@@ -1,9 +1,6 @@
 import type { DomTransform } from '../../types.js'
 import { hasText, isElement, isText } from '../../utils/dom.js'
 
-// Feeds like Medium wrap each code line in its own <pre>, which renders as
-// a stack of separate boxes instead of a unified code block. This merges
-// consecutive single-line <pre> siblings into one <pre> joined by newlines.
 const trailingBrRegex = /<br\s*\/?>\s*$/i
 const surroundingNewlinesRegex = /^\n+|\n+$/g
 const classTokenSeparatorRegex = /\s+/
@@ -16,6 +13,9 @@ const contentElement = (element: Element): Element => {
   return children.length === 1 && children[0].localName === 'code' ? children[0] : element
 }
 
+// Feeds like Medium wrap each code line in its own <pre>, which renders as
+// a stack of separate boxes instead of a unified code block. This merges
+// consecutive single-line <pre> siblings into one <pre> joined by newlines.
 export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses }) => {
   const preservedSet = new Set(preservedPreClasses)
 

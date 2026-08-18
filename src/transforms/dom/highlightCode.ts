@@ -246,12 +246,6 @@ const getCodeBlockText = (target: Element): string => {
   return text
 }
 
-// Line-number gutters: Rouge/Pygments/Chroma (and others) render code in a two-column
-// table (numbers | code), and Chroma/Prism also emit per-line number spans. Either way
-// the digits get treated as a separate code block or walked into the highlighted text.
-// Drop them before highlighting: keep only the code column's <pre>, and remove inline
-// per-line number spans.
-
 const integerLineRegex = /^\d+$/
 
 // A node is a line-number gutter when every non-empty line of its text is just an
@@ -276,6 +270,11 @@ const isLineNumberText = (text: string): boolean => {
 // in highlighted code, so structural detection would corrupt the code.
 const gutterLineSpanSelector = 'span.line-numbers-rows, span.ln, span.lnt, span.lineno'
 
+// Line-number gutters: Rouge/Pygments/Chroma (and others) render code in a two-column
+// table (numbers | code), and Chroma/Prism also emit per-line number spans. Either way
+// the digits get treated as a separate code block or walked into the highlighted text.
+// Drop them before highlighting: keep only the code column's <pre>, and remove inline
+// per-line number spans.
 const stripCodeGutters = (document: Document): void => {
   for (const table of document.querySelectorAll('table')) {
     const pres = Array.from(table.querySelectorAll('pre'))

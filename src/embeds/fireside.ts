@@ -30,10 +30,6 @@ const decodeSegment = (segment: string | undefined): string | undefined => {
 // speakerdeckScriptEmbedResolver states its default deck ratio.
 const playerHeight = 200
 
-// Feeds write `fireside.fm/player/{version}/{token}`, which 301s to the same path on
-// `player.fireside.fm` (checked 2026-08-11 and again 2026-08-15). Minting the target spares the
-// reader a hop, and that target discriminates: a real token answers 200 while a fabricated one
-// answers 404, unlike the player shells most podcast hosts serve.
 type FiresidePlayer = { version: string; token: string }
 
 export const extractFiresideToken = (link: string): FiresidePlayer | undefined => {
@@ -60,6 +56,10 @@ export const extractFiresideToken = (link: string): FiresidePlayer | undefined =
   }
 }
 
+// Feeds write `fireside.fm/player/{version}/{token}`, which 301s to the same path on
+// `player.fireside.fm` (checked 2026-08-11 and again 2026-08-15). Minting the target spares the
+// reader a hop, and that target discriminates: a real token answers 200 while a fabricated one
+// answers 404, unlike the player shells most podcast hosts serve.
 export const firesideResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const player = extractFiresideToken(url)
 

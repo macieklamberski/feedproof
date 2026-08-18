@@ -82,18 +82,18 @@ export const discourseCiteResolver: CiteResolver = {
 
     const [publisher, date] = text(source)?.split(publisherDateSeparator) ?? []
 
-    // The GitHub engines (issue, pull request, commit) put the author and an ISO-dated
-    // local-date span in `.github-info` rows instead of the generic shape.
+    // The GitHub engines (issue, pull request, commit) put the body in its own paragraph and an
+    // ISO-dated local-date span in a `.github-info` row.
     const githubBody = find(body, 'p.github-body-container')
     const githubDate = find(element, '.github-info .date .discourse-local-date')
 
-    // The folder onebox's first paragraph is the path link, not an excerpt. Its repo
-    // description sits in a `span.label1` after it.
     let description = text(body, 'p')
 
     if (githubBody) {
       description = githubDescription(githubBody)
     } else if (element.classList.contains('githubfolder')) {
+      // The folder onebox's first paragraph is the path link, not an excerpt. Its repo
+      // description sits in a `span.label1` after it.
       description = text(body, 'p span.label1')
     } else if (element.classList.contains('hackernews')) {
       // The Hacker News onebox always ends on a stats paragraph (points, comments, author,

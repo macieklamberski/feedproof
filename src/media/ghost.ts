@@ -22,11 +22,12 @@ export const ghostMediaResolver: MediaResolver = {
         return
       }
 
+      // The element's own poster is the transparent spacer, so only the figure's
+      // thumbnail attributes are worth carrying over.
       const figure = element.closest('.kg-video-card')
       const thumbnail =
         attr(figure, 'data-kg-custom-thumbnail') ?? attr(figure, 'data-kg-thumbnail')
-      // The element's own poster is the transparent spacer, so only the figure's
-      // thumbnail attributes are worth carrying over.
+
       const result: MediaResolverResult = { tag: 'video', src: source }
 
       if (thumbnail) {

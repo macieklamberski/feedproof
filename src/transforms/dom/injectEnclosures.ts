@@ -376,9 +376,10 @@ export const injectEnclosures: DomTransform = (context) => {
       // when no resolver claims it), produces an embed placeholder.
       if (resolved || enclosure.playerUrl) {
         const src = resolveOrKeepUrl(embedSource, context.resolveUrlFn, context.baseUrl)
+        const metadata = mergeEnclosureMetadata(resolved, enclosure)
+
         // A resolver rebuilds the src from the parsed id. Without one the enclosure's own
         // URL stands in.
-        const metadata = mergeEnclosureMetadata(resolved, enclosure)
         created.push(createEmbedPlaceholder(document, { ...metadata, src: metadata.src ?? src }))
         continue
       }

@@ -161,8 +161,6 @@ describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
   })
 })
 
-// The script is what a reader actually receives, so this asserts the whole placeholder the
-// pipeline emits from it rather than the resolver's return value alone.
 describe('nicovideoResolveEmbed', () => {
   // The old card host answers 403 now, so this rewrite repairs an embed that renders nothing.
   it('should rewrite the dead thumb card to the modern player', () => {
@@ -196,6 +194,8 @@ describe('nicovideoResolveEmbed', () => {
   })
 })
 
+// The script is what a reader actually receives, so this asserts the whole placeholder the
+// pipeline emits from it rather than the resolver's return value alone.
 describeForEachParser('nicovideo through the pipeline', (parseHtml) => {
   const placeholder = async (value: string): Promise<Record<string, string>> => {
     const result = await transformContent(value, {

@@ -11,10 +11,6 @@ import {
 } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// TikTok's oEmbed snippet is a `<blockquote class="tiktok-embed">` wrapping a section with
-// the author's @handle anchor, the caption paragraph and a sound-line anchor, followed by
-// an embed.js loader script that turns it into a player. The script never runs in a reader,
-// so the blockquote renders as quoted caption text with bare hashtag links and no video.
 const tiktokHost = 'tiktok.com'
 
 const isTiktokUrl = (url: URL): boolean => {
@@ -189,6 +185,11 @@ const resolveAccount = (element: Element): EmbedResolverResult | undefined => {
   }
 }
 
+// TikTok's oEmbed snippet is a `<blockquote class="tiktok-embed">` wrapping a section with
+// the author's @handle anchor, the caption paragraph and a sound-line anchor, followed by
+// an embed.js loader script that turns it into a player. The script never runs in a reader,
+// so the blockquote renders as quoted caption text with bare hashtag links and no video.
+//
 // Every oEmbed shape TikTok issues is this blockquote, and the shapes differ only in what the
 // markup still names. The clip is the more specific claim and is tried first. The account is
 // what a blockquote naming no clip anywhere still identifies, so it is never a substitute for
