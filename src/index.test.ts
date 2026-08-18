@@ -366,12 +366,11 @@ describeForEachParser('transformContent', (parseHtml) => {
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       enrichEmbedFn: (embeds) => {
-        return new Map(
-          embeds.map(({ provider, id }) => [
-            `${provider}:${id}`,
-            { title: `Title for ${id}`, author: 'Test Channel', duration: 213 },
-          ]),
-        )
+        return embeds.map((embed) => ({
+          title: `Title for ${embed.id}`,
+          author: 'Test Channel',
+          duration: 213,
+        }))
       },
     })
 
@@ -391,7 +390,7 @@ describeForEachParser('transformContent', (parseHtml) => {
     `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
-      enrichEmbedFn: () => new Map(),
+      enrichEmbedFn: () => [],
     })
 
     expect(result).toEqualHtml(expected)
@@ -420,9 +419,7 @@ describeForEachParser('transformContent', (parseHtml) => {
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       enrichCiteFn: (cites) => {
-        return new Map(
-          cites.map(({ url }) => [url, { thumbnail: 'https://example.com/cover.png' }]),
-        )
+        return cites.map((cite) => ({ ...cite, thumbnail: 'https://example.com/cover.png' }))
       },
     })
 
@@ -439,7 +436,7 @@ describeForEachParser('transformContent', (parseHtml) => {
       ),
       enrichEmbedFn: () => {
         called = true
-        return new Map([['youtube:dQw4w9WgXcQ', { title: 'Unused' }]])
+        return [{ title: 'Unused' }]
       },
     })
     const expected = html`

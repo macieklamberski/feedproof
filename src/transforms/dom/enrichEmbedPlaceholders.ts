@@ -1,4 +1,4 @@
-import type { DomTransform } from '../../types.js'
+import type { DomTransform, EmbedRef } from '../../types.js'
 import { parseOrKeepDate, updateEmbedPlaceholder } from '../../utils/widgets.js'
 
 export const enrichEmbedPlaceholders: DomTransform = (context) => {
@@ -16,7 +16,7 @@ export const enrichEmbedPlaceholders: DomTransform = (context) => {
       return
     }
 
-    const embeds: Array<{ provider: string; id: string }> = new Array(count)
+    const embeds: Array<EmbedRef> = new Array(count)
     for (let i = 0; i < count; i++) {
       const element = placeholders[i]
 
@@ -26,11 +26,12 @@ export const enrichEmbedPlaceholders: DomTransform = (context) => {
       }
     }
 
+    // Positional: the answer for placeholders[i] is enriched[i], undefined where the enricher
+    // found nothing.
     const enriched = await enrichEmbedFn(embeds)
 
     for (let i = 0; i < count; i++) {
-      const embed = embeds[i]
-      const data = enriched.get(`${embed.provider}:${embed.id}`)
+      const data = enriched[i]
 
       if (data) {
         updateEmbedPlaceholder(placeholders[i], {
