@@ -77,7 +77,7 @@ describeForEachParser('fixSubstackImageLinks', (parseHtml) => {
       `
       const result = await transform(value)
 
-      expect(result).toEqualHtml(value)
+      expect(result).toBe(value)
     })
 
     it('should leave an anchor holding text untouched', async () => {
@@ -89,7 +89,7 @@ describeForEachParser('fixSubstackImageLinks', (parseHtml) => {
       `
       const result = await transform(value)
 
-      expect(result).toEqualHtml(value)
+      expect(result).toBe(value)
     })
 
     it('should leave an anchor whose href is not an image file untouched', async () => {
@@ -102,21 +102,21 @@ describeForEachParser('fixSubstackImageLinks', (parseHtml) => {
       `
       const result = await transform(value)
 
-      expect(result).toEqualHtml(value)
+      expect(result).toBe(value)
     })
 
     it('should leave an anchor without an href untouched', async () => {
       const value = '<a class="image-link image2"></a>'
       const result = await transform(value)
 
-      expect(result).toEqualHtml(value)
+      expect(result).toBe(value)
     })
 
     it('should leave an empty anchor without the image-link class untouched', async () => {
       const value = '<a href="https://cdn.example.com/photo.jpeg"></a>'
       const result = await transform(value)
 
-      expect(result).toEqualHtml(value)
+      expect(result).toBe(value)
     })
   })
 

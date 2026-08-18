@@ -4,8 +4,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { demoteHeadings } from './demoteHeadings.js'
 
 describeForEachParser('demoteHeadings', (parseHtml) => {
-  const transform = (html: string) => {
-    return applyDomTransforms(parseHtml(html), [demoteHeadings(baseContext)])
+  const transform = (value: string) => {
+    return applyDomTransforms(parseHtml(value), [demoteHeadings(baseContext)])
   }
 
   describe('triggered when body contains <h1>', () => {

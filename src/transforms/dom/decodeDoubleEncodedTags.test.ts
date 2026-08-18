@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { decodeDoubleEncodedTags } from './decodeDoubleEncodedTags.js'
 
 describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [decodeDoubleEncodedTags(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [decodeDoubleEncodedTags(context)])
   }
 
   describe('decodes whole escaped fragments', () => {
@@ -63,74 +63,74 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
     it('should not decode an escaped tag embedded in prose', async () => {
       const value = '<p>Build &lt;a href="/products"&gt;eight products&lt;/a&gt; today.</p>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not decode a tag mentioned in a heading', async () => {
       const value = '<h2>Use &lt;video&gt;</h2>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not decode a backtick-wrapped tag', async () => {
       const value = '<p>example: `&lt;img src=picture.png&gt;`</p>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not decode a lone self-closing tag', async () => {
       const value = '<p>&lt;br/&gt;</p>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not decode a stray closing tag', async () => {
       const value = '<div>&lt;/pre&gt;</div>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not decode non-HTML markup', async () => {
       const value =
         '&lt;dependency&gt;&lt;groupId&gt;org.example&lt;/groupId&gt;&lt;/dependency&gt;'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not decode an unknown tag name', async () => {
       const value = '&lt;widget&gt;content&lt;/widget&gt;'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not decode a fragment containing command placeholders', async () => {
       const value = '&lt;p&gt;Run ssh &lt;user&gt;@&lt;host&gt; to connect.&lt;/p&gt;'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not decode a fragment containing code generics', async () => {
       const value = '&lt;p&gt;Store items in Vec&lt;T&gt; for speed.&lt;/p&gt;'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not decode an angle-bracketed url', async () => {
       const value = '<p>see &lt;https://example.com/path&gt; for more</p>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not modify plain text without tags', async () => {
       const value = 'Just plain text with no tags'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not modify content with only real HTML tags', async () => {
       const value = '<p>Build <a href="/products">eight products</a>.</p>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
   })
 
@@ -138,13 +138,13 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
     it('should not decode an escaped fragment inside a real code element', async () => {
       const value = '<code>&lt;p&gt;example&lt;/p&gt;</code>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not decode an escaped fragment inside a real pre element', async () => {
       const value = '<pre>&lt;div&gt;&lt;span&gt;x&lt;/span&gt;&lt;/div&gt;</pre>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should decode outside a code element but not inside it', async () => {

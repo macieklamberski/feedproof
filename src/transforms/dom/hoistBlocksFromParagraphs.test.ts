@@ -38,7 +38,7 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
         <p> and enjoy.</p>
       `
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should carry the paragraph attributes onto both halves', async () => {
@@ -54,7 +54,7 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
         <p dir="rtl" class="lead"> after</p>
       `
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should hoist a block other than a div', async () => {
@@ -65,7 +65,7 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
         <p> now</p>
       `
 
-      expect(await transform(value, 'pre')).toEqualHtml(expected)
+      expect(await transform(value, 'pre')).toBe(expected)
     })
 
     it('should split every paragraph holding a block', async () => {
@@ -82,7 +82,7 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
         <p> end</p>
       `
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
   })
 
@@ -97,7 +97,7 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
           <em> after</em>.</p>
       `
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should drop an inline wrapper the block emptied', async () => {
@@ -108,7 +108,7 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
         <p> after.</p>
       `
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should walk husk removal up through nested emptied wrappers', async () => {
@@ -178,7 +178,7 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
       `
       const result = await applyDomTransforms(document, [hoistBlocksFromParagraphs(baseContext)])
 
-      expect(result).toEqualHtml(expected)
+      expect(result).toBe(expected)
     })
 
     it('should be idempotent', async () => {

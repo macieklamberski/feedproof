@@ -53,19 +53,19 @@ describeForEachParser('convertLazyImageContainers', (parseHtml) => {
   it('should not convert a non-image lazy src like an AJAX content URL', async () => {
     const value = '<div data-src="https://example.com/load-more.html"></div>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not touch a div without a lazy attribute', async () => {
     const value = '<div class="text">Some text</div>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should ignore a flag-style value that is not an image URL', async () => {
     const value = '<div data-src="true"></div>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should be idempotent', async () => {

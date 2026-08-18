@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { unwrapWrappers } from './unwrapWrappers.js'
 
 describeForEachParser('unwrapWrappers', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [unwrapWrappers(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [unwrapWrappers(context)])
   }
 
   it('should unwrap a single bare div wrapper', async () => {
@@ -250,7 +250,7 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
       <a href="https://twitter.com/someone/status/1234567890123456789">https://twitter.com/someone/status/1234567890123456789</a>
     `
 
-    expect(await transform(value)).toEqualHtml(expected)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should keep a figure whose link wraps an image', async () => {
@@ -262,7 +262,7 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
       </figure>
     `
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should keep a figure whose link sits next to a caption', async () => {
@@ -273,7 +273,7 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
       </figure>
     `
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should keep a figure holding a placeholder next to its link', async () => {
@@ -285,7 +285,7 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
       </figure>
     `
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should be idempotent', async () => {

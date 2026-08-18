@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripDuplicateRules } from './stripDuplicateRules.js'
 
 describeForEachParser('stripDuplicateRules', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripDuplicateRules(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripDuplicateRules(context)])
   }
 
   it('should collapse two adjacent rules into one', async () => {
@@ -36,7 +36,7 @@ describeForEachParser('stripDuplicateRules', (parseHtml) => {
       <p>Second</p>
     `
 
-    expect(await transform(value)).toEqualHtml(expected)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should collapse rules separated by a comment', async () => {

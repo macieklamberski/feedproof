@@ -4,8 +4,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { wrapCargoGalleryImages } from './wrapCargoGalleryImages.js'
 
 describeForEachParser('wrapCargoGalleryImages', (parseHtml) => {
-  const transform = (html: string) => {
-    return applyDomTransforms(parseHtml(html), [wrapCargoGalleryImages(baseContext)])
+  const transform = (value: string) => {
+    return applyDomTransforms(parseHtml(value), [wrapCargoGalleryImages(baseContext)])
   }
 
   describe('wraps', () => {
@@ -13,7 +13,7 @@ describeForEachParser('wrapCargoGalleryImages', (parseHtml) => {
       const value = '<img src="https://freight.cargo.site/i/aaa/piece.jpg">'
       const expected = '<figure><img src="https://freight.cargo.site/i/aaa/piece.jpg"></figure>'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should wrap each image in its own figure, leaving caption and nav as siblings', async () => {
@@ -22,14 +22,14 @@ describeForEachParser('wrapCargoGalleryImages', (parseHtml) => {
       const expected =
         'Delta<figure><img src="https://freight.cargo.site/i/aaa/1.jpg"></figure><figure><img src="https://freight.cargo.site/i/bbb/2.jpg"></figure>PREV NEXT'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should match a data-src cargo image', async () => {
       const value = '<img data-src="https://freight.cargo.site/i/aaa/1.jpg">'
       const expected = '<figure><img data-src="https://freight.cargo.site/i/aaa/1.jpg"></figure>'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should wrap the enclosing textless link', async () => {
@@ -46,7 +46,7 @@ describeForEachParser('wrapCargoGalleryImages', (parseHtml) => {
         </figure>
       `
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
   })
 
@@ -54,19 +54,19 @@ describeForEachParser('wrapCargoGalleryImages', (parseHtml) => {
     it('should leave a non-cargo image', async () => {
       const value = '<img src="https://example.com/1.jpg">'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave a cargo image already inside a figure', async () => {
       const value = '<figure><img src="https://freight.cargo.site/i/aaa/1.jpg"></figure>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave a cargo image inside a paragraph', async () => {
       const value = '<p>See <img src="https://freight.cargo.site/i/aaa/1.jpg"> here</p>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
   })
 

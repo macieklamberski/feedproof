@@ -247,7 +247,7 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
     it('should leave an anchor that wraps no card alone', async () => {
       const value = '<a href="https://example.com/page">Plain link</a>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     // The nested anchor this fixes only misbehaves once the output is reparsed, which is

@@ -353,7 +353,7 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
         </div>
       `
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
   })
 })

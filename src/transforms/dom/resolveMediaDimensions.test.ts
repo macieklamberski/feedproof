@@ -112,7 +112,7 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
         </picture>
       `
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not carry a partial picture dimension', async () => {
@@ -123,7 +123,7 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
         </picture>
       `
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should prefer the img own dimensions over the picture', async () => {
@@ -240,25 +240,25 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
     it('should not read dimensions from a data: placeholder src', async () => {
       const value = '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not promote a tracking-pixel-sized URL', async () => {
       const value = '<img src="https://example.com/spacer-1x1.gif">'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not promote when the URL has a width but no height', async () => {
       const value = '<img src="https://example.com/p.jpg?w=800">'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave an image whose URL has no size', async () => {
       const value = '<img src="https://example.com/plain.jpg">'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
   })
 
@@ -268,7 +268,7 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
         <img src="photo.jpg" width="800" height="600" style="width:300px;height:200px">
       `
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not promote max-width/max-height/auto', async () => {
@@ -276,31 +276,31 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
         <video src="clip.mp4" style="max-width:550px;height:auto;max-height:500px"></video>
       `
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not promote when only one dimension is present', async () => {
       const value = '<img src="photo.jpg" style="width:300px">'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not promote non-pixel units', async () => {
       const value = '<img src="photo.jpg" style="width:50%;height:10em">'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not promote zero dimensions', async () => {
       const value = '<img src="photo.jpg" style="width:0px;height:0px">'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should not promote tracking-pixel-sized dimensions', async () => {
       const value = '<img src="photo.jpg" style="width:2px;height:2px">'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
   })
 
@@ -345,7 +345,7 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
     it('should keep valid integer attributes', async () => {
       const value = '<img src="https://example.com/p.jpg" width="800" height="600">'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
   })
 
@@ -406,7 +406,7 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
     it('should leave dimensions unset for an unparseable srcset', async () => {
       const value = '<img srcset=" ">'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
   })
 

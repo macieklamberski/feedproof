@@ -4,11 +4,11 @@ import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { shortenSamePageLinkFragments } from './shortenSamePageLinkFragments.js'
 
-const context: TransformContext = { ...baseContext, baseUrl: 'https://example.com/blog/post' }
+const pageContext: TransformContext = { ...baseContext, baseUrl: 'https://example.com/blog/post' }
 
 describeForEachParser('shortenSamePageLinkFragments', (parseHtml) => {
-  const transform = (html: string, ctx: TransformContext = context) => {
-    return applyDomTransforms(parseHtml(html), [shortenSamePageLinkFragments(ctx)])
+  const transform = (value: string, context: TransformContext = pageContext) => {
+    return applyDomTransforms(parseHtml(value), [shortenSamePageLinkFragments(context)])
   }
 
   describe('shortens', () => {
@@ -41,37 +41,37 @@ describeForEachParser('shortenSamePageLinkFragments', (parseHtml) => {
     it('should leave an off-page (different host) fragment link', async () => {
       const value = '<p><a href="https://example.org/page#sec">jump</a></p>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave a same-host different-path fragment link', async () => {
       const value = '<p><a href="https://example.com/blog/other-post#sec">jump</a></p>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave an already-bare fragment', async () => {
       const value = '<p><a href="#sec">jump</a></p>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave a link with no fragment', async () => {
       const value = '<p><a href="https://example.com/blog/post">read</a></p>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should no-op when no baseUrl is set', async () => {
       const value = '<p><a href="https://example.com/blog/post#sec">jump</a></p>'
 
-      expect(await transform(value, baseContext)).toEqualHtml(value)
+      expect(await transform(value, baseContext)).toBe(value)
     })
   })
 
   describe('with sameSiteUrls', () => {
     const siteContext: TransformContext = {
-      ...context,
+      ...pageContext,
       sameSiteUrls: ['https://example.com/longform'],
     }
 
@@ -102,7 +102,7 @@ describeForEachParser('shortenSamePageLinkFragments', (parseHtml) => {
     it('should leave a self-page link whose target is absent from the content', async () => {
       const value = '<p><a href="https://example.com/longform#recent">all posts</a></p>'
 
-      expect(await transform(value, siteContext)).toEqualHtml(value)
+      expect(await transform(value, siteContext)).toBe(value)
     })
 
     it('should leave a link to a non-self page even when its fragment id is in the content', async () => {
@@ -113,7 +113,7 @@ describeForEachParser('shortenSamePageLinkFragments', (parseHtml) => {
         <div id="note-1">The note.</div>
       `
 
-      expect(await transform(value, siteContext)).toEqualHtml(value)
+      expect(await transform(value, siteContext)).toBe(value)
     })
 
     it('should still shorten a link on the item permalink without needing a target', async () => {

@@ -34,7 +34,7 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
     `
     const expected = '<div data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"></div>'
 
-    expect(await transform(value)).toEqualHtml(expected)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should leave a template with no embed alone', async () => {

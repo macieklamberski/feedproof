@@ -10,8 +10,8 @@ const samePageContext: TransformContext = {
 }
 
 describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [normalizeAnchoredHeadings(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [normalizeAnchoredHeadings(context)])
   }
 
   describe('symbol-only permalinks', () => {
@@ -152,7 +152,7 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
         </h2>
       `
 
-      expect(await transform(value, samePageContext)).toEqualHtml(value)
+      expect(await transform(value, samePageContext)).toBe(value)
     })
 
     it('should preserve surrounding markup when promoting the text out', async () => {
@@ -215,13 +215,13 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
     it('should leave a named anchor that wraps real heading text', async () => {
       const value = '<h2><a name="x">Real heading text</a></h2>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave a plain content link with no fragment', async () => {
       const value = '<h2><a href="https://example.com/post">Headline</a></h2>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
   })
 
@@ -247,7 +247,7 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
     it('should leave a heading with no id and no anchor untouched', async () => {
       const value = '<h2>Plain heading</h2>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave a heading with an empty id untouched', async () => {
@@ -261,37 +261,37 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
     it('should leave a footnote reference wrapped in <sup>', async () => {
       const value = '<h2>Title<sup><a href="#fn1">1</a></sup></h2>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave an anchor with a footnote class', async () => {
       const value = '<h2>Title <a href="#footnote_1" class="footnote-link">1</a></h2>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave an anchor whose text is a bracketed numeral', async () => {
       const value = '<h6><a href="http://example.com/post#_ftnref40">[40]</a> Ibid</h6>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave a heading link with no fragment', async () => {
       const value = '<h2><a href="https://example.com/post">Post Title</a></h2>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave a partial fragment link that is not self-referential', async () => {
       const value = '<h3>See <a href="#other-section">other section</a> below</h3>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave a JS toggle whose fragment does not match the heading', async () => {
       const value = '<h2><a href="#new_category" class="toggler">Create New Category</a></h2>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave an accordion control even when its fragment matches the title', async () => {
@@ -301,7 +301,7 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
         </h3>
       `
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave a WPBakery tab control (data-vc-accordion attribute)', async () => {
@@ -317,7 +317,7 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
     it('should leave a disclosure button (role + aria-expanded)', async () => {
       const value = '<h4><a href="#section" role="button" aria-expanded="false">Section</a></h4>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
   })
 
@@ -336,7 +336,7 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
         </h2>
       `
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should leave an absolute link untouched when the base URL does not resolve', async () => {
@@ -347,7 +347,7 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
         resolveUrlFn: (_url, base) => (base === undefined ? undefined : 'https://example.com/post'),
       }
 
-      expect(await transform(value, context)).toEqualHtml(value)
+      expect(await transform(value, context)).toBe(value)
     })
 
     it('should leave an absolute link untouched when resolution yields an invalid URL', async () => {
@@ -358,7 +358,7 @@ describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
         resolveUrlFn: () => '::',
       }
 
-      expect(await transform(value, context)).toEqualHtml(value)
+      expect(await transform(value, context)).toBe(value)
     })
   })
 

@@ -293,7 +293,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       `
       const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
 
-      expect(await transform(value, context)).toEqualHtml(value)
+      expect(await transform(value, context)).toBe(value)
     })
 
     it('should not inject an image enclosure when content has a picture element', async () => {
@@ -304,7 +304,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       `
       const context = withEnclosures([{ url: 'https://example.com/photo.jpg', type: 'image/jpeg' }])
 
-      expect(await transform(value, context)).toEqualHtml(value)
+      expect(await transform(value, context)).toBe(value)
     })
 
     it('should still inject audio and video enclosures when content has an image', async () => {
@@ -330,7 +330,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         { url: 'https://2.gravatar.com/avatar/abc123?s=96&d=identicon', type: 'image/jpeg' },
       ])
 
-      expect(await transform(value, context)).toEqualHtml(value)
+      expect(await transform(value, context)).toBe(value)
     })
 
     it('should keep a real image enclosure and skip the gravatar avatar in the same item', async () => {
@@ -575,7 +575,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/file.bin' }])
 
-    expect(await transform(value, context)).toEqualHtml(value)
+    expect(await transform(value, context)).toBe(value)
   })
 
   it('should inject multiple enclosures', async () => {
@@ -677,7 +677,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       { url: 'https://example.com/widget.swf', type: 'application/x-shockwave-flash' },
     ])
 
-    expect(await transform(value, context)).toEqualHtml(value)
+    expect(await transform(value, context)).toBe(value)
   })
 
   it('should skip enclosure with javascript: url', async () => {
@@ -695,7 +695,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'data:text/html,<script>1</script>', medium: 'video' }])
 
-    expect(await transform(value, context)).toEqualHtml(value)
+    expect(await transform(value, context)).toBe(value)
   })
 
   it('should inject a relative enclosure url when baseUrl resolves it', async () => {
@@ -743,7 +743,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: '/clip.mp4', type: 'video/mp4' }])
 
-    expect(await transform(value, context)).toEqualHtml(value)
+    expect(await transform(value, context)).toBe(value)
   })
 
   it('should emit width and height on video enclosure when provided', async () => {

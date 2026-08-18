@@ -16,7 +16,7 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
     const value = `<iframe src="" ${attribute}="https://example.com/embed/x"></iframe>`
     const expected = `<iframe src="https://example.com/embed/x" ${attribute}="https://example.com/embed/x"></iframe>`
 
-    expect(await transform(value)).toEqualHtml(expected)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should promote a lazy attribute into an iframe with no src', async () => {
@@ -97,7 +97,7 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
       <iframe src="https://forum.example.com/applications/core/interface/index.html"></iframe>
     `
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not overwrite a usable src', async () => {
@@ -105,7 +105,7 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
       <iframe src="https://example.com/real" data-src="https://example.com/lazy"></iframe>
     `
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should leave an empty iframe with no recoverable attribute', async () => {

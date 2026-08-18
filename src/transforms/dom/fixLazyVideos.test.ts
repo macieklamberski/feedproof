@@ -41,7 +41,7 @@ describeForEachParser('fixLazyVideos', (parseHtml) => {
   it('should not overwrite an existing poster', async () => {
     const value = '<video poster="real.jpg" data-poster="https://example.com/lazy.jpg"></video>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should promote a lazy data-src into src on a sourceless video', async () => {
@@ -59,19 +59,19 @@ describeForEachParser('fixLazyVideos', (parseHtml) => {
   it('should not promote a src when a source child is present', async () => {
     const value = '<video data-src="https://example.com/clip.mp4"><source src="real.mp4"></video>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not overwrite a usable src', async () => {
     const value = '<video src="real.mp4" data-src="https://example.com/lazy.mp4"></video>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should ignore flag-style values that are not URL-shaped', async () => {
     const value = '<video data-src="loaded" data-poster="true"></video>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should be idempotent', async () => {

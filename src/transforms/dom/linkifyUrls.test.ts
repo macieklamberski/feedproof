@@ -122,13 +122,13 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
   it('should not link protocol-less URL', async () => {
     const value = '<p>Visit example.com for more</p>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not link email address', async () => {
     const value = '<p>Contact user@example.com</p>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   const unlinkableTags: Array<string> = ['pre', 'code', 'kbd', 'samp', 'var', 'script']
@@ -136,26 +136,26 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
   it.each(unlinkableTags)('should not link URL inside %s tag', async (tag) => {
     const value = `<${tag}>https://example.com</${tag}>`
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not link URL inside style tag', async () => {
     // Valid CSS (a comment) so jsdom's stylesheet parser stays quiet.
     const value = '<style>/*\nhttps://example.com\n*/</style>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not link URL inside nested code within pre', async () => {
     const value = '<pre><code>const url = "https://example.com"</code></pre>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not modify html with no URLs', async () => {
     const value = '<p>No links here</p>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should handle whitespace-only text nodes', async () => {
@@ -167,7 +167,7 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
   it('should handle empty content', async () => {
     const value = ''
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should be idempotent', async () => {

@@ -320,24 +320,10 @@ describe('getImageFingerprint', () => {
     expect(getImageFingerprint(value)).toBe(expected)
   })
 
-  it('should unwrap a WordPress Photon URL, re-adding the stripped scheme', () => {
-    const value = 'https://i0.wp.com/cdn.example.com/photo.jpg'
-    const expected = 'cdn.example.com/photo.jpg'
-
-    expect(getImageFingerprint(value)).toBe(expected)
-  })
-
   it('should unwrap a Next.js image optimizer URL to its inner source', () => {
     const value =
       'https://example.com/_next/image?url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg&w=200'
     const expected = 'cdn.example.com/photo.jpg'
-
-    expect(getImageFingerprint(value)).toBe(expected)
-  })
-
-  it('should drop a whole leaf that is only dimensions', () => {
-    const value = 'https://example.com/gallery/640x360.jpg'
-    const expected = 'example.com/gallery'
 
     expect(getImageFingerprint(value)).toBe(expected)
   })

@@ -5,47 +5,47 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripMarkdownEscapeBackslashes } from './stripMarkdownEscapeBackslashes.js'
 
 describeForEachParser('stripMarkdownEscapeBackslashes', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripMarkdownEscapeBackslashes(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripMarkdownEscapeBackslashes(context)])
   }
 
   it('should empty a lone-backslash paragraph', async () => {
     const value = '<p>\\</p>'
     const expected = '<p></p>'
 
-    expect(await transform(value)).toEqualHtml(expected)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should strip a backslash at the start of a paragraph', async () => {
     const value = '<p>\\ Is the Trump administration…</p>'
     const expected = '<p> Is the Trump administration…</p>'
 
-    expect(await transform(value)).toEqualHtml(expected)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should strip a leading backslash after leading whitespace', async () => {
     const value = '<p>  \\ text</p>'
     const expected = '<p>   text</p>'
 
-    expect(await transform(value)).toEqualHtml(expected)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should not touch a leading backslash followed by a non-space', async () => {
     const value = '<p>\\(x^2\\) is math</p>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not touch a leading double backslash', async () => {
     const value = '<p>\\\\ literal</p>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not touch a backslash mid-paragraph', async () => {
     const value = '<p>a path C:\\Users ends here</p>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should leave a backslash before a br alone (Windows paths, continuations)', async () => {
@@ -57,7 +57,7 @@ describeForEachParser('stripMarkdownEscapeBackslashes', (parseHtml) => {
   it('should not touch a leading backslash in non-paragraph blocks like div', async () => {
     const value = '<div>\\ text</div>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should handle empty input', async () => {

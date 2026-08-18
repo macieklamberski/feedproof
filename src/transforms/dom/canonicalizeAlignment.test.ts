@@ -7,8 +7,8 @@ import { flattenPictureElements } from './flattenPictureElements.js'
 import { unwrapWrappers } from './unwrapWrappers.js'
 
 describeForEachParser('canonicalizeAlignment', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [canonicalizeAlignment(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [canonicalizeAlignment(context)])
   }
 
   describe('happy paths', () => {

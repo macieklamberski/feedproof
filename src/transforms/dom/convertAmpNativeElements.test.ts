@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { convertAmpNativeElements } from './convertAmpNativeElements.js'
 
 describeForEachParser('convertAmpNativeElements', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [convertAmpNativeElements(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [convertAmpNativeElements(context)])
   }
 
   it('should convert amp-img into img carrying its image attributes', async () => {
@@ -198,7 +198,7 @@ describeForEachParser('convertAmpNativeElements', (parseHtml) => {
       <amp-gist data-gistid="b9bb35bc68df68259af94430f012425f"></amp-gist>
     `
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should leave amp-story alone', async () => {

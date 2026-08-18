@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripDuplicateLeadingImages } from './stripDuplicateLeadingImages.js'
 
 describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripDuplicateLeadingImages(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripDuplicateLeadingImages(context)])
   }
 
   describe('removal', () => {
@@ -25,7 +25,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
         <p>Content</p>
       `
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove a sized repeat and keep the unscaled leading original', async () => {
@@ -40,7 +40,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
         <p></p>
       `
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove a sized leading image and keep the unscaled repeat', async () => {
@@ -50,7 +50,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
       `
       const expected = '<img src="https://example.com/uploads/photo.jpg">'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should keep the larger copy when both are sized variants of one file', async () => {
@@ -60,7 +60,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
       `
       const expected = '<img src="https://example.com/uploads/photo-577x1024.jpg">'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should keep the leading original over an underscore sized repeat', async () => {
@@ -70,7 +70,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
       `
       const expected = '<img src="https://example.com/uploads/photo.jpg">'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should keep the larger size-keyword variant even when it leads', async () => {
@@ -80,7 +80,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
       `
       const expected = '<img src="https://example.com/photos/123/large.jpg">'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should keep the larger size-keyword variant when it comes second', async () => {
@@ -90,7 +90,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
       `
       const expected = '<img src="https://example.com/photos/123/large.jpg">'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove a leading image whose repeat differs only by query render params', async () => {
@@ -100,7 +100,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
       `
       const expected = '<img src="https://example.com/uploads/photo.jpg">'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove a leading image whose repeat hides behind an image proxy', async () => {
@@ -110,7 +110,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
       `
       const expected = '<img src="https://example.com/uploads/photo.jpg">'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove a leading image whose repeat differs only by protocol', async () => {
@@ -120,7 +120,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
       `
       const expected = '<img src="http://example.com/uploads/photo.jpg">'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should collapse a run of identical leading images to the last one', async () => {
@@ -135,7 +135,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
         <p>Content</p>
       `
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should leave the emptied paragraph for stripEmptyTags downstream', async () => {
@@ -152,7 +152,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
           <img src="https://example.com/uploads/photo.jpg"> Caption</p>
       `
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove an emptied link wrapper along with the leading image', async () => {
@@ -164,7 +164,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
       `
       const expected = '<img src="https://example.com/uploads/photo.jpg">'
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
 
     it('should remove the leading image with text between the two copies', async () => {
@@ -178,7 +178,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
         <img src="https://example.com/uploads/photo.jpg">
       `
 
-      expect(await transform(value)).toEqualHtml(expected)
+      expect(await transform(value)).toBe(expected)
     })
   })
 
@@ -189,13 +189,13 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
         <img src="https://example.com/uploads/two.jpg">
       `
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should keep a single image', async () => {
       const value = '<img src="https://example.com/uploads/photo.jpg">'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should keep a repeat deeper in the body', async () => {
@@ -205,7 +205,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
         <img src="https://example.com/uploads/photo.jpg">
       `
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should keep an inner duplicate that does not involve the leading image', async () => {
@@ -215,7 +215,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
         <img src="https://example.com/uploads/two.jpg">
       `
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should keep a bare keyword beside a dimension-suffixed keyword variant', async () => {
@@ -228,7 +228,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
         <img src="https://example.com/photos/123/large-800x600.jpg">
       `
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should keep different photos sharing the same size suffix', async () => {
@@ -237,7 +237,7 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
         <img src="https://example.com/uploads/two-800x450.jpg">
       `
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should keep distinct images served by a script endpoint', async () => {
@@ -246,13 +246,13 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
         <img src="https://example.com/download/file.php?id=119393">
       `
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
 
     it('should keep a document with no images', async () => {
       const value = '<p>Content</p>'
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toBe(value)
     })
   })
 

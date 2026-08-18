@@ -24,19 +24,19 @@ describeForEachParser('fixLazyAudios', (parseHtml) => {
   it('should not promote a src when a source child is present', async () => {
     const value = '<audio data-src="https://example.com/track.mp3"><source src="real.mp3"></audio>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should not overwrite a usable src', async () => {
     const value = '<audio src="real.mp3" data-src="https://example.com/lazy.mp3"></audio>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should ignore flag-style values that are not URL-shaped', async () => {
     const value = '<audio data-src="loaded"></audio>'
 
-    expect(await transform(value)).toEqualHtml(value)
+    expect(await transform(value)).toBe(value)
   })
 
   it('should be idempotent', async () => {

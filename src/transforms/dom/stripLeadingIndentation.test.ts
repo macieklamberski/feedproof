@@ -13,28 +13,28 @@ describeForEachParser('stripLeadingIndentation', (parseHtml) => {
     const value = '<p>&nbsp;&nbsp;&nbsp;Lorem ipsum</p>'
     const expected = '<p>Lorem ipsum</p>'
 
-    expect(await transform(value)).toEqualHtml(expected)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should strip a leading run inside an inline wrapper', async () => {
     const value = '<p><span>&nbsp;&nbsp;Lorem ipsum</span></p>'
     const expected = '<p><span>Lorem ipsum</span></p>'
 
-    expect(await transform(value)).toEqualHtml(expected)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should strip a run mixing nbsp and regular spaces', async () => {
     const value = '<p>&nbsp; &nbsp; &nbsp;Lorem ipsum</p>'
     const expected = '<p>Lorem ipsum</p>'
 
-    expect(await transform(value)).toEqualHtml(expected)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should strip other fixed-width spaces (em space, ideographic space)', async () => {
     const value = '<p>&emsp;&#12288;Lorem ipsum</p>'
     const expected = '<p>Lorem ipsum</p>'
 
-    expect(await transform(value)).toEqualHtml(expected)
+    expect(await transform(value)).toBe(expected)
   })
 
   const blockCases: Array<[string, string]> = [
@@ -53,7 +53,7 @@ describeForEachParser('stripLeadingIndentation', (parseHtml) => {
     const value = '<div><p>&nbsp;&nbsp;Lorem ipsum</p></div>'
     const expected = '<div><p>Lorem ipsum</p></div>'
 
-    expect(await transform(value)).toEqualHtml(expected)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should leave purely collapsible leading whitespace untouched', async () => {
@@ -78,7 +78,7 @@ describeForEachParser('stripLeadingIndentation', (parseHtml) => {
     const value = '<blockquote><p>&nbsp;&nbsp;Lorem ipsum</p></blockquote>'
     const expected = '<blockquote><p>Lorem ipsum</p></blockquote>'
 
-    expect(await transform(value)).toEqualHtml(expected)
+    expect(await transform(value)).toBe(expected)
   })
 
   it('should leave a paragraph without leading whitespace unchanged', async () => {

@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { unwrapHeadingBold } from './unwrapHeadingBold.js'
 
 describeForEachParser('unwrapHeadingBold', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [unwrapHeadingBold(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [unwrapHeadingBold(context)])
   }
 
   describe('happy paths', () => {
