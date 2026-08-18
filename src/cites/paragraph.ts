@@ -25,8 +25,8 @@ export const paragraphCiteResolver: CiteResolver = {
       return
     }
 
-    // Embedly reuses this envelope for video and rich embeds, which are players rather
-    // than link previews, so only a plain link becomes a cite.
+    // Embedly reuses this envelope for video and rich embeds, which are players, not link
+    // previews. A payload that names no type is kept, since older cards omit the key.
     if (data.type !== undefined && data.type !== 'link') {
       return
     }

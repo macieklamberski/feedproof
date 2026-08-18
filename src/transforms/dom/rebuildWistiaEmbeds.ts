@@ -13,7 +13,8 @@ const mediaIdRegex = /^[A-Za-z0-9]{10}$/
 // Three carriers, one player. The `wistia_async_{id}` div is the JS-API inline embed, the
 // `<wistia-player media-id>` custom element is Wistia's current form, and a bare
 // `<script src=".../embed/medias/{id}.jsonp">` is what remains when a feed keeps the loader
-// but drops the div. None of them renders anything without JS.
+// but drops the div. None of them renders anything without JS. A real `<iframe>` is matched
+// too, not to rebuild it but so a loader script beside it does not mint a second player.
 const wistiaSelector = [
   '[class*="wistia_async_"]',
   'wistia-player[media-id]',

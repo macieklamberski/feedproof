@@ -14,7 +14,7 @@ import { createEmbedPlaceholder, hasDimensions, isMediaResult } from '../../util
 
 // Marks an injected element so a repeat run skips it and stripDuplicateEnclosures (an
 // opt-in heuristic) can tell it from the item's own inline content. Exported because
-// that pass reads it.
+// stripDuplicateEnclosures and assignVideoPosters both read it.
 export const enclosureMarker = 'data-enclosure'
 
 const isAudioEnclosure = (enclosure: Enclosure): boolean => {

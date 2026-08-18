@@ -166,6 +166,3 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
     })
   })
 })
-
-// The anchor is what a reader actually receives, so this asserts the whole placeholder the
-// pipeline emits from it rather than the resolver's return value alone.

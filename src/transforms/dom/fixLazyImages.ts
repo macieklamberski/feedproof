@@ -61,7 +61,7 @@ export const fixLazyImages: DomTransform = (context) => {
       }
     }
 
-    // Extract images from noscript wrappers when sibling is a lazy placeholder.
+    // Extract the image from a noscript wrapper when an <img> sits directly before it.
     const noscripts = document.querySelectorAll('noscript')
 
     for (const noscript of noscripts) {

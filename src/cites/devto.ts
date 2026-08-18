@@ -56,7 +56,9 @@ export const devtoPostCiteResolver: CiteResolver = {
         text(element, '.crayons-article__context-note') ??
         text(element, '.crayons-story__contentpreview'),
       // Author and organization share a class. The author comes first in the document, and
-      // the organization is the one wrapped in the `for <org>` span.
+      // the organization is the one wrapped in the `for <org>` span. Forem renders the author
+      // anchor unconditionally and the organization only after it, so the first match is never
+      // the organization.
       author: text(element, 'a.crayons-story__secondary'),
       publisher: text(element, 'span > a.crayons-story__secondary'),
       date: dateWithYear(text(element, 'time')),

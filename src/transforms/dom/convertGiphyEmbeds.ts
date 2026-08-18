@@ -1,8 +1,8 @@
 import type { DomTransform } from '../../types.js'
 import { attr } from '../../utils/dom.js'
 
-// `giphy.com/embed/{id}`, and the media host spelling `media.giphy.com/media/{id}/giphy.gif`
-// that some feeds put in an iframe instead.
+// `giphy.com/embed/{id}`, the media host spelling `media.giphy.com/media/{id}/giphy.gif` that
+// some feeds put in an iframe instead, and the `giphy.com/gifs/{id}` page url.
 const giphyIdRegex = /giphy\.com\/(?:embed|media|gifs)\/([A-Za-z0-9]+)/
 
 // Giphy publishes every gif as a plain file derivable from the id alone, and a gif animates in

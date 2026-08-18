@@ -82,7 +82,7 @@ export const jwplayerAmpEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
-// The third carrier: an empty `<div class="jwplayer">` beside an inline `jwplayer(...).setup()`
+// The fourth carrier: an empty `<div class="jwplayer">` beside an inline `jwplayer(...).setup()`
 // call. Nothing here names the media in the markup, so without reading the script the div is
 // deleted as an empty tag and the video is gone. The setup object points its playlist at
 // `cdn.jwplayer.com/v2/media/{mediaId}`, which is the same id the other carriers name, so all

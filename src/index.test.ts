@@ -339,7 +339,7 @@ describeForEachParser('transformContent', (parseHtml) => {
     expect(result).toEqualHtml(expected)
   })
 
-  // enrichEmbedPlaceholders is opt-in; default pipeline does not include it.
+  // enrichEmbedPlaceholders is in the default pipeline and no-ops until enrichEmbedFn is set.
   it('should enrich embed placeholders with metadata from enrichEmbedFn', async () => {
     const value = html`
       <iframe

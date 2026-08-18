@@ -348,7 +348,7 @@ export const styleLength = (element: Nullish<Element>, property: string): string
 // A pixel size as a player url or embed attribute states it: `200`, or `200px` where the
 // publisher wrote the unit. `coerceNumber` alone will not do, because it reads neither the
 // suffix nor a bound, and a stated height of `0` or `99999` is a mistake, not a size.
-// Two to four digits is what every player in `embeds/` needs and is a sane range for one.
+// The bound below is what every player in `embeds/` needs.
 //
 // Deliberately not shared with `dimensionAttribute` below, which reads a declared width or
 // height attribute and has the opposite requirement: removeTrackingPixels finds a tracking
@@ -523,7 +523,7 @@ const ratioRegexes = [
 ]
 
 // The one string-ratio grammar: a colon or slash width:height pair, or a bare decimal
-// (a pair with an implied height of 1), returned reduced and in the `W/H` spelling.
+// (a pair with an implied height of 1), returned in the `W/H` spelling.
 export const parseRatio = (value: string): string | undefined => {
   for (const regex of ratioRegexes) {
     const match = value.match(regex)

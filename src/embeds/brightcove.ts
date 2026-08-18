@@ -6,6 +6,10 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // Brightcove builds its player page from four ids the in-page embed carries as attributes. The
 // account is usually one of them, but some plugins leave it only in the loader script's url, so
 // both places are read here instead of by whoever holds the element.
+//
+// The script lookup spans the whole document, so two players from two accounts would both take
+// the first account. Of 12.7M corpus feeds, the nine carrying a `data-video-id` element with no
+// `data-account` ship no loader script at all, so nothing has reached that branch.
 const brightcoveIdRegex = /^\d{5,}$/
 const accountScriptSelector = 'script[src*="players.brightcove.net"]'
 const accountScriptRegex = /players\.brightcove\.net\/(\d+)\//

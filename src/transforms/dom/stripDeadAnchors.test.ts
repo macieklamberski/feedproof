@@ -102,7 +102,7 @@ describeForEachParser('stripDeadAnchors', (parseHtml) => {
     expect(await transform(value)).toBe(expected)
   })
 
-  it('should leave non-anchor content untouched', async () => {
+  it('should unwrap the dead anchor and keep the live one in the same paragraph', async () => {
     const value = '<p>before <a href="#">dead</a> after <a href="https://example.com">live</a></p>'
     const expected = '<p>before dead after <a href="https://example.com">live</a></p>'
 
@@ -139,7 +139,7 @@ describeForEachParser('stripDeadAnchors', (parseHtml) => {
     expect(await transform(value)).toBe(value)
   })
 
-  it('should still unwrap anchor with id when href is alive (id is irrelevant)', async () => {
+  it('should keep an anchor with an id when its href is alive', async () => {
     const value = '<a id="x" href="https://example.com">live</a>'
 
     expect(await transform(value)).toBe(value)

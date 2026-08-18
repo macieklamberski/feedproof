@@ -138,7 +138,9 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // Several episodes in one item: each player has its own script, and they are not adjacent.
+    it.todo('should resolve each player when several episodes share one item', () => {
+      // Several episodes in one item: each player has its own script, and they are not adjacent.
+    })
 
     it('should emit no poster when the config states none', async () => {
       const config = JSON.stringify([
@@ -155,7 +157,9 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
   })
 
   describe('rejections', () => {
-    // The id lookup runs and finds nothing, which is separate from there being no script.
+    it.todo('should return undefined when the id names no config entry', () => {
+      // The id lookup runs and finds nothing, which is separate from there being no script.
+    })
 
     // The endpoint spelling: a config url with no data, which would need a fetch.
     it('should return undefined for the fetch-based player form', async () => {
