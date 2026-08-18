@@ -781,7 +781,7 @@ describeForEachParser('declaredSize', (parseHtml) => {
     })
   })
 
-  // A withRatio and a pixel size describe different things, so a result must never end up holding
+  // A ratio and a pixel size describe different things, so a result must never end up holding
   // one of each: a resolver that infers 16/9 and a carrier that states a 400px height are
   // talking past each other. Every combination below asks the same question: can the result end
   // up holding one number from each side?
@@ -800,7 +800,7 @@ describeForEachParser('declaredSize', (parseHtml) => {
 
     // The carrier is the publisher stating the box they laid out for the player they actually
     // embedded, so what it declares on itself replaces whatever the resolver said, dimensions first
-    // and a withRatio of its own next. A carrier that states nothing leaves the resolver alone.
+    // and a ratio of its own next. A carrier that states nothing leaves the resolver alone.
     describe('the carrier outranks the resolver', () => {
       it('should let the carrier overrule the height the resolver states', () => {
         const value = html`
@@ -814,7 +814,7 @@ describeForEachParser('declaredSize', (parseHtml) => {
         expect(build(withHeight, value)).toEqual(expected)
       })
 
-      it('should drop the resolver withRatio when the carrier states a height alone', () => {
+      it('should drop the resolver ratio when the carrier states a height alone', () => {
         const value = html`
           <div
             class="player"
@@ -826,7 +826,7 @@ describeForEachParser('declaredSize', (parseHtml) => {
         expect(build(withRatio, value)).toEqual(expected)
       })
 
-      it('should drop the resolver withRatio when the carrier states a width alone', () => {
+      it('should drop the resolver ratio when the carrier states a width alone', () => {
         const value = html`
           <div
             class="player"
@@ -875,9 +875,9 @@ describeForEachParser('declaredSize', (parseHtml) => {
         expect(build(withRatio, value)).toEqual(expected)
       })
 
-      // A withRatio the carrier declares on itself is still the carrier speaking, so it replaces the
+      // A ratio the carrier declares on itself is still the carrier speaking, so it replaces the
       // resolver's the same as a declared width or height would.
-      it('should replace the withRatio from one declared on the carrier itself', () => {
+      it('should replace the ratio from one declared on the carrier itself', () => {
         const value = '<div class="player" style="aspect-ratio: 4/3"></div>'
         const expected: EmbedResolverResult = { ...base, ratio: '4/3' }
 
@@ -885,11 +885,11 @@ describeForEachParser('declaredSize', (parseHtml) => {
       })
     })
 
-    // Whatever the resolver base stands when the carrier base nothing on itself. That covers
-    // a measured height, a platform withRatio and a corpus-typical default alike: the pipeline does
+    // Whatever the resolver stated stands when the carrier states nothing on itself. That covers
+    // a measured height, a platform ratio and a corpus-typical default alike: the pipeline does
     // not tell them apart, and only the carrier itself ranks above the resolver.
     describe('the resolver outranks an ancestor', () => {
-      it('should keep the resolver withRatio when the carrier states nothing', () => {
+      it('should keep the resolver ratio when the carrier states nothing', () => {
         const value = html`<div class="player"></div>`
 
         expect(build(withRatio, value)).toEqual(withRatio)
@@ -904,7 +904,7 @@ describeForEachParser('declaredSize', (parseHtml) => {
       // An ancestor's responsive wrapper says what shape the box around the player is, not what
       // shape the player is. Read at full depth this once turned a platform's own 9:16 into a
       // theme's blanket 16:9.
-      it('should keep the resolver withRatio over one inferred from an ancestor wrapper', () => {
+      it('should keep the resolver ratio over one inferred from an ancestor wrapper', () => {
         const value = html`
           <div style="padding-bottom: 50%">
             <div class="player"></div>
@@ -915,7 +915,7 @@ describeForEachParser('declaredSize', (parseHtml) => {
         expect(build(withRatio, value)).toEqual(expected)
       })
 
-      it('should keep the resolver height over a withRatio inferred from an ancestor wrapper', () => {
+      it('should keep the resolver height over a ratio inferred from an ancestor wrapper', () => {
         const value = html`
           <div style="padding-bottom: 50%">
             <div class="player"></div>
@@ -927,7 +927,7 @@ describeForEachParser('declaredSize', (parseHtml) => {
     })
 
     // A size is one measurement from one source. The carrier naming a width and nothing else does
-    // not get the resolver's height to complete it: 640 by 300 is a withRatio no one base.
+    // not get the resolver's height to complete it: 640 by 300 is a ratio no one stated.
     describe('a size comes from one source', () => {
       it('should not pair the resolver height with a width the carrier states', () => {
         const value = html`
@@ -945,7 +945,7 @@ describeForEachParser('declaredSize', (parseHtml) => {
     // A size the carrier states in a form nothing can read is the same as stating none, so the
     // resolver's own pair survives intact.
     describe('a size the carrier states unreadably', () => {
-      it('should keep the withRatio for a fluid width and an automatic height', () => {
+      it('should keep the ratio for a fluid width and an automatic height', () => {
         const value = html`
           <div
             class="player"

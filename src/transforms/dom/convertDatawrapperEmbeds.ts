@@ -12,7 +12,7 @@ const getChartId = (url: string | null | undefined): string | undefined => {
 }
 
 // Builds the chart as a linked <img>: the chart inline, its interactive version one click away,
-// so the image transforms downstream dimension and proxy it like any other image.
+// so the downstream dimension and proxy passes treat it like any other image.
 //
 // Datawrapper publishes a complete static PNG render of every chart at `dwcdn.net/<id>/full.png`,
 // derivable from the chart id alone, and names that same file in the `<noscript>` of its own
