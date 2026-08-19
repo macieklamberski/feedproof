@@ -116,8 +116,8 @@ const specimens: Record<string, string | [string, string]> = {
 const specimenEntries = Object.entries(specimens)
 
 describeForEachParser('stripNonContentElements', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripNonContentElements(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripNonContentElements(context)])
   }
 
   describe('with default selectors', () => {

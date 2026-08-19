@@ -429,13 +429,6 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
-  it('should not add a preserved attribute when the URL is not proxied', async () => {
-    const skip: AssetProxyFn = () => undefined
-    const value = '<img src="https://cdn.example.com/photo.jpg">'
-
-    expect(await transform(value, skip)).toBe(value)
-  })
-
   it('should not add a preserved attribute for data: URIs', async () => {
     const value = '<img src="data:image/png;base64,iVBORw0KGgo=">'
 

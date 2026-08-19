@@ -28,11 +28,11 @@ const cardResolver: CiteResolver = {
 
 describeForEachParser('convertCiteCards', (parseHtml) => {
   const transform = (
-    html: string,
+    value: string,
     citeResolvers: Array<CiteResolver>,
     context: TransformContext = baseContext,
   ) => {
-    return applyDomTransforms(parseHtml(html), [convertCiteCards({ ...context, citeResolvers })])
+    return applyDomTransforms(parseHtml(value), [convertCiteCards({ ...context, citeResolvers })])
   }
 
   describe('happy paths', () => {

@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { wrapTablesForScroll } from './wrapTablesForScroll.js'
 
 describeForEachParser('wrapTablesForScroll', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [wrapTablesForScroll(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [wrapTablesForScroll(context)])
   }
 
   describe('happy paths', () => {

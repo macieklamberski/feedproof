@@ -9,8 +9,8 @@ const withFn = (enrichCiteFn: EnrichCiteFn): TransformContext => {
 }
 
 describeForEachParser('enrichCitePlaceholders', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [enrichCitePlaceholders(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [enrichCitePlaceholders(context)])
   }
 
   it('should be a no-op when enrichCiteFn is not provided', async () => {

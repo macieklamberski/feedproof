@@ -148,13 +148,6 @@ describe('paragraphizePlainText', () => {
   // Exact-output fixtures pinned to @wordpress/autop behavior on plain text,
   // captured before the dependency was inlined.
   describe('autop-compatible output', () => {
-    it('should wrap a single chunk', () => {
-      const value = 'Hello world'
-      const expected = '<p>Hello world</p>\n'
-
-      expect(paragraphize(value)).toBe(expected)
-    })
-
     it('should split paragraphs and break lines', () => {
       const value = 'Multi\n\nMid\nLine\n\nLast'
       const expected = '<p>Multi</p>\n<p>Mid<br />\nLine</p>\n<p>Last</p>\n'

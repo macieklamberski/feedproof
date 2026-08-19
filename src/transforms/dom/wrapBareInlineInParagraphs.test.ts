@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { wrapBareInlineInParagraphs } from './wrapBareInlineInParagraphs.js'
 
 describeForEachParser('wrapBareInlineInParagraphs', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [wrapBareInlineInParagraphs(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [wrapBareInlineInParagraphs(context)])
   }
 
   describe('dissolving wrappers', () => {

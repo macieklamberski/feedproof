@@ -9,8 +9,8 @@ const withFn = (enrichEmbedFn: EnrichEmbedFn): TransformContext => {
 }
 
 describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [enrichEmbedPlaceholders(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [enrichEmbedPlaceholders(context)])
   }
 
   it('should be a no-op when enrichEmbedFn is not provided', async () => {

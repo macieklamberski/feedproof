@@ -165,8 +165,8 @@ export const html = (strings: TemplateStringsArray, ...values: Array<unknown>): 
 // escaping `&` vs `&amp;`, boolean attributes `controls` vs `controls=""`,
 // attribute order). Parsing once and sorting attributes collapses those
 // differences while leaving genuine DOM differences intact.
-const normalizeHtml = (html: string): string => {
-  const document = parseWithLinkedom(html)
+const normalizeHtml = (value: string): string => {
+  const document = parseWithLinkedom(value)
 
   for (const element of document.querySelectorAll('*')) {
     const attributes = Array.from(element.attributes)

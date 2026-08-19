@@ -10,8 +10,8 @@ const samePageContext: TransformContext = {
 }
 
 describeForEachParser('normalizeAnchoredHeadings', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [normalizeAnchoredHeadings(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [normalizeAnchoredHeadings(context)])
   }
 
   describe('symbol-only permalinks', () => {

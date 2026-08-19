@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripWordBreaks } from './stripWordBreaks.js'
 
 describeForEachParser('stripWordBreaks', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripWordBreaks(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripWordBreaks(context)])
   }
 
   describe('happy paths', () => {

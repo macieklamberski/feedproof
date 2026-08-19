@@ -4,8 +4,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { wrapCargoGalleryImages } from './wrapCargoGalleryImages.js'
 
 describeForEachParser('wrapCargoGalleryImages', (parseHtml) => {
-  const transform = (html: string) => {
-    return applyDomTransforms(parseHtml(html), [wrapCargoGalleryImages(baseContext)])
+  const transform = (value: string) => {
+    return applyDomTransforms(parseHtml(value), [wrapCargoGalleryImages(baseContext)])
   }
 
   describe('wraps', () => {

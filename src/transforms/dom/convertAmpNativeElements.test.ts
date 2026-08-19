@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { convertAmpNativeElements } from './convertAmpNativeElements.js'
 
 describeForEachParser('convertAmpNativeElements', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [convertAmpNativeElements(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [convertAmpNativeElements(context)])
   }
 
   it('should convert amp-img into img carrying its image attributes', async () => {

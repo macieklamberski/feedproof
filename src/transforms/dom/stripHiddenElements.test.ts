@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripHiddenElements } from './stripHiddenElements.js'
 
 describeForEachParser('stripHiddenElements', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripHiddenElements(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripHiddenElements(context)])
   }
 
   describe('removes hidden elements', () => {

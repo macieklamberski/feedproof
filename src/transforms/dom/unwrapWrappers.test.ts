@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { unwrapWrappers } from './unwrapWrappers.js'
 
 describeForEachParser('unwrapWrappers', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [unwrapWrappers(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [unwrapWrappers(context)])
   }
 
   it('should unwrap a single bare div wrapper', async () => {

@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripMarkdownEscapeBackslashes } from './stripMarkdownEscapeBackslashes.js'
 
 describeForEachParser('stripMarkdownEscapeBackslashes', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripMarkdownEscapeBackslashes(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripMarkdownEscapeBackslashes(context)])
   }
 
   it('should empty a lone-backslash paragraph', async () => {

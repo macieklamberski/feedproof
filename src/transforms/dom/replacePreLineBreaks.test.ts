@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { replacePreLineBreaks } from './replacePreLineBreaks.js'
 
 describeForEachParser('replacePreLineBreaks', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [replacePreLineBreaks(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [replacePreLineBreaks(context)])
   }
 
   it('should replace br with newline inside pre', async () => {
