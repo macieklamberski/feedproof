@@ -195,6 +195,61 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should keep the iframe title when the payload carries none', async () => {
+      const thumbnailOnlyCardAttrs = jsonAttrValue({
+        thumbnail_url: 'https://i1.sndcdn.com/artworks-Xy2ab-t500x500.jpg',
+      })
+      const value = html`
+        <div
+          class="soundcloud-wrap"
+          data-attrs="${thumbnailOnlyCardAttrs}"
+          data-component-name="SoundcloudToDOM"
+        >
+          <iframe
+            title="Real Track Name"
+            src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F12345"
+          ></iframe>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        id: 'tracks/12345',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F12345',
+        height: 166,
+        title: 'Real Track Name',
+        thumbnail: 'https://i1.sndcdn.com/artworks-Xy2ab-t500x500.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should let the payload title override the one the iframe states', async () => {
+      const titledCardAttrs = jsonAttrValue({
+        title: 'Golden Hour (Extended Mix)',
+      })
+      const value = html`
+        <div
+          class="soundcloud-wrap"
+          data-attrs="${titledCardAttrs}"
+          data-component-name="SoundcloudToDOM"
+        >
+          <iframe
+            title="Golden Hour by Nightdrift"
+            src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F67890"
+          ></iframe>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        id: 'tracks/67890',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F67890',
+        height: 166,
+        title: 'Golden Hour (Extended Mix)',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // Both fields are empty in a good share of the payloads, and an empty string is not a value.
     it('should state nothing for an empty description and target url', async () => {
       const untitledCardAttrs = jsonAttrValue({
