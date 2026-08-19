@@ -73,6 +73,6 @@ See [Enclosures](/guides/enclosures) for the full guide.
 ## Next Steps
 
 - **[How It Works](/how-it-works)** — the pipeline, its phases, and its guarantees.
-- **[Transforms](/transforms)** — the complete catalog of the 77 transforms.
+- **[Transforms](/transforms)** — the complete catalog of the 81 transforms.
 - **[Widgets](/widgets)** — how embeds and link cards become `data-*` placeholders.
 - **[transformContent](/reference/transform-content)** — every option in one table.

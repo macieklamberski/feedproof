@@ -8,7 +8,7 @@ Feed content carries things that were never content: platform chrome injected ar
 
 ### stripNonContentElements
 
-Removes elements matching the `nonContentSelectors` option — a curated list of selectors for markup that reads as noise in a reader:
+Removes elements matching a curated list of selectors for markup that reads as noise in a reader:
 
 - Subscribe forms and email-signup blocks
 - Share-button clusters and social follow prompts
@@ -32,7 +32,7 @@ Removes elements matching the `nonContentSelectors` option — a curated list of
 
 The stripping line is deliberate: chrome and nags are removed, gated content is recovered. When a cookie-consent plugin replaces an embed with a click-to-consent shim, the embed's real URL is parked in an attribute on the iframe — the media transforms promote it back into `src`, and only the consent notice beside it is stripped. See [Embed Recovery](/transforms/embeds).
 
-Every entry in the default list is validated against real feeds before it is added, favoring platform-specific class names over generic words that could match article content. You can extend or replace the list — see [Default Lists](/guides/customization/default-lists).
+Every entry in the default list is validated against real feeds before it is added, favoring platform-specific class names over generic words that could match article content. The list is built in, not an option: see [What's Built In](/guides/built-in).
 
 ### stripHiddenElements
 

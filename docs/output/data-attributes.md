@@ -4,7 +4,7 @@ title: "Output: Data Attributes"
 
 # Data Attributes
 
-Feedsweep communicates everything it learned about the content through `data-*` attributes. They are the contract a consuming renderer reads: stable names, plain string values, no markup conventions to parse. A consumer that ignores them entirely still gets working HTML — placeholders carry fallback links, media elements play natively, and every attribute is inert on its own.
+Feedsweep communicates everything it learned about the content through `data-*` attributes. They are the contract a consuming renderer reads: stable names, plain string values, no markup conventions to parse. Media elements play natively, every attribute is inert on its own, and the two placeholder families are the only output that a renderer has to act on.
 
 The families at a glance:
 
@@ -22,7 +22,7 @@ The families at a glance:
 
 ## Embeds: `data-embed-*`
 
-An embed placeholder is a `<div>` whose only child is a fallback `<a>` pointing at the content. All fields are optional except `data-embed-src`; a resolver writes what it could extract and skips the rest. See [Embeds](/widgets/embeds) for how placeholders are produced.
+An embed placeholder is an empty `<div>`. All fields are optional except `data-embed-src`; a resolver writes what it could extract and skips the rest. See [Embeds](/widgets/embeds) for how placeholders are produced.
 
 | Attribute | Value |
 |-----------|-------|
@@ -33,11 +33,16 @@ An embed placeholder is a `<div>` whose only child is a fallback `<a>` pointing 
 | `data-embed-thumbnail` | Poster image URL |
 | `data-embed-width` | Intrinsic width in pixels |
 | `data-embed-height` | Intrinsic height in pixels |
+| `data-embed-ratio` | The player's shape as a CSS aspect ratio (`16/9`), where no dimension was measured |
 | `data-embed-title` | Content title |
 | `data-embed-description` | Content description |
 | `data-embed-author` | Author or channel name |
 | `data-embed-avatar` | Author avatar image URL |
+| `data-embed-publisher` | The publication the content belongs to |
+| `data-embed-date` | The content's date, as the source states it |
 | `data-embed-duration` | Duration in seconds |
+
+A placeholder carries either the two dimensions or the ratio, never both. See [Embeds](/widgets/embeds#size-dimensions-or-ratio).
 
 ```html
 <div
@@ -47,14 +52,12 @@ An embed placeholder is a `<div>` whose only child is a fallback `<a>` pointing 
   data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
   data-embed-width="560"
   data-embed-height="315"
->
-  <a href="https://www.youtube.com/embed/dQw4w9WgXcQ">https://www.youtube.com/embed/dQw4w9WgXcQ</a>
-</div>
+></div>
 ```
 
 ## Cites: `data-cite-*`
 
-A cite placeholder is a `<div>` whose only child is a fallback `<a>` carrying the target's title. See [Cites](/widgets/cites) for the resolver catalog.
+A cite placeholder is an empty `<div>` too. See [Cites](/widgets/cites) for the resolver catalog.
 
 | Attribute | Value |
 |-----------|-------|
@@ -77,9 +80,7 @@ A cite placeholder is a `<div>` whose only child is a fallback `<a>` carrying th
   data-cite-title="An Example Post"
   data-cite-description="What the post is about."
   data-cite-icon="https://example.com/favicon.ico"
->
-  <a href="https://example.com/post">An Example Post</a>
-</div>
+></div>
 ```
 
 ## Code blocks: `data-pre-*`
@@ -98,7 +99,7 @@ Written on `<pre>` elements by [highlightCode](/transforms/code).
 
 ## Layout: `data-align` and `data-table`
 
-`data-align` carries the alignment the author chose (`left`, `center`, or `right`) on the media element or its `<figure>`, with the platform-specific classes and styles it was found in stripped. `data-table` is a valueless marker on the `<div>` wrapped around every top-level `<table>`, so wide tables can scroll instead of overflowing.
+`data-align` carries the alignment the author chose (`left`, `center`, or `right`) on the media element or its `<figure>`. The platform-specific class or style it was read from stays in place, so the attribute is a hook to style against, not a replacement for what the feed wrote. `data-table` is a valueless marker on the `<div>` wrapped around every top-level `<table>`, so wide tables can scroll instead of overflowing.
 
 ```html
 <figure data-align="center"><img src="https://example.com/photo.jpg"></figure>

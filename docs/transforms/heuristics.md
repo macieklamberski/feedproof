@@ -41,20 +41,20 @@ For players without an id-matched thumbnail, a video-led item (its first embed i
 
 Removes an injected enclosure that duplicates media already in the content: an image present in any size variant, or an audio/video/embed with the same URL. Only elements `injectEnclosures` marked with `data-enclosure` are candidates — author-placed content is never removed.
 
-**Before**
+**Before** (after `injectEnclosures` has added the feed's image enclosure)
 
 ```html
-<img src="https://example.com/photo-1024w.jpg">
-<img src="https://example.com/photo.jpg" data-enclosure>
+<img src="https://example.com/photo-1024x768.jpg" data-enclosure>
+<p><img src="https://example.com/photo.jpg"></p>
 ```
 
 **After**
 
 ```html
-<img src="https://example.com/photo-1024w.jpg">
+<p><img src="https://example.com/photo.jpg"></p>
 ```
 
-Images are compared by fingerprint, so scaled variants of the same photo match; audio and video compare on the exact cleaned URL, because podcast proxy URLs carry the episode's identity in the query string.
+Images are compared by fingerprint, which reads the size a URL encodes (`photo-1024x768.jpg`) so scaled variants of one photo match; audio and video compare on the exact cleaned URL, because podcast proxy URLs carry the episode's identity in the query string.
 
 ### stripDuplicateLeadingImages
 
@@ -63,7 +63,7 @@ Removes a leading image the body repeats immediately after it. Feed plugins prep
 **Before**
 
 ```html
-<img src="https://example.com/photo-300w.jpg">
+<img src="https://example.com/photo-300x200.jpg">
 <img src="https://example.com/photo.jpg">
 <p>The article.</p>
 ```

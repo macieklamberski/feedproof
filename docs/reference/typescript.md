@@ -21,11 +21,11 @@ import { transformContent } from 'feedsweep'
 The package has three entry points:
 
 ```typescript
-// The main API: transformContent, every transform, every resolver, all types.
+// The main API: transformContent, every transform, the placeholder helpers, all types.
 import { transformContent } from 'feedsweep'
 
-// Every default list, for extending with the spread idiom.
-import { defaultTrackingHosts, defaultWidgetResolvers } from 'feedsweep/defaults'
+// The default pipelines and the built-in lists, for composing a pipeline of your own.
+import { defaultStandardDomTransforms } from 'feedsweep/defaults'
 
 // The bundled linkedom parser (requires the optional linkedom peer dependency).
 import { parseHtml } from 'feedsweep/linkedom'

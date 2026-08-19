@@ -16,7 +16,7 @@ type DomTransform = (context: TransformContext) => (document: Document) => void 
 type StringTransform = (context: TransformContext) => (html: string) => string | Promise<string>
 ```
 
-`TransformContext` is `TransformContentOptions` with every default filled in — the same option names, but the array and function options are guaranteed present. See [Types](/reference/types).
+`TransformContext` is what the caller passed plus everything feedsweep supplies itself: the resolver registries, the attribute and selector lists, the resolved URL and highlighter functions. The array and function fields are guaranteed present. See [Types](/reference/types).
 
 ## Writing a DOM Transform
 

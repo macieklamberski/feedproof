@@ -26,7 +26,7 @@ Attributes are written in this order, and only when a value is present:
 | `data-cite-icon` | The linked site's favicon URL |
 | `data-cite-thumbnail` | Preview image URL |
 
-The placeholder's only child is `<a href="{url}">{title}</a>`, so a consumer that ignores the attributes still shows a titled link.
+The placeholder is an empty `<div>`: a renderer builds the card from these attributes. See [Rendering](/output/rendering).
 
 Card URLs pass through your [`cleanUrlFn`](/guides/customization/url-handling) even when they never sat in an anchor's `href`, and `data-cite-date` passes through your [`parseDateFn`](/reference/transform-content#options) so all cards carry dates in a format you chose. Without the hook the raw date string is kept.
 
@@ -63,21 +63,19 @@ Card URLs pass through your [`cleanUrlFn`](/guides/customization/url-handling) e
   data-cite-title="An Article Worth Reading"
   data-cite-icon="https://example.com/favicon.ico"
   data-cite-thumbnail="https://example.com/cover.jpg"
->
-  <a href="https://example.com/article">An Article Worth Reading</a>
-</div>
+></div>
 ```
 
 ## Built-in Resolvers
 
-24 resolvers ship by default, each reading one platform's card markup.
+25 resolvers ship by default, each reading one platform's card markup.
 
 ### Blog Platforms
 
 | Platform | Matches |
 |----------|---------|
 | Ghost | `.kg-bookmark-card` bookmark cards |
-| Substack | Embedded own-post cards and cross-publication digest embeds |
+| Substack | Embedded own-post cards, cross-publication digest embeds, and the `substack-post-embed` snippet |
 | Medium | Mixtape embeds (both the figure and bare-anchor forms) |
 | Tumblr | NPF link blocks |
 | note.com | External-article embed figures |
@@ -108,4 +106,4 @@ Discourse's social-post oneboxes (a quoted tweet, for example) are deliberately 
 | Microformats | `.h-cite` markup; response properties set `data-cite-kind` |
 | Embedly | `blockquote.embedly-card` embeds |
 
-To handle a platform not listed here, see [Cite Resolvers](/guides/customization/cite-resolvers).
+A platform not listed here belongs in the library: [open an issue or a pull request](https://github.com/macieklamberski/feedsweep/issues).

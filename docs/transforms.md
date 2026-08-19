@@ -4,7 +4,7 @@ title: Transforms
 
 # Transforms
 
-A transform is a single, focused pass over the content. Feedsweep runs two phases: string transforms operate on the raw HTML text before parsing, DOM transforms operate on the parsed document. The default pipeline runs 5 string transforms and 69 DOM transforms; 3 more DOM transforms are opt-in [heuristics](/transforms/heuristics).
+A transform is a single, focused pass over the content. Feedsweep runs two phases: string transforms operate on the raw HTML text before parsing, DOM transforms operate on the parsed document. The default pipeline runs 5 string transforms and 73 DOM transforms; 3 more DOM transforms are opt-in [heuristics](/transforms/heuristics).
 
 Every transform is idempotent — running the pipeline twice produces the same output as running it once, and every transform is tested for exactly that.
 
@@ -37,6 +37,7 @@ Setting `heuristics: true` selects the extended pipeline with the 3 opt-in trans
 | `unwrapCdataMarkers` | [String](/transforms/string) | Unwrap a value that is one whole escaped `<![CDATA[…]]>` block |
 | `paragraphizePlainText` | [String](/transforms/string) | Turn tag-less plain text into paragraphs and line breaks |
 | `decodeDoubleEncodedTags` | [Text and Structure](/transforms/structure) | Rebuild HTML that a feed generator entity-escaped twice |
+| `surfaceParkedMarkup` | [Embed Recovery](/transforms/embeds) | Dissolve a lazy-loader container into the encoded embed markup it holds |
 | `stripComments` | [Content Cleanup](/transforms/cleanup) | Remove HTML comments |
 | `stripHiddenElements` | [Content Cleanup](/transforms/cleanup) | Remove elements hidden via `hidden`, `display:none`, or `visibility:hidden` |
 | `surfaceTemplateEmbeds` | [Embed Recovery](/transforms/embeds) | Hoist an embed trapped inside a `<template>` into the document |
@@ -45,6 +46,7 @@ Setting `heuristics: true` selects the extended pipeline with the 3 opt-in trans
 | `rebuildLiteVideoEmbeds` | [Embed Recovery](/transforms/embeds) | Rebuild the iframe from a `lite-youtube` / `lite-vimeo` custom element |
 | `rebuildLyteEmbeds` | [Embed Recovery](/transforms/embeds) | Rebuild the iframe from a WP YouTube Lyte facade |
 | `rebuildRocketYoutubePreviews` | [Embed Recovery](/transforms/embeds) | Rebuild the iframe from a WP Rocket YouTube preview |
+| `rebuildVideoJsEmbeds` | [Embed Recovery](/transforms/embeds) | Rebuild a native `<video>` from a Video.js `<video-js>` element |
 | `rebuildWistiaEmbeds` | [Embed Recovery](/transforms/embeds) | Rebuild the iframe from a Wistia JS-API facade |
 | `rebuildLazyLoadForVideos` | [Embed Recovery](/transforms/embeds) | Rebuild the iframe from a Lazy Load for Videos facade |
 | `rebuildLazyYtEmbeds` | [Embed Recovery](/transforms/embeds) | Rebuild the iframe from a jQuery lazyYT facade |
@@ -52,11 +54,13 @@ Setting `heuristics: true` selects the extended pipeline with the 3 opt-in trans
 | `rebuildEmbedlyEmbeds` | [Embed Recovery](/transforms/embeds) | Unwrap an Embedly media widget to its inner provider iframe |
 | `linkifyGistEmbeds` | [Embed Recovery](/transforms/embeds) | Replace a GitHub Gist script embed with a link to the gist |
 | `fixSubstackMentions` | [Text and Structure](/transforms/structure) | Rebuild a Substack @-mention into an inline profile link |
+| `fixSubstackImageLinks` | [Media Recovery](/transforms/media) | Remint the image inside an emptied Substack lightbox anchor |
 | `wrapCargoGalleryImages` | [Media Recovery](/transforms/media) | Wrap Cargo portfolio images in figures so they keep block boundaries |
-| `convertAmpElements` | [Media Recovery](/transforms/media) | Convert AMP custom elements to plain HTML media |
+| `convertAmpNativeElements` | [Media Recovery](/transforms/media) | Convert AMP custom elements that have a native equivalent into it |
 | `convertNoteEmbeds` | [Embed Recovery](/transforms/embeds) | Convert note.com embed figures into iframes and links |
-| `rebuildDeferredIframes` | [Embed Recovery](/transforms/embeds) | Materialize an iframe parked in a `<div>` attribute (Pym.js, @newswire/frames) |
+| `rebuildDeferredIframes` | [Embed Recovery](/transforms/embeds) | Materialize an iframe parked in a `<div>` attribute (Pym.js, @newswire/frames, oEmbed) |
 | `convertDatawrapperEmbeds` | [Embed Recovery](/transforms/embeds) | Convert Datawrapper chart embeds into a linked static image |
+| `convertGiphyEmbeds` | [Embed Recovery](/transforms/embeds) | Convert a Giphy iframe into the linked gif itself |
 | `unwrapDoublyNestedLists` | [Text and Structure](/transforms/structure) | Dissolve a list nested directly inside another list |
 | `stripDuplicateTitleHeading` | [Text and Structure](/transforms/structure) | Remove a leading heading that repeats the article title |
 | `demoteHeadings` | [Text and Structure](/transforms/structure) | Demote `h1`–`h5` one level when the body contains an `h1` |
@@ -65,6 +69,7 @@ Setting `heuristics: true` selects the extended pipeline with the 3 opt-in trans
 | `fixLazyImages` | [Media Recovery](/transforms/media) | Promote a lazy image URL from its `data-*` attribute into `src` / `srcset` |
 | `fixLazyVideos` | [Media Recovery](/transforms/media) | Promote a lazy video `src` and poster into their real attributes |
 | `fixLazyAudios` | [Media Recovery](/transforms/media) | Promote a lazy audio `src` into the real attribute |
+| `removeTrackingPixels` | [Media Recovery](/transforms/media) | Remove tracking pixels and beacon images |
 | `resolveMediaDimensions` | [Media Recovery](/transforms/media) | Backfill `width` / `height` from style, URL hints, or the wrapping picture |
 | `flattenPictureElements` | [Media Recovery](/transforms/media) | Collapse each `<picture>` to a single `<img>`, keeping the modern format |
 | `hoistFigcaptionFromAnchor` | [Media Recovery](/transforms/media) | Move a `<figcaption>` out of a figure-wide click-through anchor |
@@ -75,7 +80,6 @@ Setting `heuristics: true` selects the extended pipeline with the 3 opt-in trans
 | `normalizeAnchoredHeadings` | [Text and Structure](/transforms/structure) | Collapse heading permalink markup to one canonical anchor form |
 | `stripDeadAnchors` | [Links and URLs](/transforms/urls) | Unwrap anchors that link nowhere |
 | `convertCiteCards` | [Widgets](/widgets) | Read link-preview cards into `data-cite-*` placeholders |
-| `removeTrackingPixels` | [Media Recovery](/transforms/media) | Remove tracking pixels and beacon images |
 | `unwrapEmojiImages` | [Media Recovery](/transforms/media) | Replace platform emoji images with the real glyph, or mark them `data-emoji` |
 | `stripMarkdownEscapeBackslashes` | [Text and Structure](/transforms/structure) | Empty paragraphs holding a lone Markdown escape backslash |
 | `convertBreaksToParagraphs` | [Text and Structure](/transforms/structure) | Convert `<br>`-separated prose into real paragraphs |

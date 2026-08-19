@@ -65,7 +65,7 @@ If you compose a custom `domTransforms` array, keep `neutralizeUnsafeUrls` after
 
 Beyond URL safety, the default pipeline removes the common ways feed content phones home:
 
-- **Tracking pixels** — `removeTrackingPixels` drops 1×1 and invisible images, plus any image from a host in `trackingHosts` (~50 known tracking domains by default) or with a path segment like `pixel` or `beacon`.
+- **Tracking pixels** — `removeTrackingPixels` drops 1×1 and invisible images, plus any image from one of the ~50 known tracking hosts it carries or with a path segment like `pixel` or `beacon`.
 - **Tracking params and redirect wrappers** — the `cleanUrlFn` hook cleans every anchor and placeholder URL; supply your URL cleaner of choice and Feedsweep applies it in all the right places. See [URL Handling](/guides/customization/url-handling).
 - **Third-party iframes become placeholders** — an embedded player loads nothing until your renderer decides to load it, so reading an item never contacts the embed's origin by default. See [Widgets](/widgets).
 - **Asset proxying** — `assetProxyFn` rewrites image, video, and audio URLs through your proxy, keeping reader IPs off publisher origins. The original URL is preserved in a `data-proxied-*` attribute for fallback and dedup.

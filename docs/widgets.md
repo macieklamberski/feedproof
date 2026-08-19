@@ -17,11 +17,11 @@ Not everything becomes a placeholder. The rule: a placeholder exists where your 
 
 A platform-hosted upload with a direct file URL becomes a real `<video>` or `<audio>` element with `controls`. Native elements flow through the rest of the pipeline like any other media: they get dimensioned, their URLs neutralized and proxied, and they deduplicate against [enclosures](/guides/enclosures). A placeholder is deliberately opaque — later passes only touch its `data-*` URL fields.
 
-Which path a piece of content takes is decided by the resolver's result shape. A result carrying a `tag` field mints that element; any other result becomes an embed placeholder. See [Widget Resolvers](/guides/customization/widget-resolvers) for the contract.
+Which path a piece of content takes is decided by the resolver's result shape. A result carrying a `tag` field mints that element; any other result becomes an embed placeholder. See [Embeds](/widgets/embeds) for the catalog of what each path covers.
 
 ## Anatomy of a Placeholder
 
-Every placeholder is built the same way: a `<div>` with `data-{type}-{key}` attributes for each extracted field, and fallback content inside.
+Every placeholder is built the same way: an empty `<div>` with a `data-{type}-{key}` attribute for each extracted field.
 
 ```html
 <div
@@ -30,20 +30,20 @@ Every placeholder is built the same way: a `<div>` with `data-{type}-{key}` attr
   data-embed-id="dQw4w9WgXcQ"
   data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
   data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
->
-  <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
-</div>
+></div>
 ```
 
 Three properties hold for every placeholder:
 
 - **All fields are optional except the ones the placeholder cannot exist without** (an embed's `src`, a cite's `url` and `title`). Partial extraction beats dropping the content.
 - **Empty and whitespace-only values are skipped**, so an attribute is either absent or meaningful.
-- **An attribute is written once and never overwritten.** An [enrichment pass](/guides/customization/enrichment) can only fill fields the resolver left empty — the resolver's own values always survive.
+- **A later pass that states a field means it.** An [enrichment pass](/guides/customization/enrichment) answers about this exact embed from the platform's own API, so what it returns replaces what a resolver read off the markup. Fields the enricher leaves out keep the resolver's value.
 
-## Graceful Fallback
+## The Element Stays Empty
 
-The child content is the degradation story. A consumer that knows nothing about `data-embed-*` still renders a working link: an embed placeholder contains an `<a>` to the content's page (or player), a cite placeholder contains an `<a>` carrying the card's title. Rendering the placeholder yourself means replacing that child — see [Rendering](/output/rendering).
+A placeholder holds no children, so everything a renderer shows for it comes from the attributes. That is the whole point of the shape: the div carries no markup of feedsweep's choosing to undo, restyle, or work around, and a consumer renders the content as its own design says it should.
+
+The cost is that a renderer has to do something with `data-embed-src` and `data-cite-url`. An empty div renders as nothing, so a consumer that ignores the attributes entirely shows nothing where the embed was. [Rendering](/output/rendering) covers the minimum: an anchor, a click-to-load facade, or a full card.
 
 ## Generated Wrappers
 

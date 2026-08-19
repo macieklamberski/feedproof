@@ -4,18 +4,31 @@ title: "Output: Rendering"
 
 # Rendering
 
-Feedsweep's output is plain HTML that works with no renderer logic at all. The [data attributes](/output/data-attributes) exist for consumers that want more: native players instead of fallback links, styled cards instead of plain anchors, alignment and scroll behavior instead of default block flow. This page shows what a renderer typically does with each hook.
+Feedsweep's output is plain HTML. Most of it needs no renderer logic at all, and the [data attributes](/output/data-attributes) are there for the parts that do: a player where an iframe was, a styled card where a link preview was, alignment and scroll behavior instead of default block flow. This page shows what a renderer typically does with each hook.
 
 ## Graceful degradation
 
 Render the output with nothing but a stylesheet and it stays correct:
 
-- An embed placeholder shows its fallback link — the content is one click away.
-- A cite placeholder shows a titled link to the cited page.
+- Prose, media, code blocks, and tables are ordinary elements a stylesheet is enough for.
 - Injected enclosures are native `<audio>`, `<video>`, and `<img>` elements that play as-is.
 - `data-align`, `data-table`, `data-pre-*`, `data-timestamp` are inert attributes on otherwise ordinary elements.
 
-Everything below is progressive enhancement on top of that baseline.
+Placeholders are the exception. An embed or cite placeholder is an empty `<div>`, so it renders as nothing until you do something with its attributes. The smallest thing that works is an anchor:
+
+```typescript
+for (const placeholder of container.querySelectorAll('[data-embed-src]')) {
+  const url = placeholder.getAttribute('data-embed-url') ?? placeholder.getAttribute('data-embed-src')
+  const link = document.createElement('a')
+
+  link.href = url
+  link.textContent = placeholder.getAttribute('data-embed-title') ?? url
+
+  placeholder.replaceChildren(link)
+}
+```
+
+Everything below is what a renderer builds instead of that.
 
 ## Styling hooks
 
@@ -66,16 +79,22 @@ img[data-emoji] {
 
 ## Rendering embeds
 
-An embed placeholder carries everything needed for a click-to-load facade: show `data-embed-thumbnail` sized by `data-embed-width` and `data-embed-height`, and swap in an iframe pointing at `data-embed-src` when the reader clicks. Loading the iframe eagerly works too — `data-embed-src` is a plain player URL.
+An embed placeholder carries everything needed for a click-to-load facade: show `data-embed-thumbnail` sized by `data-embed-width` and `data-embed-height`, or by `data-embed-ratio` when the source stated only a shape, and swap in an iframe pointing at `data-embed-src` when the reader clicks. Loading the iframe eagerly works too — `data-embed-src` is a plain player URL.
 
 ```typescript
 for (const placeholder of container.querySelectorAll('[data-embed-src]')) {
   const iframe = document.createElement('iframe')
 
   iframe.src = placeholder.getAttribute('data-embed-src')
-  iframe.width = placeholder.getAttribute('data-embed-width') ?? '640'
-  iframe.height = placeholder.getAttribute('data-embed-height') ?? '360'
   iframe.setAttribute('allowfullscreen', '')
+
+  const width = placeholder.getAttribute('data-embed-width')
+  const height = placeholder.getAttribute('data-embed-height')
+  const ratio = placeholder.getAttribute('data-embed-ratio')
+
+  if (width) iframe.width = width
+  if (height) iframe.height = height
+  if (ratio) iframe.style.aspectRatio = ratio
 
   placeholder.replaceChildren(iframe)
 }

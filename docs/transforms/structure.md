@@ -233,7 +233,9 @@ Removes elements with no text and no meaningful children — empty spans, `<div>
 
 ### unwrapWrappers
 
-Dissolves purely presentational containers (`div`, `article`, `section`, `main`, `header`, `footer`), hoisting their children in place. Feedsweep's own generated wrappers (`data-embed-*`, `data-cite-*`, `data-table`, `data-pre`) are preserved, as are containers whose `id` is the target of an in-page link — unwrapping those would break the link.
+Dissolves purely presentational containers (`div`, `article`, `section`, `main`, `header`, `footer`), hoisting their children in place. Feedsweep's own generated wrappers (`data-embed-*`, `data-cite-*`, `data-table`, `data-pre`) are preserved, as are containers whose `id` is the target of an in-page link, since unwrapping those would break the link.
+
+Two `<figure>` shapes go the same way: one holding nothing but a placeholder, which is the platform's own embed wrapper and has already had everything it stated read into the placeholder, and one reduced to a single text-only link. A figure with a caption, an image, or a second element beside its content is the author's grouping and stays. The pass repeats until nothing more dissolves, since a wrapper only becomes a sole child once the wrapper inside it is gone.
 
 **Before**
 

@@ -6,7 +6,7 @@ title: Feedsweep — Tidy HTML Content in Web Feeds
 
 Tidy up the HTML content in web feeds. Fix feed-specific quirks so content displays in its best possible form.
 
-Feed items arrive with markup written for a JavaScript-enabled browser on the publisher's own site: lazy-loaded images with empty `src` attributes, video embeds that render as blank divs, tracking pixels, subscribe forms, and code blocks flattened into single lines. Feedsweep takes that HTML and runs it through a pipeline of 77 transforms that repairs, cleans, and normalizes it into content a reader can render as-is.
+Feed items arrive with markup written for a JavaScript-enabled browser on the publisher's own site: lazy-loaded images with empty `src` attributes, video embeds that render as blank divs, tracking pixels, subscribe forms, and code blocks flattened into single lines. Feedsweep takes that HTML and runs it through a pipeline of 81 transforms that repairs, cleans, and normalizes it into content a reader can render as-is.
 
 Perfect for feed readers, read-it-later apps, and newsletter digests that render third-party feed content.
 
@@ -22,10 +22,8 @@ Perfect for feed readers, read-it-later apps, and newsletter digests that render
 
 ```html
 <!-- Output: what your reader renders -->
-<p><img data-src="https://example.com/photo.jpg" src="https://example.com/photo.jpg"></p>
-<div data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ" data-embed-provider="youtube" data-embed-id="dQw4w9WgXcQ" data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg">
-  <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
-</div>
+<p><img data-src="https://example.com/photo.jpg" src="https://example.com/photo.jpg" class="lazyload"></p>
+<div data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ" data-embed-provider="youtube" data-embed-id="dQw4w9WgXcQ" data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"></div>
 ```
 
 ## Features
@@ -44,7 +42,7 @@ Perfect for feed readers, read-it-later apps, and newsletter digests that render
 
 ### Normalize
 
-- **Embeds and cards** — converts video embeds and link-preview cards into framework-agnostic [`data-*` placeholders](/output/data-attributes) with graceful HTML fallback. Built-in support for YouTube, Vimeo, Dailymotion, JW Player, Buzzsprout, Brightcove, Mediavine, and SoundCloud.
+- **Embeds and cards** — converts video embeds and link-preview cards into framework-agnostic [`data-*` placeholders](/output/data-attributes) your app renders however it wants. Fifty-six platforms are recognized out of the box, from YouTube, Vimeo and Spotify to Apple Podcasts, Bluesky, Mastodon and CodePen.
 - **Code blocks** — highlights labeled code with highlight.js and marks blocks with their language.
 - **Structure** — paragraphs from `<br>` runs, demoted headings, merged fragmented lists, scroll-wrapped tables.
 - **URLs** — resolves relative URLs, auto-links bare ones, neutralizes dangerous schemes.
@@ -52,7 +50,7 @@ Perfect for feed readers, read-it-later apps, and newsletter digests that render
 ### Integrate
 
 - **Bring your own DOM** — works with linkedom, jsdom, happy-dom, or the browser's native parser.
-- **Every default replaceable** — transforms, resolvers, selector lists, and URL policies are all options.
+- **Composable pipeline** — the transform arrays are options, and every transform is exported individually.
 - **Enclosures** — injects feed enclosure media into the content as native players.
 
 ## What Feedsweep Is Not

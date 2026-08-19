@@ -17,7 +17,7 @@ Feedsweep is a pure function over HTML. One call to [`transformContent`](/refere
  parseHtmlFn ────────── your DOM parser (linkedom, jsdom, happy-dom, browser)
       │
       ▼
- DOM transforms ─────── 69 passes over the document, in a fixed order
+ DOM transforms ─────── 73 passes over the document, in a fixed order
       │
       ▼
  serialized <body>
@@ -39,21 +39,21 @@ The DOM transforms run in a deliberate sequence. Three clusters matter for under
 - **No exceptions from the pipeline.** Transforms do not throw on malformed input. Caller-supplied functions must honor the same contract: an exception from one of your hooks rejects the whole `transformContent` promise.
 - **Deterministic.** Same input, same options, same output.
 
-## Defaults Replace, Not Merge
+## What You Configure
 
-Every array option — transforms, resolvers, selector lists — fully replaces its default when set. To extend a default, spread it:
+The pipeline is an option, and so are the hooks around it: URL cleaning, asset proxying, safety policy, code highlighting, enrichment. `stringTransforms` and `domTransforms` replace their phase entirely when set, so extending the defaults means spreading them:
 
 ```typescript
 import { transformContent } from 'feedsweep'
-import { defaultTrackingHosts } from 'feedsweep/defaults'
+import { defaultStandardDomTransforms } from 'feedsweep/defaults'
 
 const html = await transformContent(item.content, {
   parseHtmlFn: parseHtml,
-  trackingHosts: [...defaultTrackingHosts, 'tracker.example.com'],
+  domTransforms: [...defaultStandardDomTransforms, myTransform],
 })
 ```
 
-See [Default Lists](/guides/customization/default-lists) for every list and its contents.
+What feedsweep knows about the feed landscape is not configurable: the platforms it recognizes, the hosts it treats as trackers, the selectors it strips as chrome, the attributes lazy loaders park a URL in. Each entry was measured against a corpus of real feeds, and a list a caller can replace is a list that drifts from that measurement. See [What's Built In](/guides/built-in).
 
 ## What Stays Out of Scope
 

@@ -8,7 +8,7 @@ Feeds routinely ship images and media that render as nothing: the real URL parke
 
 ### fixLazyImages
 
-Promotes the real image URL from a lazy-load attribute into `src` (and the real `srcset` into `srcset`) on `<img>` and `<source>` elements. Also recovers the full `<img>` from a `<noscript>` fallback that sits next to a lazy placeholder. The attribute names come from the [`lazySrcAttributes` and `lazySrcsetAttributes`](/guides/customization/default-lists) options.
+Promotes the real image URL from a lazy-load attribute into `src` (and the real `srcset` into `srcset`) on `<img>` and `<source>` elements. Also recovers the full `<img>` from a `<noscript>` fallback that sits next to a lazy placeholder. The attribute names are [built in](/guides/built-in), covering the lazy loaders and image CDNs feeds actually use.
 
 **Before**
 
@@ -70,9 +70,11 @@ Recovers a real `<img>` from a lazy-image container: a `<div>` or `<figure>` tha
 <img src="https://example.com/photo.jpg">
 ```
 
-### convertAmpElements
+### convertAmpNativeElements
 
-Converts AMP custom elements to their plain HTML equivalents: `amp-img` and `amp-anim` become `<img>`, `amp-video` becomes `<video>`, `amp-audio` becomes `<audio>`, `amp-iframe` becomes `<iframe>`, and `amp-youtube` becomes the platform's embed iframe built from its video id. AMP elements render nothing without the AMP runtime; the converted elements flow to the image and embed transforms downstream. `<amp-story>` is a full-page format, not in-content media, and is left alone.
+Converts AMP custom elements that have a native equivalent into it: `amp-img` and `amp-anim` become `<img>`, `amp-video` becomes `<video>`, `amp-audio` becomes `<audio>`, `amp-iframe` and `amp-video-iframe` become `<iframe>`. AMP elements render nothing without the AMP runtime; the converted elements flow to the image and embed transforms downstream.
+
+The set stops where the provider is known. An AMP element naming a platform (`amp-youtube`, `amp-twitter`, `amp-instagram`, `amp-jwplayer`, `amp-gist`) belongs to that platform's own resolver, which reads its attributes and mints the placeholder directly. `<amp-story>` is a full-page format, not in-content media, and is left alone.
 
 **Before**
 
@@ -150,8 +152,10 @@ Resolves the many ways feeds express media alignment — WordPress `aligncenter`
 **After**
 
 ```html
-<p><img src="photo.jpg" data-align="center"></p>
+<p style="text-align:center"><img src="photo.jpg" data-align="center"></p>
 ```
+
+The pass is purely additive: the class or style it read stays where it was, so native rendering keeps working until a renderer adopts `data-align`.
 
 ### wrapCargoGalleryImages
 
@@ -173,9 +177,25 @@ Project caption
 <figure><img src="https://freight.cargo.site/two.jpg"></figure>
 ```
 
+### fixSubstackImageLinks
+
+Remints the `<img>` inside a Substack lightbox anchor that reached the feed with its image child stripped, using the anchor's own href, which is the full-size image. Without it `stripEmptyTags` deletes the empty anchor and the picture with it.
+
+**Before**
+
+```html
+<a class="image-link" href="https://substackcdn.com/image/fetch/photo.jpg"></a>
+```
+
+**After**
+
+```html
+<a class="image-link" href="https://substackcdn.com/image/fetch/photo.jpg"><img src="https://substackcdn.com/image/fetch/photo.jpg"></a>
+```
+
 ### unwrapEmojiImages
 
-Replaces platform emoji and smilie images (WordPress, forum engines, editor plugins) with the real Unicode glyph when the image's filename or shortcode resolves to one. An emoji image that cannot be resolved is marked `data-emoji` instead, so a consumer can still size it like text. The [`emojiImageHosts`](/guides/customization/default-lists) option lists the hosts whose images are treated as emoji by URL.
+Replaces platform emoji and smilie images (WordPress, forum engines, editor plugins) with the real Unicode glyph when the image's filename or shortcode resolves to one. An emoji image that cannot be resolved is marked `data-emoji` instead, so a consumer can still size it like text. A [built-in host list](/guides/built-in) names the emoji image sets recognized by URL.
 
 **Before**
 
@@ -191,7 +211,7 @@ Replaces platform emoji and smilie images (WordPress, forum engines, editor plug
 
 ### removeTrackingPixels
 
-Removes tracking pixels and beacon images: images hidden by style or zero opacity, pixel-sized images without a content signal, and images whose URL matches the [`trackingHosts` or `trackingPathSegments`](/guides/customization/default-lists) lists. Raster formats at zero size and images with a `srcset` are treated as content and kept — trackers are script and GIF endpoints, not real photos.
+Removes tracking pixels and beacon images: images hidden by style or zero opacity, pixel-sized images without a content signal, and images whose URL matches the [built-in tracking host and path-segment lists](/guides/built-in). Raster formats at zero size and images with a `srcset` are treated as content and kept — trackers are script and GIF endpoints, not real photos.
 
 **Before**
 

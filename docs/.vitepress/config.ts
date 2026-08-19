@@ -93,16 +93,14 @@ export default defineConfig({
         items: [
           { text: 'Enclosures', link: '/guides/enclosures' },
           { text: 'Security', link: '/guides/security' },
+          { text: "What's Built In", link: '/guides/built-in' },
           {
             text: 'Customization',
             collapsed: false,
             items: [
               { text: 'DOM Parsing', link: '/guides/customization/dom-parsing' },
               { text: 'URL Handling', link: '/guides/customization/url-handling' },
-              { text: 'Widget Resolvers', link: '/guides/customization/widget-resolvers' },
-              { text: 'Cite Resolvers', link: '/guides/customization/cite-resolvers' },
               { text: 'Enrichment', link: '/guides/customization/enrichment' },
-              { text: 'Default Lists', link: '/guides/customization/default-lists' },
               { text: 'Code Highlighting', link: '/guides/customization/code-highlighting' },
               { text: 'Custom Transforms', link: '/guides/customization/custom-transforms' },
             ],

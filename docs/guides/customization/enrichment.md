@@ -4,64 +4,62 @@ title: "Customization: Enrichment"
 
 # Customize Enrichment
 
-Resolvers extract only what the markup carries. Enrichment fills in the rest — a thumbnail the card never named, a title only the platform's API knows — through two optional batch hooks that run after the placeholders exist. This is the one place in the pipeline where network calls belong; every resolver's `extract` stays pure.
+Resolvers extract only what the markup carries. Enrichment fills in the rest, a thumbnail the card never named or a title only the platform's API knows, through two optional batch hooks that run after the placeholders exist. This is the one place in the pipeline where network calls belong; every resolver's `extract` stays pure.
 
 ## enrichEmbedFn
 
-Called once with every embed placeholder that has both a provider and an id:
+Called once per document with every embed placeholder that has both a provider and an id:
 
 ```typescript
 type EnrichEmbedFn = (
   embeds: Array<{ provider: string; id: string }>,
-) => Map<string, Partial<EmbedResolverResult>> | Promise<Map<string, Partial<EmbedResolverResult>>>
+) => MaybePromise<Array<Partial<EmbedResolverResult> | undefined>>
 ```
 
-Return a `Map` keyed `provider:id`. Each entry's fields are written onto the matching placeholder:
+The answer is positional: one entry per embed sent, in the same order, the way `Promise.all` returns. An entry is whatever was found for that embed, or `undefined` for nothing, which leaves the placeholder as it was.
 
 ```typescript
 const output = await transformContent(html, {
   parseHtmlFn: parseHtml,
   enrichEmbedFn: async (embeds) => {
-    const enriched = new Map()
+    return Promise.all(
+      embeds.map(async ({ provider, id }) => {
+        const metadata = await fetchOEmbed(provider, id)
 
-    for (const { provider, id } of embeds) {
-      const metadata = await fetchOEmbed(provider, id)
-
-      if (metadata) {
-        enriched.set(`${provider}:${id}`, {
-          title: metadata.title,
-          thumbnail: metadata.thumbnail_url,
-        })
-      }
-    }
-
-    return enriched
+        return metadata && { title: metadata.title, thumbnail: metadata.thumbnail_url }
+      }),
+    )
   },
 })
 ```
 
-The single batched call lets you deduplicate lookups, hit a cache, or fan out requests however you like — feedsweep does not care how the `Map` gets filled.
+The single batched call is what lets an implementation deduplicate lookups, hit a cache, or fan out requests however it likes. Reassembling a batched response back into input order is the implementation's job, since only it knows how it batched.
+
+The id is enough to rebuild the platform's endpoint on its own, which is why TikTok's carries the handle beside the video id.
 
 ## enrichCiteFn
 
-The cite counterpart, keyed by the cited `url` alone:
+The cite counterpart, with the same positional contract:
 
 ```typescript
 type EnrichCiteFn = (
   cites: Array<{ provider: string; url: string }>,
-) => Map<string, Partial<CiteResolverResult>> | Promise<Map<string, Partial<CiteResolverResult>>>
+) => MaybePromise<Array<Partial<CiteResolverResult> | undefined>>
 ```
 
-The provider is not part of the key: it names the platform the card was scraped from, not the linked page, so two cards from different platforms pointing at one URL share a single entry. It stays in the payload because an implementation may still dispatch on it.
+Two placeholders citing one URL arrive as two entries and expect two answers. An implementation that fetches each URL once fills both slots from the one result.
 
-Dates returned by `enrichCiteFn` pass through [`parseDateFn`](/guides/customization/cite-resolvers#parsedatefn) like resolver-extracted ones.
+The provider names the platform the card was scraped from, not the linked page, so two cards from different platforms pointing at one URL are the same cite. It stays in the payload because an implementation still dispatches on it.
 
-## What Enrichment Cannot Do
+A date returned by either hook passes through [`parseDateFn`](/reference/transform-content#options), the same way a resolver-extracted one does.
 
-- **Overwrite.** Attributes already on a placeholder are never replaced — a resolver's own values always win. Enrichment only fills gaps.
-- **Add fields outside the schema.** The returned metadata is mapped through the same closed field set as resolver results, so passing a whole API payload through is safe: unknown keys are dropped, and no value can become an attribute name.
-- **Escape the safety passes.** Enrichment runs before `neutralizeUnsafeUrls` and `proxyAssetUrls`, so enriched URLs are still checked against the scheme floor and rewritten by your [asset proxy](/guides/customization/url-handling#assetproxyfn).
+## What Enrichment Can and Cannot Do
+
+- **It overwrites.** A field the hook returns replaces whatever the resolver read off the markup: the platform's own API answering about this exact embed beats a guess derived from a URL. Fields the hook leaves out keep the resolver's values.
+- **Size moves as a unit.** An enriched width and height clear any ratio the resolver stated, and an enriched ratio clears its dimensions, so a placeholder never states a box nobody measured. See [Embeds](/widgets/embeds#size-dimensions-or-ratio).
+- **It cannot add fields outside the schema.** The returned metadata is mapped through the same closed field set as resolver results, so passing a whole API payload through is safe: unknown keys are dropped, and no value can become an attribute name.
+- **It cannot escape the safety passes.** Enrichment runs before `neutralizeUnsafeUrls` and `proxyAssetUrls`, so enriched URLs are still checked against the scheme floor and rewritten by your [asset proxy](/guides/customization/url-handling#assetproxyfn).
 
 ## When to Skip It
 
-Both hooks default to unset, and the enrichment transforms no-op without them. Placeholders remain fully renderable from markup-extracted metadata alone — enrichment is for consumers that want richer previews and are willing to pay the round trips for them.
+Both hooks default to unset, and the enrichment transforms no-op without them. Placeholders remain fully renderable from markup-extracted metadata alone. Enrichment is for consumers that want richer previews and are willing to pay the round trips for them.

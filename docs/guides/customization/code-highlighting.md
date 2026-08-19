@@ -61,6 +61,6 @@ Each highlighted or language-labeled block carries:
 
 See [Data Attributes](/output/data-attributes#code-blocks-data-pre) for how these render downstream. Blocks declared as plain text (`plaintext`, `text`, `txt`) are deliberately left unannotated — a "Plain text" badge says nothing a code block does not already convey.
 
-## preservedPreClasses
+## Preserved Blocks
 
-Adjacent one-line `<pre>` blocks are merged into one block by `mergeConsecutiveOneLinerPres` — fragmented code is far more common in feeds than deliberate runs of one-line blocks. The `preservedPreClasses` option lists class tokens that mark a `<pre>` as author-chosen formatting (by default WordPress's Verse and Preformatted blocks) so poems and tables of contents never merge. Extend it via [`feedsweep/defaults`](/guides/customization/default-lists).
+Adjacent one-line `<pre>` blocks are merged into one block by `mergeConsecutiveOneLinerPres` — fragmented code is far more common in feeds than deliberate runs of one-line blocks. A built-in list of class tokens marks a `<pre>` as author-chosen formatting (by default WordPress's Verse and Preformatted blocks) so poems and tables of contents never merge. The token list is [built in](/guides/built-in).

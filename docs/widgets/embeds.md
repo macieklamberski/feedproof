@@ -12,20 +12,31 @@ Attributes are written in this order, and only when a value is present:
 
 | Field | Description |
 |-------|-------------|
-| `data-embed-src` | The player URL — the one field every embed placeholder carries |
+| `data-embed-src` | The player URL, the one field every embed placeholder carries |
 | `data-embed-provider` | Provider name (`youtube`, `vimeo`, …); absent on generic iframes |
 | `data-embed-id` | The provider's content id |
 | `data-embed-url` | The human-facing page for the content, where the provider has one |
 | `data-embed-thumbnail` | Poster image URL |
 | `data-embed-width` | Width in pixels |
 | `data-embed-height` | Height in pixels |
+| `data-embed-ratio` | The player's shape as CSS spells it (`16/9`), when nothing measured it |
 | `data-embed-title` | Content title |
 | `data-embed-description` | Content description |
 | `data-embed-author` | Author or channel name |
 | `data-embed-avatar` | Author avatar URL |
+| `data-embed-publisher` | The publication the content belongs to |
+| `data-embed-date` | The content's date, as the source states it |
 | `data-embed-duration` | Duration in seconds |
 
-The placeholder's only child is an `<a>` pointing at `data-embed-url` (falling back to `data-embed-src`), so a consumer that ignores the attributes still shows a working link.
+The placeholder is an empty `<div>`: a renderer builds the player, the facade, or the link from these attributes. See [Rendering](/output/rendering).
+
+## Size: Dimensions or Ratio
+
+A placeholder states how big it is in one of two ways, never both. Where something really measured the player, it carries `data-embed-width` and `data-embed-height` in pixels, or just one of them where that is all the platform states: a podcast player 200 pixels tall has no width worth naming. Where nothing measured it and only the shape is known, from a responsive wrapper or the platform's own aspect-ratio attribute, it carries `data-embed-ratio` instead.
+
+The ratio is written from the numbers the source stated, `16/9` or `800/600` or `1.7777777777777777/1`, and is ready to assign to `style.aspectRatio` as it stands. Nothing is reduced or rounded, so the value traces back to what the markup said.
+
+The size moves as a unit. A pass that writes any size clears the whole size slot first, so a width from one source can never end up beside a height from another, and dimensions beat a ratio when a single write brings both.
 
 ## Example
 
@@ -42,29 +53,81 @@ The placeholder's only child is an `<a>` pointing at `data-embed-url` (falling b
   data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
   data-embed-width="560"
   data-embed-height="315"
->
-  <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">https://www.youtube.com/watch?v=dQw4w9WgXcQ</a>
-</div>
+></div>
 ```
 
 The `src` is rebuilt from the extracted id, so tracking params are dropped while meaningful ones survive (a YouTube `start` offset, a Vimeo unlisted-video `h` token).
 
 ## Built-in Providers
 
-Each provider resolver knows how to read the platform's markup and what can be derived from the id alone — no network requests are ever made.
+Fifty-six platforms resolve out of the box. Each resolver reads the platform's own markup and derives what the id alone allows, a canonical page URL or a thumbnail. No network requests are ever made.
 
-| Provider | Matches | Extracts |
-|----------|---------|----------|
-| YouTube | `<iframe>` on `youtube.com`, `youtube-nocookie.com`, `youtu.be` | id, watch URL, thumbnail; playlist and channel-live embeds resolve to their playlist/channel URL |
-| Vimeo | `<iframe>` on `vimeo.com`, `player.vimeo.com` | id, watch URL; unlisted-video token kept |
-| Dailymotion | `<iframe>` on `dailymotion.com`, `dai.ly` | id, watch URL, thumbnail |
-| JW Player | `<iframe>` on `jwplayer.com`/`jwplatform.com`, and the script embed (`<script>` + empty div) | id, player URL, thumbnail |
-| Buzzsprout | Episode `<iframe>`, and the WordPress shortcode's `<script>` embed | podcast/episode id, player URL, episode URL |
-| Brightcove | `<video-js data-video-id>` custom element | id, player URL built from the element's account/player attributes |
-| Mediavine | `<div class="mv-video-target" data-video-id>` | id, player URL, dimensions from the aspect ratio |
-| SoundCloud | Player `<iframe>`, plus the share snippet's sibling links | id, title, author, and track URL where the snippet or iframe title carries them |
+Most platforms ship their embed in more than one shape, and each shape gets its own resolver: an ordinary `<iframe>`, a `<blockquote>` the platform's script upgrades, an AMP element, a `<script>` tag beside an empty div, a Flash `<object>` in an old post. The script, blockquote, and custom-element forms are the ones that matter most, because they render nothing at all without JavaScript.
 
-The script and custom-element forms matter because they render nothing at all without JavaScript — resolving them is the difference between the episode appearing and vanishing.
+### Video
+
+| Platform | Recognized as |
+|----------|---------------|
+| YouTube | Iframe, `amp-youtube`. Playlist and channel-live embeds resolve to their playlist or channel URL |
+| Vimeo | Iframe; the unlisted-video token is kept |
+| Dailymotion | Iframe on `dailymotion.com`, `dai.ly` |
+| VideoPress | Iframe, Flash object |
+| Wistia | Iframe (the JS-API facade is rebuilt into one first) |
+| Brightcove | Iframe, `<video-js>` element, Flash object |
+| JW Player | Iframe, script embed, `amp-jwplayer`, inline `setup()` call |
+| Mediavine | `<div class="mv-video-target">` |
+| TED | Iframe |
+| Odysee, BitChute, Niconico | Iframe; Niconico also ships a script embed |
+| Blogger | Video iframe |
+| Internet Archive | Iframe, Flash object |
+| Flickr | Photo and video iframe |
+
+### Audio and Podcasts
+
+| Platform | Recognized as |
+|----------|---------------|
+| SoundCloud | Player iframe, plus the share snippet's sibling links for title and author |
+| Spotify | Iframe (tracks, albums, shows, episodes) |
+| Apple Podcasts, Apple Music | Iframe; the provider name says which |
+| Bandcamp, Mixcloud | Iframe |
+| Buzzsprout | Episode iframe, WordPress shortcode script embed |
+| Acast, Anchor, Audioboom, Blubrry, Captivate, Fireside, iVoox, Libsyn, Megaphone, Omny, Podbean, Podigee, Simplecast, Transistor, stand.fm | Player iframe |
+| Spreaker | Iframe, player anchor |
+
+### Social Posts
+
+| Platform | Recognized as |
+|----------|---------------|
+| Twitter / X | Blockquote, iframe, `amp-twitter`, Substack's own tweet markup |
+| Bluesky | Blockquote, iframe, `<bluesky-post>` element, s9e MediaEmbed wrapper |
+| Instagram | Blockquote, iframe, `amp-instagram`, Substack's own markup |
+| Facebook | Widget div, iframe, blockquote, XFBML, `amp-facebook` |
+| TikTok | Blockquote, iframe |
+| Reddit | Widget blockquote, iframe |
+| Mastodon | Iframe |
+| Telegram | Script embed, iframe |
+| Imgur | Blockquote, iframe |
+| note.com | Iframe |
+
+A social post is always an embed, never a [cite](/widgets/cites): the post is the content, not a preview of somewhere else.
+
+### Documents and Slides
+
+| Platform | Recognized as |
+|----------|---------------|
+| Scribd | Iframe, Flash object; the honest ratio comes from `data-aspect-ratio` rather than the stock `height="500"` |
+| SlideShare | Iframe, Flash object |
+| Speaker Deck | Script embed, iframe |
+| Issuu | Widget div, iframe |
+
+### Interactive
+
+| Platform | Recognized as |
+|----------|---------------|
+| CodePen | Widget div, iframe |
+| Typeform | Widget div, iframe |
+| Flourish | Widget div, iframe |
+| Genially, Sketchfab | Iframe |
 
 ## Media Resolvers
 
@@ -77,6 +140,7 @@ Some platform markup hides a directly playable file rather than a hosted viewer.
 | Weebly | Video wrappers with an `about:blank` iframe | `<video>` with poster, rebuilt from the wrapper's own attributes |
 | Ghost | Video and audio cards | Fresh `<video>`/`<audio>` with `controls` and the card's thumbnail as poster |
 | Discourse | Video placeholder divs | `<video>` with the upload URL and thumbnail poster |
+| Podlove | Web Player mounts whose sibling script inlines the episode config | `<audio>` with the episode file and the show's poster |
 
 ## Unclaimed Embeds
 
@@ -84,9 +148,9 @@ Anything no resolver claims still resolves, through generic tiers:
 
 - An `<iframe>` with a resolvable `src` becomes a provider-less placeholder (just `src` and dimensions).
 - An `<iframe>`, `<object>`, or `<embed>` whose URL names a media file becomes a native player instead of a frame.
-- A container element parking a media-file URL in a data attribute (see [`mediaSrcAttributes`](/guides/customization/default-lists)) gets a native player prepended, keeping the container's caption text.
+- A container element parking a media-file URL in a data attribute (see [What's Built In](/guides/built-in)) gets a native player prepended, keeping the container's caption text.
 
 > [!NOTE]
 > Streaming manifests (`.m3u8`, `.mpd`) are deliberately not promoted to native players — they play natively only in Safari, so promoting one produces a broken player everywhere else. They stay as embed placeholders.
 
-To add your own provider, see [Widget Resolvers](/guides/customization/widget-resolvers). To fill fields the markup does not carry (a Vimeo poster, a playlist title), see [Enrichment](/guides/customization/enrichment).
+A provider that is missing belongs in the library: [open an issue or a pull request](https://github.com/macieklamberski/feedsweep/issues). To fill fields the markup does not carry, a Vimeo poster or a playlist title, see [Enrichment](/guides/customization/enrichment).

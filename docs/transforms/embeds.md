@@ -6,6 +6,22 @@ title: "Transforms: Embed Recovery"
 
 A reader runs no JavaScript, and most embed plugins depend on it: they ship a facade — a thumbnail, an empty div, a custom element — and build the real player at runtime. These transforms rebuild the standard element the facade hides, early enough that the [widget pass](/widgets) treats it like any ordinary embed.
 
+### surfaceParkedMarkup
+
+Dissolves a lazy-loader container (`div.load-later[data-content]`) into the markup it holds percent-encoded. The plugin replaces every third-party embed with an empty div and rebuilds it on scroll, so a reader shows nothing and `stripEmptyTags` deletes the div along with the embed. The decoded payload is the publisher's original element, whatever platform it belongs to: a YouTube iframe with its player parameters, a tweet blockquote with its text and author, a TikTok quote with its caption. It runs at the head of the pipeline, so every pass below sees ordinary markup.
+
+**Before**
+
+```html
+<div class="load-later" data-content="%3Ciframe%20src%3D%22https%3A%2F%2Fwww.youtube.com%2Fembed%2FdQw4w9WgXcQ%22%3E%3C%2Fiframe%3E"></div>
+```
+
+**After**
+
+```html
+<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+```
+
 ### surfaceTemplateEmbeds
 
 Hoists embed markup trapped inside a `<template>` into the document. Lazy-load video plugins park the real iframe (or a complete `<video>`, as Shopify's deferred media does) in a template and show only a thumbnail. Templates holding no embed are JS scaffolding and are left alone.
@@ -24,7 +40,7 @@ Hoists embed markup trapped inside a `<template>` into the document. Lazy-load v
 
 ### surfaceNoscriptEmbeds
 
-Hoists a video iframe out of its `<noscript>` fallback. Lazy-load plugins wrap the original iframe in `<noscript>`, which readers hide and sanitizers strip. Only iframes claimed by a [widget resolver](/guides/customization/widget-resolvers) are surfaced — `<noscript><iframe>` is also how tag managers and ad networks ship fallbacks, and those must stay buried.
+Hoists a video iframe out of its `<noscript>` fallback. Lazy-load plugins wrap the original iframe in `<noscript>`, which readers hide and sanitizers strip. Only iframes claimed by a [widget resolver](/widgets/embeds) are surfaced — `<noscript><iframe>` is also how tag managers and ad networks ship fallbacks, and those must stay buried.
 
 **Before**
 
@@ -100,6 +116,22 @@ Rebuilds the iframe from a WP Rocket YouTube preview div, which holds the embed 
 
 ```html
 <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+```
+
+### rebuildVideoJsEmbeds
+
+Rebuilds a native `<video>` from a `<video-js>` custom element, which renders nothing until the Video.js script upgrades it. The file comes from a `<source>` child or from the `sources` array of the element's `data-setup` JSON, and the poster carries over. Only a file the browser can play itself qualifies: a stream manifest needs the player's JavaScript to stitch its segments. An element naming no file at all, a Brightcove player identified by account and video id for instance, is left to that platform's own resolver in the [widget pass](/widgets).
+
+**Before**
+
+```html
+<video-js data-setup='{"sources":[{"src":"https://example.com/clip.mp4"}]}' poster="https://example.com/still.jpg"></video-js>
+```
+
+**After**
+
+```html
+<video src="https://example.com/clip.mp4" controls poster="https://example.com/still.jpg"></video>
 ```
 
 ### rebuildWistiaEmbeds
@@ -184,7 +216,7 @@ Unwraps an Embedly media widget to the third-party iframe it wraps. The real emb
 
 ### rebuildDeferredIframes
 
-Materializes an iframe whose URL is parked in a `<div>` attribute by an embed convention that builds the iframe at runtime — Pym.js (`data-pym-src`) and @newswire/frames (`data-frame-src`) by default. The [`deferredIframeSources`](/guides/customization/default-lists) option configures the selector-attribute pairs.
+Materializes an iframe whose URL is parked in a `<div>` attribute by an embed convention that builds the iframe at runtime: Pym.js (`data-pym-src`), @newswire/frames (`data-frame-src`), and the Drupal/CKEditor oEmbed convention (`data-oembed-url`). The oEmbed wrapper parks a watch page rather than a player URL, which is fine here, because the widget pass asks the resolvers what the URL means and they mint the player from it.
 
 **Before**
 
@@ -200,7 +232,7 @@ Materializes an iframe whose URL is parked in a `<div>` attribute by an embed co
 
 ### fixLazyIframes
 
-Promotes a lazy or consent-gated iframe URL from a `data-*` attribute into `src`, when the existing `src` is empty, `about:blank`, or a known placeholder page. This is also how consent-gated embeds are recovered: GDPR consent plugins rewrite the author's iframe to park its URL in an attribute like `consent-original-src-_` or `data-src-cmplz` until the visitor accepts cookies. A feed body carries no consent flow — the gated iframe is the author's chosen embed, so it is restored, while the plugin's "please accept cookies" notice is [stripped as chrome](/transforms/cleanup). The attribute list is the [`lazyIframeAttributes`](/guides/customization/default-lists) option.
+Promotes a lazy or consent-gated iframe URL from a `data-*` attribute into `src`, when the existing `src` is empty, `about:blank`, or a known placeholder page. This is also how consent-gated embeds are recovered: GDPR consent plugins rewrite the author's iframe to park its URL in an attribute like `consent-original-src-_` or `data-src-cmplz` until the visitor accepts cookies. A feed body carries no consent flow — the gated iframe is the author's chosen embed, so it is restored, while the plugin's "please accept cookies" notice is [stripped as chrome](/transforms/cleanup). The attributes it reads cover the lazy loaders and the consent plugins alike, and are [built in](/guides/built-in).
 
 **Before**
 
@@ -244,6 +276,22 @@ Converts Datawrapper chart embeds — iframe, script, and link forms — into a 
 
 ```html
 <a href="https://datawrapper.dwcdn.net/abc12/"><img src="https://datawrapper.dwcdn.net/abc12/full.png" alt="Chart title"></a>
+```
+
+### convertGiphyEmbeds
+
+Converts a Giphy iframe into the gif itself, linked to its Giphy page. Every Giphy gif is a plain file derivable from the id, and a gif animates in an `<img>` with no script at all, so the frame costs a third-party request and hides the image from the dimension, proxy, and enclosure passes that treat every other image in the document.
+
+**Before**
+
+```html
+<iframe src="https://giphy.com/embed/l0HlQoLBhTNMxHkaA"></iframe>
+```
+
+**After**
+
+```html
+<a href="https://giphy.com/gifs/l0HlQoLBhTNMxHkaA"><img src="https://media.giphy.com/media/l0HlQoLBhTNMxHkaA/giphy.gif"></a>
 ```
 
 ### convertNoteEmbeds

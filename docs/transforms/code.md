@@ -97,7 +97,7 @@ Merges a run of consecutive single-line `<pre>` siblings into one block joined b
 const b = 2</code></pre>
 ```
 
-A run is skipped when any of its blocks carries a class listed in the `preservedPreClasses` option (default: `wp-block-verse`, `wp-block-preformatted`). Those mark author-distinct content — poetry stanzas, scriptural verses — that is meant to stay as separate blocks even when single-line.
+A run is skipped when any of its blocks carries one of the preserved class tokens, `wp-block-verse` and `wp-block-preformatted` today. Those mark author-distinct content — poetry stanzas, scriptural verses — that is meant to stay as separate blocks even when single-line.
 
 ### trimPreWhitespace
 
