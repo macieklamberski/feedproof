@@ -135,9 +135,8 @@ describeForEachParser('Facebook', (parseHtml) => {
         data-href="https://www.facebook.com/PageName/posts/123"
       ></amp-facebook>
     `
-    const expected = value
 
-    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(value)
   })
 
   // A lazy loader parks the plugin url in its own attribute and points the frame at a blank
