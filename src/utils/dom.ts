@@ -151,10 +151,10 @@ export const flashVars = (element: Nullish<Element>): string | undefined => {
   return attr(named, 'value')
 }
 
-// The first url in an element's inline `background-image`, for cards that paint their
-// thumbnail with CSS instead of an `<img>`.
 const bgImageUrlRegex = /url\(['"]?([^'")]+)/
 
+// The first url in an element's inline `background-image`, for cards that paint their
+// thumbnail with CSS instead of an `<img>`.
 export const bgImage = (element: Nullish<Element>): string | undefined => {
   return attr(element, 'style')?.match(bgImageUrlRegex)?.[1]
 }

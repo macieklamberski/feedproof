@@ -2,13 +2,13 @@ import { attr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
+const podigeeHosts = ['podigee.io', 'podigee.com', 'podigee-cdn.net']
+
 // Podigee ships a generic loader script whose `data-configuration` is the player url itself,
 // so the embed is recoverable without executing anything. 86 of 100 corpus feeds carry it in
 // that form. The other 14 point the attribute at an inline config object (`data-configuration
 // ="podigee"` or `="playerConfiguration"`), where the data lives in a script body this
 // resolver deliberately does not read: those keep the generic treatment.
-const podigeeHosts = ['podigee.io', 'podigee.com', 'podigee-cdn.net']
-
 export const podigeeEmbedResolver = createMarkupEmbedResolver(
   'script.podigee-podcast-player[data-configuration]',
   (element) => {

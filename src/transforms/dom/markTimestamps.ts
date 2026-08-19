@@ -3,12 +3,13 @@ import { collectTextNodes } from '../../utils/dom.js'
 
 const timestampIgnoreTags = new Set(['a', 'pre', 'code', 'kbd', 'samp', 'var', 'script', 'style'])
 
-// Matches a timestamp anchored to a line boundary: either starting the line
-// (optionally after leading whitespace) or ending it (optionally before
-// trailing whitespace): MM:SS or HH:MM:SS, with the seconds always two digits.
-// Anchoring to a boundary avoids turning incidental "12:30" mentions in the
-// middle of prose into markers.
+// MM:SS or HH:MM:SS, with the seconds always two digits.
 const timestampToken = '(?:\\d{1,2}:)?\\d{1,2}:\\d{2}'
+
+// Matches the token anchored to a line boundary: either starting the line (optionally after
+// leading whitespace) or ending it (optionally before trailing whitespace). Anchoring to a
+// boundary avoids turning incidental "12:30" mentions in the middle of prose into markers.
+//
 // The token is captured in one of two groups: at a line start (optional whitespace
 // prefix consumed ahead of it) or before a line end (trailing whitespace in a zero-width
 // lookahead). The prefix is consumed, not matched in a variable-length lookbehind, so a

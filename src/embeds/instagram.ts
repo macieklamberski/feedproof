@@ -205,11 +205,6 @@ export const instagramAmpEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
-// Substack renders an Instagram post server-side and ships the wrapper div childless, with the
-// whole card as JSON in `data-attrs`: the shortcode, the post's page title, the author and a
-// thumbnail Substack rehosted to its own storage. Left alone the div is dropped as empty markup
-// and the post goes with it. Some feeds strip the class and keep the component name, so both
-// halves of the selector name the same div.
 type SubstackPostAttributes = {
   instagram_id?: string
   title?: string | null
@@ -242,6 +237,11 @@ const composeHandle = (handle: string | null | undefined): string | undefined =>
   return handle.startsWith('@') ? handle : `@${handle}`
 }
 
+// Substack renders an Instagram post server-side and ships the wrapper div childless, with the
+// whole card as JSON in `data-attrs`: the shortcode, the post's page title, the author and a
+// thumbnail Substack rehosted to its own storage. Left alone the div is dropped as empty markup
+// and the post goes with it. Some feeds strip the class and keep the component name, so both
+// halves of the selector name the same div.
 export const instagramSubstackEmbedResolver = createMarkupEmbedResolver(
   'div.instagram-embed-wrap[data-attrs], div[data-component-name="InstagramToDOM"]',
   (element): EmbedResolverResult | undefined => {

@@ -6,15 +6,16 @@ import { pickQueryParams } from '../../utils/urls.js'
 // crafted value can't inject extra query params.
 const startSecondsPattern = /^\d+$/
 
-// lite-youtube / lite-vimeo (and their forks) are JS web components that hold the video
-// id in a `videoid` attribute and build the real iframe on click. A reader runs no JS,
-// so the video never appears. Each entry maps the custom tag to the embed URL built
-// from the id, applying the `start` offset the way that platform's player expects.
 type EmbedSource = {
   params: ReadonlyArray<string>
   compose: (id: string, params: Record<string, string>) => string
 }
 
+// lite-youtube / lite-vimeo (and their forks) are JS web components that hold the video
+// id in a `videoid` attribute and build the real iframe on click. A reader runs no JS,
+// so the video never appears. Each entry maps the custom tag to the embed URL built
+// from the id, applying the `start` offset the way that platform's player expects.
+//
 // Each entry states the parameters its own player understands, so a facade's `params` is
 // filtered against that platform, not against whichever one happens to be first. Vimeo's
 // player takes the offset as a `#t=` fragment and reads nothing else, so a name YouTube allows
