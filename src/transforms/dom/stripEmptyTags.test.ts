@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripEmptyTags } from './stripEmptyTags.js'
 
 describeForEachParser('stripEmptyTags', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripEmptyTags(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripEmptyTags(context)])
   }
 
   it('should strip empty div', async () => {

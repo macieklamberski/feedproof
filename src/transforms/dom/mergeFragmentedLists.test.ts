@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { mergeFragmentedLists } from './mergeFragmentedLists.js'
 
 describeForEachParser('mergeFragmentedLists', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [mergeFragmentedLists(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [mergeFragmentedLists(context)])
   }
 
   it('should merge two consecutive ul siblings into one', async () => {

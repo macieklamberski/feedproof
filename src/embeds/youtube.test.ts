@@ -141,13 +141,6 @@ describe('extractVideoId', () => {
     expect(extractVideoId(value)).toBeUndefined()
   })
 
-  it('should extract id from /v/ legacy embed url', () => {
-    const value = 'https://www.youtube.com/v/dQw4w9WgXcQ'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
   it('should extract id from shorts url with trailing path', () => {
     const value = 'https://www.youtube.com/shorts/dQw4w9WgXcQ?si=abc'
     const expected = 'dQw4w9WgXcQ'

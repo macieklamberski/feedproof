@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripDuplicateLeadingImages } from './stripDuplicateLeadingImages.js'
 
 describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripDuplicateLeadingImages(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripDuplicateLeadingImages(context)])
   }
 
   describe('removal', () => {

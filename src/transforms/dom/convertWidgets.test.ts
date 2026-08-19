@@ -296,7 +296,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     expect(await transform(value, customContext)).toEqualHtml(expected)
   })
 
-  it('should wrap unknown iframe as generic placeholder without provider', async () => {
+  it('should wrap an unknown iframe as an empty generic placeholder with no provider', async () => {
     const value = '<iframe src="https://unknown-site.com/123"></iframe>'
     const expected = html`
       <div data-embed-src="https://unknown-site.com/123"></div>
@@ -337,13 +337,6 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     `
 
     expect(await transform(value)).toBe(expected)
-  })
-
-  it('should leave the placeholder empty when wrapping unknown iframe', async () => {
-    const value = '<iframe src="https://unknown-site.com/123"></iframe>'
-    const expected = '<div data-embed-src="https://unknown-site.com/123"></div>'
-
-    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should skip iframe without src attribute', async () => {

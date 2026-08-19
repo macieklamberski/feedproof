@@ -4,8 +4,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { surfaceParkedMarkup } from './surfaceParkedMarkup.js'
 
 describeForEachParser('surfaceParkedMarkup', (parseHtml) => {
-  const transform = (html: string) => {
-    return applyDomTransforms(parseHtml(html), [surfaceParkedMarkup(baseContext)])
+  const transform = (value: string) => {
+    return applyDomTransforms(parseHtml(value), [surfaceParkedMarkup(baseContext)])
   }
 
   // Each payload below is the publisher's own bytes: the markup is percent-encoded and its

@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripComments } from './stripComments.js'
 
 describeForEachParser('stripComments', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripComments(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripComments(context)])
   }
 
   describe('happy paths', () => {

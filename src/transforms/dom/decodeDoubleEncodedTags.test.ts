@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { decodeDoubleEncodedTags } from './decodeDoubleEncodedTags.js'
 
 describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [decodeDoubleEncodedTags(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [decodeDoubleEncodedTags(context)])
   }
 
   describe('decodes whole escaped fragments', () => {

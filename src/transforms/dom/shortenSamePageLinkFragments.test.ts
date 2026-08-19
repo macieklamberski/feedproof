@@ -4,11 +4,11 @@ import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { shortenSamePageLinkFragments } from './shortenSamePageLinkFragments.js'
 
-const context: TransformContext = { ...baseContext, baseUrl: 'https://example.com/blog/post' }
+const pageContext: TransformContext = { ...baseContext, baseUrl: 'https://example.com/blog/post' }
 
 describeForEachParser('shortenSamePageLinkFragments', (parseHtml) => {
-  const transform = (html: string, ctx: TransformContext = context) => {
-    return applyDomTransforms(parseHtml(html), [shortenSamePageLinkFragments(ctx)])
+  const transform = (value: string, context: TransformContext = pageContext) => {
+    return applyDomTransforms(parseHtml(value), [shortenSamePageLinkFragments(context)])
   }
 
   describe('shortens', () => {
@@ -71,7 +71,7 @@ describeForEachParser('shortenSamePageLinkFragments', (parseHtml) => {
 
   describe('with sameSiteUrls', () => {
     const siteContext: TransformContext = {
-      ...context,
+      ...pageContext,
       sameSiteUrls: ['https://example.com/longform'],
     }
 

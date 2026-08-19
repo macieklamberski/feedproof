@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripDuplicateTitleHeading } from './stripDuplicateTitleHeading.js'
 
 describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
-  const transform = (html: string, context: TransformContext) => {
-    return applyDomTransforms(parseHtml(html), [stripDuplicateTitleHeading(context)])
+  const transform = (value: string, context: TransformContext) => {
+    return applyDomTransforms(parseHtml(value), [stripDuplicateTitleHeading(context)])
   }
 
   describe('happy paths', () => {
