@@ -123,7 +123,7 @@ describeForEachParser('stripDeadAnchors', (parseHtml) => {
   })
 
   it('should preserve anchor with id even when href is dead', async () => {
-    // The anchor is a fragment target referenced elsewhere — unwrapping it
+    // The anchor is a fragment target referenced elsewhere: unwrapping it
     // would break all in-page navigation pointing at #section1.
     const value = html`
       <a id="section1" href="#"></a>

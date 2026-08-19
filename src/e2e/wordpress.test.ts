@@ -9,7 +9,7 @@ describeForEachParser('WordPress', (parseHtml) => {
   // lazy-loader attribute stashes (defaultLazyIframeAttributes, defaultLazySrcAttributes).
   // The plugin facades are rebuilt by rebuildLyteEmbeds, rebuildRocketYoutubePreviews,
   // rebuildLazyLoadForVideos, rebuildEmbedPlusEmbeds and rebuildElementorVideoEmbeds.
-  // An oEmbed block whose provider call failed ships the bare url alone; linkifyUrls makes it a
+  // An oEmbed block whose provider call failed ships the bare url alone. LinkifyUrls makes it a
   // link and unwrapWrappers drops the figure shell around it.
   // wp-embedded-content post embeds are in open PR #361; add that clause when it merges.
 
@@ -33,7 +33,7 @@ describeForEachParser('WordPress', (parseHtml) => {
   describe('Avada privacy embed without a dedicated transform', () => {
     // Avada gates a video behind a consent notice: a hidden <iframe> parks the real URL in
     // data-privacy-src, and a sibling .fusion-privacy-placeholder shows "please accept". No
-    // single transform owns this — fixLazyIframes recovers the iframe (then the youtube
+    // single transform owns this. fixLazyIframes recovers the iframe (then the youtube
     // resolver placeholders it) while stripNonContentElements removes the notice.
     it('should recover the gated video and strip the "please accept" notice', async () => {
       const value = html`

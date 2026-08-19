@@ -64,7 +64,7 @@ const readNoteUrl = (link: string): NoteUrl | undefined => {
 
 // Two carriers, one resolver. The player is what the figure's script builds at runtime and what
 // a CMS that ran the script first saves into a feed: 255 corpus feeds carry it and every one of
-// them reached a provider-less generic placeholder before this resolver existed. The post url is
+// them would otherwise reach a provider-less generic placeholder. The post url is
 // what note.com's own embed figure names, and `convertNoteEmbeds` frames it so this claims it
 // there too, which is why the figure needs no resolver of its own.
 export const notecomIframeEmbedResolver = createUrlEmbedResolver(notecomHosts, (url) => {

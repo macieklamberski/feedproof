@@ -63,7 +63,7 @@ describeForEachParser('replacePreLineBreaks', (parseHtml) => {
   it('should not stack extra entity encoding inside xmp', async () => {
     // linkedom's parser/serializer already double-encodes entities inside
     // `<xmp>` once (a known parser quirk). The transform must not add a
-    // second round-trip on top of that — the output should be byte-identical
+    // second round-trip on top of that. The output should be byte-identical
     // to running an identity DOM transform on the same input.
     const value = '<pre><code><xmp>&lt;p&gt;Hi&lt;/p&gt;</xmp></code></pre>'
     const result = await transform(value)

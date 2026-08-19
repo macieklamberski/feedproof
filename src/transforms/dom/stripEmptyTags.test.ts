@@ -210,7 +210,7 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
   })
 
   it('should preserve div with anchor child regardless of data-* attributes', async () => {
-    // The anchor child makes the div non-empty; data-embed attributes are not
+    // The anchor child makes the div non-empty. Data-embed attributes are not
     // special-cased here, they just survive because their host element does.
     const value = html`
       <div data-embed-src="https://example.com/embed">
@@ -238,7 +238,7 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
   })
 
   it('should not strip tag-shaped strings inside <script>', async () => {
-    // <script> is a raw-text element — its body is one text node, not parsed
+    // <script> is a raw-text element: its body is one text node, not parsed
     // elements. The empty-tag walk skips it naturally without explicit guards.
     const value = html`
       <p>before</p>
@@ -296,8 +296,7 @@ describeForEachParser('stripEmptyTags', (parseHtml) => {
 
   it('should reparse <br></br> as two <br> elements (HTML5 spec)', async () => {
     // Per HTML5 the `</br>` end tag is reparsed as a `<br>` start tag, so the
-    // pair becomes two `<br>` elements. Either way the line break survives —
-    // the old regex destroyed the pair entirely.
+    // pair becomes two `<br>` elements and the line break survives.
     const value = 'line 1<br></br>line 2'
     const expected = 'line 1<br><br>line 2'
 

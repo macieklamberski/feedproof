@@ -47,7 +47,7 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
 
     it('should see through a leading C0 control byte that \\s does not match', async () => {
       // A leading \x01 survives HTML parsing and a browser strips it before reading the
-      // scheme, so `\x01javascript:` runs — but \s never matched it.
+      // scheme, so `\x01javascript:` runs, but \s never matched it.
       const value = '<a href="\x01javascript:alert(1)">x</a>'
       const expected = '<a href="#unsafe-link">x</a>'
 

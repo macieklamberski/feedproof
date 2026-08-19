@@ -29,7 +29,7 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
         src: 'https://form.typeform.com/to/01HCZ4DNW8JM6PEGNTQWF2PW87',
         url: 'https://form.typeform.com/to/01HCZ4DNW8JM6PEGNTQWF2PW87',
         title: 'User Satisfaction Survey',
-        // The snippet's inline style states the height; its width is a percentage, not pixels.
+        // The snippet's inline style states the height. Its width is a percentage, not pixels.
         height: 500,
       }
 

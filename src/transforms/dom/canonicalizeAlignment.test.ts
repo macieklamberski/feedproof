@@ -245,8 +245,8 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
     })
 
     it('should survive unwrapWrappers dissolving the div', async () => {
-      // The aligncenter class lives on the div, which unwrapWrappers dissolves; only the
-      // relocated data-align hook survives on the image — which is the point of the ordering.
+      // The aligncenter class lives on the div, which unwrapWrappers dissolves. Only the
+      // relocated data-align hook survives on the image, which is the point of the ordering.
       const value = '<div class="aligncenter"><img src="a.jpg"></div>'
       const expected = '<img src="a.jpg" data-align="center">'
       const context = baseContext

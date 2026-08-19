@@ -109,7 +109,7 @@ describeForEachParser('transformContent', (parseHtml) => {
   it('should decode a multi-line double-escaped description in full', async () => {
     // A double-escaping feed generator ships whole HTML as entity text spread across
     // lines. paragraphizePlainText must pass it through so decodeDoubleEncodedTags gets
-    // the whole fragment as one text node; otherwise only the lines holding a complete
+    // the whole fragment as one text node. Otherwise only the lines holding a complete
     // tag pair decode and the rest stays visible as escaped text.
     const value = [
       '&lt;p&gt;A &lt;a href=&#34;https://example.com/about&#34;&gt;now page&lt;/a&gt;',
@@ -482,7 +482,7 @@ describeForEachParser('transformContent', (parseHtml) => {
         </picture>
       </p>
     `
-    // The superseded data-src is left in place (fixLazyImages no longer strips it).
+    // The superseded data-src is left in place.
     const expected = html`
       <p>
         <img
@@ -639,7 +639,7 @@ describeForEachParser('transformContent', (parseHtml) => {
       <p>More text</p>
     `
     // The rules bracket the widget in the feed, so removing it as non-content is what
-    // puts them side by side — unwrapWrappers dissolves their <div>s first.
+    // puts them side by side. unwrapWrappers dissolves their <div>s first.
     const expected = html`
       <p>Article text</p>
       <hr>

@@ -8,7 +8,7 @@ import {
 } from './substack.js'
 
 // Substack ships these cards as empty divs whose data lives in a `data-attrs` JSON blob,
-// stored in a double-quoted attribute with the inner quotes HTML-encoded — that is what
+// stored in a double-quoted attribute with the inner quotes HTML-encoded, which is what
 // survives a parse/serialise roundtrip. Tests pass the attrs object with Substack's own
 // key names so the wire keys stay visible at the call site.
 const makeContainer = (className: string, attrs?: Record<string, unknown> | string): string => {

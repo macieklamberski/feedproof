@@ -18,7 +18,7 @@ const showPlayerRegex = /player_es_podcast_(\d+)(?:_\d+)?_\d+\.html/
 
 const ivooxHosts = ['ivoox.com']
 
-// 200 in 26 of 34 sampled corpus iframes on the current player; the rest are 120, which looks
+// 200 in 26 of 34 sampled corpus iframes on the current player. The rest are 120, which looks
 // like a compact skin. A size in the markup wins over this, so it only applies where the
 // publisher stated none.
 const playerHeight = 200
@@ -53,7 +53,7 @@ export const extractIvooxSubject = (link: string): IvooxSubject | undefined => {
   return legacy?.[1] ? { kind: 'episode', id: legacy[1], skin: '1', player: 'ej' } : undefined
 }
 
-// The legacy player is gone: `playerivoox_ee_8292430_1.html` answers **404** with iVoox's own
+// The legacy player is gone: `playerivoox_ee_8292430_1.html` answers 404 with iVoox's own
 // "page does not exist" body (checked 2026-08-11 across two ids), so rewriting is a repair and
 // those embeds render nothing today. The current form is not verifiable the same way, since
 // `player_ej_` answers 200 to any id at all: it is a javascript shell that resolves the id on

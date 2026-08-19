@@ -13,11 +13,11 @@ const nicovideoHosts = ['nicovideo.jp']
 //
 // `ext.nicovideo.jp/thumb_watch/{id}` is a script that writes the player where it stands. It
 // never runs in a reader, so the video is lost: 566 corpus feeds carry it and 498 have no
-// nicovideo iframe anywhere. Nicovideo answers it with a **302 to
-// `embed.nicovideo.jp/watch/{id}/script`**, so the platform itself names the modern target and
+// nicovideo iframe anywhere. Nicovideo answers it with a 302 to
+// `embed.nicovideo.jp/watch/{id}/script`, so the platform itself names the modern target and
 // the id carries across unchanged (checked 2026-08-12).
 //
-// `ext.nicovideo.jp/thumb/{id}` is the old iframe card, in 345 feeds, and it now answers **403**
+// `ext.nicovideo.jp/thumb/{id}` is the old iframe card, in 345 feeds, and it now answers 403
 // to any user agent. Those embeds render nothing today, so rewriting them to the modern player
 // repairs them rather than merely relabelling.
 //

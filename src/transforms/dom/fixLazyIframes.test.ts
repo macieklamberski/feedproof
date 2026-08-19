@@ -32,7 +32,7 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
-  // Real Cookie Banner parks the plain URL and an autoplay=1 variant on the same iframe; the
+  // Real Cookie Banner parks the plain URL and an autoplay=1 variant on the same iframe. The
   // list order makes the plain one win even when the click variant comes first in the markup.
   it('should prefer the non-autoplay URL when both consent attributes are parked', async () => {
     const value = html`

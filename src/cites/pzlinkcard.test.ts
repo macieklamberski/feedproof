@@ -251,7 +251,7 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
     })
 
     // The nested anchor this fixes only misbehaves once the output is reparsed, which is
-    // what a second run does — so this is the case that pins the bug staying fixed.
+    // what a second run does. This is the case that pins the wrapping-anchor match.
     it('should be idempotent', async () => {
       const value = html`
         <a href="https://example.com/page">

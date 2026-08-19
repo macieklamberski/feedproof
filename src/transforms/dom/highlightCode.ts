@@ -333,7 +333,7 @@ const stripCodeGutters = (document: Document): void => {
 }
 
 // Tags whose presence means this transform has work to do. Gutter spans are only stripped
-// inside these, so a gutter class alone (outside any code block) is no longer a signal.
+// inside these, so a gutter class outside any code block is not a signal.
 const highlightSignalTags = new Set(['pre', 'code', 'table'])
 
 export const highlightCode: DomTransform = ({ highlightFn }) => {

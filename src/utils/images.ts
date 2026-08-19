@@ -288,7 +288,7 @@ export const getUrlDimensions = (
     return
   }
 
-  // Explicit w/h query params win; otherwise the last WxH pair in the path or
+  // Explicit w/h query params win. Otherwise the last WxH pair in the path or
   // filename (the rendition size sits after any path digits).
   let width = Number(urlQueryWidthRegex.exec(src)?.[1])
   let height = Number(urlQueryHeightRegex.exec(src)?.[1])

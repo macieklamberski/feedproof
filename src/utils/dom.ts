@@ -356,9 +356,9 @@ export const styleLength = (element: Nullish<Element>, property: string): string
 // as numbers there. Routing that through this would make every tracking pixel undetectable.
 const pixelSizeRegex = /^(\d{1,5})(?:px)?$/
 
-// The range is stated as numbers rather than a digit count, which the resolvers had been using
-// as a proxy for it. A count is a leaky one: `\d{2,4}` accepts `007` and `0000`, so the very
-// values the bound exists to reject came through as 7 and 0.
+// The range is a pair of numbers, not a digit count. A count is a leaky proxy for one:
+// `\d{2,4}` accepts `007` and `0000`, so the very values the bound exists to reject come
+// through as 7 and 0.
 const minimumPixelSize = 10
 const maximumPixelSize = 9999
 

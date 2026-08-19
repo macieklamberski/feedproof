@@ -56,7 +56,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
 
   it('should move inter-fragment whitespace inside the merged list as a separator', async () => {
     // Whitespace between fragments gets moved INTO the merged list between
-    // absorbed items so it keeps acting as a textContent boundary — without
+    // absorbed items so it keeps acting as a textContent boundary. Without
     // it the last `<li>` of one fragment fuses with the first `<li>` of the
     // next on textContent extraction.
     const value = '<ul><li>a</li></ul> \n <ul><li>b</li></ul>'

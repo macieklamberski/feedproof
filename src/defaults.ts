@@ -253,13 +253,13 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // Runs before convertCiteCards so a payload naming `link` still reaches the cite pass, and
   // before stripEmptyTags, which is what deletes an empty carrier nothing has claimed.
   rebuildEmbedlyEmbeds,
-  // A GitHub Gist embed is a JS-only <script> that renders nothing in a reader; replace it
+  // A GitHub Gist embed is a JS-only <script> that renders nothing in a reader. Replace it
   // with a link to the gist so the content is at least reachable.
   linkifyGistEmbeds,
   // A Substack @-mention is an empty span whose name lives only in its data-attrs JSON;
   // rebuild the anchor before stripEmptyTags deletes the span and the name with it.
   fixSubstackMentions,
-  // A Substack lightbox anchor can arrive with its <img> child stripped; remint the image
+  // A Substack lightbox anchor can arrive with its <img> child stripped. Remint the image
   // from the anchor's own href before stripEmptyTags deletes the empty anchor, so the
   // image passes below dimension and proxy it like any other.
   fixSubstackImageLinks,
@@ -331,7 +331,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   stripMarkdownEscapeBackslashes,
   convertBreaksToParagraphs,
   // Runs before highlightCode and the merge passes so they see real newlines. Prism
-  // and Eleventy feeds separate code lines with <br> instead of \n; without this they
+  // and Eleventy feeds separate code lines with <br> instead of \n. Without this they
   // highlight as a single line and adjacent blocks get wrongly merged.
   replacePreLineBreaks,
   // Runs before highlightCode so it sees a single code block: a redundant <code> nested in
@@ -393,7 +393,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
 ]
 
 // Opt-in "best judgement" transforms that may drop content on a heuristic. Not in
-// the standard pipeline; enable them with the `heuristics` option (which selects
+// the standard pipeline. Enable them with the `heuristics` option (which selects
 // defaultAllDomTransforms) or by composing them into a custom `domTransforms`.
 export const heuristicDomTransforms: Array<DomTransform> = [
   assignVideoPosters,
@@ -606,12 +606,12 @@ export const defaultLazyIframeAttributes = [
   'data-original-src', // Generic lazy loaders.
   'data-opt-src', // Image/embed optimizers.
   // Invision Community forums defer embeds two ways: an iframe with no src at all, or one whose
-  // src points at the forum's own blank interface page; fixLazyIframes treats that page as a
+  // src points at the forum's own blank interface page. FixLazyIframes treats that page as a
   // placeholder so this attribute wins in both shapes.
   'data-embed-src', // Invision Community deferred embeds: 24 feeds in a 1/64 sample.
   // Avada's privacy-embed facade (data-privacy-type is a taxonomy: YouTube, Vimeo, …), NOT a
   // cookie banner: it defers a real video the author embedded. Recovering it yields a privacy-safe
-  // click-to-load placeholder; stripping would just delete the video. The visible Avada notice
+  // click-to-load placeholder. Stripping would delete the video. The visible Avada notice
   // (.fusion-privacy-placeholder) is stripped separately in defaultNonContentSelectors.
   'data-privacy-src', // Avada privacy-embed facade: 19 feeds.
   // Cookie-consent gates (CMPs) sit on the same recover side of that line. Each plugin rewrites
@@ -635,7 +635,7 @@ export const defaultLazyIframeAttributes = [
   'data-suppressedsrc', // iubenda: 0 feeds.
   'data-uc-src', // Usercentrics: 0 feeds.
   'data-gdpr-iframesrc', // Moove GDPR Cookie Compliance: 1 feed.
-  // EmbedPlus parks the deferred player's URL here; the plugin's facade shape is rebuilt by
+  // EmbedPlus parks the deferred player's URL here. The plugin's facade shape is rebuilt by
   // rebuildEmbedPlusEmbeds.
   'data-ep-src', // EmbedPlus YouTube deferred player: 14 feeds.
   // Below the 1/64 sample resolution; the count is from an older full-corpus walk.
@@ -650,7 +650,7 @@ export const defaultDeferredIframeSources: Array<DeferredIframeSource> = [
   // The Drupal/CKEditor oEmbed convention parks the source url on the wrapper, so unlike the
   // two above the value is a watch page rather than a player: `youtube.com/watch` in 321 feeds,
   // `vimeo.com` in 138, `listen.style/p` in 53. That is fine here, because convertWidgets asks
-  // the resolvers what the url means and they mint the player from it; a host nobody resolves
+  // the resolvers what the url means and they mint the player from it. A host nobody resolves
   // becomes a placeholder carrying the url, which is what those feeds show today anyway.
   //
   // Scoped to a wrapper holding no player. In 566 of the 624 feeds the iframe is already inside,
@@ -817,7 +817,7 @@ export const defaultNonContentSelectors = [
   '.feedflare', // FeedBurner share footer ("Share on X / Email this"): 262 feeds (0.002%).
   '.addtoany_share_save_container', // AddToAny share buttons (WordPress): 157 feeds (0.001%).
   // The AddToAny anchor itself. Empty in 6,904 of 8,138 feeds, where stripEmptyTags already
-  // removed it; this is for the ~1,170 whose variant carries an image or text and survives as
+  // removed it. This is for the ~1,170 whose variant carries an image or text and survives as
   // a "Share" button.
   'a.addtoany_share_save',
   // Survives as a live "Tweet" link in the output: 3,002 feeds, 2,807 of them with no other

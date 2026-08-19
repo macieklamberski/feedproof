@@ -78,7 +78,7 @@ export type DeferredIframeSource = {
 }
 
 // The relationship a citation expresses toward the linked work. Sparse: only sources that
-// carry a real relationship set it (today just microformats h-cite, via its `u-*-of` class).
+// carry a real relationship set it (today only microformats h-cite, via its `u-*-of` class).
 // Every platform card leaves it unset, meaning a plain link preview with no relationship.
 export type CiteKind = 'bookmark' | 'repost' | 'like' | 'reply' | 'read' | 'listen' | 'watch'
 
@@ -115,7 +115,7 @@ export type CiteRef = { provider: string; url: string }
 //
 // The answer is positional: one entry per cite sent, in the same order, the way `Promise.all`
 // returns, or `undefined` where nothing was found. Two placeholders citing one url arrive as two
-// entries and expect two answers; an implementation that fetches each url once fills both slots
+// entries and expect two answers. An implementation that fetches each url once fills both slots
 // from the one result.
 export type EnrichCiteFn = (
   cites: Array<CiteRef>,

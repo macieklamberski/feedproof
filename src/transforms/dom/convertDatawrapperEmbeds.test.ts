@@ -5,7 +5,7 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { convertDatawrapperEmbeds } from './convertDatawrapperEmbeds.js'
 
 // The two parsers order the img attributes differently, so a case whose image carries an alt
-// beside its src compares through toEqualHtml; the rest compare byte for byte.
+// beside its src compares through toEqualHtml. The rest compare byte for byte.
 describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
   const transform = (value: string) => {
     return applyDomTransforms(parseHtml(value), [convertDatawrapperEmbeds(baseContext)])
@@ -116,7 +116,7 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
   })
 
   // data-frame-src is now materialized into an <iframe> by rebuildDeferredIframes upstream, so
-  // a Texas Tribune / @newswire/frames Datawrapper wrapper still becomes an image — end to end.
+  // a Texas Tribune / @newswire/frames Datawrapper wrapper still becomes an image, end to end.
   it('should convert a data-frame-src datawrapper wrapper end to end', async () => {
     const value = html`
       <div

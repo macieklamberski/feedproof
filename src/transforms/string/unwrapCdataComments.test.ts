@@ -95,7 +95,7 @@ describe('unwrapCdataComments', () => {
   })
 
   it('should leave unterminated CDATA shape alone', () => {
-    // No matching `]]-->` — leave verbatim; the HTML parser will treat it
+    // No matching `]]-->`, so leave it verbatim. The HTML parser will treat it
     // as a bogus/unterminated comment.
     const value = '<!--[CDATA[unterminated'
 

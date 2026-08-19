@@ -8,7 +8,7 @@ const wrapProxy: AssetProxyFn = (url, type) => {
   return `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`
 }
 
-// proxyAssetUrls is idempotent only when assetProxyFn is — this one skips
+// proxyAssetUrls is idempotent only when assetProxyFn is: this one skips
 // already-proxied URLs so re-running the transform is a no-op.
 const idempotentProxy: AssetProxyFn = (url, type) => {
   if (url.startsWith('https://proxy.example.com/')) {
@@ -62,7 +62,7 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
-  // A url-less feed srcset leaves bare width descriptors the parser reads as urls; proxying
+  // A url-less feed srcset leaves bare width descriptors the parser reads as urls. Proxying
   // one would sign and request a page that does not exist, so they are dropped first.
   it('should not proxy descriptor-only srcset candidates', async () => {
     const value = html`

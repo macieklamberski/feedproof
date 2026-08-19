@@ -30,7 +30,7 @@ export const extractPodbeanId = (link: string): string | undefined => {
   return keepIfMatches(id, safeIdRegex)
 }
 
-// Podbean serves one player behind two urls: `/media/player/{id}` **301s to**
+// Podbean serves one player behind two urls: `/media/player/{id}` 301s to
 // `/player-v2/?…&i={id}-pb`, marking the migration with `from=old_player`. Minting the v2 form
 // therefore repairs a legacy url and saves the reader a redirect. Checked live 2026-08-11 with
 // a real id: `/media/player/yx4hr-f3d1e1` answers 301 to `…&i=yx4hr-f3d1e1-pb`, and an invented

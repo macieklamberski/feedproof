@@ -62,9 +62,8 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
   })
 
   it('should unwrap wrapper with attribute values containing > characters', async () => {
-    // Tailwind-style arbitrary-value selectors contain `>` inside the class
-    // attribute. The old regex misparsed this; the DOM version handles it
-    // correctly because linkedom parses attribute values as one unit.
+    // Tailwind-style arbitrary-value selectors carry a `>` inside the class
+    // attribute, which linkedom parses as one unit.
     const value = html`
       <section class="[&amp;:has([data-x])>*]:pointer-events-auto">
         <p>Article</p>

@@ -104,7 +104,7 @@ describe('paragraphizePlainText', () => {
 
   it('should pass through a wholly escaped HTML fragment', () => {
     // A double-escaping feed generator ships its HTML as entity text. The fragment must
-    // stay intact so decodeDoubleEncodedTags sees it as one text node; paragraphizing
+    // stay intact so decodeDoubleEncodedTags sees it as one text node. Paragraphizing
     // would cut it line-by-line and only complete-tag-pair lines would decode.
     const value = [
       '&lt;p&gt;A &lt;a href="https://example.com/about"&gt;now page&lt;/a&gt;',
