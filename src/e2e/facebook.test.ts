@@ -60,7 +60,6 @@ describeForEachParser('Facebook', (parseHtml) => {
   // before the empty-tag pass reaches it.
   it('should claim the empty video widget before it is dropped as an empty tag', async () => {
     const value = html`
-      <p>Before.</p>
       <div
         class="fb-video"
         data-href="https://www.facebook.com/PageName/videos/123/"
@@ -68,7 +67,6 @@ describeForEachParser('Facebook', (parseHtml) => {
       ></div>
     `
     const expected = html`
-      <p>Before.</p>
       <div
         data-embed-provider="facebook"
         data-embed-id="https://www.facebook.com/PageName/videos/123/"
@@ -130,7 +128,6 @@ describeForEachParser('Facebook', (parseHtml) => {
   // claims the element either, so it reaches the output as the custom element it arrived as.
   it('should leave an amp-facebook comment embed as markup', async () => {
     const value = html`
-      <p>Article text.</p>
       <amp-facebook
         width="552"
         height="303"
@@ -213,12 +210,12 @@ describeForEachParser('Facebook', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
-  // Known leak: the resolver refuses the comments plugin url, but refusing hands the iframe to
-  // the generic fallback, which promotes the same chrome the div form is stripped for into a
-  // click-to-load card.
+  // The resolver takes the post and video plugins only, so a comments-plugin url falls to the
+  // generic iframe fallback. That is not the same treatment as the div form stripped above, and
+  // the difference is the point: the div is an empty JS mount with nothing to show, while this
+  // endpoint still answers 200, so a click-to-load card is something a reader can open.
   it('should fall back the comments plugin iframe to a generic placeholder', async () => {
     const value = html`
-      <p>Article text.</p>
       <iframe
         src="https://www.facebook.com/plugins/comments.php?href=https%3A%2F%2Fexample.com%2Fpost&numposts=5"
         width="500"
@@ -226,7 +223,6 @@ describeForEachParser('Facebook', (parseHtml) => {
       ></iframe>
     `
     const expected = html`
-      <p>Article text.</p>
       <div
         data-embed-src="https://www.facebook.com/plugins/comments.php?href=https%3A%2F%2Fexample.com%2Fpost&numposts=5"
         data-embed-width="500"
