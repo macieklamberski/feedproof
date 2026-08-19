@@ -30,6 +30,28 @@ describeForEachParser('WordPress', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
+  it('should carry the oEmbed figure ratio onto a placeholder for a sizeless iframe', async () => {
+    const value = html`
+      <figure class="wp-block-embed is-type-video wp-embed-aspect-16-9 wp-has-aspect-ratio">
+        <div class="wp-block-embed__wrapper">
+          <iframe src="https://www.youtube.com/embed/0OqYNLrUoes"></iframe>
+        </div>
+      </figure>
+    `
+    const expected = html`
+      <div
+        data-embed-ratio="16/9"
+        data-embed-thumbnail="https://i.ytimg.com/vi/0OqYNLrUoes/hqdefault.jpg"
+        data-embed-url="https://www.youtube.com/watch?v=0OqYNLrUoes"
+        data-embed-id="0OqYNLrUoes"
+        data-embed-provider="youtube"
+        data-embed-src="https://www.youtube.com/embed/0OqYNLrUoes"
+      ></div>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
   describe('Avada privacy embed without a dedicated transform', () => {
     // Avada gates a video behind a consent notice: a hidden <iframe> parks the real URL in
     // data-privacy-src, and a sibling .fusion-privacy-placeholder shows "please accept". No
