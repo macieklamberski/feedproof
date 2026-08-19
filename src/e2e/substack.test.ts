@@ -556,10 +556,9 @@ describeForEachParser('Substack', (parseHtml) => {
         data-component-name="ButtonCreateButton"
       ><a class="button primary" href="https://examplepub.substack.com/subscribe?"><span>Subscribe now</span></a></p>
     `
-    const expected = value
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
-    expect(result).toEqualHtml(expected)
+    expect(result).toEqualHtml(value)
   })
 
   it('should strip a CaptionedButtonToDOM CTA with its inner button', async () => {
@@ -1233,10 +1232,9 @@ describeForEachParser('Substack', (parseHtml) => {
         data-component-name="MentionUser"
       >Casey Author</a></span> wrote.</p>
     `
-    const expected = value
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
-    expect(result).toEqualHtml(expected)
+    expect(result).toEqualHtml(value)
   })
 
   it('should strip an EmbeddedPublicationToDOMWithSubscribe promo as non-content', async () => {
