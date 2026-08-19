@@ -5,10 +5,11 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { neutralizeUnsafeUrls } from './neutralizeUnsafeUrls.js'
 
 describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
-  const blockHost =
-    (host: string): IsSafeUrlFn =>
-    (url) =>
-      !url.includes(host)
+  const blockHost = (host: string): IsSafeUrlFn => {
+    return (url) => {
+      return !url.includes(host)
+    }
+  }
 
   const transform = (value: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(value), [neutralizeUnsafeUrls(context)])
