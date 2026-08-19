@@ -192,7 +192,7 @@ const toEqualHtml = (received: unknown, expected: string) => {
   // A parser reproduces well-formed HTML exactly and repairs anything else, and `normalizeHtml`
   // parses both sides, so without this the same repair lands on both and malformed output still
   // passes. Unwrapped, because `parseWithLinkedom` lowercases attribute names and so cannot
-  // reproduce its own output; either one matching is enough, since they disagree on void elements
+  // reproduce its own output. Either one matching is enough, since they disagree on void elements
   // and entity escaping and the string came from one of them.
   const parseUntouched = (html: string) => {
     return parseHTML(`<!doctype html><html><head></head><body>${html}</body></html>`).document
