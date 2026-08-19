@@ -1,5 +1,7 @@
 import { describe, expect } from 'bun:test'
 import { JSDOM } from 'jsdom'
+import type { DefaultTreeAdapterMap } from 'parse5'
+import { parseFragment } from 'parse5'
 import type { MaybePromise } from 'trousse'
 import {
   defaultAvatarImageHosts,
@@ -185,6 +187,8 @@ const normalizeHtml = (html: string): string => {
   return document.body.innerHTML
 }
 
+type ParentNode = DefaultTreeAdapterMap['parentNode']
+
 // Elements that never carry a closing tag, so a missing one is correct rather than a repair.
 const voidTags = new Set([
   'area',
@@ -203,77 +207,52 @@ const voidTags = new Set([
   'wbr',
 ])
 
-const tagRegex = /<(\/?)([a-zA-Z][\w:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g
-// Consumes the value along with the name, so words inside a quoted value are never read as names.
-const attributeRegex = /([a-zA-Z_:][\w:.-]*)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*))?/g
-
-// The open and close tags a serialized string states, in order, with self-closing forms expanded
-// so `<image/>` and `<image></image>` read alike. Comparing this against the same sequence taken
-// after a parse is what makes a repair visible: closing an unclosed tag or dropping a stray one
-// changes the sequence, while none of the parser dialect differences do.
-const getTagSequence = (value: string): Array<string> => {
-  const tokens: Array<string> = []
-
-  for (const match of value.matchAll(tagRegex)) {
-    const [, closing, name, , selfClosing] = match
-    const tag = name.toLowerCase()
-
-    if (closing) {
-      tokens.push(`/${tag}`)
+// An element whose closing tag the markup never stated, so the parser supplied it. A void element
+// correctly has none, and a self-closing foreign element (`<image />`) states its own in the start
+// tag, which is why the source slice is read rather than the tree.
+const getImpliedEndTag = (node: ParentNode, value: string): string | undefined => {
+  for (const child of node.childNodes) {
+    if (!('tagName' in child)) {
       continue
     }
 
-    tokens.push(tag)
+    const location = child.sourceCodeLocation
+    const startTag = location?.startTag
+    const isSelfClosing = startTag
+      ? value.slice(startTag.startOffset, startTag.endOffset).endsWith('/>')
+      : false
 
-    if (selfClosing && !voidTags.has(tag)) {
-      tokens.push(`/${tag}`)
+    if (location && !location.endTag && !isSelfClosing && !voidTags.has(child.tagName)) {
+      return child.tagName
+    }
+
+    const nested = getImpliedEndTag(child, value)
+
+    if (nested) {
+      return nested
     }
   }
-
-  return tokens
 }
 
-// Attribute names stated twice on one tag. A parser keeps the first and discards the rest, so a
-// duplicate is gone by the time the string has been through a DOM.
-const getDuplicateAttributes = (value: string): Array<string> => {
-  const duplicates: Array<string> = []
-
-  for (const match of value.matchAll(tagRegex)) {
-    if (match[1]) {
-      continue
-    }
-
-    const seen = new Set<string>()
-
-    for (const [, name] of match[3].matchAll(attributeRegex)) {
-      const attribute = name.toLowerCase()
-
-      if (seen.has(attribute)) {
-        duplicates.push(`${match[2].toLowerCase()}@${attribute}`)
-      }
-
-      seen.add(attribute)
-    }
-  }
-
-  return duplicates
-}
-
-// What a parse would silently repair in this string, if anything. `normalizeHtml` runs both sides
+// What the parser had to invent or discard reading this string. `normalizeHtml` runs both sides
 // through a parser, so without this check every repair happens to both and the assertion passes on
-// malformed output: an unclosed tag, a stray closing tag and a duplicate attribute all survive.
+// malformed output. parse5 reports the spec's own parse errors (a duplicate attribute, an
+// unescaped `<`, a malformed attribute name); the tree walk adds the tags it had to close.
 const getMalformation = (value: string): string | undefined => {
-  const duplicates = getDuplicateAttributes(value)
+  const errors: Array<string> = []
+  const fragment = parseFragment(value, {
+    sourceCodeLocationInfo: true,
+    onParseError: ({ code }) => errors.push(code),
+  })
 
-  if (duplicates.length) {
-    return `duplicate attribute: ${duplicates.join(', ')}`
+  if (errors.length) {
+    return `parse error: ${[...new Set(errors)].join(', ')}`
   }
 
-  const stated = getTagSequence(value).join(' ')
-  const parsed = getTagSequence(normalizeHtml(value)).join(' ')
+  const implied = getImpliedEndTag(fragment, value)
 
-  if (stated !== parsed) {
-    return `tags repaired by the parser\n    stated: ${stated}\n    parsed: ${parsed}`
+  if (implied) {
+    return `closing tag supplied by the parser: <${implied}>`
   }
 }
 
