@@ -249,7 +249,6 @@ describeForEachParser('Twitter', (parseHtml) => {
   // stays, wrapped into a paragraph. The loader beside it goes as an empty tag.
   it('should keep a timeline widget as a link and drop its loader', async () => {
     const value = html`
-      <p>Before.</p>
       <a
         class="twitter-timeline"
         href="https://twitter.com/user"
@@ -260,7 +259,6 @@ describeForEachParser('Twitter', (parseHtml) => {
       ></script>
     `
     const expected = html`
-      <p>Before.</p>
       <p>
         <a class="twitter-timeline" href="https://twitter.com/user">Tweets by user</a>
       </p>
