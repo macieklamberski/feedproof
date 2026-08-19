@@ -186,23 +186,16 @@ const normalizeHtml = (html: string): string => {
   return document.body.innerHTML
 }
 
-// Asking whether a parser would have to repair a string is a question about HTML, not about this
-// project, so it goes to the parsers unwrapped: `parseWithLinkedom` lowercases attribute names on
-// the way in (see the parser module), which means it does not reproduce its own output and cannot
-// answer it.
+// Unwrapped, because `parseWithLinkedom` lowercases attribute names and so cannot reproduce its
+// own output. Either one matching is enough: they disagree on void elements and entity escaping,
+// and the string came from one of them.
 const probeParsers: Array<ParseHtml> = [
   (html) => parseHTML(`<!doctype html><html><head></head><body>${html}</body></html>`).document,
   parseWithJsdom,
 ]
 
-// A well-formed string survives a parser unchanged: parse it, serialize it, and the bytes come
-// back identical. A malformed one does not, because the parser closes what was left open, discards
-// what it cannot place, and escapes what should have been escaped. `normalizeHtml` runs both sides
-// through a parser, so without this check every one of those repairs happens to both and the
-// assertion passes on malformed output.
-//
-// Either parser reproducing it is enough. The received string is in the dialect of whichever one
-// produced it, and the two disagree on void elements and entity escaping.
+// A parser reproduces well-formed HTML exactly and repairs anything else. `normalizeHtml` parses
+// both sides, so without this the same repair lands on both and malformed output still passes.
 const isWellFormed = (value: string): boolean => {
   return probeParsers.some((parse) => parse(value).body.innerHTML === value)
 }
@@ -212,7 +205,7 @@ const toEqualHtml = (received: unknown, expected: string) => {
     return {
       pass: false,
       message: () =>
-        `expected HTML a parser would not have to repair\n  received: ${received}\n  repaired: ${normalizeHtml(received as string)}`,
+        `expected HTML a parser would not repair\n  received: ${received}\n  repaired: ${normalizeHtml(received as string)}`,
     }
   }
 

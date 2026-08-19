@@ -120,32 +120,32 @@ describe('toEqualHtml', () => {
     it('should fail on an unclosed tag', () => {
       const throwing = () => expect('<div><span>x</div>').toEqualHtml('<div><span>x</span></div>')
 
-      expect(throwing).toThrow('would not have to repair')
+      expect(throwing).toThrow('would not repair')
     })
 
     it('should fail on a stray closing tag', () => {
       const throwing = () => expect('<p>a</p></div>').toEqualHtml('<p>a</p>')
 
-      expect(throwing).toThrow('would not have to repair')
+      expect(throwing).toThrow('would not repair')
     })
 
     it('should fail on a block element inside a paragraph', () => {
       const throwing = () => expect('<p>a<div>b</div></p>').toEqualHtml('<p>a</p><div>b</div>')
 
-      expect(throwing).toThrow('would not have to repair')
+      expect(throwing).toThrow('would not repair')
     })
 
     it('should fail on an unescaped angle bracket in text', () => {
       const throwing = () => expect('<p>1 < 2</p>').toEqualHtml('<p>1 &lt; 2</p>')
 
-      expect(throwing).toThrow('would not have to repair')
+      expect(throwing).toThrow('would not repair')
     })
 
     it('should fail on a duplicate attribute', () => {
       const throwing = () =>
         expect('<img src="a.jpg" src="b.jpg">').toEqualHtml('<img src="a.jpg">')
 
-      expect(throwing).toThrow('would not have to repair')
+      expect(throwing).toThrow('would not repair')
     })
 
     it('should accept an attribute value containing spaces', () => {
