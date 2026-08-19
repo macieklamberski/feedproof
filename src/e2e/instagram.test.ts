@@ -325,8 +325,6 @@ describeForEachParser('Instagram', (parseHtml) => {
         <p>Some text and no link at all.</p>
       </blockquote>
     `
-    const expected = value
-
-    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(value)
   })
 })
