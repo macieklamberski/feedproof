@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, text } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -26,8 +26,7 @@ const composeEmbed = (deck: string, url?: string, title?: string): EmbedResolver
     provider: 'slideshare',
     id: deck,
     src: `https://www.slideshare.net/slideshow/embed_code/${deck}`,
-    ...(url && { url }),
-    ...(title && { title }),
+    ...trimObject({ url, title }, Boolean),
   }
 }
 

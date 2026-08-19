@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -50,7 +50,7 @@ const sketchfabResolveEmbed = (link: string, element: Element): EmbedResolverRes
     id: uid,
     src: `https://sketchfab.com/models/${uid}/embed`,
     url: `https://sketchfab.com/models/${uid}`,
-    ...(title && { title }),
+    ...trimObject({ title }, Boolean),
   }
 }
 

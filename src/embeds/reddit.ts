@@ -1,4 +1,4 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize, text } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -139,8 +139,7 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
   const height = parsePixelSize(attr(element, 'data-embed-height'))
 
   return composeEmbed(target, {
-    ...(title && { title }),
-    ...(author && { author }),
+    ...trimObject({ title, author }, Boolean),
     ...(height !== undefined && { height }),
   })
 }

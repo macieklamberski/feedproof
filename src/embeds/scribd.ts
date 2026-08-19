@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches, parseRatio } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -54,7 +54,7 @@ export const scribdResolveEmbed = (
   }
 
   const title = attr(element, 'title')
-  const result = { ...composeEmbed(document), ...(title && { title }) }
+  const result = { ...composeEmbed(document), ...trimObject({ title }, Boolean) }
   const ratio = parseRatio(attr(element, aspectRatioAttribute) ?? '')
 
   // The ratio describes the document and the declared height is a constant, so where both are

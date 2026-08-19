@@ -1,4 +1,4 @@
-import { getPathSegments, isHostOf, parseUrl } from 'trousse'
+import { getPathSegments, isHostOf, parseUrl, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches, parsePixelSize, text } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
@@ -271,7 +271,7 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
 
   return composeEmbed(
     { kind: 'embed', user, ownerPath, grants, slug, defaultTab, themeId, height },
-    { ...(title && { title }) },
+    { ...trimObject({ title }, Boolean) },
   )
 }
 
@@ -302,7 +302,7 @@ export const codepenResolveEmbed = (
 
   return composeEmbed(target, {
     src: url,
-    ...(title && { title }),
+    ...trimObject({ title }, Boolean),
   })
 }
 

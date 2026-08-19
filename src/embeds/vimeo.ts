@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
 import { pickUrlParams } from '../utils/urls.js'
@@ -59,7 +59,7 @@ export const vimeoResolveEmbed = (
     id: videoId,
     src: `https://player.vimeo.com/video/${videoId}${pickUrlParams(url, vimeoEmbedParams)}`,
     url: `https://vimeo.com/${videoId}`,
-    ...(title && { title }),
+    ...trimObject({ title }, Boolean),
     // TODO: no thumbnail yet. Vimeo posters aren't derivable from the id (the URL
     // carries an opaque hash), so they need an oEmbed lookup
     // (https://vimeo.com/api/oembed.json?url=...) wired through enrichEmbedFn.

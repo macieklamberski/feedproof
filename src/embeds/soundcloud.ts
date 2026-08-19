@@ -1,4 +1,4 @@
-import { parseUrl } from 'trousse'
+import { parseUrl, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, jsonAttr, text } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -40,23 +40,26 @@ type SubstackTrackAttributes = {
   targetUrl?: string
 }
 
-const readSubstackTrack = (element: Element): Partial<EmbedResolverResult> => {
+const readSubstackTrack = (element: Element): Partial<EmbedResolverResult> | undefined => {
   const wrapper = element.closest('[data-component-name="SoundcloudToDOM"]')
   const attributes = jsonAttr<SubstackTrackAttributes>(wrapper, 'data-attrs')
 
   if (!attributes) {
-    return {}
+    return
   }
 
   // Absent fields stay absent: an explicit undefined would ride through Object.assign in the
   // caller and erase what the iframe itself stated, most often its title.
-  return {
-    ...(attributes.title && { title: attributes.title }),
-    ...(attributes.description && { description: attributes.description }),
-    ...(attributes.thumbnail_url && { thumbnail: attributes.thumbnail_url }),
-    ...(attributes.author_name && { author: attributes.author_name }),
-    ...(attributes.targetUrl && { url: attributes.targetUrl }),
-  }
+  return trimObject(
+    {
+      title: attributes.title,
+      description: attributes.description,
+      thumbnail: attributes.thumbnail_url,
+      author: attributes.author_name,
+      url: attributes.targetUrl,
+    },
+    Boolean,
+  )
 }
 
 // The reference the iframe names the track by is not human-clickable, so the iframe alone yields

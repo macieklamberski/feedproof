@@ -1,4 +1,4 @@
-import { parseUrl } from 'trousse'
+import { parseUrl, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -75,7 +75,7 @@ const odyseeResolveEmbed = (link: string, element: Element): EmbedResolverResult
     id: claimPath,
     src: `https://odysee.com/$/embed/${claimPath}`,
     url: `https://odysee.com/${claimPath}`,
-    ...(title && { title }),
+    ...trimObject({ title }, Boolean),
   }
 }
 

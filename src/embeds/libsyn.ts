@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { parsePixelSize } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -71,7 +71,7 @@ export const libsynResolveEmbed = (url: string): EmbedResolverResult | undefined
     provider: 'libsyn',
     id: `${embed.kind}/${embed.id}`,
     src: `https://play.libsyn.com/embed/${embed.kind}/id/${embed.id}/${height}`,
-    ...(embed.height ? { height: embed.height } : {}),
+    ...trimObject({ height: embed.height }, Boolean),
   }
 }
 

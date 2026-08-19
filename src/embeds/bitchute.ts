@@ -1,4 +1,4 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -36,7 +36,7 @@ const bitchuteResolveEmbed = (link: string, element: Element): EmbedResolverResu
     id: videoId,
     src: `https://www.bitchute.com/embed/${videoId}/`,
     url: `https://www.bitchute.com/video/${videoId}/`,
-    ...(title && { title }),
+    ...trimObject({ title }, Boolean),
   }
 }
 

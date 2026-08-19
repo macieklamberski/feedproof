@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, parseRatio } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
@@ -41,7 +41,7 @@ const composeEmbed = (
     provider: 'speakerdeck',
     id: hasSlide ? `${deckId}/${slide}` : deckId,
     src: `https://speakerdeck.com/player/${deckId}${hasSlide ? `?slide=${slide}` : ''}`,
-    ...(title && { title }),
+    ...trimObject({ title }, Boolean),
   }
 }
 
