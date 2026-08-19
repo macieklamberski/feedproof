@@ -51,7 +51,7 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://vimeo.com/76979871"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should omit data-thumbnail when there is no image param', async () => {
@@ -62,7 +62,7 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://example.com/embed"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave an embedly iframe with no src param untouched', async () => {
@@ -72,13 +72,13 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
       ></iframe>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a non-embedly iframe untouched', async () => {
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   describe('the payload div, where a refusal costs the whole block', () => {
@@ -96,7 +96,7 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
       `
       const expected = '<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should carry the payload thumbnail onto the iframe', async () => {
@@ -136,7 +136,7 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
       `
       const expected = '<iframe src="https://example.com/widget"></iframe>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should convert a block with no payload into a link to its own src', async () => {
@@ -148,7 +148,7 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
       `
       const expected = '<a href="https://example.com/thing">https://example.com/thing</a>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should convert a block with a malformed payload the same way', async () => {
@@ -161,7 +161,7 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
       `
       const expected = '<a href="https://example.com/thing">https://example.com/thing</a>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave a link payload for the cite pass', async () => {
@@ -178,7 +178,7 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
         ></div>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave a payload naming no type for the cite pass', async () => {
@@ -194,7 +194,7 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
         ></div>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave a video payload whose url is not http', async () => {
@@ -210,7 +210,7 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
         ></div>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave a payloadless block whose src is not http', async () => {
@@ -221,7 +221,7 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
         ></div>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should produce a youtube placeholder end to end', async () => {
@@ -294,6 +294,6 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await applyDomTransforms(parseHtml(once), [rebuildEmbedlyEmbeds(baseContext)])
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

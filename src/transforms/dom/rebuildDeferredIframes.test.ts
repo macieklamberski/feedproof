@@ -18,14 +18,14 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
     `
     const expected = '<iframe src="https://apps.npr.org/chart/"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild an iframe from a @newswire/frames data-frame-src div', async () => {
     const value = '<div data-frame-src="https://embed.example.org/graphic/"></div>'
     const expected = '<iframe src="https://embed.example.org/graphic/"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should skip an already-initialized Pym node', async () => {
@@ -36,19 +36,19 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
       ></div>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a div whose attribute is not a URL untouched', async () => {
     const value = '<div data-frame-src="not a url"></div>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave an unrelated div untouched', async () => {
     const value = '<div class="content">Hello</div>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should be idempotent', async () => {
@@ -56,7 +56,7 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
     const once = await transform(value)
     const twice = await applyDomTransforms(parseHtml(once), [rebuildDeferredIframes(baseContext)])
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   it('should surface a deferred embed into a placeholder end to end', async () => {
@@ -67,7 +67,7 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
       baseUrl: 'https://example.com',
     })
 
-    expect(result).toBe(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   // The Drupal/CKEditor convention. Its value is a watch page rather than a player url, which
@@ -76,7 +76,7 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
     const value = '<div data-oembed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></div>'
     const expected = '<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   // 566 of the 624 corpus wrappers already hold the iframe, and this transform replaces what it
@@ -88,6 +88,6 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
       </div>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 })

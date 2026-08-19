@@ -618,13 +618,13 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
   it('should do nothing when no enclosures', async () => {
     const value = '<p>Content</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should do nothing when enclosures is empty', async () => {
     const value = '<p>Content</p>'
 
-    expect(await transform(value, withEnclosures([]))).toBe(value)
+    expect(await transform(value, withEnclosures([]))).toEqualHtml(value)
   })
 
   it('should resolve enclosure with unrecognized type through resolver', async () => {
@@ -688,7 +688,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       withEnclosures([{ url: 'javascript:alert(1)', medium: 'video' }]),
     )
 
-    expect(result).toBe(value)
+    expect(result).toEqualHtml(value)
   })
 
   it('should skip enclosure with data: url', async () => {
@@ -870,7 +870,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Episode notes</p>'
     const result = await transform(value, withEnclosures([{ type: 'image/png' } as Enclosure]))
 
-    expect(result).toBe(value)
+    expect(result).toEqualHtml(value)
   })
 
   it('should skip a malformed enclosure while still injecting valid ones', async () => {
@@ -896,6 +896,6 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const once = await transform(value, context)
     const twice = await transform(once, context)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

@@ -22,7 +22,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
       `
       const expected = html`<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>`
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // The second-largest embed kind note.com ships after its own posts and YouTube. The status
@@ -41,7 +41,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
         <iframe src="https://x.com/hoxai/status/2040742008386634171"></iframe>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should convert a note figure into an iframe', async () => {
@@ -56,7 +56,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
       `
       const expected = html`<iframe src="https://note.com/info/n/ne5fc6bd602c8"></iframe>`
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // Spotify reaches a feed as `oembed`, not as a service of its own: it did not appear once
@@ -75,7 +75,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
         <iframe src="https://open.spotify.com/track/03yOjwHoOPDlTUg0NRxN6t"></iframe>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // `embedded-service` is matched on but never read, so a value nobody has catalogued behaves
@@ -92,7 +92,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
       `
       const expected = html`<iframe src="https://vimeo.com/76979871"></iframe>`
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // No resolver claims codepen, so the frame carries the page url through untouched.
@@ -108,7 +108,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
       `
       const expected = html`<iframe src="https://codepen.io/oclockten/pen/zxqLGrz"></iframe>`
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // This page frames fine and no resolver claims it, which is the pair a registry check gets
@@ -125,7 +125,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
       `
       const expected = html`<iframe src="https://adventar.org/calendars/11560"></iframe>`
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -145,7 +145,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
         </figure>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     // Replacing it would throw away whatever it is already showing.
@@ -161,7 +161,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
         </figure>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave a figure with a non-http data-src untouched', async () => {
@@ -175,7 +175,7 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
         ></figure>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave a figure with an empty data-src untouched', async () => {
@@ -189,13 +189,13 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
         ></figure>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave a figure without embedded-service untouched', async () => {
       const value = html`<figure data-src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></figure>`
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
   })
 
@@ -264,6 +264,6 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

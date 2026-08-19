@@ -146,43 +146,43 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
     it('should leave a text paragraph alignment untouched', async () => {
       const value = '<p class="has-text-align-center">Some prose.</p>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave a text-align paragraph of prose untouched', async () => {
       const value = '<p style="text-align: center">Just some centered text.</p>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave an inline-only center untouched', async () => {
       const value = '<center>Plain centered text</center>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should not stamp a wrapper that also holds prose', async () => {
       const value = '<div class="aligncenter"><img src="a.jpg"><p>A caption sentence.</p></div>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should not stamp an alignnone image', async () => {
       const value = '<img class="alignnone" src="a.jpg">'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should ignore a bare directional class on a wrapper that also holds prose', async () => {
       const value = '<div class="center"><img src="a.jpg"><p>A caption sentence.</p></div>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should not stamp a vertical align attribute', async () => {
       const value = '<img align="middle" src="a.jpg">'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should let the class win over a conflicting inline text-align', async () => {
@@ -200,13 +200,13 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
     it('should leave a media element that already carries data-align unchanged', async () => {
       const value = '<img class="aligncenter" src="a.jpg" data-align="left">'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave content without alignment signals unchanged', async () => {
       const value = '<p>Nothing aligned here</p><img src="a.jpg">'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should be idempotent', async () => {
@@ -214,7 +214,7 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
       const once = await transform(value)
       const twice = await transform(once)
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
 
     it('should not restamp when applied multiple times to the same document', async () => {

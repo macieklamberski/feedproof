@@ -36,7 +36,7 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
     `
     const expected = '<img src="real.jpg">'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should normalize attribute case on images extracted from noscript', async () => {
@@ -48,7 +48,7 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
     `
     const expected = '<img src="real.jpg">'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not extract noscript when sibling is not an image', async () => {
@@ -59,19 +59,19 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
       </noscript>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not extract noscript when it is the first child with no preceding sibling', async () => {
     const value = '<noscript><img src="real.jpg"></noscript>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not modify images without lazy attributes', async () => {
     const value = '<img src="already-loaded.jpg" alt="photo">'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should move both data-src and data-srcset on same image', async () => {
@@ -131,19 +131,19 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
     it('should not promote a non-URL value like "left"', async () => {
       const value = '<img data-orig="left">'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should not promote a numeric flag value like "1"', async () => {
       const value = '<img data-src="1">'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should not promote a boolean-string value like "true"', async () => {
       const value = '<img data-src="true">'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should not promote a JSON-object value', async () => {
@@ -154,13 +154,13 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
         >
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should not promote an empty string', async () => {
       const value = '<img data-src="">'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should fall through to a later attribute when an earlier one is non-URL', async () => {
@@ -202,20 +202,20 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
       <noscript>just text, no image tag</noscript>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should overwrite existing src with data-src', async () => {
     const value = '<img src="placeholder.gif" data-src="real.jpg">'
     const expected = '<img src="real.jpg" data-src="real.jpg">'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should handle html with no images', async () => {
     const value = '<p>No images here</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   describe('lazy srcset attributes', () => {
@@ -242,13 +242,13 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
     it('should skip non-URL srcset values like Cloudinary transform params', async () => {
       const value = '<img data-srcset="w_200,h_200 200w, w_400,h_400 400w">'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should skip empty srcset values', async () => {
       const value = '<img data-image-srcset="">'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
   })
 
@@ -299,6 +299,6 @@ describeForEachParser('fixLazyImages', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

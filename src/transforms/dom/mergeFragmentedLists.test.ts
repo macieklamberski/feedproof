@@ -20,7 +20,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
     `
     const expected = '<ul><li>a</li><li>b</li></ul>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should merge three consecutive ul siblings in one pass', async () => {
@@ -37,7 +37,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
     `
     const expected = '<ul><li>a</li><li>b</li><li>c</li></ul>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should merge consecutive ol siblings when no numbering attrs are set', async () => {
@@ -51,7 +51,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
     `
     const expected = '<ol><li>a</li><li>b</li></ol>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should move inter-fragment whitespace inside the merged list as a separator', async () => {
@@ -62,7 +62,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
     const value = '<ul><li>a</li></ul> \n <ul><li>b</li></ul>'
     const expected = '<ul><li>a</li> \n <li>b</li></ul>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should merge across HTML comments and remove them', async () => {
@@ -77,7 +77,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
     `
     const expected = '<ul><li>a</li><li>b</li></ul>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should merge despite a comment nested inside a fragment', async () => {
@@ -92,7 +92,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
     `
     const expected = '<ul><!-- x --><li>a</li><li>b</li></ul>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should merge when both lists carry the same class', async () => {
@@ -106,7 +106,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
     `
     const expected = '<ul class="bullets"><li>a</li><li>b</li></ul>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not merge ul followed by ol', async () => {
@@ -119,7 +119,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
       </ol>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not merge when class attributes differ', async () => {
@@ -132,7 +132,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
       </ul>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not merge when attribute names differ despite equal attribute counts', async () => {
@@ -145,7 +145,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
       </ul>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not merge ol when start attribute differs', async () => {
@@ -158,7 +158,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
       </ol>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not merge ol when reversed attribute differs', async () => {
@@ -193,13 +193,13 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
       </ul>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not merge when separated by non-whitespace text', async () => {
     const value = '<ul><li>a</li></ul>between<ul><li>b</li></ul>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not merge when separated by a br', async () => {
@@ -213,13 +213,13 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
       </ul>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a single standalone list untouched', async () => {
     const value = '<ul><li>only</li></ul>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should merge multiple independent runs in one pass', async () => {
@@ -250,7 +250,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
       </ul>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should preserve surrounding content', async () => {
@@ -273,7 +273,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
       <p>after</p>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave nested lists inside li untouched', async () => {
@@ -290,7 +290,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
     `
     const expected = '<ul><li>outer<ul><li>nested</li></ul></li><li>sibling</li></ul>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not merge lists that contain direct text instead of <li>', async () => {
@@ -299,7 +299,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
       <ul>Item two</ul>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not merge when one list contains direct text alongside valid lists', async () => {
@@ -313,7 +313,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
       </ul>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should preserve text content separator between merged fragments', async () => {
@@ -323,7 +323,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
     const value = '<ul><li>foo</li></ul>\n<ul><li>bar</li></ul>'
     const expected = '<ul><li>foo</li>\n<li>bar</li></ul>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not merge when a list contains a non-li element child', async () => {
@@ -336,7 +336,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
       </ul>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should handle the Dwell-style three-fragment case', async () => {
@@ -363,7 +363,7 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
       </div>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
@@ -378,6 +378,6 @@ describeForEachParser('mergeFragmentedLists', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

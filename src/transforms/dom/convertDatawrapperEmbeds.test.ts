@@ -36,7 +36,7 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
       </a>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should accept a version-less iframe url', async () => {
@@ -47,7 +47,7 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
       </a>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should remove the sibling resize listener script', async () => {
@@ -75,13 +75,13 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
       </a>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave the secret preview iframe for the generic placeholder', async () => {
     const value = '<iframe src="https://datawrapper.dwcdn.net/AbCdE/2/#?secret=tok3n"></iframe>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should recover the script/noscript form and carry the alt', async () => {
@@ -112,7 +112,7 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
       </a>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   // data-frame-src is now materialized into an <iframe> by rebuildDeferredIframes upstream, so
@@ -134,7 +134,7 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
       baseUrl: 'https://example.com',
     })
 
-    expect(result).toBe(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   it('should convert the plain-link form', async () => {
@@ -149,7 +149,7 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
       </a>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a standalone static image untouched', async () => {
@@ -161,13 +161,13 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
       >
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a non-datawrapper iframe untouched', async () => {
     const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should convert every iframe when a post packs several', async () => {
@@ -184,7 +184,7 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
       </a>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
@@ -195,7 +195,7 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await applyDomTransforms(parseHtml(once), [convertDatawrapperEmbeds(baseContext)])
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   it('should survive into the output end to end', async () => {

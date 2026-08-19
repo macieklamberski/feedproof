@@ -24,7 +24,7 @@ describeForEachParser('wrapTablesForScroll', (parseHtml) => {
         </div>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should wrap multiple sibling tables independently', async () => {
@@ -65,7 +65,7 @@ describeForEachParser('wrapTablesForScroll', (parseHtml) => {
         </div>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should preserve the table attributes and inner markup', async () => {
@@ -82,7 +82,7 @@ describeForEachParser('wrapTablesForScroll', (parseHtml) => {
         </div>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should keep surrounding content intact', async () => {
@@ -111,7 +111,7 @@ describeForEachParser('wrapTablesForScroll', (parseHtml) => {
         <p>After</p>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -119,7 +119,7 @@ describeForEachParser('wrapTablesForScroll', (parseHtml) => {
     it('should leave content without tables unchanged', async () => {
       const value = '<p>No tables here</p>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should be idempotent', async () => {
@@ -127,7 +127,7 @@ describeForEachParser('wrapTablesForScroll', (parseHtml) => {
       const once = await transform(value)
       const twice = await transform(once)
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
 
     it('should not stack wrappers when applied multiple times to the same document', async () => {
@@ -150,13 +150,13 @@ describeForEachParser('wrapTablesForScroll', (parseHtml) => {
         wrapTablesForScroll(context),
       ])
 
-      expect(result).toBe(expected)
+      expect(result).toEqualHtml(expected)
     })
 
     it('should not re-wrap a table already in a div data-table', async () => {
       const value = '<div data-table=""><table><tbody><tr><td>Cell</td></tr></tbody></table></div>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should add its own wrapper around a table inside an author div', async () => {
@@ -185,7 +185,7 @@ describeForEachParser('wrapTablesForScroll', (parseHtml) => {
         </div>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should wrap only the outer table when tables are nested', async () => {
@@ -226,7 +226,7 @@ describeForEachParser('wrapTablesForScroll', (parseHtml) => {
         </div>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 })

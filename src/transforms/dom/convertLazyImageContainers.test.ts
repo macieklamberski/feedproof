@@ -13,21 +13,21 @@ describeForEachParser('convertLazyImageContainers', (parseHtml) => {
     const value = '<div class="cesis_gallery_img" data-src="https://example.com/photo.jpg"></div>'
     const expected = '<img src="https://example.com/photo.jpg">'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should convert a figure container the same way', async () => {
     const value = '<figure data-lazy-src="https://example.com/photo.png"></figure>'
     const expected = '<img src="https://example.com/photo.png">'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should keep an image-shaped src with a query string', async () => {
     const value = '<div data-src="https://example.com/photo.jpg?w=600"></div>'
     const expected = '<img src="https://example.com/photo.jpg?w=600">'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a div that already wraps an image', async () => {
@@ -37,7 +37,7 @@ describeForEachParser('convertLazyImageContainers', (parseHtml) => {
       </div>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a wrapper around a lazy video iframe', async () => {
@@ -47,7 +47,7 @@ describeForEachParser('convertLazyImageContainers', (parseHtml) => {
       </div>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not convert a non-image lazy src like an AJAX content URL', async () => {
@@ -73,6 +73,6 @@ describeForEachParser('convertLazyImageContainers', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

@@ -39,7 +39,7 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
       >
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should prefer an avif source over a webp source', async () => {
@@ -79,7 +79,7 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
       >
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should lift the inner img unchanged when there is no modern source', async () => {
@@ -97,7 +97,7 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
       >
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should drop a stale sizes attribute when promoting', async () => {
@@ -120,13 +120,13 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
       >
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a bare img unchanged', async () => {
     const value = '<img src="https://example.com/a.jpeg" alt="photo">'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should synthesize an img when the picture has no img fallback', async () => {
@@ -156,7 +156,7 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
     `
     const expected = ''
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should drop a picture whose only source has an empty srcset', async () => {
@@ -167,7 +167,7 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
     `
     const expected = ''
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should give a src-less img a src from its own srcset', async () => {
@@ -248,7 +248,7 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
       >
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should take the last candidate of a density-only srcset', async () => {
@@ -282,6 +282,6 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

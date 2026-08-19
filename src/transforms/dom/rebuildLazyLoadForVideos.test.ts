@@ -22,7 +22,7 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild an iframe from a vimeo facade', async () => {
@@ -38,7 +38,7 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
     `
     const expected = '<iframe src="https://player.vimeo.com/video/76979871"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should preserve a vimeo unlisted hash', async () => {
@@ -50,7 +50,7 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
     `
     const expected = '<iframe src="https://player.vimeo.com/video/76979871?h=abc123def4"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should prefer data-video-uri over href', async () => {
@@ -63,7 +63,7 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should carry data-video-title into the iframe title', async () => {
@@ -92,7 +92,7 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
       ></a>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should produce a youtube placeholder end to end', async () => {
@@ -137,6 +137,6 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

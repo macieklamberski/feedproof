@@ -28,7 +28,7 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
       </div>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild a vimeo iframe from the widget settings', async () => {
@@ -50,7 +50,7 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
       </div>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild a dailymotion iframe from the widget settings', async () => {
@@ -72,7 +72,7 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
       </div>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild a videopress iframe from the widget settings', async () => {
@@ -94,7 +94,7 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
       </div>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a widget with malformed data-settings alone', async () => {
@@ -113,7 +113,7 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
       </div>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a widget with empty data-settings alone', async () => {
@@ -125,7 +125,7 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
       </div>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should skip a widget whose video type is unknown', async () => {
@@ -147,7 +147,7 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
       </div>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should produce a youtube placeholder end to end', async () => {
@@ -192,6 +192,6 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

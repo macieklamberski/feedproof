@@ -259,13 +259,13 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
     it('should leave content unchanged when no resolver matches', async () => {
       const value = '<p>Regular content</p>'
 
-      expect(await transform(value, [cardResolver])).toBe(value)
+      expect(await transform(value, [cardResolver])).toEqualHtml(value)
     })
 
     it('should skip elements when the resolver returns undefined', async () => {
       const value = '<div class="card"></div>'
 
-      expect(await transform(value, [cardResolver])).toBe(value)
+      expect(await transform(value, [cardResolver])).toEqualHtml(value)
     })
 
     it.todo('should surface errors when a resolver extract throws', () => {
@@ -279,7 +279,7 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
       const once = await transform(value, [cardResolver])
       const twice = await transform(once, [cardResolver])
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
   })
 
