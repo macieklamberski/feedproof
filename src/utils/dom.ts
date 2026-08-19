@@ -412,8 +412,13 @@ const maxWrapperAncestorDepth = 3
 // That is the only reason: both parsers do implement `.style`, and they agree with each other
 // on everything else, including reading an unset property as `''` (checked 2026-08-16).
 //
-// TODO: measure whether uppercase property names occur in feed markup at all. If they do not,
-// `getPropertyValue` is the simpler read and these regexes lose their last justification.
+// Settled without a corpus count: leniency is the policy, inputs are read case-insensitively
+// no matter how rare the uppercase declaration is, so these regexes stay as the mechanism.
+// The alternative, a pre-parse string transform lowercasing property names so every read could
+// go through `getPropertyValue`, was considered and not taken: it would have to find style
+// attributes and split names from values in raw untokenized HTML (`url()` payloads and quoted
+// strings must keep their case), which is the parser's job done earlier and with more regex
+// than the anchored reads it would remove.
 const elementRatioSources: Array<{
   attribute: string
   regex: RegExp
