@@ -77,15 +77,13 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
       </template>
     `
     const expected = html`
-      <figure class="wp-block-embed">
-        <div
-          data-embed-src="https://www.youtube.com/embed/yEB6Q3wTKcw"
-          data-embed-provider="youtube"
-          data-embed-id="yEB6Q3wTKcw"
-          data-embed-url="https://www.youtube.com/watch?v=yEB6Q3wTKcw"
-          data-embed-thumbnail="https://img.youtube.com/vi/yEB6Q3wTKcw/maxresdefault.jpg"
-        ></div>
-      </figure>
+      <div
+        data-embed-src="https://www.youtube.com/embed/yEB6Q3wTKcw"
+        data-embed-provider="youtube"
+        data-embed-id="yEB6Q3wTKcw"
+        data-embed-url="https://www.youtube.com/watch?v=yEB6Q3wTKcw"
+        data-embed-thumbnail="https://img.youtube.com/vi/yEB6Q3wTKcw/maxresdefault.jpg"
+      ></div>
     `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,

@@ -275,12 +275,84 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(value)
   })
 
-  it('should keep a figure holding a placeholder next to its link', async () => {
+  // A figure that holds nothing but a placeholder is the platform's own embed wrapper, and every
+  // field it carried has been read into the placeholder by the time this runs.
+  it('should unwrap a figure holding nothing but a placeholder', async () => {
+    const value = html`
+      <figure
+        class="tmblr-embed tmblr-full"
+        data-provider="instagram"
+        data-orig-width="540"
+      >
+        <div data-embed-provider="instagram" data-embed-id="reel/DGPdABWz84n"></div>
+      </figure>
+    `
+    const expected = '<div data-embed-provider="instagram" data-embed-id="reel/DGPdABWz84n"></div>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  // The placeholder is not a direct child until the wrapper div dissolves, so the figure only
+  // becomes unwrappable on a later pass. One pass would leave it behind.
+  it('should unwrap a figure whose wrapper div held the placeholder', async () => {
+    const value = html`
+      <figure class="wp-block-embed is-type-rich">
+        <div class="wp-block-embed__wrapper">
+          <div data-embed-provider="twitter" data-embed-id="123"></div>
+        </div>
+      </figure>
+    `
+    const expected = '<div data-embed-provider="twitter" data-embed-id="123"></div>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should unwrap a figure holding a placeholder that wraps its own link', async () => {
     const value = html`
       <figure>
         <div data-embed-provider="youtube" data-embed-src="https://www.youtube.com/embed/abc">
           <a href="https://www.youtube.com/watch?v=abc">Watch</a>
         </div>
+      </figure>
+    `
+    const expected = html`
+      <div data-embed-provider="youtube" data-embed-src="https://www.youtube.com/embed/abc">
+        <a href="https://www.youtube.com/watch?v=abc">Watch</a>
+      </div>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  // The caption is what the figure is for, and unwrapping would leave it floating beside the
+  // embed instead of attached to it.
+  it('should keep a figure whose placeholder sits beside a caption', async () => {
+    const value = html`
+      <figure>
+        <div data-embed-provider="youtube" data-embed-id="abc"></div>
+        <figcaption>What the author said about it</figcaption>
+      </figure>
+    `
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
+  it('should keep a figure holding a placeholder beside other content', async () => {
+    const value = html`
+      <figure>
+        <div data-embed-provider="youtube" data-embed-id="abc"></div>
+        <p>A note the author wrote under it</p>
+      </figure>
+    `
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
+  it('should keep a figure holding an image beside a placeholder', async () => {
+    const value = html`
+      <figure>
+        <img src="https://example.com/photo.jpg">
+        <div data-embed-provider="youtube" data-embed-id="abc"></div>
       </figure>
     `
 
