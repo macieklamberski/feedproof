@@ -21,16 +21,15 @@ const wistiaSelector = [
   'iframe[src*="wistia"]',
 ].join(', ')
 
+// Both carry the media id in the src path.
+const srcCarrierTags = new Set(['script', 'iframe'])
+
 const readMediaId = (element: Element): string | undefined => {
   if (element.localName === 'wistia-player') {
     return attr(element, 'media-id')
   }
 
-  if (element.localName === 'script') {
-    return attr(element, 'src')?.match(scriptMediaPattern)?.[1]
-  }
-
-  if (element.localName === 'iframe') {
+  if (srcCarrierTags.has(element.localName)) {
     return attr(element, 'src')?.match(scriptMediaPattern)?.[1]
   }
 

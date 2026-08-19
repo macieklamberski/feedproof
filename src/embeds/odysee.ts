@@ -44,7 +44,11 @@ const readClaimPath = (parsed: URL): string | undefined => {
   const isLegacyPair = segments.length === 2 && first !== undefined && !first.includes(':')
   const claims = isLegacyPair ? [`${first}:${second}`] : segments
 
-  if (claims.length === 0 || claims.length > 2 || !claims.every(isClaim)) {
+  if (
+    claims.length === 0 ||
+    claims.length > 2 ||
+    !claims.every((claim) => claimRegex.test(claim))
+  ) {
     return
   }
 
@@ -54,10 +58,6 @@ const readClaimPath = (parsed: URL): string | undefined => {
   }
 
   return claims.join('/')
-}
-
-const isClaim = (segment: string): boolean => {
-  return claimRegex.test(segment)
 }
 
 const odyseeResolveEmbed = (link: string, element: Element): EmbedResolverResult | undefined => {

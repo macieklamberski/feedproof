@@ -87,13 +87,13 @@ const readWrapper = (element: Element): { deck?: string; url?: string; title?: s
   // deck's link, so finding an id is not a reason to stop climbing.
   while (node && (!deck || !anchor)) {
     deck ??= attr(node, 'id')?.match(wrapperIdRegex)?.[1]
-    anchor ??= find(node, 'a[href*="slideshare.net/"]') ?? undefined
+    anchor ??= find(node, 'a[href*="slideshare.net/"]')
     node = node.parentElement
   }
 
   return {
     deck,
-    url: attr(anchor, 'href') ?? undefined,
+    url: attr(anchor, 'href'),
     title: attr(anchor, 'title') ?? text(anchor),
   }
 }

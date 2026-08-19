@@ -27,7 +27,7 @@ export const parseOrKeepDate = (
 //
 // Legacy Flash markup nests an `<embed>` inside an `<object>` and both match. The outer one
 // wins by document order and takes the inner with it.
-export const embedCarriers: Record<string, string> = {
+const embedCarriers: Record<string, string> = {
   iframe: 'src',
   embed: 'src',
   object: 'data',
@@ -46,7 +46,7 @@ export const readCarrierUrl = (element: Element): string => {
 // `declaredSize: false`: Scribd states the same `height="500"` on every document it embeds and
 // keeps the honest ratio in `data-aspect-ratio`, so a number from the markup is not always the
 // better one.
-export type ResolverOptions = {
+type ResolverOptions = {
   declaredSize?: boolean
 }
 
@@ -68,7 +68,7 @@ export const createMarkupEmbedResolver = (
 
 // What a carrier says about its size: the dimensions it declares, or the ratio a responsive
 // wrapper implies when it declares none. Never both, which is the rule the placeholder carries too.
-export type EmbedSize = Pick<EmbedResolverResult, 'width' | 'height' | 'ratio'>
+type EmbedSize = Pick<EmbedResolverResult, 'width' | 'height' | 'ratio'>
 
 // The two questions asked of a size wherever one is merged: does it carry any dimension, and does
 // it carry anything at all. Named once so every merge reads as the rule it applies. Typed on the
@@ -79,7 +79,7 @@ export const hasDimensions = (size: SizeFields): boolean => {
   return size.width !== undefined || size.height !== undefined
 }
 
-export const hasSize = (size: SizeFields): boolean => {
+const hasSize = (size: SizeFields): boolean => {
   return hasDimensions(size) || size.ratio !== undefined
 }
 

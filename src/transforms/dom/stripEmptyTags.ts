@@ -95,9 +95,7 @@ export const stripEmptyTags: DomTransform = () => {
         continue
       }
 
-      if (childCount === 0) {
-        element.remove()
-      } else if (isBlockElement(element)) {
+      if (childCount === 0 || isBlockElement(element)) {
         element.remove()
       } else {
         const whitespace = element.textContent ?? ''

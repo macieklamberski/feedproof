@@ -30,9 +30,6 @@ const pathPrefixRegex = /^(?:embed|embed-podcast|intl-[a-z]{2})$/
 // pair, not the only one: of 50 sampled occurrences of the query form, 41 are that four-token
 // shape.
 const legacyUriRegex = /^spotify:(?:.*:)?([a-z]+):([a-zA-Z0-9]+)$/
-// The same ownership spelled as a path, `/embed/user/{handle}/playlist/{id}`.
-const ownerSegment = 'user'
-
 // The snippet writes `Spotify Embed: {name}`, and the name is the only part worth keeping: the
 // rest names the widget, which the placeholder already says. Every title in a 40-feed corpus
 // read carried the prefix.
@@ -87,7 +84,8 @@ export const spotifyResolveEmbed = (
 
   const segments = getPathSegments(parsed)
   const named = pathPrefixRegex.test(segments[0] ?? '') ? segments.slice(1) : segments
-  const owned = named[0] === ownerSegment ? named.slice(2) : named
+  // The same ownership spelled as a path, `/embed/user/{handle}/playlist/{id}`.
+  const owned = named[0] === 'user' ? named.slice(2) : named
   const [pathType, pathId] = owned
   const legacy = parsed.searchParams.get('uri')?.match(legacyUriRegex)
   const type = pathType ?? legacy?.[1]

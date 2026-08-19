@@ -29,7 +29,7 @@ export const extractBlubrryEmbed = (link: string): string | undefined => {
 
   const mediaUrl = parsed.searchParams.get('media_url')
 
-  return mediaUrl ? mediaUrl : undefined
+  return mediaUrl || undefined
 }
 
 // PowerPress, Blubrry's WordPress plugin, can render the same player on the publisher's own

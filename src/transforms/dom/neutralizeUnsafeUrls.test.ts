@@ -5,6 +5,11 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { neutralizeUnsafeUrls } from './neutralizeUnsafeUrls.js'
 
 describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
+  const blockHost =
+    (host: string): IsSafeUrlFn =>
+    (url) =>
+      !url.includes(host)
+
   const transform = (value: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(value), [neutralizeUnsafeUrls(context)])
   }
@@ -125,11 +130,6 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
   })
 
   describe('with a caller isSafeUrlFn', () => {
-    const blockHost =
-      (host: string): IsSafeUrlFn =>
-      (url) =>
-        !url.includes(host)
-
     it('should neutralize a link the policy rejects', async () => {
       const context: TransformContext = { ...baseContext, isSafeUrlFn: blockHost('evil.test') }
       const value = '<a href="https://evil.test/x">x</a>'
@@ -172,11 +172,6 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
   })
 
   describe('srcset', () => {
-    const blockHost =
-      (host: string): IsSafeUrlFn =>
-      (url) =>
-        !url.includes(host)
-
     it('should drop only the unsafe candidates', async () => {
       const context: TransformContext = { ...baseContext, isSafeUrlFn: blockHost('evil.test') }
       const value = '<img srcset="https://ok.test/a.jpg 1x, https://evil.test/b.jpg 2x">'

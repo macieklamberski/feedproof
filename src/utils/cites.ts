@@ -3,8 +3,7 @@ import type { CiteResolverResult } from '../types.js'
 
 // What a resolver scrapes: the result fields as the markup or the JSON blob carries them,
 // untrimmed and nullish wherever the field is absent.
-export type RawCiteResult = PartialNullish<CiteResolverResult> &
-  Pick<CiteResolverResult, 'provider'>
+type RawCiteResult = PartialNullish<CiteResolverResult> & Pick<CiteResolverResult, 'provider'>
 
 const trim = (value: Nullish<string>): string | undefined => {
   return value?.trim() || undefined
