@@ -1,5 +1,5 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { ResolveUrlFn } from '../types.js'
+import type { AssetType, ResolveUrlFn, UrlRole } from '../types.js'
 
 const urlShapeRegex = /[:/.]/
 
@@ -21,6 +21,68 @@ export const audioFileRegex = /\.(mp3|m4a|ogg|oga|wav|flac|opus)(\?|#|$)/i
 // serve the `.swf` bytes, so a URL that reaches this is one that answers 200 and renders
 // nothing whatever a reader does with it.
 export const flashFileRegex = /\.swf(\?|#|$)/i
+
+// One attribute that can carry a url, on one element. Both passes that act on a url by its
+// element and attribute, neutralizeUnsafeUrls and proxyAssetUrls, filter the table below for
+// their own list, so an attribute is declared once and neither can quietly fall behind the
+// other. resolveRelativeUrls deliberately stays out: it asks nothing of the tag.
+export type UrlAttribute = {
+  // Element carrying the attribute. Absent where any element can carry it: an embed or cite
+  // placeholder parks its urls on data-* attributes of whatever element it replaced.
+  tag?: string
+  attribute: string
+  // Safety class of the value, which picks the sentinel neutralizeUnsafeUrls swaps an unsafe
+  // url for.
+  role: UrlRole
+  // Kind of asset proxyAssetUrls hands to the caller's proxy. `parent` reads the kind off the
+  // element above, which is where a <source> or <track> says whether it belongs to a video or
+  // an audio. Absent where the value is not an asset a proxy can serve.
+  asset?: AssetType | 'parent'
+}
+
+// The url-carrying attributes of the whole pipeline. The tag-less rows come first: they are the
+// embed and cite placeholder attributes, which sit on whatever element the placeholder replaced,
+// so every pass reads them on every element it visits.
+export const urlAttributes: Array<UrlAttribute> = [
+  { attribute: 'data-embed-url', role: 'link' },
+  { attribute: 'data-cite-url', role: 'link' },
+  { attribute: 'formaction', role: 'link' },
+  { attribute: 'data-embed-src', role: 'media' },
+  { attribute: 'data-embed-thumbnail', role: 'media', asset: 'image' },
+  { attribute: 'data-embed-avatar', role: 'media', asset: 'image' },
+  { attribute: 'data-cite-icon', role: 'media', asset: 'image' },
+  { attribute: 'data-cite-thumbnail', role: 'media', asset: 'image' },
+  { tag: 'a', attribute: 'href', role: 'link' },
+  { tag: 'img', attribute: 'src', role: 'media', asset: 'image' },
+  { tag: 'img', attribute: 'srcset', role: 'media', asset: 'image' },
+  { tag: 'video', attribute: 'src', role: 'media', asset: 'video' },
+  { tag: 'video', attribute: 'poster', role: 'media', asset: 'image' },
+  { tag: 'audio', attribute: 'src', role: 'media', asset: 'audio' },
+  { tag: 'source', attribute: 'src', role: 'media', asset: 'parent' },
+  { tag: 'source', attribute: 'srcset', role: 'media', asset: 'image' },
+  { tag: 'track', attribute: 'src', role: 'media', asset: 'parent' },
+  { tag: 'iframe', attribute: 'src', role: 'media' },
+  { tag: 'embed', attribute: 'src', role: 'media' },
+  { tag: 'object', attribute: 'data', role: 'media' },
+  { tag: 'image', attribute: 'href', role: 'media', asset: 'image' },
+]
+
+// Keys the rows that name a tag by that tag, so a pass walking the DOM looks up an element's
+// attributes by its local name instead of scanning the table. Tag-less rows are left out; a
+// pass reads those on every element and filters for them separately.
+export const groupUrlAttributesByTag = <Attribute extends UrlAttribute>(
+  attributes: ReadonlyArray<Attribute>,
+): Record<string, Array<Attribute>> => {
+  const grouped: Record<string, Array<Attribute>> = {}
+
+  for (const attribute of attributes) {
+    if (attribute.tag) {
+      grouped[attribute.tag] = [...(grouped[attribute.tag] ?? []), attribute]
+    }
+  }
+
+  return grouped
+}
 
 // A real, loadable src, not empty and not the `about:blank` lazy placeholder.
 export const isUsableSrc = (src: string | null): src is string => {

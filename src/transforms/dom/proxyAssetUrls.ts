@@ -1,21 +1,30 @@
 import { stringifySrcset } from 'srcset'
 import type { AssetProxyFn, AssetType, DomTransform } from '../../types.js'
+import { hrefAttribute } from '../../utils/dom.js'
 import { parseSrcset } from '../../utils/images.js'
+import { groupUrlAttributesByTag, type UrlAttribute, urlAttributes } from '../../utils/urls.js'
 
+type ProxyableAttribute = UrlAttribute & { asset: NonNullable<UrlAttribute['asset']> }
+
+const proxyableAttributes = urlAttributes.filter((attribute): attribute is ProxyableAttribute => {
+  return attribute.asset !== undefined
+})
+// A tag-less attribute is matched on its own, since a placeholder parks it on whatever element
+// it replaced; the rest are matched by tag, which is also how an SVG <image> carrying its url
+// on xlink:href is reached.
 const proxyableSelectors = [
-  'img',
-  'video',
-  'audio',
-  'source',
-  'track',
-  'image',
-  '[data-embed-thumbnail]',
-  '[data-embed-avatar]',
-  '[data-cite-icon]',
-  '[data-cite-thumbnail]',
+  ...new Set(proxyableAttributes.map(({ attribute, tag }) => tag ?? `[${attribute}]`)),
 ]
+const genericAttributes = proxyableAttributes.filter((attribute) => !attribute.tag)
+const tagAttributes = groupUrlAttributesByTag(proxyableAttributes)
 
-const sourceTypeFromParent = (element: Element): AssetType => {
+// A `parent` attribute takes its kind from the element above: a <source> or <track> is a video
+// track inside a <video>, an audio one inside an <audio>, and an image anywhere else.
+const assetTypeOf = (element: Element, asset: ProxyableAttribute['asset']): AssetType => {
+  if (asset !== 'parent') {
+    return asset
+  }
+
   const parent = element.parentElement?.localName
 
   if (parent === 'video') {
@@ -114,52 +123,21 @@ export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
     const elements = document.querySelectorAll(proxyableSelectors.join(', '))
 
     for (const element of elements) {
-      switch (element.localName) {
-        case 'img': {
-          proxyAttribute(element, 'src', 'image', assetProxyFn)
-          proxySrcset(element, 'image', assetProxyFn)
-          break
+      for (const { asset, attribute } of tagAttributes[element.localName] ?? []) {
+        const type = assetTypeOf(element, asset)
+
+        if (attribute === 'srcset') {
+          proxySrcset(element, type, assetProxyFn)
+          continue
         }
-        case 'video': {
-          proxyAttribute(element, 'src', 'video', assetProxyFn)
-          proxyAttribute(element, 'poster', 'image', assetProxyFn)
-          break
-        }
-        case 'audio': {
-          proxyAttribute(element, 'src', 'audio', assetProxyFn)
-          break
-        }
-        case 'source': {
-          proxyAttribute(element, 'src', sourceTypeFromParent(element), assetProxyFn)
-          proxySrcset(element, 'image', assetProxyFn)
-          break
-        }
-        case 'track': {
-          proxyAttribute(element, 'src', sourceTypeFromParent(element), assetProxyFn)
-          break
-        }
-        // SVG2 uses `href`. Legacy SVG1 uses `xlink:href`.
-        case 'image': {
-          const attribute = element.hasAttribute('href') ? 'href' : 'xlink:href'
-          proxyAttribute(element, attribute, 'image', assetProxyFn)
-          break
-        }
+
+        const name = attribute === 'href' ? hrefAttribute(element) : attribute
+
+        proxyAttribute(element, name, type, assetProxyFn)
       }
 
-      if (element.hasAttribute('data-embed-thumbnail')) {
-        proxyAttribute(element, 'data-embed-thumbnail', 'image', assetProxyFn)
-      }
-
-      if (element.hasAttribute('data-embed-avatar')) {
-        proxyAttribute(element, 'data-embed-avatar', 'image', assetProxyFn)
-      }
-
-      if (element.hasAttribute('data-cite-icon')) {
-        proxyAttribute(element, 'data-cite-icon', 'image', assetProxyFn)
-      }
-
-      if (element.hasAttribute('data-cite-thumbnail')) {
-        proxyAttribute(element, 'data-cite-thumbnail', 'image', assetProxyFn)
+      for (const { asset, attribute } of genericAttributes) {
+        proxyAttribute(element, attribute, assetTypeOf(element, asset), assetProxyFn)
       }
     }
   }

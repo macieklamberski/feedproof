@@ -126,6 +126,13 @@ export const attr = (element: Nullish<Element>, name: string): string | undefine
   return element?.getAttribute(name)?.trim() || undefined
 }
 
+// The name an element spells its reference with: SVG2 uses `href`, SVG1 uses `xlink:href`, and
+// an anchor inside an <svg> may use either. `href` wins where both are present, as it does in a
+// browser.
+export const hrefAttribute = (element: Element): string => {
+  return element.hasAttribute('href') ? 'href' : 'xlink:href'
+}
+
 // Keeps a value read out of an attribute or a url when it fits the shape expected of it, an id,
 // a handle or a token, and drops it otherwise, so nothing malformed reaches a minted url.
 export const keepIfMatches = (value: Nullish<string>, regex: RegExp): string | undefined => {
