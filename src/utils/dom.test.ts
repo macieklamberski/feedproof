@@ -474,8 +474,6 @@ describe('parseRatio', () => {
     expect(parseRatio('690 / 362')).toBe('690/362')
   })
 
-  // A short decimal still reduces, since scaling it up stays inside the bound: 1.5 becomes
-  // 15/10 and then 3/2. A long one does not, and is written over one as stated.
   it('should parse a bare decimal as width over height', () => {
     expect(parseRatio('1.5')).toBe('1.5/1')
     expect(parseRatio('1.77777777777778')).toBe('1.77777777777778/1')
