@@ -104,7 +104,9 @@ export const spotifyResolveEmbed = (
     src: `https://open.spotify.com/embed/${type}/${id}`,
     url: `https://open.spotify.com/${type}/${id}`,
     height: spotifyHeights[type],
-    title: card.title ?? stated,
+    // Some payloads carry the title key with an empty string, so a blank card title falls
+    // through to the stated one instead of shadowing it.
+    title: card.title?.trim() || stated,
     author: card.author,
     description: card.description,
     thumbnail: card.thumbnail,

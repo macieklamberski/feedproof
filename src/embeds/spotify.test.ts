@@ -271,6 +271,58 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // Some payloads carry the title key with an empty string, which must not shadow the name
+    // the iframe's own title states.
+    it('should fall back to the stated title when the card title is blank', async () => {
+      const blankTitleCardAttrs = jsonAttrValue({
+        title: '',
+        subtitle: 'The Smiths',
+      })
+      const value = html`
+        <iframe
+          class="spotify-wrap"
+          data-attrs="${blankTitleCardAttrs}"
+          src="https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t"
+          title="Spotify Embed: Cemetry Gates"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'track/03yOjwHoOPDlTUg0NRxN6t',
+        src: 'https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t',
+        url: 'https://open.spotify.com/track/03yOjwHoOPDlTUg0NRxN6t',
+        height: 152,
+        title: 'Cemetry Gates',
+        author: 'The Smiths',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should treat a whitespace-only card title as blank', async () => {
+      const whitespaceTitleCardAttrs = jsonAttrValue({
+        title: '   ',
+      })
+      const value = html`
+        <iframe
+          class="spotify-wrap"
+          data-attrs="${whitespaceTitleCardAttrs}"
+          src="https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t"
+          title="Spotify Embed: Cemetry Gates"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'track/03yOjwHoOPDlTUg0NRxN6t',
+        src: 'https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t',
+        url: 'https://open.spotify.com/track/03yOjwHoOPDlTUg0NRxN6t',
+        height: 152,
+        title: 'Cemetry Gates',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // An artwork url is only trusted when it comes from Spotify's own image host.
     it('should ignore artwork hosted somewhere else', async () => {
       const foreignArtworkAttrs = jsonAttrValue({
