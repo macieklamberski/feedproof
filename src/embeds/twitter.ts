@@ -159,7 +159,8 @@ export const twitterBlockquoteEmbedResolver = createMarkupEmbedResolver(
 )
 
 // The AMP component names the same tweet in an attribute and carries no text at all, so left
-// alone it is dropped as an empty element.
+// alone it reaches the reader inert: stripEmptyTags skips custom elements, whose emptiness is
+// meaningful, and no AMP runtime runs to build the frame.
 export const twitterAmpEmbedResolver = createMarkupEmbedResolver(
   'amp-twitter[data-tweetid]',
   extractTweet,

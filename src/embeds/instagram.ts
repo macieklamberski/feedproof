@@ -190,8 +190,9 @@ export const instagramBlockquoteEmbedResolver = createMarkupEmbedResolver(
 )
 
 // The AMP component names the post in an attribute and carries no text at all, so left alone it
-// is dropped as an empty element and the post goes with it. It names the media and not the path
-// the media lives at, and addresses every shortcode it is given through `/p/`.
+// reaches the reader inert: stripEmptyTags skips custom elements, whose emptiness is meaningful,
+// and no AMP runtime runs to build the frame. It names the media and not the path the media
+// lives at, and addresses every shortcode it is given through `/p/`.
 export const instagramAmpEmbedResolver = createMarkupEmbedResolver(
   'amp-instagram[data-shortcode], amp-instagram[shortcode]',
   (element): EmbedResolverResult | undefined => {
