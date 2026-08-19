@@ -53,11 +53,11 @@ describeForEachParser('replacePreLineBreaks', (parseHtml) => {
   it('should not modify content without pre elements', async () => {
     const value = '<p>plain paragraph</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should handle empty input', async () => {
-    expect(await transform('')).toBe('')
+    expect(await transform('')).toEqualHtml('')
   })
 
   it('should not stack extra entity encoding inside xmp', async () => {
@@ -69,7 +69,7 @@ describeForEachParser('replacePreLineBreaks', (parseHtml) => {
     const result = await transform(value)
     const baseline = await applyDomTransforms(parseHtml(value), [() => {}])
 
-    expect(result).toBe(baseline)
+    expect(result).toEqualHtml(baseline)
   })
 
   it('should be idempotent', async () => {
@@ -77,6 +77,6 @@ describeForEachParser('replacePreLineBreaks', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

@@ -131,7 +131,7 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
     it.each(specimenEntries)('should strip %s', async (_selector, specimen) => {
       const [value, expected] = Array.isArray(specimen) ? specimen : [specimen, '']
 
-      expect(await transform(`<p>Before</p>${value}<p>After</p>`)).toBe(
+      expect(await transform(`<p>Before</p>${value}<p>After</p>`)).toEqualHtml(
         `<p>Before</p>${expected}<p>After</p>`,
       )
     })
@@ -159,13 +159,13 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
         <amp-timeago datetime="2026-08-01T00:00:00Z">1 August 2026</amp-timeago>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should keep a read-more wrapper that holds real content (anchor-scoped)', async () => {
       const value = '<div class="read-more-section"><p>Body</p></div>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should remove image-link-expand carrying additional classes', async () => {
@@ -179,7 +179,7 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
       `
       const expected = '<picture><img src="x.jpg"></picture>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove the Tumblr alt-text badge and keep the image alt it labels', async () => {
@@ -195,7 +195,7 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
         </figure>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove SubscribeWidget regardless of the host tag', async () => {
@@ -205,13 +205,13 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
       `
       const expected = '<p>After</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should not match elements with a different data-component-name', async () => {
       const value = '<div data-component-name="ShareWidget">Share</div>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave unrelated iframes and forms untouched', async () => {
@@ -222,7 +222,7 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
         </form>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should remove both Substack and Drupal markers in the same document', async () => {
@@ -246,7 +246,7 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
         <p>article</p>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove multiple matches of the same selector', async () => {
@@ -260,7 +260,7 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
       `
       const expected = ''
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave document untouched when no non-content elements are present', async () => {
@@ -271,19 +271,19 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
         </figure>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should not touch unrelated classes containing "expand"', async () => {
       const value = '<div class="expand-collapse"><span>still here</span></div>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave non-Drupal custom elements untouched', async () => {
       const value = '<lite-youtube videoid="abc"></lite-youtube>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should be idempotent', async () => {
@@ -300,7 +300,7 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
       const once = await transform(value)
       const twice = await transform(once)
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
   })
 
@@ -316,7 +316,7 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
         </span>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
   })
 })

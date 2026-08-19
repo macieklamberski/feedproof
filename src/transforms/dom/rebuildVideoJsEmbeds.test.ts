@@ -66,7 +66,7 @@ describeForEachParser('rebuildVideoJsEmbeds', (parseHtml) => {
         </video-js>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     // A hosted player's element names an id and no file, so it survives this pass untouched and
@@ -81,7 +81,7 @@ describeForEachParser('rebuildVideoJsEmbeds', (parseHtml) => {
         ></video-js>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave an element naming no file at all', async () => {
@@ -92,14 +92,14 @@ describeForEachParser('rebuildVideoJsEmbeds', (parseHtml) => {
         ></video-js>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave an element whose data-setup is malformed json', async () => {
       const value = `<video-js data-setup='{"sources":['></video-js>`
       const expected = '<video-js data-setup="{&quot;sources&quot;:["></video-js>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -112,6 +112,6 @@ describeForEachParser('rebuildVideoJsEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

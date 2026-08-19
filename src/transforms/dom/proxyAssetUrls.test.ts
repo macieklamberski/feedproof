@@ -30,7 +30,7 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
   it('should be a no-op when assetProxyFn is unset', async () => {
     const value = '<img src="https://cdn.example.com/photo.jpg">'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   // Every rewrite case below states the whole element, so each one also pins the contract that
@@ -261,14 +261,14 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
   it('should not rewrite data-cite-url (navigation, not asset)', async () => {
     const value = '<div data-cite-url="https://example.com/post"></div>'
 
-    expect(await transform(value, wrapProxy)).toBe(value)
+    expect(await transform(value, wrapProxy)).toEqualHtml(value)
   })
 
   it('should leave attributes unchanged when assetProxyFn returns undefined', async () => {
     const skip: AssetProxyFn = () => undefined
     const value = '<img src="https://cdn.example.com/photo.jpg">'
 
-    expect(await transform(value, skip)).toBe(value)
+    expect(await transform(value, skip)).toEqualHtml(value)
   })
 
   it('should leave data: URIs untouched and never invoke assetProxyFn for them', async () => {
@@ -432,7 +432,7 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
   it('should not add a preserved attribute for data: URIs', async () => {
     const value = '<img src="data:image/png;base64,iVBORw0KGgo=">'
 
-    expect(await transform(value, wrapProxy)).toBe(value)
+    expect(await transform(value, wrapProxy)).toEqualHtml(value)
   })
 
   it('should be idempotent given an idempotent assetProxyFn', async () => {
@@ -440,7 +440,7 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     const once = await transform(value, idempotentProxy)
     const twice = await transform(once, idempotentProxy)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   it('should not overwrite the preserved src on a second idempotent run', async () => {

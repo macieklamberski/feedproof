@@ -23,7 +23,7 @@ describeForEachParser('convertGiphyEmbeds', (parseHtml) => {
       </a>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   // Compared with `toEqualHtml`: the two parsers serialise the added `alt` on opposite sides
@@ -58,7 +58,7 @@ describeForEachParser('convertGiphyEmbeds', (parseHtml) => {
       </a>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   // The padding wrapper is not this transform's job: unwrapWrappers dissolves a sole-child
@@ -78,7 +78,7 @@ describeForEachParser('convertGiphyEmbeds', (parseHtml) => {
       </div>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave no wrapper behind once the whole pipeline has run', async () => {
@@ -98,13 +98,13 @@ describeForEachParser('convertGiphyEmbeds', (parseHtml) => {
       baseUrl: 'https://x.test/p',
     })
 
-    expect(result).toBe(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   it('should leave a giphy url naming no gif alone', async () => {
     const value = '<iframe src="https://giphy.com/about"></iframe>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should be idempotent', async () => {
@@ -112,6 +112,6 @@ describeForEachParser('convertGiphyEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

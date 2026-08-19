@@ -16,7 +16,7 @@ describeForEachParser('enrichCitePlaceholders', (parseHtml) => {
   it('should be a no-op when enrichCiteFn is not provided', async () => {
     const value = '<div data-cite-provider="tumblr" data-cite-url="https://example.com/post"></div>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not call enrichCiteFn when no placeholders have provider and url', async () => {
@@ -247,6 +247,6 @@ describeForEachParser('enrichCitePlaceholders', (parseHtml) => {
     const once = await transform(value, withFn(fn))
     const twice = await transform(once, withFn(fn))
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

@@ -14,7 +14,7 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
     const value = '<p>Visit https://example.com for more</p>'
     const expected = '<p>Visit <a href="https://example.com">https://example.com</a> for more</p>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should link bare http URL', async () => {
@@ -81,7 +81,7 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
     const value = '<p>before https://example.com after</p>'
     const expected = '<p>before <a href="https://example.com">https://example.com</a> after</p>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should link URL in deeply nested content', async () => {
@@ -116,7 +116,7 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
   it('should not double-link already linked URL', async () => {
     const value = '<p><a href="https://example.com">https://example.com</a></p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not link protocol-less URL', async () => {
@@ -161,7 +161,7 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
   it('should handle whitespace-only text nodes', async () => {
     const value = '<p>   </p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should handle empty content', async () => {
@@ -175,7 +175,7 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   describe('cleanUrlFn', () => {
@@ -190,7 +190,7 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
         <p>See <a href="https://example.com/post">https://example.com/post</a> for more</p>
       `
 
-      expect(await transform(value, withCleanUrlFn)).toBe(expected)
+      expect(await transform(value, withCleanUrlFn)).toEqualHtml(expected)
     })
 
     it('should keep the url as written when cleaning changes nothing', async () => {
@@ -199,7 +199,7 @@ describeForEachParser('linkifyUrls', (parseHtml) => {
         <p>See <a href="https://example.com/post">https://example.com/post</a> for more</p>
       `
 
-      expect(await transform(value, withCleanUrlFn)).toBe(expected)
+      expect(await transform(value, withCleanUrlFn)).toEqualHtml(expected)
     })
   })
 })

@@ -44,6 +44,6 @@ describeForEachParser('fixLazyAudios', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

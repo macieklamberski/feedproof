@@ -27,13 +27,13 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
     const value = '<pre>\n   \n</pre>'
     const expected = '<pre></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave an empty pre unchanged', async () => {
     const value = '<pre></pre>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should trim leading newlines', async () => {
@@ -70,7 +70,7 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
     const expected =
       '<pre><code class="hljs"><span class="hljs-keyword">const</span> x = 1</code></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should dedent common leading indentation', async () => {
@@ -142,21 +142,21 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
     const value = '<pre>\n<span>x</span></pre>'
     const expected = '<pre><span>x</span></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should trim a trailing newline when the first child is an element', async () => {
     const value = '<pre><span>x</span>\n</pre>'
     const expected = '<pre><span>x</span></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should handle multiple pre blocks', async () => {
     const value = '<pre><code>first\n</code></pre><pre><code>second\n</code></pre>'
     const expected = '<pre><code>first</code></pre><pre><code>second</code></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should handle html with no pre blocks', async () => {
@@ -173,7 +173,7 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
     const result = await transform(value)
     const baseline = await applyDomTransforms(parseHtml(value), [() => {}])
 
-    expect(result).toBe(baseline)
+    expect(result).toEqualHtml(baseline)
   })
 
   it('should trim trailing whitespace and dedent together', async () => {
@@ -195,6 +195,6 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

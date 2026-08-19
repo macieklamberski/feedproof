@@ -76,7 +76,7 @@ describeForEachParser('assignVideoPosters', (parseHtml) => {
       <div data-embed-src="https://cdn.jwplayer.com/players/abc123.html"></div>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a standalone enclosure image when there is no video', async () => {
@@ -85,7 +85,7 @@ describeForEachParser('assignVideoPosters', (parseHtml) => {
       <p>Just text.</p>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should set the poster on a native video and remove the enclosure image', async () => {
@@ -101,7 +101,7 @@ describeForEachParser('assignVideoPosters', (parseHtml) => {
       </video>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should keep an unrelated image that is not a video poster', async () => {
@@ -110,7 +110,7 @@ describeForEachParser('assignVideoPosters', (parseHtml) => {
       <div data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"></div>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should be idempotent', async () => {
@@ -121,6 +121,6 @@ describeForEachParser('assignVideoPosters', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

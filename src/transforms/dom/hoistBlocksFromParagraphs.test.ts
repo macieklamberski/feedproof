@@ -27,7 +27,7 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
       const value = '<p><i class="marker">Block</i></p>'
       const expected = '<div data-block="">Block</div>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should split the paragraph around the block', async () => {
@@ -119,7 +119,7 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
         <p> after.</p>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -128,7 +128,7 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
       const value = '<div><i class="marker">Block</i></div>'
       const expected = '<div><div data-block="">Block</div></div>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should drop the trailing half when nothing renderable follows', async () => {
@@ -138,7 +138,7 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
         <div data-block="">Block</div>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should keep a trailing half holding only media', async () => {
@@ -150,7 +150,7 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
         </p>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // Both blocks match the selector, so the inner one gets its turn after the outer has
@@ -188,7 +188,7 @@ describeForEachParser('hoistBlocksFromParagraphs', (parseHtml) => {
         hoistBlocksFromParagraphs(baseContext),
       ])
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
   })
 })

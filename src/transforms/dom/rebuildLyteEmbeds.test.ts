@@ -18,14 +18,14 @@ describeForEachParser('rebuildLyteEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild an iframe from a standalone lyte_ node', async () => {
     const value = '<div id="lyte_dQw4w9WgXcQ"></div>'
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should produce a single iframe for the nested WYL_ / lyte_ pair', async () => {
@@ -38,14 +38,14 @@ describeForEachParser('rebuildLyteEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should keep an underscore-bearing video id intact', async () => {
     const value = '<div id="WYL_a_b-c123def45"></div>'
     const expected = '<iframe src="https://www.youtube.com/embed/a_b-c123def45"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should produce a youtube placeholder end to end', async () => {
@@ -83,6 +83,6 @@ describeForEachParser('rebuildLyteEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

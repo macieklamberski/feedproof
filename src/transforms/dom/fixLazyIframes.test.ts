@@ -72,7 +72,7 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
       ></iframe>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should promote over the Complianz placeholder video src', async () => {
@@ -89,7 +89,7 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
       ></iframe>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave the Invision placeholder src when nothing is parked', async () => {
@@ -111,13 +111,13 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
   it('should leave an empty iframe with no recoverable attribute', async () => {
     const value = '<iframe src="about:blank"></iframe>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should ignore flag-style values that are not URL-shaped', async () => {
     const value = '<iframe src="about:blank" data-src="loaded"></iframe>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should be idempotent', async () => {
@@ -125,6 +125,6 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

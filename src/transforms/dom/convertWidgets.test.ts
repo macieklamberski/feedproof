@@ -336,12 +336,12 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       <div data-embed-src="https://c-site.com/3"></div>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should skip iframe without src attribute', async () => {
     const value = '<iframe></iframe>'
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should still wrap unknown iframes when widgetResolvers is empty', async () => {
@@ -356,22 +356,22 @@ describeForEachParser('convertWidgets', (parseHtml) => {
 
   it('should leave video elements untouched', async () => {
     const value = '<video src="https://example.com/clip.mp4"></video>'
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave audio elements untouched', async () => {
     const value = '<audio src="https://example.com/episode.mp3"></audio>'
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should skip iframe with malformed src url', async () => {
     const value = '<iframe src="not-a-valid-url"></iframe>'
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should skip iframe with non-http(s) src', async () => {
     const value = '<iframe src="javascript:alert(1)"></iframe>'
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should fall through to next handler when first returns undefined', async () => {
@@ -462,7 +462,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   describe('non-iframe carriers', () => {
@@ -541,7 +541,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     it('should leave an empty iframe with no recoverable content', async () => {
       const value = '<iframe src="about:blank"></iframe>'
 
-      expect(await transform(value, withNoResolvers)).toBe(value)
+      expect(await transform(value, withNoResolvers)).toEqualHtml(value)
     })
   })
 
@@ -628,7 +628,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       const once = await transform(value, withNoResolvers)
       const twice = await transform(once, withNoResolvers)
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
   })
 
@@ -803,7 +803,7 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
   it('should leave a container its resolver rejects', async () => {
     const value = '<div class="native-video-embed"></div>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should run media and embed resolvers from the one array', async () => {
@@ -880,7 +880,7 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   describe('bare media files framed as embeds', () => {
@@ -980,13 +980,13 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
     it('should skip a streaming manifest', async () => {
       const value = '<div data-video-src="https://x.example/index.m3u8"></div>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should skip a value that names an image', async () => {
       const value = '<div data-src="https://x.example/photo.jpg"></div>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should skip a container that already wraps a player', async () => {

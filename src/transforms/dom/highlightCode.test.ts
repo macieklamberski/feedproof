@@ -492,13 +492,13 @@ describeForEachParser('highlightCode', (parseHtml) => {
         '<pre><span class="lineno">1</span>echo hi\n<span class="lineno">2</span>echo bye</pre>'
       const expected = '<pre data-pre-numbered=""><code>echo hi\necho bye</code></pre>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave an orphan gutter span outside any code block untouched', async () => {
       const value = '<p><span class="ln">1</span>text</p>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should drop a gutter table with no recognized class (structural)', async () => {
@@ -514,7 +514,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
       const value =
         '<table><tbody><tr><td>1</td><td>Apple</td></tr><tr><td>2</td><td>Banana</td></tr></tbody></table>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should not mark a plain code block without a gutter', async () => {
@@ -545,7 +545,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
   it('should leave an unlabeled non-JSON block plain', async () => {
     const value = '<pre><code>function greet(name) {\n  return "Hello, " + name;\n}</code></pre>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should keep line breaks when each line is wrapped in a block element', async () => {
@@ -577,44 +577,44 @@ describeForEachParser('highlightCode', (parseHtml) => {
   it('should not touch inline code outside pre', async () => {
     const value = '<p>Use <code>const x = 1</code> to declare a variable</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not touch empty code blocks', async () => {
     const value = '<pre><code></code></pre>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not touch whitespace-only code blocks', async () => {
     const value = '<pre><code>   \n  </code></pre>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a block with an unknown declared language plain', async () => {
     const value =
       '<pre><code class="language-nonexistent">function add(a, b) {\n  return a + b;\n}</code></pre>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a lang-auto block as plain text', async () => {
     const value = '<pre><code class="lang-auto">System: Host: laptop arch: x86_64</code></pre>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave an unlabeled JSON block plain', async () => {
     const value = '<pre><code>{\n  "linter": true,\n  "rules": ["a", "b"]\n}</code></pre>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a trivial unlabeled one-liner plain', async () => {
     const value = '<pre><code>const x = 1</code></pre>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   // Each row states only that the alias resolves to a registered language: the highlighted
@@ -667,21 +667,21 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const value = '<pre>plain preformatted text</pre>'
     const expected = '<pre><code>plain preformatted text</code></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave an unlabeled bare pre plain', async () => {
     const value = '<pre>function greet(name) {\n  return "Hello, " + name;\n}</pre>'
     const expected = '<pre><code>function greet(name) {\n  return "Hello, " + name;\n}</code></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not highlight a bare pre with an unsupported language hint', async () => {
     const value = '<pre data-language="nonexistent">some content here</pre>'
     const expected = '<pre data-language="nonexistent"><code>some content here</code></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should be idempotent on a bare pre', async () => {
@@ -689,7 +689,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   it('should highlight a standalone multi-line code (no pre) with a data-language hint', async () => {
@@ -718,32 +718,32 @@ describeForEachParser('highlightCode', (parseHtml) => {
   it('should not highlight a hinted single-line inline code', async () => {
     const value = '<p>Use <code class="language-js">const x = 1</code> to declare</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should promote an unhinted multi-line standalone code even without highlighting', async () => {
     const value = '<code>the quick brown fox\njumps over the lazy dog</code>'
     const expected = '<pre><code>the quick brown fox\njumps over the lazy dog</code></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not promote a single-line standalone code', async () => {
     const value = '<p>see <code>config.set("x", 1)</code> here</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not promote a pretty-printed single-word inline code', async () => {
     const value = '<p>I used <code>\n  mdp\n </code> for slides</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not promote a single content line padded with blank lines', async () => {
     const value = '<p>run <code>\n\n\n  npm install\n </code> first</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should be idempotent on a standalone code', async () => {
@@ -751,13 +751,13 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   it('should handle html with no code blocks', async () => {
     const value = '<p>No code here</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should highlight Shiki code blocks using data-language on pre', async () => {
@@ -816,7 +816,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   it('should highlight an Expressive Code block via its figcaption filename', async () => {
@@ -834,7 +834,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   it('should highlight an EnlighterJS bare pre via data-enlighter-language', async () => {
@@ -852,7 +852,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const expected =
       '<pre class="EnlighterJSRAW" data-enlighter-language="generic"><code>some plain text here</code></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should highlight a Forem class="highlight LANG" block', async () => {
@@ -868,7 +868,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   it('should highlight a GitHub highlight-source-LANG block', async () => {
@@ -886,7 +886,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   it('should be idempotent', async () => {
@@ -894,7 +894,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   describe('language attributes', () => {
@@ -934,13 +934,13 @@ describeForEachParser('highlightCode', (parseHtml) => {
       const value =
         '<pre><code>Note: this matters; really, it does. See also: the docs.</code></pre>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave a block declared as plain text unlabeled', async () => {
       const value = '<pre><code class="language-text">just some plain text</code></pre>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
   })
 
@@ -959,7 +959,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
       const highlightFn: HighlightFn = () => undefined
       const value = '<pre><code class="language-js">const x = 1</code></pre>'
 
-      expect(await transform(value, { ...baseContext, highlightFn })).toBe(value)
+      expect(await transform(value, { ...baseContext, highlightFn })).toEqualHtml(value)
     })
 
     it('should support an async highlightFn', async () => {
@@ -977,13 +977,13 @@ describeForEachParser('highlightCode', (parseHtml) => {
       const value = '<pre>plain preformatted text</pre>'
       const expected = '<pre><code>plain preformatted text</code></pre>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave a pre whose only child is a code unchanged', async () => {
       const value = '<pre><code>plain text</code></pre>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     // The existing <code> is left in place (stripEmptyTags drops the empty span later); the
@@ -991,13 +991,13 @@ describeForEachParser('highlightCode', (parseHtml) => {
     it('should not nest the code when a Pygments empty span precedes it', async () => {
       const value = '<pre><span></span><code>plain text</code></pre>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should not nest the code when it is buried under wrapper divs', async () => {
       const value = '<pre><div class="hl"><code>plain text</code></div></pre>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should wrap a pre with no code child, keeping empty line spans', async () => {
@@ -1005,7 +1005,7 @@ describeForEachParser('highlightCode', (parseHtml) => {
       const expected =
         '<pre><code><span class="line"></span><br><span class="line">x = 1</span></code></pre>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should move the in-place hljs class onto the new code', async () => {

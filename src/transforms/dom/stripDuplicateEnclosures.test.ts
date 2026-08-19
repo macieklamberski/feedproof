@@ -21,7 +21,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
         <img src="https://example.com/photo.jpg">
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a marked image that is a WordPress sized copy of a content image', async () => {
@@ -31,7 +31,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
       `
       const expected = '<img src="https://example.com/uploads/photo.jpg">'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a marked image that is a size-keyword variant of a content image', async () => {
@@ -41,7 +41,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
       `
       const expected = '<img src="https://example.com/photos/123/456/large.jpg">'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a marked image differing from a content image only by query', async () => {
@@ -51,7 +51,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
       `
       const expected = '<img src="https://example.com/a/photo.png">'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a marked image differing from a content image only by www', async () => {
@@ -61,7 +61,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
       `
       const expected = '<img src="http://example.com/news/thumb.jpg">'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a marked image differing from a content image only by protocol', async () => {
@@ -71,7 +71,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
       `
       const expected = '<img src="http://example.com/news/thumb.jpg">'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a marked image differing from a content image only by host case', async () => {
@@ -81,7 +81,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
       `
       const expected = '<img src="https://example.com/news/thumb.jpg">'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a marked Substack image that differs only in proxy render params', async () => {
@@ -95,7 +95,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
         >
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should keep two Substack images with different inner sources', async () => {
@@ -108,7 +108,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
         <img src="https://substackcdn.com/image/fetch/$s_!a!,w_1456/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fbbb_800x600.png">
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a marked Photon image that wraps the same origin as the content', async () => {
@@ -120,7 +120,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
         <img src="https://i0.wp.com/example.com/wp-content/uploads/2024/05/photo.png?w=300">
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a Photon image that duplicates a non-proxied content image', async () => {
@@ -130,7 +130,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
       `
       const expected = '<img src="https://example.com/wp-content/uploads/photo.png">'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a Cloudflare image-resize variant with an absolute source', async () => {
@@ -144,7 +144,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
         >
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a Cloudflare image-resize variant with a relative source (beehiiv)', async () => {
@@ -158,7 +158,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
         >
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove an ImageKit variant of the same source', async () => {
@@ -170,7 +170,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
         <img src="https://ik.imagekit.io/acct/tr:w-900/https://origin.example.com/a/photo.jpg">
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a wsrv.nl variant of the same source', async () => {
@@ -197,7 +197,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
         <img src="https://i0.wp.com/example.com/a/two.png?w=300">
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should keep a genuinely different image and drop its marker', async () => {
@@ -210,7 +210,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
         <img src="https://example.com/photos/123/456/large.jpg">
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should not collapse unrelated root-level size-keyword files', async () => {
@@ -223,7 +223,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
         <img src="https://example.com/large.jpg">
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a content image variant using cleanUrlFn before comparing', async () => {
@@ -237,7 +237,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
       }
       const expected = '<img src="https://example.com/a/photo.png?utm=2">'
 
-      expect(await transform(value, context)).toBe(expected)
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
   })
 
@@ -249,7 +249,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
       `
       const expected = '<audio src="https://example.com/episode.mp3"></audio>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should keep a marked audio whose identity lives in a differing query', async () => {
@@ -262,7 +262,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
         <audio src="https://host.example/play.mp3?url=episodeB"></audio>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a marked embed placeholder matching a content embed', async () => {
@@ -272,7 +272,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
       `
       const expected = '<div data-embed-src="https://www.youtube.com/embed/abc"></div>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -285,7 +285,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
     `
     const expected = '<img src="https://example.com/photo.jpg">'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should do nothing when there are no marked enclosures', async () => {
@@ -294,7 +294,7 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
       <img src="https://example.com/photo.jpg">
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should be idempotent', async () => {
@@ -306,6 +306,6 @@ describeForEachParser('stripDuplicateEnclosures', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

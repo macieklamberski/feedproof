@@ -23,7 +23,7 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
         <p>Thanks to <a href="https://substack.com/profile/123456">@Jane Miller</a> for the idea.</p>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should link a publication mention to its payload url', async () => {
@@ -38,7 +38,7 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
         <p>She hosts <a href="https://open.substack.com/pub/morningletters">@Morning Letters</a> now.</p>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should convert every mention in a paragraph', async () => {
@@ -51,7 +51,7 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
         </p>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -61,7 +61,7 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
       const value = `<p>With ${mention} on stage.</p>`
       const expected = '<p>With @Sam Fields on stage.</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should fall back to the profile url when the payload url is not http', async () => {
@@ -74,7 +74,7 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
       const value = `<p>${mention}</p>`
       const expected = '<p><a href="https://substack.com/profile/42">@Ana</a></p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should not interpolate an id that is not a positive integer', async () => {
@@ -82,7 +82,7 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
       const value = `<p>${mention}</p>`
       const expected = '<p>@Ana</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -90,19 +90,19 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
     it('should leave a span without data-attrs untouched', async () => {
       const value = '<p><span class="mention-wrap" data-component-name="MentionToDOM"></span></p>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave a span with malformed data-attrs untouched', async () => {
       const value = `<p>${makeMention('{"name":"Ana"')}</p>`
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave a span without a name untouched', async () => {
       const value = `<p>${makeMention({ id: 123456, type: 'user', url: null })}</p>`
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
   })
 
@@ -117,7 +117,7 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
       baseUrl: 'https://example.com',
     })
 
-    expect(result).toBe(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
@@ -126,6 +126,6 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

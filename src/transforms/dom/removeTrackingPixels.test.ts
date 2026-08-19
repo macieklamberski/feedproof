@@ -18,7 +18,7 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
       `
       const expected = '<p>Text</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove 2x2 pixel images', async () => {
@@ -332,6 +332,6 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

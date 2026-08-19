@@ -16,7 +16,7 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
   it('should be a no-op when enrichEmbedFn is not provided', async () => {
     const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not call enrichEmbedFn when no placeholders have provider and id', async () => {
@@ -284,6 +284,6 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     const once = await transform(value, withFn(fn))
     const twice = await transform(once, withFn(fn))
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

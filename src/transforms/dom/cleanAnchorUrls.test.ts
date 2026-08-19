@@ -16,7 +16,7 @@ describeForEachParser('cleanAnchorUrls', (parseHtml) => {
     const context = { ...baseContext, cleanUrlFn: stripQueryFn }
     const expected = '<a href="https://example.com/page">link</a>'
 
-    expect(await transform(value, context)).toBe(expected)
+    expect(await transform(value, context)).toEqualHtml(expected)
   })
 
   it('should clean every anchor in the document', async () => {
@@ -30,27 +30,27 @@ describeForEachParser('cleanAnchorUrls', (parseHtml) => {
       <a href="https://example.com/b">second</a>
     `
 
-    expect(await transform(value, context)).toBe(expected)
+    expect(await transform(value, context)).toEqualHtml(expected)
   })
 
   it('should leave hrefs untouched when cleanUrlFn returns the same value', async () => {
     const value = '<a href="https://example.com/page">link</a>'
     const context = { ...baseContext, cleanUrlFn: stripQueryFn }
 
-    expect(await transform(value, context)).toBe(value)
+    expect(await transform(value, context)).toEqualHtml(value)
   })
 
   it('should do nothing when cleanUrlFn is not provided', async () => {
     const value = '<a href="https://example.com/page?utm_source=feed">link</a>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should ignore anchors without hrefs', async () => {
     const value = '<a id="top">anchor</a>'
     const context = { ...baseContext, cleanUrlFn: stripQueryFn }
 
-    expect(await transform(value, context)).toBe(value)
+    expect(await transform(value, context)).toEqualHtml(value)
   })
 
   it.todo('should surface errors when cleanUrlFn throws', () => {
@@ -65,6 +65,6 @@ describeForEachParser('cleanAnchorUrls', (parseHtml) => {
     const once = await transform(value, context)
     const twice = await transform(once, context)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

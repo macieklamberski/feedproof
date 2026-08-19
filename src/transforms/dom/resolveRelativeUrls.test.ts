@@ -15,7 +15,7 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     const value = '<a href="/page">link</a>'
     const expected = '<a href="https://example.com/page">link</a>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve through the configured resolveUrlFn', async () => {
@@ -26,56 +26,56 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     const value = '<a href="/page">link</a>'
     const expected = '<a href="https://custom.test/page">link</a>'
 
-    expect(await transform(value, context)).toBe(expected)
+    expect(await transform(value, context)).toEqualHtml(expected)
   })
 
   it('should resolve relative src on images', async () => {
     const value = '<img src="/images/photo.jpg">'
     const expected = '<img src="https://example.com/images/photo.jpg">'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve relative src on video elements', async () => {
     const value = '<video src="/video.mp4"></video>'
     const expected = '<video src="https://example.com/video.mp4"></video>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve relative data on object elements', async () => {
     const value = '<object data="/player.swf"></object>'
     const expected = '<object data="https://example.com/player.swf"></object>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve relative src on audio elements', async () => {
     const value = '<audio src="/audio.mp3"></audio>'
     const expected = '<audio src="https://example.com/audio.mp3"></audio>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve relative src on source elements', async () => {
     const value = '<video><source src="/video.mp4"></video>'
     const expected = '<video><source src="https://example.com/video.mp4"></video>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve relative src on iframes', async () => {
     const value = '<iframe src="/embed"></iframe>'
     const expected = '<iframe src="https://example.com/embed"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve relative video poster', async () => {
     const value = '<video poster="/thumb.jpg"></video>'
     const expected = '<video poster="https://example.com/thumb.jpg"></video>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve srcset entries', async () => {
@@ -84,14 +84,14 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
       <img srcset="https://example.com/small.jpg 300w, https://example.com/large.jpg 600w">
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve a relative srcset entry following an absolute one with no space', async () => {
     const value = '<img srcset="https://cdn.com/a.jpg 100w,/rel/b.jpg 200w">'
     const expected = '<img srcset="https://cdn.com/a.jpg 100w, https://example.com/rel/b.jpg 200w">'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   // A url-less feed srcset ("…768w, 225w, 563w") makes the parser read the bare width
@@ -100,7 +100,7 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     const value = '<img srcset="https://cdn.com/a.jpg 768w,  225w,  563w,  1152w">'
     const expected = '<img srcset="https://cdn.com/a.jpg 768w">'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve srcset entries on source elements', async () => {
@@ -112,7 +112,7 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
       </picture>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve camelCase srcSet from React/Next.js', async () => {
@@ -130,43 +130,43 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
   it('should preserve already-absolute URLs', async () => {
     const value = '<a href="https://other.com/page">link</a>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should skip data: URLs', async () => {
     const value = '<img src="data:image/png;base64,abc">'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should skip mailto: URLs', async () => {
     const value = '<a href="mailto:test@example.com">email</a>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should skip tel: URLs', async () => {
     const value = '<a href="tel:+1234567890">call</a>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should skip javascript: URLs', async () => {
     const value = '<a href="javascript:void(0)">click</a>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should preserve fragment-only hrefs (in-article anchors)', async () => {
     const value = '<a href="#section">jump</a>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should preserve fragment-only href even when no matching target exists', async () => {
     const value = '<a href="#missing">jump</a>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should preserve fragment-only href alongside an id target', async () => {
@@ -175,28 +175,28 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
       <h2 id="section">Section</h2>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should still resolve hrefs that combine a path with a fragment', async () => {
     const value = '<a href="/page#section">jump</a>'
     const expected = '<a href="https://example.com/page#section">jump</a>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should handle protocol-relative URLs', async () => {
     const value = '<img src="//cdn.example.com/img.jpg">'
     const expected = '<img src="https://cdn.example.com/img.jpg">'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should handle invalid URLs gracefully', async () => {
     const value = '<a href="://broken">link</a>'
     const expected = '<a href="https://example.com/://broken">link</a>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave relative urls untouched when baseUrl is missing', async () => {
@@ -205,7 +205,7 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
       <img src="/photo.jpg">
     `
 
-    expect(await transform(value, defaultContext)).toBe(value)
+    expect(await transform(value, defaultContext)).toEqualHtml(value)
   })
 
   // A protocol-relative url names its host already and needs only a scheme, so it is absolutised
@@ -220,20 +220,20 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
       <img src="https://cdn.test/photo.jpg">
     `
 
-    expect(await transform(value, defaultContext)).toBe(expected)
+    expect(await transform(value, defaultContext)).toEqualHtml(expected)
   })
 
   it('should not modify html with no resolvable attributes', async () => {
     const value = '<p>No links or images</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should resolve srcset with single entry and no descriptor', async () => {
     const value = '<img srcset="/photo.jpg">'
     const expected = '<img srcset="https://example.com/photo.jpg">'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should preserve commas inside srcset URLs', async () => {
@@ -243,7 +243,7 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     ].join(', ')
     const value = `<img srcset="${srcset}">`
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not split Substack CDN srcset into fragments resolved against base URL', async () => {
@@ -253,7 +253,7 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     ].join(', ')
     const value = `<img srcset="${srcset}">`
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should resolve a relative href on an svg image', async () => {
@@ -275,6 +275,6 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

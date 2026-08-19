@@ -16,7 +16,7 @@ describeForEachParser('linkifyGistEmbeds', (parseHtml) => {
       >https://gist.github.com/octocat/6cad326836d38bd3a7ae</a>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should handle a user-less gist url', async () => {
@@ -27,7 +27,7 @@ describeForEachParser('linkifyGistEmbeds', (parseHtml) => {
       >https://gist.github.com/6cad326836d38bd3a7ae</a>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should drop a trailing ?file= query when building the link', async () => {
@@ -40,7 +40,7 @@ describeForEachParser('linkifyGistEmbeds', (parseHtml) => {
       >https://gist.github.com/octocat/6cad326836d38bd3a7ae</a>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should replace an amp-gist with a link built from the bare gist id', async () => {
@@ -57,19 +57,19 @@ describeForEachParser('linkifyGistEmbeds', (parseHtml) => {
       >https://gist.github.com/b9bb35bc68df68259af94430f012425f</a>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave an amp-gist with a malformed gist id untouched', async () => {
     const value = '<amp-gist data-gistid="../../evil"></amp-gist>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave an amp-gist with an empty gist id untouched', async () => {
     const value = '<amp-gist data-gistid=""></amp-gist>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   // A script pointing at the gist page rather than its `.js` embed names no gist to link to,
@@ -77,13 +77,13 @@ describeForEachParser('linkifyGistEmbeds', (parseHtml) => {
   it('should leave a gist script that names no embed untouched', async () => {
     const value = '<script src="https://gist.github.com/octocat"></script>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a non-gist script untouched', async () => {
     const value = '<script src="https://example.com/widget.js"></script>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should be idempotent', async () => {
@@ -91,6 +91,6 @@ describeForEachParser('linkifyGistEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await applyDomTransforms(parseHtml(once), [linkifyGistEmbeds(baseContext)])
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

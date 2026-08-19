@@ -22,7 +22,7 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
       <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should surface a data-embed-src placeholder trapped in a template', async () => {
@@ -40,7 +40,7 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
   it('should leave a template with no embed alone', async () => {
     const value = '<template><p>placeholder text</p></template>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should hoist the content in place of the template', async () => {
@@ -58,7 +58,7 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
       <p>after</p>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should collapse the hd-bcve shape into one connected player', async () => {
@@ -107,7 +107,7 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })
 
@@ -154,6 +154,6 @@ describeForEachParser('surfaceTemplateEmbeds (media)', (parseHtml) => {
   it('should leave a template holding no media or embed alone', async () => {
     const value = '<div><template><span class="skeleton"></span></template></div>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 })

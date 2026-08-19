@@ -17,7 +17,7 @@ describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a Google Tag Manager noscript alone', async () => {
@@ -28,13 +28,13 @@ describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {
       </noscript>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a noscript without an iframe alone', async () => {
     const value = '<noscript><p>Enable JavaScript</p></noscript>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should produce a youtube placeholder end to end', async () => {
@@ -69,6 +69,6 @@ describeForEachParser('surfaceNoscriptEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

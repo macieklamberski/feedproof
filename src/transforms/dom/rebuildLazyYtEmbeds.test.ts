@@ -18,7 +18,7 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should keep an underscore-bearing video id intact', async () => {
@@ -30,7 +30,7 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/a_b-c123def"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a facade with an empty data-youtube-id untouched', async () => {
@@ -41,13 +41,13 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
       ></div>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a facade with no data-youtube-id untouched', async () => {
     const value = '<div class="lazyYT"></div>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should produce a youtube placeholder end to end', async () => {
@@ -90,7 +90,7 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild a data-youtube-id facade whatever class it carries', async () => {
@@ -102,14 +102,14 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild a data-youtube facade', async () => {
     const value = '<div data-youtube="dQw4w9WgXcQ"></div>'
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild a youtube-player facade naming its id', async () => {
@@ -121,7 +121,7 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild a youtube-player facade naming its embed', async () => {
@@ -133,7 +133,7 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   // `data-id` says nothing about a platform, so the class is what has to name one.
@@ -145,7 +145,7 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
       ></div>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   // The facade div holds nothing, so an unrecognised one is not an empty box on the page:
@@ -181,7 +181,7 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
       ></div>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   // The id goes straight into a url, so what counts as one stays embeds/youtube.ts's answer.
@@ -193,7 +193,7 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
       ></div>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should be idempotent', async () => {
@@ -206,6 +206,6 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

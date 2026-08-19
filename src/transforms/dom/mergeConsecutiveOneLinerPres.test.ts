@@ -18,7 +18,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
     `
     const expected = '<pre>line 1\nline 2\nline 3</pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should merge pre>code lines into one block, keeping a single code', async () => {
@@ -28,7 +28,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
     `
     const expected = '<pre><code>line 1\nline 2</code></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should keep inline markup inside a merged code line', async () => {
@@ -38,7 +38,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
     `
     const expected = '<pre><code>a <b>x</b>\nb</code></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should strip trailing br tags from merged lines', async () => {
@@ -49,26 +49,26 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
     `
     const expected = '<pre>line 1\nline 2\nline 3</pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should ignore whitespace-only text nodes between pres', async () => {
     const value = '<pre>line 1</pre> \n <pre>line 2</pre>'
     const expected = '<pre>line 1\nline 2</pre> \n '
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not merge if any pre is multi-line', async () => {
     const value = '<pre>line 1\nline 2</pre><pre>line 3</pre>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not merge if any pre has multi-line content after trimming', async () => {
     const value = '<pre>line 1\nline 2\n</pre><pre>line 3</pre>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not treat mid-content br as multi-line', async () => {
@@ -78,7 +78,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
     `
     const expected = '<pre>line 1<br>line 2\nline 3</pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave br for replacePreLineBreaks to clean up', async () => {
@@ -97,7 +97,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
   it('should not merge a single pre block', async () => {
     const value = '<pre>only one</pre>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not merge pres separated by non-whitespace content', async () => {
@@ -107,7 +107,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
       <pre>second</pre>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not merge pres separated by a comment node', async () => {
@@ -117,7 +117,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
       <pre>second</pre>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should handle Medium-style code blocks', async () => {
@@ -129,7 +129,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
     `
     const expected = "<pre>- name: Upgrade packages\n  yum:\n    name: '*'\n    state: latest</pre>"
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should merge multiple separate runs independently', async () => {
@@ -142,7 +142,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
     `
     const expected = '<pre>a\nb</pre><p>gap</p><pre>c\nd</pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should preserve surrounding content', async () => {
@@ -154,14 +154,14 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
     `
     const expected = '<p>before</p><pre>a\nb</pre><p>after</p>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should strip surrounding newlines but preserve spaces', async () => {
     const value = '<pre>\nline 1\n</pre><pre>\n  line 2\n</pre>'
     const expected = '<pre>line 1\n  line 2</pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   describe('preservedPreClasses', () => {
@@ -171,7 +171,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
         <pre class="wp-block-verse">stanza 2</pre>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should skip a run where a pre has wp-block-preformatted', async () => {
@@ -180,7 +180,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
         <pre class="wp-block-preformatted">Chapter 1 ____23</pre>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should skip when the preserved class is one of several tokens', async () => {
@@ -189,7 +189,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
         <pre class="wp-block-verse has-text-align-center">line 2</pre>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should skip when only one pre in the run carries the preserved class', async () => {
@@ -199,7 +199,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
         <pre>line 3</pre>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should still merge wp-block-code (not in the preserve list)', async () => {
@@ -209,7 +209,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
       `
       const expected = '<pre class="wp-block-code">SHOW GRANTS\nFOR user_or_role</pre>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should still merge when neither pre carries any class', async () => {
@@ -219,7 +219,7 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
       `
       const expected = '<pre>line 1\nline 2</pre>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -232,6 +232,6 @@ describeForEachParser('mergeConsecutiveOneLinerPres', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

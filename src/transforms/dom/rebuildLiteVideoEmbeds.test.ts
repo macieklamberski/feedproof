@@ -13,20 +13,20 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     const value = '<lite-youtube videoid="dQw4w9WgXcQ"></lite-youtube>'
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild an iframe from a lite-vimeo element', async () => {
     const value = '<lite-vimeo videoid="76979871"></lite-vimeo>'
     const expected = '<iframe src="https://player.vimeo.com/video/76979871"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a lite-youtube element with no videoid alone', async () => {
     const value = '<lite-youtube></lite-youtube>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should carry a youtube start offset into a query param', async () => {
@@ -38,7 +38,7 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=90"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should carry a vimeo start offset into a time fragment', async () => {
@@ -50,7 +50,7 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://player.vimeo.com/video/76979871#t=90s"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should ignore a non-numeric start', async () => {
@@ -62,7 +62,7 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should carry the whitelisted half of params', async () => {
@@ -74,7 +74,7 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   // The attribute names the same option more specifically than the query string does.
@@ -84,7 +84,7 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=90"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   // Anything the iframe path would not carry cannot arrive this way either.
@@ -94,7 +94,7 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=10"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should keep a params offset through the default pipeline', async () => {
@@ -160,6 +160,6 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

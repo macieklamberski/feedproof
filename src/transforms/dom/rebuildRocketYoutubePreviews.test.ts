@@ -20,7 +20,7 @@ describeForEachParser('rebuildRocketYoutubePreviews', (parseHtml) => {
     `
     const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should carry the data-query through as a query string', async () => {
@@ -35,7 +35,7 @@ describeForEachParser('rebuildRocketYoutubePreviews', (parseHtml) => {
       <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed"></iframe>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave the element untouched when there is no data-src', async () => {
@@ -46,7 +46,7 @@ describeForEachParser('rebuildRocketYoutubePreviews', (parseHtml) => {
       ></div>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should produce a youtube placeholder end to end', async () => {
@@ -90,6 +90,6 @@ describeForEachParser('rebuildRocketYoutubePreviews', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

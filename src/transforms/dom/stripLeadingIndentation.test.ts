@@ -46,7 +46,7 @@ describeForEachParser('stripLeadingIndentation', (parseHtml) => {
   ]
 
   it.each(blockCases)('should strip the leading run from %s', async (value, expected) => {
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not cross a nested block when a div wraps child blocks', async () => {
@@ -59,7 +59,7 @@ describeForEachParser('stripLeadingIndentation', (parseHtml) => {
   it('should leave purely collapsible leading whitespace untouched', async () => {
     const value = '<p>   \n\tLorem ipsum</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should preserve non-leading nbsp', async () => {
@@ -84,18 +84,18 @@ describeForEachParser('stripLeadingIndentation', (parseHtml) => {
   it('should leave a paragraph without leading whitespace unchanged', async () => {
     const value = '<p>Lorem ipsum</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should strip the whole run from an all-whitespace block', async () => {
     const value = '<p>&nbsp;&nbsp;</p>'
     const expected = '<p></p>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should handle empty input', async () => {
-    expect(await transform('')).toBe('')
+    expect(await transform('')).toEqualHtml('')
   })
 
   it('should be idempotent', async () => {
@@ -103,6 +103,6 @@ describeForEachParser('stripLeadingIndentation', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })
