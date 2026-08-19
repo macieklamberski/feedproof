@@ -27,9 +27,9 @@ Feedsweep is a pure function over HTML. One call to [`transformContent`](/refere
 
 The DOM transforms run in a deliberate sequence. Three clusters matter for understanding the output:
 
-1. **Recover first.** Facades and lazy-loading conventions are rebuilt into ordinary elements early — a `lite-youtube` element becomes a real `<iframe>`, a `data-src` becomes a `src`, a consent-gated embed gets its parked URL back. Everything downstream then treats them like any other media. See [Embed Recovery](/transforms/embeds).
+1. **Recover first.** Facades and lazy-loading conventions are rebuilt into ordinary elements early: a `lite-youtube` element becomes a real `<iframe>`, a `data-src` becomes a `src`, a consent-gated embed gets its parked URL back. Everything downstream then treats them like any other media. See [Embed Recovery](/transforms/embeds).
 2. **Read cards early, classify embeds late.** Link-preview cards are converted to [cite placeholders](/widgets/cites) before prose normalization can disturb their delicate markup. Iframes and players are classified into [embed placeholders](/widgets/embeds) near the end, after every rebuild has had a chance to produce one.
-3. **Enforce invariants last.** URL safety, asset proxying, empty-tag removal, and table wrapping run at the end, so they cover everything earlier passes produced — including placeholder attributes and injected enclosures.
+3. **Enforce invariants last.** URL safety, asset proxying, empty-tag removal, and table wrapping run at the end, so they cover everything earlier passes produced, placeholder attributes and injected enclosures included.
 
 ## Guarantees
 
@@ -57,4 +57,4 @@ What feedsweep knows about the feed landscape is not configurable: the platforms
 
 ## What Stays Out of Scope
 
-Feedsweep is not a sanitizer and not a content extractor. It does not enforce tag allowlists — keep an HTML sanitizer in your pipeline ([Security](/guides/security)) — and it assumes the input is already an extracted feed item, not a full web page with navigation to strip.
+Feedsweep is not a sanitizer and not a content extractor. It does not enforce tag allowlists, so keep an HTML sanitizer in your pipeline ([Security](/guides/security)), and it assumes the input is already an extracted feed item, not a full web page with navigation to strip.

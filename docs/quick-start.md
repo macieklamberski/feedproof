@@ -32,7 +32,7 @@ bun add feedsweep linkedom
 
 :::
 
-`linkedom` is an optional peer dependency. You only need it for the bundled `parseHtml` helper — see [DOM Parsing](/guides/customization/dom-parsing) for jsdom, happy-dom, and browser-native alternatives.
+`linkedom` is an optional peer dependency. You only need it for the bundled `parseHtml` helper; see [DOM Parsing](/guides/customization/dom-parsing) for jsdom, happy-dom, and browser-native alternatives.
 
 ## Basic Usage
 
@@ -72,7 +72,7 @@ See [Enclosures](/guides/enclosures) for the full guide.
 
 ## Next Steps
 
-- **[How It Works](/how-it-works)** — the pipeline, its phases, and its guarantees.
-- **[Transforms](/transforms)** — the complete catalog of the 81 transforms.
-- **[Widgets](/widgets)** — how embeds and link cards become `data-*` placeholders.
-- **[transformContent](/reference/transform-content)** — every option in one table.
+- **[How It Works](/how-it-works).** The pipeline, its phases, and its guarantees.
+- **[Transforms](/transforms).** The complete catalog of the 81 transforms.
+- **[Widgets](/widgets).** How embeds and link cards become `data-*` placeholders.
+- **[transformContent](/reference/transform-content).** Every option in one table.

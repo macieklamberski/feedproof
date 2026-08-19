@@ -121,7 +121,7 @@ Written on `<pre>` elements by [highlightCode](/transforms/code).
 
 ## Enclosures: `data-enclosure`
 
-A valueless marker on every element [injectEnclosures](/guides/enclosures) adds — native `<audio>`, `<video>`, `<img>`, or an embed placeholder. It tells injected media apart from media the item's own content carried, and stops a repeat run from injecting the same source twice.
+A valueless marker on every element [injectEnclosures](/guides/enclosures) adds: a native `<audio>`, `<video>`, `<img>`, or an embed placeholder. It tells injected media apart from media the item's own content carried, and stops a repeat run from injecting the same source twice.
 
 ```html
 <audio controls src="https://example.com/episode.mp3" data-enclosure></audio>

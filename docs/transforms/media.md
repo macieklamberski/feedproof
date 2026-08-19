@@ -24,7 +24,7 @@ Promotes the real image URL from a lazy-load attribute into `src` (and the real 
 
 ### fixLazyVideos
 
-Promotes a lazy `<video>` clip URL into `src` and a lazy `data-poster` into `poster`, so a reader shows the still frame and can play the clip. Only fires when the element has nothing to play from — a usable `src` or a `<source>` child means the clip already resolves.
+Promotes a lazy `<video>` clip URL into `src` and a lazy `data-poster` into `poster`, so a reader shows the still frame and can play the clip. Only fires when the element has nothing to play from: a usable `src` or a `<source>` child means the clip already resolves.
 
 **Before**
 
@@ -90,7 +90,7 @@ The set stops where the provider is known. An AMP element naming a platform (`am
 
 ### resolveMediaDimensions
 
-Backfills missing `width` / `height` attributes on `<img>` and `<video>` from, in order: the element's inline style, a size encoded in its URL, or — for an image inside a `<picture>` — the wrapping picture or source. Invalid attribute values (percentages, `auto`, zero) are dropped first. The attributes drive the browser's automatic aspect ratio, so space is reserved and the ratio survives reader CSS like `img { height: auto }`.
+Backfills missing `width` / `height` attributes on `<img>` and `<video>` from, in order: the element's inline style, a size encoded in its URL, or (for an image inside a `<picture>`) the wrapping picture or source. Invalid attribute values (percentages, `auto`, zero) are dropped first. The attributes drive the browser's automatic aspect ratio, so space is reserved and the ratio survives reader CSS like `img { height: auto }`.
 
 **Before**
 
@@ -141,7 +141,7 @@ Moves a `<figcaption>` out of a figure-wide click-through anchor, so the caption
 
 ### canonicalizeAlignment
 
-Resolves the many ways feeds express media alignment — WordPress `aligncenter` / `alignleft` / `alignright` classes, the deprecated `align` attribute, inline `text-align` and auto margins, on the media itself or on a wrapper whose only content is the media — into one `data-align="left|center|right"` attribute on the media element. See [Data Attributes](/output/data-attributes) for how a consumer styles it.
+Resolves the many ways feeds express media alignment into one `data-align="left|center|right"` attribute on the media element: WordPress `aligncenter` / `alignleft` / `alignright` classes, the deprecated `align` attribute, inline `text-align` and auto margins, read from the media itself or from a wrapper whose only content is the media. See [Data Attributes](/output/data-attributes) for how a consumer styles it.
 
 **Before**
 
@@ -211,7 +211,7 @@ Replaces platform emoji and smilie images (WordPress, forum engines, editor plug
 
 ### removeTrackingPixels
 
-Removes tracking pixels and beacon images: images hidden by style or zero opacity, pixel-sized images without a content signal, and images whose URL matches the [built-in tracking host and path-segment lists](/guides/built-in). Raster formats at zero size and images with a `srcset` are treated as content and kept — trackers are script and GIF endpoints, not real photos.
+Removes tracking pixels and beacon images: images hidden by style or zero opacity, pixel-sized images without a content signal, and images whose URL matches the [built-in tracking host and path-segment lists](/guides/built-in). Raster formats at zero size and images with a `srcset` are treated as content and kept, since trackers are script and GIF endpoints, not real photos.
 
 **Before**
 

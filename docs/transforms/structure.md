@@ -104,7 +104,7 @@ Removes `<br>` at the very start or end of a block element, where it pads the bl
 
 ### stripMarkdownEscapeBackslashes
 
-Removes a Markdown escape backslash leaked at the very start of a paragraph. A `\` mid-text or before a `<br>` is left alone: there it is overwhelmingly real content — Windows paths, shell line continuations, LaTeX.
+Removes a Markdown escape backslash leaked at the very start of a paragraph. A `\` mid-text or before a `<br>` is left alone, since there it is overwhelmingly real content: Windows paths, shell line continuations, LaTeX.
 
 **Before**
 
@@ -136,7 +136,7 @@ Removes the content's first heading when it repeats the item title. Requires the
 
 ### demoteHeadings
 
-Shifts every heading down one level (`h1`→`h2`, …, `h5`→`h6`) when the content contains an `<h1>`. The reader's page already has an `<h1>` — the item title — so a body-level `<h1>` breaks the document outline. Bodies that already start at `<h2>` are left alone.
+Shifts every heading down one level (`h1`→`h2`, …, `h5`→`h6`) when the content contains an `<h1>`. The reader's page already has an `<h1>`, the item title, so a body-level `<h1>` breaks the document outline. Bodies that already start at `<h2>` are left alone.
 
 **Before**
 
@@ -168,7 +168,7 @@ Unwraps a `<b>`/`<strong>` that spans a heading's entire content. Headings are a
 
 ### unwrapDoublyNestedLists
 
-Dissolves a list whose only item wraps another list of the same kind — a double-nesting some editors emit that renders as one over-indented list.
+Dissolves a list whose only item wraps another list of the same kind, a double-nesting some editors emit that renders as one over-indented list.
 
 **Before**
 
@@ -217,7 +217,7 @@ Wraps every top-level `<table>` in `<div data-table>` so a wide table can scroll
 
 ### stripEmptyTags
 
-Removes elements with no text and no meaningful children — empty spans, `<div>&nbsp;</div>` spacers, husks left by earlier transforms. Media elements, void elements, and structural cells survive: an empty `<td>` keeps its column aligned, an `<img>` carries its content in `src`.
+Removes elements with no text and no meaningful children: empty spans, `<div>&nbsp;</div>` spacers, husks left by earlier transforms. Media elements, void elements, and structural cells survive: an empty `<td>` keeps its column aligned, an `<img>` carries its content in `src`.
 
 **Before**
 
@@ -267,7 +267,7 @@ Collapses a run of consecutive `<hr>` into the first one. Runs arrive both autho
 
 ### fixSubstackMentions
 
-Rebuilds a Substack inline @-mention — an empty `<span class="mention-wrap">` whose person lives only in a JSON attribute — into a visible profile link, so the name stops vanishing mid-sentence.
+Rebuilds a Substack inline @-mention, an empty `<span class="mention-wrap">` whose person lives only in a JSON attribute, into a visible profile link, so the name stops vanishing mid-sentence.
 
 **Before**
 

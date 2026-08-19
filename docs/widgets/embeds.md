@@ -4,7 +4,7 @@ title: "Widgets: Embeds"
 
 # Embeds
 
-An embed is content with a platform-hosted viewer: a video player, a podcast episode, an interactive chart. The `convertWidgets` transform replaces each one with a `data-embed-*` placeholder your app renders as it sees fit — typically a thumbnail that click-loads the player, keeping third-party iframes out of the initial view.
+An embed is content with a platform-hosted viewer: a video player, a podcast episode, an interactive chart. The `convertWidgets` transform replaces each one with a `data-embed-*` placeholder your app renders as it sees fit, typically a thumbnail that click-loads the player, keeping third-party iframes out of the initial view.
 
 ## Fields
 
@@ -131,7 +131,7 @@ A social post is always an embed, never a [cite](/widgets/cites): the post is th
 
 ## Media Resolvers
 
-Some platform markup hides a directly playable file rather than a hosted viewer. Those resolvers return a native `<video>` or `<audio>` element instead of a placeholder — see [the placeholder-or-native rule](/widgets#placeholder-or-native-element):
+Some platform markup hides a directly playable file rather than a hosted viewer. Those resolvers return a native `<video>` or `<audio>` element instead of a placeholder. See [the placeholder-or-native rule](/widgets#placeholder-or-native-element):
 
 | Platform | Matches | Produces |
 |----------|---------|----------|
@@ -151,6 +151,6 @@ Anything no resolver claims still resolves, through generic tiers:
 - A container element parking a media-file URL in a data attribute (see [What's Built In](/guides/built-in)) gets a native player prepended, keeping the container's caption text.
 
 > [!NOTE]
-> Streaming manifests (`.m3u8`, `.mpd`) are deliberately not promoted to native players — they play natively only in Safari, so promoting one produces a broken player everywhere else. They stay as embed placeholders.
+> Streaming manifests (`.m3u8`, `.mpd`) are deliberately not promoted to native players: they play natively only in Safari, so promoting one produces a broken player everywhere else. They stay as embed placeholders.
 
 A provider that is missing belongs in the library: [open an issue or a pull request](https://github.com/macieklamberski/feedsweep/issues). To fill fields the markup does not carry, a Vimeo poster or a playlist title, see [Enrichment](/guides/customization/enrichment).

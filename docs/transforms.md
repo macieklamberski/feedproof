@@ -6,11 +6,11 @@ title: Transforms
 
 A transform is a single, focused pass over the content. Feedsweep runs two phases: string transforms operate on the raw HTML text before parsing, DOM transforms operate on the parsed document. The default pipeline runs 5 string transforms and 73 DOM transforms; 3 more DOM transforms are opt-in [heuristics](/transforms/heuristics).
 
-Every transform is idempotent — running the pipeline twice produces the same output as running it once, and every transform is tested for exactly that.
+Every transform is idempotent: running the pipeline twice produces the same output as running it once, and every transform is tested for exactly that.
 
 ## Running a Subset
 
-The `stringTransforms` and `domTransforms` options replace the default arrays entirely — nothing is merged. To extend the defaults, spread them:
+The `stringTransforms` and `domTransforms` options replace the default arrays entirely, and nothing is merged. To extend the defaults, spread them:
 
 ```typescript
 import { defaultStandardDomTransforms, transformContent } from 'feedsweep'
@@ -113,4 +113,4 @@ Setting `heuristics: true` selects the extended pipeline with the 3 opt-in trans
 | `stripDuplicateEnclosures` | [Heuristics](/transforms/heuristics) | Remove injected enclosures that duplicate inline content |
 | `stripDuplicateLeadingImages` | [Heuristics](/transforms/heuristics) | Remove a leading image duplicated by the item's featured image |
 
-The table lists transforms in pipeline order: string transforms first, then DOM transforms, then the opt-in heuristics. Order within the DOM phase matters — many transforms depend on an earlier one having normalized the markup they read.
+The table lists transforms in pipeline order: string transforms first, then DOM transforms, then the opt-in heuristics. Order within the DOM phase matters, because many transforms depend on an earlier one having normalized the markup they read.

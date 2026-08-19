@@ -4,7 +4,7 @@ title: "Transforms: Links and URLs"
 
 # Links and URLs
 
-Feed URLs arrive relative, wrapped in redirectors, split by word breaks, or plain unsafe. These transforms make every URL absolute, clean, and inert where it must be — and turn bare URLs and timestamps into usable affordances.
+Feed URLs arrive relative, wrapped in redirectors, split by word breaks, or plain unsafe. These transforms make every URL absolute, clean, and inert where it must be, and turn bare URLs and timestamps into usable affordances.
 
 ### resolveRelativeUrls
 
@@ -22,7 +22,7 @@ Resolves relative URLs against the `baseUrl` option: anchor `href`, `src` on any
 <img src="https://example.com/images/chart.png">
 ```
 
-Resolution itself goes through the `resolveUrlFn` option — see [URL Handling](/guides/customization/url-handling).
+Resolution itself goes through the `resolveUrlFn` option; see [URL Handling](/guides/customization/url-handling).
 
 ### cleanAnchorUrls
 
@@ -56,11 +56,11 @@ Rewrites a fragment link on the item's own page back to its bare `#fragment` for
 <a href="#setup">Setup</a>
 ```
 
-A link on the `baseUrl` page is always shortened. Links on the item's other self pages — listed in the `sameSiteUrls` option, typically the site URL and feed URL — are shortened only when the fragment's target actually exists in the content, so genuine links to other pages of the same site stay absolute.
+A link on the `baseUrl` page is always shortened. Links on the item's other self pages, listed in the `sameSiteUrls` option and typically the site URL and feed URL, are shortened only when the fragment's target actually exists in the content, so genuine links to other pages of the same site stay absolute.
 
 ### normalizeAnchoredHeadings
 
-Collapses the many heading-permalink shapes static-site generators emit — trailing `#` and `¶` glyphs, link-icon anchors, `headerlink`/`header-anchor`/`hash-link` classes, whole-heading links — into one canonical form: plain heading text plus a single empty, self-referential anchor.
+Collapses the many heading-permalink shapes static-site generators emit, trailing `#` and `¶` glyphs, link-icon anchors, `headerlink`/`header-anchor`/`hash-link` classes and whole-heading links, into one canonical form: plain heading text plus a single empty, self-referential anchor.
 
 **Before**
 
@@ -78,7 +78,7 @@ Footnote references, accordion toggles, and anchors with real link text are reco
 
 ### stripDeadAnchors
 
-Unwraps anchors whose `href` navigates nowhere — empty, a lone `#`, or a `javascript:` pseudo-protocol left over from an interactive widget. The text stays visible, and any URL inside it becomes eligible for `linkifyUrls`. Anchors carrying `id` or `name` are kept: they are navigation targets other links point to.
+Unwraps anchors whose `href` navigates nowhere: empty, a lone `#`, or a `javascript:` pseudo-protocol left over from an interactive widget. The text stays visible, and any URL inside it becomes eligible for `linkifyUrls`. Anchors carrying `id` or `name` are kept: they are navigation targets other links point to.
 
 **Before**
 
@@ -110,7 +110,7 @@ Removes every `<wbr>` and merges the surrounding text. Email-oriented feeds spli
 
 ### linkifyUrls
 
-Wraps bare `http(s)` URLs in text with `<a>` tags. Text inside `<a>`, `<pre>`, `<code>`, `<kbd>`, `<samp>`, and `<var>` is skipped. Each minted link is passed through `cleanUrlFn`, and when cleaning changes the URL, the visible text shows the cleaned form — a visible URL never points somewhere else.
+Wraps bare `http(s)` URLs in text with `<a>` tags. Text inside `<a>`, `<pre>`, `<code>`, `<kbd>`, `<samp>`, and `<var>` is skipped. Each minted link is passed through `cleanUrlFn`, and when cleaning changes the URL, the visible text shows the cleaned form, so a visible URL never points somewhere else.
 
 **Before**
 
@@ -145,7 +145,7 @@ Wraps line-leading or line-ending `MM:SS` / `HH:MM:SS` timestamps in `<span data
 Replaces unsafe URLs with an inert sentinel while keeping the element: `#unsafe-link` for link-role attributes, `about:blank` for media. Two layers apply:
 
 - **The dangerous-scheme floor, always enforced**: `javascript:`, `vbscript:`, and `data:text/html` everywhere, plus `data:image/svg+xml` for links (an SVG data URL executes when navigated to, but is inert as an image source). Leading control characters and whitespace are stripped before the scheme is read, so `java\tscript:` is caught the way a browser would read it.
-- **Consumer policy**, when the `isSafeUrlFn` option is set — SSRF rules, host allowlists, whatever the caller decides. See [Security](/guides/security).
+- **Consumer policy**, when the `isSafeUrlFn` option is set: SSRF rules, host allowlists, whatever the caller decides. See [Security](/guides/security).
 
 Covered attributes include `href`, `src`, `srcset`, `poster`, `xlink:href`, and every URL-carrying `data-embed-*` / `data-cite-*` placeholder field.
 
@@ -163,7 +163,7 @@ Covered attributes include `href`, `src`, `srcset`, `poster`, `xlink:href`, and 
 
 ### proxyAssetUrls
 
-Rewrites media URLs through the `assetProxyFn` option — images, video, audio, `source` and `track` elements, SVG images, and placeholder thumbnail/icon/avatar fields. The original URL is preserved on the element as `data-proxied-<name>` (`src` → `data-proxied-src`), so a reader can fall back when the proxied URL fails. Does nothing when `assetProxyFn` is not set.
+Rewrites media URLs through the `assetProxyFn` option: images, video, audio, `source` and `track` elements, SVG images, and placeholder thumbnail/icon/avatar fields. The original URL is preserved on the element as `data-proxied-<name>` (`src` → `data-proxied-src`), so a reader can fall back when the proxied URL fails. Does nothing when `assetProxyFn` is not set.
 
 **Before**
 

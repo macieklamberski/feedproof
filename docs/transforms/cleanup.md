@@ -30,7 +30,7 @@ Removes elements matching a curated list of selectors for markup that reads as n
 <p>The article.</p>
 ```
 
-The stripping line is deliberate: chrome and nags are removed, gated content is recovered. When a cookie-consent plugin replaces an embed with a click-to-consent shim, the embed's real URL is parked in an attribute on the iframe — the media transforms promote it back into `src`, and only the consent notice beside it is stripped. See [Embed Recovery](/transforms/embeds).
+The stripping line is deliberate: chrome and nags are removed, gated content is recovered. When a cookie-consent plugin replaces an embed with a click-to-consent shim, the embed's real URL is parked in an attribute on the iframe. The media transforms promote it back into `src`, and only the consent notice beside it is stripped. See [Embed Recovery](/transforms/embeds).
 
 Every entry in the default list is validated against real feeds before it is added, favoring platform-specific class names over generic words that could match article content. The list is built in, not an option: see [What's Built In](/guides/built-in).
 
@@ -56,7 +56,7 @@ Removes elements hidden from view: the `hidden` attribute, inline `display:none`
 
 ### stripComments
 
-Removes HTML comments — generator leftovers, template markers, MSO conditionals. Comments inside `<pre>` and `<code>` survive: there they are usually part of a tutorial's example markup.
+Removes HTML comments: generator leftovers, template markers, MSO conditionals. Comments inside `<pre>` and `<code>` survive: there they are usually part of a tutorial's example markup.
 
 **Before**
 

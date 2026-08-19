@@ -1,5 +1,5 @@
 ---
-title: Feedsweep — Tidy HTML Content in Web Feeds
+title: Feedsweep, Tidy HTML Content in Web Feeds
 ---
 
 # Feedsweep
@@ -30,29 +30,29 @@ Perfect for feed readers, read-it-later apps, and newsletter digests that render
 
 ### Repair
 
-- **Lazy media** — promotes real URLs parked in `data-src` and 20+ other lazy-loading attributes back into `src`.
-- **JavaScript-only embeds** — rebuilds real iframes from video facades (WordPress plugins, Elementor, Wistia, lite-youtube, and more) and consent-gated wrappers.
-- **Broken markup** — decodes double-encoded tags, unwraps stray CDATA markers, paragraphizes plain-text bodies.
+- **Lazy media.** Promotes real URLs parked in `data-src` and 20+ other lazy-loading attributes back into `src`.
+- **JavaScript-only embeds.** Rebuilds real iframes from video facades (WordPress plugins, Elementor, Wistia, lite-youtube, and more) and consent-gated wrappers.
+- **Broken markup.** Decodes double-encoded tags, unwraps stray CDATA markers, paragraphizes plain-text bodies.
 
 ### Clean
 
-- **Tracking pixels** — removes 1×1 images and requests to known tracking hosts.
-- **Platform chrome** — strips subscribe forms, share buttons, related-posts blocks, and consent nags.
-- **Empty and hidden elements** — drops what would render as nothing.
+- **Tracking pixels.** Removes 1×1 images and requests to known tracking hosts.
+- **Platform chrome.** Strips subscribe forms, share buttons, related-posts blocks, and consent nags.
+- **Empty and hidden elements.** Drops what would render as nothing.
 
 ### Normalize
 
-- **Embeds and cards** — converts video embeds and link-preview cards into framework-agnostic [`data-*` placeholders](/output/data-attributes) your app renders however it wants. Fifty-six platforms are recognized out of the box, from YouTube, Vimeo and Spotify to Apple Podcasts, Bluesky, Mastodon and CodePen.
-- **Code blocks** — highlights labeled code with highlight.js and marks blocks with their language.
-- **Structure** — paragraphs from `<br>` runs, demoted headings, merged fragmented lists, scroll-wrapped tables.
-- **URLs** — resolves relative URLs, auto-links bare ones, neutralizes dangerous schemes.
+- **Embeds and cards.** Converts video embeds and link-preview cards into framework-agnostic [`data-*` placeholders](/output/data-attributes) your app renders however it wants. Fifty-six platforms are recognized out of the box, from YouTube, Vimeo and Spotify to Apple Podcasts, Bluesky, Mastodon and CodePen.
+- **Code blocks.** Highlights labeled code with highlight.js and marks blocks with their language.
+- **Structure.** Paragraphs from `<br>` runs, demoted headings, merged fragmented lists, scroll-wrapped tables.
+- **URLs.** Resolves relative URLs, auto-links bare ones, neutralizes dangerous schemes.
 
 ### Integrate
 
-- **Bring your own DOM** — works with linkedom, jsdom, happy-dom, or the browser's native parser.
-- **Composable pipeline** — the transform arrays are options, and every transform is exported individually.
-- **Enclosures** — injects feed enclosure media into the content as native players.
+- **Bring your own DOM.** Works with linkedom, jsdom, happy-dom, or the browser's native parser.
+- **Composable pipeline.** The transform arrays are options, and every transform is exported individually.
+- **Enclosures.** Injects feed enclosure media into the content as native players.
 
 ## What Feedsweep Is Not
 
-Feedsweep improves how content renders. It is not an HTML sanitizer — keep one in your pipeline — and it never makes network requests: every transform works from the markup alone. See [Security](/guides/security).
+Feedsweep improves how content renders. It is not an HTML sanitizer, so keep one in your pipeline, and it never makes network requests: every transform works from the markup alone. See [Security](/guides/security).

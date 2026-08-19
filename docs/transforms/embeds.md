@@ -4,7 +4,7 @@ title: "Transforms: Embed Recovery"
 
 # Embed Recovery
 
-A reader runs no JavaScript, and most embed plugins depend on it: they ship a facade — a thumbnail, an empty div, a custom element — and build the real player at runtime. These transforms rebuild the standard element the facade hides, early enough that the [widget pass](/widgets) treats it like any ordinary embed.
+A reader runs no JavaScript, and most embed plugins depend on it: they ship a facade, a thumbnail or an empty div or a custom element, and build the real player at runtime. These transforms rebuild the standard element the facade hides, early enough that the [widget pass](/widgets) treats it like any ordinary embed.
 
 ### surfaceParkedMarkup
 
@@ -40,7 +40,7 @@ Hoists embed markup trapped inside a `<template>` into the document. Lazy-load v
 
 ### surfaceNoscriptEmbeds
 
-Hoists a video iframe out of its `<noscript>` fallback. Lazy-load plugins wrap the original iframe in `<noscript>`, which readers hide and sanitizers strip. Only iframes claimed by a [widget resolver](/widgets/embeds) are surfaced — `<noscript><iframe>` is also how tag managers and ad networks ship fallbacks, and those must stay buried.
+Hoists a video iframe out of its `<noscript>` fallback. Lazy-load plugins wrap the original iframe in `<noscript>`, which readers hide and sanitizers strip. Only iframes claimed by a [widget resolver](/widgets/embeds) are surfaced, since `<noscript><iframe>` is also how tag managers and ad networks ship fallbacks, and those must stay buried.
 
 **Before**
 
@@ -232,7 +232,7 @@ Materializes an iframe whose URL is parked in a `<div>` attribute by an embed co
 
 ### fixLazyIframes
 
-Promotes a lazy or consent-gated iframe URL from a `data-*` attribute into `src`, when the existing `src` is empty, `about:blank`, or a known placeholder page. This is also how consent-gated embeds are recovered: GDPR consent plugins rewrite the author's iframe to park its URL in an attribute like `consent-original-src-_` or `data-src-cmplz` until the visitor accepts cookies. A feed body carries no consent flow — the gated iframe is the author's chosen embed, so it is restored, while the plugin's "please accept cookies" notice is [stripped as chrome](/transforms/cleanup). The attributes it reads cover the lazy loaders and the consent plugins alike, and are [built in](/guides/built-in).
+Promotes a lazy or consent-gated iframe URL from a `data-*` attribute into `src`, when the existing `src` is empty, `about:blank`, or a known placeholder page. This is also how consent-gated embeds are recovered: GDPR consent plugins rewrite the author's iframe to park its URL in an attribute like `consent-original-src-_` or `data-src-cmplz` until the visitor accepts cookies. A feed body carries no consent flow: the gated iframe is the author's chosen embed, so it is restored, while the plugin's "please accept cookies" notice is [stripped as chrome](/transforms/cleanup). The attributes it reads cover the lazy loaders and the consent plugins alike, and are [built in](/guides/built-in).
 
 **Before**
 
@@ -248,7 +248,7 @@ Promotes a lazy or consent-gated iframe URL from a `data-*` attribute into `src`
 
 ### linkifyGistEmbeds
 
-Replaces a GitHub Gist script embed — which renders nothing without JS — with a link to the gist page, so the content is at least reachable.
+Replaces a GitHub Gist script embed, which renders nothing without JS, with a link to the gist page, so the content is at least reachable.
 
 **Before**
 
@@ -264,7 +264,7 @@ Replaces a GitHub Gist script embed — which renders nothing without JS — wit
 
 ### convertDatawrapperEmbeds
 
-Converts Datawrapper chart embeds — iframe, script, and link forms — into a static `<img>` of the chart's published PNG render, wrapped in a link to the interactive version. The static render is the platform's own declared fallback, derivable from the chart id alone, and it shows the chart immediately instead of loading a third-party frame. The image flows to the media transforms downstream like any other.
+Converts Datawrapper chart embeds, in their iframe, script, and link forms, into a static `<img>` of the chart's published PNG render, wrapped in a link to the interactive version. The static render is the platform's own declared fallback, derivable from the chart id alone, and it shows the chart immediately instead of loading a third-party frame. The image flows to the media transforms downstream like any other.
 
 **Before**
 
@@ -311,4 +311,4 @@ Converts note.com's embed figures, which are empty `<figure embedded-service dat
 ```
 
 > [!NOTE]
-> Rebuilt iframes are not the final output. The [widget pass](/widgets) runs later and converts each recognized iframe into a `data-embed-*` placeholder — the rebuild transforms exist so it has a real iframe to read.
+> Rebuilt iframes are not the final output. The [widget pass](/widgets) runs later and converts each recognized iframe into a `data-embed-*` placeholder. The rebuild transforms exist so it has a real iframe to read.

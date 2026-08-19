@@ -4,7 +4,7 @@ title: "Transforms: String Transforms"
 
 # String Transforms
 
-String transforms run on the raw HTML text, before any DOM exists. They handle problems that must be fixed before parsing — or that only exist before parsing.
+String transforms run on the raw HTML text, before any DOM exists. They handle problems that must be fixed before parsing, or that only exist before parsing.
 
 ### stripControlChars
 
@@ -44,7 +44,7 @@ Unwraps `<!--[CDATA[…]]-->` blocks. WordPress and similar CMSes serialize CDAT
 
 ### unwrapCdataMarkers
 
-Unwraps a value that is one whole literal `<![CDATA[…]]>` block — the result of a feed entity-escaping the CDATA markers themselves. Only fires when a single block spans the entire value, so a bare `<![CDATA[` in the middle of content (an XML tutorial, for example) survives verbatim.
+Unwraps a value that is one whole literal `<![CDATA[…]]>` block, the result of a feed entity-escaping the CDATA markers themselves. Only fires when a single block spans the entire value, so a bare `<![CDATA[` in the middle of content (an XML tutorial, for example) survives verbatim.
 
 **Before**
 
@@ -60,7 +60,7 @@ Unwraps a value that is one whole literal `<![CDATA[…]]>` block — the result
 
 ### paragraphizePlainText
 
-Turns tag-less plain text into HTML: double newlines split paragraphs, single newlines become `<br />`. Content containing any tag passes through untouched — the HTML-aware paragraph work belongs to the DOM transforms.
+Turns tag-less plain text into HTML: double newlines split paragraphs, single newlines become `<br />`. Content containing any tag passes through untouched, since the HTML-aware paragraph work belongs to the DOM transforms.
 
 **Before**
 

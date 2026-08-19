@@ -28,7 +28,7 @@ import { applyDomTransforms, resolveMediaDimensions } from 'feedsweep'
 const result = await applyDomTransforms(document, [resolveMediaDimensions(context)])
 ```
 
-Both take transforms already bound to a context — call each transform with a [`TransformContext`](/reference/types) first. `transformContent` does this wiring for you; reach for the runners only when composing a pipeline by hand. See [Custom Transforms](/guides/customization/custom-transforms).
+Both take transforms already bound to a context, so call each transform with a [`TransformContext`](/reference/types) first. `transformContent` does this wiring for you; reach for the runners only when composing a pipeline by hand. See [Custom Transforms](/guides/customization/custom-transforms).
 
 ## Placeholder Builders
 
@@ -97,7 +97,7 @@ Both take an options object as a third argument. `declaredSize: false` tells the
 
 ### `generatedWrapperTypes`
 
-The wrapper types feedsweep mints: `['embed', 'cite', 'table', 'pre']`. A custom transform that dissolves wrapper divs should leave elements carrying these `data-*` namespaces alone — the built-in `unwrapWrappers` does exactly that.
+The wrapper types feedsweep mints: `['embed', 'cite', 'table', 'pre']`. A custom transform that dissolves wrapper divs should leave elements carrying these `data-*` namespaces alone, which is what the built-in `unwrapWrappers` does.
 
 ```typescript
 import { generatedWrapperTypes } from 'feedsweep'

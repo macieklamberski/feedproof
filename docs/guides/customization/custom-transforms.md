@@ -50,7 +50,7 @@ const markExternalLinks: DomTransform = (context) => {
 }
 ```
 
-Transforms must not throw — an exception rejects the whole `transformContent` promise. They should also be idempotent: running a transform twice over its own output must equal running it once, since content sometimes passes through a pipeline more than once.
+Transforms must not throw: an exception rejects the whole `transformContent` promise. They should also be idempotent: running a transform twice over its own output must equal running it once, since content sometimes passes through a pipeline more than once.
 
 ## Splicing Into the Default Pipeline
 
@@ -66,7 +66,7 @@ const output = await transformContent(html, {
 })
 ```
 
-Appending is the safe default. Position matters when your transform interacts with others — a transform that adds media wants to run before the dimensioning and proxying passes; one that inspects final structure wants to run last. The ordering constraints between the built-ins are documented as comments in `src/defaults.ts`, and inserting relative to a named transform is straightforward:
+Appending is the safe default. Position matters when your transform interacts with others. A transform that adds media wants to run before the dimensioning and proxying passes; one that inspects final structure wants to run last. The ordering constraints between the built-ins are documented as comments in `src/defaults.ts`, and inserting relative to a named transform is straightforward:
 
 ```typescript
 import { defaultStandardDomTransforms } from 'feedsweep/defaults'
@@ -81,11 +81,11 @@ const domTransforms = [
 ```
 
 > [!NOTE]
-> Passing `domTransforms` explicitly also bypasses the `heuristics` flag — splice in `heuristicDomTransforms` yourself if you want them too.
+> Passing `domTransforms` explicitly also bypasses the `heuristics` flag, so splice in `heuristicDomTransforms` yourself if you want them too.
 
 ## Running Pipelines Directly
 
-The runners `transformContent` uses internally are exported. They take the inner functions (context already applied), run them in order, and — for the DOM runner — return `document.body.innerHTML`:
+The runners `transformContent` uses internally are exported. They take the inner functions (context already applied), run them in order, and (for the DOM runner) return `document.body.innerHTML`:
 
 ```typescript
 import { applyDomTransforms, applyStringTransforms } from 'feedsweep'
@@ -98,8 +98,8 @@ const output = await applyDomTransforms(document, [
 ])
 ```
 
-This is the escape hatch for consumers with their own pipeline architecture: feedsweep's transforms become a toolbox rather than a framework. Note that you assemble the `context` yourself in that case — every transform expects the full `TransformContext` shape.
+This is the escape hatch for consumers with their own pipeline architecture: feedsweep's transforms become a toolbox rather than a framework. Note that you assemble the `context` yourself in that case, and every transform expects the full `TransformContext` shape.
 
 ## String Transforms
 
-String transforms run before parsing, on the raw HTML text. Reach for one only when the fix must happen before a parser sees the markup — mis-encoded tags, CDATA wrappers, oversized inline data. Everything else is easier and safer as a DOM transform. See [String Transforms](/transforms/string) for the built-ins.
+String transforms run before parsing, on the raw HTML text. Reach for one only when the fix must happen before a parser sees the markup: mis-encoded tags, CDATA wrappers, oversized inline data. Everything else is easier and safer as a DOM transform. See [String Transforms](/transforms/string) for the built-ins.

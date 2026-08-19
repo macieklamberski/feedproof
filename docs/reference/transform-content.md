@@ -47,7 +47,7 @@ The `stringTransforms` and `domTransforms` arrays replace their phase entirely, 
 
 #### Returns
 
-`Promise<string>` — The transformed HTML: the serialized content of the document's `<body>`.
+`Promise<string>`, the transformed HTML: the serialized content of the document's `<body>`.
 
 #### Example
 

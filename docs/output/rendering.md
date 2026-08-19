@@ -79,7 +79,7 @@ img[data-emoji] {
 
 ## Rendering embeds
 
-An embed placeholder carries everything needed for a click-to-load facade: show `data-embed-thumbnail` sized by `data-embed-width` and `data-embed-height`, or by `data-embed-ratio` when the source stated only a shape, and swap in an iframe pointing at `data-embed-src` when the reader clicks. Loading the iframe eagerly works too — `data-embed-src` is a plain player URL.
+An embed placeholder carries everything needed for a click-to-load facade: show `data-embed-thumbnail` sized by `data-embed-width` and `data-embed-height`, or by `data-embed-ratio` when the source stated only a shape, and swap in an iframe pointing at `data-embed-src` when the reader clicks. Loading the iframe eagerly works too, since `data-embed-src` is a plain player URL.
 
 ```typescript
 for (const placeholder of container.querySelectorAll('[data-embed-src]')) {
@@ -100,7 +100,7 @@ for (const placeholder of container.querySelectorAll('[data-embed-src]')) {
 }
 ```
 
-`data-embed-provider` and `data-embed-id` let a renderer special-case a provider — its own SDK player, a privacy-enhanced domain, quality parameters — without parsing the URL. Unrecognized providers still render through the generic path above.
+`data-embed-provider` and `data-embed-id` let a renderer special-case a provider, with its own SDK player or a privacy-enhanced domain or quality parameters, without parsing the URL. Unrecognized providers still render through the generic path above.
 
 ## Rendering cites
 
@@ -119,7 +119,7 @@ for (const placeholder of container.querySelectorAll('[data-cite-url]')) {
 }
 ```
 
-`data-cite-kind`, when present, states the author's relation to the cited page (`repost`, `reply`, `like`, ...) — useful for an icon or a lead-in like "Replied to".
+`data-cite-kind`, when present, states the author's relation to the cited page (`repost`, `reply`, `like`, ...), which is useful for an icon or a lead-in like "Replied to".
 
 ## Timestamps
 

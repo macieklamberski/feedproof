@@ -4,7 +4,7 @@ title: "Transforms: Heuristics"
 
 # Heuristics
 
-Three transforms guess. Each one judges whether two pieces of media are "the same thing" — a poster and its video, an enclosure and an inline image — and a wrong guess removes or moves real content. That risk is why they are opt-in: pass `heuristics: true` to enable them.
+Three transforms guess. Each one judges whether two pieces of media are "the same thing", a poster and its video or an enclosure and an inline image, and a wrong guess removes or moves real content. That risk is why they are opt-in: pass `heuristics: true` to enable them.
 
 ```typescript
 import { transformContent } from 'feedsweep'
@@ -20,7 +20,7 @@ The flag splices the three transforms into the standard pipeline right after `in
 
 ### assignVideoPosters
 
-Moves an image enclosure onto a video embed as its poster when the two demonstrably belong together — a YouTube thumbnail URL carries the video's id, and the embedded player carries the same id. The item stops rendering a lone photo above a player showing the identical frame.
+Moves an image enclosure onto a video embed as its poster when the two demonstrably belong together: a YouTube thumbnail URL carries the video's id, and the embedded player carries the same id. The item stops rendering a lone photo above a player showing the identical frame.
 
 **Before**
 
@@ -39,7 +39,7 @@ For players without an id-matched thumbnail, a video-led item (its first embed i
 
 ### stripDuplicateEnclosures
 
-Removes an injected enclosure that duplicates media already in the content: an image present in any size variant, or an audio/video/embed with the same URL. Only elements `injectEnclosures` marked with `data-enclosure` are candidates — author-placed content is never removed.
+Removes an injected enclosure that duplicates media already in the content: an image present in any size variant, or an audio/video/embed with the same URL. Only elements `injectEnclosures` marked with `data-enclosure` are candidates, so author-placed content is never removed.
 
 **Before** (after `injectEnclosures` has added the feed's image enclosure)
 
@@ -75,4 +75,4 @@ Removes a leading image the body repeats immediately after it. Feed plugins prep
 <p>The article.</p>
 ```
 
-Only the first two images in document order are compared; a repeat deeper in the body can be deliberate and stays. Of the pair, the smaller rendition goes — dropping by position alone could keep a thumbnail and delete the full image.
+Only the first two images in document order are compared; a repeat deeper in the body can be deliberate and stays. Of the pair, the smaller rendition goes, because dropping by position alone could keep a thumbnail and delete the full image.

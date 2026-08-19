@@ -4,11 +4,11 @@ title: "Transforms: Code Blocks"
 
 # Code Blocks
 
-Feeds deliver code in dozens of markups: per-line `<pre>` stacks, `<br>`-separated lines, line-number gutter tables, redundant nested wrappers. These transforms converge them all onto one shape — `<pre><code>` with real newlines — and highlight blocks whose language the feed declares.
+Feeds deliver code in dozens of markups: per-line `<pre>` stacks, `<br>`-separated lines, line-number gutter tables, redundant nested wrappers. These transforms converge them all onto one shape, `<pre><code>` with real newlines, and highlight blocks whose language the feed declares.
 
 ### replacePreLineBreaks
 
-Replaces `<br>` inside `<pre>` with newline characters. Whitespace is preserved in `<pre>`, so the `<br>` is redundant — and it breaks highlighting, which needs real newlines to see the block's lines.
+Replaces `<br>` inside `<pre>` with newline characters. Whitespace is preserved in `<pre>`, so the `<br>` is redundant, and it breaks highlighting, which needs real newlines to see the block's lines.
 
 **Before**
 
@@ -45,15 +45,15 @@ Highlights code blocks whose language the feed declares, strips line-number gutt
 
 The language comes from `detectLanguage`, which reads the conventions real platforms emit, in priority order:
 
-1. `language-*` / `lang-*` class on the `<code>`, `<pre>`, or a wrapping ancestor — Prism, highlight.js, Ghost, Hugo, Jekyll, and most Markdown renderers
-2. `data-language` / `data-lang` — Shiki, Astro, Hugo, Discourse, Docusaurus; `data-enlighter-language` — EnlighterJS
-3. `class="sourceCode LANG"` — Pandoc
-4. `class="brush: LANG"` — SyntaxHighlighter Evolved (WordPress)
-5. `class="lang:LANG"` / `lang_LANG` — Crayon (WordPress)
-6. A `<figcaption>` filename whose extension names the language — Expressive Code (Astro)
-7. `class="highlight LANG"` where `LANG` resolves to a known grammar — dev.to, Pygments
-8. `highlight-source-LANG` / `highlight-LANG` wrapper class — GitHub-flavored markup, Sphinx
-9. A standalone class that is itself a grammar name (3+ characters) — `class="haskell"`
+1. `language-*` / `lang-*` class on the `<code>`, `<pre>`, or a wrapping ancestor: Prism, highlight.js, Ghost, Hugo, Jekyll, and most Markdown renderers
+2. `data-language` / `data-lang` (Shiki, Astro, Hugo, Discourse, Docusaurus), and `data-enlighter-language` (EnlighterJS)
+3. `class="sourceCode LANG"`: Pandoc
+4. `class="brush: LANG"`: SyntaxHighlighter Evolved (WordPress)
+5. `class="lang:LANG"` / `lang_LANG`: Crayon (WordPress)
+6. A `<figcaption>` filename whose extension names the language: Expressive Code (Astro)
+7. `class="highlight LANG"` where `LANG` resolves to a known grammar: dev.to, Pygments
+8. `highlight-source-LANG` / `highlight-LANG` wrapper class: GitHub-flavored markup, Sphinx
+9. A standalone class that is itself a grammar name (3+ characters): `class="haskell"`
 
 A block with no language hint stays plain. There is no shape-based or statistical guessing: a guessed language reads as inconsistent across unlabeled blocks and is often wrong on short snippets. A block explicitly declared `plaintext`, `text`, or `txt` is also left untouched.
 
@@ -77,7 +77,7 @@ A highlighted block carries the resolved language on its `<pre>`:
 <pre data-pre-language="xml" data-pre-label="XML"><code class="language-xml hljs"><span class="hljs-tag">...</span></code></pre>
 ```
 
-The highlighter itself is replaceable through the `highlightFn` option — see [Code Highlighting](/guides/customization/code-highlighting). The attributes a renderer can style are listed in [Data Attributes](/output/data-attributes).
+The highlighter itself is replaceable through the `highlightFn` option; see [Code Highlighting](/guides/customization/code-highlighting). The attributes a renderer can style are listed in [Data Attributes](/output/data-attributes).
 
 ### mergeConsecutiveOneLinerPres
 
@@ -97,7 +97,7 @@ Merges a run of consecutive single-line `<pre>` siblings into one block joined b
 const b = 2</code></pre>
 ```
 
-A run is skipped when any of its blocks carries one of the preserved class tokens, `wp-block-verse` and `wp-block-preformatted` today. Those mark author-distinct content — poetry stanzas, scriptural verses — that is meant to stay as separate blocks even when single-line.
+A run is skipped when any of its blocks carries one of the preserved class tokens, `wp-block-verse` and `wp-block-preformatted` today. Those mark author-distinct content, poetry stanzas and scriptural verses, that is meant to stay as separate blocks even when single-line.
 
 ### trimPreWhitespace
 

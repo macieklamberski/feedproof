@@ -4,7 +4,7 @@ title: "Customization: DOM Parsing"
 
 # Customize DOM Parsing
 
-Feedsweep is parser-agnostic: it never bundles a DOM implementation. The `parseHtmlFn` option — the only required option — tells `transformContent` how to turn the pre-processed HTML string into a `Document` the DOM transforms then operate on.
+Feedsweep is parser-agnostic: it never bundles a DOM implementation. The `parseHtmlFn` option, the only required one, tells `transformContent` how to turn the pre-processed HTML string into a `Document` the DOM transforms then operate on.
 
 ```typescript
 type ParseHtmlFn = (html: string) => Document | Promise<Document>
@@ -23,7 +23,7 @@ import { parseHtml } from 'feedsweep/linkedom'
 const output = await transformContent(html, { parseHtmlFn: parseHtml })
 ```
 
-The helper is not a plain `parseHTML` call — it bakes in two adjustments:
+The helper is not a plain `parseHTML` call. It bakes in two adjustments:
 
 - **Attribute names are lowercased at parse time.** linkedom preserves attribute case ([linkedom#235](https://github.com/WebReflection/linkedom/issues/235)), so `<img SRC="…">` would be invisible to a transform reading `src`. The helper folds every attribute name to lowercase once, first occurrence winning, so all transforms read attributes by their canonical name.
 - **Self-closed SVG tags are expanded.** linkedom parses SVG subtrees in HTML mode ([linkedom#326](https://github.com/WebReflection/linkedom/issues/326)), where a self-close on a non-void element is ignored and following siblings become children. The helper expands `<path … />` into `<path …></path>` inside `<svg>` blocks before parsing.
@@ -33,7 +33,7 @@ The helper is not a plain `parseHTML` call — it bakes in two adjustments:
 
 ## jsdom
 
-Heavier, but fully case-preserving — including camelCase SVG elements:
+Heavier, but fully case-preserving, camelCase SVG elements included:
 
 ```typescript
 import { transformContent } from 'feedsweep'
@@ -75,8 +75,8 @@ const output = await transformContent(html, {
 
 ## Which One?
 
-- **linkedom** — fastest and smallest; the right default for servers processing many items.
-- **jsdom** — when inline SVG fidelity matters, or you already have jsdom loaded.
-- **Browser `DOMParser`** — when transforming client-side.
+- **linkedom.** Fastest and smallest; the right default for servers processing many items.
+- **jsdom.** When inline SVG fidelity matters, or you already have jsdom loaded.
+- **Browser `DOMParser`.** When transforming client-side.
 
-Whatever the parser, `transformContent` returns `document.body.innerHTML` after the last transform — the parser choice never changes the output contract.
+Whatever the parser, `transformContent` returns `document.body.innerHTML` after the last transform, so the parser choice never changes the output contract.

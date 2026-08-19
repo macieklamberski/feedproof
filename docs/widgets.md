@@ -4,18 +4,18 @@ title: Widgets
 
 # Widgets
 
-Feed items carry rich content blocks that plain HTML cannot render on its own: a hosted video player, a podcast episode, a link-preview card. Feedsweep normalizes these into **placeholders** — framework-agnostic `<div>` elements that describe the content in `data-*` attributes and let your app render them however it wants.
+Feed items carry rich content blocks that plain HTML cannot render on its own: a hosted video player, a podcast episode, a link-preview card. Feedsweep normalizes these into **placeholders**, framework-agnostic `<div>` elements that describe the content in `data-*` attributes and let your app render them however it wants.
 
 Two placeholder families exist:
 
-- **[Embeds](/widgets/embeds)** (`data-embed-*`) — content with a platform-hosted viewer: a video, a podcast player, any iframe.
-- **[Cites](/widgets/cites)** (`data-cite-*`) — link-preview cards pointing at another page: bookmark cards, blog cards, forum link previews.
+- **[Embeds](/widgets/embeds)** (`data-embed-*`) for content with a platform-hosted viewer: a video, a podcast player, any iframe.
+- **[Cites](/widgets/cites)** (`data-cite-*`) for link-preview cards pointing at another page: bookmark cards, blog cards, forum link previews.
 
 ## Placeholder or Native Element
 
-Not everything becomes a placeholder. The rule: a placeholder exists where your app must render chrome around the content — a player frame, a card layout. Where HTML can already express the content, feedsweep emits the native element instead.
+Not everything becomes a placeholder. The rule: a placeholder exists where your app must render chrome around the content, a player frame or a card layout. Where HTML can already express the content, feedsweep emits the native element instead.
 
-A platform-hosted upload with a direct file URL becomes a real `<video>` or `<audio>` element with `controls`. Native elements flow through the rest of the pipeline like any other media: they get dimensioned, their URLs neutralized and proxied, and they deduplicate against [enclosures](/guides/enclosures). A placeholder is deliberately opaque — later passes only touch its `data-*` URL fields.
+A platform-hosted upload with a direct file URL becomes a real `<video>` or `<audio>` element with `controls`. Native elements flow through the rest of the pipeline like any other media: they get dimensioned, their URLs neutralized and proxied, and they deduplicate against [enclosures](/guides/enclosures). A placeholder is deliberately opaque, and later passes only touch its `data-*` URL fields.
 
 Which path a piece of content takes is decided by the resolver's result shape. A result carrying a `tag` field mints that element; any other result becomes an embed placeholder. See [Embeds](/widgets/embeds) for the catalog of what each path covers.
 
@@ -55,4 +55,4 @@ import { generatedWrapperTypes } from 'feedsweep'
 // ['embed', 'cite', 'table', 'pre']
 ```
 
-`table` and `pre` are not widgets — they are wrappers minted by [`wrapTablesForScroll`](/transforms/structure) and [`highlightCode`](/transforms/code) — but they share the same marking, and the same guarantee that no feedsweep transform dissolves them.
+`table` and `pre` are not widgets. They are wrappers minted by [`wrapTablesForScroll`](/transforms/structure) and [`highlightCode`](/transforms/code), but they share the same marking, and the same guarantee that no feedsweep transform dissolves them.

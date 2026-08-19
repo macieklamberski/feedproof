@@ -6,7 +6,7 @@ title: "Widgets: Cites"
 
 A cite is a link-preview card: a block in the source markup that presents another page with its title, description, and preview image. Blog platforms, WordPress themes, and forums each render these with their own markup; the `convertCiteCards` transform normalizes all of them into one `data-cite-*` placeholder.
 
-Cites are read early in the pipeline, before prose normalization runs — a card's markup is delicate, and passes like link auto-detection or paragraph rewrapping would disturb it.
+Cites are read early in the pipeline, before prose normalization runs. A card's markup is delicate, and passes like link auto-detection or paragraph rewrapping would disturb it.
 
 ## Fields
 
@@ -21,8 +21,8 @@ Attributes are written in this order, and only when a value is present:
 | `data-cite-publisher` | The linked site's name |
 | `data-cite-date` | The linked page's date |
 | `data-cite-kind` | The kind of reference, where the markup states one |
-| `data-cite-url` | The linked page — always present |
-| `data-cite-title` | The linked page's title — always present |
+| `data-cite-url` | The linked page, always present |
+| `data-cite-title` | The linked page's title, always present |
 | `data-cite-icon` | The linked site's favicon URL |
 | `data-cite-thumbnail` | Preview image URL |
 
@@ -32,7 +32,7 @@ Card URLs pass through your [`cleanUrlFn`](/guides/customization/url-handling) e
 
 ### Kind
 
-`data-cite-kind` is one of `bookmark`, `repost`, `like`, `reply`, `read`, `listen`, `watch`. It is set only where the source markup names the relationship — today that is microformats markup, where the `h-cite` sits in a response property like `u-bookmark-of` or `p-in-reply-to`. Cards that are just "a preview of a link" carry no `kind`.
+`data-cite-kind` is one of `bookmark`, `repost`, `like`, `reply`, `read`, `listen`, `watch`. It is set only where the source markup names the relationship, today only microformats markup, where the `h-cite` sits in a response property like `u-bookmark-of` or `p-in-reply-to`. Cards that are just "a preview of a link" carry no `kind`.
 
 ## Example
 
@@ -97,7 +97,7 @@ Popular themes (widely used on Japanese-language blogs) render internal and exte
 | XenForo | Unfurled-link blocks |
 | NodeBB | Link previews |
 
-Discourse's social-post oneboxes (a quoted tweet, for example) are deliberately not converted — a quoted post is not a link preview, and flattening it to a titled link would lose the post itself.
+Discourse's social-post oneboxes (a quoted tweet, for example) are deliberately not converted. A quoted post is not a link preview, and flattening it to a titled link would lose the post itself.
 
 ### Generic
 

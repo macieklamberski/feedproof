@@ -4,7 +4,7 @@ title: "Customization: URL Handling"
 
 # Customize URL Handling
 
-Every URL in the output — anchors, media sources, placeholder metadata — passes through a small set of options that resolve, clean, check, and proxy it. Feedsweep never invents a URL that is not present in the input; these options only decide what happens to the ones that are.
+Every URL in the output, in anchors, media sources and placeholder metadata alike, passes through a small set of options that resolve, clean, check, and proxy it. Feedsweep never invents a URL that is not present in the input; these options only decide what happens to the ones that are.
 
 ## baseUrl
 
@@ -21,7 +21,7 @@ Without `baseUrl`, relative URLs are left as they are.
 
 ## sameSiteUrls
 
-Other URLs that also stand for the item's own page — typically the site's homepage and the feed URL, alongside the permalink in `baseUrl`. Some feeds, notably HTML-to-Atom bridges, absolutize in-page fragment links against one of these instead of the permalink. `shortenSamePageLinkFragments` uses this list to turn such links back into plain `#fragment` links, but only when the fragment's target id actually exists in the content — cross-page links stay absolute.
+Other URLs that also stand for the item's own page, typically the site's homepage and the feed URL, alongside the permalink in `baseUrl`. Some feeds, notably HTML-to-Atom bridges, absolutize in-page fragment links against one of these instead of the permalink. `shortenSamePageLinkFragments` uses this list to turn such links back into plain `#fragment` links, but only when the fragment's target id actually exists in the content, so cross-page links stay absolute.
 
 ```typescript
 const output = await transformContent(html, {
@@ -50,7 +50,7 @@ const output = await transformContent(html, {
 })
 ```
 
-Feedsweep deliberately ships no URL-cleaning rules of its own — which parameters are junk and which redirectors to unwrap is consumer policy, and the same function you use elsewhere in your app can be passed straight in. When unset, URLs pass through unchanged.
+Feedsweep deliberately ships no URL-cleaning rules of its own: which parameters are junk and which redirectors to unwrap is consumer policy, and the same function you use elsewhere in your app can be passed straight in. When unset, URLs pass through unchanged.
 
 ## assetProxyFn
 
