@@ -61,7 +61,7 @@ describeForEachParser('fixSubstackImageLinks', (parseHtml) => {
       const value = `<a class="image-link image2" href="https://cdn.example.com/photo.jpeg"> </a>`
       const result = await transform(value)
 
-      // The whitespace text node stays; the image is appended after it.
+      // The whitespace text node stays. The image is appended after it.
       expect(result).toEqualHtml(
         `<a class="image-link image2" href="https://cdn.example.com/photo.jpeg"> <img src="https://cdn.example.com/photo.jpeg"></a>`,
       )

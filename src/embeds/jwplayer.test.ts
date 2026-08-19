@@ -28,7 +28,7 @@ describe('extractJwplayerId', () => {
 
   // Business Insider's feed ships JW Player embeds with an empty player id, leaving a
   // `{mediaId}-.html` tail whose URL 404s ("File not Found"). This is a quirk of that feed,
-  // not something other providers hit — most embeds carry a well-formed URL. Extracting the
+  // not something other providers hit. Most embeds carry a well-formed url, and extracting the
   // media id from the segment recovers it regardless of the missing player id.
   it('should extract the media id from a Business Insider empty-player-id url', () => {
     const value = 'https://cdn.jwplayer.com/players/H4GXr873-.html'

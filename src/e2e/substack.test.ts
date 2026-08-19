@@ -38,7 +38,7 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   // The same subscribe form as the wrap above, arriving as Substack's other snippet. Both are
-  // chrome, so both go; before this the iframe became a click-to-load placeholder instead.
+  // chrome, so both go.
   it('should strip the subscribe iframe as non-content too', async () => {
     const value = html`
       <p>Text</p>
@@ -293,7 +293,7 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   it('should resolve a Youtube2ToDOM wrap into a youtube embed placeholder', async () => {
-    // The host-keyed youtube resolver claims the inner iframe; the wrap divs dissolve.
+    // The host-keyed youtube resolver claims the inner iframe. The wrap divs dissolve.
     const youtubeAttrs = jsonAttrValue({
       videoId: 'ab3DEfGHijk',
       startTime: null,
@@ -738,7 +738,7 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   it('should resolve a VimeoToDOM wrap into a vimeo embed placeholder', async () => {
-    // The vimeo resolver claims the inner player iframe; the wrap divs dissolve.
+    // The vimeo resolver claims the inner player iframe. The wrap divs dissolve.
     const vimeoAttrs = jsonAttrValue({
       videoId: '123456789',
       videoKey: '',
@@ -822,7 +822,7 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   it('should convert a DatawrapperToDOM chart into its static image', async () => {
-    // convertDatawrapperEmbeds owns the iframe; the sibling resize script passes through
+    // convertDatawrapperEmbeds owns the iframe. The sibling resize script passes through
     // for the reader to drop.
     const chartAttrs = jsonAttrValue({
       url: 'https://datawrapper.dwcdn.net/aB1cD/2/',
@@ -1005,7 +1005,7 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   it('should fall back a PredictionMarketToDOM iframe to a generic placeholder', async () => {
-    // The generic iframe fallback owns the market iframe; its px-suffixed size attributes
+    // The generic iframe fallback owns the market iframe. Its px-suffixed size attributes
     // do not survive as embed dimensions.
     const marketAttrs = jsonAttrValue({
       url: 'https://manifold.markets/embed/ExampleUser/will-the-thing-happen',
@@ -1362,7 +1362,7 @@ describeForEachParser('Substack', (parseHtml) => {
 
   it('should drop a PollToDOM embed', async () => {
     // Known loss: the poll ships only its id and votes live on Substack, so stripEmptyTags
-    // deletes the empty div; no poll kind exists to park it in.
+    // deletes the empty div. No poll kind exists to park it in.
     const pollAttrs = jsonAttrValue({ id: 123456 })
     const value = html`
       <p>Before.</p>
@@ -1455,7 +1455,7 @@ describeForEachParser('Substack', (parseHtml) => {
 
   it('should drop a CashtagToDOM span and its ticker symbol', async () => {
     // Known loss: the ticker lives only in the data-attrs JSON, so the empty span is
-    // deleted mid-sentence; no restore is minted for it.
+    // deleted mid-sentence. No restore is minted for it.
     const cashtagAttrs = jsonAttrValue({ symbol: '$RKLB' })
     const value = html`
       <p>Rocket Lab <span

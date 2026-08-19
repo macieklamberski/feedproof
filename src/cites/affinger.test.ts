@@ -326,7 +326,7 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
     })
 
     // A left-behind anchor only misbehaves once the output is reparsed, which is what a
-    // second run does — so this is the case that pins the wrapping-anchor match.
+    // second run does. This is the case that pins the wrapping-anchor match.
     it('should be idempotent', async () => {
       const value = html`
         <a href="https://example.com/post" class="st-cardlink">

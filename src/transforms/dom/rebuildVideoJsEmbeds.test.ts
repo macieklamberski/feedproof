@@ -57,7 +57,7 @@ describeForEachParser('rebuildVideoJsEmbeds', (parseHtml) => {
   })
 
   describe('left alone', () => {
-    // A stream manifest needs the JS player to fetch and stitch its segments; a native <video>
+    // A stream manifest needs the JS player to fetch and stitch its segments. A native <video>
     // pointed at one shows an empty box everywhere except Safari.
     it('should leave an element whose only source is a stream manifest', async () => {
       const value = html`

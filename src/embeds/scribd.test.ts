@@ -12,7 +12,7 @@ describeForEachParser('scribdIframeEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, scribdIframeEmbedResolver)
 
   describe('the current share-panel iframe', () => {
-    // The snippet states height="500" for every document; the ratio beside it is the one that
+    // The snippet states height="500" for every document. The ratio beside it is the one that
     // describes this document, so the placeholder carries the ratio instead.
     it('should prefer the stated ratio over the constant height', async () => {
       const value = html`

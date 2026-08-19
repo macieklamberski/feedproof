@@ -80,7 +80,7 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
   })
 
   // Measured across the corpus: `.youtube-embed[data-video_id]` is the largest facade at 701
-  // feeds, ahead of the `.lazyYT` plugin this transform started with.
+  // feeds, ahead of the `.lazyYT` plugin at 155.
   it('should rebuild the youtube-embed facade', async () => {
     const value = html`
       <div

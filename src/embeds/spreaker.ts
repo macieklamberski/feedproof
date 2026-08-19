@@ -11,7 +11,7 @@ const spreakerHosts = ['spreaker.com']
 const embedKinds = { episode_id: 'episode', show_id: 'show' } as const
 
 // The height Spreaker documents in its own embed snippet (`height="200px"`), and the reason
-// this resolver earns its place: the corpus iframes carry **no height attribute at all**, so
+// this resolver earns its place: the corpus iframes carry no height attribute at all, so
 // without it a reader reserves nothing. Spreaker's oEmbed also returns title, author and a
 // thumbnail, which the enrichment hook can fill once provider and id are tagged here.
 const playerHeight = 200

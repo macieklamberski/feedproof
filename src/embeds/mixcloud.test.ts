@@ -34,7 +34,7 @@ describe('extractMixcloudShow', () => {
     expect(extractMixcloudShow(value)).toBeUndefined()
   })
 
-  // A show is exactly user plus slug; anything deeper is a section of the site.
+  // A show is exactly user plus slug. Anything deeper is a section of the site.
   it('should return undefined for a path that is not a show', () => {
     const value = 'https://www.mixcloud.com/widget/iframe/?feed=%2Fcategories%2Fhouse%2Ftop%2F'
 
@@ -114,7 +114,7 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
   })
 
   // The legacy Flash carrier reaches the resolver through the shared carrier selector. Feeds
-  // write this src protocol-relative; resolveRelativeUrls makes it absolute earlier in the
+  // write this src protocol-relative. ResolveRelativeUrls makes it absolute earlier in the
   // pipeline, so the url is absolute by the time the resolver sees it.
   it('should resolve the legacy Flash player', async () => {
     const value = html`

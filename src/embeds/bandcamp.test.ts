@@ -69,7 +69,7 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
 
   describe('happy paths', () => {
     // Bandcamp's own snippet carries the release page and label in a fallback anchor, which is
-    // the only place either appears — the player url names the release by number alone.
+    // the only place either appears: the player url names the release by number alone.
     it('should read the canonical url and title from the fallback anchor', async () => {
       const value = html`
         <iframe

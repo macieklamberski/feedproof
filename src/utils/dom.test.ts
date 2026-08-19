@@ -125,7 +125,7 @@ describeForEachParser('getElementDimensions', (parseHtml) => {
 
   it('should not backtrack quadratically on a long invalid numeric style value', () => {
     // A long digit run followed by a non-terminator made the old `[0-9]*\.?[0-9]+`
-    // form take seconds; this completes instantly and matches nothing.
+    // form take seconds. This completes instantly and matches nothing.
     const value = `width:${'9'.repeat(50000)}${'a'.repeat(50000)}`
     const document = parseHtml(`<img style="${value}">`)
     const image = queryElement(document, 'img')
@@ -343,7 +343,7 @@ describeForEachParser('getWrapperRatio', (parseHtml) => {
     const document = parseHtml('<div style="padding-bottom:50%"><iframe></iframe></div>')
     const iframe = queryElement(document, 'iframe')
 
-    // maxDepth 0 checks only the element itself; the wrapper is one level up.
+    // maxDepth 0 checks only the element itself. The wrapper is one level up.
     expect(getWrapperRatio(iframe, 0)).toBeUndefined()
     expect(getWrapperRatio(iframe, 1)).toBe('100/50')
   })
@@ -995,8 +995,7 @@ describe('parsePixelSize', () => {
     expect(parsePixelSize('99999')).toBeUndefined()
   })
 
-  // A digit count reads `007` as three digits and lets 7 through, which is what the resolvers
-  // were doing before the bound became a range.
+  // A digit count reads `007` as three digits and lets 7 through.
   it('should apply the range to the value, not to how it was written', () => {
     expect(parsePixelSize('007')).toBeUndefined()
     expect(parsePixelSize('0000')).toBeUndefined()

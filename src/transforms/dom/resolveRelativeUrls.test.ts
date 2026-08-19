@@ -95,7 +95,7 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
   })
 
   // A url-less feed srcset ("…768w, 225w, 563w") makes the parser read the bare width
-  // descriptors as candidate urls; left in, each resolves to a page that does not exist.
+  // descriptors as candidate urls. Left in, each resolves to a page that does not exist.
   it('should drop descriptor-only srcset candidates instead of resolving them', async () => {
     const value = '<img srcset="https://cdn.com/a.jpg 768w,  225w,  563w,  1152w">'
     const expected = '<img srcset="https://cdn.com/a.jpg 768w">'

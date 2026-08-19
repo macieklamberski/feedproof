@@ -273,7 +273,7 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
-    // A dots-only owner never reaches a minted path; the set beside it still resolves through
+    // A dots-only owner never reaches a minted path. The set beside it still resolves through
     // the ownerless shape.
     it('should keep the set when the owner is a traversal segment', async () => {
       const value = html`

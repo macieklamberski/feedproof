@@ -74,8 +74,8 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // Three provider slugs are in use — `bluesky-social`, `bluesky-embed` and a bare
-    // `bluesky` — but they only ever name the figure, and the blockquote inside is the same.
+    // Three provider slugs are in use: `bluesky-social`, `bluesky-embed` and a bare
+    // `bluesky`. They only ever name the figure, and the blockquote inside is the same.
     it('should read a post under the bare provider slug', async () => {
       const value = html`
         <figure class="wp-block-embed is-type-rich is-provider-bluesky wp-block-embed-bluesky">

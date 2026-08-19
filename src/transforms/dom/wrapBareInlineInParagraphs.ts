@@ -49,7 +49,7 @@ const isMediaBoundary = (node: Node): boolean => {
   return node.matches(mediaSelector) || node.querySelector(mediaSelector) !== null
 }
 
-// Wrappers unwrapWrappers later dissolves into a flow root; their inline content
+// Wrappers unwrapWrappers later dissolves into a flow root. Their inline content
 // would otherwise become bare text, so even a single full-container run is wrapped.
 const dissolvingTags = new Set(['div', 'article', 'section', 'main', 'header', 'footer'])
 

@@ -31,7 +31,7 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // A feed can embed one deck at many slides; without this they collapse into identical
+    // A feed can embed one deck at many slides. Without this they collapse into identical
     // placeholders.
     it('should carry data-slide into the player url', async () => {
       const value = html`

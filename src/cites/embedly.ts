@@ -13,7 +13,7 @@ import { attr, find, text } from '../utils/dom.js'
 //   inline anchor with a block placeholder would break the paragraph around it.
 //
 // The rich card (thumbnail, publisher) only exists in the hydrated iframe, so even the
-// blockquote carries just url, title and description.
+// blockquote carries only url, title and description.
 export const embedlyCiteResolver: CiteResolver = {
   selector: 'blockquote.embedly-card',
   extract: (element) => {

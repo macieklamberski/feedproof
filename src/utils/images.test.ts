@@ -154,7 +154,7 @@ describe('getImageFingerprint', () => {
 
   it('should keep a keyword leaf distinct from a dimension-suffixed keyword leaf', () => {
     // Deliberate: collapsing these would send the pair into dedup, where the size
-    // signals cannot rank them correctly. A kept duplicate only renders twice; a wrong
+    // signals cannot rank them correctly. A kept duplicate only renders twice. A wrong
     // removal deletes content, so the ambiguous shape stays unmatched.
     const keyword = getImageFingerprint('https://example.com/photos/123/small.jpg')
     const suffixed = getImageFingerprint('https://example.com/photos/123/large-800x600.jpg')
@@ -193,7 +193,7 @@ describe('getImageFingerprint', () => {
   })
 
   it('should keep the raw capture when the proxied source is malformed', () => {
-    // `%E0%A4%A` is an incomplete percent-escape; decoding throws and the raw value is kept.
+    // `%E0%A4%A` is an incomplete percent-escape. Decoding throws and the raw value is kept.
     expect(() =>
       getImageFingerprint('https://images.weserv.nl/?url=https%3A%2F%2F%E0%A4%A'),
     ).not.toThrow()
@@ -653,7 +653,7 @@ describe('pickLargerImageUrl', () => {
   })
 
   // The size hint is regex-only, so a value that is not a parseable URL cannot throw;
-  // it just carries no signal and defers to the caller's tie policy.
+  // it carries no signal and defers to the caller's tie policy.
   it('should return undefined for values that are not urls', () => {
     expect(pickLargerImageUrl('not-a-url', 'also not a url')).toBeUndefined()
     expect(pickLargerImageUrl('', 'https://example.com/photo-800x450.jpg')).toBeUndefined()

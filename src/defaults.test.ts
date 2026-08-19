@@ -9,7 +9,7 @@ import { createCitePlaceholder } from './utils/widgets.js'
 
 describe('defaults', () => {
   // convertCiteCards hands every resolver the same document, in registration order, with
-  // the earlier replacements already applied — so a resolver has to stay off the others'
+  // the earlier replacements already applied, so a resolver has to stay off the others'
   // toes. The next two tests pin the two ways one could tread on another.
 
   // Claiming a placeholder an earlier resolver already produced: that converts finished

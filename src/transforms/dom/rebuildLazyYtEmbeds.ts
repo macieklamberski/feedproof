@@ -5,7 +5,7 @@ import { attr, parsePixelSize } from '../../utils/dom.js'
 // Each facade parks the id in its own attribute and builds the iframe with JS on click, so a
 // reader shows nothing at all. Measured across the corpus: `.youtube-embed[data-video_id]` is
 // the largest at 701 feeds, `data-youtube-id` follows at roughly 212, `data-youtube` at 120,
-// and `.lazyYT` (the jQuery plugin this transform started with) at 155.
+// and the `.lazyYT` jQuery plugin at 155.
 //
 // `data-youtube-id` and `data-youtube` are matched on the attribute alone because the name says
 // the platform. `data-video_id`, `data-id` and `data-embed` are not exclusive to anyone, so each
