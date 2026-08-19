@@ -193,7 +193,7 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
 
   describe('the Substack card the container carries', () => {
     it('should take an episode payload, reading its runtime as milliseconds', async () => {
-      const episodeCardAttrs = {
+      const episodeCardAttrs = jsonAttrValue({
         url: 'https://embed.podcasts.apple.com/us/podcast/undertone/id1693303954?i=1000664459889',
         isEpisode: true,
         imageUrl: 'https://substack-post-media.s3.amazonaws.com/public/images/podcast-episode.jpg',
@@ -204,12 +204,12 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
         numEpisodes: '',
         targetUrl: 'https://podcasts.apple.com/us/podcast/undertone/id1693303954?uo=4',
         releaseDate: '2024-06-19T00:00:00Z',
-      }
+      })
       const value = html`
         <div class="apple-podcast-container" data-component-name="ApplePodcastToDom">
           <iframe
             class="apple-podcast episode-list"
-            data-attrs="${jsonAttrValue(episodeCardAttrs)}"
+            data-attrs="${episodeCardAttrs}"
             src="https://embed.podcasts.apple.com/us/podcast/undertone/id1693303954?i=1000664459889"
           ></iframe>
         </div>
@@ -233,7 +233,7 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
     // A show states the same number in seconds, so reading both the same way would publish one
     // of them a thousandfold out.
     it('should take a show payload, reading its runtime as seconds', async () => {
-      const showCardAttrs = {
+      const showCardAttrs = jsonAttrValue({
         url: 'https://embed.podcasts.apple.com/us/podcast/boardroom-governance/id1513064579',
         isEpisode: false,
         imageUrl: 'https://substack-post-media.s3.amazonaws.com/public/images/podcast.jpg',
@@ -244,12 +244,12 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
         numEpisodes: 2,
         targetUrl: 'https://podcasts.apple.com/us/podcast/boardroom-governance/id1513064579?uo=4',
         releaseDate: '2026-03-04T00:00:00Z',
-      }
+      })
       const value = html`
         <div class="apple-podcast-container" data-component-name="ApplePodcastToDom">
           <iframe
             class="apple-podcast episode-list"
-            data-attrs="${jsonAttrValue(showCardAttrs)}"
+            data-attrs="${showCardAttrs}"
             src="https://embed.podcasts.apple.com/us/podcast/boardroom-governance/id1513064579"
           ></iframe>
         </div>
@@ -274,15 +274,15 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
     // The payload's own `targetUrl` is this page with an affiliate token on it, so the composed
     // url stands instead of it.
     it('should compose the url rather than take the payload affiliate link', async () => {
-      const sparseCardAttrs = {
+      const sparseCardAttrs = jsonAttrValue({
         targetUrl: 'https://podcasts.apple.com/gb/podcast/exploaded/id1887512662?uo=4',
         title: 'EXPloaded',
-      }
+      })
       const value = html`
         <div class="apple-podcast-container" data-component-name="ApplePodcastToDom">
           <iframe
             class="apple-podcast episode-list"
-            data-attrs="${jsonAttrValue(sparseCardAttrs)}"
+            data-attrs="${sparseCardAttrs}"
             src="https://embed.podcasts.apple.com/gb/podcast/exploaded/id1887512662"
           ></iframe>
         </div>
@@ -322,14 +322,14 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
     })
 
     it('should ignore a payload that no Substack container names', async () => {
-      const foreignCardAttrs = {
+      const foreignCardAttrs = jsonAttrValue({
         title: 'Not a Substack card',
         podcastTitle: 'Nor this',
-      }
+      })
       const value = html`
         <div>
           <iframe
-            data-attrs="${jsonAttrValue(foreignCardAttrs)}"
+            data-attrs="${foreignCardAttrs}"
             src="https://embed.podcasts.apple.com/gb/podcast/exploaded/id1887512662"
           ></iframe>
         </div>

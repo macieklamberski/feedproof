@@ -753,14 +753,15 @@ describeForEachParser('twitterSubstackEmbedResolver', (parseHtml) => {
     })
 
     it('should resolve the div by component name alone when the class is stripped', async () => {
+      const attrs = jsonAttrValue({
+        url: 'https://twitter.com/user/status/123456789012345',
+        full_text: 'Tweet text here.',
+        username: 'user',
+        name: 'Display Name',
+      })
       const value = html`
         <div
-          data-attrs="${jsonAttrValue({
-            url: 'https://twitter.com/user/status/123456789012345',
-            full_text: 'Tweet text here.',
-            username: 'user',
-            name: 'Display Name',
-          })}"
+          data-attrs="${attrs}"
           data-component-name="Twitter2ToDOM"
         ></div>
       `
@@ -777,15 +778,16 @@ describeForEachParser('twitterSubstackEmbedResolver', (parseHtml) => {
     })
 
     it('should read the payload the same when the div carries children', async () => {
+      const attrs = jsonAttrValue({
+        url: 'https://twitter.com/user/status/123456789012345',
+        full_text: 'Tweet text here.',
+        username: 'user',
+        name: 'Display Name',
+      })
       const value = html`
         <div
           class="twitter-embed"
-          data-attrs="${jsonAttrValue({
-            url: 'https://twitter.com/user/status/123456789012345',
-            full_text: 'Tweet text here.',
-            username: 'user',
-            name: 'Display Name',
-          })}"
+          data-attrs="${attrs}"
           data-component-name="Twitter2ToDOM"
         >
           <p>Tweet text here.</p>
