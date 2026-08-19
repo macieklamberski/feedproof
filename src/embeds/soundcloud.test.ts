@@ -166,7 +166,7 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
 
   describe('the Substack card the wrapper carries', () => {
     it('should take the title, description, artwork, artist and track page', async () => {
-      const trackCardAttrs = {
+      const trackCardAttrs = jsonAttrValue({
         url: 'https://api.soundcloud.com/tracks/2088634614',
         title: "It's Just Us by Kali Uchis",
         description: 'A single',
@@ -174,9 +174,9 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
         author_name: 'Kali Uchis',
         author_url: 'https://soundcloud.com/kaliuchis',
         targetUrl: 'https://soundcloud.com/kaliuchis/its-just-us',
-      }
+      })
       const value = html`
-        <div class="soundcloud-wrap" data-attrs="${jsonAttrValue(trackCardAttrs)}" data-component-name="SoundcloudToDOM">
+        <div class="soundcloud-wrap" data-attrs="${trackCardAttrs}" data-component-name="SoundcloudToDOM">
           <iframe src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2088634614"></iframe>
         </div>
       `
@@ -197,16 +197,16 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
 
     // Both fields are empty in a good share of the payloads, and an empty string is not a value.
     it('should state nothing for an empty description and target url', async () => {
-      const untitledCardAttrs = {
+      const untitledCardAttrs = jsonAttrValue({
         url: 'https://api.soundcloud.com/tracks/948032941',
         title: 'Youth Is A Fugitive',
         description: '',
         thumbnail_url: 'https://i1.sndcdn.com/artworks-j4ziiQ-t500x500.jpg',
         author_name: 'Fonograf Editions',
         targetUrl: '',
-      }
+      })
       const value = html`
-        <div class="soundcloud-wrap" data-attrs="${jsonAttrValue(untitledCardAttrs)}" data-component-name="SoundcloudToDOM">
+        <div class="soundcloud-wrap" data-attrs="${untitledCardAttrs}" data-component-name="SoundcloudToDOM">
           <iframe src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F948032941"></iframe>
         </div>
       `

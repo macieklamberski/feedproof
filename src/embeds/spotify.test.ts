@@ -190,17 +190,17 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
 
   describe('the card Substack hangs on the player', () => {
     it('should carry the artwork, the name and the act across', async () => {
-      const trackCardAttrs = {
+      const trackCardAttrs = jsonAttrValue({
         image: 'https://i.scdn.co/image/ab67616d0000b273',
         title: 'Cemetry Gates',
         subtitle: 'The Smiths',
         description: '',
         url: 'https://open.spotify.com/track/03yOjwHoOPDlTUg0NRxN6t',
-      }
+      })
       const value = html`
         <iframe
           class="spotify-wrap"
-          data-attrs="${jsonAttrValue(trackCardAttrs)}"
+          data-attrs="${trackCardAttrs}"
           src="https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t"
           data-component-name="Spotify2ToDOM"
         ></iframe>
@@ -221,15 +221,15 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
 
     // The card prints the type where a description would go, which the id already states.
     it('should state no description when the card holds only the type', async () => {
-      const typeOnlyCardAttrs = {
+      const typeOnlyCardAttrs = jsonAttrValue({
         title: 'An interview',
         subtitle: 'A host',
         description: 'Episode',
-      }
+      })
       const value = html`
         <iframe
           class="spotify-wrap podcast"
-          data-attrs="${jsonAttrValue(typeOnlyCardAttrs)}"
+          data-attrs="${typeOnlyCardAttrs}"
           src="https://open.spotify.com/embed/episode/1taJsFyMEbsljV14QAt409"
         ></iframe>
       `
@@ -247,14 +247,14 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
     })
 
     it('should keep a description that says something the type does not', async () => {
-      const describedCardAttrs = {
+      const describedCardAttrs = jsonAttrValue({
         title: 'A memoir',
         description: 'Nine years since it came out',
-      }
+      })
       const value = html`
         <iframe
           class="spotify-wrap"
-          data-attrs="${jsonAttrValue(describedCardAttrs)}"
+          data-attrs="${describedCardAttrs}"
           src="https://open.spotify.com/embed/episode/1taJsFyMEbsljV14QAt409"
         ></iframe>
       `
@@ -273,14 +273,14 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
 
     // An artwork url is only trusted when it comes from Spotify's own image host.
     it('should ignore artwork hosted somewhere else', async () => {
-      const foreignArtworkAttrs = {
+      const foreignArtworkAttrs = jsonAttrValue({
         title: 'A track',
         image: 'https://evil.test/i.scdn.co/image/x',
-      }
+      })
       const value = html`
         <iframe
           class="spotify-wrap"
-          data-attrs="${jsonAttrValue(foreignArtworkAttrs)}"
+          data-attrs="${foreignArtworkAttrs}"
           src="https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t"
         ></iframe>
       `
