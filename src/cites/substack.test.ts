@@ -94,8 +94,6 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // Optional fields pass through raw; createCitePlaceholder trims every field
-    // when it writes the attributes. Only the guard-checked title is trimmed here.
     it('should trim every text field', async () => {
       const value = makeContainer('digest-post-embed', {
         title: '  Model Drop  ',

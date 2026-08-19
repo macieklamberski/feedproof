@@ -4,7 +4,7 @@
 // Each platform lists the filenames it actually ships, taken from its own distribution. Names
 // repeat across platforms on purpose: `smile.png` really is shipped by four of these, and
 // recording it four times keeps each list checkable against its source. A repeated name must
-// agree on the glyph, which `mergeNames` asserts, because nothing in the markup says which
+// agree on the glyph, which `mergeEmojiNames` asserts, because nothing in the markup says which
 // engine produced a given image.
 //
 // A stock filename we deliberately do not map is left commented out in its own platform, with

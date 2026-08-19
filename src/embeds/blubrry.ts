@@ -11,9 +11,8 @@ const blubrryHosts = ['blubrry.com']
 const playerHeight = 138
 
 // Two forms: `/id/{episodeId}/` names the episode, while `/?media_url={mp3}` names the file
-// directly. The media url is deliberately **not** promoted to a native <audio>: the form
-// fidelity rule keeps a provider's player iframe an embed placeholder, and the raw file is only
-// input for the future enrichment hook.
+// directly. The media url is not promoted to a native <audio>: a provider's player iframe stays
+// an embed placeholder, and the raw file is only input for the enrichment hook.
 export const extractBlubrryEmbed = (link: string): string | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
 

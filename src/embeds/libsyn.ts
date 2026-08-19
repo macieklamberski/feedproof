@@ -8,8 +8,8 @@ const safeIdRegex = /^\d+$/
 const libsynHosts = ['libsyn.com']
 
 // Libsyn spells its player options as path segments, not a query string:
-// `/embed/episode/id/{id}/height/{px}/theme/{name}/thumbnail/{yes|no}/…`. `episode` and `show`
-// are the two kinds. A show player plays the latest episode.
+// `/embed/episode/id/{id}/height/{px}/theme/{name}/thumbnail/{yes|no}/…`. `episode`, `show` and
+// `destination` are the kinds. A show player plays the latest episode.
 const embedKinds = ['episode', 'show', 'destination']
 
 const readPathOption = (segments: Array<string>, name: string): string | undefined => {

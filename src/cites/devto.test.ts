@@ -90,8 +90,6 @@ describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // Optional fields pass through raw; createPlaceholder trims every field when it
-    // writes the attributes. Only the guard-checked title is trimmed in the resolver.
     it('should read the publisher from the text beside the favicon', async () => {
       const value = html`
         <div class="c-embed">

@@ -69,9 +69,9 @@ export type EmbedResolver = {
 }
 
 // A convention that parks an iframe's real URL in a `<div>` attribute and builds the iframe
-// with JS at runtime: Pym.js (`data-pym-src`) and @newswire/frames (`data-frame-src`) are the
-// two seen in the wild. A reader runs no JS, so `rebuildDeferredIframes` materializes the iframe
-// from `attribute` on each `selector` match.
+// with JS at runtime: Pym.js (`data-pym-src`), @newswire/frames (`data-frame-src`) and the
+// Drupal/CKEditor oEmbed convention (`data-oembed-url`). A reader runs no JS, so
+// `rebuildDeferredIframes` materializes the iframe from `attribute` on each `selector` match.
 export type DeferredIframeSource = {
   selector: string
   attribute: string
@@ -231,7 +231,7 @@ export type TransformContentOptions = {
   articleTitle?: string
   stringTransforms?: Array<StringTransform>
   domTransforms?: Array<DomTransform>
-  // Opt into the "best judgement" heuristic transforms (enclosure-duplicate and
-  // video-poster stripping). Ignored when `domTransforms` is set explicitly.
+  // Opt into the "best judgement" heuristic transforms (video-poster assignment, duplicate
+  // enclosures and duplicate leading images). Ignored when `domTransforms` is set explicitly.
   heuristics?: boolean
 }
