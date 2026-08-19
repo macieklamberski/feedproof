@@ -3,8 +3,10 @@ import type { EmbedResolverResult } from '../types.js'
 import { keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// The view id is a dashless 24-character hex id.
-const safeViewIdRegex = /^[0-9a-f]{24}$/i
+// The view id is a dashless 24-character lowercase hex id, which is the only case the platform
+// mints. An uppercase id has never been probed, and a rejected url keeps its working iframe,
+// while a matched one is rewritten onto the modern host, so leniency here mints unverified urls.
+const safeViewIdRegex = /^[0-9a-f]{24}$/
 
 const geniallyHosts = ['genially.com', 'genial.ly']
 

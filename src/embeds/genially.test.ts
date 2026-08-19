@@ -42,6 +42,12 @@ describe('extractGeniallyViewId', () => {
     expect(extractGeniallyViewId(value)).toBeUndefined()
   })
 
+  it('should return undefined for an uppercase id', () => {
+    const value = 'https://view.genially.com/60294F8B2EC856159AE0BAA5'
+
+    expect(extractGeniallyViewId(value)).toBeUndefined()
+  })
+
   it('should return undefined for a url that cannot be parsed', () => {
     const value = 'https://['
 
