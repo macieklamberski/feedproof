@@ -204,9 +204,7 @@ describeForEachParser('Bluesky', (parseHtml) => {
         <p lang="en">The identifier is gone entirely.</p>
       </blockquote>
     `
-    const expected = value
-
-    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(value)
   })
 
   // The player path spelled on somebody else's host names no Bluesky post, so the generic
