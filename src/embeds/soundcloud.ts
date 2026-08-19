@@ -48,12 +48,14 @@ const readSubstackTrack = (element: Element): Partial<EmbedResolverResult> => {
     return {}
   }
 
+  // Absent fields stay absent: an explicit undefined would ride through Object.assign in the
+  // caller and erase what the iframe itself stated, most often its title.
   return {
-    title: attributes.title || undefined,
-    description: attributes.description || undefined,
-    thumbnail: attributes.thumbnail_url || undefined,
-    author: attributes.author_name || undefined,
-    url: attributes.targetUrl || undefined,
+    ...(attributes.title && { title: attributes.title }),
+    ...(attributes.description && { description: attributes.description }),
+    ...(attributes.thumbnail_url && { thumbnail: attributes.thumbnail_url }),
+    ...(attributes.author_name && { author: attributes.author_name }),
+    ...(attributes.targetUrl && { url: attributes.targetUrl }),
   }
 }
 
