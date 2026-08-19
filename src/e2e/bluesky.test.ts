@@ -13,8 +13,8 @@ describeForEachParser('Bluesky', (parseHtml) => {
 
   // Three provider slugs are in use on the figure (`bluesky-social`, `bluesky-embed` and a bare
   // `bluesky`) and all three reach the same placeholder, since only the blockquote is read.
-  // The inner wrapper dissolves, the figure stays, and the loader script goes with every other
-  // remote script.
+  // The inner wrapper dissolves, the figure goes with it once the placeholder is all it holds,
+  // and the loader script goes with every other remote script.
   it('should convert the blockquote inside a Gutenberg figure and drop its loader script', async () => {
     const value = html`
       <figure class="wp-block-embed is-type-rich is-provider-bluesky-social wp-block-embed-bluesky-social">
@@ -34,17 +34,15 @@ describeForEachParser('Bluesky', (parseHtml) => {
       </figure>
     `
     const expected = html`
-      <figure class="wp-block-embed is-type-rich is-provider-bluesky-social wp-block-embed-bluesky-social">
-        <div
-          data-embed-provider="bluesky"
-          data-embed-id="did:plc:ewvi7nxzyoun6zhxrhs64oiz/3lbwtqmxbec2p"
-          data-embed-src="https://embed.bsky.app/embed/did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.feed.post/3lbwtqmxbec2p"
-          data-embed-url="https://bsky.app/profile/did:plc:ewvi7nxzyoun6zhxrhs64oiz/post/3lbwtqmxbec2p"
-          data-embed-description="The block editor pastes the oEmbed html verbatim."
-          data-embed-author="Display Name (@user.bsky.social)"
-          data-embed-date="2025-01-02T03:04:05.006Z"
-        ></div>
-      </figure>
+      <div
+        data-embed-provider="bluesky"
+        data-embed-id="did:plc:ewvi7nxzyoun6zhxrhs64oiz/3lbwtqmxbec2p"
+        data-embed-src="https://embed.bsky.app/embed/did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.feed.post/3lbwtqmxbec2p"
+        data-embed-url="https://bsky.app/profile/did:plc:ewvi7nxzyoun6zhxrhs64oiz/post/3lbwtqmxbec2p"
+        data-embed-description="The block editor pastes the oEmbed html verbatim."
+        data-embed-author="Display Name (@user.bsky.social)"
+        data-embed-date="2025-01-02T03:04:05.006Z"
+      ></div>
     `
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)

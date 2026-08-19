@@ -49,9 +49,9 @@ describeForEachParser('Twitter', (parseHtml) => {
   })
 
   // The Gutenberg wrapper, which the Jetpack, Ghost, RebelMouse and per-theme wrappers repeat
-  // with another class. unwrapWrappers dissolves the inner div and keeps the figure, since a
-  // figure holding a placeholder is content markup rather than a generated shell.
-  it('should keep the wp-block figure around the placeholder it wraps', async () => {
+  // with another class. unwrapWrappers dissolves the inner div, and the figure goes with it once
+  // the placeholder is all it holds.
+  it('should dissolve the wp-block figure down to the placeholder it wraps', async () => {
     const value = html`
       <figure class="wp-block-embed is-type-rich is-provider-twitter wp-block-embed-twitter">
         <div class="wp-block-embed__wrapper">
@@ -74,17 +74,15 @@ describeForEachParser('Twitter', (parseHtml) => {
       </figure>
     `
     const expected = html`
-      <figure class="wp-block-embed is-type-rich is-provider-twitter wp-block-embed-twitter">
-        <div
-          data-embed-provider="twitter"
-          data-embed-id="123456789012345"
-          data-embed-src="https://platform.twitter.com/embed/Tweet.html?id=123456789012345"
-          data-embed-url="https://x.com/user/status/123456789012345"
-          data-embed-description="Tweet text here."
-          data-embed-author="Display Name"
-          data-embed-date="May 12, 2020"
-        ></div>
-      </figure>
+      <div
+        data-embed-provider="twitter"
+        data-embed-id="123456789012345"
+        data-embed-src="https://platform.twitter.com/embed/Tweet.html?id=123456789012345"
+        data-embed-url="https://x.com/user/status/123456789012345"
+        data-embed-description="Tweet text here."
+        data-embed-author="Display Name"
+        data-embed-date="May 12, 2020"
+      ></div>
     `
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)

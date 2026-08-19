@@ -15,8 +15,7 @@ describeForEachParser('TikTok', (parseHtml) => {
   // The section's author and sound anchors are bare inline, and wrapBareInlineInParagraphs gives
   // each of them a paragraph of its own before the widget pass runs, so the caption the
   // placeholder carries is the one picked by content and not the first paragraph in the section.
-  // The wrapper div dissolves and the figure stays, because a figure holding a placeholder is not
-  // one of the wrappers the pipeline drops.
+  // The wrapper div dissolves and the figure goes with it, since the placeholder is all it holds.
   it('should convert a clip inside the block editor wrapper and drop the loader script', async () => {
     const value = html`
       <figure class="wp-block-embed is-type-video is-provider-tiktok wp-block-embed-tiktok">
@@ -42,16 +41,14 @@ describeForEachParser('TikTok', (parseHtml) => {
       </figure>
     `
     const expected = html`
-      <figure class="wp-block-embed is-type-video is-provider-tiktok wp-block-embed-tiktok">
-        <div
-          data-embed-provider="tiktok"
-          data-embed-id="@cookingwithlynja/video/7001234567890123456"
-          data-embed-src="https://www.tiktok.com/embed/v2/7001234567890123456"
-          data-embed-url="https://www.tiktok.com/@cookingwithlynja/video/7001234567890123456"
-          data-embed-description="Midnight pasta #pasta"
-          data-embed-author="@cookingwithlynja"
-        ></div>
-      </figure>
+      <div
+        data-embed-provider="tiktok"
+        data-embed-id="@cookingwithlynja/video/7001234567890123456"
+        data-embed-src="https://www.tiktok.com/embed/v2/7001234567890123456"
+        data-embed-url="https://www.tiktok.com/@cookingwithlynja/video/7001234567890123456"
+        data-embed-description="Midnight pasta #pasta"
+        data-embed-author="@cookingwithlynja"
+      ></div>
     `
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
