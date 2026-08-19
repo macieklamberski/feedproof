@@ -14,7 +14,7 @@ const brightcoveIdRegex = /^\d{5,}$/
 const accountScriptSelector = 'script[src*="players.brightcove.net"]'
 const accountScriptRegex = /players\.brightcove\.net\/(\d+)\//
 
-export const readPlayerAccount = (element: Element): string | undefined => {
+const readPlayerAccount = (element: Element): string | undefined => {
   const stated = attr(element, 'data-account')
 
   if (stated) {
@@ -26,7 +26,7 @@ export const readPlayerAccount = (element: Element): string | undefined => {
   return attr(loader, 'src')?.match(accountScriptRegex)?.[1]
 }
 
-export const composePlayerUrl = (
+const composePlayerUrl = (
   account: string,
   videoId: string,
   player = 'default',
@@ -89,7 +89,7 @@ export const brightcoveVideoJsEmbedResolver = createMarkupEmbedResolver(
 // 200 while a bogus account 404s.
 const federatedPathRegex = /\/services\/viewer\/federated_/
 
-export const brightcoveFlashResolveEmbed = (
+const brightcoveFlashResolveEmbed = (
   src: string,
   element: Element,
 ): EmbedResolverResult | undefined => {
@@ -119,7 +119,7 @@ export const brightcoveFlashResolveEmbed = (
   return {
     provider: 'brightcove',
     id: videoId,
-    src: `https://players.brightcove.net/${account}/default_default/index.html?videoId=${videoId}`,
+    src: composePlayerUrl(account, videoId),
   }
 }
 

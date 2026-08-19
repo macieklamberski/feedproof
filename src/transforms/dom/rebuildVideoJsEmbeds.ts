@@ -7,17 +7,13 @@ type SetupConfig = {
   poster?: string
 }
 
-const readSetup = (element: Element): SetupConfig | undefined => {
-  return jsonAttr<SetupConfig>(element, 'data-setup')
-}
-
 // The file sits either in a `<source>` child or in the
 // `sources` array of the `data-setup` json Video.js reads. Only a file a `<video>` can actually
 // play counts: a stream manifest needs the javascript player to fetch and stitch its segments,
 // so a native element pointed at one shows an empty box everywhere except Safari.
 // `videoFileRegex` draws that line already, so nothing here has to detect "live".
 const buildVideo = (document: Document, element: Element): Element | undefined => {
-  const setup = readSetup(element)
+  const setup = jsonAttr<SetupConfig>(element, 'data-setup')
   const child = Array.from(element.querySelectorAll('source'))
     .map((source) => attr(source, 'src'))
     .find((source) => source && videoFileRegex.test(source))

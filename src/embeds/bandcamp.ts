@@ -101,7 +101,7 @@ export const bandcampResolveEmbed = (
   element: Element,
 ): EmbedResolverResult | undefined => {
   const parsed = parseUrl(src, 'https://example.com')
-  const releases = parsed ? readReleases(src) : []
+  const releases = readReleases(src)
   // A player naming both is a track inside an album, which is what the builder writes when the
   // publisher picks a track from an album page. The track is what they linked, so it names the
   // placeholder. Taking whichever id the url spelled first made the same track come out as the

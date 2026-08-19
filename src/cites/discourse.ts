@@ -9,9 +9,9 @@ import { attr, find, isElement, text } from '../utils/dom.js'
 const publisherDateSeparator = ' – '
 
 const stripCommentPrefix = (title: string | undefined, author: string): string | undefined => {
-  return title?.startsWith(`Comment by ${author} - `)
-    ? title.slice(`Comment by ${author} - `.length)
-    : title
+  const prefix = `Comment by ${author} - `
+
+  return title?.startsWith(prefix) ? title.slice(prefix.length) : title
 }
 
 // The GitHub onebox splits its body preview around a "…" show-more expander: the text
