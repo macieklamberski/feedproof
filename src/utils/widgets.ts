@@ -90,8 +90,9 @@ const hasSize = (size: SizeFields): boolean => {
 // stated beside a height the resolver derived is a box nobody measured. And on itself, because a
 // ratio inferred from an ancestor's responsive wrapper says what shape the box around the player
 // is, not what shape the player is. Read at full depth here it once turned a platform's own 9:16
-// into a theme's blanket 16:9. The ancestor walk stays for the unclaimed carrier, where no
-// resolver size exists to beat.
+// into a theme's blanket 16:9. So the ancestors are read only when the resolver stated no size at
+// all: with nothing to beat, the wrapper's shape is the one signal left, and a sizeless player in
+// a responsive wrapper still gets a placeholder that can reserve space.
 export const withDeclaredSize = (
   element: Element,
   result: EmbedResolverResult | undefined,
@@ -100,7 +101,8 @@ export const withDeclaredSize = (
     return
   }
 
-  const declared = getEmbedSize(element, 0)
+  const wrapperDepth = hasSize(result) ? 0 : undefined
+  const declared = getEmbedSize(element, wrapperDepth)
 
   if (!hasSize(declared)) {
     return result

@@ -926,6 +926,28 @@ describeForEachParser('declaredSize', (parseHtml) => {
       })
     })
 
+    // The wrapper is the weakest source, so it speaks only when nobody else did: the resolver
+    // stated no size and the carrier declares nothing on itself. That is the everyday responsive
+    // embed, a sizeless video iframe inside a theme's padding-bottom wrapper.
+    describe('an ancestor fills in when nothing else states a size', () => {
+      it('should take the wrapper ratio when the resolver states no size', () => {
+        const value = html`
+          <div style="padding-bottom: 56.25%">
+            <div class="player"></div>
+          </div>
+        `
+        const expected: EmbedResolverResult = { ...base, ratio: '100/56.25' }
+
+        expect(build(base, value)).toEqual(expected)
+      })
+
+      it('should state no size when there is no wrapper either', () => {
+        const value = html`<div class="player"></div>`
+
+        expect(build(base, value)).toEqual(base)
+      })
+    })
+
     // A size is one measurement from one source. The carrier naming a width and nothing else does
     // not get the resolver's height to complete it: 640 by 300 is a ratio no one stated.
     describe('a size comes from one source', () => {
