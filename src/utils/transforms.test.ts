@@ -48,8 +48,8 @@ describe('applyStringTransforms', () => {
 
   it('should pipe the output of each transform into the next in order', async () => {
     const transforms = [
-      (html: string) => `${html}<p>first</p>`,
-      async (html: string) => `${html}<p>second</p>`,
+      (input: string) => `${input}<p>first</p>`,
+      async (input: string) => `${input}<p>second</p>`,
     ]
     const expected = html`
       <p>Hello</p>

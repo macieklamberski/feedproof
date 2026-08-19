@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser } from '../tests.js'
+import { describeForEachParser, resolverExtractor } from '../tests.js'
+import type { EmbedResolverResult } from '../types.js'
 import {
   dailymotionEmbedResolver,
   dailymotionResolveEmbed,
@@ -8,38 +9,66 @@ import {
 
 describe('extractDailymotionId', () => {
   it('should extract id from a video url', () => {
-    expect(extractDailymotionId('https://www.dailymotion.com/video/x7tgad0')).toBe('x7tgad0')
+    const value = 'https://www.dailymotion.com/video/x7tgad0'
+    const expected = 'x7tgad0'
+
+    expect(extractDailymotionId(value)).toBe(expected)
   })
 
   it('should extract id from a dai.ly short url', () => {
-    expect(extractDailymotionId('https://dai.ly/x7tgad0')).toBe('x7tgad0')
+    const value = 'https://dai.ly/x7tgad0'
+    const expected = 'x7tgad0'
+
+    expect(extractDailymotionId(value)).toBe(expected)
   })
 
   it('should extract id from an embed url', () => {
-    expect(extractDailymotionId('https://www.dailymotion.com/embed/video/x7tgad0')).toBe('x7tgad0')
+    const value = 'https://www.dailymotion.com/embed/video/x7tgad0'
+    const expected = 'x7tgad0'
+
+    expect(extractDailymotionId(value)).toBe(expected)
+  })
+
+  // Both forms the Flash player shipped.
+  it('should extract id from the swf player url', () => {
+    const value = 'http://www.dailymotion.com/swf/x7tgad0'
+    const expected = 'x7tgad0'
+
+    expect(extractDailymotionId(value)).toBe(expected)
+  })
+
+  it('should extract id from the swf player url carrying a video segment', () => {
+    const value = 'http://www.dailymotion.com/swf/video/x7tgad0'
+    const expected = 'x7tgad0'
+
+    expect(extractDailymotionId(value)).toBe(expected)
   })
 
   it('should extract id from the geo player url', () => {
-    expect(extractDailymotionId('https://geo.dailymotion.com/player.html?video=x7tgad0')).toBe(
-      'x7tgad0',
-    )
+    const value = 'https://geo.dailymotion.com/player.html?video=x7tgad0'
+    const expected = 'x7tgad0'
+
+    expect(extractDailymotionId(value)).toBe(expected)
   })
 
   it('should strip a title slug suffix', () => {
-    expect(extractDailymotionId('https://www.dailymotion.com/video/x7tgad0_some-title')).toBe(
-      'x7tgad0',
-    )
+    const value = 'https://www.dailymotion.com/video/x7tgad0_some-title'
+    const expected = 'x7tgad0'
+
+    expect(extractDailymotionId(value)).toBe(expected)
   })
 
   it('should return undefined for an invalid url', () => {
-    expect(extractDailymotionId('not a url')).toBeUndefined()
+    const value = 'not a url'
+
+    expect(extractDailymotionId(value)).toBeUndefined()
   })
 })
 
 describe('dailymotionResolveEmbed', () => {
   it('should build the embed with a thumbnail', () => {
-    const result = dailymotionResolveEmbed('https://www.dailymotion.com/video/x7tgad0')
-    const expected = {
+    const value = 'https://www.dailymotion.com/video/x7tgad0'
+    const expected: EmbedResolverResult = {
       provider: 'dailymotion',
       id: 'x7tgad0',
       src: 'https://www.dailymotion.com/embed/video/x7tgad0',
@@ -47,44 +76,61 @@ describe('dailymotionResolveEmbed', () => {
       thumbnail: 'https://www.dailymotion.com/thumbnail/video/x7tgad0',
     }
 
-    expect(result).toEqual(expected)
+    expect(dailymotionResolveEmbed(value)).toEqual(expected)
   })
 
   it('should preserve the start offset', () => {
-    const result = dailymotionResolveEmbed(
-      'https://www.dailymotion.com/embed/video/x8abcde?start=42',
-    )
+    const value = 'https://www.dailymotion.com/embed/video/x8abcde?start=42'
+    const expected: EmbedResolverResult = {
+      provider: 'dailymotion',
+      id: 'x8abcde',
+      src: 'https://www.dailymotion.com/embed/video/x8abcde?start=42',
+      url: 'https://www.dailymotion.com/video/x8abcde',
+      thumbnail: 'https://www.dailymotion.com/thumbnail/video/x8abcde',
+    }
 
-    expect(result?.src).toBe('https://www.dailymotion.com/embed/video/x8abcde?start=42')
+    expect(dailymotionResolveEmbed(value)).toEqual(expected)
   })
 
   it('should drop tracking parameters', () => {
-    const result = dailymotionResolveEmbed(
-      'https://www.dailymotion.com/embed/video/x8abcde?utm_source=feed',
-    )
+    const value = 'https://www.dailymotion.com/embed/video/x8abcde?utm_source=feed'
+    const expected: EmbedResolverResult = {
+      provider: 'dailymotion',
+      id: 'x8abcde',
+      src: 'https://www.dailymotion.com/embed/video/x8abcde',
+      url: 'https://www.dailymotion.com/video/x8abcde',
+      thumbnail: 'https://www.dailymotion.com/thumbnail/video/x8abcde',
+    }
 
-    expect(result?.src).toBe('https://www.dailymotion.com/embed/video/x8abcde')
+    expect(dailymotionResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should return undefined for a dailymotion url naming no video', () => {
+    const value = 'https://www.dailymotion.com/about'
+
+    expect(dailymotionResolveEmbed(value)).toBeUndefined()
   })
 })
 
 describeForEachParser('dailymotionEmbedResolver', (parseHtml) => {
-  const resolve = (value: string) => {
-    const element = parseHtml(value).querySelector(dailymotionEmbedResolver.selector) ?? undefined
-    return element ? dailymotionEmbedResolver.extract(element) : undefined
-  }
+  const extract = resolverExtractor(parseHtml, dailymotionEmbedResolver)
 
   it('should resolve a dailymotion iframe', async () => {
-    const result = await resolve(
-      '<iframe src="https://www.dailymotion.com/embed/video/x7tgad0"></iframe>',
-    )
+    const value = '<iframe src="https://www.dailymotion.com/embed/video/x7tgad0"></iframe>'
+    const expected: EmbedResolverResult = {
+      provider: 'dailymotion',
+      id: 'x7tgad0',
+      src: 'https://www.dailymotion.com/embed/video/x7tgad0',
+      url: 'https://www.dailymotion.com/video/x7tgad0',
+      thumbnail: 'https://www.dailymotion.com/thumbnail/video/x7tgad0',
+    }
 
-    expect(result?.provider).toBe('dailymotion')
-    expect(result?.id).toBe('x7tgad0')
+    expect(await extract(value)).toEqual(expected)
   })
 
   it('should ignore a non-dailymotion iframe', async () => {
-    const result = await resolve('<iframe src="https://example.com/video"></iframe>')
+    const value = '<iframe src="https://example.com/video"></iframe>'
 
-    expect(result).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 })

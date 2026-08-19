@@ -4,12 +4,12 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { CleanUrlFn } from '../types.js'
 import { pixelDimensionLimit } from './dom.js'
 
-// A candidate whose url is only a width/density descriptor (`225w`, `2x`), which a real
-// image url never is. The `srcset` parser is lenient: when a feed drops the urls and
-// leaves bare descriptors — a Jetpack/WordPress bug that ships `…768w, 225w, 563w` with
-// only the first url present — it reads each stray descriptor as a candidate whose url
-// IS the descriptor. Resolving that against the base url or handing it to an asset proxy
-// produces a request for a page that does not exist, so the wrapper below drops them.
+// A candidate whose url is only a width/density descriptor (`225w`, `2x`), which a real image
+// url never is. The `srcset` parser is lenient: where a feed leaves a bare descriptor with no
+// url, it reads the descriptor itself as that candidate's url. A Jetpack/WordPress bug ships
+// `…768w, 225w, 563w` with only the first url present. Resolving such a candidate against the
+// base url, or handing it to an asset proxy, requests a page that does not exist, so the wrapper
+// below drops them.
 const descriptorOnlyUrl = /^\d+(?:\.\d+)?[wx]$/i
 // The lenient parser can leave a trailing comma on a malformed candidate's url.
 const trailingComma = /,$/
@@ -27,10 +27,9 @@ export const countSrcsetCandidates = (srcset: string): number => {
 }
 
 // Size words a feed uses as a whole filename for a scaled variant, e.g.
-// .../{id}/large.jpg vs .../{id}/small.jpg. Defined with provenance (like urlpurify's
-// tracking-param literals): the keys join into the leaf matcher, and the rank orders two
-// variants of one image so pickLargerImageUrl can keep the larger. Rank 0 means the word
-// dedups but is too ambiguous to win or lose a size comparison.
+// .../{id}/large.jpg vs .../{id}/small.jpg. The keys join into the leaf matcher, and the rank
+// orders two variants of one image so pickLargerImageUrl can keep the larger. Rank 0 means the
+// word dedups but is too ambiguous to win or lose a size comparison.
 //
 // Conservative on purpose: "main"/"cover"/"default"/"wide"/"full" are left out. They
 // read as size hints but turn up as real content filenames often enough that a false
@@ -71,13 +70,13 @@ const bareHostSource = (capture: string): string => {
   return addMissingProtocol(decodeUrlPart(capture))
 }
 
-// Image CDNs/proxies that wrap the real source URL inside their own request — one
+// Image CDNs/proxies that wrap the real source URL inside their own request: one
 // entry per service. We key on the inner source so different render params of the same
 // image (width, format, quality, crop) collapse to one. Each pattern is host- or
 // path-anchored to a single CDN and captures the wrapped source (a url= query param, a
-// full URL at the end of the path, or a bare host+path for Photon); toSource turns that
+// full URL at the end of the path, or a bare host+path for Photon). toSource turns that
 // capture into an absolute URL. Deliberately an explicit list rather than a generic
-// catch-all, so it stays auditable — an unlisted proxy is simply left as-is.
+// catch-all, so it stays auditable: an unlisted proxy is left as-is.
 type ImageProxy = {
   pattern: RegExp
   toSource: (capture: string, proxy: URL) => string | undefined
@@ -137,17 +136,17 @@ const pathTransforms: Array<PathTransform> = [
     strip: /=(?:s\d{1,4}|w\d{1,4}-h\d{1,4})(?:-[a-z]{1,3})*$/i,
     replace: '',
   },
-  // Wix: media/{id}~mv2.{ext}/v1/{transform}/{file} — key on the id before /v1/.
+  // Wix: media/{id}~mv2.{ext}/v1/{transform}/{file}: key on the id before /v1/.
   { host: /wixstatic\.com$/i, strip: /\/v1\/.+$/i, replace: '' },
-  // Ghost (self-hosted): /content/images/size/w{N}/... — drop the size directory.
+  // Ghost (self-hosted): /content/images/size/w{N}/...: drop the size directory.
   { strip: /\/content\/images\/size\/w\d+(?:h\d+)?\//i, replace: '/content/images/' },
   // Cloudinary upload (self-hosted, host-agnostic): /image/upload/{signature?}/
-  // {transforms?}/... — strip the signature and comma-joined transform segments.
+  // {transforms?}/...: strip the signature and comma-joined transform segments.
   {
     strip: /\/image\/upload\/(?:s--[^/]+--\/)?(?:[a-z]{1,3}_[^/,]+(?:,[a-z]{1,3}_[^/,]+)*\/)*/i,
     replace: '/image/upload/',
   },
-  // Medium: miro.medium.com/v2/{transforms}/{id}(-{width}).{ext} — key on the bare id.
+  // Medium: miro.medium.com/v2/{transforms}/{id}(-{width}).{ext}: key on the bare id.
   { host: /miro\.medium\.com$/i, strip: /\/v2\/(?:[^/]+\/)+/i, replace: '/' },
   { host: /miro\.medium\.com$/i, strip: /(?:-\d{2,4})?\.[a-z]+$/i, replace: '' },
 ]
@@ -164,14 +163,14 @@ const scriptLeaf = new RegExp(`\\.(?:${scriptExtensionLiterals.join('|')})$`, 'i
 const dimensionLeaf = /^(.*__)?\d{1,5}x\d{1,5}(\.[a-z0-9]+)?$/i
 // A dimension suffix on an otherwise-shared stem: a scaled copy, e.g.
 // "photo-800x450.jpg" or "photo_800x450.jpg" of "photo.jpg". Both separators occur
-// in the corpus — hyphen (WordPress) on ~10% of feeds, underscore on ~1.5%. The
+// in the corpus: hyphen (WordPress) on ~10% of feeds, underscore on ~1.5%. The
 // width-only "_800x" and retina "@2x" shapes stay out, each below 0.1% of feeds.
 const dimensionSuffix = /[-_]\d{1,5}x\d{1,5}(\.[a-z0-9]+)$/i
 
-// If the URL is a known image-proxy wrapper, return its inner source URL so the key
-// is built from the real image rather than the proxy's render params. Loops so a
-// proxy that wraps another proxy (e.g. a Cloudinary fetch of a Cloudinary upload)
-// fully unwraps; the depth cap and same-value check stop any runaway.
+// If the URL is a known image-proxy wrapper, return its inner source URL so the key is built
+// from the real image, not the proxy's render params. Loops so a proxy that wraps another proxy
+// (e.g. a Cloudinary fetch of a Cloudinary upload) fully unwraps. The depth cap and same-value
+// check stop any runaway.
 const unwrapProxiedImage = (url: string): string => {
   let current = url
 
@@ -213,7 +212,7 @@ const unwrapProxiedImage = (url: string): string => {
 //     leading www., lowercase the host (DNS is case-insensitive), and normalize
 //     percent-encoding/unicode/duplicate slashes. The key is host + path with no
 //     protocol, so http and https collapse together too. The path's case is left
-//     alone — it is case-sensitive on most servers.
+//     alone: it is case-sensitive on most servers.
 //   - drop the query (cache-busters and ?w=/?width= render params), except on a script
 //     endpoint, where the query names the image instead of describing a rendition
 //   - collapse a -WxH or _WxH dimension suffix back to the base filename
@@ -222,8 +221,8 @@ const unwrapProxiedImage = (url: string): string => {
 // root-level files like /large.jpg and /small.jpg are never collapsed.
 export const getImageFingerprint = (rawUrl: string, cleanUrlFn?: CleanUrlFn): string => {
   const cleaned = unwrapProxiedImage(cleanUrlFn ? cleanUrlFn(rawUrl) : rawUrl)
-  // Keep the protocol (stripProtocol off) so the result stays a parseable URL;
-  // it is dropped below when the key is assembled from host + path.
+  // Keep the protocol (stripProtocol off) so the result stays a parseable URL.
+  // It is dropped below when the key is assembled from host + path.
   const normalized = normalizeUrl(cleaned, {
     stripWww: true,
     stripHash: true,
@@ -289,7 +288,7 @@ export const getUrlDimensions = (
     return
   }
 
-  // Explicit w/h query params win; otherwise the last WxH pair in the path or
+  // Explicit w/h query params win. Otherwise the last WxH pair in the path or
   // filename (the rendition size sits after any path digits).
   let width = Number(urlQueryWidthRegex.exec(src)?.[1])
   let height = Number(urlQueryHeightRegex.exec(src)?.[1])
@@ -331,7 +330,7 @@ const leafExtensionRegex = /\.[a-z0-9]+$/i
 // fingerprint: the comparison is then within one host's own directory naming, where
 // small vs large is unambiguous, not a cross-CDN convention.
 export const getSizeKeywordRank = (url: string): number => {
-  // The base only anchors a relative src so its leaf can be read; it never surfaces.
+  // The base only anchors a relative src so its leaf can be read. It never surfaces.
   const parsed = parseUrl(url, 'https://example.com')
 
   if (!parsed) {
@@ -353,8 +352,8 @@ export const getSizeKeywordRank = (url: string): number => {
   return 0
 }
 
-// Picks the strictly larger of two same-image URLs. Encoded dimensions decide first;
-// when neither side encodes any, two ranked size-keyword file names (large.jpg beside
+// Picks the strictly larger of two same-image URLs. Encoded dimensions decide first.
+// When neither side encodes any, two ranked size-keyword file names (large.jpg beside
 // small.jpg) decide instead. Returns undefined on a tie or when only one side carries
 // a signal: a URL that encodes no size may be the unscaled original or just
 // unmeasurable, and which way to read that is the caller's tie policy, not this

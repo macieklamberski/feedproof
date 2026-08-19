@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { microformatsCiteResolver } from './microformats.js'
 
 describeForEachParser('microformatsCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, microformatsCiteResolver)
+  const extract = resolverExtractor(parseHtml, microformatsCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete citation', async () => {
@@ -13,7 +13,9 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
           <a class="u-url" href="https://example.com/post">
             <span class="p-name">Page title</span>
           </a>
-          by <span class="p-author h-card"><span class="p-name">Author name</span></span>
+          by <span class="p-author h-card">
+            <span class="p-name">Author name</span>
+          </span>
           <details open>
             <summary>Post details</summary>
             <blockquote class="p-summary">Preview text</blockquote>
@@ -37,7 +39,9 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
     it('should extract the date and the publisher of a cited article', async () => {
       const value = html`
         <span class="h-cite">
-          <a class="u-url" href="https://example.com/article"><span class="p-name">Article title</span></a>
+          <a class="u-url" href="https://example.com/article">
+            <span class="p-name">Article title</span>
+          </a>
           <time class="dt-published" datetime="2026-03-04T09:15:00Z">March 4, 2026</time>
           in <cite class="p-publication">The Journal</cite>
         </span>
@@ -73,10 +77,14 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
     it('should not take the author url or name when the author is a nested h-card', async () => {
       const value = html`
         <span class="u-read-of h-cite">
-          <a class="u-url" href="https://example.com/book"><span class="p-name">Book title</span></a>
+          <a class="u-url" href="https://example.com/book">
+            <span class="p-name">Book title</span>
+          </a>
           by
           <span class="p-author h-card">
-            <a class="u-url" href="https://example.com/author"><span class="p-name">Author name</span></a>
+            <a class="u-url" href="https://example.com/author">
+              <span class="p-name">Author name</span>
+            </a>
           </span>
         </span>
       `
@@ -102,12 +110,15 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
           </span>
         </span>
       `
-      const result = await extract(value)
-
-      expect(result).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        author: 'Author name',
         icon: 'https://example.com/avatar.jpg',
-      })
-      expect(result?.thumbnail).toBeUndefined()
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should split the citation image and the author photo between thumbnail and icon', async () => {
@@ -121,11 +132,16 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
           </span>
         </span>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        author: 'Author name',
         icon: 'https://example.com/avatar.jpg',
         thumbnail: 'https://example.com/cover.png',
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the description from e-summary', async () => {
@@ -135,10 +151,14 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
           <blockquote class="e-summary">Preview text</blockquote>
         </span>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
         description: 'Preview text',
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should map the p-spelled reply class to the reply kind', async () => {
@@ -147,10 +167,14 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
           <a class="u-url p-name" href="https://example.com/post">Page title</a>
         </span>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
         kind: 'reply',
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should accept the p- spelling for every response property', async () => {
@@ -159,10 +183,14 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
           <a class="u-url p-name" href="https://example.com/post">Page title</a>
         </span>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
         kind: 'bookmark',
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the kind unset for a bare citation with no response class', async () => {
@@ -171,8 +199,13 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
           <a class="u-url p-name" href="https://example.com/post">Page title</a>
         </span>
       `
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.kind).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the image from u-photo when u-featured is absent', async () => {
@@ -182,8 +215,14 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
           <img class="u-photo" src="https://example.com/photo.jpg" />
         </span>
       `
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        thumbnail: 'https://example.com/photo.jpg',
+      }
 
-      expect((await extract(value))?.thumbnail).toBe('https://example.com/photo.jpg')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the description from p-content when p-summary is absent', async () => {
@@ -193,8 +232,14 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
           <div class="p-content">Full note text</div>
         </span>
       `
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        description: 'Full note text',
+      }
 
-      expect((await extract(value))?.description).toBe('Full note text')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the date from the text when dt-published has no datetime attribute', async () => {
@@ -204,8 +249,14 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
           <span class="dt-published">2026-03-04</span>
         </span>
       `
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        date: '2026-03-04',
+      }
 
-      expect((await extract(value))?.date).toBe('2026-03-04')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the date unset for a citation with no dt-published', async () => {
@@ -214,19 +265,33 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
           <a class="u-url p-name" href="https://example.com/post">Page title</a>
         </span>
       `
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.date).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should take the description from e-content', async () => {
       const value = html`
         <div class="u-like-of h-cite">
           <a class="u-url p-name" href="https://example.com/post">Page title</a>
-          <div class="e-content"><p>The cited post's body.</p></div>
+          <div class="e-content">
+            <p>The cited post's body.</p>
+          </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        description: "The cited post's body.",
+        kind: 'like',
+      }
 
-      expect((await extract(value))?.description).toBe("The cited post's body.")
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should prefer the summary over e-content', async () => {
@@ -234,25 +299,39 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
         <div class="h-cite">
           <a class="u-url p-name" href="https://example.com/post">Page title</a>
           <p class="p-summary">Short summary.</p>
-          <div class="e-content"><p>The much longer body.</p></div>
+          <div class="e-content">
+            <p>The much longer body.</p>
+          </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        description: 'Short summary.',
+      }
 
-      expect((await extract(value))?.description).toBe('Short summary.')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should prefer the summary even when the content comes first', async () => {
       const value = html`
         <div class="h-cite">
           <a class="u-url p-name" href="https://example.com/post">Page title</a>
-          <div class="e-content"><p>The much longer body.</p></div>
+          <div class="e-content">
+            <p>The much longer body.</p>
+          </div>
           <p class="p-summary">Short summary.</p>
         </div>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
         description: 'Short summary.',
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should prefer u-featured even when u-photo comes first', async () => {
@@ -263,10 +342,14 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
           <img class="u-featured" src="https://example.com/featured.png" />
         </div>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
         thumbnail: 'https://example.com/featured.png',
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should ignore a class that only resembles a response property', async () => {
@@ -275,8 +358,13 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
           <a class="u-url p-name" href="https://example.com/post">Page title</a>
         </span>
       `
+      const expected: CiteResolverResult = {
+        provider: 'microformats',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.kind).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -305,7 +393,9 @@ describeForEachParser('microformatsCiteResolver', (parseHtml) => {
       const value = html`
         <span class="h-cite">
           <span class="p-author h-card">
-            <a class="u-url" href="https://example.com/author"><span class="p-name">Author name</span></a>
+            <a class="u-url" href="https://example.com/author">
+              <span class="p-name">Author name</span>
+            </a>
           </span>
         </span>
       `

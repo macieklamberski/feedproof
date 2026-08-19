@@ -2,7 +2,6 @@ import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type {
   CleanUrlFn,
   DomTransform,
-  EmbedResolver,
   EmbedResolverResult,
   Enclosure,
   TransformContext,
@@ -11,11 +10,11 @@ import type {
 import { getElementDimensions } from '../../utils/dom.js'
 import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
 import { absoluteUrlRegex, resolveOrKeepUrl } from '../../utils/urls.js'
-import { createEmbedPlaceholder, isMediaResult } from '../../utils/widgets.js'
+import { createEmbedPlaceholder, hasDimensions, isMediaResult } from '../../utils/widgets.js'
 
 // Marks an injected element so a repeat run skips it and stripDuplicateEnclosures (an
 // opt-in heuristic) can tell it from the item's own inline content. Exported because
-// that pass reads it.
+// stripDuplicateEnclosures and assignVideoPosters both read it.
 export const enclosureMarker = 'data-enclosure'
 
 const isAudioEnclosure = (enclosure: Enclosure): boolean => {
@@ -134,17 +133,23 @@ const injectImageEnclosure = (
 // composed hqdefault thumbnail), while the feed carries the publisher's real thumbnail,
 // title, dimensions, and duration. Identity fields (provider/id/src/url) stay from the
 // resolver.
+//
+// The dimensions come from one side whole, never a width from one and a height from the other:
+// a feed that states only a width beside a resolver's fixed player height would describe a box
+// nobody measured (320 beside Acast's 190 came out of that once, for a fluid-width bar).
 const mergeEnclosureMetadata = (
   resolved: EmbedResolverResult | undefined,
   enclosure: Enclosure,
 ): Partial<EmbedResolverResult> => {
+  const dimensions = hasDimensions(enclosure) ? enclosure : resolved
+
   return {
     ...resolved,
     thumbnail: enclosure.thumbnails?.[0]?.url ?? resolved?.thumbnail,
     title: enclosure.title ?? resolved?.title,
     description: enclosure.description ?? resolved?.description,
-    width: enclosure.width ?? resolved?.width,
-    height: enclosure.height ?? resolved?.height,
+    width: dimensions?.width,
+    height: dimensions?.height,
     duration: enclosure.duration ?? resolved?.duration,
   }
 }
@@ -152,7 +157,7 @@ const mergeEnclosureMetadata = (
 // Whether `incoming` is a better variant of the same image to keep than `kept`. A URL
 // with no size encoded in it (`hint === 0`) is treated as the full-res original and
 // preferred over any sized copy (a bare `photo.jpg` outranks `photo-800x450.jpg`).
-// Between two sized variants the larger wins; on a true tie the no-query URL wins, else
+// Between two sized variants the larger wins. On a true tie the no-query URL wins, else
 // the first stays.
 const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
   const incomingUrl = incoming.url ?? ''
@@ -173,7 +178,7 @@ const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
   return keptUrl.includes('?') && !incomingUrl.includes('?')
 }
 
-// Collapse image enclosures that are the same picture at a different size or render —
+// Collapse image enclosures that are the same picture at a different size or render:
 // a scaled copy, a CDN-proxied variant, or just a `?w=` query (a feed often lists one
 // image as a native enclosure plus a media:content). Without this they each inject as a
 // stacked copy. Keyed by getImageFingerprint (the same size-agnostic key the duplicate
@@ -244,7 +249,7 @@ const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): En
   container.innerHTML = playerEmbed
 
   // In real feeds (corpus sample, July 2026) rawvoice:embed is an iframe player in 36 of
-  // 40 feeds; the rest wrap a native <audio> for the same file as the enclosure, or plain
+  // 40 feeds. The rest wrap a native <audio> for the same file as the enclosure, or plain
   // text. Only frame-able elements count as players, so those others fall through and the
   // enclosure itself still renders.
   const frame = container.querySelector('iframe[src], embed[src]')
@@ -371,9 +376,10 @@ export const injectEnclosures: DomTransform = (context) => {
       // when no resolver claims it), produces an embed placeholder.
       if (resolved || enclosure.playerUrl) {
         const src = resolveOrKeepUrl(embedSource, context.resolveUrlFn, context.baseUrl)
-        // A resolver rebuilds the src from the parsed id; without one the enclosure's own
-        // URL stands in.
         const metadata = mergeEnclosureMetadata(resolved, enclosure)
+
+        // A resolver rebuilds the src from the parsed id. Without one the enclosure's own
+        // URL stands in.
         created.push(createEmbedPlaceholder(document, { ...metadata, src: metadata.src ?? src }))
         continue
       }
@@ -423,12 +429,12 @@ export const injectEnclosures: DomTransform = (context) => {
     })
 
     // Tag each injected element so the optional stripDuplicateEnclosures pass can
-    // recognize it as injected media rather than the item's own content.
+    // recognize it as injected media, not the item's own content.
     for (const element of injected) {
       element.setAttribute(enclosureMarker, '')
     }
 
-    // Prepend ahead of the existing content while preserving enclosure order; a
+    // Prepend ahead of the existing content while preserving enclosure order. A
     // per-item prepend would reverse the order of multi-enclosure items.
     for (let index = injected.length - 1; index >= 0; index--) {
       document.body.prepend(injected[index])

@@ -1,0 +1,128 @@
+import { getPathSegments, isAnyOf, parseUrl } from 'trousse'
+import type { EmbedResolverResult } from '../types.js'
+import { attr } from '../utils/dom.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
+
+const issuuHosts = ['issuu.com']
+
+// Two id spaces, and neither converts into the other. A config id is a pair of counters
+// (`1016421/47623369`) and addresses the reader through the url hash. A publisher and document
+// name pair addresses the same reader through the query. Each has its own url, which is what
+// makes both resolvable with nothing fetched.
+const configIdRegex = /^\d+\/\d+$/
+const safeNameRegex = /^[\w.-]+$/
+const pageNumberRegex = /^\d+$/
+
+// `anonymous-embed.html` is gone: it answers 403 with an S3 access-denied body for every request,
+// its own documents as well as an invented one, while `embed.html` beside it serves the reader.
+// Both take the same query, so moving it across repairs those embeds.
+const embedPaths = ['embed.html', 'anonymous-embed.html']
+
+const composeConfigEmbed = (configId: string | undefined): EmbedResolverResult | undefined => {
+  if (!configId || !configIdRegex.test(configId)) {
+    return
+  }
+
+  return {
+    provider: 'issuu',
+    id: configId,
+    src: `https://e.issuu.com/embed.html#${configId}`,
+  }
+}
+
+// The page number stays out of the id, because it selects a view of one document while the id is
+// what addresses the document itself. It stays in the url, which is what selects the page.
+const composeDocumentEmbed = (
+  publisher: string | undefined,
+  documentName: string | undefined,
+  page?: string,
+): EmbedResolverResult | undefined => {
+  if (!publisher || !documentName) {
+    return
+  }
+
+  if (!safeNameRegex.test(publisher) || !safeNameRegex.test(documentName)) {
+    return
+  }
+
+  const pageQuery = page && pageNumberRegex.test(page) ? `&p=${page}` : ''
+
+  return {
+    provider: 'issuu',
+    id: `${publisher}/${documentName}`,
+    src: `https://e.issuu.com/embed.html?u=${publisher}&d=${documentName}${pageQuery}`,
+    url: `https://issuu.com/${publisher}/docs/${documentName}`,
+  }
+}
+
+// A reader url, `issuu.com/{publisher}/docs/{document}` with an optional page number after it.
+const readDocumentUrl = (url: string): EmbedResolverResult | undefined => {
+  const parsed = parseUrlOnHosts(url, issuuHosts)
+
+  if (!parsed) {
+    return
+  }
+
+  const [publisher, marker, documentName, page] = getPathSegments(parsed)
+
+  if (marker !== 'docs') {
+    return
+  }
+
+  return composeDocumentEmbed(publisher, documentName, page)
+}
+
+// Issuu's inline embed is an empty `<div class="issuuembed">` that `e.issuu.com/embed.js`
+// hydrates into an iframe at runtime. With no script running there is nothing in the markup at
+// all, so the div is dropped as empty and the document goes with it: 481 corpus feeds lose one
+// that way, against 441 carrying `div[data-configid]` and 535 carrying the class.
+//
+// The loader is what says how each attribute addresses the reader. It reads `data-configid` into
+// the hash of `e.issuu.com/embed.html`, and parses `data-url` into the `u`, `d` and `p` query the
+// iframe form already uses. Publishers write the hash form into iframes by hand as well, which is
+// the second place it can be read off.
+export const issuuWidgetEmbedResolver = createMarkupEmbedResolver(
+  'div.issuuembed[data-configid], div.issuuembed[data-url]',
+  (element) => {
+    return (
+      composeConfigEmbed(attr(element, 'data-configid')) ??
+      readDocumentUrl(attr(element, 'data-url') ?? '')
+    )
+  },
+)
+
+// The Flash viewer, `static.issuu.com/webembed/…/IssuuReader.swf`, reaches here and is left
+// alone. Its `documentId` flashvar is a third id space that neither url form accepts, so there is
+// nothing to mint from and the generic fallback keeps it.
+export const issuuResolveEmbed = (
+  url: string,
+  element?: Element,
+): EmbedResolverResult | undefined => {
+  const parsed = parseUrl(url)
+
+  if (!parsed || !isAnyOf(getPathSegments(parsed)[0] ?? '', embedPaths)) {
+    return
+  }
+
+  // The publication name is the only thing an Issuu carrier states that neither url form holds,
+  // and the current share snippet writes it on the iframe.
+  const title = attr(element, 'title')
+  const configEmbed = composeConfigEmbed(parsed.hash.replace('#', ''))
+
+  if (configEmbed) {
+    return { ...configEmbed, title }
+  }
+
+  const publisher = parsed.searchParams.get('u') ?? undefined
+  const documentName = parsed.searchParams.get('d') ?? undefined
+  const documentEmbed = composeDocumentEmbed(
+    publisher,
+    documentName,
+    parsed.searchParams.get('p') ?? undefined,
+  )
+
+  return documentEmbed && { ...documentEmbed, title }
+}
+
+export const issuuIframeEmbedResolver = createUrlEmbedResolver(issuuHosts, issuuResolveEmbed)

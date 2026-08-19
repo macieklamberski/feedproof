@@ -1,11 +1,10 @@
 // One entry per platform whose emoji markup we recognize. The flat lookups the transform uses
-// are derived from this, so adding a platform is one object rather than edits spread across
-// several arrays.
+// are derived from this.
 //
 // Each platform lists the filenames it actually ships, taken from its own distribution. Names
 // repeat across platforms on purpose: `smile.png` really is shipped by four of these, and
 // recording it four times keeps each list checkable against its source. A repeated name must
-// agree on the glyph, which `mergeNames` asserts, because nothing in the markup says which
+// agree on the glyph, which `mergeEmojiNames` asserts, because nothing in the markup says which
 // engine produced a given image.
 //
 // A stock filename we deliberately do not map is left commented out in its own platform, with
@@ -13,7 +12,7 @@
 //
 // Each `paths` entry is the narrowest segment that still matches every board of that platform.
 // Some can be pinned exactly, others cannot because the directory above the smilies is the
-// board's theme name, which is why `/smilies/` appears where a longer path would be wrong.
+// board's theme name.
 //
 // Names checked against the whole corpus and left out on purpose, so a later pass does not
 // rediscover them as gaps:

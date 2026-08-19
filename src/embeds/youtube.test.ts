@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   composeEmbedUrl,
   composeThumbnailUrl,
   extractVideoId,
   isVideoId,
-  youtubeEmbedResolver,
+  youtubeAmpEmbedResolver,
+  youtubeIframeEmbedResolver,
   youtubeResolveEmbed,
 } from './youtube.js'
 
@@ -28,6 +29,29 @@ describe('extractVideoId', () => {
 
   it('should extract id from youtu.be short url', () => {
     const value = 'https://youtu.be/dQw4w9WgXcQ'
+    const expected = 'dQw4w9WgXcQ'
+
+    expect(extractVideoId(value)).toBe(expected)
+  })
+
+  it('should extract id from the Flash /v/ url', () => {
+    const value = 'http://www.youtube.com/v/dQw4w9WgXcQ'
+    const expected = 'dQw4w9WgXcQ'
+
+    expect(extractVideoId(value)).toBe(expected)
+  })
+
+  // The Flash player appended its parameters with `&` and no `?`, so the whole tail arrives
+  // inside the id's path segment.
+  it('should extract id from a Flash url whose params carry no question mark', () => {
+    const value = 'http://www.youtube.com/v/dQw4w9WgXcQ&hl=en_US&fs=1&'
+    const expected = 'dQw4w9WgXcQ'
+
+    expect(extractVideoId(value)).toBe(expected)
+  })
+
+  it('should extract id from the googleapis Flash host', () => {
+    const value = 'http://youtube.googleapis.com/v/dQw4w9WgXcQ&hl=en_US'
     const expected = 'dQw4w9WgXcQ'
 
     expect(extractVideoId(value)).toBe(expected)
@@ -117,13 +141,6 @@ describe('extractVideoId', () => {
     expect(extractVideoId(value)).toBeUndefined()
   })
 
-  it('should extract id from /v/ legacy embed url', () => {
-    const value = 'https://www.youtube.com/v/dQw4w9WgXcQ'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
   it('should extract id from shorts url with trailing path', () => {
     const value = 'https://www.youtube.com/shorts/dQw4w9WgXcQ?si=abc'
     const expected = 'dQw4w9WgXcQ'
@@ -206,32 +223,54 @@ describe('youtubeResolveEmbed', () => {
 
   it('should preserve the start offset', () => {
     const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=90'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=90',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+    }
 
-    expect(youtubeResolveEmbed(value)?.src).toBe(
-      'https://www.youtube.com/embed/dQw4w9WgXcQ?start=90',
-    )
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should preserve the playlist and its position', () => {
     const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+    }
 
-    expect(youtubeResolveEmbed(value)?.src).toBe(
-      'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4',
-    )
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should preserve both halves of a clip', () => {
     const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+    }
 
-    expect(youtubeResolveEmbed(value)?.src).toBe(
-      'https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh',
-    )
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should drop player and tracking parameters', () => {
     const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?si=abc&autoplay=1&rel=0'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+    }
 
-    expect(youtubeResolveEmbed(value)?.src).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ')
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should resolve youtu.be short url', () => {
@@ -286,10 +325,14 @@ describe('youtubeResolveEmbed', () => {
 
   it('should normalize a nocookie playlist embed to youtube.com', () => {
     const value = 'https://www.youtube-nocookie.com/embed/videoseries?list=PLxyz'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'PLxyz',
+      src: 'https://www.youtube.com/embed/videoseries?list=PLxyz',
+      url: 'https://www.youtube.com/playlist?list=PLxyz',
+    }
 
-    expect(youtubeResolveEmbed(value)?.src).toBe(
-      'https://www.youtube.com/embed/videoseries?list=PLxyz',
-    )
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined for a videoseries embed with no list', () => {
@@ -362,29 +405,33 @@ describe('composeEmbedUrl', () => {
   })
 
   it('should append params as a query string', () => {
+    const value = 'dQw4w9WgXcQ'
     const expected = 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=42'
 
-    expect(composeEmbedUrl('dQw4w9WgXcQ', { start: '42' })).toBe(expected)
+    expect(composeEmbedUrl(value, { start: '42' })).toBe(expected)
   })
 
   it('should join several params with an ampersand', () => {
+    const value = 'videoseries'
     const expected = 'https://www.youtube.com/embed/videoseries?list=PL1&index=2'
 
-    expect(composeEmbedUrl('videoseries', { list: 'PL1', index: '2' })).toBe(expected)
+    expect(composeEmbedUrl(value, { list: 'PL1', index: '2' })).toBe(expected)
   })
 
   it('should stay bare for an empty param object', () => {
+    const value = 'dQw4w9WgXcQ'
     const expected = 'https://www.youtube.com/embed/dQw4w9WgXcQ'
 
-    expect(composeEmbedUrl('dQw4w9WgXcQ', {})).toBe(expected)
+    expect(composeEmbedUrl(value, {})).toBe(expected)
   })
 
   // One param whose value happens to contain the separator, not two params. Encoding is what
   // keeps it that way, so a feed cannot smuggle `autoplay` in through a list id.
   it('should encode a separator inside a value instead of starting a new param', () => {
+    const value = 'videoseries'
     const expected = 'https://www.youtube.com/embed/videoseries?list=PL1%26autoplay%3D1'
 
-    expect(composeEmbedUrl('videoseries', { list: 'PL1&autoplay=1' })).toBe(expected)
+    expect(composeEmbedUrl(value, { list: 'PL1&autoplay=1' })).toBe(expected)
   })
 })
 
@@ -397,14 +444,11 @@ describe('composeThumbnailUrl', () => {
   })
 })
 
-describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
-  const firstMatch = (html: string): Element | undefined => {
-    return parseHtml(html).querySelector(youtubeEmbedResolver.selector) ?? undefined
-  }
+describeForEachParser('youtubeIframeEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, youtubeIframeEmbedResolver)
 
-  it('should extract metadata from a youtube iframe', () => {
-    const element = firstMatch('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>')
-    const result = element ? youtubeEmbedResolver.extract(element) : undefined
+  it('should extract metadata from a youtube iframe', async () => {
+    const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
@@ -413,12 +457,11 @@ describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
 
-    expect(result).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
-  it('should extract metadata from a youtube subdomain iframe', () => {
-    const element = firstMatch('<iframe src="https://m.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>')
-    const result = element ? youtubeEmbedResolver.extract(element) : undefined
+  it('should extract metadata from a youtube subdomain iframe', async () => {
+    const value = '<iframe src="https://m.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>'
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
@@ -427,12 +470,11 @@ describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
 
-    expect(result).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
-  it('should extract metadata from a youtu.be iframe', () => {
-    const element = firstMatch('<iframe src="https://youtu.be/dQw4w9WgXcQ"></iframe>')
-    const result = element ? youtubeEmbedResolver.extract(element) : undefined
+  it('should extract metadata from a youtu.be iframe', async () => {
+    const value = '<iframe src="https://youtu.be/dQw4w9WgXcQ"></iframe>'
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'dQw4w9WgXcQ',
@@ -441,29 +483,153 @@ describeForEachParser('youtubeEmbedResolver', (parseHtml) => {
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     }
 
-    expect(result).toEqual(expected)
+    expect(await extract(value)).toEqual(expected)
   })
 
-  it('should return undefined for non-youtube iframes', () => {
-    const element = firstMatch('<iframe src="https://example.com/video"></iframe>')
-    const result = element ? youtubeEmbedResolver.extract(element) : undefined
+  it('should return undefined for non-youtube iframes', async () => {
+    const value = '<iframe src="https://example.com/video"></iframe>'
 
-    expect(result).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 
   // Regression: a non-youtube host carrying a watch?v=<id> shaped query must
   // not be claimed just because extractVideoId could parse the id from it.
-  it('should reject iframe with valid video id but wrong host', () => {
-    const element = firstMatch('<iframe src="https://evil.com/watch?v=dQw4w9WgXcQ"></iframe>')
-    const result = element ? youtubeEmbedResolver.extract(element) : undefined
+  it('should reject iframe with valid video id but wrong host', async () => {
+    const value = '<iframe src="https://evil.com/watch?v=dQw4w9WgXcQ"></iframe>'
 
-    expect(result).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
   })
 
-  it('should return undefined for an iframe with an empty src', () => {
-    const element = firstMatch('<iframe src=""></iframe>')
-    const result = element ? youtubeEmbedResolver.extract(element) : undefined
+  it('should return undefined for an iframe with an empty src', async () => {
+    const value = '<iframe src=""></iframe>'
 
-    expect(result).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
+  })
+})
+
+describeForEachParser('youtubeAmpEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, youtubeAmpEmbedResolver)
+
+  describe('happy paths', () => {
+    it('should extract metadata from the videoid alone', async () => {
+      const value = '<amp-youtube data-videoid="dQw4w9WgXcQ"></amp-youtube>'
+      const expected: EmbedResolverResult = {
+        provider: 'youtube',
+        id: 'dQw4w9WgXcQ',
+        src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should carry the size the element declares', async () => {
+      const value = html`
+        <amp-youtube data-videoid="dQw4w9WgXcQ" width="480" height="270" layout="responsive">
+        </amp-youtube>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'youtube',
+        id: 'dQw4w9WgXcQ',
+        src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        width: 480,
+        height: 270,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should carry the playback window from data-param attributes', async () => {
+      const value = html`
+        <amp-youtube data-videoid="dQw4w9WgXcQ" data-param-start="30" data-param-end="90">
+        </amp-youtube>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'youtube',
+        id: 'dQw4w9WgXcQ',
+        src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=30&end=90',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should carry the playlist and its position from data-param attributes', async () => {
+      const value = html`
+        <amp-youtube
+          data-videoid="dQw4w9WgXcQ"
+          data-param-list="PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf"
+          data-param-index="2"
+        >
+        </amp-youtube>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'youtube',
+        id: 'dQw4w9WgXcQ',
+        src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf&index=2',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The same set the url form keeps, so an AMP embed and an ordinary one resolve alike:
+    // autoplay, rel and the rest change nothing a reader can see from a placeholder.
+    it('should drop data-param attributes outside the carried set', async () => {
+      const value = html`
+        <amp-youtube data-videoid="dQw4w9WgXcQ" data-param-autoplay="1" data-param-rel="0">
+        </amp-youtube>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'youtube',
+        id: 'dQw4w9WgXcQ',
+        src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    it('should return undefined for an element with no videoid', async () => {
+      const value = '<amp-youtube width="480" height="270"></amp-youtube>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for an empty videoid', async () => {
+      const value = '<amp-youtube data-videoid=""></amp-youtube>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // A bogus id would mint a bogus player url and a bogus enrichment key, so the element is
+    // left for the generic handling instead, exactly as the url form treats a malformed id.
+    it('should return undefined for a malformed videoid', async () => {
+      const value = '<amp-youtube data-videoid="../../evil"></amp-youtube>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for an embed path word in the videoid', async () => {
+      const value = '<amp-youtube data-videoid="videoseries"></amp-youtube>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // The channel-live variant states no video, so there is no poster and no watch url to
+    // mint. It occurs in no corpus feed, and is deliberately left unresolved.
+    it('should not claim the live channel variant', async () => {
+      const value = '<amp-youtube data-live-channelid="UCuAXFkgsw1L7xaCfnd5JJOw"></amp-youtube>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
   })
 })

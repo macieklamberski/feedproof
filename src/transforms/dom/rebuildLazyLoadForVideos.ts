@@ -6,7 +6,7 @@ import type { DomTransform } from '../../types.js'
 // `.preview-lazyload` facade: a container div wrapping an `<a>` that holds the watch URL
 // (in `data-video-uri`, or the visible `href`) and only builds the real iframe with JS on
 // click. A reader runs no JS, so the video never appears. Reusing the widget resolvers maps
-// the recovered watch URL to the platform's embed URL — keeping that format in one place and
+// the recovered watch URL to the platform's embed URL: keeping that format in one place and
 // preserving Vimeo's unlisted `?h=` hash that a hand-built URL would drop.
 const resolveEmbedSource = [youtubeResolveEmbed, vimeoResolveEmbed]
 

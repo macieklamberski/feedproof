@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripDuplicateTitleHeading } from './stripDuplicateTitleHeading.js'
 
 describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
-  const transform = (html: string, context: TransformContext) => {
-    return applyDomTransforms(parseHtml(html), [stripDuplicateTitleHeading(context)])
+  const transform = (value: string, context: TransformContext) => {
+    return applyDomTransforms(parseHtml(value), [stripDuplicateTitleHeading(context)])
   }
 
   describe('happy paths', () => {
@@ -18,7 +18,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today' }
       const expected = '<p>Article body.</p>'
 
-      expect(await transform(value, context)).toBe(expected)
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     it('should remove first H2 when it matches the title', async () => {
@@ -29,7 +29,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today' }
       const expected = '<p>Article body.</p>'
 
-      expect(await transform(value, context)).toBe(expected)
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     it('should remove heading when title differs only by case', async () => {
@@ -40,7 +40,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       const context: TransformContext = { ...baseContext, articleTitle: 'breaking news today' }
       const expected = '<p>Article body.</p>'
 
-      expect(await transform(value, context)).toBe(expected)
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     it('should remove heading when title differs only by surrounding whitespace', async () => {
@@ -48,7 +48,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today' }
       const expected = '<p>Article body.</p>'
 
-      expect(await transform(value, context)).toBe(expected)
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     it('should remove heading containing inline formatting that matches title text', async () => {
@@ -59,12 +59,17 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       const context: TransformContext = { ...baseContext, articleTitle: 'The real story' }
       const expected = '<p>Article body.</p>'
 
-      expect(await transform(value, context)).toBe(expected)
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     it('should remove heading when the title still carries HTML entities', async () => {
       const value = html`
-        <h1><b><i>Let ‘em laugh</i></b><b>: Country’s last word 🪕</b></h1>
+        <h1>
+          <b>
+            <i>Let ‘em laugh</i>
+          </b>
+          <b>: Country’s last word 🪕</b>
+        </h1>
         <p>Article body.</p>
       `
       const context: TransformContext = {
@@ -73,7 +78,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       }
       const expected = '<p>Article body.</p>'
 
-      expect(await transform(value, context)).toBe(expected)
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     it('should remove heading when the title itself carries inline markup', async () => {
@@ -84,7 +89,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       const context: TransformContext = { ...baseContext, articleTitle: 'The <em>real</em> story' }
       const expected = '<p>Article body.</p>'
 
-      expect(await transform(value, context)).toBe(expected)
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     it('should remove heading when text has collapsed multi-space whitespace', async () => {
@@ -95,7 +100,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       const context: TransformContext = { ...baseContext, articleTitle: 'The real story' }
       const expected = '<p>Article body.</p>'
 
-      expect(await transform(value, context)).toBe(expected)
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     it('should only remove the first matching heading, not subsequent occurrences', async () => {
@@ -110,7 +115,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
         <h1>The Title</h1>
       `
 
-      expect(await transform(value, context)).toBe(expected)
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
   })
 
@@ -121,7 +126,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
         <p>Article body.</p>
       `
 
-      expect(await transform(value, baseContext)).toBe(value)
+      expect(await transform(value, baseContext)).toEqualHtml(value)
     })
 
     it('should leave content alone when title is empty string', async () => {
@@ -131,7 +136,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       `
       const context: TransformContext = { ...baseContext, articleTitle: '' }
 
-      expect(await transform(value, context)).toBe(value)
+      expect(await transform(value, context)).toEqualHtml(value)
     })
 
     it('should leave content alone when title is whitespace only', async () => {
@@ -141,7 +146,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       `
       const context: TransformContext = { ...baseContext, articleTitle: '   ' }
 
-      expect(await transform(value, context)).toBe(value)
+      expect(await transform(value, context)).toEqualHtml(value)
     })
 
     it('should leave content alone when first heading does not match title', async () => {
@@ -151,14 +156,14 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       `
       const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today' }
 
-      expect(await transform(value, context)).toBe(value)
+      expect(await transform(value, context)).toEqualHtml(value)
     })
 
     it('should leave content alone when document has no headings', async () => {
       const value = '<p>Article body without any heading.</p>'
       const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today' }
 
-      expect(await transform(value, context)).toBe(value)
+      expect(await transform(value, context)).toEqualHtml(value)
     })
 
     it('should not remove a later heading even if it matches when first does not', async () => {
@@ -169,7 +174,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       `
       const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today' }
 
-      expect(await transform(value, context)).toBe(value)
+      expect(await transform(value, context)).toEqualHtml(value)
     })
 
     it('should leave content alone when title differs by punctuation', async () => {
@@ -179,7 +184,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       `
       const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today!' }
 
-      expect(await transform(value, context)).toBe(value)
+      expect(await transform(value, context)).toEqualHtml(value)
     })
 
     it('should be idempotent', async () => {
@@ -191,27 +196,29 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       const once = await transform(value, context)
       const twice = await transform(once, context)
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
 
     it('should skip removal when the heading contains an img', async () => {
       const value = html`
-        <h1>Logo<img src="logo.png"></h1>
+        <h1>Logo<img src="logo.png">
+        </h1>
         <p>Body.</p>
       `
       const context: TransformContext = { ...baseContext, articleTitle: 'Logo' }
 
-      expect(await transform(value, context)).toBe(value)
+      expect(await transform(value, context)).toEqualHtml(value)
     })
 
     it('should skip removal when the heading contains a video', async () => {
       const value = html`
-        <h1>Title<video src="x.mp4"></video></h1>
+        <h1>Title<video src="x.mp4"></video>
+        </h1>
         <p>Body.</p>
       `
       const context: TransformContext = { ...baseContext, articleTitle: 'Title' }
 
-      expect(await transform(value, context)).toBe(value)
+      expect(await transform(value, context)).toEqualHtml(value)
     })
 
     it('should skip removal when the matching heading contains a nested heading', async () => {
@@ -227,7 +234,9 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       queryElement(document, 'h2').appendChild(inner)
       const transforms = [stripDuplicateTitleHeading(context)]
       const expected = html`
-        <h2><h1>Breaking News Today</h1></h2>
+        <h2>
+          <h1>Breaking News Today</h1>
+        </h2>
         <p>Body.</p>
       `
 
@@ -248,7 +257,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
         <p>Body.</p>
       `
 
-      expect(await transform(value, context)).toBe(expected)
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     it('should leave content alone when all headings are empty', async () => {
@@ -259,7 +268,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       `
       const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today' }
 
-      expect(await transform(value, context)).toBe(value)
+      expect(await transform(value, context)).toEqualHtml(value)
     })
 
     it('should skip past leading whitespace-only heading', async () => {
@@ -274,7 +283,7 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
         <p>Body.</p>
       `
 
-      expect(await transform(value, context)).toBe(expected)
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
   })
 })

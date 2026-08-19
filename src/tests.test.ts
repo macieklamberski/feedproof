@@ -40,11 +40,16 @@ describe('queryElement', () => {
 describe('html', () => {
   it('should join lines with nothing at tag boundaries', () => {
     const value = html`
-      <ul><li>a</li></ul>
-      <ol><li>b</li></ol>
+      <ul>
+        <li>a</li>
+      </ul>
+      <ol>
+        <li>b</li>
+      </ol>
     `
+    const expected = '<ul><li>a</li></ul><ol><li>b</li></ol>'
 
-    expect(value).toBe('<ul><li>a</li></ul><ol><li>b</li></ol>')
+    expect(value).toBe(expected)
   })
 
   it('should join attribute lines with a space and glue a standalone closing bracket', () => {
@@ -56,8 +61,9 @@ describe('html', () => {
         <span>text</span>
       </div>
     `
+    const expected = '<div class="card" id="post"><span>text</span></div>'
 
-    expect(value).toBe('<div class="card" id="post"><span>text</span></div>')
+    expect(value).toBe(expected)
   })
 
   it('should join a standalone self-closing bracket with a space', () => {
@@ -66,8 +72,9 @@ describe('html', () => {
         src="photo.jpg"
       />
     `
+    const expected = '<img src="photo.jpg" />'
 
-    expect(value).toBe('<img src="photo.jpg" />')
+    expect(value).toBe(expected)
   })
 
   it('should interpolate values', () => {
@@ -75,8 +82,9 @@ describe('html', () => {
     const value = html`
       <img src="${source}">
     `
+    const expected = '<img src="photo.jpg">'
 
-    expect(value).toBe('<img src="photo.jpg">')
+    expect(value).toBe(expected)
   })
 })
 
@@ -103,6 +111,58 @@ describe('toEqualHtml', () => {
     const throwing = () => expect('<p>a</p>').not.toEqualHtml('<p>a</p>')
 
     expect(throwing).toThrow('to equal')
+  })
+
+  // Both sides go through a parser to be compared, so anything a parse repairs would otherwise
+  // be repaired on both sides and the assertion would pass on malformed output. Each case below
+  // is a defect a transform could emit whose expected value is the same markup written correctly.
+  describe('malformed received HTML', () => {
+    it('should fail on an unclosed tag', () => {
+      const throwing = () => expect('<div><span>x</div>').toEqualHtml('<div><span>x</span></div>')
+
+      expect(throwing).toThrow('would not repair')
+    })
+
+    it('should fail on a stray closing tag', () => {
+      const throwing = () => expect('<p>a</p></div>').toEqualHtml('<p>a</p>')
+
+      expect(throwing).toThrow('would not repair')
+    })
+
+    it('should fail on a block element inside a paragraph', () => {
+      const throwing = () => expect('<p>a<div>b</div></p>').toEqualHtml('<p>a</p><div>b</div>')
+
+      expect(throwing).toThrow('would not repair')
+    })
+
+    it('should fail on an unescaped angle bracket in text', () => {
+      const throwing = () => expect('<p>1 < 2</p>').toEqualHtml('<p>1 &lt; 2</p>')
+
+      expect(throwing).toThrow('would not repair')
+    })
+
+    it('should fail on a duplicate attribute', () => {
+      const throwing = () =>
+        expect('<img src="a.jpg" src="b.jpg">').toEqualHtml('<img src="a.jpg">')
+
+      expect(throwing).toThrow('would not repair')
+    })
+
+    it('should accept an attribute value containing spaces', () => {
+      expect('<div data-title="Sample Title Sample"></div>').toEqualHtml(
+        '<div data-title="Sample Title Sample"></div>',
+      )
+    })
+
+    it('should accept a self-closing foreign element against its expanded spelling', () => {
+      expect('<svg><image href="a.png" /></svg>').toEqualHtml(
+        '<svg><image href="a.png"></image></svg>',
+      )
+    })
+
+    it('should accept a void element with no closing tag', () => {
+      expect('<p>a<br>b<img src="a.jpg"></p>').toEqualHtml('<p>a<br>b<img src="a.jpg"></p>')
+    })
   })
 })
 

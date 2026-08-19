@@ -18,10 +18,9 @@ describeForEachParser('rebuildRocketYoutubePreviews', (parseHtml) => {
         data-alt="Title"
       ></div>
     `
-    const result = await transform(value)
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ">')
-    expect(result).not.toContain('rll-youtube-player')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should carry the data-query through as a query string', async () => {
@@ -32,19 +31,22 @@ describeForEachParser('rebuildRocketYoutubePreviews', (parseHtml) => {
         data-query="feature=oembed"
       ></div>
     `
-    const result = await transform(value)
+    const expected = html`
+      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed"></iframe>
+    `
 
-    expect(result).toContain(
-      '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed">',
-    )
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave the element untouched when there is no data-src', async () => {
-    const value = html`<div class="rll-youtube-player" data-id="dQw4w9WgXcQ"></div>`
-    const result = await transform(value)
+    const value = html`
+      <div
+        class="rll-youtube-player"
+        data-id="dQw4w9WgXcQ"
+      ></div>
+    `
 
-    expect(result).toContain('rll-youtube-player')
-    expect(result).not.toContain('<iframe')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should produce a youtube placeholder end to end', async () => {
@@ -59,14 +61,21 @@ describeForEachParser('rebuildRocketYoutubePreviews', (parseHtml) => {
         <img src="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg" />
       </div>
     `
+    const expected = html`
+      <div
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+      ></div>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com',
     })
 
-    expect(result).toContain('data-embed-provider="youtube"')
-    expect(result).toContain('data-embed-thumbnail=')
-    expect(result).not.toContain('rll-youtube-player')
+    expect(result).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
@@ -81,6 +90,6 @@ describeForEachParser('rebuildRocketYoutubePreviews', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

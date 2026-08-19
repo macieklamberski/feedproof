@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { ghostCiteResolver } from './ghost.js'
 
 describeForEachParser('ghostCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, ghostCiteResolver)
+  const extract = resolverExtractor(parseHtml, ghostCiteResolver)
 
   describe('happy paths', () => {
     // The author and publisher classes are reversed on purpose: Ghost's renderer puts
@@ -115,7 +115,9 @@ describeForEachParser('ghostCiteResolver', (parseHtml) => {
           <a class="kg-bookmark-container" href="https://example.com/post">
             <div class="kg-bookmark-content">
               <div class="kg-bookmark-title">Post title</div>
-              <div class="kg-bookmark-description"><small>Preview text</small></div>
+              <div class="kg-bookmark-description">
+                <small>Preview text</small>
+              </div>
             </div>
           </a>
         </figure>
@@ -208,7 +210,7 @@ describeForEachParser('ghostCiteResolver', (parseHtml) => {
     })
 
     it('should return undefined when no bookmark card is present', async () => {
-      const value = html`<p>Regular content</p>`
+      const value = '<p>Regular content</p>'
 
       expect(await extract(value)).toBeUndefined()
     })

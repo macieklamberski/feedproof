@@ -1,6 +1,49 @@
 import { describe, expect, it } from 'bun:test'
 import { baseContext } from '../tests.js'
-import { pickUrlParams, resolveOrKeepUrl } from './urls.js'
+import { parseUrlOnHosts, pickQueryParams, pickUrlParams, resolveOrKeepUrl } from './urls.js'
+
+describe('parseUrlOnHosts', () => {
+  const hosts = ['platform.example', 'other.example']
+
+  it('should return the parsed url when it is on one of the hosts', () => {
+    const value = 'https://platform.example/watch/123?v=1'
+
+    expect(parseUrlOnHosts(value, hosts)?.pathname).toBe('/watch/123')
+  })
+
+  it('should accept a subdomain of a host', () => {
+    const value = 'https://open.platform.example/track/123'
+
+    expect(parseUrlOnHosts(value, hosts)?.hostname).toBe('open.platform.example')
+  })
+
+  it('should accept a protocol-relative url on a host', () => {
+    const value = '//platform.example/watch/123'
+
+    expect(parseUrlOnHosts(value, hosts)?.hostname).toBe('platform.example')
+  })
+
+  it('should return undefined for a url on another host', () => {
+    expect(parseUrlOnHosts('https://elsewhere.example/watch/123', hosts)).toBeUndefined()
+  })
+
+  it('should return undefined for a host that only ends with the name', () => {
+    expect(parseUrlOnHosts('https://notplatform.example/watch/123', hosts)).toBeUndefined()
+  })
+
+  it('should return undefined for a relative path', () => {
+    expect(parseUrlOnHosts('/watch/123', hosts)).toBeUndefined()
+  })
+
+  it('should return undefined for an unparseable url', () => {
+    expect(parseUrlOnHosts('http://[', hosts)).toBeUndefined()
+  })
+
+  it('should return undefined for an empty or undefined url', () => {
+    expect(parseUrlOnHosts('', hosts)).toBeUndefined()
+    expect(parseUrlOnHosts(undefined, hosts)).toBeUndefined()
+  })
+})
 
 describe('resolveOrKeepUrl', () => {
   const { resolveUrlFn } = baseContext
@@ -44,17 +87,58 @@ describe('resolveOrKeepUrl', () => {
   })
 })
 
+describe('pickQueryParams', () => {
+  it('should keep only the named parameters', () => {
+    const value = 'start=90&autoplay=1&list=PLabc'
+    const expected = { start: '90', list: 'PLabc' }
+
+    expect(pickQueryParams(value, ['start', 'list'])).toEqual(expected)
+  })
+
+  it('should state nothing when none are present', () => {
+    const value = 'autoplay=1&rel=0'
+
+    expect(pickQueryParams(value, ['start'])).toEqual({})
+  })
+
+  it('should state nothing for an empty query', () => {
+    expect(pickQueryParams('', ['start'])).toEqual({})
+  })
+
+  it('should skip a parameter present but empty', () => {
+    expect(pickQueryParams('start=', ['start'])).toEqual({})
+  })
+
+  // The query arrives from an attribute, so it may carry the punctuation a url would have
+  // percent-encoded; `URLSearchParams` decodes it the same way either way.
+  it('should decode a value that arrived encoded', () => {
+    const value = 'clipt=a%2Bb%2Fc'
+    const expected = { clipt: 'a+b/c' }
+
+    expect(pickQueryParams(value, ['clipt'])).toEqual(expected)
+  })
+
+  it('should take the first of a repeated parameter', () => {
+    const value = 'start=10&start=90'
+    const expected = { start: '10' }
+
+    expect(pickQueryParams(value, ['start'])).toEqual(expected)
+  })
+})
+
 describe('pickUrlParams', () => {
   it('should keep only the named parameters, in the order given', () => {
     const value = 'https://example.com/e/x?utm_source=feed&index=4&list=PLabc&start=90'
+    const expected = '?start=90&list=PLabc&index=4'
 
-    expect(pickUrlParams(value, ['start', 'list', 'index'])).toBe('?start=90&list=PLabc&index=4')
+    expect(pickUrlParams(value, ['start', 'list', 'index'])).toBe(expected)
   })
 
   it('should return an empty string when none are present', () => {
     const value = 'https://example.com/e/x?utm_source=feed'
+    const expected = ''
 
-    expect(pickUrlParams(value, ['start'])).toBe('')
+    expect(pickUrlParams(value, ['start'])).toBe(expected)
   })
 
   it('should return an empty string when there is no query', () => {
@@ -71,7 +155,8 @@ describe('pickUrlParams', () => {
 
   it('should encode a value that needs it', () => {
     const value = 'https://example.com/e/x?clipt=a%2Bb%2Fc'
+    const expected = '?clipt=a%2Bb%2Fc'
 
-    expect(pickUrlParams(value, ['clipt'])).toBe('?clipt=a%2Bb%2Fc')
+    expect(pickUrlParams(value, ['clipt'])).toBe(expected)
   })
 })

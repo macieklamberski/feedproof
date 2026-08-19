@@ -9,14 +9,14 @@ const withFn = (enrichCiteFn: EnrichCiteFn): TransformContext => {
 }
 
 describeForEachParser('enrichCitePlaceholders', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [enrichCitePlaceholders(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [enrichCitePlaceholders(context)])
   }
 
   it('should be a no-op when enrichCiteFn is not provided', async () => {
     const value = '<div data-cite-provider="tumblr" data-cite-url="https://example.com/post"></div>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not call enrichCiteFn when no placeholders have provider and url', async () => {
@@ -27,7 +27,7 @@ describeForEachParser('enrichCitePlaceholders', (parseHtml) => {
     let called = false
     const fn: EnrichCiteFn = () => {
       called = true
-      return new Map()
+      return []
     }
 
     await transform(value, withFn(fn))
@@ -43,7 +43,7 @@ describeForEachParser('enrichCitePlaceholders', (parseHtml) => {
     const calls: Array<Array<{ provider: string; url: string }>> = []
     const fn: EnrichCiteFn = (cites) => {
       calls.push(cites)
-      return new Map()
+      return []
     }
 
     await transform(value, withFn(fn))
@@ -64,51 +64,77 @@ describeForEachParser('enrichCitePlaceholders', (parseHtml) => {
         publisher: 'example.com',
         thumbnail: 'https://example.com/cover.jpg',
       }
-      return new Map([['https://example.com/post', data]])
+      return [{ ...data }]
     }
-    const result = await transform(value, withFn(fn))
+    const expected = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/post"
+        data-cite-title="Page title"
+        data-cite-description="Preview text"
+        data-cite-publisher="example.com"
+        data-cite-thumbnail="https://example.com/cover.jpg"
+      ></div>
+    `
 
-    expect(result).toContain('data-cite-title="Page title"')
-    expect(result).toContain('data-cite-description="Preview text"')
-    expect(result).toContain('data-cite-publisher="example.com"')
-    expect(result).toContain('data-cite-thumbnail="https://example.com/cover.jpg"')
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
   it('should write the enriched date normalized through parseDateFn', async () => {
     const value = '<div data-cite-provider="tumblr" data-cite-url="https://example.com/post"></div>'
     const fn: EnrichCiteFn = () => {
-      return new Map([['https://example.com/post', { date: 'January 13th, 2023' }]])
+      return [{ date: 'January 13th, 2023' }]
     }
     const parseDateFn = (raw: string) => {
       return raw === 'January 13th, 2023' ? '2023-01-13' : undefined
     }
-    const result = await transform(value, { ...withFn(fn), parseDateFn })
+    const expected = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/post"
+        data-cite-date="2023-01-13"
+      ></div>
+    `
 
-    expect(result).toContain('data-cite-date="2023-01-13"')
+    expect(await transform(value, { ...withFn(fn), parseDateFn })).toEqualHtml(expected)
   })
 
   it('should keep the raw enriched date when the hook returns undefined', async () => {
     const value = '<div data-cite-provider="tumblr" data-cite-url="https://example.com/post"></div>'
     const fn: EnrichCiteFn = () => {
-      return new Map([['https://example.com/post', { date: 'January 13th, 2023' }]])
+      return [{ date: 'January 13th, 2023' }]
     }
     const parseDateFn = () => undefined
-    const result = await transform(value, { ...withFn(fn), parseDateFn })
+    const expected = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/post"
+        data-cite-date="January 13th, 2023"
+      ></div>
+    `
 
-    expect(result).toContain('data-cite-date="January 13th, 2023"')
+    expect(await transform(value, { ...withFn(fn), parseDateFn })).toEqualHtml(expected)
   })
 
   it('should keep the raw enriched date when no hook is provided', async () => {
     const value = '<div data-cite-provider="tumblr" data-cite-url="https://example.com/post"></div>'
     const fn: EnrichCiteFn = () => {
-      return new Map([['https://example.com/post', { date: 'January 13th, 2023' }]])
+      return [{ date: 'January 13th, 2023' }]
     }
-    const result = await transform(value, withFn(fn))
+    const expected = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/post"
+        data-cite-date="January 13th, 2023"
+      ></div>
+    `
 
-    expect(result).toContain('data-cite-date="January 13th, 2023"')
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
-  it('should not overwrite existing data-cite-* attributes', async () => {
+  // The enricher answers from the cited page itself, so what it sets beats what a resolver read
+  // off the card markup, for every field it chooses to set.
+  it('should overwrite existing data-cite-* attributes', async () => {
     const value = html`
       <div
         data-cite-provider="tumblr"
@@ -118,25 +144,43 @@ describeForEachParser('enrichCitePlaceholders', (parseHtml) => {
       </div>
     `
     const fn: EnrichCiteFn = () => {
-      return new Map([['https://example.com/post', { title: 'Enrichment title' }]])
+      return [{ title: 'Enrichment title' }]
     }
-    const result = await transform(value, withFn(fn))
+    const expected = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/post"
+        data-cite-title="Enrichment title"
+      ></div>
+    `
 
-    expect(result).toContain('data-cite-title="Resolver title"')
-    expect(result).not.toContain('Enrichment title')
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
-  it('should apply one entry to every placeholder citing that url, whatever their provider', async () => {
+  // Two placeholders citing one url arrive as two entries and expect two answers. Whether the
+  // enricher fetches the url once or twice behind that is its own business.
+  it('should hand the enricher one entry per placeholder, even for a repeated url', async () => {
     const value = html`
       <div data-cite-provider="tumblr" data-cite-url="https://example.com/post"></div>
       <div data-cite-provider="ghost" data-cite-url="https://example.com/post"></div>
     `
-    const fn: EnrichCiteFn = () => {
-      return new Map([['https://example.com/post', { title: 'Page title' }]])
+    const fn: EnrichCiteFn = (cites) => {
+      return cites.map(() => ({ title: 'Page title' }))
     }
-    const result = await transform(value, withFn(fn))
+    const expected = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/post"
+        data-cite-title="Page title"
+      ></div>
+      <div
+        data-cite-provider="ghost"
+        data-cite-url="https://example.com/post"
+        data-cite-title="Page title"
+      ></div>
+    `
 
-    expect(result.match(/data-cite-title="Page title"/g)).toHaveLength(2)
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
   it('should propagate an exception thrown by enrichCiteFn', async () => {
@@ -148,32 +192,45 @@ describeForEachParser('enrichCitePlaceholders', (parseHtml) => {
     await expect(transform(value, withFn(fn))).rejects.toThrow('boom')
   })
 
-  it('should silently skip placeholders missing from the returned map', async () => {
+  // The answer is positional, so nothing found for a placeholder is an undefined in its slot.
+  it('should leave a placeholder alone when its slot is undefined', async () => {
     const value = html`
       <div data-cite-provider="tumblr" data-cite-url="https://example.com/known"></div>
       <div data-cite-provider="tumblr" data-cite-url="https://example.com/unknown"></div>
     `
     const fn: EnrichCiteFn = () => {
-      return new Map([['https://example.com/known', { title: 'Found' }]])
+      return [{ title: 'Found' }, undefined]
     }
-    const result = await transform(value, withFn(fn))
+    const expected = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/known"
+        data-cite-title="Found"
+      ></div>
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/unknown"
+      ></div>
+    `
 
-    expect(result).toContain('data-cite-url="https://example.com/known"')
-    expect(result).toContain('data-cite-url="https://example.com/unknown"')
-    expect(result).toContain('data-cite-title="Found"')
-    const titleMatches = result.match(/data-cite-title=/g)
-    expect(titleMatches).toHaveLength(1)
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
   it('should accept async (Promise-returning) enrichCiteFn', async () => {
     const value = '<div data-cite-provider="tumblr" data-cite-url="https://example.com/post"></div>'
     const fn: EnrichCiteFn = async (cites) => {
       await new Promise((resolve) => setTimeout(resolve, 1))
-      return new Map(cites.map((cite) => [cite.url, { title: 'Page title' }]))
+      return cites.map(() => ({ title: 'Page title' }))
     }
-    const result = await transform(value, withFn(fn))
+    const expected = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/post"
+        data-cite-title="Page title"
+      ></div>
+    `
 
-    expect(result).toContain('data-cite-title="Page title"')
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
@@ -185,11 +242,11 @@ describeForEachParser('enrichCitePlaceholders', (parseHtml) => {
         publisher: 'example.com',
         thumbnail: 'https://example.com/cover.jpg',
       }
-      return new Map([['https://example.com/post', data]])
+      return [{ ...data }]
     }
     const once = await transform(value, withFn(fn))
     const twice = await transform(once, withFn(fn))
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

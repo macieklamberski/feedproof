@@ -3,16 +3,17 @@ import { collectTextNodes } from '../../utils/dom.js'
 
 const timestampIgnoreTags = new Set(['a', 'pre', 'code', 'kbd', 'samp', 'var', 'script', 'style'])
 
-// Matches a timestamp anchored to a line boundary — either starting the line
-// (optionally after leading whitespace) or ending it (optionally before
-// trailing whitespace): MM:SS or HH:MM:SS, with the seconds always two digits.
-// Anchoring to a boundary avoids turning incidental "12:30" mentions in the
-// middle of prose into markers.
+// MM:SS or HH:MM:SS, with the seconds always two digits.
 const timestampToken = '(?:\\d{1,2}:)?\\d{1,2}:\\d{2}'
+
+// Matches the token anchored to a line boundary: either starting the line (optionally after
+// leading whitespace) or ending it (optionally before trailing whitespace). Anchoring to a
+// boundary avoids turning incidental "12:30" mentions in the middle of prose into markers.
+//
 // The token is captured in one of two groups: at a line start (optional whitespace
 // prefix consumed ahead of it) or before a line end (trailing whitespace in a zero-width
 // lookahead). The prefix is consumed, not matched in a variable-length lookbehind, so a
-// long whitespace run is scanned once rather than re-scanned per position.
+// long whitespace run is scanned once, with no re-scan per position.
 const lineBoundaryTimestampRegex = new RegExp(
   `(?:^|\\n)[ \\t]*(${timestampToken})|(${timestampToken})(?=[ \\t]*(?:\\n|$))`,
   'g',
@@ -60,7 +61,7 @@ const shouldSkipElement = (element: Element): boolean => {
 
 // Wraps line-boundary YouTube-style timestamps (e.g. "01:21 - Title" or
 // "Title - 01:21") in a span carrying the time in seconds, so the reader can
-// later seek a player to that point. The visible text is left as-is; only the
+// later seek a player to that point. The visible text is left as-is. Only the
 // seconds attribute is added.
 export const markTimestamps: DomTransform = () => {
   return (document) => {
@@ -95,7 +96,7 @@ export const markTimestamps: DomTransform = () => {
         }
 
         // The line-start branch consumes a whitespace prefix, so the token sits at
-        // the end of the overall match; derive its offset from the match end.
+        // the end of the overall match. Derive its offset from the match end.
         const tokenStart = (match.index ?? 0) + match[0].length - token.length
 
         if (tokenStart > lastIndex) {

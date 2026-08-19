@@ -11,7 +11,7 @@ import { jsonAttr } from '../utils/dom.js'
 // resolves an id belonging to any publication, so nothing here needs the post's own host.
 //
 // The endpoint must go in the element as-is. Following the redirect and storing what it
-// points at yields a url carrying an expiring signature, which stops working; this one is
+// points at yields a url carrying an expiring signature, which stops working. This one is
 // stable and redirects at play time.
 const composeSourceUrl = (mediaUploadId: string): string => {
   return `https://api.substack.com/api/v1/video/upload/${mediaUploadId}/src`
@@ -30,7 +30,7 @@ export const substackMediaResolver: MediaResolver = {
     const mediaUploadId = attrs?.mediaUploadId
 
     // The id goes straight into a url, so anything that is not the shape Substack emits is
-    // dropped rather than interpolated.
+    // dropped.
     if (!mediaUploadId || !uuidRegex.test(mediaUploadId)) {
       return
     }

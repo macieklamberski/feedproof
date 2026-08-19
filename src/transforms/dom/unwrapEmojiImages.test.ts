@@ -11,30 +11,30 @@ const asciiLetterRegex = /[a-zA-Z]/
 const conflictingNameRegex = /happy/
 
 describeForEachParser('unwrapEmojiImages', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [unwrapEmojiImages(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [unwrapEmojiImages(context)])
   }
 
   // An emoji image that keeps its picture is also marked. The marker has its own describe block
   // below, so it is dropped here to keep each case about the reason the image was kept.
-  const transformKeeping = async (html: string, context: TransformContext = baseContext) => {
-    return (await transform(html, context)).replaceAll(' data-emoji=""', '')
+  const transformKeeping = async (value: string, context: TransformContext = baseContext) => {
+    return (await transform(value, context)).replaceAll(' data-emoji=""', '')
   }
 
   describe('WordPress (wp-smiley class + s.w.org host)', () => {
     it('should replace wp-smiley image with alt emoji', async () => {
       const value = html`
         <p>Hello
-        <img
-          src="https://s.w.org/images/core/emoji/17.0.2/72x72/1f609.png"
-          alt="😉"
-          class="wp-smiley"
-        >
+          <img
+            src="https://s.w.org/images/core/emoji/17.0.2/72x72/1f609.png"
+            alt="😉"
+            class="wp-smiley"
+          >
         </p>
       `
       const expected = '<p>Hello 😉</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should replace multiple wp-smiley images in the same paragraph', async () => {
@@ -45,14 +45,14 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>😉 and 😊</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should handle wp-smiley alongside additional classes', async () => {
       const value = '<p><img alt="😀" class="wp-smiley emoji extra"></p>'
       const expected = '<p>😀</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should replace newer WP variant with class="emoji"', async () => {
@@ -69,7 +69,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>🤔</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // The alt is a gemoji shortcode we deliberately do not carry, but the filename names the
@@ -87,15 +87,18 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>🐍</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should replace no-class WP variant matched by s.w.org URL', async () => {
-      const value =
-        '<p><img src="https://s.w.org/images/core/emoji/13.1.0/svg/1f680.svg" alt="🚀"></p>'
+      const value = html`
+        <p>
+          <img src="https://s.w.org/images/core/emoji/13.1.0/svg/1f680.svg" alt="🚀">
+        </p>
+      `
       const expected = '<p>🚀</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should replace a legacy wp-includes smilie whose alt is a shortcode', async () => {
@@ -110,7 +113,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>🙂</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave the lossy mrgreen smilie with its working image', async () => {
@@ -124,14 +127,22 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     it('should resolve a Tango icon-set filename once the face- prefix is dropped', async () => {
-      const value =
-        '<p><img class="wp-smiley" src="/wp-content/plugins/tango-smilies/tango/face-smile.png" alt=":)"></p>'
+      const value = html`
+        <p>
+          <img
+            class="wp-smiley"
+            src="/wp-content/plugins/tango-smilies/tango/face-smile.png"
+            alt=":)"
+          >
+        </p>
+      `
+      const expected = '<p>🙂</p>'
 
-      expect(await transform(value)).toBe('<p>🙂</p>')
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -147,7 +158,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>🙂</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -172,14 +183,14 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>Eigenwerbung... 😃</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should match the shortname case-insensitively', async () => {
       const value = `<p><img src="${spriteSource}" data-shortname=":ROFLMAO:" alt=":ROFLMAO:"></p>`
       const expected = '<p>🤣</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // The shortname is not an emoji, so it is marked as fallback text rather than left as prose.
@@ -187,7 +198,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const value = `<p><img src="${spriteSource}" data-shortname=":sk21_d1:" alt=":sk21_d1:"></p>`
       const expected = '<p><span data-emoji="">:sk21_d1:</span></p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should never emit the title, which pads the name onto the shortcode', async () => {
@@ -201,10 +212,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
           >
         </p>
       `
-      const result = await transform(value)
+      const expected = '<p>😕</p>'
 
-      expect(result).toBe('<p>😕</p>')
-      expect(result).not.toContain('Confused')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // Pre-2.2 boards and modified templates omit data-shortname. The image still paints
@@ -213,19 +223,19 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const value = `<p><img src="${spriteSource}" class="smilie smilie--sprite" alt=":D"></p>`
       const expected = '<p>😃</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave a sprite smilie untouched when nothing names it', async () => {
       const value = `<p><img src="${spriteSource}" class="smilie smilie--sprite"></p>`
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     it('should leave an inlined data-URI image untouched when it is too long to be a spacer', async () => {
       const value = `<p><img src="data:image/png;base64,${'A'.repeat(300)}" data-shortname=":D"></p>`
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     // 1.x numbers its sprites in the class instead of carrying data-shortname, and points src at
@@ -241,8 +251,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
           >
         </p>
       `
+      const expected = '<p>😛</p>'
 
-      expect(await transform(value)).toBe('<p>😛</p>')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // The theme directory differs per board, so the `smilies` directory is what identifies a
@@ -260,14 +271,14 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>🙂</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should preserve position when the sprite is nested inside an anchor', async () => {
       const value = `<p><a href="/x">nice <img src="${spriteSource}" data-shortname=":)"> work</a></p>`
       const expected = '<p><a href="/x">nice 🙂 work</a></p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should be idempotent', async () => {
@@ -275,17 +286,23 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const once = await transform(value)
       const twice = await transform(once)
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
   })
 
   describe('JoyPixels CDN (host list)', () => {
     it('should replace an image whose alt is already the glyph', async () => {
-      const value =
-        '<p><img src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/1f642.png" alt="🙂"></p>'
+      const value = html`
+        <p>
+          <img
+            src="https://cdn.jsdelivr.net/joypixels/assets/6.6/png/unicode/64/1f642.png"
+            alt="🙂"
+          >
+        </p>
+      `
       const expected = '<p>🙂</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should replace an image whose alt is a shortcode in the table', async () => {
@@ -301,7 +318,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>🙂</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // Still a gap, though no longer for want of a decoder. A host match alone does not make the
@@ -317,13 +334,13 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     it('should leave an unhosted image with a codepoint filename untouched', async () => {
       const value = '<p><img src="https://forum.example.com/assets/1f642.png" alt=":nope:"></p>'
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
   })
 
@@ -343,7 +360,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>🙂</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should replace several smilies in one sentence', async () => {
@@ -356,21 +373,24 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>See ➡️ and 😎</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should fall back to the filename when the alt is empty', async () => {
       const value = '<p><img class="smilies" src="/images/smilies/icon_wink.gif" alt=""></p>'
       const expected = '<p>😉</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave an unmapped smilie with its working image', async () => {
-      const value =
-        '<p><img class="smilies" src="/images/smilies/icon_mrgreen.gif" alt=":mrgreen:"></p>'
+      const value = html`
+        <p>
+          <img class="smilies" src="/images/smilies/icon_mrgreen.gif" alt=":mrgreen:">
+        </p>
+      `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     // The parent of the smilies directory is the theme name and differs per board, so these
@@ -383,7 +403,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     ])('should replace a smilie served from the theme directory %s', async (path) => {
       const value = `<p><img src="https://example.com${path}" alt=":)" class="smiley"></p>`
 
-      expect(await transform(value)).toBe('<p>🙂</p>')
+      expect(await transform(value)).toEqualHtml('<p>🙂</p>')
     })
 
     it.each([
@@ -393,13 +413,13 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     ])('should recognize the singular %s class other engines use', async (className) => {
       const value = `<p><img src="/x/smilies/wink.png" alt=";)" class="${className}"></p>`
 
-      expect(await transform(value)).toBe('<p>😉</p>')
+      expect(await transform(value)).toEqualHtml('<p>😉</p>')
     })
 
     it('should leave a non-smilie image served from the smilies folder untouched', async () => {
       const value = '<p><img src="https://example.com/images/smilies/banner.png" alt="Banner"></p>'
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     // The board shipped the template variable unsubstituted, so the src is a placeholder and the
@@ -408,21 +428,21 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const value = `<p><img src="{SMILIES_PATH}/teeth_smile.gif" alt=":D" title="Very Happy"></p>`
       const expected = '<p>😃</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should replace a smilie whose placeholder arrived percent-encoded', async () => {
       const value = `<p><img src="%7BSMILIES_PATH%7D/wink_smile.gif" alt=";)"></p>`
       const expected = '<p>😉</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should resolve a placeholder smilie by its alt when the filename carries no meaning', async () => {
       const value = `<p><img src="{SMILIES_PATH}/15.gif" alt=":cry:" title="Crying"></p>`
       const expected = '<p>😢</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // A placeholder src is a link the board failed to build, which is not this transform's to
@@ -430,7 +450,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     it('should leave a placeholder smilie that resolves to nothing alone', async () => {
       const value = `<p><img src="%7BSMILIES_PATH%7D/borracho.gif" alt="(borracho)" title="Borracho"></p>`
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
   })
 
@@ -451,7 +471,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>🙂</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should resolve a stock filename once the default_ prefix is dropped', async () => {
@@ -466,22 +486,28 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>😉</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should resolve a filename carrying a resolution variant suffix', async () => {
-      const value =
-        '<p><img data-emoticon="" src="https://example.com/uploads/emoticons/biggrin@2x.png" alt=""></p>'
+      const value = html`
+        <p>
+          <img data-emoticon="" src="https://example.com/uploads/emoticons/biggrin@2x.png" alt="">
+        </p>
+      `
       const expected = '<p>😃</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave a site-custom emoticon with its working image', async () => {
-      const value =
-        '<p><img alt=":yahoo:" data-emoticon="" src="https://example.com/uploads/emoticons/yahoo.png"></p>'
+      const value = html`
+        <p>
+          <img alt=":yahoo:" data-emoticon="" src="https://example.com/uploads/emoticons/yahoo.png">
+        </p>
+      `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
   })
 
@@ -494,14 +520,14 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>Compare the files 😉</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should resolve from the filename when the alt is empty', async () => {
       const value = '<p><img src="https://example.com/forum/img/smilies/big_smile.png" alt=""></p>'
       const expected = '<p>😃</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // Forums translate the alt but keep the stock English filename, so a localized board
@@ -510,31 +536,40 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const value = '<p><img src="https://example.com/forum/img/smilies/love.gif" alt="Hjärta"></p>'
       const expected = '<p>😍</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should replace a French-labelled smilie from its stock filename', async () => {
-      const value =
-        '<p><img src="https://example.com/img/smilies/big_smile.png" alt="fou" width="15"></p>'
+      const value = html`
+        <p>
+          <img src="https://example.com/img/smilies/big_smile.png" alt="fou" width="15">
+        </p>
+      `
       const expected = '<p>😃</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // base64 may contain `/`, so a stem parsed out of a data URI is a slice of the payload.
     it('should not answer an unmapped sprite from its own base64 payload', async () => {
-      const value =
-        '<p><img src="data:image/gif;base64,AAA/smile" data-shortname=":totally_custom:"></p>'
+      const value = html`
+        <p>
+          <img src="data:image/gif;base64,AAA/smile" data-shortname=":totally_custom:">
+        </p>
+      `
       const expected = '<p><span data-emoji="">:totally_custom:</span></p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave a smilie from a custom theme pack with its working image', async () => {
-      const value =
-        '<p><img src="https://example.com/forum/img/smilies/haku/haku-smirk.svg" alt="壞笑"></p>'
+      const value = html`
+        <p>
+          <img src="https://example.com/forum/img/smilies/haku/haku-smirk.svg" alt="壞笑">
+        </p>
+      `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
   })
 
@@ -556,13 +591,13 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     it.each(pathCases)('should replace a %s smilie', async (_engine, source, expected) => {
       const value = `<p><img src="${source}" alt=""></p>`
 
-      expect(await transform(value)).toBe(`<p>${expected}</p>`)
+      expect(await transform(value)).toEqualHtml(`<p>${expected}</p>`)
     })
 
     it('should leave a site-custom smilie set untouched', async () => {
       const value = '<p><img src="http://example.com/smilies/yahoo_laughloud.gif" alt=":))"></p>'
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
   })
 
@@ -570,17 +605,28 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     // The generic class is read for a glyph alt and never for a shortcode, so the path is what
     // lets the filename be looked up.
     it('should replace an emoji named only by its path', async () => {
-      const value =
-        '<p><img class="emoji" alt="smiley" src="https://cdn.artstation.com/mailer/emoji/smiley.png"></p>'
+      const value = html`
+        <p>
+          <img class="emoji" alt="smiley" src="https://cdn.artstation.com/mailer/emoji/smiley.png">
+        </p>
+      `
+      const expected = '<p>🙂</p>'
 
-      expect(await transform(value)).toBe('<p>🙂</p>')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave an emoji whose name is not in the table alone', async () => {
-      const value =
-        '<p><img class="emoji" alt="partying" src="https://cdn.artstation.com/mailer/emoji/partying.png"></p>'
+      const value = html`
+        <p>
+          <img
+            class="emoji"
+            alt="partying"
+            src="https://cdn.artstation.com/mailer/emoji/partying.png"
+          >
+        </p>
+      `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
   })
 
@@ -669,7 +715,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         '<img class="e-emoticon" src="/e107_images/emotes/default/cheesey.png" alt="">',
         '😁',
       ],
-      // Boards add clap.gif to several engines' sets. The shortcode alt already resolved; this
+      // Boards add clap.gif to several engines' sets. The shortcode alt already resolved. This
       // is the localized-title case where only the filename says what the picture is.
       [
         'community-added clap',
@@ -679,7 +725,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     ]
 
     it.each(engineCases)('should replace a %s smilie', async (_engine, tag, expected) => {
-      expect(await transform(`<p>${tag}</p>`)).toBe(`<p>${expected}</p>`)
+      expect(await transform(`<p>${tag}</p>`)).toEqualHtml(`<p>${expected}</p>`)
     })
   })
 
@@ -705,7 +751,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transform(value)).toBe(`<p>${expected}</p>`)
+      expect(await transform(value)).toEqualHtml(`<p>${expected}</p>`)
     })
   })
 
@@ -737,7 +783,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transform(value)).toBe(`<p>${expected}</p>`)
+      expect(await transform(value)).toEqualHtml(`<p>${expected}</p>`)
     })
 
     // The set also draws each expression on a cat, a man, a woman and a robot. Unicode has cat
@@ -751,7 +797,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     it.each(keptCases)('should leave the %s variant with its picture', async (_species, name) => {
       const value = `<p><img class="emoticon" src="https://example.com/i/smilies/${name}.png" alt="Wink"></p>`
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     // Between annoyed, weary and pouting there is no single face this one obviously means.
@@ -766,7 +812,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     // Some boards replace the stock art with a licensed set whose files are numbered, leaving
@@ -782,7 +828,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     it('should be idempotent', async () => {
@@ -798,7 +844,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const once = await transform(value)
       const twice = await transform(once)
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
   })
 
@@ -807,49 +853,53 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const value = '<p>Nice work <tg-emoji emoji-id="5368324170671202286">👍</tg-emoji> today</p>'
       const expected = '<p>Nice work 👍 today</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should replace several elements in one paragraph', async () => {
-      const value =
-        '<p><tg-emoji emoji-id="1">🔥</tg-emoji><tg-emoji emoji-id="2">🎉</tg-emoji></p>'
+      const value = html`
+        <p>
+          <tg-emoji emoji-id="1">🔥</tg-emoji>
+          <tg-emoji emoji-id="2">🎉</tg-emoji>
+        </p>
+      `
       const expected = '<p>🔥🎉</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should preserve position inside a link', async () => {
       const value = '<p><a href="/x">go <tg-emoji emoji-id="1">👍</tg-emoji></a></p>'
       const expected = '<p><a href="/x">go 👍</a></p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should keep a multi-codepoint fallback intact', async () => {
       const value = '<p><tg-emoji emoji-id="1">👨‍👩‍👧</tg-emoji></p>'
       const expected = '<p>👨‍👩‍👧</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should mark the text of a fallback that is not an emoji', async () => {
       const value = '<p><tg-emoji emoji-id="1">[cat]</tg-emoji></p>'
       const expected = '<p><span data-emoji="">[cat]</span></p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should flatten a fallback wrapped in another element', async () => {
       const value = '<p><tg-emoji emoji-id="1"><span>👍</span></tg-emoji></p>'
       const expected = '<p>👍</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave an empty element untouched', async () => {
       const value = '<p>a <tg-emoji emoji-id="1"></tg-emoji> b</p>'
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     // The facades this package rebuilds into real iframes are custom elements too, so the tag
@@ -862,7 +912,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     it('should be idempotent', async () => {
@@ -870,7 +920,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const once = await transform(value)
       const twice = await transform(once)
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
   })
 
@@ -888,7 +938,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
   })
 
@@ -902,7 +952,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
   })
 
@@ -916,7 +966,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     it('should leave a built-in char image served from the c subdomain with its picture', async () => {
@@ -926,7 +976,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     it('should leave an author-uploaded emoji with its picture', async () => {
@@ -936,7 +986,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     it('should not touch an ordinary post image on the same domain', async () => {
@@ -946,7 +996,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
   })
 
@@ -954,7 +1004,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     it('should leave Discourse shortcode-alt with class="emoji" untouched', async () => {
       const value = '<p><img class="emoji" alt=":slight_smile:"></p>'
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
   })
 
@@ -973,7 +1023,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>🙂</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -982,7 +1032,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const value = '<p><img src="https://abs.twimg.com/emoji/v2/72x72/1f600.png" alt="😀"></p>'
       const expected = '<p>😀</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -998,7 +1048,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>🚀</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -1024,7 +1074,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transform(value)).toBe(`<p>${expected}</p>`)
+      expect(await transform(value)).toEqualHtml(`<p>${expected}</p>`)
     })
 
     it('should decode a filename carrying a resolution variant suffix', async () => {
@@ -1039,7 +1089,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>👍</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // Any engine, not one: this is a phpBB directory rather than WoltLab's.
@@ -1051,7 +1101,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>😄</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // Hex-shaped is not emoji-shaped, and each of these is a filename that really occurs:
@@ -1070,48 +1120,55 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
   })
 
   describe('data-emoji marker', () => {
     // Custom sets have no glyph to become, so the marker is the only thing a reader can act on.
-    const markedCases: Array<[string, string]> = [
+    const markedCases: Array<[string, string, string]> = [
       [
         'Mastodon custom emoji',
         '<img class="emojione" alt=":catjam:" src="https://files.mastodon.social/custom_emojis/images/000/224/097/d9c.gif">',
+        '<img data-emoji="" class="emojione" alt=":catjam:" src="https://files.mastodon.social/custom_emojis/images/000/224/097/d9c.gif">',
       ],
       [
         'Weibo emoticon',
         '<img alt="[微笑]" src="https://h5.sinaimg.cn/m/emoticon/icon/default/d_weixiao.png">',
+        '<img data-emoji="" alt="[微笑]" src="https://h5.sinaimg.cn/m/emoticon/icon/default/d_weixiao.png">',
       ],
       [
         'phpBB smilie with no mapping',
         '<img class="smilies" src="/images/smilies/x.gif" alt=":mrgreen:">',
+        '<img data-emoji="" class="smilies" src="/images/smilies/x.gif" alt=":mrgreen:">',
       ],
       [
         'IPS emoticon with no mapping',
         '<img data-emoticon="" src="/uploads/emoticons/yahoo.png" alt=":yahoo:">',
+        '<img data-emoji="" data-emoticon="" src="/uploads/emoticons/yahoo.png" alt=":yahoo:">',
       ],
       [
         'emoji CDN image with no usable alt',
         '<img src="https://s.w.org/images/core/emoji/14/72x72/1f642.png" alt="?">',
+        '<img data-emoji="" src="https://s.w.org/images/core/emoji/14/72x72/1f642.png" alt="?">',
       ],
       [
         'Ameba built-in char image',
         '<img src="https://stat100.ameba.jp/blog/ucs/img/char/char3/004.png" alt="ウインク" width="24" height="24">',
+        '<img data-emoji="" src="https://stat100.ameba.jp/blog/ucs/img/char/char3/004.png" alt="ウインク" width="24" height="24">',
       ],
       [
         'Ameba author-uploaded emoji',
         '<img src="https://emoji.ameba.jp/img/user/sa/sayu74/118238.gif" alt="カナダ" border="0">',
+        '<img data-emoji="" src="https://emoji.ameba.jp/img/user/sa/sayu74/118238.gif" alt="カナダ" border="0">',
       ],
     ]
 
-    it.each(markedCases)('should mark a %s', async (_label, tag) => {
-      const result = await transform(`<p>${tag}</p>`)
+    it.each(markedCases)('should mark a %s', async (_label, tag, marked) => {
+      const value = `<p>${tag}</p>`
+      const expected = `<p>${marked}</p>`
 
-      expect(result).toContain('data-emoji=""')
-      expect(result).toContain('<img')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // A smilie directory is matched loosely on purpose, so evidence that rests only on the path
@@ -1130,15 +1187,14 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     it.each(unmarkedCases)('should not mark a %s', async (_label, tag) => {
       const value = `<p>${tag}</p>`
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should not mark an image it converted', async () => {
       const value = '<p><img class="wp-smiley" alt="\u{1F642}"></p>'
-      const result = await transform(value)
+      const expected = '<p>🙂</p>'
 
-      expect(result).not.toContain('data-emoji')
-      expect(result).not.toContain('<img')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // Marking a glyph would style two identical emoji differently in one sentence, since an
@@ -1151,7 +1207,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       `
       const expected = '<p>Nice 😉 work 😉</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should be idempotent', async () => {
@@ -1159,7 +1215,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const once = await transform(value)
       const twice = await transform(once)
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
 
     it('should be idempotent over fallback text it wrapped', async () => {
@@ -1174,7 +1230,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const once = await transform(value)
       const twice = await transform(once)
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
   })
 
@@ -1246,23 +1302,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const value = `<p>Hi <img src="https://${host}1f642.png" alt="🙂"></p>`
       const expected = '<p>Hi 🙂</p>'
 
-      expect(await transform(value)).toBe(expected)
-    })
-
-    it('should respect a custom host list override', async () => {
-      const context: TransformContext = { ...baseContext, emojiImageHosts: [] }
-      const value =
-        '<p><img src="https://s.w.org/images/core/emoji/13.1.0/svg/1f680.svg" alt="🚀"></p>'
-
-      expect(await transformKeeping(value, context)).toBe(value)
-    })
-
-    it('should replace images from a caller-added custom host', async () => {
-      const context: TransformContext = { ...baseContext, emojiImageHosts: ['cdn.example.com'] }
-      const value = '<p><img src="https://cdn.example.com/emoji/1f389.png" alt="🎉"></p>'
-      const expected = '<p>🎉</p>'
-
-      expect(await transform(value, context)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -1271,21 +1311,21 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const value = '<p><img alt="👨‍👩‍👧" class="wp-smiley"></p>'
       const expected = '<p>👨‍👩‍👧</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should preserve skin-tone modifier alt', async () => {
       const value = '<p><img alt="👋🏽" class="wp-smiley"></p>'
       const expected = '<p>👋🏽</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should preserve BMP-only emoji (length 1 in JS)', async () => {
       const value = '<p><img class="wp-smiley" alt="✔"></p>'
       const expected = '<p>✔</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     // These are real alts from localized boards. The old guard accepted anything non-ASCII
@@ -1298,7 +1338,7 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     ])('should leave image untouched when alt is the localized word %s', async (alt) => {
       const value = `<p><img src="emoji.png" alt="${alt}" class="wp-smiley"></p>`
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     // A subdivision flag is a base flag plus tag characters spelling the region code, so the
@@ -1310,44 +1350,44 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     ])('should replace image when alt is the subdivision flag %s', async (flag) => {
       const value = `<p><img class="wp-smiley" src="/f.png" alt="${flag}"></p>`
 
-      expect(await transform(value)).toBe(`<p>${flag}</p>`)
+      expect(await transform(value)).toEqualHtml(`<p>${flag}</p>`)
     })
 
     it('should leave image untouched when alt is a lone digit without a keycap', async () => {
       const value = '<p><img src="emoji.png" alt="7" class="wp-smiley"></p>'
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     it('should replace image when alt is several emoji separated by a space', async () => {
       const value = '<p><img src="emoji.png" alt="🙂 🎉" class="wp-smiley"></p>'
       const expected = '<p>🙂 🎉</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave image untouched when alt has mixed text', async () => {
       const value = '<p><img class="emoji" alt="hello 🐱"></p>'
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     it('should leave image untouched when alt is empty', async () => {
       const value = '<p><img src="emoji.png" alt="" class="wp-smiley"></p>'
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     it('should leave image untouched when alt is ASCII-only', async () => {
       const value = '<p><img src="emoji.png" alt="x" class="wp-smiley"></p>'
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     it('should never emit a "?" fallback alt as text', async () => {
       const value = '<p><img src="smilies/broken.png" alt="?" class="wp-smiley"></p>'
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     // A "?" alt is WordPress failing to encode the emoji it meant. The filename still names the
@@ -1363,19 +1403,19 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     it('should leave image untouched when alt attribute is missing', async () => {
       const value = '<p><img src="emoji.png" class="wp-smiley"></p>'
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
 
     it('should leave non-emoji images untouched', async () => {
       const value = '<p><img src="photo.jpg" alt="cat photo"></p>'
 
-      expect(await transformKeeping(value)).toBe(value)
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
   })
 
@@ -1384,14 +1424,14 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       const value = '<p><a href="/x">click <img alt="🚀" class="wp-smiley"> here</a></p>'
       const expected = '<p><a href="/x">click 🚀 here</a></p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should preserve position when emoji is nested inside strong', async () => {
       const value = '<p><strong>wow <img alt="🎉" class="wp-smiley"></strong></p>'
       const expected = '<p><strong>wow 🎉</strong></p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -1408,6 +1448,6 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

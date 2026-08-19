@@ -25,15 +25,15 @@ export const paragraphCiteResolver: CiteResolver = {
       return
     }
 
-    // Embedly reuses this envelope for video and rich embeds, which are players rather
-    // than link previews, so only a plain link becomes a cite.
+    // Embedly reuses this envelope for video and rich embeds, which are players, not link
+    // previews. A payload that names no type is kept, since older cards omit the key.
     if (data.type !== undefined && data.type !== 'link') {
       return
     }
 
     return buildCite({
       provider: 'paragraph',
-      // `url` is Embedly's canonical form; the `src` attribute holds what the author typed
+      // `url` is Embedly's canonical form. The `src` attribute holds what the author typed
       // and can differ (a bare http:// host, or an entirely different slug), so it is only
       // the fallback.
       url: data.url ?? attr(element, 'src'),

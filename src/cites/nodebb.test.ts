@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { nodebbCiteResolver } from './nodebb.js'
 
 describeForEachParser('nodebbCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, nodebbCiteResolver)
+  const extract = resolverExtractor(parseHtml, nodebbCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {
@@ -21,7 +21,8 @@ describeForEachParser('nodebbCiteResolver', (parseHtml) => {
           </div>
           <a href="https://example.com/post" class="card-footer text-body-secondary small">
             <img src="https://example.com/favicon.svg" alt="favicon" class="not-responsive" />
-            <p class="d-inline-block text-truncate mb-0">Example <span class="text-secondary">(example.com)</span></p>
+            <p class="d-inline-block text-truncate mb-0">Example <span class="text-secondary">(example.com)</span>
+            </p>
           </a>
         </div>
       `
@@ -42,7 +43,9 @@ describeForEachParser('nodebbCiteResolver', (parseHtml) => {
       const value = html`
         <div class="card link-preview">
           <div class="card-body">
-            <h5 class="card-title"><a href="https://example.com/post">Page title</a></h5>
+            <h5 class="card-title">
+              <a href="https://example.com/post">Page title</a>
+            </h5>
           </div>
         </div>
       `
@@ -61,28 +64,45 @@ describeForEachParser('nodebbCiteResolver', (parseHtml) => {
       const value = html`
         <div class="card link-preview">
           <div class="card-body">
-            <h5 class="card-title"><a href="https://example.com/post">Page title</a></h5>
+            <h5 class="card-title">
+              <a href="https://example.com/post">Page title</a>
+            </h5>
           </div>
           <a href="https://example.com/post" class="card-footer">
-            <p class="d-inline-block text-truncate mb-0">Example <span>(example.com)</span></p>
+            <p class="d-inline-block text-truncate mb-0">Example <span>(example.com)</span>
+            </p>
           </a>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'nodebb',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        publisher: 'Example',
+      }
 
-      expect((await extract(value))?.publisher).toBe('Example')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should fall back to the image anchor when the title has no link', async () => {
       const value = html`
         <div class="card link-preview">
-          <a href="https://example.com/post"><img class="card-img-top" src="https://cdn.example.com/cover.png" /></a>
+          <a href="https://example.com/post">
+            <img class="card-img-top" src="https://cdn.example.com/cover.png" />
+          </a>
           <div class="card-body">
             <h5 class="card-title">Page title</h5>
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'nodebb',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        thumbnail: 'https://cdn.example.com/cover.png',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/post')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

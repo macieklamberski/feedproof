@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { xenforoCiteResolver } from './xenforo.js'
 
 describeForEachParser('xenforoCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, xenforoCiteResolver)
+  const extract = resolverExtractor(parseHtml, xenforoCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {
@@ -65,6 +65,73 @@ describeForEachParser('xenforoCiteResolver', (parseHtml) => {
     })
   })
 
+  describe('themes shipping no js-unfurl hooks', () => {
+    // 21 feeds carry only the theme classes.
+    it('should read the title and description from the theme classes', async () => {
+      const value = html`
+        <div class="bbCodeBlock bbCodeBlock--unfurl" data-url="https://example.com/page" data-host="example.com">
+          <div class="contentRow">
+            <div class="contentRow-main">
+              <h3 class="contentRow-title">
+                <a href="https://example.com/page">Page title</a>
+              </h3>
+              <div class="contentRow-snippet">Preview text</div>
+            </div>
+          </div>
+        </div>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'xenforo',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        description: 'Preview text',
+        publisher: 'example.com',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // 23 feeds put the image under its own class instead of the figure hook.
+    it('should read the thumbnail from the unfurl image class', async () => {
+      const value = html`
+        <div class="bbCodeBlock bbCodeBlock--unfurl" data-url="https://example.com/page">
+          <div class="contentRow-figure">
+            <img src="https://cdn.example.com/thumb.jpg" class="bbCodeBlockUnfurl-image" alt="example.com">
+          </div>
+          <h3 class="js-unfurl-title">Page title</h3>
+        </div>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'xenforo',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        thumbnail: 'https://cdn.example.com/thumb.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should prefer the hooked figure when a card carries both', async () => {
+      const value = html`
+        <div class="bbCodeBlock bbCodeBlock--unfurl" data-url="https://example.com/page">
+          <div class="contentRow-figure js-unfurl-figure">
+            <img src="https://cdn.example.com/hooked.jpg" alt="example.com">
+          </div>
+          <img src="https://cdn.example.com/themed.jpg" class="bbCodeBlockUnfurl-image" alt="example.com">
+          <h3 class="js-unfurl-title">Page title</h3>
+        </div>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'xenforo',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        thumbnail: 'https://cdn.example.com/hooked.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
   describe('edge cases', () => {
     it('should extract a card without a thumbnail figure', async () => {
       const value = html`
@@ -100,8 +167,13 @@ describeForEachParser('xenforoCiteResolver', (parseHtml) => {
           </h3>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'xenforo',
+        url: 'https://example.com/canonical',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/canonical')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

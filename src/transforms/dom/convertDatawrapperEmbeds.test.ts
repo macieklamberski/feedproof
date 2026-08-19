@@ -4,35 +4,50 @@ import { baseContext, describeForEachParser, html } from '../../tests.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { convertDatawrapperEmbeds } from './convertDatawrapperEmbeds.js'
 
+// The two parsers order the img attributes differently, so a case whose image carries an alt
+// beside its src compares through toEqualHtml. The rest compare byte for byte.
 describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
   const transform = (value: string) => {
     return applyDomTransforms(parseHtml(value), [convertDatawrapperEmbeds(baseContext)])
   }
 
   it('should convert a responsive iframe into a linked static image', async () => {
-    const value = html`<iframe id="datawrapper-chart-bdqZJ" src="https://datawrapper.dwcdn.net/bdqZJ/2/" title="Egg prices"></iframe>`
-    const result = await transform(value)
+    const value = html`
+      <iframe
+        id="datawrapper-chart-bdqZJ"
+        src="https://datawrapper.dwcdn.net/bdqZJ/2/"
+        title="Egg prices"
+      ></iframe>
+    `
+    const expected = html`
+      <a href="https://datawrapper.dwcdn.net/bdqZJ/">
+        <img src="https://datawrapper.dwcdn.net/bdqZJ/full.png" alt="Egg prices">
+      </a>
+    `
 
-    expect(result).toContain('<a href="https://datawrapper.dwcdn.net/bdqZJ/">')
-    expect(result).toContain('src="https://datawrapper.dwcdn.net/bdqZJ/full.png"')
-    expect(result).toContain('alt="Egg prices"')
-    expect(result).not.toContain('<iframe')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should convert an iframe with no title (no alt attribute)', async () => {
-    const value = html`<iframe src="https://datawrapper.dwcdn.net/t4fiQ/3/"></iframe>`
-    const result = await transform(value)
+    const value = '<iframe src="https://datawrapper.dwcdn.net/t4fiQ/3/"></iframe>'
+    const expected = html`
+      <a href="https://datawrapper.dwcdn.net/t4fiQ/">
+        <img src="https://datawrapper.dwcdn.net/t4fiQ/full.png">
+      </a>
+    `
 
-    expect(result).toContain('<a href="https://datawrapper.dwcdn.net/t4fiQ/">')
-    expect(result).toContain('src="https://datawrapper.dwcdn.net/t4fiQ/full.png"')
-    expect(result).not.toContain('alt=')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should accept a version-less iframe url', async () => {
-    const value = html`<iframe src="https://datawrapper.dwcdn.net/M9ROR/"></iframe>`
-    const result = await transform(value)
+    const value = '<iframe src="https://datawrapper.dwcdn.net/M9ROR/"></iframe>'
+    const expected = html`
+      <a href="https://datawrapper.dwcdn.net/M9ROR/">
+        <img src="https://datawrapper.dwcdn.net/M9ROR/full.png">
+      </a>
+    `
 
-    expect(result).toContain('src="https://datawrapper.dwcdn.net/M9ROR/full.png"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should remove the sibling resize listener script', async () => {
@@ -40,11 +55,13 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
       <iframe src="https://datawrapper.dwcdn.net/bdqZJ/2/" title="Egg prices"></iframe>
       <script type="text/javascript">window.addEventListener("message",function(a){if(void 0!==a.data["datawrapper-height"]){}})</script>
     `
-    const result = await transform(value)
+    const expected = html`
+      <a href="https://datawrapper.dwcdn.net/bdqZJ/">
+        <img src="https://datawrapper.dwcdn.net/bdqZJ/full.png" alt="Egg prices">
+      </a>
+    `
 
-    expect(result).toContain('src="https://datawrapper.dwcdn.net/bdqZJ/full.png"')
-    expect(result).not.toContain('datawrapper-height')
-    expect(result).not.toContain('<script')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should remove the legacy embedDeltas resize script', async () => {
@@ -52,19 +69,19 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
       <iframe src="https://datawrapper.dwcdn.net/b0fHe/1/"></iframe>
       <script type="text/javascript">window.datawrapper=window.datawrapper||{};window.datawrapper["b0fHe"]={};window.datawrapper["b0fHe"].embedDeltas={"100":787};</script>
     `
-    const result = await transform(value)
+    const expected = html`
+      <a href="https://datawrapper.dwcdn.net/b0fHe/">
+        <img src="https://datawrapper.dwcdn.net/b0fHe/full.png">
+      </a>
+    `
 
-    expect(result).not.toContain('embedDeltas')
-    expect(result).not.toContain('<script')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave the secret preview iframe for the generic placeholder', async () => {
-    const value = html`<iframe src="https://datawrapper.dwcdn.net/AbCdE/2/#?secret=tok3n"></iframe>`
-    const result = await transform(value)
+    const value = '<iframe src="https://datawrapper.dwcdn.net/AbCdE/2/#?secret=tok3n"></iframe>'
 
-    expect(result).toContain('<iframe')
-    expect(result).toContain('secret=tok3n')
-    expect(result).not.toContain('full.png')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should recover the script/noscript form and carry the alt', async () => {
@@ -74,13 +91,13 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
         <noscript><img src="https://datawrapper.dwcdn.net/CmrER/full.png" alt="Line chart of egg prices"></noscript>
       </div>
     `
-    const result = await transform(value)
+    const expected = html`
+      <a href="https://datawrapper.dwcdn.net/CmrER/">
+        <img src="https://datawrapper.dwcdn.net/CmrER/full.png" alt="Line chart of egg prices">
+      </a>
+    `
 
-    expect(result).toContain('<a href="https://datawrapper.dwcdn.net/CmrER/">')
-    expect(result).toContain('src="https://datawrapper.dwcdn.net/CmrER/full.png"')
-    expect(result).toContain('alt="Line chart of egg prices"')
-    expect(result).not.toContain('embed.js')
-    expect(result).not.toContain('datawrapper-vis-')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should recover the script form even when the noscript fallback is absent', async () => {
@@ -89,48 +106,68 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
         <script type="text/javascript" defer src="https://datawrapper.dwcdn.net/CmrER/embed.js" data-target="#datawrapper-vis-CmrER"></script>
       </div>
     `
-    const result = await transform(value)
+    const expected = html`
+      <a href="https://datawrapper.dwcdn.net/CmrER/">
+        <img src="https://datawrapper.dwcdn.net/CmrER/full.png">
+      </a>
+    `
 
-    expect(result).toContain('src="https://datawrapper.dwcdn.net/CmrER/full.png"')
-    expect(result).not.toContain('embed.js')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   // data-frame-src is now materialized into an <iframe> by rebuildDeferredIframes upstream, so
-  // a Texas Tribune / @newswire/frames Datawrapper wrapper still becomes an image — end to end.
+  // a Texas Tribune / @newswire/frames Datawrapper wrapper still becomes an image, end to end.
   it('should convert a data-frame-src datawrapper wrapper end to end', async () => {
-    const value = html`<div data-frame-sandbox="allow-scripts" data-frame-src="https://datawrapper.dwcdn.net/OaEnQ/"></div>`
+    const value = html`
+      <div
+        data-frame-sandbox="allow-scripts"
+        data-frame-src="https://datawrapper.dwcdn.net/OaEnQ/"
+      ></div>
+    `
+    const expected = html`
+      <a href="https://datawrapper.dwcdn.net/OaEnQ/">
+        <img src="https://datawrapper.dwcdn.net/OaEnQ/full.png">
+      </a>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com',
     })
 
-    expect(result).toContain('https://datawrapper.dwcdn.net/OaEnQ/full.png')
-    expect(result).not.toContain('data-frame-src')
+    expect(result).toEqualHtml(expected)
   })
 
   it('should convert the plain-link form', async () => {
-    const value = html`<div class="datawrapper-embed"><a href="https://datawrapper.dwcdn.net/8sk4Y/3/" target="_blank" rel="noopener noreferrer">View Link</a></div>`
-    const result = await transform(value)
+    const value = html`
+      <div class="datawrapper-embed">
+        <a href="https://datawrapper.dwcdn.net/8sk4Y/3/" target="_blank" rel="noopener noreferrer">View Link</a>
+      </div>
+    `
+    const expected = html`
+      <a href="https://datawrapper.dwcdn.net/8sk4Y/">
+        <img src="https://datawrapper.dwcdn.net/8sk4Y/full.png">
+      </a>
+    `
 
-    expect(result).toContain('<a href="https://datawrapper.dwcdn.net/8sk4Y/">')
-    expect(result).toContain('src="https://datawrapper.dwcdn.net/8sk4Y/full.png"')
-    expect(result).not.toContain('View Link')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a standalone static image untouched', async () => {
-    const value = html`<img decoding="async" src="https://datawrapper.dwcdn.net/AbCdE/full.png" width="600">`
-    const result = await transform(value)
+    const value = html`
+      <img
+        decoding="async"
+        src="https://datawrapper.dwcdn.net/AbCdE/full.png"
+        width="600"
+      >
+    `
 
-    expect(result).toContain('src="https://datawrapper.dwcdn.net/AbCdE/full.png"')
-    expect(result).not.toContain('<a ')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a non-datawrapper iframe untouched', async () => {
-    const value = html`<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`
-    const result = await transform(value)
+    const value = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
 
-    expect(result).toContain('youtube.com/embed/dQw4w9WgXcQ')
-    expect(result).not.toContain('dwcdn.net')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should convert every iframe when a post packs several', async () => {
@@ -138,11 +175,16 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
       <iframe src="https://datawrapper.dwcdn.net/AAAAA/1/"></iframe>
       <iframe src="https://datawrapper.dwcdn.net/BBBBB/1/"></iframe>
     `
-    const result = await transform(value)
+    const expected = html`
+      <a href="https://datawrapper.dwcdn.net/AAAAA/">
+        <img src="https://datawrapper.dwcdn.net/AAAAA/full.png">
+      </a>
+      <a href="https://datawrapper.dwcdn.net/BBBBB/">
+        <img src="https://datawrapper.dwcdn.net/BBBBB/full.png">
+      </a>
+    `
 
-    expect(result).toContain('AAAAA/full.png')
-    expect(result).toContain('BBBBB/full.png')
-    expect(result).not.toContain('<iframe')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
@@ -153,16 +195,27 @@ describeForEachParser('convertDatawrapperEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await applyDomTransforms(parseHtml(once), [convertDatawrapperEmbeds(baseContext)])
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   it('should survive into the output end to end', async () => {
-    const value = html`<iframe src="https://datawrapper.dwcdn.net/bdqZJ/2/" title="Egg prices"></iframe>`
+    const value = html`
+      <iframe
+        src="https://datawrapper.dwcdn.net/bdqZJ/2/"
+        title="Egg
+        prices"
+      ></iframe>
+    `
+    const expected = html`
+      <a href="https://datawrapper.dwcdn.net/bdqZJ/">
+        <img src="https://datawrapper.dwcdn.net/bdqZJ/full.png" alt="Egg prices">
+      </a>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com',
     })
 
-    expect(result).toContain('https://datawrapper.dwcdn.net/bdqZJ/full.png')
+    expect(result).toEqualHtml(expected)
   })
 })

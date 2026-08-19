@@ -1,7 +1,8 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { keepIfMatches } from '../utils/dom.js'
 import { pickUrlParams } from '../utils/urls.js'
-import { createIframeEmbedResolver } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9]{5,}$/
 
@@ -25,17 +26,18 @@ export const extractDailymotionId = (link: string): string | undefined => {
     id = segments[1]
   } else if (segments[0] === 'embed' && segments[1] === 'video') {
     id = segments[2]
+  } else if (segments[0] === 'swf') {
+    // The Flash player, in both the forms it shipped: /swf/{id} and /swf/video/{id}.
+    id = segments[1] === 'video' ? segments[2] : segments[1]
   } else {
     // geo.dailymotion.com/player.html?video={id}
     id = url.searchParams.get('video') ?? undefined
   }
 
-  // Share URLs append a "_title-slug" to the id; keep only the id.
+  // Share URLs append a "_title-slug" to the id. Keep only the id.
   id = id?.split('_')[0]
 
-  if (id && safeVideoIdRegex.test(id)) {
-    return id
-  }
+  return keepIfMatches(id, safeVideoIdRegex)
 }
 
 // Where playback starts, and the playlist the video sits in. The rest of the publisher's
@@ -58,7 +60,7 @@ export const dailymotionResolveEmbed = (url: string): EmbedResolverResult | unde
   }
 }
 
-export const dailymotionEmbedResolver = createIframeEmbedResolver(
+export const dailymotionEmbedResolver = createUrlEmbedResolver(
   dailymotionHosts,
   dailymotionResolveEmbed,
 )

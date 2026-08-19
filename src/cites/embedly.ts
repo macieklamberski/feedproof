@@ -2,7 +2,7 @@ import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
-// Embedly's platform.js turns an `.embedly-card` element into an iframe on the live page; in
+// Embedly's platform.js turns an `.embedly-card` element into an iframe on the live page. In
 // a feed the static form survives. Two shapes share the class, and only the blockquote is
 // converted:
 //
@@ -13,7 +13,7 @@ import { attr, find, text } from '../utils/dom.js'
 //   inline anchor with a block placeholder would break the paragraph around it.
 //
 // The rich card (thumbnail, publisher) only exists in the hydrated iframe, so even the
-// blockquote carries just url, title and description.
+// blockquote carries only url, title and description.
 export const embedlyCiteResolver: CiteResolver = {
   selector: 'blockquote.embedly-card',
   extract: (element) => {

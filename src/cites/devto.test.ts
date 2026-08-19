@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import {
   devtoLegacyPostCiteResolver,
@@ -8,7 +8,7 @@ import {
 } from './devto.js'
 
 describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, devtoLinkCiteResolver)
+  const extract = resolverExtractor(parseHtml, devtoLinkCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {
@@ -50,7 +50,9 @@ describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
       const value = html`
         <div class="c-embed">
           <div class="c-embed__body">
-            <h2><a href="https://example.com/page">Page title</a></h2>
+            <h2>
+              <a href="https://example.com/page">Page title</a>
+            </h2>
           </div>
         </div>
       `
@@ -68,23 +70,33 @@ describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
     it('should fall back to the cover link when the title has no href', async () => {
       const value = html`
         <div class="c-embed">
-          <div class="c-embed__cover"><a href="https://example.com/page"><img src="https://example.com/cover.png" /></a></div>
+          <div class="c-embed__cover">
+            <a href="https://example.com/page">
+              <img src="https://example.com/cover.png" />
+            </a>
+          </div>
           <div class="c-embed__body">
             <h2>Page title</h2>
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        thumbnail: 'https://example.com/cover.png',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/page')
+      expect(await extract(value)).toEqual(expected)
     })
 
-    // Optional fields pass through raw; createPlaceholder trims every field when it
-    // writes the attributes. Only the guard-checked title is trimmed in the resolver.
     it('should read the publisher from the text beside the favicon', async () => {
       const value = html`
         <div class="c-embed">
           <div class="c-embed__body">
-            <h2><a href="https://example.com/page">Page title</a></h2>
+            <h2>
+              <a href="https://example.com/page">Page title</a>
+            </h2>
             <div class="color-secondary">
               <img class="c-embed__favicon" src="https://example.com/favicon.png" />
               example.com
@@ -92,8 +104,15 @@ describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        publisher: 'example.com',
+        icon: 'https://example.com/favicon.png',
+      }
 
-      expect((await extract(value))?.publisher).toBe('example.com')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -125,7 +144,7 @@ describeForEachParser('devtoLinkCiteResolver', (parseHtml) => {
 })
 
 describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, devtoPostCiteResolver)
+  const extract = resolverExtractor(parseHtml, devtoPostCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a card published under an organization', async () => {
@@ -188,7 +207,9 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
               <div>
                 <a href="/author" class="crayons-story__secondary fw-medium">Author name</a>
               </div>
-              <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+              <h2 class="crayons-story__title">
+                <a href="https://example.com/post">Page title</a>
+              </h2>
             </div>
           </div>
         </div>
@@ -214,40 +235,66 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
                 <img src="https://example.com/author.png" alt="author profile" class="crayons-avatar__image" />
               </a>
             </div>
-            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+            <h2 class="crayons-story__title">
+              <a href="https://example.com/post">Page title</a>
+            </h2>
           </div>
         </div>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/post',
+        title: 'Page title',
         icon: 'https://example.com/author.png',
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the date when it spells a year', async () => {
       const value = html`
         <div class="ltag__link--embedded">
           <div class="crayons-story ">
-            <a href="https://example.com/post" class="crayons-story__tertiary fs-xs"><time>Aug 21, 2025</time></a>
-            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+            <a href="https://example.com/post" class="crayons-story__tertiary fs-xs">
+              <time>Aug 21, 2025</time>
+            </a>
+            <h2 class="crayons-story__title">
+              <a href="https://example.com/post">Page title</a>
+            </h2>
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        date: 'Aug 21, 2025',
+      }
 
-      expect((await extract(value))?.date).toBe('Aug 21, 2025')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the date unset when it carries no year', async () => {
       const value = html`
         <div class="ltag__link--embedded">
           <div class="crayons-story ">
-            <a href="https://example.com/post" class="crayons-story__tertiary fs-xs"><time>Jul 25</time><span class="time-ago-indicator-initial-placeholder"></span></a>
-            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+            <a href="https://example.com/post" class="crayons-story__tertiary fs-xs">
+              <time>Jul 25</time>
+              <span class="time-ago-indicator-initial-placeholder"></span>
+            </a>
+            <h2 class="crayons-story__title">
+              <a href="https://example.com/post">Page title</a>
+            </h2>
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.date).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the description from a context note', async () => {
@@ -260,37 +307,60 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
             >
               Context note text
             </a>
-            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+            <h2 class="crayons-story__title">
+              <a href="https://example.com/post">Page title</a>
+            </h2>
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        description: 'Context note text',
+      }
 
-      expect((await extract(value))?.description).toBe('Context note text')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the description from a status preview when there is no context note', async () => {
       const value = html`
         <div class="ltag__link--embedded">
           <div class="crayons-story ">
-            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+            <h2 class="crayons-story__title">
+              <a href="https://example.com/post">Page title</a>
+            </h2>
             <div class="crayons-story__contentpreview">Status text</div>
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        description: 'Status text',
+      }
 
-      expect((await extract(value))?.description).toBe('Status text')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should fall back to the title link when the navigation link is absent', async () => {
       const value = html`
         <div class="ltag__link--embedded">
           <div class="crayons-story ">
-            <h2 class="crayons-story__title"><a href="https://example.com/post">Page title</a></h2>
+            <h2 class="crayons-story__title">
+              <a href="https://example.com/post">Page title</a>
+            </h2>
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/post')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -322,7 +392,7 @@ describeForEachParser('devtoPostCiteResolver', (parseHtml) => {
 })
 
 describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, devtoLegacyPostCiteResolver)
+  const extract = resolverExtractor(parseHtml, devtoLegacyPostCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {
@@ -366,25 +436,41 @@ describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
             <div class="ltag__link__content">
               <h2>Page title</h2>
               <h3>Author name ・ Aug 25 '22 ・ 5 min read</h3>
-              <div class="ltag__link__taglist"><span class="ltag__link__tag">#git</span></div>
+              <div class="ltag__link__taglist">
+                <span class="ltag__link__tag">#git</span>
+              </div>
             </div>
           </a>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/author/post',
+        title: 'Page title',
+        author: 'Author name',
+        date: "Aug 25 '22",
+      }
 
-      expect((await extract(value))?.author).toBe('Author name')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the author undefined when the byline is missing', async () => {
       const value = html`
         <div class="ltag__link">
           <a href="https://example.com/author/post" class="ltag__link__link">
-            <div class="ltag__link__content"><h2>Page title</h2></div>
+            <div class="ltag__link__content">
+              <h2>Page title</h2>
+            </div>
           </a>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://example.com/author/post',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.author).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -409,7 +495,9 @@ describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
       const value = html`
         <div class="ltag__link">
           <div class="ltag__link__content">
-            <div class="missing"><h2>Post not found or has been removed.</h2></div>
+            <div class="missing">
+              <h2>Post not found or has been removed.</h2>
+            </div>
           </div>
         </div>
       `
@@ -421,7 +509,9 @@ describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
       const value = html`
         <div class="ltag__link">
           <a href="https://example.com/author/post" class="ltag__link__link">
-            <div class="ltag__link__content"><h3>Author name ・ Aug 25 '22</h3></div>
+            <div class="ltag__link__content">
+              <h3>Author name ・ Aug 25 '22</h3>
+            </div>
           </a>
         </div>
       `

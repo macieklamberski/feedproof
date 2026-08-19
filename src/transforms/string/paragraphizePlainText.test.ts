@@ -13,10 +13,10 @@ describe('paragraphizePlainText', () => {
   })
 
   it('should wrap multiple paragraphs separated by double newlines', () => {
-    const result = paragraphize('First paragraph\n\nSecond paragraph')
+    const value = 'First paragraph\n\nSecond paragraph'
+    const expected = '<p>First paragraph</p>\n<p>Second paragraph</p>\n'
 
-    expect(result).toContain('<p>First paragraph</p>')
-    expect(result).toContain('<p>Second paragraph</p>')
+    expect(paragraphize(value)).toBe(expected)
   })
 
   it('should convert single newlines to line breaks', () => {
@@ -59,13 +59,52 @@ describe('paragraphizePlainText', () => {
     expect(paragraphize(value)).toBe(value)
   })
 
+  // A tag name carrying a namespace prefix or a hyphen is still a tag. Reading one as plain
+  // text autops the markup around it: a paragraph per blank line and a <br /> per newline.
+  describe('tag names that are not plain letters', () => {
+    // Atom type="xhtml" content reaches the pipeline with the prefixes the spec declares.
+    it('should not autop a namespace-prefixed tag', () => {
+      const value =
+        '<xhtml:div>\n  <xhtml:p>First</xhtml:p>\n\n  <xhtml:p>Second</xhtml:p>\n</xhtml:div>'
+
+      expect(paragraphize(value)).toBe(value)
+    })
+
+    // Facebook's pre-SDK snippet, which the widget pass claims later.
+    it('should not autop a prefixed tag that carries only attributes', () => {
+      const value = '<fb:post href="https://example.com/PageName/posts/123"></fb:post>'
+
+      expect(paragraphize(value)).toBe(value)
+    })
+
+    it('should not autop a hyphenated custom element', () => {
+      const value = '<amp-img src="photo.jpg" width="600" height="400"></amp-img>'
+
+      expect(paragraphize(value)).toBe(value)
+    })
+
+    it('should not autop a custom element carrying more than one hyphen', () => {
+      const value = '<my-video-player src="clip.mp4"></my-video-player>'
+
+      expect(paragraphize(value)).toBe(value)
+    })
+
+    // The prefix has to name something: a bare colon or hyphen after the `<` is prose.
+    it('should autop text where the angle bracket leads nowhere', () => {
+      const value = 'ratio <:1 and range <-5'
+      const expected = '<p>ratio <:1 and range <-5</p>\n'
+
+      expect(paragraphize(value)).toBe(expected)
+    })
+  })
+
   it('should handle empty string', () => {
     expect(paragraphize('')).toBe('')
   })
 
   it('should pass through a wholly escaped HTML fragment', () => {
     // A double-escaping feed generator ships its HTML as entity text. The fragment must
-    // stay intact so decodeDoubleEncodedTags sees it as one text node; paragraphizing
+    // stay intact so decodeDoubleEncodedTags sees it as one text node. Paragraphizing
     // would cut it line-by-line and only complete-tag-pair lines would decode.
     const value = [
       '&lt;p&gt;A &lt;a href="https://example.com/about"&gt;now page&lt;/a&gt;',
@@ -109,13 +148,6 @@ describe('paragraphizePlainText', () => {
   // Exact-output fixtures pinned to @wordpress/autop behavior on plain text,
   // captured before the dependency was inlined.
   describe('autop-compatible output', () => {
-    it('should wrap a single chunk', () => {
-      const value = 'Hello world'
-      const expected = '<p>Hello world</p>\n'
-
-      expect(paragraphize(value)).toBe(expected)
-    })
-
     it('should split paragraphs and break lines', () => {
       const value = 'Multi\n\nMid\nLine\n\nLast'
       const expected = '<p>Multi</p>\n<p>Mid<br />\nLine</p>\n<p>Last</p>\n'

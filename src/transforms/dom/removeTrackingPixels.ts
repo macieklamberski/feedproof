@@ -49,7 +49,7 @@ const isPixelSized = (dimensions: { width?: number; height?: number }): boolean 
 }
 
 // Raster sources signal a real content image (tracking pixels are GIF/script
-// beacons), so we never strip them on the size heuristic. `.gif` is excluded —
+// beacons), so we never strip them on the size heuristic. `.gif` is excluded:
 // it is the dominant spacer/pixel format.
 const rasterExtensionRegex = /\.(?:jpe?g|png|webp|avif)(?:$|[?#])/i
 const rasterFormatQueryRegex = /[?&](?:format|fm|output)=(?:jpe?g|png|webp|avif)\b/i
@@ -57,7 +57,7 @@ const rasterFormatQueryRegex = /[?&](?:format|fm|output)=(?:jpe?g|png|webp|avif)
 // A `0×0` image still fires its request, so trackers do use it and dimension
 // alone can't clear an image. But `0`/unset is the dominant lazy-load
 // *placeholder* convention (real size set client-side), and at `0×0` a raster
-// `src` is overwhelmingly real content — corpus `0×0` beacons are script/`.gif`
+// `src` is overwhelmingly real content: corpus `0×0` beacons are script/`.gif`
 // endpoints, not raster files. A non-empty `srcset` is a content signal at any
 // size. The hidden-style and tracking-host checks still apply regardless.
 const hasContentImageSignal = (
@@ -80,7 +80,7 @@ const hasContentImageSignal = (
 }
 
 // An `opacity:0` image is a tracking-beacon trick. It's image-specific: a generic
-// `opacity:0` is often a fade-in animation, so it stays here rather than in the shared
+// `opacity:0` is often a fade-in animation, so it stays here instead of in the shared
 // isElementHidden check (which covers `display:none`/`visibility:hidden`/`[hidden]`).
 const hasZeroOpacity = (image: Element): boolean => {
   const style = image.getAttribute('style')

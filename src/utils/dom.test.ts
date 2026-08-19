@@ -1,17 +1,22 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, queryElement } from '../tests.js'
+import { describeForEachParser, html, queryElement } from '../tests.js'
 import {
   attr,
   bgImage,
   find,
-  getElementAspectRatio,
+  findConfigScript,
+  flashVars,
+  formatRatio,
   getElementDimensions,
-  getWrapperAspectRatio,
+  getWrapperRatio,
   hasAncestorWithTagName,
   isElementHidden,
-  parseAspectRatio,
-  ratioDimensions,
+  isEmptyElement,
+  keepIfMatches,
+  parsePixelSize,
+  parseRatio,
   removeWithEmptyWrappers,
+  styleLength,
   text,
   textNode,
   walkElements,
@@ -120,7 +125,7 @@ describeForEachParser('getElementDimensions', (parseHtml) => {
 
   it('should not backtrack quadratically on a long invalid numeric style value', () => {
     // A long digit run followed by a non-terminator made the old `[0-9]*\.?[0-9]+`
-    // form take seconds; this completes instantly and matches nothing.
+    // form take seconds. This completes instantly and matches nothing.
     const value = `width:${'9'.repeat(50000)}${'a'.repeat(50000)}`
     const document = parseHtml(`<img style="${value}">`)
     const image = queryElement(document, 'img')
@@ -194,79 +199,126 @@ describeForEachParser('isElementHidden', (parseHtml) => {
   })
 })
 
-describeForEachParser('getElementAspectRatio', (parseHtml) => {
+describeForEachParser('getWrapperRatio reading only the element itself', (parseHtml) => {
   it('should read the aspect-ratio property from the element itself', () => {
     const document = parseHtml('<iframe style="aspect-ratio: 21 / 9"></iframe>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getElementAspectRatio(iframe)).toBeCloseTo(21 / 9)
+    expect(getWrapperRatio(iframe, 0)).toBe('21/9')
   })
 
   it('should read a wp-embed-aspect class from the element itself', () => {
     const document = parseHtml('<figure class="wp-embed-aspect-4-3"></figure>')
     const figure = queryElement(document, 'figure')
 
-    expect(getElementAspectRatio(figure)).toBeCloseTo(4 / 3)
+    expect(getWrapperRatio(figure, 0)).toBe('4/3')
   })
 
   it('should read a padding hack from the element itself', () => {
     const document = parseHtml('<div style="padding-bottom:25%"></div>')
     const div = queryElement(document, 'div')
 
-    expect(getElementAspectRatio(div)).toBe(4)
+    expect(getWrapperRatio(div, 0)).toBe('100/25')
+  })
+
+  it('should read a max-width and max-height pair as a ratio', () => {
+    const document = parseHtml('<iframe style="max-width:800px;max-height:600px"></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperRatio(iframe, 0)).toBe('800/600')
+  })
+
+  it('should ignore a lone max-width, which says nothing about shape', () => {
+    const document = parseHtml('<iframe style="max-width:800px;min-width:325px"></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperRatio(iframe, 0)).toBeUndefined()
+  })
+
+  it('should ignore a lone max-height', () => {
+    const document = parseHtml('<iframe style="max-height:600px"></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperRatio(iframe, 0)).toBeUndefined()
+  })
+
+  // The caps are the weakest source, so a stated ratio on the same element outranks them.
+  it('should prefer a stated aspect-ratio over the caps', () => {
+    const document = parseHtml(
+      '<iframe style="aspect-ratio: 21 / 9;max-width:800px;max-height:600px"></iframe>',
+    )
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperRatio(iframe, 0)).toBe('21/9')
+  })
+
+  it('should prefer a padding hack over the caps', () => {
+    const document = parseHtml(
+      '<div style="padding-bottom:25%;max-width:800px;max-height:600px"></div>',
+    )
+    const div = queryElement(document, 'div')
+
+    expect(getWrapperRatio(div, 0)).toBe('100/25')
+  })
+
+  it('should ignore caps stated in a unit that is not pixels', () => {
+    const document = parseHtml('<iframe style="max-width:80em;max-height:60em"></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperRatio(iframe, 0)).toBeUndefined()
   })
 
   it('should return undefined when the element declares no ratio', () => {
     const document = parseHtml('<iframe></iframe>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getElementAspectRatio(iframe)).toBeUndefined()
+    expect(getWrapperRatio(iframe, 0)).toBeUndefined()
   })
 
   it('should return undefined for an out-of-range aspect-ratio value', () => {
     const document = parseHtml('<div style="aspect-ratio: 0 / 0"></div>')
     const div = queryElement(document, 'div')
 
-    expect(getElementAspectRatio(div)).toBeUndefined()
+    expect(getWrapperRatio(div, 0)).toBeUndefined()
   })
 })
 
-describeForEachParser('getWrapperAspectRatio', (parseHtml) => {
+describeForEachParser('getWrapperRatio', (parseHtml) => {
   it('should read the ratio from a wp-embed-aspect class on an ancestor', () => {
     const document = parseHtml(
       '<figure class="wp-block-embed wp-embed-aspect-4-3"><div class="wp-block-embed__wrapper"><iframe></iframe></div></figure>',
     )
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperAspectRatio(iframe)).toBeCloseTo(4 / 3)
+    expect(getWrapperRatio(iframe)).toBe('4/3')
   })
 
   it('should read the ratio from an inline aspect-ratio property', () => {
     const document = parseHtml('<div style="aspect-ratio: 16 / 9"><iframe></iframe></div>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperAspectRatio(iframe)).toBeCloseTo(16 / 9)
+    expect(getWrapperRatio(iframe)).toBe('16/9')
   })
 
   it('should read a single-number aspect-ratio as width over height', () => {
     const document = parseHtml('<div style="aspect-ratio: 1.5"><iframe></iframe></div>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperAspectRatio(iframe)).toBe(1.5)
+    expect(getWrapperRatio(iframe)).toBe('1.5/1')
   })
 
   it('should read the ratio from an inline padding hack on an ancestor', () => {
     const document = parseHtml('<div style="padding-bottom:50%"><iframe></iframe></div>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperAspectRatio(iframe)).toBe(2)
+    expect(getWrapperRatio(iframe)).toBe('100/50')
   })
 
   it('should return undefined when no ancestor carries an aspect signal', () => {
     const document = parseHtml('<p><iframe></iframe></p>')
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+    expect(getWrapperRatio(iframe)).toBeUndefined()
   })
 
   it('should return undefined for out-of-range wrapper values', () => {
@@ -275,7 +327,7 @@ describeForEachParser('getWrapperAspectRatio', (parseHtml) => {
     )
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+    expect(getWrapperRatio(iframe)).toBeUndefined()
   })
 
   it('should not look beyond the ancestor depth limit', () => {
@@ -284,16 +336,16 @@ describeForEachParser('getWrapperAspectRatio', (parseHtml) => {
     )
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+    expect(getWrapperRatio(iframe)).toBeUndefined()
   })
 
   it('should honor a custom maxDepth argument', () => {
     const document = parseHtml('<div style="padding-bottom:50%"><iframe></iframe></div>')
     const iframe = queryElement(document, 'iframe')
 
-    // maxDepth 0 checks only the element itself; the wrapper is one level up.
-    expect(getWrapperAspectRatio(iframe, 0)).toBeUndefined()
-    expect(getWrapperAspectRatio(iframe, 1)).toBe(2)
+    // maxDepth 0 checks only the element itself. The wrapper is one level up.
+    expect(getWrapperRatio(iframe, 0)).toBeUndefined()
+    expect(getWrapperRatio(iframe, 1)).toBe('100/50')
   })
 
   it('should not read a wrapper that holds the element plus siblings', () => {
@@ -302,44 +354,147 @@ describeForEachParser('getWrapperAspectRatio', (parseHtml) => {
     )
     const iframe = queryElement(document, 'iframe')
 
-    expect(getWrapperAspectRatio(iframe)).toBeUndefined()
+    expect(getWrapperRatio(iframe)).toBeUndefined()
   })
 })
 
-describe('parseAspectRatio', () => {
+// The lookup several platforms need to reach the inline `<script>` that configures a player:
+// Podlove and JW Player both use it, so the branches are pinned here rather than through
+// whichever caller happens to exercise them.
+describeForEachParser('findConfigScript', (parseHtml) => {
+  const find = (markup: string) => {
+    const document = parseHtml(markup)
+
+    return findConfigScript(queryElement(document, '.player'))
+  }
+
+  it('should take the script sitting directly beside the player', () => {
+    const value = html`
+      <div>
+        <div class="player" id="player"></div>
+        <script>config()</script>
+      </div>
+    `
+
+    expect(find(value)?.textContent).toBe('config()')
+  })
+
+  // `wrapBareInlineInParagraphs` runs before the widget pass, so by then a bare script is
+  // inside a paragraph and the player's sibling is that paragraph rather than the script.
+  it('should look inside a sibling that wraps the script', () => {
+    const value = html`
+      <div>
+        <div class="player" id="player"></div>
+        <p><script>config()</script></p>
+      </div>
+    `
+
+    expect(find(value)?.textContent).toBe('config()')
+  })
+
+  // Where one item holds several players, each script names its own container, so the id is
+  // what pairs them once they are no longer adjacent.
+  it('should match a distant script by the player id it names', () => {
+    const value = html`
+      <div>
+        <div class="player" id="player"></div>
+        <p>Prose between the player and its script.</p>
+        <script>setup("player")</script>
+      </div>
+    `
+
+    expect(find(value)?.textContent).toBe('setup("player")')
+  })
+
+  it('should state nothing when a distant script names another player', () => {
+    const value = html`
+      <div>
+        <div class="player" id="player"></div>
+        <p>Prose.</p>
+        <script>setup("other")</script>
+      </div>
+    `
+
+    expect(find(value)).toBeUndefined()
+  })
+
+  // With no id there is nothing to pair a distant script against, so the walk stops.
+  it('should state nothing when the player carries no id', () => {
+    const value = html`
+      <div>
+        <div class="player"></div>
+        <p>Prose.</p>
+        <script>setup("player")</script>
+      </div>
+    `
+
+    expect(find(value)).toBeUndefined()
+  })
+
+  it('should state nothing when there is no script at all', () => {
+    const value = '<div><div class="player" id="player"></div></div>'
+
+    expect(find(value)).toBeUndefined()
+  })
+})
+
+// Nothing is reduced or approximated: the numbers a source stated are the numbers written, so a
+// reader can trace the value back. CSS renders every spelling of a shape identically.
+describe('formatRatio', () => {
+  it('should write a pair as stated, without reducing it', () => {
+    expect(formatRatio(800, 600)).toBe('800/600')
+    expect(formatRatio(16, 9)).toBe('16/9')
+  })
+
+  it('should keep the padding hack percentage as a decimal denominator', () => {
+    expect(formatRatio(100, 56.25)).toBe('100/56.25')
+  })
+
+  it('should write a bare decimal over one', () => {
+    expect(formatRatio(1.33333333333333)).toBe('1.33333333333333/1')
+    expect(formatRatio(4)).toBe('4/1')
+  })
+
+  it('should state a portrait ratio with the larger number second', () => {
+    expect(formatRatio(9, 16)).toBe('9/16')
+  })
+})
+
+describe('parseRatio', () => {
   it('should parse the colon form', () => {
-    expect(parseAspectRatio('16:9')).toBeCloseTo(16 / 9)
+    expect(parseRatio('16:9')).toBe('16/9')
   })
 
   it('should parse the slash form', () => {
-    expect(parseAspectRatio('16/9')).toBeCloseTo(16 / 9)
+    expect(parseRatio('16/9')).toBe('16/9')
   })
 
   it('should allow spaces around the separator', () => {
-    expect(parseAspectRatio('16 : 9')).toBeCloseTo(16 / 9)
-    expect(parseAspectRatio('690 / 362')).toBeCloseTo(690 / 362)
+    expect(parseRatio('16 : 9')).toBe('16/9')
+    expect(parseRatio('690 / 362')).toBe('690/362')
+  })
+
+  it('should parse a bare decimal as width over height', () => {
+    expect(parseRatio('1.5')).toBe('1.5/1')
+    expect(parseRatio('1.77777777777778')).toBe('1.77777777777778/1')
+  })
+
+  it('should keep a portrait ratio in the order it was stated', () => {
+    expect(parseRatio('9:16')).toBe('9/16')
   })
 
   it('should reject a zero part', () => {
-    expect(parseAspectRatio('0:9')).toBeUndefined()
+    expect(parseRatio('0:9')).toBeUndefined()
+    expect(parseRatio('0')).toBeUndefined()
   })
 
-  it('should reject a single number', () => {
-    expect(parseAspectRatio('16')).toBeUndefined()
+  it('should reject a non-numeric value', () => {
+    expect(parseRatio('wide')).toBeUndefined()
+    expect(parseRatio('1.2.3')).toBeUndefined()
   })
 
   it('should reject an empty string', () => {
-    expect(parseAspectRatio('')).toBeUndefined()
-  })
-})
-
-describe('ratioDimensions', () => {
-  it('should encode a landscape ratio', () => {
-    expect(ratioDimensions(16 / 9)).toEqual({ width: 100, height: 56 })
-  })
-
-  it('should encode a portrait ratio', () => {
-    expect(ratioDimensions(9 / 16)).toEqual({ width: 100, height: 178 })
+    expect(parseRatio('')).toBeUndefined()
   })
 })
 
@@ -395,6 +550,50 @@ describeForEachParser('hasAncestorWithTagName', (parseHtml) => {
     const pre = queryElement(document, 'pre')
 
     expect(hasAncestorWithTagName(span, tagSet, pre)).toBe(false)
+  })
+})
+
+describeForEachParser('isEmptyElement', (parseHtml) => {
+  it('should treat an element with no children and no text as empty', () => {
+    const document = parseHtml('<div></div>')
+    const element = queryElement(document, 'div')
+
+    expect(isEmptyElement(element)).toBe(true)
+  })
+
+  it('should treat an element carrying only attributes as empty', () => {
+    const document = parseHtml('<div id="embed-1" data-src="https://example.com/post"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(isEmptyElement(element)).toBe(true)
+  })
+
+  it('should treat whitespace-only text as empty', () => {
+    const document = parseHtml('<div>\n  \n</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isEmptyElement(element)).toBe(true)
+  })
+
+  it('should treat an element holding text as not empty', () => {
+    const document = parseHtml('<div>Example</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isEmptyElement(element)).toBe(false)
+  })
+
+  it('should treat an element holding a child element as not empty', () => {
+    const document = parseHtml('<div><img src="https://example.com/a.jpg"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(isEmptyElement(element)).toBe(false)
+  })
+
+  it('should treat an element whose only child is itself empty as not empty', () => {
+    const document = parseHtml('<div><span></span></div>')
+    const element = queryElement(document, 'div')
+
+    expect(isEmptyElement(element)).toBe(false)
   })
 })
 
@@ -595,6 +794,77 @@ describeForEachParser('attr', (parseHtml) => {
   })
 })
 
+describeForEachParser('flashVars', (parseHtml) => {
+  // `<embed>` spells the config as its own attribute and `<object>` as a sibling `<param>`,
+  // and the same snippet often carries both so a reader of one dialect sees half the markup.
+  it('should read the value off the carrier itself', () => {
+    const document = parseHtml('<embed src="player.swf" flashvars="config=1&id=2">')
+    const element = queryElement(document, 'embed')
+
+    expect(flashVars(element)).toBe('config=1&id=2')
+  })
+
+  it('should read the value from a sibling param', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="flashvars" value="config=1&id=2" />
+        <embed src="player.swf" />
+      </object>
+    `)
+    const element = queryElement(document, 'embed')
+
+    expect(flashVars(element)).toBe('config=1&id=2')
+  })
+
+  // Brightcove writes `flashVars` and Archive writes `flashvars`, on the same attribute.
+  it('should match the param name whatever its casing', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="flashVars" value="config=1" />
+        <embed src="player.swf" />
+      </object>
+    `)
+    const element = queryElement(document, 'embed')
+
+    expect(flashVars(element)).toBe('config=1')
+  })
+
+  it('should prefer the carrier own attribute over a sibling param', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="flashvars" value="config=sibling" />
+        <embed src="player.swf" flashvars="config=own" />
+      </object>
+    `)
+    const element = queryElement(document, 'embed')
+
+    expect(flashVars(element)).toBe('config=own')
+  })
+
+  it('should ignore a param that names something else', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="movie" value="player.swf" />
+        <embed src="player.swf" />
+      </object>
+    `)
+    const element = queryElement(document, 'embed')
+
+    expect(flashVars(element)).toBeUndefined()
+  })
+
+  it('should return undefined when nothing carries the config', () => {
+    const document = parseHtml('<embed src="player.swf">')
+    const element = queryElement(document, 'embed')
+
+    expect(flashVars(element)).toBeUndefined()
+  })
+
+  it('should return undefined for a nullish element', () => {
+    expect(flashVars(undefined)).toBeUndefined()
+  })
+})
+
 describeForEachParser('bgImage', (parseHtml) => {
   it('should return the url from an unquoted background-image', () => {
     const document = parseHtml(
@@ -634,5 +904,128 @@ describeForEachParser('bgImage', (parseHtml) => {
 
   it('should return undefined for a nullish element', () => {
     expect(bgImage(undefined)).toBeUndefined()
+  })
+})
+
+describeForEachParser('styleLength', (parseHtml) => {
+  it('should read the digits of the named property', () => {
+    const document = parseHtml('<div style="max-width: 605px; min-width: 325px"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleLength(element, 'max-width')).toBe('605')
+  })
+
+  it('should read a unitless value and a fraction', () => {
+    const document = parseHtml('<div style="height: 758.53"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleLength(element, 'height')).toBe('758.53')
+  })
+
+  // The value is returned as digits, not a number, so each caller picks its own parser:
+  // getElementDimensions needs 0 to come through for removeTrackingPixels, and a resolver
+  // reading a player's own size runs it through parsePixelSize, which would reject 0.
+  it('should return the digits unparsed', () => {
+    const document = parseHtml('<img style="width: 0">')
+    const element = queryElement(document, 'img')
+
+    expect(styleLength(element, 'width')).toBe('0')
+  })
+
+  it('should not confuse a property with a longer one that contains it', () => {
+    const document = parseHtml('<div style="max-width: 605px"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleLength(element, 'width')).toBeUndefined()
+  })
+
+  it('should match a property name whatever its case', () => {
+    const document = parseHtml('<div style="MAX-WIDTH: 605px"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleLength(element, 'max-width')).toBe('605')
+  })
+
+  it('should ignore a value in a unit that is not pixels', () => {
+    const document = parseHtml('<div style="max-width: 80em"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleLength(element, 'max-width')).toBeUndefined()
+  })
+
+  it('should return undefined when the element has no style', () => {
+    const document = parseHtml('<div></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleLength(element, 'width')).toBeUndefined()
+  })
+
+  it('should return undefined for a nullish element', () => {
+    expect(styleLength(undefined, 'width')).toBeUndefined()
+  })
+})
+
+describe('parsePixelSize', () => {
+  it('should read a bare pixel count', () => {
+    expect(parsePixelSize('200')).toBe(200)
+  })
+
+  // Publishers write the unit as often as not, and coerceNumber alone rejects it.
+  it('should read a count carrying the px unit', () => {
+    expect(parsePixelSize('350px')).toBe(350)
+  })
+
+  it('should ignore surrounding whitespace', () => {
+    expect(parsePixelSize('  90  ')).toBe(90)
+  })
+
+  it('should return undefined for another unit', () => {
+    expect(parsePixelSize('100%')).toBeUndefined()
+    expect(parsePixelSize('10em')).toBeUndefined()
+  })
+
+  // A stated player height of zero or five digits is a mistake, not a size. One pixel is a
+  // typo too, unlike an image attribute where it is a tracking pixel.
+  it('should return undefined outside the plausible range', () => {
+    expect(parsePixelSize('0')).toBeUndefined()
+    expect(parsePixelSize('1')).toBeUndefined()
+    expect(parsePixelSize('9')).toBeUndefined()
+    expect(parsePixelSize('99999')).toBeUndefined()
+  })
+
+  // A digit count reads `007` as three digits and lets 7 through.
+  it('should apply the range to the value, not to how it was written', () => {
+    expect(parsePixelSize('007')).toBeUndefined()
+    expect(parsePixelSize('0000')).toBeUndefined()
+    expect(parsePixelSize('09')).toBeUndefined()
+    expect(parsePixelSize('0200')).toBe(200)
+  })
+
+  it('should return undefined for a fractional size', () => {
+    expect(parsePixelSize('350.5')).toBeUndefined()
+  })
+
+  it('should return undefined for nothing at all', () => {
+    expect(parsePixelSize(undefined)).toBeUndefined()
+    expect(parsePixelSize('')).toBeUndefined()
+    expect(parsePixelSize('abc')).toBeUndefined()
+  })
+})
+
+const safeIdRegex = /^\d+$/
+
+describe('keepIfMatches', () => {
+  it('should keep a value that fits the shape', () => {
+    expect(keepIfMatches('12345', safeIdRegex)).toBe('12345')
+  })
+
+  it('should drop a value that does not fit', () => {
+    expect(keepIfMatches('12a45', safeIdRegex)).toBeUndefined()
+  })
+
+  it('should drop an empty or nullish value', () => {
+    expect(keepIfMatches('', safeIdRegex)).toBeUndefined()
+    expect(keepIfMatches(null, safeIdRegex)).toBeUndefined()
+    expect(keepIfMatches(undefined, safeIdRegex)).toBeUndefined()
   })
 })

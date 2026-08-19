@@ -77,8 +77,8 @@ const genericEmojiClasses = [
   'emoji', // Discourse, Vanilla, NodeBB, newer WordPress.
 ]
 
-// Sets with no Unicode equivalent at all, recognized so they can be marked rather than
-// converted. Nothing here ever resolves to a glyph.
+// Sets with no Unicode equivalent at all, recognized so they can be marked, not converted.
+// Nothing here ever resolves to a glyph.
 const customEmojiClasses = [
   'emojione', // Mastodon.
   'custom-emoji', // Mastodon, newer.

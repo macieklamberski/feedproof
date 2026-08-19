@@ -1,30 +1,21 @@
 import type { DomTransform, MediaResolverResult } from '../../types.js'
+import { attr, hasText, playableElements } from '../../utils/dom.js'
 import {
-  getElementDimensions,
-  getWrapperAspectRatio,
-  playableElements,
-  ratioDimensions,
-} from '../../utils/dom.js'
-import { audioFileRegex, resolveOrKeepUrl, videoFileRegex } from '../../utils/urls.js'
-import { createEmbedPlaceholder, isMediaResult } from '../../utils/widgets.js'
+  audioFileRegex,
+  flashFileRegex,
+  resolveOrKeepUrl,
+  videoFileRegex,
+} from '../../utils/urls.js'
+import {
+  createEmbedPlaceholder,
+  embedCarrierSelector,
+  getEmbedSize,
+  isMediaResult,
+  parseOrKeepDate,
+  readCarrierUrl,
+} from '../../utils/widgets.js'
 
 const playableSelector = [...playableElements].join(', ')
-
-// When the iframe carries no usable dimensions, fall back to a responsive wrapper's
-// aspect ratio so the placeholder can still reserve space.
-const getEmbedDimensions = (element: Element): { width?: number; height?: number } => {
-  const dimensions = getElementDimensions(element)
-
-  if (dimensions.width === undefined && dimensions.height === undefined) {
-    const ratio = getWrapperAspectRatio(element)
-
-    if (ratio !== undefined) {
-      return ratioDimensions(ratio)
-    }
-  }
-
-  return dimensions
-}
 
 // The tag a bare URL should play as, or undefined when it is not a media file at all.
 // Streaming manifests (.m3u8, .mpd) are deliberately not matched (see the regexes): they
@@ -60,17 +51,16 @@ const createMediaElement = (document: Document, result: MediaResolverResult): HT
   return media
 }
 
-// A container that parks its media URL in an attribute and builds the player with JS, so a
-// reader shows nothing (Discourse video placeholders, Beaver Builder row backgrounds, the
-// Drupal audio field, several WordPress audio players). Mirrors convertLazyImageContainers,
-// which does the same for an image: the value has to name a media file, which is what keeps
+// A container that parks its media URL in an attribute and builds the player with JS, so a reader
+// shows nothing (Discourse video placeholders, Beaver Builder row backgrounds, the Drupal audio
+// field, several WordPress audio players). The value has to name a media file, which is what keeps
 // a generic attribute like `data-src` from matching something that is not media.
 const findParkedMedia = (
   element: Element,
   attributes: Array<string>,
 ): MediaResolverResult | undefined => {
   for (const attribute of attributes) {
-    const value = element.getAttribute(attribute)?.trim()
+    const value = attr(element, attribute)
 
     if (!value) {
       continue
@@ -84,26 +74,61 @@ const findParkedMedia = (
   }
 }
 
+// A Flash `<object>` is a shell around its carrier: `classid`, `codebase` and a pile of
+// `<param>`s, none of which renders anything. Replacing the shell rather than the carrier
+// inside it is what keeps the conversion from leaving dead markup wrapped around the
+// placeholder. An object holding its own text or other elements is a real fallback the
+// publisher wrote, so that one keeps its content and only the carrier is replaced.
+const carrierOrShell = (element: Element): Element => {
+  const parent = element.parentElement
+
+  if (parent?.localName !== 'object' || hasText(parent)) {
+    return element
+  }
+
+  const others = Array.from(parent.children).filter(
+    (child) => child !== element && child.localName !== 'param',
+  )
+
+  return others.length ? element : parent
+}
+
 // The widget pass: one registry of resolvers whose result shape decides the output. An
-// embed result becomes an opaque `data-embed-*` placeholder; a media result becomes a real
+// embed result becomes an opaque `data-embed-*` placeholder. A media result becomes a real
 // <video>/<audio> that the later passes then neutralize, proxy and deduplicate against the
 // enclosures like any other. The generic tiers below apply the same split to embeds no
 // resolver claims: a src that names a media file plays directly instead of being framed.
 export const convertWidgets: DomTransform = (context) => {
-  const { widgetResolvers, mediaSrcAttributes, resolveUrlFn, cleanUrlFn, baseUrl } = context
+  const { widgetResolvers, mediaSrcAttributes, resolveUrlFn, cleanUrlFn, parseDateFn, baseUrl } =
+    context
 
   return async (document) => {
-    // A static snapshot: the fallback loop below replaces iframes, and a live
-    // getElementsByTagName collection would shrink mid-iteration and skip elements.
-    const iframeSnapshot = Array.from(document.getElementsByTagName('iframe'))
-    const hasIframes = iframeSnapshot.length > 0
+    // One query per distinct selector instead of per resolver: every url-keyed resolver
+    // shares the same one, and the fallback at the end reuses that same result, so the
+    // registry and the fallback can never disagree about what a carrier is. The arrays are
+    // static because both loops replace elements, and a live collection would shrink
+    // mid-iteration and skip some.
+    const queried = new Map<string, Array<Element>>()
+
+    const elementsFor = (selector: string): Array<Element> => {
+      const cached = queried.get(selector)
+
+      if (cached) {
+        return cached
+      }
+
+      const found = Array.from(document.querySelectorAll(selector))
+      queried.set(selector, found)
+
+      return found
+    }
 
     // Parked-URL containers go first, while original iframes still exist: the guard reads
     // "already wraps a player" from the markup, and the tiers below replace iframes with
     // placeholder divs the guard would no longer recognize.
     for (const element of document.querySelectorAll('div, figure, span, li')) {
       // A container that already wraps something playable is chrome around a real player,
-      // and the attribute belongs to that player rather than to a missing element.
+      // and the attribute belongs to that player, not to a missing element.
       if (element.querySelector(playableSelector)) {
         continue
       }
@@ -117,17 +142,20 @@ export const convertWidgets: DomTransform = (context) => {
       const resolved = resolveOrKeepUrl(parked.src, resolveUrlFn, baseUrl)
       const cleaned = cleanUrlFn?.(resolved) ?? resolved
 
-      // The container often holds a caption or a track title, which is content rather than
-      // player chrome, so the media goes in front of it instead of replacing it.
+      // The container often holds a caption or a track title, which is content, not player
+      // chrome, so the media goes in front of it instead of replacing it.
       element.prepend(createMediaElement(document, { tag: parked.tag, src: cleaned }))
     }
 
     for (const resolver of widgetResolvers) {
-      if (!hasIframes && resolver.selector.startsWith('iframe')) {
-        continue
-      }
+      for (const element of elementsFor(resolver.selector)) {
+        // Legacy Flash pairs an `<object>` with a nested `<embed>` and a url-keyed resolver
+        // matches both. Replacing the outer one detaches the inner, which is still in this
+        // snapshot.
+        if (!element.parentNode) {
+          continue
+        }
 
-      for (const element of document.querySelectorAll(resolver.selector)) {
         const metadata = await resolver.extract(element)
 
         if (!metadata) {
@@ -143,7 +171,7 @@ export const convertWidgets: DomTransform = (context) => {
         if (isMediaResult(metadata)) {
           const poster = resolveOrKeepUrl(metadata.poster, resolveUrlFn, baseUrl)
 
-          element.replaceWith(
+          carrierOrShell(element).replaceWith(
             createMediaElement(document, { ...metadata, src: resolvedSrc, poster }),
           )
           continue
@@ -151,21 +179,24 @@ export const convertWidgets: DomTransform = (context) => {
 
         let resolvedUrl: string | undefined
 
+        // Cleaned like every other url the pass emits. Most resolvers mint this one from a
+        // parsed id, where there is nothing to strip, but some carry it out of the markup
+        // whole (a payload's `targetUrl`, a sibling anchor's href) and that arrives with
+        // whatever tracking params the publisher pasted.
         if (metadata.url) {
-          resolvedUrl = resolveUrlFn(metadata.url, baseUrl)
+          const resolved = resolveUrlFn(metadata.url, baseUrl)
+          resolvedUrl = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
 
           if (!resolvedUrl) {
             continue
           }
         }
 
-        const { width, height } = getEmbedDimensions(element)
-
         // A rebuild transform (e.g. a lazy-load facade) may have recovered the publisher's
         // real poster and stashed it on the element as `data-thumbnail`. Prefer it over the
         // resolver's URL-derived guess, which is only a safe-default size (e.g. YouTube's
-        // hqdefault) — the carried poster is the exact frame the publisher chose.
-        const carriedThumbnail = element.getAttribute('data-thumbnail') || undefined
+        // hqdefault): the carried poster is the exact frame the publisher chose.
+        const carriedThumbnail = attr(element, 'data-thumbnail')
 
         const placeholderMetadata = {
           ...metadata,
@@ -177,70 +208,60 @@ export const convertWidgets: DomTransform = (context) => {
             baseUrl,
           ),
           avatar: resolveOrKeepUrl(metadata.avatar, resolveUrlFn, baseUrl),
-          width: width ?? metadata.width,
-          height: height ?? metadata.height,
+          date: parseOrKeepDate(metadata.date, parseDateFn),
         }
 
-        element.replaceWith(createEmbedPlaceholder(document, placeholderMetadata))
+        carrierOrShell(element).replaceWith(createEmbedPlaceholder(document, placeholderMetadata))
       }
     }
 
-    // Generic iframe fallback. Resolvers may have detached some iframes (parentNode null).
-    if (hasIframes) {
-      for (const iframe of iframeSnapshot) {
-        if (!iframe.parentNode) {
-          continue
-        }
-
-        const src = iframe.getAttribute('src')
-
-        // resolveUrlFn rejects `about:blank`; the trim drops empty/whitespace placeholders
-        // (which would otherwise resolve to the base URL).
-        const resolved = src?.trim() ? resolveUrlFn(src, baseUrl) : undefined
-        // Unlike a resolver's src, which is rebuilt from the parsed id, this one is the
-        // publisher's own URL and also becomes the fallback anchor's href and link text.
-        const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
-
-        if (!cleaned) {
-          continue
-        }
-
-        // An iframe framing a bare media file plays as the element instead: the reader
-        // gets a native player, and the src flows through the media passes downstream.
-        const mediaTag = getMediaTag(cleaned)
-
-        if (mediaTag) {
-          iframe.replaceWith(createMediaElement(document, { tag: mediaTag, src: cleaned }))
-          continue
-        }
-
-        iframe.replaceWith(
-          createEmbedPlaceholder(document, { src: cleaned, ...getEmbedDimensions(iframe) }),
-        )
+    // Whatever no resolver claimed. A resolver may have replaced an element that is still in
+    // the snapshot, including the inner half of an <object>/<embed> pair, so a detached one
+    // is already handled.
+    for (const element of elementsFor(embedCarrierSelector)) {
+      if (!element.parentNode) {
+        continue
       }
-    }
 
-    // Legacy <object data> / <embed src> carriers — the iframe-only paths above miss
-    // them. Replace with a provider-less placeholder when the URL resolves.
-    for (const element of document.querySelectorAll('object[data], embed[src]')) {
-      const url =
-        element.localName === 'object' ? element.getAttribute('data') : element.getAttribute('src')
-      const resolved = url ? resolveUrlFn(url, baseUrl) : undefined
+      const src = readCarrierUrl(element)
+
+      // resolveUrlFn rejects `about:blank`. The trim drops empty/whitespace placeholders
+      // (which would otherwise resolve to the base URL).
+      const resolved = src.trim() ? resolveUrlFn(src, baseUrl) : undefined
+      // This src is the publisher's own URL, not one minted from a parsed id, so it arrives
+      // with whatever tracking params they pasted.
       const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
 
       if (!cleaned) {
         continue
       }
 
-      const mediaTag = getMediaTag(cleaned)
-
-      if (mediaTag) {
-        element.replaceWith(createMediaElement(document, { tag: mediaTag, src: cleaned }))
+      // A carrier still pointing at a `.swf` is left alone, not framed. A placeholder
+      // would be the worst option: it reads as resolved, so a reader draws a click-to-load
+      // button for a file no browser has been able to run since 2021, and minting it here
+      // would also discard the `<object>`'s fallback content. Untouched, the markup degrades
+      // by the platform's own rules instead: a browser renders an object's fallback children
+      // when it cannot run the object, and an allowlist sanitizer that drops the shell keeps
+      // them the same way. The Flash resolvers run above this and are unaffected: each reads
+      // a real id out of its carrier and mints a modern player, so only what nothing could
+      // repair gets here.
+      if (flashFileRegex.test(cleaned)) {
         continue
       }
 
-      element.replaceWith(
-        createEmbedPlaceholder(document, { src: cleaned, ...getEmbedDimensions(element) }),
+      // A carrier framing a bare media file plays as the element instead: the reader gets a
+      // native player, and the src flows through the media passes downstream.
+      const mediaTag = getMediaTag(cleaned)
+
+      if (mediaTag) {
+        carrierOrShell(element).replaceWith(
+          createMediaElement(document, { tag: mediaTag, src: cleaned }),
+        )
+        continue
+      }
+
+      carrierOrShell(element).replaceWith(
+        createEmbedPlaceholder(document, { src: cleaned, ...getEmbedSize(element) }),
       )
     }
   }

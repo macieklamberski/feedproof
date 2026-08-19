@@ -8,7 +8,7 @@ const wrapProxy: AssetProxyFn = (url, type) => {
   return `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`
 }
 
-// proxyAssetUrls is idempotent only when assetProxyFn is — this one skips
+// proxyAssetUrls is idempotent only when assetProxyFn is: this one skips
 // already-proxied URLs so re-running the transform is a no-op.
 const idempotentProxy: AssetProxyFn = (url, type) => {
   if (url.startsWith('https://proxy.example.com/')) {
@@ -23,16 +23,19 @@ const baseContext = (assetProxyFn?: AssetProxyFn): TransformContext => {
 }
 
 describeForEachParser('proxyAssetUrls', (parseHtml) => {
-  const transform = (html: string, assetProxyFn?: AssetProxyFn) => {
-    return applyDomTransforms(parseHtml(html), [proxyAssetUrls(baseContext(assetProxyFn))])
+  const transform = (value: string, assetProxyFn?: AssetProxyFn) => {
+    return applyDomTransforms(parseHtml(value), [proxyAssetUrls(baseContext(assetProxyFn))])
   }
 
   it('should be a no-op when assetProxyFn is unset', async () => {
     const value = '<img src="https://cdn.example.com/photo.jpg">'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
+  // Every rewrite case below states the whole element, so each one also pins the contract that
+  // the original url survives on the matching `data-proxied-*` attribute. That is why there are
+  // no separate preservation cases: they were the same fixture asserted a second time.
   it('should rewrite img src as image', async () => {
     const value = '<img src="https://cdn.example.com/photo.jpg">'
     const expected = html`
@@ -49,31 +52,42 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     const value = html`
       <img srcset="https://cdn.example.com/small.jpg 300w, https://cdn.example.com/large.jpg 600w">
     `
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <img
+        srcset="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fsmall.jpg 300w, https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Flarge.jpg 600w"
+        data-proxied-srcset="https://cdn.example.com/small.jpg 300w, https://cdn.example.com/large.jpg 600w"
+      >
+    `
 
-    expect(result).toContain('type=image')
-    expect(result).toContain('https%3A%2F%2Fcdn.example.com%2Fsmall.jpg')
-    expect(result).toContain('https%3A%2F%2Fcdn.example.com%2Flarge.jpg')
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
-  // A url-less feed srcset leaves bare width descriptors the parser reads as urls; proxying
+  // A url-less feed srcset leaves bare width descriptors the parser reads as urls. Proxying
   // one would sign and request a page that does not exist, so they are dropped first.
   it('should not proxy descriptor-only srcset candidates', async () => {
     const value = html`
       <img srcset="https://cdn.example.com/a.jpg 768w,  225w,  563w,  1152w">
     `
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <img
+        srcset="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fa.jpg 768w"
+        data-proxied-srcset="https://cdn.example.com/a.jpg 768w,  225w,  563w,  1152w"
+      >
+    `
 
-    expect(result).toContain('url=https%3A%2F%2Fcdn.example.com%2Fa.jpg')
-    expect(result).not.toContain('url=225w')
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should normalize camelCase srcSet to lowercase srcset', async () => {
     const value = '<img srcSet="https://cdn.example.com/small.jpg 300w">'
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <img
+        srcset="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fsmall.jpg 300w"
+        data-proxied-srcset="https://cdn.example.com/small.jpg 300w"
+      >
+    `
 
-    expect(result).toContain('srcset="')
-    expect(result).not.toContain('srcSet=')
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should leave srcset entries unchanged when assetProxyFn returns undefined for them', async () => {
@@ -84,14 +98,17 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
 
       return `https://proxy.example.com/?url=${encodeURIComponent(url)}`
     }
-    const value =
-      '<img srcset="https://cdn.example.com/keep.jpg 300w, https://cdn.example.com/proxy.jpg 600w">'
-    const result = await transform(value, passthrough)
+    const value = html`
+      <img srcset="https://cdn.example.com/keep.jpg 300w, https://cdn.example.com/proxy.jpg 600w">
+    `
+    const expected = html`
+      <img
+        srcset="https://cdn.example.com/keep.jpg 300w, https://proxy.example.com/?url=https%3A%2F%2Fcdn.example.com%2Fproxy.jpg 600w"
+        data-proxied-srcset="https://cdn.example.com/keep.jpg 300w, https://cdn.example.com/proxy.jpg 600w"
+      >
+    `
 
-    expect(result).toContain('https://cdn.example.com/keep.jpg 300w')
-    expect(result).toContain(
-      `https://proxy.example.com/?url=${encodeURIComponent('https://cdn.example.com/proxy.jpg')} 600w`,
-    )
+    expect(await transform(value, passthrough)).toEqualHtml(expected)
   })
 
   it('should rewrite video src as video and poster as image', async () => {
@@ -102,10 +119,17 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
       >
       </video>
     `
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <video
+        src="https://proxy.example.com/?type=video&url=https%3A%2F%2Fcdn.example.com%2Fclip.mp4"
+        poster="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fthumb.jpg"
+        data-proxied-src="https://cdn.example.com/clip.mp4"
+        data-proxied-poster="https://cdn.example.com/thumb.jpg"
+      >
+      </video>
+    `
 
-    expect(result).toContainHtml('src="https://proxy.example.com/?type=video&url=')
-    expect(result).toContainHtml('poster="https://proxy.example.com/?type=image&url=')
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should rewrite audio src as audio', async () => {
@@ -170,11 +194,20 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
         <img src="https://cdn.example.com/photo.jpg">
       </picture>
     `
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <picture>
+        <source
+          srcset="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.webp"
+          data-proxied-srcset="https://cdn.example.com/photo.webp"
+        >
+        <img
+          src="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"
+          data-proxied-src="https://cdn.example.com/photo.jpg"
+        >
+      </picture>
+    `
 
-    expect(result).toContain('type=image')
-    expect(result).toContain('https%3A%2F%2Fcdn.example.com%2Fphoto.webp')
-    expect(result).toContain('https%3A%2F%2Fcdn.example.com%2Fphoto.jpg')
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should rewrite data-embed-thumbnail as image', async () => {
@@ -227,10 +260,8 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
 
   it('should not rewrite data-cite-url (navigation, not asset)', async () => {
     const value = '<div data-cite-url="https://example.com/post"></div>'
-    const result = await transform(value, wrapProxy)
 
-    expect(result).toContain('data-cite-url="https://example.com/post"')
-    expect(result).not.toContain('proxy.example.com')
+    expect(await transform(value, wrapProxy)).toEqualHtml(value)
   })
 
   it('should leave attributes unchanged when assetProxyFn returns undefined', async () => {
@@ -250,11 +281,15 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
       <img src="data:image/png;base64,iVBORw0KGgo=">
       <img srcset="data:image/png;base64,abc 1x, https://cdn.example.com/photo.jpg 2x">
     `
-    const result = await transform(value, recorder)
+    const expected = html`
+      <img src="data:image/png;base64,iVBORw0KGgo=">
+      <img
+        srcset="data:image/png;base64,abc 1x, https://proxy.example.com/?url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg 2x"
+        data-proxied-srcset="data:image/png;base64,abc 1x, https://cdn.example.com/photo.jpg 2x"
+      >
+    `
 
-    expect(result).toContain('src="data:image/png;base64,iVBORw0KGgo="')
-    expect(result).toContain('data:image/png;base64,abc 1x')
-    expect(result).toContain('https%3A%2F%2Fcdn.example.com%2Fphoto.jpg')
+    expect(await transform(value, recorder)).toEqualHtml(expected)
     expect(seen).toEqual(['https://cdn.example.com/photo.jpg'])
   })
 
@@ -287,8 +322,11 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
   })
 
   it('should rewrite track src using parent media type', async () => {
-    const value =
-      '<video><track src="https://cdn.example.com/captions.vtt" kind="subtitles"></video>'
+    const value = html`
+      <video>
+        <track src="https://cdn.example.com/captions.vtt" kind="subtitles">
+      </video>
+    `
     const expected = html`
       <video>
         <track
@@ -303,8 +341,11 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
   })
 
   it('should rewrite track src inside audio as audio', async () => {
-    const value =
-      '<audio><track src="https://cdn.example.com/chapters.vtt" kind="chapters"></audio>'
+    const value = html`
+      <audio>
+        <track src="https://cdn.example.com/chapters.vtt" kind="chapters">
+      </audio>
+    `
     const expected = html`
       <audio>
         <track
@@ -365,38 +406,6 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     expect(seen).toEqual(['image', 'video', 'image', 'audio'])
   })
 
-  it('should preserve the original img src in data-proxied-src', async () => {
-    const value = '<img src="https://cdn.example.com/photo.jpg">'
-    const result = await transform(value, wrapProxy)
-
-    expect(result).toContain('data-proxied-src="https://cdn.example.com/photo.jpg"')
-  })
-
-  it('should preserve the original img srcset in data-proxied-srcset', async () => {
-    const value = html`
-      <img srcset="https://cdn.example.com/small.jpg 300w, https://cdn.example.com/large.jpg 600w">
-    `
-    const result = await transform(value, wrapProxy)
-
-    expect(result).toContain(
-      'data-proxied-srcset="https://cdn.example.com/small.jpg 300w, https://cdn.example.com/large.jpg 600w"',
-    )
-  })
-
-  it('should preserve original video src and poster in separate attributes', async () => {
-    const value = html`
-      <video
-        src="https://cdn.example.com/clip.mp4"
-        poster="https://cdn.example.com/thumb.jpg"
-      >
-      </video>
-    `
-    const result = await transform(value, wrapProxy)
-
-    expect(result).toContain('data-proxied-src="https://cdn.example.com/clip.mp4"')
-    expect(result).toContain('data-proxied-poster="https://cdn.example.com/thumb.jpg"')
-  })
-
   it('should preserve original SVG image href and xlink:href', async () => {
     const value = html`
       <svg>
@@ -404,32 +413,26 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
         <image xlink:href="https://cdn.example.com/legacy.jpg" />
       </svg>
     `
-    const result = await transform(value, wrapProxy)
+    const expected = html`
+      <svg>
+        <image
+          href="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"
+          data-proxied-href="https://cdn.example.com/photo.jpg"
+        />
+        <image
+          xlink:href="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Flegacy.jpg"
+          data-proxied-xlink-href="https://cdn.example.com/legacy.jpg"
+        />
+      </svg>
+    `
 
-    expect(result).toContain('data-proxied-href="https://cdn.example.com/photo.jpg"')
-    expect(result).toContain('data-proxied-xlink-href="https://cdn.example.com/legacy.jpg"')
-  })
-
-  it('should preserve placeholder metadata originals with the data- prefix dropped', async () => {
-    const value = '<div data-embed-thumbnail="https://cdn.example.com/thumb.jpg"></div>'
-    const result = await transform(value, wrapProxy)
-
-    expect(result).toContain('data-proxied-embed-thumbnail="https://cdn.example.com/thumb.jpg"')
-  })
-
-  it('should not add a preserved attribute when the URL is not proxied', async () => {
-    const skip: AssetProxyFn = () => undefined
-    const value = '<img src="https://cdn.example.com/photo.jpg">'
-    const result = await transform(value, skip)
-
-    expect(result).not.toContain('data-proxied-')
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
   it('should not add a preserved attribute for data: URIs', async () => {
     const value = '<img src="data:image/png;base64,iVBORw0KGgo=">'
-    const result = await transform(value, wrapProxy)
 
-    expect(result).not.toContain('data-proxied-')
+    expect(await transform(value, wrapProxy)).toEqualHtml(value)
   })
 
   it('should be idempotent given an idempotent assetProxyFn', async () => {
@@ -437,16 +440,22 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     const once = await transform(value, idempotentProxy)
     const twice = await transform(once, idempotentProxy)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   it('should not overwrite the preserved src on a second idempotent run', async () => {
-    const value =
-      '<img srcset="https://cdn.example.com/small.jpg 300w, https://cdn.example.com/large.jpg 600w">'
+    const value = html`
+      <img srcset="https://cdn.example.com/small.jpg 300w, https://cdn.example.com/large.jpg 600w">
+    `
+    const expected = html`
+      <img
+        srcset="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fsmall.jpg 300w, https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Flarge.jpg 600w"
+        data-proxied-srcset="https://cdn.example.com/small.jpg 300w, https://cdn.example.com/large.jpg 600w"
+      >
+    `
     const once = await transform(value, idempotentProxy)
     const twice = await transform(once, idempotentProxy)
 
-    expect(twice).toBe(once)
-    expect(twice).toContain('data-proxied-srcset="https://cdn.example.com/small.jpg 300w')
+    expect(twice).toEqualHtml(expected)
   })
 })

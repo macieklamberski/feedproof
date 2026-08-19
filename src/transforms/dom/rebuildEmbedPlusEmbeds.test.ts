@@ -19,13 +19,14 @@ describeForEachParser('rebuildEmbedPlusEmbeds', (parseHtml) => {
         <button class="epyt-facade-play"></button>
       </div>
     `
-    const result = await transform(value)
+    const expected = html`
+      <iframe
+        data-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+      ></iframe>
+    `
 
-    expect(result).toContain('src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
-    expect(result).toContain(
-      'data-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"',
-    )
-    expect(result).not.toContain('epyt-facade')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave the element untouched when there is no data-facadesrc', async () => {
@@ -34,18 +35,25 @@ describeForEachParser('rebuildEmbedPlusEmbeds', (parseHtml) => {
         <img class="epyt-facade-poster" src="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" />
       </div>
     `
-    const result = await transform(value)
+    const expected = html`
+      <div class="epyt-facade no-lazyload">
+        <img class="epyt-facade-poster" src="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg">
+      </div>
+    `
 
-    expect(result).toContain('epyt-facade')
-    expect(result).not.toContain('<iframe')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave the element untouched when data-facadesrc is empty', async () => {
-    const value = html`<div class="epyt-facade no-lazyload" data-facadesrc=""></div>`
-    const result = await transform(value)
+    const value = html`
+      <div
+        class="epyt-facade
+        no-lazyload"
+        data-facadesrc=""
+      ></div>
+    `
 
-    expect(result).toContain('epyt-facade')
-    expect(result).not.toContain('<iframe')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should produce a youtube placeholder end to end', async () => {
@@ -63,17 +71,22 @@ describeForEachParser('rebuildEmbedPlusEmbeds', (parseHtml) => {
         </div>
       </div>
     `
+    // The facade's maxres poster wins over the resolver's hqdefault default.
+    const expected = html`
+      <div
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+      ></div>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com',
     })
 
-    expect(result).toContain('data-embed-provider="youtube"')
-    // The facade's maxres poster wins over the resolver's hqdefault default.
-    expect(result).toContain(
-      'data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"',
-    )
-    expect(result).not.toContain('epyt-facade')
+    expect(result).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
@@ -89,6 +102,6 @@ describeForEachParser('rebuildEmbedPlusEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

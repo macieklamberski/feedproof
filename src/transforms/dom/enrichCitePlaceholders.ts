@@ -1,5 +1,5 @@
-import type { DomTransform } from '../../types.js'
-import { updateCitePlaceholder } from '../../utils/widgets.js'
+import type { CiteRef, DomTransform } from '../../types.js'
+import { parseOrKeepDate, updateCitePlaceholder } from '../../utils/widgets.js'
 
 export const enrichCitePlaceholders: DomTransform = (context) => {
   const { enrichCiteFn, parseDateFn } = context
@@ -16,7 +16,7 @@ export const enrichCitePlaceholders: DomTransform = (context) => {
       return
     }
 
-    const cites: Array<{ provider: string; url: string }> = new Array(count)
+    const cites: Array<CiteRef> = new Array(count)
     for (let i = 0; i < count; i++) {
       const element = placeholders[i]
 
@@ -26,20 +26,21 @@ export const enrichCitePlaceholders: DomTransform = (context) => {
       }
     }
 
+    // Positional: the answer for placeholders[i] is enriched[i], undefined where the enricher
+    // found nothing.
     const enriched = await enrichCiteFn(cites)
 
     for (let i = 0; i < count; i++) {
-      const data = enriched.get(cites[i].url)
+      const data = enriched[i]
 
       if (!data) {
         continue
       }
 
-      // Enrichment payloads carry dates in whatever form the platform's API serves, so the
-      // same parse-else-keep rule as convertCiteCards applies before the attribute is written.
-      const date = data.date ? (parseDateFn?.(data.date) ?? data.date) : undefined
-
-      updateCitePlaceholder(placeholders[i] as HTMLElement, date ? { ...data, date } : data)
+      updateCitePlaceholder(placeholders[i], {
+        ...data,
+        date: parseOrKeepDate(data.date, parseDateFn),
+      })
     }
   }
 }

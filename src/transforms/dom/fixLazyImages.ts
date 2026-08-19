@@ -16,7 +16,7 @@ export const fixLazyImages: DomTransform = (context) => {
 
   return (document) => {
     // <source> is included so lazy srcset on <picture><source> is promoted before
-    // flattenPictureElements reads it — otherwise the modern AVIF/WebP source is dropped.
+    // flattenPictureElements reads it: otherwise the modern AVIF/WebP source is dropped.
     const elements = document.querySelectorAll('img, source')
 
     for (const element of elements) {
@@ -61,7 +61,7 @@ export const fixLazyImages: DomTransform = (context) => {
       }
     }
 
-    // Extract images from noscript wrappers when sibling is a lazy placeholder.
+    // Extract the image from a noscript wrapper when an <img> sits directly before it.
     const noscripts = document.querySelectorAll('noscript')
 
     for (const noscript of noscripts) {

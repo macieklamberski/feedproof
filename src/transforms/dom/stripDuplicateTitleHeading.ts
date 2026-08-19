@@ -53,8 +53,7 @@ export const stripDuplicateTitleHeading: DomTransform = (context) => {
       return
     }
 
-    // Nested heading: `<h2><h1>x</h1></h2>` — linkedom doesn't auto-close, so
-    // removing the outer drops the inner. Skip.
+    // A nested heading (`<h2><h1>x</h1></h2>`) would go with the outer one, so the outer stays.
     if (heading.querySelector(headingSelector)) {
       return
     }

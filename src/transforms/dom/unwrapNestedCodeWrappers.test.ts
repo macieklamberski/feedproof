@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { unwrapNestedCodeWrappers } from './unwrapNestedCodeWrappers.js'
 
 describeForEachParser('unwrapNestedCodeWrappers', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [unwrapNestedCodeWrappers(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [unwrapNestedCodeWrappers(context)])
   }
 
   it('should collapse a code directly nested in a code', async () => {
@@ -53,6 +53,6 @@ describeForEachParser('unwrapNestedCodeWrappers', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

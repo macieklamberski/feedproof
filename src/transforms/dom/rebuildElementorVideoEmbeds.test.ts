@@ -20,10 +20,15 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
         </div>
       </div>
     `
-    const result = await transform(value)
+    const expected = html`
+      <div class="elementor-widget elementor-widget-video">
+        <div class="elementor-widget-container">
+          <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+        </div>
+      </div>
+    `
 
-    expect(result).toContain('<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ">')
-    expect(result).not.toContain('class="elementor-video"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild a vimeo iframe from the widget settings', async () => {
@@ -37,10 +42,15 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
         </div>
       </div>
     `
-    const result = await transform(value)
+    const expected = html`
+      <div class="elementor-widget elementor-widget-video">
+        <div class="elementor-widget-container">
+          <iframe src="https://player.vimeo.com/video/76979871"></iframe>
+        </div>
+      </div>
+    `
 
-    expect(result).toContain('<iframe src="https://player.vimeo.com/video/76979871">')
-    expect(result).not.toContain('class="elementor-video"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild a dailymotion iframe from the widget settings', async () => {
@@ -54,10 +64,15 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
         </div>
       </div>
     `
-    const result = await transform(value)
+    const expected = html`
+      <div class="elementor-widget elementor-widget-video">
+        <div class="elementor-widget-container">
+          <iframe src="https://www.dailymotion.com/embed/video/x7tgad0"></iframe>
+        </div>
+      </div>
+    `
 
-    expect(result).toContain('<iframe src="https://www.dailymotion.com/embed/video/x7tgad0">')
-    expect(result).not.toContain('class="elementor-video"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild a videopress iframe from the widget settings', async () => {
@@ -71,10 +86,15 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
         </div>
       </div>
     `
-    const result = await transform(value)
+    const expected = html`
+      <div class="elementor-widget elementor-widget-video">
+        <div class="elementor-widget-container">
+          <iframe src="https://videopress.com/v/kUJmAcSf"></iframe>
+        </div>
+      </div>
+    `
 
-    expect(result).toContain('<iframe src="https://videopress.com/v/kUJmAcSf">')
-    expect(result).not.toContain('class="elementor-video"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a widget with malformed data-settings alone', async () => {
@@ -85,10 +105,15 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
         </div>
       </div>
     `
-    const result = await transform(value)
+    const expected = html`
+      <div class="elementor-widget elementor-widget-video" data-settings="{not valid json">
+        <div class="elementor-widget-container">
+          <div class="elementor-video"></div>
+        </div>
+      </div>
+    `
 
-    expect(result).toContain('class="elementor-video"')
-    expect(result).not.toContain('<iframe')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a widget with empty data-settings alone', async () => {
@@ -99,10 +124,8 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
         </div>
       </div>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('class="elementor-video"')
-    expect(result).not.toContain('<iframe')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should skip a widget whose video type is unknown', async () => {
@@ -113,10 +136,18 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
         </div>
       </div>
     `
-    const result = await transform(value)
+    const expected = html`
+      <div
+        class="elementor-widget elementor-widget-video"
+        data-settings="{&quot;video_type&quot;:&quot;facebook&quot;}"
+      >
+        <div class="elementor-widget-container">
+          <div class="elementor-video"></div>
+        </div>
+      </div>
+    `
 
-    expect(result).toContain('class="elementor-video"')
-    expect(result).not.toContain('<iframe')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should produce a youtube placeholder end to end', async () => {
@@ -130,13 +161,21 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
         </div>
       </div>
     `
+    const expected = html`
+      <div
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+      ></div>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com',
     })
 
-    expect(result).toContain('data-embed-provider="youtube"')
-    expect(result).toContain('data-embed-id="dQw4w9WgXcQ"')
+    expect(result).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
@@ -153,6 +192,6 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })
