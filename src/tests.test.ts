@@ -123,8 +123,8 @@ describe('toEqualHtml', () => {
       expect(throwing).toThrow('malformed')
     })
 
-    it('should fail on an unescaped angle bracket in text', () => {
-      const throwing = () => expect('<p>1 < 2</p>').toEqualHtml('<p>1 &lt; 2</p>')
+    it('should fail on a stray closing tag', () => {
+      const throwing = () => expect('<p>a</p></div>').toEqualHtml('<p>a</p>')
 
       expect(throwing).toThrow('malformed')
     })
