@@ -186,30 +186,30 @@ const normalizeHtml = (html: string): string => {
   return document.body.innerHTML
 }
 
-// Unwrapped, because `parseWithLinkedom` lowercases attribute names and so cannot reproduce its
-// own output. Either one matching is enough: they disagree on void elements and entity escaping,
-// and the string came from one of them.
-const probeParsers: Array<ParseHtml> = [
-  (html) => parseHTML(`<!doctype html><html><head></head><body>${html}</body></html>`).document,
-  parseWithJsdom,
-]
-
-// A parser reproduces well-formed HTML exactly and repairs anything else. `normalizeHtml` parses
-// both sides, so without this the same repair lands on both and malformed output still passes.
-const isWellFormed = (value: string): boolean => {
-  return probeParsers.some((parse) => parse(value).body.innerHTML === value)
-}
-
 const toEqualHtml = (received: unknown, expected: string) => {
-  if (!isWellFormed(received as string)) {
+  const value = received as string
+
+  // A parser reproduces well-formed HTML exactly and repairs anything else, and `normalizeHtml`
+  // parses both sides, so without this the same repair lands on both and malformed output still
+  // passes. Unwrapped, because `parseWithLinkedom` lowercases attribute names and so cannot
+  // reproduce its own output; either one matching is enough, since they disagree on void elements
+  // and entity escaping and the string came from one of them.
+  const parseUntouched = (html: string) => {
+    return parseHTML(`<!doctype html><html><head></head><body>${html}</body></html>`).document
+  }
+  const isWellFormed = [parseUntouched, parseWithJsdom].some((parse) => {
+    return parse(value).body.innerHTML === value
+  })
+
+  if (!isWellFormed) {
     return {
       pass: false,
       message: () =>
-        `expected HTML a parser would not repair\n  received: ${received}\n  repaired: ${normalizeHtml(received as string)}`,
+        `expected HTML a parser would not repair\n  received: ${value}\n  repaired: ${normalizeHtml(value)}`,
     }
   }
 
-  const normalizedReceived = normalizeHtml(received as string)
+  const normalizedReceived = normalizeHtml(value)
   const normalizedExpected = normalizeHtml(expected)
   const pass = normalizedReceived === normalizedExpected
 
