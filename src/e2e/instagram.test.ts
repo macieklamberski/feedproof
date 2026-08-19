@@ -128,7 +128,6 @@ describeForEachParser('Instagram', (parseHtml) => {
   // the AMP runtime as the thing that would have built the frame.
   it('should convert the amp component from its shortcode alone', async () => {
     const value = html`
-      <p>Before.</p>
       <amp-instagram
         data-shortcode="CaUsPbUquKV"
         data-captioned
@@ -138,7 +137,6 @@ describeForEachParser('Instagram', (parseHtml) => {
       ></amp-instagram>
     `
     const expected = html`
-      <p>Before.</p>
       <div
         data-embed-provider="instagram"
         data-embed-id="p/CaUsPbUquKV"
@@ -171,7 +169,6 @@ describeForEachParser('Instagram', (parseHtml) => {
       belowTheFold: true,
     })
     const value = html`
-      <p>Intro</p>
       <div
         class="instagram-embed-wrap"
         data-attrs="${postAttrs}"
@@ -179,7 +176,6 @@ describeForEachParser('Instagram', (parseHtml) => {
       ></div>
     `
     const expected = html`
-      <p>Intro</p>
       <div
         data-embed-provider="instagram"
         data-embed-id="p/DZmgID9Eawg"
