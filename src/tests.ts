@@ -1,5 +1,6 @@
 import { describe, expect } from 'bun:test'
 import { JSDOM } from 'jsdom'
+import { parseHTML } from 'linkedom'
 import type { MaybePromise } from 'trousse'
 import {
   defaultAvatarImageHosts,
@@ -185,105 +186,33 @@ const normalizeHtml = (html: string): string => {
   return document.body.innerHTML
 }
 
-// Elements that never carry a closing tag, so a missing one is correct rather than a repair.
-const voidTags = new Set([
-  'area',
-  'base',
-  'br',
-  'col',
-  'embed',
-  'hr',
-  'img',
-  'input',
-  'link',
-  'meta',
-  'param',
-  'source',
-  'track',
-  'wbr',
-])
+// Asking whether a parser would have to repair a string is a question about HTML, not about this
+// project, so it goes to the parsers unwrapped: `parseWithLinkedom` lowercases attribute names on
+// the way in (see the parser module), which means it does not reproduce its own output and cannot
+// answer it.
+const probeParsers: Array<ParseHtml> = [
+  (html) => parseHTML(`<!doctype html><html><head></head><body>${html}</body></html>`).document,
+  parseWithJsdom,
+]
 
-const tagRegex = /<(\/?)([a-zA-Z][\w:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g
-// Consumes the value along with the name, so words inside a quoted value are never read as names.
-const attributeRegex = /([a-zA-Z_:][\w:.-]*)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*))?/g
-
-// The open and close tags a serialized string states, in order, with self-closing forms expanded
-// so `<image/>` and `<image></image>` read alike. Comparing this against the same sequence taken
-// after a parse is what makes a repair visible: closing an unclosed tag or dropping a stray one
-// changes the sequence, while none of the parser dialect differences do.
-const getTagSequence = (value: string): Array<string> => {
-  const tokens: Array<string> = []
-
-  for (const match of value.matchAll(tagRegex)) {
-    const [, closing, name, , selfClosing] = match
-    const tag = name.toLowerCase()
-
-    if (closing) {
-      tokens.push(`/${tag}`)
-      continue
-    }
-
-    tokens.push(tag)
-
-    if (selfClosing && !voidTags.has(tag)) {
-      tokens.push(`/${tag}`)
-    }
-  }
-
-  return tokens
-}
-
-// Attribute names stated twice on one tag. A parser keeps the first and discards the rest, so a
-// duplicate is gone by the time the string has been through a DOM.
-const getDuplicateAttributes = (value: string): Array<string> => {
-  const duplicates: Array<string> = []
-
-  for (const match of value.matchAll(tagRegex)) {
-    if (match[1]) {
-      continue
-    }
-
-    const seen = new Set<string>()
-
-    for (const [, name] of match[3].matchAll(attributeRegex)) {
-      const attribute = name.toLowerCase()
-
-      if (seen.has(attribute)) {
-        duplicates.push(`${match[2].toLowerCase()}@${attribute}`)
-      }
-
-      seen.add(attribute)
-    }
-  }
-
-  return duplicates
-}
-
-// What a parse would silently repair in this string, if anything. `normalizeHtml` runs both sides
-// through a parser, so without this check every repair happens to both and the assertion passes on
-// malformed output: an unclosed tag, a stray closing tag and a duplicate attribute all survive.
-const getMalformation = (value: string): string | undefined => {
-  const duplicates = getDuplicateAttributes(value)
-
-  if (duplicates.length) {
-    return `duplicate attribute: ${duplicates.join(', ')}`
-  }
-
-  const stated = getTagSequence(value).join(' ')
-  const parsed = getTagSequence(normalizeHtml(value)).join(' ')
-
-  if (stated !== parsed) {
-    return `tags repaired by the parser\n    stated: ${stated}\n    parsed: ${parsed}`
-  }
+// A well-formed string survives a parser unchanged: parse it, serialize it, and the bytes come
+// back identical. A malformed one does not, because the parser closes what was left open, discards
+// what it cannot place, and escapes what should have been escaped. `normalizeHtml` runs both sides
+// through a parser, so without this check every one of those repairs happens to both and the
+// assertion passes on malformed output.
+//
+// Either parser reproducing it is enough. The received string is in the dialect of whichever one
+// produced it, and the two disagree on void elements and entity escaping.
+const isWellFormed = (value: string): boolean => {
+  return probeParsers.some((parse) => parse(value).body.innerHTML === value)
 }
 
 const toEqualHtml = (received: unknown, expected: string) => {
-  const malformation = getMalformation(received as string)
-
-  if (malformation) {
+  if (!isWellFormed(received as string)) {
     return {
       pass: false,
-      message: () => `received HTML is malformed\n  ${malformation}\n  received: ${received}`,
+      message: () =>
+        `expected HTML a parser would not have to repair\n  received: ${received}\n  repaired: ${normalizeHtml(received as string)}`,
     }
   }
 
