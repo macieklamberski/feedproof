@@ -284,10 +284,18 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
         data-provider="instagram"
         data-orig-width="540"
       >
-        <div data-embed-provider="instagram" data-embed-id="reel/DGPdABWz84n"></div>
+        <div
+          data-embed-provider="instagram"
+          data-embed-id="reel/DGPdABWz84n"
+        ></div>
       </figure>
     `
-    const expected = '<div data-embed-provider="instagram" data-embed-id="reel/DGPdABWz84n"></div>'
+    const expected = html`
+      <div
+        data-embed-provider="instagram"
+        data-embed-id="reel/DGPdABWz84n"
+      ></div>
+    `
 
     expect(await transform(value)).toEqualHtml(expected)
   })
@@ -298,11 +306,19 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
     const value = html`
       <figure class="wp-block-embed is-type-rich">
         <div class="wp-block-embed__wrapper">
-          <div data-embed-provider="twitter" data-embed-id="123"></div>
+          <div
+            data-embed-provider="twitter"
+            data-embed-id="123"
+          ></div>
         </div>
       </figure>
     `
-    const expected = '<div data-embed-provider="twitter" data-embed-id="123"></div>'
+    const expected = html`
+      <div
+        data-embed-provider="twitter"
+        data-embed-id="123"
+      ></div>
+    `
 
     expect(await transform(value)).toEqualHtml(expected)
   })
@@ -310,13 +326,19 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
   it('should unwrap a figure holding a placeholder that wraps its own link', async () => {
     const value = html`
       <figure>
-        <div data-embed-provider="youtube" data-embed-src="https://www.youtube.com/embed/abc">
+        <div
+          data-embed-provider="youtube"
+          data-embed-src="https://www.youtube.com/embed/abc"
+        >
           <a href="https://www.youtube.com/watch?v=abc">Watch</a>
         </div>
       </figure>
     `
     const expected = html`
-      <div data-embed-provider="youtube" data-embed-src="https://www.youtube.com/embed/abc">
+      <div
+        data-embed-provider="youtube"
+        data-embed-src="https://www.youtube.com/embed/abc"
+      >
         <a href="https://www.youtube.com/watch?v=abc">Watch</a>
       </div>
     `
@@ -329,7 +351,10 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
   it('should keep a figure whose placeholder sits beside a caption', async () => {
     const value = html`
       <figure>
-        <div data-embed-provider="youtube" data-embed-id="abc"></div>
+        <div
+          data-embed-provider="youtube"
+          data-embed-id="abc"
+        ></div>
         <figcaption>What the author said about it</figcaption>
       </figure>
     `
@@ -340,7 +365,10 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
   it('should keep a figure holding a placeholder beside other content', async () => {
     const value = html`
       <figure>
-        <div data-embed-provider="youtube" data-embed-id="abc"></div>
+        <div
+          data-embed-provider="youtube"
+          data-embed-id="abc"
+        ></div>
         <p>A note the author wrote under it</p>
       </figure>
     `
@@ -352,7 +380,10 @@ describeForEachParser('unwrapWrappers', (parseHtml) => {
     const value = html`
       <figure>
         <img src="https://example.com/photo.jpg">
-        <div data-embed-provider="youtube" data-embed-id="abc"></div>
+        <div
+          data-embed-provider="youtube"
+          data-embed-id="abc"
+        ></div>
       </figure>
     `
 
