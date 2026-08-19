@@ -73,7 +73,7 @@ export const archiveIframeEmbedResolver = createUrlEmbedResolver(archiveHosts, a
 // A config can point the archive's player at a file somebody else hosts, so the identifier is
 // read from the download host rather than from whichever url the config happens to carry.
 const flashPlayerPathRegex = /^\/+flow\//
-const downloadIdentifierRegex = /archive\.org\/download\/([^/'"?&]+)\//
+const downloadIdentifierRegex = /\/\/(?:[\w-]+\.)*archive\.org\/download\/([^/'"?&]+)\//
 
 export const archiveFlashResolveEmbed = (
   src: string,
