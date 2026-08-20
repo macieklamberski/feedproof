@@ -92,6 +92,8 @@ export const youtubeEmbedParams = ['start', 'end', 'list', 'index', 'clip', 'cli
 // it only keeps a stray value out of the rebuilt url and the enrichment key.
 const safePlaylistChannelIdRegex = /^[a-zA-Z0-9_-]+$/
 
+const playerRatio = '16/9'
+
 export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url)
   const segments = parsed ? getPathSegments(parsed) : []
@@ -110,6 +112,7 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
           id: list,
           src: composeEmbedUrl('videoseries', { list }),
           url: `https://www.youtube.com/playlist?list=${list}`,
+          ratio: playerRatio,
         }
       }
 
@@ -125,6 +128,7 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
           id: channel,
           src: composeEmbedUrl('live_stream', { channel }),
           url: `https://www.youtube.com/channel/${channel}`,
+          ratio: playerRatio,
         }
       }
 
@@ -144,10 +148,17 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
     src: `${composeEmbedUrl(videoId)}${pickUrlParams(url, youtubeEmbedParams)}`,
     url: `https://www.youtube.com/watch?v=${videoId}`,
     thumbnail: composeThumbnailUrl(videoId),
+    ratio: playerRatio,
   }
 }
 
-export const youtubeIframeEmbedResolver = createUrlEmbedResolver(youtubeHosts, youtubeResolveEmbed)
+export const youtubeIframeEmbedResolver = createUrlEmbedResolver(
+  youtubeHosts,
+  youtubeResolveEmbed,
+  {
+    declaredSize: false,
+  },
+)
 
 // AMP's own YouTube element. It renders nothing without the AMP runtime, and the id it names in
 // `data-videoid` is the entire embed. AMP hands player parameters to the iframe as
@@ -181,6 +192,8 @@ export const youtubeAmpEmbedResolver = createMarkupEmbedResolver(
       src: composeEmbedUrl(videoId, params),
       url: `https://www.youtube.com/watch?v=${videoId}`,
       thumbnail: composeThumbnailUrl(videoId),
+      ratio: playerRatio,
     }
   },
+  { declaredSize: false },
 )

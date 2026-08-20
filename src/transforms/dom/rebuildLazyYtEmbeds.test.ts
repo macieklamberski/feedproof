@@ -61,9 +61,8 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
     `
     const expected = html`
       <div
-        data-embed-height="270"
-        data-embed-width="480"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-id="dQw4w9WgXcQ"
         data-embed-provider="youtube"
@@ -160,6 +159,7 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
       <p>Before</p>
       <div
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-id="dQw4w9WgXcQ"
         data-embed-provider="youtube"

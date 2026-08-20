@@ -70,6 +70,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-id="dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-enclosure=""
       ></div>
       <p>Episode notes</p>
@@ -122,6 +123,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-id="dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-enclosure=""
       ></div>
       <p>Notes</p>
@@ -149,6 +151,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-id="dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://cdn.example.com/feed-thumb.jpg"
+        data-embed-ratio="16/9"
         data-enclosure=""
       ></div>
       <p>Notes</p>
@@ -169,6 +172,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-id="dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-enclosure=""
       ></div>
       <p>Notes</p>
@@ -192,6 +196,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-id="dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-embed-duration="212"
         data-enclosure=""
       ></div>
@@ -694,6 +699,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-id="dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-enclosure=""
       ></div>
       <p>Content</p>
@@ -714,6 +720,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-enclosure=""
       ></div>
       <p>Content</p>
