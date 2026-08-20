@@ -26,7 +26,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Episode notes</p>'
     const context = withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }])
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
+      <video
+        src="https://example.com/clip.mp4"
+        controls
+        data-enclosure=""
+      ></video>
       <p>Episode notes</p>
     `
 
@@ -49,7 +53,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Episode notes</p>'
     const context = withEnclosures([{ url: 'https://example.com/episode.mp3', type: 'audio/mpeg' }])
     const expected = html`
-      <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
+      <audio
+        src="https://example.com/episode.mp3"
+        controls
+        data-enclosure=""
+      ></audio>
       <p>Episode notes</p>
     `
 
@@ -246,7 +254,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
       ])
       const expected = html`
-        <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
+        <audio
+          src="https://example.com/episode.mp3"
+          controls
+          data-enclosure=""
+        ></audio>
         <img src="https://example.com/cover.jpg" data-enclosure="">
         <p>Content</p>
       `
@@ -316,8 +328,16 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
       ])
       const expected = html`
-        <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
-        <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
+        <audio
+          src="https://example.com/episode.mp3"
+          controls
+          data-enclosure=""
+        ></audio>
+        <video
+          src="https://example.com/clip.mp4"
+          controls
+          data-enclosure=""
+        ></video>
         <p>Content</p>
         <img src="https://example.com/inline.jpg">
       `
@@ -559,7 +579,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         { url: 'https://example.com/ep.mp3', type: 'audio/mpeg' },
       ])
       const expected = html`
-        <audio src="https://example.com/ep.mp3" controls preload="none" data-enclosure=""></audio>
+        <audio
+          src="https://example.com/ep.mp3"
+          controls
+          data-enclosure=""
+        ></audio>
         <p>Content</p>
       `
 
@@ -594,7 +618,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         { url: 'https://example.com/ep.mp3', type: 'audio/mpeg' },
       ])
       const expected = html`
-        <audio src="https://example.com/ep.mp3" controls preload="none" data-enclosure=""></audio>
+        <audio
+          src="https://example.com/ep.mp3"
+          controls
+          data-enclosure=""
+        ></audio>
         <p>Content</p>
       `
 
@@ -636,8 +664,16 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       { url: 'https://example.com/clip.mp4', type: 'video/mp4' },
     ])
     const expected = html`
-      <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
-      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
+      <audio
+        src="https://example.com/episode.mp3"
+        controls
+        data-enclosure=""
+      ></audio>
+      <video
+        src="https://example.com/clip.mp4"
+        controls
+        data-enclosure=""
+      ></video>
       <p>Content</p>
     `
 
@@ -648,7 +684,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/episode.mp3', medium: 'audio' }])
     const expected = html`
-      <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
+      <audio
+        src="https://example.com/episode.mp3"
+        controls
+        data-enclosure=""
+      ></audio>
       <p>Content</p>
     `
 
@@ -659,7 +699,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/clip.mp4', medium: 'video' }])
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
+      <video
+        src="https://example.com/clip.mp4"
+        controls
+        data-enclosure=""
+      ></video>
       <p>Content</p>
     `
 
@@ -756,7 +800,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       baseUrl: 'https://example.com',
     }
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
+      <video
+        src="https://example.com/clip.mp4"
+        controls
+        data-enclosure=""
+      ></video>
       <p>Content</p>
     `
 
@@ -779,11 +827,9 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       <video
         src="https://example.com/clip.mp4"
         controls
-        preload="none"
         poster="https://example.com/thumb.jpg"
         data-enclosure=""
-      >
-      </video>
+      ></video>
       <p>Content</p>
     `
 
@@ -806,12 +852,10 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       <video
         src="https://example.com/clip.mp4"
         controls
-        preload="none"
         width="1280"
         height="720"
         data-enclosure=""
-      >
-      </video>
+      ></video>
       <p>Content</p>
     `
 
@@ -834,11 +878,9 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       <video
         src="https://example.com/clip.mp4"
         controls
-        preload="none"
         poster="https://example.com/poster-large.jpg"
         data-enclosure=""
-      >
-      </video>
+      ></video>
       <p>Content</p>
     `
 
@@ -851,7 +893,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       { url: 'https://example.com/clip.mp4', type: 'video/mp4', thumbnails: [] },
     ])
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
+      <video
+        src="https://example.com/clip.mp4"
+        controls
+        data-enclosure=""
+      ></video>
       <p>Content</p>
     `
 
@@ -871,11 +917,9 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       <video
         src="https://example.com/clip.mp4"
         controls
-        preload="none"
         poster="about:blank"
         data-enclosure=""
-      >
-      </video>
+      ></video>
       <p>Content</p>
     `
     const result = await applyDomTransforms(parseHtml(value), [
@@ -898,7 +942,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       },
     ])
     const expected = html`
-      <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
+      <audio
+        src="https://example.com/episode.mp3"
+        controls
+        data-enclosure=""
+      ></audio>
       <p>Content</p>
     `
 
@@ -909,7 +957,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }])
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
+      <video
+        src="https://example.com/clip.mp4"
+        controls
+        data-enclosure=""
+      ></video>
       <p>Content</p>
     `
 
@@ -931,7 +983,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       { url: 'https://example.com/episode.mp3', type: 'audio/mpeg' },
     ])
     const expected = html`
-      <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
+      <audio
+        src="https://example.com/episode.mp3"
+        controls
+        data-enclosure=""
+      ></audio>
       <p>Episode notes</p>
     `
 

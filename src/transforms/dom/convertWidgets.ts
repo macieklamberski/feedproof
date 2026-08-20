@@ -8,6 +8,7 @@ import {
 } from '../../utils/urls.js'
 import {
   createEmbedPlaceholder,
+  createMediaElement,
   embedCarrierSelector,
   getEmbedSize,
   isMediaResult,
@@ -28,27 +29,6 @@ const getMediaTag = (url: string): MediaResolverResult['tag'] | undefined => {
   if (audioFileRegex.test(url)) {
     return 'audio'
   }
-}
-
-const createMediaElement = (document: Document, result: MediaResolverResult): HTMLElement => {
-  const media = document.createElement(result.tag)
-  media.setAttribute('src', result.src)
-  media.setAttribute('controls', '')
-
-  // <audio> has no poster, so it is written only where it renders.
-  if (result.poster && result.tag === 'video') {
-    media.setAttribute('poster', result.poster)
-  }
-
-  if (result.width) {
-    media.setAttribute('width', String(result.width))
-  }
-
-  if (result.height) {
-    media.setAttribute('height', String(result.height))
-  }
-
-  return media
 }
 
 // A container that parks its media URL in an attribute and builds the player with JS, so a reader

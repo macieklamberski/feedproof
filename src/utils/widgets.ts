@@ -132,6 +132,21 @@ export const getEmbedSize = (element: Element, wrapperDepth?: number): EmbedSize
   return ratio ? { ratio } : {}
 }
 
+// The write side of getEmbedSize: a size onto an element as real HTML attributes, each half only
+// where it exists, since a fluid-width player states a height and nothing else.
+export const setDimensions = (
+  element: Element,
+  size: Pick<EmbedResolverResult, 'width' | 'height'>,
+): void => {
+  if (size.width) {
+    element.setAttribute('width', String(size.width))
+  }
+
+  if (size.height) {
+    element.setAttribute('height', String(size.height))
+  }
+}
+
 // Every provider matches the same carriers and differs only in which hosts it claims and
 // how it reads an id out of the URL, so the match itself lives here. Keying on the URL
 // rather than on markup is what separates these resolvers from the ones that recognise a
@@ -165,6 +180,28 @@ export const createUrlEmbedResolver = (
 // carry the element tag to mint.
 export const isMediaResult = (result: WidgetResolverResult): result is MediaResolverResult => {
   return 'tag' in result
+}
+
+// The one native player every pass mints, whether the media came out of the markup or out of an
+// enclosure. The poster and the dimensions are written only on video, which is the only tag they
+// are valid on. Urls arrive resolved: a caller knows what its own source is relative to.
+export const createMediaElement = (
+  document: Document,
+  result: MediaResolverResult,
+): HTMLElement => {
+  const media = document.createElement(result.tag)
+  media.setAttribute('src', result.src)
+  media.setAttribute('controls', '')
+
+  if (result.tag === 'video') {
+    if (result.poster) {
+      media.setAttribute('poster', result.poster)
+    }
+
+    setDimensions(media, result)
+  }
+
+  return media
 }
 
 // Writes a field record as `data-{type}-*` attributes, replacing any the element already carries.
