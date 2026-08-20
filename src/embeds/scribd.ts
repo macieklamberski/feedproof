@@ -54,7 +54,7 @@ export const scribdResolveEmbed = (
   }
 
   const title = attr(element, 'title')
-  const result = { ...composeEmbed(document), ...(title && { title }) }
+  const result = { ...composeEmbed(document), title }
   const ratio = parseRatio(attr(element, aspectRatioAttribute) ?? '')
 
   // The ratio describes the document and the declared height is a constant, so where both are
