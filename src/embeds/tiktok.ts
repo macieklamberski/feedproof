@@ -1,7 +1,7 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, keepIfMatches, parsePixelSize, text, textNode } from '../utils/dom.js'
-import { styleLength } from '../utils/style.js'
+import * as styles from '../utils/styles.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const tiktokHost = 'tiktok.com'
@@ -61,7 +61,7 @@ const hydratedSize = (element: Element): { width?: number; height?: number } => 
 
     return Boolean(parsed && isTiktokUrl(parsed) && playerPathRegex.test(parsed.pathname))
   })
-  const height = parsePixelSize(styleLength(frame, 'height'))
+  const height = parsePixelSize(styles.pixels(frame, 'height'))
 
   if (!height) {
     return {}
@@ -69,7 +69,7 @@ const hydratedSize = (element: Element): { width?: number; height?: number } => 
 
   // The iframe is `width: 100%` inside the blockquote's own `max-width`, so that box is the
   // width the height was measured against.
-  const width = parsePixelSize(styleLength(element, 'max-width'))
+  const width = parsePixelSize(styles.pixels(element, 'max-width'))
 
   return width ? { width, height } : {}
 }
