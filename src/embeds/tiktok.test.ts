@@ -562,7 +562,7 @@ describeForEachParser('tiktokIframeEmbedResolver', (parseHtml) => {
 
   describe('happy paths', () => {
     // The declared 560x400 is the snippet's landscape box on a vertical player, wrong on both
-    // axes, so the result carries no size at all.
+    // axes, so the player's own height stands in its place.
     it('should resolve the pasted v2 player and decline its landscape size', async () => {
       const value = html`
         <iframe
@@ -575,6 +575,7 @@ describeForEachParser('tiktokIframeEmbedResolver', (parseHtml) => {
         provider: 'tiktok',
         id: '7520573541146692886',
         src: 'https://www.tiktok.com/embed/v2/7520573541146692886',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -586,6 +587,7 @@ describeForEachParser('tiktokIframeEmbedResolver', (parseHtml) => {
         provider: 'tiktok',
         id: '7520573541146692886',
         src: 'https://www.tiktok.com/embed/7520573541146692886',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -601,6 +603,7 @@ describeForEachParser('tiktokIframeEmbedResolver', (parseHtml) => {
         provider: 'tiktok',
         id: '7520573541146692886',
         src: 'https://www.tiktok.com/player/v1/7520573541146692886?music_info=1&description=1',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -620,6 +623,7 @@ describeForEachParser('tiktokIframeEmbedResolver', (parseHtml) => {
         id: '@user/video/7520573541146692886',
         src: 'https://www.tiktok.com/embed/v2/7520573541146692886',
         url: 'https://www.tiktok.com/@user/video/7520573541146692886',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -637,6 +641,7 @@ describeForEachParser('tiktokIframeEmbedResolver', (parseHtml) => {
         id: '7520573541146692886',
         src: 'https://www.tiktok.com/embed/v2/7520573541146692886',
         url: 'https://www.tiktok.com/video/7520573541146692886',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -682,6 +687,38 @@ describeForEachParser('tiktokIframeEmbedResolver', (parseHtml) => {
       const value = '<iframe src="https://www.tiktok.com/embed/v2/latest"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  // An enclosure's size reaches the resolver the same way a carrier's does, so refusing the
+  // carrier refuses the feed as well. Before the player stated a height, that left a TikTok
+  // enclosure with no size at all.
+  describe('an enclosure the feed sizes itself', () => {
+    it('should state the player height over the clip dimensions the feed carries', async () => {
+      const expected = html`
+        <div
+          data-enclosure=""
+          data-embed-height="738"
+          data-embed-url="https://www.tiktok.com/@user/video/7000000000000000000"
+          data-embed-id="@user/video/7000000000000000000"
+          data-embed-provider="tiktok"
+          data-embed-src="https://www.tiktok.com/embed/v2/7000000000000000000"
+        ></div>
+        <p>Post body</p>
+      `
+      const result = await transformContent('<p>Post body</p>', {
+        parseHtmlFn: parseHtml,
+        enclosures: [
+          {
+            url: 'https://www.tiktok.com/@user/video/7000000000000000000',
+            type: 'video/mp4',
+            width: 1080,
+            height: 1920,
+          },
+        ],
+      })
+
+      expect(result).toEqualHtml(expected)
     })
   })
 })
