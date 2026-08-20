@@ -101,16 +101,29 @@ export const pickUrlParams = (url: string, names: ReadonlyArray<string>): string
 // decision, so each one is a function with the answer in its name rather than something inferred
 // from which helper happened to be reached for.
 //
-// Keep is for a url that only decorates: a poster, an icon, an avatar. The worst a wrong one costs
-// is a picture that does not load, which beats dropping the whole placeholder over it.
+// What decides it is what the reader still sees once the url is refused, not whether the attribute
+// happens to be a src. Written unresolved, `/watch/123` is a path on the reader's own origin, so
+// the element points somewhere with nothing to do with the feed. That is worth refusing wherever
+// something else renders in its place, and not worth it where refusing leaves nothing at all.
 //
-// Drop is for a url the reader acts on: a src it loads, or a link it follows. Written unresolved,
-// `/watch/123` is a path on the reader's own origin, so the element ends up pointing somewhere
-// with nothing to do with the feed. Better to state no url than the wrong one.
+// Drop where the content survives without this url. A resolver result whose src is refused leaves
+// its carrier for the generic tier, which places a placeholder anyway. A canonical url is refused
+// on its own and the placeholder keeps every other field. An enclosure is one of a list.
+//
+// Keep where refusing deletes the last trace of something. A poster, an icon or an avatar decorates
+// an element that renders regardless, and a picture that fails to load beats no element at all. A
+// cite is mostly text and still reads with a dead link. The parked-media container in
+// convertWidgets is the one src on this side of the line: the url lives in a `data-*` attribute no
+// browser reads, so refusing it takes the media out of the item entirely, while keeping it leaves a
+// player that at least says a video was here.
 //
 // Neither is the safety floor. `neutralizeUnsafeUrls` runs last over every url a placeholder
 // carries and replaces a dangerous scheme with an inert sentinel, whichever of these wrote it.
 // What it does not judge is whether a url resolves at all, which is why that is settled here.
+//
+// A pass that rewrites a url the publisher already wrote is not covered by any of this, which is
+// why `resolveRelativeUrls` calls `resolveUrlFn` directly. It has no third option: the attribute
+// is in the document either way, so it writes the resolved url or leaves the original alone.
 
 // Overloaded so a definite URL returns a string, with no undefined fallback needed at the call
 // site. Only a possibly-undefined input widens the result.
