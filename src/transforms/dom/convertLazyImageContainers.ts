@@ -1,5 +1,6 @@
 import type { DomTransform } from '../../types.js'
 import { imageFileRegex } from '../../utils/urls.js'
+import { createImage } from '../../utils/widgets.js'
 
 // Lazy-image containers: a <div>/<figure> that parks the real image URL in a lazy
 // data-* attribute and builds the <img> with JS on load (e.g. gallery widgets that
@@ -23,9 +24,7 @@ export const convertLazyImageContainers: DomTransform = (context) => {
         // The extension check keeps a non-image lazy src (an AJAX content-loader URL parked
         // on the same attribute name) from being turned into an <img>.
         if (value && imageFileRegex.test(value)) {
-          const image = document.createElement('img')
-          image.setAttribute('src', value)
-          element.replaceWith(image)
+          element.replaceWith(createImage(document, { src: value }))
           break
         }
       }

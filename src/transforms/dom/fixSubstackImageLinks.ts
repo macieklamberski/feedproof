@@ -1,6 +1,7 @@
 import type { DomTransform } from '../../types.js'
 import { isEmptyElement } from '../../utils/dom.js'
 import { imageFileRegex } from '../../utils/urls.js'
+import { createImage } from '../../utils/widgets.js'
 
 // A Substack lightbox anchor (`a.image-link`, the Image2ToDOM/ImageToDOM components) can
 // reach a feed with its <img> child stripped, leaving an empty anchor whose href is the
@@ -19,8 +20,6 @@ export const fixSubstackImageLinks: DomTransform = () => (document) => {
       continue
     }
 
-    const image = document.createElement('img')
-    image.setAttribute('src', href)
-    element.appendChild(image)
+    element.appendChild(createImage(document, { src: href }))
   }
 }

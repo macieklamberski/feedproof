@@ -220,6 +220,50 @@ export const createMediaElement = (
   return media
 }
 
+// What every image the pipeline mints states about itself.
+type ImageFields = {
+  src: string
+  srcset?: string
+  alt?: string
+  width?: number
+  height?: number
+}
+
+// The one image every pass mints, whether it stands for an enclosure, a platform's static render
+// or an `<img>` recovered from a container that parked its url. Urls arrive resolved, the same
+// terms `createMediaElement` sets, and `src` is required because an image without one is an empty
+// box the reader still has to lay out.
+export const createImage = (document: Document, fields: ImageFields): HTMLElement => {
+  const image = document.createElement('img')
+  image.setAttribute('src', fields.src)
+
+  if (fields.srcset) {
+    image.setAttribute('srcset', fields.srcset)
+  }
+
+  if (fields.alt) {
+    image.setAttribute('alt', fields.alt)
+  }
+
+  setDimensions(image, fields)
+
+  return image
+}
+
+// A platform that publishes a canonical static render of something it would otherwise show in a
+// player: Datawrapper's chart png, Giphy's gif. The render goes inline where a reader sees it at
+// once, and the interactive version stays one click away on the platform's own page.
+export const createLinkedImage = (
+  document: Document,
+  fields: ImageFields & { href: string },
+): HTMLElement => {
+  const link = document.createElement('a')
+  link.setAttribute('href', fields.href)
+  link.appendChild(createImage(document, fields))
+
+  return link
+}
+
 // Writes a field record as `data-{type}-*` attributes, replacing any the element already carries.
 // A later pass that sets a field means it: an enrichment pass is the platform's own API answering
 // about this exact embed, and that beats whatever a resolver read off the markup. A pass that
@@ -378,6 +422,35 @@ export const normalizeCiteFields = (
     title: result.title,
     icon: result.icon,
     thumbnail: result.thumbnail,
+  }
+}
+
+// Everything a cite states about a url or a date, made ready to write: each url resolved against
+// the base, the canonical one cleaned of whatever tracking the publisher pasted, the date handed to
+// the caller's parser. Both passes that write to a cite placeholder go through this, whether the
+// card came from markup or from an enricher's payload, so the two carry their fields on the same
+// terms.
+//
+// The canonical url is kept when it will not resolve, unlike an embed's, because a cite is mostly
+// text: a card with a dead link still reads as the title, description and image it carries. So
+// nothing here refuses to produce a result.
+//
+// cleanAnchorUrls runs earlier, so the resolvers that read their url from an anchor href get it
+// already cleaned. The ones reading an attribute or a JSON blob (Tumblr, Substack, Discourse,
+// XenForo, Tistory, Paragraph) never pass through it, and neither does an enricher's payload, so
+// their redirect wrappers are unwrapped here. Re-cleaning an already-clean url is a no-op.
+export const prepareCiteMetadata = (
+  result: Partial<CiteResolverResult>,
+  context: TransformContext,
+): Partial<CiteResolverResult> => {
+  const url = resolveOrKeepUrl(result.url, context.resolveUrlFn, context.baseUrl)
+
+  return {
+    ...result,
+    url: url ? (context.cleanUrlFn?.(url) ?? url) : undefined,
+    icon: resolveOrKeepUrl(result.icon, context.resolveUrlFn, context.baseUrl),
+    thumbnail: resolveOrKeepUrl(result.thumbnail, context.resolveUrlFn, context.baseUrl),
+    date: parseOrKeepDate(result.date, context.parseDateFn),
   }
 }
 

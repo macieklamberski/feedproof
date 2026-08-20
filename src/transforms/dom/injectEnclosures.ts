@@ -12,6 +12,7 @@ import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
 import { absoluteUrlRegex, resolveOrDropUrl, resolveOrKeepUrl } from '../../utils/urls.js'
 import {
   createEmbedPlaceholder,
+  createImage,
   createMediaElement,
   isMediaResult,
   prepareEmbedMetadata,
@@ -93,29 +94,24 @@ const createNativeMediaElement = (
   })
 }
 
+// The src arrives resolved from the loop, the way createNativeMediaElement takes its own: an
+// image enclosure never carries a player url, so what the loop resolved is this enclosure's own
+// url and resolving it a second time here would only be a second chance to disagree.
 const injectImageEnclosure = (
   document: Document,
   enclosure: Enclosure,
-  context: TransformContext,
+  src: string,
 ): HTMLElement | undefined => {
   if (!isImageEnclosure(enclosure)) {
     return
   }
 
-  const element = document.createElement('img')
-  const src = resolveOrKeepUrl(enclosure.url, context.resolveUrlFn, context.baseUrl)
-
-  if (src) {
-    element.setAttribute('src', src)
-  }
-
-  setDimensions(element, enclosure)
-
-  if (enclosure.title) {
-    element.setAttribute('alt', enclosure.title)
-  }
-
-  return element
+  return createImage(document, {
+    src,
+    alt: enclosure.title,
+    width: enclosure.width,
+    height: enclosure.height,
+  })
 }
 
 // Layers the enclosure's own metadata over the resolver result, preferring the feed's
@@ -420,7 +416,7 @@ export const injectEnclosures: DomTransform = (context) => {
         continue
       }
 
-      const imageElement = injectImageEnclosure(document, enclosure, context)
+      const imageElement = injectImageEnclosure(document, enclosure, src)
       if (imageElement) {
         created.push(imageElement)
       }
