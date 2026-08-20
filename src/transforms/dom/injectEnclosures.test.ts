@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { acastEmbedResolver } from '../../embeds/acast.js'
+import { blubrryEmbedResolver } from '../../embeds/blubrry.js'
 import { youtubeIframeEmbedResolver } from '../../embeds/youtube.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { Enclosure, TransformContext } from '../../types.js'
@@ -482,9 +483,34 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     })
 
     // Width and height are one measurement and come from one side. A feed stating only a width
-    // beside a resolver's fixed player height once produced 320x190 for a fluid-width bar, a box
+    // beside a resolver's fixed player height once produced 320x138 for a fluid-width bar, a box
     // nobody measured. The feed's pair now stands whole where it states any part of one.
     it('should take the size from the feed as a pair rather than merge it with the resolver height', async () => {
+      const value = '<p>Content</p>'
+      const context: TransformContext = {
+        ...withEnclosures([
+          { url: 'https://player.blubrry.com/id/12345678/', type: 'text/html', width: 320 },
+        ]),
+        widgetResolvers: [blubrryEmbedResolver],
+      }
+      const expected = html`
+        <div
+          data-embed-src="https://player.blubrry.com/id/12345678/"
+          data-embed-provider="blubrry"
+          data-embed-id="12345678"
+          data-embed-width="320"
+          data-enclosure=""
+        ></div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    // Acast's player is 190 tall whatever the carrier says, which is why the resolver opts out of
+    // declared sizes. A feed's stated size is the same kind of claim as a publisher's markup, so
+    // the opt-out covers it too.
+    it('should keep the resolver height over the feed size when the resolver ignores declared sizes', async () => {
       const value = '<p>Content</p>'
       const context: TransformContext = {
         ...withEnclosures([
@@ -497,7 +523,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
           data-embed-src="https://embed.acast.com/myshow/myepisode"
           data-embed-provider="acast"
           data-embed-id="myshow/myepisode"
-          data-embed-width="320"
+          data-embed-height="190"
           data-enclosure=""
         ></div>
         <p>Content</p>
