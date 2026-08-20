@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { baseContext } from '../tests.js'
 import {
-  cleanOrKeepUrl,
+  cleanUrl,
   parseUrlOnHosts,
   pickQueryParams,
   pickUrlParams,
@@ -53,14 +53,12 @@ describe('parseUrlOnHosts', () => {
 })
 
 describe('resolveOrKeepUrl', () => {
-  const { resolveUrlFn } = baseContext
-
   it('should resolve a relative url against the base', () => {
     const valueUrl = '/img.jpg'
     const baseUrl = 'https://example.com/post/'
     const expectedUrl = 'https://example.com/img.jpg'
 
-    expect(resolveOrKeepUrl(valueUrl, resolveUrlFn, baseUrl)).toBe(expectedUrl)
+    expect(resolveOrKeepUrl(valueUrl, { ...baseContext, baseUrl })).toBe(expectedUrl)
   })
 
   it('should resolve a protocol-relative url to the base scheme', () => {
@@ -68,65 +66,63 @@ describe('resolveOrKeepUrl', () => {
     const baseUrl = 'https://example.com'
     const expectedUrl = 'https://cdn.example/a.jpg'
 
-    expect(resolveOrKeepUrl(valueUrl, resolveUrlFn, baseUrl)).toBe(expectedUrl)
+    expect(resolveOrKeepUrl(valueUrl, { ...baseContext, baseUrl })).toBe(expectedUrl)
   })
 
   it('should keep an absolute url unchanged', () => {
     const valueUrl = 'https://cdn.example/a.jpg'
     const baseUrl = 'https://example.com'
 
-    expect(resolveOrKeepUrl(valueUrl, resolveUrlFn, baseUrl)).toBe(valueUrl)
+    expect(resolveOrKeepUrl(valueUrl, { ...baseContext, baseUrl })).toBe(valueUrl)
   })
 
   it('should keep a data: url unchanged', () => {
     const valueUrl = 'data:image/png;base64,AAA'
     const baseUrl = 'https://example.com'
 
-    expect(resolveOrKeepUrl(valueUrl, resolveUrlFn, baseUrl)).toBe(valueUrl)
+    expect(resolveOrKeepUrl(valueUrl, { ...baseContext, baseUrl })).toBe(valueUrl)
   })
 
   it('should keep a non-http scheme url unchanged', () => {
     const valueUrl = 'ftp://files.example/a.zip'
     const baseUrl = 'https://example.com'
 
-    expect(resolveOrKeepUrl(valueUrl, resolveUrlFn, baseUrl)).toBe(valueUrl)
+    expect(resolveOrKeepUrl(valueUrl, { ...baseContext, baseUrl })).toBe(valueUrl)
   })
 
   it('should keep a relative url when there is no base', () => {
     const valueUrl = '/img.jpg'
 
-    expect(resolveOrKeepUrl(valueUrl, resolveUrlFn, undefined)).toBe(valueUrl)
+    expect(resolveOrKeepUrl(valueUrl, { ...baseContext, baseUrl: undefined })).toBe(valueUrl)
   })
 
   it('should return undefined for an undefined url', () => {
     const baseUrl = 'https://example.com'
 
-    expect(resolveOrKeepUrl(undefined, resolveUrlFn, baseUrl)).toBeUndefined()
+    expect(resolveOrKeepUrl(undefined, { ...baseContext, baseUrl })).toBeUndefined()
   })
 })
 
 describe('resolveOrDropUrl', () => {
-  const { resolveUrlFn } = baseContext
-
   it('should resolve a relative url against the base', () => {
     const valueUrl = '/img.jpg'
     const baseUrl = 'https://example.com/post/'
     const expectedUrl = 'https://example.com/img.jpg'
 
-    expect(resolveOrDropUrl(valueUrl, resolveUrlFn, baseUrl)).toBe(expectedUrl)
+    expect(resolveOrDropUrl(valueUrl, { ...baseContext, baseUrl })).toBe(expectedUrl)
   })
 
   it('should drop a relative url when there is no base', () => {
     const valueUrl = '/img.jpg'
 
-    expect(resolveOrDropUrl(valueUrl, resolveUrlFn, undefined)).toBeUndefined()
+    expect(resolveOrDropUrl(valueUrl, { ...baseContext, baseUrl: undefined })).toBeUndefined()
   })
 
   it('should drop a url whose scheme the resolver refuses', () => {
     const valueUrl = 'javascript:alert(1)'
     const baseUrl = 'https://example.com'
 
-    expect(resolveOrDropUrl(valueUrl, resolveUrlFn, baseUrl)).toBeUndefined()
+    expect(resolveOrDropUrl(valueUrl, { ...baseContext, baseUrl })).toBeUndefined()
   })
 
   // A whitespace-only attribute would otherwise resolve to the base url itself, so the element
@@ -135,13 +131,13 @@ describe('resolveOrDropUrl', () => {
     const valueUrl = '   '
     const baseUrl = 'https://example.com/post/'
 
-    expect(resolveOrDropUrl(valueUrl, resolveUrlFn, baseUrl)).toBeUndefined()
+    expect(resolveOrDropUrl(valueUrl, { ...baseContext, baseUrl })).toBeUndefined()
   })
 
   it('should return undefined for an undefined url', () => {
     const baseUrl = 'https://example.com'
 
-    expect(resolveOrDropUrl(undefined, resolveUrlFn, baseUrl)).toBeUndefined()
+    expect(resolveOrDropUrl(undefined, { ...baseContext, baseUrl })).toBeUndefined()
   })
 })
 
@@ -151,13 +147,13 @@ describe('cleanOrKeepUrl', () => {
     const cleanUrlFn = (url: string) => url.split('?')[0] ?? url
     const expectedUrl = 'https://example.com/post'
 
-    expect(cleanOrKeepUrl(valueUrl, cleanUrlFn)).toBe(expectedUrl)
+    expect(cleanUrl(valueUrl, { ...baseContext, cleanUrlFn })).toBe(expectedUrl)
   })
 
   it('should keep the url when there is no cleaner', () => {
     const valueUrl = 'https://example.com/post?utm_source=feed'
 
-    expect(cleanOrKeepUrl(valueUrl, undefined)).toBe(valueUrl)
+    expect(cleanUrl(valueUrl, { ...baseContext, cleanUrlFn: undefined })).toBe(valueUrl)
   })
 
   // A cleaner that answers with an empty string has not answered. Taking it literally would put
@@ -166,7 +162,7 @@ describe('cleanOrKeepUrl', () => {
     const valueUrl = 'https://example.com/post'
     const cleanUrlFn = () => ''
 
-    expect(cleanOrKeepUrl(valueUrl, cleanUrlFn)).toBe(valueUrl)
+    expect(cleanUrl(valueUrl, { ...baseContext, cleanUrlFn })).toBe(valueUrl)
   })
 
   it('should return undefined for an undefined url without calling the cleaner', () => {
@@ -176,7 +172,7 @@ describe('cleanOrKeepUrl', () => {
       return url
     }
 
-    expect(cleanOrKeepUrl(undefined, cleanUrlFn)).toBeUndefined()
+    expect(cleanUrl(undefined, { ...baseContext, cleanUrlFn })).toBeUndefined()
     expect(called).toBe(false)
   })
 })

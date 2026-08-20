@@ -9,7 +9,7 @@ import type {
   WidgetResolverResult,
 } from '../types.js'
 import { type GeneratedWrapperType, getElementDimensions, getWrapperRatio } from './dom.js'
-import { cleanOrKeepUrl, resolveOrDropUrl, resolveOrKeepUrl } from './urls.js'
+import { cleanUrl, resolveOrDropUrl, resolveOrKeepUrl } from './urls.js'
 
 // A card's date is whatever string the site chose to display, so the caller gets one chance to
 // normalize it and anything the parser rejects is kept verbatim, not dropped. Every path that
@@ -348,44 +348,38 @@ export const updateEmbedPlaceholder = (
   updatePlaceholder(element, 'embed', fields)
 }
 
-// The page the embed stands for, which is where a reader sends a click, so it takes the drop
-// answer. Cleaned once it resolves, because a resolver that carries this url out of the markup
-// rather than minting it from an id hands over whatever the publisher pasted.
-const prepareCanonicalUrl = (
-  url: string | undefined,
-  context: TransformContext,
-): string | undefined => {
-  const resolved = resolveOrDropUrl(url, context.resolveUrlFn, context.baseUrl)
-
-  return cleanOrKeepUrl(resolved, context.cleanUrlFn)
-}
-
 // Everything an embed states about a url or a date, made ready to write: each url resolved against
 // the base, the canonical one cleaned of whatever tracking the publisher pasted, the date handed to
 // the caller's parser. Every pass that writes to a placeholder goes through this, whether the embed
 // came from markup, from an enclosure or from an enricher's payload, so all three carry their
 // fields on the same terms.
 //
+// `src` and the canonical url both take the drop answer: one is what the reader loads and the
+// other is where a click goes, and written unresolved either points at the reader's own origin.
+// Only the canonical one is cleaned, because a resolver that carries it out of the markup rather
+// than minting it from an id hands over whatever the publisher pasted, while a player src carries
+// query the platform needs. The thumbnail and the avatar are kept: they decorate an element that
+// renders regardless, and neither is a page anyone clicks, so neither is cleaned.
+//
+// The two passes that build a placeholder resolve their own src before they decide to build at all
+// and write it back over this one, so for them that field is a second resolve of a url already
+// resolved. Enrichment is the pass it is here for: it writes onto a placeholder that already has a
+// working src, so a payload src that will not resolve is left out and the resolver's stands.
+//
 // Nothing here refuses to produce a result. A field that cannot be made good is left out and the
 // rest still go on the element, because the three callers disagree about what a refusal would
 // mean: an unbuilt markup placeholder falls through to the generic tier and still renders, while
 // an unbuilt enclosure placeholder is simply never injected.
-//
-// `src` takes the drop answer like the canonical url, since it is the url the reader actually
-// loads. The two passes that build a placeholder resolve their own before they decide to build at
-// all and write it back over this one, so for them it is a second resolve of a url already
-// resolved. Enrichment is the pass this is here for: it writes onto a placeholder that already
-// has a working src, so a payload src that will not resolve is left out and the resolver's stands.
 export const prepareEmbedMetadata = (
   metadata: Partial<EmbedResolverResult>,
   context: TransformContext,
 ): Partial<EmbedResolverResult> => {
   return {
     ...metadata,
-    src: resolveOrDropUrl(metadata.src, context.resolveUrlFn, context.baseUrl),
-    url: prepareCanonicalUrl(metadata.url, context),
-    thumbnail: resolveOrKeepUrl(metadata.thumbnail, context.resolveUrlFn, context.baseUrl),
-    avatar: resolveOrKeepUrl(metadata.avatar, context.resolveUrlFn, context.baseUrl),
+    src: resolveOrDropUrl(metadata.src, context),
+    url: cleanUrl(resolveOrDropUrl(metadata.url, context), context),
+    thumbnail: resolveOrKeepUrl(metadata.thumbnail, context),
+    avatar: resolveOrKeepUrl(metadata.avatar, context),
     date: parseOrKeepDate(metadata.date, context.parseDateFn),
   }
 }
@@ -439,17 +433,15 @@ export const normalizeCiteFields = (
 // XenForo, Tistory, Paragraph) never pass through it, and neither does an enricher's payload, so
 // their redirect wrappers are unwrapped here. Re-cleaning an already-clean url is a no-op.
 export const prepareCiteMetadata = (
-  result: Partial<CiteResolverResult>,
+  metadata: Partial<CiteResolverResult>,
   context: TransformContext,
 ): Partial<CiteResolverResult> => {
-  const url = resolveOrKeepUrl(result.url, context.resolveUrlFn, context.baseUrl)
-
   return {
-    ...result,
-    url: cleanOrKeepUrl(url, context.cleanUrlFn),
-    icon: resolveOrKeepUrl(result.icon, context.resolveUrlFn, context.baseUrl),
-    thumbnail: resolveOrKeepUrl(result.thumbnail, context.resolveUrlFn, context.baseUrl),
-    date: parseOrKeepDate(result.date, context.parseDateFn),
+    ...metadata,
+    url: cleanUrl(resolveOrKeepUrl(metadata.url, context), context),
+    icon: resolveOrKeepUrl(metadata.icon, context),
+    thumbnail: resolveOrKeepUrl(metadata.thumbnail, context),
+    date: parseOrKeepDate(metadata.date, context.parseDateFn),
   }
 }
 

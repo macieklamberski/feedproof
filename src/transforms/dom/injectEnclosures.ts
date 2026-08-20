@@ -9,7 +9,7 @@ import type {
 } from '../../types.js'
 import { getElementDimensions } from '../../utils/dom.js'
 import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
-import { absoluteUrlRegex, resolveOrDropUrl, resolveOrKeepUrl } from '../../utils/urls.js'
+import { absoluteUrlRegex, cleanUrl, resolveOrDropUrl, resolveOrKeepUrl } from '../../utils/urls.js'
 import {
   createEmbedPlaceholder,
   createImage,
@@ -79,11 +79,7 @@ const createNativeMediaElement = (
   enclosure: Enclosure,
   context: TransformContext,
 ): HTMLElement => {
-  const poster = resolveOrKeepUrl(
-    enclosure.thumbnails?.[0]?.url,
-    context.resolveUrlFn,
-    context.baseUrl,
-  )
+  const poster = resolveOrKeepUrl(enclosure.thumbnails?.[0]?.url, context)
 
   return createMediaElement(document, {
     tag,
@@ -262,8 +258,8 @@ const readEnclosure = (
 
   return {
     ...extracted,
-    url: resolveOrKeepUrl(extracted.url, context.resolveUrlFn, context.baseUrl),
-    playerUrl: resolveOrKeepUrl(extracted.playerUrl, context.resolveUrlFn, context.baseUrl),
+    url: resolveOrKeepUrl(extracted.url, context),
+    playerUrl: resolveOrKeepUrl(extracted.playerUrl, context),
   }
 }
 
@@ -283,10 +279,6 @@ const mergePlayerEnclosures = (
   enclosures: ReadonlyArray<Enclosure>,
   cleanUrlFn?: CleanUrlFn,
 ): Array<Enclosure> => {
-  const cleanUrl = (url: string): string => {
-    return cleanUrlFn ? cleanUrlFn(url) : url
-  }
-
   const result = [...enclosures]
   const removed = new Set<number>()
 
@@ -296,7 +288,9 @@ const mergePlayerEnclosures = (
         return false
       }
 
-      return typeof candidate.url === 'string' && cleanUrl(candidate.url) === nestedUrl
+      return (
+        typeof candidate.url === 'string' && cleanUrl(candidate.url, { cleanUrlFn }) === nestedUrl
+      )
     })
   }
 
@@ -308,7 +302,7 @@ const mergePlayerEnclosures = (
     }
 
     for (const nested of extractNestedUrls(player.url)) {
-      const fileIndex = findFileIndex(cleanUrl(nested), playerIndex)
+      const fileIndex = findFileIndex(cleanUrl(nested, { cleanUrlFn }), playerIndex)
 
       if (fileIndex === -1) {
         continue
@@ -367,7 +361,7 @@ export const injectEnclosures: DomTransform = (context) => {
 
       // Whatever this enclosure becomes, a player or a native element, the reader loads this url,
       // so an enclosure stating one that will not resolve is not injected at all.
-      const src = resolveOrDropUrl(embedSource, context.resolveUrlFn, context.baseUrl)
+      const src = resolveOrDropUrl(embedSource, context)
 
       if (!src) {
         continue

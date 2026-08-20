@@ -2,7 +2,7 @@ import type { DomTransform, MediaResolverResult } from '../../types.js'
 import { attr, hasText, playableElements } from '../../utils/dom.js'
 import {
   audioFileRegex,
-  cleanOrKeepUrl,
+  cleanUrl,
   flashFileRegex,
   resolveOrDropUrl,
   resolveOrKeepUrl,
@@ -81,7 +81,7 @@ const carrierOrShell = (element: Element): Element => {
 // enclosures like any other. The generic tiers below apply the same split to embeds no
 // resolver claims: a src that names a media file plays directly instead of being framed.
 export const convertWidgets: DomTransform = (context) => {
-  const { widgetResolvers, mediaSrcAttributes, resolveUrlFn, cleanUrlFn, baseUrl } = context
+  const { widgetResolvers, mediaSrcAttributes } = context
 
   return async (document) => {
     // One query per distinct selector instead of per resolver: every url-keyed resolver
@@ -124,8 +124,8 @@ export const convertWidgets: DomTransform = (context) => {
       // `data-*` attribute no browser reads, so the container renders nothing on its own and
       // refusing the url would take the media out of the item. A player that fails to load still
       // says a video was here.
-      const resolved = resolveOrKeepUrl(parked.src, resolveUrlFn, baseUrl)
-      const cleaned = cleanOrKeepUrl(resolved, cleanUrlFn)
+      const resolved = resolveOrKeepUrl(parked.src, context)
+      const cleaned = cleanUrl(resolved, context)
 
       // The container often holds a caption or a track title, which is content, not player
       // chrome, so the media goes in front of it instead of replacing it.
@@ -147,14 +147,14 @@ export const convertWidgets: DomTransform = (context) => {
           continue
         }
 
-        const src = resolveOrDropUrl(metadata.src, resolveUrlFn, baseUrl)
+        const src = resolveOrDropUrl(metadata.src, context)
 
         if (!src) {
           continue
         }
 
         if (isMediaResult(metadata)) {
-          const poster = resolveOrKeepUrl(metadata.poster, resolveUrlFn, baseUrl)
+          const poster = resolveOrKeepUrl(metadata.poster, context)
           const mediaElement = createMediaElement(document, { ...metadata, src, poster })
 
           carrierOrShell(element).replaceWith(mediaElement)
@@ -188,10 +188,10 @@ export const convertWidgets: DomTransform = (context) => {
       const src = readCarrierUrl(element)
 
       // resolveUrlFn rejects `about:blank`.
-      const resolved = resolveOrDropUrl(src, resolveUrlFn, baseUrl)
+      const resolved = resolveOrDropUrl(src, context)
       // This src is the publisher's own URL, not one minted from a parsed id, so it arrives
       // with whatever tracking params they pasted.
-      const cleaned = cleanOrKeepUrl(resolved, cleanUrlFn)
+      const cleaned = cleanUrl(resolved, context)
 
       if (!cleaned) {
         continue
