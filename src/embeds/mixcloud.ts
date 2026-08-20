@@ -33,7 +33,8 @@ export const extractMixcloudShow = (link: string): string | undefined => {
     return
   }
 
-  const segments = getPathSegments(feed.startsWith('http') ? feed : `https://example.com${feed}`)
+  const parsed = parseUrl(feed, 'https://example.com')
+  const segments = parsed ? getPathSegments(parsed) : []
 
   // Exactly a user and a slug: a deeper path is a section of the site, not a show, and
   // the value goes into a url, so anything else is left to the generic placeholder.

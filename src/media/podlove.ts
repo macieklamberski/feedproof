@@ -58,18 +58,18 @@ export const podloveMediaResolver: MediaResolver = {
     const file = files?.find((audio) => isAnyOf(audio.mimeType, preferredMimeTypes)) ?? files?.[0]
     const source = file?.url
 
-    // The config is interpolated straight into the element, so anything that is not an
-    // absolute url is dropped.
-    if (!source?.startsWith('http')) {
+    if (!source) {
       return
     }
 
-    const poster = data.poster ?? data.show?.poster
-
+    // Both urls travel as the config wrote them. convertWidgets resolves whatever a resolver
+    // returns, which is what gives a protocol-relative or feed-relative config the same
+    // treatment as one written in markup, and it drops the media when the src resolves to
+    // nothing at all.
     return {
       tag: 'audio',
       src: source,
-      ...(poster?.startsWith('http') ? { poster } : {}),
+      poster: data.poster ?? data.show?.poster,
     }
   },
 }

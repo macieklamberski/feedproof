@@ -198,11 +198,8 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
-    // The url is interpolated into the document, so a relative or scriptable value is dropped.
-    it('should return undefined for a url that is not absolute', async () => {
-      const config = JSON.stringify([
-        { data: { audio: [{ url: 'javascript:alert(1)', mimeType: 'audio/mpeg' }] } },
-      ])
+    it('should return undefined when the audio entry states no url', async () => {
+      const config = JSON.stringify([{ data: { audio: [{ mimeType: 'audio/mpeg' }] } }])
       const value = makePlayer(config)
 
       expect(await extract(value)).toBeUndefined()
@@ -232,6 +229,56 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
       const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
       expect(result).toContainHtml('<audio src="https://example.com/episode.mp3" controls></audio>')
+    })
+
+    // The config states the url the way the markup around it would, so it earns the same
+    // treatment: a scheme when it names a host, the feed's base when it names a path.
+    it('should give a protocol-relative config url a scheme', async () => {
+      const config = JSON.stringify([
+        { data: { audio: [{ url: '//cdn.example.com/episode.mp3', mimeType: 'audio/mpeg' }] } },
+      ])
+      const value = makePlayer(config)
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toContainHtml(
+        '<audio src="https://cdn.example.com/episode.mp3" controls></audio>',
+      )
+    })
+
+    it('should resolve a feed-relative config url against the base', async () => {
+      const config = JSON.stringify([
+        { data: { audio: [{ url: '/audio/episode.mp3', mimeType: 'audio/mpeg' }] } },
+      ])
+      const value = makePlayer(config)
+      const result = await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/posts/1',
+      })
+
+      expect(result).toContainHtml(
+        '<audio src="https://example.com/audio/episode.mp3" controls></audio>',
+      )
+    })
+
+    // The url is interpolated into the document, so a scriptable one must never reach it.
+    it('should build no player from a scriptable url', async () => {
+      const config = JSON.stringify([
+        { data: { audio: [{ url: 'javascript:alert(1)', mimeType: 'audio/mpeg' }] } },
+      ])
+      const value = makePlayer(config)
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).not.toContain('<audio')
+    })
+
+    it('should build no player from a feed-relative url with no base to resolve it', async () => {
+      const config = JSON.stringify([
+        { data: { audio: [{ url: '/audio/episode.mp3', mimeType: 'audio/mpeg' }] } },
+      ])
+      const value = makePlayer(config)
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).not.toContain('<audio')
     })
   })
 })

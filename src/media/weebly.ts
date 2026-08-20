@@ -39,13 +39,13 @@ export const weeblyMediaResolver: MediaResolver = {
       return
     }
 
-    // Weebly writes the poster protocol-relative (`//www.weebly.com/uploads/…`).
-    const poster = posterUrl.startsWith('//') ? `https:${posterUrl}` : posterUrl
-
+    // Weebly writes the poster protocol-relative (`//www.weebly.com/uploads/…`), and it travels
+    // that way: convertWidgets gives both urls a scheme, so adding one here would only do the
+    // same job earlier and in one resolver's own spelling.
     return {
       tag: 'video',
-      src: poster.replace(extensionRegex, '.mp4'),
-      poster,
+      src: posterUrl.replace(extensionRegex, '.mp4'),
+      poster: posterUrl,
     }
   },
 }
