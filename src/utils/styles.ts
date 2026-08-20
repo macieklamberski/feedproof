@@ -3,7 +3,7 @@ import type { Nullish } from 'trousse'
 // The declarations of one `style` attribute, by lowercase property name. Typed with an explicit
 // `undefined` because the project does not run `noUncheckedIndexedAccess`, and without it a
 // missing property reads as a `string` the callers would stop guarding.
-export type ElementStyles = Record<string, string | undefined>
+export type Declarations = Record<string, string | undefined>
 
 const importantRegex = /\s*!\s*important\s*$/i
 // An unterminated comment runs to the end of the attribute, the way a browser closes it.
@@ -28,8 +28,8 @@ const resetByShorthand = new Map<string, Array<string>>([
 // per property. A `;` inside `url(data:image/png;base64,…)` or a quoted string does not end a
 // declaration, and only a top-level `:` separates a name from its value. A repeated property takes
 // its last value, the way a browser resolves it.
-const parseStyles = (style: string): ElementStyles => {
-  const styles: ElementStyles = Object.create(null)
+const parseStyles = (style: string): Declarations => {
+  const styles: Declarations = Object.create(null)
   let declarationStart = 0
   let colonIndex = -1
   let parenDepth = 0
@@ -130,10 +130,10 @@ const parseStyles = (style: string): ElementStyles => {
 // The attribute is part of the cache key, so an element whose style is rewritten after it was
 // read parses again instead of answering from the stale declarations. Every element with no style
 // shares one frozen object, which a caller cannot corrupt for the rest of them.
-const parsedStyles = new WeakMap<Element, { style: string; styles: ElementStyles }>()
-const noStyles: ElementStyles = Object.freeze(Object.create(null))
+const parsedStyles = new WeakMap<Element, { style: string; styles: Declarations }>()
+const noStyles: Declarations = Object.freeze(Object.create(null))
 
-export const getElementStyles = (element: Nullish<Element>): ElementStyles => {
+export const declarations = (element: Nullish<Element>): Declarations => {
   if (!element) {
     return noStyles
   }
@@ -161,8 +161,8 @@ export const getElementStyles = (element: Nullish<Element>): ElementStyles => {
 // because a url path, a `content` string and a custom property all keep their case, so only the
 // caller knows it is reading a keyword, where CSS is case-insensitive and `DISPLAY: NONE` is the
 // same declaration as `display: none`.
-export const styleKeyword = (element: Nullish<Element>, property: string): string | undefined => {
-  return getElementStyles(element)[property]?.toLowerCase()
+export const keyword = (element: Nullish<Element>, property: string): string | undefined => {
+  return declarations(element)[property]?.toLowerCase()
 }
 
 // Matches a whole length value, so `50%` and `calc(100% - 2px)` state no pixel length. A leading
@@ -170,34 +170,35 @@ export const styleKeyword = (element: Nullish<Element>, property: string): strin
 // negative width is not a size. The numeric group gives each digit a single parse
 // (`[0-9]+(?:\.[0-9]+)?|\.[0-9]+`, not `[0-9]*\.?[0-9]+`), which the ambiguous form makes
 // quadratic on a long digit run.
-const styleLengthRegex = /^\+?([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?$/i
+const pixelsRegex = /^\+?([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?$/i
 
-// The digits an inline style states for one length property, or undefined when it states none.
-// Returned unparsed on purpose: the callers want different bounds on the same read. A resolver
-// taking a player's own size runs it through parsePixelSize, while getElementDimensions has to
-// keep 0, 1 and 2 for removeTrackingPixels, which that bound would reject.
-export const styleLength = (element: Nullish<Element>, property: string): string | undefined => {
-  return getElementStyles(element)[property]?.match(styleLengthRegex)?.[1]
+// The pixel count an inline style states for one property, or undefined when it states none in
+// pixels. The digits come back as they were written, without the unit and unparsed, because the
+// callers want different bounds on the same read: a resolver taking a player's own size runs it
+// through parsePixelSize, while getElementDimensions has to keep 0, 1 and 2 for
+// removeTrackingPixels, which that bound would reject.
+export const pixels = (element: Nullish<Element>, property: string): string | undefined => {
+  return declarations(element)[property]?.match(pixelsRegex)?.[1]
 }
 
 // Matches a whole CSS number, with the exponent and the sign the grammar allows. Checking the
 // shape is the point: `Number.parseFloat` alone answers 0 to spellings CSS does not have, `0x0`
 // among them, which would read as a fully transparent element.
-const styleNumberRegex = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?%?$/i
+const numberRegex = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?%?$/i
 
 // The number a property states, for the ones that take a plain number rather than a length. A
 // percentage comes back as the fraction it names, so `50%` reads as 0.5, which is what opacity
 // means by it.
-export const styleNumber = (element: Nullish<Element>, property: string): number | undefined => {
-  const value = getElementStyles(element)[property]
+export const number = (element: Nullish<Element>, property: string): number | undefined => {
+  const value = declarations(element)[property]
 
-  if (!value || !styleNumberRegex.test(value)) {
+  if (!value || !numberRegex.test(value)) {
     return
   }
 
-  const number = Number.parseFloat(value)
+  const parsed = Number.parseFloat(value)
 
-  return value.endsWith('%') ? number / 100 : number
+  return value.endsWith('%') ? parsed / 100 : parsed
 }
 
 const bgImageUrlRegex = /url\(['"]?([^'")]+)/
@@ -206,7 +207,7 @@ const bgImageUrlRegex = /url\(['"]?([^'")]+)/
 // thumbnail with CSS instead of an `<img>`. The shorthand states it among the colour and
 // the repeat, so both properties are read and the url is picked out of the value.
 export const bgImage = (element: Nullish<Element>): string | undefined => {
-  const styles = getElementStyles(element)
+  const styles = declarations(element)
   const background = styles['background-image'] ?? styles.background
 
   return background?.match(bgImageUrlRegex)?.[1]

@@ -1,11 +1,5 @@
 import { coerceNumber, isNonEmptyString, type Nullish, startsWithAnyOf } from 'trousse'
-import {
-  type ElementStyles,
-  getElementStyles,
-  styleKeyword,
-  styleLength,
-  styleNumber,
-} from './style.js'
+import * as styles from './styles.js'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
@@ -376,8 +370,9 @@ export const getElementDimensions = (element: Element): { width?: number; height
   const dimensions = imageDimensionsRegex.exec(element.getAttribute('data-image-dimensions') ?? '')
 
   return {
-    width: width ?? coerceNumber(dimensions?.[1]) ?? coerceNumber(styleLength(element, 'width')),
-    height: height ?? coerceNumber(dimensions?.[2]) ?? coerceNumber(styleLength(element, 'height')),
+    width: width ?? coerceNumber(dimensions?.[1]) ?? coerceNumber(styles.pixels(element, 'width')),
+    height:
+      height ?? coerceNumber(dimensions?.[2]) ?? coerceNumber(styles.pixels(element, 'height')),
   }
 }
 
@@ -393,8 +388,8 @@ const wpEmbedAspectRegex = /wp-embed-aspect-(\d+)-(\d+)/
 // hack in (`padding: 0 0 56.25%`). Only the three and four value forms give the bottom a value of
 // its own: one or two values pad every side alike, which is spacing rather than a shape. A value
 // holding a function is left alone, since its own spaces would be counted as sides.
-const shorthandBottom = (styles: ElementStyles): string | undefined => {
-  const padding = styles.padding
+const shorthandBottom = (declarations: styles.Declarations): string | undefined => {
+  const padding = declarations.padding
 
   if (!padding || padding.includes('(')) {
     return
@@ -410,7 +405,7 @@ const elementRatioSources: Array<(element: Element) => string | undefined> = [
   // Modern CSS: the whole `aspect-ratio` value (`16 / 9`, or a single number), parsed
   // like any other ratio string.
   (element) => {
-    const ratio = getElementStyles(element)['aspect-ratio']
+    const ratio = styles.declarations(element)['aspect-ratio']
 
     return ratio ? parseRatio(ratio.replace(autoRatioRegex, '')) : undefined
   },
@@ -426,8 +421,9 @@ const elementRatioSources: Array<(element: Element) => string | undefined> = [
   // The legacy inline padding hack (`padding-bottom:56.25%`): the percent is the
   // inverse of the ratio, bounded to keep a stray value from encoding nonsense.
   (element) => {
-    const styles = getElementStyles(element)
-    const padding = styles['padding-bottom'] ?? styles['padding-top'] ?? shorthandBottom(styles)
+    const declarations = styles.declarations(element)
+    const padding =
+      declarations['padding-bottom'] ?? declarations['padding-top'] ?? shorthandBottom(declarations)
     const percent = Number(padding?.match(paddingPercentRegex)?.[1])
 
     if (percent > 0 && percent < 1000) {
@@ -442,8 +438,8 @@ const elementRatioSources: Array<(element: Element) => string | undefined> = [
   // since getElementDimensions reads those and getEmbedSize consults this table only
   // when it found none.
   (element) => {
-    const width = styleLength(element, 'max-width')
-    const height = styleLength(element, 'max-height')
+    const width = styles.pixels(element, 'max-width')
+    const height = styles.pixels(element, 'max-height')
 
     return width && height ? parseRatio(`${width}:${height}`) : undefined
   },
@@ -538,7 +534,8 @@ export const isElementHidden = (element: Element): boolean => {
   }
 
   return (
-    styleKeyword(element, 'display') === 'none' || styleKeyword(element, 'visibility') === 'hidden'
+    styles.keyword(element, 'display') === 'none' ||
+    styles.keyword(element, 'visibility') === 'hidden'
   )
 }
 
@@ -546,7 +543,7 @@ export const isElementHidden = (element: Element): boolean => {
 // tracking-beacon trick. Elsewhere `opacity:0` is usually the first frame of a fade-in,
 // so the caller decides what it is looking at.
 export const hasZeroOpacity = (element: Element): boolean => {
-  return styleNumber(element, 'opacity') === 0
+  return styles.number(element, 'opacity') === 0
 }
 
 // Visits every element in document order and calls `visit` on each. Linkedom's

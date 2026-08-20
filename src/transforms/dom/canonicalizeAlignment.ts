@@ -1,6 +1,6 @@
 import type { DomTransform } from '../../types.js'
 import { isElement, isSkippable } from '../../utils/dom.js'
-import { styleKeyword } from '../../utils/style.js'
+import * as styles from '../../utils/styles.js'
 
 type Direction = 'center' | 'left' | 'right'
 
@@ -58,13 +58,13 @@ const whitespaceRegex = /\s+/
 // left alone, because its own spaces would be counted as sides.
 const hasAutoHorizontalMargins = (element: Element): boolean => {
   if (
-    styleKeyword(element, 'margin-left') === 'auto' &&
-    styleKeyword(element, 'margin-right') === 'auto'
+    styles.keyword(element, 'margin-left') === 'auto' &&
+    styles.keyword(element, 'margin-right') === 'auto'
   ) {
     return true
   }
 
-  const margin = styleKeyword(element, 'margin')
+  const margin = styles.keyword(element, 'margin')
 
   if (!margin || margin.includes('(')) {
     return false
@@ -78,7 +78,7 @@ const hasAutoHorizontalMargins = (element: Element): boolean => {
 }
 
 const getStyleDirection = (element: Element, isImage: boolean): Direction | undefined => {
-  const direction = attrDirections.get(styleKeyword(element, 'text-align') ?? '')
+  const direction = attrDirections.get(styles.keyword(element, 'text-align') ?? '')
 
   if (direction) {
     return direction

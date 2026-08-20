@@ -1,7 +1,7 @@
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
-import { bgImage } from '../utils/style.js'
+import * as styles from '../utils/styles.js'
 
 // note.com renders a pasted link as an `external-article` figure. The same
 // `embedded-service="external-article"` attribute also marks shopping and crowdfunding
@@ -27,7 +27,7 @@ export const notecomCiteResolver: CiteResolver = {
       title: text(element, '.external-article-widget-title') ?? text(element, 'a > strong'),
       description: text(element, '.external-article-widget-description') ?? text(descriptionEm),
       publisher: text(element, '.external-article-widget-url') ?? text(hostEm),
-      thumbnail: bgImage(find(element, '.external-article-widget-image')),
+      thumbnail: styles.bgImage(find(element, '.external-article-widget-image')),
     })
   },
 }
