@@ -106,7 +106,12 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
   // A payload is a platform's API answering, not the feed, so its urls get the same treatment a
   // resolver's do: an enricher that hands back a path is describing something on its own host.
   it('should resolve an enriched thumbnail against the base url', async () => {
-    const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+      ></div>
+    `
     const fn: EnrichEmbedFn = () => {
       return [{ thumbnail: '/vi/abc/hq.jpg' }]
     }
@@ -123,7 +128,12 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
   })
 
   it('should clean an enriched url with the provided cleanUrlFn', async () => {
-    const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+      ></div>
+    `
     const fn: EnrichEmbedFn = () => {
       return [{ url: 'https://example.com/watch/abc?utm_source=api' }]
     }
