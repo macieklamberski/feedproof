@@ -3,6 +3,7 @@ import { attr, hasText, playableElements } from '../../utils/dom.js'
 import {
   audioFileRegex,
   flashFileRegex,
+  resolveOrDropUrl,
   resolveOrKeepUrl,
   videoFileRegex,
 } from '../../utils/urls.js'
@@ -141,7 +142,7 @@ export const convertWidgets: DomTransform = (context) => {
           continue
         }
 
-        const src = resolveUrlFn(metadata.src, baseUrl)
+        const src = resolveOrDropUrl(metadata.src, resolveUrlFn, baseUrl)
 
         if (!src) {
           continue
@@ -181,9 +182,8 @@ export const convertWidgets: DomTransform = (context) => {
 
       const src = readCarrierUrl(element)
 
-      // resolveUrlFn rejects `about:blank`. The trim drops empty/whitespace placeholders
-      // (which would otherwise resolve to the base URL).
-      const resolved = src.trim() ? resolveUrlFn(src, baseUrl) : undefined
+      // resolveUrlFn rejects `about:blank`.
+      const resolved = resolveOrDropUrl(src, resolveUrlFn, baseUrl)
       // This src is the publisher's own URL, not one minted from a parsed id, so it arrives
       // with whatever tracking params they pasted.
       const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined

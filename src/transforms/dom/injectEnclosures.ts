@@ -9,7 +9,7 @@ import type {
 } from '../../types.js'
 import { getElementDimensions } from '../../utils/dom.js'
 import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
-import { absoluteUrlRegex, resolveOrKeepUrl } from '../../utils/urls.js'
+import { absoluteUrlRegex, resolveOrDropUrl, resolveOrKeepUrl } from '../../utils/urls.js'
 import {
   createEmbedPlaceholder,
   createMediaElement,
@@ -369,11 +369,13 @@ export const injectEnclosures: DomTransform = (context) => {
         continue
       }
 
-      if (!context.resolveUrlFn(embedSource, context.baseUrl)) {
+      // Whatever this enclosure becomes, a player or a native element, the reader loads this url,
+      // so an enclosure stating one that will not resolve is not injected at all.
+      const src = resolveOrDropUrl(embedSource, context.resolveUrlFn, context.baseUrl)
+
+      if (!src) {
         continue
       }
-
-      const src = resolveOrKeepUrl(embedSource, context.resolveUrlFn, context.baseUrl)
 
       const resolved = await resolveEnclosure(
         embedSource,

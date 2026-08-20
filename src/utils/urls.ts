@@ -97,6 +97,21 @@ export const pickUrlParams = (url: string, names: ReadonlyArray<string>): string
   return query ? `?${query}` : ''
 }
 
+// The two answers to a url that will not resolve. Which one a call site wants is a policy
+// decision, so each one is a function with the answer in its name rather than something inferred
+// from which helper happened to be reached for.
+//
+// Keep is for a url that only decorates: a poster, an icon, an avatar. The worst a wrong one costs
+// is a picture that does not load, which beats dropping the whole placeholder over it.
+//
+// Drop is for a url the reader acts on: a src it loads, or a link it follows. Written unresolved,
+// `/watch/123` is a path on the reader's own origin, so the element ends up pointing somewhere
+// with nothing to do with the feed. Better to state no url than the wrong one.
+//
+// Neither is the safety floor. `neutralizeUnsafeUrls` runs last over every url a placeholder
+// carries and replaces a dangerous scheme with an inert sentinel, whichever of these wrote it.
+// What it does not judge is whether a url resolves at all, which is why that is settled here.
+
 // Overloaded so a definite URL returns a string, with no undefined fallback needed at the call
 // site. Only a possibly-undefined input widens the result.
 type ResolveOrKeepUrl = {
@@ -120,6 +135,19 @@ export const resolveOrKeepUrl: ResolveOrKeepUrl = ((url, resolveUrlFn, baseUrl) 
 
   return resolveUrlFn(url, baseUrl) ?? url
 }) as ResolveOrKeepUrl
+
+// The other answer, so a caller states which it wants by the name it calls. Takes an optional url,
+// since a caller reading one out of markup or a payload has nothing to guard before asking, and
+// trims first, since a whitespace-only attribute would otherwise resolve to the base url itself.
+export const resolveOrDropUrl = (
+  url: string | undefined,
+  resolveUrlFn: ResolveUrlFn,
+  baseUrl: string | undefined,
+): string | undefined => {
+  const trimmed = url?.trim()
+
+  return trimmed ? resolveUrlFn(trimmed, baseUrl) : undefined
+}
 
 // Whether an anchor href points at the same page as the post. A bare `#fragment`
 // is inherently same-page. An absolute href counts only when it resolves to the

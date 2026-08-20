@@ -9,7 +9,7 @@ import type {
   WidgetResolverResult,
 } from '../types.js'
 import { type GeneratedWrapperType, getElementDimensions, getWrapperRatio } from './dom.js'
-import { resolveOrKeepUrl } from './urls.js'
+import { resolveOrDropUrl, resolveOrKeepUrl } from './urls.js'
 
 // A card's date is whatever string the site chose to display, so the caller gets one chance to
 // normalize it and anything the parser rejects is kept verbatim, not dropped. Every path that
@@ -304,16 +304,15 @@ export const updateEmbedPlaceholder = (
   updatePlaceholder(element, 'embed', fields)
 }
 
-// The page the embed stands for, which is where a reader sends a click, so it is dropped rather
-// than kept unresolved: a `javascript:` url a resolver read out of a payload has no business
-// reaching the placeholder. Cleaned once it resolves, because a resolver that carries this url out
-// of the markup rather than minting it from an id hands over whatever the publisher pasted. A
-// cleaner answering with nothing has not answered, and the url it was handed stands.
+// The page the embed stands for, which is where a reader sends a click, so it takes the drop
+// answer. Cleaned once it resolves, because a resolver that carries this url out of the markup
+// rather than minting it from an id hands over whatever the publisher pasted. A cleaner answering
+// with nothing has not answered, and the url it was handed stands.
 const prepareCanonicalUrl = (
   url: string | undefined,
   context: TransformContext,
 ): string | undefined => {
-  const resolved = url ? context.resolveUrlFn(url, context.baseUrl) : undefined
+  const resolved = resolveOrDropUrl(url, context.resolveUrlFn, context.baseUrl)
 
   if (!resolved) {
     return
