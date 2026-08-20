@@ -15,7 +15,7 @@ import { resolveOrDropUrl, resolveOrKeepUrl } from './urls.js'
 // normalize it and anything the parser rejects is kept verbatim, not dropped. Every path that
 // writes a date goes through this, so resolver output and enrichment payloads are treated
 // identically.
-export const parseOrKeepDate = (
+const parseOrKeepDate = (
   date: string | undefined,
   parseDateFn: ParseDateFn | undefined,
 ): string | undefined => {
@@ -77,7 +77,7 @@ type EmbedSize = Pick<EmbedResolverResult, 'width' | 'height' | 'ratio'>
 // field names alone so the normalized string record and the numeric result both qualify.
 type SizeFields = { width?: unknown; height?: unknown; ratio?: unknown }
 
-export const hasDimensions = (size: SizeFields): boolean => {
+const hasDimensions = (size: SizeFields): boolean => {
   return size.width !== undefined || size.height !== undefined
 }
 
