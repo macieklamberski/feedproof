@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { baseContext } from '../tests.js'
 import {
+  cleanOrKeepUrl,
   parseUrlOnHosts,
   pickQueryParams,
   pickUrlParams,
@@ -141,6 +142,42 @@ describe('resolveOrDropUrl', () => {
     const baseUrl = 'https://example.com'
 
     expect(resolveOrDropUrl(undefined, resolveUrlFn, baseUrl)).toBeUndefined()
+  })
+})
+
+describe('cleanOrKeepUrl', () => {
+  it('should return what the cleaner answers', () => {
+    const valueUrl = 'https://example.com/post?utm_source=feed'
+    const cleanUrlFn = (url: string) => url.split('?')[0] ?? url
+    const expectedUrl = 'https://example.com/post'
+
+    expect(cleanOrKeepUrl(valueUrl, cleanUrlFn)).toBe(expectedUrl)
+  })
+
+  it('should keep the url when there is no cleaner', () => {
+    const valueUrl = 'https://example.com/post?utm_source=feed'
+
+    expect(cleanOrKeepUrl(valueUrl, undefined)).toBe(valueUrl)
+  })
+
+  // A cleaner that answers with an empty string has not answered. Taking it literally would put
+  // an empty href on the element, which is a link back to the reader's own page.
+  it('should keep the url when the cleaner answers with nothing', () => {
+    const valueUrl = 'https://example.com/post'
+    const cleanUrlFn = () => ''
+
+    expect(cleanOrKeepUrl(valueUrl, cleanUrlFn)).toBe(valueUrl)
+  })
+
+  it('should return undefined for an undefined url without calling the cleaner', () => {
+    let called = false
+    const cleanUrlFn = (url: string) => {
+      called = true
+      return url
+    }
+
+    expect(cleanOrKeepUrl(undefined, cleanUrlFn)).toBeUndefined()
+    expect(called).toBe(false)
   })
 })
 

@@ -2,6 +2,7 @@ import type { DomTransform, MediaResolverResult } from '../../types.js'
 import { attr, hasText, playableElements } from '../../utils/dom.js'
 import {
   audioFileRegex,
+  cleanOrKeepUrl,
   flashFileRegex,
   resolveOrDropUrl,
   resolveOrKeepUrl,
@@ -124,7 +125,7 @@ export const convertWidgets: DomTransform = (context) => {
       // refusing the url would take the media out of the item. A player that fails to load still
       // says a video was here.
       const resolved = resolveOrKeepUrl(parked.src, resolveUrlFn, baseUrl)
-      const cleaned = cleanUrlFn?.(resolved) ?? resolved
+      const cleaned = cleanOrKeepUrl(resolved, cleanUrlFn)
 
       // The container often holds a caption or a track title, which is content, not player
       // chrome, so the media goes in front of it instead of replacing it.
@@ -190,7 +191,7 @@ export const convertWidgets: DomTransform = (context) => {
       const resolved = resolveOrDropUrl(src, resolveUrlFn, baseUrl)
       // This src is the publisher's own URL, not one minted from a parsed id, so it arrives
       // with whatever tracking params they pasted.
-      const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
+      const cleaned = cleanOrKeepUrl(resolved, cleanUrlFn)
 
       if (!cleaned) {
         continue

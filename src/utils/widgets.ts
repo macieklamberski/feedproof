@@ -9,7 +9,7 @@ import type {
   WidgetResolverResult,
 } from '../types.js'
 import { type GeneratedWrapperType, getElementDimensions, getWrapperRatio } from './dom.js'
-import { resolveOrDropUrl, resolveOrKeepUrl } from './urls.js'
+import { cleanOrKeepUrl, resolveOrDropUrl, resolveOrKeepUrl } from './urls.js'
 
 // A card's date is whatever string the site chose to display, so the caller gets one chance to
 // normalize it and anything the parser rejects is kept verbatim, not dropped. Every path that
@@ -350,21 +350,14 @@ export const updateEmbedPlaceholder = (
 
 // The page the embed stands for, which is where a reader sends a click, so it takes the drop
 // answer. Cleaned once it resolves, because a resolver that carries this url out of the markup
-// rather than minting it from an id hands over whatever the publisher pasted. A cleaner answering
-// with nothing has not answered, and the url it was handed stands.
+// rather than minting it from an id hands over whatever the publisher pasted.
 const prepareCanonicalUrl = (
   url: string | undefined,
   context: TransformContext,
 ): string | undefined => {
   const resolved = resolveOrDropUrl(url, context.resolveUrlFn, context.baseUrl)
 
-  if (!resolved) {
-    return
-  }
-
-  const cleaned = context.cleanUrlFn?.(resolved)
-
-  return cleaned ? cleaned : resolved
+  return cleanOrKeepUrl(resolved, context.cleanUrlFn)
 }
 
 // Everything an embed states about a url or a date, made ready to write: each url resolved against
@@ -447,7 +440,7 @@ export const prepareCiteMetadata = (
 
   return {
     ...result,
-    url: url ? (context.cleanUrlFn?.(url) ?? url) : undefined,
+    url: cleanOrKeepUrl(url, context.cleanUrlFn),
     icon: resolveOrKeepUrl(result.icon, context.resolveUrlFn, context.baseUrl),
     thumbnail: resolveOrKeepUrl(result.thumbnail, context.resolveUrlFn, context.baseUrl),
     date: parseOrKeepDate(result.date, context.parseDateFn),
