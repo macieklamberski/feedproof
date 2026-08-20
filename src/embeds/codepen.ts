@@ -271,7 +271,7 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
 
   return composeEmbed(
     { kind: 'embed', user, ownerPath, grants, slug, defaultTab, themeId, height },
-    { ...(title && { title }) },
+    { title },
   )
 }
 
@@ -300,10 +300,7 @@ export const codepenResolveEmbed = (
 
   const title = readTitle(element)
 
-  return composeEmbed(target, {
-    src: url,
-    ...(title && { title }),
-  })
+  return composeEmbed(target, { src: url, title })
 }
 
 export const codepenIframeEmbedResolver = createUrlEmbedResolver(

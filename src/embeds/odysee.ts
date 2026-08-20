@@ -75,7 +75,7 @@ const odyseeResolveEmbed = (link: string, element: Element): EmbedResolverResult
     id: claimPath,
     src: `https://odysee.com/$/embed/${claimPath}`,
     url: `https://odysee.com/${claimPath}`,
-    ...(title && { title }),
+    title,
   }
 }
 

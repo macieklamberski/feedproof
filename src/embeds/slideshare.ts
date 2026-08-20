@@ -26,8 +26,8 @@ const composeEmbed = (deck: string, url?: string, title?: string): EmbedResolver
     provider: 'slideshare',
     id: deck,
     src: `https://www.slideshare.net/slideshow/embed_code/${deck}`,
-    ...(url && { url }),
-    ...(title && { title }),
+    url,
+    title,
   }
 }
 
