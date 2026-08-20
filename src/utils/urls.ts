@@ -1,5 +1,5 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { ResolveUrlFn } from '../types.js'
+import type { CleanUrlFn, ResolveUrlFn } from '../types.js'
 
 const urlShapeRegex = /[:/.]/
 
@@ -161,6 +161,24 @@ export const resolveOrDropUrl = (
 
   return trimmed ? resolveUrlFn(trimmed, baseUrl) : undefined
 }
+
+// Overloaded the same way and for the same reason as resolveOrKeepUrl: cleaning a definite url
+// answers with a definite one, so composing the two keeps whichever answer the resolve step gave.
+type CleanOrKeepUrl = {
+  (url: string, cleanUrlFn: CleanUrlFn | undefined): string
+  (url: string | undefined, cleanUrlFn: CleanUrlFn | undefined): string | undefined
+}
+
+// Cleaning is the step after resolving, and unlike resolving it has one answer everywhere: a
+// cleaner that answers with nothing has not answered, so the url it was handed stands. Composed
+// with whichever of the two above the call site wants, which is where the keep-or-drop choice
+// already lives. Passing an absent url through keeps that composition to one line.
+//
+// No cleaner leaves the url unchanged, so a caller that has none is the same case as one whose
+// cleaner answered with nothing.
+export const cleanOrKeepUrl: CleanOrKeepUrl = ((url, cleanUrlFn) => {
+  return url ? cleanUrlFn?.(url) || url : undefined
+}) as CleanOrKeepUrl
 
 // Whether an anchor href points at the same page as the post. A bare `#fragment`
 // is inherently same-page. An absolute href counts only when it resolves to the
