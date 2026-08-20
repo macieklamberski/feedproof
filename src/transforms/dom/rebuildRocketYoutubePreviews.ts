@@ -1,4 +1,5 @@
 import type { DomTransform } from '../../types.js'
+import { createIframe } from '../../utils/widgets.js'
 
 // WP Rocket's "Replace YouTube iframe with preview image" rewrites the real iframe into a
 // `.rll-youtube-player` preview div that holds the embed URL in `data-src` and only builds
@@ -14,9 +15,8 @@ export const rebuildRocketYoutubePreviews: DomTransform = () => (document) => {
     }
 
     const query = element.getAttribute('data-query')
-    const iframe = document.createElement('iframe')
+    const iframe = createIframe(document, query ? `${src}?${query}` : src)
 
-    iframe.setAttribute('src', query ? `${src}?${query}` : src)
     element.replaceWith(iframe)
   }
 }

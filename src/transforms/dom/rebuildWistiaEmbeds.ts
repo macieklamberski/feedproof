@@ -1,5 +1,6 @@
 import type { DomTransform } from '../../types.js'
 import { attr, parseRatio } from '../../utils/dom.js'
+import { createIframe } from '../../utils/widgets.js'
 
 // Pulls the hashed id out of the `wistia_async_{id}` class the facade carries.
 const wistiaIdPattern = /\bwistia_async_([A-Za-z0-9]+)/
@@ -72,8 +73,7 @@ export const rebuildWistiaEmbeds: DomTransform = () => (document) => {
       continue
     }
 
-    const iframe = document.createElement('iframe')
-    iframe.setAttribute('src', `https://fast.wistia.net/embed/iframe/${mediaId}`)
+    const iframe = createIframe(document, `https://fast.wistia.net/embed/iframe/${mediaId}`)
 
     const ratio = parseRatio(attr(element, 'aspect') ?? '')
 
