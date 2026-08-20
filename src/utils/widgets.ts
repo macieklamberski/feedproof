@@ -220,6 +220,50 @@ export const createMediaElement = (
   return media
 }
 
+// What every image the pipeline mints states about itself.
+type ImageFields = {
+  src: string
+  srcset?: string
+  alt?: string
+  width?: number
+  height?: number
+}
+
+// The one image every pass mints, whether it stands for an enclosure, a platform's static render
+// or an `<img>` recovered from a container that parked its url. Urls arrive resolved, the same
+// terms `createMediaElement` sets, and `src` is required because an image without one is an empty
+// box the reader still has to lay out.
+export const createImage = (document: Document, fields: ImageFields): HTMLElement => {
+  const image = document.createElement('img')
+  image.setAttribute('src', fields.src)
+
+  if (fields.srcset) {
+    image.setAttribute('srcset', fields.srcset)
+  }
+
+  if (fields.alt) {
+    image.setAttribute('alt', fields.alt)
+  }
+
+  setDimensions(image, fields)
+
+  return image
+}
+
+// A platform that publishes a canonical static render of something it would otherwise show in a
+// player: Datawrapper's chart png, Giphy's gif. The render goes inline where a reader sees it at
+// once, and the interactive version stays one click away on the platform's own page.
+export const createLinkedImage = (
+  document: Document,
+  fields: ImageFields & { href: string },
+): HTMLElement => {
+  const link = document.createElement('a')
+  link.setAttribute('href', fields.href)
+  link.appendChild(createImage(document, fields))
+
+  return link
+}
+
 // Writes a field record as `data-{type}-*` attributes, replacing any the element already carries.
 // A later pass that sets a field means it: an enrichment pass is the platform's own API answering
 // about this exact embed, and that beats whatever a resolver read off the markup. A pass that
