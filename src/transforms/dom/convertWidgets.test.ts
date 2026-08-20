@@ -864,6 +864,24 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
     expect(await transform(value, withResolver(posterResolver))).toEqualHtml(expected)
   })
 
+  // `width` and `height` are not valid on <audio>, so a resolver stating them describes a box
+  // the element cannot have.
+  it('should not write dimensions onto an audio element', async () => {
+    const sizedResolver: MediaResolver = {
+      selector: '.poster-embed',
+      extract: () => ({
+        tag: 'audio',
+        src: 'https://example.com/track.mp3',
+        width: 480,
+        height: 270,
+      }),
+    }
+    const value = '<div class="poster-embed"></div>'
+    const expected = '<audio src="https://example.com/track.mp3" controls></audio>'
+
+    expect(await transform(value, withResolver(sizedResolver))).toEqualHtml(expected)
+  })
+
   it('should await an async media resolver', async () => {
     const asyncResolver: MediaResolver = {
       selector: '.async-embed',
@@ -947,7 +965,10 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       `
       const expected = html`
         <div class="audiofield-wordpress-player" data-src="https://x.example/a.mp3">
-          <audio src="https://x.example/a.mp3" controls></audio>
+          <audio
+            src="https://x.example/a.mp3"
+            controls
+          ></audio>
         </div>
       `
 
@@ -970,7 +991,10 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       const context = { ...baseContext, baseUrl: 'https://forum.example/t/1' }
       const expected = html`
         <div data-video-src="/uploads/clip.mp4">
-          <video src="https://forum.example/uploads/clip.mp4" controls></video>
+          <video
+            src="https://forum.example/uploads/clip.mp4"
+            controls
+          ></video>
         </div>
       `
 
@@ -1011,7 +1035,10 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       `
       const expected = html`
         <div data-mp4="https://x.example/a.mp4" data-webm="https://x.example/a.webm">
-          <video src="https://x.example/a.mp4" controls></video>
+          <video
+            src="https://x.example/a.mp4"
+            controls
+          ></video>
         </div>
       `
 

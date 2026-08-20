@@ -10,7 +10,12 @@ import type {
 import { getElementDimensions } from '../../utils/dom.js'
 import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
 import { absoluteUrlRegex, resolveOrKeepUrl } from '../../utils/urls.js'
-import { createEmbedPlaceholder, isMediaResult } from '../../utils/widgets.js'
+import {
+  createEmbedPlaceholder,
+  createMediaElement,
+  isMediaResult,
+  setDimensions,
+} from '../../utils/widgets.js'
 
 // Marks an injected element so a repeat run skips it and stripDuplicateEnclosures (an
 // opt-in heuristic) can tell it from the item's own inline content. Exported because
@@ -47,14 +52,7 @@ const resolveEnclosure = async (
 ): Promise<EmbedResolverResult | undefined> => {
   const probe = document.createElement('iframe')
   probe.setAttribute('src', url)
-
-  if (enclosure.width) {
-    probe.setAttribute('width', String(enclosure.width))
-  }
-
-  if (enclosure.height) {
-    probe.setAttribute('height', String(enclosure.height))
-  }
+  setDimensions(probe, enclosure)
 
   for (const resolver of resolvers) {
     if (probe.matches(resolver.selector)) {
@@ -74,40 +72,24 @@ const resolveEnclosure = async (
 // aria-label, data-* attributes, etc.) needs a separate design pass.
 const createNativeMediaElement = (
   document: Document,
-  tagName: 'audio' | 'video',
+  tag: 'audio' | 'video',
+  src: string,
   enclosure: Enclosure,
   context: TransformContext,
 ): HTMLElement => {
-  const element = document.createElement(tagName)
-  const src = resolveOrKeepUrl(enclosure.url, context.resolveUrlFn, context.baseUrl)
+  const poster = resolveOrKeepUrl(
+    enclosure.thumbnails?.[0]?.url,
+    context.resolveUrlFn,
+    context.baseUrl,
+  )
 
-  if (src) {
-    element.setAttribute('src', src)
-  }
-
-  element.setAttribute('controls', '')
-  element.setAttribute('preload', 'none')
-
-  if (tagName === 'video') {
-    if (enclosure.width) {
-      element.setAttribute('width', String(enclosure.width))
-    }
-
-    if (enclosure.height) {
-      element.setAttribute('height', String(enclosure.height))
-    }
-
-    const poster = resolveOrKeepUrl(
-      enclosure.thumbnails?.[0]?.url,
-      context.resolveUrlFn,
-      context.baseUrl,
-    )
-    if (poster) {
-      element.setAttribute('poster', poster)
-    }
-  }
-
-  return element
+  return createMediaElement(document, {
+    tag,
+    src,
+    poster,
+    width: enclosure.width,
+    height: enclosure.height,
+  })
 }
 
 const injectImageEnclosure = (
@@ -126,13 +108,7 @@ const injectImageEnclosure = (
     element.setAttribute('src', src)
   }
 
-  if (enclosure.width) {
-    element.setAttribute('width', String(enclosure.width))
-  }
-
-  if (enclosure.height) {
-    element.setAttribute('height', String(enclosure.height))
-  }
+  setDimensions(element, enclosure)
 
   if (enclosure.title) {
     element.setAttribute('alt', enclosure.title)
@@ -396,6 +372,8 @@ export const injectEnclosures: DomTransform = (context) => {
         continue
       }
 
+      const src = resolveOrKeepUrl(embedSource, context.resolveUrlFn, context.baseUrl)
+
       const resolved = await resolveEnclosure(
         embedSource,
         enclosure,
@@ -406,7 +384,6 @@ export const injectEnclosures: DomTransform = (context) => {
       // A resolver match, or an explicit player URL (embeddable by the Media RSS spec even
       // when no resolver claims it), produces an embed placeholder.
       if (resolved || enclosure.playerUrl) {
-        const src = resolveOrKeepUrl(embedSource, context.resolveUrlFn, context.baseUrl)
         const metadata = mergeEnclosureMetadata(resolved, enclosure)
 
         // A resolver rebuilds the src from the parsed id. Without one the enclosure's own
@@ -415,13 +392,15 @@ export const injectEnclosures: DomTransform = (context) => {
         continue
       }
 
+      // Only an enclosure with no player page reaches here, so `embedSource` is the enclosure's
+      // own URL and `src` is the resolved form of it.
       if (isAudioEnclosure(enclosure)) {
-        created.push(createNativeMediaElement(document, 'audio', enclosure, context))
+        created.push(createNativeMediaElement(document, 'audio', src, enclosure, context))
         continue
       }
 
       if (isVideoEnclosure(enclosure)) {
-        created.push(createNativeMediaElement(document, 'video', enclosure, context))
+        created.push(createNativeMediaElement(document, 'video', src, enclosure, context))
         continue
       }
 

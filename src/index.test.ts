@@ -201,7 +201,11 @@ describeForEachParser('transformContent', (parseHtml) => {
   it('should inject audio/video enclosures as native media elements', async () => {
     const value = '<p>Content</p>'
     const expected = html`
-      <audio src="https://example.com/audio.mp3" controls preload="none" data-enclosure=""></audio>
+      <audio
+        src="https://example.com/audio.mp3"
+        controls
+        data-enclosure=""
+      ></audio>
       <p>Content</p>
     `
     const result = await transformContent(value, {
@@ -239,7 +243,11 @@ describeForEachParser('transformContent', (parseHtml) => {
     const value = '<p>Content</p><audio src="https://example.com/episode.mp3"></audio>'
     const enclosures = [{ url: 'https://example.com/episode.mp3', type: 'audio/mpeg' }]
     const expectedStandard = html`
-      <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
+      <audio
+        src="https://example.com/episode.mp3"
+        controls
+        data-enclosure=""
+      ></audio>
       <p>Content</p>
       <audio src="https://example.com/episode.mp3"></audio>
     `
@@ -324,10 +332,8 @@ describeForEachParser('transformContent', (parseHtml) => {
         src="https://proxy.example.com/audio/https%3A%2F%2Fexample.com%2Faudio.mp3"
         data-proxied-src="https://example.com/audio.mp3"
         controls
-        preload="none"
         data-enclosure=""
-      >
-      </audio>
+      ></audio>
       <p>Content</p>
     `
     const result = await transformContent(value, {
