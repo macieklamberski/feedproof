@@ -376,14 +376,20 @@ const prepareCanonicalUrl = (
 // Nothing here refuses to produce a result. A field that cannot be made good is left out and the
 // rest still go on the element, because the three callers disagree about what a refusal would
 // mean: an unbuilt markup placeholder falls through to the generic tier and still renders, while
-// an unbuilt enclosure placeholder is simply never injected. The one field a placeholder cannot
-// go without is `src`, and each caller resolves its own before it decides to build at all.
+// an unbuilt enclosure placeholder is simply never injected.
+//
+// `src` takes the drop answer like the canonical url, since it is the url the reader actually
+// loads. The two passes that build a placeholder resolve their own before they decide to build at
+// all and write it back over this one, so for them it is a second resolve of a url already
+// resolved. Enrichment is the pass this is here for: it writes onto a placeholder that already
+// has a working src, so a payload src that will not resolve is left out and the resolver's stands.
 export const prepareEmbedMetadata = (
   metadata: Partial<EmbedResolverResult>,
   context: TransformContext,
 ): Partial<EmbedResolverResult> => {
   return {
     ...metadata,
+    src: resolveOrDropUrl(metadata.src, context.resolveUrlFn, context.baseUrl),
     url: prepareCanonicalUrl(metadata.url, context),
     thumbnail: resolveOrKeepUrl(metadata.thumbnail, context.resolveUrlFn, context.baseUrl),
     avatar: resolveOrKeepUrl(metadata.avatar, context.resolveUrlFn, context.baseUrl),
