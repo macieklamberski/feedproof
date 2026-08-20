@@ -203,6 +203,7 @@ describe('youtubeResolveEmbed', () => {
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      ratio: '16/9',
     }
 
     expect(youtubeResolveEmbed(value)).toEqual(expected)
@@ -216,6 +217,7 @@ describe('youtubeResolveEmbed', () => {
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      ratio: '16/9',
     }
 
     expect(youtubeResolveEmbed(value)).toEqual(expected)
@@ -229,6 +231,7 @@ describe('youtubeResolveEmbed', () => {
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=90',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      ratio: '16/9',
     }
 
     expect(youtubeResolveEmbed(value)).toEqual(expected)
@@ -242,6 +245,7 @@ describe('youtubeResolveEmbed', () => {
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      ratio: '16/9',
     }
 
     expect(youtubeResolveEmbed(value)).toEqual(expected)
@@ -255,6 +259,7 @@ describe('youtubeResolveEmbed', () => {
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      ratio: '16/9',
     }
 
     expect(youtubeResolveEmbed(value)).toEqual(expected)
@@ -268,6 +273,7 @@ describe('youtubeResolveEmbed', () => {
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      ratio: '16/9',
     }
 
     expect(youtubeResolveEmbed(value)).toEqual(expected)
@@ -281,6 +287,7 @@ describe('youtubeResolveEmbed', () => {
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      ratio: '16/9',
     }
 
     expect(youtubeResolveEmbed(value)).toEqual(expected)
@@ -294,6 +301,7 @@ describe('youtubeResolveEmbed', () => {
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      ratio: '16/9',
     }
 
     expect(youtubeResolveEmbed(value)).toEqual(expected)
@@ -306,6 +314,7 @@ describe('youtubeResolveEmbed', () => {
       id: 'PLabc123',
       src: 'https://www.youtube.com/embed/videoseries?list=PLabc123',
       url: 'https://www.youtube.com/playlist?list=PLabc123',
+      ratio: '16/9',
     }
 
     expect(youtubeResolveEmbed(value)).toEqual(expected)
@@ -318,6 +327,7 @@ describe('youtubeResolveEmbed', () => {
       id: 'UCabc123',
       src: 'https://www.youtube.com/embed/live_stream?channel=UCabc123',
       url: 'https://www.youtube.com/channel/UCabc123',
+      ratio: '16/9',
     }
 
     expect(youtubeResolveEmbed(value)).toEqual(expected)
@@ -330,6 +340,7 @@ describe('youtubeResolveEmbed', () => {
       id: 'PLxyz',
       src: 'https://www.youtube.com/embed/videoseries?list=PLxyz',
       url: 'https://www.youtube.com/playlist?list=PLxyz',
+      ratio: '16/9',
     }
 
     expect(youtubeResolveEmbed(value)).toEqual(expected)
@@ -455,6 +466,7 @@ describeForEachParser('youtubeIframeEmbedResolver', (parseHtml) => {
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      ratio: '16/9',
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -468,6 +480,7 @@ describeForEachParser('youtubeIframeEmbedResolver', (parseHtml) => {
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      ratio: '16/9',
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -481,6 +494,7 @@ describeForEachParser('youtubeIframeEmbedResolver', (parseHtml) => {
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      ratio: '16/9',
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -519,15 +533,20 @@ describeForEachParser('youtubeAmpEmbedResolver', (parseHtml) => {
         src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
         url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
     })
 
-    it('should carry the size the element declares', async () => {
+    it('should keep the player ratio over the size the element declares', async () => {
       const value = html`
-        <amp-youtube data-videoid="dQw4w9WgXcQ" width="480" height="270" layout="responsive">
-        </amp-youtube>
+        <amp-youtube
+          data-videoid="dQw4w9WgXcQ"
+          width="480"
+          height="270"
+          layout="responsive"
+        ></amp-youtube>
       `
       const expected: EmbedResolverResult = {
         provider: 'youtube',
@@ -535,8 +554,7 @@ describeForEachParser('youtubeAmpEmbedResolver', (parseHtml) => {
         src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
         url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
-        width: 480,
-        height: 270,
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -553,6 +571,7 @@ describeForEachParser('youtubeAmpEmbedResolver', (parseHtml) => {
         src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=30&end=90',
         url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -573,6 +592,7 @@ describeForEachParser('youtubeAmpEmbedResolver', (parseHtml) => {
         src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf&index=2',
         url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -591,6 +611,7 @@ describeForEachParser('youtubeAmpEmbedResolver', (parseHtml) => {
         src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
         url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)

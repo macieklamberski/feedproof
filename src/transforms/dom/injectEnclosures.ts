@@ -10,7 +10,12 @@ import type {
 import { getElementDimensions } from '../../utils/dom.js'
 import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
 import { absoluteUrlRegex, resolveOrKeepUrl } from '../../utils/urls.js'
-import { createEmbedPlaceholder, hasDimensions, isMediaResult } from '../../utils/widgets.js'
+import {
+  createEmbedPlaceholder,
+  createMediaElement,
+  isMediaResult,
+  setDimensions,
+} from '../../utils/widgets.js'
 
 // Marks an injected element so a repeat run skips it and stripDuplicateEnclosures (an
 // opt-in heuristic) can tell it from the item's own inline content. Exported because
@@ -35,13 +40,19 @@ const isAvatarEnclosure = (url: string, avatarHosts: ReadonlyArray<string>): boo
 
 // Run resolvers against a synthesized iframe carrying the enclosure URL so that
 // iframe-shaped resolvers (YouTube etc.) can claim platform-specific enclosures.
+//
+// The feed's dimensions ride along on the probe, which puts them in the same tier as the size a
+// publisher states on a carrier in the content: they win over the resolver's, unless the resolver
+// measured the platform better and opted out of declared sizes.
 const resolveEnclosure = async (
   url: string,
+  enclosure: Enclosure,
   resolvers: ReadonlyArray<WidgetResolver>,
   document: Document,
 ): Promise<EmbedResolverResult | undefined> => {
   const probe = document.createElement('iframe')
   probe.setAttribute('src', url)
+  setDimensions(probe, enclosure)
 
   for (const resolver of resolvers) {
     if (probe.matches(resolver.selector)) {
@@ -61,40 +72,24 @@ const resolveEnclosure = async (
 // aria-label, data-* attributes, etc.) needs a separate design pass.
 const createNativeMediaElement = (
   document: Document,
-  tagName: 'audio' | 'video',
+  tag: 'audio' | 'video',
+  src: string,
   enclosure: Enclosure,
   context: TransformContext,
 ): HTMLElement => {
-  const element = document.createElement(tagName)
-  const src = resolveOrKeepUrl(enclosure.url, context.resolveUrlFn, context.baseUrl)
+  const poster = resolveOrKeepUrl(
+    enclosure.thumbnails?.[0]?.url,
+    context.resolveUrlFn,
+    context.baseUrl,
+  )
 
-  if (src) {
-    element.setAttribute('src', src)
-  }
-
-  element.setAttribute('controls', '')
-  element.setAttribute('preload', 'none')
-
-  if (tagName === 'video') {
-    if (enclosure.width) {
-      element.setAttribute('width', String(enclosure.width))
-    }
-
-    if (enclosure.height) {
-      element.setAttribute('height', String(enclosure.height))
-    }
-
-    const poster = resolveOrKeepUrl(
-      enclosure.thumbnails?.[0]?.url,
-      context.resolveUrlFn,
-      context.baseUrl,
-    )
-    if (poster) {
-      element.setAttribute('poster', poster)
-    }
-  }
-
-  return element
+  return createMediaElement(document, {
+    tag,
+    src,
+    poster,
+    width: enclosure.width,
+    height: enclosure.height,
+  })
 }
 
 const injectImageEnclosure = (
@@ -113,13 +108,7 @@ const injectImageEnclosure = (
     element.setAttribute('src', src)
   }
 
-  if (enclosure.width) {
-    element.setAttribute('width', String(enclosure.width))
-  }
-
-  if (enclosure.height) {
-    element.setAttribute('height', String(enclosure.height))
-  }
+  setDimensions(element, enclosure)
 
   if (enclosure.title) {
     element.setAttribute('alt', enclosure.title)
@@ -131,25 +120,20 @@ const injectImageEnclosure = (
 // Layers the enclosure's own metadata over the resolver result, preferring the feed's
 // values for the display fields. The resolver only has URL-derived guesses (e.g. YouTube's
 // composed hqdefault thumbnail), while the feed carries the publisher's real thumbnail,
-// title, dimensions, and duration. Identity fields (provider/id/src/url) stay from the
-// resolver.
+// title, and duration. Identity fields (provider/id/src/url) stay from the resolver.
 //
-// The dimensions come from one side whole, never a width from one and a height from the other:
-// a feed that states only a width beside a resolver's fixed player height would describe a box
-// nobody measured (320 beside Acast's 190 came out of that once, for a fluid-width bar).
+// The size is settled before this: a resolver read the feed's dimensions off the probe, whole,
+// through the rule that governs content markup too. Where no resolver claimed the enclosure, the
+// feed's dimensions are the only ones there are.
 const mergeEnclosureMetadata = (
   resolved: EmbedResolverResult | undefined,
   enclosure: Enclosure,
 ): Partial<EmbedResolverResult> => {
-  const dimensions = hasDimensions(enclosure) ? enclosure : resolved
-
   return {
-    ...resolved,
+    ...(resolved ?? { width: enclosure.width, height: enclosure.height }),
     thumbnail: enclosure.thumbnails?.[0]?.url ?? resolved?.thumbnail,
     title: enclosure.title ?? resolved?.title,
     description: enclosure.description ?? resolved?.description,
-    width: dimensions?.width,
-    height: dimensions?.height,
     duration: enclosure.duration ?? resolved?.duration,
   }
 }
@@ -388,12 +372,18 @@ export const injectEnclosures: DomTransform = (context) => {
         continue
       }
 
-      const resolved = await resolveEnclosure(embedSource, context.widgetResolvers, document)
+      const src = resolveOrKeepUrl(embedSource, context.resolveUrlFn, context.baseUrl)
+
+      const resolved = await resolveEnclosure(
+        embedSource,
+        enclosure,
+        context.widgetResolvers,
+        document,
+      )
 
       // A resolver match, or an explicit player URL (embeddable by the Media RSS spec even
       // when no resolver claims it), produces an embed placeholder.
       if (resolved || enclosure.playerUrl) {
-        const src = resolveOrKeepUrl(embedSource, context.resolveUrlFn, context.baseUrl)
         const metadata = mergeEnclosureMetadata(resolved, enclosure)
 
         // A resolver rebuilds the src from the parsed id. Without one the enclosure's own
@@ -402,13 +392,15 @@ export const injectEnclosures: DomTransform = (context) => {
         continue
       }
 
+      // Only an enclosure with no player page reaches here, so `embedSource` is the enclosure's
+      // own URL and `src` is the resolved form of it.
       if (isAudioEnclosure(enclosure)) {
-        created.push(createNativeMediaElement(document, 'audio', enclosure, context))
+        created.push(createNativeMediaElement(document, 'audio', src, enclosure, context))
         continue
       }
 
       if (isVideoEnclosure(enclosure)) {
-        created.push(createNativeMediaElement(document, 'video', enclosure, context))
+        created.push(createNativeMediaElement(document, 'video', src, enclosure, context))
         continue
       }
 

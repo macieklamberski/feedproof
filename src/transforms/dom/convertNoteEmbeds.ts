@@ -1,6 +1,7 @@
 import { startsWithAnyOf } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { attr, hasText } from '../../utils/dom.js'
+import { createIframe } from '../../utils/widgets.js'
 
 // note.com ships every embed as an empty <figure> that only its web client hydrates, naming the
 // target in `data-src`. Nothing renders it in a reader, so the embed is lost: the figure survives
@@ -43,9 +44,7 @@ export const convertNoteEmbeds: DomTransform = () => (document) => {
       continue
     }
 
-    const iframe = document.createElement('iframe')
-
-    iframe.setAttribute('src', source)
+    const iframe = createIframe(document, source)
     element.replaceWith(iframe)
   }
 }

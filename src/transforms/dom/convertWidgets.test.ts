@@ -39,6 +39,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       <div
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-provider="youtube"
         data-embed-id="dQw4w9WgXcQ"
@@ -59,6 +60,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       <div
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        data-embed-ratio="16/9"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-provider="youtube"
         data-embed-id="dQw4w9WgXcQ"
@@ -69,9 +71,13 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   })
 
   it('should preserve iframe dimensions as data attributes', async () => {
+    const customContext: TransformContext = {
+      ...baseContext,
+      widgetResolvers: defaultWidgetResolvers,
+    }
     const value = html`
       <iframe
-        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        src="https://player.vimeo.com/video/76979871"
         width="640"
         height="360"
       ></iframe>
@@ -79,16 +85,15 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     const expected = html`
       <div
         data-embed-width="640"
-        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
-        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-        data-embed-provider="youtube"
-        data-embed-id="dQw4w9WgXcQ"
+        data-embed-url="https://vimeo.com/76979871"
+        data-embed-src="https://player.vimeo.com/video/76979871"
+        data-embed-provider="vimeo"
+        data-embed-id="76979871"
         data-embed-height="360"
       ></div>
     `
 
-    expect(await transform(value)).toEqualHtml(expected)
+    expect(await transform(value, customContext)).toEqualHtml(expected)
   })
 
   it('should recover aspect from a responsive wrapper when the iframe is unsized', async () => {
@@ -208,6 +213,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       <div
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-provider="youtube"
         data-embed-id="dQw4w9WgXcQ"
@@ -232,6 +238,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       <div
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-provider="youtube"
         data-embed-id="dQw4w9WgXcQ"
@@ -396,6 +403,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       <div
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-provider="youtube"
         data-embed-id="dQw4w9WgXcQ"
@@ -645,13 +653,12 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       `
       const expected = html`
         <div
-          data-embed-width="425"
-          data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                    data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
           data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-ratio="16/9"
           data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
           data-embed-provider="youtube"
           data-embed-id="dQw4w9WgXcQ"
-          data-embed-height="350"
         ></div>
       `
 
@@ -664,6 +671,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         <div
           data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
           data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-ratio="16/9"
           data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
           data-embed-provider="youtube"
           data-embed-id="dQw4w9WgXcQ"
@@ -683,6 +691,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         <div
           data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
           data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-ratio="16/9"
           data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
           data-embed-provider="youtube"
           data-embed-id="dQw4w9WgXcQ"
@@ -698,6 +707,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         <div
           data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
           data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-ratio="16/9"
           data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
           data-embed-provider="youtube"
           data-embed-id="dQw4w9WgXcQ"
@@ -717,13 +727,12 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       `
       const expected = html`
         <div
-          data-embed-width="425"
-          data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                    data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
           data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-ratio="16/9"
           data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
           data-embed-provider="youtube"
           data-embed-id="dQw4w9WgXcQ"
-          data-embed-height="350"
         ></div>
       `
 
@@ -750,6 +759,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
           <div
             data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
             data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+            data-embed-ratio="16/9"
             data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
             data-embed-provider="youtube"
             data-embed-id="dQw4w9WgXcQ"
@@ -819,6 +829,7 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       <div
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-provider="youtube"
         data-embed-id="dQw4w9WgXcQ"
@@ -862,6 +873,24 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
     const expected = '<audio src="https://example.com/track.mp3" controls></audio>'
 
     expect(await transform(value, withResolver(posterResolver))).toEqualHtml(expected)
+  })
+
+  // `width` and `height` are not valid on <audio>, so a resolver stating them describes a box
+  // the element cannot have.
+  it('should not write dimensions onto an audio element', async () => {
+    const sizedResolver: MediaResolver = {
+      selector: '.poster-embed',
+      extract: () => ({
+        tag: 'audio',
+        src: 'https://example.com/track.mp3',
+        width: 480,
+        height: 270,
+      }),
+    }
+    const value = '<div class="poster-embed"></div>'
+    const expected = '<audio src="https://example.com/track.mp3" controls></audio>'
+
+    expect(await transform(value, withResolver(sizedResolver))).toEqualHtml(expected)
   })
 
   it('should await an async media resolver', async () => {
@@ -947,7 +976,10 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       `
       const expected = html`
         <div class="audiofield-wordpress-player" data-src="https://x.example/a.mp3">
-          <audio src="https://x.example/a.mp3" controls></audio>
+          <audio
+            src="https://x.example/a.mp3"
+            controls
+          ></audio>
         </div>
       `
 
@@ -970,7 +1002,10 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       const context = { ...baseContext, baseUrl: 'https://forum.example/t/1' }
       const expected = html`
         <div data-video-src="/uploads/clip.mp4">
-          <video src="https://forum.example/uploads/clip.mp4" controls></video>
+          <video
+            src="https://forum.example/uploads/clip.mp4"
+            controls
+          ></video>
         </div>
       `
 
@@ -1011,7 +1046,10 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       `
       const expected = html`
         <div data-mp4="https://x.example/a.mp4" data-webm="https://x.example/a.webm">
-          <video src="https://x.example/a.mp4" controls></video>
+          <video
+            src="https://x.example/a.mp4"
+            controls
+          ></video>
         </div>
       `
 
