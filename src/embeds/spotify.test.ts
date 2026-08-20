@@ -347,6 +347,57 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // A payload writing the artwork without a scheme still names Spotify's image host.
+    it('should keep protocol-relative artwork on the image host', async () => {
+      const attrs = jsonAttrValue({
+        title: 'A track',
+        image: '//i.scdn.co/image/ab67616d0000b273',
+      })
+      const value = html`
+        <iframe
+          class="spotify-wrap"
+          data-attrs="${attrs}"
+          src="https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'track/03yOjwHoOPDlTUg0NRxN6t',
+        src: 'https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t',
+        url: 'https://open.spotify.com/track/03yOjwHoOPDlTUg0NRxN6t',
+        height: 152,
+        title: 'A track',
+        thumbnail: '//i.scdn.co/image/ab67616d0000b273',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // A path names no host at all, so it cannot be shown to be Spotify's.
+    it('should ignore artwork stated as a bare path', async () => {
+      const attrs = jsonAttrValue({
+        title: 'A track',
+        image: '/image/ab67616d0000b273',
+      })
+      const value = html`
+        <iframe
+          class="spotify-wrap"
+          data-attrs="${attrs}"
+          src="https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'track/03yOjwHoOPDlTUg0NRxN6t',
+        src: 'https://open.spotify.com/embed/track/03yOjwHoOPDlTUg0NRxN6t',
+        url: 'https://open.spotify.com/track/03yOjwHoOPDlTUg0NRxN6t',
+        height: 152,
+        title: 'A track',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   it('should ignore a non-spotify iframe', async () => {

@@ -1,4 +1,4 @@
-import { getPathSegments, isSubdomainOf } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, isBlockElement, isBr, isElement, jsonAttr, text } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -245,10 +245,10 @@ const readSubstackPost = (element: Element): Partial<EmbedResolverResult> => {
   return {
     description: attributes.text,
     author: composeAuthor(attributes.authorName, attributes.authorHandle),
-    avatar: isSubdomainOf(attributes.authorAvatarUrl ?? '', blueskyMediaHosts)
+    avatar: parseUrlOnHosts(attributes.authorAvatarUrl, blueskyMediaHosts)
       ? attributes.authorAvatarUrl
       : undefined,
-    thumbnail: isSubdomainOf(image ?? '', blueskyMediaHosts) ? image : undefined,
+    thumbnail: parseUrlOnHosts(image, blueskyMediaHosts) ? image : undefined,
     date: attributes.createdAt,
   }
 }
