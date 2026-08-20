@@ -361,6 +361,31 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(await transform(value, context)).toEqualHtml(expected)
     })
 
+    // A feed listing one picture as both a native enclosure and a media:content can spell the
+    // two differently, and the fingerprint that collapses them only compares hosts and paths.
+    it('should inject one image when enclosures differ only by a missing scheme', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
+        { url: '//example.com/cover.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/cover.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should not inject a gravatar avatar that states no scheme', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: '//2.gravatar.com/avatar/abc123?s=96&d=identicon', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
     it('should collapse a WordPress -WxH variant to the full-res original', async () => {
       const value = '<p>Content</p>'
       const context = withEnclosures([
