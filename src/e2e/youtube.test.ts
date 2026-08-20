@@ -24,6 +24,7 @@ describeForEachParser('YouTube', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
       ></div>
     `
 
@@ -46,8 +47,7 @@ describeForEachParser('YouTube', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcB"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcB"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcB/hqdefault.jpg"
-        data-embed-width="560"
-        data-embed-height="315"
+        data-embed-ratio="16/9"
       ></div>
     `
 
@@ -65,6 +65,7 @@ describeForEachParser('YouTube', (parseHtml) => {
         data-embed-id="PLabc123"
         data-embed-src="https://www.youtube.com/embed/videoseries?list=PLabc123"
         data-embed-url="https://www.youtube.com/playlist?list=PLabc123"
+        data-embed-ratio="16/9"
       ></div>
     `
 
@@ -84,6 +85,7 @@ describeForEachParser('YouTube', (parseHtml) => {
         data-embed-id="UCabc123"
         data-embed-src="https://www.youtube.com/embed/live_stream?channel=UCabc123"
         data-embed-url="https://www.youtube.com/channel/UCabc123"
+        data-embed-ratio="16/9"
       ></div>
     `
 
@@ -113,6 +115,7 @@ describeForEachParser('YouTube', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/QMIjaUgLLJg"
         data-embed-url="https://www.youtube.com/watch?v=QMIjaUgLLJg"
         data-embed-thumbnail="https://i.ytimg.com/vi/QMIjaUgLLJg/hqdefault.jpg"
+        data-embed-ratio="16/9"
       ></div>
     `
 

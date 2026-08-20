@@ -362,8 +362,7 @@ describeForEachParser('transformContent', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
-        data-embed-width="560"
-        data-embed-height="315"
+        data-embed-ratio="16/9"
         data-embed-title="Title for dQw4w9WgXcQ"
         data-embed-author="Test Channel"
         data-embed-duration="213"
@@ -392,6 +391,7 @@ describeForEachParser('transformContent', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
       ></div>
     `
     const result = await transformContent(value, {
@@ -452,6 +452,7 @@ describeForEachParser('transformContent', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
       ></div>
     `
 
