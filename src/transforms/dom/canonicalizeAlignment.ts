@@ -1,5 +1,6 @@
 import type { DomTransform } from '../../types.js'
 import { isElement, isSkippable } from '../../utils/dom.js'
+import { styleKeyword } from '../../utils/style.js'
 
 type Direction = 'center' | 'left' | 'right'
 
@@ -49,25 +50,27 @@ const bareClassDirections = new Map<string, Direction>([
 ])
 
 const whitespaceRegex = /\s+/
-const textAlignRegex = /(?:^|;)\s*text-align\s*:\s*(center|left|right)\b/i
-const autoMarginRegex = /(?:^|;)\s*margin\s*:\s*(?:0\s+)?auto\b/i
-const autoMarginLeftRegex = /(?:^|;)\s*margin-left\s*:\s*auto\b/i
-const autoMarginRightRegex = /(?:^|;)\s*margin-right\s*:\s*auto\b/i
+const autoMarginRegex = /^(?:0\s+)?auto\b/
 
-const getStyleDirection = (style: string, isImage: boolean): Direction | undefined => {
-  const match = textAlignRegex.exec(style)
+const getStyleDirection = (element: Element, isImage: boolean): Direction | undefined => {
+  const direction = attrDirections.get(styleKeyword(element, 'text-align') ?? '')
 
-  if (match) {
-    return match[1].toLowerCase() as Direction
+  if (direction) {
+    return direction
   }
 
   // Auto horizontal margins center an <img> (a block layout idiom); ambiguous on
   // other elements, so restricted to images. 0.16% of feeds.
-  if (
-    isImage &&
-    (autoMarginRegex.test(style) ||
-      (autoMarginLeftRegex.test(style) && autoMarginRightRegex.test(style)))
-  ) {
+  if (!isImage) {
+    return
+  }
+
+  const hasAutoMargin = autoMarginRegex.test(styleKeyword(element, 'margin') ?? '')
+  const hasAutoSideMargins =
+    styleKeyword(element, 'margin-left') === 'auto' &&
+    styleKeyword(element, 'margin-right') === 'auto'
+
+  if (hasAutoMargin || hasAutoSideMargins) {
     return 'center'
   }
 }
@@ -101,14 +104,10 @@ const getOwnDirection = (element: Element): Direction | 'none' | undefined => {
     return 'center'
   }
 
-  const style = element.getAttribute('style')
+  const direction = getStyleDirection(element, element.localName === 'img')
 
-  if (style) {
-    const direction = getStyleDirection(style, element.localName === 'img')
-
-    if (direction) {
-      return direction
-    }
+  if (direction) {
+    return direction
   }
 
   const align = element.getAttribute('align')
