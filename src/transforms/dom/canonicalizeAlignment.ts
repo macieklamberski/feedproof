@@ -50,7 +50,32 @@ const bareClassDirections = new Map<string, Direction>([
 ])
 
 const whitespaceRegex = /\s+/
-const autoMarginRegex = /^(?:0\s+)?auto\b/
+
+// Both horizontal margins set to auto, however the element spells them. The shorthand states
+// them by position: one value covers every side, two and three put the horizontal pair second,
+// and four gives the right and the left a value each. `10px auto` centers as surely as `0 auto`,
+// while `0 auto 10px 0` does not, since only one side is auto. A value holding a function is
+// left alone, because its own spaces would be counted as sides.
+const hasAutoHorizontalMargins = (element: Element): boolean => {
+  if (
+    styleKeyword(element, 'margin-left') === 'auto' &&
+    styleKeyword(element, 'margin-right') === 'auto'
+  ) {
+    return true
+  }
+
+  const margin = styleKeyword(element, 'margin')
+
+  if (!margin || margin.includes('(')) {
+    return false
+  }
+
+  const sides = margin.split(whitespaceRegex)
+  const right = sides.length === 1 ? sides[0] : sides[1]
+  const left = sides.length === 4 ? sides[3] : right
+
+  return right === 'auto' && left === 'auto'
+}
 
 const getStyleDirection = (element: Element, isImage: boolean): Direction | undefined => {
   const direction = attrDirections.get(styleKeyword(element, 'text-align') ?? '')
@@ -61,16 +86,7 @@ const getStyleDirection = (element: Element, isImage: boolean): Direction | unde
 
   // Auto horizontal margins center an <img> (a block layout idiom); ambiguous on
   // other elements, so restricted to images. 0.16% of feeds.
-  if (!isImage) {
-    return
-  }
-
-  const hasAutoMargin = autoMarginRegex.test(styleKeyword(element, 'margin') ?? '')
-  const hasAutoSideMargins =
-    styleKeyword(element, 'margin-left') === 'auto' &&
-    styleKeyword(element, 'margin-right') === 'auto'
-
-  if (hasAutoMargin || hasAutoSideMargins) {
+  if (isImage && hasAutoHorizontalMargins(element)) {
     return 'center'
   }
 }

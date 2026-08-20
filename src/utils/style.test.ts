@@ -6,6 +6,7 @@ import {
   getElementStyles,
   styleKeyword,
   styleLength,
+  styleNumber,
 } from './style.js'
 
 describeForEachParser('bgImage', (parseHtml) => {
@@ -166,6 +167,31 @@ describeForEachParser('getElementStyles', (parseHtml) => {
     expect(getElementStyles(element).content).toBe("'/* hi */'")
   })
 
+  // The shorthand paints its own background, so the image the longhand named is gone.
+  it('should drop a longhand the shorthand after it resets', () => {
+    const document = parseHtml('<div style="background-image: url(a.png); background: red"></div>')
+    const element = queryElement(document, 'div')
+    const expected: ElementStyles = { background: 'red' }
+
+    expect(getElementStyles(element)).toEqual(expected)
+  })
+
+  it('should keep a longhand stated after the shorthand', () => {
+    const document = parseHtml('<div style="background: red; background-image: url(a.png)"></div>')
+    const element = queryElement(document, 'div')
+    const expected: ElementStyles = { background: 'red', 'background-image': 'url(a.png)' }
+
+    expect(getElementStyles(element)).toEqual(expected)
+  })
+
+  it('should drop the padding sides the shorthand after them resets', () => {
+    const document = parseHtml('<div style="padding-bottom: 10px; padding: 0 0 56.25%"></div>')
+    const element = queryElement(document, 'div')
+    const expected: ElementStyles = { padding: '0 0 56.25%' }
+
+    expect(getElementStyles(element)).toEqual(expected)
+  })
+
   it('should drop the important flag from the value', () => {
     const document = parseHtml('<div style="max-width: 800px !important"></div>')
     const element = queryElement(document, 'div')
@@ -237,6 +263,56 @@ describeForEachParser('styleKeyword', (parseHtml) => {
 
   it('should return undefined for a nullish element', () => {
     expect(styleKeyword(undefined, 'display')).toBeUndefined()
+  })
+})
+
+describeForEachParser('styleNumber', (parseHtml) => {
+  it('should read a plain number', () => {
+    const document = parseHtml('<div style="opacity: 0.5"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleNumber(element, 'opacity')).toBe(0.5)
+  })
+
+  it('should read a number written with an exponent', () => {
+    const document = parseHtml('<div style="opacity: 5e-1"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleNumber(element, 'opacity')).toBe(0.5)
+  })
+
+  // Opacity states half as `50%`, which is the same as `0.5`.
+  it('should read a percentage as the fraction it names', () => {
+    const document = parseHtml('<div style="opacity: 50%"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleNumber(element, 'opacity')).toBe(0.5)
+  })
+
+  // Number.parseFloat reads this as zero, and CSS has no such spelling for a number.
+  it('should ignore a value CSS cannot state', () => {
+    const document = parseHtml('<div style="opacity: 0x0"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleNumber(element, 'opacity')).toBeUndefined()
+  })
+
+  it('should ignore a number carrying a unit', () => {
+    const document = parseHtml('<div style="opacity: 5px"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleNumber(element, 'opacity')).toBeUndefined()
+  })
+
+  it('should return undefined when the property is not stated', () => {
+    const document = parseHtml('<div style="color: red"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(styleNumber(element, 'opacity')).toBeUndefined()
+  })
+
+  it('should return undefined for a nullish element', () => {
+    expect(styleNumber(undefined, 'opacity')).toBeUndefined()
   })
 })
 

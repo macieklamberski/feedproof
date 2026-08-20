@@ -210,6 +210,14 @@ describeForEachParser('hasZeroOpacity', (parseHtml) => {
     expect(hasZeroOpacity(image)).toBe(false)
   })
 
+  // Number.parseFloat reads this as zero, and CSS has no such spelling for a number.
+  it('should return false for a value CSS cannot state', () => {
+    const document = parseHtml('<img src="photo.jpg" style="opacity:0x0">')
+    const image = queryElement(document, 'img')
+
+    expect(hasZeroOpacity(image)).toBe(false)
+  })
+
   it('should return false when no opacity is stated', () => {
     const document = parseHtml('<img src="photo.jpg" style="display:block">')
     const image = queryElement(document, 'img')

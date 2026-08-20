@@ -9,6 +9,15 @@ const importantRegex = /\s*!\s*important\s*$/i
 // An unterminated comment runs to the end of the attribute, the way a browser closes it.
 const commentRegex = /\/\*.*?(?:\*\/|$)/gs
 
+// A shorthand sets every longhand it covers, so `background-image:url(a);background:red` paints
+// no image at all. Reading both names without this would answer with the url the shorthand threw
+// away. Only the longhands this package reads are listed, since nothing else is asked for.
+const resetByShorthand = new Map<string, Array<string>>([
+  ['background', ['background-image']],
+  ['margin', ['margin-left', 'margin-right']],
+  ['padding', ['padding-top', 'padding-bottom']],
+])
+
 // Reads a `style` attribute into its declarations, keyed by lowercase property name. CSS property
 // names are case-insensitive, so `MAX-WIDTH:800px` is a declaration a browser honours, and neither
 // parser can be asked for it: linkedom stores the name as written but only ever looks up the
@@ -42,9 +51,17 @@ const parseStyles = (style: string): ElementStyles => {
     const statedValue = clean(style.slice(colonIndex + 1, declarationEnd))
     const value = statedValue.replace(importantRegex, '').trim()
 
-    if (property && value) {
-      styles[property.startsWith('--') ? property : property.toLowerCase()] = value
+    if (!property || !value) {
+      return
     }
+
+    const name = property.startsWith('--') ? property : property.toLowerCase()
+
+    for (const longhand of resetByShorthand.get(name) ?? []) {
+      delete styles[longhand]
+    }
+
+    styles[name] = value
   }
 
   for (let index = 0; index < style.length; index++) {
@@ -161,6 +178,26 @@ const styleLengthRegex = /^\+?([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?$/i
 // keep 0, 1 and 2 for removeTrackingPixels, which that bound would reject.
 export const styleLength = (element: Nullish<Element>, property: string): string | undefined => {
   return getElementStyles(element)[property]?.match(styleLengthRegex)?.[1]
+}
+
+// Matches a whole CSS number, with the exponent and the sign the grammar allows. Checking the
+// shape is the point: `Number.parseFloat` alone answers 0 to spellings CSS does not have, `0x0`
+// among them, which would read as a fully transparent element.
+const styleNumberRegex = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?%?$/i
+
+// The number a property states, for the ones that take a plain number rather than a length. A
+// percentage comes back as the fraction it names, so `50%` reads as 0.5, which is what opacity
+// means by it.
+export const styleNumber = (element: Nullish<Element>, property: string): number | undefined => {
+  const value = getElementStyles(element)[property]
+
+  if (!value || !styleNumberRegex.test(value)) {
+    return
+  }
+
+  const number = Number.parseFloat(value)
+
+  return value.endsWith('%') ? number / 100 : number
 }
 
 const bgImageUrlRegex = /url\(['"]?([^'")]+)/

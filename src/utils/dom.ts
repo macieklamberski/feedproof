@@ -1,5 +1,11 @@
 import { coerceNumber, isNonEmptyString, type Nullish, startsWithAnyOf } from 'trousse'
-import { type ElementStyles, getElementStyles, styleKeyword, styleLength } from './style.js'
+import {
+  type ElementStyles,
+  getElementStyles,
+  styleKeyword,
+  styleLength,
+  styleNumber,
+} from './style.js'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
@@ -540,16 +546,7 @@ export const isElementHidden = (element: Element): boolean => {
 // tracking-beacon trick. Elsewhere `opacity:0` is usually the first frame of a fade-in,
 // so the caller decides what it is looking at.
 export const hasZeroOpacity = (element: Element): boolean => {
-  const opacity = getElementStyles(element).opacity
-
-  if (opacity === undefined) {
-    return false
-  }
-
-  // Opacity takes a number or a percentage, so `0` and `0%` are the same transparency.
-  const number = opacity.endsWith('%') ? opacity.slice(0, -1) : opacity
-
-  return number !== '' && Number(number) === 0
+  return styleNumber(element, 'opacity') === 0
 }
 
 // Visits every element in document order and calls `visit` on each. Linkedom's
