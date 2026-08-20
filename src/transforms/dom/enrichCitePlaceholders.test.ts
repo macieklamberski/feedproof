@@ -80,6 +80,76 @@ describeForEachParser('enrichCitePlaceholders', (parseHtml) => {
     expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
+  // A payload is a platform's API answering, not the feed, so its urls get the same treatment a
+  // resolver's do: an enricher that hands back a path is describing something on its own host.
+  it('should resolve an enriched thumbnail against the base url', async () => {
+    const value = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/post"
+      ></div>
+    `
+    const fn: EnrichCiteFn = () => {
+      return [{ thumbnail: '/media/cover.jpg' }]
+    }
+    const expected = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/post"
+        data-cite-thumbnail="https://cdn.example.com/media/cover.jpg"
+      ></div>
+    `
+    const context: TransformContext = { ...withFn(fn), baseUrl: 'https://cdn.example.com/post' }
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
+  it('should resolve an enriched icon against the base url', async () => {
+    const value = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/post"
+      ></div>
+    `
+    const fn: EnrichCiteFn = () => {
+      return [{ icon: '/favicon.ico' }]
+    }
+    const expected = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/post"
+        data-cite-icon="https://cdn.example.com/favicon.ico"
+      ></div>
+    `
+    const context: TransformContext = { ...withFn(fn), baseUrl: 'https://cdn.example.com/post' }
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
+  it('should clean an enriched url with the provided cleanUrlFn', async () => {
+    const value = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/post"
+      ></div>
+    `
+    const fn: EnrichCiteFn = () => {
+      return [{ url: 'https://example.com/article?utm_source=api' }]
+    }
+    const expected = html`
+      <div
+        data-cite-provider="tumblr"
+        data-cite-url="https://example.com/article"
+      ></div>
+    `
+    const context: TransformContext = {
+      ...withFn(fn),
+      cleanUrlFn: (url) => url.split('?')[0] ?? url,
+    }
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
   it('should write the enriched date normalized through parseDateFn', async () => {
     const value = '<div data-cite-provider="tumblr" data-cite-url="https://example.com/post"></div>'
     const fn: EnrichCiteFn = () => {

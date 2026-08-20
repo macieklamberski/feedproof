@@ -5,9 +5,11 @@ import type {
   EmbedResolverResult,
   MediaResolverResult,
   ParseDateFn,
+  TransformContext,
   WidgetResolverResult,
 } from '../types.js'
 import { type GeneratedWrapperType, getElementDimensions, getWrapperRatio } from './dom.js'
+import { resolveOrKeepUrl } from './urls.js'
 
 // A card's date is whatever string the site chose to display, so the caller gets one chance to
 // normalize it and anything the parser rejects is kept verbatim, not dropped. Every path that
@@ -333,6 +335,35 @@ export const normalizeCiteFields = (
     title: result.title,
     icon: result.icon,
     thumbnail: result.thumbnail,
+  }
+}
+
+// Everything a cite states about a url or a date, made ready to write: each url resolved against
+// the base, the canonical one cleaned of whatever tracking the publisher pasted, the date handed to
+// the caller's parser. Both passes that write to a cite placeholder go through this, whether the
+// card came from markup or from an enricher's payload, so the two carry their fields on the same
+// terms.
+//
+// The canonical url is kept when it will not resolve, unlike an embed's, because a cite is mostly
+// text: a card with a dead link still reads as the title, description and image it carries. So
+// nothing here refuses to produce a result.
+//
+// cleanAnchorUrls runs earlier, so the resolvers that read their url from an anchor href get it
+// already cleaned. The ones reading an attribute or a JSON blob (Tumblr, Substack, Discourse,
+// XenForo, Tistory, Paragraph) never pass through it, and neither does an enricher's payload, so
+// their redirect wrappers are unwrapped here. Re-cleaning an already-clean url is a no-op.
+export const prepareCiteMetadata = (
+  result: Partial<CiteResolverResult>,
+  context: TransformContext,
+): Partial<CiteResolverResult> => {
+  const url = resolveOrKeepUrl(result.url, context.resolveUrlFn, context.baseUrl)
+
+  return {
+    ...result,
+    url: url ? (context.cleanUrlFn?.(url) ?? url) : undefined,
+    icon: resolveOrKeepUrl(result.icon, context.resolveUrlFn, context.baseUrl),
+    thumbnail: resolveOrKeepUrl(result.thumbnail, context.resolveUrlFn, context.baseUrl),
+    date: parseOrKeepDate(result.date, context.parseDateFn),
   }
 }
 
