@@ -127,6 +127,55 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     expect(await transform(value, context)).toEqualHtml(expected)
   })
 
+  it('should resolve an enriched src against the base url', async () => {
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-src="https://www.youtube.com/embed/abc"
+      ></div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ src: '/embed/abc?start=30' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-src="https://www.youtube.com/embed/abc?start=30"
+      ></div>
+    `
+    const context: TransformContext = { ...withFn(fn), baseUrl: 'https://www.youtube.com/watch' }
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
+  // Written unresolved, a payload src points at a path on the reader's own origin. The
+  // placeholder already carries a src the resolver built, so leaving the field out keeps a
+  // player that works instead of replacing it with one that cannot load.
+  it('should keep the existing src when an enriched src will not resolve', async () => {
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-src="https://www.youtube.com/embed/abc"
+      ></div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ src: '/embed/abc', title: 'Video title' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-src="https://www.youtube.com/embed/abc"
+        data-embed-title="Video title"
+      ></div>
+    `
+
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
+  })
+
   it('should clean an enriched url with the provided cleanUrlFn', async () => {
     const value = html`
       <div
