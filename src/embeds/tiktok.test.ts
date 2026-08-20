@@ -704,9 +704,8 @@ describeForEachParser('tiktokIframeEmbedResolver', (parseHtml) => {
           data-embed-provider="tiktok"
           data-embed-src="https://www.tiktok.com/embed/v2/7000000000000000000"
         ></div>
-        <p>Post body</p>
       `
-      const result = await transformContent('<p>Post body</p>', {
+      const result = await transformContent('', {
         parseHtmlFn: parseHtml,
         enclosures: [
           {
