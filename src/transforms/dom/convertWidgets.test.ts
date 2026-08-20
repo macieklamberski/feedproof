@@ -430,19 +430,26 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     expect(await transform(value, customContext)).toEqualHtml(expected)
   })
 
-  it('should skip resolver-claimed iframe when metadata.url is unsafe', async () => {
-    const unsafeResolver: EmbedResolver = {
+  // The case the drop exists for, and the only one nothing else in the pipeline covers.
+  // neutralizeUnsafeUrls judges schemes, so a bare path passes it untouched and the placeholder
+  // ends up naming a page on the reader's own origin. What the resolver read about the embed
+  // itself is not in question, so the placeholder is still built, just without the url.
+  it('should drop a resolver url that resolves to nothing and keep the rest of the embed', async () => {
+    const pathResolver: EmbedResolver = {
       selector: 'iframe[src]',
       extract: () => ({
-        provider: 'evil',
+        provider: 'example',
         src: 'https://example.com/x',
-        url: 'javascript:alert(1)',
+        url: '/watch/123',
       }),
     }
-    const customContext: TransformContext = { ...baseContext, widgetResolvers: [unsafeResolver] }
+    const customContext: TransformContext = { ...baseContext, widgetResolvers: [pathResolver] }
     const value = '<iframe src="https://example.com/x"></iframe>'
     const expected = html`
-      <div data-embed-src="https://example.com/x"></div>
+      <div
+        data-embed-src="https://example.com/x"
+        data-embed-provider="example"
+      ></div>
     `
 
     expect(await transform(value, customContext)).toEqualHtml(expected)
@@ -533,6 +540,34 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         ...baseContext,
         widgetResolvers: [urlResolver],
         cleanUrlFn: (url) => url.split('?')[0] ?? url,
+      }
+      const value = '<iframe src="https://example.com/e/x"></iframe>'
+      const expected = html`
+        <div
+          data-embed-url="https://example.com/watch/x"
+          data-embed-src="https://example.com/e/x"
+          data-embed-provider="example"
+        ></div>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    // Reading an empty answer as the cleaned url would leave the placeholder with no url to
+    // honour, and the whole embed is dropped over that. The url handed to the cleaner stands.
+    it('should keep the resolver url when the cleanUrlFn answers with nothing', async () => {
+      const urlResolver: EmbedResolver = {
+        selector: 'iframe[src*="example.com"]',
+        extract: () => ({
+          provider: 'example',
+          src: 'https://example.com/e/x',
+          url: 'https://example.com/watch/x',
+        }),
+      }
+      const context: TransformContext = {
+        ...baseContext,
+        widgetResolvers: [urlResolver],
+        cleanUrlFn: () => '',
       }
       const value = '<iframe src="https://example.com/e/x"></iframe>'
       const expected = html`

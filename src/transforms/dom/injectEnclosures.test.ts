@@ -3,7 +3,7 @@ import { acastEmbedResolver } from '../../embeds/acast.js'
 import { blubrryEmbedResolver } from '../../embeds/blubrry.js'
 import { youtubeIframeEmbedResolver } from '../../embeds/youtube.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
-import type { Enclosure, TransformContext } from '../../types.js'
+import type { EmbedResolver, Enclosure, TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { injectEnclosures } from './injectEnclosures.js'
 import { neutralizeUnsafeUrls } from './neutralizeUnsafeUrls.js'
@@ -212,6 +212,70 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     `
 
     expect(result).toEqualHtml(expected)
+  })
+
+  // A placeholder built from an enclosure carries its urls on the same terms as one built from
+  // the markup: every url resolved, and the canonical one cleaned.
+  describe('placeholder fields', () => {
+    const exampleResolver: EmbedResolver = {
+      selector: 'iframe[src*="example.com"]',
+      extract: () => ({
+        provider: 'example',
+        src: 'https://example.com/e/x',
+        url: 'https://example.com/watch/x?utm_source=feed',
+      }),
+    }
+
+    const withExampleResolver = (enclosures: Array<Enclosure>): TransformContext => {
+      return {
+        ...baseContext,
+        widgetResolvers: [exampleResolver],
+        baseUrl: 'https://publisher.example/post',
+        enclosures,
+      }
+    }
+
+    it('should resolve a feed thumbnail stated as a relative url', async () => {
+      const value = '<p>Content</p>'
+      const context = withExampleResolver([
+        {
+          url: 'https://example.com/e/x',
+          medium: 'video',
+          thumbnails: [{ url: '/uploads/thumb.jpg' }],
+        },
+      ])
+      const expected = html`
+        <div
+          data-embed-src="https://example.com/e/x"
+          data-embed-provider="example"
+          data-embed-url="https://example.com/watch/x?utm_source=feed"
+          data-embed-thumbnail="https://publisher.example/uploads/thumb.jpg"
+          data-enclosure=""
+        ></div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should clean a resolver url with the provided cleanUrlFn', async () => {
+      const value = '<p>Content</p>'
+      const context: TransformContext = {
+        ...withExampleResolver([{ url: 'https://example.com/e/x', medium: 'video' }]),
+        cleanUrlFn: (url) => url.split('?')[0] ?? url,
+      }
+      const expected = html`
+        <div
+          data-embed-src="https://example.com/e/x"
+          data-embed-provider="example"
+          data-embed-url="https://example.com/watch/x"
+          data-enclosure=""
+        ></div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
   })
 
   describe('image enclosures', () => {

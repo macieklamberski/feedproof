@@ -9,7 +9,7 @@ import type {
   WidgetResolverResult,
 } from '../types.js'
 import { type GeneratedWrapperType, getElementDimensions, getWrapperRatio } from './dom.js'
-import { resolveOrKeepUrl } from './urls.js'
+import { resolveOrDropUrl, resolveOrKeepUrl } from './urls.js'
 
 // A card's date is whatever string the site chose to display, so the caller gets one chance to
 // normalize it and anything the parser rejects is kept verbatim, not dropped. Every path that
@@ -346,6 +346,49 @@ export const updateEmbedPlaceholder = (
   }
 
   updatePlaceholder(element, 'embed', fields)
+}
+
+// The page the embed stands for, which is where a reader sends a click, so it takes the drop
+// answer. Cleaned once it resolves, because a resolver that carries this url out of the markup
+// rather than minting it from an id hands over whatever the publisher pasted. A cleaner answering
+// with nothing has not answered, and the url it was handed stands.
+const prepareCanonicalUrl = (
+  url: string | undefined,
+  context: TransformContext,
+): string | undefined => {
+  const resolved = resolveOrDropUrl(url, context.resolveUrlFn, context.baseUrl)
+
+  if (!resolved) {
+    return
+  }
+
+  const cleaned = context.cleanUrlFn?.(resolved)
+
+  return cleaned ? cleaned : resolved
+}
+
+// Everything an embed states about a url or a date, made ready to write: each url resolved against
+// the base, the canonical one cleaned of whatever tracking the publisher pasted, the date handed to
+// the caller's parser. Every pass that writes to a placeholder goes through this, whether the embed
+// came from markup, from an enclosure or from an enricher's payload, so all three carry their
+// fields on the same terms.
+//
+// Nothing here refuses to produce a result. A field that cannot be made good is left out and the
+// rest still go on the element, because the three callers disagree about what a refusal would
+// mean: an unbuilt markup placeholder falls through to the generic tier and still renders, while
+// an unbuilt enclosure placeholder is simply never injected. The one field a placeholder cannot
+// go without is `src`, and each caller resolves its own before it decides to build at all.
+export const prepareEmbedMetadata = (
+  metadata: Partial<EmbedResolverResult>,
+  context: TransformContext,
+): Partial<EmbedResolverResult> => {
+  return {
+    ...metadata,
+    url: prepareCanonicalUrl(metadata.url, context),
+    thumbnail: resolveOrKeepUrl(metadata.thumbnail, context.resolveUrlFn, context.baseUrl),
+    avatar: resolveOrKeepUrl(metadata.avatar, context.resolveUrlFn, context.baseUrl),
+    date: parseOrKeepDate(metadata.date, context.parseDateFn),
+  }
 }
 
 // `src` is the one field a placeholder cannot be built without, so it is required inside the
