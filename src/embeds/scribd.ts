@@ -2,7 +2,7 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches, parseRatio } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
-import { createUrlEmbedResolver, withDeclaredSize } from '../utils/widgets.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const scribdHosts = ['scribd.com', 'scribdassets.com']
 
@@ -58,13 +58,13 @@ export const scribdResolveEmbed = (
   const ratio = parseRatio(attr(element, aspectRatioAttribute) ?? '')
 
   // The ratio describes the document and the declared height is a constant, so where both are
-  // present the ratio wins. Where the snippet states no ratio the declared size is all there
-  // is, and it is read here rather than by the factory because that would overwrite the ratio.
-  return ratio ? { ...result, ratio } : withDeclaredSize(element, result)
+  // present the ratio wins. Where the snippet states no ratio, stating none here hands the
+  // question back to the factory, and the declared size is all there is.
+  return ratio ? { ...result, ratio } : result
 }
 
 export const scribdIframeEmbedResolver = createUrlEmbedResolver(scribdHosts, scribdResolveEmbed, {
-  declaredSize: false,
+  preferResolverSize: true,
 })
 
 // Flash died in 2020, so these have rendered nothing since and the placeholder the generic

@@ -216,7 +216,7 @@ export const tiktokBlockquoteEmbedResolver = createMarkupEmbedResolver(
 // the id is the composite the blockquote carrier builds, and the watch page becomes the
 // placeholder's url.
 //
-// `declaredSize: false` because the pasted snippets state a landscape box (560x400 in the
+// `preferResolverSize: true` because the pasted snippets state a landscape box (560x400 in the
 // wild) on a player taller than it is wide, and a wrong size reserves worse space than none.
 // It costs the one carrier that states an honest number, a stored hydrated iframe whose 758 is
 // a real measurement, which lands on 738 instead. Telling that apart from a pasted box needs a
@@ -250,5 +250,5 @@ export const tiktokIframeEmbedResolver = createUrlEmbedResolver(
       height: playerHeight,
     }
   },
-  { declaredSize: false },
+  { preferResolverSize: true },
 )

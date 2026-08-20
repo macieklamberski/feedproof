@@ -705,7 +705,7 @@ describeForEachParser('createCitePlaceholder', (parseHtml) => {
   })
 })
 
-describeForEachParser('declaredSize', (parseHtml) => {
+describeForEachParser('preferResolverSize', (parseHtml) => {
   const base: EmbedResolverResult = { provider: 'example', id: 'abc', src: 'https://x.test/abc' }
 
   const resolve = (
@@ -734,7 +734,7 @@ describeForEachParser('declaredSize', (parseHtml) => {
 
     it('should keep its own numbers when the declared size is refused', () => {
       const resolver = createMarkupEmbedResolver('div.player', () => ({ ...base, height: 200 }), {
-        declaredSize: false,
+        preferResolverSize: true,
       })
       const value = html`
         <div
@@ -766,7 +766,7 @@ describeForEachParser('declaredSize', (parseHtml) => {
 
     it('should keep its own numbers when the declared size is refused', () => {
       const resolver = createUrlEmbedResolver(['x.test'], () => ({ ...base, height: 200 }), {
-        declaredSize: false,
+        preferResolverSize: true,
       })
       const value = html`
         <iframe
@@ -778,6 +778,50 @@ describeForEachParser('declaredSize', (parseHtml) => {
       const expected: EmbedResolverResult = { ...base, height: 200 }
 
       expect(resolve(resolver, value)).toEqual(expected)
+    })
+  })
+
+  // The option says prefer, so it applies only where there is something to prefer. Refusing the
+  // carrier while stating nothing is how a placeholder ends up with no size at all, which is what
+  // a TikTok enclosure carrying the feed's own dimensions once did.
+  describe('a resolver that asks to be preferred and states no size', () => {
+    it('should fall back to the size the carrier declares', () => {
+      const resolver = createUrlEmbedResolver(['x.test'], () => base, {
+        preferResolverSize: true,
+      })
+      const value = html`
+        <iframe
+          src="https://x.test/abc"
+          width="1080"
+          height="1920"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = { ...base, width: 1080, height: 1920 }
+
+      expect(resolve(resolver, value)).toEqual(expected)
+    })
+
+    it('should fall back to the ratio a responsive wrapper implies', () => {
+      const resolver = createMarkupEmbedResolver('div.player', () => base, {
+        preferResolverSize: true,
+      })
+      const value = html`
+        <div style="aspect-ratio: 4/3">
+          <div class="player"></div>
+        </div>
+      `
+      const expected: EmbedResolverResult = { ...base, ratio: '4/3' }
+
+      expect(resolve(resolver, value)).toEqual(expected)
+    })
+
+    it('should state no size when the carrier declares none either', () => {
+      const resolver = createUrlEmbedResolver(['x.test'], () => base, {
+        preferResolverSize: true,
+      })
+      const value = '<iframe src="https://x.test/abc"></iframe>'
+
+      expect(resolve(resolver, value)).toEqual(base)
     })
   })
 
