@@ -141,13 +141,13 @@ export const convertWidgets: DomTransform = (context) => {
           continue
         }
 
+        const src = resolveUrlFn(metadata.src, baseUrl)
+
+        if (!src) {
+          continue
+        }
+
         if (isMediaResult(metadata)) {
-          const src = resolveUrlFn(metadata.src, baseUrl)
-
-          if (!src) {
-            continue
-          }
-
           const poster = resolveOrKeepUrl(metadata.poster, resolveUrlFn, baseUrl)
           const mediaElement = createMediaElement(document, { ...metadata, src, poster })
 
@@ -165,14 +165,9 @@ export const convertWidgets: DomTransform = (context) => {
           { ...metadata, thumbnail: carriedThumbnail ?? metadata.thumbnail },
           context,
         )
+        const placeholder = createEmbedPlaceholder(document, { ...prepared, src })
 
-        if (!prepared) {
-          continue
-        }
-
-        const embedPlaceholder = createEmbedPlaceholder(document, prepared)
-
-        carrierOrShell(element).replaceWith(embedPlaceholder)
+        carrierOrShell(element).replaceWith(placeholder)
       }
     }
 
@@ -221,12 +216,12 @@ export const convertWidgets: DomTransform = (context) => {
         continue
       }
 
-      const embedPlaceholder = createEmbedPlaceholder(document, {
+      const placeholder = createEmbedPlaceholder(document, {
         src: cleaned,
         ...getEmbedSize(element),
       })
 
-      carrierOrShell(element).replaceWith(embedPlaceholder)
+      carrierOrShell(element).replaceWith(placeholder)
     }
   }
 }

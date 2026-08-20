@@ -389,13 +389,9 @@ export const injectEnclosures: DomTransform = (context) => {
 
         // A resolver rebuilds the src from the parsed id. Without one the enclosure's own
         // URL stands in.
-        const prepared = prepareEmbedMetadata({ ...metadata, src: metadata.src ?? src }, context)
+        const prepared = prepareEmbedMetadata(metadata, context)
 
-        if (!prepared) {
-          continue
-        }
-
-        created.push(createEmbedPlaceholder(document, prepared))
+        created.push(createEmbedPlaceholder(document, { ...prepared, src: metadata.src ?? src }))
         continue
       }
 

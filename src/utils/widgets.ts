@@ -304,48 +304,44 @@ export const updateEmbedPlaceholder = (
   updatePlaceholder(element, 'embed', fields)
 }
 
-// Everything an embed states about a url or a date, made ready to write: each url resolved against
-// the base, the canonical one cleaned of whatever tracking the publisher pasted, the date handed to
-// the caller's parser. Both passes that build a placeholder go through this, so a markup embed and
-// an enclosure embed carry their fields on the same terms.
-//
-// A src or a canonical url that will not resolve returns nothing and the placeholder is not built:
-// the src is what the reader loads, and the url is where it sends a click, so a placeholder missing
-// either states something it cannot honour. A cite is not treated this way (see convertCiteCards):
-// it is mostly text and still reads with a url that went nowhere, while an embed is only its
-// player. The rest resolve where they can and are kept as they came where they cannot, the way any
-// url in the markup is.
-export const prepareEmbedMetadata = (
-  metadata: Partial<EmbedResolverResult> & Pick<EmbedResolverResult, 'src'>,
+// The page the embed stands for, which is where a reader sends a click, so it is dropped rather
+// than kept unresolved: a `javascript:` url a resolver read out of a payload has no business
+// reaching the placeholder. Cleaned once it resolves, because a resolver that carries this url out
+// of the markup rather than minting it from an id hands over whatever the publisher pasted. A
+// cleaner answering with nothing has not answered, and the url it was handed stands.
+const prepareCanonicalUrl = (
+  url: string | undefined,
   context: TransformContext,
-): (Partial<EmbedResolverResult> & Pick<EmbedResolverResult, 'src'>) | undefined => {
-  const src = context.resolveUrlFn(metadata.src, context.baseUrl)
+): string | undefined => {
+  const resolved = url ? context.resolveUrlFn(url, context.baseUrl) : undefined
 
-  if (!src) {
+  if (!resolved) {
     return
   }
 
-  let url: string | undefined
+  const cleaned = context.cleanUrlFn?.(resolved)
 
-  if (metadata.url) {
-    const resolved = context.resolveUrlFn(metadata.url, context.baseUrl)
+  return cleaned ? cleaned : resolved
+}
 
-    if (!resolved) {
-      return
-    }
-
-    // A cleaner answering with nothing has not answered, so the url it was handed stands. Reading
-    // that empty string as the result would drop the whole placeholder over a value no resolver
-    // produced, which is a lot of content to lose to one consumer's over-eager cleaner.
-    const cleaned = context.cleanUrlFn?.(resolved)
-
-    url = cleaned ? cleaned : resolved
-  }
-
+// Everything an embed states about a url or a date, made ready to write: each url resolved against
+// the base, the canonical one cleaned of whatever tracking the publisher pasted, the date handed to
+// the caller's parser. Every pass that writes to a placeholder goes through this, whether the embed
+// came from markup, from an enclosure or from an enricher's payload, so all three carry their
+// fields on the same terms.
+//
+// Nothing here refuses to produce a result. A field that cannot be made good is left out and the
+// rest still go on the element, because the three callers disagree about what a refusal would
+// mean: an unbuilt markup placeholder falls through to the generic tier and still renders, while
+// an unbuilt enclosure placeholder is simply never injected. The one field a placeholder cannot
+// go without is `src`, and each caller resolves its own before it decides to build at all.
+export const prepareEmbedMetadata = (
+  metadata: Partial<EmbedResolverResult>,
+  context: TransformContext,
+): Partial<EmbedResolverResult> => {
   return {
     ...metadata,
-    src,
-    url,
+    url: prepareCanonicalUrl(metadata.url, context),
     thumbnail: resolveOrKeepUrl(metadata.thumbnail, context.resolveUrlFn, context.baseUrl),
     avatar: resolveOrKeepUrl(metadata.avatar, context.resolveUrlFn, context.baseUrl),
     date: parseOrKeepDate(metadata.date, context.parseDateFn),

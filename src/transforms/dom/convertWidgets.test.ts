@@ -430,7 +430,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     expect(await transform(value, customContext)).toEqualHtml(expected)
   })
 
-  it('should skip resolver-claimed iframe when metadata.url is unsafe', async () => {
+  // The url is where a reader sends a click, so an unsafe one is left off rather than written and
+  // neutralized later. What the resolver read about the embed itself is not in question, so the
+  // placeholder is still built.
+  it('should drop an unsafe resolver url and keep the rest of the embed', async () => {
     const unsafeResolver: EmbedResolver = {
       selector: 'iframe[src]',
       extract: () => ({
@@ -442,7 +445,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     const customContext: TransformContext = { ...baseContext, widgetResolvers: [unsafeResolver] }
     const value = '<iframe src="https://example.com/x"></iframe>'
     const expected = html`
-      <div data-embed-src="https://example.com/x"></div>
+      <div
+        data-embed-src="https://example.com/x"
+        data-embed-provider="evil"
+      ></div>
     `
 
     expect(await transform(value, customContext)).toEqualHtml(expected)
