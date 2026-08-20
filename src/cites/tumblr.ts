@@ -1,6 +1,7 @@
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
-import { attr, bgImage, find, jsonAttr, text } from '../utils/dom.js'
+import { attr, find, jsonAttr, text } from '../utils/dom.js'
+import { bgImage } from '../utils/style.js'
 
 type TumblrLinkData = {
   type?: string

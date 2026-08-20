@@ -1,6 +1,7 @@
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
-import { attr, bgImage, find, text } from '../utils/dom.js'
+import { attr, find, text } from '../utils/dom.js'
+import { bgImage } from '../utils/style.js'
 
 // note.com renders a pasted link as an `external-article` figure. The same
 // `embedded-service="external-article"` attribute also marks shopping and crowdfunding

@@ -1,14 +1,7 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import {
-  attr,
-  find,
-  keepIfMatches,
-  parsePixelSize,
-  styleLength,
-  text,
-  textNode,
-} from '../utils/dom.js'
+import { attr, find, keepIfMatches, parsePixelSize, text, textNode } from '../utils/dom.js'
+import { styleLength } from '../utils/style.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const tiktokHost = 'tiktok.com'

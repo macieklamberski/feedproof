@@ -1,6 +1,7 @@
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
-import { attr, bgImage, find, text, textNode } from '../utils/dom.js'
+import { attr, find, text, textNode } from '../utils/dom.js'
+import { bgImage } from '../utils/style.js'
 
 // Medium's "mixtape" link card. Two sibling anchors inside a `.graf--mixtapeEmbed` block:
 // the text one carries url, title, description and host, and `a.mixtapeImage` carries the
