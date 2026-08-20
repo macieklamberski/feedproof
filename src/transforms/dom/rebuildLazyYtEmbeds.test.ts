@@ -50,6 +50,45 @@ describeForEachParser('rebuildLazyYtEmbeds', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(value)
   })
 
+  it('should carry the facade pixel size onto the iframe', async () => {
+    const value = html`
+      <div
+        class="lazyYT"
+        data-youtube-id="dQw4w9WgXcQ"
+        data-width="480"
+        data-height="270"
+      ></div>
+    `
+    const expected = html`
+      <iframe
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        width="480"
+        height="270"
+      ></iframe>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should drop a percentage width and keep the pixel height', async () => {
+    const value = html`
+      <div
+        class="lazyYT"
+        data-youtube-id="dQw4w9WgXcQ"
+        data-width="100%"
+        data-height="270"
+      ></div>
+    `
+    const expected = html`
+      <iframe
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        height="270"
+      ></iframe>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
   it('should produce a youtube placeholder end to end', async () => {
     const value = html`
       <div
