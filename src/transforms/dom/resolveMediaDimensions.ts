@@ -1,6 +1,7 @@
 import type { DomTransform } from '../../types.js'
 import { getElementDimensions, pixelDimensionLimit } from '../../utils/dom.js'
 import { getUrlDimensions, parseSrcset } from '../../utils/images.js'
+import { setDimensions } from '../../utils/widgets.js'
 
 // Largest-width candidate URL in a srcset, so a src-less responsive image can still
 // have its dimensions read from a rendition URL. Falls back to the last candidate when
@@ -116,19 +117,23 @@ export const resolveMediaDimensions: DomTransform = () => {
       const declaredHeight = Number(element.getAttribute('height'))
 
       if (declaredWidth) {
-        element.setAttribute(
-          'height',
-          String(Math.round((declaredWidth * dimensions.height) / dimensions.width)),
-        )
-      } else if (declaredHeight) {
-        element.setAttribute(
-          'width',
-          String(Math.round((declaredHeight * dimensions.width) / dimensions.height)),
-        )
-      } else {
-        element.setAttribute('width', String(Math.round(dimensions.width)))
-        element.setAttribute('height', String(Math.round(dimensions.height)))
+        setDimensions(element, {
+          height: Math.round((declaredWidth * dimensions.height) / dimensions.width),
+        })
+        continue
       }
+
+      if (declaredHeight) {
+        setDimensions(element, {
+          width: Math.round((declaredHeight * dimensions.width) / dimensions.height),
+        })
+        continue
+      }
+
+      setDimensions(element, {
+        width: Math.round(dimensions.width),
+        height: Math.round(dimensions.height),
+      })
     }
   }
 }
