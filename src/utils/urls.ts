@@ -1,5 +1,10 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { CleanUrlFn, ResolveUrlFn } from '../types.js'
+import type { ResolveUrlFn, TransformContext } from '../types.js'
+
+// Each helper names the slice of the context it actually reads, so a caller holding only a
+// cleaner can still reach the cleaning step, and a whole context satisfies either one.
+type ResolveContext = Pick<TransformContext, 'resolveUrlFn' | 'baseUrl'>
+type CleanContext = Pick<TransformContext, 'cleanUrlFn'>
 
 const urlShapeRegex = /[:/.]/
 
@@ -125,15 +130,15 @@ export const pickUrlParams = (url: string, names: ReadonlyArray<string>): string
 // why `resolveRelativeUrls` calls `resolveUrlFn` directly. It has no third option: the attribute
 // is in the document either way, so it writes the resolved url or leaves the original alone.
 
+// All three take the whole context rather than the two or three fields they read out of it. That
+// is what keeps them composable at one line each, and it is what removed the wrapper that used to
+// pair a resolve with a clean because writing the pair out was too noisy to repeat.
+
 // Overloaded so a definite URL returns a string, with no undefined fallback needed at the call
 // site. Only a possibly-undefined input widens the result.
 type ResolveOrKeepUrl = {
-  (url: string, resolveUrlFn: ResolveUrlFn, baseUrl: string | undefined): string
-  (
-    url: string | undefined,
-    resolveUrlFn: ResolveUrlFn,
-    baseUrl: string | undefined,
-  ): string | undefined
+  (url: string, context: ResolveContext): string
+  (url: string | undefined, context: ResolveContext): string | undefined
 }
 
 // Resolves a relative URL against the base URL, keeping the original otherwise: an
@@ -141,12 +146,12 @@ type ResolveOrKeepUrl = {
 // URL is treated the same as a content URL: nothing is normalized and nothing is dropped. The
 // cast is needed because the body's `string | undefined` doesn't satisfy the string-returning
 // signature.
-export const resolveOrKeepUrl: ResolveOrKeepUrl = ((url, resolveUrlFn, baseUrl) => {
+export const resolveOrKeepUrl: ResolveOrKeepUrl = ((url, context: ResolveContext) => {
   if (!url || absoluteUrlRegex.test(url)) {
     return url || undefined
   }
 
-  return resolveUrlFn(url, baseUrl) ?? url
+  return context.resolveUrlFn(url, context.baseUrl) ?? url
 }) as ResolveOrKeepUrl
 
 // The other answer, so a caller states which it wants by the name it calls. Takes an optional url,
@@ -154,31 +159,30 @@ export const resolveOrKeepUrl: ResolveOrKeepUrl = ((url, resolveUrlFn, baseUrl) 
 // trims first, since a whitespace-only attribute would otherwise resolve to the base url itself.
 export const resolveOrDropUrl = (
   url: string | undefined,
-  resolveUrlFn: ResolveUrlFn,
-  baseUrl: string | undefined,
+  context: ResolveContext,
 ): string | undefined => {
   const trimmed = url?.trim()
 
-  return trimmed ? resolveUrlFn(trimmed, baseUrl) : undefined
+  return trimmed ? context.resolveUrlFn(trimmed, context.baseUrl) : undefined
 }
 
 // Overloaded the same way and for the same reason as resolveOrKeepUrl: cleaning a definite url
 // answers with a definite one, so composing the two keeps whichever answer the resolve step gave.
-type CleanOrKeepUrl = {
-  (url: string, cleanUrlFn: CleanUrlFn | undefined): string
-  (url: string | undefined, cleanUrlFn: CleanUrlFn | undefined): string | undefined
+type CleanUrl = {
+  (url: string, context: CleanContext): string
+  (url: string | undefined, context: CleanContext): string | undefined
 }
 
-// Cleaning is the step after resolving, and unlike resolving it has one answer everywhere: a
-// cleaner that answers with nothing has not answered, so the url it was handed stands. Composed
-// with whichever of the two above the call site wants, which is where the keep-or-drop choice
-// already lives. Passing an absent url through keeps that composition to one line.
+// The step after resolving. It carries no `orKeep` in its name because keeping is the only answer
+// it has: a cleaner that answers with nothing has not answered, so the url it was handed stands.
+// There is no drop counterpart and there is nothing for a caller to choose between, unlike the
+// pair above, where the name is how a call site states its policy.
 //
-// No cleaner leaves the url unchanged, so a caller that has none is the same case as one whose
-// cleaner answered with nothing.
-export const cleanOrKeepUrl: CleanOrKeepUrl = ((url, cleanUrlFn) => {
-  return url ? cleanUrlFn?.(url) || url : undefined
-}) as CleanOrKeepUrl
+// No cleaner at all leaves the url unchanged, which is the same case as a cleaner answering with
+// nothing. Passing an absent url straight through keeps the composition to one line.
+export const cleanUrl: CleanUrl = ((url, context: CleanContext) => {
+  return url ? context.cleanUrlFn?.(url) || url : undefined
+}) as CleanUrl
 
 // Whether an anchor href points at the same page as the post. A bare `#fragment`
 // is inherently same-page. An absolute href counts only when it resolves to the
