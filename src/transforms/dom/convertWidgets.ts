@@ -12,7 +12,7 @@ import {
   embedCarrierSelector,
   getEmbedSize,
   isMediaResult,
-  parseOrKeepDate,
+  prepareEmbedMetadata,
   readCarrierUrl,
 } from '../../utils/widgets.js'
 
@@ -79,8 +79,7 @@ const carrierOrShell = (element: Element): Element => {
 // enclosures like any other. The generic tiers below apply the same split to embeds no
 // resolver claims: a src that names a media file plays directly instead of being framed.
 export const convertWidgets: DomTransform = (context) => {
-  const { widgetResolvers, mediaSrcAttributes, resolveUrlFn, cleanUrlFn, parseDateFn, baseUrl } =
-    context
+  const { widgetResolvers, mediaSrcAttributes, resolveUrlFn, cleanUrlFn, baseUrl } = context
 
   return async (document) => {
     // One query per distinct selector instead of per resolver: every url-keyed resolver
@@ -142,34 +141,18 @@ export const convertWidgets: DomTransform = (context) => {
           continue
         }
 
-        const resolvedSrc = resolveUrlFn(metadata.src, baseUrl)
-
-        if (!resolvedSrc) {
-          continue
-        }
-
         if (isMediaResult(metadata)) {
-          const poster = resolveOrKeepUrl(metadata.poster, resolveUrlFn, baseUrl)
+          const src = resolveUrlFn(metadata.src, baseUrl)
 
-          carrierOrShell(element).replaceWith(
-            createMediaElement(document, { ...metadata, src: resolvedSrc, poster }),
-          )
-          continue
-        }
-
-        let resolvedUrl: string | undefined
-
-        // Cleaned like every other url the pass emits. Most resolvers mint this one from a
-        // parsed id, where there is nothing to strip, but some carry it out of the markup
-        // whole (a payload's `targetUrl`, a sibling anchor's href) and that arrives with
-        // whatever tracking params the publisher pasted.
-        if (metadata.url) {
-          const resolved = resolveUrlFn(metadata.url, baseUrl)
-          resolvedUrl = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
-
-          if (!resolvedUrl) {
+          if (!src) {
             continue
           }
+
+          const poster = resolveOrKeepUrl(metadata.poster, resolveUrlFn, baseUrl)
+          const mediaElement = createMediaElement(document, { ...metadata, src, poster })
+
+          carrierOrShell(element).replaceWith(mediaElement)
+          continue
         }
 
         // A rebuild transform (e.g. a lazy-load facade) may have recovered the publisher's
@@ -178,20 +161,18 @@ export const convertWidgets: DomTransform = (context) => {
         // hqdefault): the carried poster is the exact frame the publisher chose.
         const carriedThumbnail = attr(element, 'data-thumbnail')
 
-        const placeholderMetadata = {
-          ...metadata,
-          src: resolvedSrc,
-          url: resolvedUrl,
-          thumbnail: resolveOrKeepUrl(
-            carriedThumbnail ?? metadata.thumbnail,
-            resolveUrlFn,
-            baseUrl,
-          ),
-          avatar: resolveOrKeepUrl(metadata.avatar, resolveUrlFn, baseUrl),
-          date: parseOrKeepDate(metadata.date, parseDateFn),
+        const prepared = prepareEmbedMetadata(
+          { ...metadata, thumbnail: carriedThumbnail ?? metadata.thumbnail },
+          context,
+        )
+
+        if (!prepared) {
+          continue
         }
 
-        carrierOrShell(element).replaceWith(createEmbedPlaceholder(document, placeholderMetadata))
+        const embedPlaceholder = createEmbedPlaceholder(document, prepared)
+
+        carrierOrShell(element).replaceWith(embedPlaceholder)
       }
     }
 
@@ -234,15 +215,18 @@ export const convertWidgets: DomTransform = (context) => {
       const mediaTag = getMediaTag(cleaned)
 
       if (mediaTag) {
-        carrierOrShell(element).replaceWith(
-          createMediaElement(document, { tag: mediaTag, src: cleaned }),
-        )
+        const mediaElement = createMediaElement(document, { tag: mediaTag, src: cleaned })
+
+        carrierOrShell(element).replaceWith(mediaElement)
         continue
       }
 
-      carrierOrShell(element).replaceWith(
-        createEmbedPlaceholder(document, { src: cleaned, ...getEmbedSize(element) }),
-      )
+      const embedPlaceholder = createEmbedPlaceholder(document, {
+        src: cleaned,
+        ...getEmbedSize(element),
+      })
+
+      carrierOrShell(element).replaceWith(embedPlaceholder)
     }
   }
 }

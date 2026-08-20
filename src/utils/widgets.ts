@@ -5,9 +5,11 @@ import type {
   EmbedResolverResult,
   MediaResolverResult,
   ParseDateFn,
+  TransformContext,
   WidgetResolverResult,
 } from '../types.js'
 import { type GeneratedWrapperType, getElementDimensions, getWrapperRatio } from './dom.js'
+import { resolveOrKeepUrl } from './urls.js'
 
 // A card's date is whatever string the site chose to display, so the caller gets one chance to
 // normalize it and anything the parser rejects is kept verbatim, not dropped. Every path that
@@ -300,6 +302,54 @@ export const updateEmbedPlaceholder = (
   }
 
   updatePlaceholder(element, 'embed', fields)
+}
+
+// Everything an embed states about a url or a date, made ready to write: each url resolved against
+// the base, the canonical one cleaned of whatever tracking the publisher pasted, the date handed to
+// the caller's parser. Both passes that build a placeholder go through this, so a markup embed and
+// an enclosure embed carry their fields on the same terms.
+//
+// A src or a canonical url that will not resolve returns nothing and the placeholder is not built:
+// the src is what the reader loads, and the url is where it sends a click, so a placeholder missing
+// either states something it cannot honour. A cite is not treated this way (see convertCiteCards):
+// it is mostly text and still reads with a url that went nowhere, while an embed is only its
+// player. The rest resolve where they can and are kept as they came where they cannot, the way any
+// url in the markup is.
+export const prepareEmbedMetadata = (
+  metadata: Partial<EmbedResolverResult> & Pick<EmbedResolverResult, 'src'>,
+  context: TransformContext,
+): (Partial<EmbedResolverResult> & Pick<EmbedResolverResult, 'src'>) | undefined => {
+  const src = context.resolveUrlFn(metadata.src, context.baseUrl)
+
+  if (!src) {
+    return
+  }
+
+  let url: string | undefined
+
+  if (metadata.url) {
+    const resolved = context.resolveUrlFn(metadata.url, context.baseUrl)
+
+    if (!resolved) {
+      return
+    }
+
+    // A cleaner answering with nothing has not answered, so the url it was handed stands. Reading
+    // that empty string as the result would drop the whole placeholder over a value no resolver
+    // produced, which is a lot of content to lose to one consumer's over-eager cleaner.
+    const cleaned = context.cleanUrlFn?.(resolved)
+
+    url = cleaned ? cleaned : resolved
+  }
+
+  return {
+    ...metadata,
+    src,
+    url,
+    thumbnail: resolveOrKeepUrl(metadata.thumbnail, context.resolveUrlFn, context.baseUrl),
+    avatar: resolveOrKeepUrl(metadata.avatar, context.resolveUrlFn, context.baseUrl),
+    date: parseOrKeepDate(metadata.date, context.parseDateFn),
+  }
 }
 
 // `src` is the one field a placeholder cannot be built without, so it is required inside the
