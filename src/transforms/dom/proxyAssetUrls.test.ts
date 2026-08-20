@@ -222,6 +222,18 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     expect(await transform(value, wrapProxy)).toEqualHtml(expected)
   })
 
+  it('should rewrite data-embed-thumbnail-fallback as image', async () => {
+    const value = '<div data-embed-thumbnail-fallback="https://cdn.example.com/small.jpg"></div>'
+    const expected = html`
+      <div
+        data-embed-thumbnail-fallback="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fsmall.jpg"
+        data-proxied-embed-thumbnail-fallback="https://cdn.example.com/small.jpg"
+      ></div>
+    `
+
+    expect(await transform(value, wrapProxy)).toEqualHtml(expected)
+  })
+
   it('should rewrite data-embed-avatar as image', async () => {
     const value = '<div data-embed-avatar="https://cdn.example.com/avatar.jpg"></div>'
     const expected = html`

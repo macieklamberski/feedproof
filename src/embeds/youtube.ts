@@ -36,12 +36,15 @@ export const isVideoId = (value: string): boolean => {
   return safeVideoIdRegex.test(value) && !nonVideoIds.has(value)
 }
 
-// hqdefault always exists for a video, so it's the safe default. Higher-res variants
-// (maxresdefault, sddefault) give a sharper poster but only exist for some videos, so
-// we can't pick them blindly.
-// TODO: detect and prefer a higher-res thumbnail when present. The best available
-// resolution varies per video, so it needs a probe (HEAD request) rather than a guess.
+// maxresdefault is the poster worth showing: 1280x720, and the frame as it was filmed. hqdefault
+// always exists but is 480x360, which is the 16:9 frame letterboxed into 4:3 with black bars baked
+// in. YouTube serves maxresdefault only for videos uploaded at 720p or above, so it goes out as the
+// thumbnail with hqdefault behind it rather than being picked blindly.
 export const composeThumbnailUrl = (videoId: string): string => {
+  return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`
+}
+
+export const composeThumbnailFallbackUrl = (videoId: string): string => {
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
 }
 
@@ -148,6 +151,7 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
     src: `${composeEmbedUrl(videoId)}${pickUrlParams(url, youtubeEmbedParams)}`,
     url: `https://www.youtube.com/watch?v=${videoId}`,
     thumbnail: composeThumbnailUrl(videoId),
+    thumbnailFallback: composeThumbnailFallbackUrl(videoId),
     ratio: playerRatio,
   }
 }
@@ -192,6 +196,7 @@ export const youtubeAmpEmbedResolver = createMarkupEmbedResolver(
       src: composeEmbedUrl(videoId, params),
       url: `https://www.youtube.com/watch?v=${videoId}`,
       thumbnail: composeThumbnailUrl(videoId),
+      thumbnailFallback: composeThumbnailFallbackUrl(videoId),
       ratio: playerRatio,
     }
   },

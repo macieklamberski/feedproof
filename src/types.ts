@@ -30,6 +30,12 @@ export type EmbedResolverResult = {
   src: string
   url?: string
   thumbnail?: string
+  // A second thumbnail to try when the first one fails to load, for the platforms whose best
+  // poster exists only for some items: YouTube serves `maxresdefault.jpg` for anything uploaded
+  // at 720p or above and 404s it for the rest, while `hqdefault.jpg` always exists. Waiting for
+  // an `error` event is not enough to catch the miss, because that 404 still carries a decodable
+  // 120x90 grey JPEG, so the browser fires `load`.
+  thumbnailFallback?: string
   width?: number
   height?: number
   // The shape the embed was inferred to have, as CSS spells it (`16/9`), for the case where

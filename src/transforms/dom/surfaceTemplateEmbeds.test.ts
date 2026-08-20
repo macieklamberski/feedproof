@@ -83,6 +83,7 @@ describeForEachParser('surfaceTemplateEmbeds', (parseHtml) => {
         data-embed-id="yEB6Q3wTKcw"
         data-embed-url="https://www.youtube.com/watch?v=yEB6Q3wTKcw"
         data-embed-thumbnail="https://img.youtube.com/vi/yEB6Q3wTKcw/maxresdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/yEB6Q3wTKcw/hqdefault.jpg"
         data-embed-ratio="16/9"
       ></div>
     `

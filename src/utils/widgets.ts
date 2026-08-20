@@ -211,6 +211,7 @@ export const normalizeEmbedFields = (
     id: metadata.id,
     url: metadata.url,
     thumbnail: metadata.thumbnail,
+    'thumbnail-fallback': metadata.thumbnailFallback,
     width: metadata.width ? String(metadata.width) : undefined,
     height: metadata.height ? String(metadata.height) : undefined,
     ratio: metadata.ratio,

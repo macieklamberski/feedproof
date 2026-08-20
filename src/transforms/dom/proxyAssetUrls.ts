@@ -10,6 +10,7 @@ const proxyableSelectors = [
   'track',
   'image',
   '[data-embed-thumbnail]',
+  '[data-embed-thumbnail-fallback]',
   '[data-embed-avatar]',
   '[data-cite-icon]',
   '[data-cite-thumbnail]',
@@ -148,6 +149,10 @@ export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
 
       if (element.hasAttribute('data-embed-thumbnail')) {
         proxyAttribute(element, 'data-embed-thumbnail', 'image', assetProxyFn)
+      }
+
+      if (element.hasAttribute('data-embed-thumbnail-fallback')) {
+        proxyAttribute(element, 'data-embed-thumbnail-fallback', 'image', assetProxyFn)
       }
 
       if (element.hasAttribute('data-embed-avatar')) {

@@ -3,6 +3,7 @@ import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   composeEmbedUrl,
+  composeThumbnailFallbackUrl,
   composeThumbnailUrl,
   extractVideoId,
   isVideoId,
@@ -202,7 +203,8 @@ describe('youtubeResolveEmbed', () => {
       id: 'dQw4w9WgXcQ',
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       ratio: '16/9',
     }
 
@@ -216,7 +218,8 @@ describe('youtubeResolveEmbed', () => {
       id: 'dQw4w9WgXcQ',
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       ratio: '16/9',
     }
 
@@ -230,7 +233,8 @@ describe('youtubeResolveEmbed', () => {
       id: 'dQw4w9WgXcQ',
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=90',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       ratio: '16/9',
     }
 
@@ -244,7 +248,8 @@ describe('youtubeResolveEmbed', () => {
       id: 'dQw4w9WgXcQ',
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLabc123&index=4',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       ratio: '16/9',
     }
 
@@ -258,7 +263,8 @@ describe('youtubeResolveEmbed', () => {
       id: 'dQw4w9WgXcQ',
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?clip=Ug1x&clipt=EIDh',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       ratio: '16/9',
     }
 
@@ -272,7 +278,8 @@ describe('youtubeResolveEmbed', () => {
       id: 'dQw4w9WgXcQ',
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       ratio: '16/9',
     }
 
@@ -286,7 +293,8 @@ describe('youtubeResolveEmbed', () => {
       id: 'dQw4w9WgXcQ',
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       ratio: '16/9',
     }
 
@@ -300,7 +308,8 @@ describe('youtubeResolveEmbed', () => {
       id: 'dQw4w9WgXcQ',
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       ratio: '16/9',
     }
 
@@ -447,11 +456,20 @@ describe('composeEmbedUrl', () => {
 })
 
 describe('composeThumbnailUrl', () => {
-  it('should build hqdefault thumbnail url', () => {
+  it('should build the maxresdefault thumbnail url', () => {
+    const value = 'dQw4w9WgXcQ'
+    const expected = 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg'
+
+    expect(composeThumbnailUrl(value)).toBe(expected)
+  })
+})
+
+describe('composeThumbnailFallbackUrl', () => {
+  it('should build the hqdefault thumbnail url', () => {
     const value = 'dQw4w9WgXcQ'
     const expected = 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg'
 
-    expect(composeThumbnailUrl(value)).toBe(expected)
+    expect(composeThumbnailFallbackUrl(value)).toBe(expected)
   })
 })
 
@@ -465,7 +483,8 @@ describeForEachParser('youtubeIframeEmbedResolver', (parseHtml) => {
       id: 'dQw4w9WgXcQ',
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       ratio: '16/9',
     }
 
@@ -479,7 +498,8 @@ describeForEachParser('youtubeIframeEmbedResolver', (parseHtml) => {
       id: 'dQw4w9WgXcQ',
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       ratio: '16/9',
     }
 
@@ -493,7 +513,8 @@ describeForEachParser('youtubeIframeEmbedResolver', (parseHtml) => {
       id: 'dQw4w9WgXcQ',
       src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       ratio: '16/9',
     }
 
@@ -532,7 +553,8 @@ describeForEachParser('youtubeAmpEmbedResolver', (parseHtml) => {
         id: 'dQw4w9WgXcQ',
         src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
         url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+        thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
         ratio: '16/9',
       }
 
@@ -553,7 +575,8 @@ describeForEachParser('youtubeAmpEmbedResolver', (parseHtml) => {
         id: 'dQw4w9WgXcQ',
         src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
         url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+        thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
         ratio: '16/9',
       }
 
@@ -570,7 +593,8 @@ describeForEachParser('youtubeAmpEmbedResolver', (parseHtml) => {
         id: 'dQw4w9WgXcQ',
         src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?start=30&end=90',
         url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+        thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
         ratio: '16/9',
       }
 
@@ -591,7 +615,8 @@ describeForEachParser('youtubeAmpEmbedResolver', (parseHtml) => {
         id: 'dQw4w9WgXcQ',
         src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf&index=2',
         url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+        thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
         ratio: '16/9',
       }
 
@@ -610,7 +635,8 @@ describeForEachParser('youtubeAmpEmbedResolver', (parseHtml) => {
         id: 'dQw4w9WgXcQ',
         src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
         url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+        thumbnailFallback: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
         ratio: '16/9',
       }
 

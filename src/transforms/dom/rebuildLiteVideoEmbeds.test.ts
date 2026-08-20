@@ -106,7 +106,8 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     `
     const expected = html`
       <div
-        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
         data-embed-ratio="16/9"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-id="dQw4w9WgXcQ"
@@ -140,7 +141,8 @@ describeForEachParser('rebuildLiteVideoEmbeds', (parseHtml) => {
     const value = '<lite-youtube videoid="dQw4w9WgXcQ"></lite-youtube>'
     const expected = html`
       <div
-        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
         data-embed-ratio="16/9"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-id="dQw4w9WgXcQ"

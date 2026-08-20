@@ -327,7 +327,8 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-id="ab3DEfGHijk"
         data-embed-src="https://www.youtube.com/embed/ab3DEfGHijk"
         data-embed-url="https://www.youtube.com/watch?v=ab3DEfGHijk"
-        data-embed-thumbnail="https://i.ytimg.com/vi/ab3DEfGHijk/hqdefault.jpg"
+        data-embed-thumbnail="https://i.ytimg.com/vi/ab3DEfGHijk/maxresdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/ab3DEfGHijk/hqdefault.jpg"
         data-embed-ratio="16/9"
       ></div>
     `

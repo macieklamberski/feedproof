@@ -167,7 +167,8 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
         data-embed-provider="youtube"
         data-embed-id="dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
         data-embed-ratio="16/9"
       ></div>
     `

@@ -41,7 +41,8 @@ describeForEachParser('WordPress', (parseHtml) => {
     const expected = html`
       <div
         data-embed-ratio="16/9"
-        data-embed-thumbnail="https://i.ytimg.com/vi/0OqYNLrUoes/hqdefault.jpg"
+        data-embed-thumbnail="https://i.ytimg.com/vi/0OqYNLrUoes/maxresdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/0OqYNLrUoes/hqdefault.jpg"
         data-embed-ratio="16/9"
         data-embed-url="https://www.youtube.com/watch?v=0OqYNLrUoes"
         data-embed-id="0OqYNLrUoes"
@@ -72,7 +73,8 @@ describeForEachParser('WordPress', (parseHtml) => {
       `
       const expected = html`
         <div
-          data-embed-thumbnail="https://i.ytimg.com/vi/0OqYNLrUoes/hqdefault.jpg"
+          data-embed-thumbnail="https://i.ytimg.com/vi/0OqYNLrUoes/maxresdefault.jpg"
+          data-embed-thumbnail-fallback="https://i.ytimg.com/vi/0OqYNLrUoes/hqdefault.jpg"
           data-embed-ratio="16/9"
           data-embed-url="https://www.youtube.com/watch?v=0OqYNLrUoes"
           data-embed-id="0OqYNLrUoes"

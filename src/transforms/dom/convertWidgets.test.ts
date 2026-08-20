@@ -38,7 +38,9 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       <p>Text</p>
       <div
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
         data-embed-ratio="16/9"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-provider="youtube"
@@ -60,6 +62,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       <div
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
         data-embed-ratio="16/9"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-provider="youtube"
@@ -212,7 +215,9 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     const expected = html`
       <div
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
         data-embed-ratio="16/9"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-provider="youtube"
@@ -237,7 +242,9 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       <p>Before</p>
       <div
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
         data-embed-ratio="16/9"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-provider="youtube"
@@ -402,7 +409,9 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     const expected = html`
       <div
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
         data-embed-ratio="16/9"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-provider="youtube"
@@ -654,7 +663,9 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       const expected = html`
         <div
                     data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+          data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
           data-embed-ratio="16/9"
           data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
           data-embed-provider="youtube"
@@ -670,7 +681,9 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       const expected = html`
         <div
           data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+          data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
           data-embed-ratio="16/9"
           data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
           data-embed-provider="youtube"
@@ -690,7 +703,9 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       const expected = html`
         <div
           data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+          data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
           data-embed-ratio="16/9"
           data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
           data-embed-provider="youtube"
@@ -706,7 +721,9 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       const expected = html`
         <div
           data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+          data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
           data-embed-ratio="16/9"
           data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
           data-embed-provider="youtube"
@@ -728,7 +745,9 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       const expected = html`
         <div
                     data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+          data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
           data-embed-ratio="16/9"
           data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
           data-embed-provider="youtube"
@@ -758,7 +777,9 @@ describeForEachParser('convertWidgets', (parseHtml) => {
           ></param>
           <div
             data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-            data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+            data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+            data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+            data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
             data-embed-ratio="16/9"
             data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
             data-embed-provider="youtube"
@@ -828,7 +849,9 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       ></video>
       <div
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-thumbnail-fallback="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
         data-embed-ratio="16/9"
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-provider="youtube"

@@ -116,6 +116,8 @@ Inventory of every transform exported from the package. Most are enabled by defa
 
 An embed placeholder states how big it is in one of two ways, never both. Where something really measured the player, it carries `data-embed-width` and `data-embed-height` in pixels, or just one of them where that is all the platform states (a podcast player 200 pixels tall has no width worth naming). Where nothing measured it and only the shape is known, from a responsive wrapper or the platform's own ratio attribute, it carries `data-embed-ratio` instead: a CSS aspect-ratio value written from the numbers the source stated, such as `16/9`, `800/600` or `1.7777777777777777/1`, and ready to assign to `style.aspectRatio` as it stands. Nothing is reduced or rounded, so the value traces back to what the markup said.
 
+A placeholder can carry a second poster as well. Where a platform's best thumbnail exists for some items and not others, `data-embed-thumbnail` holds the good one and `data-embed-thumbnail-fallback` holds one that always exists, for the reader to swap to when the first fails to load. YouTube is the case it was added for: `maxresdefault.jpg` is the frame as it was filmed, but only videos uploaded at 720p or above have one, and the 404 for the rest still carries a decodable 120x90 grey JPEG, so a plain `error` listener never fires.
+
 ## Options
 
 ```typescript
