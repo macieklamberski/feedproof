@@ -981,3 +981,130 @@ describeForEachParser('declaredSize', (parseHtml) => {
     })
   })
 })
+
+// The element builders below own rules that every pass depends on and that no test states
+// directly: each is asserted, if at all, inside one caller's test, where it reads as that
+// caller's behaviour rather than as the shared contract it now is.
+
+describe.todo('setDimensions', () => {
+  it.todo('should write each half only where the size states it', () => {
+    // A size of { height: 190 } and nothing else: the element gets height and no width,
+    // because a fluid-width player states one number.
+  })
+
+  it.todo('should write nothing for a size that states neither half', () => {
+    // An empty size: the element keeps whatever attributes it already had.
+  })
+
+  it.todo('should skip a zero dimension', () => {
+    // A size of { width: 0, height: 360 }: 0 is not a box anything can reserve, so only
+    // height is written.
+  })
+})
+
+describe.todo('createIframe', () => {
+  it.todo('should carry nothing but the src', () => {
+    // The eleven rebuild transforms add their own title, size and poster on top, so anything
+    // extra here would land on every rebuilt player at once.
+  })
+})
+
+describe.todo('createMediaElement', () => {
+  it.todo('should mint a video with src and controls', () => {
+    // A result of { tag: 'video', src }: the element is a <video> that a reader can play.
+  })
+
+  it.todo('should mint an audio with src and controls', () => {
+    // A result of { tag: 'audio', src }: the same two attributes on the other tag.
+  })
+
+  it.todo('should write the poster only on a video', () => {
+    // The same poster on { tag: 'audio' } and { tag: 'video' }: <audio> has no poster, so it
+    // renders nowhere and is left off.
+  })
+
+  it.todo('should write the dimensions only on a video', () => {
+    // A result of { tag: 'audio', width, height }: neither is valid on <audio>, so a resolver
+    // stating them describes a box the element cannot have.
+  })
+})
+
+describe.todo('createImage', () => {
+  it.todo('should mint an image from src alone', () => {
+    // The one field an image cannot go without, and the only one most callers state.
+  })
+
+  it.todo('should write srcset, alt and the dimensions where they are stated', () => {
+    // Every field at once, to pin the attribute set a caller can rely on.
+  })
+
+  it.todo('should skip an empty srcset and an empty alt', () => {
+    // Fields of { srcset: '', alt: '' }: an empty alt claims the image is decorative, which
+    // is a different statement from stating nothing.
+  })
+})
+
+describe.todo('createLinkedImage', () => {
+  it.todo('should wrap the image in an anchor pointing at the platform page', () => {
+    // A Datawrapper chart png inside an anchor to the chart page: the render goes inline and
+    // the interactive version stays one click away.
+  })
+
+  it.todo('should pass the image fields through to the image', () => {
+    // An alt read off the carrier's title reaches the <img>, not the <a>.
+  })
+})
+
+// Both preparers are the one place a url or a date is made ready to write, so a rule that
+// slips here slips on every pass at once: markup, enclosures and enrichment alike.
+
+describe.todo('prepareEmbedMetadata', () => {
+  it.todo('should resolve every url against the base', () => {
+    // Relative url, thumbnail and avatar with a baseUrl: all three come back absolute.
+  })
+
+  it.todo('should drop a canonical url that will not resolve', () => {
+    // A url of '/watch/123' with no baseUrl: written unresolved it would point at the
+    // reader's own origin, and the placeholder reads fine without it.
+  })
+
+  it.todo('should keep a thumbnail and an avatar that will not resolve', () => {
+    // Both decorate an element that renders regardless, so a picture that fails to load
+    // beats no element at all.
+  })
+
+  it.todo('should clean the canonical url once it resolves', () => {
+    // A resolver carrying the publisher's pasted url out of the markup hands over whatever
+    // tracking params came with it.
+  })
+
+  it.todo('should keep the resolved url when the cleaner answers with nothing', () => {
+    // A cleanUrlFn returning an empty string has not answered, so the url it was handed
+    // stands.
+  })
+
+  it.todo('should hand the date to the parser and keep what it rejects', () => {
+    // A card's date is whatever string the site chose to display, so an unparseable one is
+    // kept verbatim rather than dropped.
+  })
+})
+
+describe.todo('prepareCiteMetadata', () => {
+  it.todo('should resolve every url against the base', () => {
+    // Relative url, icon and thumbnail with a baseUrl: all three come back absolute.
+  })
+
+  it.todo('should keep a canonical url that will not resolve', () => {
+    // Unlike an embed's: a cite is mostly text and still reads as its title, description and
+    // image with a dead link.
+  })
+
+  it.todo('should clean a url the resolver read off an attribute', () => {
+    // cleanAnchorUrls never reaches the resolvers that read a url out of an attribute or a
+    // JSON blob, so their redirect wrappers are unwrapped here.
+  })
+
+  it.todo('should hand the date to the parser and keep what it rejects', () => {
+    // The same rule the embed side applies, on the field a card displays.
+  })
+})
