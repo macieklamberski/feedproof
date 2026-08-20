@@ -182,6 +182,20 @@ export const isMediaResult = (result: WidgetResolverResult): result is MediaReso
   return 'tag' in result
 }
 
+// The iframe a rebuild transform mints in place of a facade, so anything that should hold for
+// every rebuilt player is written once here rather than eleven times. A caller adds whatever its
+// own facade stated on top: a title, a size, a shape, a poster it recovered.
+//
+// Deliberately not used for the probe iframe in injectEnclosures. That one is never inserted: it
+// exists so url-keyed resolvers have a carrier to match their selector against, and giving it
+// whatever emitted iframes carry would change what every resolver sees.
+export const createIframe = (document: Document, src: string): HTMLElement => {
+  const iframe = document.createElement('iframe')
+  iframe.setAttribute('src', src)
+
+  return iframe
+}
+
 // The one native player every pass mints, whether the media came out of the markup or out of an
 // enclosure. The poster and the dimensions are written only on video, which is the only tag they
 // are valid on. Urls arrive resolved: a caller knows what its own source is relative to.

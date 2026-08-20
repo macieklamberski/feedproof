@@ -1,6 +1,7 @@
 import { composeEmbedUrl, isVideoId } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 import { attr, parsePixelSize } from '../../utils/dom.js'
+import { createIframe } from '../../utils/widgets.js'
 
 // Each facade parks the id in its own attribute and builds the iframe with JS on click, so a
 // reader shows nothing at all. Measured across the corpus: `.youtube-embed[data-video_id]` is
@@ -35,8 +36,7 @@ export const rebuildLazyYtEmbeds: DomTransform = () => (document) => {
         continue
       }
 
-      const iframe = document.createElement('iframe')
-      iframe.setAttribute('src', composeEmbedUrl(videoId))
+      const iframe = createIframe(document, composeEmbedUrl(videoId))
 
       // Carry the facade's pixel size so the placeholder downstream can reserve the right space.
       // Parsed rather than copied: these facades state `100%` as often as a pixel count, and

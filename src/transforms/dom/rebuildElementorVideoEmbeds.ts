@@ -3,6 +3,7 @@ import { extractVimeoId } from '../../embeds/vimeo.js'
 import { composeEmbedUrl, extractVideoId } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 import { jsonAttr } from '../../utils/dom.js'
+import { createIframe } from '../../utils/widgets.js'
 
 // The Elementor video widget defers its player for the embed sources (YouTube, Vimeo,
 // Dailymotion, VideoPress): the real URL lives only in the widget's `data-settings` JSON and
@@ -64,8 +65,7 @@ export const rebuildElementorVideoEmbeds: DomTransform = () => (document) => {
       continue
     }
 
-    const iframe = document.createElement('iframe')
-    iframe.setAttribute('src', source)
+    const iframe = createIframe(document, source)
 
     // Replace the empty `.elementor-video` player div if present. Otherwise fall back to
     // the widget container so the rebuilt player still lands in the right place.
