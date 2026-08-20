@@ -268,6 +268,24 @@ const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): En
   }
 }
 
+// An enclosure in the shape the rest of the pass works with: its player embed folded in, both
+// urls absolute. Absolute here rather than at each use, because the fingerprint that collapses
+// duplicate images and the gravatar check both read the url as it stands, and one naming no
+// host keys as itself and matches nothing.
+const readEnclosure = (
+  enclosure: Enclosure,
+  document: Document,
+  context: TransformContext,
+): Enclosure => {
+  const extracted = extractEnclosureFromEmbed(enclosure, document)
+
+  return {
+    ...extracted,
+    url: resolveOrKeepUrl(extracted.url, context.resolveUrlFn, context.baseUrl),
+    playerUrl: resolveOrKeepUrl(extracted.playerUrl, context.resolveUrlFn, context.baseUrl),
+  }
+}
+
 // The attribute the injected element carries its source in: `src` on native audio, video,
 // and img elements, `data-embed-src` on embed placeholders.
 const getInjectedSource = (element: Element): string | null => {
@@ -349,7 +367,7 @@ export const injectEnclosures: DomTransform = (context) => {
     const hasContentImage = !!document.querySelector('img[src], picture, [data-embed-thumbnail]')
 
     const resolvedEnclosures = enclosures.map((enclosure) => {
-      return extractEnclosureFromEmbed(enclosure, document)
+      return readEnclosure(enclosure, document, context)
     })
     const mergedEnclosures = mergePlayerEnclosures(
       dedupeImageEnclosures(resolvedEnclosures, context.cleanUrlFn),
