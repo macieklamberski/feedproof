@@ -430,19 +430,26 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     expect(await transform(value, customContext)).toEqualHtml(expected)
   })
 
-  it('should skip resolver-claimed iframe when metadata.url is unsafe', async () => {
-    const unsafeResolver: EmbedResolver = {
+  // The case the drop exists for, and the only one nothing else in the pipeline covers.
+  // neutralizeUnsafeUrls judges schemes, so a bare path passes it untouched and the placeholder
+  // ends up naming a page on the reader's own origin. What the resolver read about the embed
+  // itself is not in question, so the placeholder is still built, just without the url.
+  it('should drop a resolver url that resolves to nothing and keep the rest of the embed', async () => {
+    const pathResolver: EmbedResolver = {
       selector: 'iframe[src]',
       extract: () => ({
-        provider: 'evil',
+        provider: 'example',
         src: 'https://example.com/x',
-        url: 'javascript:alert(1)',
+        url: '/watch/123',
       }),
     }
-    const customContext: TransformContext = { ...baseContext, widgetResolvers: [unsafeResolver] }
+    const customContext: TransformContext = { ...baseContext, widgetResolvers: [pathResolver] }
     const value = '<iframe src="https://example.com/x"></iframe>'
     const expected = html`
-      <div data-embed-src="https://example.com/x"></div>
+      <div
+        data-embed-src="https://example.com/x"
+        data-embed-provider="example"
+      ></div>
     `
 
     expect(await transform(value, customContext)).toEqualHtml(expected)

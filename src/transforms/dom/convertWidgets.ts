@@ -3,6 +3,7 @@ import { attr, hasText, playableElements } from '../../utils/dom.js'
 import {
   audioFileRegex,
   flashFileRegex,
+  resolveOrDropUrl,
   resolveOrKeepUrl,
   videoFileRegex,
 } from '../../utils/urls.js'
@@ -141,13 +142,13 @@ export const convertWidgets: DomTransform = (context) => {
           continue
         }
 
+        const src = resolveOrDropUrl(metadata.src, resolveUrlFn, baseUrl)
+
+        if (!src) {
+          continue
+        }
+
         if (isMediaResult(metadata)) {
-          const src = resolveUrlFn(metadata.src, baseUrl)
-
-          if (!src) {
-            continue
-          }
-
           const poster = resolveOrKeepUrl(metadata.poster, resolveUrlFn, baseUrl)
           const mediaElement = createMediaElement(document, { ...metadata, src, poster })
 
@@ -165,14 +166,9 @@ export const convertWidgets: DomTransform = (context) => {
           { ...metadata, thumbnail: carriedThumbnail ?? metadata.thumbnail },
           context,
         )
+        const placeholder = createEmbedPlaceholder(document, { ...prepared, src })
 
-        if (!prepared) {
-          continue
-        }
-
-        const embedPlaceholder = createEmbedPlaceholder(document, prepared)
-
-        carrierOrShell(element).replaceWith(embedPlaceholder)
+        carrierOrShell(element).replaceWith(placeholder)
       }
     }
 
@@ -186,9 +182,8 @@ export const convertWidgets: DomTransform = (context) => {
 
       const src = readCarrierUrl(element)
 
-      // resolveUrlFn rejects `about:blank`. The trim drops empty/whitespace placeholders
-      // (which would otherwise resolve to the base URL).
-      const resolved = src.trim() ? resolveUrlFn(src, baseUrl) : undefined
+      // resolveUrlFn rejects `about:blank`.
+      const resolved = resolveOrDropUrl(src, resolveUrlFn, baseUrl)
       // This src is the publisher's own URL, not one minted from a parsed id, so it arrives
       // with whatever tracking params they pasted.
       const cleaned = resolved ? (cleanUrlFn?.(resolved) ?? resolved) : undefined
@@ -221,12 +216,12 @@ export const convertWidgets: DomTransform = (context) => {
         continue
       }
 
-      const embedPlaceholder = createEmbedPlaceholder(document, {
+      const placeholder = createEmbedPlaceholder(document, {
         src: cleaned,
         ...getEmbedSize(element),
       })
 
-      carrierOrShell(element).replaceWith(embedPlaceholder)
+      carrierOrShell(element).replaceWith(placeholder)
     }
   }
 }

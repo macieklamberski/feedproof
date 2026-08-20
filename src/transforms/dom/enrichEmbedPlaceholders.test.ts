@@ -103,6 +103,55 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     expect(await transform(value, { ...withFn(fn), parseDateFn })).toEqualHtml(expected)
   })
 
+  // A payload is a platform's API answering, not the feed, so its urls get the same treatment a
+  // resolver's do: an enricher that hands back a path is describing something on its own host.
+  it('should resolve an enriched thumbnail against the base url', async () => {
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+      ></div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ thumbnail: '/vi/abc/hq.jpg' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-thumbnail="https://cdn.example.com/vi/abc/hq.jpg"
+      ></div>
+    `
+    const context: TransformContext = { ...withFn(fn), baseUrl: 'https://cdn.example.com/post' }
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
+  it('should clean an enriched url with the provided cleanUrlFn', async () => {
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+      ></div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ url: 'https://example.com/watch/abc?utm_source=api' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-url="https://example.com/watch/abc"
+      ></div>
+    `
+    const context: TransformContext = {
+      ...withFn(fn),
+      cleanUrlFn: (url) => url.split('?')[0] ?? url,
+    }
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
   it('should keep the raw enriched date when parseDateFn returns undefined', async () => {
     const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
     const fn: EnrichEmbedFn = () => {
