@@ -328,8 +328,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/ab3DEfGHijk"
         data-embed-url="https://www.youtube.com/watch?v=ab3DEfGHijk"
         data-embed-thumbnail="https://i.ytimg.com/vi/ab3DEfGHijk/hqdefault.jpg"
-        data-embed-width="728"
-        data-embed-height="409"
+        data-embed-ratio="16/9"
       ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })

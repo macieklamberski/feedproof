@@ -42,6 +42,7 @@ describeForEachParser('WordPress', (parseHtml) => {
       <div
         data-embed-ratio="16/9"
         data-embed-thumbnail="https://i.ytimg.com/vi/0OqYNLrUoes/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-embed-url="https://www.youtube.com/watch?v=0OqYNLrUoes"
         data-embed-id="0OqYNLrUoes"
         data-embed-provider="youtube"
@@ -71,9 +72,8 @@ describeForEachParser('WordPress', (parseHtml) => {
       `
       const expected = html`
         <div
-          data-embed-height="315"
-          data-embed-width="560"
           data-embed-thumbnail="https://i.ytimg.com/vi/0OqYNLrUoes/hqdefault.jpg"
+          data-embed-ratio="16/9"
           data-embed-url="https://www.youtube.com/watch?v=0OqYNLrUoes"
           data-embed-id="0OqYNLrUoes"
           data-embed-provider="youtube"
