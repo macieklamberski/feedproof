@@ -119,6 +119,10 @@ export const convertWidgets: DomTransform = (context) => {
         continue
       }
 
+      // Kept rather than dropped, unlike every other src the pass mints. The url sits in a
+      // `data-*` attribute no browser reads, so the container renders nothing on its own and
+      // refusing the url would take the media out of the item. A player that fails to load still
+      // says a video was here.
       const resolved = resolveOrKeepUrl(parked.src, resolveUrlFn, baseUrl)
       const cleaned = cleanUrlFn?.(resolved) ?? resolved
 
