@@ -66,6 +66,7 @@ import { firesideEmbedResolver } from './embeds/fireside.js'
 import { flickrEmbedResolver } from './embeds/flickr.js'
 import { flourishIframeEmbedResolver, flourishWidgetEmbedResolver } from './embeds/flourish.js'
 import { geniallyEmbedResolver } from './embeds/genially.js'
+import { gettyImagesEmbedResolver } from './embeds/gettyimages.js'
 import { imgurBlockquoteEmbedResolver, imgurIframeEmbedResolver } from './embeds/imgur.js'
 import {
   instagramAmpEmbedResolver,
@@ -165,6 +166,7 @@ import { rebuildDeferredIframes } from './transforms/dom/rebuildDeferredIframes.
 import { rebuildElementorVideoEmbeds } from './transforms/dom/rebuildElementorVideoEmbeds.js'
 import { rebuildEmbedlyEmbeds } from './transforms/dom/rebuildEmbedlyEmbeds.js'
 import { rebuildEmbedPlusEmbeds } from './transforms/dom/rebuildEmbedPlusEmbeds.js'
+import { rebuildGettyImagesEmbeds } from './transforms/dom/rebuildGettyImagesEmbeds.js'
 import { rebuildLazyLoadForVideos } from './transforms/dom/rebuildLazyLoadForVideos.js'
 import { rebuildLazyYtEmbeds } from './transforms/dom/rebuildLazyYtEmbeds.js'
 import { rebuildLiteVideoEmbeds } from './transforms/dom/rebuildLiteVideoEmbeds.js'
@@ -253,6 +255,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // Runs before convertCiteCards so a payload naming `link` still reaches the cite pass, and
   // before stripEmptyTags, which is what deletes an empty carrier nothing has claimed.
   rebuildEmbedlyEmbeds,
+  rebuildGettyImagesEmbeds,
   // A GitHub Gist embed is a JS-only <script> that renders nothing in a reader. Replace it
   // with a link to the gist so the content is at least reachable.
   linkifyGistEmbeds,
@@ -478,6 +481,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   flourishWidgetEmbedResolver,
   flourishIframeEmbedResolver,
   geniallyEmbedResolver,
+  gettyImagesEmbedResolver,
   acastEmbedResolver,
   anchorEmbedResolver,
   appleEmbedResolver,
