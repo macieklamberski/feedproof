@@ -138,11 +138,7 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
   // fixed box this player is, and a made-up number beside it describes a box nobody measured.
   const height = parsePixelSize(attr(element, 'data-embed-height'))
 
-  return composeEmbed(target, {
-    ...(title && { title }),
-    ...(author && { author }),
-    ...(height !== undefined && { height }),
-  })
+  return composeEmbed(target, { title, author, height })
 }
 
 // Reddit ships the post as a blockquote holding its title, its poster and its subreddit as

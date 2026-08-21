@@ -1,4 +1,4 @@
-import { getPathSegments, isSubdomainOf } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, jsonAttr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -66,9 +66,7 @@ const readSubstackItem = (element: Element): Partial<EmbedResolverResult> => {
     author: attributes.subtitle,
     description:
       description && !typeLabels.has(description.toLowerCase()) ? description : undefined,
-    thumbnail: isSubdomainOf(attributes.image ?? '', spotifyImageHost)
-      ? attributes.image
-      : undefined,
+    thumbnail: parseUrlOnHosts(attributes.image, spotifyImageHost) ? attributes.image : undefined,
   }
 }
 

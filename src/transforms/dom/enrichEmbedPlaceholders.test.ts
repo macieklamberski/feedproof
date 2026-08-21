@@ -103,6 +103,104 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     expect(await transform(value, { ...withFn(fn), parseDateFn })).toEqualHtml(expected)
   })
 
+  // A payload is a platform's API answering, not the feed, so its urls get the same treatment a
+  // resolver's do: an enricher that hands back a path is describing something on its own host.
+  it('should resolve an enriched thumbnail against the base url', async () => {
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+      ></div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ thumbnail: '/vi/abc/hq.jpg' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-thumbnail="https://cdn.example.com/vi/abc/hq.jpg"
+      ></div>
+    `
+    const context: TransformContext = { ...withFn(fn), baseUrl: 'https://cdn.example.com/post' }
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
+  it('should resolve an enriched src against the base url', async () => {
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-src="https://www.youtube.com/embed/abc"
+      ></div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ src: '/embed/abc?start=30' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-src="https://www.youtube.com/embed/abc?start=30"
+      ></div>
+    `
+    const context: TransformContext = { ...withFn(fn), baseUrl: 'https://www.youtube.com/watch' }
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
+  // Written unresolved, a payload src points at a path on the reader's own origin. The
+  // placeholder already carries a src the resolver built, so leaving the field out keeps a
+  // player that works instead of replacing it with one that cannot load.
+  it('should keep the existing src when an enriched src will not resolve', async () => {
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-src="https://www.youtube.com/embed/abc"
+      ></div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ src: '/embed/abc', title: 'Video title' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-src="https://www.youtube.com/embed/abc"
+        data-embed-title="Video title"
+      ></div>
+    `
+
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
+  })
+
+  it('should clean an enriched url with the provided cleanUrlFn', async () => {
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+      ></div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ url: 'https://example.com/watch/abc?utm_source=api' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-url="https://example.com/watch/abc"
+      ></div>
+    `
+    const context: TransformContext = {
+      ...withFn(fn),
+      cleanUrlFn: (url) => url.split('?')[0] ?? url,
+    }
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
   it('should keep the raw enriched date when parseDateFn returns undefined', async () => {
     const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
     const fn: EnrichEmbedFn = () => {

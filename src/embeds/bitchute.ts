@@ -36,7 +36,7 @@ const bitchuteResolveEmbed = (link: string, element: Element): EmbedResolverResu
     id: videoId,
     src: `https://www.bitchute.com/embed/${videoId}/`,
     url: `https://www.bitchute.com/video/${videoId}/`,
-    ...(title && { title }),
+    title,
   }
 }
 

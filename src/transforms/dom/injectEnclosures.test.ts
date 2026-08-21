@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import { acastEmbedResolver } from '../../embeds/acast.js'
+import { blubrryEmbedResolver } from '../../embeds/blubrry.js'
 import { youtubeIframeEmbedResolver } from '../../embeds/youtube.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
-import type { Enclosure, TransformContext } from '../../types.js'
+import type { EmbedResolver, Enclosure, TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { injectEnclosures } from './injectEnclosures.js'
 import { neutralizeUnsafeUrls } from './neutralizeUnsafeUrls.js'
@@ -25,7 +26,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Episode notes</p>'
     const context = withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }])
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
+      <video
+        src="https://example.com/clip.mp4"
+        controls
+        data-enclosure=""
+      ></video>
       <p>Episode notes</p>
     `
 
@@ -48,7 +53,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Episode notes</p>'
     const context = withEnclosures([{ url: 'https://example.com/episode.mp3', type: 'audio/mpeg' }])
     const expected = html`
-      <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
+      <audio
+        src="https://example.com/episode.mp3"
+        controls
+        data-enclosure=""
+      ></audio>
       <p>Episode notes</p>
     `
 
@@ -69,6 +78,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-id="dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-enclosure=""
       ></div>
       <p>Episode notes</p>
@@ -121,6 +131,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-id="dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-enclosure=""
       ></div>
       <p>Notes</p>
@@ -148,6 +159,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-id="dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://cdn.example.com/feed-thumb.jpg"
+        data-embed-ratio="16/9"
         data-enclosure=""
       ></div>
       <p>Notes</p>
@@ -168,6 +180,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-id="dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-enclosure=""
       ></div>
       <p>Notes</p>
@@ -191,6 +204,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-id="dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-embed-duration="212"
         data-enclosure=""
       ></div>
@@ -198,6 +212,70 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     `
 
     expect(result).toEqualHtml(expected)
+  })
+
+  // A placeholder built from an enclosure carries its urls on the same terms as one built from
+  // the markup: every url resolved, and the canonical one cleaned.
+  describe('placeholder fields', () => {
+    const exampleResolver: EmbedResolver = {
+      selector: 'iframe[src*="example.com"]',
+      extract: () => ({
+        provider: 'example',
+        src: 'https://example.com/e/x',
+        url: 'https://example.com/watch/x?utm_source=feed',
+      }),
+    }
+
+    const withExampleResolver = (enclosures: Array<Enclosure>): TransformContext => {
+      return {
+        ...baseContext,
+        widgetResolvers: [exampleResolver],
+        baseUrl: 'https://publisher.example/post',
+        enclosures,
+      }
+    }
+
+    it('should resolve a feed thumbnail stated as a relative url', async () => {
+      const value = '<p>Content</p>'
+      const context = withExampleResolver([
+        {
+          url: 'https://example.com/e/x',
+          medium: 'video',
+          thumbnails: [{ url: '/uploads/thumb.jpg' }],
+        },
+      ])
+      const expected = html`
+        <div
+          data-embed-src="https://example.com/e/x"
+          data-embed-provider="example"
+          data-embed-url="https://example.com/watch/x?utm_source=feed"
+          data-embed-thumbnail="https://publisher.example/uploads/thumb.jpg"
+          data-enclosure=""
+        ></div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should clean a resolver url with the provided cleanUrlFn', async () => {
+      const value = '<p>Content</p>'
+      const context: TransformContext = {
+        ...withExampleResolver([{ url: 'https://example.com/e/x', medium: 'video' }]),
+        cleanUrlFn: (url) => url.split('?')[0] ?? url,
+      }
+      const expected = html`
+        <div
+          data-embed-src="https://example.com/e/x"
+          data-embed-provider="example"
+          data-embed-url="https://example.com/watch/x"
+          data-enclosure=""
+        ></div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
   })
 
   describe('image enclosures', () => {
@@ -245,7 +323,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
       ])
       const expected = html`
-        <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
+        <audio
+          src="https://example.com/episode.mp3"
+          controls
+          data-enclosure=""
+        ></audio>
         <img src="https://example.com/cover.jpg" data-enclosure="">
         <p>Content</p>
       `
@@ -315,8 +397,16 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
       ])
       const expected = html`
-        <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
-        <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
+        <audio
+          src="https://example.com/episode.mp3"
+          controls
+          data-enclosure=""
+        ></audio>
+        <video
+          src="https://example.com/clip.mp4"
+          controls
+          data-enclosure=""
+        ></video>
         <p>Content</p>
         <img src="https://example.com/inline.jpg">
       `
@@ -359,6 +449,31 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       `
 
       expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    // A feed listing one picture as both a native enclosure and a media:content can spell the
+    // two differently, and the fingerprint that collapses them only compares hosts and paths.
+    it('should inject one image when enclosures differ only by a missing scheme', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/cover.jpg', type: 'image/jpeg' },
+        { url: '//example.com/cover.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/cover.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should not inject a gravatar avatar that states no scheme', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: '//2.gravatar.com/avatar/abc123?s=96&d=identicon', type: 'image/jpeg' },
+      ])
+
+      expect(await transform(value, context)).toEqualHtml(value)
     })
 
     it('should collapse a WordPress -WxH variant to the full-res original', async () => {
@@ -457,9 +572,34 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     })
 
     // Width and height are one measurement and come from one side. A feed stating only a width
-    // beside a resolver's fixed player height once produced 320x190 for a fluid-width bar, a box
+    // beside a resolver's fixed player height once produced 320x138 for a fluid-width bar, a box
     // nobody measured. The feed's pair now stands whole where it states any part of one.
     it('should take the size from the feed as a pair rather than merge it with the resolver height', async () => {
+      const value = '<p>Content</p>'
+      const context: TransformContext = {
+        ...withEnclosures([
+          { url: 'https://player.blubrry.com/id/12345678/', type: 'text/html', width: 320 },
+        ]),
+        widgetResolvers: [blubrryEmbedResolver],
+      }
+      const expected = html`
+        <div
+          data-embed-src="https://player.blubrry.com/id/12345678/"
+          data-embed-provider="blubrry"
+          data-embed-id="12345678"
+          data-embed-width="320"
+          data-enclosure=""
+        ></div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    // Acast's player is 190 tall whatever the carrier says, which is why the resolver opts out of
+    // declared sizes. A feed's stated size is the same kind of claim as a publisher's markup, so
+    // the opt-out covers it too.
+    it('should keep the resolver height over the feed size when the resolver ignores declared sizes', async () => {
       const value = '<p>Content</p>'
       const context: TransformContext = {
         ...withEnclosures([
@@ -472,7 +612,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
           data-embed-src="https://embed.acast.com/myshow/myepisode"
           data-embed-provider="acast"
           data-embed-id="myshow/myepisode"
-          data-embed-width="320"
+          data-embed-height="190"
           data-enclosure=""
         ></div>
         <p>Content</p>
@@ -508,7 +648,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         { url: 'https://example.com/ep.mp3', type: 'audio/mpeg' },
       ])
       const expected = html`
-        <audio src="https://example.com/ep.mp3" controls preload="none" data-enclosure=""></audio>
+        <audio
+          src="https://example.com/ep.mp3"
+          controls
+          data-enclosure=""
+        ></audio>
         <p>Content</p>
       `
 
@@ -543,7 +687,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         { url: 'https://example.com/ep.mp3', type: 'audio/mpeg' },
       ])
       const expected = html`
-        <audio src="https://example.com/ep.mp3" controls preload="none" data-enclosure=""></audio>
+        <audio
+          src="https://example.com/ep.mp3"
+          controls
+          data-enclosure=""
+        ></audio>
         <p>Content</p>
       `
 
@@ -585,8 +733,16 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       { url: 'https://example.com/clip.mp4', type: 'video/mp4' },
     ])
     const expected = html`
-      <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
-      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
+      <audio
+        src="https://example.com/episode.mp3"
+        controls
+        data-enclosure=""
+      ></audio>
+      <video
+        src="https://example.com/clip.mp4"
+        controls
+        data-enclosure=""
+      ></video>
       <p>Content</p>
     `
 
@@ -597,7 +753,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/episode.mp3', medium: 'audio' }])
     const expected = html`
-      <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
+      <audio
+        src="https://example.com/episode.mp3"
+        controls
+        data-enclosure=""
+      ></audio>
       <p>Content</p>
     `
 
@@ -608,7 +768,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/clip.mp4', medium: 'video' }])
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
+      <video
+        src="https://example.com/clip.mp4"
+        controls
+        data-enclosure=""
+      ></video>
       <p>Content</p>
     `
 
@@ -643,6 +807,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-id="dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-enclosure=""
       ></div>
       <p>Content</p>
@@ -663,6 +828,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
         data-enclosure=""
       ></div>
       <p>Content</p>
@@ -705,7 +871,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       baseUrl: 'https://example.com',
     }
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
+      <video
+        src="https://example.com/clip.mp4"
+        controls
+        data-enclosure=""
+      ></video>
       <p>Content</p>
     `
 
@@ -728,11 +898,9 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       <video
         src="https://example.com/clip.mp4"
         controls
-        preload="none"
         poster="https://example.com/thumb.jpg"
         data-enclosure=""
-      >
-      </video>
+      ></video>
       <p>Content</p>
     `
 
@@ -755,12 +923,10 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       <video
         src="https://example.com/clip.mp4"
         controls
-        preload="none"
         width="1280"
         height="720"
         data-enclosure=""
-      >
-      </video>
+      ></video>
       <p>Content</p>
     `
 
@@ -783,11 +949,9 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       <video
         src="https://example.com/clip.mp4"
         controls
-        preload="none"
         poster="https://example.com/poster-large.jpg"
         data-enclosure=""
-      >
-      </video>
+      ></video>
       <p>Content</p>
     `
 
@@ -800,7 +964,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       { url: 'https://example.com/clip.mp4', type: 'video/mp4', thumbnails: [] },
     ])
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
+      <video
+        src="https://example.com/clip.mp4"
+        controls
+        data-enclosure=""
+      ></video>
       <p>Content</p>
     `
 
@@ -820,11 +988,9 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       <video
         src="https://example.com/clip.mp4"
         controls
-        preload="none"
         poster="about:blank"
         data-enclosure=""
-      >
-      </video>
+      ></video>
       <p>Content</p>
     `
     const result = await applyDomTransforms(parseHtml(value), [
@@ -847,7 +1013,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       },
     ])
     const expected = html`
-      <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
+      <audio
+        src="https://example.com/episode.mp3"
+        controls
+        data-enclosure=""
+      ></audio>
       <p>Content</p>
     `
 
@@ -858,7 +1028,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/clip.mp4', type: 'video/mp4' }])
     const expected = html`
-      <video src="https://example.com/clip.mp4" controls preload="none" data-enclosure=""></video>
+      <video
+        src="https://example.com/clip.mp4"
+        controls
+        data-enclosure=""
+      ></video>
       <p>Content</p>
     `
 
@@ -880,7 +1054,11 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       { url: 'https://example.com/episode.mp3', type: 'audio/mpeg' },
     ])
     const expected = html`
-      <audio src="https://example.com/episode.mp3" controls preload="none" data-enclosure=""></audio>
+      <audio
+        src="https://example.com/episode.mp3"
+        controls
+        data-enclosure=""
+      ></audio>
       <p>Episode notes</p>
     `
 

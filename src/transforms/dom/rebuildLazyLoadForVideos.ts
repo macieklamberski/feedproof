@@ -1,6 +1,7 @@
 import { vimeoResolveEmbed } from '../../embeds/vimeo.js'
 import { youtubeResolveEmbed } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
+import { createIframe } from '../../utils/widgets.js'
 
 // The "Lazy Load for Videos" WordPress plugin rewrites a YouTube/Vimeo embed into a
 // `.preview-lazyload` facade: a container div wrapping an `<a>` that holds the watch URL
@@ -35,8 +36,7 @@ export const rebuildLazyLoadForVideos: DomTransform = () => (document) => {
     }
 
     const facade = anchor.closest('.container-lazyload') ?? anchor
-    const iframe = document.createElement('iframe')
-    iframe.setAttribute('src', source)
+    const iframe = createIframe(document, source)
 
     const videoTitle = anchor.getAttribute('data-video-title')
     if (videoTitle) {

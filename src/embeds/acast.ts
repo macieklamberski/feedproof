@@ -62,5 +62,5 @@ const acastResolveEmbed = (url: string): EmbedResolverResult | undefined => {
 }
 
 export const acastEmbedResolver = createUrlEmbedResolver(acastHosts, acastResolveEmbed, {
-  declaredSize: false,
+  preferResolverSize: true,
 })

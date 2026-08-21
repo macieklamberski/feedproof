@@ -1,4 +1,5 @@
 import { coerceNumber, isNonEmptyString, type Nullish, startsWithAnyOf } from 'trousse'
+import * as styles from './styles.js'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
@@ -156,14 +157,6 @@ export const flashVars = (element: Nullish<Element>): string | undefined => {
   const named = params.find((param) => attr(param, 'name')?.toLowerCase() === 'flashvars')
 
   return attr(named, 'value')
-}
-
-const bgImageUrlRegex = /url\(['"]?([^'")]+)/
-
-// The first url in an element's inline `background-image`, for cards that paint their
-// thumbnail with CSS instead of an `<img>`.
-export const bgImage = (element: Nullish<Element>): string | undefined => {
-  return attr(element, 'style')?.match(bgImageUrlRegex)?.[1]
 }
 
 // Parsed value of an attribute holding a JSON blob, as several platforms ship whole cards
@@ -332,26 +325,6 @@ export const isGeneratedWrapper = (element: Element): boolean => {
   return element.getAttributeNames().some((name) => startsWithAnyOf(name, generatedWrapperPrefixes))
 }
 
-// Matches `<property>: <number>[px];` at a declaration boundary, so `width` cannot match inside
-// `max-width`. px is optional and any other unit (em/rem/%) fails to match. The numeric group
-// gives each digit a single parse (`[0-9]+(?:\.[0-9]+)?|\.[0-9]+`, not `[0-9]*\.?[0-9]+`): the
-// ambiguous form backtracks quadratically on a long digit run followed by a non-terminator, which
-// `style` (an unbounded untrusted attribute) can carry.
-const styleLengthRegex = (property: string): RegExp => {
-  return new RegExp(
-    `(?:^|;)\\s*${property}\\s*:\\s*([0-9]+(?:\\.[0-9]+)?|\\.[0-9]+)\\s*(?:px)?\\s*(?:;|$)`,
-    'i',
-  )
-}
-
-// The digits an inline style states for one length property, or undefined when it states none.
-// Returned unparsed on purpose: the callers want different bounds on the same read. A resolver
-// taking a player's own size runs it through parsePixelSize, while getElementDimensions has to
-// keep 0, 1 and 2 for removeTrackingPixels, which that bound would reject.
-export const styleLength = (element: Nullish<Element>, property: string): string | undefined => {
-  return attr(element, 'style')?.match(styleLengthRegex(property))?.[1]
-}
-
 // A pixel size as a player url or embed attribute states it: `200`, or `200px` where the
 // publisher wrote the unit. `coerceNumber` alone will not do, because it reads neither the
 // suffix nor a bound, and a stated height of `0` or `99999` is a mistake, not a size.
@@ -404,82 +377,87 @@ export const getElementDimensions = (element: Element): { width?: number; height
   const dimensions = imageDimensionsRegex.exec(element.getAttribute('data-image-dimensions') ?? '')
 
   return {
-    width: width ?? coerceNumber(dimensions?.[1]) ?? coerceNumber(styleLength(element, 'width')),
-    height: height ?? coerceNumber(dimensions?.[2]) ?? coerceNumber(styleLength(element, 'height')),
+    width: width ?? coerceNumber(dimensions?.[1]) ?? coerceNumber(styles.pixels(element, 'width')),
+    height:
+      height ?? coerceNumber(dimensions?.[2]) ?? coerceNumber(styles.pixels(element, 'height')),
   }
 }
 
 // How many ancestors above the element to also check for a responsive wrapper.
 const maxWrapperAncestorDepth = 3
-// The ways an element can declare its aspect ratio. Every source reads the raw `style` or
-// `class` attribute instead of the CSSOM API, because both parsers drop a style declaration
-// whose property name is not lowercase. CSS property names are case-insensitive, so
-// `MAX-WIDTH:800px` is a declaration a browser honours and `.style` loses, while a
-// case-insensitive regex still matches it, the same way getElementDimensions reads its styles.
-// That is the only reason: both parsers do implement `.style`, and they agree with each other
-// on everything else, including reading an unset property as `''` (checked 2026-08-16).
-//
-// TODO: measure whether uppercase property names occur in feed markup at all. If they do not,
-// `getPropertyValue` is the simpler read and these regexes lose their last justification.
-const elementRatioSources: Array<{
-  attribute: string
-  regex: RegExp
-  extract: (match: RegExpExecArray) => string | undefined
-}> = [
-  {
-    // Modern CSS: the whole `aspect-ratio` value (`16 / 9`, or a single number), parsed
-    // like any other ratio string.
-    attribute: 'style',
-    regex: /aspect-ratio:\s*(?:auto\s+)?([\d.\s/]+)/i,
-    extract: (match) => parseRatio(match[1]),
-  },
-  {
-    // WordPress responsive embeds carry the ratio as a class (`wp-embed-aspect-16-9`),
-    // styled by an external stylesheet feedsweep never sees. The class itself encodes it.
-    attribute: 'class',
-    regex: /wp-embed-aspect-(\d+)-(\d+)/,
-    extract: (match) => parseRatio(`${match[1]}:${match[2]}`),
-  },
-  {
-    // The legacy inline padding hack (`padding-bottom:56.25%`): the percent is the
-    // inverse of the ratio, bounded to keep a stray value from encoding nonsense.
-    attribute: 'style',
-    regex: /padding-(?:bottom|top):\s*([\d.]+)%/i,
-    extract: (match) => {
-      const percent = Number(match[1])
+// `aspect-ratio` takes the ratio with an optional `auto` beside it, on either side.
+const autoRatioRegex = /^auto\s+|\s+auto$/gi
+const paddingPercentRegex = /^([\d.]+)%$/
+const paddingSidesRegex = /\s+/
+const wpEmbedAspectRegex = /wp-embed-aspect-(\d+)-(\d+)/
 
-      if (percent > 0 && percent < 1000) {
-        return formatRatio(100, percent)
-      }
-    },
-  },
-  {
-    // A pair of caps (`max-width:800px;max-height:600px`). Neither is a size the element
-    // takes, only the box it may not exceed, so together they encode a ratio and nothing
-    // more. Last in this list because it is the weakest reading: anything above states a
-    // ratio outright, while this one infers it. A real width or height never competes,
-    // since getElementDimensions reads those and getEmbedSize consults this table only
-    // when it found none.
-    attribute: 'style',
-    regex: styleLengthRegex('max-width'),
-    extract: (match) => {
-      const height = styleLengthRegex('max-height').exec(match.input)?.[1]
+// The bottom padding as the `padding` shorthand states it, which some embed wrappers write the
+// hack in (`padding: 0 0 56.25%`). Only the three and four value forms give the bottom a value of
+// its own: one or two values pad every side alike, which is spacing rather than a shape. A value
+// holding a function is left alone, since its own spaces would be counted as sides.
+const shorthandBottom = (declarations: styles.Declarations): string | undefined => {
+  const padding = declarations.padding
 
-      return height ? parseRatio(`${match[1]}:${height}`) : undefined
-    },
+  if (!padding || padding.includes('(')) {
+    return
+  }
+
+  const sides = padding.split(paddingSidesRegex)
+
+  return sides.length >= 3 ? sides[2] : undefined
+}
+
+// The ways an element can declare its aspect ratio, in the order they are trusted.
+const elementRatioSources: Array<(element: Element) => string | undefined> = [
+  // Modern CSS: the whole `aspect-ratio` value (`16 / 9`, or a single number), parsed
+  // like any other ratio string.
+  (element) => {
+    const ratio = styles.declarations(element)['aspect-ratio']
+
+    return ratio ? parseRatio(ratio.replace(autoRatioRegex, '')) : undefined
+  },
+
+  // WordPress responsive embeds carry the ratio as a class (`wp-embed-aspect-16-9`),
+  // styled by an external stylesheet feedsweep never sees. The class itself encodes it.
+  (element) => {
+    const match = wpEmbedAspectRegex.exec(element.getAttribute('class') ?? '')
+
+    return match ? parseRatio(`${match[1]}:${match[2]}`) : undefined
+  },
+
+  // The legacy inline padding hack (`padding-bottom:56.25%`): the percent is the
+  // inverse of the ratio, bounded to keep a stray value from encoding nonsense.
+  (element) => {
+    const declarations = styles.declarations(element)
+    const padding =
+      declarations['padding-bottom'] ?? declarations['padding-top'] ?? shorthandBottom(declarations)
+    const percent = Number(padding?.match(paddingPercentRegex)?.[1])
+
+    if (percent > 0 && percent < 1000) {
+      return formatRatio(100, percent)
+    }
+  },
+
+  // A pair of caps (`max-width:800px;max-height:600px`). Neither is a size the element
+  // takes, only the box it may not exceed, so together they encode a ratio and nothing
+  // more. Last in this list because it is the weakest reading: anything above states a
+  // ratio outright, while this one infers it. A real width or height never competes,
+  // since getElementDimensions reads those and getEmbedSize consults this table only
+  // when it found none.
+  (element) => {
+    const width = styles.pixels(element, 'max-width')
+    const height = styles.pixels(element, 'max-height')
+
+    return width && height ? parseRatio(`${width}:${height}`) : undefined
   },
 ]
 
 const getElementRatio = (element: Element): string | undefined => {
   for (const source of elementRatioSources) {
-    const match = source.regex.exec(element.getAttribute(source.attribute) ?? '')
+    const ratio = source(element)
 
-    if (match) {
-      const ratio = source.extract(match)
-
-      if (ratio) {
-        return ratio
-      }
+    if (ratio) {
+      return ratio
     }
   }
 }
@@ -553,9 +531,6 @@ export const parseRatio = (value: string): string | undefined => {
 // won't promote a dimension at or below it.
 export const pixelDimensionLimit = 2
 
-const styleDisplayNoneRegex = /(?:^|;)\s*display\s*:\s*none/i
-const styleVisibilityHiddenRegex = /(?:^|;)\s*visibility\s*:\s*hidden/i
-
 // An element hidden from view: the `hidden` attribute, inline `display:none`, or
 // inline `visibility:hidden`. These are unambiguous. Other "hidden" signals are
 // overloaded and stay with their callers: `opacity:0` is usually a fade-in and
@@ -565,9 +540,17 @@ export const isElementHidden = (element: Element): boolean => {
     return true
   }
 
-  const style = element.getAttribute('style')
+  return (
+    styles.keyword(element, 'display') === 'none' ||
+    styles.keyword(element, 'visibility') === 'hidden'
+  )
+}
 
-  return !!style && (styleDisplayNoneRegex.test(style) || styleVisibilityHiddenRegex.test(style))
+// Kept out of isElementHidden because it only means hidden on an image, where it is a
+// tracking-beacon trick. Elsewhere `opacity:0` is usually the first frame of a fade-in,
+// so the caller decides what it is looking at.
+export const hasZeroOpacity = (element: Element): boolean => {
+  return styles.number(element, 'opacity') === 0
 }
 
 // Visits every element in document order and calls `visit` on each. Linkedom's

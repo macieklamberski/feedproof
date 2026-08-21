@@ -1,6 +1,7 @@
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
-import { attr, bgImage, find, jsonAttr, text } from '../utils/dom.js'
+import { attr, find, jsonAttr, text } from '../utils/dom.js'
+import * as styles from '../utils/styles.js'
 
 type TumblrLinkData = {
   type?: string
@@ -41,7 +42,7 @@ export const tumblrCiteResolver: CiteResolver = {
         title: text(element, '.title'),
         description: text(element, '.description'),
         publisher: text(element, '.site-name'),
-        thumbnail: bgImage(find(element, '.poster')),
+        thumbnail: styles.bgImage(find(element, '.poster')),
       })
     }
 

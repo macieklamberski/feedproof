@@ -1,4 +1,6 @@
 import type { DomTransform } from '../../types.js'
+import { attr } from '../../utils/dom.js'
+import { createLinkedImage } from '../../utils/widgets.js'
 
 const chartIdRegex = /datawrapper\.dwcdn\.net\/([A-Za-z0-9]+)/
 const visWrapperIdRegex = /^datawrapper-vis-([A-Za-z0-9]+)$/
@@ -19,19 +21,12 @@ const getChartId = (url: string | null | undefined): string | undefined => {
 // embed, so this is the platform's declared fallback rather than a guess. It shows the chart
 // immediately whichever carrier the feed used: the script form shows nothing without JS, and the
 // iframe form renders only by loading a third-party frame the reader may not allow.
-const buildChartImage = (document: Document, chartId: string, alt: string | null): HTMLElement => {
-  const image = document.createElement('img')
-  image.setAttribute('src', `https://datawrapper.dwcdn.net/${chartId}/full.png`)
-
-  if (alt) {
-    image.setAttribute('alt', alt)
-  }
-
-  const link = document.createElement('a')
-  link.setAttribute('href', `https://datawrapper.dwcdn.net/${chartId}/`)
-  link.appendChild(image)
-
-  return link
+const buildChartImage = (document: Document, chartId: string, alt?: string): HTMLElement => {
+  return createLinkedImage(document, {
+    src: `https://datawrapper.dwcdn.net/${chartId}/full.png`,
+    href: `https://datawrapper.dwcdn.net/${chartId}/`,
+    alt,
+  })
 }
 
 export const convertDatawrapperEmbeds: DomTransform = () => (document) => {
@@ -46,7 +41,7 @@ export const convertDatawrapperEmbeds: DomTransform = () => (document) => {
       continue
     }
 
-    iframe.replaceWith(buildChartImage(document, chartId, iframe.getAttribute('title')))
+    iframe.replaceWith(buildChartImage(document, chartId, attr(iframe, 'title')))
   }
 
   // Script / web-component form: `<div id="datawrapper-vis-<id>">` wrapping the embed.js loader
@@ -61,7 +56,7 @@ export const convertDatawrapperEmbeds: DomTransform = () => (document) => {
     }
 
     const fallback = wrapper.querySelector('img[src*="datawrapper.dwcdn.net/"]')
-    wrapper.replaceWith(buildChartImage(document, chartId, fallback?.getAttribute('alt') ?? null))
+    wrapper.replaceWith(buildChartImage(document, chartId, attr(fallback, 'alt')))
   }
 
   // A `data-frame-src` chart embed (Texas Tribune / @newswire/frames) is already an <iframe> by
@@ -83,7 +78,7 @@ export const convertDatawrapperEmbeds: DomTransform = () => (document) => {
       continue
     }
 
-    wrapper.replaceWith(buildChartImage(document, chartId, null))
+    wrapper.replaceWith(buildChartImage(document, chartId))
   }
 
   for (const script of document.querySelectorAll('script')) {

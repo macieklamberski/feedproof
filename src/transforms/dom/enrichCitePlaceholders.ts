@@ -1,8 +1,8 @@
 import type { CiteRef, DomTransform } from '../../types.js'
-import { parseOrKeepDate, updateCitePlaceholder } from '../../utils/widgets.js'
+import { prepareCiteMetadata, updateCitePlaceholder } from '../../utils/widgets.js'
 
 export const enrichCitePlaceholders: DomTransform = (context) => {
-  const { enrichCiteFn, parseDateFn } = context
+  const { enrichCiteFn } = context
 
   if (!enrichCiteFn) {
     return () => {}
@@ -37,10 +37,10 @@ export const enrichCitePlaceholders: DomTransform = (context) => {
         continue
       }
 
-      updateCitePlaceholder(placeholders[i], {
-        ...data,
-        date: parseOrKeepDate(data.date, parseDateFn),
-      })
+      // A payload arrives from a platform's API rather than from the feed, and it overwrites what
+      // the resolver read, so its urls go through the same preparation as a resolver's: resolved
+      // against the base, the canonical one cleaned.
+      updateCitePlaceholder(placeholders[i], prepareCiteMetadata(data, context))
     }
   }
 }

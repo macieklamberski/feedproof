@@ -1,6 +1,7 @@
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
-import { attr, bgImage, find, text, textNode } from '../utils/dom.js'
+import { attr, find, text, textNode } from '../utils/dom.js'
+import * as styles from '../utils/styles.js'
 
 // Medium's "mixtape" link card. Two sibling anchors inside a `.graf--mixtapeEmbed` block:
 // the text one carries url, title, description and host, and `a.mixtapeImage` carries the
@@ -29,7 +30,7 @@ export const mediumCiteResolver: CiteResolver = {
       url: attr(anchor, 'href'),
       title: text(anchor, 'strong'),
       description: text(anchor, 'em'),
-      thumbnail: bgImage(find(element, '.mixtapeImage')),
+      thumbnail: styles.bgImage(find(element, '.mixtapeImage')),
       // The host trails the description as a bare text node with no element of its own, so
       // it is read from text nodes only.
       publisher: textNode(anchor),

@@ -1,5 +1,6 @@
 import type { DomTransform } from '../../types.js'
 import { isUrlShaped } from '../../utils/urls.js'
+import { createIframe } from '../../utils/widgets.js'
 
 // Some embed conventions park the real iframe URL in a `<div>` attribute and build the iframe
 // with JS at runtime (Pym.js `data-pym-src`, @newswire/frames `data-frame-src`). A reader runs
@@ -16,8 +17,7 @@ export const rebuildDeferredIframes: DomTransform =
           continue
         }
 
-        const iframe = document.createElement('iframe')
-        iframe.setAttribute('src', src)
+        const iframe = createIframe(document, src)
         element.replaceWith(iframe)
       }
     }

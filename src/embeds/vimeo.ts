@@ -59,7 +59,7 @@ export const vimeoResolveEmbed = (
     id: videoId,
     src: `https://player.vimeo.com/video/${videoId}${pickUrlParams(url, vimeoEmbedParams)}`,
     url: `https://vimeo.com/${videoId}`,
-    ...(title && { title }),
+    title,
     // TODO: no thumbnail yet. Vimeo posters aren't derivable from the id (the URL
     // carries an opaque hash), so they need an oEmbed lookup
     // (https://vimeo.com/api/oembed.json?url=...) wired through enrichEmbedFn.

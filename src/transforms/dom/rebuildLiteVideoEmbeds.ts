@@ -1,6 +1,7 @@
 import { composeEmbedUrl, youtubeEmbedParams } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 import { pickQueryParams } from '../../utils/urls.js'
+import { createIframe } from '../../utils/widgets.js'
 
 // `start` carries a whole-second offset. Guard it so only digits reach the URL and a
 // crafted value can't inject extra query params.
@@ -54,8 +55,7 @@ export const rebuildLiteVideoEmbeds: DomTransform = () => (document) => {
       params.start = start
     }
 
-    const iframe = document.createElement('iframe')
-    iframe.setAttribute('src', source.compose(videoId, params))
+    const iframe = createIframe(document, source.compose(videoId, params))
 
     const videoTitle = element.getAttribute('videotitle')
     if (videoTitle) {

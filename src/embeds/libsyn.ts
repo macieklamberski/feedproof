@@ -71,7 +71,7 @@ export const libsynResolveEmbed = (url: string): EmbedResolverResult | undefined
     provider: 'libsyn',
     id: `${embed.kind}/${embed.id}`,
     src: `https://play.libsyn.com/embed/${embed.kind}/id/${embed.id}/${height}`,
-    ...(embed.height ? { height: embed.height } : {}),
+    height: embed.height,
   }
 }
 
