@@ -30,6 +30,14 @@ The placeholder is an empty `<div>`: a renderer builds the card from these attri
 
 Card URLs pass through your [`cleanUrlFn`](/guides/customization/url-handling) even when they never sat in an anchor's `href`, and `data-cite-date` passes through your [`parseDateFn`](/reference/transform-content#options) so all cards carry dates in a format you chose. Without the hook the raw date string is kept.
 
+### Description and Caption
+
+Two fields carry text about the link, and they are not interchangeable. `data-cite-description` is the linked page's own preview text, the excerpt the platform scraped from it. `data-cite-caption` is the embedding author's note about the link, a Ghost bookmark's figcaption for instance. A card that shows both carries both, and most carry neither.
+
+### Date
+
+`data-cite-date` is whatever the card states, in whatever format it states it: an ISO timestamp where the source markup carries one, a site-formatted string like `2018.10.14` where it does not, since a card renders the blog's own date setting. So the value is displayable but not reliably parseable, which is what `parseDateFn` is for. A card showing only a partial date is skipped instead of guessed at: dev.to's "Jul 14" carries no year to recover.
+
 ### Kind
 
 `data-cite-kind` is one of `bookmark`, `repost`, `like`, `reply`, `read`, `listen`, `watch`. It is set only where the source markup names the relationship, today only microformats markup, where the `h-cite` sits in a response property like `u-bookmark-of` or `p-in-reply-to`. Cards that are just "a preview of a link" carry no `kind`.
@@ -105,5 +113,11 @@ Discourse's social-post oneboxes (a quoted tweet, for example) are deliberately 
 |--------|---------|
 | Microformats | `.h-cite` markup; response properties set `data-cite-kind` |
 | Embedly | `blockquote.embedly-card` embeds |
+
+## How Resolvers Run
+
+The pass works like the [widget pass](/widgets/embeds#how-resolvers-run), with one difference that matters. A cite resolver replaces the card it matches, so a later resolver never sees it, and the card's markup is gone whether or not the placeholder ended up carrying much. That is why a resolver returning nothing is the normal outcome: a card it cannot read a URL and a title from is left as the publisher wrote it, which still renders as a card, while a half-read placeholder would render as a link to nowhere.
+
+Nothing here touches the network either. A URL a resolver returns is resolved against `baseUrl` and cleaned through your `cleanUrlFn` before it lands on the placeholder, so a resolver returns the URL as it found it in the markup. Fields the card cannot state at all are what [enrichment](/guides/customization/enrichment) is for.
 
 A platform not listed here belongs in the library: [open an issue or a pull request](https://github.com/macieklamberski/feedsweep/issues).

@@ -142,6 +142,15 @@ Some platform markup hides a directly playable file rather than a hosted viewer.
 | Discourse | Video placeholder divs | `<video>` with the upload URL and thumbnail poster |
 | Podlove | Web Player mounts whose sibling script inlines the episode config | `<audio>` with the episode file and the show's poster |
 
+## How Resolvers Run
+
+Four rules govern the pass, and they explain most of what the output looks like:
+
+- **The result shape picks the output.** A result carrying a `tag` field mints a real `<video>` or `<audio>`; any other result becomes an embed placeholder. That is the whole of the [placeholder-or-native rule](/widgets#placeholder-or-native-element): the pass reads the shape of the answer, so a resolver never states which of the two it wants.
+- **Order decides overlaps.** Resolvers run in array order, and one that returns a result claims its element by replacing it, so later resolvers never see it. The more specific selector comes first: a meta-provider like Embedly wraps other providers, so it has to be read before the provider it wraps.
+- **Returning nothing defers.** A resolver that does not recognize an element leaves it alone, for a later resolver or for the generic tiers below to claim.
+- **Nothing in the pass touches the network.** A resolver reads the element and derives what the id allows: a canonical page URL, a thumbnail a platform composes from the id. Anything needing a round trip belongs in [enrichment](/guides/customization/enrichment), which runs later and can correct what a resolver guessed.
+
 ## Unclaimed Embeds
 
 Anything no resolver claims still resolves, through generic tiers:
