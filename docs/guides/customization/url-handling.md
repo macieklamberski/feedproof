@@ -52,6 +52,8 @@ const output = await transformContent(html, {
 
 Feedsweep deliberately ships no URL-cleaning rules of its own: which parameters are junk and which redirectors to unwrap is consumer policy, and the same function you use elsewhere in your app can be passed straight in. When unset, URLs pass through unchanged.
 
+The hook rewrites a URL; it cannot refuse one. Returning an empty string keeps the original, so a cleaner that cannot make sense of a URL leaves the element pointing where the feed pointed it. Refusing a URL is [`isSafeUrlFn`](/guides/security)'s job, and that one replaces it with an inert sentinel instead of removing the element.
+
 ## assetProxyFn
 
 Rewrites media URLs to your proxy or cache, keeping the reader's requests off publisher origins:

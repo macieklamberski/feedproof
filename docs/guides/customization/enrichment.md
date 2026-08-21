@@ -58,6 +58,8 @@ A date returned by either hook passes through [`parseDateFn`](/reference/transfo
 - **It overwrites.** A field the hook returns replaces whatever the resolver read off the markup: the platform's own API answering about this exact embed beats a guess derived from a URL. Fields the hook leaves out keep the resolver's values.
 - **Size moves as a unit.** An enriched width and height clear any ratio the resolver stated, and an enriched ratio clears its dimensions, so a placeholder never states a box nobody measured. See [Embeds](/widgets/embeds#size-dimensions-or-ratio).
 - **It cannot add fields outside the schema.** The returned metadata is mapped through the same closed field set as resolver results, so passing a whole API payload through is safe: unknown keys are dropped, and no value can become an attribute name.
+- **Its URLs are prepared like a resolver's.** A relative URL in the payload is resolved against `baseUrl`, the canonical `url` is cleaned through your [`cleanUrlFn`](/guides/customization/url-handling#cleanurlfn), and a `date` goes through `parseDateFn`. So a hook returns what its API gave it and nothing more.
+- **A URL that cannot resolve is dropped where the field can afford it.** An embed's `src` and `url` are dropped, since the placeholder still carries every other field. A thumbnail, an icon, an avatar or a cite's `url` is kept as it arrived, because refusing it removes the last trace of something.
 - **It cannot escape the safety passes.** Enrichment runs before `neutralizeUnsafeUrls` and `proxyAssetUrls`, so enriched URLs are still checked against the scheme floor and rewritten by your [asset proxy](/guides/customization/url-handling#assetproxyfn).
 
 ## When to Skip It

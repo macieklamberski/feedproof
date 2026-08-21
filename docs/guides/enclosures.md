@@ -43,7 +43,9 @@ type Enclosure = {
 
 Enclosures inject in feed order, ahead of the existing content. Each one takes the first matching branch:
 
-1. **Embed placeholder.** When a [widget resolver](/widgets/embeds) claims the URL (a YouTube enclosure, for example), or when the enclosure carries an explicit `playerUrl`. The placeholder's display fields prefer the feed's own metadata: the resolver only derives guesses from the URL, while the feed carries the publisher's real thumbnail, title, dimensions, and duration. Dimensions come from one side whole, so a width the feed states never lands beside a height the resolver assumed.
+1. **Embed placeholder.** When a [widget resolver](/widgets/embeds) claims the URL (a YouTube enclosure, for example), or when the enclosure carries an explicit `playerUrl`. The placeholder's display fields prefer the feed's own metadata: the resolver only derives guesses from the URL, while the feed carries the publisher's real thumbnail, title, and duration.
+
+The size is settled differently. The feed's `width` and `height` ride on the synthesized iframe the resolvers are run against, which puts them in the same tier as a size a publisher states on a carrier in the content: they beat the resolver's, unless that resolver measured the platform and prefers its own. Where no resolver claims the enclosure, the feed's dimensions are the only ones there are. Either way the size comes from one side whole, so a width the feed states never lands beside a height the resolver assumed.
 2. **`<audio>`.** When `medium` is `audio` or `type` starts with `audio/`. The element gets `controls` and `preload="none"`.
 3. **`<video>`.** When `medium` is `video` or `type` starts with `video/`, with `width`, `height`, and the first thumbnail as `poster` when present.
 4. **`<img>`.** For image enclosures, but only when the content has no image of its own. An image enclosure is almost always a scaled copy of the lead content image on a different URL, so injecting it next to one would stack a visible duplicate. Avatar images (hosts in the [built-in avatar list](/guides/built-in), `gravatar.com` today) never inject: an author photo is not post imagery.

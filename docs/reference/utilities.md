@@ -79,7 +79,9 @@ const exampleResolver = createMarkupEmbedResolver('div.example-embed[data-id]', 
 })
 ```
 
-Both take an options object as a third argument. `declaredSize: false` tells the builder to keep the resolver's own size instead of the one the carrier declares, which is what a platform that states the same stock height on every embed needs. See [Embeds](/widgets/embeds#size-dimensions-or-ratio).
+Both take an options object as a third argument, carrying one flag. By default the size the carrier declares wins over the one the resolver returns, because the publisher chose it for the player they embedded. `preferResolverSize: true` reverses that for a resolver that has measured the platform: Scribd states the same `height="500"` on every document it embeds and keeps the honest shape in `data-aspect-ratio`, so the number in the markup is not the better one there.
+
+It prefers rather than replaces. Where the resolver states no size at all, the carrier's size is used whatever the flag says, so two refusals cannot cancel out and leave a placeholder with no size on it. See [Embeds](/widgets/embeds#size-dimensions-or-ratio).
 
 > [!NOTE]
 > The resolver registries themselves are [built in and not configurable](/guides/built-in). These builders are exported because the placeholder wire format is public, not as an extension point for `transformContent`.
