@@ -65,6 +65,20 @@ const specimens: Record<string, string | [string, string]> = {
   '.shareaholic-canvas': '<div class="shareaholic-canvas" data-app="share_buttons"></div>',
   'amp-social-share':
     '<amp-social-share type="twitter" width="60" height="44" data-param-text="Read this"></amp-social-share>',
+  '.wp-block-social-links':
+    '<ul class="wp-block-social-links is-layout-flex wp-block-social-links-is-layout-flex"><li class="wp-social-link wp-social-link-linkedin wp-block-social-link"><a href="https://www.linkedin.com/company/acme/" class="wp-block-social-link-anchor"><svg viewBox="0 0 24 24"><path d="M12 4.6"></path></svg><span class="wp-block-social-link-label screen-reader-text">LinkedIn</span></a></li></ul>',
+  '.et_pb_social_media_follow':
+    '<ul class="et_pb_social_media_follow et_pb_module et_pb_social_media_follow_0 clearfix"><li class="et_pb_social_icon et_pb_social_network_link et-social-linkedin et_pb_social_media_follow_network_2"><a href="https://www.linkedin.com/in/funtraining1/" class="icon et_pb_with_border" title="LinkedIn"><span class="et_pb_social_media_follow_network_name">LinkedIn</span></a></li></ul>',
+  '.elementor-social-icons-wrapper':
+    '<div class="elementor-social-icons-wrapper elementor-grid"><span class="elementor-grid-item"><a class="elementor-icon elementor-social-icon elementor-social-icon-linkedin elementor-repeater-item-32fb565" href="https://www.linkedin.com/company/acme/" target="_blank"><span class="elementor-screen-only">Linkedin</span><i class="fab fa-linkedin"></i></a></span></div>',
+  '.rrssb-buttons':
+    '<ul class="rrssb-buttons"><li class="rrssb-linkedin"><a href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fexample.com%2Fpost" class="popup"><span class="rrssb-icon"></span><span class="rrssb-text">linkedin</span></a></li></ul>',
+  '.simplesocialbuttons':
+    '<div class="simplesocialbuttons simplesocial-sm-round simplesocialbuttons_inline simplesocialbuttons-align-left"><button rel="nofollow" target="_blank" class="simplesocial-linkedin-share" aria-label="LinkedIn Share" data-href="https://www.linkedin.com/sharing/share-offsite/?url=https://example.com/post"><span class="simplesocialtxt">LinkedIn</span></button></div>',
+  'a.synved-social-button':
+    '<a class="synved-social-button synved-social-button-share synved-social-size-24 synved-social-provider-linkedin nolightbox" data-provider="linkedin" target="_blank" rel="nofollow" title="Share on Linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fexample.com%2Fpost"><img alt="Linkedin" title="Share on Linkedin" class="synved-share-image synved-social-image synved-social-image-share" width="24" height="24" src="https://example.com/wp-content/plugins/social-media-feather/synved-social/image/social/regular/48x48/linkedin.png"></a>',
+  '.av-share-box':
+    '<div class="av-share-box"><h5 class="av-share-link-description av-no-toc">Share this entry</h5><ul class="av-share-box-list noLightbox"><li class="av-share-link av-social-link-linkedin"><a target="_blank" href="https://linkedin.com/shareArticle?mini=true&amp;title=A%20post&amp;url=https://example.com/post" aria-hidden="true" data-av_icon="" data-av_iconfont="entypo-fontello"><span class="avia_hidden_link_text">Share on LinkedIn</span></a></li></ul></div>',
   '.yarpp-related':
     '<div class="yarpp yarpp-related yarpp-template-list"><h3>Related</h3><ol><li><a href="/a">A</a></li></ol></div>',
   '.jp-relatedposts':
@@ -157,6 +171,27 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
         </amp-carousel>
         <amp-fit-text width="300" height="80">A headline</amp-fit-text>
         <amp-timeago datetime="2026-08-01T00:00:00Z">1 August 2026</amp-timeago>
+      `
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    // Each social cluster is matched on its own vendor namespace, so the neighbouring blocks and
+    // widgets those same page builders emit around the post body have to survive untouched.
+    it('should keep the page-builder blocks that neighbour the social clusters', async () => {
+      const value = html`
+        <figure class="wp-block-image size-large">
+          <img src="photo.jpg" alt="A photo">
+        </figure>
+        <div class="elementor-widget-container">
+          <p>Body text</p>
+        </div>
+        <ul class="et_pb_text">
+          <li>A list item</li>
+        </ul>
+        <div class="av-content-box">
+          <p>More body text</p>
+        </div>
       `
 
       expect(await transform(value)).toEqualHtml(value)
