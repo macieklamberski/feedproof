@@ -44,26 +44,28 @@ export const readCarrierUrl = (element: Element): string => {
 }
 
 // The size a publisher states on the carrier is trusted by default, because they chose it for the
-// player they actually embedded. A resolver that has measured the platform can overrule that with
-// `declaredSize: false`: Scribd states the same `height="500"` on every document it embeds and
-// keeps the honest ratio in `data-aspect-ratio`, so a number from the markup is not always the
-// better one.
+// player they actually embedded. A resolver that has measured the platform can outrank that with
+// `preferResolverSize`: Scribd states the same `height="500"` on every document it embeds and keeps
+// the honest ratio in `data-aspect-ratio`, so a number from the markup is not always the better one.
+//
+// It says prefer and not replace because it only applies where the resolver has a size to prefer.
+// A resolver that states none falls back to the carrier however this is set, which is what keeps
+// the two refusals from cancelling out: TikTok once refused the carrier's landscape box while
+// stating nothing itself, and the placeholder came out with no size at all.
 type ResolverOptions = {
-  declaredSize?: boolean
+  preferResolverSize?: boolean
 }
 
 // A resolver whose selector names the platform's own markup.
 export const createMarkupEmbedResolver = (
   selector: string,
   extract: (element: Element) => EmbedResolverResult | undefined,
-  { declaredSize = true }: ResolverOptions = {},
+  options: ResolverOptions = {},
 ): EmbedResolver => {
   return {
     selector,
     extract: (element) => {
-      const result = extract(element)
-
-      return declaredSize ? withDeclaredSize(element, result) : result
+      return decideSize(element, extract(element), options.preferResolverSize)
     },
   }
 }
@@ -85,8 +87,9 @@ const hasSize = (size: SizeFields): boolean => {
   return hasDimensions(size) || size.ratio !== undefined
 }
 
-// Replaces a resolver's size with what the carrier declares on itself, whole: its dimensions, or
-// a ratio of its own. A carrier that declares nothing leaves the resolver's size alone.
+// Which of the two claims to a size wins. The carrier's is taken by default, whole: its dimensions,
+// or a ratio of its own. A resolver that asked to be preferred keeps its own instead, and either
+// way a side with nothing to say leaves the other standing.
 //
 // Whole, because mixing the two sources describes something neither meant: a width the publisher
 // stated beside a height the resolver derived is a box nobody measured. And on itself, because a
@@ -95,12 +98,17 @@ const hasSize = (size: SizeFields): boolean => {
 // into a theme's blanket 16:9. So the ancestors are read only when the resolver stated no size at
 // all: with nothing to beat, the wrapper's shape is the one signal left, and a sizeless player in
 // a responsive wrapper still gets a placeholder that can reserve space.
-export const withDeclaredSize = (
+const decideSize = (
   element: Element,
   result: EmbedResolverResult | undefined,
+  preferResolverSize?: boolean,
 ): EmbedResolverResult | undefined => {
   if (!result) {
     return
+  }
+
+  if (preferResolverSize && hasSize(result)) {
+    return result
   }
 
   const wrapperDepth = hasSize(result) ? 0 : undefined
@@ -160,7 +168,7 @@ export const setDimensions = (
 export const createUrlEmbedResolver = (
   hosts: Array<string>,
   extract: (url: string, element: Element) => EmbedResolverResult | undefined,
-  { declaredSize = true }: ResolverOptions = {},
+  options: ResolverOptions = {},
 ): EmbedResolver => {
   return {
     selector: embedCarrierSelector,
@@ -171,9 +179,7 @@ export const createUrlEmbedResolver = (
         return
       }
 
-      const result = extract(src, element)
-
-      return declaredSize ? withDeclaredSize(element, result) : result
+      return decideSize(element, extract(src, element), options.preferResolverSize)
     },
   }
 }

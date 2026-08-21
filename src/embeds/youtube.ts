@@ -155,7 +155,7 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
 export const youtubeIframeEmbedResolver = createUrlEmbedResolver(
   youtubeHosts,
   youtubeResolveEmbed,
-  { declaredSize: false },
+  { preferResolverSize: true },
 )
 
 // AMP's own YouTube element. It renders nothing without the AMP runtime, and the id it names in
@@ -193,5 +193,5 @@ export const youtubeAmpEmbedResolver = createMarkupEmbedResolver(
       ratio: playerRatio,
     }
   },
-  { declaredSize: false },
+  { preferResolverSize: true },
 )
