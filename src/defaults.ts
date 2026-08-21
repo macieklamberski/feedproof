@@ -82,6 +82,7 @@ import {
   jwplayerSetupEmbedResolver,
 } from './embeds/jwplayer.js'
 import { libsynEmbedResolver } from './embeds/libsyn.js'
+import { linkedinEmbedResolver } from './embeds/linkedin.js'
 import { mastodonEmbedResolver } from './embeds/mastodon.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { megaphoneEmbedResolver } from './embeds/megaphone.js'
@@ -447,6 +448,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   brightcoveIframeEmbedResolver,
   brightcoveVideoJsEmbedResolver,
   libsynEmbedResolver,
+  linkedinEmbedResolver,
   buzzsproutIframeEmbedResolver,
   buzzsproutScriptEmbedResolver,
   blubrryEmbedResolver,
