@@ -141,7 +141,7 @@ describe('resolveOrDropUrl', () => {
   })
 })
 
-describe('cleanOrKeepUrl', () => {
+describe('cleanUrl', () => {
   it('should return what the cleaner answers', () => {
     const valueUrl = 'https://example.com/post?utm_source=feed'
     const cleanUrlFn = (url: string) => url.split('?')[0] ?? url
