@@ -836,6 +836,20 @@ export const defaultNonContentSelectors = [
   '.shareaholic-canvas', // Shareaholic share/related widget: 669 feeds (0.005%).
   'amp-social-share', // AMP share button: 9 feeds.
 
+  // Theme and plugin social clusters, each one its own vendor namespace rather than a generic
+  // class the two [class*=] entries above already reach. Counted on the wrapper, not on a single
+  // network's button: every instance carries a Facebook, X and email sibling beside the LinkedIn
+  // one, so the per-network token understates the widget by three to five times.
+  '.wp-block-social-links', // WordPress core social-links block (follow icons): 788 feeds (0.006%).
+  '.et_pb_social_media_follow', // Divi social-media-follow module: 672 feeds (0.005%).
+  '.elementor-social-icons-wrapper', // Elementor social-icons widget (follow icons): 616 feeds (0.005%).
+  '.rrssb-buttons', // Ridiculously Responsive Social Sharing Buttons: 476 feeds (0.004%).
+  '.simplesocialbuttons', // SimpleSocialButtons share bar: 465 feeds (0.004%).
+  // Synved Social Share renders no wrapper, so the anchors are siblings of the post's own
+  // paragraphs and the button itself is the only thing there is to match.
+  'a.synved-social-button', // Synved Social Share buttons: 231 feeds (0.002%).
+  '.av-share-box', // Enfold theme "Share this entry" box: 179 feeds (0.001%).
+
   // Related-posts widgets.
   '.yarpp-related', // YARPP related-posts widget (WordPress): 1,243 feeds (0.010%).
   '.jp-relatedposts', // Jetpack related-posts carousel: 427 feeds (0.003%).
