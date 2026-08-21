@@ -188,24 +188,6 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
       expect(await transform(value)).toEqualHtml('')
     })
 
-    it('should remove img with style opacity:0', async () => {
-      const value = '<img src="invis.gif" style="opacity:0">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove img with style opacity:0.0', async () => {
-      const value = '<img src="invis.gif" style="opacity:0.0">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should not remove img with style opacity:0.5', async () => {
-      const value = '<img src="faded.jpg" style="opacity:0.5">'
-
-      expect(await transform(value)).toEqualHtml(value)
-    })
-
     it('should not remove img with style display:block', async () => {
       const value = '<img src="visible.jpg" style="display:block">'
 

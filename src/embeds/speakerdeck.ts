@@ -41,7 +41,7 @@ const composeEmbed = (
     provider: 'speakerdeck',
     id: hasSlide ? `${deckId}/${slide}` : deckId,
     src: `https://speakerdeck.com/player/${deckId}${hasSlide ? `?slide=${slide}` : ''}`,
-    ...(title && { title }),
+    title,
   }
 }
 

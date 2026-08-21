@@ -656,6 +656,42 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // A payload writing its media without a scheme still names Bluesky's own host.
+    it('should keep a protocol-relative avatar and thumbnail', async () => {
+      const payload = jsonAttrValue({
+        postId: '3mbq7aeuwbg42',
+        authorDid: 'did:plc:bhz4agnyzcrsvpnprxrbjrpa',
+        authorHandle: 'author.example',
+        text: 'The wrapper states its media without a scheme.',
+        uri: 'at://did:plc:bhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mbq7aeuwbg42',
+        authorAvatarUrl: '//cdn.bsky.app/img/avatar/plain/did:plc:bhz4/bafkreiavatar@jpeg',
+        imageUrls: ['//cdn.bsky.app/img/feed_thumbnail/plain/did:plc:bhz4/bafkreithumb@jpeg'],
+      })
+      const value = html`
+        <div
+          class="bluesky-wrap outer"
+          data-attrs="${payload}"
+          data-component-name="BlueskyCreateBlueskyEmbed"
+        >
+          <iframe
+            src="https://embed.bsky.app/embed/did:plc:bhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mbq7aeuwbg42"
+          ></iframe>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
+        id: 'did:plc:bhz4agnyzcrsvpnprxrbjrpa/3mbq7aeuwbg42',
+        src: 'https://embed.bsky.app/embed/did:plc:bhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mbq7aeuwbg42',
+        url: 'https://bsky.app/profile/did:plc:bhz4agnyzcrsvpnprxrbjrpa/post/3mbq7aeuwbg42',
+        description: 'The wrapper states its media without a scheme.',
+        author: '@author.example',
+        avatar: '//cdn.bsky.app/img/avatar/plain/did:plc:bhz4/bafkreiavatar@jpeg',
+        thumbnail: '//cdn.bsky.app/img/feed_thumbnail/plain/did:plc:bhz4/bafkreithumb@jpeg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should take a video post poster from the video host', async () => {
       const payload = jsonAttrValue({
         authorName: 'Video Author',

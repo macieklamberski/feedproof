@@ -1,5 +1,6 @@
 import { composeEmbedUrl } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
+import { createIframe } from '../../utils/widgets.js'
 
 // WP YouTube Lyte renders a facade that carries the YouTube id in its id attribute
 // (`WYL_{id}` on the outer wrapper, `lyte_{id}` on the inner node) and builds the real
@@ -18,8 +19,7 @@ export const rebuildLyteEmbeds: DomTransform = () => (document) => {
       continue
     }
 
-    const iframe = document.createElement('iframe')
-    iframe.setAttribute('src', composeEmbedUrl(videoId))
+    const iframe = createIframe(document, composeEmbedUrl(videoId))
     element.replaceWith(iframe)
   }
 }

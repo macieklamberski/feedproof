@@ -195,5 +195,5 @@ export const flickrResolveEmbed = (
 // still serves, so each maps onto a working slideshow.
 export const flickrEmbedResolver = createUrlEmbedResolver(flickrHosts, flickrResolveEmbed, {
   // The carrier's size is already folded into the src, and it is what the endpoint renders at.
-  declaredSize: false,
+  preferResolverSize: true,
 })

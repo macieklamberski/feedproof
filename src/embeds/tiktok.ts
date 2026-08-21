@@ -1,14 +1,7 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import {
-  attr,
-  find,
-  keepIfMatches,
-  parsePixelSize,
-  styleLength,
-  text,
-  textNode,
-} from '../utils/dom.js'
+import { attr, find, keepIfMatches, parsePixelSize, text, textNode } from '../utils/dom.js'
+import * as styles from '../utils/styles.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const tiktokHost = 'tiktok.com'
@@ -29,6 +22,17 @@ const playerPathRegex = /^\/(?:embed(?:\/v2)?|player\/v1)\/(\d+)\/?$/
 // A watch url names the clip's owner and the clip: `/@handle/video/{id}`. Sanitized copies
 // sometimes keep only the `/video/{id}` half, so the handle is optional.
 const watchPathRegex = /^(?:\/@([a-zA-Z0-9_.]{1,24}))?\/video\/(\d+)\/?$/
+
+// The player is fluid in width and fixed in height, so it states a height and no shape. Loading
+// `/embed/v2/{id}` at 500, 700 and 1000 pixels wide measured 738 every time (2026-08-20): the box
+// does not follow its container, because the clip is letterboxed inside a frame whose header,
+// caption, sound row and action rail are what set the height. TikTok's own oEmbed answers 739 for
+// the same clip and a stored hydrated iframe in the corpus carries 758, the spread being how much
+// room the caption takes.
+//
+// A ratio would be wrong here even though the clip is 9:16. That is the shape of the video, not of
+// the frame around it: at 1000 wide, 9/16 asks for 1778 pixels where the player occupies 738.
+const playerHeight = 738
 
 type Clip = { handle?: string; videoId?: string }
 
@@ -57,7 +61,7 @@ const hydratedSize = (element: Element): { width?: number; height?: number } => 
 
     return Boolean(parsed && isTiktokUrl(parsed) && playerPathRegex.test(parsed.pathname))
   })
-  const height = parsePixelSize(styleLength(frame, 'height'))
+  const height = parsePixelSize(styles.pixels(frame, 'height'))
 
   if (!height) {
     return {}
@@ -65,7 +69,7 @@ const hydratedSize = (element: Element): { width?: number; height?: number } => 
 
   // The iframe is `width: 100%` inside the blockquote's own `max-width`, so that box is the
   // width the height was measured against.
-  const width = parsePixelSize(styleLength(element, 'max-width'))
+  const width = parsePixelSize(styles.pixels(element, 'max-width'))
 
   return width ? { width, height } : {}
 }
@@ -212,9 +216,11 @@ export const tiktokBlockquoteEmbedResolver = createMarkupEmbedResolver(
 // the id is the composite the blockquote carrier builds, and the watch page becomes the
 // placeholder's url.
 //
-// `declaredSize: false` because the pasted snippets state a landscape box (560x400 in the
-// wild) on a player taller than it is wide. A wrong ratio reserves worse space than none,
-// and the blockquote carrier likewise ships no size short of a hydrated measurement.
+// `preferResolverSize: true` because the pasted snippets state a landscape box (560x400 in the
+// wild) on a player taller than it is wide, and a wrong size reserves worse space than none.
+// It costs the one carrier that states an honest number, a stored hydrated iframe whose 758 is
+// a real measurement, which lands on 738 instead. Telling that apart from a pasted box needs a
+// heuristic worth less than the 20 pixels it recovers.
 export const tiktokIframeEmbedResolver = createUrlEmbedResolver(
   [tiktokHost],
   (src) => {
@@ -226,6 +232,7 @@ export const tiktokIframeEmbedResolver = createUrlEmbedResolver(
         provider: 'tiktok',
         id: playerId,
         src,
+        height: playerHeight,
       }
     }
 
@@ -240,7 +247,8 @@ export const tiktokIframeEmbedResolver = createUrlEmbedResolver(
       id: handle ? `@${handle}/video/${videoId}` : videoId,
       src: `https://www.tiktok.com/embed/v2/${videoId}`,
       url: src,
+      height: playerHeight,
     }
   },
-  { declaredSize: false },
+  { preferResolverSize: true },
 )

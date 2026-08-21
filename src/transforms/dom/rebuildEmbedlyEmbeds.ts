@@ -2,6 +2,7 @@ import { startsWithAnyOf } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { attr, jsonAttr } from '../../utils/dom.js'
 import { isUrlShaped } from '../../utils/urls.js'
+import { createIframe } from '../../utils/widgets.js'
 
 // Embedly wraps a third-party embed in two carriers, and both name the real target and its poster
 // without a fetch. The rendered one is a wrapper iframe whose own query holds them:
@@ -32,16 +33,14 @@ const isHttpUrl = (value: string | undefined): value is string => {
   return !!value && startsWithAnyOf(value, ['http://', 'https://'])
 }
 
-const composeFrame = (document: Document, source: string, poster?: string): Element => {
-  const frame = document.createElement('iframe')
-
-  frame.setAttribute('src', source)
+const composeIframe = (document: Document, source: string, poster?: string): Element => {
+  const iframe = createIframe(document, source)
 
   if (poster) {
-    frame.setAttribute('data-thumbnail', poster)
+    iframe.setAttribute('data-thumbnail', poster)
   }
 
-  return frame
+  return iframe
 }
 
 export const rebuildEmbedlyEmbeds: DomTransform = () => (document) => {
@@ -59,7 +58,7 @@ export const rebuildEmbedlyEmbeds: DomTransform = () => (document) => {
       const poster = params.get('image')
 
       element.replaceWith(
-        composeFrame(document, inner, poster && isUrlShaped(poster) ? poster : undefined),
+        composeIframe(document, inner, poster && isUrlShaped(poster) ? poster : undefined),
       )
       continue
     }
@@ -67,14 +66,14 @@ export const rebuildEmbedlyEmbeds: DomTransform = () => (document) => {
     const payload = jsonAttr<EmbedlyPayload>(element, 'data')
 
     // A payload naming `link`, or naming no type at all, is the cite pass's to claim: a link
-    // preview is a cite, and turning it into a frame would take it away from that resolver.
+    // preview is a cite, and turning it into an iframe would take it away from that resolver.
     if (payload && (payload.type === undefined || payload.type === 'link')) {
       continue
     }
 
     if (payload && isHttpUrl(payload.url)) {
       element.replaceWith(
-        composeFrame(
+        composeIframe(
           document,
           payload.url,
           isHttpUrl(payload.thumbnail_url) ? payload.thumbnail_url : undefined,

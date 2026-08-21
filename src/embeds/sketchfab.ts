@@ -50,7 +50,7 @@ const sketchfabResolveEmbed = (link: string, element: Element): EmbedResolverRes
     id: uid,
     src: `https://sketchfab.com/models/${uid}/embed`,
     url: `https://sketchfab.com/models/${uid}`,
-    ...(title && { title }),
+    title,
   }
 }
 

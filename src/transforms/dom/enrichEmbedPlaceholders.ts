@@ -1,8 +1,8 @@
 import type { DomTransform, EmbedRef } from '../../types.js'
-import { parseOrKeepDate, updateEmbedPlaceholder } from '../../utils/widgets.js'
+import { prepareEmbedMetadata, updateEmbedPlaceholder } from '../../utils/widgets.js'
 
 export const enrichEmbedPlaceholders: DomTransform = (context) => {
-  const { enrichEmbedFn, parseDateFn } = context
+  const { enrichEmbedFn } = context
 
   if (!enrichEmbedFn) {
     return () => {}
@@ -17,6 +17,7 @@ export const enrichEmbedPlaceholders: DomTransform = (context) => {
     }
 
     const embeds: Array<EmbedRef> = new Array(count)
+
     for (let i = 0; i < count; i++) {
       const element = placeholders[i]
 
@@ -33,12 +34,14 @@ export const enrichEmbedPlaceholders: DomTransform = (context) => {
     for (let i = 0; i < count; i++) {
       const data = enriched[i]
 
-      if (data) {
-        updateEmbedPlaceholder(placeholders[i], {
-          ...data,
-          date: parseOrKeepDate(data.date, parseDateFn),
-        })
+      if (!data) {
+        continue
       }
+
+      // A payload arrives from a platform's API rather than from the feed, and it overwrites what
+      // the resolver read, so its urls go through the same preparation as a resolver's: resolved
+      // against the base, the canonical one cleaned.
+      updateEmbedPlaceholder(placeholders[i], prepareEmbedMetadata(data, context))
     }
   }
 }

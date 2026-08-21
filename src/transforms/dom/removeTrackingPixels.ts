@@ -1,8 +1,11 @@
 import { escapeRegex, parseUrl } from 'trousse'
 import type { DomTransform } from '../../types.js'
-import { getElementDimensions, isElementHidden, pixelDimensionLimit } from '../../utils/dom.js'
-
-const styleOpacityZeroRegex = /(?:^|;)\s*opacity\s*:\s*0(?:\.0+)?\s*(?:;|$)/i
+import {
+  getElementDimensions,
+  hasZeroOpacity,
+  isElementHidden,
+  pixelDimensionLimit,
+} from '../../utils/dom.js'
 
 // `[./]` anchors require the segment to terminate with `.` (file extension) or `/`
 // (path boundary) to avoid false positives on words like `tracker` or `counter`.
@@ -77,15 +80,6 @@ const hasContentImageSignal = (
   const src = image.getAttribute('src')
 
   return !!src && (rasterExtensionRegex.test(src) || rasterFormatQueryRegex.test(src))
-}
-
-// An `opacity:0` image is a tracking-beacon trick. It's image-specific: a generic
-// `opacity:0` is often a fade-in animation, so it stays here instead of in the shared
-// isElementHidden check (which covers `display:none`/`visibility:hidden`/`[hidden]`).
-const hasZeroOpacity = (image: Element): boolean => {
-  const style = image.getAttribute('style')
-
-  return !!style && styleOpacityZeroRegex.test(style)
 }
 
 export const removeTrackingPixels: DomTransform = (context) => {

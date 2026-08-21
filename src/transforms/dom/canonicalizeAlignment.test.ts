@@ -45,6 +45,24 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
       expect(await transform(value)).toContainHtml('data-align="center"')
     })
 
+    it('should center an image whose horizontal margins are auto beside a real top margin', async () => {
+      const value = '<img style="margin: 10px auto" src="a.jpg">'
+
+      expect(await transform(value)).toContainHtml('data-align="center"')
+    })
+
+    it('should center an image whose side margins are each stated auto', async () => {
+      const value = '<img style="margin-left: auto; margin-right: auto" src="a.jpg">'
+
+      expect(await transform(value)).toContainHtml('data-align="center"')
+    })
+
+    it('should center an image whose margin shorthand is auto on every side', async () => {
+      const value = '<img style="margin: auto" src="a.jpg">'
+
+      expect(await transform(value)).toContainHtml('data-align="center"')
+    })
+
     it('should stamp the figure and keep its caption when the figure carries the signal', async () => {
       const value = html`
         <figure class="aligncenter">
@@ -175,6 +193,13 @@ describeForEachParser('canonicalizeAlignment', (parseHtml) => {
 
     it('should ignore a bare directional class on a wrapper that also holds prose', async () => {
       const value = '<div class="center"><img src="a.jpg"><p>A caption sentence.</p></div>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    // Only the right margin is auto in the four-sided form, so the image is not centered.
+    it('should not center an image whose margins are auto on one side only', async () => {
+      const value = '<img style="margin: 0 auto 10px 0" src="a.jpg">'
 
       expect(await transform(value)).toEqualHtml(value)
     })

@@ -2,7 +2,6 @@ import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, queryElement } from '../tests.js'
 import {
   attr,
-  bgImage,
   find,
   findConfigScript,
   flashVars,
@@ -10,13 +9,13 @@ import {
   getElementDimensions,
   getWrapperRatio,
   hasAncestorWithTagName,
+  hasZeroOpacity,
   isElementHidden,
   isEmptyElement,
   keepIfMatches,
   parsePixelSize,
   parseRatio,
   removeWithEmptyWrappers,
-  styleLength,
   text,
   textNode,
   walkElements,
@@ -42,20 +41,6 @@ describeForEachParser('getElementDimensions', (parseHtml) => {
     const image = queryElement(document, 'img')
 
     expect(getElementDimensions(image)).toEqual({ width: 50, height: 25 })
-  })
-
-  it('should read unitless dimensions from style', () => {
-    const document = parseHtml('<img style="width: 10; height: 5">')
-    const image = queryElement(document, 'img')
-
-    expect(getElementDimensions(image)).toEqual({ width: 10, height: 5 })
-  })
-
-  it('should ignore em / rem / % units in style', () => {
-    const document = parseHtml('<img style="width: 1.5em; height: 100%">')
-    const image = queryElement(document, 'img')
-
-    expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
   })
 
   it('should fall back to style when attribute is non-numeric', () => {
@@ -122,30 +107,6 @@ describeForEachParser('getElementDimensions', (parseHtml) => {
 
     expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
   })
-
-  it('should not backtrack quadratically on a long invalid numeric style value', () => {
-    // A long digit run followed by a non-terminator made the old `[0-9]*\.?[0-9]+`
-    // form take seconds. This completes instantly and matches nothing.
-    const value = `width:${'9'.repeat(50000)}${'a'.repeat(50000)}`
-    const document = parseHtml(`<img style="${value}">`)
-    const image = queryElement(document, 'img')
-
-    expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
-  })
-
-  it('should extract the correct property from multi-property style', () => {
-    const document = parseHtml('<img style="color: red; width: 10px; height: 20px">')
-    const image = queryElement(document, 'img')
-
-    expect(getElementDimensions(image)).toEqual({ width: 10, height: 20 })
-  })
-
-  it('should parse decimal dimensions from style', () => {
-    const document = parseHtml('<img style="width: 1.5px; height: 2.5">')
-    const image = queryElement(document, 'img')
-
-    expect(getElementDimensions(image)).toEqual({ width: 1.5, height: 2.5 })
-  })
 })
 
 describeForEachParser('isElementHidden', (parseHtml) => {
@@ -177,6 +138,13 @@ describeForEachParser('isElementHidden', (parseHtml) => {
     expect(isElementHidden(element)).toBe(true)
   })
 
+  it('should match display:none whatever the case of the property', () => {
+    const document = parseHtml('<div style="DISPLAY: NONE">x</div>')
+    const element = queryElement(document, 'div')
+
+    expect(isElementHidden(element)).toBe(true)
+  })
+
   it('should not treat opacity:0 as hidden', () => {
     const document = parseHtml('<div style="opacity: 0">x</div>')
     const element = queryElement(document, 'div')
@@ -199,12 +167,85 @@ describeForEachParser('isElementHidden', (parseHtml) => {
   })
 })
 
+describeForEachParser('hasZeroOpacity', (parseHtml) => {
+  it('should return true for a zero opacity', () => {
+    const document = parseHtml('<img src="beacon.gif" style="opacity:0">')
+    const image = queryElement(document, 'img')
+
+    expect(hasZeroOpacity(image)).toBe(true)
+  })
+
+  it('should return true for a zero written with decimals', () => {
+    const document = parseHtml('<img src="beacon.gif" style="opacity:0.0">')
+    const image = queryElement(document, 'img')
+
+    expect(hasZeroOpacity(image)).toBe(true)
+  })
+
+  it('should return true for a zero the publisher marked important', () => {
+    const document = parseHtml('<img src="beacon.gif" style="opacity:0!important">')
+    const image = queryElement(document, 'img')
+
+    expect(hasZeroOpacity(image)).toBe(true)
+  })
+
+  it('should return true for a zero written as a percentage', () => {
+    const document = parseHtml('<img src="beacon.gif" style="opacity:0%">')
+    const image = queryElement(document, 'img')
+
+    expect(hasZeroOpacity(image)).toBe(true)
+  })
+
+  it('should return false for a partial percentage', () => {
+    const document = parseHtml('<img src="faded.jpg" style="opacity:50%">')
+    const image = queryElement(document, 'img')
+
+    expect(hasZeroOpacity(image)).toBe(false)
+  })
+
+  it('should return false for a partial opacity', () => {
+    const document = parseHtml('<img src="faded.jpg" style="opacity:0.5">')
+    const image = queryElement(document, 'img')
+
+    expect(hasZeroOpacity(image)).toBe(false)
+  })
+
+  // Number.parseFloat reads this as zero, and CSS has no such spelling for a number.
+  it('should return false for a value CSS cannot state', () => {
+    const document = parseHtml('<img src="photo.jpg" style="opacity:0x0">')
+    const image = queryElement(document, 'img')
+
+    expect(hasZeroOpacity(image)).toBe(false)
+  })
+
+  it('should return false when no opacity is stated', () => {
+    const document = parseHtml('<img src="photo.jpg" style="display:block">')
+    const image = queryElement(document, 'img')
+
+    expect(hasZeroOpacity(image)).toBe(false)
+  })
+})
+
 describeForEachParser('getWrapperRatio reading only the element itself', (parseHtml) => {
   it('should read the aspect-ratio property from the element itself', () => {
     const document = parseHtml('<iframe style="aspect-ratio: 21 / 9"></iframe>')
     const iframe = queryElement(document, 'iframe')
 
     expect(getWrapperRatio(iframe, 0)).toBe('21/9')
+  })
+
+  it('should read a ratio written after the auto keyword', () => {
+    const document = parseHtml('<iframe style="aspect-ratio: auto 16 / 9"></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperRatio(iframe, 0)).toBe('16/9')
+  })
+
+  it('should read a ratio written before the auto keyword', () => {
+    const document = parseHtml('<iframe style="aspect-ratio: 16 / 9 auto"></iframe>')
+    const iframe = queryElement(document, 'iframe')
+
+    expect(getWrapperRatio(iframe, 0)).toBe('16/9')
   })
 
   it('should read a wp-embed-aspect class from the element itself', () => {
@@ -277,6 +318,37 @@ describeForEachParser('getWrapperRatio reading only the element itself', (parseH
 
   it('should return undefined for an out-of-range aspect-ratio value', () => {
     const document = parseHtml('<div style="aspect-ratio: 0 / 0"></div>')
+    const div = queryElement(document, 'div')
+
+    expect(getWrapperRatio(div, 0)).toBeUndefined()
+  })
+
+  // The padding hack encodes the ratio as a percentage of the width. A pixel padding is
+  // ordinary spacing.
+  it('should read the padding hack from the shorthand', () => {
+    const document = parseHtml('<div style="padding: 0 0 56.25%"></div>')
+    const div = queryElement(document, 'div')
+
+    expect(getWrapperRatio(div, 0)).toBe('100/56.25')
+  })
+
+  it('should read the padding hack from the four-sided shorthand', () => {
+    const document = parseHtml('<div style="padding: 0 0 56.25% 0"></div>')
+    const div = queryElement(document, 'div')
+
+    expect(getWrapperRatio(div, 0)).toBe('100/56.25')
+  })
+
+  // One or two values pad every side alike, which is spacing and says nothing about shape.
+  it('should ignore a shorthand padding that states no bottom of its own', () => {
+    const document = parseHtml('<div style="padding: 5%"></div>')
+    const div = queryElement(document, 'div')
+
+    expect(getWrapperRatio(div, 0)).toBeUndefined()
+  })
+
+  it('should ignore padding stated in pixels', () => {
+    const document = parseHtml('<div style="padding-bottom: 20px"></div>')
     const div = queryElement(document, 'div')
 
     expect(getWrapperRatio(div, 0)).toBeUndefined()
@@ -862,106 +934,6 @@ describeForEachParser('flashVars', (parseHtml) => {
 
   it('should return undefined for a nullish element', () => {
     expect(flashVars(undefined)).toBeUndefined()
-  })
-})
-
-describeForEachParser('bgImage', (parseHtml) => {
-  it('should return the url from an unquoted background-image', () => {
-    const document = parseHtml(
-      '<a style="background-image: url(https://example.com/cover.jpg)"></a>',
-    )
-
-    expect(bgImage(queryElement(document, 'a'))).toBe('https://example.com/cover.jpg')
-  })
-
-  it('should return the url from a quoted background-image', () => {
-    const document = parseHtml(
-      `<a style="background-image: url('https://example.com/cover.jpg');"></a>`,
-    )
-
-    expect(bgImage(queryElement(document, 'a'))).toBe('https://example.com/cover.jpg')
-  })
-
-  it('should return the url from a background shorthand', () => {
-    const document = parseHtml(
-      '<a style="background: #fff url(https://example.com/c.png) no-repeat"></a>',
-    )
-
-    expect(bgImage(queryElement(document, 'a'))).toBe('https://example.com/c.png')
-  })
-
-  it('should return undefined when the style carries no url', () => {
-    const document = parseHtml('<a style="background-color: #fff"></a>')
-
-    expect(bgImage(queryElement(document, 'a'))).toBeUndefined()
-  })
-
-  it('should return undefined when there is no style attribute', () => {
-    const document = parseHtml('<a></a>')
-
-    expect(bgImage(queryElement(document, 'a'))).toBeUndefined()
-  })
-
-  it('should return undefined for a nullish element', () => {
-    expect(bgImage(undefined)).toBeUndefined()
-  })
-})
-
-describeForEachParser('styleLength', (parseHtml) => {
-  it('should read the digits of the named property', () => {
-    const document = parseHtml('<div style="max-width: 605px; min-width: 325px"></div>')
-    const element = queryElement(document, 'div')
-
-    expect(styleLength(element, 'max-width')).toBe('605')
-  })
-
-  it('should read a unitless value and a fraction', () => {
-    const document = parseHtml('<div style="height: 758.53"></div>')
-    const element = queryElement(document, 'div')
-
-    expect(styleLength(element, 'height')).toBe('758.53')
-  })
-
-  // The value is returned as digits, not a number, so each caller picks its own parser:
-  // getElementDimensions needs 0 to come through for removeTrackingPixels, and a resolver
-  // reading a player's own size runs it through parsePixelSize, which would reject 0.
-  it('should return the digits unparsed', () => {
-    const document = parseHtml('<img style="width: 0">')
-    const element = queryElement(document, 'img')
-
-    expect(styleLength(element, 'width')).toBe('0')
-  })
-
-  it('should not confuse a property with a longer one that contains it', () => {
-    const document = parseHtml('<div style="max-width: 605px"></div>')
-    const element = queryElement(document, 'div')
-
-    expect(styleLength(element, 'width')).toBeUndefined()
-  })
-
-  it('should match a property name whatever its case', () => {
-    const document = parseHtml('<div style="MAX-WIDTH: 605px"></div>')
-    const element = queryElement(document, 'div')
-
-    expect(styleLength(element, 'max-width')).toBe('605')
-  })
-
-  it('should ignore a value in a unit that is not pixels', () => {
-    const document = parseHtml('<div style="max-width: 80em"></div>')
-    const element = queryElement(document, 'div')
-
-    expect(styleLength(element, 'max-width')).toBeUndefined()
-  })
-
-  it('should return undefined when the element has no style', () => {
-    const document = parseHtml('<div></div>')
-    const element = queryElement(document, 'div')
-
-    expect(styleLength(element, 'width')).toBeUndefined()
-  })
-
-  it('should return undefined for a nullish element', () => {
-    expect(styleLength(undefined, 'width')).toBeUndefined()
   })
 })
 
