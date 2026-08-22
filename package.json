@@ -46,7 +46,7 @@
     "test:jsdom": "DOM_LIBRARY=jsdom bun test"
   },
   "dependencies": {
-    "highlight.js": "^11.11.1",
+    "highlight.js": "^11.12.0",
     "html-tag-names": "^2.1.0",
     "linkifyjs": "^4.3.2",
     "mathml-tag-names": "^4.0.0",
