@@ -69,7 +69,7 @@
     "feedcanon": "^2.0.0-rc.1",
     "feedscout": "^2.0.0-rc.3",
     "jsdom": "^30.0.1",
-    "kvalita": "^1.16.0",
+    "kvalita": "^1.17.2",
     "linkedom": "^0.18.13",
     "trousse": "^1.4.0",
     "tsdown": "^0.22.14"
