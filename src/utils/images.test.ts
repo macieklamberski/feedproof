@@ -237,11 +237,12 @@ describe('getImageFingerprint', () => {
     expect(getImageFingerprint(value)).toBe(expected)
   })
 
-  it.each(
-    imageProxyCases,
-  )('should unwrap the %s image proxy to its inner source', (_name, url, expected) => {
-    expect(getImageFingerprint(url)).toBe(expected)
-  })
+  it.each(imageProxyCases)(
+    'should unwrap the %s image proxy to its inner source',
+    (_name, url, expected) => {
+      expect(getImageFingerprint(url)).toBe(expected)
+    },
+  )
 
   it('should unwrap then strip a Cloudinary fetch of an upload URL', () => {
     const value =

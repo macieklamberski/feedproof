@@ -406,15 +406,14 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       expect(await transform(value)).toEqualHtml('<p>🙂</p>')
     })
 
-    it.each([
-      'smiley',
-      'smilie',
-      'mceSmilie',
-    ])('should recognize the singular %s class other engines use', async (className) => {
-      const value = `<p><img src="/x/smilies/wink.png" alt=";)" class="${className}"></p>`
+    it.each(['smiley', 'smilie', 'mceSmilie'])(
+      'should recognize the singular %s class other engines use',
+      async (className) => {
+        const value = `<p><img src="/x/smilies/wink.png" alt=";)" class="${className}"></p>`
 
-      expect(await transform(value)).toEqualHtml('<p>😉</p>')
-    })
+        expect(await transform(value)).toEqualHtml('<p>😉</p>')
+      },
+    )
 
     it('should leave a non-smilie image served from the smilies folder untouched', async () => {
       const value = '<p><img src="https://example.com/images/smilies/banner.png" alt="Banner"></p>'
@@ -736,10 +735,10 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       [':saint:', '1f607', '😇'],
     ]
 
-    it.each(
-      shortcodeCases,
-    )('should replace a %s smilie from its alt', async (shortcode, codepoint, expected) => {
-      const value = html`
+    it.each(shortcodeCases)(
+      'should replace a %s smilie from its alt',
+      async (shortcode, codepoint, expected) => {
+        const value = html`
         <p>
           <img
             src="https://example.com/images/smilies/emojione/${codepoint}.png"
@@ -751,8 +750,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
         </p>
       `
 
-      expect(await transform(value)).toEqualHtml(`<p>${expected}</p>`)
-    })
+        expect(await transform(value)).toEqualHtml(`<p>${expected}</p>`)
+      },
+    )
   })
 
   describe('Khoros / Lithium (/i/smilies/ stock faces)', () => {
@@ -1264,11 +1264,12 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       expect(glyph).not.toMatch(asciiLetterRegex)
     })
 
-    it.each(
-      nameEntries,
-    )('should key the %s name %s in lower case, as getFileStem normalizes', (_platform, name) => {
-      expect(name).toBe(name.toLowerCase())
-    })
+    it.each(nameEntries)(
+      'should key the %s name %s in lower case, as getFileStem normalizes',
+      (_platform, name) => {
+        expect(name).toBe(name.toLowerCase())
+      },
+    )
 
     // A filename two platforms disagree on cannot be resolved without knowing the engine, which
     // the markup does not say, so the merge refuses rather than picking a winner.
@@ -1330,28 +1331,25 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
     // These are real alts from localized boards. The old guard accepted anything non-ASCII
     // without ASCII letters, so each was injected into the text in place of its image.
-    it.each([
-      '壞笑',
-      'улыбка',
-      '笑顔',
-      'χαμόγελο',
-    ])('should leave image untouched when alt is the localized word %s', async (alt) => {
-      const value = `<p><img src="emoji.png" alt="${alt}" class="wp-smiley"></p>`
+    it.each(['壞笑', 'улыбка', '笑顔', 'χαμόγελο'])(
+      'should leave image untouched when alt is the localized word %s',
+      async (alt) => {
+        const value = `<p><img src="emoji.png" alt="${alt}" class="wp-smiley"></p>`
 
-      expect(await transformKeeping(value)).toEqualHtml(value)
-    })
+        expect(await transformKeeping(value)).toEqualHtml(value)
+      },
+    )
 
     // A subdivision flag is a base flag plus tag characters spelling the region code, so the
     // guard has to accept a class of character that appears in nothing else.
-    it.each([
-      '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-      '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-      '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
-    ])('should replace image when alt is the subdivision flag %s', async (flag) => {
-      const value = `<p><img class="wp-smiley" src="/f.png" alt="${flag}"></p>`
+    it.each(['🏴󠁧󠁢󠁳󠁣󠁴󠁿', '🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🏴󠁧󠁢󠁷󠁬󠁳󠁿'])(
+      'should replace image when alt is the subdivision flag %s',
+      async (flag) => {
+        const value = `<p><img class="wp-smiley" src="/f.png" alt="${flag}"></p>`
 
-      expect(await transform(value)).toEqualHtml(`<p>${flag}</p>`)
-    })
+        expect(await transform(value)).toEqualHtml(`<p>${flag}</p>`)
+      },
+    )
 
     it('should leave image untouched when alt is a lone digit without a keycap', async () => {
       const value = '<p><img src="emoji.png" alt="7" class="wp-smiley"></p>'
