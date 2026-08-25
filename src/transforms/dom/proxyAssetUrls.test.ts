@@ -18,6 +18,14 @@ const idempotentProxy: AssetProxyFn = (url, type) => {
   return wrapProxy(url, type)
 }
 
+// A consumer signing proxied URLs with Web Crypto has to return a promise, so the transform has
+// to await whatever assetProxyFn hands back.
+const asyncProxy: AssetProxyFn = async (url, type) => {
+  await Promise.resolve()
+
+  return wrapProxy(url, type)
+}
+
 const baseContext = (assetProxyFn?: AssetProxyFn): TransformContext => {
   return { ...defaultContext, assetProxyFn }
 }
@@ -441,6 +449,32 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     const twice = await transform(once, idempotentProxy)
 
     expect(twice).toEqualHtml(once)
+  })
+
+  it('should await an async assetProxyFn on a src attribute', async () => {
+    const value = html`<img src="https://cdn.example.com/photo.jpg">`
+    const expected = html`
+      <img
+        src="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg"
+        data-proxied-src="https://cdn.example.com/photo.jpg"
+      >
+    `
+
+    expect(await transform(value, asyncProxy)).toEqualHtml(expected)
+  })
+
+  it('should await an async assetProxyFn on every srcset entry', async () => {
+    const value = html`
+      <img srcset="https://cdn.example.com/small.jpg 300w, https://cdn.example.com/large.jpg 600w">
+    `
+    const expected = html`
+      <img
+        srcset="https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Fsmall.jpg 300w, https://proxy.example.com/?type=image&url=https%3A%2F%2Fcdn.example.com%2Flarge.jpg 600w"
+        data-proxied-srcset="https://cdn.example.com/small.jpg 300w, https://cdn.example.com/large.jpg 600w"
+      >
+    `
+
+    expect(await transform(value, asyncProxy)).toEqualHtml(expected)
   })
 
   it('should not overwrite the preserved src on a second idempotent run', async () => {

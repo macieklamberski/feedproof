@@ -133,7 +133,8 @@ const result = transformContent(html, {
   cleanUrlFn: cleanUrl,
   // Feed item enclosures (audio/video/image), injected into the content.
   enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
-  // Route image/video/audio URLs through a proxy. Return `undefined` to leave a URL untouched.
+  // Route image/video/audio URLs through a proxy. Return `undefined` to leave a URL untouched;
+  // may be async, so a proxy that signs its URLs can use Web Crypto.
   assetProxyFn: (url, type) => `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`,
   // Extra URL safety policy (e.g. SSRF/allowlist); return `false` to neutralize. A dangerous-scheme floor always applies.
   isSafeUrlFn: (url, type) => isSafe(url, type),

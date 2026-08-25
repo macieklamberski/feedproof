@@ -164,7 +164,7 @@ export type IsSafeUrlFn = (url: string, type: UrlRole) => boolean
 
 export type AssetType = 'image' | 'video' | 'audio'
 
-export type AssetProxyFn = (url: string, type: AssetType) => string | undefined
+export type AssetProxyFn = (url: string, type: AssetType) => MaybePromise<string | undefined>
 
 // Normalizes a cite card's site-formatted display date (e.g. "2018.10.14") into the
 // caller's preferred form. Returning undefined keeps the raw string verbatim, so an
