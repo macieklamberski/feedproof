@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -33,13 +33,7 @@ const playerHeight = 200
 type FiresidePlayer = { version: string; token: string }
 
 export const extractFiresideToken = (link: string): FiresidePlayer | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const segments = getPathSegments(link)
   const versioned = segments[0] === 'player' ? segments.slice(1) : segments
   const [version, encodedToken] = versioned
 

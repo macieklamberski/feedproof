@@ -16,13 +16,7 @@ const playerHeights = { creators: 204, other: 102 }
 // `podcasters.spotify.com/pod/show/{show}/embed/episodes/{slug}`,
 // `creators.spotify.com/pod/profile/{user}/embed/episodes/{slug}/{audioId}`.
 export const extractAnchorEpisode = (link: string): string | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const segments = getPathSegments(link)
   const marker = segments.indexOf('embed')
 
   if (marker < 1 || segments[marker + 1] !== 'episodes') {

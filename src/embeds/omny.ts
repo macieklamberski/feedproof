@@ -13,13 +13,7 @@ const playerHeight = 180
 // White-label customers serve the same paths from their own domain, which host matching cannot
 // reach: those keep the generic placeholder.
 export const extractOmnyClip = (link: string): string | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const segments = getPathSegments(link)
 
   if (segments[0] !== 'shows' || segments[segments.length - 1] !== 'embed') {
     return
