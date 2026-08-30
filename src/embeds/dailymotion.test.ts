@@ -7,55 +7,23 @@ import {
   extractDailymotionId,
 } from './dailymotion.js'
 
-describe('extractDailymotionId', () => {
-  it('should extract id from a video url', () => {
-    const value = 'https://www.dailymotion.com/video/x7tgad0'
-    const expected = 'x7tgad0'
-
-    expect(extractDailymotionId(value)).toBe(expected)
-  })
-
-  it('should extract id from a dai.ly short url', () => {
-    const value = 'https://dai.ly/x7tgad0'
-    const expected = 'x7tgad0'
-
-    expect(extractDailymotionId(value)).toBe(expected)
-  })
-
-  it('should extract id from an embed url', () => {
-    const value = 'https://www.dailymotion.com/embed/video/x7tgad0'
-    const expected = 'x7tgad0'
-
-    expect(extractDailymotionId(value)).toBe(expected)
-  })
-
+// Every url spelling that names a single video. All extract the same id, so a deleted row is a
+// format that silently lost support.
+const videoUrls = [
+  'https://www.dailymotion.com/video/x7tgad0',
+  'https://dai.ly/x7tgad0',
+  'https://www.dailymotion.com/embed/video/x7tgad0',
   // Both forms the Flash player shipped.
-  it('should extract id from the swf player url', () => {
-    const value = 'http://www.dailymotion.com/swf/x7tgad0'
-    const expected = 'x7tgad0'
+  'http://www.dailymotion.com/swf/x7tgad0',
+  'http://www.dailymotion.com/swf/video/x7tgad0',
+  'https://geo.dailymotion.com/player.html?video=x7tgad0',
+  // Share urls append a title slug to the id.
+  'https://www.dailymotion.com/video/x7tgad0_some-title',
+]
 
-    expect(extractDailymotionId(value)).toBe(expected)
-  })
-
-  it('should extract id from the swf player url carrying a video segment', () => {
-    const value = 'http://www.dailymotion.com/swf/video/x7tgad0'
-    const expected = 'x7tgad0'
-
-    expect(extractDailymotionId(value)).toBe(expected)
-  })
-
-  it('should extract id from the geo player url', () => {
-    const value = 'https://geo.dailymotion.com/player.html?video=x7tgad0'
-    const expected = 'x7tgad0'
-
-    expect(extractDailymotionId(value)).toBe(expected)
-  })
-
-  it('should strip a title slug suffix', () => {
-    const value = 'https://www.dailymotion.com/video/x7tgad0_some-title'
-    const expected = 'x7tgad0'
-
-    expect(extractDailymotionId(value)).toBe(expected)
+describe('extractDailymotionId', () => {
+  it.each(videoUrls)('should extract the id from %s', (value) => {
+    expect(extractDailymotionId(value)).toBe('x7tgad0')
   })
 
   it('should return undefined for an invalid url', () => {
