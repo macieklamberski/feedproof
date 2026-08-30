@@ -67,6 +67,25 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // A block can carry both generations, and only the later one is guaranteed intact, so each
+    // attribute is validated rather than the first one present being committed to.
+    it('should read the live id when the widget id is malformed', async () => {
+      const value = html`
+        <div
+          data-tf-widget="../evil"
+          data-tf-live="01HXYZ"
+        ></div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'typeform',
+        id: '01HXYZ',
+        src: 'https://form.typeform.com/to/01HXYZ',
+        url: 'https://form.typeform.com/to/01HXYZ',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('the legacy typeform-widget class', () => {

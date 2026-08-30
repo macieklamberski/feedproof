@@ -8,6 +8,26 @@ const safeVideoIdRegex = /^[a-zA-Z0-9]{5,}$/
 
 const dailymotionHosts = ['dailymotion.com', 'dai.ly']
 
+// Segments that name a route rather than a video. `/swf/video/{id}` stacks two of them, which is
+// the second of the two forms the Flash player shipped.
+const pathWords = new Set(['embed', 'video', 'swf'])
+
+const readPathId = (url: URL, segments: Array<string>): string | undefined => {
+  if (url.hostname === 'dai.ly' || url.hostname.endsWith('.dai.ly')) {
+    return segments[0]
+  }
+
+  let index = 0
+
+  while (index < segments.length && pathWords.has(segments[index])) {
+    index++
+  }
+
+  // A path opening with no route word names no video. Site pages would otherwise read as one:
+  // `/about` is five legal id characters.
+  return index > 0 ? segments[index] : undefined
+}
+
 export const extractDailymotionId = (link: string): string | undefined => {
   const url = parseUrl(link)
 
@@ -15,29 +35,14 @@ export const extractDailymotionId = (link: string): string | undefined => {
     return
   }
 
-  const segments = getPathSegments(url)
-  const isShortDomain = url.hostname === 'dai.ly' || url.hostname.endsWith('.dai.ly')
-
-  let id: string | undefined
-
-  if (isShortDomain) {
-    id = segments[0]
-  } else if (segments[0] === 'video') {
-    id = segments[1]
-  } else if (segments[0] === 'embed' && segments[1] === 'video') {
-    id = segments[2]
-  } else if (segments[0] === 'swf') {
-    // The Flash player, in both the forms it shipped: /swf/{id} and /swf/video/{id}.
-    id = segments[1] === 'video' ? segments[2] : segments[1]
-  } else {
-    // geo.dailymotion.com/player.html?video={id}
-    id = url.searchParams.get('video') ?? undefined
-  }
-
-  // Share URLs append a "_title-slug" to the id. Keep only the id.
-  id = id?.split('_')[0]
-
-  return keepIfMatches(id, safeVideoIdRegex)
+  // Each candidate is validated on its own, so a path segment that is not an id still leaves
+  // the geo player's `video` parameter to be read.
+  return (
+    [readPathId(url, getPathSegments(url)), url.searchParams.get('video')]
+      // Share urls append a "_title-slug" to the id. Keep only the id.
+      .map((candidate) => keepIfMatches(candidate?.split('_')[0], safeVideoIdRegex))
+      .find(Boolean)
+  )
 }
 
 // Where playback starts, and the playlist the video sits in. The rest of the publisher's
