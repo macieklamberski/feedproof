@@ -11,92 +11,50 @@ import {
   youtubeResolveEmbed,
 } from './youtube.js'
 
+// Every url spelling that names a single video, current and legacy. All extract the same id,
+// so a deleted row is a format that silently lost support.
+const videoUrls = [
+  'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  'https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf',
+  // The path spelling of the watch page.
+  'https://www.youtube.com/watch/dQw4w9WgXcQ',
+  'https://www.youtube.com/watch?vi=dQw4w9WgXcQ',
+  'https://www.youtube.com/watch_popup?v=dQw4w9WgXcQ',
+  'https://youtu.be/dQw4w9WgXcQ',
+  'https://www.youtu.be/dQw4w9WgXcQ',
+  'https://www.youtube.com/shorts/dQw4w9WgXcQ',
+  'https://www.youtube.com/shorts/dQw4w9WgXcQ?si=abc',
+  'https://www.youtube.com/live/dQw4w9WgXcQ',
+  'https://www.youtube.com/embed/dQw4w9WgXcQ',
+  // Authoring mistakes: YouTube serves a player page for both but cues nothing.
+  'https://www.youtube.com/embed/watch?v=dQw4w9WgXcQ',
+  'https://www.youtube.com/embed/shorts/dQw4w9WgXcQ',
+  // The Flash-era player path, with the era's `&`-and-no-`?` parameter spelling, and its
+  // googleapis host still shipped by Blogger feeds.
+  'http://www.youtube.com/v/dQw4w9WgXcQ',
+  'http://www.youtube.com/v/dQw4w9WgXcQ&hl=en_US&fs=1&',
+  'http://youtube.googleapis.com/v/dQw4w9WgXcQ&hl=en_US',
+  // The /e/ embed and /w/ watch aliases of the same era, and the old /video/ share url.
+  'http://www.youtube.com/e/dQw4w9WgXcQ',
+  'http://www.youtube.com/w/dQw4w9WgXcQ',
+  'http://www.youtube.com/video/dQw4w9WgXcQ',
+  // The Flash-era chromeless player endpoints, carrying the id as `video_id`.
+  'http://www.youtube.com/apiplayer?video_id=dQw4w9WgXcQ&version=3',
+  'http://www.youtube.com/get_video_info?video_id=dQw4w9WgXcQ&el=embedded',
+  // The 2010 AJAX site and its profile grids kept the id in the fragment.
+  'http://www.youtube.com/watch#!v=dQw4w9WgXcQ&feature=related',
+  'http://www.youtube.com/user/SomeUser#p/u/1/dQw4w9WgXcQ',
+  'http://www.youtube.com/user/SomeUser#p/a/u/0/dQw4w9WgXcQ',
+  'https://m.youtube.com/watch?v=dQw4w9WgXcQ',
+  'https://music.youtube.com/watch?v=dQw4w9WgXcQ',
+  'https://youtube.com/watch?v=dQw4w9WgXcQ',
+  // The stray quote Steam news leaks into embed srcs.
+  'https://www.youtube-nocookie.com/embed/"dQw4w9WgXcQ?fs=1&rel=0',
+]
+
 describe('extractVideoId', () => {
-  it('should extract id from standard watch url', () => {
-    const value = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
-  it('should extract id from watch url with extra params', () => {
-    const value =
-      'https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
-  it('should extract id from youtu.be short url', () => {
-    const value = 'https://youtu.be/dQw4w9WgXcQ'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
-  it('should extract id from the Flash /v/ url', () => {
-    const value = 'http://www.youtube.com/v/dQw4w9WgXcQ'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
-  // The Flash player appended its parameters with `&` and no `?`, so the whole tail arrives
-  // inside the id's path segment.
-  it('should extract id from a Flash url whose params carry no question mark', () => {
-    const value = 'http://www.youtube.com/v/dQw4w9WgXcQ&hl=en_US&fs=1&'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
-  it('should extract id from the googleapis Flash host', () => {
-    const value = 'http://youtube.googleapis.com/v/dQw4w9WgXcQ&hl=en_US'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
-  it('should extract id from www.youtu.be url', () => {
-    const value = 'https://www.youtu.be/dQw4w9WgXcQ'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
-  it('should extract id from shorts url', () => {
-    const value = 'https://www.youtube.com/shorts/dQw4w9WgXcQ'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
-  it('should extract id from mobile youtube url', () => {
-    const value = 'https://m.youtube.com/watch?v=dQw4w9WgXcQ'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
-  it('should extract id from music.youtube.com url', () => {
-    const value = 'https://music.youtube.com/watch?v=dQw4w9WgXcQ'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
-  it('should extract id from bare youtube.com url', () => {
-    const value = 'https://youtube.com/watch?v=dQw4w9WgXcQ'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
-  it('should extract id from embed url', () => {
-    const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
+  it.each(videoUrls)('should extract the id from %s', (value) => {
+    expect(extractVideoId(value)).toBe('dQw4w9WgXcQ')
   })
 
   it('should return undefined for invalid url', () => {
@@ -141,32 +99,11 @@ describe('extractVideoId', () => {
     expect(extractVideoId(value)).toBeUndefined()
   })
 
-  it('should extract id from shorts url with trailing path', () => {
-    const value = 'https://www.youtube.com/shorts/dQw4w9WgXcQ?si=abc'
-    const expected = 'dQw4w9WgXcQ'
+  // The 16-char segment is a legacy playlist id, so the grid link names no video.
+  it('should return undefined for a profile-grid playlist link with no video id', () => {
+    const value = 'http://www.youtube.com/user/SomeUser#p/c/C791A17F9108460C'
 
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
-  it('should extract id from /live/ url', () => {
-    const value = 'https://www.youtube.com/live/dQw4w9WgXcQ'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
-  it('should extract id from watch url with legacy ?vi= param', () => {
-    const value = 'https://www.youtube.com/watch?vi=dQw4w9WgXcQ'
-    const expected = 'dQw4w9WgXcQ'
-
-    expect(extractVideoId(value)).toBe(expected)
-  })
-
-  it('should extract id from nocookie embed with a leaked leading quote', () => {
-    const value = 'https://www.youtube-nocookie.com/embed/"Y2kC39Wihow?fs=1&modestbranding=1&rel=0'
-    const expected = 'Y2kC39Wihow'
-
-    expect(extractVideoId(value)).toBe(expected)
+    expect(extractVideoId(value)).toBeUndefined()
   })
 
   it('should reject id shorter than 11 chars', () => {
@@ -307,13 +244,50 @@ describe('youtubeResolveEmbed', () => {
     expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
-  it('should resolve a videoseries playlist embed, posterless', () => {
-    const value = 'https://www.youtube.com/embed/videoseries?list=PLabc123'
+  it('should preserve the self-loop playlist pair', () => {
+    const value = 'https://www.youtube.com/embed/dQw4w9WgXcQ?loop=1&playlist=dQw4w9WgXcQ'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'dQw4w9WgXcQ',
+      src: 'https://www.youtube.com/embed/dQw4w9WgXcQ?playlist=dQw4w9WgXcQ&loop=1',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      ratio: '16/9',
+    }
+
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
+  })
+
+  // Every spelling of a playlist embed: the videoseries path word, the bare embed path some
+  // WordPress plugins emit, and the nocookie host. All resolve to the same posterless
+  // placeholder, so a deleted row is a spelling that silently lost support.
+  const playlistUrls = [
+    'https://www.youtube.com/embed/videoseries?list=PLabc123',
+    'https://www.youtube.com/embed/?list=PLabc123',
+    'https://www.youtube.com/embed/?listType=playlist&list=PLabc123',
+    'https://www.youtube.com/embed?listType=playlist&list=PLabc123',
+    'https://www.youtube-nocookie.com/embed/videoseries?list=PLabc123',
+  ]
+
+  it.each(playlistUrls)('should resolve %s to the playlist embed, posterless', (value) => {
     const expected: EmbedResolverResult = {
       provider: 'youtube',
       id: 'PLabc123',
       src: 'https://www.youtube.com/embed/videoseries?list=PLabc123',
       url: 'https://www.youtube.com/playlist?list=PLabc123',
+      ratio: '16/9',
+    }
+
+    expect(youtubeResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should resolve a user_uploads embed to the channel uploads, posterless', () => {
+    const value = 'https://www.youtube.com/embed?listType=user_uploads&list=SomeUser'
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'SomeUser',
+      src: 'https://www.youtube.com/embed?listType=user_uploads&list=SomeUser',
+      url: 'https://www.youtube.com/user/SomeUser',
       ratio: '16/9',
     }
 
@@ -333,21 +307,28 @@ describe('youtubeResolveEmbed', () => {
     expect(youtubeResolveEmbed(value)).toEqual(expected)
   })
 
-  it('should normalize a nocookie playlist embed to youtube.com', () => {
-    const value = 'https://www.youtube-nocookie.com/embed/videoseries?list=PLxyz'
-    const expected: EmbedResolverResult = {
-      provider: 'youtube',
-      id: 'PLxyz',
-      src: 'https://www.youtube.com/embed/videoseries?list=PLxyz',
-      url: 'https://www.youtube.com/playlist?list=PLxyz',
-      ratio: '16/9',
-    }
-
-    expect(youtubeResolveEmbed(value)).toEqual(expected)
-  })
-
   it('should return undefined for a videoseries embed with no list', () => {
     const value = 'https://www.youtube.com/embed/videoseries'
+
+    expect(youtubeResolveEmbed(value)).toBeUndefined()
+  })
+
+  it('should return undefined for a bare embed url naming no content', () => {
+    const value = 'https://www.youtube.com/embed/?wmode=transparent'
+
+    expect(youtubeResolveEmbed(value)).toBeUndefined()
+  })
+
+  // `listType=search` named a query, not an id, and YouTube removed it in 2020: deliberately
+  // left for the generic handling, which keeps whatever the publisher wrote.
+  it('should not claim a listType=search embed', () => {
+    const value = 'https://www.youtube.com/embed?listType=search&list=sunrise+timelapse'
+
+    expect(youtubeResolveEmbed(value)).toBeUndefined()
+  })
+
+  it('should return undefined for a user_uploads embed with no list', () => {
+    const value = 'https://www.youtube.com/embed?listType=user_uploads'
 
     expect(youtubeResolveEmbed(value)).toBeUndefined()
   })
@@ -645,12 +626,44 @@ describeForEachParser('youtubeAmpEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
-    // The channel-live variant states no video, so there is no poster and no watch url to
-    // mint. It occurs in no corpus feed, and is deliberately left unresolved.
-    it('should not claim the live channel variant', async () => {
-      const value = '<amp-youtube data-live-channelid="UCuAXFkgsw1L7xaCfnd5JJOw"></amp-youtube>'
+    it('should return undefined for a malformed live channel id', async () => {
+      const value = '<amp-youtube data-live-channelid="../../evil"></amp-youtube>'
 
       expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  describe('the channel-live variant', () => {
+    it('should resolve data-live-channelid to the channel live embed, posterless', async () => {
+      const value = '<amp-youtube data-live-channelid="UCuAXFkgsw1L7xaCfnd5JJOw"></amp-youtube>'
+      const expected: EmbedResolverResult = {
+        provider: 'youtube',
+        id: 'UCuAXFkgsw1L7xaCfnd5JJOw',
+        src: 'https://www.youtube.com/embed/live_stream?channel=UCuAXFkgsw1L7xaCfnd5JJOw',
+        url: 'https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw',
+        ratio: '16/9',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should prefer the video over the channel when the element states both', async () => {
+      const value = html`
+        <amp-youtube
+          data-videoid="dQw4w9WgXcQ"
+          data-live-channelid="UCuAXFkgsw1L7xaCfnd5JJOw"
+        ></amp-youtube>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'youtube',
+        id: 'dQw4w9WgXcQ',
+        src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        ratio: '16/9',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 })
