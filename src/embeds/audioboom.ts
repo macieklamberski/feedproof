@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -15,13 +15,7 @@ const playerHeights = { v4: 300, legacy: 95 }
 export const extractAudioboomPost = (
   link: string,
 ): { id: string; isCurrent: boolean } | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const segments = getPathSegments(link)
   // `/posts/{id}/embed[/v4]` is current. `/boos/{id}/embed` is the pre-rename spelling.
   const marker = segments.findIndex((segment) => segment === 'posts' || segment === 'boos')
   const id = marker >= 0 ? segments[marker + 1] : undefined

@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -13,13 +13,7 @@ const playerHeight = 200
 const embedKinds = ['episode', 'show']
 
 export const extractCaptivateEmbed = (link: string): { kind: string; id: string } | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const segments = getPathSegments(link)
   const [kind, id] = segments
 
   if (!kind || !id || !embedKinds.includes(kind) || !uuidRegex.test(id)) {

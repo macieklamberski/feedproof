@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -31,13 +31,7 @@ type Subject = { kind: keyof typeof playerHeights; id: string }
 
 // `/e/{id}` is an episode and `/s/{id}` a show playlist.
 export const extractTransistorEmbed = (link: string): Subject | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const segments = getPathSegments(link)
   const kind = segments[0]
   const subject = segments[1]
 

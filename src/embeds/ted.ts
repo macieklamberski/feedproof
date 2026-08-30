@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -13,13 +13,7 @@ const tedHosts = ['ted.com']
 // `embed.ted.com/talks/lang/{lang}/{slug}.html`. The slug is the talk's canonical id on
 // ted.com, so a watch url follows from it without a lookup.
 export const extractTedTalk = (link: string): string | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const segments = getPathSegments(link)
 
   if (segments[0] !== 'talks') {
     return

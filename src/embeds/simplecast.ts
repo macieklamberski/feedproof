@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -18,13 +18,7 @@ const playerHeight = 200
 export const extractSimplecastEpisode = (
   link: string,
 ): { id: string; isCurrent: boolean } | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const segments = getPathSegments(link)
   const id = segments[0] === 'e' ? segments[1] : segments[0]
 
   if (!id) {

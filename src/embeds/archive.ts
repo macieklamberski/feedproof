@@ -21,13 +21,7 @@ const archiveHosts = ['archive.org']
 // identifier gets a generic 2,212-byte png, not an error, so a poster that turns out
 // to be the placeholder is the one failure this cannot rule out.
 export const extractArchiveIdentifier = (link: string): string | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const segments = getPathSegments(link)
   const identifier = segments[0] === 'embed' || segments[0] === 'details' ? segments[1] : undefined
 
   return keepIfMatches(identifier, safeIdentifierRegex)

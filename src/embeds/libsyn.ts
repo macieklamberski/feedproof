@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { parsePixelSize } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -21,13 +21,7 @@ const readPathOption = (segments: Array<string>, name: string): string | undefin
 export const extractLibsynEmbed = (
   link: string,
 ): { kind: string; id: string; height?: number } | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const segments = getPathSegments(link)
 
   if (segments[0] !== 'embed' || !embedKinds.includes(segments[1] ?? '')) {
     return

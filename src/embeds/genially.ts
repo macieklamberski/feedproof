@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -21,13 +21,7 @@ const geniallyHosts = ['genially.com', 'genial.ly']
 // path is keyed by ids that appear nowhere in the embed url, so a poster needs a fetch. Tagging
 // provider and id here is what gives that fetch something to attach to later.
 export const extractGeniallyViewId = (link: string): string | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const segments = getPathSegments(link)
   const viewId = segments[0] === 'view' ? segments[1] : segments[0]
 
   return keepIfMatches(viewId, safeViewIdRegex)
