@@ -279,6 +279,90 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
     })
   })
 
+  // soundcloud.com answers `x-frame-options: SAMEORIGIN`, so a carrier naming a page renders
+  // nothing. The widget takes a page url in place of a reference, which is what repairs it.
+  describe('a carrier naming a page rather than the player', () => {
+    it('should build the widget around a track page', async () => {
+      const value = '<iframe src="https://soundcloud.com/anjunadeep/edition-586"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fanjunadeep%2Fedition-586',
+        url: 'https://soundcloud.com/anjunadeep/edition-586',
+        height: 166,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should size a set as a playlist', async () => {
+      const value = '<iframe src="https://soundcloud.com/anjunadeep/sets/edition"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fanjunadeep%2Fsets%2Fedition',
+        url: 'https://soundcloud.com/anjunadeep/sets/edition',
+        height: 450,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should size a profile as a user', async () => {
+      const value = '<iframe src="https://soundcloud.com/anjunadeep"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fanjunadeep',
+        url: 'https://soundcloud.com/anjunadeep',
+        height: 450,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The widget refuses the token as a path segment and takes it as a parameter of its own.
+    it('should move a private share token into the widget parameter', async () => {
+      const value = '<iframe src="https://soundcloud.com/anjunadeep/demo/s-Xy12Ab"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fanjunadeep%2Fdemo&secret_token=s-Xy12Ab',
+        url: 'https://soundcloud.com/anjunadeep/demo',
+        height: 166,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Already a working player, so only the url and the height are recovered from the page.
+    it('should keep a widget src that already names a page', async () => {
+      const value = html`
+        <iframe
+          src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fanjunadeep%2Fedition-586"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fanjunadeep%2Fedition-586',
+        url: 'https://soundcloud.com/anjunadeep/edition-586',
+        height: 166,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should read a reference on the api-v2 host', async () => {
+      const value = html`
+        <iframe src="https://w.soundcloud.com/player/?url=https%3A//api-v2.soundcloud.com/tracks/293"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A//api-v2.soundcloud.com/tracks/293',
+        id: 'tracks/293',
+        height: 166,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
   describe('edge cases', () => {
     it('should yield only the src, id and height for a bare iframe', async () => {
       const value = html`

@@ -1,6 +1,7 @@
-import { parseUrl } from 'trousse'
+import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, jsonAttr, text } from '../utils/dom.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // SoundCloud's embed is an iframe whose `url=` query names the track as an
@@ -8,9 +9,41 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // number under the path and again as a `soundcloud:tracks:{id}` URN in place of it. The colons
 // arrive percent-encoded because the whole reference is itself a query value, so both spellings
 // are accepted here. Roughly one SoundCloud feed in ten carries the URN form and nothing else,
-// which without the second spelling leaves every embed in it with no id at all.
+// which without the second spelling leaves every embed in it with no id at all. The widget
+// resolves an `api-v2` reference to the same track as an `api` one.
 const referenceRegex =
-  /api\.soundcloud\.com\/(tracks|playlists|users)\/(?:soundcloud(?::|%3A)\w+(?::|%3A))?(\d+)/i
+  /api(?:-v2)?\.soundcloud\.com\/(tracks|playlists|users)\/(?:soundcloud(?::|%3A)\w+(?::|%3A))?(\d+)/i
+
+// The widget is the only part of SoundCloud that can be framed: the site itself answers
+// `x-frame-options: SAMEORIGIN`, so a carrier pointing straight at a track page shows nothing.
+// The widget takes a page url in place of a reference, which is what makes the repair possible.
+const widgetPlayerUrl = 'https://w.soundcloud.com/player/'
+
+// A page url names its kind by shape: one segment is the user, `sets` marks a playlist, and a
+// second segment is otherwise the track. A few reserved words name a collection of the user's
+// own rather than a track.
+const userCollectionSegments = new Set(['favorites', 'spotlight', 'tracks', 'albums', 'reposts'])
+
+const readPageKind = (segments: Array<string>): string | undefined => {
+  if (segments.length === 1) {
+    return 'users'
+  }
+
+  if (segments[1] === 'sets') {
+    return 'playlists'
+  }
+
+  if (segments.length === 2) {
+    return userCollectionSegments.has(segments[1]) ? 'users' : 'tracks'
+  }
+}
+
+// A private item's share url carries its token as a path segment, which the widget refuses:
+// there it is a `secret_token` parameter of its own.
+const secretTokenRegex = /^s-[\w-]+$/
+
+// The reference hosts are not pages. They share the site's domain, so a page read has to say so.
+const referenceHostRegex = /^api(?:-v2)?\./
 
 // The player is fluid-width and fixed-height. The classic one is a bar for a single track and
 // a scrolling list for anything holding several, and `visual=true` swaps both for one big
@@ -72,18 +105,44 @@ export const soundcloudResolveEmbed = (
   // The factory has already matched the host, which means the url parsed, so there is no
   // unparseable case left to guard here.
   const params = parseUrl(src, 'https://example.com')?.searchParams
-  const reference = params?.get('url')?.match(referenceRegex)
+  const inner = params?.get('url')
+  const reference = inner?.match(referenceRegex)
   const result: EmbedResolverResult = { provider: 'soundcloud', src }
 
   if (reference) {
     result.id = `${reference[1]}/${reference[2]}`
   }
 
+  // What the carrier names when it holds no reference: the page itself, either inside the
+  // widget's `url=` or as the whole src. A page states its kind in the path, which is enough to
+  // size the player and to give the placeholder a url a reader can follow.
+  const page = reference ? undefined : parseUrlOnHosts(inner ?? src, soundcloudHosts)
+  const pageSegments = page && !referenceHostRegex.test(page.hostname) ? getPathSegments(page) : []
+  const secretToken = pageSegments.find((segment) => secretTokenRegex.test(segment))
+  const permalink = pageSegments.filter((segment) => segment !== secretToken)
+  const pageKind = readPageKind(permalink)
+
+  if (pageKind) {
+    result.url = `https://soundcloud.com/${permalink.join('/')}`
+
+    // A carrier that is the page rather than the widget renders nothing at all, so the widget
+    // is built around the page url it named.
+    if (!inner) {
+      const query: Record<string, string> = { url: result.url }
+
+      if (secretToken) {
+        query.secret_token = secretToken
+      }
+
+      result.src = `${widgetPlayerUrl}?${new URLSearchParams(query)}`
+    }
+  }
+
   // The visual player is one height whatever it holds, so it needs no reference to size it.
   const height =
     params?.get('visual') === 'true'
       ? visualPlayerHeight
-      : classicPlayerHeights[reference?.[1] ?? '']
+      : classicPlayerHeights[reference?.[1] ?? pageKind ?? '']
 
   if (height) {
     result.height = height
