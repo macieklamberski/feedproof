@@ -41,7 +41,7 @@ const readClaimPath = (parsed: URL): string | undefined => {
   }
 
   const [first, second] = segments
-  const isLegacyPair = segments.length === 2 && first !== undefined && !first.includes(':')
+  const isLegacyPair = segments.length === 2 && !first.includes(':')
   const claims = isLegacyPair ? [`${first}:${second}`] : segments
 
   if (

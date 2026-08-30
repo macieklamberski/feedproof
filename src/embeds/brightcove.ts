@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, flashVars } from '../utils/dom.js'
+import { attr, flashVars, keepIfMatches } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Brightcove builds its player page from four ids the in-page embed carries as attributes. The
@@ -52,20 +52,17 @@ export const brightcoveVideoJsEmbedResolver = createMarkupEmbedResolver(
       return
     }
 
-    const videoId = attr(element, 'data-video-id')
-    const account = videoId ? readPlayerAccount(element) : undefined
-
     // Video.js is a library anyone can use, and `data-video-id` is not a name only Brightcove
     // could have chosen, so the ids have to look like Brightcove's before this mints a
     // Brightcove url from them. Both are long digit strings, the same test the other two
     // resolvers here apply. In the corpus the inference is safe anyway: 116 of the 120 feeds
     // carrying this element also ship the `players.brightcove.net` loader script.
-    if (
-      !videoId ||
-      !account ||
-      !brightcoveIdRegex.test(videoId) ||
-      !brightcoveIdRegex.test(account)
-    ) {
+    const videoId = keepIfMatches(attr(element, 'data-video-id'), brightcoveIdRegex)
+    const account = videoId
+      ? keepIfMatches(readPlayerAccount(element), brightcoveIdRegex)
+      : undefined
+
+    if (!videoId || !account) {
       return
     }
 
@@ -101,18 +98,19 @@ const brightcoveFlashResolveEmbed = (
 
   const config = flashVars(element)
   const params = config ? new URLSearchParams(config) : undefined
-  // A few embeds put the whole flashVars set in the url query instead.
-  const videoId = params?.get('@videoPlayer') ?? parsed.searchParams.get('@videoPlayer')
-  const account = parsed.searchParams.get('publisherID') ?? params?.get('publisherID')
+  // A few embeds put the whole flashVars set in the url query instead. A reference id
+  // (`ref:my-video`) names the video for the account's own API, not the player, so anything but
+  // a numeric id is left to the generic placeholder.
+  const videoId = keepIfMatches(
+    params?.get('@videoPlayer') ?? parsed.searchParams.get('@videoPlayer'),
+    brightcoveIdRegex,
+  )
+  const account = keepIfMatches(
+    parsed.searchParams.get('publisherID') ?? params?.get('publisherID'),
+    brightcoveIdRegex,
+  )
 
-  // A reference id (`ref:my-video`) names the video for the account's own API, not the
-  // player, so anything but a numeric id is left to the generic placeholder.
-  if (
-    !videoId ||
-    !account ||
-    !brightcoveIdRegex.test(videoId) ||
-    !brightcoveIdRegex.test(account)
-  ) {
+  if (!videoId || !account) {
     return
   }
 

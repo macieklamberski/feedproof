@@ -45,14 +45,12 @@ export const buzzsproutResolveEmbed = (url: string): EmbedResolverResult | undef
   }
 
   const match = parsed.pathname.match(episodePagePathRegex)
-  const podcastId = match?.[1]
-  const episodeId = match?.[2]
 
-  if (!podcastId || !episodeId) {
+  if (!match) {
     return
   }
 
-  return composeEmbed(podcastId, episodeId)
+  return composeEmbed(match[1], match[2])
 }
 
 export const buzzsproutIframeEmbedResolver: EmbedResolver = createUrlEmbedResolver(

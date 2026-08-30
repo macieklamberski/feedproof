@@ -1,14 +1,11 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, keepIfMatches, parsePixelSize, text, textNode } from '../utils/dom.js'
 import * as styles from '../utils/styles.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const tiktokHost = 'tiktok.com'
-
-const isTiktokUrl = (url: URL): boolean => {
-  return isHostOf(url, tiktokHost) || isSubdomainOf(url, tiktokHost)
-}
 
 // A handle is the same character set TikTok allows at signup.
 const safeHandleRegex = /^[a-zA-Z0-9_.]{1,24}$/
@@ -37,9 +34,9 @@ const playerHeight = 738
 type Clip = { handle?: string; videoId?: string }
 
 const readWatchUrl = (url: string | undefined): Clip => {
-  const parsed = parseUrl(url ?? '', 'https://example.com')
+  const parsed = parseUrlOnHosts(url, tiktokHost)
 
-  if (!parsed || !isTiktokUrl(parsed)) {
+  if (!parsed) {
     return {}
   }
 
@@ -57,9 +54,9 @@ const hydratedSize = (element: Element): { width?: number; height?: number } => 
   // The stored iframe is matched by the same player paths the direct carrier resolver claims,
   // so a hydrated copy keeps its measurement whichever player url the CMS wrote.
   const frame = find(element, 'iframe[src]', (iframe) => {
-    const parsed = parseUrl(attr(iframe, 'src') ?? '', 'https://example.com')
+    const parsed = parseUrlOnHosts(attr(iframe, 'src'), tiktokHost)
 
-    return Boolean(parsed && isTiktokUrl(parsed) && playerPathRegex.test(parsed.pathname))
+    return Boolean(parsed && playerPathRegex.test(parsed.pathname))
   })
   const height = parsePixelSize(styles.pixels(frame, 'height'))
 
@@ -151,9 +148,9 @@ const readHandle = (element: Element): string | undefined => {
   }
 
   for (const anchor of element.querySelectorAll('a[href]')) {
-    const parsed = parseUrl(attr(anchor, 'href') ?? '', 'https://example.com')
+    const parsed = parseUrlOnHosts(attr(anchor, 'href'), tiktokHost)
 
-    if (parsed && isTiktokUrl(parsed)) {
+    if (parsed) {
       const handle = parsed.pathname.match(profilePathRegex)?.[1]
 
       if (handle) {
@@ -176,8 +173,7 @@ const resolveAccount = (element: Element): EmbedResolverResult | undefined => {
   }
 
   const cite = attr(element, 'cite')
-  const parsedCite = parseUrl(cite ?? '', 'https://example.com')
-  const isCitedProfile = Boolean(cite && parsedCite && isTiktokUrl(parsedCite))
+  const isCitedProfile = Boolean(cite && parseUrlOnHosts(cite, tiktokHost))
 
   return {
     provider: 'tiktok',

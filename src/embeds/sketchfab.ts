@@ -21,11 +21,11 @@ const sketchfabHosts = ['sketchfab.com']
 const readModelUid = (parsed: URL): string | undefined => {
   const [route, second, third] = getPathSegments(parsed)
 
-  if (route === 'models' && (third === undefined || third === 'embed')) {
-    return keepIfMatches(second, safeUidRegex)
-  }
+  // A `/models/` path may be followed by `embed` and nothing else: a deeper segment names a
+  // page of the model's own, like its comments, rather than the model.
+  const isModelRoute = route === 'models' && (third === undefined || third === 'embed')
 
-  if (route === 'embed' || route === 'show') {
+  if (isModelRoute || route === 'embed' || route === 'show') {
     return keepIfMatches(second, safeUidRegex)
   }
 
