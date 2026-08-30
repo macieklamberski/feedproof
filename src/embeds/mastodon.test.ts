@@ -239,6 +239,31 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
       expect(extract(value)).toEqual(expected)
     })
 
+    // The AP-canonical spelling routes to the same page but is deliberately not matched, so a
+    // carrier stating it has to leave the anchor beside it free to name the post.
+    it('should fall back to the anchor when the embed url is a spelling it does not match', () => {
+      const value = html`
+        <blockquote
+          class="mastodon-embed"
+          data-embed-url="https://ruby.social/users/coder/statuses/110000000000000009/embed"
+        >
+          <a href="https://ruby.social/@coder/110000000000000009" target="_blank">
+            <div>Post by @coder@ruby.social</div>
+          </a>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'mastodon',
+        id: 'ruby.social/110000000000000009',
+        src: 'https://ruby.social/@coder/110000000000000009/embed',
+        url: 'https://ruby.social/@coder/110000000000000009',
+        author: '@coder@ruby.social',
+        publisher: 'ruby.social',
+      }
+
+      expect(extract(value)).toEqual(expected)
+    })
+
     it('should return undefined for a blockquote naming no status at all', () => {
       const value = html`
         <blockquote class="mastodon-embed">

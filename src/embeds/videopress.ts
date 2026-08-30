@@ -75,9 +75,14 @@ const videopressFlashResolveEmbed = (
     return
   }
 
-  const guid =
-    new URLSearchParams(flashVars(element)).get('guid') ?? parsed.searchParams.get('guid')
-  const safeGuid = keepIfMatches(guid, safeGuidRegex)
+  // Each guid is validated on its own: the Flash carrier states one in its flashvars and one on
+  // its src, and the two disagree often enough that neither can be trusted to be the good one.
+  const safeGuid = [
+    new URLSearchParams(flashVars(element)).get('guid'),
+    parsed.searchParams.get('guid'),
+  ]
+    .map((guid) => keepIfMatches(guid, safeGuidRegex))
+    .find(Boolean)
 
   if (!safeGuid) {
     return

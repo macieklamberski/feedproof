@@ -224,6 +224,25 @@ describeForEachParser('videopressFlashEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    // The carrier states a guid in two places and they disagree, so each is validated rather
+    // than the flashvars one winning merely by being present.
+    it('should read the src guid when the flashvars guid is malformed', async () => {
+      const value = html`
+        <embed
+          src="http://s0.videopress.com/player.swf?guid=kUJmAcSf&v=1"
+          flashvars="guid=../etc&isDynamicSeeking=false"
+        ></embed>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'videopress',
+        id: 'kUJmAcSf',
+        src: 'https://videopress.com/embed/kUJmAcSf',
+        url: 'https://videopress.com/v/kUJmAcSf',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should ignore a swf that is not the player', async () => {
       const value = html`
         <embed

@@ -56,15 +56,17 @@ export const typeformWidgetEmbedResolver = createMarkupEmbedResolver(
       return
     }
 
-    const declared = attr(element, 'data-tf-widget') ?? attr(element, 'data-tf-live')
+    const title = readTitle(element)
 
-    if (declared) {
-      return composeEmbed(declared, readTitle(element))
-    }
-
-    // The legacy generation names the form by its whole url instead of its id, and on the
-    // publisher's own subdomain as often as the canonical host.
-    return typeformResolveEmbed(attr(element, 'data-url') ?? '')
+    // Each carrier is validated on its own, so a malformed id in one does not hide a usable id
+    // in another: a block can carry all three, and only the last generation is ever complete.
+    return (
+      composeEmbed(attr(element, 'data-tf-widget') ?? '', title) ??
+      composeEmbed(attr(element, 'data-tf-live') ?? '', title) ??
+      // The legacy generation names the form by its whole url instead of its id, and on the
+      // publisher's own subdomain as often as the canonical host.
+      typeformResolveEmbed(attr(element, 'data-url') ?? '')
+    )
   },
 )
 

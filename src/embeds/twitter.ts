@@ -78,21 +78,20 @@ const findStatus = (element: Element): { status: Status; anchor?: Element } | un
     }
   }
 
-  const declared =
-    attr(element, 'data-twitter-tweet-id') ??
-    attr(element, 'data-tweet-id') ??
-    attr(element, 'data-tweetid')
-
-  if (declared && safeStatusIdRegex.test(declared)) {
-    return { status: { handle: '', id: declared } }
-  }
-
+  // The frame has to be the platform's own: `id` is an ordinary parameter name, so any other
+  // iframe a publisher nested in the quote would otherwise name the tweet.
   const frame = parseUrl(attr(find(element, 'iframe[src]'), 'src') ?? '', 'https://example.com')
-  const framed = frame?.searchParams.get('id')
+  const framed = frame && isTweetUrl(frame) ? frame.searchParams.get('id') : undefined
+  // Each id is validated on its own, because the attributes disagree: a block copied between
+  // platforms carries several generations of them and only one is guaranteed to be intact.
+  const declared = [
+    attr(element, 'data-twitter-tweet-id'),
+    attr(element, 'data-tweet-id'),
+    attr(element, 'data-tweetid'),
+    framed,
+  ].find((id) => id && safeStatusIdRegex.test(id))
 
-  return framed && safeStatusIdRegex.test(framed)
-    ? { status: { handle: '', id: framed } }
-    : undefined
+  return declared ? { status: { handle: '', id: declared } } : undefined
 }
 
 // A byline the embed dialog wrote gives up its display name. Anything else is taken whole, since

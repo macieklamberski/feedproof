@@ -479,6 +479,28 @@ describeForEachParser('codepenWidgetEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // The url in `data-href` is the player's own, so the height the author picked can sit in its
+    // query with no `data-height` beside it.
+    it('should take the height from the url when the block states none', async () => {
+      const value = html`
+        <p
+          class="codepen"
+          data-href="https://codepen.io/argyleink/pen/XJpKqXm?height=600"
+        ></p>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'codepen',
+        id: 'XJpKqXm',
+        src: 'https://codepen.io/argyleink/embed/XJpKqXm',
+        url: 'https://codepen.io/argyleink/pen/XJpKqXm',
+        thumbnail: 'https://shots.codepen.io/argyleink/pen/XJpKqXm-512.jpg',
+        author: '@argyleink',
+        height: 600,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // The loader reads a signed token off the block and appends it to the player it builds, so a
     // private pen embedded this way names its key here and nowhere else.
     it('should carry a token stated on the block', async () => {

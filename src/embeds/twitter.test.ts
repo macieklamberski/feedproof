@@ -142,6 +142,28 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+
+    // A block copied between platforms carries several generations of the attribute, and only
+    // the later one is intact, so each is validated rather than the first present one winning.
+    it('should read a later id attribute when an earlier one is malformed', async () => {
+      const value = html`
+        <blockquote
+          class="twitter-tweet"
+          data-twitter-tweet-id="../evil"
+          data-tweet-id="${statusId}"
+        >
+          <p>Text.</p>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: `https://platform.twitter.com/embed/Tweet.html?id=${statusId}`,
+        description: 'Text.',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   // One block per shape the corpus survey found, so a shape nobody handles is visible here as

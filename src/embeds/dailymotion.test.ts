@@ -58,6 +58,14 @@ describe('extractDailymotionId', () => {
     expect(extractDailymotionId(value)).toBe(expected)
   })
 
+  // The geo player states the video in its query, and a publisher who kept the path prefix
+  // leaves a route word with nothing after it, so the query still has to be read.
+  it('should read the query id when the path names no video', () => {
+    const value = 'https://www.dailymotion.com/video/?video=x7tgad0'
+
+    expect(extractDailymotionId(value)).toBe('x7tgad0')
+  })
+
   it('should return undefined for an invalid url', () => {
     const value = 'not a url'
 

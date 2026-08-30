@@ -81,12 +81,16 @@ const composeEmbedResult = (status: MastodonStatus): EmbedResolverResult => {
 export const mastodonEmbedResolver = createMarkupEmbedResolver(
   'iframe.mastodon-embed[src], iframe[src$="/embed"], blockquote.mastodon-embed',
   (element) => {
-    const link =
-      attr(element, 'src') ??
-      attr(element, 'data-embed-url') ??
-      attr(find(element, 'a[href]'), 'href')
-
-    const status = link ? parseMastodonStatus(link) : undefined
+    // Each link is parsed on its own, because a carrier can hold the AP-canonical spelling this
+    // resolver deliberately does not match beside an anchor that names the post in the matched
+    // form.
+    const status = [
+      attr(element, 'src'),
+      attr(element, 'data-embed-url'),
+      attr(find(element, 'a[href]'), 'href'),
+    ]
+      .map((link) => (link ? parseMastodonStatus(link) : undefined))
+      .find(Boolean)
 
     return status ? composeEmbedResult(status) : undefined
   },

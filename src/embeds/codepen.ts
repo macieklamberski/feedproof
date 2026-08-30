@@ -261,8 +261,10 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
   ownerPath ??= user
 
   const title = attr(element, 'data-pen-title') ?? linkedTitle
-  // The height the author chose for the player, which the loader passes straight through.
-  const height = parsePixelSize(attr(element, 'data-height'))
+  // The height the author chose for the player, which the loader passes straight through. A
+  // block naming the pen by its whole url states it in that url's query instead, so the
+  // attribute is read first and the url is what answers when it is absent.
+  const height = parsePixelSize(attr(element, 'data-height')) ?? reference.height
 
   // The panes and the theme the author picked for this player, which the loader would have put
   // into the query of the iframe it built.
