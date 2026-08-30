@@ -92,6 +92,28 @@ describeForEachParser('YouTube', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
+  // The bare `/embed/?listType=playlist` spelling used to fall through to the generic iframe
+  // handling, which kept the declared 500px height; the resolver's 16/9 ratio must win instead.
+  it('should resolve a bare listType playlist embed instead of the generic fallback', async () => {
+    const value = html`
+      <iframe
+        src="https://www.youtube.com/embed/?listType=playlist&list=UUabc123"
+        height="500"
+      ></iframe>
+    `
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="UUabc123"
+        data-embed-src="https://www.youtube.com/embed/videoseries?list=UUabc123"
+        data-embed-url="https://www.youtube.com/playlist?list=UUabc123"
+        data-embed-ratio="16/9"
+      ></div>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
   it('should collapse a Steam news YouTube facade into a clean embed placeholder', async () => {
     const value = html`
       <p>Watch the trailer:</p>
