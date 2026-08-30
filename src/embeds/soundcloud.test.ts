@@ -279,6 +279,42 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
     })
   })
 
+  // SoundCloud hosts podcast audio at `feeds.soundcloud.com`, and a feed states that file as an
+  // enclosure. It is the audio itself, so framing it shows nothing, but the file is named after
+  // the track and the player is recoverable from it.
+  describe('the podcast host, which serves the episode audio directly', () => {
+    it('should build the player from the track the file is named after', async () => {
+      const value = html`
+        <iframe
+          src="https://feeds.soundcloud.com/stream/2386923495-linear-digressions-ai.mp3"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        id: 'tracks/2386923495',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2386923495',
+        height: 166,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Without a track id there is no player to build, and the file plays on its own, so the
+    // resolver leaves it to be a native audio element.
+    it('should not claim an audio file that names no track', async () => {
+      const value =
+        '<iframe src="https://feeds.soundcloud.com/stream/nameless-episode.mp3"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should not claim an audio file anywhere else on the host', async () => {
+      const value = '<iframe src="https://soundcloud.com/downloads/session.mp3"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
   // soundcloud.com answers `x-frame-options: SAMEORIGIN`, so a carrier naming a page renders
   // nothing. The widget takes a page url in place of a reference, which is what repairs it.
   describe('a carrier naming a page rather than the player', () => {
