@@ -47,22 +47,40 @@ describe('extractVimeoId', () => {
     expect(extractVimeoId(value)).toBeUndefined()
   })
 
-  // A showcase is a playlist and an event is a livestream, both in their own id space, so the
-  // numeric segment would name an unrelated video.
-  it('should return undefined for a showcase url', () => {
-    const value = 'https://vimeo.com/showcase/7060635'
+  // A showcase and an album are playlists, an event is a livestream and an on-demand page is a
+  // store front, each in its own id space, so their numeric segment names no video.
+  const collectionUrls = [
+    'https://vimeo.com/showcase/7060635',
+    'https://vimeo.com/album/2632481',
+    'https://player.vimeo.com/event/1234567',
+    'https://vimeo.com/ondemand/20704',
+    'https://vimeo.com/ondemand/nazmaalik',
+  ]
 
+  it.each(collectionUrls)('should return undefined for %s', (value) => {
     expect(extractVimeoId(value)).toBeUndefined()
   })
 
-  it('should return undefined for an event url', () => {
-    const value = 'https://player.vimeo.com/event/1234567'
+  // The same collections still name a real video deeper in the path, and there the last numeric
+  // segment is an ordinary video id.
+  const collectionVideoUrls = [
+    'https://vimeo.com/album/2632481/video/76979871',
+    'https://vimeo.com/showcase/3253534/video/76979871',
+    'https://vimeo.com/ondemand/36938/76979871',
+  ]
 
-    expect(extractVimeoId(value)).toBeUndefined()
+  it.each(collectionVideoUrls)('should extract the video the collection names in %s', (value) => {
+    expect(extractVimeoId(value)).toBe('76979871')
   })
 
   it('should return undefined when there is no numeric id', () => {
     const value = 'https://vimeo.com/user/profile'
+
+    expect(extractVimeoId(value)).toBeUndefined()
+  })
+
+  it('should return undefined for an unparseable url', () => {
+    const value = 'not a url'
 
     expect(extractVimeoId(value)).toBeUndefined()
   })
@@ -81,13 +99,54 @@ describe('vimeoResolveEmbed', () => {
     expect(vimeoResolveEmbed(value)).toEqual(expected)
   })
 
-  it('should preserve an unlisted hash', () => {
-    const value = 'https://player.vimeo.com/video/76979871?h=abc123'
+  // The player answers 401 for an unlisted video with no hash, so it has to survive whichever
+  // spelling it arrives in. The id carries it because an oEmbed lookup for the bare id 404s.
+  it('should preserve an unlisted hash stated in the query', () => {
+    const value = 'https://player.vimeo.com/video/76979871?h=a52724358e'
     const expected: EmbedResolverResult = {
       provider: 'vimeo',
-      id: '76979871',
-      src: 'https://player.vimeo.com/video/76979871?h=abc123',
-      url: 'https://vimeo.com/76979871',
+      id: '76979871:a52724358e',
+      src: 'https://player.vimeo.com/video/76979871?h=a52724358e',
+      url: 'https://vimeo.com/76979871/a52724358e',
+    }
+
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
+  })
+
+  // The share link states it as a path segment, which the player refuses: it takes the hash
+  // only as a query parameter.
+  it('should move an unlisted hash stated in the path into the query', () => {
+    const value = 'https://vimeo.com/76979871/a52724358e'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871:a52724358e',
+      src: 'https://player.vimeo.com/video/76979871?h=a52724358e',
+      url: 'https://vimeo.com/76979871/a52724358e',
+    }
+
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
+  })
+
+  // A review link states the hash the same way, two segments further down.
+  it('should read the video and hash out of a review link', () => {
+    const value = 'https://vimeo.com/user170863801/review/76979871/a52724358e'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871:a52724358e',
+      src: 'https://player.vimeo.com/video/76979871?h=a52724358e',
+      url: 'https://vimeo.com/76979871/a52724358e',
+    }
+
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should keep the hash ahead of the start offset', () => {
+    const value = 'https://vimeo.com/76979871/a52724358e?t=30s'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871:a52724358e',
+      src: 'https://player.vimeo.com/video/76979871?h=a52724358e&t=30s',
+      url: 'https://vimeo.com/76979871/a52724358e',
     }
 
     expect(vimeoResolveEmbed(value)).toEqual(expected)
@@ -115,6 +174,12 @@ describe('vimeoResolveEmbed', () => {
     }
 
     expect(vimeoResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should return undefined for a url naming no video', () => {
+    const value = 'https://vimeo.com/user/profile'
+
+    expect(vimeoResolveEmbed(value)).toBeUndefined()
   })
 })
 
