@@ -125,35 +125,23 @@ export const bandcampResolveEmbed = (
     .flatMap((wanted) => releases.filter(([named]) => named === wanted))
     .map(([named, value]) => `${named}=${value}/`)
     .join('')
-  const result: EmbedResolverResult = {
-    provider: 'bandcamp',
-    id: `${kind}/${id}`,
-    src: isVideo
-      ? `https://bandcamp.com/VideoEmbed?${kind}=${id}`
-      : `https://bandcamp.com/EmbeddedPlayer/${selection}${size}`,
-  }
-
   const height = preset ? presetHeights[preset] : undefined
-
-  if (height) {
-    result.height = height
-  }
-
   const anchor = parseFallback(element)
   const url = attr(anchor, 'href')
   // Bandcamp writes the label as "{title} by {artist}". It is kept whole instead of split
   // on " by ", which appears inside real titles too.
   const title = text(anchor)
 
-  if (url) {
-    result.url = url
+  return {
+    provider: 'bandcamp',
+    id: `${kind}/${id}`,
+    src: isVideo
+      ? `https://bandcamp.com/VideoEmbed?${kind}=${id}`
+      : `https://bandcamp.com/EmbeddedPlayer/${selection}${size}`,
+    ...(height && { height }),
+    ...(url && { url }),
+    ...(title && { title }),
   }
-
-  if (title) {
-    result.title = title
-  }
-
-  return result
 }
 
 export const bandcampEmbedResolver = createUrlEmbedResolver(bandcampHosts, bandcampResolveEmbed)

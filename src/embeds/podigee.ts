@@ -15,8 +15,9 @@ export const podigeeEmbedResolver = createMarkupEmbedResolver(
     const configuration = attr(element, 'data-configuration')
     const parsed = parseUrlOnHosts(configuration, podigeeHosts)
 
-    // Only a real player url counts. The inline-config spellings are not urls.
-    if (!parsed || !configuration?.includes('//')) {
+    // Only a real player url counts, which the host check is enough to decide: the inline-config
+    // spellings are not urls, so they resolve against the placeholder host and fail it.
+    if (!parsed) {
       return
     }
 

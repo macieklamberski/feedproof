@@ -108,21 +108,17 @@ export const issuuResolveEmbed = (
   // The publication name is the only thing an Issuu carrier states that neither url form holds,
   // and the current share snippet writes it on the iframe.
   const title = attr(element, 'title')
-  const configEmbed = composeConfigEmbed(parsed.hash.replace('#', ''))
+  // The two id spaces the carrier can name, in the order the reader states them: a config id
+  // pair in the fragment, else the publisher and document names in the query.
+  const embed =
+    composeConfigEmbed(parsed.hash.replace('#', '')) ??
+    composeDocumentEmbed(
+      parsed.searchParams.get('u') ?? undefined,
+      parsed.searchParams.get('d') ?? undefined,
+      parsed.searchParams.get('p') ?? undefined,
+    )
 
-  if (configEmbed) {
-    return { ...configEmbed, title }
-  }
-
-  const publisher = parsed.searchParams.get('u') ?? undefined
-  const documentName = parsed.searchParams.get('d') ?? undefined
-  const documentEmbed = composeDocumentEmbed(
-    publisher,
-    documentName,
-    parsed.searchParams.get('p') ?? undefined,
-  )
-
-  return documentEmbed && { ...documentEmbed, title }
+  return embed && { ...embed, title }
 }
 
 export const issuuIframeEmbedResolver = createUrlEmbedResolver(issuuHosts, issuuResolveEmbed)

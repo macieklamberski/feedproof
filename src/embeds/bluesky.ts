@@ -215,18 +215,21 @@ const readQuotedPost = (
 // data attributes stripped, so the permalink in the footer is read as a second source. The
 // opposite stripping happens too: some feeds drop the class and keep the attributes, so the
 // second selector half claims the quote by its declared AT URI.
+// Both carriers name the post in one attribute and hold their text in the same place, so only
+// the attribute separates them.
+const extractQuotedPost = (
+  element: Element,
+  attribute: string,
+): EmbedResolverResult | undefined => {
+  const quoted = readQuotedPost(element)
+  const post = extractBlueskyPost(attr(element, attribute) ?? '') ?? quoted.post
+
+  return post ? { ...composeEmbedResult(post), ...quoted.fields } : undefined
+}
+
 export const blueskyBlockquoteEmbedResolver = createMarkupEmbedResolver(
   'blockquote.bluesky-embed, blockquote[data-bluesky-uri]',
-  (element) => {
-    const quoted = readQuotedPost(element)
-    const post = extractBlueskyPost(attr(element, 'data-bluesky-uri') ?? '') ?? quoted.post
-
-    if (!post) {
-      return
-    }
-
-    return { ...composeEmbedResult(post), ...quoted.fields }
-  },
+  (element) => extractQuotedPost(element, 'data-bluesky-uri'),
 )
 
 // Substack renders every Bluesky embed as an iframe inside its own wrapper, and that wrapper
@@ -289,14 +292,5 @@ export const blueskyS9eEmbedResolver = createMarkupEmbedResolver(
 // DID, and the fallback blockquote inside it holds the post text.
 export const blueskyPostElementEmbedResolver = createMarkupEmbedResolver(
   'bluesky-post[src]',
-  (element) => {
-    const quoted = readQuotedPost(element)
-    const post = extractBlueskyPost(attr(element, 'src') ?? '') ?? quoted.post
-
-    if (!post) {
-      return
-    }
-
-    return { ...composeEmbedResult(post), ...quoted.fields }
-  },
+  (element) => extractQuotedPost(element, 'src'),
 )

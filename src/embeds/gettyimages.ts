@@ -35,15 +35,6 @@ type WidgetConfig = {
   height?: number
 }
 
-const composeEmbed = (itemId: string): EmbedResolverResult => {
-  return {
-    provider: 'gettyimages',
-    id: itemId,
-    src: `https://embed.gettyimages.com/embed/${itemId}`,
-    url: `https://www.gettyimages.com/detail/${itemId}`,
-  }
-}
-
 const gettyImagesResolveEmbed = (link: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(link, gettyImagesHost)
   const itemId = parsed?.pathname.match(embedPathRegex)?.[1]
@@ -52,9 +43,14 @@ const gettyImagesResolveEmbed = (link: string): EmbedResolverResult | undefined 
     return
   }
 
-  // The signature and the token select this publisher's rendering of the photo, so the carrier's
-  // own query is kept whole rather than rebuilt: without them the player answers 400.
-  return { ...composeEmbed(itemId), src: link }
+  return {
+    provider: 'gettyimages',
+    id: itemId,
+    // The signature and the token select this publisher's rendering of the photo, so the
+    // carrier's own url is kept whole rather than rebuilt: without them the player answers 400.
+    src: link,
+    url: `https://www.gettyimages.com/detail/${itemId}`,
+  }
 }
 
 export const gettyImagesEmbedResolver = createUrlEmbedResolver(

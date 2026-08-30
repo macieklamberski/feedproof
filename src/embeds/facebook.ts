@@ -43,6 +43,23 @@ const readFallback = (blockquote: Nullish<Element>): Partial<EmbedResolverResult
 
 const fallbackSelector = '.fb-xfbml-parse-ignore blockquote, blockquote.fb-xfbml-parse-ignore'
 
+// A carrier that does not already hold a plugin url resolves to one built around the page it
+// named, which is the only form Facebook frames. The page is also the canonical url, so a caller
+// that knows a better id than the href states it in `extra`.
+const composePluginEmbed = (
+  plugin: string,
+  href: string,
+  extra: Partial<EmbedResolverResult>,
+): EmbedResolverResult => {
+  return {
+    provider: 'facebook',
+    id: href,
+    src: `https://www.facebook.com/plugins/${plugin}.php?href=${encodeURIComponent(href)}`,
+    url: href,
+    ...extra,
+  }
+}
+
 const extractEmbed = (
   element: Element,
   plugin: string,
@@ -60,13 +77,7 @@ const extractEmbed = (
     return
   }
 
-  return {
-    provider: 'facebook',
-    id: href,
-    src: `https://www.facebook.com/plugins/${plugin}.php?href=${encodeURIComponent(href)}`,
-    url: href,
-    ...readFallback(find(element, fallbackSelector)),
-  }
+  return composePluginEmbed(plugin, href, readFallback(find(element, fallbackSelector)))
 }
 
 // The SDK widget div, which is one carrier and not two: a post and a video arrive as the same
@@ -144,13 +155,7 @@ export const facebookResolveEmbed = (url: string): EmbedResolverResult | undefin
 
     const watchUrl = `https://www.facebook.com/watch/?v=${videoId}`
 
-    return {
-      provider: 'facebook',
-      id: videoId,
-      src: `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(watchUrl)}`,
-      url: watchUrl,
-      ...querySize(parsed),
-    }
+    return composePluginEmbed('video', watchUrl, { id: videoId, ...querySize(parsed) })
   }
 
   if (!pluginPathRegex.test(parsed.pathname)) {
@@ -198,12 +203,6 @@ export const facebookBlockquoteEmbedResolver = createMarkupEmbedResolver(
 
     const plugin = videoPathRegex.test(parsed.pathname) ? 'video' : 'post'
 
-    return {
-      provider: 'facebook',
-      id: cite,
-      src: `https://www.facebook.com/plugins/${plugin}.php?href=${encodeURIComponent(cite)}`,
-      url: cite,
-      ...readFallback(element),
-    }
+    return composePluginEmbed(plugin, cite, readFallback(element))
   },
 )
