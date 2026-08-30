@@ -3,42 +3,21 @@ import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { extractVimeoId, vimeoEmbedResolver, vimeoResolveEmbed } from './vimeo.js'
 
+// Every url spelling that names a single video. All extract the same id, so a deleted row is a
+// format that silently lost support.
+const videoUrls = [
+  'https://vimeo.com/76979871',
+  'https://player.vimeo.com/video/76979871',
+  'https://vimeo.com/channels/staffpicks/76979871',
+  'https://vimeo.com/groups/motion/videos/76979871',
+  // The Flash player carried no id in the path at all, and shipped its options beside it.
+  'http://vimeo.com/moogaloop.swf?clip_id=76979871',
+  'http://vimeo.com/moogaloop.swf?clip_id=76979871&force_embed=1&server=vimeo.com&color=00adef',
+]
+
 describe('extractVimeoId', () => {
-  it('should extract id from a vimeo.com url', () => {
-    const value = 'https://vimeo.com/76979871'
-    const expected = '76979871'
-
-    expect(extractVimeoId(value)).toBe(expected)
-  })
-
-  it('should extract id from a player embed url', () => {
-    const value = 'https://player.vimeo.com/video/76979871'
-    const expected = '76979871'
-
-    expect(extractVimeoId(value)).toBe(expected)
-  })
-
-  it('should extract id from a channel url', () => {
-    const value = 'https://vimeo.com/channels/staffpicks/76979871'
-    const expected = '76979871'
-
-    expect(extractVimeoId(value)).toBe(expected)
-  })
-
-  // The Flash player carried no id in the path at all.
-  it('should extract id from the moogaloop.swf url', () => {
-    const value = 'http://vimeo.com/moogaloop.swf?clip_id=43301601'
-    const expected = '43301601'
-
-    expect(extractVimeoId(value)).toBe(expected)
-  })
-
-  it('should extract id from a moogaloop.swf url carrying player options', () => {
-    const value =
-      'http://vimeo.com/moogaloop.swf?clip_id=43301601&force_embed=1&server=vimeo.com&color=00adef'
-    const expected = '43301601'
-
-    expect(extractVimeoId(value)).toBe(expected)
+  it.each(videoUrls)('should extract the id from %s', (value) => {
+    expect(extractVimeoId(value)).toBe('76979871')
   })
 
   it('should return undefined for a moogaloop.swf url with no clip id', () => {
