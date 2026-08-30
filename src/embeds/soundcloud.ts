@@ -19,12 +19,35 @@ const referenceRegex =
 // The widget takes a page url in place of a reference, which is what makes the repair possible.
 const widgetPlayerUrl = 'https://w.soundcloud.com/player/'
 
+const composeWidgetUrl = (target: string, secretToken?: string): string => {
+  const query: Record<string, string> = { url: target }
+
+  if (secretToken) {
+    query.secret_token = secretToken
+  }
+
+  return `${widgetPlayerUrl}?${new URLSearchParams(query)}`
+}
+
 // A page url names its kind by shape: one segment is the user, `sets` marks a playlist, and a
 // second segment is otherwise the track. A few reserved words name a collection of the user's
 // own rather than a track.
 const userCollectionSegments = new Set(['favorites', 'spotlight', 'tracks', 'albums', 'reposts'])
 
+// A direct media file, which SoundCloud serves from its podcast host. It is neither a player nor
+// a page, so it must not be read as either: the reader can play the file itself.
+const mediaFileRegex = /\.(?:aac|flac|m4a|m4v|mp3|mp4|ogg|opus|wav)$/i
+
+// `feeds.soundcloud.com/stream/{trackId}-{slug}.mp3` is the episode audio, and it is named after
+// the track it belongs to, so an enclosure carrying it still names a player.
+const streamPathRegex = /^\/stream\/(\d+)-/
+
 const readPageKind = (segments: Array<string>): string | undefined => {
+  // The audio file sits two segments deep, which would otherwise read as a user and a track.
+  if (mediaFileRegex.test(segments[segments.length - 1] ?? '')) {
+    return
+  }
+
   if (segments.length === 1) {
     return 'users'
   }
@@ -104,19 +127,32 @@ export const soundcloudResolveEmbed = (
 ): EmbedResolverResult | undefined => {
   // The factory has already matched the host, which means the url parsed, so there is no
   // unparseable case left to guard here.
-  const params = parseUrl(src, 'https://example.com')?.searchParams
+  const parsed = parseUrl(src, 'https://example.com')
+  const params = parsed?.searchParams
   const inner = params?.get('url')
   const reference = inner?.match(referenceRegex)
+  const streamTrackId = parsed?.pathname.match(streamPathRegex)?.[1]
   const result: EmbedResolverResult = { provider: 'soundcloud', src }
 
   if (reference) {
     result.id = `${reference[1]}/${reference[2]}`
+  } else if (streamTrackId) {
+    // The episode file names its track, so the placeholder gets the player instead of an
+    // iframe pointing at audio.
+    //
+    // No canonical url comes with it. A track page is addressed by handle and slug, and the id
+    // does not yield either: `soundcloud.com/tracks/{id}` redirects to a genre chart, and the
+    // file name concatenates the two halves without a separator that says where one ends. So
+    // the page is left to enrichment, which the id addresses.
+    result.id = `tracks/${streamTrackId}`
+    result.src = composeWidgetUrl(`https://api.soundcloud.com/tracks/${streamTrackId}`)
   }
 
   // What the carrier names when it holds no reference: the page itself, either inside the
   // widget's `url=` or as the whole src. A page states its kind in the path, which is enough to
   // size the player and to give the placeholder a url a reader can follow.
-  const page = reference ? undefined : parseUrlOnHosts(inner ?? src, soundcloudHosts)
+  const page =
+    reference || streamTrackId ? undefined : parseUrlOnHosts(inner ?? src, soundcloudHosts)
   const pageSegments = page && !referenceHostRegex.test(page.hostname) ? getPathSegments(page) : []
   const secretToken = pageSegments.find((segment) => secretTokenRegex.test(segment))
   const permalink = pageSegments.filter((segment) => segment !== secretToken)
@@ -128,21 +164,21 @@ export const soundcloudResolveEmbed = (
     // A carrier that is the page rather than the widget renders nothing at all, so the widget
     // is built around the page url it named.
     if (!inner) {
-      const query: Record<string, string> = { url: result.url }
-
-      if (secretToken) {
-        query.secret_token = secretToken
-      }
-
-      result.src = `${widgetPlayerUrl}?${new URLSearchParams(query)}`
+      result.src = composeWidgetUrl(result.url, secretToken)
     }
+  }
+
+  // Nothing here names a track and the url is the audio itself, so the enclosure stays a file
+  // the reader can play rather than becoming a frame pointing at one.
+  if (!result.id && !pageKind && mediaFileRegex.test(parsed?.pathname ?? '')) {
+    return
   }
 
   // The visual player is one height whatever it holds, so it needs no reference to size it.
   const height =
     params?.get('visual') === 'true'
       ? visualPlayerHeight
-      : classicPlayerHeights[reference?.[1] ?? pageKind ?? '']
+      : classicPlayerHeights[reference?.[1] ?? (streamTrackId && 'tracks') ?? pageKind ?? '']
 
   if (height) {
     result.height = height

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { acastEmbedResolver } from '../../embeds/acast.js'
 import { blubrryEmbedResolver } from '../../embeds/blubrry.js'
+import { soundcloudEmbedResolver } from '../../embeds/soundcloud.js'
 import { youtubeIframeEmbedResolver } from '../../embeds/youtube.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { EmbedResolver, Enclosure, TransformContext } from '../../types.js'
@@ -21,6 +22,56 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
   const transform = (value: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(value), [injectEnclosures(context)])
   }
+
+  // SoundCloud distributes a podcast as the audio file itself, named after the track, so the
+  // enclosure names a player even though it is a media url. Framing the file shows nothing,
+  // which is what makes claiming it without recovering the track worse than leaving it alone.
+  it('should inject a soundcloud podcast enclosure as its player', async () => {
+    const value = '<p>Episode notes</p>'
+    const context: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [soundcloudEmbedResolver],
+      enclosures: [
+        {
+          url: 'https://feeds.soundcloud.com/stream/2386923495-linear-digressions-ai.mp3',
+          type: 'audio/mpeg',
+        },
+      ],
+    }
+    const expected = html`
+      <div
+        data-enclosure=""
+        data-embed-height="166"
+        data-embed-id="tracks/2386923495"
+        data-embed-provider="soundcloud"
+        data-embed-src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2386923495"
+      ></div>
+      <p>Episode notes</p>
+    `
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
+  it('should inject a soundcloud audio enclosure naming no track as a native audio element', async () => {
+    const value = '<p>Episode notes</p>'
+    const context: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [soundcloudEmbedResolver],
+      enclosures: [
+        { url: 'https://feeds.soundcloud.com/stream/nameless-episode.mp3', type: 'audio/mpeg' },
+      ],
+    }
+    const expected = html`
+      <audio
+        src="https://feeds.soundcloud.com/stream/nameless-episode.mp3"
+        controls
+        data-enclosure=""
+      ></audio>
+      <p>Episode notes</p>
+    `
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
 
   it('should inject video enclosure as native video element', async () => {
     const value = '<p>Episode notes</p>'
