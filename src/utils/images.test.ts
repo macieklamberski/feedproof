@@ -299,6 +299,23 @@ describe('getImageFingerprint', () => {
     expect(getImageFingerprint(jpeg)).toBe(expected)
   })
 
+  it('should collapse Dwell size segments to the image id', () => {
+    const small = 'https://images.dwell.com/photos-6818593/7464425723411730432-small/the-house.jpg'
+    const large = 'https://images.dwell.com/photos-6818593/7464425723411730432-large/the-house.jpg'
+    const expected = 'images.dwell.com/photos-6818593/7464425723411730432/the-house.jpg'
+
+    expect(getImageFingerprint(small)).toBe(expected)
+    expect(getImageFingerprint(large)).toBe(expected)
+  })
+
+  it('should keep a Dwell segment that only ends in a size word', () => {
+    const value = 'https://images.dwell.com/photos-6818593/a-house-thats-large/the-house.jpg'
+
+    expect(getImageFingerprint(value)).toBe(
+      'images.dwell.com/photos-6818593/a-house-thats-large/the-house.jpg',
+    )
+  })
+
   it('should unwrap a Cloudinary fetch URL to its inner source', () => {
     const value =
       'https://res.cloudinary.com/demo/image/fetch/w_200/https://cdn.example.com/photo.jpg'
