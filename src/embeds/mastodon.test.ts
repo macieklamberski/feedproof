@@ -275,8 +275,13 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
     })
   })
 
+  // Mastodon's username route constraint excludes `@`, so this path never reaches the embed
+  // action: it answers with the application shell under `frame-ancestors 'none'` instead of the
+  // status. The embeddable copy lives on the remote instance
+  // under a different id, which only `/redirect/statuses/<id>` maps to, so nothing offline
+  // recovers it and a minted player would be a frame that cannot load.
   describe('remote post filed under a full handle', () => {
-    it('should keep the handle the path already carries', () => {
+    it('should not claim a status filed under a remote handle', () => {
       const value = html`
         <iframe
           src="https://mas.to/@author@example.social/113222333444555666/embed"
@@ -284,17 +289,8 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
           width="400"
         ></iframe>
       `
-      const expected: EmbedResolverResult = {
-        provider: 'mastodon',
-        id: 'mas.to/113222333444555666',
-        src: 'https://mas.to/@author@example.social/113222333444555666/embed',
-        url: 'https://mas.to/@author@example.social/113222333444555666',
-        width: 400,
-        author: '@author@example.social',
-        publisher: 'mas.to',
-      }
 
-      expect(extract(value)).toEqual(expected)
+      expect(extract(value)).toBeUndefined()
     })
   })
 
