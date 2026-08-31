@@ -16,6 +16,9 @@ const videoUrls = [
   // Both forms the Flash player shipped.
   'http://www.dailymotion.com/swf/x7tgad0',
   'http://www.dailymotion.com/swf/video/x7tgad0',
+  // The Flash player took its parameters with `&` and no `?`, so they land in the path segment.
+  'http://www.dailymotion.com/swf/x7tgad0&colors=background:000000;glow:000000',
+  'http://www.dailymotion.com/swf/video/x7tgad0&colors=background:000000',
   'https://geo.dailymotion.com/player.html?video=x7tgad0',
   // Share urls append a title slug to the id.
   'https://www.dailymotion.com/video/x7tgad0_some-title',

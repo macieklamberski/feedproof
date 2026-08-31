@@ -12,6 +12,11 @@ const dailymotionHosts = ['dailymotion.com', 'dai.ly']
 // the second of the two forms the Flash player shipped.
 const pathWords = new Set(['embed', 'video', 'swf'])
 
+// The Flash player took its parameters with `&` and no `?`, so `/swf/{id}&colors=background:000000`
+// arrives as one path segment and the id fails the length check. Browsers read the leading id out
+// of it, and so does this.
+const strayParamsRegex = /&.*$/
+
 // Words that introduce something other than a single video, so the segment is a route and never
 // an id. `/embed/playlist/{id}` would otherwise yield the literal `playlist`, which is eight
 // legal characters and passes the id test on length alone.
@@ -63,7 +68,9 @@ export const extractDailymotionId = (link: string): string | undefined => {
   return (
     [readPathId(url, getPathSegments(url)), url.searchParams.get('video')]
       // Share urls append a "_title-slug" to the id. Keep only the id.
-      .map((candidate) => keepIfMatches(candidate?.split('_')[0], safeVideoIdRegex))
+      .map((candidate) =>
+        keepIfMatches(candidate?.replace(strayParamsRegex, '').split('_')[0], safeVideoIdRegex),
+      )
       .find(Boolean)
   )
 }
