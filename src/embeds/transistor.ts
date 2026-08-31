@@ -45,6 +45,16 @@ export const extractTransistorEmbed = (link: string): Subject | undefined => {
     return safeSlugRegex.test(subject) ? { kind: mode, id: subject } : undefined
   }
 
+  // A show player is `/s/{id}` and takes nothing after it, so a third segment means the url
+  // names something other than the player. It is the episode transcript: Transistor writes
+  // sidecars at `/s/{showId}/{token}.{ext}`, and no legitimate third segment occurs beside
+  // them. Ignored, the sidecar resolved to the whole show's playlist player, so a subtitle
+  // file became a working page for something the feed never named. The episode branch above
+  // already vets its own third segment; this is that check on the other kind.
+  if (kind === 's' && segments[2]) {
+    return
+  }
+
   return safeIdRegex.test(subject) ? { kind, id: subject } : undefined
 }
 
