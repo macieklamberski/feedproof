@@ -42,6 +42,16 @@ const isTweetUrl = (url: URL): boolean => {
 
 // `/{handle}/status/{id}`, with the plural `statuses` form from the earliest era.
 const statusPathRegex = /^\/([a-zA-Z0-9_]{1,15})\/status(?:es)?\/(\d+)/
+
+// The paths that name a status and carry no handle: the web client's permalink, the 2015-2017
+// video frames, and the card frame before them. The frames are dead, answering 404 or a stub
+// for a real id and a fabricated one alike, so the id in them is worth more than the url.
+const handlelessPathRegex =
+  /^\/(?:i\/(?:web\/status|videos\/tweet|videos|cards\/tfw\/v\d+)|status(?:es)?)\/(\d+)/
+
+// Twitter takes `i` where a handle belongs and redirects to the real one, so a status recovered
+// without a handle still yields a url a reader can follow.
+const handleStandIn = 'i'
 // The byline the embed dialog writes, whose parenthesised handle is dropped: the display name
 // is the readable half and the handle is already in the url. The handle may be empty because a
 // skeleton blockquote keeps the byline's punctuation and fills in neither half, so what it holds
@@ -61,7 +71,13 @@ const readStatusUrl = (value: string | undefined): Status | undefined => {
 
   const match = parsed.pathname.match(statusPathRegex)
 
-  return match ? { handle: match[1], id: match[2] } : undefined
+  if (match) {
+    return { handle: match[1], id: match[2] }
+  }
+
+  const handleless = parsed.pathname.match(handlelessPathRegex)
+
+  return handleless ? { handle: handleStandIn, id: handleless[1] } : undefined
 }
 
 // Where the tweet is named, in the order the shapes provide it. The dated anchor is the usual
