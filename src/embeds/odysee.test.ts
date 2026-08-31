@@ -229,6 +229,22 @@ describeForEachParser('odyseeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // The channel and the claim inside it, both named without ids, which Odysee serves as the
+    // real video. The `@` is what separates this from the legacy name-and-id pair.
+    it('should resolve a channel and claim pair named without ids', async () => {
+      const value = html`
+        <iframe src="https://odysee.com/$/embed/@corbettreport/webb-repersoning"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'odysee',
+        id: '@corbettreport/webb-repersoning',
+        src: 'https://odysee.com/$/embed/@corbettreport/webb-repersoning',
+        url: 'https://odysee.com/@corbettreport/webb-repersoning',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // Two bare segments stay the legacy name-and-id pair rather than becoming two claims, so
     // the fully slash-separated spelling Odysee does not serve is still refused.
     it('should ignore two bare segments that are not a name and a hex id', async () => {
