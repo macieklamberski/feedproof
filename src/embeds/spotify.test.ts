@@ -70,6 +70,58 @@ describe('spotifyResolveEmbed', () => {
       expect(spotifyResolveEmbed(value)).toEqual(expected)
     })
 
+    // The parameter also carries an ordinary open.spotify.com url. It is read by the same path
+    // reader as the carrier, so every spelling the carrier's path has, it has too.
+    it.each([
+      'https://open.spotify.com/track/2ikQOoW9SMmgec0xdU94B0',
+      'https://open.spotify.com/intl-de/track/2ikQOoW9SMmgec0xdU94B0',
+      'https://open.spotify.com/embed/track/2ikQOoW9SMmgec0xdU94B0',
+      'https://OPEN.SPOTIFY.COM/track/2ikQOoW9SMmgec0xdU94B0',
+    ])('should resolve a uri parameter holding the url %s', (uri) => {
+      const value = `https://open.spotify.com/embed?uri=${encodeURIComponent(uri)}`
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'track/2ikQOoW9SMmgec0xdU94B0',
+        src: 'https://open.spotify.com/embed/track/2ikQOoW9SMmgec0xdU94B0',
+        url: 'https://open.spotify.com/track/2ikQOoW9SMmgec0xdU94B0',
+        height: 152,
+      }
+
+      expect(spotifyResolveEmbed(value)).toEqual(expected)
+    })
+
+    // The ownership form, which this file already reads in the other two spellings.
+    it('should resolve a uri url naming a playlist through its owner', () => {
+      const uri = 'https://open.spotify.com/user/ga8/playlist/2QyFr1UfIduAkWZI0A5fnC'
+      const value = `https://open.spotify.com/embed?uri=${encodeURIComponent(uri)}`
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'playlist/2QyFr1UfIduAkWZI0A5fnC',
+        src: 'https://open.spotify.com/embed/playlist/2QyFr1UfIduAkWZI0A5fnC',
+        url: 'https://open.spotify.com/playlist/2QyFr1UfIduAkWZI0A5fnC',
+        height: 352,
+      }
+
+      expect(spotifyResolveEmbed(value)).toEqual(expected)
+    })
+
+    // The type and id are taken as a pair. A path naming a type but no id must not borrow the
+    // parameter's id, which would mint one resource's id under another's type and height.
+    it('should not mix a type from the path with an id from the parameter', () => {
+      const uri = 'https://open.spotify.com/album/1DFixLWuPkv3KT3TnV35m3'
+      const value = `https://open.spotify.com/embed/track?uri=${encodeURIComponent(uri)}`
+
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'album/1DFixLWuPkv3KT3TnV35m3',
+        src: 'https://open.spotify.com/embed/album/1DFixLWuPkv3KT3TnV35m3',
+        url: 'https://open.spotify.com/album/1DFixLWuPkv3KT3TnV35m3',
+        height: 352,
+      }
+
+      expect(spotifyResolveEmbed(value)).toEqual(expected)
+    })
+
     // A playlist is named through its owner, so the type and id are the last pair in the uri
     // rather than the only one.
     it('should resolve a legacy uri naming a playlist through its owner', () => {
@@ -114,6 +166,13 @@ describe('spotifyResolveEmbed', () => {
   })
 
   describe('edge cases', () => {
+    it('should return undefined for a uri url on another host', () => {
+      const uri = 'https://example.com/track/2ikQOoW9SMmgec0xdU94B0'
+      const value = `https://open.spotify.com/embed?uri=${encodeURIComponent(uri)}`
+
+      expect(spotifyResolveEmbed(value)).toBeUndefined()
+    })
+
     it('should return undefined for a type that does not embed', () => {
       const value = 'https://open.spotify.com/user/4cOdK2wGLETKBW3PvgPWqT'
 

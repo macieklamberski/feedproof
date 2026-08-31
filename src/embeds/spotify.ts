@@ -30,6 +30,11 @@ const pathPrefixRegex = /^(?:embed|embed-podcast|intl-[a-z]{2})$/
 // pair, not the only one: of 50 sampled occurrences of the query form, 41 are that four-token
 // shape.
 const legacyUriRegex = /^spotify:(?:.*:)?([a-z]+):([a-zA-Z0-9]+)$/
+// The same parameter also carries an ordinary open.spotify.com url rather than a `spotify:` uri.
+// Its type and id sit in the path, and every spelling the carrier's own path has, the parameter
+// has too: the `intl-{lang}` prefix, an `/embed/` prefix and the `user/{handle}/playlist/{id}`
+// ownership form. So it is read by the same path reader rather than a second pattern that would
+// support a narrower set of urls than the carrier one line above it.
 // The snippet writes `Spotify Embed: {name}`, and the name is the only part worth keeping: the
 // rest names the widget, which the placeholder already says. Every title in a 40-feed corpus
 // read carried the prefix.
@@ -70,6 +75,21 @@ const readSubstackItem = (element: Element): Partial<EmbedResolverResult> => {
   }
 }
 
+// The path both the carrier and the `uri` parameter spell the same way: an optional route prefix,
+// then the ownership form, then the type and id.
+const readPathPair = (url: URL | undefined): [string, string] | undefined => {
+  if (!url) {
+    return
+  }
+
+  const segments = getPathSegments(url)
+  const named = pathPrefixRegex.test(segments[0] ?? '') ? segments.slice(1) : segments
+  // The same ownership spelled as a path, `/embed/user/{handle}/playlist/{id}`.
+  const owned = named[0] === 'user' ? named.slice(2) : named
+
+  return owned[0] && owned[1] ? [owned[0], owned[1]] : undefined
+}
+
 export const spotifyResolveEmbed = (
   url: string,
   element?: Element,
@@ -80,14 +100,15 @@ export const spotifyResolveEmbed = (
     return
   }
 
-  const segments = getPathSegments(parsed)
-  const named = pathPrefixRegex.test(segments[0] ?? '') ? segments.slice(1) : segments
-  // The same ownership spelled as a path, `/embed/user/{handle}/playlist/{id}`.
-  const owned = named[0] === 'user' ? named.slice(2) : named
-  const [pathType, pathId] = owned
-  const legacy = parsed.searchParams.get('uri')?.match(legacyUriRegex)
-  const type = pathType ?? legacy?.[1]
-  const id = pathId ?? legacy?.[2]
+  const uri = parsed.searchParams.get('uri') ?? undefined
+  const legacy = uri?.match(legacyUriRegex)
+  // The type and id are taken as a pair from whichever source names both, never one from each:
+  // a path stating a type and no id would otherwise take its id from the parameter and mint one
+  // resource's id under another's type.
+  const pair =
+    readPathPair(parsed) ??
+    (legacy ? [legacy[1], legacy[2]] : readPathPair(parseUrlOnHosts(uri, spotifyHost)))
+  const [type, id] = pair ?? []
 
   if (!type || !id || !(type in spotifyHeights) || !safeIdRegex.test(id)) {
     return
