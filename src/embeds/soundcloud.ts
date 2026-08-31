@@ -42,9 +42,27 @@ const mediaFileRegex = /\.(?:aac|flac|m4a|m4v|mp3|mp4|ogg|opus|wav)$/i
 // the track it belongs to, so an enclosure carrying it still names a player.
 const streamPathRegex = /^\/stream\/(\d+)-/
 
+// SoundCloud keeps these first segments for its own sections, so none of them can be a
+// permalink. Without the check `soundcloud.com/tags/{tag}` reads as a track and `/discover` as a
+// user, and each mints a widget around a page that names no single item.
+const sitePathSegments = new Set([
+  'discover',
+  'imprint',
+  'pages',
+  'search',
+  'stream',
+  'tags',
+  'upload',
+  'you',
+])
+
 const readPageKind = (segments: Array<string>): string | undefined => {
   // The audio file sits two segments deep, which would otherwise read as a user and a track.
   if (mediaFileRegex.test(segments[segments.length - 1] ?? '')) {
+    return
+  }
+
+  if (sitePathSegments.has(segments[0] ?? '')) {
     return
   }
 
@@ -67,6 +85,11 @@ const secretTokenRegex = /^s-[\w-]+$/
 
 // The reference hosts are not pages. They share the site's domain, so a page read has to say so.
 const referenceHostRegex = /^api(?:-v2)?\./
+
+// `on.soundcloud.com/{code}` is the share shortener, and the code is a short id rather than a
+// permalink. Reading it as a path names `soundcloud.com/{code}`, which does not exist, so the
+// short url is handed to the widget as it stands and nothing is inferred from its shape.
+const shortLinkHostRegex = /^on\./
 
 // The player is fluid-width and fixed-height. The classic one is a bar for a single track and
 // a scrolling list for anything holding several, and `visual=true` swaps both for one big
@@ -153,7 +176,9 @@ export const soundcloudResolveEmbed = (
   // size the player and to give the placeholder a url a reader can follow.
   const page =
     reference || streamTrackId ? undefined : parseUrlOnHosts(inner ?? src, soundcloudHosts)
-  const pageSegments = page && !referenceHostRegex.test(page.hostname) ? getPathSegments(page) : []
+  const shortLink = page && shortLinkHostRegex.test(page.hostname) ? page : undefined
+  const pageSegments =
+    page && !shortLink && !referenceHostRegex.test(page.hostname) ? getPathSegments(page) : []
   const secretToken = pageSegments.find((segment) => secretTokenRegex.test(segment))
   const permalink = pageSegments.filter((segment) => segment !== secretToken)
   const pageKind = readPageKind(permalink)
@@ -166,6 +191,11 @@ export const soundcloudResolveEmbed = (
     if (!inner) {
       result.src = composeWidgetUrl(result.url, secretToken)
     }
+  } else if (shortLink && !inner) {
+    // The shortener answers a redirect rather than a page, so it cannot be framed either. What
+    // the code names is unknown until it is followed, so the placeholder gets the player and no
+    // canonical url of its own.
+    result.src = composeWidgetUrl(shortLink.href)
   }
 
   // Nothing here names a track and the url is the audio itself, so the enclosure stays a file

@@ -384,6 +384,36 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // These first segments are SoundCloud's own sections, so none of them is a permalink and
+    // none names a single item to size or to link to.
+    it.each([
+      'https://soundcloud.com/tags/jazz',
+      'https://soundcloud.com/discover',
+      'https://soundcloud.com/search?q=jazz',
+      'https://soundcloud.com/stream',
+      'https://soundcloud.com/upload',
+      'https://soundcloud.com/pages/terms',
+      'https://soundcloud.com/imprint',
+      'https://soundcloud.com/you/collection',
+    ])('should not read a site section as user content (%s)', async (url) => {
+      const value = `<iframe src="${url}"></iframe>`
+      const expected: EmbedResolverResult = { provider: 'soundcloud', src: url }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The shortener answers a redirect, so the code is not a permalink: reading it as one names
+    // `soundcloud.com/{code}`, which does not exist. The widget resolves the short url itself.
+    it('should hand a share short link to the widget rather than rebuild it as a page', async () => {
+      const value = '<iframe src="https://on.soundcloud.com/AbCdEf"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fon.soundcloud.com%2FAbCdEf',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should read a reference on the api-v2 host', async () => {
       const value = html`
         <iframe src="https://w.soundcloud.com/player/?url=https%3A//api-v2.soundcloud.com/tracks/293"></iframe>
