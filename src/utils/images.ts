@@ -149,6 +149,12 @@ const pathTransforms: Array<PathTransform> = [
   // Medium: miro.medium.com/v2/{transforms}/{id}(-{width}).{ext}: key on the bare id.
   { host: /miro\.medium\.com$/i, strip: /\/v2\/(?:[^/]+\/)+/i, replace: '/' },
   { host: /miro\.medium\.com$/i, strip: /(?:-\d{2,4})?\.[a-z]+$/i, replace: '' },
+  // Dwell: images.dwell.com/{album}/{id}-{size}/{file}: key on the bare id.
+  {
+    host: /images\.dwell\.com$/i,
+    strip: new RegExp(`(?<=/\\d{6,})-(?:${sizeKeywordLiterals.join('|')})(?=/[^/]+$)`, 'i'),
+    replace: '',
+  },
 ]
 
 // Server scripts that pick which image to serve from the query, so the query carries the
