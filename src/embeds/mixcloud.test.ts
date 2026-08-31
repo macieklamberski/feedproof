@@ -28,8 +28,44 @@ describe('extractMixcloudShow', () => {
     expect(extractMixcloudShow(value)).toBe(expected)
   })
 
-  it('should return undefined when there is no feed parameter', () => {
-    const value = 'https://www.mixcloud.com/discover/house/'
+  // The page url a person copies from the address bar. It carries no `feed` parameter, so the
+  // show comes from the path itself.
+  it('should read a show from the page path', () => {
+    const value = 'https://www.mixcloud.com/photogmusic/no-filter-may-28-2018-hour-one/'
+    const expected = 'photogmusic/no-filter-may-28-2018-hour-one'
+
+    expect(extractMixcloudShow(value)).toBe(expected)
+  })
+
+  // Each of these takes the shape of a show and is a page of the site instead. The show above
+  // is the control: it has the same two-segment shape and still reads.
+  it.each([
+    'https://www.mixcloud.com/discover/house/',
+    'https://www.mixcloud.com/genres/house/',
+    'https://www.mixcloud.com/categories/house/',
+    'https://www.mixcloud.com/tag/house/',
+    'https://www.mixcloud.com/live/photogmusic/',
+    'https://www.mixcloud.com/photogmusic/uploads/',
+    'https://www.mixcloud.com/photogmusic/favorites/',
+    'https://www.mixcloud.com/photogmusic/listens/',
+    'https://www.mixcloud.com/photogmusic/stream/',
+    'https://www.mixcloud.com/photogmusic/playlists/',
+  ])('should return undefined for the site page %s', (value) => {
+    expect(extractMixcloudShow(value)).toBeUndefined()
+  })
+
+  // Without the site-segment check the widget's own two-segment url reads as the user `widget`
+  // with the show `iframe`, which is what a carrier stripped of its parameters would be.
+  it('should return undefined for the widget url carrying no feed parameter', () => {
+    const value = 'https://www.mixcloud.com/widget/iframe/'
+
+    expect(extractMixcloudShow(value)).toBeUndefined()
+  })
+
+  // The same exclusion reaches the parameter, where it was already wrong: this minted
+  // `mixcloud.com/photogmusic/uploads/` as though a listing page were a show.
+  it('should return undefined for a feed parameter naming a listing page', () => {
+    const value = 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fuploads%2F'
 
     expect(extractMixcloudShow(value)).toBeUndefined()
   })
@@ -136,5 +172,19 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
     const value = '<iframe src="https://www.mixcloud.com/discover/house/"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
+  })
+
+  // `injectEnclosures` synthesizes a carrier for every enclosure and offers it to the url
+  // resolvers, so a feed naming its show by its page url reaches the resolver this way.
+  it('should resolve a show page framed as an embed', async () => {
+    const value = '<iframe src="https://www.mixcloud.com/photogmusic/no-filter/"></iframe>'
+    const expected: EmbedResolverResult = {
+      provider: 'mixcloud',
+      id: 'photogmusic/no-filter',
+      src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
+      url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+    }
+
+    expect(await extract(value)).toEqual(expected)
   })
 })

@@ -21,33 +21,60 @@ const decodeSegment = (segment: string): string | undefined => {
 
 const mixcloudHosts = ['mixcloud.com']
 
-// Every Mixcloud carrier names the show in one `feed` parameter, so one read covers all three
-// forms found in the corpus: the widget iframe (`mixcloud.com/widget/iframe/?feed=`), the same
-// widget on its own host (`player-widget.mixcloud.com/…`), and the legacy Flash player
+// A user's listing pages sit where a show slug does, so `{user}/uploads` reads as a show and
+// mints a player for a list. `playlists` names a collection rather than one show.
+const sectionSlugs = new Set(['favorites', 'listens', 'playlists', 'stream', 'uploads'])
+
+// First segments that are the site, not a user: `genres/{x}` is a listing served at exactly
+// the show shape, `categories/{x}` and `tag/{x}` redirect into it, and the widget's own url is
+// two segments, so a carrier missing its `feed` parameter would read as the user `widget`.
+const siteSegments = new Set([
+  'categories',
+  'discover',
+  'genres',
+  'live',
+  'media',
+  'search',
+  'tag',
+  'upload',
+  'widget',
+])
+
+// Exactly a user and a slug: a deeper path is a section of the site, not a show, and the value
+// goes back into a url, so anything else is left to the generic placeholder.
+const readShowPath = (segments: Array<string>): string | undefined => {
+  const [user, slug] = segments.map(decodeSegment)
+
+  if (segments.length !== 2 || !user || !slug) {
+    return
+  }
+
+  if (unsafeSegmentRegex.test(user) || unsafeSegmentRegex.test(slug)) {
+    return
+  }
+
+  if (siteSegments.has(user.toLowerCase()) || sectionSlugs.has(slug.toLowerCase())) {
+    return
+  }
+
+  return `${user}/${slug}`
+}
+
+// An embed names the show in one `feed` parameter, which covers all three carrier forms found
+// in the corpus: the widget iframe (`mixcloud.com/widget/iframe/?feed=`), the same widget on
+// its own host (`player-widget.mixcloud.com/…`), and the legacy Flash player
 // (`mixcloud.com/media/swf/player/mixcloudLoader.swf?feed=`). The value is a path in the newer
 // embeds and a whole url in the older ones, which is why only its path is read.
+//
+// With no such parameter the path is the show itself: `mixcloud.com/{user}/{slug}/` is the page
+// a person copies from the address bar, and it resolved to nothing while the widget spelling of
+// the same show became a player.
 export const extractMixcloudShow = (link: string): string | undefined => {
-  const feed = parseUrl(link)?.searchParams.get('feed')
+  const parsed = parseUrl(link)
+  const feed = parsed?.searchParams.get('feed')
+  const source = feed ? parseUrl(feed, 'https://example.com') : parsed
 
-  if (!feed) {
-    return
-  }
-
-  const parsed = parseUrl(feed, 'https://example.com')
-  const segments = parsed ? getPathSegments(parsed) : []
-
-  // Exactly a user and a slug: a deeper path is a section of the site, not a show, and
-  // the value goes into a url, so anything else is left to the generic placeholder.
-  const decoded = segments.map(decodeSegment)
-
-  if (
-    decoded.length !== 2 ||
-    decoded.some((segment) => !segment || unsafeSegmentRegex.test(segment))
-  ) {
-    return
-  }
-
-  return `${decoded[0]}/${decoded[1]}`
+  return source ? readShowPath(getPathSegments(source)) : undefined
 }
 
 // No thumbnail: the artwork url is only available through Mixcloud's API, and nothing in the
