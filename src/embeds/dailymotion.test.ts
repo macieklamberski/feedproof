@@ -16,6 +16,9 @@ const videoUrls = [
   // Both forms the Flash player shipped.
   'http://www.dailymotion.com/swf/x7tgad0',
   'http://www.dailymotion.com/swf/video/x7tgad0',
+  // The Flash player took its parameters with `&` and no `?`, so they land in the path segment.
+  'http://www.dailymotion.com/swf/x7tgad0&colors=background:000000;glow:000000',
+  'http://www.dailymotion.com/swf/video/x7tgad0&colors=background:000000',
   'https://geo.dailymotion.com/player.html?video=x7tgad0',
   // Share urls append a title slug to the id.
   'https://www.dailymotion.com/video/x7tgad0_some-title',
@@ -62,6 +65,7 @@ describe('dailymotionResolveEmbed', () => {
       src: 'https://www.dailymotion.com/embed/video/x7tgad0',
       url: 'https://www.dailymotion.com/video/x7tgad0',
       thumbnail: 'https://www.dailymotion.com/thumbnail/video/x7tgad0',
+      ratio: '16/9',
     }
 
     expect(dailymotionResolveEmbed(value)).toEqual(expected)
@@ -75,6 +79,7 @@ describe('dailymotionResolveEmbed', () => {
       src: 'https://www.dailymotion.com/embed/video/x8abcde?start=42',
       url: 'https://www.dailymotion.com/video/x8abcde',
       thumbnail: 'https://www.dailymotion.com/thumbnail/video/x8abcde',
+      ratio: '16/9',
     }
 
     expect(dailymotionResolveEmbed(value)).toEqual(expected)
@@ -88,6 +93,7 @@ describe('dailymotionResolveEmbed', () => {
       src: 'https://www.dailymotion.com/embed/video/x8abcde',
       url: 'https://www.dailymotion.com/video/x8abcde',
       thumbnail: 'https://www.dailymotion.com/thumbnail/video/x8abcde',
+      ratio: '16/9',
     }
 
     expect(dailymotionResolveEmbed(value)).toEqual(expected)
@@ -129,6 +135,7 @@ describe('dailymotionResolveEmbed', () => {
       src: 'https://www.dailymotion.com/embed/video/x7tgad0?playlist=x6zqmk',
       url: 'https://www.dailymotion.com/video/x7tgad0',
       thumbnail: 'https://www.dailymotion.com/thumbnail/video/x7tgad0',
+      ratio: '16/9',
     }
 
     expect(dailymotionResolveEmbed(value)).toEqual(expected)
@@ -146,6 +153,7 @@ describeForEachParser('dailymotionEmbedResolver', (parseHtml) => {
       src: 'https://www.dailymotion.com/embed/video/x7tgad0',
       url: 'https://www.dailymotion.com/video/x7tgad0',
       thumbnail: 'https://www.dailymotion.com/thumbnail/video/x7tgad0',
+      ratio: '16/9',
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -155,5 +163,27 @@ describeForEachParser('dailymotionEmbedResolver', (parseHtml) => {
     const value = '<iframe src="https://example.com/video"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
+  })
+
+  // The host check is what refused this, not the path reader. Each apex 301s straight to a
+  // language landing page, dropping the video, so the id is worth more than the url the
+  // publisher wrote.
+  it.each([
+    'https://www.dailymotion.fr/video/x7tgad0',
+    'https://www.dailymotion.co.uk/video/x7tgad0',
+    'https://www.dailymotion.es/video/x7tgad0',
+    'https://www.dailymotion.it/video/x7tgad0',
+  ])('should resolve a video on the %s apex', async (url) => {
+    const value = `<iframe src="${url}"></iframe>`
+    const expected: EmbedResolverResult = {
+      provider: 'dailymotion',
+      id: 'x7tgad0',
+      src: 'https://www.dailymotion.com/embed/video/x7tgad0',
+      url: 'https://www.dailymotion.com/video/x7tgad0',
+      thumbnail: 'https://www.dailymotion.com/thumbnail/video/x7tgad0',
+      ratio: '16/9',
+    }
+
+    expect(await extract(value)).toEqual(expected)
   })
 })

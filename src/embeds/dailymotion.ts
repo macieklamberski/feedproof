@@ -6,11 +6,26 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9]{5,}$/
 
-const dailymotionHosts = ['dailymotion.com', 'dai.ly']
+// Named one by one rather than by a `dailymotion.{tld}` pattern, which would trust any
+// registration under the name: `.de` is third-party and left out. Each apex redirects to a
+// language landing page, dropping the video, so reading the id repairs what the url loses.
+const dailymotionHosts = [
+  'dailymotion.com',
+  'dailymotion.co.uk',
+  'dailymotion.es',
+  'dailymotion.fr',
+  'dailymotion.it',
+  'dai.ly',
+]
 
 // Segments that name a route rather than a video. `/swf/video/{id}` stacks two of them, which is
 // the second of the two forms the Flash player shipped.
 const pathWords = new Set(['embed', 'video', 'swf'])
+
+// The Flash player took its parameters with `&` and no `?`, so `/swf/{id}&colors=background:000000`
+// arrives as one path segment and the id fails the length check. Browsers read the leading id out
+// of it, and so does this.
+const strayParamsRegex = /&.*$/
 
 // Words that introduce something other than a single video, so the segment is a route and never
 // an id. `/embed/playlist/{id}` would otherwise yield the literal `playlist`, which is eight
@@ -63,7 +78,9 @@ export const extractDailymotionId = (link: string): string | undefined => {
   return (
     [readPathId(url, getPathSegments(url)), url.searchParams.get('video')]
       // Share urls append a "_title-slug" to the id. Keep only the id.
-      .map((candidate) => keepIfMatches(candidate?.split('_')[0], safeVideoIdRegex))
+      .map((candidate) =>
+        keepIfMatches(candidate?.replace(strayParamsRegex, '').split('_')[0], safeVideoIdRegex),
+      )
       .find(Boolean)
   )
 }
@@ -82,6 +99,7 @@ export const dailymotionResolveEmbed = (url: string): EmbedResolverResult | unde
       src: `https://www.dailymotion.com/embed/video/${videoId}${pickUrlParams(url, dailymotionEmbedParams)}`,
       url: `https://www.dailymotion.com/video/${videoId}`,
       thumbnail: `https://www.dailymotion.com/thumbnail/video/${videoId}`,
+      ratio: '16/9',
     }
   }
 
