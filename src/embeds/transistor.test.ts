@@ -23,19 +23,20 @@ describe('extractTransistorEmbed', () => {
     expect(extractTransistorEmbed(value)).toEqual(expected)
   })
 
-  it('should read a show playlist', () => {
+  // The share page and the player take the same id, so the share url reads as the episode.
+  it('should read an episode from its share page url', () => {
     const value = 'https://share.transistor.fm/s/9f8e7d6c'
     const expected = {
-      kind: 's',
+      kind: 'e',
       id: '9f8e7d6c',
     } as const
 
     expect(extractTransistorEmbed(value)).toEqual(expected)
   })
 
-  // Transistor writes an episode's transcript beside the show as `/s/{showId}/{token}.{ext}`.
-  // The show above uses the same id, so it is the control: the sidecar is refused and the
-  // player it sits beside still reads.
+  // Transistor writes an episode's transcript beside it as `/s/{id}/{token}.{ext}`. The share
+  // url above uses the same id, so it is the control: the sidecar is refused and the episode
+  // it sits beside still reads.
   it.each([
     'https://share.transistor.fm/s/9f8e7d6c/8a7b6c5d.vtt',
     'https://share.transistor.fm/s/9f8e7d6c/8a7b6c5d.srt',
@@ -105,13 +106,15 @@ describe('transistorResolveEmbed', () => {
     expect(transistorResolveEmbed(value)).toEqual(expected)
   })
 
-  it('should size a show playlist taller', () => {
+  // The share page refuses framing, so the mint has to be the `/e/` player it fronts, which
+  // takes the same id.
+  it('should mint the episode player from a share page url', () => {
     const value = 'https://share.transistor.fm/s/9f8e7d6c'
     const expected: EmbedResolverResult = {
       provider: 'transistor',
-      id: 'show/9f8e7d6c',
-      src: 'https://share.transistor.fm/s/9f8e7d6c',
-      height: 390,
+      id: 'episode/9f8e7d6c',
+      src: 'https://share.transistor.fm/e/9f8e7d6c',
+      height: 180,
     }
 
     expect(transistorResolveEmbed(value)).toEqual(expected)

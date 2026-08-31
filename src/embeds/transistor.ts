@@ -10,14 +10,14 @@ const safeSlugRegex = /^[0-9a-z][0-9a-z-]{1,60}$/i
 
 const transistorHosts = ['transistor.fm']
 
-// Real iframes fix the episode player at 180, and Transistor's own oEmbed agrees. The
-// playlist embed is taller, so the two kinds are sized apart instead of averaged. A
-// `/latest` player holds one episode and matches the episode height. `/playlist` holds the
-// whole show and matches the show one.
-const playerHeights = { e: 180, s: 390, latest: 180, playlist: 390 }
+// The episode player is fixed at 180, and Transistor's own oEmbed agrees. The playlist embed
+// is taller, so the two kinds are sized apart instead of averaged. A `/latest` player holds
+// one episode and matches the episode height. `/playlist` holds the whole show and matches
+// the show one.
+const playerHeights = { e: 180, latest: 180, playlist: 390 }
 
 // What a placeholder's id names, which has to address the endpoint on its own for enrichment.
-const subjectNames = { e: 'episode', s: 'show', latest: 'latest', playlist: 'playlist' }
+const subjectNames = { e: 'episode', latest: 'latest', playlist: 'playlist' }
 
 // A second segment naming a show mode is part of the subject, not decoration. `/e/{slug}/latest`
 // is the newest episode of a show and `/e/{slug}/playlist` the whole show, so dropping the
@@ -29,7 +29,11 @@ const showModes = ['latest', 'playlist'] as const
 
 type Subject = { kind: keyof typeof playerHeights; id: string }
 
-// `/e/{id}` is an episode and `/s/{id}` a show playlist.
+// `/e/{id}` is the episode player and `/s/{id}` the same episode's share page: the per-item
+// link a feed carries and the url the per-episode Share menu copies. The two paths take the
+// same id, so the share page collapses onto the player it fronts. Framing the share page
+// itself renders nothing, because it answers under `frame-ancestors 'self'`, and Transistor's
+// own oEmbed for a `/s/` url points its iframe at `/e/{id}` at 180.
 export const extractTransistorEmbed = (link: string): Subject | undefined => {
   const segments = getPathSegments(link)
   const kind = segments[0]
@@ -45,17 +49,16 @@ export const extractTransistorEmbed = (link: string): Subject | undefined => {
     return safeSlugRegex.test(subject) ? { kind: mode, id: subject } : undefined
   }
 
-  // A show player is `/s/{id}` and takes nothing after it, so a third segment means the url
-  // names something other than the player. It is the episode transcript: Transistor writes
-  // sidecars at `/s/{showId}/{token}.{ext}`, and no legitimate third segment occurs beside
-  // them. Ignored, the sidecar resolved to the whole show's playlist player, so a subtitle
-  // file became a working page for something the feed never named. The episode branch above
-  // already vets its own third segment; this is that check on the other kind.
+  // A share page is `/s/{id}` and takes nothing after it, so a third segment means the url
+  // names something other than the episode. It is the transcript: Transistor writes sidecars
+  // at `/s/{id}/{token}.{ext}`, and no legitimate third segment occurs beside them. The
+  // episode branch above already vets its own third segment; this is that check on the other
+  // path.
   if (kind === 's' && segments[2]) {
     return
   }
 
-  return safeIdRegex.test(subject) ? { kind, id: subject } : undefined
+  return safeIdRegex.test(subject) ? { kind: 'e', id: subject } : undefined
 }
 
 export const transistorResolveEmbed = (url: string): EmbedResolverResult | undefined => {
@@ -65,10 +68,7 @@ export const transistorResolveEmbed = (url: string): EmbedResolverResult | undef
     return
   }
 
-  const path =
-    embed.kind === 'e' || embed.kind === 's'
-      ? `${embed.kind}/${embed.id}`
-      : `e/${embed.id}/${embed.kind}`
+  const path = embed.kind === 'e' ? `e/${embed.id}` : `e/${embed.id}/${embed.kind}`
 
   return {
     provider: 'transistor',
