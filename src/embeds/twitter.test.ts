@@ -1046,6 +1046,29 @@ describeForEachParser('twitterIframeEmbedResolver', (parseHtml) => {
     expect(await extract(value)).toBeUndefined()
   })
 
+  // Twitter's own internal paths, which name a status and no handle. Both video frames and the
+  // card frame are dead, answering a stub or a 404, so the id in them is worth more than
+  // the url they point at. `i` stands in for the handle, which Twitter itself redirects.
+  describe('the internal paths that carry a status and no handle', () => {
+    it.each([
+      'https://twitter.com/i/videos/tweet/123456789012345',
+      'https://twitter.com/i/videos/123456789012345',
+      'https://twitter.com/i/cards/tfw/v1/123456789012345',
+      'https://x.com/i/web/status/123456789012345',
+      'https://x.com/statuses/123456789012345',
+    ])('should mint the player from %s', async (url) => {
+      const value = html`<iframe src="${url}"></iframe>`
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: `https://x.com/i/status/${statusId}`,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
   // The url a wrapper writes when it stores what the author pasted rather than the player, which
   // is every Twitter figure note.com ships. The page refuses framing, so unclaimed it becomes a
   // placeholder pointing at nothing a reader can load.
