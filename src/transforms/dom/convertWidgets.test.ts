@@ -978,6 +978,34 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
+    it('should play an iframe framing an aac file as an audio element', async () => {
+      const value = '<iframe src="https://cdn.example.com/ep.aac"></iframe>'
+      const expected = html`
+        <audio
+          src="https://cdn.example.com/ep.aac"
+          controls=""
+        ></audio>
+      `
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    // A parked url has to name a media file before the container is claimed, so an unmatched
+    // extension left the container empty and the reader got nothing at all.
+    it('should play a parked aac url as an audio element', async () => {
+      const value = '<div data-src="https://cdn.example.com/ep.aac"></div>'
+      const expected = html`
+        <div data-src="https://cdn.example.com/ep.aac">
+          <audio
+            src="https://cdn.example.com/ep.aac"
+            controls=""
+          ></audio>
+        </div>
+      `
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
     // A manifest plays natively only in Safari, so it stays an embed placeholder.
     it('should keep a streaming manifest as a placeholder', async () => {
       const value = '<iframe src="https://stream.example.com/live/index.m3u8"></iframe>'
