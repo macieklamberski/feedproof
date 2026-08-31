@@ -5,7 +5,9 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // `lbry.tv` was the same site under its previous name and every one of its urls redirects to
 // odysee.com with the path kept, so it is read the same way.
-const odyseeHosts = ['odysee.com', 'lbry.tv']
+// `open.lbry.com` redirects to odysee.com with the path preserved, exactly as `lbry.tv` does and
+// for the same reason: probed live, a real claim lands on the odysee.com page intact.
+const odyseeHosts = ['odysee.com', 'lbry.tv', 'open.lbry.com']
 
 // A claim is `{name}:{claim id}`, the id being a hex prefix of any length that disambiguates
 // the name. A channel is the same with `@` in front. The name is whatever the publisher typed,
