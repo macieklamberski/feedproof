@@ -1,7 +1,13 @@
 import { getPathSegments, isAnyOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import {
+  audioFileRegex,
+  documentFileRegex,
+  imageFileRegex,
+  parseUrlOnHosts,
+  videoFileRegex,
+} from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const issuuHosts = ['issuu.com']
@@ -12,6 +18,18 @@ const issuuHosts = ['issuu.com']
 // makes both resolvable with nothing fetched.
 const configIdRegex = /^\d+\/\d+$/
 const safeNameRegex = /^[\w.-]+$/
+
+// A document name is a slug and never a filename. The reader shares this url shape with the
+// enclosure probe, which offers it every attachment a feed carries, so a `.pdf` or `.mp3` on
+// the host would otherwise be minted as a document and take the place of a playable file.
+const isFileName = (value: string): boolean => {
+  return (
+    documentFileRegex.test(value) ||
+    audioFileRegex.test(value) ||
+    videoFileRegex.test(value) ||
+    imageFileRegex.test(value)
+  )
+}
 const pageNumberRegex = /^\d+$/
 
 // `anonymous-embed.html` is gone: it answers 403 with an S3 access-denied body for every request,
@@ -66,7 +84,7 @@ const readDocumentUrl = (url: string): EmbedResolverResult | undefined => {
 
   const [publisher, marker, documentName, page] = getPathSegments(parsed)
 
-  if (marker !== 'docs') {
+  if (marker !== 'docs' || !documentName || isFileName(documentName)) {
     return
   }
 
@@ -101,13 +119,24 @@ export const issuuResolveEmbed = (
 ): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url)
 
-  if (!parsed || !isAnyOf(getPathSegments(parsed)[0] ?? '', embedPaths)) {
+  if (!parsed) {
     return
   }
 
   // The publication name is the only thing an Issuu carrier states that neither url form holds,
-  // and the current share snippet writes it on the iframe.
+  // and the current share snippet writes it on the iframe. It is read before the branch below,
+  // because a reader-page carrier is the one a publisher pastes with the wrapper around it and
+  // so carries the name at least as often as the embed form does.
   const title = attr(element, 'title')
+
+  // A carrier framing the reader page rather than the embed, which is what a publisher pastes
+  // from the address bar. It names the document in its path, and the widget div's `data-url`
+  // states it the same way.
+  if (!isAnyOf(getPathSegments(parsed)[0] ?? '', embedPaths)) {
+    const embed = readDocumentUrl(url)
+
+    return embed && { ...embed, title }
+  }
   // The two id spaces the carrier can name, in the order the reader states them: a config id
   // pair in the fragment, else the publisher and document names in the query.
   const embed =
