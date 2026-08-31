@@ -172,4 +172,56 @@ describeForEachParser('odyseeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
   })
+
+  describe('a claim named without its id', () => {
+    // A name with no claim id addresses the winning claim for that name, which is what the
+    // share dialog writes when nothing needs disambiguating.
+    it('should resolve a claim named without its id', async () => {
+      const value = '<iframe src="https://odysee.com/$/embed/webb-repersoning"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'odysee',
+        id: 'webb-repersoning',
+        src: 'https://odysee.com/$/embed/webb-repersoning',
+        url: 'https://odysee.com/webb-repersoning',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should resolve a channel named without its id', async () => {
+      const value = '<iframe src="https://odysee.com/$/embed/@corbettreport"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'odysee',
+        id: '@corbettreport',
+        src: 'https://odysee.com/$/embed/@corbettreport',
+        url: 'https://odysee.com/@corbettreport',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should resolve a channel-scoped claim named without its id', async () => {
+      const value = html`
+        <iframe src="https://odysee.com/$/embed/@corbettreport:0/webb-repersoning"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'odysee',
+        id: '@corbettreport:0/webb-repersoning',
+        src: 'https://odysee.com/$/embed/@corbettreport:0/webb-repersoning',
+        url: 'https://odysee.com/@corbettreport:0/webb-repersoning',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Two bare segments stay the legacy name-and-id pair rather than becoming two claims, so
+    // the fully slash-separated spelling Odysee does not serve is still refused.
+    it('should ignore two bare segments that are not a name and a hex id', async () => {
+      const value = html`
+        <iframe src="https://odysee.com/$/embed/corbettreport/webb-repersoning"></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
 })
