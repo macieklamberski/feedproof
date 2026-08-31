@@ -5,10 +5,16 @@ import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The player is fluid-width and fixed-height, and the height depends on what sits inside it:
-// the compact bar for a single item, the taller box for a collection. These are the heights
-// Spotify's own oEmbed returns for each type. They are a fallback for the shapes that ship no
-// size at all: a height the markup declares is the publisher's choice and wins over these.
-// The map doubles as the set of types that embed.
+// the compact bar for a single item, the taller box for a collection. They are a fallback for the
+// shapes that ship no size at all: a height the markup declares is the publisher's choice and wins
+// over these. The map doubles as the set of types that embed.
+//
+// These are the heights of the plain `/embed/{type}/{id}` frame, which is the only frame this
+// resolver mints. Spotify's oEmbed sizes the variant rather than the type, so asking it about a
+// video podcast answers 624x351 for a `/video` frame it appends itself, while the same show's
+// plain frame is the 152 audio card. Sampling shows through oEmbed therefore reads as a per-type
+// difference that does not exist: ten of twelve real shows answer 152, and the two that do not
+// are video podcasts answering about a different url.
 const spotifyHeights: Record<string, number> = {
   track: 152,
   episode: 152,
