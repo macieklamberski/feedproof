@@ -7,6 +7,11 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // Video ids are a two-letter kind and a number, `sm9`, `nm12345`, `so67890`.
 const safeVideoIdRegex = /^[a-z]{2}\d+$/
 
+// `lv` names a live broadcast, which the video player answers 500 for. The shape gives nothing
+// away, since `lv` is two letters and a number like every other kind. The live host serves a
+// programme card rather than playback, and keeps serving it after the broadcast ends.
+const liveIdRegex = /^lv\d+$/
+
 const nicovideoHosts = ['nicovideo.jp']
 
 // Three spellings, one video, and the legacy two are dead or dying.
@@ -34,12 +39,15 @@ export const extractNicovideoId = (link: string): string | undefined => {
   }
 
   const segments = getPathSegments(parsed)
+  // `embed` is the live host's own route, `live.nicovideo.jp/embed/{id}`, so a broadcast already
+  // in embed form is read here rather than dropped.
   const marker = segments.findIndex((segment) => {
-    return segment === 'thumb_watch' || segment === 'thumb' || segment === 'watch'
+    return (
+      segment === 'thumb_watch' || segment === 'thumb' || segment === 'watch' || segment === 'embed'
+    )
   })
-  const videoId = marker < 0 ? undefined : segments[marker + 1]
 
-  return keepIfMatches(videoId, safeVideoIdRegex)
+  return keepIfMatches(marker < 0 ? undefined : segments[marker + 1], safeVideoIdRegex)
 }
 
 export const nicovideoResolveEmbed = (url: string): EmbedResolverResult | undefined => {
@@ -47,6 +55,18 @@ export const nicovideoResolveEmbed = (url: string): EmbedResolverResult | undefi
 
   if (!videoId) {
     return
+  }
+
+  // A broadcast is served by the live host and nothing else, so the two kinds do not share a
+  // player url. No size is stated for it: the card's height has not been measured, and a guess
+  // would outrank the height the carrier states.
+  if (liveIdRegex.test(videoId)) {
+    return {
+      provider: 'nicovideo',
+      id: videoId,
+      src: `https://live.nicovideo.jp/embed/${videoId}`,
+      url: `https://live.nicovideo.jp/watch/${videoId}`,
+    }
   }
 
   return {

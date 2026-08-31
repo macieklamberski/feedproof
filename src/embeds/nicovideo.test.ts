@@ -58,6 +58,15 @@ describe('extractNicovideoId', () => {
 
     expect(extractNicovideoId(value)).toBeUndefined()
   })
+
+  // Every spelling a broadcast arrives in, including the live host's own embed route.
+  it.each([
+    'https://live.nicovideo.jp/watch/lv346883570',
+    'https://live.nicovideo.jp/embed/lv346883570',
+    'https://www.nicovideo.jp/watch/lv346883570',
+  ])('should read the broadcast id from %s', (value) => {
+    expect(extractNicovideoId(value)).toBe('lv346883570')
+  })
 })
 
 describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
@@ -191,6 +200,32 @@ describe('nicovideoResolveEmbed', () => {
     const value = 'https://www.nicovideo.jp/ranking'
 
     expect(nicovideoResolveEmbed(value)).toBeUndefined()
+  })
+
+  // The video player answers 500 for a broadcast, so the two kinds cannot share a player url.
+  it('should build the live card for a broadcast rather than the video player', () => {
+    const value = 'https://live.nicovideo.jp/watch/lv346883570'
+    const expected: EmbedResolverResult = {
+      provider: 'nicovideo',
+      id: 'lv346883570',
+      src: 'https://live.nicovideo.jp/embed/lv346883570',
+      url: 'https://live.nicovideo.jp/watch/lv346883570',
+    }
+
+    expect(nicovideoResolveEmbed(value)).toEqual(expected)
+  })
+
+  // A broadcast written under the video host still names a broadcast.
+  it('should build the live card for a broadcast named on the main host', () => {
+    const value = 'https://www.nicovideo.jp/watch/lv346883570'
+    const expected: EmbedResolverResult = {
+      provider: 'nicovideo',
+      id: 'lv346883570',
+      src: 'https://live.nicovideo.jp/embed/lv346883570',
+      url: 'https://live.nicovideo.jp/watch/lv346883570',
+    }
+
+    expect(nicovideoResolveEmbed(value)).toEqual(expected)
   })
 })
 
