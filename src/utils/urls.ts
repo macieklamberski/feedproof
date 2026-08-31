@@ -27,6 +27,8 @@ export const audioFileRegex = /\.(aac|mp3|m4a|ogg|oga|wav|flac|opus)(\?|#|$)/i
 // nothing whatever a reader does with it.
 export const flashFileRegex = /\.swf(\?|#|$)/i
 
+export const documentFileRegex = /\.(pdf|epub|docx?|pptx?|xlsx?)(\?|#|$)/i
+
 // A real, loadable src, not empty and not the `about:blank` lazy placeholder.
 export const isUsableSrc = (src: string | null): src is string => {
   const trimmed = src?.trim()
