@@ -21,9 +21,21 @@ const videoUrls = [
   'https://www.dailymotion.com/video/x7tgad0_some-title',
 ]
 
+// Every spelling that names a playlist rather than one video. None may yield a video id, and all
+// resolve to the playlist player.
+const playlistUrls = [
+  'https://www.dailymotion.com/embed/playlist/x6zqmk',
+  'https://www.dailymotion.com/playlist/x6zqmk',
+  'https://geo.dailymotion.com/player.html?playlist=x6zqmk',
+]
+
 describe('extractDailymotionId', () => {
   it.each(videoUrls)('should extract the id from %s', (value) => {
     expect(extractDailymotionId(value)).toBe('x7tgad0')
+  })
+
+  it.each(playlistUrls)('should extract no video id from %s', (value) => {
+    expect(extractDailymotionId(value)).toBeUndefined()
   })
 
   // The geo player states the video in its query, and a publisher who kept the path prefix
@@ -85,6 +97,41 @@ describe('dailymotionResolveEmbed', () => {
     const value = 'https://www.dailymotion.com/about'
 
     expect(dailymotionResolveEmbed(value)).toBeUndefined()
+  })
+
+  // Reaches the playlist reader's own parse guard: the video readers refuse first, so the
+  // unparseable url arrives at the playlist branch too.
+  it('should return undefined for a url that cannot be parsed', () => {
+    const value = 'https://['
+
+    expect(dailymotionResolveEmbed(value)).toBeUndefined()
+  })
+
+  // The id is qualified because a playlist and a video share one grammar, and enrichment sees
+  // the provider and the id alone. No thumbnail: `/thumbnail/playlist/{id}` answers 404.
+  it.each(playlistUrls)('should build the playlist player from %s', (value) => {
+    const expected: EmbedResolverResult = {
+      provider: 'dailymotion',
+      id: 'playlist/x6zqmk',
+      src: 'https://www.dailymotion.com/embed/playlist/x6zqmk',
+      url: 'https://www.dailymotion.com/playlist/x6zqmk',
+    }
+
+    expect(dailymotionResolveEmbed(value)).toEqual(expected)
+  })
+
+  // A video playing inside a playlist is still a video, so the playlist branch must not take it.
+  it('should keep a video that names a playlist as a video', () => {
+    const value = 'https://www.dailymotion.com/embed/video/x7tgad0?playlist=x6zqmk'
+    const expected: EmbedResolverResult = {
+      provider: 'dailymotion',
+      id: 'x7tgad0',
+      src: 'https://www.dailymotion.com/embed/video/x7tgad0?playlist=x6zqmk',
+      url: 'https://www.dailymotion.com/video/x7tgad0',
+      thumbnail: 'https://www.dailymotion.com/thumbnail/video/x7tgad0',
+    }
+
+    expect(dailymotionResolveEmbed(value)).toEqual(expected)
   })
 })
 
