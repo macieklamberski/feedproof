@@ -142,6 +142,21 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // `VideoEmbed?album={id}` answers 404. Bandcamp's own video embeds always name a track, so
+    // this arrives from hand-edited markup, and the audio player does serve the release.
+    it('should fall back to the audio player when a video embed names only an album', async () => {
+      const value = html`
+        <iframe src="https://bandcamp.com/VideoEmbed?album=2545703459"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'bandcamp',
+        id: 'album/2545703459',
+        src: 'https://bandcamp.com/EmbeddedPlayer/album=2545703459/',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should yield provider and id when no fallback anchor exists', async () => {
       const value = html`
         <iframe src="https://bandcamp.com/EmbeddedPlayer/album=42/size=small/"></iframe>

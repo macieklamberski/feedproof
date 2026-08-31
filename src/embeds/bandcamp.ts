@@ -113,7 +113,9 @@ export const bandcampResolveEmbed = (
   }
 
   const [kind, id] = release
-  const isVideo = videoPathRegex.test(parsed.pathname)
+  // The video player names a track and only a track: `VideoEmbed?album={id}` answers 404. A video
+  // carrier whose only release is an album falls back to the audio player, which does serve it.
+  const isVideo = videoPathRegex.test(parsed.pathname) && kind === 'track'
   const preset = getPathSegments(parsed)
     .map((segment) => segment.match(sizeRegex)?.[1])
     .find(Boolean)
