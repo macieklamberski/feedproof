@@ -173,13 +173,38 @@ describeForEachParser('jwplayerAmpEmbedResolver', (parseHtml) => {
     expect(await extract(value)).toBeUndefined()
   })
 
-  // A playlist names no single media, so there is no poster and no player page to mint.
-  it('should not claim the playlist variant', async () => {
+  // A playlist names no single media, so it gets no poster: the poster endpoint answers about a
+  // media and 404s for anything else. It does have a player page, which discriminates, so the
+  // src is real even though the thumbnail would not be.
+  it('should claim the playlist variant without inventing a poster', async () => {
     const value = html`
       <amp-jwplayer data-playlist-id="482jsTAr" data-player-id="abc12345"></amp-jwplayer>
     `
+    const expected: EmbedResolverResult = {
+      provider: 'jwplayer',
+      id: 'playlist/482jsTAr',
+      src: 'https://cdn.jwplayer.com/players/482jsTAr.html',
+    }
 
-    expect(await extract(value)).toBeUndefined()
+    expect(await extract(value)).toEqual(expected)
+  })
+
+  // AMP's own builder gives the playlist id precedence when both are present.
+  it('should prefer the playlist id over the media id', async () => {
+    const value = html`
+      <amp-jwplayer
+        data-playlist-id="482jsTAr"
+        data-media-id="nPripu9l"
+        data-player-id="abc12345"
+      ></amp-jwplayer>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'jwplayer',
+      id: 'playlist/482jsTAr',
+      src: 'https://cdn.jwplayer.com/players/482jsTAr.html',
+    }
+
+    expect(await extract(value)).toEqual(expected)
   })
 })
 
