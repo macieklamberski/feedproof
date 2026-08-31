@@ -8,7 +8,7 @@ const numericIdRegex = /^\d+$/
 
 const simplecastHosts = ['simplecast.com']
 
-// Fixed across every specimen: 200 in 75 of 75 sampled corpus iframes.
+// The one height every iframe states.
 const playerHeight = 200
 
 // Four generations, all naming the same episode: `player.simplecast.com/{uuid}` is current,
@@ -45,8 +45,8 @@ export const extractSimplecastEpisode = (
 // episode that does not exist. One redirect hop is the cost of not knowing the modern id.
 //
 // Status codes prove nothing on this host: `player.simplecast.com/{anything}` answers 200 with
-// the same 835-byte app shell, because the id is resolved by javascript. Only the legacy host
-// validates, answering 404 for an unknown id.
+// the same app shell, because the id is resolved by javascript. Only the legacy host validates,
+// answering 404 for an unknown id.
 export const simplecastResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const episode = extractSimplecastEpisode(url)
 

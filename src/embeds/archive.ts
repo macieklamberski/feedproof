@@ -9,8 +9,8 @@ const safeIdentifierRegex = /^[\w.-]+$/
 
 const archiveHosts = ['archive.org']
 
-// The Internet Archive embeds an item as `archive.org/embed/{identifier}`, in 1,530 corpus
-// feeds. The iframe renders on its own, so what this adds is the poster: every item has a
+// The Internet Archive embeds an item as `archive.org/embed/{identifier}`. The iframe renders
+// on its own, so what this adds is the poster: every item has a
 // thumbnail at `archive.org/services/img/{identifier}`, filled from the identifier alone with no
 // network call, which is what earns a resolver over the generic iframe placeholder. It also has a
 // real page to open, at `archive.org/details/{identifier}`.
@@ -19,10 +19,10 @@ const archiveHosts = ['archive.org']
 // used curl's default and read the service as unavailable. A real identifier answers 200
 // image/jpeg and its details page 200, while an invented one answers 404 for both embed and
 // details. The thumbnail service is the exception, answering 200 for anything: an unknown
-// identifier gets a generic 2,212-byte png, not an error, so a poster that turns out
+// identifier gets a generic placeholder png, not an error, so a poster that turns out
 // to be the placeholder is the one failure this cannot rule out.
 // Some publisher tooling wrote `embed/{identifier}&playlist=1`, an ampersand where the query
-// should begin, so the whole tail lands inside the path segment. The corpus carries it with
+// should begin, so the whole tail lands inside the path segment. Feeds carry it with
 // `playlist=1` and `autoplay=1`, and with the ampersand entity-encoded. Against a live item the
 // `&` spelling answers 404 and the `?` spelling answers 200.
 const readSegmentParts = (link: string): { head: string; strayParams: string } => {

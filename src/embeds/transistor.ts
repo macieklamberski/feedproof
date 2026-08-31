@@ -10,8 +10,8 @@ const safeSlugRegex = /^[0-9a-z][0-9a-z-]{1,60}$/i
 
 const transistorHosts = ['transistor.fm']
 
-// Fixed at 180 across 49 of 49 sampled corpus iframes, and Transistor's own oEmbed agrees.
-// The playlist embed is taller, so the two kinds are sized apart instead of averaged. A
+// Real iframes fix the episode player at 180, and Transistor's own oEmbed agrees. The
+// playlist embed is taller, so the two kinds are sized apart instead of averaged. A
 // `/latest` player holds one episode and matches the episode height. `/playlist` holds the
 // whole show and matches the show one.
 const playerHeights = { e: 180, s: 390, latest: 180, playlist: 390 }
@@ -22,8 +22,8 @@ const subjectNames = { e: 'episode', s: 'show', latest: 'latest', playlist: 'pla
 // A second segment naming a show mode is part of the subject, not decoration. `/e/{slug}/latest`
 // is the newest episode of a show and `/e/{slug}/playlist` the whole show, so dropping the
 // segment mints `/e/{slug}`, which asks for an episode by a show's name: checked live against
-// Transistor's own examples, `/e/megamaker/latest` serves a 109 KB player while `/e/megamaker`
-// answers 404. Every other trailing segment, `/dark` among them, really is a display option on
+// Transistor's own examples, `/e/megamaker/latest` serves a working player while
+// `/e/megamaker` answers 404. Every other trailing segment, `/dark` among them, really is a display option on
 // an episode id and is discarded.
 const showModes = ['latest', 'playlist'] as const
 

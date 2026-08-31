@@ -9,7 +9,7 @@ const safeSegmentRegex = /^[A-Za-z0-9._-]+$/
 // spotify.com hosts but rejects these paths, so they fall through to here.
 const anchorHosts = ['anchor.fm', 'podcasters.spotify.com', 'creators.spotify.com']
 
-// Sampled from the corpus: the anchor and podcasters players are 102, the creators one 204.
+// The anchor and podcasters players are 102 tall, the creators one 204.
 const playerHeights = { creators: 204, other: 102 }
 
 // `anchor.fm/{show}/embed/episodes/{slug}`,

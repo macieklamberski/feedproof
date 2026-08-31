@@ -28,9 +28,9 @@ const tweetHosts = [
   'twittpr.com',
 ]
 
-// Nitter is self-hosted, so its instances cannot be listed: the corpus holds seven of them and
-// xcancel.com is an eighth under a name of its own. What the rest share is the software's name as
-// a whole host label, so that is the guard, together with the status path a match still needs.
+// Nitter is self-hosted, so its instances cannot be listed: real feeds frame a handful of them,
+// and xcancel.com is one more under a name of its own. What the rest share is the software's name
+// as a whole host label, so that is the guard, together with the status path a match still needs.
 // Matching `nitter` as a substring would claim theordinaryknitter.net, a real feed host.
 const nitterHostRegex = /(^|\.)nitter\./
 
@@ -251,8 +251,7 @@ export const twitterSubstackEmbedResolver = createMarkupEmbedResolver(
 
 // The player a stored-after-render copy already points at, and the one this resolver mints, so
 // a feed carrying the frame alone still names its provider. The player has two spellings with
-// the same `id` query: the corpus holds 1,390 `Tweet.html` and 161 `index.html` frames across
-// 445 feeds.
+// the same `id` query, and both occur in real feeds.
 const playerPaths = new Set(['/embed/Tweet.html', '/embed/index.html'])
 
 // A carrier framing the status page rather than the player, which is what a wrapper writes when

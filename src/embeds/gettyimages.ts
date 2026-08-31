@@ -9,15 +9,14 @@ const embedPathRegex = /^\/embed\/(\d+)\/?$/
 
 const gettyImagesHost = 'gettyimages.com'
 
-// Getty ships an embed two ways. 136 corpus feeds carry the player iframe, which renders on its
-// own. The other 285 carry the `gie` widget: an `<a class="gie-single">` naming the photo page,
-// an inline `<script>` holding the whole configuration, and a loader script. The widget never
-// runs in a reader, so those feeds show a bare "Embed from Getty Images" link where the photo
-// should be. That is a partial loss rather than a silent one, which is why this ranks below the
-// carriers that vanish outright.
+// Getty ships an embed two ways: the player iframe, which renders on its own, and the `gie`
+// widget, an `<a class="gie-single">` naming the photo page, an inline `<script>` holding the
+// whole configuration, and a loader script. The widget never runs in a reader, so those feeds
+// show a bare "Embed from Getty Images" link where the photo should be. That is a partial loss
+// rather than a silent one, which is why this ranks below the carriers that vanish outright.
 //
 // The configuration is enough to rebuild the working player offline, verified live 2026-08-21:
-// the url composed from a corpus specimen's own config answers 200, and the same url carrying a
+// the url composed from a specimen's own config answers 200, and the same url carrying a
 // signature lifted from a different specimen answers 400. The signature is bound to the item, so
 // the 200 means the photo and not a shell that greets anything. A specimen signature for a photo
 // shot in October 2015 still answered 200, so these do not appear to expire.

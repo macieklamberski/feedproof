@@ -11,10 +11,9 @@ const acastHosts = ['embed.acast.com', 'player.acast.com']
 
 // Every carrier form redirects to the one current player, and that player is 190 tall: Acast's
 // share code writes `height="190px"` and its pages state `twitter:player:height` 190. Recent
-// snippets in the corpus agree (78 of 188 sampled iframes across 43 feeds, 2026-08-15). The
-// other runs, 110 (44, mostly the retired `player.acast.com` host) and 120 (17, one feed),
-// sized players that no longer exist. So the resolver's height stands over what a carrier
-// states.
+// snippets agree, while the other heights feeds carry, 110 (mostly the retired
+// `player.acast.com` host) and 120, sized players that no longer exist. So the resolver's
+// height stands over what a carrier states.
 const playerHeight = 190
 
 // The three spellings a feed carries all redirect to the plain `embed.acast.com/{show}/{episode}`

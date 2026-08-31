@@ -8,10 +8,9 @@ const safeViewIdRegex = /^[0-9a-f]{24}$/i
 
 const geniallyHosts = ['genially.com', 'genial.ly']
 
-// Genially publishes interactive presentations, and 362 corpus feeds embed one: 232 on the old
-// `view.genial.ly` host and 130 on `view.genially.com`. The iframe renders either way, so this
-// is not a repair of dead markup. What it does is spare the reader a redirect and give the
-// embed a name.
+// Genially publishes interactive presentations, embedded on the old `view.genial.ly` host and
+// on `view.genially.com` alike. The iframe renders either way, so this is not a repair of dead
+// markup. What it does is spare the reader a redirect and give the embed a name.
 //
 // `view.genial.ly/{id}` answers 301 to `view.genially.com/{id}`, the same id on the new host,
 // so unlike a legacy id space this rewrite is computable. It is checkable too: a real id

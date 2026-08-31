@@ -4,10 +4,9 @@ import { attr, find, text } from '../utils/dom.js'
 
 // XenForo forums expand a pasted link into an "unfurl" block. The URL and host sit on the
 // wrapper, and each field carries a `js-unfurl-*` hook alongside its theme classes. The
-// hooks are what this reads first: they are near-universal across the corpus (title and favicon
-// in 1,283 of 1,284 feeds) while the theme classes vary from site to site. The theme classes are
-// the fallback for the 21 feeds whose markup ships without the hooks, and for the 23 whose figure
-// carries the image under its own class instead of under the hook.
+// hooks are what this reads first: they are near-universal while the theme classes vary from
+// site to site. The theme classes are the fallback for the rare feeds whose markup ships without
+// the hooks, or whose figure carries the image under its own class instead of under the hook.
 export const xenforoCiteResolver: CiteResolver = {
   selector: '.bbCodeBlock--unfurl[data-url]',
   extract: (element) => {

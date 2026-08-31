@@ -6,8 +6,8 @@ const safeIdRegex = /^\d+$/
 
 const blubrryHosts = ['blubrry.com']
 
-// 138 across the sampled corpus specimens. Blubrry publishes no oEmbed, so this and the
-// provider tag are what the resolver adds.
+// The player is 138 tall. Blubrry publishes no oEmbed, so this and the provider tag are what
+// the resolver adds.
 const playerHeight = 138
 
 // Two forms: `/id/{episodeId}/` names the episode, while `/?media_url={mp3}` names the file

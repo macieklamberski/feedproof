@@ -93,8 +93,7 @@ const readDocumentUrl = (url: string): EmbedResolverResult | undefined => {
 
 // Issuu's inline embed is an empty `<div class="issuuembed">` that `e.issuu.com/embed.js`
 // hydrates into an iframe at runtime. With no script running there is nothing in the markup at
-// all, so the div is dropped as empty and the document goes with it: 481 corpus feeds lose one
-// that way, against 441 carrying `div[data-configid]` and 535 carrying the class.
+// all, so the div is dropped as empty and the document goes with it.
 //
 // The loader is what says how each attribute addresses the reader. It reads `data-configid` into
 // the hash of `e.issuu.com/embed.html`, and parses `data-url` into the `u`, `d` and `p` query the

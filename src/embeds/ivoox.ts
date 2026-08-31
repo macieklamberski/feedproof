@@ -18,9 +18,9 @@ const showPlayerRegex = /player_es_podcast_(\d+)(?:_\d+)?_\d+\.html/
 
 const ivooxHosts = ['ivoox.com']
 
-// 200 in 26 of 34 sampled corpus iframes on the current player. The rest are 120, which looks
-// like a compact skin. A size in the markup wins over this, so it only applies where the
-// publisher stated none.
+// What most iframes on the current player state. The rest are 120, which looks like a compact
+// skin. A size in the markup wins over this, so it only applies where the publisher stated
+// none.
 const playerHeight = 200
 
 export type IvooxSubject = { kind: 'episode' | 'show'; id: string; skin: string; player: string }

@@ -15,9 +15,8 @@ const vimeoHosts = ['vimeo.com', 'player.vimeo.com']
 
 // Paths whose leading numeric id is not a video: a showcase and an album are playlists, an event
 // is a livestream and an on-demand page is a store front, and each lives in its own id space, so
-// that id would mint a player for an unrelated video. 43 corpus feeds carry showcase and event
-// between them. A collection can still name a real video deeper in its path, which is what
-// readCollectionVideoId reads.
+// that id would mint a player for an unrelated video. A collection can still name a real video
+// deeper in its path, which is what readCollectionVideoId reads.
 const collectionPaths = new Set(['showcase', 'album', 'event', 'ondemand'])
 
 // An album spells it `/album/{albumId}/video/{videoId}` and a showcase the same way, while an
@@ -95,10 +94,9 @@ export const extractVimeoId = (link: string): string | undefined => {
 // rather than picked from the query, because it also arrives as a path segment.
 const vimeoEmbedParams = ['t']
 
-// The `title` a share snippet writes is the video's own title about half the time and a player
-// label the rest: measured across 1,590,608 corpus feeds, 2,165 Vimeo iframes state a title and
-// 277 of those are a label. The labels are not filtered. They are localised into at least five
-// languages and some name a plugin, not the platform, so any list of them goes stale.
+// The `title` a share snippet writes is usually the video's own title, but sometimes a player
+// label. The labels are not filtered. They are localised into at least five languages and some
+// name a plugin, not the platform, so any list of them goes stale.
 export const vimeoResolveEmbed = (
   url: string,
   element?: Element,

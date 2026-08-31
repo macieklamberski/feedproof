@@ -12,7 +12,7 @@ const channelFacadePattern = /\bwistia_channel\b/
 // The script form names the media as a JSONP payload: `/embed/medias/{id}.jsonp`.
 const scriptMediaPattern = /\/embed\/medias\/([A-Za-z0-9]+)(?:\.jsonp)?/
 
-// Every id sampled from the corpus is exactly 10 alphanumeric characters.
+// Real ids are exactly 10 alphanumeric characters.
 const mediaIdRegex = /^[A-Za-z0-9]{10}$/
 
 // Three carriers, one player. The `wistia_async_{id}` div is the JS-API inline embed, the
