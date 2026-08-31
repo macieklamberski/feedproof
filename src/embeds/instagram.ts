@@ -20,9 +20,27 @@ const instagramHosts = ['instagram.com', 'instagr.am']
 // the retired IGTV route. They are not interchangeable: a live photo serves its picture at
 // `/p/{shortcode}/media/` and answers 404 at `/reel/{shortcode}/media/` (checked 2026-08-13),
 // so the path stays part of the id.
-// `/reel/audio/{id}` and `/reels/audio/{id}` name a sound, not a post, and Instagram publishes
-// no embed for a sound. Read as a post, the literal `audio` became the shortcode.
-const postPathRegex = /^\/(p|reels?(?!\/audio\b)|tv)\/([A-Za-z0-9_-]+)/
+// `audio` sits where a shortcode does, under `/reels/audio/{id}`, and names a sound, not a post.
+const nonShortcodeSegments = new Set(['audio'])
+
+// Instagram's own routes sit where an account does: `share/p/{token}` carries a redirect
+// token, not a shortcode, and reading it as one mints a frame that cannot load.
+const sitePathSegments = new Set([
+  'about',
+  'accounts',
+  'api',
+  'challenge',
+  'developer',
+  'direct',
+  'explore',
+  'legal',
+  'share',
+  'stories',
+  'web',
+])
+
+// The account names the poster, not the post, so it is matched and dropped.
+const postPathRegex = /^\/(?:([A-Za-z0-9_.]{1,30})\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/
 const safeShortcodeRegex = /^[A-Za-z0-9_-]+$/
 
 type Post = { kind: string; shortcode: string }
@@ -40,7 +58,15 @@ const readPostUrl = (value: string | undefined): Post | undefined => {
     return
   }
 
-  return { kind: match[1] === 'reels' ? 'reel' : match[1], shortcode: match[2] }
+  if (match[1] && sitePathSegments.has(match[1])) {
+    return
+  }
+
+  if (nonShortcodeSegments.has(match[3])) {
+    return
+  }
+
+  return { kind: match[2] === 'reels' ? 'reel' : match[2], shortcode: match[3] }
 }
 
 // The captioned frame renders the post's text under the picture, so which of the two a

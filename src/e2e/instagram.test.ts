@@ -319,4 +319,29 @@ describeForEachParser('Instagram', (parseHtml) => {
     `
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(value)
   })
+
+  // The account may sit in front of the post, which is a web route rather than the bare
+  // permalink. It names the poster, not the post, so it mints the same frame the bare path does.
+  it('should convert a post addressed through its account', async () => {
+    const value = '<iframe src="https://www.instagram.com/aseverofficial/p/CaUsPbUquKV/"></iframe>'
+    const expected = html`
+      <div
+        data-embed-src="https://www.instagram.com/p/CaUsPbUquKV/embed/"
+        data-embed-provider="instagram"
+        data-embed-id="p/CaUsPbUquKV"
+        data-embed-url="https://www.instagram.com/p/CaUsPbUquKV/"
+      ></div>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
+  // Instagram's own routes take the same shape as a handle. The share route names a redirect
+  // token rather than a shortcode, so claiming it would frame a post that does not exist.
+  it('should leave a share link to the generic placeholder', async () => {
+    const value = '<iframe src="https://www.instagram.com/share/p/BAJ0RmC0Vq/"></iframe>'
+    const expected = '<div data-embed-src="https://www.instagram.com/share/p/BAJ0RmC0Vq/"></div>'
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
 })

@@ -591,6 +591,75 @@ describe('instagramResolveEmbed', () => {
     expect(instagramResolveEmbed(value)).toEqual(expected)
   })
 
+  // The app's share sheet writes the account in front of the post today. It names the poster
+  // rather than the post, so the placeholder is the same one the bare path yields.
+  it('should read a post addressed through its account', () => {
+    const value = 'https://www.instagram.com/aseverofficial/p/CaUsPbUquKV/?utm_source=ig_embed'
+    const expected: EmbedResolverResult = {
+      provider: 'instagram',
+      id: 'p/CaUsPbUquKV',
+      src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
+      url: 'https://www.instagram.com/p/CaUsPbUquKV/',
+    }
+
+    expect(instagramResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should read a reel addressed through its account', () => {
+    const value = 'https://www.instagram.com/aseverofficial/reel/CaUsPbUquKV/'
+    const expected: EmbedResolverResult = {
+      provider: 'instagram',
+      id: 'reel/CaUsPbUquKV',
+      src: 'https://www.instagram.com/reel/CaUsPbUquKV/embed/',
+      url: 'https://www.instagram.com/reel/CaUsPbUquKV/',
+    }
+
+    expect(instagramResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should return undefined for an account page naming no post', () => {
+    const value = 'https://www.instagram.com/makoto57gpr?igsh=MWVhNHdjZXZvbDByZA=='
+
+    expect(instagramResolveEmbed(value)).toBeUndefined()
+  })
+
+  // `audio` sits where a shortcode does but names the sound a reel used, not a post. Instagram
+  // spells the route under both the singular and the plural, and either reads as a post without
+  // the exclusion.
+  it.each([
+    'https://www.instagram.com/reels/audio/123456789/',
+    'https://www.instagram.com/reel/audio/123456789/',
+    'https://www.instagram.com/reels/audio',
+  ])('should return undefined for the sound page %s', (value) => {
+    expect(instagramResolveEmbed(value)).toBeUndefined()
+  })
+
+  // The exclusion is a whole segment, so a real shortcode merely beginning with those five
+  // letters still resolves.
+  it('should still read a shortcode beginning with audio', () => {
+    const value = 'https://www.instagram.com/reels/audioXYZ123/'
+    const expected: EmbedResolverResult = {
+      provider: 'instagram',
+      id: 'reel/audioXYZ123',
+      src: 'https://www.instagram.com/reel/audioXYZ123/embed/',
+      url: 'https://www.instagram.com/reel/audioXYZ123/',
+    }
+
+    expect(instagramResolveEmbed(value)).toEqual(expected)
+  })
+
+  // Instagram's own routes take the same shape as a handle, and the share route names a
+  // different id space: reading its token as a shortcode would mint a frame that cannot load.
+  it.each([
+    'https://www.instagram.com/share/p/BAJ0RmC0Vq/',
+    'https://www.instagram.com/share/reel/BAJ0RmC0Vq/',
+    'https://www.instagram.com/explore/p/CaUsPbUquKV/',
+    'https://www.instagram.com/stories/p/CaUsPbUquKV/',
+    'https://www.instagram.com/accounts/p/CaUsPbUquKV/',
+  ])('should return undefined for %s', (value) => {
+    expect(instagramResolveEmbed(value)).toBeUndefined()
+  })
+
   it('should return undefined for a profile frame', () => {
     const value = 'https://www.instagram.com/someuser/embed/'
 
