@@ -21,7 +21,7 @@ describe('extractMegaphoneEmbed', () => {
       param: 'p',
       kind: 'playlist',
       id: 'NSM7546490835',
-      height: 480,
+      height: 482,
     }
 
     expect(extractMegaphoneEmbed(value)).toEqual(expected)
@@ -73,7 +73,7 @@ describe('extractMegaphoneEmbed', () => {
     },
   )
 
-  // The digit run is the part the sample supports, so it stays exact.
+  // The digit run is the part the data supports, so it stays exact.
   it('should not read an id whose digit run is not exactly ten', () => {
     const value = 'https://playlist.megaphone.fm/?e=GLT46534611423'
 
@@ -87,7 +87,7 @@ describe('extractMegaphoneEmbed', () => {
       param: 'p',
       kind: 'playlist',
       id: 'sciencevs',
-      height: 480,
+      height: 482,
     }
 
     expect(extractMegaphoneEmbed(value)).toEqual(expected)
@@ -114,7 +114,7 @@ describe('megaphoneResolveEmbed', () => {
       provider: 'megaphone',
       id: 'playlist/NSM7546490835',
       src: 'https://playlist.megaphone.fm/?p=NSM7546490835',
-      height: 480,
+      height: 482,
     }
 
     expect(megaphoneResolveEmbed(value)).toEqual(expected)
