@@ -27,15 +27,24 @@ describe('extractLibsynEmbed', () => {
     expect(extractLibsynEmbed(value)).toEqual(expected)
   })
 
-  it('should read a show player', () => {
-    const value = 'https://play.libsyn.com/embed/show/id/12345/height/200/'
+  it('should read a destination player', () => {
+    const value = 'https://play.libsyn.com/embed/destination/id/12345/height/200/'
     const expected = {
-      kind: 'show',
+      kind: 'destination',
       id: '12345',
       height: 200,
     }
 
     expect(extractLibsynEmbed(value)).toEqual(expected)
+  })
+
+  // `show` reads like a kind and is not one. Given a real show id the player renders the same
+  // "Episode Does Not Exist" error a nonsense kind renders, so minting it hands the reader an
+  // error where the generic placeholder would at least be honest.
+  it('should not read a show player, which does not exist', () => {
+    const value = 'https://play.libsyn.com/embed/show/id/12345/height/200/'
+
+    expect(extractLibsynEmbed(value)).toBeUndefined()
   })
 
   it('should read an embed that states no height', () => {
