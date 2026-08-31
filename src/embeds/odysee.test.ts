@@ -171,6 +171,21 @@ describeForEachParser('odyseeEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // The same redirect as lbry.tv, and the same repair: the path survives it intact.
+    it('should resolve the open.lbry.com host onto odysee', async () => {
+      const value = html`
+        <iframe src="https://open.lbry.com/$/embed/webb-repersoning/7"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'odysee',
+        id: 'webb-repersoning:7',
+        src: 'https://odysee.com/$/embed/webb-repersoning:7',
+        url: 'https://odysee.com/webb-repersoning:7',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('a claim named without its id', () => {
