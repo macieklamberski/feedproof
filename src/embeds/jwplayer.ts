@@ -23,15 +23,18 @@ export const extractJwplayerId = (link: string): string | undefined => {
   return keepIfMatches(mediaId, safeMediaIdRegex)
 }
 
-const composeJwplayerEmbed = (mediaId: string): EmbedResolverResult => {
+// The poster endpoint answers about a media and 404s for anything else, so a playlist id must
+// not reach it. AMP's own component applies the same rule, rendering a placeholder image only
+// when the element names a media.
+const composeJwplayerEmbed = (id: string, isPlaylist = false): EmbedResolverResult => {
   return {
     provider: 'jwplayer',
-    id: mediaId,
+    id: isPlaylist ? `playlist/${id}` : id,
     // Rebuilt from the id, so the empty player-id segment some feeds ship
     // (`{mediaId}-.html`, which 404s) is dropped and the URL loads the default player.
     // JW Player has no public watch page, so no `url`: the placeholder anchors to the src.
-    src: `https://cdn.jwplayer.com/players/${mediaId}.html`,
-    thumbnail: `https://cdn.jwplayer.com/v2/media/${mediaId}/poster.jpg`,
+    src: `https://cdn.jwplayer.com/players/${id}.html`,
+    ...(!isPlaylist && { thumbnail: `https://cdn.jwplayer.com/v2/media/${id}/poster.jpg` }),
   }
 }
 
@@ -69,16 +72,19 @@ export const jwplayerScriptEmbedResolver = createMarkupEmbedResolver(
 // AMP's own JW Player element, which renders nothing without the AMP runtime. It names the
 // media in `data-media-id` beside the account's `data-player-id`. The player id only picks a
 // skin, so the media id alone rebuilds the same player page as the other two forms.
+// A playlist is named by `data-playlist-id`, and AMP's own builder gives it precedence over the
+// media id when both are present, so the same order is followed here.
 export const jwplayerAmpEmbedResolver = createMarkupEmbedResolver(
-  'amp-jwplayer[data-media-id]',
+  'amp-jwplayer[data-media-id], amp-jwplayer[data-playlist-id]',
   (element) => {
-    const mediaId = attr(element, 'data-media-id')
+    const playlistId = attr(element, 'data-playlist-id')
+    const id = playlistId ?? attr(element, 'data-media-id')
 
-    if (!mediaId || !safeMediaIdRegex.test(mediaId)) {
+    if (!id || !safeMediaIdRegex.test(id)) {
       return
     }
 
-    return composeJwplayerEmbed(mediaId)
+    return composeJwplayerEmbed(id, !!playlistId)
   },
 )
 
