@@ -131,6 +131,41 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // A sound page, not a post: the kind would read as a reel and the literal `audio` as the
+    // shortcode. Instagram spells it under both the singular and the plural.
+    it.each([
+      'https://www.instagram.com/reels/audio/1234567890/',
+      'https://www.instagram.com/reel/audio/1234567890/',
+      'https://www.instagram.com/reels/audio',
+    ])('should not read the sound page %s as a post', async (url) => {
+      const value = html`
+        <blockquote
+          class="instagram-media"
+          data-instgrm-permalink="${url}"
+        ></blockquote>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // The boundary keeps a real shortcode that merely begins with those letters.
+    it('should still read a shortcode beginning with audio', async () => {
+      const value = html`
+        <blockquote
+          class="instagram-media"
+          data-instgrm-permalink="https://www.instagram.com/reels/audioXYZ123/"
+        ></blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'reel/audioXYZ123',
+        src: 'https://www.instagram.com/reel/audioXYZ123/embed/',
+        url: 'https://www.instagram.com/reel/audioXYZ123/',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('the retired IGTV permalink', () => {

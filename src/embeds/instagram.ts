@@ -20,7 +20,9 @@ const instagramHosts = ['instagram.com', 'instagr.am']
 // the retired IGTV route. They are not interchangeable: a live photo serves its picture at
 // `/p/{shortcode}/media/` and answers 404 at `/reel/{shortcode}/media/` (checked 2026-08-13),
 // so the path stays part of the id.
-const postPathRegex = /^\/(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/
+// `/reel/audio/{id}` and `/reels/audio/{id}` name a sound, not a post, and Instagram publishes
+// no embed for a sound. Read as a post, the literal `audio` became the shortcode.
+const postPathRegex = /^\/(p|reels?(?!\/audio\b)|tv)\/([A-Za-z0-9_-]+)/
 const safeShortcodeRegex = /^[A-Za-z0-9_-]+$/
 
 type Post = { kind: string; shortcode: string }
