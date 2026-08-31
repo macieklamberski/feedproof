@@ -62,6 +62,7 @@ describe('dailymotionResolveEmbed', () => {
       src: 'https://www.dailymotion.com/embed/video/x7tgad0',
       url: 'https://www.dailymotion.com/video/x7tgad0',
       thumbnail: 'https://www.dailymotion.com/thumbnail/video/x7tgad0',
+      ratio: '16/9',
     }
 
     expect(dailymotionResolveEmbed(value)).toEqual(expected)
@@ -75,6 +76,7 @@ describe('dailymotionResolveEmbed', () => {
       src: 'https://www.dailymotion.com/embed/video/x8abcde?start=42',
       url: 'https://www.dailymotion.com/video/x8abcde',
       thumbnail: 'https://www.dailymotion.com/thumbnail/video/x8abcde',
+      ratio: '16/9',
     }
 
     expect(dailymotionResolveEmbed(value)).toEqual(expected)
@@ -88,6 +90,7 @@ describe('dailymotionResolveEmbed', () => {
       src: 'https://www.dailymotion.com/embed/video/x8abcde',
       url: 'https://www.dailymotion.com/video/x8abcde',
       thumbnail: 'https://www.dailymotion.com/thumbnail/video/x8abcde',
+      ratio: '16/9',
     }
 
     expect(dailymotionResolveEmbed(value)).toEqual(expected)
@@ -129,6 +132,7 @@ describe('dailymotionResolveEmbed', () => {
       src: 'https://www.dailymotion.com/embed/video/x7tgad0?playlist=x6zqmk',
       url: 'https://www.dailymotion.com/video/x7tgad0',
       thumbnail: 'https://www.dailymotion.com/thumbnail/video/x7tgad0',
+      ratio: '16/9',
     }
 
     expect(dailymotionResolveEmbed(value)).toEqual(expected)
@@ -146,6 +150,7 @@ describeForEachParser('dailymotionEmbedResolver', (parseHtml) => {
       src: 'https://www.dailymotion.com/embed/video/x7tgad0',
       url: 'https://www.dailymotion.com/video/x7tgad0',
       thumbnail: 'https://www.dailymotion.com/thumbnail/video/x7tgad0',
+      ratio: '16/9',
     }
 
     expect(await extract(value)).toEqual(expected)

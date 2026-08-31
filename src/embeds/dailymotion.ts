@@ -82,6 +82,7 @@ export const dailymotionResolveEmbed = (url: string): EmbedResolverResult | unde
       src: `https://www.dailymotion.com/embed/video/${videoId}${pickUrlParams(url, dailymotionEmbedParams)}`,
       url: `https://www.dailymotion.com/video/${videoId}`,
       thumbnail: `https://www.dailymotion.com/thumbnail/video/${videoId}`,
+      ratio: '16/9',
     }
   }
 
