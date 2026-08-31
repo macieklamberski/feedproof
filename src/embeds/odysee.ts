@@ -48,7 +48,10 @@ const readClaimPath = (parsed: URL): string | undefined => {
   }
 
   const [first, second] = segments
-  const isLegacyPair = segments.length === 2 && !first.includes(':')
+  // A leading `@` says the first segment is a channel and the second the claim inside it, so
+  // the pair stays two claims even when neither carries an id. Only a bare first segment reads
+  // as the legacy `{name}/{claim id}` spelling.
+  const isLegacyPair = segments.length === 2 && !first.includes(':') && !first.startsWith('@')
   const claims = isLegacyPair ? [`${first}:${second}`] : segments
 
   if (
