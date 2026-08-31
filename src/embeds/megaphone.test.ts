@@ -38,6 +38,41 @@ describe('extractMegaphoneEmbed', () => {
 
     expect(extractMegaphoneEmbed(value)).toBeUndefined()
   })
+
+  // The parameters on a media url belong to the publisher, not to Megaphone. NPR names its own
+  // story in `e` and its programme in `p`, and reading either turns playable audio into a player
+  // box for something else.
+  it('should not read a publisher parameter off the episode audio', () => {
+    const value = 'https://dcs.megaphone.fm/NPR9963319425.mp3?e=nx-s1-5501163&p=510310'
+
+    expect(extractMegaphoneEmbed(value)).toBeUndefined()
+  })
+
+  it('should not read a media url that names no parameter at all', () => {
+    const value = 'https://dcs.megaphone.fm/NPR9963319425.mp3'
+
+    expect(extractMegaphoneEmbed(value)).toBeUndefined()
+  })
+
+  // An episode id is letters followed by exactly ten digits, so a bare number is not one.
+  it('should not read a bare number as an episode id', () => {
+    const value = 'https://playlist.megaphone.fm/?e=510310'
+
+    expect(extractMegaphoneEmbed(value)).toBeUndefined()
+  })
+
+  // A playlist is named by a slug, which has no digit grammar to check.
+  it('should read a playlist named by a slug', () => {
+    const value = 'https://playlist.megaphone.fm/?p=sciencevs'
+    const expected = {
+      param: 'p',
+      kind: 'playlist',
+      id: 'sciencevs',
+      height: 480,
+    }
+
+    expect(extractMegaphoneEmbed(value)).toEqual(expected)
+  })
 })
 
 describe('megaphoneResolveEmbed', () => {
