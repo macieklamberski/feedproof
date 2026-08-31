@@ -56,6 +56,15 @@ export const parseUrlOnHosts = (
   }
 }
 
+// A path segment arrives with its percent-encoding intact, unlike a query value, which
+// `searchParams` decodes on read — so only path-reading extraction needs this. A malformed
+// escape decodes to nothing usable and is refused rather than thrown.
+export const decodeSegment = (segment: string | undefined): string | undefined => {
+  try {
+    return segment === undefined ? undefined : decodeURIComponent(segment)
+  } catch {}
+}
+
 // The same pick as `pickUrlParams`, for a query that arrives on its own, not on a url, which is
 // how a facade states its player options (`lite-youtube`'s `params`). Returns the pairs instead
 // of a string, so a caller can override one from a dedicated attribute before building.

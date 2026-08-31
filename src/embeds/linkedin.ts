@@ -1,11 +1,17 @@
 import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { keepIfMatches } from '../utils/dom.js'
+import { decodeSegment } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The urn LinkedIn writes into the embed path. Three types occur in the corpus, `share` in 263
 // feeds, `ugcPost` in 233 and `activity` in 12, and `article` is unobserved across two corpus
 // generations, so the type segment is matched as a word rather than enumerated.
+//
+// The urn is decoded before matching: a urn written with its colons escaped arrives as
+// `urn%3Ali%3Ashare%3A…` and would fail the pattern. LinkedIn serves both spellings, probed
+// live 2026-08-31: the escaped one answers 200 with a body byte-identical to the plain one,
+// and a urn that names no post answers 404 either way.
 const safeUrnRegex = /^urn:li:[a-zA-Z]+:\d{6,32}$/
 
 const linkedinHosts = ['linkedin.com']
@@ -32,7 +38,7 @@ const linkedinResolveEmbed = (link: string): EmbedResolverResult | undefined => 
     return
   }
 
-  const postUrn = keepIfMatches(urn, safeUrnRegex)
+  const postUrn = keepIfMatches(decodeSegment(urn), safeUrnRegex)
 
   if (!postUrn) {
     return

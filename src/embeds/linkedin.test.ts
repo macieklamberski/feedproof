@@ -62,6 +62,22 @@ describeForEachParser('linkedinEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // The same post with its colons escaped. LinkedIn serves the escaped spelling a body
+    // identical to the plain one, so the src stays as the publisher wrote it and only the id
+    // and the canonical url are built from the decoded urn.
+    it('should read a urn whose colons are percent-encoded', async () => {
+      const value =
+        '<iframe src="https://www.linkedin.com/embed/feed/update/urn%3Ali%3Ashare%3A6626097641602281472"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'linkedin',
+        id: 'urn:li:share:6626097641602281472',
+        src: 'https://www.linkedin.com/embed/feed/update/urn%3Ali%3Ashare%3A6626097641602281472',
+        url: 'https://www.linkedin.com/feed/update/urn:li:share:6626097641602281472',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
@@ -90,6 +106,21 @@ describeForEachParser('linkedinEmbedResolver', (parseHtml) => {
     it('should ignore a urn of the wrong shape', async () => {
       const value =
         '<iframe src="https://www.linkedin.com/embed/feed/update/urn:li:share:not-a-number"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // Decoding is only a spelling change, so the shape check still has to hold after it.
+    it('should ignore a percent-encoded urn of the wrong shape', async () => {
+      const value =
+        '<iframe src="https://www.linkedin.com/embed/feed/update/urn%3Ali%3Ashare%3Anot-a-number"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should ignore a urn carrying a malformed escape', async () => {
+      const value =
+        '<iframe src="https://www.linkedin.com/embed/feed/update/urn%3Ali%3Ashare%3A%E0%A4%A"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })
