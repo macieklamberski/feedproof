@@ -10,11 +10,11 @@ const sluggedUidRegex = /([0-9a-f]{32})$/i
 
 const sketchfabHosts = ['sketchfab.com']
 
-// The viewer is `sketchfab.com/models/{uid}/embed`, in 168 corpus feeds, and it is what the
-// two retired spellings redirect to: `/embed/{uid}` for the viewer and `/show/{uid}` for the
-// page. The page itself lives at `/3d-models/{slug}-{uid}`. The slug is not derivable from
-// the uid, so the minted url is the unslugged `/models/{uid}`, which the site redirects to it.
-// Checked live 2026-08-16: the viewer answers 200 for a real uid and 404 for an invented one.
+// The viewer is `sketchfab.com/models/{uid}/embed`, and it is what the two retired spellings
+// redirect to: `/embed/{uid}` for the viewer and `/show/{uid}` for the page. The page itself
+// lives at `/3d-models/{slug}-{uid}`. The slug is not derivable from the uid, so the minted url
+// is the unslugged `/models/{uid}`, which the site redirects to it. Checked live 2026-08-16:
+// the viewer answers 200 for a real uid and 404 for an invented one.
 //
 // The thumbnail sits under a per-model hash that the uid does not yield, so it is left to
 // enrichment. `sketchfab.com/oembed?url=…` answers with it and the title, with no key.

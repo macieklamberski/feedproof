@@ -19,16 +19,16 @@ const odyseeHosts = ['odysee.com', 'lbry.tv', 'open.lbry.com']
 // platform only the body separates a real claim from an invented one.
 const claimRegex = /^@?[^\s/?#<>"'\\:]+(?::[0-9a-f]+)?$/i
 
-// The player is `odysee.com/$/embed/{path}`, in 160 corpus feeds, and the path takes two
-// spellings. The current share code writes the channel and the claim as two segments,
-// `@channel:x/name:y`, and lately percent-encodes the whole path, `$` and `/` included, so
-// the pathname is decoded before it is split. The older code, and the lbry.tv redirect,
-// wrote the claim as `{name}/{claim id}` with a slash between the two halves. The same claim
-// spelled `{name}:{claim id}` answers the same page (both forms checked live 2026-08-16), and
-// that colon form is what odysee.com uses as the page path, so it is what the id is
-// normalized to. The id is then the page path itself, which is what makes it self-sufficient
-// for enrichment: `odysee.com/$/oembed?url=https://odysee.com/{id}` answers with the title,
-// author and thumbnail and needs no key.
+// The player is `odysee.com/$/embed/{path}`, and the path takes two spellings. The current
+// share code writes the channel and the claim as two segments, `@channel:x/name:y`, and lately
+// percent-encodes the whole path, `$` and `/` included, so the pathname is decoded before it is
+// split. The older code, and the lbry.tv redirect, wrote the claim as `{name}/{claim id}` with
+// a slash between the two halves. The same claim spelled `{name}:{claim id}` answers the same
+// page (both forms checked live 2026-08-16), and that colon form is what odysee.com uses as the
+// page path, so it is what the id is normalized to. The id is then the page path itself, which
+// is what makes it self-sufficient for enrichment:
+// `odysee.com/$/oembed?url=https://odysee.com/{id}` answers with the title, author and
+// thumbnail and needs no key.
 //
 // The `r=` query is a referral token the share dialog appends and is dropped with the rest of
 // the query. The thumbnail lives under a content hash the url does not carry.

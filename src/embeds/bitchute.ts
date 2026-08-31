@@ -8,8 +8,8 @@ const safeVideoIdRegex = /^[a-zA-Z0-9]{8,24}$/
 
 const bitchuteHosts = ['bitchute.com']
 
-// The player is `bitchute.com/embed/{id}/`, in 132 corpus feeds, and the page is
-// `bitchute.com/video/{id}/`, both on `www` and on the `old` host the previous site keeps.
+// The player is `bitchute.com/embed/{id}/` and the page is `bitchute.com/video/{id}/`, both
+// on `www` and on the `old` host the previous site keeps.
 // Checked live 2026-08-16: the player answers 200 for a real id and 404 for an invented one.
 //
 // The cover image sits under the channel's hash, which the video url does not carry, so the

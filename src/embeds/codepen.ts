@@ -37,7 +37,7 @@ const anonymousUser = 'anon'
 
 // What the share dialog writes when the author does not choose: its own snippet ships
 // `data-height="300"`, its docs call every attribute but the slug and user an optional override,
-// and 300 is the commonest value in the corpus. Stated here rather than left to the consumer's
+// and 300 is the commonest value feeds carry. Stated here rather than left to the consumer's
 // default, so the placeholder reserves the right space for a player that declares none. A
 // carrier that states a size or a shape of its own replaces it outright.
 const defaultPenHeight = 300
@@ -89,7 +89,7 @@ const readTitle = (element: Element | undefined): string | undefined => {
 
 const parseTarget = (value: string | undefined): CodepenTarget | undefined => {
   // A feed that encoded its html twice leaves a literal `&amp;` inside the url, which makes the
-  // parameter after it read as `amp;key` and hides it. One corpus file ships an iframe like that.
+  // parameter after it read as `amp;key` and hides it. Real feeds ship iframes like that.
   const parsed = parseUrl(value?.replaceAll('&amp;', '&') ?? '', 'https://example.com')
 
   if (!parsed || !isHostOf(parsed, codepenHosts)) {
@@ -97,9 +97,9 @@ const parseTarget = (value: string | undefined): CodepenTarget | undefined => {
   }
 
   const segments = getPathSegments(parsed)
-  // A team's pens sit one segment deeper, under `team/{name}/`. No sampled feed carries one, so
-  // this is read from the url shape rather than from a specimen: CodePen blocks automated
-  // requests, and the route could not be confirmed live.
+  // A team's pens sit one segment deeper, under `team/{name}/`. This is read from the url shape
+  // rather than from a specimen: CodePen blocks automated requests, and the route could not be
+  // confirmed live.
   const isTeam = segments[0] === 'team'
   const [rawUser, kind, ...rest] = isTeam ? segments.slice(1) : segments
 
@@ -165,7 +165,7 @@ const composeQuery = (target: CodepenTarget, forPlayer: boolean): string => {
 // alone selects it: five live pens checked on 2026-08-15 each returned their own render through
 // a fabricated username, which is what lets an author-less embed still carry a thumbnail.
 //
-// Four widths are served, 512 through 1280. 512 is the one measured as publicly reachable and
+// Four widths are served, 512 through 1280. 512 is the one verified publicly reachable and
 // CDN-cached, and a placeholder does not need more.
 //
 // The service answers 200 with a picture of CodePen's own 404 page once a pen is gone or private,

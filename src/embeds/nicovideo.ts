@@ -17,14 +17,14 @@ const nicovideoHosts = ['nicovideo.jp']
 // Three spellings, one video, and the legacy two are dead or dying.
 //
 // `ext.nicovideo.jp/thumb_watch/{id}` is a script that writes the player where it stands. It
-// never runs in a reader, so the video is lost: 566 corpus feeds carry it and 498 have no
-// nicovideo iframe anywhere. Nicovideo answers it with a 302 to
+// never runs in a reader, and most feeds carrying it hold no nicovideo iframe beside it, so the
+// video is lost. Nicovideo answers it with a 302 to
 // `embed.nicovideo.jp/watch/{id}/script`, so the platform itself names the modern target and
 // the id carries across unchanged (checked 2026-08-12).
 //
-// `ext.nicovideo.jp/thumb/{id}` is the old iframe card, in 345 feeds, and it now answers 403
-// to any user agent. Those embeds render nothing today, so rewriting them to the modern player
-// repairs them rather than merely relabelling.
+// `ext.nicovideo.jp/thumb/{id}` is the old iframe card, and it now answers 403 to any user
+// agent. Those embeds render nothing today, so rewriting them to the modern player repairs them
+// rather than merely relabelling.
 //
 // `embed.nicovideo.jp/watch/{id}` is what both become. It is one of the few player hosts where a
 // status code means something: a real id answers 200 with the video's title in the document, an
@@ -58,8 +58,7 @@ export const nicovideoResolveEmbed = (url: string): EmbedResolverResult | undefi
   }
 
   // A broadcast is served by the live host and nothing else, so the two kinds do not share a
-  // player url. No size is stated for it: the card's height has not been measured, and a guess
-  // would outrank the height the carrier states.
+  // player url. No size is stated for it: a guess would outrank the height the carrier states.
   if (liveIdRegex.test(videoId)) {
     return {
       provider: 'nicovideo',

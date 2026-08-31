@@ -4,9 +4,8 @@ import { attr, find, jsonAttr, text } from '../utils/dom.js'
 
 // Substack's two post-embed shapes are separate components, not generations of one:
 // today's editor emits `.embedded-post-wrap` when embedding another creator's post and
-// `.digest-post-embed` when embedding the publication's own post (verified 2026-07 at
-// 100% separation across 235 dated live embeds; the two key sets are disjoint across
-// 4,078 corpus specimens with zero mixed blobs). Both carry their card data in the
+// `.digest-post-embed` when embedding the publication's own post (verified 2026-07: the two
+// key sets are disjoint, with no mixed blobs). Both carry their card data in the
 // `data-attrs` JSON and are rendered client-side on Substack itself.
 type CrossPostAttrs = {
   title?: string

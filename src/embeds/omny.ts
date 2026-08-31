@@ -6,7 +6,7 @@ const safeSegmentRegex = /^[A-Za-z0-9._-]+$/
 
 const omnyHosts = ['omny.fm']
 
-// 180 in the majority of sampled corpus iframes, and Omny's own oEmbed agrees.
+// The height most iframes state, and Omny's own oEmbed agrees.
 const playerHeight = 180
 
 // `/shows/{show}/{clip}/embed` is a clip and `/shows/{show}/playlists/{slug}/embed` a playlist.
@@ -38,8 +38,7 @@ export const omnyResolveEmbed = (url: string): EmbedResolverResult | undefined =
   }
 
   // The query is carried through. `style=cover` and `size=` change the player's shape, so
-  // rebuilding a bare url would hand the publisher a different embed than the one they chose,
-  // and the height stated below was measured on specimens that had them.
+  // rebuilding a bare url would hand the publisher a different embed than the one they chose.
   const query = parseUrl(url, 'https://example.com')?.search ?? ''
 
   return {

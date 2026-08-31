@@ -3,8 +3,8 @@ import { attr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// A video hash is a short run of letters and digits: 314 of 425 corpus hashes are five characters
-// and the other 111 are seven, so the range is held open a little past both.
+// A video hash is a short run of letters and digits, five or seven characters in the wild, so
+// the range is held open a little past both.
 const safeVideoHashRegex = /^[a-zA-Z0-9]{5,10}$/
 
 const aparatHost = 'aparat.com'
@@ -12,10 +12,10 @@ const scriptPathRegex = /^\/embed\/([a-zA-Z0-9]+)$/
 const framePathRegex = /^\/video\/video\/embed\/videohash\/([a-zA-Z0-9]+)(?:\/vt\/frame)?\/?$/
 
 // Aparat is Iran's video platform and it embeds two ways. The dominant one is a WordPress-style
-// facade, a `<script src="aparat.com/embed/{hash}">` inside an empty div, in 326 of 338 corpus
-// feeds with no companion iframe anywhere. That script never runs in a reader and the div dies as
-// an empty tag, so today the video is deleted outright rather than degraded: the pipeline turns
-// the whole block into nothing. The other carrier is the player iframe itself, 138 feeds.
+// facade, a `<script src="aparat.com/embed/{hash}">` inside an empty div, usually with no
+// companion iframe anywhere. That script never runs in a reader and the div dies as an empty
+// tag, so today the video is deleted outright rather than degraded: the pipeline turns the
+// whole block into nothing. The other carrier is the player iframe itself.
 //
 // Both name the same player, so both resolve to the same placeholder.
 //
@@ -29,9 +29,9 @@ const composeEmbed = (videoHash: string): EmbedResolverResult => {
     id: videoHash,
     src: `https://www.aparat.com/video/video/embed/videohash/${videoHash}/vt/frame`,
     url: `https://www.aparat.com/v/${videoHash}`,
-    // 106 of the 130 corpus iframes that state a size are 16:9, so this is the platform's shape
-    // rather than a measurement of one player. It matters most on the script carrier, which
-    // states no size at all and is the majority of the population.
+    // Most iframes that state a size are 16:9, so this is the platform's shape rather than a
+    // measurement of one player. It matters most on the script carrier, which states no size
+    // at all and is the more common carrier.
     ratio: '16/9',
   }
 }

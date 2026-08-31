@@ -13,8 +13,8 @@ import { attr, find, text } from '../utils/dom.js'
 //
 // The selector names the attribute alone. Qualifying it as `figure[data-og-source-url]` would
 // miss any variant built from another element, and the collision it guards against does not
-// occur: of 801 occurrences measured across 1,590,608 feeds, every one carries the same
-// `data-og-*` family and none belongs to another platform.
+// occur: every occurrence carries the same `data-og-*` family and none belongs to another
+// platform.
 export const tistoryCiteResolver: CiteResolver = {
   selector: '[data-og-source-url]',
   extract: (element) => {

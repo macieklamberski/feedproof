@@ -17,10 +17,9 @@ const legacyPlayerPathRegex = /^\/slideshow\/index\.gne$/i
 // `URLSearchParams` decodes: `/photos/{owner}/sets/{setId}/show/` for an album and
 // `/photos/{owner}/show/` for a photostream.
 //
-// Measured across the 534 corpus feeds carrying this carrier: 366 hold `page_show_url` and 316
-// hold `set_id`, and none holds `set_id` without `page_show_url`, so the path is the one key
-// worth reading and the only one that also yields the owner. The photostream form is rare, 5
-// feeds, plus 6 that name the owner only in `user_id`.
+// No snippet holds `set_id` without `page_show_url`, so the path is the one key worth reading
+// and the only one that also yields the owner. The photostream form is rare, and a few snippets
+// name the owner only in `user_id`.
 const setPathRegex = /^\/photos\/([\w.@-]+)\/sets\/(\d+)/
 const streamPathRegex = /^\/photos\/([\w.@-]+)\/show\/?$/
 const groupPathRegex = /^\/groups\/(\d+@N\d\d)\/pool\/show\/?$/
@@ -33,7 +32,7 @@ const safeOwnerRegex = /^[\w-][\w.-]*(?:@N\d\d)?$/
 
 // A group and a photostream each resolve by NSID and only by NSID: the player answers 200 for
 // `groups/{nsid}` and for `photostreams/{nsid}`, and 404 for a path alias in either position.
-// The corpus spells `group_id` as an NSID in every non-mangled occurrence.
+// Feeds spell `group_id` as an NSID in every non-mangled occurrence.
 const safeNsidRegex = /^\d+@N\d\d$/
 
 // What a carrier names, whichever carrier and whichever spelling: an album needs its set, a
@@ -112,9 +111,8 @@ const readFlashSubject = (element: Element): FlickrSubject => {
   return { owner: stream?.[1] ?? config.get('user_id') ?? undefined }
 }
 
-// The iframe carrier names its subject in its own query. Of the 112 corpus feeds carrying it,
-// 94 name a set and 90 name a user. A set is preferred where several appear, being the
-// narrowest of the three.
+// The iframe carrier names its subject in its own query. A set is preferred where several
+// appear, being the narrowest of the three.
 const readLegacySubject = (parsed: URL): FlickrSubject => {
   return {
     setId: parsed.searchParams.get('set_id') ?? undefined,

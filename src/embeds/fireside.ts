@@ -24,10 +24,10 @@ const decodeSegment = (segment: string | undefined): string | undefined => {
   } catch {}
 }
 
-// Fireside's player is one fixed size: `height="200"` in 28 of 28 sampled corpus iframes.
-// That is the whole case for this resolver: the embed carries no metadata, no thumbnail and
-// no canonical episode url, so stating the height is what a reader gains, the same way
-// speakerdeckScriptEmbedResolver states its default deck ratio.
+// Fireside's player is one fixed size: every iframe states `height="200"`. That is the whole
+// case for this resolver: the embed carries no metadata, no thumbnail and no canonical episode
+// url, so stating the height is what a reader gains, the same way speakerdeckScriptEmbedResolver
+// states its default deck ratio.
 const playerHeight = 200
 
 type FiresidePlayer = { version: string; token: string }

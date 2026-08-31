@@ -8,7 +8,7 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // both places are read here instead of by whoever holds the element.
 //
 // The script lookup spans the whole document, so two players from two accounts would both take
-// the first account. Of 12.7M corpus feeds, the nine carrying a `data-video-id` element with no
+// the first account. In practice the rare feeds carrying a `data-video-id` element with no
 // `data-account` ship no loader script at all, so nothing has reached that branch.
 const brightcoveIdRegex = /^\d{5,}$/
 const accountScriptSelector = 'script[src*="players.brightcove.net"]'
@@ -38,8 +38,8 @@ const composePlayerUrl = (
 // Brightcove's in-page embed is a bare `<video-js>` that its loader script turns into a player,
 // so a reader shows nothing: the element is empty and survives as an unknown tag. The older
 // syntax is a `<video class="video-js">` carrying the identical attributes, which renders as an
-// empty video element instead: all 26 corpus feeds that ship the loader with no `<video-js>`
-// and no iframe are that form. Video.js is only the renderer here. The video is Brightcove's,
+// empty video element instead: every feed that ships the loader with no `<video-js>` and no
+// iframe is that form. Video.js is only the renderer here. The video is Brightcove's,
 // named by id, which is why this lives with the rest of Brightcove rather than with the generic
 // Video.js rebuild. Brightcove has no public watch page, so the placeholder carries no `url`.
 export const brightcoveVideoJsEmbedResolver = createMarkupEmbedResolver(
@@ -55,8 +55,8 @@ export const brightcoveVideoJsEmbedResolver = createMarkupEmbedResolver(
     // Video.js is a library anyone can use, and `data-video-id` is not a name only Brightcove
     // could have chosen, so the ids have to look like Brightcove's before this mints a
     // Brightcove url from them. Both are long digit strings, the same test the other two
-    // resolvers here apply. In the corpus the inference is safe anyway: 116 of the 120 feeds
-    // carrying this element also ship the `players.brightcove.net` loader script.
+    // resolvers here apply. In practice the inference is safe anyway: nearly every feed
+    // carrying this element also ships the `players.brightcove.net` loader script.
     const videoId = keepIfMatches(attr(element, 'data-video-id'), brightcoveIdRegex)
     const account = videoId
       ? keepIfMatches(readPlayerAccount(element), brightcoveIdRegex)
@@ -128,9 +128,9 @@ export const brightcoveFlashEmbedResolver = createUrlEmbedResolver(
 )
 
 // The player page as an ordinary iframe, `players.brightcove.net/{account}/{player}_{embed}
-// /index.html?videoId={id}`. It is the most common Brightcove carrier in the corpus at 243
-// feeds, more than the `<video-js>` element, and unclaimed it falls through to the generic
-// placeholder with no provider and no id.
+// /index.html?videoId={id}`. It is the most common Brightcove carrier, more common than the
+// `<video-js>` element, and unclaimed it falls through to the generic placeholder with no
+// provider and no id.
 //
 // The account and video id are read back out, not the url passed through whole, because
 // the pair is what an enricher would key on later, and because a player url carrying neither is

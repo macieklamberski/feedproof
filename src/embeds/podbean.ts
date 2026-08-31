@@ -8,9 +8,9 @@ const safeIdRegex = /^[a-z0-9]+-[a-z0-9]+(?:-pb)?$/i
 
 const podbeanHosts = ['podbean.com']
 
-// The v2 player's height, which is what both url forms end up rendering. Sampled from the
-// corpus: `player-v2` embeds carry 150 in 10 of 11 cases, while the legacy markup states 122
-// for a player Podbean no longer serves. Where the url spells `size=` it wins.
+// The v2 player's height, which is what both url forms end up rendering and what nearly every
+// `player-v2` embed carries, while the legacy markup states 122 for a player Podbean no longer
+// serves. Where the url spells `size=` it wins.
 const defaultPlayerHeight = 150
 
 export const extractPodbeanId = (link: string): string | undefined => {

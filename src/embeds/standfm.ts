@@ -12,8 +12,8 @@ const playerKinds = new Set(['episodes', 'channels'])
 
 // A single episode and a whole channel are different players and different sizes, so the kind is
 // carried into the id. Both discriminate, which is what makes them worth minting: a real id
-// answers 200 (42,705 bytes for the episode, 72,908 for the channel) and a fabricated one
-// answers 404, and neither sends `x-frame-options` (probed 2026-08-16).
+// answers 200 and a fabricated one answers 404, and neither sends `x-frame-options` (probed
+// 2026-08-16).
 export const standfmResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url, 'https://example.com')
   const segments = parsed ? getPathSegments(parsed) : []

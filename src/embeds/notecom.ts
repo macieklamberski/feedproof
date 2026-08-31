@@ -11,10 +11,10 @@ const safeNoteIdRegex = /^n[0-9a-f]+$/
 const notecomHosts = ['note.com', 'note.mu']
 
 // The player the platform's own client builds, and the only note.com url a reader can frame.
-// It discriminates on body size rather than status: three real ids answered 200 at 3,109 to
-// 3,203 bytes while two fabricated ones answered 200 at exactly 683 bytes, the empty shell
-// (checked 2026-08-15). The real body carries the note's title, its author and a link to the
-// post, none of which is in the feed markup, so those stay for enrichment.
+// It discriminates on body size rather than status: a real id answers 200 with a full body
+// while a fabricated one answers 200 with the identical empty shell (checked 2026-08-15). The
+// real body carries the note's title, its author and a link to the post, none of which is in
+// the feed markup, so those stay for enrichment.
 const composePlayer = (noteId: string): string => {
   return `https://note.com/embed/notes/${noteId}`
 }
@@ -63,10 +63,10 @@ const readNoteUrl = (link: string): NoteUrl | undefined => {
 }
 
 // Two carriers, one resolver. The player is what the figure's script builds at runtime and what
-// a CMS that ran the script first saves into a feed: 255 corpus feeds carry it and every one of
-// them would otherwise reach a provider-less generic placeholder. The post url is
-// what note.com's own embed figure names, and `convertNoteEmbeds` frames it so this claims it
-// there too, which is why the figure needs no resolver of its own.
+// a CMS that ran the script first saves into a feed, which would otherwise reach a provider-less
+// generic placeholder. The post url is what note.com's own embed figure names, and
+// `convertNoteEmbeds` frames it so this claims it there too, which is why the figure needs no
+// resolver of its own.
 export const notecomIframeEmbedResolver = createUrlEmbedResolver(notecomHosts, (url) => {
   const target = readNoteUrl(url)
 

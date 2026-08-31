@@ -45,7 +45,7 @@ export const extractMegaphoneEmbed = (
 }
 
 // No metadata and no thumbnail without an api key, so the height is the substance here, and
-// two of the sampled corpus iframes carry no height at all.
+// some iframes carry no height at all.
 export const megaphoneResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const embed = extractMegaphoneEmbed(url)
 

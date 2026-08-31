@@ -6,8 +6,8 @@ const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 
 const captivateHosts = ['captivate.fm']
 
-// 200 across every sampled corpus specimen, and Captivate publishes no oEmbed, so the height
-// is the whole of what this states beyond the provider tag.
+// Every specimen states 200, and Captivate publishes no oEmbed, so the height is the whole
+// of what this states beyond the provider tag.
 const playerHeight = 200
 
 const embedKinds = ['episode', 'show']

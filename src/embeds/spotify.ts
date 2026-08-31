@@ -12,9 +12,8 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // These are the heights of the plain `/embed/{type}/{id}` frame, which is the only frame this
 // resolver mints. Spotify's oEmbed sizes the variant rather than the type, so asking it about a
 // video podcast answers 624x351 for a `/video` frame it appends itself, while the same show's
-// plain frame is the 152 audio card. Sampling shows through oEmbed therefore reads as a per-type
-// difference that does not exist: ten of twelve real shows answer 152, and the two that do not
-// are video podcasts answering about a different url.
+// plain frame is the 152 audio card. Reading show heights off oEmbed therefore suggests a
+// per-type difference that does not exist: the video answers describe a different url.
 const spotifyHeights: Record<string, number> = {
   track: 152,
   episode: 152,
@@ -33,8 +32,7 @@ const pathPrefixRegex = /^(?:embed|embed-podcast|intl-[a-z]{2})$/
 // in a query parameter instead of the path. That host still serves a player, so these resolve
 // to the modern URL instead of falling through to the generic iframe path. A playlist is named
 // through its owner (`spotify:user:{handle}:playlist:{id}`), so the type and id are the last
-// pair, not the only one: of 50 sampled occurrences of the query form, 41 are that four-token
-// shape.
+// pair, not the only one.
 const legacyUriRegex = /^spotify:(?:.*:)?([a-z]+):([a-zA-Z0-9]+)$/
 // The same parameter also carries an ordinary open.spotify.com url rather than a `spotify:` uri.
 // Its type and id sit in the path, and every spelling the carrier's own path has, the parameter
@@ -42,8 +40,7 @@ const legacyUriRegex = /^spotify:(?:.*:)?([a-z]+):([a-zA-Z0-9]+)$/
 // ownership form. So it is read by the same path reader rather than a second pattern that would
 // support a narrower set of urls than the carrier one line above it.
 // The snippet writes `Spotify Embed: {name}`, and the name is the only part worth keeping: the
-// rest names the widget, which the placeholder already says. Every title in a 40-feed corpus
-// read carried the prefix.
+// rest names the widget, which the placeholder already says.
 const titlePrefixRegex = /^Spotify Embed:\s*/
 
 type SubstackItemAttributes = {
@@ -57,12 +54,12 @@ const spotifyHost = 'spotify.com'
 const spotifyImageHost = 'scdn.co'
 
 // The card prints the item's type where a description would go, so that field usually repeats
-// what the id already says. These are every form it takes in the corpus.
+// what the id already says.
 const typeLabels = new Set([...Object.keys(spotifyHeights), 'podcast episode'])
 
 // Substack renders the player inside its own iframe and hangs the item's card on the same
 // element as JSON: the artwork, the title and the act. The description is kept only when it is
-// not one of those labels, which of 41 corpus payloads is one: 39 hold a label or nothing.
+// not one of those labels, which it almost always is.
 const readSubstackItem = (element: Element): Partial<EmbedResolverResult> => {
   const attributes = jsonAttr<SubstackItemAttributes>(element, 'data-attrs')
 

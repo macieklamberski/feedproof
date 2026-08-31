@@ -3,8 +3,8 @@ import type { EmbedResolverResult } from '../types.js'
 import { keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// Every id sampled from the corpus is exactly 10 alphanumeric characters. Anything else is
-// left to the generic placeholder instead of interpolated into a player url.
+// Real ids are exactly 10 alphanumeric characters. Anything else is left to the generic
+// placeholder instead of interpolated into a player url.
 const safeMediaIdRegex = /^[a-zA-Z0-9]{10}$/
 
 // The script form names the media through a JSONP callback, with no page in the url.

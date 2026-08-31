@@ -8,8 +8,8 @@ const safeIdRegex = /^\d+$/
 const audioboomHosts = ['audioboom.com', 'audioboo.fm']
 
 // The player version decides the size, and the url names it: `/embed/v4` is the full player at
-// 300 (21 of 21 sampled corpus iframes) while the older `/posts/{id}/embed` is the compact bar
-// at 95 (5 of 5). Sizing them alike would misreserve one of the two.
+// 300 while the older `/posts/{id}/embed` is the compact bar at 95. Sizing them alike would
+// misreserve one of the two.
 const playerHeights = { v4: 300, legacy: 95 }
 
 export const extractAudioboomPost = (

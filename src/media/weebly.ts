@@ -4,10 +4,9 @@ import type { MediaResolver, MediaResolverResult } from '../types.js'
 // player built by JS that never runs in a reader. The file url is not written anywhere in the
 // markup, but it does not need to be: Weebly stores the video and its poster side by side
 // under the same name, so the poster `url()` in the kept <style> names `…/{name}.jpg` and the
-// video is `…/{name}.mp4`. Verified live 2026-08-11 against 12 posters sampled from the
-// corpus, all 200.
+// video is `…/{name}.mp4`. Verified live 2026-08-11: real posters answer 200.
 //
-// The file name cannot come from `title="Video: …"`: 0 of 40 corpus feeds carry both, and the
+// The file name cannot come from `title="Video: …"`: real wrappers do not carry it, and the
 // live page omits that title too.
 //
 // Two different ids are in play and only one addresses the file. The
