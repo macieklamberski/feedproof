@@ -6,7 +6,19 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9]{5,}$/
 
-const dailymotionHosts = ['dailymotion.com', 'dai.ly']
+// The ccTLDs are named one by one rather than by a `dailymotion.[a-z]{2,3}` pattern, which would
+// trust any domain registered under that name in any TLD. All four resolve to the same address as
+// `dailymotion.fr` and redirect to a language landing page, dropping the video, so reading the id
+// repairs an embed the url itself loses. Only `.fr` carries a matching certificate, so the other
+// three are reachable over http alone; `.de` resolves too but answers 404, so it is left out.
+const dailymotionHosts = [
+  'dailymotion.com',
+  'dailymotion.co.uk',
+  'dailymotion.es',
+  'dailymotion.fr',
+  'dailymotion.it',
+  'dai.ly',
+]
 
 // Segments that name a route rather than a video. `/swf/video/{id}` stacks two of them, which is
 // the second of the two forms the Flash player shipped.
