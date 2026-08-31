@@ -42,6 +42,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `convertLazyImageContainers` | Convert a container parking an image URL in a lazy attribute into a real `<img>` |
 | `flattenPictureElements` | Collapse `<picture>` to one `<img>`, keeping the best modern-format source |
 | `hoistFigcaptionFromAnchor` | Move a `<figcaption>` out of the figure's click-through link |
+| `wrapOrphanFigcaptions` | Wrap an image and its detached `<figcaption>` in a `<figure>` |
 | `canonicalizeAlignment` | Normalize media alignment into a single `data-align` hook |
 | `mergeConsecutiveOneLinerPres` | Merge consecutive single-line `<pre>` blocks into one |
 | `replacePreLineBreaks` | Replace `<br>` with newlines inside `<pre>` |

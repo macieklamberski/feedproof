@@ -206,6 +206,7 @@ import { unwrapNestedCodeWrappers } from './transforms/dom/unwrapNestedCodeWrapp
 import { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 import { wrapBareInlineInParagraphs } from './transforms/dom/wrapBareInlineInParagraphs.js'
 import { wrapCargoGalleryImages } from './transforms/dom/wrapCargoGalleryImages.js'
+import { wrapOrphanFigcaptions } from './transforms/dom/wrapOrphanFigcaptions.js'
 import { wrapTablesForScroll } from './transforms/dom/wrapTablesForScroll.js'
 import { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
 import { stripControlChars } from './transforms/string/stripControlChars.js'
@@ -318,6 +319,9 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   resolveMediaDimensions,
   flattenPictureElements,
   hoistFigcaptionFromAnchor,
+  // Runs before unwrapWrappers, so a caption still held by its own wrapper is not yet a
+  // loose sibling of the figures it belongs to.
+  wrapOrphanFigcaptions,
   stripNonContentElements,
   resolveRelativeUrls,
   cleanAnchorUrls,

@@ -156,6 +156,7 @@ export { unwrapNestedCodeWrappers } from './transforms/dom/unwrapNestedCodeWrapp
 export { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 export { wrapBareInlineInParagraphs } from './transforms/dom/wrapBareInlineInParagraphs.js'
 export { wrapCargoGalleryImages } from './transforms/dom/wrapCargoGalleryImages.js'
+export { wrapOrphanFigcaptions } from './transforms/dom/wrapOrphanFigcaptions.js'
 export { wrapTablesForScroll } from './transforms/dom/wrapTablesForScroll.js'
 export { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
 export { stripControlChars } from './transforms/string/stripControlChars.js'
