@@ -4,7 +4,15 @@ import { attr, find, isBlockElement, isBr, isElement, jsonAttr, text } from '../
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-const blueskyHosts = ['bsky.app']
+// The AppView front ends serve the identical `/profile/{authority}/post/{rkey}` path, and both
+// answer 200 for a real post. The minted player is `embed.bsky.app` either way, so naming them
+// only widens what is read, the way the Twitter resolver already names its mirrors. They differ
+// in provenance: `main.bsky.dev` is first-party, listed beside `bsky.app` in bskyweb's own CORS
+// origins, while `deer.social` is a third-party soft fork. The fork is safe to name because the
+// host only recognises the url: authority and rkey are regex-gated before anything is built, and
+// the frame is always fetched from `embed.bsky.app`, so its cost is drift if it changes its
+// paths, not a security surface.
+export const blueskyHosts = ['bsky.app', 'deer.social', 'main.bsky.dev']
 
 // Images come off `cdn.bsky.app` today and off `cdn.bsky.social` in older records. Both are
 // plain paths with no signature and no expiry (checked live 2026-08-13: 200, public,
