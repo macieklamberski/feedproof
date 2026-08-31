@@ -94,7 +94,7 @@ import { notecomIframeEmbedResolver } from './embeds/notecom.js'
 import { odyseeEmbedResolver } from './embeds/odysee.js'
 import { omnyEmbedResolver } from './embeds/omny.js'
 import { podbeanEmbedResolver } from './embeds/podbean.js'
-import { podigeeEmbedResolver } from './embeds/podigee.js'
+import { podigeeEmbedResolver, podigeeIframeEmbedResolver } from './embeds/podigee.js'
 import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from './embeds/reddit.js'
 import { scribdFlashEmbedResolver, scribdIframeEmbedResolver } from './embeds/scribd.js'
 import { simplecastEmbedResolver } from './embeds/simplecast.js'
@@ -466,6 +466,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   podbeanEmbedResolver,
   megaphoneEmbedResolver,
   podigeeEmbedResolver,
+  podigeeIframeEmbedResolver,
   redditWidgetEmbedResolver,
   redditIframeEmbedResolver,
   simplecastEmbedResolver,
