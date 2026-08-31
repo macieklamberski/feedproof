@@ -76,12 +76,16 @@ export const dailymotionResolveEmbed = (url: string): EmbedResolverResult | unde
   const videoId = extractDailymotionId(url)
 
   if (videoId) {
+    // The player scales with its column rather than sitting in a fixed box, so the shape is what
+    // there is to state. Dailymotion's own oEmbed answers 480x269 for a video, and a carrier that
+    // declares its own size still outranks this.
     return {
       provider: 'dailymotion',
       id: videoId,
       src: `https://www.dailymotion.com/embed/video/${videoId}${pickUrlParams(url, dailymotionEmbedParams)}`,
       url: `https://www.dailymotion.com/video/${videoId}`,
       thumbnail: `https://www.dailymotion.com/thumbnail/video/${videoId}`,
+      ratio: '16/9',
     }
   }
 
