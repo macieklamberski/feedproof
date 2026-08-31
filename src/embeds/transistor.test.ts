@@ -33,6 +33,18 @@ describe('extractTransistorEmbed', () => {
     expect(extractTransistorEmbed(value)).toEqual(expected)
   })
 
+  // Transistor writes an episode's transcript beside the show as `/s/{showId}/{token}.{ext}`.
+  // The show above uses the same id, so it is the control: the sidecar is refused and the
+  // player it sits beside still reads.
+  it.each([
+    'https://share.transistor.fm/s/9f8e7d6c/8a7b6c5d.vtt',
+    'https://share.transistor.fm/s/9f8e7d6c/8a7b6c5d.srt',
+    'https://share.transistor.fm/s/9f8e7d6c/8a7b6c5d.txt',
+    'https://share.transistor.fm/s/9f8e7d6c/8a7b6c5d.json',
+  ])('should return undefined for the transcript sidecar %s', (value) => {
+    expect(extractTransistorEmbed(value)).toBeUndefined()
+  })
+
   // Real Transistor examples. Dropping the mode segment would mint `/e/{slug}`, which asks for
   // an episode by a show's name and answers 404.
   it('should read a show latest player as its own subject', () => {
@@ -132,6 +144,14 @@ describe('transistorResolveEmbed', () => {
 
   it('should return undefined for a transistor url naming no episode', () => {
     const value = 'https://share.transistor.fm/about'
+
+    expect(transistorResolveEmbed(value)).toBeUndefined()
+  })
+
+  // `injectEnclosures` offers every enclosure to every url resolver, so a transcript listed as
+  // one reached this and came back as the show player.
+  it('should return undefined for a transcript listed as an enclosure', () => {
+    const value = 'https://share.transistor.fm/s/9f8e7d6c/8a7b6c5d.vtt'
 
     expect(transistorResolveEmbed(value)).toBeUndefined()
   })
