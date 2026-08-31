@@ -36,6 +36,14 @@ describe('extractBloggerToken', () => {
     expect(extractBloggerToken(value)).toBeUndefined()
   })
 
+  // A truncated token is the one malformed shape the player does not reject: `token=A` answers
+  // 200 and then renders nothing, so a placeholder minted from it looks like a working embed.
+  it('should return undefined for a token too short to be real', () => {
+    const value = 'https://www.blogger.com/video.g?token=A'
+
+    expect(extractBloggerToken(value)).toBeUndefined()
+  })
+
   it('should return undefined for a url that cannot be parsed', () => {
     const value = 'https://['
 
