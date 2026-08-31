@@ -319,9 +319,6 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   resolveMediaDimensions,
   flattenPictureElements,
   hoistFigcaptionFromAnchor,
-  // Runs before unwrapWrappers, so a caption still held by its own wrapper is not yet a
-  // loose sibling of the figures it belongs to.
-  wrapOrphanFigcaptions,
   stripNonContentElements,
   resolveRelativeUrls,
   cleanAnchorUrls,
@@ -390,6 +387,9 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // are about to disappear and the unwrap only fires on a re-run.
   unwrapHeadingBold,
   unwrapWrappers,
+  // Runs after unwrapWrappers: a shared caption's figures sit in a wrapper of their own until
+  // it dissolves, so until then they are not the caption's siblings and the group is invisible.
+  wrapOrphanFigcaptions,
   // Compares rules against their siblings, so it runs last: stripNonContentElements and
   // stripEmptyTags have to have removed whatever sat between them, and unwrapWrappers has
   // to have dissolved the per-rule <div> a feed wraps each one in: until then the rules
