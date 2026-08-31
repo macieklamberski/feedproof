@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { baseContext } from '../tests.js'
 import {
   cleanUrl,
+  decodeSegment,
   parseUrlOnHosts,
   pickQueryParams,
   pickUrlParams,
@@ -174,6 +175,31 @@ describe('cleanUrl', () => {
 
     expect(cleanUrl(undefined, { ...baseContext, cleanUrlFn })).toBeUndefined()
     expect(called).toBe(false)
+  })
+})
+
+describe('decodeSegment', () => {
+  it('should decode a percent-encoded segment', () => {
+    const value = 'urn%3Ali%3Ashare%3A6626097641602281472'
+    const expected = 'urn:li:share:6626097641602281472'
+
+    expect(decodeSegment(value)).toBe(expected)
+  })
+
+  it('should leave a plain segment unchanged', () => {
+    const value = 'urn:li:share:6626097641602281472'
+
+    expect(decodeSegment(value)).toBe(value)
+  })
+
+  it('should return undefined for a malformed escape', () => {
+    const value = '%E0%A4%A'
+
+    expect(decodeSegment(value)).toBeUndefined()
+  })
+
+  it('should return undefined for undefined', () => {
+    expect(decodeSegment(undefined)).toBeUndefined()
   })
 })
 
