@@ -1,6 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { flashVars, keepIfMatches } from '../utils/dom.js'
+import { splitStrayParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen.
@@ -20,11 +21,19 @@ const archiveHosts = ['archive.org']
 // details. The thumbnail service is the exception, answering 200 for anything: an unknown
 // identifier gets a generic 2,212-byte png, not an error, so a poster that turns out
 // to be the placeholder is the one failure this cannot rule out.
-export const extractArchiveIdentifier = (link: string): string | undefined => {
+// Some publisher tooling wrote `embed/{identifier}&playlist=1`, an ampersand where the query
+// should begin, so the whole tail lands inside the path segment. The corpus carries it with
+// `playlist=1` and `autoplay=1`, and with the ampersand entity-encoded. Against a live item the
+// `&` spelling answers 404 and the `?` spelling answers 200.
+const readSegmentParts = (link: string): { head: string; strayParams: string } => {
   const segments = getPathSegments(link)
-  const identifier = segments[0] === 'embed' || segments[0] === 'details' ? segments[1] : undefined
+  const segment = segments[0] === 'embed' || segments[0] === 'details' ? segments[1] : undefined
 
-  return keepIfMatches(identifier, safeIdentifierRegex)
+  return splitStrayParams(segment ?? '')
+}
+
+export const extractArchiveIdentifier = (link: string): string | undefined => {
+  return keepIfMatches(readSegmentParts(link).head, safeIdentifierRegex)
 }
 
 const composeEmbedResult = (identifier: string, query = ''): EmbedResolverResult => {
@@ -45,8 +54,11 @@ export const archiveResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 
   // The query carries what the publisher chose to embed, a track within a playlist or a start
-  // offset, so it goes through untouched.
-  const query = parseUrl(url, 'https://example.com')?.search ?? ''
+  // offset, so it goes through untouched. Anything the ampersand form stranded in the path
+  // rejoins it here.
+  const search = parseUrl(url, 'https://example.com')?.search ?? ''
+  const { strayParams } = readSegmentParts(url)
+  const query = strayParams ? `${search ? `${search}&` : '?'}${strayParams}` : search
 
   return composeEmbedResult(identifier, query)
 }

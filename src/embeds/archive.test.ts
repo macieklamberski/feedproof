@@ -73,6 +73,34 @@ describe('archiveResolveEmbed', () => {
       expect(archiveResolveEmbed(value)).toEqual(expected)
     })
 
+    // Publishers spelled the query with a leading ampersand, and that url answers 404 today
+    // while the `?` spelling answers 200.
+    it('should repair a query the ampersand form stranded in the path', () => {
+      const value = 'https://archive.org/embed/some_album&playlist=1'
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'some_album',
+        src: 'https://archive.org/embed/some_album?playlist=1',
+        url: 'https://archive.org/details/some_album',
+        thumbnail: 'https://archive.org/services/img/some_album',
+      }
+
+      expect(archiveResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should keep every stranded parameter, not just the first', () => {
+      const value = 'https://archive.org/embed/some_album&playlist=1&autoplay=1'
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'some_album',
+        src: 'https://archive.org/embed/some_album?playlist=1&autoplay=1',
+        url: 'https://archive.org/details/some_album',
+        thumbnail: 'https://archive.org/services/img/some_album',
+      }
+
+      expect(archiveResolveEmbed(value)).toEqual(expected)
+    })
+
     it('should mint the embed url from a details url', () => {
       const value = 'https://archive.org/details/nasa_hubble'
       const expected: EmbedResolverResult = {

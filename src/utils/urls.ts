@@ -67,6 +67,16 @@ export const decodeSegment = (segment: string | undefined): string | undefined =
   } catch {}
 }
 
+// A Flash-era player took its options with `&` and no `?`, so `{id}&autoplay=1` arrives as one
+// path segment. The head is the id the platform's own client reads out of it; whether the tail
+// is carried into the minted query or dropped is each platform's own call, decided by what its
+// player's query selects.
+export const splitStrayParams = (segment: string): { head: string; strayParams: string } => {
+  const [head = '', ...rest] = segment.split('&')
+
+  return { head, strayParams: rest.join('&') }
+}
+
 // The same pick as `pickUrlParams`, for a query that arrives on its own, not on a url, which is
 // how a facade states its player options (`lite-youtube`'s `params`). Returns the pairs instead
 // of a string, so a caller can override one from a dedicated attribute before building.
