@@ -10,7 +10,12 @@ const odyseeHosts = ['odysee.com', 'lbry.tv']
 // A claim is `{name}:{claim id}`, the id being a hex prefix of any length that disambiguates
 // the name. A channel is the same with `@` in front. The name is whatever the publisher typed,
 // so only what would break the minted path or smuggle a second url segment is refused.
-const claimRegex = /^@?[^\s/?#<>"'\\:]+:[0-9a-f]+$/i
+//
+// The claim id is optional: a bare name addresses the winning claim for it. Probed live
+// 2026-08-31, a bare name returns the same player as the claim spelled with its short id,
+// against a not-found shell for a name that does not exist. Both answer 200, so on this
+// platform only the body separates a real claim from an invented one.
+const claimRegex = /^@?[^\s/?#<>"'\\:]+(?::[0-9a-f]+)?$/i
 
 // The player is `odysee.com/$/embed/{path}`, in 160 corpus feeds, and the path takes two
 // spellings. The current share code writes the channel and the claim as two segments,
