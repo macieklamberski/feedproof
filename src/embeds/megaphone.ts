@@ -1,8 +1,13 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { audioFileRegex, videoFileRegex } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-const safeIdRegex = /^[A-Z0-9]+$/i
+// An episode id is two to eleven letters followed by exactly ten digits, with no exceptions
+// across the ids sampled from the platform. A playlist is named by a slug instead, which has no
+// grammar to check beyond the character set.
+const safeEpisodeIdRegex = /^[A-Z]{2,11}\d{10}$/i
+const safePlaylistIdRegex = /^[A-Z0-9]+$/i
 
 const megaphoneHosts = ['megaphone.fm']
 
@@ -10,18 +15,24 @@ const megaphoneHosts = ['megaphone.fm']
 // `?e={id}` is a single episode at 200, `?p={id}` a playlist at 480. Getting that wrong is the
 // visible failure, a playlist squeezed into a 200px box, which is why the two are separated
 // rather than defaulted to the commoner one.
-const embedKinds = { e: { kind: 'episode', height: 200 }, p: { kind: 'playlist', height: 480 } }
+const embedKinds = {
+  e: { kind: 'episode', height: 200, safeIdRegex: safeEpisodeIdRegex },
+  p: { kind: 'playlist', height: 480, safeIdRegex: safePlaylistIdRegex },
+}
 
 export const extractMegaphoneEmbed = (
   link: string,
 ): { param: string; kind: string; id: string; height: number } | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
 
-  if (!parsed) {
+  // Megaphone serves the episode audio from the same domain as the players, and parameters on a
+  // media url are the publisher's own analytics rather than Megaphone's: NPR writes `?e=` for its
+  // story and `?p=` for its programme, and both would otherwise read as ids.
+  if (!parsed || audioFileRegex.test(parsed.pathname) || videoFileRegex.test(parsed.pathname)) {
     return
   }
 
-  for (const [param, { kind, height }] of Object.entries(embedKinds)) {
+  for (const [param, { kind, height, safeIdRegex }] of Object.entries(embedKinds)) {
     const id = parsed.searchParams.get(param)
 
     if (id && safeIdRegex.test(id)) {
