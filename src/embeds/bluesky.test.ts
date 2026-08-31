@@ -3,6 +3,7 @@ import { describeForEachParser, html, jsonAttrValue, resolverExtractor } from '.
 import type { EmbedResolverResult } from '../types.js'
 import {
   blueskyBlockquoteEmbedResolver,
+  blueskyHosts,
   blueskyIframeEmbedResolver,
   blueskyPostElementEmbedResolver,
   blueskyS9eEmbedResolver,
@@ -795,6 +796,23 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
         id: 'did:plc:fhz4agnyzcrsvpnprxrbjrpa/3mfq7aeuwbg42',
         src: 'https://embed.bsky.app/embed/did:plc:fhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mfq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:fhz4agnyzcrsvpnprxrbjrpa/post/3mfq7aeuwbg42',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  // Every accepted host serves the identical post path, and the minted player is
+  // `embed.bsky.app` whichever one the carrier names. Iterating the exported list keeps a new
+  // entry covered the moment it is added.
+  describe('post pasted from an accepted host', () => {
+    it.each(blueskyHosts)('should resolve a post on %s', async (host) => {
+      const value = `<iframe src="https://${host}/profile/did:plc:z72i7hdynmk6r22z27h6tvur/post/3kq7aeuwbg42k"></iframe>`
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
+        id: 'did:plc:z72i7hdynmk6r22z27h6tvur/3kq7aeuwbg42k',
+        src: 'https://embed.bsky.app/embed/did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3kq7aeuwbg42k',
+        url: 'https://bsky.app/profile/did:plc:z72i7hdynmk6r22z27h6tvur/post/3kq7aeuwbg42k',
       }
 
       expect(await extract(value)).toEqual(expected)
