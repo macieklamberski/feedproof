@@ -61,6 +61,25 @@ describe('extractMegaphoneEmbed', () => {
     expect(extractMegaphoneEmbed(value)).toBeUndefined()
   })
 
+  // The prefix is the publisher's own name, so it has no length anyone controls. Both of these
+  // are real episodes, confirmed against Megaphone's oEmbed, and a cap at eleven refused them.
+  it.each(['NEXOJORNALLTDA1003659364', 'ADSMOVILESPAASL1044003821'])(
+    'should read an episode id with a long publisher prefix (%s)',
+    (id) => {
+      const value = `https://playlist.megaphone.fm/?e=${id}`
+      const expected = { param: 'e', kind: 'episode', id, height: 200 }
+
+      expect(extractMegaphoneEmbed(value)).toEqual(expected)
+    },
+  )
+
+  // The digit run is the part the sample supports, so it stays exact.
+  it('should not read an id whose digit run is not exactly ten', () => {
+    const value = 'https://playlist.megaphone.fm/?e=GLT46534611423'
+
+    expect(extractMegaphoneEmbed(value)).toBeUndefined()
+  })
+
   // A playlist is named by a slug, which has no digit grammar to check.
   it('should read a playlist named by a slug', () => {
     const value = 'https://playlist.megaphone.fm/?p=sciencevs'
