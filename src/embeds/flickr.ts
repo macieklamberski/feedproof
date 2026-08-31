@@ -31,10 +31,10 @@ const safeSetIdRegex = /^\d+$/
 // leading class excludes a dots-only segment, so `..` cannot reach a minted path.
 const safeOwnerRegex = /^[\w-][\w.-]*(?:@N\d\d)?$/
 
-// A group only resolves by its NSID: the player answers 200 for `groups/{nsid}` and 404 for a
-// group's path alias (both checked live 2026-08-14), and the corpus spells `group_id` as an
-// NSID in every non-mangled occurrence, 23 feeds.
-const safeGroupRegex = /^\d+@N\d\d$/
+// A group and a photostream each resolve by NSID and only by NSID: the player answers 200 for
+// `groups/{nsid}` and for `photostreams/{nsid}`, and 404 for a path alias in either position.
+// The corpus spells `group_id` as an NSID in every non-mangled occurrence.
+const safeNsidRegex = /^\d+@N\d\d$/
 
 // What a carrier names, whichever carrier and whichever spelling: an album needs its set, a
 // group pool its NSID, a photostream only its owner.
@@ -50,6 +50,15 @@ const composeAlbumPlayer = (setId: string): string => {
 
 const composeStreamPlayer = (owner: string): string => {
   return `https://embedr.flickr.com/photostreams/${owner}`
+}
+
+// The page player takes either owner spelling, where embedr takes only the NSID. A real alias
+// answers 200 with the owner's stream (the page carries the account's NSID), an invented one
+// 404s, and no frame-blocking header is served; checked across three aliases and an NSID,
+// 2026-08-31. It also swallows the width and height query embedr takes, so one caller serves
+// both endpoints.
+const composeAliasStreamPlayer = (owner: string): string => {
+  return `https://www.flickr.com/photos/${owner}/player`
 }
 
 const composeGroupPlayer = (groupId: string): string => {
@@ -141,7 +150,7 @@ const composeEmbed = (subject: FlickrSubject): EmbedResolverResult | undefined =
         }
   }
 
-  if (subject.groupId && safeGroupRegex.test(subject.groupId)) {
+  if (subject.groupId && safeNsidRegex.test(subject.groupId)) {
     return {
       provider: 'flickr',
       id: `groups/${subject.groupId}`,
@@ -150,11 +159,13 @@ const composeEmbed = (subject: FlickrSubject): EmbedResolverResult | undefined =
     }
   }
 
+  // embedr takes the NSID and 404s on an alias, and nothing offline converts one into the
+  // other. An alias resolves through the page player instead, which serves both spellings.
   if (owner) {
     return {
       provider: 'flickr',
       id: `photostreams/${owner}`,
-      src: composeStreamPlayer(owner),
+      src: safeNsidRegex.test(owner) ? composeStreamPlayer(owner) : composeAliasStreamPlayer(owner),
       url: `https://www.flickr.com/photos/${owner}/`,
     }
   }

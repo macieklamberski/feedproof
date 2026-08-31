@@ -186,6 +186,24 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // embedr takes only the NSID and nothing offline converts an alias into one, so an alias
+    // goes through the page player instead, which serves both owner spellings.
+    it('should mint the page player for an owner named by its path alias', async () => {
+      const value = html`
+        <iframe src="https://www.flickr.com/slideShow/index.gne?user_id=bees"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: 'photostreams/bees',
+        src: 'https://www.flickr.com/photos/bees/player?width=400&height=300',
+        url: 'https://www.flickr.com/photos/bees/',
+        width: 400,
+        height: 300,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // Without the owner the album page path cannot be built, but the platform's short url can:
     // it is the set id in base58, and flic.kr routes it to the owned page.
     it('should reach the album through the short url when the query names no user', async () => {
