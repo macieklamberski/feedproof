@@ -164,4 +164,26 @@ describeForEachParser('dailymotionEmbedResolver', (parseHtml) => {
 
     expect(await extract(value)).toBeUndefined()
   })
+
+  // The host check is what refused this, not the path reader. Each apex 301s straight to a
+  // language landing page, dropping the video, so the id is worth more than the url the
+  // publisher wrote.
+  it.each([
+    'https://www.dailymotion.fr/video/x7tgad0',
+    'https://www.dailymotion.co.uk/video/x7tgad0',
+    'https://www.dailymotion.es/video/x7tgad0',
+    'https://www.dailymotion.it/video/x7tgad0',
+  ])('should resolve a video on the %s apex', async (url) => {
+    const value = `<iframe src="${url}"></iframe>`
+    const expected: EmbedResolverResult = {
+      provider: 'dailymotion',
+      id: 'x7tgad0',
+      src: 'https://www.dailymotion.com/embed/video/x7tgad0',
+      url: 'https://www.dailymotion.com/video/x7tgad0',
+      thumbnail: 'https://www.dailymotion.com/thumbnail/video/x7tgad0',
+      ratio: '16/9',
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
 })

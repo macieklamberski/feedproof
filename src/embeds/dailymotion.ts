@@ -6,7 +6,17 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9]{5,}$/
 
-const dailymotionHosts = ['dailymotion.com', 'dai.ly']
+// Named one by one rather than by a `dailymotion.{tld}` pattern, which would trust any
+// registration under the name: `.de` is third-party and left out. Each apex redirects to a
+// language landing page, dropping the video, so reading the id repairs what the url loses.
+const dailymotionHosts = [
+  'dailymotion.com',
+  'dailymotion.co.uk',
+  'dailymotion.es',
+  'dailymotion.fr',
+  'dailymotion.it',
+  'dai.ly',
+]
 
 // Segments that name a route rather than a video. `/swf/video/{id}` stacks two of them, which is
 // the second of the two forms the Flash player shipped.
