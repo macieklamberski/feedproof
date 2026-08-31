@@ -276,6 +276,20 @@ describeForEachParser('telegramIframeEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // The third apex Telegram answers on, serving the identical widget.
+    it('should mint the t.me url from the telegram.dog host', async () => {
+      const value = '<iframe src="https://telegram.dog/rvvoenkor/12345?embed=1"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'telegram',
+        id: 'rvvoenkor/12345',
+        src: 'https://t.me/rvvoenkor/12345?embed=1',
+        url: 'https://t.me/rvvoenkor/12345',
+        author: 'rvvoenkor',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {

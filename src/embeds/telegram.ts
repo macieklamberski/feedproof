@@ -10,7 +10,9 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // segment, so the url could not be checked.
 const postRegex = /^([a-zA-Z][a-zA-Z0-9_]{4,31})\/(\d+)$/
 
-const telegramHosts = ['t.me', 'telegram.me']
+// The third apex Telegram has always answered on, serving the identical widget: probed live, a
+// real post answers 200 there.
+const telegramHosts = ['t.me', 'telegram.me', 'telegram.dog']
 
 // `?embed=1` is what makes t.me answer with the post itself. The same path without it serves the
 // "open in Telegram" page that wraps the post in action buttons, 37,524 bytes against 18,593
