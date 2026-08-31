@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { pickUrlParams } from '../utils/urls.js'
+import { pickUrlParams, splitStrayParams } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
@@ -18,11 +18,6 @@ const strayLeadingQuoteRegex = /^(?:%22|")/
 // safeVideoIdRegex. Excluded here so extractVideoId never mistakes one for a video (a bogus
 // watch url and thumbnail). youtubeResolveEmbed handles them as playlist/live embeds below.
 const nonVideoIds = new Set(['videoseries', 'live_stream'])
-
-// The Flash player took its parameters with `&` and no `?`, so `/v/{id}&hl=en_US&fs=1`
-// arrives as one path segment and the id fails the length check. Browsers read the leading
-// id out of it, and so does this.
-const strayParamsRegex = /&.*$/
 
 // Segments that name a route rather than a video. A url can stack two of them: `/embed/watch?v=`
 // and `/embed/shorts/{id}` are authoring mistakes that YouTube answers with a player page which
@@ -112,11 +107,16 @@ export const extractVideoId = (link: string): string | undefined => {
     url.hash.match(gridFragmentIdRegex)?.[1],
   ]
 
-  return candidates
-    .map((candidate) =>
-      candidate?.replace(strayLeadingQuoteRegex, '').replace(strayParamsRegex, ''),
-    )
-    .find((candidate) => !!candidate && isVideoId(candidate))
+  return (
+    candidates
+      // The Flash player wrote `/v/{id}&hl=en_US&fs=1`, so the id is the segment's head.
+      .map((candidate) =>
+        candidate
+          ? splitStrayParams(candidate.replace(strayLeadingQuoteRegex, '')).head
+          : undefined,
+      )
+      .find((candidate) => !!candidate && isVideoId(candidate))
+  )
 }
 
 // Parameters that change what the player shows; everything else the publisher wrote, autoplay,
