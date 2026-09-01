@@ -846,6 +846,9 @@ export const defaultNonContentSelectors = [
   // Synved Social Share renders no wrapper, so the anchors are siblings of the post's own
   // paragraphs and the button itself is the only thing there is to match.
   'a.synved-social-button', // Synved Social Share buttons.
+  // GemPages (Shopify page builder) social-share module. The wrapper's class is only
+  // "module-wrap", so the [class*=] entries above never reach it.
+  '[data-key="social-share"]',
   '.av-share-box', // Enfold theme "Share this entry" box.
 
   // Related-posts widgets.
