@@ -318,8 +318,6 @@ export const isGeneratedWrapper = (element: Element): boolean => {
   return element.getAttributeNames().some((name) => startsWithAnyOf(name, generatedWrapperPrefixes))
 }
 
-// Matches embed and cite placeholders, which always carry their provider attribute. Table and
-// pre wrappers mark real elements, not placeholders, so they are not listed.
 export const placeholderSelectors = ['[data-embed-provider]', '[data-cite-provider]']
 
 // A pixel size as a player url or embed attribute states it: `200`, or `200px` where the
