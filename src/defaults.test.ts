@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'bun:test'
-import {
-  defaultCiteResolvers,
-  defaultNonContentSelectors,
-  defaultWidgetResolvers,
-} from './defaults.js'
+import { defaultNonContentSelectors, defaultWidgetResolvers } from './defaults.js'
 import { parseHtml } from './parsers/linkedom.js'
 import { createCitePlaceholder } from './utils/widgets.js'
+
+const defaultCiteResolvers = defaultWidgetResolvers.filter((resolver) => resolver.kind === 'cite')
 
 describe('defaults', () => {
   // convertCiteCards hands every resolver the same document, in registration order, with

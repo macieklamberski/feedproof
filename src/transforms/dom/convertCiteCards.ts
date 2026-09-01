@@ -2,7 +2,7 @@ import type { DomTransform } from '../../types.js'
 import { createCitePlaceholder, prepareCiteMetadata } from '../../utils/widgets.js'
 
 export const convertCiteCards: DomTransform = (context) => {
-  const { citeResolvers } = context
+  const citeResolvers = context.widgetResolvers.filter((resolver) => resolver.kind === 'cite')
 
   return async (document) => {
     for (const resolver of citeResolvers) {

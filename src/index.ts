@@ -1,7 +1,6 @@
 import {
   defaultAllDomTransforms,
   defaultAvatarImageHosts,
-  defaultCiteResolvers,
   defaultDeferredIframeSources,
   defaultEmojiImageHosts,
   defaultHighlightFn,
@@ -30,7 +29,6 @@ export const transformContent = async (
     sameSiteUrls: options.sameSiteUrls,
     enclosures: options.enclosures,
     widgetResolvers: defaultWidgetResolvers,
-    citeResolvers: defaultCiteResolvers,
     mediaSrcAttributes: defaultMediaSrcAttributes,
     lazySrcAttributes: defaultLazySrcAttributes,
     lazySrcsetAttributes: defaultLazySrcsetAttributes,

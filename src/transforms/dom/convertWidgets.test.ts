@@ -16,7 +16,10 @@ const stubResolver: EmbedResolver = {
 
 const withResolvers: TransformContext = {
   ...baseContext,
-  widgetResolvers: [youtubeIframeEmbedResolver, stubResolver],
+  widgetResolvers: [
+    { kind: 'embed', ...youtubeIframeEmbedResolver },
+    { kind: 'embed', ...stubResolver },
+  ],
 }
 
 const withNoResolvers: TransformContext = {
@@ -169,7 +172,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         height: 270,
       }),
     }
-    const customContext: TransformContext = { ...baseContext, widgetResolvers: [sizedResolver] }
+    const customContext: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [{ kind: 'embed', ...sizedResolver }],
+    }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const expected = html`
       <div
@@ -192,7 +198,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
           src: element.getAttribute('src') ?? '',
         }),
     }
-    const customContext: TransformContext = { ...baseContext, widgetResolvers: [asyncResolver] }
+    const customContext: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [{ kind: 'embed', ...asyncResolver }],
+    }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const expected = html`
       <div
@@ -262,7 +271,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         duration: 125,
       }),
     }
-    const customContext: TransformContext = { ...baseContext, widgetResolvers: [customResolver] }
+    const customContext: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [{ kind: 'embed', ...customResolver }],
+    }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const expected = html`
       <div
@@ -290,7 +302,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         avatar: 'javascript:alert(1)',
       }),
     }
-    const customContext: TransformContext = { ...baseContext, widgetResolvers: [customResolver] }
+    const customContext: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [{ kind: 'embed', ...customResolver }],
+    }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const expected = html`
       <div
@@ -421,7 +436,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         src: 'javascript:alert(1)',
       }),
     }
-    const customContext: TransformContext = { ...baseContext, widgetResolvers: [unsafeResolver] }
+    const customContext: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [{ kind: 'embed', ...unsafeResolver }],
+    }
     const value = '<iframe src="https://example.com/x"></iframe>'
     const expected = html`
       <div data-embed-src="https://example.com/x"></div>
@@ -443,7 +461,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         url: '/watch/123',
       }),
     }
-    const customContext: TransformContext = { ...baseContext, widgetResolvers: [pathResolver] }
+    const customContext: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [{ kind: 'embed', ...pathResolver }],
+    }
     const value = '<iframe src="https://example.com/x"></iframe>'
     const expected = html`
       <div
@@ -538,7 +559,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       }
       const context: TransformContext = {
         ...baseContext,
-        widgetResolvers: [urlResolver],
+        widgetResolvers: [{ kind: 'embed', ...urlResolver }],
         cleanUrlFn: (url) => url.split('?')[0] ?? url,
       }
       const value = '<iframe src="https://example.com/e/x"></iframe>'
@@ -566,7 +587,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       }
       const context: TransformContext = {
         ...baseContext,
-        widgetResolvers: [urlResolver],
+        widgetResolvers: [{ kind: 'embed', ...urlResolver }],
         cleanUrlFn: () => '',
       }
       const value = '<iframe src="https://example.com/e/x"></iframe>'
@@ -828,7 +849,7 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
   }
 
   const withResolver = (resolver: MediaResolver): TransformContext => {
-    return { ...baseContext, widgetResolvers: [resolver] }
+    return { ...baseContext, widgetResolvers: [{ kind: 'media', ...resolver }] }
   }
 
   it('should replace a container with a video element carrying controls', async () => {
@@ -1132,7 +1153,7 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
     }
     const withPostResolver: TransformContext = {
       ...baseContext,
-      widgetResolvers: [postResolver],
+      widgetResolvers: [{ kind: 'embed', ...postResolver }],
     }
     const value = '<iframe src="https://post.example/embed/1"></iframe>'
 

@@ -57,6 +57,10 @@ const resolveEnclosure = async (
   setDimensions(probe, enclosure)
 
   for (const resolver of resolvers) {
+    if (resolver.kind === 'cite') {
+      continue
+    }
+
     if (probe.matches(resolver.selector)) {
       const metadata = await resolver.extract(probe)
 

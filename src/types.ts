@@ -143,14 +143,18 @@ export type MediaResolver = {
   extract: (element: Element) => MaybePromise<MediaResolverResult | undefined>
 }
 
-// One registry for everything the widget pass recognizes. A resolver keeps a single honest
-// contract (an EmbedResolver only ever returns embed results), and the union describes what
-// the array accepts. The pass discriminates on the result shape to emit either an opaque
-// placeholder or a real media element. Cite resolvers stay out: their pass reads card markup
-// earlier in the pipeline, before link and prose normalization can disturb it.
-export type WidgetResolver = EmbedResolver | MediaResolver
+// One registry for every widget resolver. A resolver keeps a single honest contract (an
+// EmbedResolver only ever returns embed results), and the kind tag is what lets each pass
+// pick its own resolvers: convertCiteCards runs the cite ones early, before link and prose
+// normalization can disturb card markup, while convertWidgets runs the embed and media ones
+// late and discriminates on the result shape to emit either an opaque placeholder or a real
+// media element.
+export type WidgetResolver =
+  | ({ kind: 'embed' } & EmbedResolver)
+  | ({ kind: 'media' } & MediaResolver)
+  | ({ kind: 'cite' } & CiteResolver)
 
-export type WidgetResolverResult = EmbedResolverResult | MediaResolverResult
+export type WidgetResolverResult = EmbedResolverResult | MediaResolverResult | CiteResolverResult
 
 export type CleanUrlFn = (url: string) => string
 
@@ -186,7 +190,6 @@ export type TransformContext = {
   sameSiteUrls?: Array<string>
   enclosures?: Array<Enclosure>
   widgetResolvers: Array<WidgetResolver>
-  citeResolvers: Array<CiteResolver>
   mediaSrcAttributes: Array<string>
   lazySrcAttributes: Array<string>
   lazySrcsetAttributes: Array<string>
