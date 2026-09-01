@@ -9,8 +9,6 @@ export const enrichCitePlaceholders: DomTransform = (context) => {
   }
 
   return async (document) => {
-    // Every cite placeholder carries a url: CiteResolverResult requires it, and preparation
-    // keeps the original on a failed resolve, so the selector needs only the provider marker.
     const placeholders = document.querySelectorAll('[data-cite-provider]')
     const count = placeholders.length
 
