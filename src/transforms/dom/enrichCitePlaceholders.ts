@@ -9,7 +9,7 @@ export const enrichCitePlaceholders: DomTransform = (context) => {
   }
 
   return async (document) => {
-    const placeholders = document.querySelectorAll('[data-cite-provider][data-cite-url]')
+    const placeholders = document.querySelectorAll('[data-cite-provider]')
     const count = placeholders.length
 
     if (!count) {
