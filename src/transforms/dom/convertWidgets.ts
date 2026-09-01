@@ -83,7 +83,6 @@ const carrierOrShell = (element: Element): Element => {
 // resolver claims: a src that names a media file plays directly instead of being framed.
 export const convertWidgets: DomTransform = (context) => {
   const { widgetResolvers, mediaSrcAttributes } = context
-  const embedOrMediaResolvers = widgetResolvers.filter(isEmbedOrMediaResolver)
 
   return async (document) => {
     // One query per distinct selector instead of per resolver: every url-keyed resolver
@@ -134,7 +133,7 @@ export const convertWidgets: DomTransform = (context) => {
       element.prepend(createMediaElement(document, { tag: parked.tag, src: cleaned }))
     }
 
-    for (const resolver of embedOrMediaResolvers) {
+    for (const resolver of widgetResolvers.filter(isEmbedOrMediaResolver)) {
       for (const element of elementsFor(resolver.selector)) {
         // Legacy Flash pairs an `<object>` with a nested `<embed>` and a url-keyed resolver
         // matches both. Replacing the outer one detaches the inner, which is still in this
