@@ -1,7 +1,7 @@
 import type { DomTransform } from '../../types.js'
 import { isBlockElement, mediaElements, placeholderSelectors } from '../../utils/dom.js'
 
-const nonTextSelector = [...mediaElements, 'figure', 'figcaption', ...placeholderSelectors].join(
+const nonTextSelector = [...mediaElements, ...placeholderSelectors, 'figure', 'figcaption'].join(
   ', ',
 )
 
