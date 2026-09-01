@@ -23,7 +23,10 @@ describeForEachParser('mergeWrappedCaptionText', (parseHtml) => {
       <figure>
         <img src="ceres.jpg">
         <div class="img-caption">
-          <figcaption><div class="img-caption__desc">The dwarf planet Ceres.</div><a href="https://example.com/source">Credit</a>: NASA/JPL</figcaption>
+          <figcaption>
+            <div class="img-caption__desc">The dwarf planet Ceres.</div>
+            <p><a href="https://example.com/source">Credit</a>: NASA/JPL</p>
+          </figcaption>
         </div>
       </figure>
     `
@@ -45,7 +48,10 @@ describeForEachParser('mergeWrappedCaptionText', (parseHtml) => {
       <figure>
         <img src="chart.png">
         <div>
-          <figcaption>The device listing.<p>Data from the vendor.</p></figcaption>
+          <figcaption>
+            <p>The device listing.</p>
+            <p>Data from the vendor.</p>
+          </figcaption>
         </div>
       </figure>
     `
@@ -68,7 +74,36 @@ describeForEachParser('mergeWrappedCaptionText', (parseHtml) => {
       <figure>
         <img src="chart.png">
         <div>
-          <figcaption><p>First line.</p><p>Second line.</p>Credit: Someone</figcaption>
+          <figcaption>
+            <p>First line.</p>
+            <p>Second line.</p>
+            <p>Credit: Someone</p>
+          </figcaption>
+        </div>
+      </figure>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should not rewrap a figcaption whose content is already a paragraph', async () => {
+    const value = html`
+      <figure>
+        <img src="chart.png">
+        <div>
+          <p>The device listing.</p>
+          <figcaption><p>Credit: Someone</p></figcaption>
+        </div>
+      </figure>
+    `
+    const expected = html`
+      <figure>
+        <img src="chart.png">
+        <div>
+          <figcaption>
+            <p>The device listing.</p>
+            <p>Credit: Someone</p>
+          </figcaption>
         </div>
       </figure>
     `

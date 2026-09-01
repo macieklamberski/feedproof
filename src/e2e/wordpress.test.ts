@@ -105,7 +105,8 @@ describeForEachParser('WordPress', (parseHtml) => {
         <img src="https://example.com/ceres.jpg" alt="Ceres">
         <figcaption>
           <p>The dwarf planet Ceres is the largest world in the asteroid belt.</p>
-          <a href="https://example.com/source" target="_blank">Credit</a>: NASA/JPL</figcaption>
+          <p><a href="https://example.com/source" target="_blank">Credit</a>: NASA/JPL</p>
+        </figcaption>
       </figure>
     `
 

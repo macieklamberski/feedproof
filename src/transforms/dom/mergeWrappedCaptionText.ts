@@ -1,4 +1,5 @@
 import type { DomTransform } from '../../types.js'
+import { isBlockElement } from '../../utils/dom.js'
 
 const nonTextSelector =
   'img, picture, video, audio, iframe, figure, figcaption, [data-embed-provider], [data-cite-provider]'
@@ -32,6 +33,20 @@ export const mergeWrappedCaptionText: DomTransform = () => {
 
       if (siblings.length === 0 || !siblings.every(isCaptionText)) {
         continue
+      }
+
+      // The absorbed siblings arrive as blocks, so inline-only caption content is wrapped in
+      // a paragraph first to keep the caption's parts uniformly block-separated.
+      const hasBlockContent = Array.from(figcaption.children).some(isBlockElement)
+
+      if (!hasBlockContent && figcaption.textContent?.trim()) {
+        const paragraph = document.createElement('p')
+
+        while (figcaption.firstChild) {
+          paragraph.appendChild(figcaption.firstChild)
+        }
+
+        figcaption.appendChild(paragraph)
       }
 
       const reference = figcaption.firstChild
