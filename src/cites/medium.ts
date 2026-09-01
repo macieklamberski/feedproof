@@ -16,6 +16,7 @@ import * as styles from '../utils/styles.js'
 // The href is sometimes Medium's own `medium.com/r/?url=` redirector. That is left alone
 // here and unwrapped by the injected `cleanUrlFn`, as every other redirect wrapper is.
 export const mediumCiteResolver: CiteResolver = {
+  kind: 'cite',
   // Medium wraps the pair in `.graf--mixtapeEmbed`. Matching that replaces both anchors and
   // leaves no empty image anchor behind. Exports drop the wrapper, so the bare anchor is the
   // second arm, excluded inside a wrapper so the two never match the same card.

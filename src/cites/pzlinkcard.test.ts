@@ -13,7 +13,7 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
   const transform = (value: string) => {
     const context: TransformContext = {
       ...baseContext,
-      widgetResolvers: [{ kind: 'cite', ...pzlinkcardCiteResolver }],
+      widgetResolvers: [pzlinkcardCiteResolver],
     }
 
     return applyDomTransforms(parseHtml(value), [convertCiteCards(context)])

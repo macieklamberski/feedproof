@@ -63,6 +63,7 @@ export const createMarkupEmbedResolver = (
   options: ResolverOptions = {},
 ): EmbedResolver => {
   return {
+    kind: 'embed',
     selector,
     extract: (element) => {
       return decideSize(element, extract(element), options.preferResolverSize)
@@ -171,6 +172,7 @@ export const createUrlEmbedResolver = (
   options: ResolverOptions = {},
 ): EmbedResolver => {
   return {
+    kind: 'embed',
     selector: embedCarrierSelector,
     extract: (element) => {
       const src = readCarrierUrl(element)

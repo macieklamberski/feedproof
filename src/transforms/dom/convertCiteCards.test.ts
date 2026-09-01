@@ -6,6 +6,7 @@ import { convertCiteCards } from './convertCiteCards.js'
 
 // Reads cite fields off a `.card` element's data-* attributes.
 const cardResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.card',
   extract: (element) => {
     const url = element.getAttribute('data-url')
@@ -32,12 +33,9 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
     citeResolvers: Array<CiteResolver>,
     context: TransformContext = baseContext,
   ) => {
-    const widgetResolvers = citeResolvers.map((resolver) => ({
-      kind: 'cite' as const,
-      ...resolver,
-    }))
-
-    return applyDomTransforms(parseHtml(value), [convertCiteCards({ ...context, widgetResolvers })])
+    return applyDomTransforms(parseHtml(value), [
+      convertCiteCards({ ...context, widgetResolvers: citeResolvers }),
+    ])
   }
 
   describe('happy paths', () => {
@@ -83,6 +81,7 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
 
     it('should run each resolver in the registry', async () => {
       const resolverA: CiteResolver = {
+        kind: 'cite',
         selector: '.a',
         extract: (element) => {
           const url = element.getAttribute('data-url')
@@ -90,6 +89,7 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
         },
       }
       const resolverB: CiteResolver = {
+        kind: 'cite',
         selector: '.b',
         extract: (element) => {
           const url = element.getAttribute('data-url')
@@ -118,6 +118,7 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
 
     it('should support a resolver with a promise-returning extract', async () => {
       const asyncResolver: CiteResolver = {
+        kind: 'cite',
         selector: '.card',
         extract: (element) => {
           const url = element.getAttribute('data-url')
@@ -162,7 +163,7 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
     it('should resolve relative url, icon and thumbnail against the base url', async () => {
       const context: TransformContext = {
         ...baseContext,
-        widgetResolvers: [{ kind: 'cite', ...cardResolver }],
+        widgetResolvers: [cardResolver],
         baseUrl: 'https://example.com/post/',
       }
       const value = html`
@@ -192,7 +193,7 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
     it('should clean the url with the provided cleanUrlFn', async () => {
       const context: TransformContext = {
         ...baseContext,
-        widgetResolvers: [{ kind: 'cite', ...cardResolver }],
+        widgetResolvers: [cardResolver],
         cleanUrlFn: (url) => url.split('?')[0] ?? url,
       }
       const value = html`
@@ -214,7 +215,7 @@ describeForEachParser('convertCiteCards', (parseHtml) => {
     it('should clean the url after resolving it against the base url', async () => {
       const context: TransformContext = {
         ...baseContext,
-        widgetResolvers: [{ kind: 'cite', ...cardResolver }],
+        widgetResolvers: [cardResolver],
         baseUrl: 'https://example.com/post/',
         cleanUrlFn: (url) => url.split('?')[0] ?? url,
       }

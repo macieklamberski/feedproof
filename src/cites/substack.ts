@@ -33,6 +33,7 @@ type OwnPostAttrs = {
 // (publication logo header, body preview, a Read more button, engagement counts),
 // because the reader may not know the linked publication.
 export const substackCrossPostCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.embedded-post-wrap',
   extract: (element) => {
     const attrs = jsonAttr<CrossPostAttrs>(element, 'data-attrs')
@@ -68,6 +69,7 @@ export const substackCrossPostCiteResolver: CiteResolver = {
 // branding, and dates it long-form ("October 5, 2025") rather than as the ISO string
 // `data-cite-date` holds, so those fields stay empty.
 export const substackOwnPostCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.digest-post-embed, [data-component-name="DigestPostEmbed"]',
   extract: (element) => {
     const attrs = jsonAttr<OwnPostAttrs>(element, 'data-attrs')
@@ -111,6 +113,7 @@ export const substackOwnPostCiteResolver: CiteResolver = {
 // host here while still serving the standard `/p/{slug}` path, so a host check would drop the
 // variant it is meant to keep.
 export const substackPostEmbedCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: 'div.substack-post-embed',
   extract: (element) => {
     const paragraphs = element.querySelectorAll('p')

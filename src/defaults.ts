@@ -566,9 +566,9 @@ const citeResolvers: Array<CiteResolver> = [
 ]
 
 export const defaultWidgetResolvers: Array<WidgetResolver> = [
-  ...embedResolvers.map((resolver) => ({ kind: 'embed' as const, ...resolver })),
-  ...mediaResolvers.map((resolver) => ({ kind: 'media' as const, ...resolver })),
-  ...citeResolvers.map((resolver) => ({ kind: 'cite' as const, ...resolver })),
+  ...embedResolvers,
+  ...mediaResolvers,
+  ...citeResolvers,
 ]
 
 // Attributes that park a media file URL on a container which then builds the player with JS,

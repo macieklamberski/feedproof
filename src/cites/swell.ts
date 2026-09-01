@@ -14,6 +14,7 @@ const defaultCaptionLabel = 'あわせて読みたい'
 // card carries the author's own label (the stock "あわせて読みたい" or a custom note),
 // which is the embedding author's note about the link, a caption.
 export const swellCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.p-blogCard',
   extract: (element) => {
     const link = find(element, 'a.p-blogCard__title')

@@ -17,6 +17,7 @@ const dateWithYear = (value: string | undefined): string | undefined => {
 // An external link becomes `.c-embed`. A link to another dev.to post becomes one of the two
 // shapes below.
 export const devtoLinkCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.c-embed',
   extract: (element) => {
     const body = find(element, '.c-embed__body')
@@ -40,6 +41,7 @@ export const devtoLinkCiteResolver: CiteResolver = {
 // article keeps whatever markup its generator emitted, so both this shape and the older one
 // below stay in circulation indefinitely and each needs its own resolver.
 export const devtoPostCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.ltag__link--embedded',
   extract: (element) => {
     const heading = find(element, '.crayons-story__title')
@@ -72,6 +74,7 @@ export const devtoPostCiteResolver: CiteResolver = {
 const authorSeparator = '・'
 
 export const devtoLegacyPostCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.ltag__link',
   extract: (element) => {
     // The Medium liquid tag renders into the same class tree. It has no tag list and names

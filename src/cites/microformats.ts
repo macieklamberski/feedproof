@@ -33,6 +33,7 @@ const responsePrefixes = ['u-', 'p-']
 // citation, in the surrounding post's content, which contains the citation itself, so
 // reading it would capture the whole post rather than a note about the link.
 export const microformatsCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.h-cite',
   extract: (element) => {
     const notInAuthor = (node: Element) => !node.closest('.p-author')

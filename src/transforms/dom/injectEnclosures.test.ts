@@ -11,7 +11,7 @@ import { neutralizeUnsafeUrls } from './neutralizeUnsafeUrls.js'
 
 const withResolver: TransformContext = {
   ...baseContext,
-  widgetResolvers: [{ kind: 'embed', ...youtubeIframeEmbedResolver }],
+  widgetResolvers: [youtubeIframeEmbedResolver],
 }
 
 const withEnclosures = (enclosures: Array<Enclosure>): TransformContext => {
@@ -30,7 +30,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Episode notes</p>'
     const context: TransformContext = {
       ...baseContext,
-      widgetResolvers: [{ kind: 'embed', ...soundcloudEmbedResolver }],
+      widgetResolvers: [soundcloudEmbedResolver],
       enclosures: [
         {
           url: 'https://feeds.soundcloud.com/stream/2386923495-linear-digressions-ai.mp3',
@@ -56,7 +56,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const value = '<p>Episode notes</p>'
     const context: TransformContext = {
       ...baseContext,
-      widgetResolvers: [{ kind: 'embed', ...soundcloudEmbedResolver }],
+      widgetResolvers: [soundcloudEmbedResolver],
       enclosures: [
         { url: 'https://feeds.soundcloud.com/stream/nameless-episode.mp3', type: 'audio/mpeg' },
       ],
@@ -269,6 +269,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
   // the markup: every url resolved, and the canonical one cleaned.
   describe('placeholder fields', () => {
     const exampleResolver: EmbedResolver = {
+      kind: 'embed',
       selector: 'iframe[src*="example.com"]',
       extract: () => ({
         provider: 'example',
@@ -280,7 +281,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     const withExampleResolver = (enclosures: Array<Enclosure>): TransformContext => {
       return {
         ...baseContext,
-        widgetResolvers: [{ kind: 'embed', ...exampleResolver }],
+        widgetResolvers: [exampleResolver],
         baseUrl: 'https://publisher.example/post',
         enclosures,
       }
@@ -631,7 +632,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         ...withEnclosures([
           { url: 'https://player.blubrry.com/id/12345678/', type: 'text/html', width: 320 },
         ]),
-        widgetResolvers: [{ kind: 'embed', ...blubrryEmbedResolver }],
+        widgetResolvers: [blubrryEmbedResolver],
       }
       const expected = html`
         <div
@@ -656,7 +657,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
         ...withEnclosures([
           { url: 'https://embed.acast.com/myshow/myepisode', type: 'text/html', width: 320 },
         ]),
-        widgetResolvers: [{ kind: 'embed', ...acastEmbedResolver }],
+        widgetResolvers: [acastEmbedResolver],
       }
       const expected = html`
         <div
@@ -676,7 +677,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       const value = '<p>Content</p>'
       const context: TransformContext = {
         ...withEnclosures([{ url: 'https://embed.acast.com/myshow/myepisode', type: 'text/html' }]),
-        widgetResolvers: [{ kind: 'embed', ...acastEmbedResolver }],
+        widgetResolvers: [acastEmbedResolver],
       }
       const expected = html`
         <div

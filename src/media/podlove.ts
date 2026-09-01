@@ -41,6 +41,7 @@ const parseConfig = (script: Element): PodloveConfig | undefined => {
 }
 
 export const podloveMediaResolver: MediaResolver = {
+  kind: 'media',
   selector: 'div.podlove-web-player',
   extract: (element): MediaResolverResult | undefined => {
     const script = findConfigScript(element)

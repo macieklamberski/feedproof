@@ -20,6 +20,7 @@ const cardUrl = (element: Element): string | undefined => {
 }
 
 export const blogCardCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.blog-card',
   extract: (element) => {
     return buildCite({

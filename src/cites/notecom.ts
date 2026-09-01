@@ -14,6 +14,7 @@ import * as styles from '../utils/styles.js'
 // the description and host as bare text runs instead of `em`s, where only the title is
 // recoverable).
 export const notecomCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: 'figure[embedded-service="external-article"]',
   extract: (element) => {
     const ems = Array.from(element.querySelectorAll('a > em'))

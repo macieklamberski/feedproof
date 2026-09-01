@@ -61,6 +61,7 @@ const fediverseHandleRegex = /@[\w.-]+@[\w-]+(?:\.[\w-]+)+/
 // keys on the wrapper and the fields the generic shape shares rather than on the engine
 // subclass. The canonical URL sits on the wrapper, so no inner anchor is needed.
 export const discourseCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: `aside.onebox${omittedOneboxClasses.map((name) => `:not(.${name})`).join('')}`,
   extract: (element) => {
     const body = find(element, '.onebox-body')

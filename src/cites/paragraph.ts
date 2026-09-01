@@ -17,6 +17,7 @@ type EmbedlyData = {
 }
 
 export const paragraphCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: 'div[data-type="embedly"]',
   extract: (element) => {
     const data = jsonAttr<EmbedlyData>(element, 'data')

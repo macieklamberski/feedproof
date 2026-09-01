@@ -148,7 +148,7 @@ describeForEachParser('wistiaEmbedResolver', (parseHtml) => {
 describeForEachParser('wistia facades the rebuild pass materializes', (parseHtml) => {
   const context: TransformContext = {
     ...baseContext,
-    widgetResolvers: [{ kind: 'embed', ...wistiaEmbedResolver }],
+    widgetResolvers: [wistiaEmbedResolver],
   }
 
   const transform = (value: string) => {

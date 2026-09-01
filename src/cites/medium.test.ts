@@ -11,7 +11,7 @@ describeForEachParser('mediumCiteResolver', (parseHtml) => {
   const transform = (value: string) => {
     const context: TransformContext = {
       ...baseContext,
-      widgetResolvers: [{ kind: 'cite', ...mediumCiteResolver }],
+      widgetResolvers: [mediumCiteResolver],
     }
 
     return applyDomTransforms(parseHtml(value), [convertCiteCards(context)])

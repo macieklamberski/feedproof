@@ -18,7 +18,7 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
     return applyDomTransforms(parseHtml(value), [
       convertWidgets({
         ...baseContext,
-        widgetResolvers: [{ kind: 'embed', ...soundcloudEmbedResolver }],
+        widgetResolvers: [soundcloudEmbedResolver],
       }),
     ])
   }

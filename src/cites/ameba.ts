@@ -10,6 +10,7 @@ import { attr, find, text } from '../utils/dom.js'
 // `img.ogpCard_icon` is a generic grey link glyph from Ameba's own asset host
 // (editor_link.svg), not the linked site's favicon, so it is deliberately not mapped.
 export const amebaCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.ogpCard_wrap',
   extract: (element) => {
     return buildCite({

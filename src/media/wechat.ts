@@ -12,6 +12,7 @@ const composeSourceUrl = (mediaId: string): string => {
 }
 
 export const wechatMediaResolver: MediaResolver = {
+  kind: 'media',
   selector: 'mpvoice[voice_encode_fileid]',
   extract: (element): MediaResolverResult | undefined => {
     const mediaId = attr(element, 'voice_encode_fileid')

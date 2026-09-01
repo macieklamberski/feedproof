@@ -12,7 +12,7 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
     return applyDomTransforms(parseHtml(value), [
       convertWidgets({
         ...baseContext,
-        widgetResolvers: [{ kind: 'media', ...ghostMediaResolver }],
+        widgetResolvers: [ghostMediaResolver],
       }),
     ])
   }

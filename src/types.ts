@@ -64,6 +64,7 @@ export type EnrichEmbedFn = (
 ) => MaybePromise<Array<Partial<EmbedResolverResult> | undefined>>
 
 export type EmbedResolver = {
+  kind: 'embed'
   selector: string
   extract: (element: Element) => MaybePromise<EmbedResolverResult | undefined>
 }
@@ -122,6 +123,7 @@ export type EnrichCiteFn = (
 ) => MaybePromise<Array<Partial<CiteResolverResult> | undefined>>
 
 export type CiteResolver = {
+  kind: 'cite'
   selector: string
   extract: (element: Element) => MaybePromise<CiteResolverResult | undefined>
 }
@@ -139,6 +141,7 @@ export type MediaResolverResult = {
 }
 
 export type MediaResolver = {
+  kind: 'media'
   selector: string
   extract: (element: Element) => MaybePromise<MediaResolverResult | undefined>
 }
@@ -149,10 +152,7 @@ export type MediaResolver = {
 // normalization can disturb card markup, while convertWidgets runs the embed and media ones
 // late and discriminates on the result shape to emit either an opaque placeholder or a real
 // media element.
-export type WidgetResolver =
-  | ({ kind: 'embed' } & EmbedResolver)
-  | ({ kind: 'media' } & MediaResolver)
-  | ({ kind: 'cite' } & CiteResolver)
+export type WidgetResolver = EmbedResolver | MediaResolver | CiteResolver
 
 export type WidgetResolverResult = EmbedResolverResult | MediaResolverResult | CiteResolverResult
 
