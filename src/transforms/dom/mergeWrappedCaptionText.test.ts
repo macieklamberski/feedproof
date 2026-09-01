@@ -146,6 +146,19 @@ describeForEachParser('mergeWrappedCaptionText', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(value)
   })
 
+  it('should leave a wrapper whose sibling holds a legacy object player', async () => {
+    const value = html`
+      <figure>
+        <div>
+          <div><object data="https://example.com/player.swf">Flash player</object></div>
+          <figcaption>A moving picture.</figcaption>
+        </div>
+      </figure>
+    `
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
   it('should leave a wrapper whose sibling is an embed placeholder', async () => {
     const value = html`
       <figure>
