@@ -24,6 +24,7 @@ type MediaAttrs = {
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export const substackMediaResolver: MediaResolver = {
+  kind: 'media',
   selector: '.native-video-embed, .native-audio-embed',
   extract: (element): MediaResolverResult | undefined => {
     const attrs = jsonAttr<MediaAttrs>(element, 'data-attrs')

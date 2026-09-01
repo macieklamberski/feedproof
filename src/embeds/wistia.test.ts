@@ -146,7 +146,10 @@ describeForEachParser('wistiaEmbedResolver', (parseHtml) => {
 // The JS facade has no iframe at all: rebuildWistiaEmbeds mints one, and the resolver reads it
 // on the same pass, so the two halves have to keep agreeing on the url they build.
 describeForEachParser('wistia facades the rebuild pass materializes', (parseHtml) => {
-  const context: TransformContext = { ...baseContext, widgetResolvers: [wistiaEmbedResolver] }
+  const context: TransformContext = {
+    ...baseContext,
+    widgetResolvers: [wistiaEmbedResolver],
+  }
 
   const transform = (value: string) => {
     return applyDomTransforms(parseHtml(value), [

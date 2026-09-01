@@ -7,6 +7,7 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { convertWidgets } from './convertWidgets.js'
 
 const stubResolver: EmbedResolver = {
+  kind: 'embed',
   selector: 'iframe[src*="example.com"]',
   extract: (element) => ({
     provider: 'example',
@@ -161,6 +162,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
 
   it('should fall back to resolver metadata dimensions when the iframe has none', async () => {
     const sizedResolver: EmbedResolver = {
+      kind: 'embed',
       selector: 'iframe[src*="example.com"]',
       extract: (element) => ({
         provider: 'example',
@@ -169,7 +171,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         height: 270,
       }),
     }
-    const customContext: TransformContext = { ...baseContext, widgetResolvers: [sizedResolver] }
+    const customContext: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [sizedResolver],
+    }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const expected = html`
       <div
@@ -185,6 +190,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
 
   it('should support a resolver with a promise-returning extract', async () => {
     const asyncResolver: EmbedResolver = {
+      kind: 'embed',
       selector: 'iframe[src*="example.com"]',
       extract: (element) =>
         Promise.resolve({
@@ -192,7 +198,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
           src: element.getAttribute('src') ?? '',
         }),
     }
-    const customContext: TransformContext = { ...baseContext, widgetResolvers: [asyncResolver] }
+    const customContext: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [asyncResolver],
+    }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const expected = html`
       <div
@@ -251,6 +260,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
 
   it('should emit data-embed-title, description, author, avatar and duration when handler returns them', async () => {
     const customResolver: EmbedResolver = {
+      kind: 'embed',
       selector: 'iframe[src*="example.com"]',
       extract: (element) => ({
         provider: 'example',
@@ -262,7 +272,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         duration: 125,
       }),
     }
-    const customContext: TransformContext = { ...baseContext, widgetResolvers: [customResolver] }
+    const customContext: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [customResolver],
+    }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const expected = html`
       <div
@@ -283,6 +296,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   // emits the placeholder, so an unsafe avatar passes through here unchanged.
   it('should pass an unsafe avatar url through unchanged', async () => {
     const customResolver: EmbedResolver = {
+      kind: 'embed',
       selector: 'iframe[src*="example.com"]',
       extract: (element) => ({
         provider: 'example',
@@ -290,7 +304,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         avatar: 'javascript:alert(1)',
       }),
     }
-    const customContext: TransformContext = { ...baseContext, widgetResolvers: [customResolver] }
+    const customContext: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [customResolver],
+    }
     const value = '<iframe src="https://example.com/player/xyz"></iframe>'
     const expected = html`
       <div
@@ -415,13 +432,17 @@ describeForEachParser('convertWidgets', (parseHtml) => {
 
   it('should skip resolver-claimed iframe when metadata.src is unsafe', async () => {
     const unsafeResolver: EmbedResolver = {
+      kind: 'embed',
       selector: 'iframe[src]',
       extract: () => ({
         provider: 'evil',
         src: 'javascript:alert(1)',
       }),
     }
-    const customContext: TransformContext = { ...baseContext, widgetResolvers: [unsafeResolver] }
+    const customContext: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [unsafeResolver],
+    }
     const value = '<iframe src="https://example.com/x"></iframe>'
     const expected = html`
       <div data-embed-src="https://example.com/x"></div>
@@ -436,6 +457,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
   // itself is not in question, so the placeholder is still built, just without the url.
   it('should drop a resolver url that resolves to nothing and keep the rest of the embed', async () => {
     const pathResolver: EmbedResolver = {
+      kind: 'embed',
       selector: 'iframe[src]',
       extract: () => ({
         provider: 'example',
@@ -443,7 +465,10 @@ describeForEachParser('convertWidgets', (parseHtml) => {
         url: '/watch/123',
       }),
     }
-    const customContext: TransformContext = { ...baseContext, widgetResolvers: [pathResolver] }
+    const customContext: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [pathResolver],
+    }
     const value = '<iframe src="https://example.com/x"></iframe>'
     const expected = html`
       <div
@@ -529,6 +554,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     // hands over whatever the publisher pasted, so it is cleaned like every other url here.
     it('should clean a resolver url with the provided cleanUrlFn', async () => {
       const urlResolver: EmbedResolver = {
+        kind: 'embed',
         selector: 'iframe[src*="example.com"]',
         extract: () => ({
           provider: 'example',
@@ -557,6 +583,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     // honour, and the whole embed is dropped over that. The url handed to the cleaner stands.
     it('should keep the resolver url when the cleanUrlFn answers with nothing', async () => {
       const urlResolver: EmbedResolver = {
+        kind: 'embed',
         selector: 'iframe[src*="example.com"]',
         extract: () => ({
           provider: 'example',
@@ -876,6 +903,7 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
 
   it('should write a poster onto a video', async () => {
     const posterResolver: MediaResolver = {
+      kind: 'media',
       selector: '.poster-embed',
       extract: () => ({
         tag: 'video',
@@ -897,6 +925,7 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
 
   it('should not write a poster onto an audio element', async () => {
     const posterResolver: MediaResolver = {
+      kind: 'media',
       selector: '.poster-embed',
       extract: () => ({
         tag: 'audio',
@@ -914,6 +943,7 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
   // the element cannot have.
   it('should not write dimensions onto an audio element', async () => {
     const sizedResolver: MediaResolver = {
+      kind: 'media',
       selector: '.poster-embed',
       extract: () => ({
         tag: 'audio',
@@ -930,6 +960,7 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
 
   it('should await an async media resolver', async () => {
     const asyncResolver: MediaResolver = {
+      kind: 'media',
       selector: '.async-embed',
       extract: async () => ({ tag: 'video', src: 'https://example.com/clip.mp4' }),
     }
@@ -1122,6 +1153,7 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
 
   describe('post fields', () => {
     const postResolver: EmbedResolver = {
+      kind: 'embed',
       selector: 'iframe[src*="post.example"]',
       extract: () => ({
         provider: 'example',

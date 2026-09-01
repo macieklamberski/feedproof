@@ -11,7 +11,10 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
   // Which element gets replaced only exists in the document once the transform runs, so
   // extracting from a parsed element cannot see the wrapping anchor being swapped out.
   const transform = (value: string) => {
-    const context: TransformContext = { ...baseContext, citeResolvers: [pzlinkcardCiteResolver] }
+    const context: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [pzlinkcardCiteResolver],
+    }
 
     return applyDomTransforms(parseHtml(value), [convertCiteCards(context)])
   }

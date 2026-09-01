@@ -16,6 +16,7 @@ import { attr, find, text } from '../utils/dom.js'
 // occur: every occurrence carries the same `data-og-*` family and none belongs to another
 // platform.
 export const tistoryCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '[data-og-source-url]',
   extract: (element) => {
     return buildCite({

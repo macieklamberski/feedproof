@@ -217,6 +217,8 @@ import type {
   CiteResolver,
   DeferredIframeSource,
   DomTransform,
+  EmbedResolver,
+  MediaResolver,
   ResolveUrlFn,
   StringTransform,
   WidgetResolver,
@@ -424,7 +426,7 @@ export const defaultAllDomTransforms: Array<DomTransform> = defaultStandardDomTr
 // Order matters when selectors overlap: each resolver runs in array order and
 // claimed iframes can't be re-matched. Place more specific selectors (e.g.
 // meta-providers like Embedly that wrap other providers) before broader ones.
-export const defaultWidgetResolvers: Array<WidgetResolver> = [
+const embedResolvers: Array<EmbedResolver> = [
   youtubeIframeEmbedResolver,
   youtubeAmpEmbedResolver,
   twitterBlockquoteEmbedResolver,
@@ -521,6 +523,9 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   telegramScriptEmbedResolver,
   telegramIframeEmbedResolver,
   mastodonEmbedResolver,
+]
+
+const mediaResolvers: Array<MediaResolver> = [
   substackMediaResolver,
   weeblyMediaResolver,
   wechatMediaResolver,
@@ -532,7 +537,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
 // Order matters here too: a resolver replaces the element it matches, so a later one never
 // sees it. No two selectors below overlap today, so nothing depends on the current order. Keep
 // the more specific one first if that ever changes.
-export const defaultCiteResolvers: Array<CiteResolver> = [
+const citeResolvers: Array<CiteResolver> = [
   ghostCiteResolver,
   substackOwnPostCiteResolver,
   substackCrossPostCiteResolver,
@@ -558,6 +563,12 @@ export const defaultCiteResolvers: Array<CiteResolver> = [
   devtoLegacyPostCiteResolver,
   affingerCiteResolver,
   mediumCiteResolver,
+]
+
+export const defaultWidgetResolvers: Array<WidgetResolver> = [
+  ...embedResolvers,
+  ...mediaResolvers,
+  ...citeResolvers,
 ]
 
 // Attributes that park a media file URL on a container which then builds the player with JS,

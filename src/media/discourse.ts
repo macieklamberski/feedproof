@@ -7,6 +7,7 @@ import { videoFileRegex } from '../utils/urls.js'
 // direct file URL and its thumbnail. Rebuild the native <video> with the thumbnail as
 // poster. The markup never carries dimensions or an aspect ratio, so none are minted.
 export const discourseMediaResolver: MediaResolver = {
+  kind: 'media',
   selector: '.video-placeholder-container[data-video-src]',
   extract: (element): MediaResolverResult | undefined => {
     const source = attr(element, 'data-video-src')

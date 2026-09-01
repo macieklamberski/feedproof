@@ -269,6 +269,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
   // the markup: every url resolved, and the canonical one cleaned.
   describe('placeholder fields', () => {
     const exampleResolver: EmbedResolver = {
+      kind: 'embed',
       selector: 'iframe[src*="example.com"]',
       extract: () => ({
         provider: 'example',

@@ -25,6 +25,7 @@ const resolvedSelector = '[data-embed-src], video, audio'
 const liveIframeSelector = 'iframe[src]:not([src="about:blank"])'
 
 export const weeblyMediaResolver: MediaResolver = {
+  kind: 'media',
   selector: '.wsite-video-wrapper',
   extract: (element): MediaResolverResult | undefined => {
     if (element.querySelector(resolvedSelector) || element.querySelector(liveIframeSelector)) {

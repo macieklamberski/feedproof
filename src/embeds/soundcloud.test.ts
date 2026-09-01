@@ -16,7 +16,10 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
 
   const transform = (value: string) => {
     return applyDomTransforms(parseHtml(value), [
-      convertWidgets({ ...baseContext, widgetResolvers: [soundcloudEmbedResolver] }),
+      convertWidgets({
+        ...baseContext,
+        widgetResolvers: [soundcloudEmbedResolver],
+      }),
     ])
   }
 

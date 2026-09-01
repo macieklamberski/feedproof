@@ -9,6 +9,7 @@ import { attr, find, text } from '../utils/dom.js'
 // in the editor, unlike the related-posts widgets we strip, which themes append to every post
 // automatically.
 export const cocoonCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.blogcard-wrap',
   extract: (element) => {
     return buildCite({

@@ -27,6 +27,7 @@ const cardParagraphSelector = cardIframeSelector
   .join(', ')
 
 export const hatenaCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: cardParagraphSelector,
   extract: (element) => {
     const iframe = find(element, cardIframeSelector)

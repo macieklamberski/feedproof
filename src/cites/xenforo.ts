@@ -8,6 +8,7 @@ import { attr, find, text } from '../utils/dom.js'
 // site to site. The theme classes are the fallback for the rare feeds whose markup ships without
 // the hooks, or whose figure carries the image under its own class instead of under the hook.
 export const xenforoCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.bbCodeBlock--unfurl[data-url]',
   extract: (element) => {
     return buildCite({
