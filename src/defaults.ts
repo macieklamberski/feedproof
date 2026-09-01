@@ -816,6 +816,13 @@ export const defaultNonContentSelectors = [
 
   // Share and call-to-action button clusters.
   '.captioned-button-wrap', // Substack caption + CTA button (Share/Subscribe/Comment).
+  // Substack's ButtonCreateButton, its CTA button outside a captioned wrap. The component wraps
+  // author-authored buttons too (donation links, "Read <post title>"), and Elementor emits the
+  // same button-wrapper class, so the platform action in the href is what is matched rather than
+  // the component or the class.
+  '[data-component-name="ButtonCreateButton"]:has(> a[href*="/subscribe"])',
+  '[data-component-name="ButtonCreateButton"]:has(> a[href*="/comments"])',
+  '[data-component-name="ButtonCreateButton"]:has(> a[href*="action=share"])',
   '[class*="social-share"]', // Generic social-share button cluster.
   '[class*="share-buttons"]', // Generic social-share button cluster.
   '.sharethis-inline-share-buttons', // ShareThis inline share buttons.

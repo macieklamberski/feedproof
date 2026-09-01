@@ -538,9 +538,8 @@ describeForEachParser('Substack', (parseHtml) => {
     expect(result).toEqualHtml(expected)
   })
 
-  it('should keep a standalone ButtonCreateButton paragraph untouched', async () => {
-    // Passes through: no selector claims the bare CTA paragraph, so the subscribe button
-    // link survives outside a captioned-button wrap.
+  it('should strip a standalone ButtonCreateButton subscribe CTA', async () => {
+    // nonContentSelectors owns it: the subscribe button is chrome outside a captioned wrap too.
     const buttonAttrs = jsonAttrValue({
       url: 'https://examplepub.substack.com/subscribe?',
       text: 'Subscribe now',
@@ -554,6 +553,71 @@ describeForEachParser('Substack', (parseHtml) => {
         data-attrs="${buttonAttrs}"
         data-component-name="ButtonCreateButton"
       ><a class="button primary" href="https://examplepub.substack.com/subscribe?"><span>Subscribe now</span></a></p>
+    `
+    const expected = '<p>Please feel free to share this.</p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toEqualHtml(expected)
+  })
+
+  it('should strip a standalone ButtonCreateButton comment CTA', async () => {
+    const buttonAttrs = jsonAttrValue({
+      url: 'https://examplepub.substack.com/p/the-post/comments',
+      text: 'Leave a comment',
+      action: null,
+      class: null,
+    })
+    const value = html`
+      <p>Before.</p>
+      <p
+        class="button-wrapper"
+        data-attrs="${buttonAttrs}"
+        data-component-name="ButtonCreateButton"
+      ><a class="button primary" href="https://examplepub.substack.com/p/the-post/comments"><span>Leave a comment</span></a></p>
+    `
+    const expected = '<p>Before.</p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toEqualHtml(expected)
+  })
+
+  it('should strip a standalone ButtonCreateButton share CTA', async () => {
+    const buttonAttrs = jsonAttrValue({
+      url: 'https://examplepub.substack.com/p/the-post?action=share',
+      text: 'Share',
+      action: null,
+      class: null,
+    })
+    const value = html`
+      <p>Before.</p>
+      <p
+        class="button-wrapper"
+        data-attrs="${buttonAttrs}"
+        data-component-name="ButtonCreateButton"
+      ><a class="button primary" href="https://examplepub.substack.com/p/the-post?action=share"><span>Share</span></a></p>
+    `
+    const expected = '<p>Before.</p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toEqualHtml(expected)
+  })
+
+  it('should keep a ButtonCreateButton the author pointed somewhere of their own', async () => {
+    // Passes through: the component wraps author-authored buttons too, so only the platform
+    // actions are claimed and a donate button keeps its link.
+    const buttonAttrs = jsonAttrValue({
+      url: 'https://example.com/donate?campaign=spring',
+      text: 'One-time and recurring donations',
+      action: null,
+      class: 'button-wrapper',
+    })
+    const value = html`
+      <p>Before.</p>
+      <p
+        class="button-wrapper"
+        data-attrs="${buttonAttrs}"
+        data-component-name="ButtonCreateButton"
+      ><a class="button primary button-wrapper" href="https://example.com/donate?campaign=spring"><span>One-time and recurring donations</span></a></p>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
