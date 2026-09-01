@@ -3,9 +3,11 @@ import type {
   CiteResolverResult,
   EmbedResolver,
   EmbedResolverResult,
+  MediaResolver,
   MediaResolverResult,
   ParseDateFn,
   TransformContext,
+  WidgetResolver,
   WidgetResolverResult,
 } from '../types.js'
 import { type GeneratedWrapperType, getElementDimensions, getWrapperRatio } from './dom.js'
@@ -188,6 +190,14 @@ export const createUrlEmbedResolver = (
 
 // Tells a media result apart from an embed result in the widget pass: only media results
 // carry the element tag to mint.
+// The kinds whose results the widget machinery mints: an embed placeholder or a native media
+// element. Both the widget pass and the enclosure probe select by this.
+export const isEmbedOrMediaResolver = (
+  resolver: WidgetResolver,
+): resolver is EmbedResolver | MediaResolver => {
+  return resolver.kind === 'embed' || resolver.kind === 'media'
+}
+
 export const isMediaResult = (result: WidgetResolverResult): result is MediaResolverResult => {
   return 'tag' in result
 }

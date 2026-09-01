@@ -13,6 +13,7 @@ import {
   createMediaElement,
   embedCarrierSelector,
   getEmbedSize,
+  isEmbedOrMediaResolver,
   isMediaResult,
   prepareEmbedMetadata,
   readCarrierUrl,
@@ -82,9 +83,7 @@ const carrierOrShell = (element: Element): Element => {
 // resolver claims: a src that names a media file plays directly instead of being framed.
 export const convertWidgets: DomTransform = (context) => {
   const { widgetResolvers, mediaSrcAttributes } = context
-  const embedOrMediaResolvers = widgetResolvers.filter((resolver) => {
-    return resolver.kind === 'embed' || resolver.kind === 'media'
-  })
+  const embedOrMediaResolvers = widgetResolvers.filter(isEmbedOrMediaResolver)
 
   return async (document) => {
     // One query per distinct selector instead of per resolver: every url-keyed resolver

@@ -14,6 +14,7 @@ import {
   createEmbedPlaceholder,
   createImage,
   createMediaElement,
+  isEmbedOrMediaResolver,
   isMediaResult,
   prepareEmbedMetadata,
   setDimensions,
@@ -56,11 +57,7 @@ const resolveEnclosure = async (
   probe.setAttribute('src', url)
   setDimensions(probe, enclosure)
 
-  for (const resolver of resolvers) {
-    if (resolver.kind !== 'embed' && resolver.kind !== 'media') {
-      continue
-    }
-
+  for (const resolver of resolvers.filter(isEmbedOrMediaResolver)) {
     if (probe.matches(resolver.selector)) {
       const metadata = await resolver.extract(probe)
 
