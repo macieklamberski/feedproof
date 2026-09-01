@@ -53,6 +53,12 @@ const specimens: Record<string, string | [string, string]> = {
     '<amp-analytics type="googleanalytics" data-credentials="include"><script type="application/json">{"vars":{"account":"UA-12345-6"}}</script></amp-analytics>',
   '.captioned-button-wrap':
     '<div class="captioned-button-wrap"><p class="button-wrapper"><a class="button primary" href="https://example.com/p/post?action=share"><span>Share</span></a></p></div>',
+  '[data-component-name="ButtonCreateButton"]:has(> a[href*="/subscribe"])':
+    '<p class="button-wrapper" data-component-name="ButtonCreateButton"><a class="button primary" href="https://example.com/subscribe?"><span>Subscribe now</span></a></p>',
+  '[data-component-name="ButtonCreateButton"]:has(> a[href*="/comments"])':
+    '<p class="button-wrapper" data-component-name="ButtonCreateButton"><a class="button primary" href="https://example.com/p/post/comments"><span>Leave a comment</span></a></p>',
+  '[data-component-name="ButtonCreateButton"]:has(> a[href*="action=share"])':
+    '<p class="button-wrapper" data-component-name="ButtonCreateButton"><a class="button primary" href="https://example.com/p/post?action=share"><span>Share</span></a></p>',
   '[class*="social-share"]': '<div class="social-share"><a href="/x">X</a></div>',
   '[class*="share-buttons"]': '<div class="share-buttons"><a href="/fb">Facebook</a></div>',
   '.sharethis-inline-share-buttons': '<div class="sharethis-inline-share-buttons"></div>',
