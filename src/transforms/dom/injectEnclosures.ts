@@ -53,11 +53,12 @@ const resolveEnclosure = async (
   resolvers: ReadonlyArray<WidgetResolver>,
   document: Document,
 ): Promise<EmbedResolverResult | undefined> => {
+  const embedOrMediaResolvers = resolvers.filter(isEmbedOrMediaResolver)
   const probe = document.createElement('iframe')
   probe.setAttribute('src', url)
   setDimensions(probe, enclosure)
 
-  for (const resolver of resolvers.filter(isEmbedOrMediaResolver)) {
+  for (const resolver of embedOrMediaResolvers) {
     if (probe.matches(resolver.selector)) {
       const metadata = await resolver.extract(probe)
 
