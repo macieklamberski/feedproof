@@ -1,13 +1,9 @@
 import type { DomTransform } from '../../types.js'
-import { isBlockElement, mediaElements } from '../../utils/dom.js'
+import { isBlockElement, mediaElements, placeholderSelectors } from '../../utils/dom.js'
 
-const nonTextSelector = [
-  ...mediaElements,
-  'figure',
-  'figcaption',
-  '[data-embed-provider]',
-  '[data-cite-provider]',
-].join(', ')
+const nonTextSelector = [...mediaElements, 'figure', 'figcaption', ...placeholderSelectors].join(
+  ', ',
+)
 
 const isCaptionText = (element: Element): boolean => {
   if (element.matches(nonTextSelector) || element.querySelector(nonTextSelector)) {
