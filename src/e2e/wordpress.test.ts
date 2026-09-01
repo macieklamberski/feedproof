@@ -84,4 +84,31 @@ describeForEachParser('WordPress', (parseHtml) => {
       expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
     })
   })
+
+  // Big Think's theme writes the image description in site-classed divs grouped with the
+  // credit figcaption in one wrapper. mergeWrappedCaptionText folds the description into
+  // the figcaption before unwrapWrappers dissolves the grouping.
+  it('should fold a theme-classed caption description into the credit figcaption', async () => {
+    const value = html`
+      <figure class="wp-block-image size-large">
+        <img src="https://example.com/ceres.jpg" alt="Ceres" /></p>
+        <div class="img-caption">
+          <div class="img-caption__desc">
+            <div class="img-caption__desc-inner">The dwarf planet Ceres is the largest world in the asteroid belt.</div>
+          </div>
+          <figcaption><a href="https://example.com/source" target="_blank">Credit</a>: NASA/JPL<br /></figcaption>
+        </div>
+      </figure>
+    `
+    const expected = html`
+      <figure class="wp-block-image size-large">
+        <img src="https://example.com/ceres.jpg" alt="Ceres">
+        <figcaption>
+          <p>The dwarf planet Ceres is the largest world in the asteroid belt.</p>
+          <a href="https://example.com/source" target="_blank">Credit</a>: NASA/JPL</figcaption>
+      </figure>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
 })
