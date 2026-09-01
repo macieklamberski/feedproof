@@ -22,6 +22,7 @@ import {
   substackCrossPostCiteResolver,
   substackOwnPostCiteResolver,
   substackPostEmbedCiteResolver,
+  substackPublicationCiteResolver,
 } from './cites/substack.js'
 import { swellCiteResolver } from './cites/swell.js'
 import { tcdCiteResolver } from './cites/tcd.js'
@@ -542,6 +543,7 @@ const citeResolvers: Array<CiteResolver> = [
   substackOwnPostCiteResolver,
   substackCrossPostCiteResolver,
   substackPostEmbedCiteResolver,
+  substackPublicationCiteResolver,
   cocoonCiteResolver,
   blogCardCiteResolver,
   discourseCiteResolver,
@@ -794,7 +796,6 @@ export const defaultNonContentSelectors = [
   // The same subscribe form as the wrap below, arriving as Substack's other snippet. The path is
   // anchored so a post embed (`/embed/post/{id}`) is not caught by it.
   'iframe[src*=".substack.com/"][src$="/embed"]',
-  '.embedded-publication-wrap', // Substack cross-publication subscribe promo. Renders a subscribe form; treated as non-content like the rest of the subscribe-widget family.
   '.wp-block-jetpack-subscriptions', // Jetpack Gutenberg subscribe block.
   '.kg-signup-card', // Ghost (Koenig) signup card.
   '.mc4wp-form', // Mailchimp for WordPress plugin form.
