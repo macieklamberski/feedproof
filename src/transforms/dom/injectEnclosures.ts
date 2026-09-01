@@ -57,7 +57,7 @@ const resolveEnclosure = async (
   setDimensions(probe, enclosure)
 
   for (const resolver of resolvers) {
-    if (resolver.kind === 'cite') {
+    if (resolver.kind !== 'embed' && resolver.kind !== 'media') {
       continue
     }
 
