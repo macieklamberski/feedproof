@@ -126,3 +126,35 @@ export const substackPostEmbedCiteResolver: CiteResolver = {
     })
   },
 }
+
+type PublicationAttrs = {
+  name?: string
+  base_url?: string
+  hero_text?: string
+  author_name?: string
+  logo_url?: string
+}
+
+// A card for a whole publication rather than a post. In a feed the div ships childless and every
+// field comes from `data-attrs`, which carries no `description` or `hero_image` despite the post
+// shapes above having equivalents. Substack's own site ships the same card hydrated, and there
+// the blob omits `base_url` while the anchor carries the url, so each field falls back to the
+// markup. Nothing in either shape separates a card the author introduced from one Substack
+// injected, so every card renders.
+export const substackPublicationCiteResolver: CiteResolver = {
+  kind: 'cite',
+  selector:
+    '.embedded-publication-wrap, [data-component-name="EmbeddedPublicationToDOMWithSubscribe"]',
+  extract: (element) => {
+    const attrs = jsonAttr<PublicationAttrs>(element, 'data-attrs')
+
+    return buildCite({
+      provider: 'substack',
+      url: attrs?.base_url ?? attr(find(element, 'a.embedded-publication-link-part'), 'href'),
+      title: attrs?.name ?? text(find(element, '.embedded-publication-name')),
+      description: attrs?.hero_text ?? text(find(element, '.embedded-publication-hero-text')),
+      author: attrs?.author_name,
+      icon: attrs?.logo_url ?? attr(find(element, 'img.embedded-publication-logo'), 'src'),
+    })
+  },
+}
