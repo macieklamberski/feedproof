@@ -78,14 +78,14 @@ const dedupeImageEnclosures = (
   return result
 }
 
-// A rendition stating one dimension ranks by that alone.
+// A rendition that states only one dimension ranks by that one.
 const getPixelArea = (enclosure: Enclosure): number => {
   return (enclosure.width ?? enclosure.height ?? 0) * (enclosure.height ?? enclosure.width ?? 0)
 }
 
-// A media group is one object in several renditions, so it renders once. A rendition declaring
-// a zero dimension carries no picture and yields to a sibling that has one, default flag or not;
-// an absent dimension stays eligible.
+// A media group is one thing in several renditions, so only one of them renders. A rendition
+// that says its width or height is zero has no picture in it, so a sibling that has one wins
+// even over the default flag. A rendition that says nothing about its size stays in the running.
 const pickGroupRendition = (renditions: ReadonlyArray<Enclosure>): Enclosure => {
   const renderable = renditions.filter((rendition) => rendition.url ?? rendition.playerUrl)
   const eligible = renderable.length ? renderable : renditions
@@ -102,8 +102,8 @@ const pickGroupRendition = (renditions: ReadonlyArray<Enclosure>): Enclosure => 
   })
 }
 
-// One rendition per group, standing where the group's first member stood; ungrouped
-// enclosures pass through untouched.
+// Keeps one rendition per group, in the place the group's first member had. Enclosures outside
+// a group pass through as they are.
 const collapseGroups = (enclosures: ReadonlyArray<Enclosure>): Array<Enclosure> => {
   const groups = new Map<number, Array<Enclosure>>()
 
@@ -155,10 +155,9 @@ const extractNestedUrls = (url: string): Array<string> => {
   return nested
 }
 
-// A player sometimes arrives as raw embed HTML (e.g. rawvoice:embed) instead of a
-// URL. Parse it through the DOM so entity decoding and attribute quoting are
-// handled properly, and turn the entry into a plain player page entry (url plus
-// display size) that mergePlayerEnclosures can pair with its media file.
+// A player sometimes arrives as raw embed HTML, rawvoice:embed for one, instead of a url. Parsing
+// it through the DOM takes care of entities and attribute quoting, and what comes out is a plain
+// player page entry, url and display size, that mergePlayerEnclosures can pair with its file.
 const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): Enclosure => {
   if (!enclosure.playerEmbed) {
     return enclosure
@@ -168,10 +167,9 @@ const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): En
   const container = document.createElement('div')
   container.innerHTML = playerEmbed
 
-  // In real feeds (corpus sample, July 2026) rawvoice:embed is an iframe player in 36 of
-  // 40 feeds. The rest wrap a native <audio> for the same file as the enclosure, or plain
-  // text. Only frame-able elements count as players, so those others fall through and the
-  // enclosure itself still renders.
+  // In a July 2026 corpus sample, rawvoice:embed was an iframe player in 36 of 40 feeds. The
+  // rest wrap a native <audio> for the same file as the enclosure, or plain text. Only frameable
+  // elements count as players, so those fall through and the enclosure itself still renders.
   const frame = container.querySelector('iframe[src], embed[src]')
 
   if (!frame) {
@@ -188,10 +186,9 @@ const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): En
   }
 }
 
-// An enclosure in the shape the rest of the pass works with: its player embed folded in, both
-// urls absolute. Absolute here rather than at each use, because the fingerprint that collapses
-// duplicate images and the gravatar check both read the url as it stands, and one naming no
-// host keys as itself and matches nothing.
+// Folds the player embed in and makes both urls absolute. Absolute here, once, because the image
+// fingerprint and the gravatar check both read the url as it is, and a url with no host keys as
+// itself and matches nothing.
 const readEnclosure = (
   enclosure: Enclosure,
   document: Document,
@@ -206,12 +203,11 @@ const readEnclosure = (
   }
 }
 
-// A feed sometimes lists the same media twice: once as the raw file and once as a
-// player page carrying the file URL in a query param (podcast hosts pair a plain
-// <enclosure> with a player entry like …/?media_url=<file>; the param name varies
-// by host, so any URL-shaped param value counts). Collapse such pairs into the
-// file entry with the player page as its playerUrl, so the item renders one
-// embedded player instead of a player iframe next to a bare audio element.
+// A feed sometimes lists the same media twice: the raw file, and a player page carrying that
+// file's url in a query param. Podcast hosts do this, a plain <enclosure> next to a player entry
+// like …/?media_url=<file>, and the param name varies by host, so any url-shaped param value
+// counts. The pair collapses into the file entry, with the player page as its playerUrl, so the
+// item gets one embedded player instead of a player iframe next to a bare audio element.
 const mergePlayerEnclosures = (
   enclosures: ReadonlyArray<Enclosure>,
   cleanUrlFn?: CleanUrlFn,
@@ -245,10 +241,9 @@ const mergePlayerEnclosures = (
         continue
       }
 
-      // Keep the file entry's own fields and fill only what it lacks from the
-      // player entry (a player page often carries the display size the file
-      // doesn't). The earlier position of the two is kept so injection order
-      // stays stable.
+      // The file entry keeps its own fields and takes from the player entry only what it lacks,
+      // usually the display size. The merged entry sits at the earlier of the two positions so
+      // the injection order does not move.
       const file = result[fileIndex]
       const merged: Enclosure = { ...player, ...file, playerUrl: file.playerUrl ?? player.url }
 
@@ -261,8 +256,8 @@ const mergePlayerEnclosures = (
   return result.filter((_, index) => !removed.has(index))
 }
 
-// The enclosures in the shape injection works with: read, one rendition per group, image
-// variants collapsed, player pages merged with their files.
+// Reads the enclosures and gets them into the shape injection works with: one rendition per
+// group, image variants collapsed, player pages merged with their files.
 export const prepareEnclosures = (
   enclosures: ReadonlyArray<Enclosure>,
   document: Document,

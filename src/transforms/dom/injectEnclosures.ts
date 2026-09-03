@@ -211,9 +211,9 @@ export const injectEnclosures: DomTransform = (context) => {
       }
     }
 
-    // A source already on the page, from a previous run or an earlier entry in this one, would
-    // stack a visible duplicate: one file named twice, or one media:embed inherited by every
-    // enclosure of the item.
+    // A source that is already on the page, put there by a previous run or by an earlier entry
+    // in this one, would show up twice. That happens when a feed names one file twice, or when
+    // every enclosure of an item inherits the same media:embed.
     const injectedSources = new Set<string>()
 
     for (const element of document.querySelectorAll(`[${enclosureMarker}]`)) {
