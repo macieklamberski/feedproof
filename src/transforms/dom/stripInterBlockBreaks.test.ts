@@ -1,4 +1,5 @@
-import { expect, it } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
+import { parseHtml } from '../../parsers/linkedom.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
@@ -323,5 +324,33 @@ describeForEachParser('stripInterBlockBreaks', (parseHtml) => {
     const twice = await transform(once)
 
     expect(twice).toEqualHtml(once)
+  })
+})
+
+// linkedom only: jsdom's parser closes the colgroup at the <br> and opens a second one for
+// the <col>, so its output differs by parser rather than by transform.
+describe('stripInterBlockBreaks in a colgroup', () => {
+  it('should remove br between col elements', async () => {
+    const value = html`
+      <table>
+        <colgroup>
+          <br>
+          <col>
+          <br>
+          <col>
+        </colgroup>
+      </table>
+    `
+    const expected = html`
+      <table>
+        <colgroup>
+          <col>
+          <col>
+        </colgroup>
+      </table>
+    `
+    const result = await applyDomTransforms(parseHtml(value), [stripInterBlockBreaks(baseContext)])
+
+    expect(result).toEqualHtml(expected)
   })
 })
