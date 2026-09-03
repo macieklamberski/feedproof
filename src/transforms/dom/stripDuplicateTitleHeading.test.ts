@@ -103,6 +103,18 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
       expect(await transform(value, context)).toEqualHtml(expected)
     })
 
+    it('should remove a run of headings that together spell the title', async () => {
+      const value = html`
+        <h2><span> Breaking News </span></h2>
+        <h2><span> Today </span></h2>
+        <p>Article body.</p>
+      `
+      const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today' }
+      const expected = '<p>Article body.</p>'
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
     it('should only remove the first matching heading, not subsequent occurrences', async () => {
       const value = html`
         <h1>The Title</h1>
@@ -171,6 +183,40 @@ describeForEachParser('stripDuplicateTitleHeading', (parseHtml) => {
         <h1>Different</h1>
         <p>Body.</p>
         <h2>Breaking News Today</h2>
+      `
+      const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today' }
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    it('should leave a run of headings alone when together they overshoot the title', async () => {
+      const value = html`
+        <h1>Breaking News</h1>
+        <h2>Today and Tomorrow</h2>
+        <p>Body.</p>
+      `
+      const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today' }
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    it('should not join headings across a paragraph between them', async () => {
+      const value = html`
+        <h1>Breaking News</h1>
+        <p>Body.</p>
+        <h2>Today</h2>
+      `
+      const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today' }
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    it('should skip removal when a heading in the run contains an img', async () => {
+      const value = html`
+        <h1>Breaking News</h1>
+        <h2>Today<img src="logo.png">
+        </h2>
+        <p>Body.</p>
       `
       const context: TransformContext = { ...baseContext, articleTitle: 'Breaking News Today' }
 
