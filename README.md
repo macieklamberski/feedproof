@@ -135,6 +135,8 @@ const result = transformContent(html, {
   cleanUrlFn: cleanUrl,
   // Feed item enclosures (audio/video/image), injected into the content.
   enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
+  // Images also attached to the feed itself (logo, icon). An item enclosure that repeats one of them is not injected.
+  feedImageUrls: ['https://example.com/logo.png'],
   // Route image/video/audio URLs through a proxy. Return `undefined` to leave a URL untouched.
   assetProxyFn: (url, type) => `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`,
   // Extra URL safety policy (e.g. SSRF/allowlist); return `false` to neutralize. A dangerous-scheme floor always applies.

@@ -188,6 +188,9 @@ export type TransformContext = {
   // these, not the permalink, so transforms that recognize self-page
   // links check these too. See `shortenSamePageLinkFragments`.
   sameSiteUrls?: Array<string>
+  // The feed's own images (logo, icon, cover), so an enclosure that repeats one of them is
+  // read as decoration rather than as this item's picture. See `injectEnclosures`.
+  feedImageUrls?: Array<string>
   enclosures?: Array<Enclosure>
   widgetResolvers: Array<WidgetResolver>
   mediaSrcAttributes: Array<string>
@@ -222,6 +225,7 @@ export type TransformContentOptions = {
   parseHtmlFn: ParseHtmlFn
   baseUrl?: string
   sameSiteUrls?: Array<string>
+  feedImageUrls?: Array<string>
   enclosures?: Array<Enclosure>
   resolveUrlFn?: ResolveUrlFn
   cleanUrlFn?: CleanUrlFn

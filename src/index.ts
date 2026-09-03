@@ -27,6 +27,7 @@ export const transformContent = async (
   const context: TransformContext = {
     baseUrl: options.baseUrl,
     sameSiteUrls: options.sameSiteUrls,
+    feedImageUrls: options.feedImageUrls,
     enclosures: options.enclosures,
     widgetResolvers: defaultWidgetResolvers,
     mediaSrcAttributes: defaultMediaSrcAttributes,
