@@ -20,11 +20,9 @@ export const isAvatarEnclosure = (url: string, avatarHosts: ReadonlyArray<string
   return isHostOf(url, avatarHosts) || isSubdomainOf(url, avatarHosts)
 }
 
-// Whether `incoming` is a better variant of the same image to keep than `kept`. A URL
-// with no size encoded in it (`hint === 0`) is treated as the full-res original and
-// preferred over any sized copy (a bare `photo.jpg` outranks `photo-800x450.jpg`).
-// Between two sized variants the larger wins. On a true tie the no-query URL wins, else
-// the first stays.
+// Picks between two copies of one image. A url with no size in it is the original, so a bare
+// photo.jpg beats photo-800x450.jpg. Between two sized copies the bigger one wins, and on a tie
+// the one without a query string.
 const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
   const incomingUrl = incoming.url ?? ''
   const keptUrl = kept.url ?? ''
@@ -33,6 +31,7 @@ const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
 
   const incomingIsOriginal = incomingHint === 0
   const keptIsOriginal = keptHint === 0
+
   if (incomingIsOriginal !== keptIsOriginal) {
     return incomingIsOriginal
   }
@@ -44,13 +43,10 @@ const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
   return keptUrl.includes('?') && !incomingUrl.includes('?')
 }
 
-// Collapse image enclosures that are the same picture at a different size or render:
-// a scaled copy, a CDN-proxied variant, or just a `?w=` query (a feed often lists one
-// image as a native enclosure plus a media:content). Without this they each inject as a
-// stacked copy. Keyed by getImageFingerprint (the same size-agnostic key the duplicate
-// stripper uses), keeping the largest variant, then the no-query original, then the
-// first. Only images collapse: audio/video query strings often carry identity (podcast
-// proxies), so those pass through untouched.
+// A feed often lists one picture twice, as a native enclosure and again as a media:content,
+// scaled, proxied through a CDN or with a `?w=` query, and each copy would inject on its own.
+// The key is the same size-agnostic fingerprint stripDuplicateEnclosures uses. Audio and video
+// stay out of this: their query strings often carry identity, as podcast proxies do.
 const dedupeImageEnclosures = (
   enclosures: ReadonlyArray<Enclosure>,
   cleanUrlFn?: CleanUrlFn,

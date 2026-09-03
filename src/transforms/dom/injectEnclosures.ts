@@ -205,6 +205,7 @@ export const injectEnclosures: DomTransform = (context) => {
       }
 
       const imageElement = injectImageEnclosure(document, enclosure, src)
+
       if (imageElement) {
         created.push(imageElement)
       }
