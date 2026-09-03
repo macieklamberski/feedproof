@@ -194,6 +194,63 @@ const dedupeImageEnclosures = (
   return result
 }
 
+// A rendition stating one dimension ranks by that alone.
+const getPixelArea = (enclosure: Enclosure): number => {
+  return (enclosure.width ?? enclosure.height ?? 0) * (enclosure.height ?? enclosure.width ?? 0)
+}
+
+// A media group is one object in several renditions, so it renders once. A rendition declaring
+// a zero dimension carries no picture and yields to a sibling that has one, default flag or not;
+// an absent dimension stays eligible.
+const pickGroupRendition = (renditions: ReadonlyArray<Enclosure>): Enclosure => {
+  const renderable = renditions.filter((rendition) => rendition.url ?? rendition.playerUrl)
+  const eligible = renderable.length ? renderable : renditions
+  const pictured = eligible.filter((rendition) => rendition.width !== 0 && rendition.height !== 0)
+  const candidates = pictured.length ? pictured : eligible
+  const preferred = candidates.find((rendition) => rendition.isDefault)
+
+  if (preferred) {
+    return preferred
+  }
+
+  return candidates.reduce((best, rendition) => {
+    return getPixelArea(rendition) > getPixelArea(best) ? rendition : best
+  })
+}
+
+// One rendition per group, standing where the group's first member stood; ungrouped
+// enclosures pass through untouched.
+const collapseGroups = (enclosures: ReadonlyArray<Enclosure>): Array<Enclosure> => {
+  const groups = new Map<number, Array<Enclosure>>()
+
+  for (const enclosure of enclosures) {
+    if (enclosure.groupIndex === undefined) {
+      continue
+    }
+
+    const renditions = groups.get(enclosure.groupIndex) ?? []
+    renditions.push(enclosure)
+    groups.set(enclosure.groupIndex, renditions)
+  }
+
+  const collapsed: Array<Enclosure> = []
+
+  for (const enclosure of enclosures) {
+    if (enclosure.groupIndex === undefined) {
+      collapsed.push(enclosure)
+      continue
+    }
+
+    const renditions = groups.get(enclosure.groupIndex)
+
+    if (renditions?.[0] === enclosure) {
+      collapsed.push(pickGroupRendition(renditions))
+    }
+  }
+
+  return collapsed
+}
+
 // Query param values that are themselves absolute URLs, e.g. the file URL inside
 // a player page like player.example.com/?media_url=<file>.
 const extractNestedUrls = (url: string): Array<string> => {
@@ -347,7 +404,7 @@ export const injectEnclosures: DomTransform = (context) => {
       return readEnclosure(enclosure, document, context)
     })
     const mergedEnclosures = mergePlayerEnclosures(
-      dedupeImageEnclosures(resolvedEnclosures, context.cleanUrlFn),
+      dedupeImageEnclosures(collapseGroups(resolvedEnclosures), context.cleanUrlFn),
       context.cleanUrlFn,
     )
 

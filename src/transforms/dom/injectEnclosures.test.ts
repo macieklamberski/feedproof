@@ -771,6 +771,190 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     })
   })
 
+  describe('media groups', () => {
+    it('should inject one rendition of a group, preferring the default', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        {
+          url: 'https://example.com/clip-360.mp4',
+          type: 'video/mp4',
+          width: 640,
+          height: 360,
+          groupIndex: 0,
+        },
+        {
+          url: 'https://example.com/clip-720.mp4',
+          type: 'video/mp4',
+          width: 1280,
+          height: 720,
+          isDefault: true,
+          groupIndex: 0,
+        },
+        {
+          url: 'https://example.com/clip-1080.mp4',
+          type: 'video/mp4',
+          width: 1920,
+          height: 1080,
+          groupIndex: 0,
+        },
+      ])
+      const expected = html`
+        <video
+          src="https://example.com/clip-720.mp4"
+          width="1280"
+          height="720"
+          controls
+          data-enclosure=""
+        ></video>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should inject the largest rendition of a group without a default', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        {
+          url: 'https://example.com/clip-360.mp4',
+          type: 'video/mp4',
+          width: 640,
+          height: 360,
+          groupIndex: 0,
+        },
+        {
+          url: 'https://example.com/clip-1080.mp4',
+          type: 'video/mp4',
+          width: 1920,
+          height: 1080,
+          groupIndex: 0,
+        },
+        {
+          url: 'https://example.com/clip-720.mp4',
+          type: 'video/mp4',
+          width: 1280,
+          height: 720,
+          groupIndex: 0,
+        },
+      ])
+      const expected = html`
+        <video
+          src="https://example.com/clip-1080.mp4"
+          width="1920"
+          height="1080"
+          controls
+          data-enclosure=""
+        ></video>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should skip a default rendition that declares no picture', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        {
+          url: 'https://example.com/clip-audio.mp4',
+          type: 'audio/mp4',
+          medium: 'video',
+          height: 0,
+          isDefault: true,
+          groupIndex: 0,
+        },
+        {
+          url: 'https://example.com/clip-1080.mp4',
+          type: 'video/mp4',
+          medium: 'video',
+          height: 1080,
+          groupIndex: 0,
+        },
+        {
+          url: 'https://example.com/clip-720.mp4',
+          type: 'video/mp4',
+          medium: 'video',
+          height: 720,
+          groupIndex: 0,
+        },
+      ])
+      const expected = html`
+        <video
+          src="https://example.com/clip-1080.mp4"
+          height="1080"
+          controls
+          data-enclosure=""
+        ></video>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should keep the default rendition when no rendition declares a picture', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        {
+          url: 'https://example.com/episode.opus',
+          type: 'audio/ogg',
+          height: 0,
+          groupIndex: 0,
+        },
+        {
+          url: 'https://example.com/episode.mp3',
+          type: 'audio/mpeg',
+          height: 0,
+          isDefault: true,
+          groupIndex: 0,
+        },
+      ])
+      const expected = html`
+        <audio
+          src="https://example.com/episode.mp3"
+          controls
+          data-enclosure=""
+        ></audio>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should inject a group where its first rendition stood', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        {
+          url: 'https://example.com/clip-720.mp4',
+          type: 'video/mp4',
+          height: 720,
+          groupIndex: 0,
+        },
+        { url: 'https://example.com/episode.mp3', type: 'audio/mpeg' },
+        {
+          url: 'https://example.com/clip-1080.mp4',
+          type: 'video/mp4',
+          height: 1080,
+          groupIndex: 0,
+        },
+      ])
+      const expected = html`
+        <video
+          src="https://example.com/clip-1080.mp4"
+          height="1080"
+          controls
+          data-enclosure=""
+        ></video>
+        <audio
+          src="https://example.com/episode.mp3"
+          controls
+          data-enclosure=""
+        ></audio>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+  })
+
   it('should skip enclosures without type or medium', async () => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/file.bin' }])
