@@ -78,10 +78,6 @@ const dedupeImageEnclosures = (
   return result
 }
 
-const getPixelArea = (enclosure: Enclosure): number => {
-  return (enclosure.width ?? enclosure.height ?? 0) * (enclosure.height ?? enclosure.width ?? 0)
-}
-
 // A media group is one thing in several renditions, so only one of them renders. A rendition
 // that says its width or height is zero has no picture in it, so a sibling that has one wins
 // even over the default flag. A rendition that says nothing about its size stays in the running.
@@ -90,15 +86,8 @@ const pickGroupRendition = (renditions: ReadonlyArray<Enclosure>): Enclosure => 
   const eligible = renderable.length ? renderable : renditions
   const pictured = eligible.filter((rendition) => rendition.width !== 0 && rendition.height !== 0)
   const candidates = pictured.length ? pictured : eligible
-  const preferred = candidates.find((rendition) => rendition.isDefault)
 
-  if (preferred) {
-    return preferred
-  }
-
-  return candidates.reduce((best, rendition) => {
-    return getPixelArea(rendition) > getPixelArea(best) ? rendition : best
-  })
+  return candidates.find((rendition) => rendition.isDefault) ?? candidates[0]
 }
 
 // Keeps one rendition per group, in the place the group's first member had. Enclosures outside

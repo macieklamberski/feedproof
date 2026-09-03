@@ -812,7 +812,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(await transform(value, context)).toEqualHtml(expected)
     })
 
-    it('should inject the largest rendition of a group without a default', async () => {
+    it('should inject the first rendition of a group without a default', async () => {
       const value = '<p>Content</p>'
       const context = withEnclosures([
         {
@@ -839,9 +839,9 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       ])
       const expected = html`
         <video
-          src="https://example.com/clip-1080.mp4"
-          width="1920"
-          height="1080"
+          src="https://example.com/clip-360.mp4"
+          width="640"
+          height="360"
           controls
           data-enclosure=""
         ></video>
@@ -938,8 +938,8 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       ])
       const expected = html`
         <video
-          src="https://example.com/clip-1080.mp4"
-          height="1080"
+          src="https://example.com/clip-720.mp4"
+          height="720"
           controls
           data-enclosure=""
         ></video>
