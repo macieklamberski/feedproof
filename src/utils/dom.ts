@@ -318,6 +318,8 @@ export const isGeneratedWrapper = (element: Element): boolean => {
   return element.getAttributeNames().some((name) => startsWithAnyOf(name, generatedWrapperPrefixes))
 }
 
+export const placeholderSelectors = ['[data-embed-provider]', '[data-cite-provider]']
+
 // A pixel size as a player url or embed attribute states it: `200`, or `200px` where the
 // publisher wrote the unit. `coerceNumber` alone will not do, because it reads neither the
 // suffix nor a bound, and a stated height of `0` or `99999` is a mistake, not a size.

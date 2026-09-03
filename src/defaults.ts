@@ -162,6 +162,7 @@ import { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 import { markTimestamps } from './transforms/dom/markTimestamps.js'
 import { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
 import { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
+import { mergeWrappedCaptionText } from './transforms/dom/mergeWrappedCaptionText.js'
 import { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 import { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 import { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
@@ -389,6 +390,9 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // (permalink wrappers), stripEmptyTags, or the decision is made against siblings that
   // are about to disappear and the unwrap only fires on a re-run.
   unwrapHeadingBold,
+  // Runs before unwrapWrappers: the wrapper grouping a caption's text blocks with the
+  // figcaption is the evidence they belong together, and unwrapWrappers dissolves it.
+  mergeWrappedCaptionText,
   unwrapWrappers,
   // Runs after unwrapWrappers: a shared caption's figures sit in a wrapper of their own until
   // it dissolves, so until then they are not the caption's siblings and the group is invisible.
