@@ -851,6 +851,102 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(await transform(value, context)).toEqualHtml(expected)
     })
 
+    it('should fold an ungrouped enclosure naming a group member into the group', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/clip-720.mp4', type: 'video/mp4' },
+        {
+          url: 'https://example.com/clip-720.mp4',
+          type: 'video/mp4',
+          height: 720,
+          groupIndex: 0,
+        },
+        {
+          url: 'https://example.com/clip-1080.mp4',
+          type: 'video/mp4',
+          height: 1080,
+          isDefault: true,
+          groupIndex: 0,
+        },
+      ])
+      const expected = html`
+        <video
+          src="https://example.com/clip-1080.mp4"
+          height="1080"
+          controls
+          data-enclosure=""
+        ></video>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should fold an ungrouped enclosure listed after its group member', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        {
+          url: 'https://example.com/clip-720.mp4',
+          type: 'video/mp4',
+          height: 720,
+          groupIndex: 0,
+        },
+        {
+          url: 'https://example.com/clip-1080.mp4',
+          type: 'video/mp4',
+          height: 1080,
+          isDefault: true,
+          groupIndex: 0,
+        },
+        { url: 'https://example.com/clip-720.mp4', type: 'video/mp4' },
+      ])
+      const expected = html`
+        <video
+          src="https://example.com/clip-1080.mp4"
+          height="1080"
+          controls
+          data-enclosure=""
+        ></video>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should fold on the cleaned url', async () => {
+      const value = '<p>Content</p>'
+      const context: TransformContext = {
+        ...withEnclosures([
+          { url: 'https://example.com/clip-720.mp4?utm_source=feed', type: 'video/mp4' },
+          {
+            url: 'https://example.com/clip-720.mp4',
+            type: 'video/mp4',
+            height: 720,
+            groupIndex: 0,
+          },
+          {
+            url: 'https://example.com/clip-1080.mp4',
+            type: 'video/mp4',
+            height: 1080,
+            isDefault: true,
+            groupIndex: 0,
+          },
+        ]),
+        cleanUrlFn: (url) => url.split('?')[0],
+      }
+      const expected = html`
+        <video
+          src="https://example.com/clip-1080.mp4"
+          height="1080"
+          controls
+          data-enclosure=""
+        ></video>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
     it('should inject a group where its first rendition stood', async () => {
       const value = '<p>Content</p>'
       const context = withEnclosures([

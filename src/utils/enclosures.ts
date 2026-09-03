@@ -87,12 +87,68 @@ const pickGroupRendition = (renditions: ReadonlyArray<Enclosure>): Enclosure => 
   return candidates.find((rendition) => rendition.isDefault) ?? candidates[0]
 }
 
-// Keeps one rendition per group, in the place the group's first member had. Enclosures outside
-// a group pass through as they are.
-const collapseGroups = (enclosures: ReadonlyArray<Enclosure>): Array<Enclosure> => {
-  const groups = new Map<number, Array<Enclosure>>()
+// An entry outside any group that names the same file as a group member is that member listed
+// again, so it joins the group: it keeps its own position and takes the member's fields.
+const foldEqualMembers = (
+  enclosures: ReadonlyArray<Enclosure>,
+  cleanUrlFn?: CleanUrlFn,
+): Array<Enclosure> => {
+  const members = new Map<string, Enclosure>()
 
   for (const enclosure of enclosures) {
+    if (enclosure.groupIndex !== undefined && typeof enclosure.url === 'string') {
+      members.set(cleanUrl(enclosure.url, { cleanUrlFn }), enclosure)
+    }
+  }
+
+  if (!members.size) {
+    return [...enclosures]
+  }
+
+  const emitted = new Set<Enclosure>()
+  const folded: Array<Enclosure> = []
+
+  for (const enclosure of enclosures) {
+    if (enclosure.groupIndex !== undefined) {
+      if (!emitted.has(enclosure)) {
+        emitted.add(enclosure)
+        folded.push(enclosure)
+      }
+
+      continue
+    }
+
+    if (typeof enclosure.url !== 'string') {
+      folded.push(enclosure)
+      continue
+    }
+
+    const member = members.get(cleanUrl(enclosure.url, { cleanUrlFn }))
+
+    if (!member) {
+      folded.push(enclosure)
+      continue
+    }
+
+    if (!emitted.has(member)) {
+      emitted.add(member)
+      folded.push({ ...enclosure, ...member })
+    }
+  }
+
+  return folded
+}
+
+// Keeps one rendition per group, in the place the group's first member had. Enclosures outside
+// a group pass through as they are.
+const collapseGroups = (
+  enclosures: ReadonlyArray<Enclosure>,
+  cleanUrlFn?: CleanUrlFn,
+): Array<Enclosure> => {
+  const folded = foldEqualMembers(enclosures, cleanUrlFn)
+  const groups = new Map<number, Array<Enclosure>>()
+
+  for (const enclosure of folded) {
     if (enclosure.groupIndex === undefined) {
       continue
     }
@@ -104,7 +160,7 @@ const collapseGroups = (enclosures: ReadonlyArray<Enclosure>): Array<Enclosure> 
 
   const collapsed: Array<Enclosure> = []
 
-  for (const enclosure of enclosures) {
+  for (const enclosure of folded) {
     if (enclosure.groupIndex === undefined) {
       collapsed.push(enclosure)
       continue
@@ -249,7 +305,8 @@ export const prepareEnclosures = (
   context: TransformContext,
 ): Array<Enclosure> => {
   const resolved = enclosures.map((enclosure) => readEnclosure(enclosure, document, context))
-  const deduped = dedupeImageEnclosures(collapseGroups(resolved), context.cleanUrlFn)
+  const collapsed = collapseGroups(resolved, context.cleanUrlFn)
+  const deduped = dedupeImageEnclosures(collapsed, context.cleanUrlFn)
 
   return mergePlayerEnclosures(deduped, context.cleanUrlFn)
 }
