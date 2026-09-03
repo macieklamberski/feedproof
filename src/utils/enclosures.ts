@@ -78,7 +78,6 @@ const dedupeImageEnclosures = (
   return result
 }
 
-// A rendition that states only one dimension ranks by that one.
 const getPixelArea = (enclosure: Enclosure): number => {
   return (enclosure.width ?? enclosure.height ?? 0) * (enclosure.height ?? enclosure.width ?? 0)
 }
