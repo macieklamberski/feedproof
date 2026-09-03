@@ -955,6 +955,75 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
     })
   })
 
+  describe('equal sources', () => {
+    it('should inject one placeholder when two enclosures name the same player', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        {
+          url: 'https://example.com/download/clip.mp4',
+          type: 'video/mp4',
+          playerUrl: 'https://example.com/videos/embed/clip',
+        },
+        {
+          url: 'https://example.com/streams/clip-2160.mp4',
+          type: 'video/mp4',
+          height: 2160,
+          playerUrl: 'https://example.com/videos/embed/clip',
+        },
+      ])
+      const expected = html`
+        <div
+          data-embed-src="https://example.com/videos/embed/clip"
+          data-enclosure=""
+        ></div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should inject one element when two enclosures name the same file', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/episode.mp3', type: 'audio/mpeg' },
+        { url: 'https://example.com/episode.mp3', type: 'audio/mpeg', duration: 1935 },
+      ])
+      const expected = html`
+        <audio
+          src="https://example.com/episode.mp3"
+          controls
+          data-enclosure=""
+        ></audio>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should keep two players that name different files', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/clip-a.mp4', type: 'video/mp4' },
+        { url: 'https://example.com/clip-b.mp4', type: 'video/mp4' },
+      ])
+      const expected = html`
+        <video
+          src="https://example.com/clip-a.mp4"
+          controls
+          data-enclosure=""
+        ></video>
+        <video
+          src="https://example.com/clip-b.mp4"
+          controls
+          data-enclosure=""
+        ></video>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+  })
+
   it('should skip enclosures without type or medium', async () => {
     const value = '<p>Content</p>'
     const context = withEnclosures([{ url: 'https://example.com/file.bin' }])

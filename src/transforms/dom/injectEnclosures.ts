@@ -210,21 +210,32 @@ export const injectEnclosures: DomTransform = (context) => {
       }
     }
 
-    // Content that already carries a marked element with the same source (typically
-    // a previous run of this transform over the same item) already shows that
-    // enclosure, so injecting it again would stack a visible duplicate.
-    const existingSources = new Set<string>()
+    // A source already on the page, from a previous run or an earlier entry in this one, would
+    // stack a visible duplicate: one file named twice, or one media:embed inherited by every
+    // enclosure of the item.
+    const injectedSources = new Set<string>()
 
     for (const element of document.querySelectorAll(`[${enclosureMarker}]`)) {
       const source = getInjectedSource(element)
 
       if (source) {
-        existingSources.add(source)
+        injectedSources.add(source)
       }
     }
 
     const injected = created.filter((element) => {
-      return !existingSources.has(getInjectedSource(element) ?? '')
+      const source = getInjectedSource(element)
+
+      if (!source) {
+        return true
+      }
+
+      if (injectedSources.has(source)) {
+        return false
+      }
+
+      injectedSources.add(source)
+      return true
     })
 
     // Tag each injected element so the optional stripDuplicateEnclosures pass can
