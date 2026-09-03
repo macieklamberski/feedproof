@@ -890,6 +890,15 @@ export const defaultNonContentSelectors = [
   // Comment-system embeds (JS mounts that render nothing without their loader script).
   '.fb-comments', // Facebook Comments.
 
+  // Breadcrumb trails, carried into the item by themes that put the page hero into the content
+  // field. Gated on a navigation element or a plugin class, because the bare word also names
+  // recipes and articles about breadcrumbs.
+  'nav.breadcrumb', // Theme breadcrumb trail.
+  'nav.breadcrumbs', // Theme breadcrumb trail, plural spelling.
+  'nav[aria-label^="breadcrumb" i]', // ARIA-labelled breadcrumb trail, singular or plural.
+  '[role="navigation"][aria-label^="breadcrumb" i]', // The same trail on a div with a navigation role.
+  '.aioseo-breadcrumbs', // All in One SEO breadcrumb trail.
+
   // Print / PDF buttons.
   '.printfriendly', // PrintFriendly print/PDF button.
   '.pf-button', // PrintFriendly button.

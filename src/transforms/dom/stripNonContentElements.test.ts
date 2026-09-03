@@ -99,6 +99,16 @@ const specimens: Record<string, string | [string, string]> = {
   '.fb-comments': '<div class="fb-comments" data-href="https://example.com/p"></div>',
   '.printfriendly': '<a class="printfriendly" href="#">Print</a>',
   '.pf-button': '<button class="pf-button">Print</button>',
+  'nav.breadcrumb':
+    '<nav class="mb-6 flex items-center gap-2 breadcrumb"><a href="https://example.com/"><img src="https://example.com/home.png" alt="Home" width="16" height="16"></a><span class="breadcrumb-divider">/</span><a href="https://example.com/blog/category/business">Business</a></nav>',
+  'nav.breadcrumbs':
+    '<nav class="breadcrumbs"><a href="https://example.com/">Home</a> &raquo; <a href="https://example.com/news/">News</a></nav>',
+  'nav[aria-label^="breadcrumb" i]':
+    '<nav aria-label="Breadcrumbs"><div class="breadcrumb-container"><a href="https://example.com/">Home</a> / <span>Guides</span></div></nav>',
+  '[role="navigation"][aria-label^="breadcrumb" i]':
+    '<div role="navigation" aria-label="Breadcrumbs"><ol><li><a href="https://example.com/">Home</a></li><li>Docs</li></ol></div>',
+  '.aioseo-breadcrumbs':
+    '<div class="aioseo-breadcrumbs"><span class="aioseo-breadcrumb"><a href="https://example.com/">Home</a></span><span class="aioseo-breadcrumb-separator">&raquo;</span><span class="aioseo-breadcrumb">Recipes</span></div>',
   '.image-link-expand': '<div class="image-link-expand"><button><svg></svg></button></div>',
   'drupal-render-placeholder':
     '<drupal-render-placeholder callback="comment.lazy_builders:renderLinks" arguments="0=node:1"></drupal-render-placeholder>',
