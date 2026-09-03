@@ -6,9 +6,9 @@ import { enclosureMarker } from './injectEnclosures.js'
 const existingMediaSelector =
   'audio[src], video[src], iframe[src], source[src], img[src], [data-embed-src]'
 
-// Audio/video/embed have no scaled variants, and their identity often lives in the
-// query (podcast proxies like `…/play.mp3?url={episode}`), so the image key's
-// query-drop would collapse distinct episodes. Match them on the exact cleaned URL.
+// Audio, video and embeds have no scaled variants, and the query can be their whole identity, a
+// YouTube watch?v= or a player page carrying the file in ?url=, so the image key's query-drop
+// would merge different episodes. They match on the exact cleaned url.
 const buildMediaKey = (element: Element, cleanUrlFn?: CleanUrlFn): string => {
   const src = element.getAttribute('src') ?? element.getAttribute('data-embed-src') ?? ''
 

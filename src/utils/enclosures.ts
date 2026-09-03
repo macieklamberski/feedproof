@@ -46,7 +46,8 @@ const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
 // A feed often lists one picture twice, as a native enclosure and again as a media:content,
 // scaled, proxied through a CDN or with a `?w=` query, and each copy would inject on its own.
 // The key is the same size-agnostic fingerprint stripDuplicateEnclosures uses. Audio and video
-// stay out of this: their query strings often carry identity, as podcast proxies do.
+// stay out of this: there the query can be the whole identity, a YouTube watch?v= or a player
+// page carrying the file in ?url=.
 const dedupeImageEnclosures = (
   enclosures: ReadonlyArray<Enclosure>,
   cleanUrlFn?: CleanUrlFn,
