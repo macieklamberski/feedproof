@@ -50,6 +50,20 @@ describeForEachParser('getElementDimensions', (parseHtml) => {
     expect(getElementDimensions(image)).toEqual({ width: 200, height: undefined })
   })
 
+  it('should read a px-suffixed attribute the way the browser does', () => {
+    const document = parseHtml('<iframe width="100%" height="900px"></iframe>')
+    const frame = queryElement(document, 'iframe')
+
+    expect(getElementDimensions(frame)).toEqual({ width: undefined, height: 900 })
+  })
+
+  it('should keep a px-suffixed tracking pixel size parseable', () => {
+    const document = parseHtml('<img width="1px" height="1px">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 1, height: 1 })
+  })
+
   it('should treat an empty attribute as absent rather than zero', () => {
     const document = parseHtml('<img width="" height="">')
     const image = queryElement(document, 'img')
