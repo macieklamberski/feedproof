@@ -947,6 +947,16 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(await transform(value, context)).toEqualHtml(expected)
     })
 
+    it('should inject nothing for a group whose renditions have no url', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { type: 'video/mp4', height: 720, groupIndex: 0 },
+        { type: 'video/mp4', height: 1080, isDefault: true, groupIndex: 0 },
+      ])
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
     it('should inject a group where its first rendition stood', async () => {
       const value = '<p>Content</p>'
       const context = withEnclosures([

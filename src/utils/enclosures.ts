@@ -79,12 +79,11 @@ const dedupeImageEnclosures = (
 }
 
 // A media group is one thing in several renditions, so only one of them renders: the default,
-// else the first.
-const pickGroupRendition = (renditions: ReadonlyArray<Enclosure>): Enclosure => {
+// else the first. A group with nothing to load renders nothing.
+const pickGroupRendition = (renditions: ReadonlyArray<Enclosure>): Enclosure | undefined => {
   const renderable = renditions.filter((rendition) => rendition.url ?? rendition.playerUrl)
-  const candidates = renderable.length ? renderable : renditions
 
-  return candidates.find((rendition) => rendition.isDefault) ?? candidates[0]
+  return renderable.find((rendition) => rendition.isDefault) ?? renderable[0]
 }
 
 // An entry outside any group that names the same file as a group member is that member listed
@@ -168,8 +167,14 @@ const collapseGroups = (
 
     const renditions = groups.get(enclosure.groupIndex)
 
-    if (renditions?.[0] === enclosure) {
-      collapsed.push(pickGroupRendition(renditions))
+    if (renditions?.[0] !== enclosure) {
+      continue
+    }
+
+    const rendition = pickGroupRendition(renditions)
+
+    if (rendition) {
+      collapsed.push(rendition)
     }
   }
 
