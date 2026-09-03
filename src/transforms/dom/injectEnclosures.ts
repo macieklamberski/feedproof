@@ -12,7 +12,7 @@ import {
   isVideoEnclosure,
   prepareEnclosures,
 } from '../../utils/enclosures.js'
-import { resolveOrDropUrl, resolveOrKeepUrl } from '../../utils/urls.js'
+import { cleanUrl, resolveOrDropUrl, resolveOrKeepUrl } from '../../utils/urls.js'
 import {
   createEmbedPlaceholder,
   createImage,
@@ -213,14 +213,15 @@ export const injectEnclosures: DomTransform = (context) => {
 
     // A source that is already on the page, put there by a previous run or by an earlier entry
     // in this one, would show up twice. That happens when a feed names one file twice, or when
-    // every enclosure of an item inherits the same media:embed.
+    // every enclosure of an item inherits the same media:embed. Sources compare cleaned, so a
+    // tracking parameter does not make two copies of one file look different.
     const injectedSources = new Set<string>()
 
     for (const element of document.querySelectorAll(`[${enclosureMarker}]`)) {
       const source = getInjectedSource(element)
 
       if (source) {
-        injectedSources.add(source)
+        injectedSources.add(cleanUrl(source, { cleanUrlFn: context.cleanUrlFn }))
       }
     }
 
@@ -231,11 +232,13 @@ export const injectEnclosures: DomTransform = (context) => {
         return true
       }
 
-      if (injectedSources.has(source)) {
+      const key = cleanUrl(source, { cleanUrlFn: context.cleanUrlFn })
+
+      if (injectedSources.has(key)) {
         return false
       }
 
-      injectedSources.add(source)
+      injectedSources.add(key)
       return true
     })
 

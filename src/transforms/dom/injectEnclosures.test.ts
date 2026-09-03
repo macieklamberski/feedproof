@@ -1028,6 +1028,27 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(await transform(value, context)).toEqualHtml(expected)
     })
 
+    it('should inject one element when two enclosures differ only by a tracking parameter', async () => {
+      const value = '<p>Content</p>'
+      const context: TransformContext = {
+        ...withEnclosures([
+          { url: 'https://example.com/episode.mp3?utm_source=feed', type: 'audio/mpeg' },
+          { url: 'https://example.com/episode.mp3?utm_source=web', type: 'audio/mpeg' },
+        ]),
+        cleanUrlFn: (url) => url.split('?')[0],
+      }
+      const expected = html`
+        <audio
+          src="https://example.com/episode.mp3?utm_source=feed"
+          controls
+          data-enclosure=""
+        ></audio>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
     it('should keep two players that name different files', async () => {
       const value = '<p>Content</p>'
       const context = withEnclosures([
