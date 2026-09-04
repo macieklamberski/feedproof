@@ -1113,8 +1113,11 @@ describeForEachParser('Substack', (parseHtml) => {
       </div>
     `
     const expected = html`
-      <div data-embed-src="https://manifold.markets/embed/ExampleUser/will-the-thing-happen">
-      </div>
+      <div
+        data-embed-src="https://manifold.markets/embed/ExampleUser/will-the-thing-happen"
+        data-embed-width="560"
+        data-embed-height="405"
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
