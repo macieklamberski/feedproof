@@ -528,6 +528,51 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(await transform(value, context)).toEqualHtml(value)
     })
 
+    // Substack puts a post's cover image in the enclosure, and a post with no cover gets the
+    // publication logo there instead, so the logo would head every imageless post.
+    it('should not inject an image enclosure that is the feed image', async () => {
+      const value = '<p>Content</p>'
+      const context: TransformContext = {
+        ...withEnclosures([{ url: 'https://example.com/logo.png', type: 'image/jpeg' }]),
+        feedImageUrls: ['https://example.com/logo.png'],
+      }
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    it('should not inject the feed image served as another rendition', async () => {
+      const value = '<p>Content</p>'
+      const logo = 'https%3A%2F%2Fmedia.example.com%2Fpublic%2Fimages%2Flogo_1010x1010.png'
+      const context: TransformContext = {
+        ...withEnclosures([
+          {
+            url: `https://substackcdn.com/image/fetch/$s_!9H2b!,w_256,c_limit,f_auto/${logo}`,
+            type: 'image/jpeg',
+          },
+        ]),
+        feedImageUrls: [`https://substackcdn.com/image/fetch/w_512,c_limit,f_auto/${logo}`],
+      }
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    it('should keep a real image enclosure and skip the feed image in the same item', async () => {
+      const value = '<p>Content</p>'
+      const context: TransformContext = {
+        ...withEnclosures([
+          { url: 'https://example.com/logo.png', type: 'image/jpeg' },
+          { url: 'https://example.com/photo.jpg', type: 'image/jpeg' },
+        ]),
+        feedImageUrls: ['https://example.com/logo.png'],
+      }
+      const expected = html`
+        <img src="https://example.com/photo.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
     it('should collapse a WordPress -WxH variant to the full-res original', async () => {
       const value = '<p>Content</p>'
       const context = withEnclosures([
