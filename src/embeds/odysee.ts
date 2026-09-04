@@ -90,3 +90,7 @@ const odyseeResolveEmbed = (link: string, element: Element): EmbedResolverResult
 }
 
 export const odyseeEmbedResolver = createUrlEmbedResolver(odyseeHosts, odyseeResolveEmbed)
+
+// No autoplay hint. `autoplay=true` does start the embed, but the player forces it muted, any
+// value included, and offers no way to unmute from outside. Without it the viewer's click inside
+// the frame plays with sound, which is the better of the two.

@@ -85,3 +85,7 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
     return stated ? { ...result, height: stated } : result
   },
 )
+
+// No autoplay hint. The widget guide documents `autoplay=true`, but the player bundle holds no
+// code for it and the server-rendered config is identical with and without it. The widget does
+// start from a `{ type: 'play' }` message posted into the frame.

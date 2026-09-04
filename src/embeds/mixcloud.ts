@@ -1,5 +1,5 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A show is `{user}/{slug}`. Mixcloud keeps whatever script the publisher titled it in, so the
@@ -125,3 +125,13 @@ export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefin
 export const mixcloudEmbedResolver = createUrlEmbedResolver(mixcloudHosts, mixcloudResolveEmbed, {
   preferResolverSize: true,
 })
+
+// Starts playback on the click that loads the widget. The widget switches it off on a mobile
+// user agent and hides the cover whenever it is on. The documented `www` url redirects to
+// `player-widget.mixcloud.com`, and an iframe's `allow="autoplay"` covers only the origin in its
+// `src`, so a reader has to grant autoplay to any origin (`autoplay *`) or the redirect loses it
+// and the widget sits at 00:00.
+export const mixcloudRenderHint: EmbedRenderHint = {
+  provider: 'mixcloud',
+  autoplayParams: { autoplay: '1' },
+}
