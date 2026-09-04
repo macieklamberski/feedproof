@@ -1,5 +1,5 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
 import { pickQueryParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -130,3 +130,9 @@ export const vimeoResolveEmbed = (
 }
 
 export const vimeoEmbedResolver = createUrlEmbedResolver(vimeoHosts, vimeoResolveEmbed)
+
+// `dnt=1` turns off Vimeo's viewer tracking: no cookies and no analytics.
+export const vimeoRenderHint: EmbedRenderHint = {
+  provider: 'vimeo',
+  params: { dnt: '1' },
+}

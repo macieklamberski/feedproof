@@ -1,6 +1,7 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize } from '../utils/dom.js'
+import { isRecord, readPixels } from '../utils/hints.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A channel and a message id, the pair the widget spells `channel/111424`. Telegram usernames
@@ -71,3 +72,13 @@ export const telegramIframeEmbedResolver = createUrlEmbedResolver(
   telegramHosts,
   telegramResolveEmbed,
 )
+
+// The player reports a `resize` event with its height, `null` for a post it could not load
+// (captured 2026-09-04), which reads as nothing.
+export const telegramRenderHint: EmbedRenderHint = {
+  provider: 'telegram',
+  origin: 'https://t.me',
+  readHeight: (data) => {
+    return isRecord(data) && data.event === 'resize' ? readPixels(data.height) : undefined
+  },
+}

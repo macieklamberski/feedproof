@@ -6,6 +6,7 @@ import {
   blueskyHosts,
   blueskyIframeEmbedResolver,
   blueskyPostElementEmbedResolver,
+  blueskyRenderHint,
   blueskyS9eEmbedResolver,
 } from './bluesky.js'
 
@@ -948,5 +949,18 @@ describeForEachParser('blueskyPostElementEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+describe('blueskyRenderHint', () => {
+  it('should read the height out of the frame report', () => {
+    const value = { height: 687.125, id: '1' }
+
+    expect(blueskyRenderHint.readHeight?.(value)).toBe(687.125)
+  })
+
+  it('should read nothing out of a message without a height', () => {
+    expect(blueskyRenderHint.readHeight?.({ id: '1' })).toBeUndefined()
+    expect(blueskyRenderHint.readHeight?.('ready')).toBeUndefined()
   })
 })

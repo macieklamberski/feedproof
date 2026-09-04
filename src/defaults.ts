@@ -946,3 +946,5 @@ export const defaultNonContentSelectors = [
   // markup, so there is nothing to recover here, only chrome to remove.
   'span[data-s9e-mediaembed]:not(:has(iframe, embed, object, video, audio))',
 ]
+
+export { defaultEmbedRenderHints } from './hints.js'

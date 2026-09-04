@@ -1,6 +1,7 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, isBlockElement, isBr, isElement, jsonAttr, text } from '../utils/dom.js'
+import { isRecord, readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -302,3 +303,13 @@ export const blueskyPostElementEmbedResolver = createMarkupEmbedResolver(
   'bluesky-post[src]',
   (element) => extractQuotedPost(element, 'src'),
 )
+
+// The player reports its rendered height as a bare object, but only to a frame whose url carries
+// an `id` query, which it echoes back; without one it stays silent (captured 2026-09-04). The
+// value is what Bluesky's own embed script keys the frame by, and any non-empty one will do.
+export const blueskyRenderHint: EmbedRenderHint = {
+  provider: 'bluesky',
+  origin: 'https://embed.bsky.app',
+  params: { id: '1' },
+  readHeight: (data) => (isRecord(data) ? readPixels(data.height) : undefined),
+}

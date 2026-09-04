@@ -30,6 +30,10 @@
       "types": "./dist/defaults.d.ts",
       "default": "./dist/defaults.js"
     },
+    "./hints": {
+      "types": "./dist/hints.d.ts",
+      "default": "./dist/hints.js"
+    },
     "./linkedom": {
       "types": "./dist/parsers/linkedom.d.ts",
       "default": "./dist/parsers/linkedom.js"
@@ -40,7 +44,7 @@
   ],
   "scripts": {
     "prepare": "lefthook install",
-    "build": "tsdown src/index.ts src/defaults.ts src/parsers/linkedom.ts --format esm --dts --clean --unbundle --no-fixed-extension",
+    "build": "tsdown src/index.ts src/defaults.ts src/hints.ts src/parsers/linkedom.ts --format esm --dts --clean --unbundle --no-fixed-extension",
     "test": "bun test",
     "test:linkedom": "DOM_LIBRARY=linkedom bun test",
     "test:jsdom": "DOM_LIBRARY=jsdom bun test"

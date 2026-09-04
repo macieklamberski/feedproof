@@ -1,5 +1,6 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -77,3 +78,18 @@ export const notecomIframeEmbedResolver = createUrlEmbedResolver(notecomHosts, (
   // Only the post form names the user, so only it can state the canonical url outright.
   return composeEmbed(target.noteId, target.kind === 'post' ? url : undefined)
 })
+
+// The player reports its height as a string, `height::{player url}::{pixels}`, once the note has
+// rendered (captured 2026-09-04). The url in the middle can hold anything, so the number is read
+// off the end.
+const heightMessageRegex = /^height::.*::(\d+(?:\.\d+)?)$/
+
+export const notecomRenderHint: EmbedRenderHint = {
+  provider: 'notecom',
+  origin: 'https://note.com',
+  readHeight: (data) => {
+    return typeof data === 'string'
+      ? readPixels(Number(data.match(heightMessageRegex)?.[1]))
+      : undefined
+  },
+}

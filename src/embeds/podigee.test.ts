@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { podigeeEmbedResolver, podigeeResolveEmbed } from './podigee.js'
+import { podigeeEmbedResolver, podigeeRenderHint, podigeeResolveEmbed } from './podigee.js'
 
 describeForEachParser('podigeeEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, podigeeEmbedResolver)
@@ -169,5 +169,24 @@ describeForEachParser('podigee through the pipeline', (parseHtml) => {
     `
 
     expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+})
+
+describe('podigeeRenderHint', () => {
+  it('should read the height out of the player configuration', () => {
+    const value = {
+      listenTo: 'configurePlayer',
+      height: 144.812,
+      title: 'Podcast player for episode "Scheiden tut weh - entscheiden auch".',
+    }
+
+    expect(podigeeRenderHint.readHeight?.(value)).toBe(144.812)
+  })
+
+  it('should read nothing before the player has rendered', () => {
+    const value = { listenTo: 'configurePlayer', height: 0, title: 'Podcast player' }
+
+    expect(podigeeRenderHint.readHeight?.(value)).toBeUndefined()
+    expect(podigeeRenderHint.readHeight?.({ listenTo: 'loadSubscribeButton' })).toBeUndefined()
   })
 })

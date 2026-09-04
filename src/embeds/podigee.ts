@@ -1,5 +1,6 @@
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
+import { isRecord, readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -86,3 +87,16 @@ export const podigeeResolveEmbed = (url: string): EmbedResolverResult | undefine
 }
 
 export const podigeeIframeEmbedResolver = createUrlEmbedResolver(podigeeHosts, podigeeResolveEmbed)
+
+// The player reports its height under a `configurePlayer` message, 0 before it has rendered
+// and the real value after (captured 2026-09-04), which is what Podigee's own embed script sets
+// the iframe to. The frame is served from the show's own subdomain, so it has no origin to name
+// here and the reader matches the frame's own.
+export const podigeeRenderHint: EmbedRenderHint = {
+  provider: 'podigee',
+  readHeight: (data) => {
+    return isRecord(data) && data.listenTo === 'configurePlayer'
+      ? readPixels(data.height)
+      : undefined
+  },
+}

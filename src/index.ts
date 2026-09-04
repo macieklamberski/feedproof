@@ -78,8 +78,8 @@ export {
   defaultStandardDomTransforms,
   heuristicDomTransforms,
 } from './defaults.js'
-
 export { hljsHighlightFn } from './highlighters/hljs.js'
+export { defaultEmbedRenderHints } from './hints.js'
 export { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 export { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 export { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
@@ -173,6 +173,7 @@ export type {
   CleanUrlFn,
   DomTransform,
   EmbedRef,
+  EmbedRenderHint,
   EmbedResolver,
   EmbedResolverResult,
   Enclosure,

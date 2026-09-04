@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { notecomIframeEmbedResolver } from './notecom.js'
+import { notecomIframeEmbedResolver, notecomRenderHint } from './notecom.js'
 
 describeForEachParser('notecomIframeEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, notecomIframeEmbedResolver)
@@ -83,5 +83,18 @@ describeForEachParser('notecomIframeEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+describe('notecomRenderHint', () => {
+  it('should read the height off the end of the string', () => {
+    const value = 'height::https://note.com/embed/notes/ne5fc6bd602c8::234'
+
+    expect(notecomRenderHint.readHeight?.(value)).toBe(234)
+  })
+
+  it('should read nothing out of another string or a non-string', () => {
+    expect(notecomRenderHint.readHeight?.('ready')).toBeUndefined()
+    expect(notecomRenderHint.readHeight?.({ height: 234 })).toBeUndefined()
   })
 })

@@ -165,6 +165,46 @@ The `stringTransforms` and `domTransforms` options each fully replace the corres
 
 The platforms feedsweep recognizes, the hosts it treats as trackers, the selectors it strips as non-content and the lazy-loading attributes it reads are all built in and not configurable. A platform or attribute that is missing belongs in the library: open an issue or a pull request.
 
+## Render hints
+
+A placeholder says what to load. `feedsweep/hints` says what a reader needs once it turns one into a frame: the query parameters the player wants, the ones that start playback on a click, and how the player reports its rendered height. A social post has no height until it renders, so the frame posts one and the reader sizes the box from it.
+
+```typescript
+import { defaultEmbedRenderHints } from 'feedsweep/hints'
+
+const byProvider = new Map(defaultEmbedRenderHints.map((hint) => [hint.provider, hint]))
+const hint = byProvider.get(placeholder.dataset.embedProvider)
+const url = new URL(placeholder.dataset.embedSrc)
+
+for (const [key, value] of Object.entries(hint?.params ?? {})) {
+  url.searchParams.set(key, value)
+}
+
+iframe.src = url.href
+
+// The origin check and the source check are both load-bearing: without the second, any
+// frame on the page could claim another origin's message and resize a box it does not own.
+window.addEventListener('message', (event) => {
+  const origin = hint?.origin ?? new URL(iframe.src).origin
+  const height = hint?.readHeight?.(event.data)
+
+  if (event.origin !== origin || event.source !== iframe.contentWindow || !height) {
+    return
+  }
+
+  wrapper.style.aspectRatio = ''
+  wrapper.style.height = `${height}px`
+})
+
+iframe.addEventListener('load', () => {
+  if (hint?.heightRequest !== undefined) {
+    iframe.contentWindow?.postMessage(hint.heightRequest, '*')
+  }
+})
+```
+
+Each hint is data and a pure reader of the platform's message. Whether to autoplay, when to load and what to do with a height stay the reader's decisions. The entry pulls in the hints and nothing of the pipeline behind them.
+
 ## DOM library
 
 Feedsweep is parser-agnostic. You provide `parseHtmlFn` — a function that turns an HTML string into a `Document`. Use any DOM library that produces a standards-compliant `Document`. The test suite runs the full pipeline against both linkedom and jsdom.

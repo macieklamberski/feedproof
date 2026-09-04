@@ -6,6 +6,7 @@ import {
   twitterAmpEmbedResolver,
   twitterBlockquoteEmbedResolver,
   twitterIframeEmbedResolver,
+  twitterRenderHint,
   twitterResolveEmbed,
   twitterSubstackEmbedResolver,
 } from './twitter.js'
@@ -1255,5 +1256,33 @@ describeForEachParser('twitter shapes the pipeline repairs first', (parseHtml) =
 
       expect(await placeholder(value)).toEqual(expected)
     })
+  })
+})
+
+describe('twitterRenderHint', () => {
+  it('should read the height out of a resize call', () => {
+    const value = {
+      'twttr.embed': {
+        jsonrpc: '2.0',
+        method: 'twttr.private.resize',
+        id: 'embed-0',
+        params: [{ width: 550, height: 321, data: { tweet_id: '2095839790608363813' } }],
+      },
+    }
+
+    expect(twitterRenderHint.readHeight?.(value)).toBe(321)
+  })
+
+  it('should read nothing out of the other calls', () => {
+    const value = {
+      'twttr.embed': {
+        jsonrpc: '2.0',
+        method: 'twttr.private.rendered',
+        id: 'embed-0',
+        params: [{ data: { tweet_id: '2095839790608363813' } }],
+      },
+    }
+
+    expect(twitterRenderHint.readHeight?.(value)).toBeUndefined()
   })
 })

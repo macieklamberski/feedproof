@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { type MastodonStatus, mastodonEmbedResolver, parseMastodonStatus } from './mastodon.js'
+import {
+  type MastodonStatus,
+  mastodonEmbedResolver,
+  mastodonRenderHint,
+  parseMastodonStatus,
+} from './mastodon.js'
 
 describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
   const extract = (value: string): EmbedResolverResult | undefined => {
@@ -470,5 +475,15 @@ describe('parseMastodonStatus', () => {
 
   it('should reject a template that never rendered', () => {
     expect(parseMastodonStatus('{{ $status }}/embed')).toBeUndefined()
+  })
+})
+
+describe('mastodonRenderHint', () => {
+  it('should read the height out of the answer to its request', () => {
+    expect(mastodonRenderHint.readHeight?.({ type: 'setHeight', id: 0, height: 747 })).toBe(747)
+  })
+
+  it('should read nothing out of another message', () => {
+    expect(mastodonRenderHint.readHeight?.({ type: 'ready' })).toBeUndefined()
   })
 })

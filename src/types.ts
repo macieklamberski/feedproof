@@ -46,6 +46,30 @@ export type EmbedResolverResult = {
   duration?: number
 }
 
+// What a reader needs to know about a provider's player once a placeholder becomes a frame,
+// beyond what the placeholder states: the query the player wants, and how the player reports its
+// height once it has rendered. A social post has no height until then, so the frame posts one
+// and the reader sizes the box from it. These are facts about the player and pure readers of its
+// messages; whether to autoplay, when to load and what to do with a height stay the reader's
+// decisions.
+export type EmbedRenderHint = {
+  provider: string
+  // The origin the player's messages arrive from, for a reader to check `event.origin` against.
+  // Absent where the player is served from the publisher's own host, a Mastodon instance or a
+  // Podigee show, and the frame's own origin is the one to match.
+  origin?: string
+  // Query parameters the player needs on every load.
+  params?: Record<string, string>
+  // Query parameters that start playback, for a load that follows a person's click.
+  autoplayParams?: Record<string, string>
+  // A message to post into the frame once it has loaded, for a player that reports its height
+  // only when asked.
+  heightRequest?: unknown
+  // The rendered height in pixels out of a message the frame posted, or nothing when the message
+  // is about something else or the player has not rendered yet.
+  readHeight?: (data: unknown) => number | undefined
+}
+
 // What the pipeline hands an enricher: the two attributes that name a placeholder's embed, and
 // nothing else. The id must be enough to rebuild the platform's endpoint on its own, which is why
 // TikTok's carries the handle beside the video id.
