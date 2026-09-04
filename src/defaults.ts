@@ -139,11 +139,7 @@ import { typeformIframeEmbedResolver, typeformWidgetEmbedResolver } from './embe
 import { videopressFlashEmbedResolver, videopressIframeEmbedResolver } from './embeds/videopress.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { wistiaEmbedResolver } from './embeds/wistia.js'
-import {
-  youtubeAmpEmbedResolver,
-  youtubeIframeEmbedResolver,
-  youtubeRenderHint,
-} from './embeds/youtube.js'
+import { youtubeAmpEmbedResolver, youtubeIframeEmbedResolver } from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
 import { discourseMediaResolver } from './media/discourse.js'
 import { ghostMediaResolver } from './media/ghost.js'
@@ -599,9 +595,8 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   ...citeResolvers,
 ]
 
-// What a reader needs from a provider once it turns a placeholder into a frame: the query that
-// starts playback on a click, and how the player reports its rendered height. One per provider,
-// beside its resolver.
+// How each provider's player reports its rendered height, for a reader that turned the
+// placeholder into a frame. One per provider, beside its resolver.
 export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
   blueskyRenderHint,
   instagramRenderHint,
@@ -611,7 +606,6 @@ export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
   redditRenderHint,
   telegramRenderHint,
   twitterRenderHint,
-  youtubeRenderHint,
 ]
 
 // Attributes that park a media file URL on a container which then builds the player with JS,
