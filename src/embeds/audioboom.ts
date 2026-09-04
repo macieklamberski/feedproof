@@ -1,5 +1,5 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^\d+$/
@@ -50,3 +50,10 @@ export const audioboomResolveEmbed = (url: string): EmbedResolverResult | undefi
 }
 
 export const audioboomEmbedResolver = createUrlEmbedResolver(audioboomHosts, audioboomResolveEmbed)
+
+// Starts playback on the click that loads the player: the v4 player reads `autoplay` off its
+// query and starts from 0 once the audio node is ready. Undocumented, read from its chunks.
+export const audioboomRenderHint: EmbedRenderHint = {
+  provider: 'audioboom',
+  autoplayParams: { autoplay: '1' },
+}

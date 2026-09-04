@@ -38,7 +38,7 @@ import {
   archiveIframeEmbedResolver,
   archiveRenderHint,
 } from './embeds/archive.js'
-import { audioboomEmbedResolver } from './embeds/audioboom.js'
+import { audioboomEmbedResolver, audioboomRenderHint } from './embeds/audioboom.js'
 import { bandcampEmbedResolver } from './embeds/bandcamp.js'
 import { bitchuteEmbedResolver, bitchuteRenderHint } from './embeds/bitchute.js'
 import { bloggerEmbedResolver } from './embeds/blogger.js'
@@ -613,6 +613,7 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
 // provider, beside its resolver.
 export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
   archiveRenderHint,
+  audioboomRenderHint,
   bitchuteRenderHint,
   blueskyRenderHint,
   brightcoveRenderHint,
