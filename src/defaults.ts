@@ -901,6 +901,15 @@ export const defaultNonContentSelectors = [
   '[role="navigation"][aria-label^="breadcrumb" i]', // The same trail on a div with a navigation role.
   '.aioseo-breadcrumbs', // All in One SEO breadcrumb trail.
 
+  // Reading-time badges, which plugins write into the post body so they ship in the feed as a
+  // stray "Reading Time: 6 minutes" line above the article.
+  '.rt-reading-time', // Reading Time WP badge.
+  '.yoast-reading-time__wrapper', // Yoast SEO estimated-reading-time block.
+  '.booster-read-block', // Booster read-time block.
+  '.bsf-rt-reading-time', // Ultimate Addons for Elementor reading-time shortcode.
+  '.reading-time-article', // Drupal theme badge, the article copy.
+  '.reading-time-teaser', // Drupal theme badge, the teaser copy emitted beside it.
+
   // Print / PDF buttons.
   '.printfriendly', // PrintFriendly print/PDF button.
   '.pf-button', // PrintFriendly button.
