@@ -105,9 +105,8 @@ export const mastodonEmbedResolver = createMarkupEmbedResolver(
 )
 
 // The player reports its height only when asked: post `setHeight` into the frame once it has
-// loaded and it answers with the same type and the rendered height (captured 2026-09-04). The
-// frame is served by the publisher's instance, so it has no origin to name here and the
-// reader matches the frame's own.
+// loaded and it answers with the same type and the rendered height. The frame is served by the
+// publisher's instance, so it has no origin to name here and the reader matches the frame's own.
 export const readMastodonHeight = (data: unknown): number | undefined => {
   return isRecord(data) && data.type === 'setHeight' ? readPixels(data.height) : undefined
 }

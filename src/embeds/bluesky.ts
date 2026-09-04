@@ -304,9 +304,7 @@ export const blueskyPostElementEmbedResolver = createMarkupEmbedResolver(
   (element) => extractQuotedPost(element, 'src'),
 )
 
-// The player reports its rendered height as a bare object whenever the post's size changes,
-// with the `id` its own embed script keys frames by echoed back, `null` where the url carries
-// none (captured 2026-09-04). A reader matches the frame by `event.source`, so no id is minted.
+// The player posts its height whenever the post's size changes.
 export const readBlueskyHeight = (data: unknown): number | undefined => {
   return isRecord(data) ? readPixels(data.height) : undefined
 }

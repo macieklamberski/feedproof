@@ -80,8 +80,7 @@ export const notecomIframeEmbedResolver = createUrlEmbedResolver(notecomHosts, (
 })
 
 // The player reports its height as a string, `height::{player url}::{pixels}`, once the note has
-// rendered (captured 2026-09-04). The url in the middle can hold anything, so the number is read
-// off the end.
+// rendered. The url in the middle can hold anything, so the number is read off the end.
 const heightMessageRegex = /^height::.*::(\d+(?:\.\d+)?)$/
 
 export const readNotecomHeight = (data: unknown): number | undefined => {

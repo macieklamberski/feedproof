@@ -73,8 +73,8 @@ export const telegramIframeEmbedResolver = createUrlEmbedResolver(
   telegramResolveEmbed,
 )
 
-// The player reports a `resize` event with its height, `null` for a post it could not load
-// (captured 2026-09-04), which reads as nothing.
+// The player reports a `resize` event with its height, `null` for a post it could not load,
+// which reads as nothing.
 export const readTelegramHeight = (data: unknown): number | undefined => {
   return isRecord(data) && data.event === 'resize' ? readPixels(data.height) : undefined
 }

@@ -316,8 +316,8 @@ export const instagramIframeEmbedResolver = createUrlEmbedResolver(
   instagramResolveEmbed,
 )
 
-// The player measures itself once mounted and reports it under a `MEASURE` type (captured
-// 2026-09-04). `LOADING` and `MOUNTED` come through the same channel without a size.
+// The player measures itself once mounted and reports it under a `MEASURE` type. `LOADING`
+// and `MOUNTED` come through the same channel without a size.
 export const readInstagramHeight = (data: unknown): number | undefined => {
   return isRecord(data) && data.type === 'MEASURE' && isRecord(data.details)
     ? readPixels(data.details.height)
