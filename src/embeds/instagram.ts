@@ -1,7 +1,7 @@
-import { parseUrl } from 'trousse'
+import { isPlainObject, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, parsePixelSize, text } from '../utils/dom.js'
-import { isRecord, readPixels } from '../utils/hints.js'
+import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -319,7 +319,7 @@ export const instagramIframeEmbedResolver = createUrlEmbedResolver(
 // The player measures itself once mounted and reports it under a `MEASURE` type. `LOADING`
 // and `MOUNTED` come through the same channel without a size.
 export const readInstagramHeight = (data: unknown): number | undefined => {
-  return isRecord(data) && data.type === 'MEASURE' && isRecord(data.details)
+  return isPlainObject(data) && data.type === 'MEASURE' && isPlainObject(data.details)
     ? readPixels(data.details.height)
     : undefined
 }

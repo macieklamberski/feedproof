@@ -1,7 +1,7 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, isPlainObject } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize, text } from '../utils/dom.js'
-import { isRecord, readPixels } from '../utils/hints.js'
+import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -170,7 +170,7 @@ export const redditIframeEmbedResolver = createUrlEmbedResolver(redditHosts, red
 // The player reports its height under a `resize.embed` type, first as 0 and then as the rendered
 // value once the post is in, so the first message reads as nothing.
 export const readRedditHeight = (data: unknown): number | undefined => {
-  return isRecord(data) && data.type === 'resize.embed' ? readPixels(data.data) : undefined
+  return isPlainObject(data) && data.type === 'resize.embed' ? readPixels(data.data) : undefined
 }
 
 export const redditRenderHint: EmbedRenderHint = {

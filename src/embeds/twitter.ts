@@ -1,7 +1,7 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { isHostOf, isPlainObject, isSubdomainOf, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, text } from '../utils/dom.js'
-import { isRecord, readPixels } from '../utils/hints.js'
+import { readPixels } from '../utils/hints.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A tweet ships as `<blockquote class="twitter-tweet">` holding the tweet text in a `<p>`, then
@@ -287,13 +287,13 @@ export const twitterIframeEmbedResolver = createUrlEmbedResolver(
 // in view, and again when a reader expands a truncated post. The other calls in the same
 // envelope, `initialized`, `results` and `rendered`, carry no size.
 export const readTwitterHeight = (data: unknown): number | undefined => {
-  const call = isRecord(data) ? data['twttr.embed'] : undefined
+  const call = isPlainObject(data) ? data['twttr.embed'] : undefined
   const params =
-    isRecord(call) && call.method === 'twttr.private.resize' && Array.isArray(call.params)
+    isPlainObject(call) && call.method === 'twttr.private.resize' && Array.isArray(call.params)
       ? call.params[0]
       : undefined
 
-  return isRecord(params) ? readPixels(params.height) : undefined
+  return isPlainObject(params) ? readPixels(params.height) : undefined
 }
 
 export const twitterRenderHint: EmbedRenderHint = {

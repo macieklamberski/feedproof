@@ -1,7 +1,7 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, isPlainObject } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, isBlockElement, isBr, isElement, jsonAttr, text } from '../utils/dom.js'
-import { isRecord, readPixels } from '../utils/hints.js'
+import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -306,7 +306,7 @@ export const blueskyPostElementEmbedResolver = createMarkupEmbedResolver(
 
 // The player posts its height whenever the post's size changes.
 export const readBlueskyHeight = (data: unknown): number | undefined => {
-  return isRecord(data) ? readPixels(data.height) : undefined
+  return isPlainObject(data) ? readPixels(data.height) : undefined
 }
 
 export const blueskyRenderHint: EmbedRenderHint = {

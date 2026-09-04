@@ -1,6 +1,7 @@
+import { isPlainObject } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { isRecord, readPixels } from '../utils/hints.js'
+import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -93,7 +94,9 @@ export const podigeeIframeEmbedResolver = createUrlEmbedResolver(podigeeHosts, p
 // frame is served from the show's own subdomain, so it has no origin to name here and the
 // reader matches the frame's own.
 export const readPodigeeHeight = (data: unknown): number | undefined => {
-  return isRecord(data) && data.listenTo === 'configurePlayer' ? readPixels(data.height) : undefined
+  return isPlainObject(data) && data.listenTo === 'configurePlayer'
+    ? readPixels(data.height)
+    : undefined
 }
 
 export const podigeeRenderHint: EmbedRenderHint = {

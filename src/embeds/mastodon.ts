@@ -1,7 +1,7 @@
-import { isAnyOf, parseUrl } from 'trousse'
+import { isAnyOf, isPlainObject, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find } from '../utils/dom.js'
-import { isRecord, readPixels } from '../utils/hints.js'
+import { readPixels } from '../utils/hints.js'
 import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
 export type MastodonStatus = {
@@ -108,7 +108,7 @@ export const mastodonEmbedResolver = createMarkupEmbedResolver(
 // loaded and it answers with the same type and the rendered height. The frame is served by the
 // publisher's instance, so it has no origin to name here and the reader matches the frame's own.
 export const readMastodonHeight = (data: unknown): number | undefined => {
-  return isRecord(data) && data.type === 'setHeight' ? readPixels(data.height) : undefined
+  return isPlainObject(data) && data.type === 'setHeight' ? readPixels(data.height) : undefined
 }
 
 export const mastodonRenderHint: EmbedRenderHint = {
