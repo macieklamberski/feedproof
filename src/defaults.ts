@@ -40,7 +40,7 @@ import {
 } from './embeds/archive.js'
 import { audioboomEmbedResolver, audioboomRenderHint } from './embeds/audioboom.js'
 import { bandcampEmbedResolver } from './embeds/bandcamp.js'
-import { bitchuteEmbedResolver, bitchuteRenderHint } from './embeds/bitchute.js'
+import { bitchuteEmbedResolver } from './embeds/bitchute.js'
 import { bloggerEmbedResolver } from './embeds/blogger.js'
 import { blubrryEmbedResolver } from './embeds/blubrry.js'
 import {
@@ -97,7 +97,7 @@ import { linkedinEmbedResolver } from './embeds/linkedin.js'
 import { mastodonEmbedResolver, mastodonRenderHint } from './embeds/mastodon.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { megaphoneEmbedResolver } from './embeds/megaphone.js'
-import { mixcloudEmbedResolver, mixcloudRenderHint } from './embeds/mixcloud.js'
+import { mixcloudEmbedResolver } from './embeds/mixcloud.js'
 import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from './embeds/nicovideo.js'
 import { notecomIframeEmbedResolver, notecomRenderHint } from './embeds/notecom.js'
 import { odyseeEmbedResolver } from './embeds/odysee.js'
@@ -125,7 +125,7 @@ import {
 import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from './embeds/spreaker.js'
 import { standfmEmbedResolver } from './embeds/standfm.js'
-import { tedEmbedResolver, tedRenderHint } from './embeds/ted.js'
+import { tedEmbedResolver } from './embeds/ted.js'
 import {
   telegramIframeEmbedResolver,
   telegramRenderHint,
@@ -614,19 +614,16 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
 export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
   archiveRenderHint,
   audioboomRenderHint,
-  bitchuteRenderHint,
   blueskyRenderHint,
   brightcoveRenderHint,
   instagramRenderHint,
   mastodonRenderHint,
-  mixcloudRenderHint,
   notecomRenderHint,
   omnyRenderHint,
   podigeeRenderHint,
   redditRenderHint,
   sketchfabRenderHint,
   soundcloudRenderHint,
-  tedRenderHint,
   telegramRenderHint,
   twitterRenderHint,
   videopressRenderHint,

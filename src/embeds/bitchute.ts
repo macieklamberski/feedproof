@@ -1,5 +1,5 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -41,10 +41,3 @@ const bitchuteResolveEmbed = (link: string, element: Element): EmbedResolverResu
 }
 
 export const bitchuteEmbedResolver = createUrlEmbedResolver(bitchuteHosts, bitchuteResolveEmbed)
-
-// Starts playback on the click that loads the player: its script reads `autoPlay`, spelled
-// this way, and calls `play()` once the browser allows unmuted playback. Undocumented.
-export const bitchuteRenderHint: EmbedRenderHint = {
-  provider: 'bitchute',
-  autoplayParams: { autoPlay: 'true' },
-}

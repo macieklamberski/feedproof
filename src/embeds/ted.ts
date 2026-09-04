@@ -1,5 +1,5 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import type { EmbedResolverResult } from '../types.js'
 import { keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -49,10 +49,3 @@ export const tedResolveEmbed = (url: string): EmbedResolverResult | undefined =>
 }
 
 export const tedEmbedResolver = createUrlEmbedResolver(tedHosts, tedResolveEmbed)
-
-// Starts playback on the click that loads the player: the embed reads `autoplay` and `muted`
-// out of its route query. Undocumented, read from the embed's own script.
-export const tedRenderHint: EmbedRenderHint = {
-  provider: 'ted',
-  autoplayParams: { autoplay: 'true' },
-}
