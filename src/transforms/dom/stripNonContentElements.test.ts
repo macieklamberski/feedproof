@@ -109,6 +109,20 @@ const specimens: Record<string, string | [string, string]> = {
     '<div role="navigation" aria-label="Breadcrumbs"><ol><li><a href="https://example.com/">Home</a></li><li>Docs</li></ol></div>',
   '.aioseo-breadcrumbs':
     '<div class="aioseo-breadcrumbs"><span class="aioseo-breadcrumb"><a href="https://example.com/">Home</a></span><span class="aioseo-breadcrumb-separator">&raquo;</span><span class="aioseo-breadcrumb">Recipes</span></div>',
+  '.rt-reading-time': [
+    '<p><span class="span-reading-time rt-reading-time" style="display: block;"><span class="rt-label rt-prefix">Reading Time: </span> <span class="rt-time"> 6</span> <span class="rt-label rt-postfix">minutes</span></span>Building in public once helped me.</p>',
+    '<p>Building in public once helped me.</p>',
+  ],
+  '.yoast-reading-time__wrapper':
+    '<p class="wp-block-yoast-seo-estimated-reading-time yoast-reading-time__wrapper"><span class="yoast-reading-time__icon"><svg aria-hidden="true" width="20" height="20"><path d="M12 8v4l3 3"></path></svg></span><span class="yoast-reading-time__spacer" style="display:inline-block;width:1em"></span><span class="yoast-reading-time__descriptive-text">Estimated reading time: </span><span class="yoast-reading-time__reading-time">6</span><span class="yoast-reading-time__time-unit"> minutes</span></p>',
+  '.booster-read-block':
+    '<div class="booster-block booster-read-block"><div class="twp-read-time"><i class="booster-icon twp-clock"></i> <span>Read Time:</span>6 Minute, 55 Second</div></div>',
+  '.bsf-rt-reading-time':
+    '<span class="bsf-rt-reading-time"><span class="bsf-rt-display-label" prefix=""></span> <span class="bsf-rt-display-time" reading_time="2"></span> <span class="bsf-rt-display-postfix" postfix="minute read"></span></span>',
+  '.reading-time-article':
+    '<span class="reading-time reading-time-article"><i class="far fa-file-alt" aria-hidden="true"></i> <span class="d-none d-sm-inline">Lesezeit: </span>3 Minuten</span>',
+  '.reading-time-teaser':
+    '<span class="reading-time reading-time-teaser"><i class="far fa-file-alt" aria-hidden="true"></i> 3 Minuten</span>',
   '.image-link-expand': '<div class="image-link-expand"><button><svg></svg></button></div>',
   'drupal-render-placeholder':
     '<drupal-render-placeholder callback="comment.lazy_builders:renderLinks" arguments="0=node:1"></drupal-render-placeholder>',
