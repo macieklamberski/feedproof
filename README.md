@@ -165,38 +165,6 @@ The `stringTransforms` and `domTransforms` options each fully replace the corres
 
 The platforms feedsweep recognizes, the hosts it treats as trackers, the selectors it strips as non-content and the lazy-loading attributes it reads are all built in and not configurable. A platform or attribute that is missing belongs in the library: open an issue or a pull request.
 
-## Render hints
-
-A placeholder says what to load. `defaultEmbedRenderHints` says what a reader needs once it turns the placeholder into a frame: the query that starts playback on the click, and how the player reports its rendered height. A social post has no height until it renders, so the frame posts one and the reader sizes the box from it.
-
-```typescript
-import { defaultEmbedRenderHints } from 'feedsweep'
-
-const byProvider = new Map(defaultEmbedRenderHints.map((hint) => [hint.provider, hint]))
-const hint = byProvider.get(placeholder.dataset.embedProvider)
-// The origin check and the source check are both load-bearing: without the second, any
-// frame on the page could claim another origin's message and resize a box it does not own.
-window.addEventListener('message', (event) => {
-  const origin = hint?.origin ?? new URL(iframe.src).origin
-  const height = hint?.readHeight?.(event.data)
-
-  if (event.origin !== origin || event.source !== iframe.contentWindow || !height) {
-    return
-  }
-
-  wrapper.style.aspectRatio = ''
-  wrapper.style.height = `${height}px`
-})
-
-iframe.addEventListener('load', () => {
-  if (hint?.requestHeight !== undefined) {
-    iframe.contentWindow?.postMessage(hint.requestHeight, '*')
-  }
-})
-```
-
-Each hint is a fact about the player and a pure reader of its messages. When to load and what to do with the height stay the reader's decisions.
-
 ## DOM library
 
 Feedsweep is parser-agnostic. You provide `parseHtmlFn` — a function that turns an HTML string into a `Document`. Use any DOM library that produces a standards-compliant `Document`. The test suite runs the full pipeline against both linkedom and jsdom.
