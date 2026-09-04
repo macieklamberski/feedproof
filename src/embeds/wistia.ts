@@ -1,5 +1,5 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -58,3 +58,10 @@ export const wistiaResolveEmbed = (url: string): EmbedResolverResult | undefined
 }
 
 export const wistiaEmbedResolver = createUrlEmbedResolver(wistiaHosts, wistiaResolveEmbed)
+
+// Starts playback on the click that loads the player: the iframe copies every query entry into
+// its embed options. Never `silentAutoPlay=true`, which forces a muted start.
+export const wistiaRenderHint: EmbedRenderHint = {
+  provider: 'wistia',
+  autoplayParams: { autoPlay: 'true' },
+}

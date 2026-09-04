@@ -46,22 +46,26 @@ export type EmbedResolverResult = {
   duration?: number
 }
 
-// How a provider's player reports its height once it has rendered, for a reader that turned the
-// placeholder into a frame. A social post has no height until then, so the frame posts one and
-// the reader sizes the box from it. Each hint is a fact about the player and a pure reader of its
-// messages; what to do with the height is the reader's decision.
+// What a reader needs from a provider once it turns the placeholder into a frame: the query that
+// starts playback on the click, and how the player reports its height once it has rendered. A
+// social post has no height until then, so the frame posts one and the reader sizes the box from
+// it. Each hint is a fact about the player and a pure reader of its messages; when to load and
+// what to do with a height stay the reader's decisions.
 export type EmbedRenderHint = {
   provider: string
   // The origin the player's messages arrive from, for a reader to check `event.origin` against.
   // Absent where the player is served from the publisher's own host, a Mastodon instance or a
   // Podigee show, and the frame's own origin is the one to match.
   origin?: string
+  // Query parameters that start playback, for a load that follows a person's click. They never
+  // go on the placeholder's url, since a placeholder must not start on page load.
+  autoplayParams?: Record<string, string>
   // How the player's height is obtained: what to post into the frame once it has loaded, for a
   // player that reports only when asked, and the rendered height in pixels out of a message the
   // frame posted, or nothing when the message is about something else or the player has not
   // rendered yet.
   requestHeight?: unknown
-  readHeight: (data: unknown) => number | undefined
+  readHeight?: (data: unknown) => number | undefined
 }
 
 // What the pipeline hands an enricher: the two attributes that name a placeholder's embed, and

@@ -1,5 +1,5 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A show is `{user}/{slug}`. Mixcloud keeps whatever script the publisher titled it in, so the
@@ -125,3 +125,10 @@ export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefin
 export const mixcloudEmbedResolver = createUrlEmbedResolver(mixcloudHosts, mixcloudResolveEmbed, {
   preferResolverSize: true,
 })
+
+// Starts playback on the click that loads the widget. The widget switches it off on a mobile
+// user agent and hides the cover whenever it is on.
+export const mixcloudRenderHint: EmbedRenderHint = {
+  provider: 'mixcloud',
+  autoplayParams: { autoplay: '1' },
+}

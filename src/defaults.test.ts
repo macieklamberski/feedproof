@@ -79,6 +79,11 @@ describe('defaultEmbedRenderHints', () => {
     expect(new Set(providers).size).toBe(providers.length)
   })
 
+  // A hint with nothing in it would register a provider and change nothing for a reader.
+  it.each(named)('should give %s something a reader can act on', (_, hint) => {
+    expect(hint.autoplayParams ?? hint.readHeight).toBeDefined()
+  })
+
   // A reader compares `event.origin` with it by equality, so a path or a trailing slash
   // would never match.
   it.each(named.filter(([, hint]) => hint.origin))(

@@ -1,5 +1,5 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
 import { pickUrlParams, splitStrayParams } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
@@ -287,3 +287,9 @@ export const youtubeAmpEmbedResolver = createMarkupEmbedResolver(
   },
   { preferResolverSize: true },
 )
+
+// What a reader appends to start playback on the click that loads the player.
+export const youtubeRenderHint: EmbedRenderHint = {
+  provider: 'youtube',
+  autoplayParams: { autoplay: '1', enablejsapi: '1' },
+}

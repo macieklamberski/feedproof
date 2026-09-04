@@ -167,7 +167,7 @@ The platforms feedsweep recognizes, the hosts it treats as trackers, the selecto
 
 ## Render hints
 
-A placeholder says what to load. `defaultEmbedRenderHints` says how each player reports its rendered height once a reader turns the placeholder into a frame. A social post has no height until it renders, so the frame posts one and the reader sizes the box from it.
+A placeholder says what to load. `defaultEmbedRenderHints` says what a reader needs once it turns the placeholder into a frame: the query that starts playback on the click, and how the player reports its rendered height. A social post has no height until it renders, so the frame posts one and the reader sizes the box from it.
 
 ```typescript
 import { defaultEmbedRenderHints } from 'feedsweep'
@@ -195,7 +195,7 @@ iframe.addEventListener('load', () => {
 })
 ```
 
-Each hint is a fact about the player and a pure reader of its messages. What to do with the height stays the reader's decision.
+Each hint is a fact about the player and a pure reader of its messages. When to load and what to do with the height stay the reader's decisions.
 
 ## DOM library
 

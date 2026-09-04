@@ -33,10 +33,14 @@ import { acastEmbedResolver } from './embeds/acast.js'
 import { anchorEmbedResolver } from './embeds/anchor.js'
 import { aparatIframeEmbedResolver, aparatScriptEmbedResolver } from './embeds/aparat.js'
 import { appleEmbedResolver } from './embeds/apple.js'
-import { archiveFlashEmbedResolver, archiveIframeEmbedResolver } from './embeds/archive.js'
+import {
+  archiveFlashEmbedResolver,
+  archiveIframeEmbedResolver,
+  archiveRenderHint,
+} from './embeds/archive.js'
 import { audioboomEmbedResolver } from './embeds/audioboom.js'
 import { bandcampEmbedResolver } from './embeds/bandcamp.js'
-import { bitchuteEmbedResolver } from './embeds/bitchute.js'
+import { bitchuteEmbedResolver, bitchuteRenderHint } from './embeds/bitchute.js'
 import { bloggerEmbedResolver } from './embeds/blogger.js'
 import { blubrryEmbedResolver } from './embeds/blubrry.js'
 import {
@@ -49,6 +53,7 @@ import {
 import {
   brightcoveFlashEmbedResolver,
   brightcoveIframeEmbedResolver,
+  brightcoveRenderHint,
   brightcoveVideoJsEmbedResolver,
 } from './embeds/brightcove.js'
 import {
@@ -92,11 +97,11 @@ import { linkedinEmbedResolver } from './embeds/linkedin.js'
 import { mastodonEmbedResolver, mastodonRenderHint } from './embeds/mastodon.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { megaphoneEmbedResolver } from './embeds/megaphone.js'
-import { mixcloudEmbedResolver } from './embeds/mixcloud.js'
+import { mixcloudEmbedResolver, mixcloudRenderHint } from './embeds/mixcloud.js'
 import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from './embeds/nicovideo.js'
 import { notecomIframeEmbedResolver, notecomRenderHint } from './embeds/notecom.js'
 import { odyseeEmbedResolver } from './embeds/odysee.js'
-import { omnyEmbedResolver } from './embeds/omny.js'
+import { omnyEmbedResolver, omnyRenderHint } from './embeds/omny.js'
 import { podbeanEmbedResolver } from './embeds/podbean.js'
 import {
   podigeeEmbedResolver,
@@ -110,9 +115,9 @@ import {
 } from './embeds/reddit.js'
 import { scribdFlashEmbedResolver, scribdIframeEmbedResolver } from './embeds/scribd.js'
 import { simplecastEmbedResolver } from './embeds/simplecast.js'
-import { sketchfabEmbedResolver } from './embeds/sketchfab.js'
+import { sketchfabEmbedResolver, sketchfabRenderHint } from './embeds/sketchfab.js'
 import { slideshareFlashEmbedResolver, slideshareIframeEmbedResolver } from './embeds/slideshare.js'
-import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
+import { soundcloudEmbedResolver, soundcloudRenderHint } from './embeds/soundcloud.js'
 import {
   speakerdeckIframeEmbedResolver,
   speakerdeckScriptEmbedResolver,
@@ -120,7 +125,7 @@ import {
 import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from './embeds/spreaker.js'
 import { standfmEmbedResolver } from './embeds/standfm.js'
-import { tedEmbedResolver } from './embeds/ted.js'
+import { tedEmbedResolver, tedRenderHint } from './embeds/ted.js'
 import {
   telegramIframeEmbedResolver,
   telegramRenderHint,
@@ -136,10 +141,18 @@ import {
   twitterSubstackEmbedResolver,
 } from './embeds/twitter.js'
 import { typeformIframeEmbedResolver, typeformWidgetEmbedResolver } from './embeds/typeform.js'
-import { videopressFlashEmbedResolver, videopressIframeEmbedResolver } from './embeds/videopress.js'
-import { vimeoEmbedResolver } from './embeds/vimeo.js'
-import { wistiaEmbedResolver } from './embeds/wistia.js'
-import { youtubeAmpEmbedResolver, youtubeIframeEmbedResolver } from './embeds/youtube.js'
+import {
+  videopressFlashEmbedResolver,
+  videopressIframeEmbedResolver,
+  videopressRenderHint,
+} from './embeds/videopress.js'
+import { vimeoEmbedResolver, vimeoRenderHint } from './embeds/vimeo.js'
+import { wistiaEmbedResolver, wistiaRenderHint } from './embeds/wistia.js'
+import {
+  youtubeAmpEmbedResolver,
+  youtubeIframeEmbedResolver,
+  youtubeRenderHint,
+} from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
 import { discourseMediaResolver } from './media/discourse.js'
 import { ghostMediaResolver } from './media/ghost.js'
@@ -595,17 +608,30 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   ...citeResolvers,
 ]
 
-// How each provider's player reports its rendered height, for a reader that turned the
-// placeholder into a frame. One per provider, beside its resolver.
+// What a reader needs from each provider once it turns the placeholder into a frame: the query
+// that starts playback on the click, and how the player reports its rendered height. One per
+// provider, beside its resolver.
 export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
+  archiveRenderHint,
+  bitchuteRenderHint,
   blueskyRenderHint,
+  brightcoveRenderHint,
   instagramRenderHint,
   mastodonRenderHint,
+  mixcloudRenderHint,
   notecomRenderHint,
+  omnyRenderHint,
   podigeeRenderHint,
   redditRenderHint,
+  sketchfabRenderHint,
+  soundcloudRenderHint,
+  tedRenderHint,
   telegramRenderHint,
   twitterRenderHint,
+  videopressRenderHint,
+  vimeoRenderHint,
+  wistiaRenderHint,
+  youtubeRenderHint,
 ]
 
 // Attributes that park a media file URL on a container which then builds the player with JS,

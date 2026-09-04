@@ -1,5 +1,5 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { flashVars, keepIfMatches } from '../utils/dom.js'
 import { splitStrayParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -105,3 +105,9 @@ export const archiveFlashEmbedResolver = createUrlEmbedResolver(
   archiveHosts,
   archiveFlashResolveEmbed,
 )
+
+// Starts playback on the click that loads the player, for video and audio items alike.
+export const archiveRenderHint: EmbedRenderHint = {
+  provider: 'archive',
+  autoplayParams: { autoplay: '1' },
+}

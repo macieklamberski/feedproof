@@ -1,5 +1,5 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, flashVars, keepIfMatches } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -174,3 +174,10 @@ export const brightcoveIframeEmbedResolver = createUrlEmbedResolver(
   ['brightcove.net'],
   brightcoveResolveEmbed,
 )
+
+// Starts playback on the click that loads the player, which sets `playsinline` on its own.
+// Never `autoplay=muted` or `autoplay=any`, which mute.
+export const brightcoveRenderHint: EmbedRenderHint = {
+  provider: 'brightcove',
+  autoplayParams: { autoplay: 'true' },
+}
