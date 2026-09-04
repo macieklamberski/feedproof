@@ -108,10 +108,12 @@ export const mastodonEmbedResolver = createMarkupEmbedResolver(
 // loaded and it answers with the same type and the rendered height (captured 2026-09-04). The
 // frame is served by the publisher's instance, so it has no origin to name here and the
 // reader matches the frame's own.
+export const readMastodonHeight = (data: unknown): number | undefined => {
+  return isRecord(data) && data.type === 'setHeight' ? readPixels(data.height) : undefined
+}
+
 export const mastodonRenderHint: EmbedRenderHint = {
   provider: 'mastodon',
-  heightRequest: { type: 'setHeight', id: 0 },
-  readHeight: (data) => {
-    return isRecord(data) && data.type === 'setHeight' ? readPixels(data.height) : undefined
-  },
+  requestHeight: { type: 'setHeight', id: 0 },
+  readHeight: readMastodonHeight,
 }

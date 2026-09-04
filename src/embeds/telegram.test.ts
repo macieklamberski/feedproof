@@ -2,8 +2,8 @@ import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
+  readTelegramHeight,
   telegramIframeEmbedResolver,
-  telegramRenderHint,
   telegramScriptEmbedResolver,
 } from './telegram.js'
 
@@ -337,13 +337,13 @@ describeForEachParser('telegramIframeEmbedResolver', (parseHtml) => {
   })
 })
 
-describe('telegramRenderHint', () => {
+describe('readTelegramHeight', () => {
   it('should read the height out of a resize', () => {
-    expect(telegramRenderHint.readHeight?.({ event: 'resize', height: 179 })).toBe(179)
+    expect(readTelegramHeight({ event: 'resize', height: 179 })).toBe(179)
   })
 
   it('should read nothing out of a post that could not load', () => {
-    expect(telegramRenderHint.readHeight?.({ event: 'resize', height: null })).toBeUndefined()
-    expect(telegramRenderHint.readHeight?.({ event: 'ready' })).toBeUndefined()
+    expect(readTelegramHeight({ event: 'resize', height: null })).toBeUndefined()
+    expect(readTelegramHeight({ event: 'ready' })).toBeUndefined()
   })
 })

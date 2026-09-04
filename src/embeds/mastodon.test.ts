@@ -4,8 +4,8 @@ import type { EmbedResolverResult } from '../types.js'
 import {
   type MastodonStatus,
   mastodonEmbedResolver,
-  mastodonRenderHint,
   parseMastodonStatus,
+  readMastodonHeight,
 } from './mastodon.js'
 
 describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
@@ -478,12 +478,12 @@ describe('parseMastodonStatus', () => {
   })
 })
 
-describe('mastodonRenderHint', () => {
+describe('readMastodonHeight', () => {
   it('should read the height out of the answer to its request', () => {
-    expect(mastodonRenderHint.readHeight?.({ type: 'setHeight', id: 0, height: 747 })).toBe(747)
+    expect(readMastodonHeight({ type: 'setHeight', id: 0, height: 747 })).toBe(747)
   })
 
   it('should read nothing out of another message', () => {
-    expect(mastodonRenderHint.readHeight?.({ type: 'ready' })).toBeUndefined()
+    expect(readMastodonHeight({ type: 'ready' })).toBeUndefined()
   })
 })

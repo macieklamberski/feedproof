@@ -169,10 +169,12 @@ export const redditIframeEmbedResolver = createUrlEmbedResolver(redditHosts, red
 
 // The player reports its height under a `resize.embed` type, first as 0 and then as the rendered
 // value once the post is in (captured 2026-09-04), so the first message reads as nothing.
+export const readRedditHeight = (data: unknown): number | undefined => {
+  return isRecord(data) && data.type === 'resize.embed' ? readPixels(data.data) : undefined
+}
+
 export const redditRenderHint: EmbedRenderHint = {
   provider: 'reddit',
   origin: 'https://embed.reddit.com',
-  readHeight: (data) => {
-    return isRecord(data) && data.type === 'resize.embed' ? readPixels(data.data) : undefined
-  },
+  readHeight: readRedditHeight,
 }

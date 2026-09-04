@@ -6,7 +6,6 @@ import { podigeeRenderHint } from './embeds/podigee.js'
 import { redditRenderHint } from './embeds/reddit.js'
 import { telegramRenderHint } from './embeds/telegram.js'
 import { twitterRenderHint } from './embeds/twitter.js'
-import { vimeoRenderHint } from './embeds/vimeo.js'
 import { youtubeRenderHint } from './embeds/youtube.js'
 import type { EmbedRenderHint } from './types.js'
 
@@ -21,7 +20,6 @@ export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
   redditRenderHint,
   telegramRenderHint,
   twitterRenderHint,
-  vimeoRenderHint,
   youtubeRenderHint,
 ]
 

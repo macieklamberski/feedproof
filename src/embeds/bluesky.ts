@@ -117,7 +117,7 @@ const composeEmbedResult = (post: BlueskyPost): EmbedResolverResult => {
   return {
     provider: 'bluesky',
     id: `${post.authority}/${post.rkey}`,
-    src: `https://embed.bsky.app/embed/${post.authority}/${postCollection}/${post.rkey}`,
+    src: `https://embed.bsky.app/embed/${post.authority}/${postCollection}/${post.rkey}?id=1`,
     url: `https://bsky.app/profile/${post.authority}/post/${post.rkey}`,
   }
 }
@@ -306,10 +306,14 @@ export const blueskyPostElementEmbedResolver = createMarkupEmbedResolver(
 
 // The player reports its rendered height as a bare object, but only to a frame whose url carries
 // an `id` query, which it echoes back; without one it stays silent (captured 2026-09-04). The
-// value is what Bluesky's own embed script keys the frame by, and any non-empty one will do.
+// value is what Bluesky's own embed script keys the frame by, any non-empty one will do, and the
+// minted player url carries it so the frame reports without the reader knowing why.
+export const readBlueskyHeight = (data: unknown): number | undefined => {
+  return isRecord(data) ? readPixels(data.height) : undefined
+}
+
 export const blueskyRenderHint: EmbedRenderHint = {
   provider: 'bluesky',
   origin: 'https://embed.bsky.app',
-  params: { id: '1' },
-  readHeight: (data) => (isRecord(data) ? readPixels(data.height) : undefined),
+  readHeight: readBlueskyHeight,
 }

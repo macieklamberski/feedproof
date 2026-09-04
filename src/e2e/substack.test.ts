@@ -851,7 +851,7 @@ describeForEachParser('Substack', (parseHtml) => {
       <div
         data-embed-provider="vimeo"
         data-embed-id="123456789"
-        data-embed-src="https://player.vimeo.com/video/123456789"
+        data-embed-src="https://player.vimeo.com/video/123456789?dnt=1"
         data-embed-url="https://vimeo.com/123456789"
       ></div>
     `

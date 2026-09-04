@@ -3,10 +3,10 @@ import { transformContent } from '../index.js'
 import { describeForEachParser, html, jsonAttrValue, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
+  readTwitterHeight,
   twitterAmpEmbedResolver,
   twitterBlockquoteEmbedResolver,
   twitterIframeEmbedResolver,
-  twitterRenderHint,
   twitterResolveEmbed,
   twitterSubstackEmbedResolver,
 } from './twitter.js'
@@ -1259,7 +1259,7 @@ describeForEachParser('twitter shapes the pipeline repairs first', (parseHtml) =
   })
 })
 
-describe('twitterRenderHint', () => {
+describe('readTwitterHeight', () => {
   it('should read the height out of a resize call', () => {
     const value = {
       'twttr.embed': {
@@ -1270,7 +1270,7 @@ describe('twitterRenderHint', () => {
       },
     }
 
-    expect(twitterRenderHint.readHeight?.(value)).toBe(321)
+    expect(readTwitterHeight(value)).toBe(321)
   })
 
   it('should read nothing out of the other calls', () => {
@@ -1283,6 +1283,6 @@ describe('twitterRenderHint', () => {
       },
     }
 
-    expect(twitterRenderHint.readHeight?.(value)).toBeUndefined()
+    expect(readTwitterHeight(value)).toBeUndefined()
   })
 })

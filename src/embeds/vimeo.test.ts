@@ -71,7 +71,7 @@ describe('vimeoResolveEmbed', () => {
     const expected: EmbedResolverResult = {
       provider: 'vimeo',
       id: '76979871',
-      src: 'https://player.vimeo.com/video/76979871',
+      src: 'https://player.vimeo.com/video/76979871?dnt=1',
       url: 'https://vimeo.com/76979871',
     }
 
@@ -85,7 +85,7 @@ describe('vimeoResolveEmbed', () => {
     const expected: EmbedResolverResult = {
       provider: 'vimeo',
       id: '76979871:a52724358e',
-      src: 'https://player.vimeo.com/video/76979871?h=a52724358e',
+      src: 'https://player.vimeo.com/video/76979871?h=a52724358e&dnt=1',
       url: 'https://vimeo.com/76979871/a52724358e',
     }
 
@@ -99,7 +99,7 @@ describe('vimeoResolveEmbed', () => {
     const expected: EmbedResolverResult = {
       provider: 'vimeo',
       id: '76979871:a52724358e',
-      src: 'https://player.vimeo.com/video/76979871?h=a52724358e',
+      src: 'https://player.vimeo.com/video/76979871?h=a52724358e&dnt=1',
       url: 'https://vimeo.com/76979871/a52724358e',
     }
 
@@ -112,7 +112,7 @@ describe('vimeoResolveEmbed', () => {
     const expected: EmbedResolverResult = {
       provider: 'vimeo',
       id: '76979871:a52724358e',
-      src: 'https://player.vimeo.com/video/76979871?h=a52724358e',
+      src: 'https://player.vimeo.com/video/76979871?h=a52724358e&dnt=1',
       url: 'https://vimeo.com/76979871/a52724358e',
     }
 
@@ -124,7 +124,7 @@ describe('vimeoResolveEmbed', () => {
     const expected: EmbedResolverResult = {
       provider: 'vimeo',
       id: '76979871:a52724358e',
-      src: 'https://player.vimeo.com/video/76979871?h=a52724358e&t=30s',
+      src: 'https://player.vimeo.com/video/76979871?h=a52724358e&t=30s&dnt=1',
       url: 'https://vimeo.com/76979871/a52724358e',
     }
 
@@ -136,7 +136,7 @@ describe('vimeoResolveEmbed', () => {
     const expected: EmbedResolverResult = {
       provider: 'vimeo',
       id: '76979871',
-      src: 'https://player.vimeo.com/video/76979871?t=30s',
+      src: 'https://player.vimeo.com/video/76979871?t=30s&dnt=1',
       url: 'https://vimeo.com/76979871',
     }
 
@@ -148,7 +148,7 @@ describe('vimeoResolveEmbed', () => {
     const expected: EmbedResolverResult = {
       provider: 'vimeo',
       id: '76979871',
-      src: 'https://player.vimeo.com/video/76979871',
+      src: 'https://player.vimeo.com/video/76979871?dnt=1',
       url: 'https://vimeo.com/76979871',
     }
 
@@ -170,7 +170,7 @@ describeForEachParser('vimeoEmbedResolver', (parseHtml) => {
     const expected: EmbedResolverResult = {
       provider: 'vimeo',
       id: '76979871',
-      src: 'https://player.vimeo.com/video/76979871',
+      src: 'https://player.vimeo.com/video/76979871?dnt=1',
       url: 'https://vimeo.com/76979871',
     }
 
@@ -198,7 +198,7 @@ describeForEachParser('vimeoEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'vimeo',
         id: '76979871',
-        src: 'https://player.vimeo.com/video/76979871',
+        src: 'https://player.vimeo.com/video/76979871?dnt=1',
         url: 'https://vimeo.com/76979871',
         title: 'Scott M. Graffius - Speaker Reel',
         width: 640,
@@ -220,7 +220,7 @@ describeForEachParser('vimeoEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'vimeo',
         id: '76979871',
-        src: 'https://player.vimeo.com/video/76979871',
+        src: 'https://player.vimeo.com/video/76979871?dnt=1',
         url: 'https://vimeo.com/76979871',
         title: 'Vimeo video player',
       }

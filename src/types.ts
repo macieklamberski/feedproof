@@ -46,27 +46,25 @@ export type EmbedResolverResult = {
   duration?: number
 }
 
-// What a reader needs to know about a provider's player once a placeholder becomes a frame,
-// beyond what the placeholder states: the query the player wants, and how the player reports its
-// height once it has rendered. A social post has no height until then, so the frame posts one
-// and the reader sizes the box from it. These are facts about the player and pure readers of its
-// messages; whether to autoplay, when to load and what to do with a height stay the reader's
-// decisions.
+// What a reader needs from a provider once it turns the placeholder into a frame, beyond what
+// the placeholder states: the query that starts playback on a click, and how the player reports
+// its height once it has rendered. A social post has no height until then, so the frame posts
+// one and the reader sizes the box from it. Each hint is a fact about the player and a pure
+// reader of its messages; when to load and what to do with a height stay the reader's decisions.
 export type EmbedRenderHint = {
   provider: string
   // The origin the player's messages arrive from, for a reader to check `event.origin` against.
   // Absent where the player is served from the publisher's own host, a Mastodon instance or a
   // Podigee show, and the frame's own origin is the one to match.
   origin?: string
-  // Query parameters the player needs on every load.
-  params?: Record<string, string>
-  // Query parameters that start playback, for a load that follows a person's click.
+  // Query parameters that start playback, for a load that follows a person's click. Anything a
+  // player wants on every load is minted into the placeholder's `src` instead.
   autoplayParams?: Record<string, string>
-  // A message to post into the frame once it has loaded, for a player that reports its height
-  // only when asked.
-  heightRequest?: unknown
-  // The rendered height in pixels out of a message the frame posted, or nothing when the message
-  // is about something else or the player has not rendered yet.
+  // How the player's height is obtained: what to post into the frame once it has loaded, for a
+  // player that reports only when asked, and the rendered height in pixels out of a message the
+  // frame posted, or nothing when the message is about something else or the player has not
+  // rendered yet.
+  requestHeight?: unknown
   readHeight?: (data: unknown) => number | undefined
 }
 

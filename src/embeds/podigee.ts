@@ -92,11 +92,11 @@ export const podigeeIframeEmbedResolver = createUrlEmbedResolver(podigeeHosts, p
 // and the real value after (captured 2026-09-04), which is what Podigee's own embed script sets
 // the iframe to. The frame is served from the show's own subdomain, so it has no origin to name
 // here and the reader matches the frame's own.
+export const readPodigeeHeight = (data: unknown): number | undefined => {
+  return isRecord(data) && data.listenTo === 'configurePlayer' ? readPixels(data.height) : undefined
+}
+
 export const podigeeRenderHint: EmbedRenderHint = {
   provider: 'podigee',
-  readHeight: (data) => {
-    return isRecord(data) && data.listenTo === 'configurePlayer'
-      ? readPixels(data.height)
-      : undefined
-  },
+  readHeight: readPodigeeHeight,
 }

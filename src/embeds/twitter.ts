@@ -286,16 +286,18 @@ export const twitterIframeEmbedResolver = createUrlEmbedResolver(
 // The player reports its rendered height in a JSON-RPC envelope, unprompted, once the frame is
 // in view, and again when a reader expands a truncated post (captured 2026-09-04). The other
 // calls in the same envelope, `initialized`, `results` and `rendered`, carry no size.
+export const readTwitterHeight = (data: unknown): number | undefined => {
+  const call = isRecord(data) ? data['twttr.embed'] : undefined
+  const params =
+    isRecord(call) && call.method === 'twttr.private.resize' && Array.isArray(call.params)
+      ? call.params[0]
+      : undefined
+
+  return isRecord(params) ? readPixels(params.height) : undefined
+}
+
 export const twitterRenderHint: EmbedRenderHint = {
   provider: 'twitter',
   origin: 'https://platform.twitter.com',
-  readHeight: (data) => {
-    const call = isRecord(data) ? data['twttr.embed'] : undefined
-    const params =
-      isRecord(call) && call.method === 'twttr.private.resize' && Array.isArray(call.params)
-        ? call.params[0]
-        : undefined
-
-    return isRecord(params) ? readPixels(params.height) : undefined
-  },
+  readHeight: readTwitterHeight,
 }

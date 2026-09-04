@@ -167,7 +167,7 @@ The platforms feedsweep recognizes, the hosts it treats as trackers, the selecto
 
 ## Render hints
 
-A placeholder says what to load. `feedsweep/hints` says what a reader needs once it turns one into a frame: the query parameters the player wants, the ones that start playback on a click, and how the player reports its rendered height. A social post has no height until it renders, so the frame posts one and the reader sizes the box from it.
+A placeholder says what to load. `feedsweep/hints` says what a reader needs once it turns one into a frame: the query that starts playback on a click, and how the player reports its rendered height. A social post has no height until it renders, so the frame posts one and the reader sizes the box from it. Anything a player wants on every load is already in the placeholder's `src`.
 
 ```typescript
 import { defaultEmbedRenderHints } from 'feedsweep/hints'
@@ -176,7 +176,7 @@ const byProvider = new Map(defaultEmbedRenderHints.map((hint) => [hint.provider,
 const hint = byProvider.get(placeholder.dataset.embedProvider)
 const url = new URL(placeholder.dataset.embedSrc)
 
-for (const [key, value] of Object.entries(hint?.params ?? {})) {
+for (const [key, value] of Object.entries(hint?.autoplayParams ?? {})) {
   url.searchParams.set(key, value)
 }
 
@@ -197,13 +197,13 @@ window.addEventListener('message', (event) => {
 })
 
 iframe.addEventListener('load', () => {
-  if (hint?.heightRequest !== undefined) {
-    iframe.contentWindow?.postMessage(hint.heightRequest, '*')
+  if (hint?.requestHeight !== undefined) {
+    iframe.contentWindow?.postMessage(hint.requestHeight, '*')
   }
 })
 ```
 
-Each hint is data and a pure reader of the platform's message. Whether to autoplay, when to load and what to do with a height stay the reader's decisions. The entry pulls in the hints and nothing of the pipeline behind them.
+Each hint is a fact about the player and a pure reader of its messages. When to load and what to do with a height stay the reader's decisions. The entry pulls in the hints and nothing of the pipeline behind them.
 
 ## DOM library
 

@@ -87,7 +87,7 @@ describeForEachParser('convertWidgets', (parseHtml) => {
       <div
         data-embed-width="640"
         data-embed-url="https://vimeo.com/76979871"
-        data-embed-src="https://player.vimeo.com/video/76979871"
+        data-embed-src="https://player.vimeo.com/video/76979871?dnt=1"
         data-embed-provider="vimeo"
         data-embed-id="76979871"
         data-embed-height="360"

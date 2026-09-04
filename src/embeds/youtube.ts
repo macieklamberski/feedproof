@@ -288,7 +288,7 @@ export const youtubeAmpEmbedResolver = createMarkupEmbedResolver(
   { preferResolverSize: true },
 )
 
-// The parameters a reader adds to start playback on a click.
+// What a reader appends to start playback on the click that loads the player.
 export const youtubeRenderHint: EmbedRenderHint = {
   provider: 'youtube',
   autoplayParams: { autoplay: '1', enablejsapi: '1' },

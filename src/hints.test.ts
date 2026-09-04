@@ -12,7 +12,7 @@ describe('defaultEmbedRenderHints', () => {
 
   // A hint with nothing in it would register a provider and change nothing for a reader.
   it.each(named)('should give %s something a reader can act on', (_, hint) => {
-    expect(hint.params ?? hint.autoplayParams ?? hint.readHeight).toBeDefined()
+    expect(hint.autoplayParams ?? hint.readHeight).toBeDefined()
   })
 
   // A reader compares `event.origin` with it by equality, so a path or a trailing slash
@@ -26,7 +26,7 @@ describe('defaultEmbedRenderHints', () => {
     },
   )
 
-  it.each(named.filter(([, hint]) => hint.heightRequest !== undefined))(
+  it.each(named.filter(([, hint]) => hint.requestHeight !== undefined))(
     'should read the answer to the %s height request',
     (_, hint) => {
       expect(hint.readHeight).toBeDefined()
