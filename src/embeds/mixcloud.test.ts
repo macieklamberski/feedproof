@@ -147,12 +147,15 @@ describe('mixcloudResolveEmbed', () => {
   it('should keep the full height for a mini player showing its cover', () => {
     const value =
       'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F&mini=1'
-    const result = mixcloudResolveEmbed(value)
+    const expected: EmbedResolverResult = {
+      provider: 'mixcloud',
+      id: 'photogmusic/no-filter',
+      src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F&mini=1',
+      url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      height: 160,
+    }
 
-    expect(result?.src).toBe(
-      'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F&mini=1',
-    )
-    expect(result?.height).toBe(160)
+    expect(mixcloudResolveEmbed(value)).toEqual(expected)
   })
 
   // Only a flag set to `1` is a display option. Anything else in the query, the legacy
@@ -161,9 +164,15 @@ describe('mixcloudResolveEmbed', () => {
     const value =
       'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F&mini=0&autoplay=1'
 
-    expect(mixcloudResolveEmbed(value)?.src).toBe(
-      'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
-    )
+    const expected: EmbedResolverResult = {
+      provider: 'mixcloud',
+      id: 'photogmusic/no-filter',
+      src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
+      url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      height: 160,
+    }
+
+    expect(mixcloudResolveEmbed(value)).toEqual(expected)
   })
 })
 
