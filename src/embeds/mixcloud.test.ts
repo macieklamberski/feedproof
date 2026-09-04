@@ -121,16 +121,44 @@ describe('mixcloudResolveEmbed', () => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      height: 160,
     }
 
     expect(mixcloudResolveEmbed(value)).toEqual(expected)
+  })
+
+  // The display options pick the player, so they ride through and the height follows them.
+  it('should carry the display options and size the mini player by them', () => {
+    const value =
+      'https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&light=1&mini=1&feed=%2Fdjgavinboyd%2Fsoul-has-no-tempo%2F'
+    const expected: EmbedResolverResult = {
+      provider: 'mixcloud',
+      id: 'djgavinboyd/soul-has-no-tempo',
+      src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fdjgavinboyd%2Fsoul-has-no-tempo%2F&mini=1&hide_cover=1&light=1',
+      url: 'https://www.mixcloud.com/djgavinboyd/soul-has-no-tempo/',
+      height: 60,
+    }
+
+    expect(mixcloudResolveEmbed(value)).toEqual(expected)
+  })
+
+  // Only a flag set to `1` is a display option. Anything else in the query, the legacy
+  // `embed_type` or a flag switched off, is not written back.
+  it('should drop a display option that is not switched on', () => {
+    const value =
+      'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F&mini=0&autoplay=1'
+
+    expect(mixcloudResolveEmbed(value)?.src).toBe(
+      'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
+    )
   })
 })
 
 describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, mixcloudEmbedResolver)
 
-  it('should resolve the widget iframe', async () => {
+  // The carrier's height is for a player Mixcloud no longer draws, so the measured one wins.
+  it('should size the widget iframe by the player, not the carrier', async () => {
     const value = html`
       <iframe
         width="100%"
@@ -143,7 +171,7 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
-      height: 400,
+      height: 160,
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -163,6 +191,7 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
       id: 'FakeIDRadio/4-natty-champs',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2FFakeIDRadio%2F4-natty-champs%2F',
       url: 'https://www.mixcloud.com/FakeIDRadio/4-natty-champs/',
+      height: 160,
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -183,6 +212,7 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      height: 160,
     }
 
     expect(await extract(value)).toEqual(expected)

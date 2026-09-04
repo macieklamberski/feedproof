@@ -10,6 +10,13 @@ const standfmHosts = ['stand.fm']
 const safeIdRegex = /^[0-9a-f]{24}$/
 const playerKinds = new Set(['episodes', 'channels'])
 
+// The episode card is fluid-width and fixed-height: 165 tall from 480 to 660 wide, growing past
+// 200 only below 400, measured 2026-09-04 on two episodes. stand.fm's own snippet sizes the
+// iframe with a `<style>` beside it, 190 on a desktop and 230 on a phone, which is stripped
+// before the iframe reaches a reader, so its desktop number is restated here. A channel embed
+// is a scrolling list of episodes with no height of its own, so it states none.
+const episodePlayerHeight = 190
+
 // A single episode and a whole channel are different players and different sizes, so the kind is
 // carried into the id. Both discriminate, which is what makes them worth minting: a real id
 // answers 200 and a fabricated one answers 404, and neither sends `x-frame-options` (probed
@@ -28,6 +35,7 @@ export const standfmResolveEmbed = (url: string): EmbedResolverResult | undefine
     id: `${kind}/${id}`,
     src: `https://stand.fm/embed/${kind}/${id}`,
     url: `https://stand.fm/${kind}/${id}`,
+    ...(kind === 'episodes' && { height: episodePlayerHeight }),
   }
 }
 
