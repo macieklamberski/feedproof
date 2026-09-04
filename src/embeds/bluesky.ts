@@ -117,7 +117,7 @@ const composeEmbedResult = (post: BlueskyPost): EmbedResolverResult => {
   return {
     provider: 'bluesky',
     id: `${post.authority}/${post.rkey}`,
-    src: `https://embed.bsky.app/embed/${post.authority}/${postCollection}/${post.rkey}?id=1`,
+    src: `https://embed.bsky.app/embed/${post.authority}/${postCollection}/${post.rkey}`,
     url: `https://bsky.app/profile/${post.authority}/post/${post.rkey}`,
   }
 }
@@ -304,10 +304,9 @@ export const blueskyPostElementEmbedResolver = createMarkupEmbedResolver(
   (element) => extractQuotedPost(element, 'src'),
 )
 
-// The player reports its rendered height as a bare object, but only to a frame whose url carries
-// an `id` query, which it echoes back; without one it stays silent (captured 2026-09-04). The
-// value is what Bluesky's own embed script keys the frame by, any non-empty one will do, and the
-// minted player url carries it so the frame reports without the reader knowing why.
+// The player reports its rendered height as a bare object whenever the post's size changes,
+// with the `id` its own embed script keys frames by echoed back, `null` where the url carries
+// none (captured 2026-09-04). A reader matches the frame by `event.source`, so no id is minted.
 export const readBlueskyHeight = (data: unknown): number | undefined => {
   return isRecord(data) ? readPixels(data.height) : undefined
 }

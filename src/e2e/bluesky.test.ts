@@ -37,7 +37,7 @@ describeForEachParser('Bluesky', (parseHtml) => {
       <div
         data-embed-provider="bluesky"
         data-embed-id="did:plc:ewvi7nxzyoun6zhxrhs64oiz/3lbwtqmxbec2p"
-        data-embed-src="https://embed.bsky.app/embed/did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.feed.post/3lbwtqmxbec2p?id=1"
+        data-embed-src="https://embed.bsky.app/embed/did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.feed.post/3lbwtqmxbec2p"
         data-embed-url="https://bsky.app/profile/did:plc:ewvi7nxzyoun6zhxrhs64oiz/post/3lbwtqmxbec2p"
         data-embed-description="The block editor pastes the oEmbed html verbatim."
         data-embed-author="Display Name (@user.bsky.social)"
@@ -65,7 +65,7 @@ describeForEachParser('Bluesky', (parseHtml) => {
       <div
         data-embed-provider="bluesky"
         data-embed-id="did:plc:6hz4agnyzcrsvpnprxrbjrpa/3lvq7aeuwbg42"
-        data-embed-src="https://embed.bsky.app/embed/did:plc:6hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lvq7aeuwbg42?id=1"
+        data-embed-src="https://embed.bsky.app/embed/did:plc:6hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lvq7aeuwbg42"
         data-embed-url="https://bsky.app/profile/did:plc:6hz4agnyzcrsvpnprxrbjrpa/post/3lvq7aeuwbg42"
         data-embed-description="Invalid nesting, still a post."
       ></div>
@@ -113,7 +113,7 @@ describeForEachParser('Bluesky', (parseHtml) => {
       <div
         data-embed-provider="bluesky"
         data-embed-id="did:plc:bhz4agnyzcrsvpnprxrbjrpa/3mbq7aeuwbg42"
-        data-embed-src="https://embed.bsky.app/embed/did:plc:bhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mbq7aeuwbg42?id=1"
+        data-embed-src="https://embed.bsky.app/embed/did:plc:bhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mbq7aeuwbg42"
         data-embed-url="https://bsky.app/profile/did:plc:bhz4agnyzcrsvpnprxrbjrpa/post/3mbq7aeuwbg42"
         data-embed-description="The wrapper carries the post twice over."
         data-embed-author="Newsletter Author (@author.example)"
@@ -144,7 +144,7 @@ describeForEachParser('Bluesky', (parseHtml) => {
       <div
         data-embed-provider="bluesky"
         data-embed-id="did:plc:hhz4agnyzcrsvpnprxrbjrpa/3mhq7aeuwbg42"
-        data-embed-src="https://embed.bsky.app/embed/did:plc:hhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mhq7aeuwbg42?id=1"
+        data-embed-src="https://embed.bsky.app/embed/did:plc:hhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mhq7aeuwbg42"
         data-embed-url="https://bsky.app/profile/did:plc:hhz4agnyzcrsvpnprxrbjrpa/post/3mhq7aeuwbg42"
         data-embed-width="600"
         data-embed-height="600"
@@ -182,7 +182,7 @@ describeForEachParser('Bluesky', (parseHtml) => {
       <div
         data-embed-provider="bluesky"
         data-embed-id="newsroom.example/3miq7aeuwbg42"
-        data-embed-src="https://embed.bsky.app/embed/newsroom.example/app.bsky.feed.post/3miq7aeuwbg42?id=1"
+        data-embed-src="https://embed.bsky.app/embed/newsroom.example/app.bsky.feed.post/3miq7aeuwbg42"
         data-embed-url="https://bsky.app/profile/newsroom.example/post/3miq7aeuwbg42"
         data-embed-description="The web component never mounts in a reader."
         data-embed-author="Newsroom (@newsroom.example)"

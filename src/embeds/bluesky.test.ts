@@ -33,7 +33,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:z72i7hdynmk6r22z27h6tvur/3kq7aeuwbg42k',
-        src: 'https://embed.bsky.app/embed/did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3kq7aeuwbg42k?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3kq7aeuwbg42k',
         url: 'https://bsky.app/profile/did:plc:z72i7hdynmk6r22z27h6tvur/post/3kq7aeuwbg42k',
         description: 'Just shipped: Bluesky post embeds!',
         author: 'Bluesky (@bsky.app)',
@@ -66,7 +66,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:ewvi7nxzyoun6zhxrhs64oiz/3lbwtqmxbec2p',
-        src: 'https://embed.bsky.app/embed/did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.feed.post/3lbwtqmxbec2p?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.feed.post/3lbwtqmxbec2p',
         url: 'https://bsky.app/profile/did:plc:ewvi7nxzyoun6zhxrhs64oiz/post/3lbwtqmxbec2p',
         description: 'The block editor pastes the oEmbed html verbatim.',
         author: 'Display Name (@user.bsky.social)',
@@ -94,7 +94,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:ewvi7nxzyoun6zhxrhs64oiz/3lbwtqmxbec2p',
-        src: 'https://embed.bsky.app/embed/did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.feed.post/3lbwtqmxbec2p?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.feed.post/3lbwtqmxbec2p',
         url: 'https://bsky.app/profile/did:plc:ewvi7nxzyoun6zhxrhs64oiz/post/3lbwtqmxbec2p',
         description: 'Slug variations live on the figure, not the quote.',
       }
@@ -125,7 +125,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:oisofpd7lj26yvgiivf3lxsi/3ldz3mmxjks2n',
-        src: 'https://embed.bsky.app/embed/did:plc:oisofpd7lj26yvgiivf3lxsi/app.bsky.feed.post/3ldz3mmxjks2n?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:oisofpd7lj26yvgiivf3lxsi/app.bsky.feed.post/3ldz3mmxjks2n',
         url: 'https://bsky.app/profile/did:plc:oisofpd7lj26yvgiivf3lxsi/post/3ldz3mmxjks2n',
         description: 'The loader script never runs in a reader.',
         author: 'Theme Author (@theme.example)',
@@ -157,7 +157,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:44ybard66vv44zksje25o7dz/3lgevqvpjac2u',
-        src: 'https://embed.bsky.app/embed/did:plc:44ybard66vv44zksje25o7dz/app.bsky.feed.post/3lgevqvpjac2u?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:44ybard66vv44zksje25o7dz/app.bsky.feed.post/3lgevqvpjac2u',
         url: 'https://bsky.app/profile/did:plc:44ybard66vv44zksje25o7dz/post/3lgevqvpjac2u',
         description: 'Ghost keeps the script inside the figure.',
         author: 'Ghost Writer (@ghost.example)',
@@ -186,7 +186,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:kdrlfhxenchjqnbtqvxpwsnu/3lhk2yq6xzc2f',
-        src: 'https://embed.bsky.app/embed/did:plc:kdrlfhxenchjqnbtqvxpwsnu/app.bsky.feed.post/3lhk2yq6xzc2f?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:kdrlfhxenchjqnbtqvxpwsnu/app.bsky.feed.post/3lhk2yq6xzc2f',
         url: 'https://bsky.app/profile/did:plc:kdrlfhxenchjqnbtqvxpwsnu/post/3lhk2yq6xzc2f',
         description: 'Some publishers link only the handle.',
         author: 'Display Name (@user.bsky.social)',
@@ -219,7 +219,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:tgudj2fjmgcl2w7qzruzxfmy/3lj7bvrr4yk2l',
-        src: 'https://embed.bsky.app/embed/did:plc:tgudj2fjmgcl2w7qzruzxfmy/app.bsky.feed.post/3lj7bvrr4yk2l?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:tgudj2fjmgcl2w7qzruzxfmy/app.bsky.feed.post/3lj7bvrr4yk2l',
         url: 'https://bsky.app/profile/did:plc:tgudj2fjmgcl2w7qzruzxfmy/post/3lj7bvrr4yk2l',
         description: 'A post with a picture attached.',
         author: 'Newsroom (@newsroom.example)',
@@ -252,7 +252,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:6xkqmwpqhsbnvmqvdvbjzcyz/3lm4lzkrnk22d',
-        src: 'https://embed.bsky.app/embed/did:plc:6xkqmwpqhsbnvmqvdvbjzcyz/app.bsky.feed.post/3lm4lzkrnk22d?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:6xkqmwpqhsbnvmqvdvbjzcyz/app.bsky.feed.post/3lm4lzkrnk22d',
         url: 'https://bsky.app/profile/did:plc:6xkqmwpqhsbnvmqvdvbjzcyz/post/3lm4lzkrnk22d',
         description: 'Attached media sits in the same paragraph.',
         author: 'Builder (@builder.example)',
@@ -279,7 +279,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:5rowmpbfyfhbmpmldxtqzcnj/3ln54ry2iwc2x',
-        src: 'https://embed.bsky.app/embed/did:plc:5rowmpbfyfhbmpmldxtqzcnj/app.bsky.feed.post/3ln54ry2iwc2x?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:5rowmpbfyfhbmpmldxtqzcnj/app.bsky.feed.post/3ln54ry2iwc2x',
         url: 'https://bsky.app/profile/did:plc:5rowmpbfyfhbmpmldxtqzcnj/post/3ln54ry2iwc2x',
         description: 'Ein Beitrag auf Deutsch.',
         author: 'Autorin (@autorin.example)',
@@ -314,7 +314,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:qjeavhlw222ppsre4rscd3n2/3lpyqevbqvk2j',
-        src: 'https://embed.bsky.app/embed/did:plc:qjeavhlw222ppsre4rscd3n2/app.bsky.feed.post/3lpyqevbqvk2j?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:qjeavhlw222ppsre4rscd3n2/app.bsky.feed.post/3lpyqevbqvk2j',
         url: 'https://bsky.app/profile/did:plc:qjeavhlw222ppsre4rscd3n2/post/3lpyqevbqvk2j',
         description: 'The editor keeps a second, encoded copy.',
         author: 'Editor (@editor.example)',
@@ -342,7 +342,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:hvakvedv6byxhufjl4fwfnyf/3lqmk6ipt5v22',
-        src: 'https://embed.bsky.app/embed/did:plc:hvakvedv6byxhufjl4fwfnyf/app.bsky.feed.post/3lqmk6ipt5v22?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:hvakvedv6byxhufjl4fwfnyf/app.bsky.feed.post/3lqmk6ipt5v22',
         url: 'https://bsky.app/profile/did:plc:hvakvedv6byxhufjl4fwfnyf/post/3lqmk6ipt5v22',
         description: 'An old-fashioned wrapper.',
         author: 'Retro (@retro.example)',
@@ -367,7 +367,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:2ka2wpbfyfhbmpmldxtqzcnj/3lr7aeuwbg42k',
-        src: 'https://embed.bsky.app/embed/did:plc:2ka2wpbfyfhbmpmldxtqzcnj/app.bsky.feed.post/3lr7aeuwbg42k?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:2ka2wpbfyfhbmpmldxtqzcnj/app.bsky.feed.post/3lr7aeuwbg42k',
         url: 'https://bsky.app/profile/did:plc:2ka2wpbfyfhbmpmldxtqzcnj/post/3lr7aeuwbg42k',
         description: 'Only the class survived the export.',
         author: 'Stripped (@stripped.example)',
@@ -392,7 +392,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:6kz4agnyzcrsvpnprxrbjrpa/3lvq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:6kz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lvq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:6kz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lvq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:6kz4agnyzcrsvpnprxrbjrpa/post/3lvq7aeuwbg42',
         description: 'Only the attributes survived the export.',
         author: 'Classless (@classless.example)',
@@ -416,7 +416,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:3jz4agnyzcrsvpnprxrbjrpa/3lsq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:3jz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lsq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:3jz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lsq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:3jz4agnyzcrsvpnprxrbjrpa/post/3lsq7aeuwbg42',
         description: 'A theme added its own class.',
       }
@@ -437,7 +437,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:4hz4agnyzcrsvpnprxrbjrpa/3ltq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:4hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3ltq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:4hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3ltq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:4hz4agnyzcrsvpnprxrbjrpa/post/3ltq7aeuwbg42',
         description: 'Aligned the HTML4 way.',
       }
@@ -459,7 +459,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:5hz4agnyzcrsvpnprxrbjrpa/3luq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:5hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3luq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:5hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3luq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:5hz4agnyzcrsvpnprxrbjrpa/post/3luq7aeuwbg42',
         description: 'Centred with inline css.',
       }
@@ -483,7 +483,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:6hz4agnyzcrsvpnprxrbjrpa/3lvq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:6hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lvq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:6hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lvq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:6hz4agnyzcrsvpnprxrbjrpa/post/3lvq7aeuwbg42',
         description: 'Invalid nesting, still a post.',
       }
@@ -507,7 +507,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:7hz4agnyzcrsvpnprxrbjrpa/3lwq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:7hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lwq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:7hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lwq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:7hz4agnyzcrsvpnprxrbjrpa/post/3lwq7aeuwbg42',
         description: 'The hashed class cannot be selected on.',
       }
@@ -531,7 +531,7 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:8hz4agnyzcrsvpnprxrbjrpa/3lxq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:8hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lxq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:8hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3lxq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:8hz4agnyzcrsvpnprxrbjrpa/post/3lxq7aeuwbg42',
         description: 'A hand-rolled theme.',
       }
@@ -644,7 +644,7 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:bhz4agnyzcrsvpnprxrbjrpa/3mbq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:bhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mbq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:bhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mbq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:bhz4agnyzcrsvpnprxrbjrpa/post/3mbq7aeuwbg42',
         description: 'The wrapper carries the post twice over.',
         author: 'Newsletter Author (@author.example)',
@@ -683,7 +683,7 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:bhz4agnyzcrsvpnprxrbjrpa/3mbq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:bhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mbq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:bhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mbq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:bhz4agnyzcrsvpnprxrbjrpa/post/3mbq7aeuwbg42',
         description: 'The wrapper states its media without a scheme.',
         author: '@author.example',
@@ -711,13 +711,13 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
           data-attrs="${payload}"
           data-component-name="BlueskyCreateBlueskyEmbed"
         >
-          <iframe src="https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42?id=1"></iframe>
+          <iframe src="https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42"></iframe>
         </div>
       `
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:chz4agnyzcrsvpnprxrbjrpa/3mcq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:chz4agnyzcrsvpnprxrbjrpa/post/3mcq7aeuwbg42',
         description: 'A post with a clip.',
         author: 'Video Author (@video.example)',
@@ -742,13 +742,13 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
           data-attrs="${payload}"
           data-component-name="BlueskyCreateBlueskyEmbed"
         >
-          <iframe src="https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42?id=1"></iframe>
+          <iframe src="https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42"></iframe>
         </div>
       `
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:dhz4agnyzcrsvpnprxrbjrpa/3mdq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:dhz4agnyzcrsvpnprxrbjrpa/post/3mdq7aeuwbg42',
         author: '@author.example',
       }
@@ -773,7 +773,7 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:ehz4agnyzcrsvpnprxrbjrpa/3meq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:ehz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3meq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:ehz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3meq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:ehz4agnyzcrsvpnprxrbjrpa/post/3meq7aeuwbg42',
       }
 
@@ -795,7 +795,7 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:fhz4agnyzcrsvpnprxrbjrpa/3mfq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:fhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mfq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:fhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mfq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:fhz4agnyzcrsvpnprxrbjrpa/post/3mfq7aeuwbg42',
       }
 
@@ -812,7 +812,7 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:z72i7hdynmk6r22z27h6tvur/3kq7aeuwbg42k',
-        src: 'https://embed.bsky.app/embed/did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3kq7aeuwbg42k?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3kq7aeuwbg42k',
         url: 'https://bsky.app/profile/did:plc:z72i7hdynmk6r22z27h6tvur/post/3kq7aeuwbg42k',
       }
 
@@ -857,7 +857,7 @@ describeForEachParser('blueskyS9eEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:hhz4agnyzcrsvpnprxrbjrpa/3mhq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:hhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mhq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:hhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mhq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:hhz4agnyzcrsvpnprxrbjrpa/post/3mhq7aeuwbg42',
         // The helper page states the box it renders into as an inline style.
         width: 600,
@@ -907,7 +907,7 @@ describeForEachParser('blueskyPostElementEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'newsroom.example/3miq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/newsroom.example/app.bsky.feed.post/3miq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/newsroom.example/app.bsky.feed.post/3miq7aeuwbg42',
         url: 'https://bsky.app/profile/newsroom.example/post/3miq7aeuwbg42',
         description: 'The web component never mounts in a reader.',
         author: 'Newsroom (@newsroom.example)',
@@ -928,7 +928,7 @@ describeForEachParser('blueskyPostElementEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'bluesky',
         id: 'did:plc:jhz4agnyzcrsvpnprxrbjrpa/3mjq7aeuwbg42',
-        src: 'https://embed.bsky.app/embed/did:plc:jhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mjq7aeuwbg42?id=1',
+        src: 'https://embed.bsky.app/embed/did:plc:jhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mjq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:jhz4agnyzcrsvpnprxrbjrpa/post/3mjq7aeuwbg42',
         description: 'A did addresses the player directly.',
       }
