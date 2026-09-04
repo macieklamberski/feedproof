@@ -82,9 +82,10 @@ export const extractMixcloudShow = (link: string): string | undefined => {
 const displayOptions = ['mini', 'hide_cover', 'hide_artwork', 'light']
 
 // The player is fluid-width and fixed-height, measured 2026-09-04 at 330 and 660 wide on two
-// shows: the standard bar draws 160 whatever the frame allows and `mini=1` draws 60. With the
-// cover left on, the artwork fills any height the frame has, so the bar's height serves there
-// too. The heights carriers state belong to earlier players, 180 to 208 on 44 of 46 sampled
+// shows: with the cover hidden the standard bar draws 160 whatever the frame allows, and
+// `mini=1` beside it draws 60. With the cover left on the artwork fills any height the frame
+// has, `mini` or not, and at 60 the logo lands on the title, so that form takes the bar's full
+// height. The heights carriers state belong to earlier players, 180 to 208 on 44 of 46 sampled
 // iframes, and Mixcloud's own oEmbed still answers 120, so the measured number stands over
 // what a carrier states.
 const miniPlayerHeight = 60
@@ -115,7 +116,8 @@ export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefin
     id: show,
     src: `https://www.mixcloud.com/widget/iframe/?${query.join('&')}`,
     url: `https://www.mixcloud.com/${show}/`,
-    height: options.includes('mini') ? miniPlayerHeight : playerHeight,
+    height:
+      options.includes('mini') && options.includes('hide_cover') ? miniPlayerHeight : playerHeight,
   }
 }
 

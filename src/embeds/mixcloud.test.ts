@@ -142,6 +142,19 @@ describe('mixcloudResolveEmbed', () => {
     expect(mixcloudResolveEmbed(value)).toEqual(expected)
   })
 
+  // The bar shrinks to the mini height only with the cover hidden: with it on, the artwork
+  // player is what `mini` selects, and that one fills whatever height it gets.
+  it('should keep the full height for a mini player showing its cover', () => {
+    const value =
+      'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F&mini=1'
+    const result = mixcloudResolveEmbed(value)
+
+    expect(result?.src).toBe(
+      'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F&mini=1',
+    )
+    expect(result?.height).toBe(160)
+  })
+
   // Only a flag set to `1` is a display option. Anything else in the query, the legacy
   // `embed_type` or a flag switched off, is not written back.
   it('should drop a display option that is not switched on', () => {
