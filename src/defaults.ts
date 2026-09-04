@@ -43,6 +43,7 @@ import {
   blueskyBlockquoteEmbedResolver,
   blueskyIframeEmbedResolver,
   blueskyPostElementEmbedResolver,
+  blueskyRenderHint,
   blueskyS9eEmbedResolver,
 } from './embeds/bluesky.js'
 import {
@@ -75,6 +76,7 @@ import {
   instagramAmpEmbedResolver,
   instagramBlockquoteEmbedResolver,
   instagramIframeEmbedResolver,
+  instagramRenderHint,
   instagramSubstackEmbedResolver,
 } from './embeds/instagram.js'
 import { issuuIframeEmbedResolver, issuuWidgetEmbedResolver } from './embeds/issuu.js'
@@ -87,17 +89,25 @@ import {
 } from './embeds/jwplayer.js'
 import { libsynEmbedResolver } from './embeds/libsyn.js'
 import { linkedinEmbedResolver } from './embeds/linkedin.js'
-import { mastodonEmbedResolver } from './embeds/mastodon.js'
+import { mastodonEmbedResolver, mastodonRenderHint } from './embeds/mastodon.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { megaphoneEmbedResolver } from './embeds/megaphone.js'
 import { mixcloudEmbedResolver } from './embeds/mixcloud.js'
 import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from './embeds/nicovideo.js'
-import { notecomIframeEmbedResolver } from './embeds/notecom.js'
+import { notecomIframeEmbedResolver, notecomRenderHint } from './embeds/notecom.js'
 import { odyseeEmbedResolver } from './embeds/odysee.js'
 import { omnyEmbedResolver } from './embeds/omny.js'
 import { podbeanEmbedResolver } from './embeds/podbean.js'
-import { podigeeEmbedResolver, podigeeIframeEmbedResolver } from './embeds/podigee.js'
-import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from './embeds/reddit.js'
+import {
+  podigeeEmbedResolver,
+  podigeeIframeEmbedResolver,
+  podigeeRenderHint,
+} from './embeds/podigee.js'
+import {
+  redditIframeEmbedResolver,
+  redditRenderHint,
+  redditWidgetEmbedResolver,
+} from './embeds/reddit.js'
 import { scribdFlashEmbedResolver, scribdIframeEmbedResolver } from './embeds/scribd.js'
 import { simplecastEmbedResolver } from './embeds/simplecast.js'
 import { sketchfabEmbedResolver } from './embeds/sketchfab.js'
@@ -111,20 +121,29 @@ import { spotifyEmbedResolver } from './embeds/spotify.js'
 import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from './embeds/spreaker.js'
 import { standfmEmbedResolver } from './embeds/standfm.js'
 import { tedEmbedResolver } from './embeds/ted.js'
-import { telegramIframeEmbedResolver, telegramScriptEmbedResolver } from './embeds/telegram.js'
+import {
+  telegramIframeEmbedResolver,
+  telegramRenderHint,
+  telegramScriptEmbedResolver,
+} from './embeds/telegram.js'
 import { tiktokBlockquoteEmbedResolver, tiktokIframeEmbedResolver } from './embeds/tiktok.js'
 import { transistorEmbedResolver } from './embeds/transistor.js'
 import {
   twitterAmpEmbedResolver,
   twitterBlockquoteEmbedResolver,
   twitterIframeEmbedResolver,
+  twitterRenderHint,
   twitterSubstackEmbedResolver,
 } from './embeds/twitter.js'
 import { typeformIframeEmbedResolver, typeformWidgetEmbedResolver } from './embeds/typeform.js'
 import { videopressFlashEmbedResolver, videopressIframeEmbedResolver } from './embeds/videopress.js'
 import { vimeoEmbedResolver } from './embeds/vimeo.js'
 import { wistiaEmbedResolver } from './embeds/wistia.js'
-import { youtubeAmpEmbedResolver, youtubeIframeEmbedResolver } from './embeds/youtube.js'
+import {
+  youtubeAmpEmbedResolver,
+  youtubeIframeEmbedResolver,
+  youtubeRenderHint,
+} from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
 import { discourseMediaResolver } from './media/discourse.js'
 import { ghostMediaResolver } from './media/ghost.js'
@@ -220,6 +239,7 @@ import type {
   CiteResolver,
   DeferredIframeSource,
   DomTransform,
+  EmbedRenderHint,
   EmbedResolver,
   MediaResolver,
   ResolveUrlFn,
@@ -577,6 +597,21 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   ...embedResolvers,
   ...mediaResolvers,
   ...citeResolvers,
+]
+
+// What a reader needs from a provider once it turns a placeholder into a frame: the query that
+// starts playback on a click, and how the player reports its rendered height. One per provider,
+// beside its resolver.
+export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
+  blueskyRenderHint,
+  instagramRenderHint,
+  mastodonRenderHint,
+  notecomRenderHint,
+  podigeeRenderHint,
+  redditRenderHint,
+  telegramRenderHint,
+  twitterRenderHint,
+  youtubeRenderHint,
 ]
 
 // Attributes that park a media file URL on a container which then builds the player with JS,
@@ -946,5 +981,3 @@ export const defaultNonContentSelectors = [
   // markup, so there is nothing to recover here, only chrome to remove.
   'span[data-s9e-mediaembed]:not(:has(iframe, embed, object, video, audio))',
 ]
-
-export { defaultEmbedRenderHints } from './hints.js'

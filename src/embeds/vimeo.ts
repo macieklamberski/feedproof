@@ -109,12 +109,9 @@ export const vimeoResolveEmbed = (
 
   const { id: videoId, hash } = reference
   const title = element ? attr(element, 'title') : undefined
-  // `dnt=1` turns off Vimeo's viewer tracking, no cookies and no analytics, and every load
-  // wants it, so the minted url carries it.
   const query = new URLSearchParams({
     ...(hash && { h: hash }),
     ...pickQueryParams(parseUrl(url)?.search ?? '', vimeoEmbedParams),
-    dnt: '1',
   }).toString()
 
   return {
@@ -122,7 +119,7 @@ export const vimeoResolveEmbed = (
     // Vimeo's own identity for an unlisted video joins the two with a colon, and the hash has to
     // travel with the id: an oEmbed lookup for the bare id answers 404.
     id: hash ? `${videoId}:${hash}` : videoId,
-    src: `https://player.vimeo.com/video/${videoId}?${query}`,
+    src: `https://player.vimeo.com/video/${videoId}${query ? `?${query}` : ''}`,
     // Without the hash the page loses its title and its poster, so it stays on the url too.
     url: `https://vimeo.com/${videoId}${hash ? `/${hash}` : ''}`,
     title,

@@ -36,7 +36,7 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
         </a>
       </div>
     `
-    const expected = '<iframe src="https://player.vimeo.com/video/76979871?dnt=1"></iframe>'
+    const expected = '<iframe src="https://player.vimeo.com/video/76979871"></iframe>'
 
     expect(await transform(value)).toEqualHtml(expected)
   })
@@ -48,8 +48,7 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
         class="preview-lazyload preview-vimeo"
       ></a>
     `
-    const expected =
-      '<iframe src="https://player.vimeo.com/video/76979871?h=abc123def4&dnt=1"></iframe>'
+    const expected = '<iframe src="https://player.vimeo.com/video/76979871?h=abc123def4"></iframe>'
 
     expect(await transform(value)).toEqualHtml(expected)
   })
