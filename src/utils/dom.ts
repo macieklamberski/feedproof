@@ -350,12 +350,13 @@ export const parsePixelSize = (value: Nullish<string>): number | undefined => {
 }
 
 // An empty or whitespace-only width/height attribute (`width=""`, common in editor output)
-// is not a declared dimension. coerceNumber treats those as absent. A `px` unit is dropped
-// first, since a browser reads `height="900px"` as 900 pixels, while `90%` stays unparsed.
-const pixelUnitRegex = /px\s*$/i
+// is not a declared dimension. coerceNumber treats those as absent. A trailing unit is dropped
+// first and never converted, since a browser reads `height="900px"` and `height="900pt"` alike
+// as 900 pixels, while `90%` stays unparsed.
+const trailingUnitRegex = /\s*[a-z]+\s*$/i
 
 const dimensionAttribute = (element: Element, name: string): number | undefined => {
-  return coerceNumber(element.getAttribute(name)?.replace(pixelUnitRegex, ''))
+  return coerceNumber(element.getAttribute(name)?.replace(trailingUnitRegex, ''))
 }
 
 // Squarespace stamps the intrinsic size on `data-image-dimensions="2500x1695"`, and for

@@ -57,6 +57,13 @@ describeForEachParser('getElementDimensions', (parseHtml) => {
     expect(getElementDimensions(frame)).toEqual({ width: undefined, height: 900 })
   })
 
+  it('should read any unit suffix as pixels the way the browser does', () => {
+    const document = parseHtml('<iframe width="600 px" height="900pt"></iframe>')
+    const frame = queryElement(document, 'iframe')
+
+    expect(getElementDimensions(frame)).toEqual({ width: 600, height: 900 })
+  })
+
   it('should keep a px-suffixed tracking pixel size parseable', () => {
     const document = parseHtml('<img width="1px" height="1px">')
     const image = queryElement(document, 'img')
