@@ -106,15 +106,16 @@ export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefin
 
   const params = parseUrl(url)?.searchParams
   const options = displayOptions.filter((option) => params?.get(option) === '1')
-  const query = [
-    `feed=${encodeURIComponent(`/${show}/`)}`,
-    ...options.map((option) => `${option}=1`),
-  ]
+  const query = new URLSearchParams({ feed: `/${show}/` })
+
+  for (const option of options) {
+    query.set(option, '1')
+  }
 
   return {
     provider: 'mixcloud',
     id: show,
-    src: `https://www.mixcloud.com/widget/iframe/?${query.join('&')}`,
+    src: `https://www.mixcloud.com/widget/iframe/?${query}`,
     url: `https://www.mixcloud.com/${show}/`,
     height:
       options.includes('mini') && options.includes('hide_cover') ? miniPlayerHeight : playerHeight,
