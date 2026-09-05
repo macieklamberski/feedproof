@@ -250,12 +250,9 @@ import { stripOversizedBase64Sources } from './transforms/string/stripOversizedB
 import { unwrapCdataComments } from './transforms/string/unwrapCdataComments.js'
 import { unwrapCdataMarkers } from './transforms/string/unwrapCdataMarkers.js'
 import type {
-  CiteResolver,
   DeferredIframeSource,
   DomTransform,
   EmbedRenderHint,
-  EmbedResolver,
-  MediaResolver,
   ResolveUrlFn,
   StringTransform,
   WidgetResolver,
@@ -457,16 +454,19 @@ export const heuristicDomTransforms: Array<DomTransform> = [
 // The standard pipeline with the heuristic transforms spliced in right after
 // injectEnclosures: they must run after injection (stripDuplicateEnclosures reads
 // the markers it leaves) and before proxyAssetUrls rewrites media URLs.
-export const defaultAllDomTransforms: Array<DomTransform> = defaultStandardDomTransforms.flatMap(
-  (transform) => {
+//
+// Marked pure, as is the `concat` below: a bundler keeps a call or a spread it cannot prove
+// side-effect free, and with it every transform and resolver the expression reads, so a page
+// importing only the render hints from this file would carry the whole pipeline.
+export const defaultAllDomTransforms: Array<DomTransform> =
+  /* @__PURE__ */ defaultStandardDomTransforms.flatMap((transform) => {
     return transform === injectEnclosures ? [transform, ...heuristicDomTransforms] : [transform]
-  },
-)
+  })
 
 // Order matters when selectors overlap: each resolver runs in array order and
 // claimed iframes can't be re-matched. Place more specific selectors (e.g.
 // meta-providers like Embedly that wrap other providers) before broader ones.
-const embedResolvers: Array<EmbedResolver> = [
+const embedResolvers: Array<WidgetResolver> = [
   youtubeIframeEmbedResolver,
   youtubeAmpEmbedResolver,
   twitterBlockquoteEmbedResolver,
@@ -566,7 +566,7 @@ const embedResolvers: Array<EmbedResolver> = [
   mastodonEmbedResolver,
 ]
 
-const mediaResolvers: Array<MediaResolver> = [
+const mediaResolvers: Array<WidgetResolver> = [
   substackMediaResolver,
   weeblyMediaResolver,
   wechatMediaResolver,
@@ -578,7 +578,7 @@ const mediaResolvers: Array<MediaResolver> = [
 // Order matters here too: a resolver replaces the element it matches, so a later one never
 // sees it. No two selectors below overlap today, so nothing depends on the current order. Keep
 // the more specific one first if that ever changes.
-const citeResolvers: Array<CiteResolver> = [
+const citeResolvers: Array<WidgetResolver> = [
   ghostCiteResolver,
   substackOwnPostCiteResolver,
   substackCrossPostCiteResolver,
@@ -607,11 +607,10 @@ const citeResolvers: Array<CiteResolver> = [
   mediumCiteResolver,
 ]
 
-export const defaultWidgetResolvers: Array<WidgetResolver> = [
-  ...embedResolvers,
-  ...mediaResolvers,
-  ...citeResolvers,
-]
+export const defaultWidgetResolvers: Array<WidgetResolver> = /* @__PURE__ */ embedResolvers.concat(
+  mediaResolvers,
+  citeResolvers,
+)
 
 // What a reader needs from each provider once it turns the placeholder into a frame: how to
 // start playback on the click, by query or by a message into the frame, and how the player
