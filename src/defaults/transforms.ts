@@ -71,6 +71,7 @@ import { surfaceParkedMarkup } from '../transforms/dom/surfaceParkedMarkup.js'
 import { surfaceTemplateEmbeds } from '../transforms/dom/surfaceTemplateEmbeds.js'
 import { trimPreWhitespace } from '../transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from '../transforms/dom/unwrapDoublyNestedLists.js'
+import { unwrapDrupalOembedIframes } from '../transforms/dom/unwrapDrupalOembedIframes.js'
 import { unwrapEmojiImages } from '../transforms/dom/unwrapEmojiImages.js'
 import { unwrapHeadingBold } from '../transforms/dom/unwrapHeadingBold.js'
 import { unwrapNestedCodeWrappers } from '../transforms/dom/unwrapNestedCodeWrappers.js'
@@ -122,6 +123,9 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // Runs before convertCiteCards so a payload naming `link` still reaches the cite pass, and
   // before stripEmptyTags, which is what deletes an empty carrier nothing has claimed.
   rebuildEmbedlyEmbeds,
+  // Points a Drupal media oEmbed frame at the page url it wraps, so the provider resolvers
+  // below see the video and not the site's proxy route.
+  unwrapDrupalOembedIframes,
   rebuildGettyImagesEmbeds,
   // A GitHub Gist embed is a JS-only <script> that renders nothing in a reader. Replace it
   // with a link to the gist so the content is at least reachable.
