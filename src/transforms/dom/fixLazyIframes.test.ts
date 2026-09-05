@@ -121,7 +121,10 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
     const value = '<iframe src="about:blank" data-src="/embed/x"></iframe>'
     const context: TransformContext = { ...baseContext, baseUrl: 'https://example.com/post' }
     const expected = html`
-      <iframe src="https://example.com/embed/x" data-src="/embed/x"></iframe>
+      <iframe
+        src="https://example.com/embed/x"
+        data-src="/embed/x"
+      ></iframe>
     `
 
     expect(await transform(value, context)).toEqualHtml(expected)
