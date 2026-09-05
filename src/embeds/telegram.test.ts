@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { telegramIframeEmbedResolver, telegramScriptEmbedResolver } from './telegram.js'
+import {
+  readTelegramHeight,
+  telegramIframeEmbedResolver,
+  telegramScriptEmbedResolver,
+} from './telegram.js'
 
 describeForEachParser('telegramScriptEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, telegramScriptEmbedResolver)
@@ -330,5 +334,16 @@ describeForEachParser('telegramIframeEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+describe('readTelegramHeight', () => {
+  it('should read the height out of a resize', () => {
+    expect(readTelegramHeight({ event: 'resize', height: 179 })).toBe(179)
+  })
+
+  it('should read nothing out of a post that could not load', () => {
+    expect(readTelegramHeight({ event: 'resize', height: null })).toBeUndefined()
+    expect(readTelegramHeight({ event: 'ready' })).toBeUndefined()
   })
 })

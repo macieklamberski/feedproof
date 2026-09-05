@@ -7,6 +7,7 @@ import {
   instagramIframeEmbedResolver,
   instagramResolveEmbed,
   instagramSubstackEmbedResolver,
+  readInstagramHeight,
 } from './instagram.js'
 
 describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
@@ -869,5 +870,23 @@ describeForEachParser('instagramSubstackEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+describe('readInstagramHeight', () => {
+  it('should read the height out of a measurement', () => {
+    const value = { details: { height: 1003 }, type: 'MEASURE' }
+
+    expect(readInstagramHeight(value)).toBe(1003)
+  })
+
+  it('should read nothing out of the lifecycle messages', () => {
+    const mounted = {
+      details: { styles: [['boxShadow', 'none']] },
+      type: 'MOUNTED',
+    }
+
+    expect(readInstagramHeight({ details: {}, type: 'LOADING' })).toBeUndefined()
+    expect(readInstagramHeight(mounted)).toBeUndefined()
   })
 })

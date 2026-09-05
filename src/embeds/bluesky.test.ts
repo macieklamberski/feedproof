@@ -7,6 +7,7 @@ import {
   blueskyIframeEmbedResolver,
   blueskyPostElementEmbedResolver,
   blueskyS9eEmbedResolver,
+  readBlueskyHeight,
 } from './bluesky.js'
 
 describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
@@ -710,7 +711,7 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
           data-attrs="${payload}"
           data-component-name="BlueskyCreateBlueskyEmbed"
         >
-          <iframe src="https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42?id=1"></iframe>
+          <iframe src="https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42"></iframe>
         </div>
       `
       const expected: EmbedResolverResult = {
@@ -741,7 +742,7 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
           data-attrs="${payload}"
           data-component-name="BlueskyCreateBlueskyEmbed"
         >
-          <iframe src="https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42?id=1"></iframe>
+          <iframe src="https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42"></iframe>
         </div>
       `
       const expected: EmbedResolverResult = {
@@ -948,5 +949,18 @@ describeForEachParser('blueskyPostElementEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+describe('readBlueskyHeight', () => {
+  it('should read the height out of the frame report', () => {
+    const value = { height: 687.125, id: '1' }
+
+    expect(readBlueskyHeight(value)).toBe(687.125)
+  })
+
+  it('should read nothing out of a message without a height', () => {
+    expect(readBlueskyHeight({ id: '1' })).toBeUndefined()
+    expect(readBlueskyHeight('ready')).toBeUndefined()
   })
 })

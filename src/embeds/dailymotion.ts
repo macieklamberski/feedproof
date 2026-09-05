@@ -121,3 +121,7 @@ export const dailymotionEmbedResolver = createUrlEmbedResolver(
   dailymotionHosts,
   dailymotionResolveEmbed,
 )
+
+// No autoplay hint. The runtime-parameter docs list `autoplay`, but neither player url reads it
+// off the query: the legacy `/embed/video/` url redirects to the new player and the redirect
+// drops it, and the new player takes autostart from the saved player configuration alone.

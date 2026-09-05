@@ -1,5 +1,5 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -55,3 +55,9 @@ const sketchfabResolveEmbed = (link: string, element: Element): EmbedResolverRes
 }
 
 export const sketchfabEmbedResolver = createUrlEmbedResolver(sketchfabHosts, sketchfabResolveEmbed)
+
+// Starts the viewer on the click that loads it; there is no audio to hold back.
+export const sketchfabRenderHint: EmbedRenderHint = {
+  provider: 'sketchfab',
+  autoplayParams: { autostart: '1' },
+}

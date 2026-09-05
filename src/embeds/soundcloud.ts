@@ -1,5 +1,5 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, jsonAttr, text } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -243,3 +243,9 @@ export const soundcloudEmbedResolver = createUrlEmbedResolver(
   soundcloudHosts,
   soundcloudResolveEmbed,
 )
+
+// Starts playback on the click that loads the widget.
+export const soundcloudRenderHint: EmbedRenderHint = {
+  provider: 'soundcloud',
+  autoplayParams: { auto_play: 'true' },
+}

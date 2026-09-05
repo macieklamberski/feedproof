@@ -1,5 +1,6 @@
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolver, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
+import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -82,3 +83,10 @@ export const buzzsproutScriptEmbedResolver = createMarkupEmbedResolver(
     }
   },
 )
+
+// The player takes no query to start, and Buzzsprout's help says so; it speaks player.js.
+export const buzzsproutRenderHint: EmbedRenderHint = {
+  provider: 'buzzsprout',
+  isReady: isPlayerJsReady,
+  requestPlay: playerJsPlayRequest,
+}

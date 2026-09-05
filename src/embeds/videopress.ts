@@ -1,5 +1,5 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { flashVars, keepIfMatches } from '../utils/dom.js'
 import { pickUrlParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -95,3 +95,10 @@ export const videopressFlashEmbedResolver = createUrlEmbedResolver(
   videopressHosts,
   videopressFlashResolveEmbed,
 )
+
+// Starts playback on the click that loads the player. The player's routes read the boolean
+// keys `1`, `true` and empty, and alias `autoplay` to this spelling.
+export const videopressRenderHint: EmbedRenderHint = {
+  provider: 'videopress',
+  autoplayParams: { autoPlay: '1' },
+}

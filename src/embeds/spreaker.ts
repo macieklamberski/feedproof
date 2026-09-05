@@ -1,6 +1,7 @@
 import { parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize } from '../utils/dom.js'
+import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^\d+$/
@@ -85,3 +86,11 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
     return stated ? { ...result, height: stated } : result
   },
 )
+
+// The widget guide documents `autoplay=true`, but the player bundle holds no code for it and the
+// server-rendered config is identical with and without it. The widget speaks player.js instead.
+export const spreakerRenderHint: EmbedRenderHint = {
+  provider: 'spreaker',
+  isReady: isPlayerJsReady,
+  requestPlay: playerJsPlayRequest,
+}

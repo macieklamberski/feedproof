@@ -1,5 +1,5 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -49,3 +49,11 @@ export const tedResolveEmbed = (url: string): EmbedResolverResult | undefined =>
 }
 
 export const tedEmbedResolver = createUrlEmbedResolver(tedHosts, tedResolveEmbed)
+
+// Starts playback on the click that loads the player: the embed reads `autoplay` out of its route
+// query. It reaches the player only when the url does not redirect, since the embed's 308 from
+// a legacy talk slug to the canonical one drops the query.
+export const tedRenderHint: EmbedRenderHint = {
+  provider: 'ted',
+  autoplayParams: { autoplay: 'true' },
+}

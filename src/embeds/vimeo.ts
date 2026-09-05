@@ -1,5 +1,5 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
 import { pickQueryParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -130,3 +130,10 @@ export const vimeoResolveEmbed = (
 }
 
 export const vimeoEmbedResolver = createUrlEmbedResolver(vimeoHosts, vimeoResolveEmbed)
+
+// Starts playback on the click that loads the player. Never `background=1`, which mutes the
+// video and strips its controls.
+export const vimeoRenderHint: EmbedRenderHint = {
+  provider: 'vimeo',
+  autoplayParams: { autoplay: '1' },
+}

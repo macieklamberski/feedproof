@@ -29,12 +29,16 @@ import { tcdCiteResolver } from './cites/tcd.js'
 import { tistoryCiteResolver } from './cites/tistory.js'
 import { tumblrCiteResolver } from './cites/tumblr.js'
 import { xenforoCiteResolver } from './cites/xenforo.js'
-import { acastEmbedResolver } from './embeds/acast.js'
+import { acastEmbedResolver, acastRenderHint } from './embeds/acast.js'
 import { anchorEmbedResolver } from './embeds/anchor.js'
 import { aparatIframeEmbedResolver, aparatScriptEmbedResolver } from './embeds/aparat.js'
 import { appleEmbedResolver } from './embeds/apple.js'
-import { archiveFlashEmbedResolver, archiveIframeEmbedResolver } from './embeds/archive.js'
-import { audioboomEmbedResolver } from './embeds/audioboom.js'
+import {
+  archiveFlashEmbedResolver,
+  archiveIframeEmbedResolver,
+  archiveRenderHint,
+} from './embeds/archive.js'
+import { audioboomEmbedResolver, audioboomRenderHint } from './embeds/audioboom.js'
 import { bandcampEmbedResolver } from './embeds/bandcamp.js'
 import { bitchuteEmbedResolver } from './embeds/bitchute.js'
 import { bloggerEmbedResolver } from './embeds/blogger.js'
@@ -43,18 +47,21 @@ import {
   blueskyBlockquoteEmbedResolver,
   blueskyIframeEmbedResolver,
   blueskyPostElementEmbedResolver,
+  blueskyRenderHint,
   blueskyS9eEmbedResolver,
 } from './embeds/bluesky.js'
 import {
   brightcoveFlashEmbedResolver,
   brightcoveIframeEmbedResolver,
+  brightcoveRenderHint,
   brightcoveVideoJsEmbedResolver,
 } from './embeds/brightcove.js'
 import {
   buzzsproutIframeEmbedResolver,
+  buzzsproutRenderHint,
   buzzsproutScriptEmbedResolver,
 } from './embeds/buzzsprout.js'
-import { captivateEmbedResolver } from './embeds/captivate.js'
+import { captivateEmbedResolver, captivateRenderHint } from './embeds/captivate.js'
 import { codepenIframeEmbedResolver, codepenWidgetEmbedResolver } from './embeds/codepen.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { donorboxEmbedResolver } from './embeds/donorbox.js'
@@ -75,6 +82,7 @@ import {
   instagramAmpEmbedResolver,
   instagramBlockquoteEmbedResolver,
   instagramIframeEmbedResolver,
+  instagramRenderHint,
   instagramSubstackEmbedResolver,
 } from './embeds/instagram.js'
 import { issuuIframeEmbedResolver, issuuWidgetEmbedResolver } from './embeds/issuu.js'
@@ -87,44 +95,69 @@ import {
 } from './embeds/jwplayer.js'
 import { libsynEmbedResolver } from './embeds/libsyn.js'
 import { linkedinEmbedResolver } from './embeds/linkedin.js'
-import { mastodonEmbedResolver } from './embeds/mastodon.js'
+import { mastodonEmbedResolver, mastodonRenderHint } from './embeds/mastodon.js'
 import { mediavineEmbedResolver } from './embeds/mediavine.js'
 import { megaphoneEmbedResolver } from './embeds/megaphone.js'
-import { mixcloudEmbedResolver } from './embeds/mixcloud.js'
+import { mixcloudEmbedResolver, mixcloudRenderHint } from './embeds/mixcloud.js'
 import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from './embeds/nicovideo.js'
-import { notecomIframeEmbedResolver } from './embeds/notecom.js'
+import { notecomIframeEmbedResolver, notecomRenderHint } from './embeds/notecom.js'
 import { odyseeEmbedResolver } from './embeds/odysee.js'
-import { omnyEmbedResolver } from './embeds/omny.js'
-import { podbeanEmbedResolver } from './embeds/podbean.js'
-import { podigeeEmbedResolver, podigeeIframeEmbedResolver } from './embeds/podigee.js'
-import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from './embeds/reddit.js'
+import { omnyEmbedResolver, omnyRenderHint } from './embeds/omny.js'
+import { podbeanEmbedResolver, podbeanRenderHint } from './embeds/podbean.js'
+import {
+  podigeeEmbedResolver,
+  podigeeIframeEmbedResolver,
+  podigeeRenderHint,
+} from './embeds/podigee.js'
+import {
+  redditIframeEmbedResolver,
+  redditRenderHint,
+  redditWidgetEmbedResolver,
+} from './embeds/reddit.js'
 import { scribdFlashEmbedResolver, scribdIframeEmbedResolver } from './embeds/scribd.js'
 import { simplecastEmbedResolver } from './embeds/simplecast.js'
-import { sketchfabEmbedResolver } from './embeds/sketchfab.js'
+import { sketchfabEmbedResolver, sketchfabRenderHint } from './embeds/sketchfab.js'
 import { slideshareFlashEmbedResolver, slideshareIframeEmbedResolver } from './embeds/slideshare.js'
-import { soundcloudEmbedResolver } from './embeds/soundcloud.js'
+import { soundcloudEmbedResolver, soundcloudRenderHint } from './embeds/soundcloud.js'
 import {
   speakerdeckIframeEmbedResolver,
   speakerdeckScriptEmbedResolver,
 } from './embeds/speakerdeck.js'
 import { spotifyEmbedResolver } from './embeds/spotify.js'
-import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from './embeds/spreaker.js'
+import {
+  spreakerAnchorEmbedResolver,
+  spreakerIframeEmbedResolver,
+  spreakerRenderHint,
+} from './embeds/spreaker.js'
 import { standfmEmbedResolver } from './embeds/standfm.js'
-import { tedEmbedResolver } from './embeds/ted.js'
-import { telegramIframeEmbedResolver, telegramScriptEmbedResolver } from './embeds/telegram.js'
+import { tedEmbedResolver, tedRenderHint } from './embeds/ted.js'
+import {
+  telegramIframeEmbedResolver,
+  telegramRenderHint,
+  telegramScriptEmbedResolver,
+} from './embeds/telegram.js'
 import { tiktokBlockquoteEmbedResolver, tiktokIframeEmbedResolver } from './embeds/tiktok.js'
 import { transistorEmbedResolver } from './embeds/transistor.js'
 import {
   twitterAmpEmbedResolver,
   twitterBlockquoteEmbedResolver,
   twitterIframeEmbedResolver,
+  twitterRenderHint,
   twitterSubstackEmbedResolver,
 } from './embeds/twitter.js'
 import { typeformIframeEmbedResolver, typeformWidgetEmbedResolver } from './embeds/typeform.js'
-import { videopressFlashEmbedResolver, videopressIframeEmbedResolver } from './embeds/videopress.js'
-import { vimeoEmbedResolver } from './embeds/vimeo.js'
-import { wistiaEmbedResolver } from './embeds/wistia.js'
-import { youtubeAmpEmbedResolver, youtubeIframeEmbedResolver } from './embeds/youtube.js'
+import {
+  videopressFlashEmbedResolver,
+  videopressIframeEmbedResolver,
+  videopressRenderHint,
+} from './embeds/videopress.js'
+import { vimeoEmbedResolver, vimeoRenderHint } from './embeds/vimeo.js'
+import { wistiaEmbedResolver, wistiaRenderHint } from './embeds/wistia.js'
+import {
+  youtubeAmpEmbedResolver,
+  youtubeIframeEmbedResolver,
+  youtubeRenderHint,
+} from './embeds/youtube.js'
 import { hljsHighlightFn } from './highlighters/hljs.js'
 import { discourseMediaResolver } from './media/discourse.js'
 import { ghostMediaResolver } from './media/ghost.js'
@@ -220,6 +253,7 @@ import type {
   CiteResolver,
   DeferredIframeSource,
   DomTransform,
+  EmbedRenderHint,
   EmbedResolver,
   MediaResolver,
   ResolveUrlFn,
@@ -577,6 +611,37 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   ...embedResolvers,
   ...mediaResolvers,
   ...citeResolvers,
+]
+
+// What a reader needs from each provider once it turns the placeholder into a frame: how to
+// start playback on the click, by query or by a message into the frame, and how the player
+// reports its rendered height. One per provider, beside its resolver.
+export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
+  acastRenderHint,
+  archiveRenderHint,
+  audioboomRenderHint,
+  blueskyRenderHint,
+  brightcoveRenderHint,
+  buzzsproutRenderHint,
+  captivateRenderHint,
+  instagramRenderHint,
+  mastodonRenderHint,
+  mixcloudRenderHint,
+  notecomRenderHint,
+  omnyRenderHint,
+  podbeanRenderHint,
+  podigeeRenderHint,
+  redditRenderHint,
+  sketchfabRenderHint,
+  soundcloudRenderHint,
+  spreakerRenderHint,
+  tedRenderHint,
+  telegramRenderHint,
+  twitterRenderHint,
+  videopressRenderHint,
+  vimeoRenderHint,
+  wistiaRenderHint,
+  youtubeRenderHint,
 ]
 
 // Attributes that park a media file URL on a container which then builds the player with JS,

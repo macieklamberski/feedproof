@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
+  readRedditHeight,
   redditIframeEmbedResolver,
   redditResolveEmbed,
   redditWidgetEmbedResolver,
@@ -437,5 +438,16 @@ describeForEachParser('redditIframeEmbedResolver', (parseHtml) => {
     const value = '<iframe src="https://evil.test/r/pics/comments/dq4m1v/my_garden/"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
+  })
+})
+
+describe('readRedditHeight', () => {
+  it('should read the height out of a resize', () => {
+    expect(readRedditHeight({ type: 'resize.embed', data: 480 })).toBe(480)
+  })
+
+  // The first resize arrives before the post is in.
+  it('should read nothing out of the empty first resize', () => {
+    expect(readRedditHeight({ type: 'resize.embed', data: 0 })).toBeUndefined()
   })
 })

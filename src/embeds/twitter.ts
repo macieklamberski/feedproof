@@ -1,6 +1,7 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { isHostOf, isPlainObject, isSubdomainOf, parseUrl } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, text } from '../utils/dom.js'
+import { readPixels } from '../utils/hints.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A tweet ships as `<blockquote class="twitter-tweet">` holding the tweet text in a `<p>`, then
@@ -281,3 +282,22 @@ export const twitterIframeEmbedResolver = createUrlEmbedResolver(
   ['twitter.com', 'x.com'],
   twitterResolveEmbed,
 )
+
+// The player reports its rendered height in a JSON-RPC envelope, unprompted, once the frame is
+// in view, and again when a reader expands a truncated post. The other calls in the same
+// envelope, `initialized`, `results` and `rendered`, carry no size.
+export const readTwitterHeight = (data: unknown): number | undefined => {
+  const call = isPlainObject(data) ? data['twttr.embed'] : undefined
+  const params =
+    isPlainObject(call) && call.method === 'twttr.private.resize' && Array.isArray(call.params)
+      ? call.params[0]
+      : undefined
+
+  return isPlainObject(params) ? readPixels(params.height) : undefined
+}
+
+export const twitterRenderHint: EmbedRenderHint = {
+  provider: 'twitter',
+  origin: 'https://platform.twitter.com',
+  readHeight: readTwitterHeight,
+}

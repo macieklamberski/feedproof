@@ -1,5 +1,5 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -39,3 +39,10 @@ export const captivateResolveEmbed = (url: string): EmbedResolverResult | undefi
 }
 
 export const captivateEmbedResolver = createUrlEmbedResolver(captivateHosts, captivateResolveEmbed)
+
+// The player takes no query to start. Its own embed API posts this action into the frame, and
+// the frame posts nothing first, so the request goes on load.
+export const captivateRenderHint: EmbedRenderHint = {
+  provider: 'captivate',
+  requestPlay: { action: 'CP.API.PLAY' },
+}
