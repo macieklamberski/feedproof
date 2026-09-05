@@ -157,8 +157,6 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   convertDatawrapperEmbeds,
   convertGiphyEmbeds,
   unwrapDoublyNestedLists,
-  stripDuplicateTitleHeading,
-  demoteHeadings,
   // Runs before flattenPictureElements and unwrapWrappers so an alignment signal on
   // a soon-dissolved <picture> or wrapper <div> is relocated onto the surviving media.
   canonicalizeAlignment,
@@ -193,6 +191,13 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // Runs after cleanAnchorUrls so the href it inspects is already cleaned/resolved,
   // and before stripDeadAnchors so a `#`-only permalink isn't unwrapped first.
   normalizeAnchoredHeadings,
+  // Compares the first heading's text with the article title, so it runs after
+  // normalizeAnchoredHeadings has dropped the permalink glyph (`#`, `¶`) a generator puts
+  // inside the heading, or the glyph is read as part of the text and the title never matches.
+  stripDuplicateTitleHeading,
+  // Runs after stripDuplicateTitleHeading: a removed title <h1> must not demote the body's
+  // own headings.
+  demoteHeadings,
   stripDeadAnchors,
   convertCiteCards,
   unwrapEmojiImages,
