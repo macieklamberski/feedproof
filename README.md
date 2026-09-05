@@ -55,7 +55,6 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `normalizeAnchoredHeadings` | Strip static-site-generator permalink anchors from headings (Sphinx/MkDocs, Docusaurus, AnchorJS, Zola) |
 | `cleanAnchorUrls` | Clean anchor hrefs (redirects, tracking params) via the `cleanUrlFn` option |
 | `stripDeadAnchors` | Unwrap links with empty, `#`, or `javascript:` hrefs |
-| `stripSelfLinkParagraphs` | Remove a paragraph holding only a link to the item's own page |
 | `stripNonContentElements` | Strip non-content chrome — subscribe/share/related widgets, ads, author bios |
 | `stripHiddenElements` | Strip elements hidden from view (`hidden` attribute, inline `display:none` / `visibility:hidden`) |
 | `removeTrackingPixels` | Strip 1×1 tracking pixels, keeping real images |

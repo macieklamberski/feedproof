@@ -144,7 +144,6 @@ export { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js
 export { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
 export { stripMarkdownEscapeBackslashes } from './transforms/dom/stripMarkdownEscapeBackslashes.js'
 export { stripNonContentElements } from './transforms/dom/stripNonContentElements.js'
-export { stripSelfLinkParagraphs } from './transforms/dom/stripSelfLinkParagraphs.js'
 export { stripWordBreaks } from './transforms/dom/stripWordBreaks.js'
 export { surfaceNoscriptEmbeds } from './transforms/dom/surfaceNoscriptEmbeds.js'
 export { surfaceParkedMarkup } from './transforms/dom/surfaceParkedMarkup.js'

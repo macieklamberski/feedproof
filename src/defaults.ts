@@ -197,7 +197,6 @@ import { stripInterBlockBreaks } from './transforms/dom/stripInterBlockBreaks.js
 import { stripLeadingIndentation } from './transforms/dom/stripLeadingIndentation.js'
 import { stripMarkdownEscapeBackslashes } from './transforms/dom/stripMarkdownEscapeBackslashes.js'
 import { stripNonContentElements } from './transforms/dom/stripNonContentElements.js'
-import { stripSelfLinkParagraphs } from './transforms/dom/stripSelfLinkParagraphs.js'
 import { stripWordBreaks } from './transforms/dom/stripWordBreaks.js'
 import { surfaceNoscriptEmbeds } from './transforms/dom/surfaceNoscriptEmbeds.js'
 import { surfaceParkedMarkup } from './transforms/dom/surfaceParkedMarkup.js'
@@ -332,9 +331,6 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // and before normalizeAnchoredHeadings so heading permalinks are already bare
   // `#fragment` when the canonical `<a name>` is built.
   shortenSamePageLinkFragments,
-  // Runs after resolveRelativeUrls and cleanAnchorUrls so a self link is judged on its
-  // absolute, cleaned href.
-  stripSelfLinkParagraphs,
   // Runs after cleanAnchorUrls so the href it inspects is already cleaned/resolved,
   // and before stripDeadAnchors so a `#`-only permalink isn't unwrapped first.
   normalizeAnchoredHeadings,
