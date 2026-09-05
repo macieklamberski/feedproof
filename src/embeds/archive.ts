@@ -81,6 +81,14 @@ export const archiveIframeEmbedResolver = createUrlEmbedResolver(archiveHosts, a
 const flashPlayerPathRegex = /^\/+flow\//
 const downloadIdentifierRegex = /\/\/(?:[\w-]+\.)*archive\.org\/download\/([^/'"?&]+)\//
 
+// The audio player was a 26 pixel controls bar, and that is the height its carrier declares.
+// The modern embed shows the item's artwork above the controls instead, at the 560x384 the
+// archive's own share dialog writes for an audio item, so the declared bar height describes
+// nothing that renders any more. A video carrier's size still describes the player it gets.
+// The file's extension in the config is what tells the two apart, since the swf is the same.
+const audioFileRegex = /\.(?:aac|mp3|m4a|ogg|oga|wav|flac|opus)(?=['"]|\s|$)/i
+const audioPlayerSize = { width: 560, height: 384 }
+
 export const archiveFlashResolveEmbed = (
   src: string,
   element: Element,
@@ -94,16 +102,19 @@ export const archiveFlashResolveEmbed = (
   const config = flashVars(element) ?? parsed.searchParams.get('config')
   const identifier = config?.match(downloadIdentifierRegex)?.[1]
 
-  if (!identifier || !safeIdentifierRegex.test(identifier)) {
+  if (!identifier || !safeIdentifierRegex.test(identifier) || !config) {
     return
   }
 
-  return composeEmbedResult(identifier)
+  const result = composeEmbedResult(identifier)
+
+  return audioFileRegex.test(config) ? { ...result, ...audioPlayerSize } : result
 }
 
 export const archiveFlashEmbedResolver = createUrlEmbedResolver(
   archiveHosts,
   archiveFlashResolveEmbed,
+  { preferResolverSize: true },
 )
 
 // Starts playback on the click that loads the player, for video and audio items alike.
