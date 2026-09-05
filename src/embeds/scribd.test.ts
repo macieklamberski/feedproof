@@ -187,12 +187,57 @@ describeForEachParser('scribdFlashEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // The earlier snippet leaves the swf url bare and names the document in the flashvars.
+    it('should read the document off the flashvars when the swf query is bare', async () => {
+      const value = html`
+        <embed
+          type="application/x-shockwave-flash"
+          src="http://d1.scribdassets.com/ScribdViewer.swf"
+          flashvars="document_id=41131710&amp;access_key=key-abc&amp;page=1&amp;viewMode=list"
+          width="100%"
+          height="600"
+        />
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'scribd',
+        id: '41131710',
+        src: 'https://www.scribd.com/embeds/41131710/content',
+        url: 'https://www.scribd.com/document/41131710',
+        height: 600,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should read the document off a flashvars param whatever its case', async () => {
+      const value = html`
+        <object
+          data="http://d1.scribdassets.com/ScribdViewer.swf"
+          width="100%"
+          height="600"
+        >
+          <param name="FlashVars" value="document_id=41131710&amp;access_key=key-abc" />
+        </object>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'scribd',
+        id: '41131710',
+        src: 'https://www.scribd.com/embeds/41131710/content',
+        url: 'https://www.scribd.com/document/41131710',
+        height: 600,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
-    it('should return undefined when the swf query names no document', async () => {
+    it('should return undefined when neither the swf query nor the flashvars name a document', async () => {
       const value = html`
-        <object data="http://d1.scribdassets.com/ScribdViewer.swf?access_key=key-abc"></object>
+        <object data="http://d1.scribdassets.com/ScribdViewer.swf?access_key=key-abc">
+          <param name="flashvars" value="page=1&amp;viewMode=list" />
+        </object>
       `
 
       expect(await extract(value)).toBeUndefined()
