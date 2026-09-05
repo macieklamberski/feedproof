@@ -65,6 +65,6 @@ export const podbeanEmbedResolver = createUrlEmbedResolver(podbeanHosts, podbean
 // The player takes no query to start; it speaks player.js.
 export const podbeanRenderHint: EmbedRenderHint = {
   provider: 'podbean',
-  requestPlay: playerJsPlayRequest,
   isReady: isPlayerJsReady,
+  requestPlay: playerJsPlayRequest,
 }

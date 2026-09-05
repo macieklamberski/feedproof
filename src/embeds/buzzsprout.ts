@@ -87,6 +87,6 @@ export const buzzsproutScriptEmbedResolver = createMarkupEmbedResolver(
 // The player takes no query to start, and Buzzsprout's help says so; it speaks player.js.
 export const buzzsproutRenderHint: EmbedRenderHint = {
   provider: 'buzzsprout',
-  requestPlay: playerJsPlayRequest,
   isReady: isPlayerJsReady,
+  requestPlay: playerJsPlayRequest,
 }

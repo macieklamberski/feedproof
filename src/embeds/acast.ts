@@ -68,6 +68,6 @@ export const acastEmbedResolver = createUrlEmbedResolver(acastHosts, acastResolv
 // The player takes no query to start; it speaks player.js.
 export const acastRenderHint: EmbedRenderHint = {
   provider: 'acast',
-  requestPlay: playerJsPlayRequest,
   isReady: isPlayerJsReady,
+  requestPlay: playerJsPlayRequest,
 }

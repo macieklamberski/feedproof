@@ -91,6 +91,6 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
 // server-rendered config is identical with and without it. The widget speaks player.js instead.
 export const spreakerRenderHint: EmbedRenderHint = {
   provider: 'spreaker',
-  requestPlay: playerJsPlayRequest,
   isReady: isPlayerJsReady,
+  requestPlay: playerJsPlayRequest,
 }

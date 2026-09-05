@@ -104,7 +104,7 @@ export const readPodigeeHeight = (data: unknown): number | undefined => {
 
 export const podigeeRenderHint: EmbedRenderHint = {
   provider: 'podigee',
-  requestPlay: playerJsPlayRequest,
   isReady: isPlayerJsReady,
+  requestPlay: playerJsPlayRequest,
   readHeight: readPodigeeHeight,
 }

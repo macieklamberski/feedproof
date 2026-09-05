@@ -60,12 +60,12 @@ export type EmbedRenderHint = {
   // Query parameters that start playback, for a load that follows a person's click. They never
   // go on the placeholder's url, since a placeholder must not start on page load.
   autoplayParams?: Record<string, string>
-  // How playback is started for a player that takes no query for it: what to post into the
-  // frame, and which of the frame's own messages says it is ready to take it, for a player that
-  // ignores the request before then. A reader posts the request once, on that message where the
-  // hint names one and on `load` otherwise. Posting twice pauses a player whose command toggles.
-  requestPlay?: unknown
+  // How playback is started for a player that takes no query for it: which of the frame's own
+  // messages says it is ready to take a command, for a player that ignores one before then, and
+  // what to post into the frame. A reader posts the request once, on that message where the hint
+  // names one and on `load` otherwise. Posting twice pauses a player whose command toggles.
   isReady?: (data: unknown) => boolean
+  requestPlay?: unknown
   // How the player's height is obtained: what to post into the frame once it has loaded, for a
   // player that reports only when asked, and the rendered height in pixels out of a message the
   // frame posted, or nothing when the message is about something else or the player has not
