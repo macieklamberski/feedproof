@@ -85,11 +85,23 @@ const specimens: Record<string, string | [string, string]> = {
     '<a class="synved-social-button synved-social-button-share synved-social-size-24 synved-social-provider-linkedin nolightbox" data-provider="linkedin" target="_blank" rel="nofollow" title="Share on Linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fexample.com%2Fpost"><img alt="Linkedin" title="Share on Linkedin" class="synved-share-image synved-social-image synved-social-image-share" width="24" height="24" src="https://example.com/wp-content/plugins/social-media-feather/synved-social/image/social/regular/48x48/linkedin.png"></a>',
   '.av-share-box':
     '<div class="av-share-box"><h5 class="av-share-link-description av-no-toc">Share this entry</h5><ul class="av-share-box-list noLightbox"><li class="av-share-link av-social-link-linkedin"><a target="_blank" href="https://linkedin.com/shareArticle?mini=true&amp;title=A%20post&amp;url=https://example.com/post" aria-hidden="true" data-av_icon="" data-av_iconfont="entypo-fontello"><span class="avia_hidden_link_text">Share on LinkedIn</span></a></li></ul></div>',
+  '[class*="elementor-share-buttons"]':
+    '<div class="elementor-element elementor-share-buttons--view-icon elementor-share-buttons--skin-flat elementor-widget-share-buttons"><div class="elementor-widget-container"><div class="elementor-grid"><div class="elementor-share-btn elementor-share-btn_facebook"><span class="elementor-share-btn__title">Facebook</span></div></div></div></div>',
+  '[class*="heateor_sss"]':
+    '<div class="heateor_sss_sharing_container heateor_sss_horizontal_sharing"><div class="heateor_sss_sharing_ul"><a class="heateor_sss_facebook" href="https://example.com/share/facebook"><span class="heateor_sss_svg"></span></a></div></div>',
+  '.mashsb-container':
+    '<aside class="mashsb-container mashsb-main"><div class="mashsb-buttons"><a href="https://example.com/share/facebook" class="mashicon-facebook"><span class="text">Share</span></a></div></aside>',
+  '.ssbp-wrap':
+    '<div class="ssba-classic-2 ssba ssbp-wrap alignleft ssbp--theme-1"><div style="text-align:left"><span class="ssba-share-text">Share this</span><a data-site="facebook" class="ssba_facebook_share ssba_share_link" href="https://example.com/share/facebook">Facebook</a></div></div>',
+  '.swp_social_panel':
+    '<div class="swp_social_panel swp_horizontal_panel swp_flat_fresh" data-min-width="1100"><div class="nc_tweetContainer swp_share_button"><a class="nc_tweet swp_share_link" href="https://example.com/share/facebook"><span class="swp_share">Share</span></a></div></div>',
   '.yarpp-related':
     '<div class="yarpp yarpp-related yarpp-template-list"><h3>Related</h3><ol><li><a href="/a">A</a></li></ol></div>',
   '.jp-relatedposts':
     '<div id="jp-relatedposts" class="jp-relatedposts"><h3 class="jp-relatedposts-headline">Related</h3></div>',
   '.crp_related': '<div class="crp_related"><ul><li><a href="/a">A</a></li></ul></div>',
+  '.zergnet-widget':
+    '<div class="zergnet-widget widget-loaded"><div class="zerglayoutcl"><div class="zergrow"><div class="zergentity"><a href="https://example.com/story">A story you might like</a></div></div></div></div>',
   '.wp-block-post-author':
     '<div class="wp-block-post-author"><div class="wp-block-post-author__content"><p>Jane</p></div></div>',
   '.saboxplugin-wrap':
