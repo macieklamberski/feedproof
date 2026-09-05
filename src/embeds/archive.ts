@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { flashVars, keepIfMatches } from '../utils/dom.js'
-import { splitStrayParams } from '../utils/urls.js'
+import { audioFileRegex, splitStrayParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen.
@@ -85,9 +85,17 @@ const downloadIdentifierRegex = /\/\/(?:[\w-]+\.)*archive\.org\/download\/([^/'"
 // The modern embed shows the item's artwork above the controls instead, at the 560x384 the
 // archive's own share dialog writes for an audio item, so the declared bar height describes
 // nothing that renders any more. A video carrier's size still describes the player it gets.
-// The file's extension in the config is what tells the two apart, since the swf is the same.
-const audioFileRegex = /\.(?:aac|mp3|m4a|ogg|oga|wav|flac|opus)(?=['"]|\s|$)/i
+// The files the config names are what tell the two apart, since the swf is the same. Both
+// dialects write them as `url` entries, quoted in either style and with the key bare in the
+// older query form.
+const configFileRegex = /\burl['"]?\s*:\s*['"]([^'"]+)['"]/g
 const audioPlayerSize = { width: 560, height: 384 }
+
+const namesAudioFile = (config: string): boolean => {
+  return Array.from(config.matchAll(configFileRegex), (match) => match[1]).some((file) => {
+    return audioFileRegex.test(file)
+  })
+}
 
 export const archiveFlashResolveEmbed = (
   src: string,
@@ -108,7 +116,7 @@ export const archiveFlashResolveEmbed = (
 
   const result = composeEmbedResult(identifier)
 
-  return audioFileRegex.test(config) ? { ...result, ...audioPlayerSize } : result
+  return namesAudioFile(config) ? { ...result, ...audioPlayerSize } : result
 }
 
 export const archiveFlashEmbedResolver = createUrlEmbedResolver(
