@@ -59,6 +59,9 @@ export const defaultNonContentSelectors = [
   // Drupal Easy Social. The widget is chrome, but the pipeline cannot tell, so its Facebook
   // Like iframe becomes an embed placeholder card and the chrome is promoted to content.
   'div.easy_social_box',
+  // The Like button pasted on its own, a 25 pixel iframe that would otherwise reach the reader
+  // as a click-to-play placeholder for a button.
+  'iframe[src*="facebook.com/plugins/like.php"]',
   '.a2a_kit', // AddToAny share icons (higher-prevalence marker than the wrapper).
   '[class*="addthis_"]', // AddThis share toolbox.
   '.shareaholic-canvas', // Shareaholic share/related widget.
