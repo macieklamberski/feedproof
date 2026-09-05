@@ -5,17 +5,18 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const flickrHosts = ['flickr.com']
 
-// Two dead carriers, both from the Flash era, and both naming either an album or a whole
-// photostream. The `<object>`/`<embed>` pair plays the swf, and the iframe points at a page
-// that answers `x-frame-options: SAMEORIGIN` and so renders an empty frame. Neither shows
-// anything today.
+// Three dead carriers, each naming an album, a group pool or a whole photostream. The
+// `<object>`/`<embed>` pair from the Flash era plays the swf, the legacy iframe points at the
+// slideshow page, and the third frames the album or stream page itself, which is what the
+// page's own "view slideshow" link pointed at. Every flickr.com page answers `x-frame-options:
+// SAMEORIGIN`, so both iframes render an empty frame, and none of the three shows anything today.
 const flashPlayerPathRegex = /^\/apps\/slideshow\//i
 const legacyPlayerPathRegex = /^\/slideshow\/index\.gne$/i
 
 // The swf url names only the player, with a cache-busting `?v=` that is identical on every
 // slideshow ever pasted. The subject is in the flashvars, as a percent-encoded page path that
 // `URLSearchParams` decodes: `/photos/{owner}/sets/{setId}/show/` for an album and
-// `/photos/{owner}/show/` for a photostream.
+// `/photos/{owner}/show/` for a photostream. A framed page carries the same path as its own.
 //
 // No snippet holds `set_id` without `page_show_url`, so the path is the one key worth reading
 // and the only one that also yields the owner. The photostream form is rare, and a few snippets
@@ -89,11 +90,8 @@ const composeShortAlbumUrl = (setId: string): string => {
 const defaultWidth = 400
 const defaultHeight = 300
 
-// The swf carrier names its subject in the flashvars beside it: the page path first, and the
-// bare `user_id` for the few snippets that carry nothing else.
-const readFlashSubject = (element: Element): FlickrSubject => {
-  const config = new URLSearchParams(flashVars(element) ?? '')
-  const page = config.get('page_show_url') ?? ''
+// What a page path names, whether it arrived in the flashvars or as the framed page itself.
+const readPageSubject = (page: string): FlickrSubject | undefined => {
   const set = page.match(setPathRegex)
 
   if (set) {
@@ -108,7 +106,18 @@ const readFlashSubject = (element: Element): FlickrSubject => {
 
   const stream = page.match(streamPathRegex)
 
-  return { owner: stream?.[1] ?? config.get('user_id') ?? undefined }
+  if (stream) {
+    return { owner: stream[1] }
+  }
+}
+
+// The swf carrier names its subject in the flashvars beside it: the page path first, and the
+// bare `user_id` for the few snippets that carry nothing else.
+const readFlashSubject = (element: Element): FlickrSubject => {
+  const config = new URLSearchParams(flashVars(element) ?? '')
+  const page = config.get('page_show_url') ?? ''
+
+  return readPageSubject(page) ?? { owner: config.get('user_id') ?? undefined }
 }
 
 // The iframe carrier names its subject in its own query. A set is preferred where several
@@ -185,6 +194,8 @@ export const flickrResolveEmbed = (
     subject = readFlashSubject(element)
   } else if (legacyPlayerPathRegex.test(parsed.pathname)) {
     subject = readLegacySubject(parsed)
+  } else {
+    subject = readPageSubject(parsed.pathname)
   }
 
   const result = subject && composeEmbed(subject)
@@ -200,8 +211,8 @@ export const flickrResolveEmbed = (
   return { ...result, src: `${result.src}?width=${width}&height=${height}`, width, height }
 }
 
-// Both carriers render nothing today, and both name something Flickr's current embed endpoint
-// still serves, so each maps onto a working slideshow.
+// All three carriers render nothing today, and each names something Flickr's current embed
+// endpoint still serves, so each maps onto a working slideshow.
 export const flickrEmbedResolver = createUrlEmbedResolver(flickrHosts, flickrResolveEmbed, {
   // The carrier's size is already folded into the src, and it is what the endpoint renders at.
   preferResolverSize: true,
