@@ -29,7 +29,7 @@ import { tcdCiteResolver } from './cites/tcd.js'
 import { tistoryCiteResolver } from './cites/tistory.js'
 import { tumblrCiteResolver } from './cites/tumblr.js'
 import { xenforoCiteResolver } from './cites/xenforo.js'
-import { acastEmbedResolver } from './embeds/acast.js'
+import { acastEmbedResolver, acastRenderHint } from './embeds/acast.js'
 import { anchorEmbedResolver } from './embeds/anchor.js'
 import { aparatIframeEmbedResolver, aparatScriptEmbedResolver } from './embeds/aparat.js'
 import { appleEmbedResolver } from './embeds/apple.js'
@@ -58,9 +58,10 @@ import {
 } from './embeds/brightcove.js'
 import {
   buzzsproutIframeEmbedResolver,
+  buzzsproutRenderHint,
   buzzsproutScriptEmbedResolver,
 } from './embeds/buzzsprout.js'
-import { captivateEmbedResolver } from './embeds/captivate.js'
+import { captivateEmbedResolver, captivateRenderHint } from './embeds/captivate.js'
 import { codepenIframeEmbedResolver, codepenWidgetEmbedResolver } from './embeds/codepen.js'
 import { dailymotionEmbedResolver } from './embeds/dailymotion.js'
 import { donorboxEmbedResolver } from './embeds/donorbox.js'
@@ -102,7 +103,7 @@ import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from './em
 import { notecomIframeEmbedResolver, notecomRenderHint } from './embeds/notecom.js'
 import { odyseeEmbedResolver } from './embeds/odysee.js'
 import { omnyEmbedResolver, omnyRenderHint } from './embeds/omny.js'
-import { podbeanEmbedResolver } from './embeds/podbean.js'
+import { podbeanEmbedResolver, podbeanRenderHint } from './embeds/podbean.js'
 import {
   podigeeEmbedResolver,
   podigeeIframeEmbedResolver,
@@ -123,7 +124,11 @@ import {
   speakerdeckScriptEmbedResolver,
 } from './embeds/speakerdeck.js'
 import { spotifyEmbedResolver } from './embeds/spotify.js'
-import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from './embeds/spreaker.js'
+import {
+  spreakerAnchorEmbedResolver,
+  spreakerIframeEmbedResolver,
+  spreakerRenderHint,
+} from './embeds/spreaker.js'
 import { standfmEmbedResolver } from './embeds/standfm.js'
 import { tedEmbedResolver, tedRenderHint } from './embeds/ted.js'
 import {
@@ -608,23 +613,28 @@ export const defaultWidgetResolvers: Array<WidgetResolver> = [
   ...citeResolvers,
 ]
 
-// What a reader needs from each provider once it turns the placeholder into a frame: the query
-// that starts playback on the click, and how the player reports its rendered height. One per
-// provider, beside its resolver.
+// What a reader needs from each provider once it turns the placeholder into a frame: how to
+// start playback on the click, by query or by a message into the frame, and how the player
+// reports its rendered height. One per provider, beside its resolver.
 export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
+  acastRenderHint,
   archiveRenderHint,
   audioboomRenderHint,
   blueskyRenderHint,
   brightcoveRenderHint,
+  buzzsproutRenderHint,
+  captivateRenderHint,
   instagramRenderHint,
   mastodonRenderHint,
   mixcloudRenderHint,
   notecomRenderHint,
   omnyRenderHint,
+  podbeanRenderHint,
   podigeeRenderHint,
   redditRenderHint,
   sketchfabRenderHint,
   soundcloudRenderHint,
+  spreakerRenderHint,
   tedRenderHint,
   telegramRenderHint,
   twitterRenderHint,

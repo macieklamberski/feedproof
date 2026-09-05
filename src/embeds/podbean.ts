@@ -1,6 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { keepIfMatches, parsePixelSize } from '../utils/dom.js'
+import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Ids are a slug pair, e.g. `yx4hr-f3d1e1`, and the v2 player appends `-pb` to its own.
@@ -60,3 +61,10 @@ export const podbeanResolveEmbed = (url: string): EmbedResolverResult | undefine
 }
 
 export const podbeanEmbedResolver = createUrlEmbedResolver(podbeanHosts, podbeanResolveEmbed)
+
+// The player takes no query to start; it speaks player.js.
+export const podbeanRenderHint: EmbedRenderHint = {
+  provider: 'podbean',
+  requestPlay: playerJsPlayRequest,
+  isReady: isPlayerJsReady,
+}

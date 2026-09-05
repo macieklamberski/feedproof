@@ -62,3 +62,7 @@ export const megaphoneResolveEmbed = (url: string): EmbedResolverResult | undefi
 }
 
 export const megaphoneEmbedResolver = createUrlEmbedResolver(megaphoneHosts, megaphoneResolveEmbed)
+
+// No play request. The player speaks player.js and takes its `play`, flipping to its playing
+// state, but loaded in Chrome by a click the audio never started from it. Nothing to send until
+// it does.

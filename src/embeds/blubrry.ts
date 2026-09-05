@@ -54,3 +54,7 @@ export const blubrryResolveEmbed = (url: string): EmbedResolverResult | undefine
 }
 
 export const blubrryEmbedResolver = createUrlEmbedResolver(blubrryHosts, blubrryResolveEmbed)
+
+// No play request. The page listens for a bare number, `-1` clicks Play, and the button flips
+// to its playing state, but loaded in Chrome by a click the audio never started from it. Nothing
+// to send until it does.

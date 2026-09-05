@@ -1,5 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A show is a 24-hex object id, a UUID or the alias the publisher chose. An episode is an
@@ -63,3 +64,10 @@ const acastResolveEmbed = (url: string): EmbedResolverResult | undefined => {
 export const acastEmbedResolver = createUrlEmbedResolver(acastHosts, acastResolveEmbed, {
   preferResolverSize: true,
 })
+
+// The player takes no query to start; it speaks player.js.
+export const acastRenderHint: EmbedRenderHint = {
+  provider: 'acast',
+  requestPlay: playerJsPlayRequest,
+  isReady: isPlayerJsReady,
+}

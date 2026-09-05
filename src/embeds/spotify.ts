@@ -136,3 +136,7 @@ export const spotifyResolveEmbed = (
 }
 
 export const spotifyEmbedResolver = createUrlEmbedResolver([spotifyHost], spotifyResolveEmbed)
+
+// No play request. The player posts `{ type: 'ready' }` and takes a `{ command: 'play' }` object,
+// answering that it is playing and buffering, but loaded in Chrome by a click the audio never
+// started from it. Nothing to send until it does.

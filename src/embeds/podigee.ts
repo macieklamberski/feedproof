@@ -1,7 +1,7 @@
 import { isPlainObject } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { readPixels } from '../utils/hints.js'
+import { isPlayerJsReady, playerJsPlayRequest, readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -89,6 +89,9 @@ export const podigeeResolveEmbed = (url: string): EmbedResolverResult | undefine
 
 export const podigeeIframeEmbedResolver = createUrlEmbedResolver(podigeeHosts, podigeeResolveEmbed)
 
+// The player takes no query to start, and Podigee's help says playback must wait for a click; it
+// speaks player.js.
+//
 // The player reports its height under a `configurePlayer` message, 0 before it has rendered
 // and the real value after, which is what Podigee's own embed script sets the iframe to. The
 // frame is served from the show's own subdomain, so it has no origin to name here and the
@@ -101,5 +104,7 @@ export const readPodigeeHeight = (data: unknown): number | undefined => {
 
 export const podigeeRenderHint: EmbedRenderHint = {
   provider: 'podigee',
+  requestPlay: playerJsPlayRequest,
+  isReady: isPlayerJsReady,
   readHeight: readPodigeeHeight,
 }
