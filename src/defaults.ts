@@ -940,11 +940,21 @@ export const defaultNonContentSelectors = [
   // "module-wrap", so the [class*=] entries above never reach it.
   '[data-key="social-share"]',
   '.av-share-box', // Enfold theme "Share this entry" box.
+  // Elementor names the widget only through modifier classes (elementor-share-buttons--view-icon
+  // and siblings), so there is no bare class to match.
+  '[class*="elementor-share-buttons"]', // Elementor share-buttons widget.
+  '[class*="heateor_sss"]', // Sassy Social Share sharing container.
+  '.mashsb-container', // MashShare share bar.
+  // Simple Share Buttons Adder writes the wrapper as `ssba ssbp-wrap`; there is no `ssba-wrap`
+  // class despite the plugin's name.
+  '.ssbp-wrap', // Simple Share Buttons Adder share bar.
+  '.swp_social_panel', // Social Warfare share panel.
 
   // Related-posts widgets.
   '.yarpp-related', // YARPP related-posts widget (WordPress).
   '.jp-relatedposts', // Jetpack related-posts carousel.
   '.crp_related', // Contextual Related Posts WordPress plugin.
+  '.zergnet-widget', // ZergNet content-recommendation widget.
 
   // Author bio blocks.
   '.wp-block-post-author', // WordPress Gutenberg author bio block.
