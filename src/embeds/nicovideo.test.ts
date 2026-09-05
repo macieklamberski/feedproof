@@ -41,6 +41,14 @@ describe('extractNicovideoId', () => {
     expect(extractNicovideoId('https://ext.nicovideo.jp/thumb_watch/so67890')).toBe('so67890')
   })
 
+  // A channel upload is addressed by a bare thread number, with no kind in front of it.
+  it('should read a bare numeric id', () => {
+    const value = 'https://embed.nicovideo.jp/watch/1576909203/script?w=640&h=360'
+    const expected = '1576909203'
+
+    expect(extractNicovideoId(value)).toBe(expected)
+  })
+
   it('should return undefined for a url that cannot be parsed', () => {
     const value = 'https://['
 
@@ -191,6 +199,18 @@ describe('nicovideoResolveEmbed', () => {
       id: 'sm9',
       src: 'https://embed.nicovideo.jp/watch/sm9',
       url: 'https://www.nicovideo.jp/watch/sm9',
+    }
+
+    expect(nicovideoResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should mint the player for a numeric channel upload id', () => {
+    const value = 'https://embed.nicovideo.jp/watch/1576909203/script?w=640&h=360'
+    const expected: EmbedResolverResult = {
+      provider: 'nicovideo',
+      id: '1576909203',
+      src: 'https://embed.nicovideo.jp/watch/1576909203',
+      url: 'https://www.nicovideo.jp/watch/1576909203',
     }
 
     expect(nicovideoResolveEmbed(value)).toEqual(expected)
