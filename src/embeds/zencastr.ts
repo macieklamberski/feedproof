@@ -1,3 +1,4 @@
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -17,7 +18,7 @@ const playerRatio = '480/480'
 // The embed page answers 200 for a real episode and 404 for an invented one (2026-09-06).
 export const zencastrResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, zencastrHosts)
-  const [route, id, ...rest] = parsed?.pathname.split('/').filter(Boolean) ?? []
+  const [route, id, ...rest] = parsed ? getPathSegments(parsed) : []
 
   if (route !== 'embed' || !id || rest.length || !safeIdRegex.test(id)) {
     return
