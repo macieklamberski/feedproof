@@ -24,6 +24,29 @@ describe('extractArchiveIdentifier', () => {
     expect(extractArchiveIdentifier(value)).toBe(expected)
   })
 
+  // The retired BookReader route names the same item, with the book's own file after it.
+  it('should read the identifier from a stream url', () => {
+    const value = 'https://archive.org/stream/hoursofdevotionb00neudrich'
+    const expected = 'hoursofdevotionb00neudrich'
+
+    expect(extractArchiveIdentifier(value)).toBe(expected)
+  })
+
+  it('should read the identifier from a stream url naming a file inside the item', () => {
+    const value = 'https://archive.org/stream/westandunitedand006948mbp/westandunitedand006948mbp'
+    const expected = 'westandunitedand006948mbp'
+
+    expect(extractArchiveIdentifier(value)).toBe(expected)
+  })
+
+  // `download` serves the item's files rather than a viewer of them, so an enclosure on the
+  // same host must not be read as an item.
+  it('should return undefined for a download url', () => {
+    const value = 'https://archive.org/download/nasa_hubble/nasa_hubble.mp3'
+
+    expect(extractArchiveIdentifier(value)).toBeUndefined()
+  })
+
   it('should return undefined for an archive url naming no item', () => {
     const value = 'https://archive.org/about'
 
@@ -109,6 +132,19 @@ describe('archiveResolveEmbed', () => {
         src: 'https://archive.org/embed/nasa_hubble',
         url: 'https://archive.org/details/nasa_hubble',
         thumbnail: 'https://archive.org/services/img/nasa_hubble',
+      }
+
+      expect(archiveResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should send a BookReader stream url to the modern player', () => {
+      const value = 'https://archive.org/stream/hoursofdevotionb00neudrich?ui=embed'
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'hoursofdevotionb00neudrich',
+        src: 'https://archive.org/embed/hoursofdevotionb00neudrich?ui=embed',
+        url: 'https://archive.org/details/hoursofdevotionb00neudrich',
+        thumbnail: 'https://archive.org/services/img/hoursofdevotionb00neudrich',
       }
 
       expect(archiveResolveEmbed(value)).toEqual(expected)
