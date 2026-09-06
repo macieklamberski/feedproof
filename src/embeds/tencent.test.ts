@@ -72,6 +72,39 @@ describeForEachParser('tencentEmbedResolver', (parseHtml) => {
     })
   })
 
+  describe('sad paths', () => {
+    it('should ignore a foreign host carrying the same path', async () => {
+      const value =
+        '<iframe src="https://evil.test/v.qq.com/txp/iframe/player.html?vid=v03604lrvan"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should ignore the watch page, which frames nothing', async () => {
+      const value = '<iframe src="https://v.qq.com/x/page/v03604lrvan.html"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should ignore a player that names no video', async () => {
+      const value = '<iframe src="https://v.qq.com/txp/iframe/player.html?autoplay=true"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should ignore an id that is not one', async () => {
+      const value = '<iframe src="https://v.qq.com/txp/iframe/player.html?vid=latest"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should ignore a swf on the static host that is not the player', async () => {
+      const value = '<embed src="http://static.video.qq.com/loader.swf?vid=u0015tdk4pp">'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
   describe('the Flash players that carried the same id', () => {
     it('should repair the swf on the static host', async () => {
       const value = html`
@@ -114,39 +147,6 @@ describeForEachParser('tencentEmbedResolver', (parseHtml) => {
       }
 
       expect(await extract(value)).toEqual(expected)
-    })
-  })
-
-  describe('sad paths', () => {
-    it('should ignore a foreign host carrying the same path', async () => {
-      const value =
-        '<iframe src="https://evil.test/v.qq.com/txp/iframe/player.html?vid=v03604lrvan"></iframe>'
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should ignore the watch page, which frames nothing', async () => {
-      const value = '<iframe src="https://v.qq.com/x/page/v03604lrvan.html"></iframe>'
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should ignore a player that names no video', async () => {
-      const value = '<iframe src="https://v.qq.com/txp/iframe/player.html?autoplay=true"></iframe>'
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should ignore an id that is not one', async () => {
-      const value = '<iframe src="https://v.qq.com/txp/iframe/player.html?vid=latest"></iframe>'
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should ignore a swf on the static host that is not the player', async () => {
-      const value = '<embed src="http://static.video.qq.com/loader.swf?vid=u0015tdk4pp">'
-
-      expect(await extract(value)).toBeUndefined()
     })
   })
 })
