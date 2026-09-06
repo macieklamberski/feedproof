@@ -152,6 +152,9 @@ export const defaultNonContentSelectors = [
   // HelloAsso donation, membership and ticketing forms. Every widget path ends in `widget`,
   // `widget-bouton` or `widget-vignette` under the association's page.
   'iframe[src*="helloasso.com/associations/"][src*="/widget"]',
+  // GetYourGuide activity and availability widgets. The mount is an empty div the partner
+  // script fills, or one holding only a "Powered by GetYourGuide" credit.
+  '[data-gyg-href]',
 
   // Platform UI chrome and non-rendered scaffolding.
   '.image-link-expand', // Substack restack/zoom buttons next to images.

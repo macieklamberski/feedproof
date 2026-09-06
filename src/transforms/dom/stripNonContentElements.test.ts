@@ -151,6 +151,8 @@ const specimens: Record<string, string | [string, string]> = {
     '<iframe id="stay22-widget" src="https://www.stay22.com/embed/699754889b53f8015d33a6ae" width="100%" height="428" frameborder="0"></iframe>',
   'iframe[src*="helloasso.com/associations/"][src*="/widget"]':
     '<iframe id="haWidget" src="https://www.helloasso.com/associations/pacte-civique/formulaires/1/widget-bouton" style="width:100%;height:70px;border:none;"></iframe>',
+  '[data-gyg-href]':
+    '<div data-gyg-href="https://example.com/default/activities.frame" data-gyg-locale-code="en-US" data-gyg-widget="activities" data-gyg-number-of-items="3" data-gyg-partner-id="66RVO1V" data-gyg-tour-ids="76035,75950,400712">Powered by <a href="https://example.com/sarajevo-l2281/" target="_blank" rel="noopener sponsored">GetYourGuide</a></div>',
   '.image-link-expand': '<div class="image-link-expand"><button><svg></svg></button></div>',
   'drupal-render-placeholder':
     '<drupal-render-placeholder callback="comment.lazy_builders:renderLinks" arguments="0=node:1"></drupal-render-placeholder>',
