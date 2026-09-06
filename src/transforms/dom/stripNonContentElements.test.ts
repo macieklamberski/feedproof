@@ -159,6 +159,8 @@ const specimens: Record<string, string | [string, string]> = {
   'a.addtoany_share_save': '<a class="a2a_button_facebook addtoany_share_save">Share</a>',
   'a.twitter-share-button':
     '<a href="https://twitter.com/share" class="twitter-share-button" data-via="someone">Tweet</a>',
+  '.vm-like-button':
+    '<div class="vm-like-button"><span class="pt-like-it-not"><button class="like-button" data-href="https://example.com/wp-admin/admin-ajax.php?action=pt_like_it&amp;post_id=25556" data-id="25556" data-modus="activity"><span class="like-icon"><i class="far fa-heart"></i></span>&nbsp;<span class="like-count">3</span></button></span></div>',
   'div.easy_social_box': [
     '<div class="easy_social_box"><div class="easy_social-widget"><iframe src="https://www.facebook.com/plugins/like.php?href=https%3A%2F%2Fexample.com"></iframe></div></div>',
     '',

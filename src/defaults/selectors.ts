@@ -59,6 +59,9 @@ export const defaultNonContentSelectors = [
   // Drupal Easy Social. The widget is chrome, but the pipeline cannot tell, so its Facebook
   // Like iframe becomes an embed placeholder card and the chrome is promoted to content.
   'div.easy_social_box',
+  // A per-post like button with its count, which a community activity feed writes under every
+  // update. The button renders nothing in a reader and the count survives as a stray digit.
+  '.vm-like-button',
   // The Like button pasted on its own, a 25 pixel iframe that would otherwise reach the reader
   // as a click-to-play placeholder for a button.
   'iframe[src*="facebook.com/plugins/like.php"]',
