@@ -1,4 +1,3 @@
-import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, flashVars } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -100,7 +99,7 @@ export const cnnFlashEmbedResolver = createUrlEmbedResolver(cdnHosts, cnnFlashRe
 export const cnnScriptEmbedResolver = createMarkupEmbedResolver(
   'script[src*="cdn.turner.com/cnn/.element/js/"][src*="/video/evp/module.js"]',
   (element) => {
-    const parsed = parseUrl(attr(element, 'src') ?? '', 'https://example.com')
+    const parsed = parseUrlOnHosts(attr(element, 'src'), cdnHosts)
 
     return resolveVideoId(parsed?.searchParams.get('vid'))
   },

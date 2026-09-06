@@ -231,5 +231,12 @@ describeForEachParser('cnnScriptEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+
+    it('should ignore a foreign host carrying the same path', async () => {
+      const value =
+        '<script src="https://evil.test/cdn.turner.com/cnn/.element/js/2.0/video/evp/module.js?vid=/video/politics/2009/05/21/obama.guantanamo.cnn"></script>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
   })
 })
