@@ -61,7 +61,9 @@ const readPlayer = (url: URL): Player | undefined => {
     const episode = url.searchParams.get('episode_id') ?? ''
     const theme = url.searchParams.get('theme')
     const named = safeIdRegex.test(episode) ? `?episode_id=${episode}` : ''
-    const themed = theme && named ? `&theme=${theme}` : ''
+    // Encoded, because `searchParams` hands the value back decoded: a feed writing
+    // `theme=dark%26autoplay%3Dtrue` would otherwise mint a second parameter of its own choosing.
+    const themed = theme && named ? `&theme=${encodeURIComponent(theme)}` : ''
 
     return {
       kind: named ? 'episode' : 'podcast',
