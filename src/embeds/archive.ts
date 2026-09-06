@@ -81,15 +81,18 @@ export const archiveIframeEmbedResolver = createUrlEmbedResolver(archiveHosts, a
 const flashPlayerPathRegex = /^\/+flow\//
 const downloadIdentifierRegex = /\/\/(?:[\w-]+\.)*archive\.org\/download\/([^/'"?&]+)\//
 
-// The audio player was a 26 pixel controls bar, and that is the height its carrier declares.
-// The modern embed shows the item's artwork above the controls instead, at the 560x384 the
-// archive's own share dialog writes for an audio item, so the declared bar height describes
-// nothing that renders any more. A video carrier's size still describes the player it gets.
+// The modern audio player is a controls bar and nothing else: measured in a browser at 320,
+// 558 and 800 pixels wide on 2026-09-06, it is 30 pixels tall at every width. A height that
+// does not move with the width is a fixed height, and a bar that fills whatever width it is
+// given states no width at all, so the result carries the height alone. The carrier declares
+// the 26 pixels of the Flash bar it replaced, which is close but describes a player that is
+// gone. A video carrier's size still describes the player it gets, and the video branch states
+// no size, so `preferResolverSize` leaves it to the carrier.
 // The files the config names are what tell the two apart, since the swf is the same. Both
 // dialects write them as `url` entries, quoted in either style and with the key bare in the
 // older query form.
 const configFileRegex = /\burl['"]?\s*:\s*['"]([^'"]+)['"]/g
-const audioPlayerSize = { width: 560, height: 384 }
+const audioPlayerHeight = 30
 
 const namesAudioFile = (config: string): boolean => {
   return Array.from(config.matchAll(configFileRegex), (match) => match[1]).some((file) => {
@@ -116,7 +119,7 @@ export const archiveFlashResolveEmbed = (
 
   const result = composeEmbedResult(identifier)
 
-  return namesAudioFile(config) ? { ...result, ...audioPlayerSize } : result
+  return namesAudioFile(config) ? { ...result, height: audioPlayerHeight } : result
 }
 
 export const archiveFlashEmbedResolver = createUrlEmbedResolver(

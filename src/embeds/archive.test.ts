@@ -154,7 +154,7 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
     })
 
     // The audio player names the file on its own and puts the item on the clip instead. An
-    // audio item takes the modern player's size, since the bar the carrier was sized for is gone.
+    // audio item takes the modern bar's height, since the bar the carrier was sized for is gone.
     it('should read the identifier from the clip base url', async () => {
       const value = html`
         <embed
@@ -169,16 +169,15 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
         src: 'https://archive.org/embed/EndCameTooSoon',
         url: 'https://archive.org/details/EndCameTooSoon',
         thumbnail: 'https://archive.org/services/img/EndCameTooSoon',
-        width: 560,
-        height: 384,
+        height: 30,
       }
 
       expect(await extract(value)).toEqual(expected)
     })
 
-    // The carrier states the 26 pixels of the old controls bar, which the modern player does
-    // not have, so the resolver's size wins over it.
-    it('should replace the audio bar height with the modern player size', async () => {
+    // The carrier states the 26 pixels of the Flash bar, and the modern bar measures 30, so the
+    // resolver's height wins over it. The width is the carrier's business either way.
+    it('should replace the audio bar height with the modern player height', async () => {
       const value = html`
         <embed
           type="application/x-shockwave-flash"
@@ -194,8 +193,7 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
         src: 'https://archive.org/embed/EndCameTooSoon',
         url: 'https://archive.org/details/EndCameTooSoon',
         thumbnail: 'https://archive.org/services/img/EndCameTooSoon',
-        width: 560,
-        height: 384,
+        height: 30,
       }
 
       expect(await extract(value)).toEqual(expected)
