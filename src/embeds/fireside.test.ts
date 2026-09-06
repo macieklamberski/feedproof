@@ -47,6 +47,20 @@ describe('extractFiresideToken', () => {
     expect(extractFiresideToken(value)).toEqual(expected)
   })
 
+  // The retired share route names the token and no version, so it takes the current player.
+  it('should read a token off the share route', () => {
+    const value = 'https://fireside.fm/s/aHx_iT3N+3W9-AW7P/iframe'
+    const expected = { version: 'v3', token: 'aHx_iT3N+3W9-AW7P' }
+
+    expect(extractFiresideToken(value)).toEqual(expected)
+  })
+
+  it('should return undefined for a share route naming no token', () => {
+    const value = 'https://fireside.fm/s'
+
+    expect(extractFiresideToken(value)).toBeUndefined()
+  })
+
   it('should return undefined for a player version it does not know', () => {
     const value = 'https://player.fireside.fm/v9/DiNRb69N+Dagp3z15'
 
@@ -105,6 +119,19 @@ describe('firesideResolveEmbed', () => {
       provider: 'fireside',
       id: 'I-2by1pi+kf-gXAOz',
       src: 'https://player.fireside.fm/v3/I-2by1pi+kf-gXAOz',
+      height: 200,
+    }
+
+    expect(firesideResolveEmbed(value)).toEqual(expected)
+  })
+
+  // The route 302s to a page that 404s, while the same token plays on the versioned player.
+  it('should send a share route url to the current player', () => {
+    const value = 'https://fireside.fm/s/aHx_iT3N+3W9-AW7P/iframe'
+    const expected: EmbedResolverResult = {
+      provider: 'fireside',
+      id: 'aHx_iT3N+3W9-AW7P',
+      src: 'https://player.fireside.fm/v3/aHx_iT3N+3W9-AW7P',
       height: 200,
     }
 
