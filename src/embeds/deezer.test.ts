@@ -366,7 +366,6 @@ describeForEachParser('deezer through the pipeline', (parseHtml) => {
 
   it('should claim a widget frame the default list reaches', async () => {
     const value = '<iframe src="https://widget.deezer.com/widget/dark/track/3135556"></iframe>'
-
     const expected = html`
       <div
         data-embed-id="track/3135556"
