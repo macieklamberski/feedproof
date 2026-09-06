@@ -26,18 +26,14 @@ const staticFlashPathRegex = /^\/v[\d.]+\/v\/swf\/\w*player\.swf$/
 const readVideoId = (url: string): string | undefined => {
   const parsed = parseUrlOnHosts(url, youkuHosts)
 
-  if (!parsed) {
-    return
-  }
-
-  if (parsed.hostname === 'static.youku.com') {
+  if (parsed?.hostname === 'static.youku.com') {
     return staticFlashPathRegex.test(parsed.pathname)
       ? keepIfMatches(parsed.searchParams.get('VideoIDS'), safeVideoIdRegex)
       : undefined
   }
 
   const videoId =
-    parsed.pathname.match(embedPathRegex)?.[1] ?? parsed.pathname.match(flashPathRegex)?.[1]
+    parsed?.pathname.match(embedPathRegex)?.[1] ?? parsed?.pathname.match(flashPathRegex)?.[1]
 
   return keepIfMatches(videoId, safeVideoIdRegex)
 }
