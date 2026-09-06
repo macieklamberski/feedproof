@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { nytimesCiteResolver } from './nytimes.js'
@@ -80,5 +81,39 @@ describeForEachParser('nytimesCiteResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+// WordPress serves the paper's own card inside its embed template, so the iframe carries
+// `wp-embedded-content` and a handshake secret while its src is still the Times' oEmbed url.
+// Only the pipeline shows the card surviving that far, and it is the case a broader strip of
+// `iframe.wp-embedded-content` would delete outright, taking the headline and the link with it.
+describeForEachParser('nytimes card through the pipeline', (parseHtml) => {
+  it('should convert the card WordPress wrapped into a cite placeholder', async () => {
+    const value = html`
+      <p>Worth reading this morning.</p>
+      <iframe
+        class="wp-embedded-content"
+        sandbox="allow-scripts"
+        security="restricted"
+        title="British Columbia Wildfire in Photos"
+        src="https://www.nytimes.com/svc/oembed/html/?url=https%3A%2F%2Fwww.nytimes.com%2F2023%2F08%2F19%2Fworld%2Fcanada%2Fkelowna.html#?secret=mDnypfg4do"
+        data-secret="mDnypfg4do"
+      ></iframe>
+    `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+    })
+    const expected = html`
+      <p>Worth reading this morning.</p>
+      <div
+        data-cite-provider="nytimes"
+        data-cite-url="https://www.nytimes.com/2023/08/19/world/canada/kelowna.html"
+        data-cite-title="British Columbia Wildfire in Photos"
+      ></div>
+    `
+
+    expect(result).toEqualHtml(expected)
   })
 })
