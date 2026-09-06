@@ -146,9 +146,12 @@ export const defaultNonContentSelectors = [
   '[id^="goodreadsGiveawayWidget"]',
   '.goodreadsGiveawayWidget',
 
-  // Affiliate booking widgets, which render a map or a form to sell the reader a stay or a
-  // ticket and carry none of the post.
+  // Booking and fundraising widgets, which render a map or a form to sell the reader a stay, a
+  // ticket or a donation and carry none of the post.
   'iframe[src*="stay22.com/embed"]', // Stay22 hotel map.
+  // HelloAsso donation, membership and ticketing forms. Every widget path ends in `widget`,
+  // `widget-bouton` or `widget-vignette` under the association's page.
+  'iframe[src*="helloasso.com/associations/"][src*="/widget"]',
 
   // Platform UI chrome and non-rendered scaffolding.
   '.image-link-expand', // Substack restack/zoom buttons next to images.
