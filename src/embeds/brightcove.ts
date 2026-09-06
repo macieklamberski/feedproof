@@ -1,6 +1,7 @@
+import type { Nullish } from 'trousse'
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { attr, flashVars, keepIfMatches } from '../utils/dom.js'
+import { attr, flashVars, keepIfMatches, paramValue } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Brightcove builds its player page from four ids the in-page embed carries as attributes. The
@@ -29,6 +30,37 @@ const readPlayerAccount = (element: Element): string | undefined => {
   const loader = element.ownerDocument.querySelector(accountScriptSelector)
 
   return attr(loader, 'src')?.match(accountScriptRegex)?.[1]
+}
+
+// Every legacy carrier names its player and its video, and almost none of them names the
+// account, which is the one id the modern player url needs. The account is in the `playerKey`
+// all the same: its middle comma-separated segment is the id as big-endian bytes in a base64
+// alphabet using `-`, `_` and `~` for `+`, `/` and `=`. Verified live 2026-09-06 by decoding
+// keys out of corpus flashVars and asking Brightcove's own playback API for the video id that
+// sat beside them: five of twenty answered with the video's real title, and every fabricated
+// account 404s on the player host.
+const readPlayerKeyAccount = (key: Nullish<string>): string | undefined => {
+  const encoded = key?.split(',')[1]
+
+  if (!encoded) {
+    return
+  }
+
+  let bytes: string
+
+  try {
+    bytes = atob(encoded.replaceAll('-', '+').replaceAll('_', '/').replaceAll('~', '='))
+  } catch {
+    return
+  }
+
+  let account = 0n
+
+  for (const byte of bytes) {
+    account = account * 256n + BigInt(byte.charCodeAt(0))
+  }
+
+  return String(account)
 }
 
 const composePlayerUrl = (
@@ -105,13 +137,19 @@ const brightcoveFlashResolveEmbed = (
   const params = config ? new URLSearchParams(config) : undefined
   // A few embeds put the whole flashVars set in the url query instead. A reference id
   // (`ref:my-video`) names the video for the account's own API, not the player, so anything but
-  // a numeric id is left to the generic placeholder.
+  // a numeric id is left to the generic placeholder. `videoId` is the older spelling of
+  // `@videoPlayer` and is what most of the corpus's Flash carriers actually write.
   const videoId = keepIfMatches(
-    params?.get('@videoPlayer') ?? parsed.searchParams.get('@videoPlayer'),
+    params?.get('@videoPlayer') ??
+      parsed.searchParams.get('@videoPlayer') ??
+      params?.get('videoId') ??
+      parsed.searchParams.get('videoId'),
     brightcoveIdRegex,
   )
   const account = keepIfMatches(
-    parsed.searchParams.get('publisherID') ?? params?.get('publisherID'),
+    parsed.searchParams.get('publisherID') ??
+      params?.get('publisherID') ??
+      readPlayerKeyAccount(params?.get('playerKey')),
     brightcoveIdRegex,
   )
 
@@ -130,6 +168,35 @@ const brightcoveFlashResolveEmbed = (
 export const brightcoveFlashEmbedResolver = createUrlEmbedResolver(
   ['brightcove.com'],
   brightcoveFlashResolveEmbed,
+)
+
+// The pre-iframe in-page embed: an `<object class="BrightcoveExperience">` whose whole
+// configuration is `<param>` children, upgraded by `admin.brightcove.com/js/
+// BrightcoveExperiences.js`. That loader builds its player on `c.brightcove.com` or
+// `secure.brightcove.com`, and neither host has a DNS record any more, so the snippet renders
+// nothing and always will. It is not even a carrier the census can see: the object states no
+// url, and the ids live only in the params. The video is `@videoPlayer` and the account comes
+// out of `playerKey`, which is what makes the modern player mintable from markup that names
+// no host at all. A snippet carrying a player but no `@videoPlayer` is a channel or playlist
+// player, and there is no single video to resolve it to.
+export const brightcoveExperienceEmbedResolver = createMarkupEmbedResolver(
+  'object.BrightcoveExperience',
+  (element) => {
+    const videoId = keepIfMatches(paramValue(element, '@videoplayer'), brightcoveIdRegex)
+    const account = videoId
+      ? keepIfMatches(readPlayerKeyAccount(paramValue(element, 'playerkey')), brightcoveIdRegex)
+      : undefined
+
+    if (!videoId || !account) {
+      return
+    }
+
+    return {
+      provider: 'brightcove',
+      id: videoId,
+      src: composePlayerUrl(account, videoId),
+    }
+  },
 )
 
 // The player page as an ordinary iframe, `players.brightcove.net/{account}/{player}_{embed}

@@ -140,14 +140,16 @@ export const keepIfMatches = (value: Nullish<string>, regex: RegExp): string | u
 // one of them reads half the corpus. Returned raw, because callers disagree about what it
 // holds: a query string for Brightcove and Flickr, a config blob for Archive.
 export const flashVars = (element: Nullish<Element>): string | undefined => {
-  const own = attr(element, 'flashvars')
+  return attr(element, 'flashvars') ?? paramValue(element?.parentElement, 'flashvars')
+}
 
-  if (own) {
-    return own
-  }
-
-  const params = Array.from(element?.parentElement?.querySelectorAll('param') ?? [])
-  const named = params.find((param) => attr(param, 'name')?.toLowerCase() === 'flashvars')
+// The value of a named `<param>` under `root`. Flash-era snippets carry their whole
+// configuration this way, either beside the carrier for an `<object>` wrapper or, where the
+// player is a script rather than a movie, inside the element itself. The name is matched
+// case-insensitively because publishers spell it every way, so `name` arrives lowercased.
+export const paramValue = (root: Nullish<Element>, name: string): string | undefined => {
+  const params = Array.from(root?.querySelectorAll('param') ?? [])
+  const named = params.find((param) => attr(param, 'name')?.toLowerCase() === name)
 
   return attr(named, 'value')
 }
