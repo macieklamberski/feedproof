@@ -33,6 +33,38 @@ describe('rutubeResolveEmbed', () => {
     })
   })
 
+  describe('sad paths', () => {
+    it('should ignore a foreign host carrying the same path', () => {
+      const value = 'https://evil.test/rutube.ru/play/embed/c91d5d8847c7c5391a090fff38c86f34/'
+
+      expect(rutubeResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should leave the numeric ids of the old player alone', () => {
+      const value = 'https://rutube.ru/play/embed/9955425'
+
+      expect(rutubeResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should leave the Flash player alone', () => {
+      const value = 'http://video.rutube.ru/2d0970f507fe8ecf63c5e570a2ddc74a'
+
+      expect(rutubeResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should ignore the watch page, which frames nothing', () => {
+      const value = 'https://rutube.ru/video/c91d5d8847c7c5391a090fff38c86f34/'
+
+      expect(rutubeResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should ignore a playlist route that names no video', () => {
+      const value = 'https://rutube.ru/pl/?pl_id=1234&pl_type=user'
+
+      expect(rutubeResolveEmbed(value)).toBeUndefined()
+    })
+  })
+
   describe('the routes that redirect onto the player', () => {
     it('should mint the player for the video embed route', () => {
       const value = 'http://rutube.ru/video/embed/1f166e1227ab75d3a14890d5c5bf5e7a'
@@ -71,38 +103,6 @@ describe('rutubeResolveEmbed', () => {
       }
 
       expect(rutubeResolveEmbed(value)).toEqual(expected)
-    })
-  })
-
-  describe('sad paths', () => {
-    it('should ignore a foreign host carrying the same path', () => {
-      const value = 'https://evil.test/rutube.ru/play/embed/c91d5d8847c7c5391a090fff38c86f34/'
-
-      expect(rutubeResolveEmbed(value)).toBeUndefined()
-    })
-
-    it('should leave the numeric ids of the old player alone', () => {
-      const value = 'https://rutube.ru/play/embed/9955425'
-
-      expect(rutubeResolveEmbed(value)).toBeUndefined()
-    })
-
-    it('should leave the Flash player alone', () => {
-      const value = 'http://video.rutube.ru/2d0970f507fe8ecf63c5e570a2ddc74a'
-
-      expect(rutubeResolveEmbed(value)).toBeUndefined()
-    })
-
-    it('should ignore the watch page, which frames nothing', () => {
-      const value = 'https://rutube.ru/video/c91d5d8847c7c5391a090fff38c86f34/'
-
-      expect(rutubeResolveEmbed(value)).toBeUndefined()
-    })
-
-    it('should ignore a playlist route that names no video', () => {
-      const value = 'https://rutube.ru/pl/?pl_id=1234&pl_type=user'
-
-      expect(rutubeResolveEmbed(value)).toBeUndefined()
     })
   })
 })
