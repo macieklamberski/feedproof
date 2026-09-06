@@ -268,7 +268,6 @@ describeForEachParser('podomatic through the pipeline', (parseHtml) => {
 
   it('should claim a player frame the default list reaches', async () => {
     const value = '<iframe src="https://www.podomatic.com/embed/html5/episode/10076958"></iframe>'
-
     const expected = html`
       <div
         data-embed-id="episode/10076958"
