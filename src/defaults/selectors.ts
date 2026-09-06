@@ -146,6 +146,10 @@ export const defaultNonContentSelectors = [
   '[id^="goodreadsGiveawayWidget"]',
   '.goodreadsGiveawayWidget',
 
+  // Affiliate booking widgets, which render a map or a form to sell the reader a stay or a
+  // ticket and carry none of the post.
+  'iframe[src*="stay22.com/embed"]', // Stay22 hotel map.
+
   // Platform UI chrome and non-rendered scaffolding.
   '.image-link-expand', // Substack restack/zoom buttons next to images.
   'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets.
