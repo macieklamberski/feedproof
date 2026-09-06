@@ -184,4 +184,30 @@ describeForEachParser('brid facades through the pipeline', (parseHtml) => {
     expect(await placeholder(value)).toEqual(expected)
     expect(await convert(value)).not.toContain('$bp(')
   })
+
+  it('should keep both players when one script configures two containers', async () => {
+    const value = html`
+      <div
+        id="Brid_111"
+        class="brid"
+      ></div>
+      <div
+        id="Brid_222"
+        class="brid"
+      ></div>
+      <script type="text/javascript">
+        $bp("Brid_111", {"id":"26602","video":"755940"});
+        $bp("Brid_222", {"id":"26602","video":"755958"});
+      </script>
+    `
+    const expected = [
+      'https://services.brid.tv/services/iframe/video/755940/26602',
+      'https://services.brid.tv/services/iframe/video/755958/26602',
+    ]
+    const sources = [...parseHtml(await convert(value)).querySelectorAll('[data-embed-src]')].map(
+      (element) => element.getAttribute('data-embed-src'),
+    )
+
+    expect(sources).toEqual(expected)
+  })
 })

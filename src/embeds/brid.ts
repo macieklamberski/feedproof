@@ -10,6 +10,7 @@ import { createMarkupEmbedResolver } from '../utils/widgets.js'
 //
 // `id` is the player, `video` the video, and the title is percent-encoded. The fields are read
 // from the text after the div's own id, so a script holding several configs yields the right one.
+const containerIdRegex = /Brid_[\w-]+/g
 const playerIdRegex = /"id"\s*:\s*"?(\d+)"?/
 const videoIdRegex = /"video"\s*:\s*"?(\d+)"?/
 const titleRegex = /"title"\s*:\s*"([^"]*)"/
@@ -70,7 +71,12 @@ export const bridEmbedResolver = createMarkupEmbedResolver(
       return
     }
 
-    script?.remove()
+    // One script often configures every container on the page, so it is dropped only once it
+    // has nothing left to say. Removing it on the first container took the other containers'
+    // configs with it and deleted their videos.
+    if ((text.match(containerIdRegex)?.length ?? 0) < 2) {
+      script?.remove()
+    }
 
     const title = config.match(titleRegex)?.[1]
 
