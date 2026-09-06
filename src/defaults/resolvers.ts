@@ -96,6 +96,7 @@ import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from '../e
 import { notecomIframeEmbedResolver } from '../embeds/notecom.js'
 import { odyseeEmbedResolver } from '../embeds/odysee.js'
 import { omnyEmbedResolver } from '../embeds/omny.js'
+import { padletEmbedResolver } from '../embeds/padlet.js'
 import { podbeanEmbedResolver } from '../embeds/podbean.js'
 import { podigeeEmbedResolver, podigeeIframeEmbedResolver } from '../embeds/podigee.js'
 import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from '../embeds/reddit.js'
@@ -227,6 +228,7 @@ const embedResolvers: Array<EmbedResolver> = [
   audioboomEmbedResolver,
   notecomIframeEmbedResolver,
   omnyEmbedResolver,
+  padletEmbedResolver,
   odyseeEmbedResolver,
   nicovideoScriptEmbedResolver,
   nicovideoIframeEmbedResolver,
