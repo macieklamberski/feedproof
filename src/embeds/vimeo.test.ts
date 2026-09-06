@@ -176,8 +176,8 @@ describe('vimeoResolveEmbed', () => {
       expect(vimeoResolveEmbed(value)).toEqual(expected)
     })
 
-    // oEmbed answers 404 for an album url and 200 for the same id spelled as a showcase, and the
-    // album player 301s onto the showcase one, so the id travels in the spelling that resolves.
+    // The album player 301s onto the showcase one, so the id travels in the spelling Vimeo
+    // itself redirects to.
     it('should normalise the album spelling onto the showcase', () => {
       const value = 'https://vimeo.com/album/5480258/embed'
       const expected: EmbedResolverResult = {

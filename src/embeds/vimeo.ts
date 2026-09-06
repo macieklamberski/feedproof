@@ -35,8 +35,8 @@ const readCollectionVideoId = (segments: Array<string>): string | undefined => {
 
 // A showcase is a playlist with its own player and its own id space, and `album` is what Vimeo
 // called one before renaming them in 2018. The album spelling is normalised away here because
-// `vimeo.com/album/{id}/embed` 301s onto the showcase player anyway, and because oEmbed answers
-// 404 for an album url and 200 for the same id spelled as a showcase.
+// `vimeo.com/album/{id}/embed` 301s onto the showcase player. oEmbed settles nothing either way:
+// it answers the two spellings of one id identically, down to the byte, live or dead alike.
 const showcasePaths = new Set(['showcase', 'album'])
 
 // No video id, so no poster, and no size: the showcase player is a grid whose shape is whatever
