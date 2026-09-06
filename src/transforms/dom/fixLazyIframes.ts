@@ -12,8 +12,12 @@ const placeholderPageRegexes = [
 // Promote a lazy/consent-gated iframe src (the real embed URL parked in a data-*
 // attribute) into `src` when the src itself is empty or `about:blank`, so the
 // downstream embed transform sees a resolvable iframe.
+//
+// The promoted value is resolved on the way, since resolveRelativeUrls has already run over
+// `src` by now and a parked url skipped it: a protocol-relative one would otherwise reach the
+// resolvers without a host and fall through to the generic placeholder.
 export const fixLazyIframes: DomTransform = (context) => {
-  const { lazyIframeAttributes } = context
+  const { lazyIframeAttributes, baseUrl, resolveUrlFn } = context
 
   return (document) => {
     for (const iframe of document.querySelectorAll('iframe')) {
@@ -27,7 +31,7 @@ export const fixLazyIframes: DomTransform = (context) => {
         const value = iframe.getAttribute(attribute)
 
         if (value && isUrlShaped(value)) {
-          iframe.setAttribute('src', value)
+          iframe.setAttribute('src', resolveUrlFn(value, baseUrl) ?? value)
           break
         }
       }
