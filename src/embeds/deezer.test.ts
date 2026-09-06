@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { deezerEmbedResolver, deezerResolveEmbed } from './deezer.js'
@@ -349,5 +350,46 @@ describeForEachParser('deezerEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+// The resolver only reaches a feed through the registered default list, and only an enclosure
+// test reaches the path where claiming a media url would cost a reader the audio.
+describeForEachParser('deezer through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should claim a widget frame the default list reaches', async () => {
+    const value = '<iframe src="https://widget.deezer.com/widget/dark/track/3135556"></iframe>'
+
+    const expected = html`
+      <div
+        data-embed-id="track/3135556"
+        data-embed-provider="deezer"
+        data-embed-src="https://widget.deezer.com/widget/dark/track/3135556"
+        data-embed-url="https://www.deezer.com/track/3135556"
+        data-embed-height="150"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
+  })
+
+  // Deezer serves its previews from `dzcdn.net` rather than from any host this claims, so no
+  // feed carries one today. The route check is what keeps it that way if one ever does.
+  it('should leave an audio enclosure on a deezer host playable', async () => {
+    const enclosures = [{ url: 'https://cdn.deezer.com/preview/3135556.mp3', type: 'audio/mpeg' }]
+
+    const expected = html`
+      <audio data-enclosure="" controls src="https://cdn.deezer.com/preview/3135556.mp3"></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })
