@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { reverbnationEmbedResolver, reverbnationResolveEmbed } from './reverbnation.js'
@@ -226,5 +227,58 @@ describeForEachParser('reverbnationEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+  })
+})
+
+// The resolver only reaches a feed through the registered default list, and only an enclosure
+// test reaches the path where claiming a media url would cost a reader the audio.
+describeForEachParser('reverbnation through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  // A frame that declares nothing is what the placeholder has to survive, since the resolver
+  // states no size of its own.
+  it('should claim a flash widget the default list reaches', async () => {
+    const value = html`
+      <embed
+        src="https://cache.reverbnation.com/widgets/swf/54/pro_widget.swf?id=artist_1018382"
+        type="application/x-shockwave-flash"
+      />
+    `
+
+    const expected = html`
+      <div
+        data-embed-id="artist_1018382"
+        data-embed-provider="reverbnation"
+        data-embed-src="https://www.reverbnation.com/widget_code/html_widget/artist_1018382"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
+  })
+
+  // ReverbNation streams from a CloudFront host rather than from its own, but listing
+  // `reverbnation.com` claims every subdomain, so the path check is what stands between an
+  // enclosure and a placeholder pointing at an audio file.
+  it('should leave an audio enclosure on a reverbnation host playable', async () => {
+    const enclosures = [
+      { url: 'https://cache.reverbnation.com/audio/1018382.mp3', type: 'audio/mpeg' },
+    ]
+
+    const expected = html`
+      <audio
+        data-enclosure=""
+        controls
+        src="https://cache.reverbnation.com/audio/1018382.mp3"
+      ></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })
