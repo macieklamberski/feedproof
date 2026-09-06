@@ -28,25 +28,6 @@ describeForEachParser('mediavineEmbedResolver', (parseHtml) => {
     })
   })
 
-  describe('edge cases', () => {
-    it('should state no shape for a malformed ratio', async () => {
-      const value = html`
-        <div
-          class="mv-video-target mv-video-id-t9z9zameefjmqvtghsvu"
-          data-video-id="t9z9zameefjmqvtghsvu"
-          data-ratio="wide"
-        ></div>
-      `
-      const expected: EmbedResolverResult = {
-        provider: 'mediavine',
-        id: 't9z9zameefjmqvtghsvu',
-        src: 'https://embed.mediavine.com/videos/t9z9zameefjmqvtghsvu',
-      }
-
-      expect(await extract(value)).toEqual(expected)
-    })
-  })
-
   describe('sad paths', () => {
     it('should return undefined for an empty video id', async () => {
       const value = html`
@@ -68,6 +49,25 @@ describeForEachParser('mediavineEmbedResolver', (parseHtml) => {
       `
 
       expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should state no shape for a malformed ratio', async () => {
+      const value = html`
+        <div
+          class="mv-video-target mv-video-id-t9z9zameefjmqvtghsvu"
+          data-video-id="t9z9zameefjmqvtghsvu"
+          data-ratio="wide"
+        ></div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'mediavine',
+        id: 't9z9zameefjmqvtghsvu',
+        src: 'https://embed.mediavine.com/videos/t9z9zameefjmqvtghsvu',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 })
