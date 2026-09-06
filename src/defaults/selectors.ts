@@ -133,6 +133,11 @@ export const defaultNonContentSelectors = [
   '.printfriendly', // PrintFriendly print/PDF button.
   '.pf-button', // PrintFriendly button.
 
+  // Giveaway widgets. Each is a script mount whose loader never runs in a reader, so what
+  // survives is the mount's own fallback, a boilerplate link to the entry form.
+  'a.rcptr', // Rafflecopter giveaway mount, a link reading "a Rafflecopter giveaway".
+  'a.rafl', // The same mount as Rafflecopter's earlier loader wrote it.
+
   // Platform UI chrome and non-rendered scaffolding.
   '.image-link-expand', // Substack restack/zoom buttons next to images.
   'drupal-render-placeholder', // Drupal lazy-render markers for comments/forms/flag widgets.
