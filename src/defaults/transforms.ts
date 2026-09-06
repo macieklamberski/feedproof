@@ -19,6 +19,7 @@ import { fixLazyAudios } from '../transforms/dom/fixLazyAudios.js'
 import { fixLazyIframes } from '../transforms/dom/fixLazyIframes.js'
 import { fixLazyImages } from '../transforms/dom/fixLazyImages.js'
 import { fixLazyVideos } from '../transforms/dom/fixLazyVideos.js'
+import { fixSubstackGalleries } from '../transforms/dom/fixSubstackGalleries.js'
 import { fixSubstackImageLinks } from '../transforms/dom/fixSubstackImageLinks.js'
 import { fixSubstackMentions } from '../transforms/dom/fixSubstackMentions.js'
 import { flattenPictureElements } from '../transforms/dom/flattenPictureElements.js'
@@ -133,6 +134,10 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // from the anchor's own href before stripEmptyTags deletes the empty anchor, so the
   // image passes below dimension and proxy it like any other.
   fixSubstackImageLinks,
+  // A Substack image gallery is an empty div whose images live only in its data-attrs JSON.
+  // Rebuild the figure before stripEmptyTags deletes the div, so the image passes below
+  // dimension and proxy the minted images like any other.
+  fixSubstackGalleries,
   // Wraps Cargo (cargo.site) portfolio images in <figure> here in the normalize
   // cluster, so wrapBareInlineInParagraphs later sees block boundaries and keeps the
   // caption, images, and PREV/NEXT nav apart instead of gluing them into one paragraph.

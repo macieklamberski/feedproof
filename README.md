@@ -82,6 +82,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `linkifyGistEmbeds` | Replace a GitHub Gist script embed or `<amp-gist>` with a link to the gist |
 | `fixSubstackMentions` | Rebuild a Substack @-mention (empty `span.mention-wrap`) into an inline `<a>@name</a>` link, so the name survives instead of vanishing mid-sentence |
 | `fixSubstackImageLinks` | Remint the `<img>` inside an emptied Substack lightbox anchor (`a.image-link` whose image child was stripped) from the anchor's own image href |
+| `fixSubstackGalleries` | Rebuild a Substack image gallery (empty `div.image-gallery-embed` whose images live only in its `data-attrs` JSON) into a `<figure>` of its images and caption |
 | `convertNoteEmbeds` | Convert note.com's empty embed figures (`figure[embedded-service][data-src]`): media services become plain iframes for the widget pass, own-post embeds become plain links |
 | `convertAmpNativeElements` | Convert AMP custom elements with a native equivalent (`amp-img`, `amp-anim`, `amp-video`, `amp-audio`, `amp-iframe`) into that element |
 | `convertDatawrapperEmbeds` | Convert Datawrapper chart embeds (iframe, script/noscript, and link forms) into a static image linking to the interactive chart |
