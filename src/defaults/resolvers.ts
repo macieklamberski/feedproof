@@ -37,6 +37,7 @@ import { appleEmbedResolver } from '../embeds/apple.js'
 import { archiveFlashEmbedResolver, archiveIframeEmbedResolver } from '../embeds/archive.js'
 import { audioboomEmbedResolver } from '../embeds/audioboom.js'
 import { bandcampEmbedResolver } from '../embeds/bandcamp.js'
+import { bbcIframeEmbedResolver } from '../embeds/bbc.js'
 import { bitchuteEmbedResolver } from '../embeds/bitchute.js'
 import { bloggerEmbedResolver } from '../embeds/blogger.js'
 import { blubrryEmbedResolver } from '../embeds/blubrry.js'
@@ -218,6 +219,7 @@ const embedResolvers: Array<EmbedResolver> = [
   archiveIframeEmbedResolver,
   archiveFlashEmbedResolver,
   bandcampEmbedResolver,
+  bbcIframeEmbedResolver,
   bitchuteEmbedResolver,
   bloggerEmbedResolver,
   blueskyBlockquoteEmbedResolver,
