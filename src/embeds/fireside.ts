@@ -1,5 +1,6 @@
 import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { decodeSegment } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The token pairs a show with an episode across a `+`, e.g. `DiNRb69N+Dagp3z15`. Both halves are
@@ -20,16 +21,6 @@ const playerVersions = new Set(['v2', 'v3'])
 const currentPlayerVersion = 'v3'
 
 const firesideHosts = ['fireside.fm']
-
-const decodeSegment = (segment: string | undefined): string | undefined => {
-  if (!segment) {
-    return
-  }
-
-  try {
-    return decodeURIComponent(segment)
-  } catch {}
-}
 
 // Fireside's player is one fixed size: every iframe states `height="200"`. That is the whole
 // case for this resolver: the embed carries no metadata, no thumbnail and no canonical episode
