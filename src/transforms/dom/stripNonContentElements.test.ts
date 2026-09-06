@@ -64,7 +64,7 @@ const specimens: Record<string, string | [string, string]> = {
   '.feedflare': '<div class="feedflare"><a href="/ff">Share</a></div>',
   '.addtoany_share_save_container':
     '<div class="addtoany_share_save_container"><a class="a2a_button_facebook" href="#">Share</a></div>',
-  'iframe[src*="facebook.com/plugins/like.php"]':
+  'iframe[src*="facebook.com"][src*="/plugins/like.php"]':
     '<iframe src="http://www.facebook.com/plugins/like.php?href=https://example.com/post/&amp;layout=standard&amp;show_faces=1&amp;width=450&amp;action=like" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:450px; height:25px"></iframe>',
   'iframe[src*="facebook.com"][src*="/plugins/page.php"]':
     '<iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Facme&amp;tabs=timeline&amp;width=340&amp;height=500&amp;small_header=false&amp;adapt_container_width=true&amp;hide_cover=false&amp;show_facepile=true" width="340" height="500" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true"></iframe>',
@@ -405,6 +405,9 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
         ></iframe>
         <iframe
           src="https://www.facebook.com/v2.10/plugins/share_button.php?href=https%3A%2F%2Fexample.com%2Fpost"
+        ></iframe>
+        <iframe
+          src="https://www.facebook.com/v2.5/plugins/like.php?href=https%3A%2F%2Fexample.com%2Fpost&layout=standard"
         ></iframe>
       `
 

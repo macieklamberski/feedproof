@@ -63,8 +63,10 @@ export const defaultNonContentSelectors = [
   // update. The button renders nothing in a reader and the count survives as a stray digit.
   '.vm-like-button',
   // The Like button pasted on its own, a 25 pixel iframe that would otherwise reach the reader
-  // as a click-to-play placeholder for a button.
-  'iframe[src*="facebook.com/plugins/like.php"]',
+  // as a click-to-play placeholder for a button. Matched as two substrings for the same reason
+  // as the plugins below: a generator can write the Graph API version between the host and the
+  // file, and those urls still serve.
+  'iframe[src*="facebook.com"][src*="/plugins/like.php"]',
   // The rest of the plugin namespace that is chrome rather than a post: the Page box in both its
   // spellings, and the Share button. The resolver already refuses each of these as an embed, and
   // refusing leaves them to the generic fallback, which draws a card for a follow widget. The two
