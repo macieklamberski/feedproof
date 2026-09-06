@@ -137,7 +137,6 @@ describeForEachParser('zencastr through the pipeline', (parseHtml) => {
         data-episode-href="https://zencastr.com/embed/0C_Xr4ma"
       ></blockquote>
     `
-
     const expected = html`
       <div
         data-embed-id="0C_Xr4ma"
