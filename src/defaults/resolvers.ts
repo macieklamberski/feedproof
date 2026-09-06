@@ -131,6 +131,7 @@ import {
 } from '../embeds/videopress.js'
 import { vimeoEmbedResolver } from '../embeds/vimeo.js'
 import { wistiaEmbedResolver } from '../embeds/wistia.js'
+import { youkuEmbedResolver } from '../embeds/youku.js'
 import { youtubeAmpEmbedResolver, youtubeIframeEmbedResolver } from '../embeds/youtube.js'
 import { discourseMediaResolver } from '../media/discourse.js'
 import { ghostMediaResolver } from '../media/ghost.js'
@@ -145,6 +146,7 @@ import type { CiteResolver, EmbedResolver, MediaResolver, WidgetResolver } from 
 // meta-providers like Embedly that wrap other providers) before broader ones.
 const embedResolvers: Array<EmbedResolver> = [
   youtubeIframeEmbedResolver,
+  youkuEmbedResolver,
   youtubeAmpEmbedResolver,
   twitterBlockquoteEmbedResolver,
   twitterAmpEmbedResolver,
