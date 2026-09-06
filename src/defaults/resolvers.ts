@@ -66,6 +66,7 @@ import {
   facebookWidgetEmbedResolver,
   facebookXfbmlEmbedResolver,
 } from '../embeds/facebook.js'
+import { figshareEmbedResolver } from '../embeds/figshare.js'
 import { firesideEmbedResolver } from '../embeds/fireside.js'
 import { flickrEmbedResolver } from '../embeds/flickr.js'
 import { flourishIframeEmbedResolver, flourishWidgetEmbedResolver } from '../embeds/flourish.js'
@@ -205,6 +206,7 @@ const embedResolvers: Array<EmbedResolver> = [
   speakerdeckScriptEmbedResolver,
   speakerdeckIframeEmbedResolver,
   firesideEmbedResolver,
+  figshareEmbedResolver,
   flickrEmbedResolver,
   flourishWidgetEmbedResolver,
   flourishIframeEmbedResolver,
