@@ -84,7 +84,7 @@ export const bridEmbedResolver = createMarkupEmbedResolver(
       provider: 'brid',
       id: `${videoId}/${playerId}`,
       src: `https://services.brid.tv/services/iframe/video/${videoId}/${playerId}`,
-      ...(title ? { title: decodeTitle(title) } : {}),
+      ...(title && { title: decodeTitle(title) }),
       ...readSize(config.match(widthRegex)?.[1], config.match(heightRegex)?.[1]),
     }
   },
