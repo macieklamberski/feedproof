@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { audiomackEmbedResolver, audiomackResolveEmbed } from './audiomack.js'
@@ -245,5 +246,55 @@ describeForEachParser('audiomackEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+  })
+})
+
+// The resolver only reaches a feed through the registered default list, and only an enclosure
+// test reaches the path where claiming a media url would cost a reader the audio.
+describeForEachParser('audiomack through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should claim a player frame the default list reaches', async () => {
+    const value = '<iframe src="https://audiomack.com/embed/chuuwee/album/cool-world"></iframe>'
+
+    const expected = html`
+      <div
+        data-embed-id="chuuwee/album/cool-world"
+        data-embed-provider="audiomack"
+        data-embed-src="https://audiomack.com/embed/chuuwee/album/cool-world"
+        data-embed-url="https://audiomack.com/chuuwee/album/cool-world"
+        data-embed-height="400"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
+  })
+
+  // Audiomack streams from `music.audiomack.com`, an artist and a slug deep just like the embed
+  // route, and listing `audiomack.com` claims it. Only the route word keeps the audio playable.
+  it('should leave an audiomack audio enclosure playable', async () => {
+    const enclosures = [
+      {
+        url: 'https://music.audiomack.com/streaming/chuuwee/cool-world.mp3?Expires=1',
+        type: 'audio/mpeg',
+      },
+    ]
+
+    const expected = html`
+      <audio
+        data-enclosure=""
+        controls
+        src="https://music.audiomack.com/streaming/chuuwee/cool-world.mp3?Expires=1"
+      ></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })
