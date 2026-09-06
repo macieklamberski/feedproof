@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
@@ -233,5 +234,39 @@ describeForEachParser('kalturaScriptEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+// The player hosts also serve every customer's own media: `playManifest` and `serveFlavor`
+// hand out the mp4 and mp3 a podcast feed links as its enclosure. Only the resolver reading
+// the entry out of the query keeps those off the resolver, and only this path reaches the
+// point where claiming one would cost a reader the file.
+describeForEachParser('kaltura through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should leave a kaltura media enclosure playable', async () => {
+    const enclosures = [
+      {
+        url: 'https://cdnapisec.kaltura.com/p/1758271/sp/175827100/playManifest/entryId/1_jhjo10ru/format/url/protocol/https/a.mp4',
+        type: 'video/mp4',
+      },
+      {
+        url: 'https://api.ca.kaltura.com/p/148/sp/14800/serveFlavor/entryId/0_gs5r8b3x/name/a.mp3',
+        type: 'audio/mpeg',
+      },
+    ]
+    const expected = html`
+      <video data-enclosure="" controls src="https://cdnapisec.kaltura.com/p/1758271/sp/175827100/playManifest/entryId/1_jhjo10ru/format/url/protocol/https/a.mp4"></video>
+      <audio data-enclosure="" controls src="https://api.ca.kaltura.com/p/148/sp/14800/serveFlavor/entryId/0_gs5r8b3x/name/a.mp3"></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })
