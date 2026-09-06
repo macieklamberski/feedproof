@@ -191,15 +191,18 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // Runs after cleanAnchorUrls so the href it inspects is already cleaned/resolved,
   // and before stripDeadAnchors so a `#`-only permalink isn't unwrapped first.
   normalizeAnchoredHeadings,
+  stripDeadAnchors,
+  convertCiteCards,
   // Compares the first heading's text with the article title, so it runs after
   // normalizeAnchoredHeadings has dropped the permalink glyph (`#`, `¶`) a generator puts
-  // inside the heading, or the glyph is read as part of the text and the title never matches.
+  // inside the heading, or the glyph is read as part of the text and the title never matches,
+  // and after convertCiteCards has folded link cards into placeholders: a card quotes the
+  // linked page's title in a heading of its own, and a post about that page carries the same
+  // title, so read before the cite pass the card's heading was taken for the article's.
   stripDuplicateTitleHeading,
   // Runs after stripDuplicateTitleHeading: a removed title <h1> must not demote the body's
   // own headings.
   demoteHeadings,
-  stripDeadAnchors,
-  convertCiteCards,
   unwrapEmojiImages,
   // Empties lone-backslash paragraphs (`<p>\</p>`); runs before stripEmptyTags so
   // the now-empty paragraphs are removed by it.
