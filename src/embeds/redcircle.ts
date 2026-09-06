@@ -1,3 +1,4 @@
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -58,7 +59,7 @@ const readSubject = (
 // The query is kept because it is where the publisher's `theme=` lives.
 export const redcircleResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, redcircleHosts)
-  const subject = parsed ? readSubject(parsed.pathname.split('/').filter(Boolean)) : undefined
+  const subject = parsed ? readSubject(getPathSegments(parsed)) : undefined
 
   if (!parsed || !subject) {
     return
