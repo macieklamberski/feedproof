@@ -138,6 +138,13 @@ export const youtubeEmbedParams = [
 // length/prefix one: it only keeps a stray value out of the rebuilt url and the enrichment key.
 const safePlaylistChannelIdRegex = /^[a-zA-Z0-9_-]+$/
 
+// The Flash-era playlist player wrote `youtube.com/p/{id}`, where the id is the same playlist
+// the modern url spells as `list=PL{id}`: 262 of the 263 distinct ids in the corpus are exactly
+// 16 uppercase hex characters, and the odd one is a bare `/p/` naming nothing. Probed 2026-09-06:
+// `playlist?list=PL7BE4DDAC0A0D31AF` opens the playlist the specimen's post is about, while the
+// same id without the prefix 404s.
+const legacyPlaylistIdRegex = /^[0-9A-F]{16}$/
+
 const playerRatio = '16/9'
 
 // A playlist or channel live embed is not a single video: it has no video id, no single poster
@@ -218,6 +225,15 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
     if (embed || segments.length === 1 || nonVideoIds.has(segments[1])) {
       return embed
     }
+  }
+
+  // The Flash player took its playlist on `/p/`, and the swf it points at is dead, so the id is
+  // the only thing left to rebuild from. The publisher's `?hl=` and `&fs=1` are player chrome and
+  // go with the rest of the query.
+  if (segments[0] === 'p') {
+    const list = splitStrayParams(segments[1] ?? '').head
+
+    return legacyPlaylistIdRegex.test(list) ? composeListEmbed(`PL${list}`) : undefined
   }
 
   const videoId = extractVideoId(url)
