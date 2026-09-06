@@ -97,6 +97,7 @@ import { notecomIframeEmbedResolver } from '../embeds/notecom.js'
 import { odyseeEmbedResolver } from '../embeds/odysee.js'
 import { omnyEmbedResolver } from '../embeds/omny.js'
 import { podbeanEmbedResolver } from '../embeds/podbean.js'
+import { podetizeIframeEmbedResolver, podetizeScriptEmbedResolver } from '../embeds/podetize.js'
 import { podigeeEmbedResolver, podigeeIframeEmbedResolver } from '../embeds/podigee.js'
 import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from '../embeds/reddit.js'
 import { scribdFlashEmbedResolver, scribdIframeEmbedResolver } from '../embeds/scribd.js'
@@ -189,6 +190,8 @@ const embedResolvers: Array<EmbedResolver> = [
   mixcloudEmbedResolver,
   podbeanEmbedResolver,
   megaphoneEmbedResolver,
+  podetizeScriptEmbedResolver,
+  podetizeIframeEmbedResolver,
   podigeeEmbedResolver,
   podigeeIframeEmbedResolver,
   redditWidgetEmbedResolver,
