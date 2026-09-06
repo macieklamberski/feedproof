@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
@@ -139,5 +140,58 @@ describeForEachParser('podetizeIframeEmbedResolver', (parseHtml) => {
     const value = '<iframe src="https://evil.test/player.podetize.com/?id=P8RHvvMsf"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
+  })
+})
+
+// The resolvers only reach a feed through the registered default list, and only an enclosure
+// test reaches the path where claiming a media url would cost a reader the audio.
+describeForEachParser('podetize through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should claim the loader script the default list reaches', async () => {
+    const value = html`
+      <script
+        async
+        src="https://player.podetize.com/loadShowcasePlayer.js"
+        data="zvFEj7DPJ"
+        epmode="true"
+      ></script>
+    `
+
+    const expected = html`
+      <div
+        data-embed-id="zvFEj7DPJ"
+        data-embed-provider="podetize"
+        data-embed-src="https://player.podetize.com/?id=zvFEj7DPJ&amp;epmode=true"
+        data-embed-height="200"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
+  })
+
+  // Podetize serves its episode audio from `feeds.podetize.com`, which the player-only host list
+  // does not claim, and the root-path check refuses anything else that lands on the player host.
+  it('should leave a podetize audio enclosure playable', async () => {
+    const enclosures = [
+      { url: 'https://feeds.podetize.com/ep/zvFEj7DPJ/media.mp3', type: 'audio/mpeg' },
+    ]
+
+    const expected = html`
+      <audio
+        data-enclosure=""
+        controls
+        src="https://feeds.podetize.com/ep/zvFEj7DPJ/media.mp3"
+      ></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })
