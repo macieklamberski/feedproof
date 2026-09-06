@@ -1,5 +1,5 @@
 import type { EmbedResolverResult } from '../types.js'
-import { findConfigScript } from '../utils/dom.js'
+import { findConfigScript, formatRatio } from '../utils/dom.js'
 import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
 // The config the inline script hands the loader, in one of its two spellings:
@@ -42,7 +42,7 @@ const readSize = (
   }
 
   return parsedWidth < ratioCeiling && parsedHeight < ratioCeiling
-    ? { ratio: `${parsedWidth}/${parsedHeight}` }
+    ? { ratio: formatRatio(parsedWidth, parsedHeight) }
     : { width: parsedWidth, height: parsedHeight }
 }
 
