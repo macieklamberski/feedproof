@@ -133,6 +133,17 @@ describe('stackblitzResolveEmbed', () => {
 
       expect(stackblitzResolveEmbed(value)).toBeUndefined()
     })
+
+    // A slug carries dots, so a filename passes the slug test. The enclosure probe reads this same
+    // url shape, so a media file on the host would otherwise take the place of a playable element.
+    it.each([
+      'https://stackblitz.com/edit/angular-ivy-snow.mp3',
+      'https://stackblitz.com/edit/angular-ivy-snow.mp4',
+      'https://stackblitz.com/edit/angular-ivy-snow.pdf',
+      'https://stackblitz.com/edit/angular-ivy-snow.jpg',
+    ])('should refuse the file name %s', (value) => {
+      expect(stackblitzResolveEmbed(value)).toBeUndefined()
+    })
   })
 })
 
@@ -276,5 +287,25 @@ describeForEachParser('stackblitz shapes the pipeline repairs first', (parseHtml
     `
 
     expect(await convert(value)).not.toContain('cdn.embedly.com')
+  })
+
+  // injectEnclosures offers every attachment a feed carries to this resolver, and only this path
+  // reaches the case where claiming one would cost a reader the audio.
+  it('should leave an audio enclosure on the projects host playable', async () => {
+    const enclosures = [
+      { url: 'https://stackblitz.com/edit/angular-ivy-snow.mp3', type: 'audio/mpeg' },
+    ]
+    const expected = html`
+      <audio data-enclosure="" controls src="https://stackblitz.com/edit/angular-ivy-snow.mp3"></audio>
+      <p>Body</p>
+    `
+
+    const result = await transformContent('<p>Body</p>', {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+
+    expect(result).toEqualHtml(expected)
   })
 })
