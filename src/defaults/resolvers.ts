@@ -88,6 +88,7 @@ import {
 } from '../embeds/jwplayer.js'
 import { libsynEmbedResolver } from '../embeds/libsyn.js'
 import { linkedinEmbedResolver } from '../embeds/linkedin.js'
+import { mailruEmbedResolver } from '../embeds/mailru.js'
 import { mastodonEmbedResolver } from '../embeds/mastodon.js'
 import { mediavineEmbedResolver } from '../embeds/mediavine.js'
 import { megaphoneEmbedResolver } from '../embeds/megaphone.js'
@@ -241,6 +242,7 @@ const embedResolvers: Array<EmbedResolver> = [
   telegramScriptEmbedResolver,
   telegramIframeEmbedResolver,
   mastodonEmbedResolver,
+  mailruEmbedResolver,
 ]
 
 const mediaResolvers: Array<MediaResolver> = [
