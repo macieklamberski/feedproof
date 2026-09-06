@@ -27,11 +27,12 @@ const flashPlayerPathRegex = /^\/swf\/.*\.swf$/i
 // `img.rtve.es/v/{id}/` and `/v/{id}/` answer for a video id, `/a/{id}/` for an audio id, and
 // each 404s for the other kind and for an invented id. No poster route exists for audio.
 //
-// RTVE's share snippet pads a wrapper to 64% of its width and sets the frame to 90% of that,
-// 57.6% of the width, within 2.4% of the video's own 16:9, and the player fills whatever box it
-// gets. The Flash carriers state the old player's 425x239 or 425x300 instead, so the ratio is
-// preferred. The audio player is a card that fills its box too, and the 37 pixel bar the old
-// snippet states describes the Flash player, so audio states no size and the carrier's stands.
+// The player fills whatever box it gets, measured at 500 and 1000 pixels wide, so the box is
+// the snippet's to state: RTVE's pads a wrapper to 64% of its width and sets the frame to 90%
+// of that, 57.6% of the width, and that is the ratio stated here, as the snippet spells it. The
+// Flash carriers state the old player's 425x239 or 425x300 instead, so the ratio is preferred.
+// The audio player is a card that fills its box too, and the 37 pixel bar the old snippet states
+// describes the Flash player, so audio states no size and the carrier's stands.
 const composeEmbed = (kind: Kind, id: string): EmbedResolverResult => {
   const result: EmbedResolverResult = {
     provider: 'rtve',
@@ -42,7 +43,7 @@ const composeEmbed = (kind: Kind, id: string): EmbedResolverResult => {
 
   if (kind === 'video') {
     result.thumbnail = `https://img.rtve.es/v/${id}/`
-    result.ratio = '16/9'
+    result.ratio = '100/57.6'
   }
 
   return result

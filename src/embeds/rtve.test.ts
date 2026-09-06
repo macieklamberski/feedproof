@@ -13,7 +13,7 @@ describe('rtveResolveEmbed', () => {
         src: 'https://www.rtve.es/drmn/embed/video/2474214/',
         url: 'https://www.rtve.es/v/2474214/',
         thumbnail: 'https://img.rtve.es/v/2474214/',
-        ratio: '16/9',
+        ratio: '100/57.6',
       }
 
       expect(rtveResolveEmbed(value)).toEqual(expected)
@@ -87,7 +87,7 @@ describeForEachParser('rtveIframeEmbedResolver', (parseHtml) => {
         src: 'https://www.rtve.es/drmn/embed/video/2474214/',
         url: 'https://www.rtve.es/v/2474214/',
         thumbnail: 'https://img.rtve.es/v/2474214/',
-        ratio: '16/9',
+        ratio: '100/57.6',
         title: 'La Aventura del Saber. Copyleft',
       }
 
@@ -108,7 +108,7 @@ describeForEachParser('rtveIframeEmbedResolver', (parseHtml) => {
         src: 'https://www.rtve.es/drmn/embed/video/5544716/',
         url: 'https://www.rtve.es/v/5544716/',
         thumbnail: 'https://img.rtve.es/v/5544716/',
-        ratio: '16/9',
+        ratio: '100/57.6',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -171,7 +171,7 @@ describeForEachParser('rtveFlashEmbedResolver', (parseHtml) => {
         src: 'https://www.rtve.es/drmn/embed/video/309749/',
         url: 'https://www.rtve.es/v/309749/',
         thumbnail: 'https://img.rtve.es/v/309749/',
-        ratio: '16/9',
+        ratio: '100/57.6',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -219,7 +219,7 @@ describeForEachParser('rtveFlashEmbedResolver', (parseHtml) => {
         src: 'https://www.rtve.es/drmn/embed/video/1081934/',
         url: 'https://www.rtve.es/v/1081934/',
         thumbnail: 'https://img.rtve.es/v/1081934/',
-        ratio: '16/9',
+        ratio: '100/57.6',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -245,7 +245,7 @@ describeForEachParser('rtveFlashEmbedResolver', (parseHtml) => {
         src: 'https://www.rtve.es/drmn/embed/video/1551723/',
         url: 'https://www.rtve.es/v/1551723/',
         thumbnail: 'https://img.rtve.es/v/1551723/',
-        ratio: '16/9',
+        ratio: '100/57.6',
         title: 'Mitos y leyendas - Aquiles',
       }
 
