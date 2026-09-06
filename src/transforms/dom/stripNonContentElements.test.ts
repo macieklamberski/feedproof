@@ -64,6 +64,8 @@ const specimens: Record<string, string | [string, string]> = {
   '.feedflare': '<div class="feedflare"><a href="/ff">Share</a></div>',
   '.addtoany_share_save_container':
     '<div class="addtoany_share_save_container"><a class="a2a_button_facebook" href="#">Share</a></div>',
+  'iframe[src*="facebook.com/plugins/like.php"]':
+    '<iframe src="http://www.facebook.com/plugins/like.php?href=https://example.com/post/&amp;layout=standard&amp;show_faces=1&amp;width=450&amp;action=like" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:450px; height:25px"></iframe>',
   '.a2a_kit': '<span class="a2a_kit a2a_kit_size_32 addtoany_list"></span>',
   '[class*="addthis_"]': '<div class="addthis_toolbox addthis_default_style"></div>',
   '.shareaholic-canvas': '<div class="shareaholic-canvas" data-app="share_buttons"></div>',
