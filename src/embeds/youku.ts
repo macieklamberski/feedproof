@@ -23,6 +23,12 @@ const staticFlashPathRegex = /^\/v[\d.]+\/v\/swf\/\w*player\.swf$/
 // title and a poster, a fabricated id answers "video not exist". The player host is a shell that
 // serves the same 5,164 bytes for any id, so the API is the only check that carries information.
 // The poster lives under a hash the id does not yield, so it is left to enrichment.
+//
+// The modern player is chromeless and fills its box; Youku's own watch page sizes it 16:9
+// (622x350). The 510x498 its old share snippet wrote, and the 480x400 the Flash embeds carry, are
+// boxes with the retired chrome in them, so the ratio stands over what a carrier declares.
+const playerRatio = '16/9'
+
 const readVideoId = (url: string): string | undefined => {
   const parsed = parseUrlOnHosts(url, youkuHosts)
 
@@ -50,7 +56,10 @@ export const youkuResolveEmbed = (url: string): EmbedResolverResult | undefined 
     id: videoId,
     src: `https://player.youku.com/embed/${videoId}`,
     url: `https://v.youku.com/v_show/id_${videoId}.html`,
+    ratio: playerRatio,
   }
 }
 
-export const youkuEmbedResolver = createUrlEmbedResolver(youkuHosts, youkuResolveEmbed)
+export const youkuEmbedResolver = createUrlEmbedResolver(youkuHosts, youkuResolveEmbed, {
+  preferResolverSize: true,
+})

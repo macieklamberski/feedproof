@@ -7,7 +7,7 @@ describeForEachParser('youkuEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, youkuEmbedResolver)
 
   describe('happy paths', () => {
-    it('should resolve the player frame and keep the size the publisher stated', async () => {
+    it('should keep the player ratio over the box the share snippet declares', async () => {
       const value = html`
         <iframe
           src="http://player.youku.com/embed/XNDUyNTczMDEyOA=="
@@ -21,8 +21,7 @@ describeForEachParser('youkuEmbedResolver', (parseHtml) => {
         id: 'XNDUyNTczMDEyOA==',
         src: 'https://player.youku.com/embed/XNDUyNTczMDEyOA==',
         url: 'https://v.youku.com/v_show/id_XNDUyNTczMDEyOA==.html',
-        width: 510,
-        height: 498,
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -36,6 +35,7 @@ describeForEachParser('youkuEmbedResolver', (parseHtml) => {
         id: 'XNTg1ODI0MTE1Mg==',
         src: 'https://player.youku.com/embed/XNTg1ODI0MTE1Mg==',
         url: 'https://v.youku.com/v_show/id_XNTg1ODI0MTE1Mg==.html',
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -43,7 +43,7 @@ describeForEachParser('youkuEmbedResolver', (parseHtml) => {
   })
 
   describe('the Flash players that carried the same id', () => {
-    it('should repair the player.php swf onto the modern player', async () => {
+    it('should repair the player.php swf onto the modern player and drop its Flash box', async () => {
       const value = html`
         <embed
           src="http://player.youku.com/player.php/sid/XODczMzU0NTAw/v.swf"
@@ -59,8 +59,7 @@ describeForEachParser('youkuEmbedResolver', (parseHtml) => {
         id: 'XODczMzU0NTAw',
         src: 'https://player.youku.com/embed/XODczMzU0NTAw',
         url: 'https://v.youku.com/v_show/id_XODczMzU0NTAw.html',
-        width: 480,
-        height: 400,
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -79,8 +78,7 @@ describeForEachParser('youkuEmbedResolver', (parseHtml) => {
         id: 'XMTE4Mzc2NTcy',
         src: 'https://player.youku.com/embed/XMTE4Mzc2NTcy',
         url: 'https://v.youku.com/v_show/id_XMTE4Mzc2NTcy.html',
-        width: 530,
-        height: 440,
+        ratio: '16/9',
       }
 
       expect(await extract(value)).toEqual(expected)
