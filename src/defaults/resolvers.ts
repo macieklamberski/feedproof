@@ -46,6 +46,7 @@ import {
   blueskyPostElementEmbedResolver,
   blueskyS9eEmbedResolver,
 } from '../embeds/bluesky.js'
+import { bridEmbedResolver } from '../embeds/brid.js'
 import {
   brightcoveFlashEmbedResolver,
   brightcoveIframeEmbedResolver,
@@ -241,6 +242,7 @@ const embedResolvers: Array<EmbedResolver> = [
   telegramScriptEmbedResolver,
   telegramIframeEmbedResolver,
   mastodonEmbedResolver,
+  bridEmbedResolver,
 ]
 
 const mediaResolvers: Array<MediaResolver> = [
