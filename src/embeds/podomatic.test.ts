@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { podomaticEmbedResolver, podomaticResolveEmbed } from './podomatic.js'
@@ -238,5 +239,54 @@ describeForEachParser('podomaticEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+  })
+})
+
+// The resolver only reaches a feed through the registered default list, and only an enclosure
+// test reaches the path where claiming a media url would cost a reader the audio.
+describeForEachParser('podomatic through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should claim a player frame the default list reaches', async () => {
+    const value = '<iframe src="https://www.podomatic.com/embed/html5/episode/10076958"></iframe>'
+
+    const expected = html`
+      <div
+        data-embed-id="episode/10076958"
+        data-embed-provider="podomatic"
+        data-embed-src="https://www.podomatic.com/embed/html5/episode/10076958"
+        data-embed-height="208"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
+  })
+
+  // Every PodOmatic show serves its episodes from its own account subdomain, which listing
+  // `podomatic.com` claims. Only the `embed` route check keeps the audio playable.
+  it('should leave a podomatic audio enclosure playable', async () => {
+    const enclosures = [
+      {
+        url: 'https://ataiii.podomatic.com/enclosure/2016-08-10T07_54_26-07_00.mp3',
+        type: 'audio/mpeg',
+      },
+    ]
+
+    const expected = html`
+      <audio
+        data-enclosure=""
+        controls
+        src="https://ataiii.podomatic.com/enclosure/2016-08-10T07_54_26-07_00.mp3"
+      ></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })
