@@ -230,7 +230,6 @@ describeForEachParser('ausha through the pipeline', (parseHtml) => {
   // that host, so only the check that the frame sits on the player itself keeps the audio.
   it('should claim a player frame the default list reaches', async () => {
     const value = '<iframe src="https://player.ausha.co/?podcastId=BGKwJUJG8D9m&amp;v=3"></iframe>'
-
     const expected = html`
       <div
         data-embed-id="podcast/BGKwJUJG8D9m"
