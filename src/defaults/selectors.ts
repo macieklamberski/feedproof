@@ -69,9 +69,12 @@ export const defaultNonContentSelectors = [
   // spellings, and the Share button. The resolver already refuses each of these as an embed, and
   // refusing leaves them to the generic fallback, which draws a card for a follow widget. The two
   // plugins that do carry content, `post.php` and `video.php`, are named nowhere here.
-  'iframe[src*="facebook.com/plugins/page.php"]',
-  'iframe[src*="facebook.com/plugins/likebox.php"]',
-  'iframe[src*="facebook.com/plugins/share_button.php"]',
+  //
+  // The host and the file are matched separately because a generator can write the Graph API
+  // version between them (`facebook.com/v2.3/plugins/page.php`), which one substring would miss.
+  'iframe[src*="facebook.com"][src*="/plugins/page.php"]',
+  'iframe[src*="facebook.com"][src*="/plugins/likebox.php"]',
+  'iframe[src*="facebook.com"][src*="/plugins/share_button.php"]',
   '.a2a_kit', // AddToAny share icons (higher-prevalence marker than the wrapper).
   '[class*="addthis_"]', // AddThis share toolbox.
   '.shareaholic-canvas', // Shareaholic share/related widget.
