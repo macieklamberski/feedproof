@@ -56,6 +56,11 @@ import {
   buzzsproutScriptEmbedResolver,
 } from '../embeds/buzzsprout.js'
 import { captivateEmbedResolver } from '../embeds/captivate.js'
+import {
+  cnnFlashEmbedResolver,
+  cnnIframeEmbedResolver,
+  cnnScriptEmbedResolver,
+} from '../embeds/cnn.js'
 import { codepenIframeEmbedResolver, codepenWidgetEmbedResolver } from '../embeds/codepen.js'
 import { dailymotionEmbedResolver } from '../embeds/dailymotion.js'
 import { donorboxEmbedResolver } from '../embeds/donorbox.js'
@@ -159,6 +164,9 @@ const embedResolvers: Array<EmbedResolver> = [
   videopressFlashEmbedResolver,
   wistiaEmbedResolver,
   captivateEmbedResolver,
+  cnnScriptEmbedResolver,
+  cnnFlashEmbedResolver,
+  cnnIframeEmbedResolver,
   codepenWidgetEmbedResolver,
   codepenIframeEmbedResolver,
   dailymotionEmbedResolver,
