@@ -35,10 +35,10 @@ const readPlayerAccount = (element: Element): string | undefined => {
 // Every legacy carrier names its player and its video, and almost none of them names the
 // account, which is the one id the modern player url needs. The account is in the `playerKey`
 // all the same: its middle comma-separated segment is the id as big-endian bytes in a base64
-// alphabet using `-`, `_` and `~` for `+`, `/` and `=`. Verified live 2026-09-06 by decoding
-// keys out of corpus flashVars and asking Brightcove's own playback API for the video id that
-// sat beside them: five of twenty answered with the video's real title, and every fabricated
-// account 404s on the player host.
+// alphabet using `-`, `_` and either `~` or `.` for `+`, `/` and `=`. Verified live 2026-09-06
+// by decoding keys out of corpus flashVars and asking Brightcove's own playback API for the
+// video id that sat beside them: five of twenty answered with the video's real title, and every
+// fabricated account 404s on the player host.
 const readPlayerKeyAccount = (key: Nullish<string>): string | undefined => {
   const encoded = key?.split(',')[1]
 
@@ -49,7 +49,9 @@ const readPlayerKeyAccount = (key: Nullish<string>): string | undefined => {
   let bytes: string
 
   try {
-    bytes = atob(encoded.replaceAll('-', '+').replaceAll('_', '/').replaceAll('~', '='))
+    bytes = atob(
+      encoded.replaceAll('-', '+').replaceAll('_', '/').replaceAll('~', '=').replaceAll('.', '='),
+    )
   } catch {
     return
   }

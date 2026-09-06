@@ -124,6 +124,25 @@ describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // The same key with `.` for the base64 padding, which is how a percent-encoded flashVars
+    // set spells it. Real corpus pair: the decoded account answers 200 on the player host and
+    // the account one digit off it 404s.
+    it('should decode a playerKey padded with dots instead of tildes', async () => {
+      const value = html`
+        <embed
+          src="http://c.brightcove.com/services/viewer/federated_f9?isVid=1"
+          flashVars="videoId=3758718092001&playerID=309045659001&playerKey=AQ%2E%2E,AAAAE_Nrlok%2E,_Cvi-4rvLA4_tzdIHBnXT7KyNUAOdmJG"
+        />
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'brightcove',
+        id: '3758718092001',
+        src: 'https://players.brightcove.net/85688293001/default_default/index.html?videoId=3758718092001',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should ignore a snippet whose playerKey is the only id it names', async () => {
       const value = html`
         <embed
