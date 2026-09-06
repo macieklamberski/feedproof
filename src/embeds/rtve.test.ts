@@ -46,7 +46,13 @@ describe('rtveResolveEmbed', () => {
     })
 
     it('should return undefined for an id outside the numeric shape', () => {
-      const value = 'https://www.rtve.es/drmn/embed/video/../evil'
+      const value = 'https://www.rtve.es/drmn/embed/video/evil'
+
+      expect(rtveResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a player url naming no asset', () => {
+      const value = 'https://www.rtve.es/drmn/embed/video/'
 
       expect(rtveResolveEmbed(value)).toBeUndefined()
     })
