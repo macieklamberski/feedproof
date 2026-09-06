@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
@@ -170,5 +171,59 @@ describeForEachParser('redcircleIframeEmbedResolver', (parseHtml) => {
       '<iframe src="https://redcircle.com/shows/638d4a39-ade6-47d8-9dd2-aa1cc5bef21a"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
+  })
+})
+
+// The resolvers only reach a feed through the registered default list, and only an enclosure
+// test reaches the path where claiming a media url would cost a reader the audio.
+describeForEachParser('redcircle through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should claim the loader script the default list reaches', async () => {
+    const value = html`
+      <script
+        src="https://api.podcache.net/embedded-show-player/sh/7bc4f231-9280-445a-a62b-b5727083ddca?theme=light"
+      ></script>
+    `
+
+    const expected = html`
+      <div
+        data-embed-id="show/7bc4f231-9280-445a-a62b-b5727083ddca"
+        data-embed-provider="redcircle"
+        data-embed-src="https://redcircle.com/embedded-show-webplayer/7bc4f231-9280-445a-a62b-b5727083ddca?theme=light"
+        data-embed-url="https://redcircle.com/shows/7bc4f231-9280-445a-a62b-b5727083ddca"
+        data-embed-height="320"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
+  })
+
+  // Every RedCircle feed's audio sits on a numbered `audio{n}.redcircle.com`, which listing
+  // `redcircle.com` claims. Only the route table keeps the audio playable.
+  it('should leave a redcircle audio enclosure playable', async () => {
+    const enclosures = [
+      {
+        url: 'https://audio4.redcircle.com/episodes/fe18a710-ceb4-42d7-a290-7b5a43075e16/stream.mp3',
+        type: 'audio/mpeg',
+      },
+    ]
+
+    const expected = html`
+      <audio
+        data-enclosure=""
+        controls
+        src="https://audio4.redcircle.com/episodes/fe18a710-ceb4-42d7-a290-7b5a43075e16/stream.mp3"
+      ></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })
