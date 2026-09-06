@@ -59,7 +59,8 @@ export const extractIvooxSubject = (link: string): IvooxSubject | undefined => {
 // generations share one id space, which is what lets the rewrite carry the id across:
 // `ivoox.com/x_rf_{id}_1.html` redirects to the episode's own slugged page for a real id and
 // 404s for a fabricated one, and it answered with the episode named in the same snippet for
-// fourteen of nineteen legacy ids probed 2026-09-06, across all three generations. The current form is not verifiable the same way, since
+// fourteen of nineteen legacy ids probed 2026-09-06, across all three generations. The current
+// form is not verifiable the same way, since
 // `player_ej_` answers 200 to any id at all: it is a javascript shell that resolves the id on
 // load. What the rewrite rests on is the 404 and the shared id, not a status code off the
 // target. The skin segment is carried through when the source states one.
