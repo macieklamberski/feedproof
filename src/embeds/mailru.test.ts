@@ -164,6 +164,28 @@ describeForEachParser('mailruEmbedResolver', (parseHtml) => {
     })
   })
 
+  describe('sad paths', () => {
+    it('should ignore a foreign host carrying the same path', async () => {
+      const value =
+        '<iframe src="https://evil.test/my.mail.ru/video/embed/253943806846567285"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should ignore the Flash player when its flashvars name no video', async () => {
+      const value = html`
+        <object
+          type="application/x-shockwave-flash"
+          data="http://img.mail.ru/r/video2/uvpv3.swf?3"
+        >
+          <param name="flashvars" value="autoplay=0" />
+        </object>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
   describe('the Flash player that named the video in its flashvars', () => {
     it('should repair the object whose flashvars param names the video', async () => {
       const value = html`
@@ -207,28 +229,6 @@ describeForEachParser('mailruEmbedResolver', (parseHtml) => {
       }
 
       expect(await extract(value)).toEqual(expected)
-    })
-  })
-
-  describe('sad paths', () => {
-    it('should ignore a foreign host carrying the same path', async () => {
-      const value =
-        '<iframe src="https://evil.test/my.mail.ru/video/embed/253943806846567285"></iframe>'
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should ignore the Flash player when its flashvars name no video', async () => {
-      const value = html`
-        <object
-          type="application/x-shockwave-flash"
-          data="http://img.mail.ru/r/video2/uvpv3.swf?3"
-        >
-          <param name="flashvars" value="autoplay=0" />
-        </object>
-      `
-
-      expect(await extract(value)).toBeUndefined()
     })
   })
 })
