@@ -91,6 +91,7 @@ import { linkedinEmbedResolver } from '../embeds/linkedin.js'
 import { mastodonEmbedResolver } from '../embeds/mastodon.js'
 import { mediavineEmbedResolver } from '../embeds/mediavine.js'
 import { megaphoneEmbedResolver } from '../embeds/megaphone.js'
+import { megatvEmbedResolver } from '../embeds/megatv.js'
 import { mixcloudEmbedResolver } from '../embeds/mixcloud.js'
 import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from '../embeds/nicovideo.js'
 import { notecomIframeEmbedResolver } from '../embeds/notecom.js'
@@ -189,6 +190,7 @@ const embedResolvers: Array<EmbedResolver> = [
   mixcloudEmbedResolver,
   podbeanEmbedResolver,
   megaphoneEmbedResolver,
+  megatvEmbedResolver,
   podigeeEmbedResolver,
   podigeeIframeEmbedResolver,
   redditWidgetEmbedResolver,
