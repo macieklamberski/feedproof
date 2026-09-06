@@ -89,7 +89,7 @@ import {
 import { libsynEmbedResolver } from '../embeds/libsyn.js'
 import { linkedinEmbedResolver } from '../embeds/linkedin.js'
 import { mastodonEmbedResolver } from '../embeds/mastodon.js'
-import { mediavineEmbedResolver } from '../embeds/mediavine.js'
+import { mediavineEmbedResolver, mediavineScriptEmbedResolver } from '../embeds/mediavine.js'
 import { megaphoneEmbedResolver } from '../embeds/megaphone.js'
 import { mixcloudEmbedResolver } from '../embeds/mixcloud.js'
 import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from '../embeds/nicovideo.js'
@@ -186,6 +186,7 @@ const embedResolvers: Array<EmbedResolver> = [
   facebookXfbmlEmbedResolver,
   facebookAmpEmbedResolver,
   mediavineEmbedResolver,
+  mediavineScriptEmbedResolver,
   mixcloudEmbedResolver,
   podbeanEmbedResolver,
   megaphoneEmbedResolver,
