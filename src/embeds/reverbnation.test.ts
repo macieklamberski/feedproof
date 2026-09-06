@@ -90,7 +90,7 @@ describe('reverbnationResolveEmbed', () => {
     })
   })
 
-  describe('Variant: the Flash players, moved onto the html widget', () => {
+  describe('the Flash players, moved onto the html widget', () => {
     it('should read the pro widget id parameter', () => {
       const value =
         'http://cache.reverbnation.com/widgets/swf/40/pro_widget.swf?id=artist_1354004&posted_by=&skin_id=PWAS1006&background_color=000000&auto_play=false'
@@ -250,7 +250,6 @@ describeForEachParser('reverbnation through the pipeline', (parseHtml) => {
         type="application/x-shockwave-flash"
       />
     `
-
     const expected = html`
       <div
         data-embed-id="artist_1018382"
