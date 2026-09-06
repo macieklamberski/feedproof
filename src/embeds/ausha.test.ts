@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { aushaEmbedResolver, aushaResolveEmbed } from './ausha.js'
@@ -210,5 +211,46 @@ describeForEachParser('aushaEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+  })
+})
+
+// The resolver only reaches a feed through the registered default list, and only an enclosure
+// test reaches the path where claiming a media url would cost a reader the audio.
+describeForEachParser('ausha through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  // `audio.ausha.co` is where every Ausha feed's episode audio sits, and the file is named with
+  // the same twelve characters the player takes as its `podcastId`. Listing `ausha.co` claims
+  // that host, so only the check that the frame sits on the player itself keeps the audio.
+  it('should claim a player frame the default list reaches', async () => {
+    const value = '<iframe src="https://player.ausha.co/?podcastId=BGKwJUJG8D9m&amp;v=3"></iframe>'
+
+    const expected = html`
+      <div
+        data-embed-id="podcast/BGKwJUJG8D9m"
+        data-embed-provider="ausha"
+        data-embed-src="https://player.ausha.co/?podcastId=BGKwJUJG8D9m&amp;v=3"
+        data-embed-height="220"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
+  })
+
+  it('should leave an ausha audio enclosure playable', async () => {
+    const enclosures = [{ url: 'https://audio.ausha.co/BGKwJUJG8D9m.mp3?t=1', type: 'audio/mpeg' }]
+
+    const expected = html`
+      <audio data-enclosure="" controls src="https://audio.ausha.co/BGKwJUJG8D9m.mp3?t=1"></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })
