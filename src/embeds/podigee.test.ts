@@ -18,6 +18,7 @@ describeForEachParser('podigeeEmbedResolver', (parseHtml) => {
         provider: 'podigee',
         id: 'theshow/42-an-episode',
         src: 'https://theshow.podigee.io/42-an-episode/embed?context=external',
+        height: 145,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -56,6 +57,7 @@ describe('podigeeResolveEmbed', () => {
       provider: 'podigee',
       id: 'cloudonaut/72-serverless-and-devops-a-match',
       src: 'https://cloudonaut.podigee.io/72-serverless-and-devops-a-match/embed',
+      height: 145,
     }
 
     expect(podigeeResolveEmbed(value)).toEqual(expected)
@@ -69,6 +71,7 @@ describe('podigeeResolveEmbed', () => {
       provider: 'podigee',
       id: 'cloudonaut/72-an-episode',
       src: value,
+      height: 145,
     }
 
     expect(podigeeResolveEmbed(value)).toEqual(expected)
@@ -81,6 +84,7 @@ describe('podigeeResolveEmbed', () => {
       provider: 'podigee',
       id: 'cloudonaut/an-unnumbered-episode',
       src: value,
+      height: 145,
     }
 
     expect(podigeeResolveEmbed(value)).toEqual(expected)
@@ -101,6 +105,7 @@ describe('podigeeResolveEmbed', () => {
       provider: 'podigee',
       id: 'cloudonaut/72-an-episode',
       src: 'https://cloudonaut.podigee.io/72-an-episode/embed',
+      height: 145,
     }
 
     expect(podigeeResolveEmbed(value)).toEqual(expected)
@@ -152,6 +157,7 @@ describeForEachParser('podigee through the pipeline', (parseHtml) => {
         data-embed-id="cloudonaut/72-an-episode"
         data-embed-provider="podigee"
         data-embed-src="https://cloudonaut.podigee.io/72-an-episode/embed"
+        data-embed-height="145"
       ></div>
     `
 
