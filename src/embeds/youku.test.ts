@@ -42,6 +42,33 @@ describeForEachParser('youkuEmbedResolver', (parseHtml) => {
     })
   })
 
+  describe('sad paths', () => {
+    it('should ignore a video id that is not one', async () => {
+      const value = '<iframe src="https://player.youku.com/embed/watch"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should ignore the player api script path', async () => {
+      const value = '<iframe src="https://player.youku.com/iframeapi"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should ignore a static-host swf that is not a player', async () => {
+      const value =
+        '<embed src="http://static.youku.com/v1.0.0080/v/swf/loader.swf?VideoIDS=XMTE4Mzc2NTcy">'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should ignore a foreign host carrying the same path', async () => {
+      const value = '<iframe src="https://evil.test/player.youku.com/embed/XODczMzU0NTAw"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
   describe('the Flash players that carried the same id', () => {
     it('should repair the player.php swf onto the modern player and drop its Flash box', async () => {
       const value = html`
@@ -82,33 +109,6 @@ describeForEachParser('youkuEmbedResolver', (parseHtml) => {
       }
 
       expect(await extract(value)).toEqual(expected)
-    })
-  })
-
-  describe('sad paths', () => {
-    it('should ignore a video id that is not one', async () => {
-      const value = '<iframe src="https://player.youku.com/embed/watch"></iframe>'
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should ignore the player api script path', async () => {
-      const value = '<iframe src="https://player.youku.com/iframeapi"></iframe>'
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should ignore a static-host swf that is not a player', async () => {
-      const value =
-        '<embed src="http://static.youku.com/v1.0.0080/v/swf/loader.swf?VideoIDS=XMTE4Mzc2NTcy">'
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
-    it('should ignore a foreign host carrying the same path', async () => {
-      const value = '<iframe src="https://evil.test/player.youku.com/embed/XODczMzU0NTAw"></iframe>'
-
-      expect(await extract(value)).toBeUndefined()
     })
   })
 })
