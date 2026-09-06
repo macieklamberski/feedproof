@@ -187,7 +187,6 @@ describeForEachParser('audioboom through the pipeline', (parseHtml) => {
         src="https://embeds.audioboom.com/posts/6479208-eddie-jones-england-s-forward-power/embed/v4"
       ></iframe>
     `
-
     const expected = html`
       <div
         data-embed-id="6479208"
