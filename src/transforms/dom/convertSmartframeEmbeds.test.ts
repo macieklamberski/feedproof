@@ -86,7 +86,7 @@ describeForEachParser('convertSmartframeEmbeds', (parseHtml) => {
 
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
-      baseUrl: 'https://x.test/p',
+      baseUrl: 'https://example.com/post',
     })
 
     expect(result).toEqualHtml(expected)
