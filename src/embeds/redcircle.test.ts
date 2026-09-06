@@ -191,7 +191,6 @@ describeForEachParser('redcircle through the pipeline', (parseHtml) => {
         src="https://api.podcache.net/embedded-show-player/sh/7bc4f231-9280-445a-a62b-b5727083ddca?theme=light"
       ></script>
     `
-
     const expected = html`
       <div
         data-embed-id="show/7bc4f231-9280-445a-a62b-b5727083ddca"
