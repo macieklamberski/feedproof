@@ -262,7 +262,6 @@ describeForEachParser('audiomack through the pipeline', (parseHtml) => {
 
   it('should claim a player frame the default list reaches', async () => {
     const value = '<iframe src="https://audiomack.com/embed/chuuwee/album/cool-world"></iframe>'
-
     const expected = html`
       <div
         data-embed-id="chuuwee/album/cool-world"
