@@ -56,6 +56,10 @@ export const defaultNonContentSelectors = [
   // Survives as a live "Tweet" link in the output, usually with no other non-content selector
   // matching anywhere.
   'a.twitter-share-button',
+  // The rendered form of the same button, and of the follow button and the share counter beside
+  // it. Every class the corpus puts on one of these frames names a button, so the path is the
+  // whole platform's button namespace; the player lives under `/embed/` and is untouched.
+  'iframe[src*="platform.twitter.com/widgets/"]',
   // Drupal Easy Social. The widget is chrome, but the pipeline cannot tell, so its Facebook
   // Like iframe becomes an embed placeholder card and the chrome is promoted to content.
   'div.easy_social_box',

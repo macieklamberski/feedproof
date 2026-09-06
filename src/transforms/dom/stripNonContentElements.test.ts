@@ -64,6 +64,8 @@ const specimens: Record<string, string | [string, string]> = {
   '.feedflare': '<div class="feedflare"><a href="/ff">Share</a></div>',
   '.addtoany_share_save_container':
     '<div class="addtoany_share_save_container"><a class="a2a_button_facebook" href="#">Share</a></div>',
+  'iframe[src*="platform.twitter.com/widgets/"]':
+    '<iframe id="twitter-widget-0" scrolling="no" frameborder="0" allowtransparency="true" src="https://platform.twitter.com/widgets/tweet_button.1397165098.html#_=1400000000000&amp;count=horizontal&amp;id=twitter-widget-0&amp;lang=en&amp;original_referer=https%3A%2F%2Fexample.com%2Fpost&amp;size=m&amp;text=A%20post&amp;url=https%3A%2F%2Fexample.com%2Fpost" class="twitter-share-button twitter-share-button-rendered twitter-tweet-button" style="position: static; visibility: visible; width: 107px; height: 20px;" title="Twitter Tweet Button"></iframe>',
   'iframe[src*="facebook.com/plugins/like.php"]':
     '<iframe src="http://www.facebook.com/plugins/like.php?href=https://example.com/post/&amp;layout=standard&amp;show_faces=1&amp;width=450&amp;action=like" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:450px; height:25px"></iframe>',
   '.a2a_kit': '<span class="a2a_kit a2a_kit_size_32 addtoany_list"></span>',
@@ -396,6 +398,15 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
           </span>
         </span>
       `
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    // The tweet player sits on the same host as the buttons, one path segment away, so the
+    // button entry is anchored on `/widgets/` and the frame that carries a tweet survives.
+    it('should keep the tweet player that shares the button host', async () => {
+      const value =
+        '<iframe src="https://platform.twitter.com/embed/Tweet.html?id=123456789012345"></iframe>'
 
       expect(await transform(value)).toEqualHtml(value)
     })
