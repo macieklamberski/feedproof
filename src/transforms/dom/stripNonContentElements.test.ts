@@ -66,6 +66,12 @@ const specimens: Record<string, string | [string, string]> = {
     '<div class="addtoany_share_save_container"><a class="a2a_button_facebook" href="#">Share</a></div>',
   'iframe[src*="facebook.com/plugins/like.php"]':
     '<iframe src="http://www.facebook.com/plugins/like.php?href=https://example.com/post/&amp;layout=standard&amp;show_faces=1&amp;width=450&amp;action=like" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:450px; height:25px"></iframe>',
+  'iframe[src*="facebook.com/plugins/page.php"]':
+    '<iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Facme&amp;tabs=timeline&amp;width=340&amp;height=500&amp;small_header=false&amp;adapt_container_width=true&amp;hide_cover=false&amp;show_facepile=true" width="340" height="500" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true"></iframe>',
+  'iframe[src*="facebook.com/plugins/likebox.php"]':
+    '<iframe src="//www.facebook.com/plugins/likebox.php?href=https%3A%2F%2Fwww.facebook.com%2Facme&amp;width=292&amp;height=258&amp;show_faces=true&amp;header=false&amp;stream=false&amp;show_border=false" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:292px; height:258px" allowtransparency="true"></iframe>',
+  'iframe[src*="facebook.com/plugins/share_button.php"]':
+    '<iframe src="https://www.facebook.com/plugins/share_button.php?href=https%3A%2F%2Fexample.com%2Fpost&amp;layout=button_count&amp;size=small&amp;width=90&amp;height=20" width="90" height="20" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true"></iframe>',
   '.a2a_kit': '<span class="a2a_kit a2a_kit_size_32 addtoany_list"></span>',
   '[class*="addthis_"]': '<div class="addthis_toolbox addthis_default_style"></div>',
   '.shareaholic-canvas': '<div class="shareaholic-canvas" data-app="share_buttons"></div>',
@@ -388,6 +394,21 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
   describe('scoped selectors', () => {
     // The same wrapper with its player intact is a working embed, not chrome. Only the shells
     // whose iframe the feed generator removed are stripped.
+    // Two plugins on the same path carry the post itself, and the entries above name the chrome
+    // ones by file so those two survive to be resolved.
+    it('should keep the Facebook post and video plugin frames', async () => {
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Facme%2Fposts%2F123"
+        ></iframe>
+        <iframe
+          src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Facme%2Fvideos%2F456"
+        ></iframe>
+      `
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
     it('should keep an s9e wrapper whose player survived', async () => {
       const value = html`
         <span data-s9e-mediaembed="youtube">

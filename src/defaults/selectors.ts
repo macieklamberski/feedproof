@@ -65,6 +65,13 @@ export const defaultNonContentSelectors = [
   // The Like button pasted on its own, a 25 pixel iframe that would otherwise reach the reader
   // as a click-to-play placeholder for a button.
   'iframe[src*="facebook.com/plugins/like.php"]',
+  // The rest of the plugin namespace that is chrome rather than a post: the Page box in both its
+  // spellings, and the Share button. The resolver already refuses each of these as an embed, and
+  // refusing leaves them to the generic fallback, which draws a card for a follow widget. The two
+  // plugins that do carry content, `post.php` and `video.php`, are named nowhere here.
+  'iframe[src*="facebook.com/plugins/page.php"]',
+  'iframe[src*="facebook.com/plugins/likebox.php"]',
+  'iframe[src*="facebook.com/plugins/share_button.php"]',
   '.a2a_kit', // AddToAny share icons (higher-prevalence marker than the wrapper).
   '[class*="addthis_"]', // AddThis share toolbox.
   '.shareaholic-canvas', // Shareaholic share/related widget.
