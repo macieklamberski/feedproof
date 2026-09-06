@@ -4,8 +4,10 @@ import { attr, keepIfMatches, parsePixelSize } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// Video ids are a two-letter kind and a number, `sm9`, `nm12345`, `so67890`.
-const safeVideoIdRegex = /^[a-z]{2}\d+$/
+// Video ids are a two-letter kind and a number, `sm9`, `nm12345`, `so67890`. A channel upload
+// is also addressed by a bare number, the thread id its watch page was minted under: the player
+// answers it 200 with the title like any other id and an invented one 500 (checked 2026-09-05).
+const safeVideoIdRegex = /^(?:[a-z]{2})?\d+$/
 
 // `lv` names a live broadcast, which the video player answers 500 for. The shape gives nothing
 // away, since `lv` is two letters and a number like every other kind. The live host serves a
