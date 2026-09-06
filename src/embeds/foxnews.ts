@@ -1,3 +1,4 @@
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -30,7 +31,7 @@ const composeEmbed = (id: string): EmbedResolverResult => {
 export const foxnewsResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, foxnewsHosts)
   const id = parsed?.searchParams.get('video_id') ?? parsed?.searchParams.get('id')
-  const [route, page] = parsed?.pathname.split('/').filter(Boolean) ?? []
+  const [route, page] = parsed ? getPathSegments(parsed) : []
 
   if (route !== 'v' || (page !== 'embed.js' && page !== 'video-embed.html')) {
     return
