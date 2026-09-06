@@ -58,6 +58,7 @@ import {
 import { captivateEmbedResolver } from '../embeds/captivate.js'
 import { codepenIframeEmbedResolver, codepenWidgetEmbedResolver } from '../embeds/codepen.js'
 import { dailymotionEmbedResolver } from '../embeds/dailymotion.js'
+import { deezerEmbedResolver } from '../embeds/deezer.js'
 import { donorboxEmbedResolver } from '../embeds/donorbox.js'
 import {
   facebookAmpEmbedResolver,
@@ -162,6 +163,7 @@ const embedResolvers: Array<EmbedResolver> = [
   codepenWidgetEmbedResolver,
   codepenIframeEmbedResolver,
   dailymotionEmbedResolver,
+  deezerEmbedResolver,
   donorboxEmbedResolver,
   imgurBlockquoteEmbedResolver,
   imgurIframeEmbedResolver,
