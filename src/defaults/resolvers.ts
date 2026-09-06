@@ -99,6 +99,7 @@ import { omnyEmbedResolver } from '../embeds/omny.js'
 import { podbeanEmbedResolver } from '../embeds/podbean.js'
 import { podigeeEmbedResolver, podigeeIframeEmbedResolver } from '../embeds/podigee.js'
 import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from '../embeds/reddit.js'
+import { rtveFlashEmbedResolver, rtveIframeEmbedResolver } from '../embeds/rtve.js'
 import { scribdFlashEmbedResolver, scribdIframeEmbedResolver } from '../embeds/scribd.js'
 import { simplecastEmbedResolver } from '../embeds/simplecast.js'
 import { sketchfabEmbedResolver } from '../embeds/sketchfab.js'
@@ -196,6 +197,8 @@ const embedResolvers: Array<EmbedResolver> = [
   simplecastEmbedResolver,
   scribdFlashEmbedResolver,
   scribdIframeEmbedResolver,
+  rtveIframeEmbedResolver,
+  rtveFlashEmbedResolver,
   slideshareFlashEmbedResolver,
   slideshareIframeEmbedResolver,
   sketchfabEmbedResolver,
