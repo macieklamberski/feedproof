@@ -98,6 +98,7 @@ import { odyseeEmbedResolver } from '../embeds/odysee.js'
 import { omnyEmbedResolver } from '../embeds/omny.js'
 import { podbeanEmbedResolver } from '../embeds/podbean.js'
 import { podigeeEmbedResolver, podigeeIframeEmbedResolver } from '../embeds/podigee.js'
+import { redcircleIframeEmbedResolver, redcircleScriptEmbedResolver } from '../embeds/redcircle.js'
 import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from '../embeds/reddit.js'
 import { scribdFlashEmbedResolver, scribdIframeEmbedResolver } from '../embeds/scribd.js'
 import { simplecastEmbedResolver } from '../embeds/simplecast.js'
@@ -191,6 +192,8 @@ const embedResolvers: Array<EmbedResolver> = [
   megaphoneEmbedResolver,
   podigeeEmbedResolver,
   podigeeIframeEmbedResolver,
+  redcircleScriptEmbedResolver,
+  redcircleIframeEmbedResolver,
   redditWidgetEmbedResolver,
   redditIframeEmbedResolver,
   simplecastEmbedResolver,
