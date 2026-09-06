@@ -151,6 +151,8 @@ const specimens: Record<string, string | [string, string]> = {
     '<iframe id="stay22-widget" src="https://www.stay22.com/embed/699754889b53f8015d33a6ae" width="100%" height="428" frameborder="0"></iframe>',
   'iframe[src*="helloasso.com/associations/"][src*="/widget"]':
     '<iframe id="haWidget" src="https://www.helloasso.com/associations/pacte-civique/formulaires/1/widget-bouton" style="width:100%;height:70px;border:none;"></iframe>',
+  ':is(p, div)[data-gyg-href]:not(:has(*:not(a)))':
+    '<div data-gyg-href="https://example.com/default/activities.frame" data-gyg-locale-code="en-US" data-gyg-widget="activities" data-gyg-number-of-items="3" data-gyg-partner-id="66RVO1V" data-gyg-tour-ids="76035,75950,400712">Powered by <a href="https://example.com/sarajevo-l2281/" target="_blank" rel="noopener sponsored">GetYourGuide</a></div>',
   '.image-link-expand': '<div class="image-link-expand"><button><svg></svg></button></div>',
   'drupal-render-placeholder':
     '<drupal-render-placeholder callback="comment.lazy_builders:renderLinks" arguments="0=node:1"></drupal-render-placeholder>',
@@ -251,6 +253,23 @@ describeForEachParser('stripNonContentElements', (parseHtml) => {
         </ul>
         <div class="av-content-box">
           <p>More body text</p>
+        </div>
+      `
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    // Publishers paste the GetYourGuide snippet's whole attribute set onto their own markup, so
+    // the attribute alone names a heading and a hand-written list of tours as often as it names
+    // the partner script's mount.
+    it("should keep GetYourGuide mounts that carry the publisher's own markup", async () => {
+      const value = html`
+        <h3 data-gyg-href="https://widget.getyourguide.com/default/activities.frame" data-gyg-widget="activities" data-gyg-partner-id="SN3E6N5">The best Turkish bath and spa experiences in Istanbul:</h3>
+        <div data-gyg-href="https://widget.getyourguide.com/default/activities.frame" data-gyg-widget="activities" data-gyg-partner-id="SN3E6N5">
+          <ul>
+            <li><a href="https://gyg.me/o5CJHgXr">Private Turkish Bath, Sauna, and Massage</a> from US$58</li>
+            <li><a href="https://gyg.me/lXzd4xxJ">Traditional Turkish Bath</a> from US$25</li>
+          </ul>
         </div>
       `
 

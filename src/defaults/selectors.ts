@@ -152,6 +152,13 @@ export const defaultNonContentSelectors = [
   // HelloAsso donation, membership and ticketing forms. Every widget path ends in `widget`,
   // `widget-bouton` or `widget-vignette` under the association's page.
   'iframe[src*="helloasso.com/associations/"][src*="/widget"]',
+  // GetYourGuide activity and availability widgets. The mount is an empty paragraph or div the
+  // partner script fills, or one holding only a "Powered by GetYourGuide" credit anchor, which is
+  // every shape but two of the 376 mounts sampled. The other two are a publisher pasting the
+  // widget's whole attribute set onto their own markup, a heading and a div wrapping a
+  // hand-written list of tours, so the mount is claimed only where it carries nothing but that
+  // anchor.
+  ':is(p, div)[data-gyg-href]:not(:has(*:not(a)))',
 
   // Platform UI chrome and non-rendered scaffolding.
   '.image-link-expand', // Substack restack/zoom buttons next to images.
