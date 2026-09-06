@@ -185,8 +185,12 @@ describe('codesandboxResolveEmbed', () => {
       expect(codesandboxResolveEmbed(value)).toBeUndefined()
     })
 
-    it('should refuse the empty-sandbox route, whose word is too short to be a hash', () => {
+    it('should refuse the starter-template route, which saves no sandbox', () => {
       expect(codesandboxResolveEmbed('https://codesandbox.io/embed/new')).toBeUndefined()
+    })
+
+    it('should refuse a named template, whose word is too short to be a hash', () => {
+      expect(codesandboxResolveEmbed('https://codesandbox.io/embed/vue')).toBeUndefined()
     })
   })
 })

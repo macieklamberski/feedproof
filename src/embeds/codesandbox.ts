@@ -13,9 +13,9 @@ const codesandboxHosts = ['codesandbox.io', 'www.codesandbox.io']
 // mixed case only in the 9-character era.
 const idRegex = /^[A-Za-z0-9]{5,10}$/
 
-// Words CodeSandbox owns in the position a slug sits in. `github` is the one that bites: it is six
-// lowercase alphanumerics, so it passes the id test on length alone and turns a repository embed
-// into a sandbox named `github`.
+// Words CodeSandbox owns where a slug sits. `github` is the one that bites, being six lowercase
+// alphanumerics that pass the id test on length alone. `new` opens a starter template with nothing
+// saved behind it, which is what the id bound refuses the shorter template names like `vue` for too.
 const reservedSlugSegments = new Set(['github', 'github.com', 'fork', 'new'])
 
 // The sandbox's own name, which is what the share dialog writes and what a rendered DEV.to or
