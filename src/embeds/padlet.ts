@@ -20,13 +20,8 @@ const boardHeight = 608
 // is a different presentation and is left as the publisher wrote it.
 export const padletResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, padletHost)
-
-  if (!parsed) {
-    return
-  }
-
   const boardId =
-    parsed.pathname.match(embedPathRegex)?.[1] ?? parsed.pathname.match(previewPathRegex)?.[1]
+    parsed?.pathname.match(embedPathRegex)?.[1] ?? parsed?.pathname.match(previewPathRegex)?.[1]
 
   if (!boardId || !safeBoardIdRegex.test(boardId)) {
     return
