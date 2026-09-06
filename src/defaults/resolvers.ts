@@ -1,6 +1,7 @@
 import { affingerCiteResolver } from '../cites/affinger.js'
 import { amebaCiteResolver } from '../cites/ameba.js'
 import { blogCardCiteResolver } from '../cites/blogcard.js'
+import { buddypressCiteResolver } from '../cites/buddypress.js'
 import { cocoonCiteResolver } from '../cites/cocoon.js'
 import {
   devtoLegacyPostCiteResolver,
@@ -271,6 +272,7 @@ const citeResolvers: Array<CiteResolver> = [
   hatenaCiteResolver,
   devtoLinkCiteResolver,
   nodebbCiteResolver,
+  buddypressCiteResolver,
   pzlinkcardCiteResolver,
   notecomCiteResolver,
   tumblrCiteResolver,
