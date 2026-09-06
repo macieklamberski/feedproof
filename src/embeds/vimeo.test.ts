@@ -160,6 +160,81 @@ describe('vimeoResolveEmbed', () => {
 
     expect(vimeoResolveEmbed(value)).toBeUndefined()
   })
+
+  // A showcase is a playlist in its own id space, so it resolves as itself rather than as the
+  // video its number would otherwise be read as.
+  describe('the showcase, and the album it used to be called', () => {
+    it('should resolve a showcase embed to the showcase, posterless', () => {
+      const value = 'https://vimeo.com/showcase/5371408/embed'
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: 'showcase/5371408',
+        src: 'https://vimeo.com/showcase/5371408/embed',
+        url: 'https://vimeo.com/showcase/5371408',
+      }
+
+      expect(vimeoResolveEmbed(value)).toEqual(expected)
+    })
+
+    // oEmbed answers 404 for an album url and 200 for the same id spelled as a showcase, and the
+    // album player 301s onto the showcase one, so the id travels in the spelling that resolves.
+    it('should normalise the album spelling onto the showcase', () => {
+      const value = 'https://vimeo.com/album/5480258/embed'
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: 'showcase/5480258',
+        src: 'https://vimeo.com/showcase/5480258/embed',
+        url: 'https://vimeo.com/showcase/5480258',
+      }
+
+      expect(vimeoResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should build the player from a bare showcase page url', () => {
+      const value = 'https://vimeo.com/showcase/5371408'
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: 'showcase/5371408',
+        src: 'https://vimeo.com/showcase/5371408/embed',
+        url: 'https://vimeo.com/showcase/5371408',
+      }
+
+      expect(vimeoResolveEmbed(value)).toEqual(expected)
+    })
+
+    // The deeper path still names a real video, and a video beats the collection around it.
+    it('should resolve the video a showcase path names rather than the showcase', () => {
+      const value = 'https://vimeo.com/showcase/3253534/video/76979871'
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: '76979871',
+        src: 'https://player.vimeo.com/video/76979871',
+        url: 'https://vimeo.com/76979871',
+      }
+
+      expect(vimeoResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should refuse a showcase path whose id is not numeric', () => {
+      const value = 'https://vimeo.com/showcase/highlights/embed'
+
+      expect(vimeoResolveEmbed(value)).toBeUndefined()
+    })
+
+    // An event is a livestream, not a playlist, and it stays with the generic placeholder: the
+    // refusal is deliberate and is pinned here so removing it is a decision rather than a slip.
+    it('should still leave an event embed unresolved', () => {
+      const value = 'https://vimeo.com/event/5933775/embed'
+
+      expect(vimeoResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should still leave an on-demand store front unresolved', () => {
+      const value = 'https://vimeo.com/ondemand/20704'
+
+      expect(vimeoResolveEmbed(value)).toBeUndefined()
+    })
+  })
 })
 
 describeForEachParser('vimeoEmbedResolver', (parseHtml) => {
@@ -181,6 +256,28 @@ describeForEachParser('vimeoEmbedResolver', (parseHtml) => {
     const value = '<iframe src="https://example.com/video"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
+  })
+
+  // Every corpus showcase carrier states a box, so the size the placeholder ends up with is the
+  // publisher's and the resolver states none of its own.
+  it('should keep the size a showcase iframe states', async () => {
+    const value = html`
+      <iframe
+        src="https://vimeo.com/showcase/5371408/embed"
+        width="525"
+        height="295"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: 'showcase/5371408',
+      src: 'https://vimeo.com/showcase/5371408/embed',
+      url: 'https://vimeo.com/showcase/5371408',
+      width: 525,
+      height: 295,
+    }
+
+    expect(await extract(value)).toEqual(expected)
   })
 
   describe('the title the share snippet writes', () => {
