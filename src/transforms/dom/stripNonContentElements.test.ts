@@ -141,6 +141,8 @@ const specimens: Record<string, string | [string, string]> = {
     '<a class="rcptr" data-raflid="0b78662439" data-template="" data-theme="classic" href="https://example.com/rafl/display/0b78662439/" id="rcwidget_cq72wtxg" rel="nofollow">a Rafflecopter giveaway</a>',
   'a.rafl':
     '<a class="rafl" href="https://example.com/rafl/display/70b9a02412/" id="rc-70b9a02412" rel="nofollow">a Rafflecopter giveaway</a>',
+  'a.e-widget':
+    '<a class="e-widget no-button" href="https://example.com/3wKIE/win-100-amazon-gift-card" rel="nofollow">Win $100 Amazon Gift Card</a>',
   '.image-link-expand': '<div class="image-link-expand"><button><svg></svg></button></div>',
   'drupal-render-placeholder':
     '<drupal-render-placeholder callback="comment.lazy_builders:renderLinks" arguments="0=node:1"></drupal-render-placeholder>',
