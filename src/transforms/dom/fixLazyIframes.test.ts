@@ -76,6 +76,27 @@ describeForEachParser('fixLazyIframes', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  it('should promote over the Invision spacer image src', async () => {
+    const value = html`
+      <iframe
+        width="480"
+        height="270"
+        src="https://forum.example.com/applications/core/interface/js/spacer.png"
+        data-embed-src="https://www.youtube.com/embed/x?feature=oembed"
+      ></iframe>
+    `
+    const expected = html`
+      <iframe
+        width="480"
+        height="270"
+        src="https://www.youtube.com/embed/x?feature=oembed"
+        data-embed-src="https://www.youtube.com/embed/x?feature=oembed"
+      ></iframe>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
   it('should promote over the Complianz placeholder video src', async () => {
     const value = html`
       <iframe

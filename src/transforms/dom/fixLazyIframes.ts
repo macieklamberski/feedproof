@@ -5,7 +5,9 @@ import { isUrlShaped, isUsableSrc } from '../../utils/urls.js'
 // Blank pages a platform points a deferred iframe's src at while the real URL sits in a
 // lazy attribute: a src matching one of these is a placeholder, not content.
 const placeholderPageRegexes = [
-  /\/applications\/core\/interface\/index\.html(?:[?#]|$)/, // Invision Community, paired with data-embed-src.
+  // Invision Community, paired with data-embed-src. Older boards park the frame on the
+  // interface's spacer image instead of its blank page.
+  /\/applications\/core\/interface\/(?:index\.html|js\/spacer\.png)(?:[?#]|$)/,
   /\/complianz-gdpr(?:-premium)?\/assets\/video\//, // Complianz placeholder video, paired with data-src-cmplz.
 ]
 
