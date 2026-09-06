@@ -86,6 +86,7 @@ import {
   jwplayerScriptEmbedResolver,
   jwplayerSetupEmbedResolver,
 } from '../embeds/jwplayer.js'
+import { kalturaIframeEmbedResolver, kalturaScriptEmbedResolver } from '../embeds/kaltura.js'
 import { libsynEmbedResolver } from '../embeds/libsyn.js'
 import { linkedinEmbedResolver } from '../embeds/linkedin.js'
 import { mastodonEmbedResolver } from '../embeds/mastodon.js'
@@ -241,6 +242,8 @@ const embedResolvers: Array<EmbedResolver> = [
   telegramScriptEmbedResolver,
   telegramIframeEmbedResolver,
   mastodonEmbedResolver,
+  kalturaIframeEmbedResolver,
+  kalturaScriptEmbedResolver,
 ]
 
 const mediaResolvers: Array<MediaResolver> = [
