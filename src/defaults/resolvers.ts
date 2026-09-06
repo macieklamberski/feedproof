@@ -116,6 +116,7 @@ import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from '../emb
 import { standfmEmbedResolver } from '../embeds/standfm.js'
 import { tedEmbedResolver } from '../embeds/ted.js'
 import { telegramIframeEmbedResolver, telegramScriptEmbedResolver } from '../embeds/telegram.js'
+import { tencentEmbedResolver } from '../embeds/tencent.js'
 import { tiktokBlockquoteEmbedResolver, tiktokIframeEmbedResolver } from '../embeds/tiktok.js'
 import { transistorEmbedResolver } from '../embeds/transistor.js'
 import {
@@ -241,6 +242,7 @@ const embedResolvers: Array<EmbedResolver> = [
   telegramScriptEmbedResolver,
   telegramIframeEmbedResolver,
   mastodonEmbedResolver,
+  tencentEmbedResolver,
 ]
 
 const mediaResolvers: Array<MediaResolver> = [
