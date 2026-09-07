@@ -47,6 +47,13 @@ describe('extractFiresideToken', () => {
     expect(extractFiresideToken(value)).toEqual(expected)
   })
 
+  it('should read a player version past the ones Fireside has shipped', () => {
+    const value = 'https://player.fireside.fm/v4/N8LaNbQY+MI2PkJ2g'
+    const expected = { version: 'v4', token: 'N8LaNbQY+MI2PkJ2g' }
+
+    expect(extractFiresideToken(value)).toEqual(expected)
+  })
+
   // The retired share route names the token and no version, so it takes the current player.
   it('should read a token off the share route', () => {
     const value = 'https://fireside.fm/s/aHx_iT3N+3W9-AW7P/iframe'
@@ -61,8 +68,8 @@ describe('extractFiresideToken', () => {
     expect(extractFiresideToken(value)).toBeUndefined()
   })
 
-  it('should return undefined for a player version it does not know', () => {
-    const value = 'https://player.fireside.fm/v9/DiNRb69N+Dagp3z15'
+  it('should return undefined for a first segment that is not a version', () => {
+    const value = 'https://player.fireside.fm/embed/DiNRb69N+Dagp3z15'
 
     expect(extractFiresideToken(value)).toBeUndefined()
   })

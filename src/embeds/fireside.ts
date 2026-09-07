@@ -9,9 +9,11 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 const safeTokenRegex = /^[A-Za-z0-9_-]+\+[A-Za-z0-9_-]+$/
 
 // The version sits before the token on both hosts: `fireside.fm/player/{version}/{token}` and
-// `player.fireside.fm/{version}/{token}`. v3 is what the platform writes today and v2 still
-// serves, so the publisher's choice is carried through instead of normalised to one of them.
-const playerVersions = new Set(['v2', 'v3'])
+// `player.fireside.fm/{version}/{token}`. It is taken on its shape rather than on the versions
+// shipped so far, because refusing a later one silently costs the height and the id, while the
+// shape still keeps anything else out of a minted url. The publisher's choice is carried through
+// instead of normalised to one version.
+const playerVersionRegex = /^v\d$/
 
 // `fireside.fm/s/{token}/iframe` is the retired share route, naming the same token and no
 // version. It serves nothing today: all six carriers in the census 302 to
@@ -36,7 +38,7 @@ export const extractFiresideToken = (link: string): FiresidePlayer | undefined =
   const [version, encodedToken] =
     segments[0] === 's' ? [currentPlayerVersion, segments[1]] : versioned
 
-  if (!version || !playerVersions.has(version)) {
+  if (!version || !playerVersionRegex.test(version)) {
     return
   }
 
