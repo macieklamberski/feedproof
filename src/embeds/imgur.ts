@@ -10,6 +10,33 @@ const imgurHosts = ['imgur.com']
 // path the older share links took.
 const albumRoutes = new Set(['a', 'gallery'])
 
+// Imgur's own pages sit at the same depth as a post, so a first segment is a site page as often
+// as it is an id. The longer ones are live pages that pass the id shape, which is why the shape
+// alone let `imgur.com/upload` mint a post called `upload`. The short ones, `r`, `t` and `user`,
+// are refused by the id length today and are named here anyway, so that dropping the length band
+// cannot quietly turn a subreddit, a tag or a profile into a post.
+const sitePathSegments = new Set([
+  'about',
+  'account',
+  'apps',
+  'emerald',
+  'memegen',
+  'new',
+  'privacy',
+  'r',
+  'register',
+  'search',
+  'signin',
+  't',
+  'tos',
+  'upload',
+  'user',
+  'vidgif',
+])
+
+// The gallery's own listings sit where an album id would, so they are refused the same way.
+const galleryListingSegments = new Set(['hot', 'new', 'top'])
+
 // Post ids are short alphanumerics. The album form is the same id behind an `a/` prefix, which
 // is how the platform's own script tells the two apart.
 const safePostIdRegex = /^[a-zA-Z0-9]{5,12}$/
@@ -82,16 +109,13 @@ export const imgurResolveEmbed = (url: string): EmbedResolverResult | undefined 
 
   const segments = getPathSegments(parsed)
   const isAlbum = albumRoutes.has(segments[0] ?? '')
+  const id = isAlbum ? segments[1] : segments[0]
 
-  // A first segment on its own is a site page as often as it is a post, so a route word has to
-  // say a post is there: an album prefix, the gallery share path, or the `embed` route the
-  // script's frame ends on. Without one, `imgur.com/upload` reads as a post called `upload`.
-  if (!isAlbum && segments[1] !== 'embed') {
+  if (!id || (isAlbum ? galleryListingSegments : sitePathSegments).has(id)) {
     return
   }
 
-  const id = isAlbum ? segments[1] : segments[0]
-  const post = id ? parsePost(isAlbum ? `${albumPrefix}${id}` : id) : undefined
+  const post = parsePost(isAlbum ? `${albumPrefix}${id}` : id)
 
   return post ? composeEmbed(post) : undefined
 }

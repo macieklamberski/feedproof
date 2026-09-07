@@ -208,6 +208,20 @@ describe('imgurResolveEmbed', () => {
     expect(imgurResolveEmbed(value)).toEqual(expected)
   })
 
+  // A publisher pastes the post page as often as the frame, and both name the same post.
+  it('should read the post page url', () => {
+    const value = 'https://imgur.com/pVa2rXL'
+    const expected: EmbedResolverResult = {
+      provider: 'imgur',
+      id: 'pVa2rXL',
+      src: 'https://imgur.com/pVa2rXL/embed',
+      url: 'https://imgur.com/pVa2rXL',
+      thumbnail: 'https://i.imgur.com/pVa2rXLm.jpg',
+    }
+
+    expect(imgurResolveEmbed(value)).toEqual(expected)
+  })
+
   it('should ignore an imgur url that names no post', () => {
     const value = 'https://imgur.com/'
 
@@ -219,8 +233,8 @@ describe('imgurResolveEmbed', () => {
       expect(imgurResolveEmbed(value)).toBeUndefined()
     })
 
-    it('should ignore the post page url, which states no embed route', () => {
-      const value = 'https://imgur.com/pVa2rXL'
+    it('should ignore a gallery listing, which sits where an album id would', () => {
+      const value = 'https://imgur.com/gallery/hot'
 
       expect(imgurResolveEmbed(value)).toBeUndefined()
     })
