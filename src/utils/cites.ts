@@ -3,14 +3,13 @@ import type { CiteResolverResult } from '../types.js'
 
 // What a resolver scrapes: the result fields as the markup or the JSON blob carries them,
 // untrimmed and nullish wherever the field is absent.
-export type RawCiteResult = PartialNullish<CiteResolverResult> &
-  Pick<CiteResolverResult, 'provider'>
+type RawCiteResult = PartialNullish<CiteResolverResult> & Pick<CiteResolverResult, 'provider'>
 
 const trim = (value: Nullish<string>): string | undefined => {
   return value?.trim() || undefined
 }
 
-// Every resolver ends the same way, so the shared rules live here rather than in each one: a
+// Every resolver ends the same way, so the shared rules live here instead of in each one: a
 // card without a url or a title has nothing to render, and every value is trimmed, with the
 // blanks that leaves dropped.
 export const buildCite = (result: RawCiteResult): CiteResolverResult | undefined => {

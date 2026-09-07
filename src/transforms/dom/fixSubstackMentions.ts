@@ -1,6 +1,7 @@
-import { isNonEmptyString, isNumber, startsWithAnyOf } from 'trousse'
+import { isNonEmptyString, isNumber } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { jsonAttr } from '../../utils/dom.js'
+import { isUrlShaped } from '../../utils/urls.js'
 
 // Substack ships an inline @-mention as an empty <span class="mention-wrap"> whose person
 // or publication lives only in the data-attrs JSON, so the name vanishes mid-sentence in a
@@ -23,10 +24,9 @@ export const fixSubstackMentions: DomTransform = () => (document) => {
 
     let url: string | undefined
 
-    // A payload url must be http(s) before it may become the href. The id lands in a url
-    // template, so anything that is not the positive integer Substack emits is dropped
-    // rather than interpolated.
-    if (isNonEmptyString(attrs.url) && startsWithAnyOf(attrs.url, ['http://', 'https://'])) {
+    // The id lands in a url template, so anything that is not the positive integer Substack
+    // emits is dropped.
+    if (isNonEmptyString(attrs.url) && isUrlShaped(attrs.url)) {
       url = attrs.url
     } else if (isNumber(attrs.id) && Number.isInteger(attrs.id) && attrs.id > 0) {
       url = `https://substack.com/profile/${attrs.id}`

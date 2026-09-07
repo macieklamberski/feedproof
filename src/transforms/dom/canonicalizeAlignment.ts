@@ -1,5 +1,6 @@
 import type { DomTransform } from '../../types.js'
 import { isElement, isSkippable } from '../../utils/dom.js'
+import * as styles from '../../utils/styles.js'
 
 type Direction = 'center' | 'left' | 'right'
 
@@ -14,23 +15,20 @@ const structuralWrapperTags = new Set(['picture', 'figure', 'a'])
 
 // Generic block wrappers that count only when they wrap media and nothing else (a
 // "media-primary" wrapper), e.g. classic-editor <p style="text-align:center"><img></p>.
-// <center> appears in 0.38% of feeds; inline text-align in 7.3% (mostly text — only the
-// media-primary slice is in scope).
+// Inline text-align mostly sits on text, so only the media-primary slice is in scope.
 const genericWrapperTags = new Set(['div', 'p', 'center'])
 
-// WordPress block/editor classes — the dominant explicit media-alignment signal.
+// WordPress block/editor classes: the dominant explicit media-alignment signal.
 // `alignnone` is an explicit "no alignment" that terminates resolution without a hook.
-// Corpus feed shares (on an <img>): center 3.39%, left 1.88%, right 1.39%.
 const classDirections = new Map<string, Direction | 'none'>([
-  ['aligncenter', 'center'], // 154,871 feeds (5.7%); on <img> 91,757 (3.4%).
-  ['alignleft', 'left'], // 72,307 feeds (2.7%); on <img> 50,936 (1.9%).
-  ['alignright', 'right'], // 58,094 feeds (2.1%); on <img> 37,519 (1.4%).
-  ['alignnone', 'none'], // 103,250 feeds (3.8%).
+  ['aligncenter', 'center'],
+  ['alignleft', 'left'],
+  ['alignright', 'right'],
+  ['alignnone', 'none'],
 ])
 
-// Deprecated `align` attribute — horizontal values only. `middle`/`top`/`bottom`
-// are vertical image alignment and must not map to a horizontal hook. On <img>:
-// center 0.04%, left 0.18%, right 0.11%, middle 0.04% (excluded).
+// Deprecated `align` attribute: horizontal values only. `middle`/`top`/`bottom`
+// are vertical image alignment and must not map to a horizontal hook.
 const attrDirections = new Map<string, Direction>([
   ['center', 'center'],
   ['left', 'left'],
@@ -38,7 +36,7 @@ const attrDirections = new Map<string, Direction>([
 ])
 
 // Bare directional classes. Honored on a media element or a media-primary wrapper
-// of it — never a standalone text block — where `center`/`left`/`right` unambiguously
+// of it, never a standalone text block, where `center`/`left`/`right` unambiguously
 // mean "align this media" (e.g. <img class="center">, <div class="center"><img></div>).
 // resolve() only feeds getOwnDirection media-context elements, so the media-primary
 // gate already prevents reading these off layout containers.
@@ -49,25 +47,43 @@ const bareClassDirections = new Map<string, Direction>([
 ])
 
 const whitespaceRegex = /\s+/
-const textAlignRegex = /(?:^|;)\s*text-align\s*:\s*(center|left|right)\b/i
-const autoMarginRegex = /(?:^|;)\s*margin\s*:\s*(?:0\s+)?auto\b/i
-const autoMarginLeftRegex = /(?:^|;)\s*margin-left\s*:\s*auto\b/i
-const autoMarginRightRegex = /(?:^|;)\s*margin-right\s*:\s*auto\b/i
 
-const getStyleDirection = (style: string, isImage: boolean): Direction | undefined => {
-  const match = textAlignRegex.exec(style)
+// Both horizontal margins set to auto, however the element spells them. The shorthand states
+// them by position: one value covers every side, two and three put the horizontal pair second,
+// and four gives the right and the left a value each. `10px auto` centers as surely as `0 auto`,
+// while `0 auto 10px 0` does not, since only one side is auto. A value holding a function is
+// left alone, because its own spaces would be counted as sides.
+const hasAutoHorizontalMargins = (element: Element): boolean => {
+  if (
+    styles.keyword(element, 'margin-left') === 'auto' &&
+    styles.keyword(element, 'margin-right') === 'auto'
+  ) {
+    return true
+  }
 
-  if (match) {
-    return match[1].toLowerCase() as Direction
+  const margin = styles.keyword(element, 'margin')
+
+  if (!margin || margin.includes('(')) {
+    return false
+  }
+
+  const sides = margin.split(whitespaceRegex)
+  const right = sides.length === 1 ? sides[0] : sides[1]
+  const left = sides.length === 4 ? sides[3] : right
+
+  return right === 'auto' && left === 'auto'
+}
+
+const getStyleDirection = (element: Element, isImage: boolean): Direction | undefined => {
+  const direction = attrDirections.get(styles.keyword(element, 'text-align') ?? '')
+
+  if (direction) {
+    return direction
   }
 
   // Auto horizontal margins center an <img> (a block layout idiom); ambiguous on
-  // other elements, so restricted to images. 0.16% of feeds.
-  if (
-    isImage &&
-    (autoMarginRegex.test(style) ||
-      (autoMarginLeftRegex.test(style) && autoMarginRightRegex.test(style)))
-  ) {
+  // other elements, so restricted to images.
+  if (isImage && hasAutoHorizontalMargins(element)) {
     return 'center'
   }
 }
@@ -97,19 +113,14 @@ const getOwnDirection = (element: Element): Direction | 'none' | undefined => {
     }
   }
 
-  // The <center> element is itself a center signal.
   if (element.localName === 'center') {
     return 'center'
   }
 
-  const style = element.getAttribute('style')
+  const direction = getStyleDirection(element, element.localName === 'img')
 
-  if (style) {
-    const direction = getStyleDirection(style, element.localName === 'img')
-
-    if (direction) {
-      return direction
-    }
+  if (direction) {
+    return direction
   }
 
   const align = element.getAttribute('align')
@@ -120,7 +131,7 @@ const getOwnDirection = (element: Element): Direction | 'none' | undefined => {
 }
 
 // A generic wrapper qualifies only when its meaningful content is the media we
-// climbed from (plus optional sibling media) and nothing else — never prose.
+// climbed from (plus optional sibling media) and nothing else: never prose.
 const isMediaPrimary = (wrapper: Element, inner: Element): boolean => {
   let hasContent = false
 
@@ -184,14 +195,16 @@ const resolve = (media: Element): Resolution | undefined => {
   }
 }
 
-// Canonicalizes explicit media alignment (WordPress align* classes, deprecated
-// align attribute, <center>, inline text-align, image auto-margins) into a single
-// data-align="center|left|right" hook on the media (or its <figure>). Purely
-// additive: it only attaches the hook and never mutates the existing markup, so
-// native rendering keeps working until a renderer adopts data-align. Text alignment
-// on prose is left untouched. Runs before flattenPictureElements and unwrapWrappers
-// so a signal on a soon-dissolved <picture>/<div> lands on the surviving media.
-// Idempotent: a media element already carrying data-align is skipped.
+// Canonicalizes explicit media alignment (WordPress align* classes, deprecated align attribute,
+// <center>, inline text-align, image auto-margins) into a single data-align="center|left|right"
+// hook on the media (or its <figure>). Text alignment on prose is left untouched.
+//
+// Purely additive: it only attaches the hook and never mutates the existing markup, so native
+// rendering keeps working until a renderer adopts data-align. Idempotent too: a media element
+// already carrying data-align is skipped.
+//
+// Runs before flattenPictureElements and unwrapWrappers, so a signal on a soon-dissolved
+// <picture>/<div> lands on the surviving media.
 export const canonicalizeAlignment: DomTransform = () => {
   return (document) => {
     for (const media of document.querySelectorAll('img, video, audio, iframe')) {

@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripComments } from './stripComments.js'
 
 describeForEachParser('stripComments', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripComments(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripComments(context)])
   }
 
   describe('happy paths', () => {
@@ -14,14 +14,14 @@ describeForEachParser('stripComments', (parseHtml) => {
       const value = '<!-- hidden -->'
       const expected = ''
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove multiple comments', async () => {
       const value = '<!-- one --><p>text</p><!-- two -->'
       const expected = '<p>text</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a comment between elements', async () => {
@@ -35,7 +35,7 @@ describeForEachParser('stripComments', (parseHtml) => {
         <p>Second</p>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a comment containing newlines', async () => {
@@ -45,28 +45,28 @@ describeForEachParser('stripComments', (parseHtml) => {
         <p>after</p>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a conditional comment', async () => {
       const value = '<!--[if IE]><p>legacy</p><![endif]--><p>main</p>'
       const expected = '<p>main</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove a comment inside a paragraph', async () => {
       const value = '<p>Hello <!-- inline --> world</p>'
       const expected = '<p>Hello  world</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove an unterminated comment', async () => {
       const value = '<p>before</p><!-- unterminated'
       const expected = '<p>before</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -74,51 +74,51 @@ describeForEachParser('stripComments', (parseHtml) => {
     it('should preserve comments inside pre blocks', async () => {
       const value = '<pre>let x = 1; <!-- inline --></pre>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should preserve comments inside code blocks', async () => {
       const value = '<code>let x = 1; <!-- inline --></code>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should preserve comments inside nested pre and code blocks', async () => {
       const value = '<pre><code><!-- nested --></code></pre>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should preserve comment-like text inside attribute values', async () => {
       const value = '<a title="<!-- safe -->">link</a>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave content unchanged when there are no comments', async () => {
       const value = '<p>Plain content with no comments</p>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave entity-encoded comment text unchanged', async () => {
       const value = '<p>Use &lt;!-- comment --&gt; in HTML</p>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should merge surrounding text when comment has no adjacent whitespace', async () => {
       const value = '<p>data<!-- mid -->base</p>'
       const expected = '<p>database</p>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should handle empty string', async () => {
       const value = ''
       const expected = ''
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should be idempotent', async () => {
@@ -126,7 +126,7 @@ describeForEachParser('stripComments', (parseHtml) => {
       const once = await transform(value)
       const twice = await transform(once)
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
   })
 })

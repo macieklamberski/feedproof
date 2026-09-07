@@ -49,19 +49,19 @@ const preservedAttribute = (attribute: string): string => {
 // keeps the transform idempotent: on a second run the value is already proxied, an
 // idempotent assetProxyFn returns it unchanged, so the first run's original is not
 // overwritten with the proxied URL.
-const proxyAttribute = (
+const proxyAttribute = async (
   element: Element,
   attribute: string,
   type: AssetType,
   assetProxyFn: AssetProxyFn,
-): void => {
+): Promise<void> => {
   const value = element.getAttribute(attribute)
 
   if (!value || !isProxyableUrl(value)) {
     return
   }
 
-  const proxied = assetProxyFn(value, type)
+  const proxied = await assetProxyFn(value, type)
 
   if (proxied && proxied !== value) {
     element.setAttribute(preservedAttribute(attribute), value)
@@ -69,7 +69,11 @@ const proxyAttribute = (
   }
 }
 
-const proxySrcset = (element: Element, type: AssetType, assetProxyFn: AssetProxyFn): void => {
+const proxySrcset = async (
+  element: Element,
+  type: AssetType,
+  assetProxyFn: AssetProxyFn,
+): Promise<void> => {
   const srcset = element.getAttribute('srcset')
 
   if (!srcset) {
@@ -77,20 +81,22 @@ const proxySrcset = (element: Element, type: AssetType, assetProxyFn: AssetProxy
   }
 
   let changed = false
-  const rewritten = parseSrcset(srcset).map((entry) => {
-    if (!isProxyableUrl(entry.url)) {
+  const rewritten = await Promise.all(
+    parseSrcset(srcset).map(async (entry) => {
+      if (!isProxyableUrl(entry.url)) {
+        return entry
+      }
+
+      const proxied = await assetProxyFn(entry.url, type)
+
+      if (proxied && proxied !== entry.url) {
+        changed = true
+        return { ...entry, url: proxied }
+      }
+
       return entry
-    }
-
-    const proxied = assetProxyFn(entry.url, type)
-
-    if (proxied && proxied !== entry.url) {
-      changed = true
-      return { ...entry, url: proxied }
-    }
-
-    return entry
-  })
+    }),
+  )
 
   if (!changed) {
     return
@@ -110,56 +116,56 @@ export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
     return () => {}
   }
 
-  return (document) => {
+  return async (document) => {
     const elements = document.querySelectorAll(proxyableSelectors.join(', '))
 
     for (const element of elements) {
       switch (element.localName) {
         case 'img': {
-          proxyAttribute(element, 'src', 'image', assetProxyFn)
-          proxySrcset(element, 'image', assetProxyFn)
+          await proxyAttribute(element, 'src', 'image', assetProxyFn)
+          await proxySrcset(element, 'image', assetProxyFn)
           break
         }
         case 'video': {
-          proxyAttribute(element, 'src', 'video', assetProxyFn)
-          proxyAttribute(element, 'poster', 'image', assetProxyFn)
+          await proxyAttribute(element, 'src', 'video', assetProxyFn)
+          await proxyAttribute(element, 'poster', 'image', assetProxyFn)
           break
         }
         case 'audio': {
-          proxyAttribute(element, 'src', 'audio', assetProxyFn)
+          await proxyAttribute(element, 'src', 'audio', assetProxyFn)
           break
         }
         case 'source': {
-          proxyAttribute(element, 'src', sourceTypeFromParent(element), assetProxyFn)
-          proxySrcset(element, 'image', assetProxyFn)
+          await proxyAttribute(element, 'src', sourceTypeFromParent(element), assetProxyFn)
+          await proxySrcset(element, 'image', assetProxyFn)
           break
         }
         case 'track': {
-          proxyAttribute(element, 'src', sourceTypeFromParent(element), assetProxyFn)
+          await proxyAttribute(element, 'src', sourceTypeFromParent(element), assetProxyFn)
           break
         }
-        // SVG2 uses `href`; legacy SVG1 uses `xlink:href`.
+        // SVG2 uses `href`. Legacy SVG1 uses `xlink:href`.
         case 'image': {
           const attribute = element.hasAttribute('href') ? 'href' : 'xlink:href'
-          proxyAttribute(element, attribute, 'image', assetProxyFn)
+          await proxyAttribute(element, attribute, 'image', assetProxyFn)
           break
         }
       }
 
       if (element.hasAttribute('data-embed-thumbnail')) {
-        proxyAttribute(element, 'data-embed-thumbnail', 'image', assetProxyFn)
+        await proxyAttribute(element, 'data-embed-thumbnail', 'image', assetProxyFn)
       }
 
       if (element.hasAttribute('data-embed-avatar')) {
-        proxyAttribute(element, 'data-embed-avatar', 'image', assetProxyFn)
+        await proxyAttribute(element, 'data-embed-avatar', 'image', assetProxyFn)
       }
 
       if (element.hasAttribute('data-cite-icon')) {
-        proxyAttribute(element, 'data-cite-icon', 'image', assetProxyFn)
+        await proxyAttribute(element, 'data-cite-icon', 'image', assetProxyFn)
       }
 
       if (element.hasAttribute('data-cite-thumbnail')) {
-        proxyAttribute(element, 'data-cite-thumbnail', 'image', assetProxyFn)
+        await proxyAttribute(element, 'data-cite-thumbnail', 'image', assetProxyFn)
       }
     }
   }

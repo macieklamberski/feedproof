@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { tistoryCiteResolver } from './tistory.js'
 
 describeForEachParser('tistoryCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, tistoryCiteResolver)
+  const extract = resolverExtractor(parseHtml, tistoryCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {
@@ -75,8 +75,14 @@ describeForEachParser('tistoryCiteResolver', (parseHtml) => {
           data-og-image="https://cdn.example.com/a.jpg,https://cdn.example.com/b.jpg,https://cdn.example.com/c.jpg"
         ></figure>
       `
+      const expected: CiteResolverResult = {
+        provider: 'tistory',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        thumbnail: 'https://cdn.example.com/a.jpg',
+      }
 
-      expect((await extract(value))?.thumbnail).toBe('https://cdn.example.com/a.jpg')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should prefer the source url over the canonical url', async () => {
@@ -87,8 +93,13 @@ describeForEachParser('tistoryCiteResolver', (parseHtml) => {
           data-og-title="Page title"
         ></figure>
       `
+      const expected: CiteResolverResult = {
+        provider: 'tistory',
+        url: 'https://short.example.com/e/abc',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe('https://short.example.com/e/abc')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

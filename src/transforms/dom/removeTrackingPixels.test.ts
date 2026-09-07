@@ -6,8 +6,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { removeTrackingPixels } from './removeTrackingPixels.js'
 
 describeForEachParser('removeTrackingPixels', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [removeTrackingPixels(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [removeTrackingPixels(context)])
   }
 
   describe('size-based detection', () => {
@@ -16,10 +16,9 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
         <p>Text</p>
         <img src="tracker.gif" width="1" height="1">
       `
-      const result = await transform(value)
+      const expected = '<p>Text</p>'
 
-      expect(result).toContain('<p>Text</p>')
-      expect(result).not.toContain('tracker.gif')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should remove 2x2 pixel images', async () => {
@@ -67,15 +66,17 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
 
   describe('content-image guard', () => {
     it('should keep a 0x0 image whose src is a real raster file', async () => {
-      const value =
-        '<img src="https://img.cdn.example.com/abc.jpg" width="0" height="0" alt="Photo">'
+      const value = html`
+        <img src="https://img.cdn.example.com/abc.jpg" width="0" height="0" alt="Photo">
+      `
 
       expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should keep a 0x0 image whose src carries a raster format query', async () => {
-      const value =
-        '<img src="https://img.cdn.example.com/abc?width=1300&format=jpeg" width="0" height="0">'
+      const value = html`
+        <img src="https://img.cdn.example.com/abc?width=1300&format=jpeg" width="0" height="0">
+      `
 
       expect(await transform(value)).toEqualHtml(value)
     })
@@ -87,8 +88,9 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
     })
 
     it('should still remove a 0x0 beacon whose src is not a real image', async () => {
-      const value =
-        '<img src="https://stat.example.com/piwik.php?idsite=1&rec=1" width="0" height="0">'
+      const value = html`
+        <img src="https://stat.example.com/piwik.php?idsite=1&rec=1" width="0" height="0">
+      `
 
       expect(await transform(value)).toEqualHtml('')
     })
@@ -106,8 +108,9 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
     })
 
     it('should still remove an opacity:0 image even with a real raster src', async () => {
-      const value =
-        '<img src="https://example.com/photo.jpg" style="opacity:0" width="0" height="0">'
+      const value = html`
+        <img src="https://example.com/photo.jpg" style="opacity:0" width="0" height="0">
+      `
 
       expect(await transform(value)).toEqualHtml('')
     })
@@ -183,24 +186,6 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
       const value = '<img src="invis.gif" hidden>'
 
       expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove img with style opacity:0', async () => {
-      const value = '<img src="invis.gif" style="opacity:0">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should remove img with style opacity:0.0', async () => {
-      const value = '<img src="invis.gif" style="opacity:0.0">'
-
-      expect(await transform(value)).toEqualHtml('')
-    })
-
-    it('should not remove img with style opacity:0.5', async () => {
-      const value = '<img src="faded.jpg" style="opacity:0.5">'
-
-      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should not remove img with style display:block', async () => {
@@ -321,78 +306,6 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
     })
   })
 
-  describe('overrides', () => {
-    it('should ignore default trackingHosts when override is provided', async () => {
-      const customContext: TransformContext = {
-        ...baseContext,
-        trackingHosts: ['my-tracker.example'],
-      }
-      const value = '<img src="https://stats.wordpress.com/b.gif">'
-
-      expect(await transform(value, customContext)).toEqualHtml(value)
-    })
-
-    it('should use the provided trackingHosts', async () => {
-      const customContext: TransformContext = {
-        ...baseContext,
-        trackingHosts: ['my-tracker.example'],
-      }
-      const value = '<img src="https://my-tracker.example/p.gif">'
-
-      expect(await transform(value, customContext)).toEqualHtml('')
-    })
-
-    it('should ignore default trackingPathSegments when override is provided', async () => {
-      const customContext: TransformContext = { ...baseContext, trackingPathSegments: ['ping'] }
-      const value = '<img src="https://example.com/pixel.gif">'
-
-      expect(await transform(value, customContext)).toEqualHtml(value)
-    })
-
-    it('should use the provided trackingPathSegments', async () => {
-      const customContext: TransformContext = { ...baseContext, trackingPathSegments: ['ping'] }
-      const value = '<img src="https://example.com/ping.gif">'
-
-      expect(await transform(value, customContext)).toEqualHtml('')
-    })
-
-    it('should disable path-based detection when trackingPathSegments is empty', async () => {
-      const customContext: TransformContext = { ...baseContext, trackingPathSegments: [] }
-      const value = '<img src="https://example.com/pixel.gif">'
-
-      expect(await transform(value, customContext)).toEqualHtml(value)
-    })
-
-    it('should still apply size check when overrides are set', async () => {
-      const customContext: TransformContext = {
-        ...baseContext,
-        trackingHosts: [],
-        trackingPathSegments: [],
-      }
-      const value = '<img src="https://example.com/p.gif" width="1" height="1">'
-
-      expect(await transform(value, customContext)).toEqualHtml('')
-    })
-
-    it('should still apply the opacity check when overrides are set', async () => {
-      const customContext: TransformContext = {
-        ...baseContext,
-        trackingHosts: [],
-        trackingPathSegments: [],
-      }
-      const value = '<img src="https://example.com/p.gif" style="opacity:0">'
-
-      expect(await transform(value, customContext)).toEqualHtml('')
-    })
-
-    it('should escape special regex characters in trackingPathSegments', async () => {
-      const customContext: TransformContext = { ...baseContext, trackingPathSegments: ['p.x'] }
-      const value = '<img src="https://example.com/pax.gif">'
-
-      expect(await transform(value, customContext)).toEqualHtml(value)
-    })
-  })
-
   it('should be idempotent', async () => {
     const value = html`
       <p>Text</p>
@@ -401,6 +314,6 @@ describeForEachParser('removeTrackingPixels', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

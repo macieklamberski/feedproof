@@ -167,11 +167,22 @@ describeForEachParser('decodeDoubleEncodedEntities', (parseHtml) => {
     expect(await transform('')).toBe('')
   })
 
-  it('should be idempotent', async () => {
+  // The guarantee is one layer per run, not idempotence in general: a triple-encoded run peels
+  // again on a second pass. That is unreachable in the pipeline, which applies each transform
+  // once per item, but the fixture has to be one that has stopped moving or the case asserts
+  // nothing. `&amp;amp;` is fully peeled after one run; `&amp;amp;amp;` would not be.
+  it('should be idempotent once a layer is off', async () => {
     const value = '<p>Tom &amp;amp; Jerry &amp;lt;3</p>'
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
+  })
+
+  it('should peel exactly one layer off a triple-encoded run', async () => {
+    const value = '<p>Tom &amp;amp;amp; Jerry</p>'
+    const expected = '<p>Tom &amp;amp; Jerry</p>'
+
+    expect(await transform(value)).toEqualHtml(expected)
   })
 })

@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { replacePreLineBreaks } from './replacePreLineBreaks.js'
 
 describeForEachParser('replacePreLineBreaks', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [replacePreLineBreaks(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [replacePreLineBreaks(context)])
   }
 
   it('should replace br with newline inside pre', async () => {
@@ -53,23 +53,23 @@ describeForEachParser('replacePreLineBreaks', (parseHtml) => {
   it('should not modify content without pre elements', async () => {
     const value = '<p>plain paragraph</p>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should handle empty input', async () => {
-    expect(await transform('')).toBe('')
+    expect(await transform('')).toEqualHtml('')
   })
 
   it('should not stack extra entity encoding inside xmp', async () => {
     // linkedom's parser/serializer already double-encodes entities inside
     // `<xmp>` once (a known parser quirk). The transform must not add a
-    // second round-trip on top of that — the output should be byte-identical
+    // second round-trip on top of that. The output should be byte-identical
     // to running an identity DOM transform on the same input.
     const value = '<pre><code><xmp>&lt;p&gt;Hi&lt;/p&gt;</xmp></code></pre>'
     const result = await transform(value)
     const baseline = await applyDomTransforms(parseHtml(value), [() => {}])
 
-    expect(result).toBe(baseline)
+    expect(result).toEqualHtml(baseline)
   })
 
   it('should be idempotent', async () => {
@@ -77,6 +77,6 @@ describeForEachParser('replacePreLineBreaks', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

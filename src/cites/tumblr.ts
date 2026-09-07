@@ -1,16 +1,8 @@
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
-import { attr, bgImage, find, jsonAttr, text } from '../utils/dom.js'
+import { attr, find, jsonAttr, text } from '../utils/dom.js'
+import * as styles from '../utils/styles.js'
 
-// Tumblr's NPF (Neue Post Format) link block reaches feeds in two shapes. `.npf_link` is a
-// bare anchor with the whole card alongside it in `data-npf`, as scraped Open Graph data;
-// the visible markup carries only the link, so everything except the URL comes from the
-// JSON. `.npf-link-block` is the card painted as markup instead, with the poster as a CSS
-// `background-image` rather than an `<img>`.
-//
-// The URL is usually wrapped in one of Tumblr's outbound redirectors (`t.umblr.com/redirect`
-// or `href.li`), sometimes nested. Unwrapping is left to the injected cleanUrlFn, which
-// already handles wrappers and nesting.
 type TumblrLinkData = {
   type?: string
   url?: string
@@ -31,7 +23,17 @@ const bareUrl = (value: string): string => {
   return value.replace(urlScheme, '').replace(urlTail, '')
 }
 
+// Tumblr's NPF (Neue Post Format) link block reaches feeds in two shapes. `.npf_link` is a
+// bare anchor with the whole card alongside it in `data-npf`, as scraped Open Graph data.
+// The visible markup carries only the link, so everything except the URL comes from the
+// JSON. `.npf-link-block` is the card painted as markup instead, with the poster as a CSS
+// `background-image` and no `<img>` anywhere.
+//
+// The URL is usually wrapped in one of Tumblr's outbound redirectors (`t.umblr.com/redirect`
+// or `href.li`), sometimes nested. Unwrapping is left to the injected cleanUrlFn, which
+// already handles wrappers and nesting.
 export const tumblrCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.npf_link, .npf-link-block',
   extract: (element) => {
     if (element.matches('.npf-link-block')) {
@@ -41,7 +43,7 @@ export const tumblrCiteResolver: CiteResolver = {
         title: text(element, '.title'),
         description: text(element, '.description'),
         publisher: text(element, '.site-name'),
-        thumbnail: bgImage(find(element, '.poster')),
+        thumbnail: styles.bgImage(find(element, '.poster')),
       })
     }
 
@@ -67,8 +69,8 @@ export const tumblrCiteResolver: CiteResolver = {
       description: data.description,
       author: data.author,
       publisher: data.site_name,
-      // Recent posts describe the poster by `media_key` only, with no URL to resolve it to;
-      // older ones carry a real one.
+      // Recent posts describe the poster by `media_key` only, with no URL to resolve it to.
+      // Older ones carry a real one.
       thumbnail: data.poster?.find((poster) => poster.url)?.url,
     })
   },

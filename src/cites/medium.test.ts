@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'bun:test'
-import { baseContext, citeExtractor, describeForEachParser, html } from '../tests.js'
+import { baseContext, describeForEachParser, html, resolverExtractor } from '../tests.js'
 import { convertCiteCards } from '../transforms/dom/convertCiteCards.js'
 import type { CiteResolverResult, TransformContext } from '../types.js'
 import { applyDomTransforms } from '../utils/transforms.js'
 import { mediumCiteResolver } from './medium.js'
 
 describeForEachParser('mediumCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, mediumCiteResolver)
+  const extract = resolverExtractor(parseHtml, mediumCiteResolver)
 
   const transform = (value: string) => {
-    const context: TransformContext = { ...baseContext, citeResolvers: [mediumCiteResolver] }
+    const context: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [mediumCiteResolver],
+    }
 
     return applyDomTransforms(parseHtml(value), [convertCiteCards(context)])
   }
@@ -59,8 +62,14 @@ describeForEachParser('mediumCiteResolver', (parseHtml) => {
           </a>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'medium',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        thumbnail: 'https://example.com/cover.jpg',
+      }
 
-      expect((await extract(value))?.thumbnail).toBe('https://example.com/cover.jpg')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the thumbnail undefined when the image anchor is empty', async () => {
@@ -72,8 +81,13 @@ describeForEachParser('mediumCiteResolver', (parseHtml) => {
           <a href="https://example.com/page" class="js-mixtapeImage mixtapeImage mixtapeImage--empty"></a>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'medium',
+        url: 'https://example.com/page',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.thumbnail).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should extract a bare anchor, the shape exported archives keep', async () => {
@@ -110,20 +124,30 @@ describeForEachParser('mediumCiteResolver', (parseHtml) => {
           <strong>Page title</strong>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'medium',
+        url: 'https://medium.com/r/?url=https%3A%2F%2Fexample.com%2Fpage',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe(
-        'https://medium.com/r/?url=https%3A%2F%2Fexample.com%2Fpage',
-      )
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the publisher undefined when no host trails the description', async () => {
       const value = html`
         <a href="https://example.com/page" class="markup--mixtapeEmbed-anchor">
-          <strong>Page title</strong><em>Preview text</em>
+          <strong>Page title</strong>
+          <em>Preview text</em>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'medium',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        description: 'Preview text',
+      }
 
-      expect((await extract(value))?.publisher).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the description undefined when the card carries only a title', async () => {
@@ -175,15 +199,24 @@ describeForEachParser('mediumCiteResolver', (parseHtml) => {
       const value = html`
         <div class="graf graf--mixtapeEmbed">
           <a href="https://example.com/page" class="markup--mixtapeEmbed-anchor">
-            <strong>Page title</strong><em>Preview text</em>example.com
+            <strong>Page title</strong>
+            <em>Preview text</em>example.com
           </a>
           <a href="https://example.com/page" class="js-mixtapeImage mixtapeImage u-ignoreBlock"></a>
         </div>
       `
+      const expected = html`
+        <div
+          data-cite-provider="medium"
+          data-cite-description="Preview text"
+          data-cite-publisher="example.com"
+          data-cite-url="https://example.com/page"
+          data-cite-title="Page title"
+        ></div>
+      `
       const result = await transform(value)
 
-      expect(result).toContain('data-cite-provider="medium"')
-      expect(result).not.toContain('mixtapeImage')
+      expect(result).toEqualHtml(expected)
     })
 
     it('should emit one placeholder per wrapped card', async () => {

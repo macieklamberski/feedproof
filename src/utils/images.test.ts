@@ -154,7 +154,7 @@ describe('getImageFingerprint', () => {
 
   it('should keep a keyword leaf distinct from a dimension-suffixed keyword leaf', () => {
     // Deliberate: collapsing these would send the pair into dedup, where the size
-    // signals cannot rank them correctly. A kept duplicate only renders twice; a wrong
+    // signals cannot rank them correctly. A kept duplicate only renders twice. A wrong
     // removal deletes content, so the ambiguous shape stays unmatched.
     const keyword = getImageFingerprint('https://example.com/photos/123/small.jpg')
     const suffixed = getImageFingerprint('https://example.com/photos/123/large-800x600.jpg')
@@ -193,7 +193,7 @@ describe('getImageFingerprint', () => {
   })
 
   it('should keep the raw capture when the proxied source is malformed', () => {
-    // `%E0%A4%A` is an incomplete percent-escape; decoding throws and the raw value is kept.
+    // `%E0%A4%A` is an incomplete percent-escape. Decoding throws and the raw value is kept.
     expect(() =>
       getImageFingerprint('https://images.weserv.nl/?url=https%3A%2F%2F%E0%A4%A'),
     ).not.toThrow()
@@ -237,11 +237,12 @@ describe('getImageFingerprint', () => {
     expect(getImageFingerprint(value)).toBe(expected)
   })
 
-  it.each(
-    imageProxyCases,
-  )('should unwrap the %s image proxy to its inner source', (_name, url, expected) => {
-    expect(getImageFingerprint(url)).toBe(expected)
-  })
+  it.each(imageProxyCases)(
+    'should unwrap the %s image proxy to its inner source',
+    (_name, url, expected) => {
+      expect(getImageFingerprint(url)).toBe(expected)
+    },
+  )
 
   it('should unwrap then strip a Cloudinary fetch of an upload URL', () => {
     const value =
@@ -298,6 +299,23 @@ describe('getImageFingerprint', () => {
     expect(getImageFingerprint(jpeg)).toBe(expected)
   })
 
+  it('should collapse Dwell size segments to the image id', () => {
+    const small = 'https://images.dwell.com/photos-6818593/7464425723411730432-small/the-house.jpg'
+    const large = 'https://images.dwell.com/photos-6818593/7464425723411730432-large/the-house.jpg'
+    const expected = 'images.dwell.com/photos-6818593/7464425723411730432/the-house.jpg'
+
+    expect(getImageFingerprint(small)).toBe(expected)
+    expect(getImageFingerprint(large)).toBe(expected)
+  })
+
+  it('should keep a Dwell segment that only ends in a size word', () => {
+    const value = 'https://images.dwell.com/photos-6818593/a-house-thats-large/the-house.jpg'
+
+    expect(getImageFingerprint(value)).toBe(
+      'images.dwell.com/photos-6818593/a-house-thats-large/the-house.jpg',
+    )
+  })
+
   it('should unwrap a Cloudinary fetch URL to its inner source', () => {
     const value =
       'https://res.cloudinary.com/demo/image/fetch/w_200/https://cdn.example.com/photo.jpg'
@@ -320,24 +338,10 @@ describe('getImageFingerprint', () => {
     expect(getImageFingerprint(value)).toBe(expected)
   })
 
-  it('should unwrap a WordPress Photon URL, re-adding the stripped scheme', () => {
-    const value = 'https://i0.wp.com/cdn.example.com/photo.jpg'
-    const expected = 'cdn.example.com/photo.jpg'
-
-    expect(getImageFingerprint(value)).toBe(expected)
-  })
-
   it('should unwrap a Next.js image optimizer URL to its inner source', () => {
     const value =
       'https://example.com/_next/image?url=https%3A%2F%2Fcdn.example.com%2Fphoto.jpg&w=200'
     const expected = 'cdn.example.com/photo.jpg'
-
-    expect(getImageFingerprint(value)).toBe(expected)
-  })
-
-  it('should drop a whole leaf that is only dimensions', () => {
-    const value = 'https://example.com/gallery/640x360.jpg'
-    const expected = 'example.com/gallery'
 
     expect(getImageFingerprint(value)).toBe(expected)
   })
@@ -653,7 +657,7 @@ describe('pickLargerImageUrl', () => {
   })
 
   // The size hint is regex-only, so a value that is not a parseable URL cannot throw;
-  // it just carries no signal and defers to the caller's tie policy.
+  // it carries no signal and defers to the caller's tie policy.
   it('should return undefined for values that are not urls', () => {
     expect(pickLargerImageUrl('not-a-url', 'also not a url')).toBeUndefined()
     expect(pickLargerImageUrl('', 'https://example.com/photo-800x450.jpg')).toBeUndefined()

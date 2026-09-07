@@ -1,17 +1,20 @@
 import { describe, expect, it } from 'bun:test'
-import { baseContext, citeExtractor, describeForEachParser, html } from '../tests.js'
+import { baseContext, describeForEachParser, html, resolverExtractor } from '../tests.js'
 import { convertCiteCards } from '../transforms/dom/convertCiteCards.js'
 import type { CiteResolverResult, TransformContext } from '../types.js'
 import { applyDomTransforms } from '../utils/transforms.js'
 import { pzlinkcardCiteResolver } from './pzlinkcard.js'
 
 describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, pzlinkcardCiteResolver)
+  const extract = resolverExtractor(parseHtml, pzlinkcardCiteResolver)
 
   // Which element gets replaced only exists in the document once the transform runs, so
   // extracting from a parsed element cannot see the wrapping anchor being swapped out.
   const transform = (value: string) => {
-    const context: TransformContext = { ...baseContext, citeResolvers: [pzlinkcardCiteResolver] }
+    const context: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [pzlinkcardCiteResolver],
+    }
 
     return applyDomTransforms(parseHtml(value), [convertCiteCards(context)])
   }
@@ -30,8 +33,12 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
               </div>
             </div>
             <div class="lkc-content">
-              <figure class="lkc-thumbnail"><img class="lkc-thumbnail-img" src="https://cdn.example.com/thumb.jpg" alt="" /></figure>
-              <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
+              <figure class="lkc-thumbnail">
+                <img class="lkc-thumbnail-img" src="https://cdn.example.com/thumb.jpg" alt="" />
+              </figure>
+              <div class="lkc-title">
+                <div class="lkc-title-text">Page title</div>
+              </div>
               <div class="lkc-date">
                 <img src="https://s.w.org/images/core/emoji/17.0.2/72x72/1f552.png" alt="🕒" class="wp-smiley" style="height: 1em; max-height: 1em;" />2023年6月8日
               </div>
@@ -58,7 +65,9 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
       const value = html`
         <a href="https://example.com/page">
           <div class="lkc-card">
-            <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
+            <div class="lkc-title">
+              <div class="lkc-title-text">Page title</div>
+            </div>
           </div>
         </a>
       `
@@ -83,27 +92,43 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
               </div>
               <div class="lkc-domain">example.com</div>
             </div>
-            <div class="lkc-content"><div class="lkc-title">Page title</div></div>
+            <div class="lkc-content">
+              <div class="lkc-title">Page title</div>
+            </div>
           </div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'pzlinkcard',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        publisher: 'example.com',
+        icon: 'https://www.google.com/s2/favicons?domain=example.com',
+      }
 
-      expect((await extract(value))?.icon).toBe(
-        'https://www.google.com/s2/favicons?domain=example.com',
-      )
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the printed url when the card has no wrapping anchor', async () => {
       const value = html`
         <div class="lkc-card">
           <div class="lkc-content">
-            <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
-            <div class="lkc-url"><strike>https://example.com/page</strike></div>
+            <div class="lkc-title">
+              <div class="lkc-title-text">Page title</div>
+            </div>
+            <div class="lkc-url">
+              <strike>https://example.com/page</strike>
+            </div>
           </div>
         </div>
       `
+      const expected: CiteResolverResult = {
+        provider: 'pzlinkcard',
+        url: 'https://example.com/page',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/page')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should prefer the wrapping anchor over the printed url', async () => {
@@ -112,13 +137,20 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
           <div class="lkc-card">
             <div class="lkc-content">
               <div class="lkc-title">Page title</div>
-              <div class="lkc-url"><strike>https://example.com/printed</strike></div>
+              <div class="lkc-url">
+                <strike>https://example.com/printed</strike>
+              </div>
             </div>
           </div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'pzlinkcard',
+        url: 'https://example.com/anchor',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/anchor')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should fall back to the title container when the title-text element is absent', async () => {
@@ -129,8 +161,13 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
           </div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'pzlinkcard',
+        url: 'https://example.com/page',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.title).toBe('Page title')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -138,7 +175,9 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
     it('should return undefined when there is no wrapping link', async () => {
       const value = html`
         <div class="lkc-card">
-          <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
+          <div class="lkc-title">
+            <div class="lkc-title-text">Page title</div>
+          </div>
         </div>
       `
 
@@ -163,7 +202,9 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
       const value = html`
         <a href="https://example.com/page">
           <div class="lkc-card">
-            <div class="lkc-title"><div class="lkc-title-text">Page title</div></div>
+            <div class="lkc-title">
+              <div class="lkc-title-text">Page title</div>
+            </div>
           </div>
         </a>
       `
@@ -172,9 +213,7 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
           data-cite-title="Page title"
           data-cite-url="https://example.com/page"
           data-cite-provider="pzlinkcard"
-        >
-          <a href="https://example.com/page">Page title</a>
-        </div>
+        ></div>
       `
 
       expect(await transform(value)).toEqualHtml(expected)
@@ -183,17 +222,29 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
     it('should emit one placeholder per card', async () => {
       const value = html`
         <a href="https://example.com/one">
-          <div class="lkc-card"><div class="lkc-title">One</div></div>
+          <div class="lkc-card">
+            <div class="lkc-title">One</div>
+          </div>
         </a>
         <div class="lkc-card">
           <div class="lkc-title">Two</div>
           <div class="lkc-url">https://example.com/two</div>
         </div>
       `
-      const result = await transform(value)
+      const expected = html`
+        <div
+          data-cite-provider="pzlinkcard"
+          data-cite-url="https://example.com/one"
+          data-cite-title="One"
+        ></div>
+        <div
+          data-cite-provider="pzlinkcard"
+          data-cite-url="https://example.com/two"
+          data-cite-title="Two"
+        ></div>
+      `
 
-      expect((result.match(/data-cite-provider="/g) ?? []).length).toBe(2)
-      expect(result).not.toContain('class="lkc-card"')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave an anchor that wraps no card alone', async () => {
@@ -203,17 +254,19 @@ describeForEachParser('pzlinkcardCiteResolver', (parseHtml) => {
     })
 
     // The nested anchor this fixes only misbehaves once the output is reparsed, which is
-    // what a second run does — so this is the case that pins the bug staying fixed.
+    // what a second run does. This is the case that pins the wrapping-anchor match.
     it('should be idempotent', async () => {
       const value = html`
         <a href="https://example.com/page">
-          <div class="lkc-card"><div class="lkc-title">Page title</div></div>
+          <div class="lkc-card">
+            <div class="lkc-title">Page title</div>
+          </div>
         </a>
       `
       const once = await transform(value)
       const twice = await transform(once)
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
   })
 })

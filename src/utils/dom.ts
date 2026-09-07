@@ -1,9 +1,10 @@
 import { coerceNumber, isNonEmptyString, type Nullish, startsWithAnyOf } from 'trousse'
+import * as styles from './styles.js'
 
 // Linkedom mis-types Node as `() => void` in facades.d.ts (WebReflection/linkedom#167).
 export const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, COMMENT_NODE: 8 } as const
 
-// NodeFilter is not globally available in Bun; mirror the DOM-spec constants.
+// NodeFilter is not globally available in Bun. These are the DOM-spec constants.
 export const NodeFilter = { SHOW_ELEMENT: 0x1, SHOW_TEXT: 0x4, SHOW_COMMENT: 0x80 } as const
 
 export const blockElements = new Set([
@@ -42,7 +43,7 @@ export const blockElements = new Set([
 ])
 
 // Extraction helpers, used mainly by the cite resolvers to pull one field out of a card.
-// Each accepts a nullable element and returns `undefined` rather than `null` or `''`, so
+// Each accepts a nullable element and returns `undefined`, not `null` or `''`, so
 // they compose (`attr(find(element, selector), 'src')`) and chain (`a() ?? b()`) without
 // optional-chaining noise, and so a blank value fails a `!value` guard.
 
@@ -69,7 +70,6 @@ export const find = (
   }
 }
 
-// Trimmed text of a descendant, or of the element itself when no selector is given.
 export const text = (element: Nullish<Element>, selector?: string): string | undefined => {
   const target = selector ? find(element, selector) : element
 
@@ -94,17 +94,64 @@ export const textNode = (element: Nullish<Element>): string | undefined => {
   return result.trim() || undefined
 }
 
-// Trimmed value of an attribute on the element itself.
+// The inline `<script>` that configures a player sitting beside it, which several platforms use
+// instead of an iframe. Two things make it awkward to reach. `wrapBareInlineInParagraphs` runs
+// before the widget pass and puts a bare script in a `<p>`, so by then the player's sibling is
+// that paragraph, not the script. And where one item holds several players, each script
+// names its own container, so the element's id is what pairs them when they are not adjacent.
+export const findConfigScript = (element: Element): Element | undefined => {
+  const sibling = element.nextElementSibling
+
+  if (sibling?.localName === 'script') {
+    return sibling
+  }
+
+  const wrapped = sibling?.querySelector('script')
+
+  if (wrapped) {
+    return wrapped
+  }
+
+  if (!element.id) {
+    return
+  }
+
+  for (const script of element.parentElement?.querySelectorAll('script') ?? []) {
+    if (script.textContent?.includes(element.id)) {
+      return script
+    }
+  }
+}
+
 export const attr = (element: Nullish<Element>, name: string): string | undefined => {
   return element?.getAttribute(name)?.trim() || undefined
 }
 
-// The first url in an element's inline `background-image`, for cards that paint their
-// thumbnail with CSS instead of an `<img>`. Matches the url with or without quotes.
-const bgImageUrlRegex = /url\(['"]?([^'")]+)/
+// Keeps a value read out of an attribute or a url when it fits the shape expected of it, an id,
+// a handle or a token, and drops it otherwise, so nothing malformed reaches a minted url.
+export const keepIfMatches = (value: Nullish<string>, regex: RegExp): string | undefined => {
+  return value && regex.test(value) ? value : undefined
+}
 
-export const bgImage = (element: Nullish<Element>): string | undefined => {
-  return attr(element, 'style')?.match(bgImageUrlRegex)?.[1]
+// A Flash player's configuration, which is where a `.swf` carrier names what it plays: the
+// url is only the player. The value sits either on the carrier itself, which is how `<embed>`
+// spells it, or in a sibling `<param name="flashvars">`, which is how `<object>` does. Both
+// dialects appear on the same platform and often in the same snippet, so a reader that knows
+// one of them reads half the corpus. Returned raw, because callers disagree about what it
+// holds: a query string for Brightcove and Flickr, a config blob for Archive.
+export const flashVars = (element: Nullish<Element>): string | undefined => {
+  return attr(element, 'flashvars') ?? paramValue(element?.parentElement, 'flashvars')
+}
+
+// The value of a named `<param>` under `root`. Flash-era snippets carry their whole
+// configuration this way, either beside the carrier for an `<object>` wrapper or, where the
+// player is a script rather than a movie, inside the element itself. The name is matched
+// case-insensitively because publishers spell it every way, so `name` arrives lowercased.
+export const paramValue = (root: Nullish<Element>, name: string): string | undefined => {
+  const params = Array.from(root?.querySelectorAll('param') ?? [])
+  const named = params.find((param) => attr(param, 'name')?.toLowerCase() === name)
+
+  return attr(named, 'value')
 }
 
 // Parsed value of an attribute holding a JSON blob, as several platforms ship whole cards
@@ -157,6 +204,14 @@ export const isBlockElement = (node: Node): boolean => {
   return isElement(node) && blockElements.has(node.localName)
 }
 
+// An element a reader sees nothing of: no child elements and no text beyond whitespace.
+// Attributes are not content, so an element carrying only a src or an href still counts as
+// empty here. This is not the test stripEmptyTags applies, which keeps some empty elements
+// and tells whitespace-only apart from no content at all.
+export const isEmptyElement = (element: Element): boolean => {
+  return element.children.length === 0 && !hasText(element)
+}
+
 // Remove an element along with any wrapper (a/figure) it leaves empty, so a
 // removed image doesn't leave a dangling link or empty figure behind.
 export const removeWithEmptyWrappers = (element: Element): void => {
@@ -170,8 +225,7 @@ export const removeWithEmptyWrappers = (element: Element): void => {
       break
     }
 
-    const isEmpty = parent.children.length === 0 && (parent.textContent ?? '').trim() === ''
-    if (!isEmpty) {
+    if (!isEmptyElement(parent)) {
       break
     }
 
@@ -202,10 +256,10 @@ export const isMediaElement = (node: Node): boolean => {
 // a player is already built around it.
 export const playableElements = new Set(['audio', 'embed', 'iframe', 'object', 'source', 'video'])
 
-// Collects a subtree's text nodes via an iterative depth-first walk (an explicit stack
-// rather than recursion) so a deeply nested document can't overflow the call stack.
-// Children are pushed in reverse so they pop in document order. An element for which
-// shouldPruneElement returns true prunes its whole subtree.
+// Collects a subtree's text nodes via an iterative depth-first walk (an explicit stack, not
+// recursion) so a deeply nested document can't overflow the call stack. Children are pushed in
+// reverse so they pop in document order. An element for which shouldPruneElement returns true
+// prunes its whole subtree.
 export const collectTextNodes = (
   root: Node,
   shouldPruneElement: (element: Element) => boolean,
@@ -248,12 +302,12 @@ export const hasAncestorWithTagName = (node: Node, tagSet: Set<string>, stopAt?:
   return false
 }
 
-// The registry of wrapper types this package generates — embed and cite placeholders,
+// The registry of wrapper types this package generates: embed and cite placeholders,
 // the table scroll wrapper, the code-block wrapper. A wrapper carries its contract in
 // `data-{type}-*` attributes and its children are a fixed shape a consumer reads or
 // replaces wholesale, so transforms that restructure containers treat it as opaque.
 // createPlaceholder only accepts these types, so a new widget fails to compile until it
-// is added here — and adding it makes the wrapper opaque everywhere at once. `table` and
+// is added here, and adding it makes the wrapper opaque everywhere at once. `table` and
 // `pre` are not minted through the factory (wrapTablesForScroll and highlightCode set
 // their attributes directly) and stay manual entries.
 export const generatedWrapperTypes = ['embed', 'cite', 'table', 'pre'] as const
@@ -266,22 +320,51 @@ export const isGeneratedWrapper = (element: Element): boolean => {
   return element.getAttributeNames().some((name) => startsWithAnyOf(name, generatedWrapperPrefixes))
 }
 
-// Matches `<prop>: <number>[px];` — px is optional, other units (em/rem/%) don't match.
-// The numeric group gives each digit a single parse (`[0-9]+(?:\.[0-9]+)?|\.[0-9]+`, not
-// `[0-9]*\.?[0-9]+`): the ambiguous form backtracks quadratically on a long digit run
-// followed by a non-terminator, which `style` (an unbounded untrusted attribute) can carry.
-const styleWidthRegex = /(?:^|;)\s*width\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
-const styleHeightRegex =
-  /(?:^|;)\s*height\s*:\s*([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?\s*(?:;|$)/i
+export const placeholderSelectors = ['[data-embed-provider]', '[data-cite-provider]']
+
+// A pixel size as a player url or embed attribute states it: `200`, or `200px` where the
+// publisher wrote the unit. `coerceNumber` alone will not do, because it reads neither the
+// suffix nor a bound, and a stated height of `0` or `99999` is a mistake, not a size.
+// The bound below is what every player in `embeds/` needs.
+//
+// Deliberately not shared with `dimensionAttribute` below, which reads a declared width or
+// height attribute and has the opposite requirement: removeTrackingPixels finds a tracking
+// pixel by testing dimensions against `pixelDimensionLimit`, so `0`, `1` and `2` have to parse
+// as numbers there. Routing that through this would make every tracking pixel undetectable.
+const pixelSizeRegex = /^(\d{1,5})(?:px)?$/
+
+// The range is a pair of numbers, not a digit count. A count is a leaky proxy for one:
+// `\d{2,4}` accepts `007` and `0000`, so the very values the bound exists to reject come
+// through as 7 and 0.
+const minimumPixelSize = 10
+const maximumPixelSize = 9999
+
+export const parsePixelSize = (value: Nullish<string>): number | undefined => {
+  const digits = value?.trim().match(pixelSizeRegex)?.[1]
+
+  if (!digits) {
+    return
+  }
+
+  const size = Number(digits)
+
+  return size >= minimumPixelSize && size <= maximumPixelSize ? size : undefined
+}
 
 // An empty or whitespace-only width/height attribute (`width=""`, common in editor output)
-// is not a declared dimension; coerceNumber treats those as absent.
+// is not a declared dimension. coerceNumber treats those as absent. A trailing unit is dropped
+// first and never converted, since a browser reads `height="900px"` and `height="900pt"` alike
+// as 900 pixels, while `90%` stays unparsed. The unit is bounded and nothing is matched ahead of
+// it, since an unbounded run of letters, or of whitespace in front of them, costs six seconds on
+// a 120 KB attribute. Whatever whitespace the unit leaves behind is coerceNumber's to ignore.
+const trailingUnitRegex = /[a-z]{1,6}\s*$/i
+
 const dimensionAttribute = (element: Element, name: string): number | undefined => {
-  return coerceNumber(element.getAttribute(name))
+  return coerceNumber(element.getAttribute(name)?.replace(trailingUnitRegex, ''))
 }
 
 // Squarespace stamps the intrinsic size on `data-image-dimensions="2500x1695"`, and for
-// its gallery images (`img.thumb-image`) that is the only place the size exists — the
+// its gallery images (`img.thumb-image`) that is the only place the size exists: the
 // `src` is a resized CDN URL and there are no width/height attributes. It carries the same
 // value as the real attributes when both are present, so it is read as their fallback.
 const imageDimensionsRegex = /^\s*([0-9]+)\s*x\s*([0-9]+)\s*$/i
@@ -294,91 +377,116 @@ export const getElementDimensions = (element: Element): { width?: number; height
     return { width, height }
   }
 
-  // `data-image-dimensions` holds both sizes in one `WxH` attribute, so it is matched once
-  // and each dimension picks its own capture group, the same way `style` is read once and
-  // `fromStyle` picks each property.
   const dimensions = imageDimensionsRegex.exec(element.getAttribute('data-image-dimensions') ?? '')
-  const style = element.getAttribute('style')
-
-  const fromStyle = (regex: RegExp): number | undefined => {
-    const match = style ? regex.exec(style) : null
-    return match ? coerceNumber(match[1]) : undefined
-  }
 
   return {
-    width: width ?? coerceNumber(dimensions?.[1]) ?? fromStyle(styleWidthRegex),
-    height: height ?? coerceNumber(dimensions?.[2]) ?? fromStyle(styleHeightRegex),
+    width: width ?? coerceNumber(dimensions?.[1]) ?? coerceNumber(styles.pixels(element, 'width')),
+    height:
+      height ?? coerceNumber(dimensions?.[2]) ?? coerceNumber(styles.pixels(element, 'height')),
   }
 }
 
 // How many ancestors above the element to also check for a responsive wrapper.
 const maxWrapperAncestorDepth = 3
-// Modern CSS: `aspect-ratio: 16 / 9` (or a single number, the width-to-height ratio).
-const aspectRatioRegex = /aspect-ratio:\s*(?:auto\s+)?([\d.]+)(?:\s*\/\s*([\d.]+))?/i
-// WordPress responsive embeds carry the ratio as a class (`wp-embed-aspect-16-9`),
-// styled by an external stylesheet feedsweep never sees; the class itself encodes it.
-const aspectClassRegex = /wp-embed-aspect-(\d+)-(\d+)/
-// The legacy shape is the inline padding hack (`padding-bottom:56.25%`). All three are read
-// off the raw `style`/`class` attributes, not the CSSOM `style` API: linkedom's getPropertyValue
-// returns `undefined` (not "") for unset properties, and both parsers drop declarations whose
-// property name isn't lowercase — a case-insensitive regex matches those, mirroring getElementDimensions.
-const paddingRatioRegex = /padding-(?:bottom|top):\s*([\d.]+)%/i
+const paddingPercentRegex = /^([\d.]+)%$/
+const whitespaceRegex = /\s+/
+const wpEmbedAspectRegex = /wp-embed-aspect-(\d+)-(\d+)/
 
-// The width-to-height aspect ratio (e.g. 16/9 ≈ 1.78) a single element declares — via the
-// `aspect-ratio` property, a `wp-embed-aspect-*` class, or the padding hack — or undefined.
-export const getElementAspectRatio = (element: Element): number | undefined => {
-  const style = element.getAttribute('style') ?? ''
+// The bottom padding as the `padding` shorthand states it, which some embed wrappers write the
+// hack in (`padding: 0 0 56.25%`). Only the three and four value forms give the bottom a value of
+// its own: one or two values pad every side alike, which is spacing rather than a shape. A value
+// holding a function is left alone, since its own spaces would be counted as sides.
+const shorthandBottom = (declarations: styles.Declarations): string | undefined => {
+  const padding = declarations.padding
 
-  const ratioMatch = aspectRatioRegex.exec(style)
-
-  if (ratioMatch) {
-    const width = Number(ratioMatch[1])
-    const height = ratioMatch[2] === undefined ? 1 : Number(ratioMatch[2])
-
-    if (width > 0 && height > 0) {
-      return width / height
-    }
+  if (!padding || padding.includes('(')) {
+    return
   }
 
-  const classMatch = aspectClassRegex.exec(element.getAttribute('class') ?? '')
+  const sides = padding.split(whitespaceRegex)
 
-  if (classMatch) {
-    const width = Number(classMatch[1])
-    const height = Number(classMatch[2])
+  return sides.length >= 3 ? sides[2] : undefined
+}
 
-    if (width > 0 && height > 0) {
-      return width / height
+// The ways an element can declare its aspect ratio, in the order they are trusted.
+const elementRatioSources: Array<(element: Element) => string | undefined> = [
+  // Modern CSS: the whole `aspect-ratio` value (`16 / 9`, or a single number), parsed
+  // like any other ratio string. The value takes an optional `auto` beside the ratio, on
+  // either side, dropped here as a token: matching it around an unbounded `\s+` costs two
+  // seconds on 120 KB of spaces.
+  (element) => {
+    const ratio = styles.declarations(element)['aspect-ratio']
+
+    if (!ratio) {
+      return
     }
-  }
 
-  const paddingMatch = paddingRatioRegex.exec(style)
+    const stated = ratio.split(whitespaceRegex).filter((token) => token.toLowerCase() !== 'auto')
 
-  if (paddingMatch) {
-    const percent = Number(paddingMatch[1])
+    return parseRatio(stated.join(' '))
+  },
+
+  // WordPress responsive embeds carry the ratio as a class (`wp-embed-aspect-16-9`),
+  // styled by an external stylesheet feedsweep never sees. The class itself encodes it.
+  (element) => {
+    const match = wpEmbedAspectRegex.exec(element.getAttribute('class') ?? '')
+
+    return match ? parseRatio(`${match[1]}:${match[2]}`) : undefined
+  },
+
+  // The legacy inline padding hack (`padding-bottom:56.25%`): the percent is the
+  // inverse of the ratio, bounded to keep a stray value from encoding nonsense.
+  (element) => {
+    const declarations = styles.declarations(element)
+    const padding =
+      declarations['padding-bottom'] ?? declarations['padding-top'] ?? shorthandBottom(declarations)
+    const percent = Number(padding?.match(paddingPercentRegex)?.[1])
 
     if (percent > 0 && percent < 1000) {
-      return 100 / percent
+      return formatRatio(100, percent)
+    }
+  },
+
+  // A pair of caps (`max-width:800px;max-height:600px`). Neither is a size the element
+  // takes, only the box it may not exceed, so together they encode a ratio and nothing
+  // more. Last in this list because it is the weakest reading: anything above states a
+  // ratio outright, while this one infers it. A real width or height never competes,
+  // since getElementDimensions reads those and getEmbedSize consults this table only
+  // when it found none.
+  (element) => {
+    const width = styles.pixels(element, 'max-width')
+    const height = styles.pixels(element, 'max-height')
+
+    return width && height ? parseRatio(`${width}:${height}`) : undefined
+  },
+]
+
+const getElementRatio = (element: Element): string | undefined => {
+  for (const source of elementRatioSources) {
+    const ratio = source(element)
+
+    if (ratio) {
+      return ratio
     }
   }
 }
 
 // Walks the element and its ancestors (the element plus up to `maxDepth` levels) and returns the
-// first aspect ratio any of them declares — for an element whose own dimensions are unknown but
+// first aspect ratio any of them declares: for an element whose own dimensions are unknown but
 // which sits in a responsive wrapper. Only ascends into a parent that wraps this element alone:
 // a parent with other element children sizes the whole group, so its ratio isn't this element's.
-// Call getElementAspectRatio directly when only the element itself matters (e.g. an image with
-// its own `aspect-ratio`).
-export const getWrapperAspectRatio = (
+// Pass maxDepth 0 to read only the element itself.
+export const getWrapperRatio = (
   element: Element,
   maxDepth = maxWrapperAncestorDepth,
-): number | undefined => {
+): string | undefined => {
   let current: Element | null = element
   let depth = 0
 
   while (current && depth <= maxDepth) {
-    const ratio = getElementAspectRatio(current)
+    const ratio = getElementRatio(current)
 
-    if (ratio !== undefined) {
+    if (ratio) {
       return ratio
     }
 
@@ -393,13 +501,25 @@ export const getWrapperAspectRatio = (
   }
 }
 
-const ratioPairRegexes = [
+// A ratio written the way CSS wants it, `W/H`, from the numbers the source stated. Nothing is
+// reduced or approximated: `800:600` stays `800/600`, and a bare decimal is written over one.
+// CSS renders every spelling of a shape identically, so tidying one up buys a consumer nothing,
+// while every attempt at it needed a threshold (a denominator bound, a tolerance, a digit count)
+// where the output changed for reasons unrelated to the ratio.
+export const formatRatio = (width: number, height = 1): string => {
+  return `${width}/${height}`
+}
+
+const ratioRegexes = [
   /^\s*(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)\s*$/, // 16:9, 690 : 362
   /^\s*(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*$/, // 100/56, 690 / 362
+  /^\s*([\d.]+)\s*$/, // 1.77777777777778, 1.5
 ]
 
-export const parseAspectRatio = (value: string): number | undefined => {
-  for (const regex of ratioPairRegexes) {
+// The one string-ratio grammar: a colon or slash width:height pair, or a bare decimal
+// (a pair with an implied height of 1), returned in the `W/H` spelling.
+export const parseRatio = (value: string): string | undefined => {
+  for (const regex of ratioRegexes) {
     const match = value.match(regex)
 
     if (!match) {
@@ -407,47 +527,46 @@ export const parseAspectRatio = (value: string): number | undefined => {
     }
 
     const width = Number(match[1])
-    const height = Number(match[2])
+    const height = match[2] === undefined ? 1 : Number(match[2])
 
-    if (width > 0 && height > 0) {
-      return width / height
+    if (Number.isFinite(width) && width > 0 && height > 0) {
+      return formatRatio(width, height)
     }
   }
 }
 
-// Encodes an aspect ratio as placeholder dimensions: the 100×N pair encodes the ratio, not
-// absolute pixels. Assumes a valid positive ratio; validation stays at the call sites.
-export const ratioDimensions = (ratio: number): { width: number; height: number } => {
-  return { width: 100, height: Math.round(100 / ratio) }
-}
-
 // A width or height at or below this many pixels marks a tracking pixel, not real
-// content. removeTrackingPixels strips images at or below it; resolveMediaDimensions
+// content. removeTrackingPixels strips images at or below it. resolveMediaDimensions
 // won't promote a dimension at or below it.
 export const pixelDimensionLimit = 2
 
-const styleDisplayNoneRegex = /(?:^|;)\s*display\s*:\s*none/i
-const styleVisibilityHiddenRegex = /(?:^|;)\s*visibility\s*:\s*hidden/i
-
 // An element hidden from view: the `hidden` attribute, inline `display:none`, or
 // inline `visibility:hidden`. These are unambiguous. Other "hidden" signals are
-// overloaded and stay with their callers — `opacity:0` is usually a fade-in and
+// overloaded and stay with their callers: `opacity:0` is usually a fade-in and
 // `0×0` is the lazy-placeholder convention, both handled in removeTrackingPixels.
 export const isElementHidden = (element: Element): boolean => {
   if (element.hasAttribute('hidden')) {
     return true
   }
 
-  const style = element.getAttribute('style')
+  return (
+    styles.keyword(element, 'display') === 'none' ||
+    styles.keyword(element, 'visibility') === 'hidden'
+  )
+}
 
-  return !!style && (styleDisplayNoneRegex.test(style) || styleVisibilityHiddenRegex.test(style))
+// Kept out of isElementHidden because it only means hidden on an image, where it is a
+// tracking-beacon trick. Elsewhere `opacity:0` is usually the first frame of a fade-in,
+// so the caller decides what it is looking at.
+export const hasZeroOpacity = (element: Element): boolean => {
+  return styles.number(element, 'opacity') === 0
 }
 
 // Visits every element in document order and calls `visit` on each. Linkedom's
 // querySelectorAll compiles its selector (via css-select) on every call, so
 // replacing a per-document query with this walk avoids that repeated compile.
 // Template subtrees are skipped, the same as querySelectorAll does. Return true
-// from `visit` to stop early; walkElements then also returns true.
+// from `visit` to stop early. walkElements then also returns true.
 export const walkElements = (
   document: Document,
   visit: (element: Element) => boolean | undefined,
