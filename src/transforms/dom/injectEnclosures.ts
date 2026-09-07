@@ -12,6 +12,7 @@ import {
   isVideoEnclosure,
   prepareEnclosures,
 } from '../../utils/enclosures.js'
+import { getImageFingerprint } from '../../utils/images.js'
 import { cleanUrl, resolveOrDropUrl, resolveOrKeepUrl } from '../../utils/urls.js'
 import {
   createEmbedPlaceholder,
