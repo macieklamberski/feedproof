@@ -196,7 +196,8 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // The audio player names the file on its own and puts the item on the clip instead.
+    // The audio player names the file on its own and puts the item on the clip instead. An
+    // audio item takes the modern bar's height, since the bar the carrier was sized for is gone.
     it('should read the identifier from the clip base url', async () => {
       const value = html`
         <embed
@@ -211,6 +212,54 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
         src: 'https://archive.org/embed/EndCameTooSoon',
         url: 'https://archive.org/details/EndCameTooSoon',
         thumbnail: 'https://archive.org/services/img/EndCameTooSoon',
+        height: 30,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The carrier states the 26 pixels of the Flash bar, and the modern bar measures 30, so the
+    // resolver's height wins over it. The width is the carrier's business either way.
+    it('should replace the audio bar height with the modern player height', async () => {
+      const value = html`
+        <embed
+          type="application/x-shockwave-flash"
+          src="https://www.archive.org/flow/flowplayer.commercial-3.2.1.swf"
+          flashvars="config={'playlist':[{'url':'EndCameTooSoon-Mixtape.mp3','autoPlay':false}],'clip':{'autoPlay':true,'baseUrl':'https://www.archive.org/download/EndCameTooSoon/'},'plugins':{'audio':{'url':'https://www.archive.org/flow/flowplayer.audio-3.2.1-dev.swf'}}}"
+          width="640"
+          height="26"
+        />
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'EndCameTooSoon',
+        src: 'https://archive.org/embed/EndCameTooSoon',
+        url: 'https://archive.org/details/EndCameTooSoon',
+        thumbnail: 'https://archive.org/services/img/EndCameTooSoon',
+        height: 30,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should keep the declared size for a video item', async () => {
+      const value = html`
+        <embed
+          type="application/x-shockwave-flash"
+          src="http://www.archive.org/flow/flowplayer.commercial-3.0.3.swf"
+          flashvars='config={"playlist":[{"url":"http://www.archive.org/download/TheGoodOldGasMask/TheGoodOldGasMask_512kb.mp4"}]}'
+          width="640"
+          height="504"
+        />
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'TheGoodOldGasMask',
+        src: 'https://archive.org/embed/TheGoodOldGasMask',
+        url: 'https://archive.org/details/TheGoodOldGasMask',
+        thumbnail: 'https://archive.org/services/img/TheGoodOldGasMask',
+        width: 640,
+        height: 504,
       }
 
       expect(await extract(value)).toEqual(expected)
