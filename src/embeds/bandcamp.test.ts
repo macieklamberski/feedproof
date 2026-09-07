@@ -64,8 +64,12 @@ describe('extractBandcampRelease', () => {
   })
 })
 
-// Every preset name Bandcamp serves, paired with the height it lays out to. Each row is
-// [preset, height]; `tall` is missing because its height is keyed on the release instead.
+// Every preset name Bandcamp serves, paired with the height it lays out to. The names are
+// written out here rather than read from `presetHeights`, and that duplication is the point:
+// `tall_album` and `tall_track` sat in that map as keys Bandcamp never served, and a test
+// walking the map would have fed `size=tall_album`, found the key and passed. Only a list of
+// what the platform actually serves catches a dead one, so this list is the second source and
+// must stay independent of the map. `tall` is absent because its height is keyed on the release.
 const presetCases: Array<[string, number]> = [
   ['venti', 100],
   ['grande', 100],
