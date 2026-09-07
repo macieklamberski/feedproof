@@ -6,7 +6,7 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 const donorboxHost = 'donorbox.org'
 
 // A campaign slug as Donorbox writes it: one run of word characters and hyphens.
-const slugRegex = /^[\w-]{1,128}$/
+const slugRegex = /^[\w-]+$/
 
 // The form does not grow with its container: measured 750 tall at 250 wide and 733 at 500 and
 // 1000 on 2026-09-03, on the first of its steps. Donorbox's own snippet reserves 900, which is

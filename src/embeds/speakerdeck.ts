@@ -3,10 +3,17 @@ import type { EmbedResolverResult } from '../types.js'
 import { attr, parseRatio } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// Ids are lowercase hex, in two lengths. 32 chars is the current dashless UUID. 24 is the
-// legacy Mongo ObjectId Speaker Deck issued around 2011-2012, and those decks still play: the
-// player url answers 200 (verified live 2026-08-11).
-const deckIdRegex = /^[0-9a-f]{24}(?:[0-9a-f]{8})?$/
+// Ids are lowercase hex, in two lengths already. 32 chars is the current dashless UUID. 24 is
+// the legacy Mongo ObjectId Speaker Deck issued around 2011-2012, and those decks still play:
+// the player url answers 200 (verified live 2026-08-11).
+//
+// The lengths are not checked. The id is read either off Speaker Deck's own `data-id` or from
+// the segment after `player`, and `/player/` serves decks and nothing else: checked live
+// 2026-09-07, a real deck id answers 200 at 125 KB while `abc` and the hex word `decade` both
+// answer the same 404 as the site's other missing paths. So a bound would only refuse whatever
+// length Speaker Deck mints next. Hex is what stays, and it excludes the dot, which keeps a file
+// on the host playable when the enclosure probe offers it here.
+const deckIdRegex = /^[0-9a-f]+$/
 
 // A few feeds fold the slide number into the id attribute itself.
 const slideSuffixRegex = /\?slide=(\d+)$/
