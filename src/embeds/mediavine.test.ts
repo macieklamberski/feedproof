@@ -28,6 +28,40 @@ describeForEachParser('mediavineEmbedResolver', (parseHtml) => {
   })
 
   describe('edge cases', () => {
+    // The attribute is whatever the feed wrote, and unescaped it picks the page: `../../evil`
+    // resolves to `embed.mediavine.com/evil` and a `?` moves the rest of it into the query.
+    it('should keep a traversing video id inside its own path segment', async () => {
+      const value = html`
+        <div
+          class="mv-video-target"
+          data-video-id="../../evil"
+        ></div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'mediavine',
+        id: '../../evil',
+        src: 'https://embed.mediavine.com/videos/..%2F..%2Fevil',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should keep a query a video id states out of the minted url', async () => {
+      const value = html`
+        <div
+          class="mv-video-target"
+          data-video-id="a?autoplay=1"
+        ></div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'mediavine',
+        id: 'a?autoplay=1',
+        src: 'https://embed.mediavine.com/videos/a%3Fautoplay%3D1',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should state no shape for a malformed ratio', async () => {
       const value = html`
         <div

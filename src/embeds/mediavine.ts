@@ -20,7 +20,10 @@ export const mediavineEmbedResolver = createMarkupEmbedResolver(
     return {
       provider: 'mediavine',
       id: videoId,
-      src: `https://embed.mediavine.com/videos/${videoId}`,
+      // The attribute is taken as written, so the id is encoded on the way into the path:
+      // unescaped, `data-video-id="../../evil"` names a different page on the host and
+      // `data-video-id="a?autoplay=1"` appends a query.
+      src: `https://embed.mediavine.com/videos/${encodeURIComponent(videoId)}`,
       ...(ratio && { ratio }),
     }
   },
