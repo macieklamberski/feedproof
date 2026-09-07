@@ -4,11 +4,18 @@ import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A Tencent Video id is a run of lowercase letters and digits, eleven characters in the wild.
-// The length is not checked: the id is read out of `vid` on the player's own path, so nothing
-// but an id reaches that position and a bound would only refuse the next length Tencent mints.
-// The alphabet stays because it excludes the dot, which is what keeps a media file on the host
+// The length is not checked: a bound would only refuse the next length Tencent mints. The
+// alphabet stays because it excludes the dot, which is what keeps a media file on the host
 // playable, since the enclosure probe offers every attachment a feed carries to this resolver.
 const safeVideoIdRegex = /^[a-z0-9]+$/
+
+// Tencent's own route word, from `v.qq.com/x/cover/{cid}/{vid}.html`, left in `vid` by an embed
+// snippet nobody filled in. It is the one non-id among 65 `vid` values mined from the corpus; the
+// other, `$1`, the alphabet already refuses. The player answers the same 1,127-byte shell for it
+// as for a real id, but the poster route hands back its 5 KB png placeholder and
+// `x/page/cover.html` serves the not-found body, so a grey thumbnail and a dead link are minted
+// where the generic frame drew a click-to-load box.
+const nonVideoWords = new Set(['cover'])
 
 // `v.qq.com` serves the player; the other two served the Flash player.
 const tencentHosts = ['v.qq.com', 'static.video.qq.com', 'imgcache.qq.com']
@@ -35,9 +42,13 @@ const readVideoId = (url: string): string | undefined => {
   const parsed = parseUrlOnHosts(url, tencentHosts)
   const pathRegex = parsed?.hostname === 'v.qq.com' ? playerPathRegex : flashPathRegex
 
-  return parsed && pathRegex.test(parsed.pathname)
-    ? keepIfMatches(parsed.searchParams.get('vid'), safeVideoIdRegex)
-    : undefined
+  if (!parsed || !pathRegex.test(parsed.pathname)) {
+    return
+  }
+
+  const videoId = keepIfMatches(parsed.searchParams.get('vid'), safeVideoIdRegex)
+
+  return videoId && !nonVideoWords.has(videoId) ? videoId : undefined
 }
 
 export const tencentResolveEmbed = (url: string): EmbedResolverResult | undefined => {
