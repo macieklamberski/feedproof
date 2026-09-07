@@ -54,15 +54,43 @@ describeForEachParser('YouTube', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
-  it('should resolve a YouTube playlist embed to a posterless youtube placeholder', async () => {
-    const value = '<iframe src="https://www.youtube.com/embed/videoseries?list=PLabc123"></iframe>'
-    // `videoseries` is a playlist, not a video: keep the working src, give a canonical playlist
-    // url, and no thumbnail (a playlist has no id-derivable poster). The list id stays as the
-    // enrichment key.
+  // The snippet YouTube's own oEmbed returns, which is what a WordPress oEmbed cache stores and
+  // republishes into the feed. The title is the only place the video is named.
+  it('should carry the title an oEmbed snippet states onto the placeholder', async () => {
+    const value = html`
+      <iframe
+        width="560"
+        height="315"
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        title="Kraftwerk - Autobahn (1974)"
+        frameborder="0"
+        allowfullscreen
+      ></iframe>
+    `
     const expected = html`
       <div
         data-embed-provider="youtube"
-        data-embed-id="PLabc123"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
+        data-embed-title="Kraftwerk - Autobahn (1974)"
+      ></div>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
+  it('should resolve a YouTube playlist embed to a posterless youtube placeholder', async () => {
+    const value = '<iframe src="https://www.youtube.com/embed/videoseries?list=PLabc123"></iframe>'
+    // `videoseries` is a playlist, not a video: keep the working src, give a canonical playlist
+    // url, and no thumbnail (a playlist has no id-derivable poster). The enrichment key names
+    // the route, since a bare list id is also a legal channel id and username.
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="playlist/PLabc123"
         data-embed-src="https://www.youtube.com/embed/videoseries?list=PLabc123"
         data-embed-url="https://www.youtube.com/playlist?list=PLabc123"
         data-embed-ratio="16/9"
@@ -78,11 +106,11 @@ describeForEachParser('YouTube', (parseHtml) => {
     `
     // `live_stream` is a channel live embed, not a video: the `channel` param is preserved
     // (resolving it as a video would drop it and leave a dead `embed/live_stream`), the url
-    // points at the channel, and there is no thumbnail. The channel id is the enrichment key.
+    // points at the channel, and there is no thumbnail. The enrichment key names the route.
     const expected = html`
       <div
         data-embed-provider="youtube"
-        data-embed-id="UCabc123"
+        data-embed-id="channel/UCabc123"
         data-embed-src="https://www.youtube.com/embed/live_stream?channel=UCabc123"
         data-embed-url="https://www.youtube.com/channel/UCabc123"
         data-embed-ratio="16/9"
@@ -109,7 +137,7 @@ describeForEachParser('YouTube', (parseHtml) => {
     const expected = html`
       <div
         data-embed-provider="youtube"
-        data-embed-id="PL7BE4DDAC0A0D31AF"
+        data-embed-id="playlist/PL7BE4DDAC0A0D31AF"
         data-embed-src="https://www.youtube.com/embed/videoseries?list=PL7BE4DDAC0A0D31AF"
         data-embed-url="https://www.youtube.com/playlist?list=PL7BE4DDAC0A0D31AF"
         data-embed-ratio="16/9"
@@ -156,7 +184,7 @@ describeForEachParser('YouTube', (parseHtml) => {
     const expected = html`
       <div
         data-embed-provider="youtube"
-        data-embed-id="UUabc123"
+        data-embed-id="playlist/UUabc123"
         data-embed-src="https://www.youtube.com/embed/videoseries?list=UUabc123"
         data-embed-url="https://www.youtube.com/playlist?list=UUabc123"
         data-embed-ratio="16/9"

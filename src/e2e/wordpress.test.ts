@@ -78,6 +78,7 @@ describeForEachParser('WordPress', (parseHtml) => {
           data-embed-id="0OqYNLrUoes"
           data-embed-provider="youtube"
           data-embed-src="https://www.youtube.com/embed/0OqYNLrUoes"
+          data-embed-title="YouTube video player"
         ></div>
       `
 
