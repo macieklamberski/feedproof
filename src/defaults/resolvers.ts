@@ -166,13 +166,23 @@ import { wistiaEmbedResolver } from '../embeds/wistia.js'
 import { youkuEmbedResolver } from '../embeds/youku.js'
 import { youtubeAmpEmbedResolver, youtubeIframeEmbedResolver } from '../embeds/youtube.js'
 import { zencastrBlockquoteEmbedResolver, zencastrIframeEmbedResolver } from '../embeds/zencastr.js'
+import { coblocksGalleryResolver } from '../galleries/coblocks.js'
+import { ghostGalleryResolver } from '../galleries/ghost.js'
+import { jetpackSlideshowResolver } from '../galleries/jetpack.js'
+import { wordpressGalleryResolver } from '../galleries/wordpress.js'
 import { discourseMediaResolver } from '../media/discourse.js'
 import { ghostMediaResolver } from '../media/ghost.js'
 import { podloveMediaResolver } from '../media/podlove.js'
 import { substackMediaResolver } from '../media/substack.js'
 import { wechatMediaResolver } from '../media/wechat.js'
 import { weeblyMediaResolver } from '../media/weebly.js'
-import type { CiteResolver, EmbedResolver, MediaResolver, WidgetResolver } from '../types.js'
+import type {
+  CiteResolver,
+  EmbedResolver,
+  GalleryResolver,
+  MediaResolver,
+  WidgetResolver,
+} from '../types.js'
 
 // Order matters when selectors overlap: each resolver runs in array order and
 // claimed iframes can't be re-matched. Place more specific selectors (e.g.
@@ -361,8 +371,19 @@ const citeResolvers: Array<CiteResolver> = [
   mediumCiteResolver,
 ]
 
+// Order matters here too: a resolver replaces the element it matches, so a later one never
+// sees it. No two selectors below overlap (`wp-block-coblocks-gallery-*` is a different class
+// token from `wp-block-gallery`); keep the more specific one first if that ever changes.
+const galleryResolvers: Array<GalleryResolver> = [
+  wordpressGalleryResolver,
+  ghostGalleryResolver,
+  jetpackSlideshowResolver,
+  coblocksGalleryResolver,
+]
+
 export const defaultWidgetResolvers: Array<WidgetResolver> = [
   ...embedResolvers,
   ...mediaResolvers,
   ...citeResolvers,
+  ...galleryResolvers,
 ]

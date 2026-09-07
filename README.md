@@ -92,6 +92,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `stripDuplicateEnclosures` | _Heuristic (opt-in):_ remove an injected enclosure that duplicates inline content (image size-variants, exact audio/video/embed) |
 | `stripDuplicateLeadingImages` | _Heuristic (opt-in):_ remove a leading image the body repeats as the very next image (featured-image prepends), keeping the larger copy |
 | `convertCiteCards` | Convert link-preview cards into `data-cite-*` placeholders |
+| `convertGalleries` | Convert multi-image galleries and slideshows into `data-gallery-*` placeholders carrying an items JSON plus a per-image `<figure>` fallback |
 | `enrichEmbedPlaceholders` | Fill placeholder metadata via the caller's `enrichEmbedFn` (no-op unless set) |
 | `enrichCitePlaceholders` | Fill cite placeholder metadata via the caller's `enrichCiteFn` (no-op unless set) |
 | `neutralizeUnsafeUrls` | Replace dangerous-scheme URLs (and any the `isSafeUrlFn` option rejects) with an inert sentinel, keeping the element |

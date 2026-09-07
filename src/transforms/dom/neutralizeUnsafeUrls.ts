@@ -1,6 +1,7 @@
 import { parseSrcset, stringifySrcset } from 'srcset'
 import type { DomTransform, IsSafeUrlFn, UrlRole } from '../../types.js'
 import { walkElements } from '../../utils/dom.js'
+import { rewriteGalleryItemUrls } from '../../utils/widgets.js'
 
 // Inert replacements that keep the element but render nothing: a same-page no-op for
 // links, the empty document for media (about:blank loads nothing and runs nothing).
@@ -105,13 +106,13 @@ const hrefTagRoles: Record<string, UrlRole> = { a: 'link', image: 'media' }
 
 // Replaces unsafe URLs with an inert, role-appropriate sentinel while keeping the element.
 // Always enforces a dangerous-scheme floor (javascript:/vbscript:/data:text/html), plus the
-// caller's isSafeUrlFn policy when provided. Runs after URLs are resolved and embeds/cites are
-// placeholdered, and before proxyAssetUrls.
+// caller's isSafeUrlFn policy when provided. Runs after URLs are resolved and embeds, cites
+// and galleries are placeholdered, and before proxyAssetUrls.
 //
 // One walk covers every attribute (see walkElements), instead of a querySelectorAll per
 // attribute: there are around 20 of them.
 export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
-  return (document) => {
+  return async (document) => {
     walkElements(document, (element) => {
       // Skip elements with no attributes. hasAttributes is O(1) in linkedom.
       if (!element.hasAttributes()) {
@@ -145,5 +146,16 @@ export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
         neutralizeAttribute(element, attribute, hrefRole, isSafeUrlFn)
       }
     })
+
+    // Gallery placeholders keep their urls in a data-gallery-items JSON blob, out of reach of
+    // the per-attribute walk above. The display `url` is a media role, the full-size `fullUrl`
+    // a link, matching the fallback <img>/<a> the resolver emits.
+    for (const element of document.querySelectorAll('[data-gallery-items]')) {
+      await rewriteGalleryItemUrls(element, (url, key) => {
+        const role: UrlRole = key === 'url' ? 'media' : 'link'
+
+        return isUnsafe(url, role, isSafeUrlFn) ? sentinels[role] : undefined
+      })
+    }
   }
 }

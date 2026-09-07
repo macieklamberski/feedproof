@@ -87,6 +87,7 @@ export { convertAmpNativeElements } from './transforms/dom/convertAmpNativeEleme
 export { convertBreaksToParagraphs } from './transforms/dom/convertBreaksToParagraphs.js'
 export { convertCiteCards } from './transforms/dom/convertCiteCards.js'
 export { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmbeds.js'
+export { convertGalleries } from './transforms/dom/convertGalleries.js'
 export { convertGiphyEmbeds } from './transforms/dom/convertGiphyEmbeds.js'
 export { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 export { convertNoteEmbeds } from './transforms/dom/convertNoteEmbeds.js'
@@ -181,6 +182,9 @@ export type {
   Enclosure,
   EnrichCiteFn,
   EnrichEmbedFn,
+  GalleryItem,
+  GalleryResolver,
+  GalleryResolverResult,
   HighlightFn,
   IsSafeUrlFn,
   MediaResolver,
@@ -204,6 +208,7 @@ export { applyDomTransforms, applyStringTransforms } from './utils/transforms.js
 export {
   createCitePlaceholder,
   createEmbedPlaceholder,
+  createGalleryPlaceholder,
   createMarkupEmbedResolver,
   createPlaceholder,
   createUrlEmbedResolver,

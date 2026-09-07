@@ -7,6 +7,7 @@ import { convertAmpNativeElements } from '../transforms/dom/convertAmpNativeElem
 import { convertBreaksToParagraphs } from '../transforms/dom/convertBreaksToParagraphs.js'
 import { convertCiteCards } from '../transforms/dom/convertCiteCards.js'
 import { convertDatawrapperEmbeds } from '../transforms/dom/convertDatawrapperEmbeds.js'
+import { convertGalleries } from '../transforms/dom/convertGalleries.js'
 import { convertGiphyEmbeds } from '../transforms/dom/convertGiphyEmbeds.js'
 import { convertLazyImageContainers } from '../transforms/dom/convertLazyImageContainers.js'
 import { convertNoteEmbeds } from '../transforms/dom/convertNoteEmbeds.js'
@@ -199,6 +200,11 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   normalizeAnchoredHeadings,
   stripDeadAnchors,
   convertCiteCards,
+  // Sits after resolveRelativeUrls and the lazy-image fixes: whatever goes into the
+  // data-gallery-items JSON has to be already real and absolute, because that JSON is out
+  // of reach of the per-attribute url passes. neutralizeUnsafeUrls and proxyAssetUrls run
+  // later and are the two passes that do reach into it (rewriteGalleryItemUrls).
+  convertGalleries,
   // Compares the first heading's text with the article title, so it runs after
   // normalizeAnchoredHeadings has dropped the permalink glyph (`#`, `¶`) a generator puts
   // inside the heading, or the glyph is read as part of the text and the title never matches,

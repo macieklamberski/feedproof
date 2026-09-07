@@ -1,8 +1,9 @@
-import { isHostOf, isSubdomainOf } from 'trousse'
+import { isHostOf, isSubdomainOf, type MaybePromise } from 'trousse'
 import type {
   CiteResolverResult,
   EmbedResolver,
   EmbedResolverResult,
+  GalleryResolverResult,
   MediaResolver,
   MediaResolverResult,
   ParseDateFn,
@@ -475,4 +476,104 @@ export const createCitePlaceholder = (
   result: CiteResolverResult,
 ): HTMLElement => {
   return createPlaceholder(document, 'cite', normalizeCiteFields(result))
+}
+
+// The items live twice on the placeholder: as `data-gallery-items` JSON (the primary
+// render path for a gallery-aware reader) and as plain <figure> children (the fallback
+// any reader renders as ordinary images).
+export const createGalleryPlaceholder = (
+  document: Document,
+  result: GalleryResolverResult,
+): HTMLElement => {
+  const items = result.items
+
+  const element = createPlaceholder(document, 'gallery', {
+    provider: result.provider,
+    layout: result.layout,
+    title: result.title,
+    items: items.length ? JSON.stringify(items) : undefined,
+  })
+
+  for (const item of items) {
+    const figure = document.createElement('figure')
+    const image = document.createElement('img')
+    image.setAttribute('src', item.url)
+
+    if (item.alt) {
+      image.setAttribute('alt', item.alt)
+    }
+
+    if (item.fullUrl) {
+      const link = document.createElement('a')
+      link.setAttribute('href', item.fullUrl)
+      link.appendChild(image)
+      figure.appendChild(link)
+    } else {
+      figure.appendChild(image)
+    }
+
+    if (item.caption) {
+      const caption = document.createElement('figcaption')
+      caption.textContent = item.caption
+      figure.appendChild(caption)
+    }
+
+    element.appendChild(figure)
+  }
+
+  return element
+}
+
+// Rewrites the URL-carrying fields inside a gallery placeholder's `data-gallery-items`
+// JSON in place. The fallback figures are reached by the generic element passes, but the
+// JSON is opaque to them, so neutralizeUnsafeUrls and proxyAssetUrls call this to cover it
+// too. `rewrite` returns a replacement URL, or undefined to leave the value unchanged;
+// `key` lets the caller apply a different policy to the display `url` (media) than the
+// full-size `fullUrl` (link).
+export const rewriteGalleryItemUrls = async (
+  element: Element,
+  rewrite: (url: string, key: 'url' | 'fullUrl') => MaybePromise<string | undefined>,
+): Promise<void> => {
+  const raw = element.getAttribute('data-gallery-items')
+
+  if (!raw) {
+    return
+  }
+
+  let items: Array<Record<string, unknown>>
+
+  try {
+    const parsed = JSON.parse(raw)
+
+    if (!Array.isArray(parsed)) {
+      return
+    }
+
+    items = parsed
+  } catch {
+    return
+  }
+
+  let hasChanged = false
+
+  for (const item of items) {
+    for (const key of ['url', 'fullUrl'] as const) {
+      const value = item[key]
+
+      if (typeof value !== 'string') {
+        continue
+      }
+
+      const rewritten = await rewrite(value, key)
+
+      if (rewritten !== undefined && rewritten !== value) {
+        item[key] = rewritten
+        hasChanged = true
+      }
+    }
+  }
+
+  if (hasChanged) {
+    element.setAttribute('data-gallery-items', JSON.stringify(items))
+  }
 }
