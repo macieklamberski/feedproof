@@ -109,6 +109,7 @@ import { omnyEmbedResolver } from '../embeds/omny.js'
 import { podbeanEmbedResolver } from '../embeds/podbean.js'
 import { podetizeIframeEmbedResolver, podetizeScriptEmbedResolver } from '../embeds/podetize.js'
 import { podigeeEmbedResolver, podigeeIframeEmbedResolver } from '../embeds/podigee.js'
+import { redcircleIframeEmbedResolver, redcircleScriptEmbedResolver } from '../embeds/redcircle.js'
 import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from '../embeds/reddit.js'
 import { reverbnationEmbedResolver } from '../embeds/reverbnation.js'
 import { rtveFlashEmbedResolver, rtveIframeEmbedResolver } from '../embeds/rtve.js'
@@ -218,6 +219,8 @@ const embedResolvers: Array<EmbedResolver> = [
   megatvEmbedResolver,
   podigeeEmbedResolver,
   podigeeIframeEmbedResolver,
+  redcircleScriptEmbedResolver,
+  redcircleIframeEmbedResolver,
   redditWidgetEmbedResolver,
   redditIframeEmbedResolver,
   reverbnationEmbedResolver,

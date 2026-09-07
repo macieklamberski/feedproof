@@ -58,6 +58,8 @@ const specimens: Record<string, string | [string, string]> = {
   '[data-component-name="ButtonCreateButton"]:has(> a[href*="action=share"])':
     '<p class="button-wrapper" data-component-name="ButtonCreateButton"><a class="button primary" href="https://example.com/p/post?action=share"><span>Share</span></a></p>',
   '[class*="social-share"]': '<div class="social-share"><a href="/x">X</a></div>',
+  'p:has(> a.redcircle-link)':
+    '<p style="font-size: 10px; color: gray;">Powered by <a class="redcircle-link" href="https://example.com/?utm_source=rc_embedded_player">RedCircle</a></p>',
   '[class*="share-buttons"]': '<div class="share-buttons"><a href="/fb">Facebook</a></div>',
   '.sharethis-inline-share-buttons': '<div class="sharethis-inline-share-buttons"></div>',
   '.sharedaddy': '<div class="sharedaddy sd-sharing-enabled"></div>',
