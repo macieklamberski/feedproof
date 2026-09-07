@@ -10,6 +10,11 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // The script lookup spans the whole document, so two players from two accounts would both take
 // the first account. In practice the rare feeds carrying a `data-video-id` element with no
 // `data-account` ship no loader script at all, so nothing has reached that branch.
+//
+// Every resolver here states its id as `{account}/{videoId}`. A video id on its own names
+// nothing: the playback API is `/playback/v1/accounts/{account}/videos/{video}`, and the
+// account is the half that discriminates, since a fabricated one 404s on the player host
+// while a wrong video id still serves the same shell.
 const brightcoveIdRegex = /^\d{5,}$/
 const accountScriptSelector = 'script[src*="players.brightcove.net"]'
 const accountScriptRegex = /players\.brightcove\.net\/(\d+)\//
@@ -26,13 +31,19 @@ const readPlayerAccount = (element: Element): string | undefined => {
   return attr(loader, 'src')?.match(accountScriptRegex)?.[1]
 }
 
+// The account and the video id are checked against `brightcoveIdRegex` before they get here, but
+// the player and the embed are whatever the element carried, so they are encoded: unescaped,
+// `data-player="../../999999/stolen"` names another account's player and `data-player="p?a=1"`
+// moves the rest of the path into the query.
 const composePlayerUrl = (
   account: string,
   videoId: string,
   player = 'default',
   embed = 'default',
 ): string => {
-  return `https://players.brightcove.net/${account}/${player}_${embed}/index.html?videoId=${videoId}`
+  const segment = `${encodeURIComponent(player)}_${encodeURIComponent(embed)}`
+
+  return `https://players.brightcove.net/${account}/${segment}/index.html?videoId=${videoId}`
 }
 
 // Brightcove's in-page embed is a bare `<video-js>` that its loader script turns into a player,
@@ -68,7 +79,7 @@ export const brightcoveVideoJsEmbedResolver = createMarkupEmbedResolver(
 
     return {
       provider: 'brightcove',
-      id: videoId,
+      id: `${account}/${videoId}`,
       src: composePlayerUrl(
         account,
         videoId,
@@ -116,7 +127,7 @@ const brightcoveFlashResolveEmbed = (
 
   return {
     provider: 'brightcove',
-    id: videoId,
+    id: `${account}/${videoId}`,
     src: composePlayerUrl(account, videoId),
   }
 }
@@ -132,9 +143,8 @@ export const brightcoveFlashEmbedResolver = createUrlEmbedResolver(
 // `<video-js>` element, and unclaimed it falls through to the generic placeholder with no
 // provider and no id.
 //
-// The account and video id are read back out, not the url passed through whole, because
-// the pair is what an enricher would key on later, and because a player url carrying neither is
-// not a video worth naming.
+// The account and video id are read back out, not the url passed through whole, because a
+// player url carrying neither is not a video worth naming.
 const playerPathRegex = /^([^_]+)_(.+)$/
 
 export const brightcoveResolveEmbed = (url: string): EmbedResolverResult | undefined => {
@@ -165,7 +175,7 @@ export const brightcoveResolveEmbed = (url: string): EmbedResolverResult | undef
 
   return {
     provider: 'brightcove',
-    id: videoId,
+    id: `${account}/${videoId}`,
     src: `https://players.brightcove.net/${account}/${player}/index.html?videoId=${videoId}`,
   }
 }

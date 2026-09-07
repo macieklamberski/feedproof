@@ -3,9 +3,11 @@ import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
 // The player page, which is the only page Mediavine publishes for a video: there is no watch
-// page, so the placeholder carries no `url`.
+// page, so the placeholder carries no `url`. The id is encoded on the way into the path because
+// the div carrier takes its attribute as written: unescaped, `data-video-id="../../evil"` names a
+// different page on the host and `data-video-id="a?autoplay=1"` appends a query.
 const composeEmbedUrl = (videoId: string): string => {
-  return `https://embed.mediavine.com/videos/${videoId}`
+  return `https://embed.mediavine.com/videos/${encodeURIComponent(videoId)}`
 }
 
 // Mediavine ships a video as an empty `<div class="mv-video-target mv-video-id-{id}"
@@ -35,10 +37,9 @@ export const mediavineEmbedResolver = createMarkupEmbedResolver(
 
 // The older snippet names the video only in the loader script's url and leaves the div beside it
 // with nothing but an `id` matching that same video id, so neither element renders and the div is
-// stripped as empty: the video is gone from the item. The id is letters and digits, the grammar
-// the `data-video-id` carrier takes unchecked, and only that is checked before it goes into the
-// player url: a wrong id fails the same whether it is minted or passed through, and a length
-// bound would refuse the next id space.
+// stripped as empty: the video is gone from the item. The id is letters and digits, and only
+// that alphabet is checked before it goes into the player url: a wrong id fails the same whether
+// it is minted or passed through, and a length bound would refuse the next id space.
 const scriptIdRegex = /^\/videos\/([A-Za-z0-9]+)\.js$/
 
 // The selector matches on a substring, so any host can spell `video.mediavine.com/videos` inside
