@@ -2,14 +2,14 @@ import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// `playerivoox_ee_{id}_1.html` is the legacy episode player, and `player_ej_` and `player_ek_`
-// are two live generations of the current one. All three name the episode by the same numeric
-// id. `player_ek_` also appears without the skin segment.
+// `playerivoox_ee_`, `_ep_` and `_em_` are three generations of the legacy episode player, and
+// `player_ej_` and `player_ek_` are two live generations of the current one. All of them name
+// the episode by the same numeric id. `player_ek_` also appears without the skin segment.
 //
 // The letters are enumerated rather than matched as a shape, because they are not a sequence:
 // `player_el_` and `player_en_podcast_` both answer 404 while `ej`, `ek` and `es_podcast` serve
 // (probed 2026-08-15 with real ids). A `player_e[a-z]_` pattern would mint dead urls.
-const legacyPlayerRegex = /playerivoox_ee_(\d+)_\d+\.html/
+const legacyPlayerRegex = /playerivoox_e[emp]_(\d+)_\d+\.html/
 const episodePlayerRegex = /player_e[jk]_(\d+)(?:_(\d+))?_\d+\.html/
 
 // The show player, which carries every episode. Its id is the podcast's, a different id space
@@ -53,9 +53,14 @@ export const extractIvooxSubject = (link: string): IvooxSubject | undefined => {
   return legacy?.[1] ? { kind: 'episode', id: legacy[1], skin: '1', player: 'ej' } : undefined
 }
 
-// The legacy player is gone: `playerivoox_ee_8292430_1.html` answers 404 with iVoox's own
-// "page does not exist" body (checked 2026-08-11 across two ids), so rewriting is a repair and
-// those embeds render nothing today. The current form is not verifiable the same way, since
+// The legacy player is gone: `playerivoox_ee_8292430_1.html` and `playerivoox_ep_1617339_1.html`
+// answer 404 with the same 80,237-byte "page does not exist" body, whichever generation and
+// whichever id, so rewriting is a repair and those embeds render nothing today. The three
+// generations share one id space, which is what lets the rewrite carry the id across:
+// `ivoox.com/x_rf_{id}_1.html` redirects to the episode's own slugged page for a real id and
+// 404s for a fabricated one, and it answered with the episode named in the same snippet for
+// fourteen of nineteen legacy ids probed 2026-09-06, across all three generations. The current
+// form is not verifiable the same way, since
 // `player_ej_` answers 200 to any id at all: it is a javascript shell that resolves the id on
 // load. What the rewrite rests on is the 404 and the shared id, not a status code off the
 // target. The skin segment is carried through when the source states one.
