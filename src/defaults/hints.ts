@@ -6,6 +6,7 @@ import { blueskyRenderHint } from '../embeds/bluesky.js'
 import { brightcoveRenderHint } from '../embeds/brightcove.js'
 import { buzzsproutRenderHint } from '../embeds/buzzsprout.js'
 import { captivateRenderHint } from '../embeds/captivate.js'
+import { codesandboxRenderHint } from '../embeds/codesandbox.js'
 import { instagramRenderHint } from '../embeds/instagram.js'
 import { mastodonRenderHint } from '../embeds/mastodon.js'
 import { mixcloudRenderHint } from '../embeds/mixcloud.js'
@@ -38,6 +39,7 @@ export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
   brightcoveRenderHint,
   buzzsproutRenderHint,
   captivateRenderHint,
+  codesandboxRenderHint,
   instagramRenderHint,
   mastodonRenderHint,
   mixcloudRenderHint,

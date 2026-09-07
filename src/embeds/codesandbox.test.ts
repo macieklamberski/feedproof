@@ -2,7 +2,11 @@ import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { codesandboxIframeEmbedResolver, codesandboxResolveEmbed } from './codesandbox.js'
+import {
+  codesandboxIframeEmbedResolver,
+  codesandboxResolveEmbed,
+  readCodesandboxHeight,
+} from './codesandbox.js'
 
 // Every `data-embed-*` field the placeholder carries, for the shapes that only resolve once the
 // pipeline has repaired them and so cannot be asserted on the resolver alone.
@@ -357,5 +361,24 @@ describeForEachParser('codesandbox shapes the pipeline repairs first', (parseHtm
     `
 
     expect(await convert(value)).not.toContain('cdn.embedly.com')
+  })
+})
+
+describe('readCodesandboxHeight', () => {
+  // What the editor posts as it settles, unasked.
+  it('should read the height out of a resize message', () => {
+    const value = {
+      src: 'https://codesandbox.io/embed/ng-accordion-ssscp',
+      context: 'iframe.resize',
+      height: 664,
+    }
+
+    expect(readCodesandboxHeight(value)).toBe(664)
+  })
+
+  it('should read nothing from another message or an unrendered player', () => {
+    expect(readCodesandboxHeight({ context: 'iframe.resize', height: 0 })).toBeUndefined()
+    expect(readCodesandboxHeight({ context: 'iframe.ready', height: 500 })).toBeUndefined()
+    expect(readCodesandboxHeight('iframe.resize')).toBeUndefined()
   })
 })
