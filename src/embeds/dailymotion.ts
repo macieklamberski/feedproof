@@ -57,6 +57,24 @@ const isRouteWord = (segment: string): boolean => {
   return pathWords.has(segment) || nonVideoWords.has(segment)
 }
 
+// A locale is stepped over only where a route word follows it, so `/embed/fr/video/{id}` reaches
+// the id while a two-letter account name at the head of a path still names no video. The word may
+// be a listing one: `/embed/fr/playlist/{id}` loses the playlist and loads an empty player, so the
+// id has to reach the playlist reader for the working url to be minted.
+const skipRouteWords = (segments: Array<string>): number => {
+  let index = 0
+
+  while (
+    index < segments.length &&
+    (pathWords.has(segments[index]) ||
+      (localeRegex.test(segments[index]) && isRouteWord(segments[index + 1])))
+  ) {
+    index++
+  }
+
+  return index
+}
+
 // A playlist names no single video, so it is read separately and only once the video readers have
 // found nothing: `/embed/video/{id}?playlist={id}` is a video playing inside one, not a playlist.
 export const extractDailymotionPlaylistId = (link: string): string | undefined => {
@@ -67,8 +85,13 @@ export const extractDailymotionPlaylistId = (link: string): string | undefined =
   }
 
   const segments = getPathSegments(url)
-  const marker = segments.indexOf('playlist')
-  const candidate = marker < 0 ? url.searchParams.get('playlist') : segments[marker + 1]
+  const marker = skipRouteWords(segments)
+
+  // The word is read where the route prefix ends rather than found anywhere in the path. Scanning
+  // read `/search/playlist/videos`, the search page for the word, as a playlist called `videos`,
+  // and `/embed/{account}/playlist/{id}` answers a real 404, so no working form sits deeper.
+  const candidate =
+    segments[marker] === 'playlist' ? segments[marker + 1] : url.searchParams.get('playlist')
 
   return keepIfMatches(candidate, safeVideoIdRegex)
 }
@@ -80,19 +103,7 @@ const readPathId = (url: URL, segments: Array<string>): string | undefined => {
     return segments[0]
   }
 
-  let index = 0
-
-  // A locale is stepped over only where a route word follows it, so `/embed/fr/video/{id}` reaches
-  // the id while a two-letter account name at the head of a path still names no video. The word
-  // may be a listing one: `/embed/fr/playlist/{id}` loses the playlist and loads an empty player,
-  // so the id has to reach the playlist reader for the working url to be minted.
-  while (
-    index < segments.length &&
-    (pathWords.has(segments[index]) ||
-      (localeRegex.test(segments[index]) && isRouteWord(segments[index + 1])))
-  ) {
-    index++
-  }
+  const index = skipRouteWords(segments)
 
   // A path opening with no route word names no video. Site pages would otherwise read as one:
   // `/about` is five legal id characters.
