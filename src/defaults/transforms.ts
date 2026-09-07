@@ -10,6 +10,7 @@ import { convertDatawrapperEmbeds } from '../transforms/dom/convertDatawrapperEm
 import { convertGiphyEmbeds } from '../transforms/dom/convertGiphyEmbeds.js'
 import { convertLazyImageContainers } from '../transforms/dom/convertLazyImageContainers.js'
 import { convertNoteEmbeds } from '../transforms/dom/convertNoteEmbeds.js'
+import { convertSmartframeEmbeds } from '../transforms/dom/convertSmartframeEmbeds.js'
 import { convertWidgets } from '../transforms/dom/convertWidgets.js'
 import { decodeDoubleEncodedTags } from '../transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from '../transforms/dom/demoteHeadings.js'
@@ -156,6 +157,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // cluster so the emitted <img> is dimensioned and proxied by the image transforms below.
   convertDatawrapperEmbeds,
   convertGiphyEmbeds,
+  convertSmartframeEmbeds,
   unwrapDoublyNestedLists,
   // Runs before flattenPictureElements and unwrapWrappers so an alignment signal on
   // a soon-dissolved <picture> or wrapper <div> is relocated onto the surviving media.
