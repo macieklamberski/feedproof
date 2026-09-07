@@ -426,6 +426,43 @@ describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should read the Medium card the same tag compiles into', async () => {
+      const value = html`
+        <div class="ltag__link">
+          <a href="https://medium.com/@author/post" class="ltag__link__link">
+            <div class="ltag__link__pic">
+              <img src="https://example.com/author.jpg" alt="Author name" />
+            </div>
+          </a>
+          <a href="https://medium.com/@author/post" class="ltag__link__link">
+            <div class="ltag__link__content">
+              <h2>Page title</h2>
+              <h3>
+                Author name ・
+                <time datetime="2022-08-25">Aug 25, 2022</time>
+                ・ 5 min read
+              </h3>
+              <div class="ltag__link__servicename">
+                <img src="https://example.com/medium.svg" alt="Medium Logo" />
+                medium.com
+              </div>
+            </div>
+          </a>
+        </div>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'devto',
+        url: 'https://medium.com/@author/post',
+        title: 'Page title',
+        author: 'Author name',
+        publisher: 'medium.com',
+        date: 'Aug 25, 2022',
+        icon: 'https://example.com/author.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('edge cases', () => {
@@ -475,22 +512,6 @@ describeForEachParser('devtoLegacyPostCiteResolver', (parseHtml) => {
   })
 
   describe('sad paths', () => {
-    it('should return undefined for a Medium card sharing the same classes', async () => {
-      const value = html`
-        <div class="ltag__link">
-          <a href="https://medium.com/@author/post" class="ltag__link__link">
-            <div class="ltag__link__content">
-              <h2>Page title</h2>
-              <h3>Author name</h3>
-              <span class="ltag__link__servicename">Medium</span>
-            </div>
-          </a>
-        </div>
-      `
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
     it('should return undefined for a removed post', async () => {
       const value = html`
         <div class="ltag__link">

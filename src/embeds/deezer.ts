@@ -3,7 +3,7 @@ import type { EmbedResolverResult } from '../types.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-const deezerHost = 'deezer.com'
+const deezerHosts = ['deezer.com']
 
 // The types the widget serves, each with the height the corpus's own widget frames give it.
 // Both numbers are corpus-typical rather than measured, because the widget has no natural
@@ -85,7 +85,7 @@ const readResource = (url: URL): Resource | undefined => {
 }
 
 export const deezerResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrlOnHosts(url, deezerHost)
+  const parsed = parseUrlOnHosts(url, deezerHosts)
   const resource = parsed && readResource(parsed)
 
   if (!resource || !(resource.type in deezerHeights) || !safeIdRegex.test(resource.id)) {
@@ -106,4 +106,4 @@ export const deezerResolveEmbed = (url: string): EmbedResolverResult | undefined
   }
 }
 
-export const deezerEmbedResolver = createUrlEmbedResolver([deezerHost], deezerResolveEmbed)
+export const deezerEmbedResolver = createUrlEmbedResolver(deezerHosts, deezerResolveEmbed)

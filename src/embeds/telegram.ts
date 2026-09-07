@@ -11,7 +11,7 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // shorter than that, the private channel's own `c/{id}` included. A message id is a plain
 // counter. A forum channel writes a third segment for the topic, and that shape is left alone:
 // no real specimen was available to check the url against.
-const postRegex = /^([a-zA-Z][a-zA-Z0-9_]{2,31})\/(\d+)$/
+const postRegex = /^([a-zA-Z][a-zA-Z0-9_]{2,})\/(\d+)$/
 
 // The third apex Telegram has always answered on, serving the identical widget: probed live, a
 // real post answers 200 there.

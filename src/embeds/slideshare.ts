@@ -9,14 +9,21 @@ const slideshareHosts = ['slideshare.net', 'slidesharecdn.com']
 // Two id spaces address one deck. The modern embed names it by an opaque key, the pre-2015
 // one by the deck's numeric id, and both still serve: opening `/slideshow/embed_code/6435157`
 // lands on the key form and renders the deck (checked in a browser 2026-08-13).
-const safeDeckKeyRegex = /^[A-Za-z0-9]{10,20}$/
-const safeDeckIdRegex = /^\d{4,12}$/
+//
+// Neither length is checked. `embed_code` and the `key` segment after it are what select a
+// deck, and each id sits in the one position behind them, so a bound would only refuse the next
+// length SlideShare mints. What the classes do is separate the two spaces from each other,
+// since digits cannot be read as a key nor `key` as a numeric id, and exclude the dot, which
+// keeps a file on the host playable when the enclosure probe offers it here.
+const safeDeckKeyRegex = /^[A-Za-z0-9]+$/
+const safeDeckIdRegex = /^\d+$/
 
 // The Flash wrapper carries the numeric id twice, on the div that holds the player and on the
 // object inside it: `id="__ss_6435157"` and `id="__sse6435157"`. The div's spelling is the one
 // that matters: many carriers name the deck on the div alone, so accepting only the object's
-// spelling would lose them.
-const wrapperIdRegex = /^__ss[e_]?(\d{4,12})$/
+// spelling would lose them. The `__ss` prefix is what tells the wrapper from any other element
+// carrying an id, so only the digits are checked after it.
+const wrapperIdRegex = /^__ss[e_]?(\d+)$/
 
 // Two players, the presentation one and the document one, sharing a query.
 const flashPlayerPathRegex = /\/swf\/(?:ssplayer\d?|doc_player)\.swf$/

@@ -77,12 +77,6 @@ export const devtoLegacyPostCiteResolver: CiteResolver = {
   kind: 'cite',
   selector: '.ltag__link',
   extract: (element) => {
-    // The Medium liquid tag renders into the same class tree. It has no tag list and names
-    // the service instead, which separates the two.
-    if (find(element, '.ltag__link__servicename')) {
-      return
-    }
-
     const content = find(element, '.ltag__link__content')
     const [author, date] = text(content, 'h3')?.split(authorSeparator) ?? []
 
@@ -91,6 +85,10 @@ export const devtoLegacyPostCiteResolver: CiteResolver = {
       url: attr(content?.closest('a'), 'href'),
       title: text(content, 'h2'),
       author,
+      // The Medium liquid tag compiles into the same tree and names the service where a dev.to
+      // card has a tag list, writing the article's host into it. Everything else it renders is
+      // in the same place, so the card reads whole and the service is the publisher.
+      publisher: text(element, '.ltag__link__servicename'),
       date: dateWithYear(date),
       icon: attr(find(element, '.ltag__link__pic img'), 'src'),
     })

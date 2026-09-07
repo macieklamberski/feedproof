@@ -635,6 +635,18 @@ describe('instagramResolveEmbed', () => {
     expect(instagramResolveEmbed(value)).toEqual(expected)
   })
 
+  it('should read a post whose account runs past thirty characters', () => {
+    const value = 'https://www.instagram.com/documentary_film_archive_berlin_x/p/CaUsPbUquKV/'
+    const expected: EmbedResolverResult = {
+      provider: 'instagram',
+      id: 'p/CaUsPbUquKV',
+      src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
+      url: 'https://www.instagram.com/p/CaUsPbUquKV/',
+    }
+
+    expect(instagramResolveEmbed(value)).toEqual(expected)
+  })
+
   it('should read a reel addressed through its account', () => {
     const value = 'https://www.instagram.com/aseverofficial/reel/CaUsPbUquKV/'
     const expected: EmbedResolverResult = {
