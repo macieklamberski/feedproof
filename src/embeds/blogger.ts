@@ -4,11 +4,11 @@ import { keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The token is opaque and url-safe base64, so anything outside that alphabet is not one and is
-// left to the generic iframe path instead of being interpolated into a url. Real tokens run far
-// longer than the floor, which sits well below them because the prefix and the size are Google's
-// to change; it only has to keep out a truncated fragment. That matters because `video.g?token=A`
-// answers 200 and renders nothing, so the player looks minted and is not.
-const safeTokenRegex = /^[\w-]{20,}$/
+// left to the generic iframe path instead of being interpolated into a url. The alphabet is the
+// whole guard: a truncated token renders nothing whether the frame is claimed or left alone,
+// since `video.g?token=A` answers 200 with the same empty shell the carrier would have loaded,
+// and the prefix and the length are Google's to change.
+const safeTokenRegex = /^[\w-]+$/
 
 const bloggerHosts = ['blogger.com']
 
