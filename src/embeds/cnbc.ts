@@ -7,9 +7,11 @@ const cnbcHosts = ['cnbc.com']
 const playerHost = 'player.cnbc.com'
 
 const safeGuidRegex = /^\d{6,}$/
+// Both path tokens go into the minted src, so each is bounded rather than taken as written.
+const safePathTokenRegex = /^[A-Za-z0-9_-]{1,64}$/
 
-// The player is `player.cnbc.com/p/{account}/{player}?playertype=synd&byGuid={guid}`, one
-// account and one player on every corpus specimen. It answers 200 for any guid, but with the
+// The player is `player.cnbc.com/p/{account}/{player}?playertype=synd&byGuid={guid}`, the same
+// account and player on every corpus specimen. It answers 200 for any guid, but with the
 // player and the clip's title for a real one (14.5 KB) and a "404: This page could not be
 // found" page (4 KB) for a fabricated one, checked 2026-09-06 with a browser user agent. The
 // Flash-era `plus.cnbc.com/rssvideosearch/…/id/{id}` ids are another space: three of them
@@ -27,6 +29,10 @@ export const cnbcResolveEmbed = (url: string): EmbedResolverResult | undefined =
   const guid = parsed?.searchParams.get('byGuid')
 
   if (parsed?.hostname !== playerHost || route !== 'p' || !account || !player || extra) {
+    return
+  }
+
+  if (!safePathTokenRegex.test(account) || !safePathTokenRegex.test(player)) {
     return
   }
 

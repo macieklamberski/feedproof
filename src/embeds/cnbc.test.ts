@@ -38,6 +38,20 @@ describe('cnbcResolveEmbed', () => {
       expect(cnbcResolveEmbed(value)).toBeUndefined()
     })
 
+    it('should return undefined for an account outside the token shape', () => {
+      const value =
+        'https://player.cnbc.com/p/evil.test%2Fp%2FgZWlPC/cnbc_global?playertype=synd&byGuid=7000344703'
+
+      expect(cnbcResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a player outside the token shape', () => {
+      const value =
+        'https://player.cnbc.com/p/gZWlPC/cnbc_global%3Fsrc%3Devil.test?playertype=synd&byGuid=7000344703'
+
+      expect(cnbcResolveEmbed(value)).toBeUndefined()
+    })
+
     it('should return undefined for a path that is not a player', () => {
       const value = 'https://player.cnbc.com/p/gZWlPC/cnbc_global/extra?byGuid=7000344703'
 
