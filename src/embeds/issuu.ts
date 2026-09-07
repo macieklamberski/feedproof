@@ -109,9 +109,12 @@ export const issuuWidgetEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
-// The Flash viewer, `static.issuu.com/webembed/…/IssuuReader.swf`, reaches here and is left
-// alone. Its `documentId` flashvar is a third id space that neither url form accepts, so there is
-// nothing to mint from and the generic fallback keeps it.
+// The Flash viewer, `static.issuu.com/webembed/…/IssuuReader.swf`, reaches here and is left alone.
+// Its `documentId` flashvar is a third id space that neither url form accepts. The older
+// `IssuuViewer.swf` snippets carry `username` and `docName` beside it, which is what the document
+// composer above mints from, so a repair is writable. It stays unwritten because nothing shows it
+// would help: `e.issuu.com/embed.html` answers the same 10,540 bytes for a real pair and an
+// invented one (2026-09-06), so no probe tells a document that still serves from one that does not.
 export const issuuResolveEmbed = (
   url: string,
   element?: Element,

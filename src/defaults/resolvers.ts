@@ -36,7 +36,7 @@ import { aparatIframeEmbedResolver, aparatScriptEmbedResolver } from '../embeds/
 import { appleEmbedResolver } from '../embeds/apple.js'
 import { archiveFlashEmbedResolver, archiveIframeEmbedResolver } from '../embeds/archive.js'
 import { arteEmbedResolver } from '../embeds/arte.js'
-import { audioboomEmbedResolver } from '../embeds/audioboom.js'
+import { audioboomEmbedResolver, audioboomPlayerEmbedResolver } from '../embeds/audioboom.js'
 import { bandcampEmbedResolver } from '../embeds/bandcamp.js'
 import { bitchuteEmbedResolver } from '../embeds/bitchute.js'
 import { bloggerEmbedResolver } from '../embeds/blogger.js'
@@ -90,7 +90,7 @@ import {
 import { libsynEmbedResolver } from '../embeds/libsyn.js'
 import { linkedinEmbedResolver } from '../embeds/linkedin.js'
 import { mastodonEmbedResolver } from '../embeds/mastodon.js'
-import { mediavineEmbedResolver } from '../embeds/mediavine.js'
+import { mediavineEmbedResolver, mediavineScriptEmbedResolver } from '../embeds/mediavine.js'
 import { megaphoneEmbedResolver } from '../embeds/megaphone.js'
 import { mixcloudEmbedResolver } from '../embeds/mixcloud.js'
 import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from '../embeds/nicovideo.js'
@@ -187,6 +187,7 @@ const embedResolvers: Array<EmbedResolver> = [
   facebookXfbmlEmbedResolver,
   facebookAmpEmbedResolver,
   mediavineEmbedResolver,
+  mediavineScriptEmbedResolver,
   mixcloudEmbedResolver,
   podbeanEmbedResolver,
   megaphoneEmbedResolver,
@@ -227,6 +228,7 @@ const embedResolvers: Array<EmbedResolver> = [
   blueskyS9eEmbedResolver,
   blueskyPostElementEmbedResolver,
   audioboomEmbedResolver,
+  audioboomPlayerEmbedResolver,
   notecomIframeEmbedResolver,
   omnyEmbedResolver,
   odyseeEmbedResolver,
