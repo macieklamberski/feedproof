@@ -15,7 +15,7 @@ describe('zencastrResolveEmbed', () => {
       provider: 'zencastr',
       id: 'cK98nMcr',
       src: 'https://zencastr.com/embed/cK98nMcr',
-      ratio: '480/480',
+      ratio: '1/1',
     }
 
     expect(zencastrResolveEmbed(value)).toEqual(expected)
@@ -69,7 +69,7 @@ describeForEachParser('zencastrBlockquoteEmbedResolver', (parseHtml) => {
         provider: 'zencastr',
         id: 'cK98nMcr',
         src: 'https://zencastr.com/embed/cK98nMcr',
-        ratio: '480/480',
+        ratio: '1/1',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -106,7 +106,7 @@ describeForEachParser('zencastrIframeEmbedResolver', (parseHtml) => {
       provider: 'zencastr',
       id: 'cK98nMcr',
       src: 'https://zencastr.com/embed/cK98nMcr',
-      ratio: '480/480',
+      ratio: '1/1',
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -142,7 +142,7 @@ describeForEachParser('zencastr through the pipeline', (parseHtml) => {
         data-embed-id="0C_Xr4ma"
         data-embed-provider="zencastr"
         data-embed-src="https://zencastr.com/embed/0C_Xr4ma"
-        data-embed-ratio="480/480"
+        data-embed-ratio="1/1"
       ></div>
     `
 
