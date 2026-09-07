@@ -75,6 +75,17 @@ describe('extractNicovideoId', () => {
   ])('should read the broadcast id from %s', (value) => {
     expect(extractNicovideoId(value)).toBe('lv346883570')
   })
+
+  // The illustration site sits on the same domain and writes the same `thumb/{kind}{digits}`
+  // card, so its ids pass the video id test on shape alone. Its card still renders, and the
+  // video player answers 500 for one, so these are left where they are.
+  it.each([
+    'https://ext.seiga.nicovideo.jp/thumb/im4572423',
+    'https://ext.seiga.nicovideo.jp/thumb/mg316785',
+    'https://seiga.nicovideo.jp/seiga/im4572423',
+  ])('should refuse the seiga card at %s', (value) => {
+    expect(extractNicovideoId(value)).toBeUndefined()
+  })
 })
 
 describeForEachParser('nicovideoScriptEmbedResolver', (parseHtml) => {
