@@ -88,7 +88,7 @@ export const deezerResolveEmbed = (url: string): EmbedResolverResult | undefined
   const parsed = parseUrlOnHosts(url, deezerHosts)
   const resource = parsed && readResource(parsed)
 
-  if (!resource || !(resource.type in deezerHeights) || !safeIdRegex.test(resource.id)) {
+  if (!resource || !Object.hasOwn(deezerHeights, resource.type) || !safeIdRegex.test(resource.id)) {
     return
   }
 

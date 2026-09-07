@@ -160,6 +160,18 @@ describe('appleResolveEmbed', () => {
       expect(appleResolveEmbed(value)).toBeUndefined()
     })
 
+    it('should return undefined for a kind naming an inherited method', () => {
+      const value = 'https://embed.podcasts.apple.com/us/toString/the-daily/id1200361736'
+
+      expect(appleResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a kind naming the prototype itself', () => {
+      const value = 'https://embed.podcasts.apple.com/us/__proto__/the-daily/id1200361736'
+
+      expect(appleResolveEmbed(value)).toBeUndefined()
+    })
+
     it('should return undefined for an id that is not an apple one', () => {
       const value = 'https://music.apple.com/us/album/thriller/abc'
 

@@ -192,6 +192,24 @@ describe('spotifyResolveEmbed', () => {
       expect(spotifyResolveEmbed(value)).toBeUndefined()
     })
 
+    it('should return undefined for a two-segment route that is not a type', () => {
+      const value = 'https://open.spotify.com/concert/38rJfCcp1DPmGqDbYE3xoR'
+
+      expect(spotifyResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a type naming an inherited method', () => {
+      const value = 'https://open.spotify.com/embed/toString/4uLU6hMCjMI75M1A2tKUQC'
+
+      expect(spotifyResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a type naming the prototype itself', () => {
+      const value = 'https://open.spotify.com/embed/__proto__/4uLU6hMCjMI75M1A2tKUQC'
+
+      expect(spotifyResolveEmbed(value)).toBeUndefined()
+    })
+
     it('should return undefined for a path naming a type and no id', () => {
       const value = 'https://open.spotify.com/embed/track'
 

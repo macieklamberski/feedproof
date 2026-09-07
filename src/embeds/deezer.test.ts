@@ -84,6 +84,18 @@ describe('deezerResolveEmbed', () => {
 
       expect(deezerResolveEmbed(value)).toBeUndefined()
     })
+
+    it('should refuse a type naming an inherited method', () => {
+      const value = 'https://widget.deezer.com/widget/dark/toString/3135556'
+
+      expect(deezerResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should refuse a type naming the prototype itself', () => {
+      const value = 'https://widget.deezer.com/widget/dark/__proto__/3135556'
+
+      expect(deezerResolveEmbed(value)).toBeUndefined()
+    })
   })
 
   describe('Variant #1: the current widget frame', () => {

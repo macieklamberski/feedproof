@@ -57,7 +57,7 @@ export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined 
   const [kind, ...rest] = storefrontRegex.test(segments[0] ?? '') ? segments.slice(1) : segments
   const pathId = rest[rest.length - 1]
 
-  if (!kind || !pathId || !(kind in appleHeights) || !safeIdRegex.test(pathId)) {
+  if (!kind || !pathId || !Object.hasOwn(appleHeights, kind) || !safeIdRegex.test(pathId)) {
     return
   }
 
