@@ -7,21 +7,19 @@ import {
   imgurResolveEmbed,
 } from './imgur.js'
 
-// The first segment of Imgur's own pages, which is what the resolver reads as an id. The three
-// that carry more of a path are listed with it, because what is refused is still the first
-// segment: `user`, `r` and `t`.
-const siteSegments = [
-  'upload',
-  'about',
-  'signin',
-  'memegen',
-  'search?q=cats',
-  'new',
-  'tos',
-  'privacy',
-  'user/someone',
-  'r/funny/abc12345',
-  't/cats/abc12345',
+// Imgur's own routes, none of which names a post to mint from.
+const sitePaths = [
+  'https://imgur.com/upload',
+  'https://imgur.com/about',
+  'https://imgur.com/signin',
+  'https://imgur.com/memegen',
+  'https://imgur.com/search?q=cats',
+  'https://imgur.com/new',
+  'https://imgur.com/tos',
+  'https://imgur.com/privacy',
+  'https://imgur.com/user/someone',
+  'https://imgur.com/r/funny/abc12345',
+  'https://imgur.com/t/cats/abc12345',
 ]
 
 describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
@@ -231,8 +229,8 @@ describe('imgurResolveEmbed', () => {
   })
 
   describe('shapes that name no post', () => {
-    it.each(siteSegments)('should ignore the site segment %s', (segment) => {
-      expect(imgurResolveEmbed(`https://imgur.com/${segment}`)).toBeUndefined()
+    it.each(sitePaths)('should ignore the site path %s', (value) => {
+      expect(imgurResolveEmbed(value)).toBeUndefined()
     })
 
     it('should ignore a gallery listing, which sits where an album id would', () => {
