@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
+import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { captivateResolveEmbed, extractCaptivateEmbed } from './captivate.js'
 
@@ -70,5 +72,35 @@ describe('captivateResolveEmbed', () => {
     const value = 'https://player.captivate.fm/about'
 
     expect(captivateResolveEmbed(value)).toBeUndefined()
+  })
+})
+
+// The url resolver reaches every enclosure a feed carries, and Captivate's episode files sit on
+// the same domain as its player one segment deeper, so only the segment count keeps them playable.
+describeForEachParser('captivate through the pipeline', (parseHtml) => {
+  it('should leave a captivate audio enclosure playable', async () => {
+    const enclosures = [
+      {
+        url: 'https://podcasts.captivate.fm/media/1d2e3f40-aaaa-bbbb-cccc-1234567890ab/episode.mp3',
+        type: 'audio/mpeg',
+      },
+    ]
+
+    const expected = html`
+      <audio
+        data-enclosure=""
+        controls
+        src="https://podcasts.captivate.fm/media/1d2e3f40-aaaa-bbbb-cccc-1234567890ab/episode.mp3"
+      ></audio>
+      <p>Body</p>
+    `
+
+    expect(
+      await transformContent('<p>Body</p>', {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/post',
+        enclosures,
+      }),
+    ).toEqualHtml(expected)
   })
 })

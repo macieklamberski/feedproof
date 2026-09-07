@@ -17,11 +17,15 @@ const playerHeight = 200
 // have rendered.
 const embedKindRegex = /^[a-z]+$/
 
+// A player url is a kind and an id and nothing after them. The episode files sit on the same
+// domain one segment deeper, `podcasts.captivate.fm/media/{uuid}/{file}.mp3`, and the url
+// resolver is offered every enclosure a feed carries, so the segment count is what keeps a
+// playable file from being minted into a dead `player.captivate.fm/media/…` placeholder.
 export const extractCaptivateEmbed = (link: string): { kind: string; id: string } | undefined => {
   const segments = getPathSegments(link)
   const [kind, id] = segments
 
-  if (!kind || !id || !embedKindRegex.test(kind) || !uuidRegex.test(id)) {
+  if (segments.length !== 2 || !kind || !id || !embedKindRegex.test(kind) || !uuidRegex.test(id)) {
     return
   }
 
