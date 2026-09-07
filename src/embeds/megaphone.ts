@@ -18,6 +18,13 @@ const megaphoneHosts = ['megaphone.fm']
 // 200, `?p={id}` a playlist at 482. Getting that wrong is the
 // visible failure, a playlist squeezed into a 200px box, which is why the two are separated
 // rather than defaulted to the commoner one.
+//
+// Measured 2026-09-07 in Chrome against `?e=AUDD4761726018` and `?p=NSM7546490835`: the episode
+// player is 200 tall at 320, 640 and 1280 wide inside a 1200-tall frame, a fixed height that
+// ignores its width; given a 150-tall frame it shrinks to fit, so 200 is what it renders on its
+// own and not a floor. The playlist player is 469 tall at 320 and 481 at 640 and 1280, one short
+// of 482 at the widths a post column gives it. Both fire only when the carrier states no size,
+// since `decideSize` takes the carrier's first.
 const embedKinds = {
   e: { kind: 'episode', height: 200, safeIdRegex: safeEpisodeIdRegex },
   p: { kind: 'playlist', height: 482, safeIdRegex: safePlaylistIdRegex },

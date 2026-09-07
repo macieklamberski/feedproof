@@ -10,6 +10,27 @@ const sizeRegex = /^size=([a-z0-9_]+)$/
 // The size preset is a path segment and it decides the player's exact pixels, so dropping it
 // would hand a publisher who chose `large` a short wide bar instead. Preserved in the minted
 // url, and used for the height the markup may not state.
+//
+// Measured 2026-09-07 in Chrome against album 1578579597 (8 tracks), track 1637967854, each preset
+// framed at 350 wide and again at 700, with the frame first at the height below and then at 1200.
+// No preset tracks its width, and the four that carry a tracklist stretch to the frame, scrolling
+// their rows inside whatever they get; the rest lay out to a height of their own and leave the
+// remainder blank. `medium` 120, `small` 42 and `venti` 100 match to the pixel. `grande` paints
+// 100, its controls overlapping a 100-square artwork. `grande2` and `grande3` paint 318 and 376 for
+// this album, both tracklist-long, inside 355 and 415. `short` paints its play and info row inside
+// 23 and shows a second row when given 42. `tall2` ends its chrome at 320 whatever the width, and
+// whatever the release: albums of 2, 8 and 20 tracks all put the tracklist at 325 and scroll the
+// rows inside it, so 450 stands for a long release as well as a short one. Every one of them fires
+// only where the carrier states no size, since `decideSize` takes the carrier's first.
+//
+// There is no `tall_album` or `tall_track` preset. Bandcamp spells one `size=tall`, and asking
+// for either of those two serves the `venti` fallback instead, so keying the map by them meant
+// no tall player ever got a height. What `tall` renders depends on the release, which is what
+// the two keys below hold. Measured 2026-09-07 in Chrome against album 1003538090 and track
+// 1092382717 at 150, 300, 600 and 700 wide: the chrome ends at 292 for an album and 268 for a
+// track, does not move with the width, and the tracklist below it stretches into whatever height
+// is left. A player naming both is an album player opened on a track, so the album decides. The
+// eight `size=tall` carriers in the corpus declare 295 and 270, a couple of pixels more.
 const presetHeights: Record<string, number> = {
   venti: 100,
   grande: 100,
@@ -19,8 +40,8 @@ const presetHeights: Record<string, number> = {
   medium: 120,
   small: 42,
   short: 23,
-  tall_album: 295,
-  tall_track: 270,
+  'tall/album': 295,
+  'tall/track': 270,
   tall2: 450,
 }
 const releaseKinds = ['album', 'track']
@@ -127,7 +148,9 @@ export const bandcampResolveEmbed = (
     .flatMap((wanted) => releases.filter(([named]) => named === wanted))
     .map(([named, value]) => `${named}=${value}/`)
     .join('')
-  const height = preset ? presetHeights[preset] : undefined
+  const isAlbum = releases.some(([named]) => named === 'album')
+  const tallKey = isAlbum ? 'tall/album' : 'tall/track'
+  const height = preset ? presetHeights[preset === 'tall' ? tallKey : preset] : undefined
   const anchor = parseFallback(element)
   const url = attr(anchor, 'href')
   // Bandcamp writes the label as "{title} by {artist}". It is kept whole instead of split
