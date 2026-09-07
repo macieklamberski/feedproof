@@ -15,9 +15,10 @@ const safeGuidRegex = /^\d{6,}$/
 // Flash-era `plus.cnbc.com/rssvideosearch/…/id/{id}` ids are another space: three of them
 // answer that same not-found page on this player, so the Flash carrier is not claimed.
 //
-// In a browser the player is a JW Player instance sized 16:9 of the viewport width (1000 by
-// 563), which the snippet's 560 by 349 agrees with; a publisher who states 100% by 580 does
-// not, so the ratio is preferred. Not measured at a second viewport width.
+// The JW instance runs in aspect mode with a 56.25% spacer and fills the frame it is given, with
+// its title band absolutely positioned inside rather than stacked below. So the frame's honest
+// shape is the clip's, and the 560 by 349 CNBC's own snippet states, which 59% of the carriers
+// copy, reserves 34 pixels of blank at that width. Measured 2026-09-07.
 const playerRatio = '16/9'
 
 export const cnbcResolveEmbed = (url: string): EmbedResolverResult | undefined => {

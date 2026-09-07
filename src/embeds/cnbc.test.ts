@@ -55,7 +55,25 @@ describe('cnbcResolveEmbed', () => {
 describeForEachParser('cnbcIframeEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, cnbcIframeEmbedResolver)
 
-  // A publisher's own 100% by 580 box does not describe the player, so the ratio is preferred.
+  // CNBC's own 560 by 349 snippet, which most carriers copy, reserves 34 pixels of blank.
+  it('should prefer the ratio over the snippet the carrier states', async () => {
+    const value = html`
+      <iframe
+        src="https://player.cnbc.com/p/gZWlPC/cnbc_global?playertype=synd&amp;byGuid=7000313539"
+        width="560"
+        height="349"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'cnbc',
+      id: '7000313539',
+      src: 'https://player.cnbc.com/p/gZWlPC/cnbc_global?playertype=synd&byGuid=7000313539',
+      ratio: '16/9',
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
   it('should resolve the pasted player iframe', async () => {
     const value = html`
       <iframe
