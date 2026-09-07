@@ -4,9 +4,17 @@ import { attr, flashVars, keepIfMatches, parseRatio } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-const scribdHosts = ['scribd.com', 'scribdassets.com']
+// The embed routes are the site's own. `scribdassets.com` served the Flash player and serves the
+// document images beside it, `img/document/{id}/…` among them, so only the Flash resolver takes
+// it: read as an embed those images mint a player over a picture the feed attached.
+const scribdHost = 'scribd.com'
+const scribdFlashHosts = [scribdHost, 'scribdassets.com']
 
-const safeDocumentIdRegex = /^\d{4,18}$/
+// The id is the segment after `embeds`, `document` or `doc`, so a marker word is what selects a
+// document and the length is not. Digits are what stays: they refuse a route word in that
+// position, and they exclude the dot, which keeps a file on the host playable when the enclosure
+// probe offers it here.
+const safeDocumentIdRegex = /^\d+$/
 
 const flashPlayerPathRegex = /\/scribdviewer\.swf$/i
 
@@ -41,7 +49,7 @@ export const scribdResolveEmbed = (
   link: string,
   element: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrlOnHosts(link, scribdHosts)
+  const parsed = parseUrlOnHosts(link, [scribdHost])
 
   if (!parsed) {
     return
@@ -63,7 +71,7 @@ export const scribdResolveEmbed = (
   return ratio ? { ...result, ratio } : result
 }
 
-export const scribdIframeEmbedResolver = createUrlEmbedResolver(scribdHosts, scribdResolveEmbed, {
+export const scribdIframeEmbedResolver = createUrlEmbedResolver([scribdHost], scribdResolveEmbed, {
   preferResolverSize: true,
 })
 
@@ -97,4 +105,7 @@ export const scribdFlashResolveEmbed = (
   return document && safeDocumentIdRegex.test(document) ? composeEmbed(document) : undefined
 }
 
-export const scribdFlashEmbedResolver = createUrlEmbedResolver(scribdHosts, scribdFlashResolveEmbed)
+export const scribdFlashEmbedResolver = createUrlEmbedResolver(
+  scribdFlashHosts,
+  scribdFlashResolveEmbed,
+)
