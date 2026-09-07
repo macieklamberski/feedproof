@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
+import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { extractIvooxSubject, type IvooxSubject, ivooxResolveEmbed } from './ivoox.js'
 
@@ -25,6 +27,39 @@ describe('extractIvooxSubject', () => {
     }
 
     expect(extractIvooxSubject(value)).toEqual(expected)
+  })
+
+  // The other two legacy generations, `_ep_` and `_em_`, name the episode with the same id.
+  it('should read an episode from the second legacy generation', () => {
+    const value = 'http://www.ivoox.com/playerivoox_ep_1617339_1.html'
+    const expected: IvooxSubject = {
+      kind: 'episode',
+      id: '1617339',
+      skin: '1',
+      player: 'ej',
+    }
+
+    expect(extractIvooxSubject(value)).toEqual(expected)
+  })
+
+  it('should read an episode from the earliest legacy generation', () => {
+    const value = 'http://www.ivoox.com/playerivoox_em_23415_1.html'
+    const expected: IvooxSubject = {
+      kind: 'episode',
+      id: '23415',
+      skin: '1',
+      player: 'ej',
+    }
+
+    expect(extractIvooxSubject(value)).toEqual(expected)
+  })
+
+  // The letters are a list, not a range: nothing outside the three seen in the corpus is read
+  // as a player, so an unknown generation keeps the generic placeholder.
+  it('should ignore a legacy generation letter the corpus never carries', () => {
+    const value = 'http://www.ivoox.com/playerivoox_ez_1617339_1.html'
+
+    expect(extractIvooxSubject(value)).toBeUndefined()
   })
 
   it('should read the regional player host', () => {
@@ -102,6 +137,18 @@ describe('ivooxResolveEmbed', () => {
     expect(ivooxResolveEmbed(value)).toEqual(expected)
   })
 
+  it('should rewrite the second legacy generation onto the same player', () => {
+    const value = 'http://www.ivoox.com/playerivoox_ep_1617339_1.html'
+    const expected: EmbedResolverResult = {
+      provider: 'ivoox',
+      id: '1617339',
+      src: 'https://www.ivoox.com/player_ej_1617339_1_1.html',
+      height: 200,
+    }
+
+    expect(ivooxResolveEmbed(value)).toEqual(expected)
+  })
+
   it('should carry the skin the source states', () => {
     const value = 'https://www.ivoox.com/player_ej_80807760_6_1.html'
     const expected: EmbedResolverResult = {
@@ -144,5 +191,37 @@ describe('ivooxResolveEmbed', () => {
     const value = 'https://www.ivoox.com/index.html'
 
     expect(ivooxResolveEmbed(value)).toBeUndefined()
+  })
+})
+
+// The legacy generations only ever arrive as a Flash `<object data>` or `<embed src>`, which is
+// the carrier the url resolver has to be reached through, so the repair is asserted end to end.
+describeForEachParser('ivoox flash carriers through the pipeline', (parseHtml) => {
+  const convert = (value: string) => {
+    return transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://example.com/post' })
+  }
+
+  it('should move a dead object player onto the current one', async () => {
+    const value = html`
+      <object
+        data="http://www.ivoox.com/playerivoox_ep_1617339_1.html"
+        type="application/x-shockwave-flash"
+        width="173"
+        height="30"
+      >
+        <param name="movie" value="http://www.ivoox.com/playerivoox_ep_1617339_1.html">
+      </object>
+    `
+    const expected = html`
+      <div
+        data-embed-src="https://www.ivoox.com/player_ej_1617339_1_1.html"
+        data-embed-provider="ivoox"
+        data-embed-id="1617339"
+        data-embed-width="173"
+        data-embed-height="30"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
   })
 })

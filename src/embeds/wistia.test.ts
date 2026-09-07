@@ -35,10 +35,11 @@ describe('extractWistiaEmbed', () => {
     expect(extractWistiaEmbed(value)).toEqual(expected)
   })
 
-  it('should return undefined for an id of the wrong length', () => {
-    const value = 'https://fast.wistia.net/embed/iframe/short'
+  it('should read an id longer than the ten characters Wistia mints today', () => {
+    const value = 'https://fast.wistia.net/embed/iframe/2fg072pftb9'
+    const expected = { route: 'iframe', id: '2fg072pftb9' }
 
-    expect(extractWistiaEmbed(value)).toBeUndefined()
+    expect(extractWistiaEmbed(value)).toEqual(expected)
   })
 
   it('should return undefined for a wistia url naming no media', () => {

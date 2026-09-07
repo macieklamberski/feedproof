@@ -6,6 +6,37 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 const imgurHosts = ['imgur.com']
 
+// The routes that name an album: the prefix the platform's own script writes, and the gallery
+// path the older share links took.
+const albumRoutes = new Set(['a', 'gallery'])
+
+// Imgur's own pages sit at the same depth as a post, so a first segment is a site page as often
+// as it is an id. The longer ones are live pages that pass the id shape, which is why the shape
+// alone let `imgur.com/upload` mint a post called `upload`. The short ones, `r`, `t` and `user`,
+// are refused by the id length today and are named here anyway, so that dropping the length band
+// cannot quietly turn a subreddit, a tag or a profile into a post.
+const sitePathSegments = new Set([
+  'about',
+  'account',
+  'apps',
+  'emerald',
+  'memegen',
+  'new',
+  'privacy',
+  'r',
+  'register',
+  'search',
+  'signin',
+  't',
+  'tos',
+  'upload',
+  'user',
+  'vidgif',
+])
+
+// The gallery's own listings sit where an album id would, so they are refused the same way.
+const galleryListingSegments = new Set(['hot', 'new', 'top'])
+
 // Post ids are short alphanumerics. The album form is the same id behind an `a/` prefix, which
 // is how the platform's own script tells the two apart.
 const safePostIdRegex = /^[a-zA-Z0-9]{5,12}$/
@@ -77,10 +108,14 @@ export const imgurResolveEmbed = (url: string): EmbedResolverResult | undefined 
   }
 
   const segments = getPathSegments(parsed)
-  // `/<id>/embed`, `/a/<id>/embed`, and the gallery path the older share links used.
-  const isAlbum = segments[0] === 'a' || segments[0] === 'gallery'
+  const isAlbum = albumRoutes.has(segments[0] ?? '')
   const id = isAlbum ? segments[1] : segments[0]
-  const post = id ? parsePost(isAlbum ? `${albumPrefix}${id}` : id) : undefined
+
+  if (!id || (isAlbum ? galleryListingSegments : sitePathSegments).has(id)) {
+    return
+  }
+
+  const post = parsePost(isAlbum ? `${albumPrefix}${id}` : id)
 
   return post ? composeEmbed(post) : undefined
 }

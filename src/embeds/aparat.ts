@@ -32,6 +32,14 @@ const composeEmbed = (videoHash: string): EmbedResolverResult => {
     // Most iframes that state a size are 16:9, so this is the platform's shape rather than a
     // measurement of one player. It matters most on the script carrier, which states no size
     // at all and is the more common carrier.
+    //
+    // Counted 2026-09-07 over the 138 corpus feeds the markup census lists with an Aparat iframe,
+    // 136 of them still on disk, 443 iframes in all: 190 state a width and a height in pixels, 172
+    // of those 16:9 and the other 18 landscape too (2:1, 4:3, 3:2), none portrait; 88 state a
+    // height alone, 84 of them `100%` by 450; 165 state nothing. So the ratio fires on those 165
+    // and on every script carrier, and judged by the sized iframes it would mis-shape about one
+    // in ten, 18 of 190, never into a portrait box. `decideSize` takes the carrier's size first,
+    // so the 278 that state anything keep it.
     ratio: '16/9',
   }
 }

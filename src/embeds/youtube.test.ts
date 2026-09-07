@@ -344,6 +344,57 @@ describe('youtubeResolveEmbed', () => {
 
     expect(youtubeResolveEmbed(value)).toBeUndefined()
   })
+
+  // The Flash player took its playlist on `/p/{id}`, and its 16 hex characters are the modern
+  // `list=PL{id}` without the prefix. The swf is dead, so these render nothing today.
+  describe('the Flash-era playlist player', () => {
+    it('should resolve a /p/ playlist to the playlist embed, posterless', () => {
+      const value = 'http://www.youtube.com/p/7BE4DDAC0A0D31AF?hl=es_ES&fs=1'
+      const expected: EmbedResolverResult = {
+        provider: 'youtube',
+        id: 'PL7BE4DDAC0A0D31AF',
+        src: 'https://www.youtube.com/embed/videoseries?list=PL7BE4DDAC0A0D31AF',
+        url: 'https://www.youtube.com/playlist?list=PL7BE4DDAC0A0D31AF',
+        ratio: '16/9',
+      }
+
+      expect(youtubeResolveEmbed(value)).toEqual(expected)
+    })
+
+    // Half the corpus specimens join the player options with `&` instead of `?`, so the id
+    // arrives as the head of the path segment rather than as the whole of it.
+    it('should resolve a /p/ playlist whose options ride on a stray ampersand', () => {
+      const value = 'http://www.youtube.com/p/B863A0EC10FE8F5B&hl=en&fs=1'
+      const expected: EmbedResolverResult = {
+        provider: 'youtube',
+        id: 'PLB863A0EC10FE8F5B',
+        src: 'https://www.youtube.com/embed/videoseries?list=PLB863A0EC10FE8F5B',
+        url: 'https://www.youtube.com/playlist?list=PLB863A0EC10FE8F5B',
+        ratio: '16/9',
+      }
+
+      expect(youtubeResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should refuse a /p/ id that is not 16 hex characters', () => {
+      const value = 'http://www.youtube.com/p/somechannelname'
+
+      expect(youtubeResolveEmbed(value)).toBeUndefined()
+    })
+
+    // A playlist id is case sensitive, so a lowercase spelling would mint a url that 404s.
+    it('should refuse a lowercase /p/ id', () => {
+      const value = 'http://www.youtube.com/p/7be4ddac0a0d31af'
+
+      expect(youtubeResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should refuse a bare /p/ path naming no playlist', () => {
+      const value = 'http://www.youtube.com/p/'
+
+      expect(youtubeResolveEmbed(value)).toBeUndefined()
+    })
+  })
 })
 
 describe('isVideoId', () => {
@@ -499,6 +550,26 @@ describeForEachParser('youtubeIframeEmbedResolver', (parseHtml) => {
     const value = '<iframe src=""></iframe>'
 
     expect(await extract(value)).toBeUndefined()
+  })
+
+  // The Flash playlist arrives on an `<embed>`, never an iframe: the form predates the iframe
+  // player, so the carrier is the half of this that has to keep working.
+  it('should extract the playlist from a Flash embed carrier', async () => {
+    const value = html`
+      <embed
+        src="http://www.youtube.com/p/7BE4DDAC0A0D31AF?hl=es_ES&fs=1"
+        type="application/x-shockwave-flash"
+      />
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'youtube',
+      id: 'PL7BE4DDAC0A0D31AF',
+      src: 'https://www.youtube.com/embed/videoseries?list=PL7BE4DDAC0A0D31AF',
+      url: 'https://www.youtube.com/playlist?list=PL7BE4DDAC0A0D31AF',
+      ratio: '16/9',
+    }
+
+    expect(await extract(value)).toEqual(expected)
   })
 })
 

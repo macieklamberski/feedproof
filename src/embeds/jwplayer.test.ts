@@ -50,8 +50,31 @@ describe('extractJwplayerId', () => {
     expect(extractJwplayerId(value)).toBeUndefined()
   })
 
+  it('should read an id off the previews route', () => {
+    const value = 'https://cdn.jwplayer.com/previews/H4GXr873'
+    const expected = 'H4GXr873'
+
+    expect(extractJwplayerId(value)).toBe(expected)
+  })
+
+  // `products` is eight characters, so the bound this replaces read it as a media id.
+  it('should return undefined for a marketing page whose slug fits the id shape', () => {
+    const value = 'https://www.jwplayer.com/products'
+
+    expect(extractJwplayerId(value)).toBeUndefined()
+  })
+
+  it('should read an id longer than the eight characters JW mints today', () => {
+    const value = 'https://cdn.jwplayer.com/players/H4GXr873xyz-abc12345.html'
+    const expected = 'H4GXr873xyz'
+
+    expect(extractJwplayerId(value)).toBe(expected)
+  })
+
+  // An underscore is outside the alphabet a media id is written in, and it is what tells a
+  // malformed id from a short one, since a short id fails the same whether minted or passed through.
   it('should return undefined when the media id is malformed', () => {
-    const value = 'https://cdn.jwplayer.com/players/short.html'
+    const value = 'https://cdn.jwplayer.com/players/H4GX_r873-abc12345.html'
 
     expect(extractJwplayerId(value)).toBeUndefined()
   })
@@ -278,5 +301,28 @@ describeForEachParser('jwplayerSetupEmbedResolver through the pipeline', (parseH
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
     expect(result).toContainHtml('data-embed-id="hwhuyhFf"')
+  })
+})
+
+// The url resolver reaches every enclosure a feed carries, and JW's media CDN sits on the same
+// domain as its player: only the route check keeps a rendition file a video.
+describeForEachParser('jwplayerIframeEmbedResolver through the pipeline', (parseHtml) => {
+  it('should leave a JW rendition enclosure playable', async () => {
+    const enclosures = [
+      { url: 'https://cdn.jwplayer.com/videos/H4GXr873-1280.mp4', type: 'video/mp4' },
+    ]
+
+    const expected = html`
+      <video data-enclosure="" controls src="https://cdn.jwplayer.com/videos/H4GXr873-1280.mp4"></video>
+      <p>Body</p>
+    `
+
+    expect(
+      await transformContent('<p>Body</p>', {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/post',
+        enclosures,
+      }),
+    ).toEqualHtml(expected)
   })
 })

@@ -15,9 +15,11 @@ const issuuHosts = ['issuu.com']
 // Two id spaces, and neither converts into the other. A config id is a pair of counters
 // (`1016421/47623369`) and addresses the reader through the url hash. A publisher and document
 // name pair addresses the same reader through the query. Each has its own url, which is what
-// makes both resolvable with nothing fetched.
+// makes both resolvable with nothing fetched. A name is also refused when it is only dots: the
+// query route hands the names back decoded and writes them into the page url as path segments,
+// so `u=..&d=..` would otherwise mint `issuu.com/../docs/..`.
 const configIdRegex = /^\d+\/\d+$/
-const safeNameRegex = /^[\w.-]+$/
+const safeNameRegex = /^(?!\.+$)[\w.-]+$/
 
 // A document name is a slug and never a filename. The reader shares this url shape with the
 // enclosure probe, which offers it every attachment a feed carries, so a `.pdf` or `.mp3` on
@@ -109,9 +111,12 @@ export const issuuWidgetEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
-// The Flash viewer, `static.issuu.com/webembed/…/IssuuReader.swf`, reaches here and is left
-// alone. Its `documentId` flashvar is a third id space that neither url form accepts, so there is
-// nothing to mint from and the generic fallback keeps it.
+// The Flash viewer, `static.issuu.com/webembed/…/IssuuReader.swf`, reaches here and is left alone.
+// Its `documentId` flashvar is a third id space that neither url form accepts. The older
+// `IssuuViewer.swf` snippets carry `username` and `docName` beside it, which is what the document
+// composer above mints from, so a repair is writable. It stays unwritten because nothing shows it
+// would help: `e.issuu.com/embed.html` answers the same 10,540 bytes for a real pair and an
+// invented one (2026-09-06), so no probe tells a document that still serves from one that does not.
 export const issuuResolveEmbed = (
   url: string,
   element?: Element,
