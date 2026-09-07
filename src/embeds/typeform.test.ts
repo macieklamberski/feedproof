@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
@@ -82,6 +83,19 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
         id: '01HXYZ',
         src: 'https://form.typeform.com/to/01HXYZ',
         url: 'https://form.typeform.com/to/01HXYZ',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Two generations of id already differ in length, and the length is not what names a form.
+    it('should recover a form whose id is shorter than either generation', async () => {
+      const value = '<div data-tf-widget="Xk2p"></div>'
+      const expected: EmbedResolverResult = {
+        provider: 'typeform',
+        id: 'Xk2p',
+        src: 'https://form.typeform.com/to/Xk2p',
+        url: 'https://form.typeform.com/to/Xk2p',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -241,5 +255,26 @@ describeForEachParser('typeformIframeEmbedResolver', (parseHtml) => {
     const value = '<iframe src="https://evil.test/to/MTt3Pw7K"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
+  })
+})
+
+// The enclosure probe offers every attachment a feed carries to this resolver, and Typeform
+// admits every subdomain of its own host, so the id alphabet is what keeps a file playable.
+describeForEachParser('typeform through the pipeline', (parseHtml) => {
+  it('should leave an audio enclosure on the typeform host playable', async () => {
+    const enclosures = [{ url: 'https://api.typeform.com/to/MTt3Pw7K.mp3', type: 'audio/mpeg' }]
+
+    const expected = html`
+      <audio data-enclosure="" controls src="https://api.typeform.com/to/MTt3Pw7K.mp3"></audio>
+      <p>Body</p>
+    `
+
+    expect(
+      await transformContent('<p>Body</p>', {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/post',
+        enclosures,
+      }),
+    ).toEqualHtml(expected)
   })
 })

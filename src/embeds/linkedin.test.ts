@@ -78,6 +78,19 @@ describeForEachParser('linkedinEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should resolve a urn whose id runs past thirty-two digits', async () => {
+      const value =
+        '<iframe src="https://www.linkedin.com/embed/feed/update/urn:li:share:746494483590132531274649448359013253127"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'linkedin',
+        id: 'urn:li:share:746494483590132531274649448359013253127',
+        src: 'https://www.linkedin.com/embed/feed/update/urn:li:share:746494483590132531274649448359013253127',
+        url: 'https://www.linkedin.com/feed/update/urn:li:share:746494483590132531274649448359013253127',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {

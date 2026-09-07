@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { notecomIframeEmbedResolver } from './notecom.js'
+import { notecomIframeEmbedResolver, readNotecomHeight } from './notecom.js'
 
 describeForEachParser('notecomIframeEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, notecomIframeEmbedResolver)
@@ -54,6 +54,20 @@ describeForEachParser('notecomIframeEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // A note under one of the platform's own publications, where the subdomain stands in for
+    // the user segment. The player serves it like any other note.
+    it('should mint the player from a publication post url', async () => {
+      const value = html`<iframe src="https://biz.note.com/n/n449782c9c270"></iframe>`
+      const expected: EmbedResolverResult = {
+        provider: 'notecom',
+        id: 'n449782c9c270',
+        src: 'https://note.com/embed/notes/n449782c9c270',
+        url: 'https://biz.note.com/n/n449782c9c270',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
@@ -83,5 +97,18 @@ describeForEachParser('notecomIframeEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+describe('readNotecomHeight', () => {
+  it('should read the height off the end of the string', () => {
+    const value = 'height::https://note.com/embed/notes/ne5fc6bd602c8::234'
+
+    expect(readNotecomHeight(value)).toBe(234)
+  })
+
+  it('should read nothing out of another string or a non-string', () => {
+    expect(readNotecomHeight('ready')).toBeUndefined()
+    expect(readNotecomHeight({ height: 234 })).toBeUndefined()
   })
 })

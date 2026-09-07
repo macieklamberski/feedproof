@@ -1,13 +1,17 @@
-import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { getPathSegments, isPlainObject } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize } from '../utils/dom.js'
+import { readPixels } from '../utils/hints.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// A channel and a message id, the pair the widget spells `channel/111424`. Telegram usernames
-// are 5 to 32 characters, start with a letter and hold letters, digits and underscores. A
-// message id is a plain counter. A forum channel writes a third segment for the topic, and that
-// shape is left alone: no real specimen was available to check the url against.
-const postRegex = /^([a-zA-Z][a-zA-Z0-9_]{4,31})\/(\d+)$/
+// A channel and a message id, the pair the widget spells `channel/111424`. Telegram's signup
+// form asks for five characters, but shorter names exist: Telegram holds some itself and
+// Fragment auctions the rest, and `t.me/nft/3?embed=1` serves a real post (checked 2026-09-07).
+// Three is the floor because every reserved route that takes a numeric second segment is
+// shorter than that, the private channel's own `c/{id}` included. A message id is a plain
+// counter. A forum channel writes a third segment for the topic, and that shape is left alone:
+// no real specimen was available to check the url against.
+const postRegex = /^([a-zA-Z][a-zA-Z0-9_]{2,})\/(\d+)$/
 
 // The third apex Telegram has always answered on, serving the identical widget: probed live, a
 // real post answers 200 there.
@@ -71,3 +75,15 @@ export const telegramIframeEmbedResolver = createUrlEmbedResolver(
   telegramHosts,
   telegramResolveEmbed,
 )
+
+// The player reports a `resize` event with its height, `null` for a post it could not load,
+// which reads as nothing.
+export const readTelegramHeight = (data: unknown): number | undefined => {
+  return isPlainObject(data) && data.event === 'resize' ? readPixels(data.height) : undefined
+}
+
+export const telegramRenderHint: EmbedRenderHint = {
+  provider: 'telegram',
+  origin: 'https://t.me',
+  readHeight: readTelegramHeight,
+}

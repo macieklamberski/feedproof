@@ -1,6 +1,7 @@
-import { parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { isPlainObject, parseUrl } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, parsePixelSize, text } from '../utils/dom.js'
+import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -40,7 +41,7 @@ const sitePathSegments = new Set([
 ])
 
 // The account names the poster, not the post, so it is matched and dropped.
-const postPathRegex = /^\/(?:([A-Za-z0-9_.]{1,30})\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/
+const postPathRegex = /^\/(?:([A-Za-z0-9_.]+)\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/
 const safeShortcodeRegex = /^[A-Za-z0-9_-]+$/
 
 type Post = { kind: string; shortcode: string }
@@ -199,9 +200,11 @@ const readContent = (element: Element): Partial<EmbedResolverResult> => {
 }
 
 // The blockquote in all its versions and wrappers, which is what the share dialog writes and
-// what every CMS re-wraps.
+// what every CMS re-wraps. The permalink attribute is the second handle on purpose: a sanitizer
+// that strips classes keeps data attributes, so some feeds carry the quote with the attributes
+// alone, and the attribute is Instagram's own namespace rather than a name anyone else picked.
 export const instagramBlockquoteEmbedResolver = createMarkupEmbedResolver(
-  'blockquote.instagram-media',
+  'blockquote.instagram-media, blockquote[data-instgrm-permalink]',
   (element): EmbedResolverResult | undefined => {
     const wrapper = readWrapper(element)
     const post = findPost(element) ?? wrapper.post
@@ -314,3 +317,17 @@ export const instagramIframeEmbedResolver = createUrlEmbedResolver(
   instagramHosts,
   instagramResolveEmbed,
 )
+
+// The player measures itself once mounted and reports it under a `MEASURE` type. `LOADING`
+// and `MOUNTED` come through the same channel without a size.
+export const readInstagramHeight = (data: unknown): number | undefined => {
+  return isPlainObject(data) && data.type === 'MEASURE' && isPlainObject(data.details)
+    ? readPixels(data.details.height)
+    : undefined
+}
+
+export const instagramRenderHint: EmbedRenderHint = {
+  provider: 'instagram',
+  origin: 'https://www.instagram.com',
+  readHeight: readInstagramHeight,
+}

@@ -1,8 +1,8 @@
 import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { uuidRegex } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const legacyIdRegex = /^[0-9a-f]{8}$/i
 const numericIdRegex = /^\d+$/
 
@@ -66,3 +66,7 @@ export const simplecastEmbedResolver = createUrlEmbedResolver(
   simplecastHosts,
   simplecastResolveEmbed,
 )
+
+// No play request. The player speaks player.js and takes its `play`, flipping to its playing
+// state, but loaded in Chrome by a click the audio never started from it. Nothing to send until
+// it does.

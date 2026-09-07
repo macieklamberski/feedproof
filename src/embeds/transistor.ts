@@ -2,11 +2,15 @@ import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-const safeIdRegex = /^[0-9a-z]{6,12}$/i
-// A show slug is the publisher's own words, not a generated id, so it runs longer and
-// hyphenates. The leading class keeps a slug from opening with a hyphen or reaching a dot, so
-// it cannot climb out of the minted path.
-const safeSlugRegex = /^[0-9a-z][0-9a-z-]{1,60}$/i
+// Neither length is checked. `/e/` and `/s/` are the only routes read here and Transistor serves
+// nothing else behind them: checked 2026-09-07, `transistor.fm/e/` and `transistor.fm/s/` both
+// answer 404 on the marketing site, whose own pages sit at the first path segment. What the
+// alphabets do is exclude the dot, so neither id can reach a file on the host or climb out of the
+// minted path. A show slug is the publisher's own words rather than a generated id, so it
+// hyphenates where an episode id never does, and its leading class keeps it from opening with a
+// hyphen.
+const safeIdRegex = /^[0-9a-z]+$/i
+const safeSlugRegex = /^[0-9a-z][0-9a-z-]*$/i
 
 const transistorHosts = ['transistor.fm']
 
@@ -82,3 +86,7 @@ export const transistorEmbedResolver = createUrlEmbedResolver(
   transistorHosts,
   transistorResolveEmbed,
 )
+
+// No play request. The player speaks player.js and takes its `play`, flipping to its playing
+// state, but loaded in Chrome by a click the audio never started from it. Nothing to send until
+// it does.

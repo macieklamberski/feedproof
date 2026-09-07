@@ -11,13 +11,16 @@ const odyseeHosts = ['odysee.com', 'lbry.tv', 'open.lbry.com']
 
 // A claim is `{name}:{claim id}`, the id being a hex prefix of any length that disambiguates
 // the name. A channel is the same with `@` in front. The name is whatever the publisher typed,
-// so only what would break the minted path or smuggle a second url segment is refused.
+// so only what would break the minted path or smuggle a second url segment is refused. A name
+// that is only dots is refused too: the url parser folds a bare `..` segment away, but a path
+// percent-encoded whole carries it past the parser, and it would come out of the decode below
+// as a dot segment in the minted path.
 //
 // The claim id is optional: a bare name addresses the winning claim for it. Probed live
 // 2026-08-31, a bare name returns the same player as the claim spelled with its short id,
 // against a not-found shell for a name that does not exist. Both answer 200, so on this
 // platform only the body separates a real claim from an invented one.
-const claimRegex = /^@?[^\s/?#<>"'\\:]+(?::[0-9a-f]+)?$/i
+const claimRegex = /^@?(?!\.+(?::|$))[^\s/?#<>"'\\:]+(?::[0-9a-f]+)?$/i
 
 // The player is `odysee.com/$/embed/{path}`, and the path takes two spellings. The current
 // share code writes the channel and the claim as two segments, `@channel:x/name:y`, and lately
@@ -90,3 +93,7 @@ const odyseeResolveEmbed = (link: string, element: Element): EmbedResolverResult
 }
 
 export const odyseeEmbedResolver = createUrlEmbedResolver(odyseeHosts, odyseeResolveEmbed)
+
+// No autoplay hint. `autoplay=true` does start the embed, but the player forces it muted, any
+// value included, and offers no way to unmute from outside. Without it the viewer's click inside
+// the frame plays with sound, which is the better of the two.

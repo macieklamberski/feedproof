@@ -13,6 +13,7 @@ import {
   isElementHidden,
   isEmptyElement,
   keepIfMatches,
+  paramValue,
   parsePixelSize,
   parseRatio,
   removeWithEmptyWrappers,
@@ -48,6 +49,27 @@ describeForEachParser('getElementDimensions', (parseHtml) => {
     const image = queryElement(document, 'img')
 
     expect(getElementDimensions(image)).toEqual({ width: 200, height: undefined })
+  })
+
+  it('should read a px-suffixed attribute the way the browser does', () => {
+    const document = parseHtml('<iframe width="100%" height="900px"></iframe>')
+    const frame = queryElement(document, 'iframe')
+
+    expect(getElementDimensions(frame)).toEqual({ width: undefined, height: 900 })
+  })
+
+  it('should read any unit suffix as pixels the way the browser does', () => {
+    const document = parseHtml('<iframe width="600 px" height="900pt"></iframe>')
+    const frame = queryElement(document, 'iframe')
+
+    expect(getElementDimensions(frame)).toEqual({ width: 600, height: 900 })
+  })
+
+  it('should keep a px-suffixed tracking pixel size parseable', () => {
+    const document = parseHtml('<img width="1px" height="1px">')
+    const image = queryElement(document, 'img')
+
+    expect(getElementDimensions(image)).toEqual({ width: 1, height: 1 })
   })
 
   it('should treat an empty attribute as absent rather than zero', () => {
@@ -106,6 +128,19 @@ describeForEachParser('getElementDimensions', (parseHtml) => {
     const image = queryElement(document, 'img')
 
     expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
+  })
+
+  // A feed writes the attribute, so the read has to stay linear in its length. This input took
+  // 6.8 seconds before the unit was bounded and takes 2 milliseconds now, so the threshold sits
+  // an order of magnitude above the fast path and an order below the slow one: a loaded machine
+  // moves it nowhere near either side.
+  it('should read a long unit-like attribute in linear time', () => {
+    const document = parseHtml(`<img width="${'a'.repeat(120000)}1">`)
+    const image = queryElement(document, 'img')
+    const start = performance.now()
+
+    expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
+    expect(performance.now() - start).toBeLessThan(500)
   })
 })
 
@@ -246,6 +281,18 @@ describeForEachParser('getWrapperRatio reading only the element itself', (parseH
     const iframe = queryElement(document, 'iframe')
 
     expect(getWrapperRatio(iframe, 0)).toBe('16/9')
+  })
+
+  // A feed writes the attribute, so the read has to stay linear in its length. This input took
+  // 2 seconds before the keyword was dropped by token and takes 3 milliseconds now, so the
+  // threshold sits well clear of both and a loaded machine cannot flip it.
+  it('should read a ratio holding a long run of spaces in linear time', () => {
+    const document = parseHtml(`<iframe style="aspect-ratio: 16${' '.repeat(120000)}9"></iframe>`)
+    const iframe = queryElement(document, 'iframe')
+    const start = performance.now()
+
+    expect(getWrapperRatio(iframe, 0)).toBeUndefined()
+    expect(performance.now() - start).toBeLessThan(500)
   })
 
   it('should read a wp-embed-aspect class from the element itself', () => {
@@ -934,6 +981,99 @@ describeForEachParser('flashVars', (parseHtml) => {
 
   it('should return undefined for a nullish element', () => {
     expect(flashVars(undefined)).toBeUndefined()
+  })
+})
+
+// `flashVars` exercises this helper with one name only, so the branches its other two callers
+// rest on are pinned here rather than through whichever caller happens to reach them.
+describeForEachParser('paramValue', (parseHtml) => {
+  it('should read the value of the named param', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="playerkey" value="AQ~~,abc,def" />
+      </object>
+    `)
+    const element = queryElement(document, 'object')
+
+    expect(paramValue(element, 'playerkey')).toBe('AQ~~,abc,def')
+  })
+
+  // The name is matched lowercased, so a caller passing anything else never matches. Brightcove
+  // writes `@videoplayer` and `playerKey`, and both reach here as the lowercase spelling.
+  it('should match the param name whatever the markup casing', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="PlayerKey" value="AQ~~,abc,def" />
+      </object>
+    `)
+    const element = queryElement(document, 'object')
+
+    expect(paramValue(element, 'playerkey')).toBe('AQ~~,abc,def')
+  })
+
+  it('should return undefined when the caller states the name in another casing', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="playerkey" value="AQ~~,abc,def" />
+      </object>
+    `)
+    const element = queryElement(document, 'object')
+
+    expect(paramValue(element, 'playerKey')).toBeUndefined()
+  })
+
+  it('should pick the named param out of several', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="movie" value="player.swf" />
+        <param name="@videoplayer" value="6098765432" />
+        <param name="wmode" value="transparent" />
+      </object>
+    `)
+    const element = queryElement(document, 'object')
+
+    expect(paramValue(element, '@videoplayer')).toBe('6098765432')
+  })
+
+  // The search is over descendants, not children, because the Flash-era wrappers nest a player
+  // inside a second `<object>` for the browsers that needed it.
+  it('should read a param nested below the root', () => {
+    const document = parseHtml(html`
+      <object>
+        <object>
+          <param name="flashvars" value="config=1" />
+        </object>
+      </object>
+    `)
+    const element = queryElement(document, 'object')
+
+    expect(paramValue(element, 'flashvars')).toBe('config=1')
+  })
+
+  it('should return undefined for a param that states no value', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="playerkey" />
+      </object>
+    `)
+    const element = queryElement(document, 'object')
+
+    expect(paramValue(element, 'playerkey')).toBeUndefined()
+  })
+
+  it('should return undefined when no param carries the name', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="movie" value="player.swf" />
+      </object>
+    `)
+    const element = queryElement(document, 'object')
+
+    expect(paramValue(element, 'playerkey')).toBeUndefined()
+  })
+
+  it('should return undefined for no root', () => {
+    expect(paramValue(undefined, 'playerkey')).toBeUndefined()
   })
 })
 

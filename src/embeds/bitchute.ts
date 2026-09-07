@@ -41,3 +41,7 @@ const bitchuteResolveEmbed = (link: string, element: Element): EmbedResolverResu
 }
 
 export const bitchuteEmbedResolver = createUrlEmbedResolver(bitchuteHosts, bitchuteResolveEmbed)
+
+// No autoplay hint. The player's script reads `autoPlay` off its query, then gates `play()` on an
+// unmuted 250 ms autoplay probe, and loaded in Chrome by a click with `autoPlay=true` the player
+// still sat on its poster. Not a hint until the player honours it.

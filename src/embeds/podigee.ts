@@ -1,5 +1,7 @@
-import type { EmbedResolverResult } from '../types.js'
+import { isPlainObject } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
+import { isPlayerJsReady, playerJsPlayRequest, readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -17,6 +19,10 @@ const showHostRegex = /^(?!www\.)[a-z0-9-]+\.podigee\.io$/i
 // two does. A url already ending in `/embed` names the player outright and needs no such guess.
 const safeEpisodeRegex = /^\d+-/
 
+// Fluid in width and fixed in height: 145 at 400 and 900 pixels wide (2026-09-05), matching
+// the 144.8 the player reports once rendered.
+const playerHeight = 145
+
 // The show is the subdomain and the episode the first path segment, which together make a
 // stable id without parsing the query.
 const composeEmbed = (parsed: URL, src: string): EmbedResolverResult | undefined => {
@@ -27,7 +33,7 @@ const composeEmbed = (parsed: URL, src: string): EmbedResolverResult | undefined
     return
   }
 
-  return { provider: 'podigee', id: `${show}/${episode}`, src }
+  return { provider: 'podigee', id: `${show}/${episode}`, src, height: playerHeight }
 }
 
 // Podigee ships a generic loader script whose `data-configuration` is the player url itself,
@@ -86,3 +92,23 @@ export const podigeeResolveEmbed = (url: string): EmbedResolverResult | undefine
 }
 
 export const podigeeIframeEmbedResolver = createUrlEmbedResolver(podigeeHosts, podigeeResolveEmbed)
+
+// The player takes no query to start, and Podigee's help says playback must wait for a click; it
+// speaks player.js.
+//
+// The player reports its height under a `configurePlayer` message, 0 before it has rendered
+// and the real value after, which is what Podigee's own embed script sets the iframe to. The
+// frame is served from the show's own subdomain, so it has no origin to name here and the
+// reader matches the frame's own.
+export const readPodigeeHeight = (data: unknown): number | undefined => {
+  return isPlainObject(data) && data.listenTo === 'configurePlayer'
+    ? readPixels(data.height)
+    : undefined
+}
+
+export const podigeeRenderHint: EmbedRenderHint = {
+  provider: 'podigee',
+  isReady: isPlayerJsReady,
+  requestPlay: playerJsPlayRequest,
+  readHeight: readPodigeeHeight,
+}

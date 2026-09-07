@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { podigeeEmbedResolver, podigeeResolveEmbed } from './podigee.js'
+import { podigeeEmbedResolver, podigeeResolveEmbed, readPodigeeHeight } from './podigee.js'
 
 describeForEachParser('podigeeEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, podigeeEmbedResolver)
@@ -18,6 +18,7 @@ describeForEachParser('podigeeEmbedResolver', (parseHtml) => {
         provider: 'podigee',
         id: 'theshow/42-an-episode',
         src: 'https://theshow.podigee.io/42-an-episode/embed?context=external',
+        height: 145,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -56,6 +57,7 @@ describe('podigeeResolveEmbed', () => {
       provider: 'podigee',
       id: 'cloudonaut/72-serverless-and-devops-a-match',
       src: 'https://cloudonaut.podigee.io/72-serverless-and-devops-a-match/embed',
+      height: 145,
     }
 
     expect(podigeeResolveEmbed(value)).toEqual(expected)
@@ -69,6 +71,7 @@ describe('podigeeResolveEmbed', () => {
       provider: 'podigee',
       id: 'cloudonaut/72-an-episode',
       src: value,
+      height: 145,
     }
 
     expect(podigeeResolveEmbed(value)).toEqual(expected)
@@ -81,6 +84,7 @@ describe('podigeeResolveEmbed', () => {
       provider: 'podigee',
       id: 'cloudonaut/an-unnumbered-episode',
       src: value,
+      height: 145,
     }
 
     expect(podigeeResolveEmbed(value)).toEqual(expected)
@@ -101,6 +105,7 @@ describe('podigeeResolveEmbed', () => {
       provider: 'podigee',
       id: 'cloudonaut/72-an-episode',
       src: 'https://cloudonaut.podigee.io/72-an-episode/embed',
+      height: 145,
     }
 
     expect(podigeeResolveEmbed(value)).toEqual(expected)
@@ -152,6 +157,7 @@ describeForEachParser('podigee through the pipeline', (parseHtml) => {
         data-embed-id="cloudonaut/72-an-episode"
         data-embed-provider="podigee"
         data-embed-src="https://cloudonaut.podigee.io/72-an-episode/embed"
+        data-embed-height="145"
       ></div>
     `
 
@@ -169,5 +175,24 @@ describeForEachParser('podigee through the pipeline', (parseHtml) => {
     `
 
     expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+})
+
+describe('readPodigeeHeight', () => {
+  it('should read the height out of the player configuration', () => {
+    const value = {
+      listenTo: 'configurePlayer',
+      height: 144.812,
+      title: 'Podcast player for episode "Scheiden tut weh - entscheiden auch".',
+    }
+
+    expect(readPodigeeHeight(value)).toBe(144.812)
+  })
+
+  it('should read nothing before the player has rendered', () => {
+    const value = { listenTo: 'configurePlayer', height: 0, title: 'Podcast player' }
+
+    expect(readPodigeeHeight(value)).toBeUndefined()
+    expect(readPodigeeHeight({ listenTo: 'loadSubscribeButton' })).toBeUndefined()
   })
 })

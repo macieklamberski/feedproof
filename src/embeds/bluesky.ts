@@ -1,6 +1,7 @@
-import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { getPathSegments, isPlainObject } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, isBlockElement, isBr, isElement, jsonAttr, text } from '../utils/dom.js'
+import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -29,9 +30,12 @@ const atUriRegex = /^at:\/\/([^/]+)\/([^/]+)\/([^/?#]+)/
 // The authority is either a DID (`did:plc:…`, `did:web:…`) or a handle, which is a domain
 // name. The record key is base32-sortable in practice. The wider charset here is the whole
 // of what a record key may hold. Both are interpolated into urls, so anything outside these
-// alphabets is refused, not escaped.
+// alphabets is refused, not escaped. The AT URI comes off raw attribute text, so nothing has
+// folded a dot segment away before it gets here, and a record key of `.` or `..` would climb out
+// of the collection in the minted player url. The AT Protocol forbids exactly those two keys, so
+// refusing them costs no real post.
 const safeAuthorityRegex = /^(?:did:[a-z]+:[\w.:%-]+|[a-z\d-]+(?:\.[a-z\d-]+)+)$/i
-const safeRecordKeyRegex = /^[\w.~-]+$/
+const safeRecordKeyRegex = /^(?!\.{1,2}$)[\w.~-]+$/
 
 // The author label sits between the post text and the date link, and the leading separator is
 // whatever the snippet generator emitted: `&mdash;`, an en dash, or a plain `--`.
@@ -302,3 +306,14 @@ export const blueskyPostElementEmbedResolver = createMarkupEmbedResolver(
   'bluesky-post[src]',
   (element) => extractQuotedPost(element, 'src'),
 )
+
+// The player posts its height whenever the post's size changes.
+export const readBlueskyHeight = (data: unknown): number | undefined => {
+  return isPlainObject(data) ? readPixels(data.height) : undefined
+}
+
+export const blueskyRenderHint: EmbedRenderHint = {
+  provider: 'bluesky',
+  origin: 'https://embed.bsky.app',
+  readHeight: readBlueskyHeight,
+}

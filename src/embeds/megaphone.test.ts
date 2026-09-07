@@ -73,11 +73,18 @@ describe('extractMegaphoneEmbed', () => {
     },
   )
 
-  // The digit run is the part the data supports, so it stays exact.
-  it('should not read an id whose digit run is not exactly ten', () => {
+  // Every id in the corpus runs to ten digits, which is Megaphone's generator and not a rule the
+  // parameter needs, so the run is not counted.
+  it('should read an episode id whose digit run is not ten', () => {
     const value = 'https://playlist.megaphone.fm/?e=GLT46534611423'
+    const expected = {
+      param: 'e',
+      kind: 'episode',
+      id: 'GLT46534611423',
+      height: 200,
+    }
 
-    expect(extractMegaphoneEmbed(value)).toBeUndefined()
+    expect(extractMegaphoneEmbed(value)).toEqual(expected)
   })
 
   // A playlist is named by a slug, which has no digit grammar to check.

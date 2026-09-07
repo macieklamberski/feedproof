@@ -133,6 +133,10 @@ export const injectEnclosures: DomTransform = (context) => {
     return () => {}
   }
 
+  const feedImageFingerprints = new Set(
+    context.feedImageUrls?.map((url) => getImageFingerprint(url, context.cleanUrlFn)),
+  )
+
   return async (document) => {
     const created: Array<HTMLElement> = []
 
@@ -193,10 +197,15 @@ export const injectEnclosures: DomTransform = (context) => {
         continue
       }
 
-      // WordPress attaches the author's gravatar as a per-item media:content image.
-      // It is the author's avatar, not post imagery, so never inject it as the lead
-      // image of an otherwise imageless item.
-      if (isImageEnclosure(enclosure) && isAvatarEnclosure(embedSource, context.avatarImageHosts)) {
+      // WordPress attaches the author's gravatar as a per-item media:content image, and
+      // Substack fills the enclosure of a post with no cover with the publication logo.
+      // Neither is post imagery, so never inject one as the lead image of an otherwise
+      // imageless item.
+      if (
+        isImageEnclosure(enclosure) &&
+        (isAvatarEnclosure(embedSource, context.avatarImageHosts) ||
+          feedImageFingerprints.has(getImageFingerprint(embedSource, context.cleanUrlFn)))
+      ) {
         continue
       }
 

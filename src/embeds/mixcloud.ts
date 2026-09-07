@@ -1,5 +1,5 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A show is `{user}/{slug}`. Mixcloud keeps whatever script the publisher titled it in, so the
@@ -76,13 +76,23 @@ export const extractMixcloudShow = (link: string): string | undefined => {
   return source ? readShowPath(getPathSegments(source)) : undefined
 }
 
+// The widget's display options, in the order they are written back. Each is a flag the
+// publisher set to `1`, and together they pick which player the widget draws, so they ride
+// through into the minted url and the stated height describes that player.
+const displayOptions = ['mini', 'hide_cover', 'hide_artwork', 'light']
+
+// The player is fluid-width and fixed-height, measured 2026-09-04 at 330 and 660 wide on two
+// shows: with the cover hidden the standard bar draws 160 whatever the frame allows, and
+// `mini=1` beside it draws 60. With the cover left on the artwork fills any height the frame
+// has, `mini` or not, and at 60 the logo lands on the title, so that form takes the bar's full
+// height. The heights carriers state belong to earlier players, 180 to 208 on 44 of 46 sampled
+// iframes, and Mixcloud's own oEmbed still answers 120, so the measured number stands over
+// what a carrier states.
+const miniPlayerHeight = 60
+const playerHeight = 160
+
 // No thumbnail: the artwork url is only available through Mixcloud's API, and nothing in the
 // embed carries it.
-//
-// No height either. It is not a property of the show but of the embed's display options:
-// `mini=1` is 60, `hide_cover=1` is 120 (sometimes 180) and the artwork player is 400 or 480,
-// and iframes carry their own `height`, which the widget pass prefers over anything a resolver
-// supplies.
 //
 // The `www` widget url is what publishers write and what Mixcloud documents. It 301s to
 // `player-widget.mixcloud.com`, so it is kept instead of pre-resolved to a host that is one
@@ -94,12 +104,34 @@ export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefin
     return
   }
 
+  const params = parseUrl(url)?.searchParams
+  const options = displayOptions.filter((option) => params?.get(option) === '1')
+  const query = new URLSearchParams({ feed: `/${show}/` })
+
+  for (const option of options) {
+    query.set(option, '1')
+  }
+
   return {
     provider: 'mixcloud',
     id: show,
-    src: `https://www.mixcloud.com/widget/iframe/?feed=${encodeURIComponent(`/${show}/`)}`,
+    src: `https://www.mixcloud.com/widget/iframe/?${query}`,
     url: `https://www.mixcloud.com/${show}/`,
+    height:
+      options.includes('mini') && options.includes('hide_cover') ? miniPlayerHeight : playerHeight,
   }
 }
 
-export const mixcloudEmbedResolver = createUrlEmbedResolver(mixcloudHosts, mixcloudResolveEmbed)
+export const mixcloudEmbedResolver = createUrlEmbedResolver(mixcloudHosts, mixcloudResolveEmbed, {
+  preferResolverSize: true,
+})
+
+// Starts playback on the click that loads the widget. The widget switches it off on a mobile
+// user agent and hides the cover whenever it is on. The documented `www` url redirects to
+// `player-widget.mixcloud.com`, and an iframe's `allow="autoplay"` covers only the origin in its
+// `src`, so a reader has to grant autoplay to any origin (`autoplay *`) or the redirect loses it
+// and the widget sits at 00:00.
+export const mixcloudRenderHint: EmbedRenderHint = {
+  provider: 'mixcloud',
+  autoplayParams: { autoplay: '1' },
+}

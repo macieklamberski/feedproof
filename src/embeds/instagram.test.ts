@@ -7,6 +7,7 @@ import {
   instagramIframeEmbedResolver,
   instagramResolveEmbed,
   instagramSubstackEmbedResolver,
+  readInstagramHeight,
 } from './instagram.js'
 
 describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
@@ -484,6 +485,35 @@ describeForEachParser('instagramBlockquoteEmbedResolver', (parseHtml) => {
     })
   })
 
+  // A sanitizer that strips class attributes keeps data attributes, so the quote arrives naming
+  // its post in the permalink and nothing else. 53 of the 11,951 feeds carrying the permalink
+  // attribute have no `instagram-media` class anywhere (markup census, 12.7M feeds).
+  describe('the class-stripped blockquote', () => {
+    it('should mint the frame from the permalink alone', async () => {
+      const value = html`
+        <blockquote
+          data-instgrm-permalink="https://www.instagram.com/p/CpiRiksOLDF/?utm_source=ig_embed&amp;utm_campaign=loading"
+          data-instgrm-version="14"
+          style="background: #FFF; border: 0; border-radius: 3px; margin: 1px; padding: 0;"
+        >
+          <div style="padding: 16px">
+            <a href="https://www.instagram.com/p/CpiRiksOLDF/" target="_blank">
+              <div>View this post on Instagram</div>
+            </a>
+          </div>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'instagram',
+        id: 'p/CpiRiksOLDF',
+        src: 'https://www.instagram.com/p/CpiRiksOLDF/embed/',
+        url: 'https://www.instagram.com/p/CpiRiksOLDF/',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
   describe('sad paths', () => {
     it('should return undefined when nothing names a post', async () => {
       const value = html`
@@ -595,6 +625,18 @@ describe('instagramResolveEmbed', () => {
   // rather than the post, so the placeholder is the same one the bare path yields.
   it('should read a post addressed through its account', () => {
     const value = 'https://www.instagram.com/aseverofficial/p/CaUsPbUquKV/?utm_source=ig_embed'
+    const expected: EmbedResolverResult = {
+      provider: 'instagram',
+      id: 'p/CaUsPbUquKV',
+      src: 'https://www.instagram.com/p/CaUsPbUquKV/embed/',
+      url: 'https://www.instagram.com/p/CaUsPbUquKV/',
+    }
+
+    expect(instagramResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should read a post whose account runs past thirty characters', () => {
+    const value = 'https://www.instagram.com/documentary_film_archive_berlin_x/p/CaUsPbUquKV/'
     const expected: EmbedResolverResult = {
       provider: 'instagram',
       id: 'p/CaUsPbUquKV',
@@ -869,5 +911,23 @@ describeForEachParser('instagramSubstackEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+describe('readInstagramHeight', () => {
+  it('should read the height out of a measurement', () => {
+    const value = { details: { height: 1003 }, type: 'MEASURE' }
+
+    expect(readInstagramHeight(value)).toBe(1003)
+  })
+
+  it('should read nothing out of the lifecycle messages', () => {
+    const mounted = {
+      details: { styles: [['boxShadow', 'none']] },
+      type: 'MOUNTED',
+    }
+
+    expect(readInstagramHeight({ details: {}, type: 'LOADING' })).toBeUndefined()
+    expect(readInstagramHeight(mounted)).toBeUndefined()
   })
 })

@@ -4,7 +4,11 @@ import { keepIfMatches } from '../utils/dom.js'
 import { pickUrlParams, splitStrayParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-const safeVideoIdRegex = /^[a-zA-Z0-9]{5,}$/
+// Dailymotion's own alphabet, with no length. A `{5,}` floor sat here and refused real videos:
+// the platform's oldest ids are four characters, and `x13i` (uploaded 2005-07-25) still answers
+// with a title, a player and a thumbnail. What the floor was doing by accident was refusing the
+// four-letter route words, which `nonVideoWords` now names one by one.
+const safeVideoIdRegex = /^[a-zA-Z0-9]+$/
 
 // Named one by one rather than by a `dailymotion.{tld}` pattern, which would trust any
 // registration under the name: `.de` is third-party and left out. Each apex redirects to a
@@ -22,10 +26,26 @@ const dailymotionHosts = [
 // the second of the two forms the Flash player shipped.
 const pathWords = new Set(['embed', 'video', 'swf'])
 
-// Words that introduce something other than a single video, so the segment is a route and never
-// an id. `/embed/playlist/{id}` would otherwise yield the literal `playlist`, which is eight
-// legal characters and passes the id test on length alone.
-const collectionWords = new Set(['playlist'])
+// Kinds Dailymotion's embed route serves besides a video, so the segment names a listing or a
+// landing page and never a video. Measured 2026-09-07 against `/embed/{word}/x7tgad0`: only
+// `video` and `playlist` reach the player carrying the id, each word below reaches it with an
+// empty `video=` or redirects to a page, and every other word answers a real 404. They are the
+// retired 2008-era listing embeds, so this records what was probed rather than betting that the
+// catalogue is frozen. `/embed/playlist/{id}` would otherwise yield the literal `playlist`,
+// which is eight legal characters and passes the id test on length alone.
+const nonVideoWords = new Set([
+  'playlist',
+  'user',
+  'channel',
+  'group',
+  'tag',
+  'search',
+  'topic',
+  'collection',
+  'feed',
+  'videos',
+  'live',
+])
 
 // A playlist names no single video, so it is read separately and only once the video readers have
 // found nothing: `/embed/video/{id}?playlist={id}` is a video playing inside one, not a playlist.
@@ -44,6 +64,8 @@ export const extractDailymotionPlaylistId = (link: string): string | undefined =
 }
 
 const readPathId = (url: URL, segments: Array<string>): string | undefined => {
+  // The short domain is a pure shortener with no routes of its own: every path it does not know
+  // as a video goes to `/urlshortener?path=…`, so nothing there needs telling from an id.
   if (url.hostname === 'dai.ly' || url.hostname.endsWith('.dai.ly')) {
     return segments[0]
   }
@@ -58,7 +80,7 @@ const readPathId = (url: URL, segments: Array<string>): string | undefined => {
   // `/about` is five legal id characters.
   const candidate = index > 0 ? segments[index] : undefined
 
-  return candidate && !collectionWords.has(candidate) ? candidate : undefined
+  return candidate && !nonVideoWords.has(candidate) ? candidate : undefined
 }
 
 export const extractDailymotionId = (link: string): string | undefined => {
@@ -98,6 +120,12 @@ export const dailymotionResolveEmbed = (url: string): EmbedResolverResult | unde
       src: `https://www.dailymotion.com/embed/video/${videoId}${pickUrlParams(url, dailymotionEmbedParams)}`,
       url: `https://www.dailymotion.com/video/${videoId}`,
       thumbnail: `https://www.dailymotion.com/thumbnail/video/${videoId}`,
+      // Not the player's shape: it fills whatever frame it gets, at 320, 640 and 1280 wide alike,
+      // measured 2026-09-07 in Chrome on `x7tgad0`, whose own API states 1280x720. It is the
+      // corpus shape of the carriers: of 1,011 `dailymotion.com/embed` iframes across 396 sampled
+      // feeds, 813 state a box, 511 of those 16:9, 51 4:3, 251 another landscape shape and none
+      // portrait; 10 state a height alone and 188 state nothing, which is where this fires, since
+      // `decideSize` takes the carrier's size first.
       ratio: '16/9',
     }
   }
@@ -121,3 +149,7 @@ export const dailymotionEmbedResolver = createUrlEmbedResolver(
   dailymotionHosts,
   dailymotionResolveEmbed,
 )
+
+// No autoplay hint. The runtime-parameter docs list `autoplay`, but neither player url reads it
+// off the query: the legacy `/embed/video/` url redirects to the new player and the redirect
+// drops it, and the new player takes autostart from the saved player configuration alone.

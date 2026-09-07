@@ -41,6 +41,14 @@ describe('extractNicovideoId', () => {
     expect(extractNicovideoId('https://ext.nicovideo.jp/thumb_watch/so67890')).toBe('so67890')
   })
 
+  // A channel upload is addressed by a bare thread number, with no kind in front of it.
+  it('should read a bare numeric id', () => {
+    const value = 'https://embed.nicovideo.jp/watch/1576909203/script?w=640&h=360'
+    const expected = '1576909203'
+
+    expect(extractNicovideoId(value)).toBe(expected)
+  })
+
   it('should return undefined for a url that cannot be parsed', () => {
     const value = 'https://['
 
@@ -66,6 +74,17 @@ describe('extractNicovideoId', () => {
     'https://www.nicovideo.jp/watch/lv346883570',
   ])('should read the broadcast id from %s', (value) => {
     expect(extractNicovideoId(value)).toBe('lv346883570')
+  })
+
+  // The illustration site sits on the same domain and writes the same `thumb/{kind}{digits}`
+  // card, so its ids pass the video id test on shape alone. Its card still renders, and the
+  // video player answers 500 for one, so these are left where they are.
+  it.each([
+    'https://ext.seiga.nicovideo.jp/thumb/im4572423',
+    'https://ext.seiga.nicovideo.jp/thumb/mg316785',
+    'https://seiga.nicovideo.jp/seiga/im4572423',
+  ])('should refuse the seiga card at %s', (value) => {
+    expect(extractNicovideoId(value)).toBeUndefined()
   })
 })
 
@@ -191,6 +210,18 @@ describe('nicovideoResolveEmbed', () => {
       id: 'sm9',
       src: 'https://embed.nicovideo.jp/watch/sm9',
       url: 'https://www.nicovideo.jp/watch/sm9',
+    }
+
+    expect(nicovideoResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should mint the player for a numeric channel upload id', () => {
+    const value = 'https://embed.nicovideo.jp/watch/1576909203/script?w=640&h=360'
+    const expected: EmbedResolverResult = {
+      provider: 'nicovideo',
+      id: '1576909203',
+      src: 'https://embed.nicovideo.jp/watch/1576909203',
+      url: 'https://www.nicovideo.jp/watch/1576909203',
     }
 
     expect(nicovideoResolveEmbed(value)).toEqual(expected)

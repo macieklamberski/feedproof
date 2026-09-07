@@ -4,8 +4,10 @@ import { attr, keepIfMatches, parsePixelSize } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// Video ids are a two-letter kind and a number, `sm9`, `nm12345`, `so67890`.
-const safeVideoIdRegex = /^[a-z]{2}\d+$/
+// Video ids are a two-letter kind and a number, `sm9`, `nm12345`, `so67890`. A channel upload
+// is also addressed by a bare number, the thread id its watch page was minted under: the player
+// answers it 200 with the title like any other id and an invented one 500 (checked 2026-09-05).
+const safeVideoIdRegex = /^(?:[a-z]{2})?\d+$/
 
 // `lv` names a live broadcast, which the video player answers 500 for. The shape gives nothing
 // away, since `lv` is two letters and a number like every other kind. The live host serves a
@@ -13,6 +15,14 @@ const safeVideoIdRegex = /^[a-z]{2}\d+$/
 const liveIdRegex = /^lv\d+$/
 
 const nicovideoHosts = ['nicovideo.jp']
+
+// The illustration and manga site shares the video site's domain, its `thumb` path word and its
+// id grammar: `ext.seiga.nicovideo.jp/thumb/im4572423` and `/thumb/mg316785` both pass the video
+// id test on the two-letter prefix and the digits. They are not videos. Checked 2026-09-06: the
+// seiga card still answers 200 with the work's own title, while `embed.nicovideo.jp/watch/
+// im4572423` answers 500, so reading one as a video would swap a card that renders for a player
+// url that does not resolve.
+const seigaHosts = ['seiga.nicovideo.jp']
 
 // Three spellings, one video, and the legacy two are dead or dying.
 //
@@ -34,7 +44,7 @@ export const extractNicovideoId = (link: string): string | undefined => {
   // inside its own path and reach this. The path shape alone must not mint a nicovideo url.
   const parsed = parseUrlOnHosts(link, nicovideoHosts)
 
-  if (!parsed) {
+  if (!parsed || parseUrlOnHosts(link, seigaHosts)) {
     return
   }
 

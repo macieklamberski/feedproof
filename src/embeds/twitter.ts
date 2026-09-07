@@ -1,6 +1,7 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { isHostOf, isPlainObject, isSubdomainOf, parseUrl } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, text } from '../utils/dom.js'
+import { readPixels } from '../utils/hints.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A tweet ships as `<blockquote class="twitter-tweet">` holding the tweet text in a `<p>`, then
@@ -41,7 +42,7 @@ const isTweetUrl = (url: URL): boolean => {
 }
 
 // `/{handle}/status/{id}`, with the plural `statuses` form from the earliest era.
-const statusPathRegex = /^\/([a-zA-Z0-9_]{1,15})\/status(?:es)?\/(\d+)/
+const statusPathRegex = /^\/([a-zA-Z0-9_]+)\/status(?:es)?\/(\d+)/
 
 // The paths that name a status and carry no handle: the web client's permalink, the 2015-2017
 // video frames, and the card frame before them. The frames are dead, answering 404 or a stub
@@ -57,7 +58,7 @@ const handleStandIn = 'i'
 // skeleton blockquote keeps the byline's punctuation and fills in neither half, so what it holds
 // is `—  (@)`. That matches here and yields an empty name, which is how it gets dropped instead
 // of being carried through as an author.
-const bylineRegex = /^[—–-]\s*(.*?)\s*\(@[a-zA-Z0-9_]{0,15}\)\s*$/
+const bylineRegex = /^[—–-]\s*(.*?)\s*\(@[a-zA-Z0-9_]*\)\s*$/
 const safeStatusIdRegex = /^\d+$/
 
 type Status = { handle: string; id: string }
@@ -281,3 +282,22 @@ export const twitterIframeEmbedResolver = createUrlEmbedResolver(
   ['twitter.com', 'x.com'],
   twitterResolveEmbed,
 )
+
+// The player reports its rendered height in a JSON-RPC envelope, unprompted, once the frame is
+// in view, and again when a reader expands a truncated post. The other calls in the same
+// envelope, `initialized`, `results` and `rendered`, carry no size.
+export const readTwitterHeight = (data: unknown): number | undefined => {
+  const call = isPlainObject(data) ? data['twttr.embed'] : undefined
+  const params =
+    isPlainObject(call) && call.method === 'twttr.private.resize' && Array.isArray(call.params)
+      ? call.params[0]
+      : undefined
+
+  return isPlainObject(params) ? readPixels(params.height) : undefined
+}
+
+export const twitterRenderHint: EmbedRenderHint = {
+  provider: 'twitter',
+  origin: 'https://platform.twitter.com',
+  readHeight: readTwitterHeight,
+}

@@ -27,6 +27,7 @@ export const transformContent = async (
   const context: TransformContext = {
     baseUrl: options.baseUrl,
     sameSiteUrls: options.sameSiteUrls,
+    feedImageUrls: options.feedImageUrls,
     enclosures: options.enclosures,
     widgetResolvers: defaultWidgetResolvers,
     mediaSrcAttributes: defaultMediaSrcAttributes,
@@ -72,12 +73,12 @@ export const transformContent = async (
 
 export {
   defaultAllDomTransforms,
+  defaultEmbedRenderHints,
   defaultHighlightFn,
   defaultResolveUrlFn,
   defaultStandardDomTransforms,
   heuristicDomTransforms,
 } from './defaults.js'
-
 export { hljsHighlightFn } from './highlighters/hljs.js'
 export { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 export { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
@@ -89,6 +90,7 @@ export { convertDatawrapperEmbeds } from './transforms/dom/convertDatawrapperEmb
 export { convertGiphyEmbeds } from './transforms/dom/convertGiphyEmbeds.js'
 export { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 export { convertNoteEmbeds } from './transforms/dom/convertNoteEmbeds.js'
+export { convertSmartframeEmbeds } from './transforms/dom/convertSmartframeEmbeds.js'
 export { convertWidgets } from './transforms/dom/convertWidgets.js'
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
@@ -149,6 +151,7 @@ export { surfaceParkedMarkup } from './transforms/dom/surfaceParkedMarkup.js'
 export { surfaceTemplateEmbeds } from './transforms/dom/surfaceTemplateEmbeds.js'
 export { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 export { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
+export { unwrapDrupalOembedIframes } from './transforms/dom/unwrapDrupalOembedIframes.js'
 export { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 export { unwrapHeadingBold } from './transforms/dom/unwrapHeadingBold.js'
 export { unwrapNestedCodeWrappers } from './transforms/dom/unwrapNestedCodeWrappers.js'
@@ -172,6 +175,7 @@ export type {
   CleanUrlFn,
   DomTransform,
   EmbedRef,
+  EmbedRenderHint,
   EmbedResolver,
   EmbedResolverResult,
   Enclosure,
