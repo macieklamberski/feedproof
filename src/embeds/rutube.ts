@@ -40,9 +40,9 @@ const rutubeEmbedParams = ['p', 't', 'stopTime']
 // the id is a self-sufficient enrichment key. The poster file is named by a hash the id does not
 // yield, so it stays with enrichment.
 //
-// The player fills its box, and Rutube's own snippet and oEmbed size it 720x405, which 384 of
-// 1,491 corpus iframes repeat exactly; the ratio stands in only where a carrier states nothing,
-// since vertical clips are embedded at their own shape.
+// The player fills its box, and Rutube's own snippet and oEmbed size it 720x405, which 489 of the
+// 1,491 iframes in the 396 census feeds that carry one repeat exactly; the ratio stands in only
+// where a carrier states nothing, since vertical clips are embedded at their own shape.
 const composeEmbed = (videoId: string, link: string): EmbedResolverResult => {
   return {
     provider: 'rutube',
