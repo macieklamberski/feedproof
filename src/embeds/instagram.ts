@@ -41,7 +41,7 @@ const sitePathSegments = new Set([
 ])
 
 // The account names the poster, not the post, so it is matched and dropped.
-const postPathRegex = /^\/(?:([A-Za-z0-9_.]{1,30})\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/
+const postPathRegex = /^\/(?:([A-Za-z0-9_.]+)\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/
 const safeShortcodeRegex = /^[A-Za-z0-9_-]+$/
 
 type Post = { kind: string; shortcode: string }

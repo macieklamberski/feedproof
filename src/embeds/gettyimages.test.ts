@@ -104,6 +104,19 @@ describeForEachParser('gettyImagesEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should resolve an item id shorter than the ones Getty mints today', async () => {
+      const value =
+        '<iframe src="https://embed.gettyimages.com/embed/83621?et=cDxg5NFcRMx1XLFxZDgc0w&tld=com&sig=VHEk4Nmc0V832P7TTYFTGYLHOid_pXnO05LCJzLgVIY=&caption=true"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'gettyimages',
+        id: '83621',
+        src: 'https://embed.gettyimages.com/embed/83621?et=cDxg5NFcRMx1XLFxZDgc0w&tld=com&sig=VHEk4Nmc0V832P7TTYFTGYLHOid_pXnO05LCJzLgVIY=&caption=true',
+        url: 'https://www.gettyimages.com/detail/83621',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {

@@ -65,6 +65,20 @@ describe('stackblitzResolveEmbed', () => {
 
       expect(stackblitzResolveEmbed(value)).toEqual(expected)
     })
+
+    it('should read a slug longer than eighty characters', () => {
+      const value =
+        'https://stackblitz.com/edit/nextjs-app-router-server-components-streaming-suspense-boundaries-demo-starter-k9xj2'
+      const expected: EmbedResolverResult = {
+        provider: 'stackblitz',
+        id: 'nextjs-app-router-server-components-streaming-suspense-boundaries-demo-starter-k9xj2',
+        src: 'https://stackblitz.com/edit/nextjs-app-router-server-components-streaming-suspense-boundaries-demo-starter-k9xj2',
+        url: 'https://stackblitz.com/edit/nextjs-app-router-server-components-streaming-suspense-boundaries-demo-starter-k9xj2',
+        height: 500,
+      }
+
+      expect(stackblitzResolveEmbed(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {

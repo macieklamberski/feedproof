@@ -3,10 +3,10 @@ import type { EmbedResolverResult } from '../types.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-const donorboxHost = 'donorbox.org'
+const donorboxHosts = ['donorbox.org']
 
 // A campaign slug as Donorbox writes it: one run of word characters and hyphens.
-const slugRegex = /^[\w-]{1,128}$/
+const slugRegex = /^[\w-]+$/
 
 // The form does not grow with its container: measured 750 tall at 250 wide and 733 at 500 and
 // 1000 on 2026-09-03, on the first of its steps. Donorbox's own snippet reserves 900, which is
@@ -16,7 +16,7 @@ const formHeight = 900
 // Only `/embed/{slug}` is a form. The campaign page sits at `/{slug}` and is what the
 // placeholder links to; the blog and event routes name nothing embeddable.
 export const donorboxResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrlOnHosts(url, donorboxHost)
+  const parsed = parseUrlOnHosts(url, donorboxHosts)
 
   if (!parsed) {
     return
@@ -39,4 +39,4 @@ export const donorboxResolveEmbed = (url: string): EmbedResolverResult | undefin
   }
 }
 
-export const donorboxEmbedResolver = createUrlEmbedResolver([donorboxHost], donorboxResolveEmbed)
+export const donorboxEmbedResolver = createUrlEmbedResolver(donorboxHosts, donorboxResolveEmbed)
