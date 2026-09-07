@@ -49,6 +49,23 @@ describeForEachParser('facebookWidgetEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should mint an absolute plugin href from a protocol-relative data-href', async () => {
+      const value = html`
+        <div
+          class="fb-post"
+          data-href="//www.facebook.com/PageName/posts/123"
+        ></div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'facebook',
+        id: '//www.facebook.com/PageName/posts/123',
+        src: 'https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123',
+        url: '//www.facebook.com/PageName/posts/123',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('the video div', () => {
@@ -350,6 +367,28 @@ describeForEachParser('facebookBlockquoteEmbedResolver', (parseHtml) => {
         id: 'https://www.facebook.com/PageName/posts/123',
         src: 'https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123',
         url: 'https://www.facebook.com/PageName/posts/123',
+        description: 'A post caption.',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Nothing in the pipeline absolutises a `cite`, so a CMS that rewrites urls to `//` hands
+    // the resolver one with no scheme.
+    it('should read a protocol-relative cite', async () => {
+      const value = html`
+        <blockquote
+          cite="//www.facebook.com/PageName/posts/123"
+          class="fb-xfbml-parse-ignore"
+        >
+          <p>A post caption.</p>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'facebook',
+        id: '//www.facebook.com/PageName/posts/123',
+        src: 'https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123',
+        url: '//www.facebook.com/PageName/posts/123',
         description: 'A post caption.',
       }
 

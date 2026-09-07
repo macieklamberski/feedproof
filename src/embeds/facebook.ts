@@ -52,10 +52,15 @@ const composePluginEmbed = (
   href: string,
   extra: Partial<EmbedResolverResult>,
 ): EmbedResolverResult => {
+  // The plugin frames a post only for an absolute href. Handed `//www.facebook.com/…` it serves
+  // the same 47 KB shell an unknown id gets, against 173 KB for a real video, so the scheme is
+  // filled in for the mint while `id` and `url` keep the form the publisher wrote.
+  const pluginHref = parseUrl(href, 'https://www.facebook.com')?.href ?? href
+
   return {
     provider: 'facebook',
     id: href,
-    src: `https://www.facebook.com/plugins/${plugin}.php?href=${encodeURIComponent(href)}`,
+    src: `https://www.facebook.com/plugins/${plugin}.php?href=${encodeURIComponent(pluginHref)}`,
     url: href,
     ...extra,
   }
@@ -227,7 +232,7 @@ export const facebookBlockquoteEmbedResolver = createMarkupEmbedResolver(
   fallbackSelector,
   (element) => {
     const cite = attr(element, 'cite')
-    const parsed = cite ? parseUrl(cite) : undefined
+    const parsed = cite ? parseUrl(cite, 'https://example.com') : undefined
 
     if (!cite || !parsed || !isFacebookUrl(parsed)) {
       return
