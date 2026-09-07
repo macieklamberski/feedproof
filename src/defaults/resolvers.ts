@@ -125,6 +125,7 @@ import {
 } from '../embeds/speakerdeck.js'
 import { spotifyEmbedResolver } from '../embeds/spotify.js'
 import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from '../embeds/spreaker.js'
+import { stackblitzIframeEmbedResolver } from '../embeds/stackblitz.js'
 import { standfmEmbedResolver } from '../embeds/standfm.js'
 import { tedEmbedResolver } from '../embeds/ted.js'
 import { telegramIframeEmbedResolver, telegramScriptEmbedResolver } from '../embeds/telegram.js'
@@ -223,6 +224,7 @@ const embedResolvers: Array<EmbedResolver> = [
   rtveFlashEmbedResolver,
   slideshareFlashEmbedResolver,
   slideshareIframeEmbedResolver,
+  stackblitzIframeEmbedResolver,
   sketchfabEmbedResolver,
   tiktokBlockquoteEmbedResolver,
   tiktokIframeEmbedResolver,
