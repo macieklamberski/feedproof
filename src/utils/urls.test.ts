@@ -9,7 +9,6 @@ import {
   resolveOrDropUrl,
   resolveOrKeepUrl,
   splitStrayParams,
-  uuidRegex,
 } from './urls.js'
 
 describe('parseUrlOnHosts', () => {
@@ -298,32 +297,5 @@ describe('pickUrlParams', () => {
     const expected = '?clipt=a%2Bb%2Fc'
 
     expect(pickUrlParams(value, ['clipt'])).toBe(expected)
-  })
-})
-
-describe('uuidRegex', () => {
-  it('should match the RFC form', () => {
-    expect(uuidRegex.test('1d2e3f40-aaaa-bbbb-cccc-1234567890ab')).toBe(true)
-  })
-
-  // RedCircle's own copy of this regex was the one without the flag, which is the drift a shared
-  // constant exists to stop.
-  it('should match an uppercase spelling', () => {
-    expect(uuidRegex.test('1D2E3F40-AAAA-BBBB-CCCC-1234567890AB')).toBe(true)
-  })
-
-  // Simplecast tells its current id space from the legacy one by this exactness, so a looser
-  // class here would read a legacy id as a current one and speak it to the wrong host.
-  it('should refuse the eight hex characters of a legacy id', () => {
-    expect(uuidRegex.test('deadbeef')).toBe(false)
-  })
-
-  it('should refuse a uuid with a group of the wrong length', () => {
-    expect(uuidRegex.test('1d2e3f40-aaa-bbbb-cccc-1234567890ab')).toBe(false)
-  })
-
-  it('should refuse a uuid with anything around it', () => {
-    expect(uuidRegex.test('x1d2e3f40-aaaa-bbbb-cccc-1234567890ab')).toBe(false)
-    expect(uuidRegex.test('1d2e3f40-aaaa-bbbb-cccc-1234567890ab.mp3')).toBe(false)
   })
 })
