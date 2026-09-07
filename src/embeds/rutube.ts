@@ -9,8 +9,11 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // uuid `a104813a026655f245ce34e3ac10ebf5` that `api/video/16879846/` names as the same video,
 // while an invented id answers `default_does_not_exists_video`. So the length is not checked: it
 // would refuse a live legacy video, and a wrong id fails the same whether it is minted or passed
-// through. The routes above are exact, so nothing but an id reaches this.
-const safeVideoIdRegex = /^[0-9a-f]+$/
+// through. An id also has to carry a digit, which is what separates it from a word spelled in hex
+// letters: `play/embed/feed` and `play/embed/added` would otherwise mint a placeholder. Every real
+// id has one, the legacy form being all digits and a 32-character uuid of none being a one in
+// ten-trillion shape.
+const safeVideoIdRegex = /^(?=[0-9a-f]*\d)[0-9a-f]+$/
 
 const rutubeHost = 'rutube.ru'
 

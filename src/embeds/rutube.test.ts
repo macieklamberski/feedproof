@@ -82,6 +82,14 @@ describe('rutubeResolveEmbed', () => {
       expect(rutubeResolveEmbed(value)).toBeUndefined()
     })
 
+    // The id alphabet is hex, so a word spelled in those letters sits in the id position without
+    // naming anything. A real id always carries a digit, which is what tells the two apart.
+    it('should return undefined for a hex-letter word in the id position', () => {
+      const value = 'https://rutube.ru/play/embed/added'
+
+      expect(rutubeResolveEmbed(value)).toBeUndefined()
+    })
+
     it('should leave the Flash player alone', () => {
       const value = 'http://video.rutube.ru/2d0970f507fe8ecf63c5e570a2ddc74a'
 
