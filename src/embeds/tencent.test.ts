@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { tencentEmbedResolver } from './tencent.js'
@@ -70,6 +71,22 @@ describeForEachParser('tencentEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // Eleven characters is what Tencent mints today, and the length is not what selects a video.
+    it('should resolve a video id longer than the ones minted so far', async () => {
+      const value =
+        '<iframe src="https://v.qq.com/txp/iframe/player.html?vid=v03604lrvanlonger"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'tencent',
+        id: 'v03604lrvanlonger',
+        src: 'https://v.qq.com/txp/iframe/player.html?vid=v03604lrvanlonger',
+        url: 'https://v.qq.com/x/page/v03604lrvanlonger.html',
+        thumbnail: 'https://puui.qpic.cn/qqvideo_ori/0/v03604lrvanlonger_496_280/0',
+        ratio: '16/9',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
@@ -92,8 +109,9 @@ describeForEachParser('tencentEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
-    it('should ignore an id that is not one', async () => {
-      const value = '<iframe src="https://v.qq.com/txp/iframe/player.html?vid=latest"></iframe>'
+    it('should ignore an id carrying a file name', async () => {
+      const value =
+        '<iframe src="https://v.qq.com/txp/iframe/player.html?vid=v03604lrvan.mp4"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -148,5 +166,28 @@ describeForEachParser('tencentEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+  })
+})
+
+// The enclosure probe offers every attachment a feed carries to this resolver, and Tencent serves
+// video on the same domains as the player, so the id alphabet is what keeps a file playable.
+describeForEachParser('tencent through the pipeline', (parseHtml) => {
+  it('should leave a video enclosure on the player host playable', async () => {
+    const enclosures = [
+      { url: 'https://v.qq.com/txp/iframe/player.html/v03604lrvan.mp4', type: 'video/mp4' },
+    ]
+
+    const expected = html`
+      <video data-enclosure="" controls src="https://v.qq.com/txp/iframe/player.html/v03604lrvan.mp4"></video>
+      <p>Body</p>
+    `
+
+    expect(
+      await transformContent('<p>Body</p>', {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/post',
+        enclosures,
+      }),
+    ).toEqualHtml(expected)
   })
 })
