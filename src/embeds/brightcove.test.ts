@@ -23,7 +23,7 @@ describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '19521637001',
+        id: '1660622131/19521637001',
         src: 'https://players.brightcove.net/1660622131/default_default/index.html?videoId=19521637001',
         width: 300,
         height: 250,
@@ -72,7 +72,7 @@ describe('brightcoveResolveEmbed', () => {
       const value = playerUrl
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '6098765432',
+        id: '1234567890/6098765432',
         src: playerUrl,
       }
 
@@ -84,7 +84,7 @@ describe('brightcoveResolveEmbed', () => {
         'https://players.brightcove.net/1234567890/AbCdEf123_custom/index.html?videoId=6098765432'
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '6098765432',
+        id: '1234567890/6098765432',
         src: 'https://players.brightcove.net/1234567890/AbCdEf123_custom/index.html?videoId=6098765432',
       }
 
@@ -95,7 +95,7 @@ describe('brightcoveResolveEmbed', () => {
       const value = `${playerUrl}&autoplay=true&muted=true`
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '6098765432',
+        id: '1234567890/6098765432',
         src: playerUrl,
       }
 
@@ -155,7 +155,7 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '6098765432',
+        id: '1234567890/6098765432',
         src: 'https://players.brightcove.net/1234567890/AbCdEf_custom/index.html?videoId=6098765432',
       }
 
@@ -171,7 +171,7 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '6098765432',
+        id: '1234567890/6098765432',
         src: 'https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432',
       }
 
@@ -186,7 +186,7 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '6098765432',
+        id: '1234567890/6098765432',
         src: 'https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432',
       }
 
@@ -208,7 +208,7 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '6098765432',
+        id: '1234567890/6098765432',
         src: 'https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432',
       }
 
@@ -293,7 +293,7 @@ describeForEachParser('brightcove video-js through the pipeline', (parseHtml) =>
       <div
         data-embed-src="https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432"
         data-embed-provider="brightcove"
-        data-embed-id="6098765432"
+        data-embed-id="1234567890/6098765432"
       ></div>
     `
 
