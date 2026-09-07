@@ -7,7 +7,7 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 const safeItemIdRegex = /^\d+$/
 const embedPathRegex = /^\/embed\/(\d+)\/?$/
 
-const gettyImagesHost = 'gettyimages.com'
+const gettyImagesHosts = ['gettyimages.com']
 
 // Getty ships an embed two ways: the player iframe, which renders on its own, and the `gie`
 // widget, an `<a class="gie-single">` naming the photo page, an inline `<script>` holding the
@@ -35,7 +35,7 @@ type WidgetConfig = {
 }
 
 const gettyImagesResolveEmbed = (link: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrlOnHosts(link, gettyImagesHost)
+  const parsed = parseUrlOnHosts(link, gettyImagesHosts)
   const itemId = parsed?.pathname.match(embedPathRegex)?.[1]
 
   if (!itemId || !safeItemIdRegex.test(itemId)) {
@@ -53,7 +53,7 @@ const gettyImagesResolveEmbed = (link: string): EmbedResolverResult | undefined 
 }
 
 export const gettyImagesEmbedResolver = createUrlEmbedResolver(
-  [gettyImagesHost],
+  gettyImagesHosts,
   gettyImagesResolveEmbed,
 )
 

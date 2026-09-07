@@ -3,7 +3,7 @@ import type { EmbedResolverResult } from '../types.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-const reverbnationHost = 'reverbnation.com'
+const reverbnationHosts = ['reverbnation.com']
 
 // Every widget names what it plays as a kind and a number: `artist_1018382`, `Playlist_957851`,
 // `Album_170738`, and the rarer `fan_` and `promoter_`. The kind is capitalised inconsistently by
@@ -45,7 +45,7 @@ const readFlashId = (url: URL): string | undefined => {
 }
 
 export const reverbnationResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrlOnHosts(url, reverbnationHost)
+  const parsed = parseUrlOnHosts(url, reverbnationHosts)
 
   if (!parsed) {
     return
@@ -79,6 +79,6 @@ export const reverbnationResolveEmbed = (url: string): EmbedResolverResult | und
 // `main/redirect_to_artist?artist_id=1018382` all 404. The widget page carries the slug, so that
 // is an enrich-time read.
 export const reverbnationEmbedResolver = createUrlEmbedResolver(
-  [reverbnationHost],
+  reverbnationHosts,
   reverbnationResolveEmbed,
 )
