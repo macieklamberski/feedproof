@@ -268,6 +268,47 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // Both handle readers take the account with no length checked, the declared attribute here
+    // and the profile anchor below, so a name past the 24 characters the signup form allows still
+    // resolves.
+    it('should resolve a declared handle longer than the signup form allows', async () => {
+      const value = html`
+        <blockquote
+          class="tiktok-embed"
+          data-unique-id="averylonghandlepastwhatsignupallows"
+          data-embed-type="creator"
+        >
+          <section></section>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '@averylonghandlepastwhatsignupallows',
+        src: 'https://www.tiktok.com/embed/@averylonghandlepastwhatsignupallows',
+        url: 'https://www.tiktok.com/@averylonghandlepastwhatsignupallows',
+        author: '@averylonghandlepastwhatsignupallows',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should resolve a long handle from the profile anchor alone', async () => {
+      const value = html`
+        <blockquote class="tiktok-embed">
+          <a href="https://www.tiktok.com/@averylonghandlepastwhatsignupallows">Profile</a>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '@averylonghandlepastwhatsignupallows',
+        src: 'https://www.tiktok.com/embed/@averylonghandlepastwhatsignupallows',
+        url: 'https://www.tiktok.com/@averylonghandlepastwhatsignupallows',
+        author: '@averylonghandlepastwhatsignupallows',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // The minimal authored shape, stripped of every data attribute and of the cite: no video id,
     // no cite, no /video/ link. The account is the only thing this markup still identifies, so it
     // resolves to the profile viewer rather than being left as text.
@@ -637,6 +678,23 @@ describeForEachParser('tiktokIframeEmbedResolver', (parseHtml) => {
         id: '@user/video/7520573541146692886',
         src: 'https://www.tiktok.com/embed/v2/7520573541146692886',
         url: 'https://www.tiktok.com/@user/video/7520573541146692886',
+        height: 738,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should mint the player from a watch page whose handle is long', async () => {
+      const value = html`
+        <iframe
+          src="https://www.tiktok.com/@averylonghandlepastwhatsignupallows/video/7520573541146692886"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '@averylonghandlepastwhatsignupallows/video/7520573541146692886',
+        src: 'https://www.tiktok.com/embed/v2/7520573541146692886',
+        url: 'https://www.tiktok.com/@averylonghandlepastwhatsignupallows/video/7520573541146692886',
         height: 738,
       }
 
