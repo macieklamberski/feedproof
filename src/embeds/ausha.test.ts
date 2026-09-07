@@ -58,10 +58,22 @@ describe('aushaResolveEmbed', () => {
   })
 
   describe('edge cases', () => {
-    it('should refuse an id of the wrong length', () => {
-      const value = 'https://player.ausha.co/?podcastId=BGKwJUJG&v=3'
+    it('should refuse an id holding a separator', () => {
+      const value = 'https://player.ausha.co/?podcastId=podcast/BGKwJUJG8D9m&v=3'
 
       expect(aushaResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should read an id longer than the twelve characters minted today', () => {
+      const value = 'https://player.ausha.co/?podcastId=BGKwJUJG8D9mX&v=3'
+      const expected: EmbedResolverResult = {
+        provider: 'ausha',
+        id: 'podcast/BGKwJUJG8D9mX',
+        src: 'https://player.ausha.co/?podcastId=BGKwJUJG8D9mX&v=3',
+        height: 220,
+      }
+
+      expect(aushaResolveEmbed(value)).toEqual(expected)
     })
 
     it('should refuse a path on the player host that is not the player', () => {

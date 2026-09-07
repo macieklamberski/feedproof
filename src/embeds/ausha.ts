@@ -5,8 +5,10 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const aushaHost = 'ausha.co'
 
-// Every Ausha id is twelve of the alphabet's own characters, upper and lower case and digits.
-const safeIdRegex = /^[A-Za-z0-9]{12}$/
+// Letters and digits in both cases, with no separator, since the id goes into the `kind/id` key.
+// Not the twelve characters every id has today: a wrong id fails the same whether it is minted
+// or passed through, and a bound would refuse the next id space.
+const safeIdRegex = /^[A-Za-z0-9]+$/
 
 // The v3 player is a fixed height on a fluid width: measured in Chrome at 1200 and 400 pixels
 // wide it is 220 both times, and 501 both times with `display=vertical`. The corpus agrees on the
