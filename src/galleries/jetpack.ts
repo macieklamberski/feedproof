@@ -5,6 +5,7 @@ import { extractGalleryItems } from './common.js'
 // arrows and pagination bullets carry no <img>, so a plain image walk yields only slide
 // images.
 export const jetpackSlideshowResolver: GalleryResolver = {
+  kind: 'gallery',
   selector: '.wp-block-jetpack-slideshow',
   extract: (element) => {
     const items = extractGalleryItems(element, 'img')

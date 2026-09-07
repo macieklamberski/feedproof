@@ -12,12 +12,16 @@ describeForEachParser('amebaCiteResolver', (parseHtml) => {
         <div class="ogpCard_root">
           <article class="ogpCard_wrap" contenteditable="false">
             <a class="ogpCard_link" href="https://example.com/product" target="_blank" rel="noopener noreferrer" data-ogp-card-log="">
-              <span class="ogpCard_imageWrap"><img class="ogpCard_image" src="https://cdn.example.com/thumb.jpg" alt="" /></span>
+              <span class="ogpCard_imageWrap">
+                <img class="ogpCard_image" src="https://cdn.example.com/thumb.jpg" alt="" />
+              </span>
               <span class="ogpCard_content">
                 <span class="ogpCard_title">Page title</span>
                 <span class="ogpCard_description">Preview text</span>
                 <span class="ogpCard_url">
-                  <span class="ogpCard_iconWrap"><img class="ogpCard_icon" alt="link" src="https://c.stat100.ameba.jp/ameblo/symbols/editor_link.svg" /></span>
+                  <span class="ogpCard_iconWrap">
+                    <img class="ogpCard_icon" alt="link" src="https://c.stat100.ameba.jp/ameblo/symbols/editor_link.svg" />
+                  </span>
                   <span class="ogpCard_urlText">example.com</span>
                 </span>
               </span>
@@ -45,7 +49,9 @@ describeForEachParser('amebaCiteResolver', (parseHtml) => {
               <span class="ogpCard_title">Page title</span>
               <span class="ogpCard_description">Preview text</span>
               <span class="ogpCard_url">
-                <span class="ogpCard_iconWrap"><img class="ogpCard_icon" src="https://c.stat100.ameba.jp/ameblo/symbols/editor_link.svg" /></span>
+                <span class="ogpCard_iconWrap">
+                  <img class="ogpCard_icon" src="https://c.stat100.ameba.jp/ameblo/symbols/editor_link.svg" />
+                </span>
                 <span class="ogpCard_urlText">example.com</span>
               </span>
             </span>
@@ -72,7 +78,9 @@ describeForEachParser('amebaCiteResolver', (parseHtml) => {
             <span class="ogpCard_content">
               <span class="ogpCard_title">Page title</span>
               <span class="ogpCard_url">
-                <span class="ogpCard_iconWrap"><img class="ogpCard_icon" src="https://c.stat100.ameba.jp/ameblo/symbols/editor_link.svg" /></span>
+                <span class="ogpCard_iconWrap">
+                  <img class="ogpCard_icon" src="https://c.stat100.ameba.jp/ameblo/symbols/editor_link.svg" />
+                </span>
                 <span class="ogpCard_urlText">example.com</span>
               </span>
             </span>

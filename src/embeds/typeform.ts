@@ -1,15 +1,21 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const typeformHosts = ['typeform.com']
 
 // Two id generations share one url template. A form id is short and mixed case
-// (`MTt3Pw7K`); a live-embed id is a 26-char Crockford base32 ULID
-// (`01HCZ4DNW8JM6PEGNTQWF2PW87`). Both are alphanumeric, which is what keeps them safe to
-// interpolate.
-const safeIdRegex = /^[A-Za-z0-9]{6,26}$/
+// (`MTt3Pw7K`). A live-embed id is a 26-char Crockford base32 ULID
+// (`01HCZ4DNW8JM6PEGNTQWF2PW87`). The length spanning both is not checked: each id is read
+// either off Typeform's own attribute or from the segment after `/to/`, where nothing but a
+// form id sits. Checked 2026-09-07: `form.typeform.com/to/{invented}` redirects to Typeform's
+// explore page and `/to/pricing` answers 404, so the route holds no word to tell apart.
+//
+// The alphabet is what keeps them safe to interpolate, and it excludes the dot, so a media file
+// on the host stays playable when the enclosure probe offers it here.
+const safeIdRegex = /^[A-Za-z0-9]+$/
 
 // The share panel writes the form's own title into an iframe-props string, `title=<the
 // title>,<other props>`, which is the only human-readable text the empty div carries.
@@ -17,7 +23,7 @@ const titlePropRegex = /(?:^|,)title=([^,]+)/
 
 // Four of the five embed types are launchers: a button that opens the form in an overlay.
 // Those are chrome that was never article content, and each carries the same id as the
-// widget, so they have to be excluded before the id is read rather than after.
+// widget, so they have to be excluded before the id is read.
 const launcherAttributes = ['data-tf-popup', 'data-tf-slider', 'data-tf-popover', 'data-tf-sidetab']
 
 const composeEmbed = (id: string, title?: string): EmbedResolverResult | undefined => {
@@ -45,7 +51,7 @@ const readTitle = (element: Element): string | undefined => {
 // `typeform-widget` class whose loader is still served.
 //
 // A `data-tf-live` id is not a form id: `form.typeform.com/to/<liveId>` 301s to Typeform's
-// explore page rather than a form. The id still travels, because `api.typeform.com/
+// explore page, not a form. The id still travels, because `api.typeform.com/
 // single-embed/<liveId>` answers key-free with the real form id, which is an enrichment step
 // and not something a pure extract can do.
 export const typeformWidgetEmbedResolver = createMarkupEmbedResolver(
@@ -55,25 +61,27 @@ export const typeformWidgetEmbedResolver = createMarkupEmbedResolver(
       return
     }
 
-    const declared = attr(element, 'data-tf-widget') ?? attr(element, 'data-tf-live')
+    const title = readTitle(element)
 
-    if (declared) {
-      return composeEmbed(declared, readTitle(element))
-    }
-
-    // The legacy generation names the form by its whole url instead of its id, and on the
-    // publisher's own subdomain as often as the canonical host.
-    return typeformResolveEmbed(attr(element, 'data-url') ?? '')
+    // Each carrier is validated on its own, so a malformed id in one does not hide a usable id
+    // in another: a block can carry all three, and only the last generation is ever complete.
+    return (
+      composeEmbed(attr(element, 'data-tf-widget') ?? '', title) ??
+      composeEmbed(attr(element, 'data-tf-live') ?? '', title) ??
+      // The legacy generation names the form by its whole url instead of its id, and on the
+      // publisher's own subdomain as often as the canonical host.
+      typeformResolveEmbed(attr(element, 'data-url') ?? '')
+    )
   },
 )
 
 // `form.typeform.com/to/<id>` is what the platform's oEmbed emits, and the per-account
-// `<user>.typeform.com/to/<id>` still serves the same form rather than redirecting, so both
+// `<user>.typeform.com/to/<id>` still serves the same form without redirecting, so both
 // reach here. The query is telemetry (`typeform-embed`, `typeform-medium`) and is dropped.
 export const typeformResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(url)
+  const parsed = parseUrlOnHosts(url, typeformHosts)
 
-  if (!parsed || (!isHostOf(parsed, typeformHosts) && !isSubdomainOf(parsed, typeformHosts))) {
+  if (!parsed) {
     return
   }
 

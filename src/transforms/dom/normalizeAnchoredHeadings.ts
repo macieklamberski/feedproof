@@ -22,7 +22,7 @@ const permalinkClasses = new Set([
   'permalink', // Generic permalink markup.
 ])
 
-// Decorative permalink markers: a run of one or more glyph characters — hash (so
+// Decorative permalink markers: a run of one or more glyph characters: hash (so
 // "#"/"##"/"###" by heading level), pilcrow, section sign, fleuron, link emoji, or
 // zero-width space. An anchor whose visible content is only these (or empty) is a
 // permalink, not real link text.
@@ -32,15 +32,15 @@ const bracketedNumberRegex = /^\[\d+\]$/
 const whitespaceRegex = /\s+/
 
 // Accordion / collapse / tab controls (WPBakery, jQuery UI, Bootstrap, …) wrap
-// the heading in an `<a href="#panel">` whose fragment is the slugified title —
+// the heading in an `<a href="#panel">` whose fragment is the slugified title,
 // so it slug-matches a permalink, but it's an interactive toggle. Detected by
 // the control's class (on the anchor or heading) or its ARIA / toggle attributes.
 const interactiveClassRegex = /accordion|collaps|toggl|panel-title|panel-heading|tta-panel/i
 const interactiveAttrRegex = /toggle|accordion|collapse/i
 
-// An anchor child is a decorative permalink marker — to be dropped rather than
-// kept as heading text — when its text is empty, a lone glyph, or the inline
-// `#fragment` form some generators render (e.g. `<span class="anchor">#intro</span>`).
+// An anchor child is a decorative permalink marker, to be dropped and never kept as heading
+// text, when its text is empty, a lone glyph, or the inline `#fragment` form some generators
+// render (e.g. `<span class="anchor">#intro</span>`).
 const isGlyphMarker = (text: string, fragment: string): boolean => {
   const trimmed = text.trim()
 
@@ -57,13 +57,12 @@ const slugify = (value: string): string => {
     .replace(/^-+|-+$/g, '')
 }
 
-// Headings carry in-page permalinks ("anchors") in many shapes: the whole
-// heading wrapped in a `#fragment` link, a trailing `#`/`¶` glyph, a generator's
-// empty `headerlink`/`hash-link` anchor, a bare `<a name>`/`<a id>` scroll target,
-// a plain `id` on the heading itself, and so on. This collapses every shape to
-// one canonical affordance: plain heading text plus a single empty, self-referential
-// anchor (`<a id="fragment" href="#fragment">`) as the heading's first child — the
-// fragment rides on the anchor's `id` (the scroll target), so the reader can paint a
+// Headings carry in-page permalinks ("anchors") in many shapes: the whole heading wrapped in a
+// `#fragment` link, a trailing `#`/`¶` glyph, a generator's empty `headerlink`/`hash-link`
+// anchor, a bare `<a name>`/`<a id>` scroll target, a plain `id` on the heading itself, and so
+// on. This collapses every shape to one: plain heading text plus a single empty,
+// self-referential anchor (`<a id="fragment" href="#fragment">`) as the heading's first child.
+// The fragment rides on the anchor's `id` (the scroll target), so the reader can paint a
 // clickable permalink glyph (e.g. `::before { content: '#' }`) without any script.
 export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn }) => {
   return (document) => {
@@ -105,7 +104,7 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
         const className = anchor.getAttribute('class') ?? ''
 
         // Footnote references inside headings (sup-wrapped, footnote-classed, or a
-        // bracketed numeral) are citations, not permalinks — leave them alone.
+        // bracketed numeral) are citations, not permalinks: leave them alone.
         const isFootnote =
           footnoteClassRegex.test(className) ||
           bracketedNumberRegex.test(visible) ||
@@ -154,8 +153,8 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
           continue
         }
 
-        // A decorative permalink — a glyph, or a marker sitting beside the real heading
-        // text (e.g. a labelled `permalink`/`heading-link` anchor) — is removed whole. An
+        // A decorative permalink: a glyph, or a marker sitting beside the real heading
+        // text (e.g. a labelled `permalink`/`heading-link` anchor): is removed whole. An
         // anchor that wraps the entire heading keeps its text by promoting it out (inline
         // glyph markers dropped) before the now-empty anchor goes.
         const wrapsHeading = (heading.textContent ?? '').trim() === visible
@@ -175,7 +174,7 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
         anchor.remove()
 
         // Target the heading's own id when a generator set one, else the anchor's
-        // fragment. A bare target keeps its own name/id — that is what existing links
+        // fragment. A bare target keeps its own name/id: that is what existing links
         // already point at. The single canonical permalink is inserted after the loop.
         if (permalinkFragment === null) {
           permalinkFragment = isBareTarget ? fragment : (headingId ?? fragment)
@@ -183,7 +182,7 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
       }
 
       // No anchor contributed a permalink, but a bare `id` sitting directly on the
-      // heading is itself a scroll target — promote it to the same canonical anchor so
+      // heading is itself a scroll target: promote it to the same canonical anchor so
       // every heading id renders one consistent affordance.
       if (permalinkFragment === null) {
         if (!headingId) {

@@ -4,7 +4,7 @@ import { attr } from '../utils/dom.js'
 // WeChat articles carry narration as an <mpvoice> custom element with no audio anywhere on
 // the page. Its `voice_encode_fileid` resolves to the file with no key, no Referer and no
 // user agent (verified 2026-08-01, 206 audio/mp3). The `src` on the element points at a
-// WeChat template page rather than at the audio, so it is not usable as a source.
+// WeChat template page, not at the audio, so it is not usable as a source.
 const mediaIdRegex = /^[A-Za-z0-9_-]{8,120}$/
 
 const composeSourceUrl = (mediaId: string): string => {
@@ -12,6 +12,7 @@ const composeSourceUrl = (mediaId: string): string => {
 }
 
 export const wechatMediaResolver: MediaResolver = {
+  kind: 'media',
   selector: 'mpvoice[voice_encode_fileid]',
   extract: (element): MediaResolverResult | undefined => {
     const mediaId = attr(element, 'voice_encode_fileid')

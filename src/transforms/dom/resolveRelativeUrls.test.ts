@@ -7,8 +7,8 @@ import { resolveRelativeUrls } from './resolveRelativeUrls.js'
 const baseContext: TransformContext = { ...defaultContext, baseUrl: 'https://example.com' }
 
 describeForEachParser('resolveRelativeUrls', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [resolveRelativeUrls(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [resolveRelativeUrls(context)])
   }
 
   it('should resolve relative href on anchors', async () => {
@@ -80,29 +80,27 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
 
   it('should resolve srcset entries', async () => {
     const value = '<img srcset="/small.jpg 300w, /large.jpg 600w">'
-    const result = await transform(value)
+    const expected = html`
+      <img srcset="https://example.com/small.jpg 300w, https://example.com/large.jpg 600w">
+    `
 
-    expect(result).toContain('https://example.com/small.jpg 300w')
-    expect(result).toContain('https://example.com/large.jpg 600w')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve a relative srcset entry following an absolute one with no space', async () => {
     const value = '<img srcset="https://cdn.com/a.jpg 100w,/rel/b.jpg 200w">'
-    const result = await transform(value)
+    const expected = '<img srcset="https://cdn.com/a.jpg 100w, https://example.com/rel/b.jpg 200w">'
 
-    expect(result).toContain('https://cdn.com/a.jpg 100w')
-    expect(result).toContain('https://example.com/rel/b.jpg 200w')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   // A url-less feed srcset ("…768w, 225w, 563w") makes the parser read the bare width
-  // descriptors as candidate urls; left in, each resolves to a page that does not exist.
+  // descriptors as candidate urls. Left in, each resolves to a page that does not exist.
   it('should drop descriptor-only srcset candidates instead of resolving them', async () => {
     const value = '<img srcset="https://cdn.com/a.jpg 768w,  225w,  563w,  1152w">'
-    const result = await transform(value)
+    const expected = '<img srcset="https://cdn.com/a.jpg 768w">'
 
-    expect(result).toContain('srcset="https://cdn.com/a.jpg 768w"')
-    expect(result).not.toContain('example.com/225w')
-    expect(result).not.toContain('225w')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve srcset entries on source elements', async () => {
@@ -119,12 +117,14 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
 
   it('should resolve camelCase srcSet from React/Next.js', async () => {
     const value = '<img srcSet="/small.jpg 1x, /large.jpg 2x" src="/img.jpg">'
-    const result = await transform(value)
+    const expected = html`
+      <img
+        src="https://example.com/img.jpg"
+        srcset="https://example.com/small.jpg 1x, https://example.com/large.jpg 2x"
+      >
+    `
 
-    expect(result).toContain('https://example.com/small.jpg 1x')
-    expect(result).toContain('https://example.com/large.jpg 2x')
-    expect(result).not.toContain('srcSet')
-    expect(result).toContain('srcset=')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should preserve already-absolute URLs', async () => {
@@ -159,10 +159,8 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
 
   it('should preserve fragment-only hrefs (in-article anchors)', async () => {
     const value = '<a href="#section">jump</a>'
-    const result = await transform(value)
 
-    expect(result).toContain('href="#section"')
-    expect(result).not.toContain('https://example.com/#section')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should preserve fragment-only href even when no matching target exists', async () => {
@@ -176,10 +174,8 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
       <a href="#section">jump</a>
       <h2 id="section">Section</h2>
     `
-    const result = await transform(value)
 
-    expect(result).toContain('href="#section"')
-    expect(result).toContain('<h2 id="section">')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should still resolve hrefs that combine a path with a fragment', async () => {
@@ -198,8 +194,9 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
 
   it('should handle invalid URLs gracefully', async () => {
     const value = '<a href="://broken">link</a>'
+    const expected = '<a href="https://example.com/://broken">link</a>'
 
-    expect(await transform(value)).toContain('link')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave relative urls untouched when baseUrl is missing', async () => {
@@ -208,7 +205,22 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
       <img src="/photo.jpg">
     `
 
-    expect(await transform(value, defaultContext)).toBe(value)
+    expect(await transform(value, defaultContext)).toEqualHtml(value)
+  })
+
+  // A protocol-relative url names its host already and needs only a scheme, so it is absolutised
+  // whether or not the caller states a base.
+  it('should give a protocol-relative url a scheme when baseUrl is missing', async () => {
+    const value = html`
+      <a href="//other.test/page">link</a>
+      <img src="//cdn.test/photo.jpg">
+    `
+    const expected = html`
+      <a href="https://other.test/page">link</a>
+      <img src="https://cdn.test/photo.jpg">
+    `
+
+    expect(await transform(value, defaultContext)).toEqualHtml(expected)
   })
 
   it('should not modify html with no resolvable attributes', async () => {
@@ -230,14 +242,8 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
       'https://substackcdn.com/image/fetch/w_848,c_limit,f_webp/https%3A%2F%2Fexample.com%2Fimg.png 848w',
     ].join(', ')
     const value = `<img srcset="${srcset}">`
-    const result = await transform(value)
 
-    expect(result).toContain(
-      'https://substackcdn.com/image/fetch/w_424,c_limit,f_webp/https%3A%2F%2Fexample.com%2Fimg.png 424w',
-    )
-    expect(result).toContain(
-      'https://substackcdn.com/image/fetch/w_848,c_limit,f_webp/https%3A%2F%2Fexample.com%2Fimg.png 848w',
-    )
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not split Substack CDN srcset into fragments resolved against base URL', async () => {
@@ -246,23 +252,22 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
       'https://substackcdn.com/image/fetch/w_848,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Ftest.png 848w',
     ].join(', ')
     const value = `<img srcset="${srcset}">`
-    const result = await transform(value)
 
-    expect(result).not.toContain('https://example.com/w_424')
-    expect(result).not.toContain('https://example.com/c_limit')
-    expect(result).not.toContain('https://example.com/f_webp')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should resolve a relative href on an svg image', async () => {
-    const result = await transform('<svg><image href="/img.png"></image></svg>')
+    const value = '<svg><image href="/img.png"></image></svg>'
+    const expected = '<svg><image href="https://example.com/img.png"></image></svg>'
 
-    expect(result).toContain('https://example.com/img.png')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should resolve a relative xlink:href on an svg image', async () => {
-    const result = await transform('<svg><image xlink:href="/img.png"></image></svg>')
+    const value = '<svg><image xlink:href="/img.png"></image></svg>'
+    const expected = '<svg><image xlink:href="https://example.com/img.png"></image></svg>'
 
-    expect(result).toContain('https://example.com/img.png')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
@@ -270,6 +275,6 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

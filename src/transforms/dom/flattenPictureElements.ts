@@ -1,5 +1,6 @@
 import type { DomTransform } from '../../types.js'
 import { parseSrcset } from '../../utils/images.js'
+import { createImage } from '../../utils/widgets.js'
 
 // Prefer AVIF, then WebP. Other source types are not worth promoting over the
 // <img> fallback, which is already a widely-supported format.
@@ -66,7 +67,7 @@ const firstSourceWithSrcset = (picture: Element): Element | undefined => {
 
 // Collapse each <picture> to a single <img>. When a modern format-only <source>
 // (AVIF/WebP, no media query) is present, its srcset is promoted onto the img so
-// the lighter format survives; the publisher's WebP/AVIF is the whole point of
+// the lighter format survives. The publisher's WebP/AVIF is the whole point of
 // most feed <picture> elements. Art-direction sources (with media) are left to
 // the plain <img> fallback. A <picture> missing its <img> (invalid, but seen in
 // feeds) gets one synthesized from the best available source.
@@ -98,7 +99,7 @@ export const flattenPictureElements: DomTransform = () => {
         }
 
         // sizes="auto" collapses a lifted image to 0x0 in renderers using
-        // width:auto; drop it, but keep a real sizes value intact.
+        // width:auto. Drop it, but keep a real sizes value intact.
         if (existing.getAttribute('sizes') === 'auto') {
           existing.removeAttribute('sizes')
         }
@@ -117,10 +118,7 @@ export const flattenPictureElements: DomTransform = () => {
         continue
       }
 
-      const image = document.createElement('img')
-      image.setAttribute('src', url)
-      image.setAttribute('srcset', srcset)
-      picture.replaceWith(image)
+      picture.replaceWith(createImage(document, { src: url, srcset }))
     }
   }
 }

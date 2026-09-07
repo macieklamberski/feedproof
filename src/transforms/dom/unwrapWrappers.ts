@@ -13,7 +13,18 @@ const wrapperSelectors = [
   // sibling (the content is one chain), that chain ends in a leaf anchor, and no placeholder sits
   // in it. jsdom rejects a `:has` nested in another, so each stands on its own.
   'figure:has(a):not(:has(* ~ *)):not(:has(a *)):not(:has([data-embed-provider], [data-cite-provider]))',
+  // A figure holding nothing but a placeholder is the platform's own embed wrapper (Tumblr's
+  // `tmblr-embed`, Gutenberg's `wp-block-embed`), and everything it stated has been read into the
+  // placeholder by the time this runs. A figcaption, a second element or an image beside it means
+  // the figure is the author's grouping and stays.
+  'figure:has(> [data-embed-provider], > [data-cite-provider]):not(:has(> * ~ *))',
 ]
+
+// A conditional selector only matches once whatever sat between it and its content is gone, so
+// one pass is not enough: a `figure > div > placeholder` becomes `figure > placeholder` only
+// after the div dissolves. Each pass removes at least one element or stops, so this terminates;
+// the bound is a backstop against a selector that matches something it cannot remove.
+const maxUnwrapPasses = 10
 
 const wrapperSelector = wrapperSelectors.join(', ')
 
@@ -43,31 +54,40 @@ const collectReferencedFragments = (document: Document): Set<string> => {
 export const unwrapWrappers: DomTransform = () => {
   return (document) => {
     const referencedFragments = collectReferencedFragments(document)
-    const candidates = document.body.querySelectorAll(wrapperSelector)
 
-    for (let i = 0, n = candidates.length; i < n; i++) {
-      const element = candidates[i]
-      const parent = element.parentNode
+    for (let pass = 0; pass < maxUnwrapPasses; pass++) {
+      const candidates = document.body.querySelectorAll(wrapperSelector)
+      let unwrapped = 0
 
-      if (!parent) {
-        continue
+      for (let i = 0, n = candidates.length; i < n; i++) {
+        const element = candidates[i]
+        const parent = element.parentNode
+
+        if (!parent) {
+          continue
+        }
+
+        if (isGeneratedWrapper(element)) {
+          continue
+        }
+
+        const id = element.getAttribute('id')
+
+        if (id && referencedFragments.has(id)) {
+          continue
+        }
+
+        while (element.firstChild) {
+          parent.insertBefore(element.firstChild, element)
+        }
+
+        element.remove()
+        unwrapped++
       }
 
-      if (isGeneratedWrapper(element)) {
-        continue
+      if (unwrapped === 0) {
+        return
       }
-
-      const id = element.getAttribute('id')
-
-      if (id && referencedFragments.has(id)) {
-        continue
-      }
-
-      while (element.firstChild) {
-        parent.insertBefore(element.firstChild, element)
-      }
-
-      element.remove()
     }
   }
 }

@@ -6,6 +6,7 @@ import { convertGalleries } from './convertGalleries.js'
 
 // Collects every <img> in a `.gallery` element into items (two or more required).
 const imageResolver: GalleryResolver = {
+  kind: 'gallery',
   selector: '.gallery',
   extract: (element) => {
     const items: Array<GalleryItem> = []
@@ -29,7 +30,7 @@ const imageResolver: GalleryResolver = {
 describeForEachParser('convertGalleries', (parseHtml) => {
   const transform = (value: string, galleryResolvers: Array<GalleryResolver>) => {
     return applyDomTransforms(parseHtml(value), [
-      convertGalleries({ ...baseContext, galleryResolvers }),
+      convertGalleries({ ...baseContext, widgetResolvers: galleryResolvers }),
     ])
   }
 
@@ -59,6 +60,7 @@ describeForEachParser('convertGalleries', (parseHtml) => {
 
     it('should emit data-gallery-layout for sliders only', async () => {
       const sliderResolver: GalleryResolver = {
+        kind: 'gallery',
         selector: '.slider',
         extract: () => {
           return {
@@ -69,6 +71,7 @@ describeForEachParser('convertGalleries', (parseHtml) => {
         },
       }
       const gridResolver: GalleryResolver = {
+        kind: 'gallery',
         selector: '.grid',
         extract: () => {
           return {
@@ -86,6 +89,7 @@ describeForEachParser('convertGalleries', (parseHtml) => {
 
     it('should run each resolver in the registry', async () => {
       const resolverA: GalleryResolver = {
+        kind: 'gallery',
         selector: '.a',
         extract: () => {
           return {
@@ -95,6 +99,7 @@ describeForEachParser('convertGalleries', (parseHtml) => {
         },
       }
       const resolverB: GalleryResolver = {
+        kind: 'gallery',
         selector: '.b',
         extract: () => {
           return {
@@ -112,6 +117,7 @@ describeForEachParser('convertGalleries', (parseHtml) => {
 
     it('should render per-image captions in the fallback', async () => {
       const captionResolver: GalleryResolver = {
+        kind: 'gallery',
         selector: '.gallery',
         extract: () => {
           return {

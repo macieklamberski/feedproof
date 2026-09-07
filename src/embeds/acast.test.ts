@@ -148,25 +148,25 @@ describeForEachParser('acastEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for the player host naming a show alone', async () => {
-      const value = html`<iframe src="https://player.acast.com/5cd07163ad694b18367aeb03"></iframe>`
+      const value = '<iframe src="https://player.acast.com/5cd07163ad694b18367aeb03"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined for a bare dollar prefix', async () => {
-      const value = html`<iframe src="https://embed.acast.com/$/"></iframe>`
+      const value = '<iframe src="https://embed.acast.com/$/"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined for a traversal in the episode', async () => {
-      const value = html`<iframe src="https://embed.acast.com/homebrewshow/..%2Fevil"></iframe>`
+      const value = '<iframe src="https://embed.acast.com/homebrewshow/..%2Fevil"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined for an id holding a dot', async () => {
-      const value = html`<iframe src="https://embed.acast.com/show.name/episode"></iframe>`
+      const value = '<iframe src="https://embed.acast.com/show.name/episode"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })

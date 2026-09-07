@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
@@ -29,7 +30,7 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
         src: 'https://form.typeform.com/to/01HCZ4DNW8JM6PEGNTQWF2PW87',
         url: 'https://form.typeform.com/to/01HCZ4DNW8JM6PEGNTQWF2PW87',
         title: 'User Satisfaction Survey',
-        // The snippet's inline style states the height; its width is a percentage, not pixels.
+        // The snippet's inline style states the height. Its width is a percentage, not pixels.
         height: 500,
       }
 
@@ -57,12 +58,44 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
 
   describe('the direct widget form', () => {
     it('should recover the form named by its own id', async () => {
-      const value = html`<div data-tf-widget="MTt3Pw7K"></div>`
+      const value = '<div data-tf-widget="MTt3Pw7K"></div>'
       const expected: EmbedResolverResult = {
         provider: 'typeform',
         id: 'MTt3Pw7K',
         src: 'https://form.typeform.com/to/MTt3Pw7K',
         url: 'https://form.typeform.com/to/MTt3Pw7K',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // A block can carry both generations, and only the later one is guaranteed intact, so each
+    // attribute is validated rather than the first one present being committed to.
+    it('should read the live id when the widget id is malformed', async () => {
+      const value = html`
+        <div
+          data-tf-widget="../evil"
+          data-tf-live="01HXYZ"
+        ></div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'typeform',
+        id: '01HXYZ',
+        src: 'https://form.typeform.com/to/01HXYZ',
+        url: 'https://form.typeform.com/to/01HXYZ',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Two generations of id already differ in length, and the length is not what names a form.
+    it('should recover a form whose id is shorter than either generation', async () => {
+      const value = '<div data-tf-widget="Xk2p"></div>'
+      const expected: EmbedResolverResult = {
+        provider: 'typeform',
+        id: 'Xk2p',
+        src: 'https://form.typeform.com/to/Xk2p',
+        url: 'https://form.typeform.com/to/Xk2p',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -118,13 +151,13 @@ describeForEachParser('typeformWidgetEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined for an id outside the url-safe alphabet', async () => {
-      const value = html`<div data-tf-widget="../evil"></div>`
+      const value = '<div data-tf-widget="../evil"></div>'
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined for an empty id', async () => {
-      const value = html`<div data-tf-widget=""></div>`
+      const value = '<div data-tf-widget=""></div>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -219,8 +252,29 @@ describeForEachParser('typeformIframeEmbedResolver', (parseHtml) => {
   })
 
   it('should ignore an iframe on another host', async () => {
-    const value = html`<iframe src="https://evil.test/to/MTt3Pw7K"></iframe>`
+    const value = '<iframe src="https://evil.test/to/MTt3Pw7K"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
+  })
+})
+
+// The enclosure probe offers every attachment a feed carries to this resolver, and Typeform
+// admits every subdomain of its own host, so the id alphabet is what keeps a file playable.
+describeForEachParser('typeform through the pipeline', (parseHtml) => {
+  it('should leave an audio enclosure on the typeform host playable', async () => {
+    const enclosures = [{ url: 'https://api.typeform.com/to/MTt3Pw7K.mp3', type: 'audio/mpeg' }]
+
+    const expected = html`
+      <audio data-enclosure="" controls src="https://api.typeform.com/to/MTt3Pw7K.mp3"></audio>
+      <p>Body</p>
+    `
+
+    expect(
+      await transformContent('<p>Body</p>', {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/post',
+        enclosures,
+      }),
+    ).toEqualHtml(expected)
   })
 })

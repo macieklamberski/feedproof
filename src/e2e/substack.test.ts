@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
-import { describeForEachParser, html, substackAttrs } from '../tests.js'
+import { describeForEachParser, html, jsonAttrValue } from '../tests.js'
 
 describeForEachParser('Substack', (parseHtml) => {
   // substackOwnPostCiteResolver and substackCrossPostCiteResolver claim the post embeds,
@@ -26,9 +26,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-cite-provider="substack"
         data-cite-url="https://thereader.example.com/p/model-drop"
         data-cite-title="Model Drop"
-      >
-        <a href="https://thereader.example.com/p/model-drop">Model Drop</a>
-      </div>
+      ></div>
     `
 
     const result = await transformContent(value, {
@@ -39,16 +37,49 @@ describeForEachParser('Substack', (parseHtml) => {
     expect(result).toEqualHtml(expected)
   })
 
-  it('should strip substack publication embeds as non-content', async () => {
-    const value = `<p>Text</p><div class="embedded-publication-wrap" data-attrs='{"name":"Other Pub","base_url":"https://other.substack.com","hero_text":"A great read"}'></div>`
+  // The same subscribe form as the wrap above, arriving as Substack's other snippet. Both are
+  // chrome, so both go.
+  it('should strip the subscribe iframe as non-content too', async () => {
+    const value = html`
+      <p>Text</p>
+      <iframe src="https://other.substack.com/embed" width="480" height="320"></iframe>
+    `
+    const expected = '<p>Text</p>'
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
+  })
+
+  // The card follows a sentence introducing it often enough that stripping it left the sentence
+  // pointing at nothing, so it converts instead of going the way of the subscribe widgets below.
+  it('should convert a substack publication embed into a cite placeholder', async () => {
+    const publicationAttrs = jsonAttrValue({
+      name: 'Other Pub',
+      base_url: 'https://otherpub.example.com',
+      hero_text: 'A great read',
+      author_name: 'Author name',
+      logo_url: 'https://cdn.example.com/logo.png',
+    })
+    const value = html`
+      <p>Check out the other newsletter here:</p>
+      <div class="embedded-publication-wrap" data-attrs="${publicationAttrs}"></div>
+    `
+    const expected = html`
+      <p>Check out the other newsletter here:</p>
+      <div
+        data-cite-provider="substack"
+        data-cite-url="https://otherpub.example.com"
+        data-cite-title="Other Pub"
+        data-cite-description="A great read"
+        data-cite-author="Author name"
+        data-cite-icon="https://cdn.example.com/logo.png"
+      ></div>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com/',
     })
 
-    expect(result).toContain('<p>Text</p>')
-    expect(result).not.toContain('embedded-publication-wrap')
-    expect(result).not.toContain('Other Pub')
+    expect(result).toEqualHtml(expected)
   })
 
   // Markup that reaches a clean shape through the interaction of generic transforms alone,
@@ -112,8 +143,12 @@ describeForEachParser('Substack', (parseHtml) => {
           <figure>
             <a class="image-link image2" href="https://cdn.example.com/full.png" data-component-name="Image2ToDOM">
               <div class="image2-inset">
-                <picture><img src="https://cdn.example.com/img.png" width="600" height="400" alt="" /></picture>
-                <div class="image-link-expand"><button class="restack-image">restack</button></div>
+                <picture>
+                  <img src="https://cdn.example.com/img.png" width="600" height="400" alt="" />
+                </picture>
+                <div class="image-link-expand">
+                  <button class="restack-image">restack</button>
+                </div>
               </div>
             </a>
           </figure>
@@ -231,7 +266,7 @@ describeForEachParser('Substack', (parseHtml) => {
 
   it('should convert a VideoPlaceholder upload into a native video element', async () => {
     // substackMediaResolver owns it, minting the api.substack.com upload endpoint.
-    const videoAttrs = substackAttrs({
+    const videoAttrs = jsonAttrValue({
       mediaUploadId: uploadId,
       duration: null,
       isEditorNode: true,
@@ -255,7 +290,7 @@ describeForEachParser('Substack', (parseHtml) => {
 
   it('should convert an AudioPlaceholder upload into a native audio element', async () => {
     // substackMediaResolver owns it, through the same upload endpoint as video.
-    const audioAttrs = substackAttrs({
+    const audioAttrs = jsonAttrValue({
       label: '',
       mediaUploadId: uploadId,
       duration: 714.031,
@@ -280,8 +315,8 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   it('should resolve a Youtube2ToDOM wrap into a youtube embed placeholder', async () => {
-    // The host-keyed youtube resolver claims the inner iframe; the wrap divs dissolve.
-    const youtubeAttrs = substackAttrs({
+    // The host-keyed youtube resolver claims the inner iframe. The wrap divs dissolve.
+    const youtubeAttrs = jsonAttrValue({
       videoId: 'ab3DEfGHijk',
       startTime: null,
       endTime: null,
@@ -315,11 +350,8 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-src="https://www.youtube.com/embed/ab3DEfGHijk"
         data-embed-url="https://www.youtube.com/watch?v=ab3DEfGHijk"
         data-embed-thumbnail="https://i.ytimg.com/vi/ab3DEfGHijk/hqdefault.jpg"
-        data-embed-width="728"
-        data-embed-height="409"
-      >
-        <a href="https://www.youtube.com/watch?v=ab3DEfGHijk">https://www.youtube.com/watch?v=ab3DEfGHijk</a>
-      </div>
+        data-embed-ratio="16/9"
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -327,8 +359,9 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   it('should resolve a spotify-wrap iframe into a spotify embed placeholder', async () => {
-    // The url-keyed spotify resolver claims the iframe; its declared height wins.
-    const episodeAttrs = substackAttrs({
+    // The url-keyed spotify resolver claims the iframe and reads the card Substack hangs on it;
+    // the declared height wins. The description holds the type label, which the id already says.
+    const episodeAttrs = jsonAttrValue({
       image: 'https://i.scdn.co/image/ab6765630000ba8a0000000000000000000000ff',
       title: 'Episode 42: Field Recording',
       subtitle: 'Casey Host',
@@ -355,12 +388,11 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-id="episode/aB3dEfGhIjKlMnOpQrStUv"
         data-embed-src="https://open.spotify.com/embed/episode/aB3dEfGhIjKlMnOpQrStUv"
         data-embed-url="https://open.spotify.com/episode/aB3dEfGhIjKlMnOpQrStUv"
+        data-embed-title="Episode 42: Field Recording"
+        data-embed-author="Casey Host"
+        data-embed-thumbnail="https://i.scdn.co/image/ab6765630000ba8a0000000000000000000000ff"
         data-embed-height="232"
-      >
-        <a
-          href="https://open.spotify.com/episode/aB3dEfGhIjKlMnOpQrStUv"
-        >https://open.spotify.com/episode/aB3dEfGhIjKlMnOpQrStUv</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -369,14 +401,14 @@ describeForEachParser('Substack', (parseHtml) => {
 
   it('should rebuild a MentionToDOM span into an inline profile link', async () => {
     // fixSubstackMentions owns it: the name lives only in the data-attrs JSON.
-    const mentionAttrs = substackAttrs({
+    const mentionAttrs = jsonAttrValue({
       name: 'Jane Miller',
       id: 123456,
       type: 'user',
       url: null,
     })
     const mention = `<span class="mention-wrap" data-attrs="${mentionAttrs}" data-component-name="MentionToDOM"></span>`
-    const value = html`<p>Thanks to ${mention} for the idea.</p>`
+    const value = `<p>Thanks to ${mention} for the idea.</p>`
     const expected = html`
       <p>Thanks to <a href="https://substack.com/profile/123456">@Jane Miller</a> for the idea.</p>
     `
@@ -387,7 +419,7 @@ describeForEachParser('Substack', (parseHtml) => {
 
   it('should convert an EmbeddedPostToDOM cross-post card into a cite placeholder', async () => {
     // substackCrossPostCiteResolver owns it in the cite pass.
-    const crossPostAttrs = substackAttrs({
+    const crossPostAttrs = jsonAttrValue({
       id: 203084323,
       url: 'https://otherpub.substack.com/p/field-notes-23',
       publication_id: 6115088,
@@ -426,9 +458,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-cite-url="https://otherpub.substack.com/p/field-notes-23"
         data-cite-title="Field Notes #23"
         data-cite-icon="https://substackcdn.com/image/fetch/f_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Flogo_1080x1080.png"
-      >
-        <a href="https://otherpub.substack.com/p/field-notes-23">Field Notes #23</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -437,7 +467,7 @@ describeForEachParser('Substack', (parseHtml) => {
 
   it('should convert a DigestPostEmbed own-post card into a cite placeholder', async () => {
     // substackOwnPostCiteResolver owns it in the cite pass.
-    const ownPostAttrs = substackAttrs({
+    const ownPostAttrs = jsonAttrValue({
       nodeId: 1,
       title: 'Model Drop',
       caption: 'The excerpt of the linked post.',
@@ -458,9 +488,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-cite-author="Casey Author"
         data-cite-url="https://examplepub.substack.com/p/model-drop"
         data-cite-title="Model Drop"
-      >
-        <a href="https://examplepub.substack.com/p/model-drop">Model Drop</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -470,7 +498,7 @@ describeForEachParser('Substack', (parseHtml) => {
   it('should strip a SubscribeWidgetToDOM widget as non-content', async () => {
     // nonContentSelectors owns it (.subscription-widget-wrap-editor): a subscribe CTA is
     // chrome, so removal is the desired end state.
-    const subscribeAttrs = substackAttrs({
+    const subscribeAttrs = jsonAttrValue({
       url: 'https://examplepub.substack.com/subscribe?',
       text: 'Subscribe',
       language: 'en',
@@ -493,7 +521,7 @@ describeForEachParser('Substack', (parseHtml) => {
         </div>
       </div>
     `
-    const expected = html`<p>Thank you for being here.</p>`
+    const expected = '<p>Thank you for being here.</p>'
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
     expect(result).toEqualHtml(expected)
@@ -502,14 +530,14 @@ describeForEachParser('Substack', (parseHtml) => {
   it('should drop DirectMessageToDOM and CommunityChatRenderPlaceholder divs', async () => {
     // stripEmptyTags owns them: both ship childless, hold no content to recover, and
     // point at interactions that only work on Substack, so removal is the desired end state.
-    const directMessageAttrs = substackAttrs({
+    const directMessageAttrs = jsonAttrValue({
       userId: 123456,
       userName: 'Sam Fields',
       canDm: null,
       dmUpgradeOptions: null,
       isEditorNode: true,
     })
-    const communityChatAttrs = substackAttrs({
+    const communityChatAttrs = jsonAttrValue({
       url: 'https://open.substack.com/pub/examplepub/chat?utm_source=chat_embed',
       subdomain: 'examplepub',
     })
@@ -526,16 +554,15 @@ describeForEachParser('Substack', (parseHtml) => {
         data-component-name="CommunityChatRenderPlaceholder"
       ></div>
     `
-    const expected = html`<p>Come say hi.</p>`
+    const expected = '<p>Come say hi.</p>'
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
     expect(result).toEqualHtml(expected)
   })
 
-  it('should keep a standalone ButtonCreateButton paragraph untouched', async () => {
-    // Passes through: no selector claims the bare CTA paragraph, so the subscribe button
-    // link survives outside a captioned-button wrap.
-    const buttonAttrs = substackAttrs({
+  it('should strip a standalone ButtonCreateButton subscribe CTA', async () => {
+    // nonContentSelectors owns it: the subscribe button is chrome outside a captioned wrap too.
+    const buttonAttrs = jsonAttrValue({
       url: 'https://examplepub.substack.com/subscribe?',
       text: 'Subscribe now',
       action: null,
@@ -549,15 +576,79 @@ describeForEachParser('Substack', (parseHtml) => {
         data-component-name="ButtonCreateButton"
       ><a class="button primary" href="https://examplepub.substack.com/subscribe?"><span>Subscribe now</span></a></p>
     `
-    const expected = value
+    const expected = '<p>Please feel free to share this.</p>'
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
     expect(result).toEqualHtml(expected)
   })
 
+  it('should strip a standalone ButtonCreateButton comment CTA', async () => {
+    const buttonAttrs = jsonAttrValue({
+      url: 'https://examplepub.substack.com/p/the-post/comments',
+      text: 'Leave a comment',
+      action: null,
+      class: null,
+    })
+    const value = html`
+      <p>Before.</p>
+      <p
+        class="button-wrapper"
+        data-attrs="${buttonAttrs}"
+        data-component-name="ButtonCreateButton"
+      ><a class="button primary" href="https://examplepub.substack.com/p/the-post/comments"><span>Leave a comment</span></a></p>
+    `
+    const expected = '<p>Before.</p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toEqualHtml(expected)
+  })
+
+  it('should strip a standalone ButtonCreateButton share CTA', async () => {
+    const buttonAttrs = jsonAttrValue({
+      url: 'https://examplepub.substack.com/p/the-post?action=share',
+      text: 'Share',
+      action: null,
+      class: null,
+    })
+    const value = html`
+      <p>Before.</p>
+      <p
+        class="button-wrapper"
+        data-attrs="${buttonAttrs}"
+        data-component-name="ButtonCreateButton"
+      ><a class="button primary" href="https://examplepub.substack.com/p/the-post?action=share"><span>Share</span></a></p>
+    `
+    const expected = '<p>Before.</p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toEqualHtml(expected)
+  })
+
+  it('should keep a ButtonCreateButton the author pointed somewhere of their own', async () => {
+    // Passes through: the component wraps author-authored buttons too, so only the platform
+    // actions are claimed and a donate button keeps its link.
+    const buttonAttrs = jsonAttrValue({
+      url: 'https://example.com/donate?campaign=spring',
+      text: 'One-time and recurring donations',
+      action: null,
+      class: 'button-wrapper',
+    })
+    const value = html`
+      <p>Before.</p>
+      <p
+        class="button-wrapper"
+        data-attrs="${buttonAttrs}"
+        data-component-name="ButtonCreateButton"
+      ><a class="button primary button-wrapper" href="https://example.com/donate?campaign=spring"><span>One-time and recurring donations</span></a></p>
+    `
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toEqualHtml(value)
+  })
+
   it('should strip a CaptionedButtonToDOM CTA with its inner button', async () => {
     // nonContentSelectors owns it (.captioned-button-wrap): caption and button are chrome.
-    const captionedAttrs = substackAttrs({
+    const captionedAttrs = jsonAttrValue({
       url: 'https://examplepub.substack.com/p/the-post?action=share',
       text: 'Share',
     })
@@ -578,7 +669,7 @@ describeForEachParser('Substack', (parseHtml) => {
         ><a class="button primary" href="https://examplepub.substack.com/p/the-post?action=share"><span>Share</span></a></p>
       </div>
     `
-    const expected = html`<p>Before.</p>`
+    const expected = '<p>Before.</p>'
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
     expect(result).toEqualHtml(expected)
@@ -588,15 +679,21 @@ describeForEachParser('Substack', (parseHtml) => {
     // Passes through: the footnote kind is parked, so the anchor stays inline and the
     // footnote body unwraps into ordinary paragraphs that keep the back link.
     const value = html`
-      <p>A claim in the body.<a class="footnote-anchor" data-component-name="FootnoteAnchorToDOM" id="footnote-anchor-1" href="#footnote-1" target="_self">1</a></p>
+      <p>A claim in the body.<a class="footnote-anchor" data-component-name="FootnoteAnchorToDOM" id="footnote-anchor-1" href="#footnote-1" target="_self">1</a>
+      </p>
       <div class="footnote" data-component-name="FootnoteToDOM">
         <a id="footnote-1" href="#footnote-anchor-1" class="footnote-number" contenteditable="false" target="_self">1</a>
-        <div class="footnote-content"><p>The footnote text.</p></div>
+        <div class="footnote-content">
+          <p>The footnote text.</p>
+        </div>
       </div>
     `
     const expected = html`
-      <p>A claim in the body.<a class="footnote-anchor" data-component-name="FootnoteAnchorToDOM" id="footnote-anchor-1" href="#footnote-1" target="_self">1</a></p>
-      <p><a id="footnote-1" href="#footnote-anchor-1" class="footnote-number" contenteditable="false" target="_self">1</a></p>
+      <p>A claim in the body.<a class="footnote-anchor" data-component-name="FootnoteAnchorToDOM" id="footnote-anchor-1" href="#footnote-1" target="_self">1</a>
+      </p>
+      <p>
+        <a id="footnote-1" href="#footnote-anchor-1" class="footnote-number" contenteditable="false" target="_self">1</a>
+      </p>
       <p>The footnote text.</p>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
@@ -616,7 +713,7 @@ describeForEachParser('Substack', (parseHtml) => {
 
   it('should highlight a HighlightedCodeBlockToDOM block through the code pipeline', async () => {
     // highlightCode owns it: the declared language becomes the pre label and hljs markup.
-    const codeAttrs = substackAttrs({
+    const codeAttrs = jsonAttrValue({
       language: 'markdown',
       nodeId: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
     })
@@ -634,7 +731,7 @@ describeForEachParser('Substack', (parseHtml) => {
   it('should keep a GitgistToDOM inline gist as a scrollable table', async () => {
     // Passes through: wrapTablesForScroll owns the code table, and the stylesheet link and
     // the gist-meta line survive as they arrive.
-    const gistAttrs = substackAttrs({
+    const gistAttrs = jsonAttrValue({
       innerHTML: '<div id="gist100200300" class="gist"></div>',
       stylesheet: 'https://github.githubassets.com/assets/gist-embed-b1ee75c43dbe.css',
     })
@@ -661,9 +758,17 @@ describeForEachParser('Substack', (parseHtml) => {
     const expected = html`
       <link rel="stylesheet" href="https://github.githubassets.com/assets/gist-embed-b1ee75c43dbe.css">
       <div data-table="">
-        <table class="highlight"><tbody><tr><td class="blob-code">print("hello")</td></tr></tbody></table>
+        <table class="highlight">
+          <tbody>
+            <tr>
+              <td class="blob-code">print("hello")</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <p><a href="https://gist.github.com/caseyauthor/abc123/raw/">view raw</a> hosted with ❤ by <a href="https://github.com">GitHub</a></p>
+      <p>
+        <a href="https://gist.github.com/caseyauthor/abc123/raw/">view raw</a> hosted with ❤ by <a href="https://github.com">GitHub</a>
+      </p>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -685,12 +790,14 @@ describeForEachParser('Substack', (parseHtml) => {
             <a
               class="file-embed-button wide"
               href="https://examplepub.substack.com/api/v1/file/2b9c5d1e-4f3a-4b6c-8d7e-9f0a1b2c3d4e.pdf"
-            ><span class="file-embed-button-text">Download</span></a>
+            ><span class="file-embed-button-text">Download</span>
+            </a>
           </div>
           <a
             class="file-embed-button narrow"
             href="https://examplepub.substack.com/api/v1/file/2b9c5d1e-4f3a-4b6c-8d7e-9f0a1b2c3d4e.pdf"
-          ><span class="file-embed-button-text">Download</span></a>
+          ><span class="file-embed-button-text">Download</span>
+          </a>
         </div>
       </div>
     `
@@ -698,8 +805,16 @@ describeForEachParser('Substack', (parseHtml) => {
       <p>Before.</p>
       <p>Three Poems</p>
       <p>31.9KB ∙ PDF file</p>
-      <p><a class="file-embed-button wide" href="https://examplepub.substack.com/api/v1/file/2b9c5d1e-4f3a-4b6c-8d7e-9f0a1b2c3d4e.pdf"><span class="file-embed-button-text">Download</span></a></p>
-      <p><a class="file-embed-button narrow" href="https://examplepub.substack.com/api/v1/file/2b9c5d1e-4f3a-4b6c-8d7e-9f0a1b2c3d4e.pdf"><span class="file-embed-button-text">Download</span></a></p>
+      <p>
+        <a class="file-embed-button wide" href="https://examplepub.substack.com/api/v1/file/2b9c5d1e-4f3a-4b6c-8d7e-9f0a1b2c3d4e.pdf">
+          <span class="file-embed-button-text">Download</span>
+        </a>
+      </p>
+      <p>
+        <a class="file-embed-button narrow" href="https://examplepub.substack.com/api/v1/file/2b9c5d1e-4f3a-4b6c-8d7e-9f0a1b2c3d4e.pdf">
+          <span class="file-embed-button-text">Download</span>
+        </a>
+      </p>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -707,8 +822,8 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   it('should resolve a VimeoToDOM wrap into a vimeo embed placeholder', async () => {
-    // The vimeo resolver claims the inner player iframe; the wrap divs dissolve.
-    const vimeoAttrs = substackAttrs({
+    // The vimeo resolver claims the inner player iframe. The wrap divs dissolve.
+    const vimeoAttrs = jsonAttrValue({
       videoId: '123456789',
       videoKey: '',
       belowTheFold: false,
@@ -738,9 +853,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-id="123456789"
         data-embed-src="https://player.vimeo.com/video/123456789"
         data-embed-url="https://vimeo.com/123456789"
-      >
-        <a href="https://vimeo.com/123456789">https://vimeo.com/123456789</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -748,8 +861,9 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   it('should resolve an ApplePodcastToDom iframe into an applepodcasts placeholder', async () => {
-    // The apple resolver claims the embed iframe and states the episode player height.
-    const podcastAttrs = substackAttrs({
+    // The apple resolver claims the embed iframe, states the episode player height and takes the
+    // card the container carries, whose runtime is in milliseconds because this is an episode.
+    const podcastAttrs = jsonAttrValue({
       url: 'https://embed.podcasts.apple.com/au/podcast/the-art-of/id1234567890?i=1000500600700',
       isEpisode: true,
       imageUrl:
@@ -778,12 +892,13 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-id="podcast/1000500600700"
         data-embed-src="https://embed.podcasts.apple.com/au/podcast/the-art-of/id1234567890?i=1000500600700"
         data-embed-url="https://podcasts.apple.com/au/podcast/the-art-of/id1234567890?i=1000500600700"
+        data-embed-thumbnail="https://substack-post-media.s3.amazonaws.com/public/images/podcast-episode_1000500600700.jpg"
         data-embed-height="175"
-      >
-        <a
-          href="https://podcasts.apple.com/au/podcast/the-art-of/id1234567890?i=1000500600700"
-        >https://podcasts.apple.com/au/podcast/the-art-of/id1234567890?i=1000500600700</a>
-      </div>
+        data-embed-title="The art of storytelling"
+        data-embed-publisher="Example Show"
+        data-embed-date="2021-04-04T14:51:00Z"
+        data-embed-duration="4419"
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -791,9 +906,9 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   it('should convert a DatawrapperToDOM chart into its static image', async () => {
-    // convertDatawrapperEmbeds owns the iframe; the sibling resize script passes through
+    // convertDatawrapperEmbeds owns the iframe. The sibling resize script passes through
     // for the reader to drop.
-    const chartAttrs = substackAttrs({
+    const chartAttrs = jsonAttrValue({
       url: 'https://datawrapper.dwcdn.net/aB1cD/2/',
       thumbnail_url: 'https://substack-post-media.s3.amazonaws.com/public/images/a_1220x1742.png',
       height: 536,
@@ -829,7 +944,7 @@ describeForEachParser('Substack', (parseHtml) => {
 
   it('should resolve a BandcampToDOM wrap into a bandcamp embed placeholder', async () => {
     // The bandcamp resolver claims the player iframe and keeps the publisher's size preset.
-    const bandcampAttrs = substackAttrs({
+    const bandcampAttrs = jsonAttrValue({
       url: 'https://examplelabel.bandcamp.com/track/end-credits',
       thumbnail_url: 'https://substack-post-media.s3.amazonaws.com/public/images/b_700x700.jpeg',
       author: 'Example Band',
@@ -858,11 +973,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-id="track/1234567890"
         data-embed-src="https://bandcamp.com/EmbeddedPlayer/track=1234567890/size=large/"
         data-embed-height="470"
-      >
-        <a
-          href="https://bandcamp.com/EmbeddedPlayer/track=1234567890/size=large/"
-        >https://bandcamp.com/EmbeddedPlayer/track=1234567890/size=large/</a>
-      </div>
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -870,8 +981,9 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   it('should resolve a SoundcloudToDOM wrap into a soundcloud embed placeholder', async () => {
-    // The soundcloud resolver claims the player iframe and reads the track id off its url.
-    const soundcloudAttrs = substackAttrs({
+    // The soundcloud resolver claims the player iframe, reads the track id off its url and takes
+    // the card the wrapper carries.
+    const soundcloudAttrs = jsonAttrValue({
       title: 'Mix 4',
       description: 'Tracklist',
       thumbnail_url: 'https://i1.sndcdn.com/artworks-abc-t500x500.jpg',
@@ -899,12 +1011,13 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-provider="soundcloud"
         data-embed-id="tracks/123456789"
         data-embed-src="https://w.soundcloud.com/player/?auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=true&show_comments=false&show_playcount=false&show_user=true&hide_related=true&visual=false&start_track=0&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F123456789"
+        data-embed-url="https://soundcloud.com/exampleradio/mix-4"
+        data-embed-thumbnail="https://i1.sndcdn.com/artworks-abc-t500x500.jpg"
         data-embed-height="166"
-      >
-        <a
-          href="https://w.soundcloud.com/player/?auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=true&show_comments=false&show_playcount=false&show_user=true&hide_related=true&visual=false&start_track=0&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F123456789"
-        >https://w.soundcloud.com/player/?auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=true&show_comments=false&show_playcount=false&show_user=true&hide_related=true&visual=false&start_track=0&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F123456789</a>
-      </div>
+        data-embed-title="Mix 4"
+        data-embed-description="Tracklist"
+        data-embed-author="Example Radio"
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -914,7 +1027,7 @@ describeForEachParser('Substack', (parseHtml) => {
   it('should fall back the TikTok embed pair to a generic placeholder and its static link', async () => {
     // The generic iframe fallback owns the iframely player (no tiktok resolver claims it),
     // the hidden cookie-check iframe is stripped, and the static thumbnail link survives.
-    const tiktokAttrs = substackAttrs({
+    const tiktokAttrs = jsonAttrValue({
       url: 'https://www.tiktok.com/@caseyhandle/video/7123456789012345678',
       thumbnail_url:
         'https://substack-post-media.s3.amazonaws.com/public/images/b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e_1080x1920.jpeg',
@@ -960,11 +1073,7 @@ describeForEachParser('Substack', (parseHtml) => {
     const expected = html`
       <div
         data-embed-src="https://cdn.iframe.ly/api/iframe?media=1&app=1&url=https%3A%2F%2Fwww.tiktok.com%2F%40caseyhandle%2Fvideo%2F7123456789012345678&key=abc123"
-      >
-        <a
-          href="https://cdn.iframe.ly/api/iframe?media=1&app=1&url=https%3A%2F%2Fwww.tiktok.com%2F%40caseyhandle%2Fvideo%2F7123456789012345678&key=abc123"
-        >https://cdn.iframe.ly/api/iframe?media=1&amp;app=1&amp;url=https%3A%2F%2Fwww.tiktok.com%2F%40caseyhandle%2Fvideo%2F7123456789012345678&amp;key=abc123</a>
-      </div>
+      ></div>
       <a href="https://www.tiktok.com/@caseyhandle/video/7123456789012345678" target="_blank">
         <img
           width="1080"
@@ -980,9 +1089,9 @@ describeForEachParser('Substack', (parseHtml) => {
   })
 
   it('should fall back a PredictionMarketToDOM iframe to a generic placeholder', async () => {
-    // The generic iframe fallback owns the market iframe; its px-suffixed size attributes
+    // The generic iframe fallback owns the market iframe. Its px-suffixed size attributes
     // do not survive as embed dimensions.
-    const marketAttrs = substackAttrs({
+    const marketAttrs = jsonAttrValue({
       url: 'https://manifold.markets/embed/ExampleUser/will-the-thing-happen',
       thumbnail_url: 'https://substack-post-media.s3.amazonaws.com/public/images/c_600x315.png',
     })
@@ -1004,11 +1113,11 @@ describeForEachParser('Substack', (parseHtml) => {
       </div>
     `
     const expected = html`
-      <div data-embed-src="https://manifold.markets/embed/ExampleUser/will-the-thing-happen">
-        <a
-          href="https://manifold.markets/embed/ExampleUser/will-the-thing-happen"
-        >https://manifold.markets/embed/ExampleUser/will-the-thing-happen</a>
-      </div>
+      <div
+        data-embed-src="https://manifold.markets/embed/ExampleUser/will-the-thing-happen"
+        data-embed-width="560"
+        data-embed-height="405"
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -1018,7 +1127,7 @@ describeForEachParser('Substack', (parseHtml) => {
   it('should convert a VideoEmbedPlayer web render into a native video element', async () => {
     // substackMediaResolver owns the outer native-video-embed div, so the web-render inner
     // resolves the same way as an empty VideoPlaceholder.
-    const playerAttrs = substackAttrs({
+    const playerAttrs = jsonAttrValue({
       mediaUploadId: 'c3d4e5f6-a7b8-4c9d-8e0f-1a2b3c4d5e6f',
       duration: null,
     })
@@ -1099,10 +1208,12 @@ describeForEachParser('Substack', (parseHtml) => {
     // resolveMediaDimensions owns it: the bare v1 img carries its size only in the
     // extension-less _WxH filename suffix.
     const value = html`
-      <p>Text before. <img style="" src="https://substackcdn.com/image/fetch/w_1100,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2Faa11bb22-cc33-4d44-8e55-ff6677889900_240x298" data-component-name="ImageToDOM"></p>
+      <p>Text before. <img style="" src="https://substackcdn.com/image/fetch/w_1100,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2Faa11bb22-cc33-4d44-8e55-ff6677889900_240x298" data-component-name="ImageToDOM">
+      </p>
     `
     const expected = html`
-      <p>Text before. <img width="240" height="298" src="https://substackcdn.com/image/fetch/w_1100,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2Faa11bb22-cc33-4d44-8e55-ff6677889900_240x298" data-component-name="ImageToDOM"></p>
+      <p>Text before. <img width="240" height="298" src="https://substackcdn.com/image/fetch/w_1100,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2Faa11bb22-cc33-4d44-8e55-ff6677889900_240x298" data-component-name="ImageToDOM">
+      </p>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -1191,7 +1302,7 @@ describeForEachParser('Substack', (parseHtml) => {
   it('should keep a MentionUser anchor as the working link it already is', async () => {
     // Passes through: the web-render mention ships its own name text and profile href, so
     // fixSubstackMentions (which owns only span.mention-wrap) has nothing to recover.
-    const mentionUserAttrs = substackAttrs({
+    const mentionUserAttrs = jsonAttrValue({
       name: 'Casey Author',
       id: 123456,
       type: 'user',
@@ -1209,16 +1320,15 @@ describeForEachParser('Substack', (parseHtml) => {
         data-component-name="MentionUser"
       >Casey Author</a></span> wrote.</p>
     `
-    const expected = value
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
-    expect(result).toEqualHtml(expected)
+    expect(result).toEqualHtml(value)
   })
 
-  it('should strip an EmbeddedPublicationToDOMWithSubscribe promo as non-content', async () => {
-    // nonContentSelectors owns it (.embedded-publication-wrap): a cross-publication
-    // subscribe promo is chrome, so removal is the desired end state.
-    const publicationAttrs = substackAttrs({
+  it('should convert an EmbeddedPublicationToDOMWithSubscribe promo into a cite placeholder', async () => {
+    // substackPublicationCiteResolver owns it. This shape omits base_url from the blob, so the
+    // url and the logo come off the anchor and its image instead.
+    const publicationAttrs = jsonAttrValue({
       url: 'https://otherpub.substack.com?utm_medium=web',
       publication_id: 1,
       name: 'Other Pub',
@@ -1243,7 +1353,17 @@ describeForEachParser('Substack', (parseHtml) => {
         </div>
       </div>
     `
-    const expected = html`<p>Before.</p>`
+    const expected = html`
+      <p>Before.</p>
+      <div
+        data-cite-provider="substack"
+        data-cite-url="https://otherpub.substack.com?utm_medium=web"
+        data-cite-title="Other Pub"
+        data-cite-description="A newsletter."
+        data-cite-author="Casey Author"
+        data-cite-icon="https://substackcdn.com/image/fetch/f_auto/logo.png"
+      ></div>
+    `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
     expect(result).toEqualHtml(expected)
@@ -1255,7 +1375,11 @@ describeForEachParser('Substack', (parseHtml) => {
     const value = html`
       <p>Before.</p>
       <div class="subscribe-widget is-signed-up is-fully-subscribed" data-component-name="SubscribeWidget">
-        <p class="button-wrapper"><a class="button primary" href="https://examplepub.substack.com/subscribe"><span>Subscribe</span></a></p>
+        <p class="button-wrapper">
+          <a class="button primary" href="https://examplepub.substack.com/subscribe">
+            <span>Subscribe</span>
+          </a>
+        </p>
       </div>
       <p>After.</p>
     `
@@ -1290,11 +1414,14 @@ describeForEachParser('Substack', (parseHtml) => {
       <img class="install-substack-app-embed-img" src="https://substackcdn.com/image/fetch/f_auto/icon.png">
       <p>Get more from Casey Author in the Substack app</p>
       <p>Available for iOS and Android</p>
-      <p><a
-        href="https://substack.com/app/app-store-redirect?utm_campaign=app-marketing"
-        target="_blank"
-        class="install-substack-app-embed-link"
-      ><button class="install-substack-app-embed-btn button primary">Get the app</button></a></p>
+      <p>
+        <a
+          href="https://substack.com/app/app-store-redirect?utm_campaign=app-marketing"
+          target="_blank"
+          class="install-substack-app-embed-link"
+        ><button class="install-substack-app-embed-btn button primary">Get the app</button>
+        </a>
+      </p>
       <p>After.</p>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
@@ -1305,7 +1432,7 @@ describeForEachParser('Substack', (parseHtml) => {
   it('should drop the PaywallToDOM and SponsorshipCampaignToDOM markers', async () => {
     // stripEmptyTags owns them: the paywall jump target and the sponsor ad slot are both
     // empty divs, and removal is the desired end state.
-    const sponsorAttrs = substackAttrs({
+    const sponsorAttrs = jsonAttrValue({
       id: 'b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e',
       campaignPostId: 'e5f6a7b8-c9d0-4e1f-8a2b-3c4d5e6f7a8b',
       pub: null,
@@ -1331,8 +1458,8 @@ describeForEachParser('Substack', (parseHtml) => {
 
   it('should drop a PollToDOM embed', async () => {
     // Known loss: the poll ships only its id and votes live on Substack, so stripEmptyTags
-    // deletes the empty div; no poll kind exists to park it in.
-    const pollAttrs = substackAttrs({ id: 123456 })
+    // deletes the empty div. No poll kind exists to park it in.
+    const pollAttrs = jsonAttrValue({ id: 123456 })
     const value = html`
       <p>Before.</p>
       <div class="poll-embed" data-attrs="${pollAttrs}" data-component-name="PollToDOM"></div>
@@ -1350,7 +1477,7 @@ describeForEachParser('Substack', (parseHtml) => {
   it('should drop a CommentPlaceholder with its quoted comment', async () => {
     // Known loss: the quoted-comment payload is parked with the comment kind, so the
     // childless div is deleted, comment text and all.
-    const commentAttrs = substackAttrs({
+    const commentAttrs = jsonAttrValue({
       url: 'https://open.substack.com/home',
       commentId: 12345678,
       comment: {
@@ -1378,7 +1505,7 @@ describeForEachParser('Substack', (parseHtml) => {
   it('should drop a CommunityPostPlaceholder with its quoted chat post', async () => {
     // Known loss: the quoted chat-post payload is parked with the comment kind, same as
     // CommentPlaceholder.
-    const chatPostAttrs = substackAttrs({
+    const chatPostAttrs = jsonAttrValue({
       url: 'https://open.substack.com/chat/posts/2c932b4f-f0a8-4db2-8dae-7e381ede1563?utm_source=thread_embed',
       postId: '2c932b4f-f0a8-4db2-8dae-7e381ede1563',
       communityPost: {
@@ -1404,7 +1531,7 @@ describeForEachParser('Substack', (parseHtml) => {
   it('should drop a LatexBlockToDOM expression', async () => {
     // Known loss: the expression lives only in the data-attrs JSON and the math kind is
     // parked, so stripEmptyTags deletes the childless div.
-    const latexAttrs = substackAttrs({
+    const latexAttrs = jsonAttrValue({
       persistentExpression: '\\log_{10}(P)= -4.701 + 5.218\\log_{10}(t)',
       id: 'DZZQYUJUUA',
     })
@@ -1424,8 +1551,8 @@ describeForEachParser('Substack', (parseHtml) => {
 
   it('should drop a CashtagToDOM span and its ticker symbol', async () => {
     // Known loss: the ticker lives only in the data-attrs JSON, so the empty span is
-    // deleted mid-sentence; no restore is minted for it.
-    const cashtagAttrs = substackAttrs({ symbol: '$RKLB' })
+    // deleted mid-sentence. No restore is minted for it.
+    const cashtagAttrs = jsonAttrValue({ symbol: '$RKLB' })
     const value = html`
       <p>Rocket Lab <span
         class="cashtag-wrap"
@@ -1433,7 +1560,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-component-name="CashtagToDOM"
       ></span> returned 105% from entry.</p>
     `
-    const expected = html`<p>Rocket Lab  returned 105% from entry.</p>`
+    const expected = '<p>Rocket Lab  returned 105% from entry.</p>'
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
     expect(result).toEqualHtml(expected)
@@ -1442,7 +1569,7 @@ describeForEachParser('Substack', (parseHtml) => {
   it('should drop a RecipeToDOM embed', async () => {
     // Known loss: the recipe ships only its id and the card is rendered server-side, so
     // stripEmptyTags deletes the empty div.
-    const recipeAttrs = substackAttrs({ id: 12345 })
+    const recipeAttrs = jsonAttrValue({ id: 12345 })
     const value = html`
       <h3>Cake Goop</h3>
       <div
@@ -1464,7 +1591,7 @@ describeForEachParser('Substack', (parseHtml) => {
   it('should drop a PolymarketToDOM embed', async () => {
     // Known loss: the market embed ships childless with only slugs in its payload, so
     // stripEmptyTags deletes it.
-    const polymarketAttrs = substackAttrs({
+    const polymarketAttrs = jsonAttrValue({
       eventSlug: 'example-event-06-29-2026',
       marketSlug: '',
       profileName: '',

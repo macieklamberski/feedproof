@@ -4,8 +4,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { demoteHeadings } from './demoteHeadings.js'
 
 describeForEachParser('demoteHeadings', (parseHtml) => {
-  const transform = (html: string) => {
-    return applyDomTransforms(parseHtml(html), [demoteHeadings(baseContext)])
+  const transform = (value: string) => {
+    return applyDomTransforms(parseHtml(value), [demoteHeadings(baseContext)])
   }
 
   describe('triggered when body contains <h1>', () => {
@@ -19,7 +19,7 @@ describeForEachParser('demoteHeadings', (parseHtml) => {
         <p>Body</p>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should shift every heading level down by one', async () => {
@@ -40,7 +40,7 @@ describeForEachParser('demoteHeadings', (parseHtml) => {
         <p>Body</p>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave <h6> as <h6>', async () => {
@@ -53,7 +53,7 @@ describeForEachParser('demoteHeadings', (parseHtml) => {
         <h6>Bottom</h6>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should preserve attributes when rewriting', async () => {
@@ -67,7 +67,7 @@ describeForEachParser('demoteHeadings', (parseHtml) => {
       const value = '<h1>Hello <em>world</em> and <a href="/x">link</a></h1>'
       const expected = '<h2>Hello <em>world</em> and <a href="/x">link</a></h2>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should demote every heading even when multiple <h1>s appear', async () => {
@@ -84,14 +84,14 @@ describeForEachParser('demoteHeadings', (parseHtml) => {
         <h3>Sub</h3>
       `
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should handle headings nested inside other elements', async () => {
       const value = '<section><h1>Inside</h1><p>Body</p></section>'
       const expected = '<section><h2>Inside</h2><p>Body</p></section>'
 
-      expect(await transform(value)).toBe(expected)
+      expect(await transform(value)).toEqualHtml(expected)
     })
   })
 
@@ -103,7 +103,7 @@ describeForEachParser('demoteHeadings', (parseHtml) => {
         <p>Body</p>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave a body with no headings untouched', async () => {
@@ -112,13 +112,13 @@ describeForEachParser('demoteHeadings', (parseHtml) => {
         <p>More text</p>
       `
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should leave a lone <h3> alone', async () => {
       const value = '<h3>Standalone</h3>'
 
-      expect(await transform(value)).toBe(value)
+      expect(await transform(value)).toEqualHtml(value)
     })
   })
 
@@ -130,6 +130,6 @@ describeForEachParser('demoteHeadings', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

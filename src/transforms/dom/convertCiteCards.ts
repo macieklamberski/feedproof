@@ -1,9 +1,8 @@
 import type { DomTransform } from '../../types.js'
-import { resolveOrKeepUrl } from '../../utils/urls.js'
-import { createCitePlaceholder, parseOrKeepDate } from '../../utils/widgets.js'
+import { createCitePlaceholder, prepareCiteMetadata } from '../../utils/widgets.js'
 
 export const convertCiteCards: DomTransform = (context) => {
-  const { citeResolvers, resolveUrlFn, cleanUrlFn, parseDateFn, baseUrl } = context
+  const citeResolvers = context.widgetResolvers.filter((resolver) => resolver.kind === 'cite')
 
   return async (document) => {
     for (const resolver of citeResolvers) {
@@ -14,20 +13,13 @@ export const convertCiteCards: DomTransform = (context) => {
           continue
         }
 
-        // cleanAnchorUrls runs earlier, so the resolvers that read their url from an anchor
-        // href get it already cleaned; the ones reading an attribute or a JSON blob (Tumblr,
-        // Substack, Discourse, XenForo, Tistory, Paragraph) never pass through it, so their
-        // redirect wrappers are unwrapped here. Re-cleaning an already-clean url is a no-op.
-        const resolvedUrl = resolveOrKeepUrl(result.url, resolveUrlFn, baseUrl)
-        const resolved = {
-          ...result,
-          url: cleanUrlFn?.(resolvedUrl) ?? resolvedUrl,
-          icon: resolveOrKeepUrl(result.icon, resolveUrlFn, baseUrl),
-          thumbnail: resolveOrKeepUrl(result.thumbnail, resolveUrlFn, baseUrl),
-          date: parseOrKeepDate(result.date, parseDateFn),
-        }
+        // Spread back over the resolver's own result because preparation is typed for the
+        // enricher's payload, where every field is optional, while a placeholder is built from a
+        // card that states a url. Nothing prepared is lost: a field it fills wins over the same
+        // field underneath.
+        const prepared = { ...result, ...prepareCiteMetadata(result, context) }
 
-        element.replaceWith(createCitePlaceholder(document, resolved))
+        element.replaceWith(createCitePlaceholder(document, prepared))
       }
     }
   }

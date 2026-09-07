@@ -5,19 +5,23 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripDuplicateLeadingImages } from './stripDuplicateLeadingImages.js'
 
 describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripDuplicateLeadingImages(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripDuplicateLeadingImages(context)])
   }
 
   describe('removal', () => {
     it('should remove a leading image repeated as the next image', async () => {
       const value = html`
         <img src="https://example.com/uploads/photo.jpg">
-        <p><img src="https://example.com/uploads/photo.jpg"></p>
+        <p>
+          <img src="https://example.com/uploads/photo.jpg">
+        </p>
         <p>Content</p>
       `
       const expected = html`
-        <p><img src="https://example.com/uploads/photo.jpg"></p>
+        <p>
+          <img src="https://example.com/uploads/photo.jpg">
+        </p>
         <p>Content</p>
       `
 
@@ -27,7 +31,9 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
     it('should remove a sized repeat and keep the unscaled leading original', async () => {
       const value = html`
         <img src="https://example.com/uploads/photo.jpg" width="1280" height="853">
-        <p><img src="https://example.com/uploads/photo-900x600.jpg" width="900" height="600"></p>
+        <p>
+          <img src="https://example.com/uploads/photo-900x600.jpg" width="900" height="600">
+        </p>
       `
       const expected = html`
         <img src="https://example.com/uploads/photo.jpg" width="1280" height="853">
@@ -134,12 +140,16 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
 
     it('should leave the emptied paragraph for stripEmptyTags downstream', async () => {
       const value = html`
-        <p><img src="https://example.com/uploads/photo.jpg"></p>
-        <p><img src="https://example.com/uploads/photo.jpg"> Caption</p>
+        <p>
+          <img src="https://example.com/uploads/photo.jpg">
+        </p>
+        <p>
+          <img src="https://example.com/uploads/photo.jpg"> Caption</p>
       `
       const expected = html`
         <p></p>
-        <p><img src="https://example.com/uploads/photo.jpg"> Caption</p>
+        <p>
+          <img src="https://example.com/uploads/photo.jpg"> Caption</p>
       `
 
       expect(await transform(value)).toEqualHtml(expected)
@@ -147,7 +157,9 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
 
     it('should remove an emptied link wrapper along with the leading image', async () => {
       const value = html`
-        <a href="https://example.com/post"><img src="https://example.com/uploads/photo.jpg"></a>
+        <a href="https://example.com/post">
+          <img src="https://example.com/uploads/photo.jpg">
+        </a>
         <img src="https://example.com/uploads/photo.jpg">
       `
       const expected = '<img src="https://example.com/uploads/photo.jpg">'
@@ -253,6 +265,6 @@ describeForEachParser('stripDuplicateLeadingImages', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

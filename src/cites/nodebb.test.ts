@@ -21,7 +21,8 @@ describeForEachParser('nodebbCiteResolver', (parseHtml) => {
           </div>
           <a href="https://example.com/post" class="card-footer text-body-secondary small">
             <img src="https://example.com/favicon.svg" alt="favicon" class="not-responsive" />
-            <p class="d-inline-block text-truncate mb-0">Example <span class="text-secondary">(example.com)</span></p>
+            <p class="d-inline-block text-truncate mb-0">Example <span class="text-secondary">(example.com)</span>
+            </p>
           </a>
         </div>
       `
@@ -42,7 +43,9 @@ describeForEachParser('nodebbCiteResolver', (parseHtml) => {
       const value = html`
         <div class="card link-preview">
           <div class="card-body">
-            <h5 class="card-title"><a href="https://example.com/post">Page title</a></h5>
+            <h5 class="card-title">
+              <a href="https://example.com/post">Page title</a>
+            </h5>
           </div>
         </div>
       `
@@ -61,10 +64,13 @@ describeForEachParser('nodebbCiteResolver', (parseHtml) => {
       const value = html`
         <div class="card link-preview">
           <div class="card-body">
-            <h5 class="card-title"><a href="https://example.com/post">Page title</a></h5>
+            <h5 class="card-title">
+              <a href="https://example.com/post">Page title</a>
+            </h5>
           </div>
           <a href="https://example.com/post" class="card-footer">
-            <p class="d-inline-block text-truncate mb-0">Example <span>(example.com)</span></p>
+            <p class="d-inline-block text-truncate mb-0">Example <span>(example.com)</span>
+            </p>
           </a>
         </div>
       `
@@ -81,7 +87,9 @@ describeForEachParser('nodebbCiteResolver', (parseHtml) => {
     it('should fall back to the image anchor when the title has no link', async () => {
       const value = html`
         <div class="card link-preview">
-          <a href="https://example.com/post"><img class="card-img-top" src="https://cdn.example.com/cover.png" /></a>
+          <a href="https://example.com/post">
+            <img class="card-img-top" src="https://cdn.example.com/cover.png" />
+          </a>
           <div class="card-body">
             <h5 class="card-title">Page title</h5>
           </div>

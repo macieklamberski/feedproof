@@ -4,6 +4,7 @@ import { directCaption, extractGalleryItems } from './common.js'
 // Covers both modern (figure.wp-block-gallery.has-nested-images > figure.wp-block-image > a > img)
 // and legacy (ul.wp-block-gallery > li.blocks-gallery-item > figure > a > img) shapes.
 export const wordpressGalleryResolver: GalleryResolver = {
+  kind: 'gallery',
   selector: '.wp-block-gallery',
   extract: (element) => {
     const items = extractGalleryItems(element, 'img')

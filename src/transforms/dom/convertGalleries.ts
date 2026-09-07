@@ -2,7 +2,9 @@ import type { DomTransform } from '../../types.js'
 import { createGalleryPlaceholder } from '../../utils/widgets.js'
 
 export const convertGalleries: DomTransform = (context) => {
-  const { galleryResolvers } = context
+  const galleryResolvers = context.widgetResolvers.filter((resolver) => {
+    return resolver.kind === 'gallery'
+  })
 
   return async (document) => {
     for (const resolver of galleryResolvers) {

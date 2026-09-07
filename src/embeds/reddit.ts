@@ -1,14 +1,21 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { getPathSegments, isPlainObject } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize, text } from '../utils/dom.js'
+import { readPixels } from '../utils/hints.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const redditHosts = ['reddit.com', 'redditmedia.com']
 
-// Subreddit and account names are letters, digits, underscore and hyphen; posts and comments
-// are named by a base36 id. Both are interpolated into the minted url, so both are bounded.
-const safeNameRegex = /^[A-Za-z0-9_-]{1,32}$/
-const safeThingIdRegex = /^[a-z0-9]{4,13}$/i
+// Subreddit and account names are letters, digits, underscore and hyphen, and a post or a comment
+// is named by a base36 id. Both are interpolated into the minted url, so the alphabet is the
+// guard: neither admits a slash or a dot, so an id cannot climb out of the minted path or name a
+// file on the host. Neither length is checked. `r` or `user` sits in front of a name and
+// `comments` in front of an id, so a bound refuses nothing but what Reddit has already minted,
+// and the post counter started at one base36 character in 2005: two-character permalinks are
+// still linked from real feeds today.
+const safeNameRegex = /^[A-Za-z0-9_-]+$/
+const safeThingIdRegex = /^[a-z0-9]+$/i
 
 // What a permalink names. A post carries a title, a comment does not, and a subreddit names
 // neither, so the kind decides which fields the widget can fill.
@@ -23,9 +30,9 @@ type RedditTarget = {
 // A relative href has no host to check, so it falls out here rather than being resolved
 // against the feed's own base: a permalink is always written in full.
 const parseRedditPath = (value: string | undefined): Array<string> | undefined => {
-  const parsed = parseUrl(value ?? '', 'https://example.com')
+  const parsed = parseUrlOnHosts(value, redditHosts)
 
-  if (!parsed || (!isHostOf(parsed, redditHosts) && !isSubdomainOf(parsed, redditHosts))) {
+  if (!parsed) {
     return
   }
 
@@ -36,8 +43,8 @@ const parseRedditPath = (value: string | undefined): Array<string> | undefined =
 // build `embed.reddit.com/user/{name}/` from a bare profile link and that address answers 404,
 // while `/user/{name}/comments/{id}/` is a profile post and renders like any other.
 //
-// The subreddit in a post path is not checked by the player — the post id alone selects the
-// post — but it is not optional either: `embed.reddit.com/comments/{id}/` serves the not-found
+// The subreddit in a post path is not checked by the player: the post id alone selects the
+// post, but it is not optional either: `embed.reddit.com/comments/{id}/` serves the not-found
 // shell. So the whole path travels as the id, which is also what lets the id address Reddit's
 // oEmbed endpoint, the one enrichment source that answers without a key.
 const parseTarget = (value: string | undefined): RedditTarget | undefined => {
@@ -119,7 +126,7 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
     // The post's title sits on the anchor naming the post: a comment widget links the comment
     // first and the discussion it came from second, and only the second carries a title. The
     // first anchor of a comment widget reads "Comment", a label the dialog writes in the
-    // reader's own language, which is why the kind decides this rather than the position.
+    // reader's own language, which is why the kind decides this, not the position.
     if (anchorTarget?.kind === 'post') {
       title ??= text(anchor)
     }
@@ -133,15 +140,11 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
 
   // The height Reddit's own dialog states, which the loader passes to the player. The modern
   // widget spells it as an inline style as well, and the declared-size pass reads that one for
-  // free. Neither states a width and the placeholder must not invent one: a pair would read as
-  // a ratio rather than as the fixed box the player is.
+  // free. Neither states a width and the placeholder must not invent one: a lone height is the
+  // fixed box this player is, and a made-up number beside it describes a box nobody measured.
   const height = parsePixelSize(attr(element, 'data-embed-height'))
 
-  return composeEmbed(target, {
-    ...(title && { title }),
-    ...(author && { author }),
-    ...(height !== undefined && { height }),
-  })
+  return composeEmbed(target, { title, author, height })
 }
 
 // Reddit ships the post as a blockquote holding its title, its poster and its subreddit as
@@ -168,3 +171,15 @@ export const redditResolveEmbed = (url: string): EmbedResolverResult | undefined
 }
 
 export const redditIframeEmbedResolver = createUrlEmbedResolver(redditHosts, redditResolveEmbed)
+
+// The player reports its height under a `resize.embed` type, first as 0 and then as the rendered
+// value once the post is in, so the first message reads as nothing.
+export const readRedditHeight = (data: unknown): number | undefined => {
+  return isPlainObject(data) && data.type === 'resize.embed' ? readPixels(data.data) : undefined
+}
+
+export const redditRenderHint: EmbedRenderHint = {
+  provider: 'reddit',
+  origin: 'https://embed.reddit.com',
+  readHeight: readRedditHeight,
+}

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'bun:test'
-import { baseContext, describeForEachParser } from '../../tests.js'
+import { baseContext, describeForEachParser, html } from '../../tests.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { wrapCargoGalleryImages } from './wrapCargoGalleryImages.js'
 
 describeForEachParser('wrapCargoGalleryImages', (parseHtml) => {
-  const transform = (html: string) => {
-    return applyDomTransforms(parseHtml(html), [wrapCargoGalleryImages(baseContext)])
+  const transform = (value: string) => {
+    return applyDomTransforms(parseHtml(value), [wrapCargoGalleryImages(baseContext)])
   }
 
   describe('wraps', () => {
@@ -33,10 +33,18 @@ describeForEachParser('wrapCargoGalleryImages', (parseHtml) => {
     })
 
     it('should wrap the enclosing textless link', async () => {
-      const value =
-        '<a href="https://example.com/project"><img src="https://freight.cargo.site/i/aaa/1.jpg"></a>'
-      const expected =
-        '<figure><a href="https://example.com/project"><img src="https://freight.cargo.site/i/aaa/1.jpg"></a></figure>'
+      const value = html`
+        <a href="https://example.com/project">
+          <img src="https://freight.cargo.site/i/aaa/1.jpg">
+        </a>
+      `
+      const expected = html`
+        <figure>
+          <a href="https://example.com/project">
+            <img src="https://freight.cargo.site/i/aaa/1.jpg">
+          </a>
+        </figure>
+      `
 
       expect(await transform(value)).toEqualHtml(expected)
     })
@@ -68,6 +76,6 @@ describeForEachParser('wrapCargoGalleryImages', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

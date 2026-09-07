@@ -1,41 +1,41 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
-import type { CiteResolverResult, EmbedResolverResult, GalleryResolverResult } from '../types.js'
+import { baseContext, describeForEachParser, html } from '../tests.js'
+import type {
+  CiteResolverResult,
+  EmbedResolverResult,
+  GalleryResolverResult,
+  MediaResolverResult,
+} from '../types.js'
 import {
   createCitePlaceholder,
   createEmbedPlaceholder,
   createGalleryPlaceholder,
+  createIframe,
+  createImage,
+  createLinkedImage,
   createMarkupEmbedResolver,
+  createMediaElement,
   createPlaceholder,
   createUrlEmbedResolver,
   normalizeEmbedFields,
+  prepareCiteMetadata,
+  prepareEmbedMetadata,
   rewriteGalleryItemUrls,
+  setDimensions,
   updateCitePlaceholder,
   updateEmbedPlaceholder,
 } from './widgets.js'
 
 describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
-  describe('fallback link', () => {
-    it('should use url when present', () => {
-      const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, {
-        provider: 'custom',
-        src: 'https://embed.example/abc',
-        url: 'https://canonical.example/abc',
-      })
-
-      expect(element.querySelector('a')?.getAttribute('href')).toBe('https://canonical.example/abc')
+  it('should leave the placeholder empty', () => {
+    const document = parseHtml('')
+    const element = createEmbedPlaceholder(document, {
+      provider: 'custom',
+      src: 'https://embed.example/abc',
+      url: 'https://canonical.example/abc',
     })
 
-    it('should fall back to src when url is absent', () => {
-      const document = parseHtml('')
-      const element = createEmbedPlaceholder(document, {
-        provider: 'custom',
-        src: 'https://embed.example/abc',
-      })
-
-      expect(element.querySelector('a')?.getAttribute('href')).toBe('https://embed.example/abc')
-    })
+    expect(element.childNodes.length).toBe(0)
   })
 
   describe('src wiring', () => {
@@ -57,9 +57,68 @@ describeForEachParser('createEmbedPlaceholder', (parseHtml) => {
     })
   })
 
+  describe('a size and a shape together', () => {
+    it('should write the ratio when nothing measured the player', () => {
+      const document = parseHtml('')
+      const element = createEmbedPlaceholder(document, {
+        src: 'https://embed.example/abc',
+        ratio: '16/9',
+      })
+
+      const expected = html`
+        <div
+          data-embed-src="https://embed.example/abc"
+          data-embed-ratio="16/9"
+        >
+        </div>
+      `
+
+      expect(element.outerHTML).toEqualHtml(expected)
+    })
+
+    it('should drop the ratio when the metadata also states a size', () => {
+      const document = parseHtml('')
+      const element = createEmbedPlaceholder(document, {
+        src: 'https://embed.example/abc',
+        width: 560,
+        height: 315,
+        ratio: '16/9',
+      })
+
+      const expected = html`
+        <div
+          data-embed-src="https://embed.example/abc"
+          data-embed-width="560"
+          data-embed-height="315"
+        >
+        </div>
+      `
+
+      expect(element.outerHTML).toEqualHtml(expected)
+    })
+
+    it('should drop the ratio when the metadata states a height alone', () => {
+      const document = parseHtml('')
+      const element = createEmbedPlaceholder(document, {
+        src: 'https://embed.example/abc',
+        height: 200,
+        ratio: '16/9',
+      })
+
+      const expected = html`
+        <div
+          data-embed-src="https://embed.example/abc"
+          data-embed-height="200"
+        >
+        </div>
+      `
+
+      expect(element.outerHTML).toEqualHtml(expected)
+    })
+  })
+
   it.todo('should write the full metadata as data-embed-* attributes', () => {
-    // Pass every EmbedResolverResult field and assert the complete placeholder
-    // markup: all data-embed-* attributes plus the fallback anchor.
+    // Pass every EmbedResolverResult field and assert the complete placeholder markup.
   })
 })
 
@@ -86,15 +145,40 @@ describeForEachParser('updateEmbedPlaceholder', (parseHtml) => {
     expect(element.outerHTML).toEqualHtml(expected)
   })
 
-  it('should not overwrite attributes already present on the element', () => {
+  // A later write means what it sets. This is what lets an enrichment pass, the platform's own API
+  // answering about this exact embed, replace whatever a resolver read off the markup.
+  it('should overwrite attributes already present on the element', () => {
     const document = parseHtml('')
     const element = document.createElement('div')
     element.setAttribute('data-embed-title', 'Original title')
 
-    updateEmbedPlaceholder(element, { title: 'Replacement title', author: 'Channel name' })
+    updateEmbedPlaceholder(element, {
+      title: 'Replacement title',
+      author: 'Channel name',
+    })
 
     const expected = html`
-      <div data-embed-title="Original title" data-embed-author="Channel name"></div>
+      <div
+        data-embed-title="Replacement title"
+        data-embed-author="Channel name"
+      ></div>
+    `
+
+    expect(element.outerHTML).toEqualHtml(expected)
+  })
+
+  it('should leave an attribute alone when the write does not set it', () => {
+    const document = parseHtml('')
+    const element = document.createElement('div')
+    element.setAttribute('data-embed-title', 'Original title')
+
+    updateEmbedPlaceholder(element, { author: 'Channel name' })
+
+    const expected = html`
+      <div
+        data-embed-title="Original title"
+        data-embed-author="Channel name"
+      ></div>
     `
 
     expect(element.outerHTML).toEqualHtml(expected)
@@ -104,11 +188,118 @@ describeForEachParser('updateEmbedPlaceholder', (parseHtml) => {
     const document = parseHtml('')
     const element = document.createElement('div')
 
-    updateEmbedPlaceholder(element, { title: '  Video title  ', author: '   ' })
+    updateEmbedPlaceholder(element, {
+      title: '  Video title  ',
+      author: '   ',
+    })
 
     const expected = '<div data-embed-title="Video title"></div>'
 
     expect(element.outerHTML).toEqualHtml(expected)
+  })
+
+  // Width and height are one measurement and land as one. Written as independent attributes
+  // they once split: an enricher's width joined a resolver's fixed height and 560x190 described
+  // a box nobody measured. An incoming size now clears the slot and lands whole.
+  it('should replace the element size whole with the incoming pair', () => {
+    const document = parseHtml('')
+    const element = document.createElement('div')
+    element.setAttribute('data-embed-height', '190')
+
+    updateEmbedPlaceholder(element, {
+      width: 560,
+      height: 315,
+    })
+
+    const expected = html`
+      <div
+        data-embed-width="560"
+        data-embed-height="315"
+      ></div>
+    `
+
+    expect(element.outerHTML).toEqualHtml(expected)
+  })
+
+  // A lone incoming height is still the whole size: it must not gain the width the element had.
+  it('should replace a pair with a lone incoming height, not merge them', () => {
+    const document = parseHtml('')
+    const element = document.createElement('div')
+    element.setAttribute('data-embed-width', '640')
+    element.setAttribute('data-embed-height', '360')
+
+    updateEmbedPlaceholder(element, { height: 190 })
+
+    const expected = '<div data-embed-height="190"></div>'
+
+    expect(element.outerHTML).toEqualHtml(expected)
+  })
+
+  // A size and a shape never sit side by side. Whichever arrives later takes the slot whole,
+  // since a later write is a better-informed one, and dimensions beat a ratio when both arrive at
+  // once because they are the more specific claim.
+  describe('a size arriving beside a shape', () => {
+    it('should replace the ratio with a size the enrichment brings', () => {
+      const document = parseHtml('')
+      const element = document.createElement('div')
+      element.setAttribute('data-embed-ratio', '16/9')
+
+      updateEmbedPlaceholder(element, {
+        width: 560,
+        height: 315,
+      })
+
+      const expected = html`
+        <div
+          data-embed-width="560"
+          data-embed-height="315"
+        >
+        </div>
+      `
+
+      expect(element.outerHTML).toEqualHtml(expected)
+    })
+
+    it('should replace a stated size with a ratio the enrichment brings', () => {
+      const document = parseHtml('')
+      const element = document.createElement('div')
+      element.setAttribute('data-embed-height', '200')
+
+      updateEmbedPlaceholder(element, {
+        ratio: '16/9',
+        title: 'Episode title',
+      })
+
+      const expected = html`
+        <div
+          data-embed-ratio="16/9"
+          data-embed-title="Episode title"
+        >
+        </div>
+      `
+
+      expect(element.outerHTML).toEqualHtml(expected)
+    })
+
+    it('should keep the dimensions when a write brings both dimensions and a ratio', () => {
+      const document = parseHtml('')
+      const element = document.createElement('div')
+
+      updateEmbedPlaceholder(element, {
+        width: 640,
+        height: 360,
+        ratio: '16/9',
+      })
+
+      const expected = html`
+        <div
+          data-embed-width="640"
+          data-embed-height="360"
+        ></div>
+      `
+
+      expect(element.outerHTML).toEqualHtml(expected)
+    })
   })
 })
 
@@ -133,7 +324,7 @@ describeForEachParser('updateCitePlaceholder', (parseHtml) => {
     expect(element.outerHTML).toEqualHtml(expected)
   })
 
-  it('should not overwrite attributes already present on the element', () => {
+  it('should overwrite attributes already present on the element', () => {
     const document = parseHtml('')
     const element = document.createElement('div')
     element.setAttribute('data-cite-title', 'Resolver title')
@@ -141,7 +332,10 @@ describeForEachParser('updateCitePlaceholder', (parseHtml) => {
     updateCitePlaceholder(element, { title: 'Enrichment title', publisher: 'example.com' })
 
     const expected = html`
-      <div data-cite-title="Resolver title" data-cite-publisher="example.com"></div>
+      <div
+        data-cite-title="Enrichment title"
+        data-cite-publisher="example.com"
+      ></div>
     `
 
     expect(element.outerHTML).toEqualHtml(expected)
@@ -195,8 +389,9 @@ describe('normalizeEmbedFields', () => {
 
     it('should keep data:image thumbnails', () => {
       const value = { thumbnail: 'data:image/png;base64,iVBORw0KGgo=' }
+      const expected = 'data:image/png;base64,iVBORw0KGgo='
 
-      expect(normalizeEmbedFields(value).thumbnail).toBe('data:image/png;base64,iVBORw0KGgo=')
+      expect(normalizeEmbedFields(value).thumbnail).toBe(expected)
     })
 
     // Safety is neutralizeUnsafeUrls' job (see its tests); normalizeEmbedFields only
@@ -266,6 +461,7 @@ describe('normalizeEmbedFields', () => {
         thumbnail: 'https://cdn.example/t.jpg',
         width: 1,
         height: 2,
+        ratio: '16/9',
         title: 't',
         description: 'd',
         author: 'a',
@@ -283,6 +479,7 @@ describe('normalizeEmbedFields', () => {
         'thumbnail',
         'width',
         'height',
+        'ratio',
         'title',
         'description',
         'author',
@@ -445,15 +642,13 @@ describeForEachParser('createCitePlaceholder', (parseHtml) => {
         data-cite-title="Post title"
         data-cite-icon="https://example.com/favicon.ico"
         data-cite-thumbnail="https://example.com/og-image.jpg"
-      >
-        <a href="https://example.com/post">Post title</a>
-      </div>
+      ></div>
     `
 
     expect(element.outerHTML).toEqualHtml(expected)
   })
 
-  it('should trim raw field values in attributes and the fallback link', () => {
+  it('should trim raw field values in attributes and the link', () => {
     const document = parseHtml('')
     const value: CiteResolverResult = {
       provider: 'ghost',
@@ -469,9 +664,7 @@ describeForEachParser('createCitePlaceholder', (parseHtml) => {
         data-cite-description="Preview text"
         data-cite-url="https://example.com/post"
         data-cite-title="Post title"
-      >
-        <a href="https://example.com/post">Post title</a>
-      </div>
+      ></div>
     `
 
     expect(element.outerHTML).toEqualHtml(expected)
@@ -494,9 +687,7 @@ describeForEachParser('createCitePlaceholder', (parseHtml) => {
         data-cite-title="Post title"
         data-cite-icon="http://example.com/favicon.ico"
         data-cite-thumbnail="http://example.com/og-image.jpg"
-      >
-        <a href="http://example.com/post">Post title</a>
-      </div>
+      ></div>
     `
 
     expect(element.outerHTML).toEqualHtml(expected)
@@ -521,17 +712,15 @@ describeForEachParser('createCitePlaceholder', (parseHtml) => {
         data-cite-title="Post title"
         data-cite-icon="javascript:alert(1)"
         data-cite-thumbnail="data:image/svg+xml;utf8,<svg/>"
-      >
-        <a href="https://example.com/post">Post title</a>
-      </div>
+      ></div>
     `
 
     expect(element.outerHTML).toEqualHtml(expected)
   })
 })
 
-describeForEachParser('declaredSize', (parseHtml) => {
-  const stated: EmbedResolverResult = { provider: 'example', id: 'abc', src: 'https://x.test/abc' }
+describeForEachParser('preferResolverSize', (parseHtml) => {
+  const base: EmbedResolverResult = { provider: 'example', id: 'abc', src: 'https://x.test/abc' }
 
   const resolve = (
     resolver: { selector: string; extract: (element: Element) => unknown },
@@ -544,19 +733,31 @@ describeForEachParser('declaredSize', (parseHtml) => {
 
   describe('a markup-keyed resolver', () => {
     it('should take the size the carrier declares by default', () => {
-      const resolver = createMarkupEmbedResolver('div.player', () => stated)
-      const value = html`<div class="player" width="640" height="360"></div>`
-      const expected: EmbedResolverResult = { ...stated, width: 640, height: 360 }
+      const resolver = createMarkupEmbedResolver('div.player', () => base)
+      const value = html`
+        <div
+          class="player"
+          width="640"
+          height="360"
+        ></div>
+      `
+      const expected: EmbedResolverResult = { ...base, width: 640, height: 360 }
 
       expect(resolve(resolver, value)).toEqual(expected)
     })
 
     it('should keep its own numbers when the declared size is refused', () => {
-      const resolver = createMarkupEmbedResolver('div.player', () => ({ ...stated, height: 200 }), {
-        declaredSize: false,
+      const resolver = createMarkupEmbedResolver('div.player', () => ({ ...base, height: 200 }), {
+        preferResolverSize: true,
       })
-      const value = html`<div class="player" width="640" height="360"></div>`
-      const expected: EmbedResolverResult = { ...stated, height: 200 }
+      const value = html`
+        <div
+          class="player"
+          width="640"
+          height="360"
+        ></div>
+      `
+      const expected: EmbedResolverResult = { ...base, height: 200 }
 
       expect(resolve(resolver, value)).toEqual(expected)
     })
@@ -564,22 +765,756 @@ describeForEachParser('declaredSize', (parseHtml) => {
 
   describe('a url-keyed resolver', () => {
     it('should take the size the carrier declares by default', () => {
-      const resolver = createUrlEmbedResolver(['x.test'], () => stated)
-      const value = html`<iframe src="https://x.test/abc" width="640" height="360"></iframe>`
-      const expected: EmbedResolverResult = { ...stated, width: 640, height: 360 }
+      const resolver = createUrlEmbedResolver(['x.test'], () => base)
+      const value = html`
+        <iframe
+          src="https://x.test/abc"
+          width="640"
+          height="360"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = { ...base, width: 640, height: 360 }
 
       expect(resolve(resolver, value)).toEqual(expected)
     })
 
     it('should keep its own numbers when the declared size is refused', () => {
-      const resolver = createUrlEmbedResolver(['x.test'], () => ({ ...stated, height: 200 }), {
-        declaredSize: false,
+      const resolver = createUrlEmbedResolver(['x.test'], () => ({ ...base, height: 200 }), {
+        preferResolverSize: true,
       })
-      const value = html`<iframe src="https://x.test/abc" width="640" height="360"></iframe>`
-      const expected: EmbedResolverResult = { ...stated, height: 200 }
+      const value = html`
+        <iframe
+          src="https://x.test/abc"
+          width="640"
+          height="360"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = { ...base, height: 200 }
 
       expect(resolve(resolver, value)).toEqual(expected)
     })
+  })
+
+  // The option says prefer, so it applies only where there is something to prefer. Refusing the
+  // carrier while stating nothing is how a placeholder ends up with no size at all, which is what
+  // a TikTok enclosure carrying the feed's own dimensions once did.
+  describe('a resolver that asks to be preferred and states no size', () => {
+    it('should fall back to the size the carrier declares', () => {
+      const resolver = createUrlEmbedResolver(['x.test'], () => base, {
+        preferResolverSize: true,
+      })
+      const value = html`
+        <iframe
+          src="https://x.test/abc"
+          width="1080"
+          height="1920"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = { ...base, width: 1080, height: 1920 }
+
+      expect(resolve(resolver, value)).toEqual(expected)
+    })
+
+    it('should fall back to the ratio a responsive wrapper implies', () => {
+      const resolver = createMarkupEmbedResolver('div.player', () => base, {
+        preferResolverSize: true,
+      })
+      const value = html`
+        <div style="aspect-ratio: 4/3">
+          <div class="player"></div>
+        </div>
+      `
+      const expected: EmbedResolverResult = { ...base, ratio: '4/3' }
+
+      expect(resolve(resolver, value)).toEqual(expected)
+    })
+
+    it('should state no size when the carrier declares none either', () => {
+      const resolver = createUrlEmbedResolver(['x.test'], () => base, {
+        preferResolverSize: true,
+      })
+      const value = '<iframe src="https://x.test/abc"></iframe>'
+
+      expect(resolve(resolver, value)).toEqual(base)
+    })
+  })
+
+  // A ratio and a pixel size describe different things, so a result must never end up holding
+  // one of each: a resolver that infers 16/9 and a carrier that states a 400px height are
+  // talking past each other. Every combination below asks the same question: can the result end
+  // up holding one number from each side?
+  // The order in which a size is decided, top to bottom. Each group is one tier, and a case in a
+  // lower group only applies once every higher one found nothing.
+  describe('what decides the size', () => {
+    const withRatio: EmbedResolverResult = { ...base, ratio: '16/9' }
+    const withHeight: EmbedResolverResult = { ...base, height: 300 }
+
+    const build = (result: EmbedResolverResult, markup: string) => {
+      return resolve(
+        createMarkupEmbedResolver('div.player', () => result),
+        markup,
+      )
+    }
+
+    // The carrier is the publisher stating the box they laid out for the player they actually
+    // embedded, so what it declares on itself replaces whatever the resolver said, dimensions first
+    // and a ratio of its own next. A carrier that states nothing leaves the resolver alone.
+    describe('the carrier outranks the resolver', () => {
+      it('should let the carrier overrule the height the resolver states', () => {
+        const value = html`
+          <div
+            class="player"
+            height="400"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...base, height: 400 }
+
+        expect(build(withHeight, value)).toEqual(expected)
+      })
+
+      it('should drop the resolver ratio when the carrier states a height alone', () => {
+        const value = html`
+          <div
+            class="player"
+            height="400"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...base, height: 400 }
+
+        expect(build(withRatio, value)).toEqual(expected)
+      })
+
+      it('should drop the resolver ratio when the carrier states a width alone', () => {
+        const value = html`
+          <div
+            class="player"
+            width="640"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...base, width: 640 }
+
+        expect(build(withRatio, value)).toEqual(expected)
+      })
+
+      it('should take the carrier pair whole when it states both', () => {
+        const value = html`
+          <div
+            class="player"
+            width="640"
+            height="360"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...base, width: 640, height: 360 }
+
+        expect(build(withRatio, value)).toEqual(expected)
+      })
+
+      it('should replace the pair from an inline style', () => {
+        const value = html`
+          <div
+            class="player"
+            style="height: 400px"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...base, height: 400 }
+
+        expect(build(withRatio, value)).toEqual(expected)
+      })
+
+      it('should replace the pair from data-image-dimensions', () => {
+        const value = html`
+          <div
+            class="player"
+            data-image-dimensions="640x360"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...base, width: 640, height: 360 }
+
+        expect(build(withRatio, value)).toEqual(expected)
+      })
+
+      // A ratio the carrier declares on itself is still the carrier speaking, so it replaces the
+      // resolver's the same as a declared width or height would.
+      it('should replace the ratio from one declared on the carrier itself', () => {
+        const value = '<div class="player" style="aspect-ratio: 4/3"></div>'
+        const expected: EmbedResolverResult = { ...base, ratio: '4/3' }
+
+        expect(build(withRatio, value)).toEqual(expected)
+      })
+    })
+
+    // Whatever the resolver stated stands when the carrier states nothing on itself. That covers
+    // a measured height, a platform ratio and a corpus-typical default alike: the pipeline does
+    // not tell them apart, and only the carrier itself ranks above the resolver.
+    describe('the resolver outranks an ancestor', () => {
+      it('should keep the resolver ratio when the carrier states nothing', () => {
+        const value = html`<div class="player"></div>`
+
+        expect(build(withRatio, value)).toEqual(withRatio)
+      })
+
+      it('should keep the resolver height when the carrier states nothing', () => {
+        const value = html`<div class="player"></div>`
+
+        expect(build(withHeight, value)).toEqual(withHeight)
+      })
+
+      // An ancestor's responsive wrapper says what shape the box around the player is, not what
+      // shape the player is. Read at full depth this once turned a platform's own 9:16 into a
+      // theme's blanket 16:9.
+      it('should keep the resolver ratio over one inferred from an ancestor wrapper', () => {
+        const value = html`
+          <div style="padding-bottom: 50%">
+            <div class="player"></div>
+          </div>
+        `
+        const expected: EmbedResolverResult = { ...base, ratio: '16/9' }
+
+        expect(build(withRatio, value)).toEqual(expected)
+      })
+
+      it('should keep the resolver height over a ratio inferred from an ancestor wrapper', () => {
+        const value = html`
+          <div style="padding-bottom: 50%">
+            <div class="player"></div>
+          </div>
+        `
+
+        expect(build(withHeight, value)).toEqual(withHeight)
+      })
+    })
+
+    // The wrapper is the weakest source, so it speaks only when nobody else did: the resolver
+    // stated no size and the carrier declares nothing on itself. That is the everyday responsive
+    // embed, a sizeless video iframe inside a theme's padding-bottom wrapper.
+    describe('an ancestor fills in when nothing else states a size', () => {
+      it('should take the wrapper ratio when the resolver states no size', () => {
+        const value = html`
+          <div style="padding-bottom: 56.25%">
+            <div class="player"></div>
+          </div>
+        `
+        const expected: EmbedResolverResult = { ...base, ratio: '100/56.25' }
+
+        expect(build(base, value)).toEqual(expected)
+      })
+
+      it('should state no size when there is no wrapper either', () => {
+        const value = html`<div class="player"></div>`
+
+        expect(build(base, value)).toEqual(base)
+      })
+    })
+
+    // A size is one measurement from one source. The carrier naming a width and nothing else does
+    // not get the resolver's height to complete it: 640 by 300 is a ratio no one stated.
+    describe('a size comes from one source', () => {
+      it('should not pair the resolver height with a width the carrier states', () => {
+        const value = html`
+          <div
+            class="player"
+            width="640"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...base, width: 640 }
+
+        expect(build(withHeight, value)).toEqual(expected)
+      })
+    })
+
+    // A size the carrier states in a form nothing can read is the same as stating none, so the
+    // resolver's own pair survives intact.
+    describe('a size the carrier states unreadably', () => {
+      it('should keep the ratio for a fluid width and an automatic height', () => {
+        const value = html`
+          <div
+            class="player"
+            width="100%"
+            height="auto"
+          ></div>
+        `
+
+        expect(build(withRatio, value)).toEqual(withRatio)
+      })
+    })
+  })
+})
+
+// The builders below own rules that every pass depends on: the poster that only a video may
+// carry, the fields an image skips when they are blank, the two urls a placeholder drops and the
+// three it keeps. Each was asserted, if at all, inside one caller's test, where it read as that
+// caller's behaviour rather than as the shared contract it is.
+
+describeForEachParser('setDimensions', (parseHtml) => {
+  const build = (size: Pick<EmbedResolverResult, 'width' | 'height'>): string => {
+    const element = parseHtml('').createElement('div')
+    setDimensions(element, size)
+
+    return element.outerHTML
+  }
+
+  it('should write both halves when the size states both', () => {
+    const value = {
+      width: 640,
+      height: 360,
+    }
+    const expected = html`
+      <div
+        width="640"
+        height="360"
+      ></div>
+    `
+
+    expect(build(value)).toEqualHtml(expected)
+  })
+
+  // A fluid-width player states its height and nothing else, so the halves are written
+  // independently and a lone one does not gain a partner.
+  it('should write the height alone when the size states no width', () => {
+    const value = { height: 190 }
+    const expected = '<div height="190"></div>'
+
+    expect(build(value)).toEqualHtml(expected)
+  })
+
+  it('should write the width alone when the size states no height', () => {
+    const value = { width: 605 }
+    const expected = '<div width="605"></div>'
+
+    expect(build(value)).toEqualHtml(expected)
+  })
+
+  // getElementDimensions reads 0, 1 and 2 through so tracking-pixel removal can see them, so a
+  // zero can reach here. It is not a box anything can reserve.
+  it('should skip a zero dimension', () => {
+    const value = {
+      width: 0,
+      height: 360,
+    }
+    const expected = '<div height="360"></div>'
+
+    expect(build(value)).toEqualHtml(expected)
+  })
+
+  it('should write nothing for a size that states neither half', () => {
+    const expected = '<div></div>'
+
+    expect(build({})).toEqualHtml(expected)
+  })
+})
+
+describeForEachParser('createIframe', (parseHtml) => {
+  // Eleven rebuild transforms mint their player through this, and each adds its own title, size,
+  // shape or poster afterwards. Anything extra here would land on all of them at once.
+  it('should carry nothing but the src', () => {
+    const value = 'https://player.example/embed/abc'
+    const expected = '<iframe src="https://player.example/embed/abc"></iframe>'
+
+    expect(createIframe(parseHtml(''), value).outerHTML).toEqualHtml(expected)
+  })
+
+  it('should keep the src exactly as it was handed over', () => {
+    const value = 'https://player.example/embed/abc?start=30&rel=0'
+    const expected = '<iframe src="https://player.example/embed/abc?start=30&rel=0"></iframe>'
+
+    expect(createIframe(parseHtml(''), value).outerHTML).toEqualHtml(expected)
+  })
+})
+
+describeForEachParser('createMediaElement', (parseHtml) => {
+  const build = (result: MediaResolverResult): string => {
+    return createMediaElement(parseHtml(''), result).outerHTML
+  }
+
+  it('should mint a video with every field it accepts', () => {
+    const value: MediaResolverResult = {
+      tag: 'video',
+      src: 'https://cdn.example.com/clip.mp4',
+      poster: 'https://cdn.example.com/clip.jpg',
+      width: 640,
+      height: 360,
+    }
+    const expected = html`
+      <video
+        src="https://cdn.example.com/clip.mp4"
+        controls
+        poster="https://cdn.example.com/clip.jpg"
+        width="640"
+        height="360"
+      ></video>
+    `
+
+    expect(build(value)).toEqualHtml(expected)
+  })
+
+  it('should mint a video from src alone', () => {
+    const value: MediaResolverResult = {
+      tag: 'video',
+      src: 'https://cdn.example.com/clip.mp4',
+    }
+    const expected = '<video src="https://cdn.example.com/clip.mp4" controls></video>'
+
+    expect(build(value)).toEqualHtml(expected)
+  })
+
+  it('should mint an audio from src alone', () => {
+    const value: MediaResolverResult = {
+      tag: 'audio',
+      src: 'https://cdn.example.com/episode.mp3',
+    }
+    const expected = '<audio src="https://cdn.example.com/episode.mp3" controls></audio>'
+
+    expect(build(value)).toEqualHtml(expected)
+  })
+
+  // Neither poster nor the dimensions are valid on <audio>, so a resolver stating them describes
+  // something the element cannot render.
+  it('should skip a poster on an audio', () => {
+    const value: MediaResolverResult = {
+      tag: 'audio',
+      src: 'https://cdn.example.com/episode.mp3',
+      poster: 'https://cdn.example.com/cover.jpg',
+    }
+    const expected = '<audio src="https://cdn.example.com/episode.mp3" controls></audio>'
+
+    expect(build(value)).toEqualHtml(expected)
+  })
+
+  it('should skip the dimensions on an audio', () => {
+    const value: MediaResolverResult = {
+      tag: 'audio',
+      src: 'https://cdn.example.com/episode.mp3',
+      width: 480,
+      height: 270,
+    }
+    const expected = '<audio src="https://cdn.example.com/episode.mp3" controls></audio>'
+
+    expect(build(value)).toEqualHtml(expected)
+  })
+})
+
+describeForEachParser('createImage', (parseHtml) => {
+  const build = (fields: Parameters<typeof createImage>[1]): string => {
+    return createImage(parseHtml(''), fields).outerHTML
+  }
+
+  it('should write every field it accepts', () => {
+    const value = {
+      src: 'https://cdn.example.com/photo.jpg',
+      srcset: 'https://cdn.example.com/photo-2x.jpg 2x',
+      alt: 'A photo',
+      width: 800,
+      height: 600,
+    }
+    const expected = html`
+      <img
+        src="https://cdn.example.com/photo.jpg"
+        srcset="https://cdn.example.com/photo-2x.jpg 2x"
+        alt="A photo"
+        width="800"
+        height="600"
+      />
+    `
+
+    expect(build(value)).toEqualHtml(expected)
+  })
+
+  it('should mint an image from src alone', () => {
+    const value = { src: 'https://cdn.example.com/photo.jpg' }
+    const expected = '<img src="https://cdn.example.com/photo.jpg" />'
+
+    expect(build(value)).toEqualHtml(expected)
+  })
+
+  // An empty alt claims the image is decorative, which is a different statement from stating
+  // nothing, and it is not what a caller passing through a missing title meant to say.
+  it('should skip an empty srcset and an empty alt', () => {
+    const value = {
+      src: 'https://cdn.example.com/photo.jpg',
+      srcset: '',
+      alt: '',
+    }
+    const expected = '<img src="https://cdn.example.com/photo.jpg" />'
+
+    expect(build(value)).toEqualHtml(expected)
+  })
+})
+
+describeForEachParser('createLinkedImage', (parseHtml) => {
+  const build = (fields: Parameters<typeof createLinkedImage>[1]): string => {
+    return createLinkedImage(parseHtml(''), fields).outerHTML
+  }
+
+  // The platform's static render goes inline where a reader sees it at once, and the interactive
+  // version stays one click away on the platform's own page.
+  it('should wrap the image in an anchor to the platform page', () => {
+    const value = {
+      href: 'https://charts.example.com/AbC12/',
+      src: 'https://charts.example.com/AbC12/full.png',
+    }
+    const expected = html`
+      <a href="https://charts.example.com/AbC12/">
+        <img src="https://charts.example.com/AbC12/full.png" />
+      </a>
+    `
+
+    expect(build(value)).toEqualHtml(expected)
+  })
+
+  it('should pass every image field through to the image', () => {
+    const value = {
+      href: 'https://charts.example.com/AbC12/',
+      src: 'https://charts.example.com/AbC12/full.png',
+      alt: 'Unemployment by region',
+      width: 600,
+      height: 400,
+    }
+    const expected = html`
+      <a href="https://charts.example.com/AbC12/">
+        <img
+          src="https://charts.example.com/AbC12/full.png"
+          alt="Unemployment by region"
+          width="600"
+          height="400"
+        />
+      </a>
+    `
+
+    expect(build(value)).toEqualHtml(expected)
+  })
+})
+
+describe('prepareEmbedMetadata', () => {
+  const baseUrl = 'https://blog.example.com/post'
+
+  it('should resolve every url it carries against the base', () => {
+    const value: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      src: '/embed/abc',
+      url: '/watch/abc',
+      thumbnail: '/thumbs/abc.jpg',
+      avatar: '/avatars/abc.jpg',
+    }
+    const expected: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      src: 'https://blog.example.com/embed/abc',
+      url: 'https://blog.example.com/watch/abc',
+      thumbnail: 'https://blog.example.com/thumbs/abc.jpg',
+      avatar: 'https://blog.example.com/avatars/abc.jpg',
+    }
+
+    expect(prepareEmbedMetadata(value, { ...baseContext, baseUrl })).toEqual(expected)
+  })
+
+  it('should pass the fields it does not touch through unchanged', () => {
+    const value: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      id: 'abc',
+      title: 'Video title',
+      duration: 125,
+      ratio: '16/9',
+    }
+
+    expect(prepareEmbedMetadata(value, baseContext)).toEqual(value)
+  })
+
+  // Both are urls the reader acts on, one by loading it and one by following it, and written
+  // unresolved either points at a path on the reader's own origin.
+  it('should drop a src that will not resolve', () => {
+    const value: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      src: '/embed/abc',
+      title: 'Video title',
+    }
+    const expected: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      title: 'Video title',
+    }
+
+    expect(prepareEmbedMetadata(value, baseContext)).toEqual(expected)
+  })
+
+  it('should drop a canonical url that will not resolve', () => {
+    const value: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      src: 'https://player.example/embed/abc',
+      url: '/watch/abc',
+    }
+    const expected: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      src: 'https://player.example/embed/abc',
+    }
+
+    expect(prepareEmbedMetadata(value, baseContext)).toEqual(expected)
+  })
+
+  // Both decorate an element that renders regardless, so a picture that fails to load beats no
+  // element at all.
+  it('should keep a thumbnail and an avatar that will not resolve', () => {
+    const value: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      thumbnail: '/thumbs/abc.jpg',
+      avatar: '/avatars/abc.jpg',
+    }
+
+    expect(prepareEmbedMetadata(value, baseContext)).toEqual(value)
+  })
+
+  it('should clean the canonical url once it resolves', () => {
+    const value: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      url: 'https://blog.example.com/watch/abc?utm_source=feed',
+    }
+    const expected: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      url: 'https://blog.example.com/watch/abc',
+    }
+    const context = { ...baseContext, cleanUrlFn: (url: string) => url.split('?')[0] ?? url }
+
+    expect(prepareEmbedMetadata(value, context)).toEqual(expected)
+  })
+
+  // A player src carries query the platform needs, and every resolver has already curated it,
+  // either by minting the url from an id or by keeping the publisher's on purpose.
+  it('should not clean the src', () => {
+    const value: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      src: 'https://player.example/embed/abc?start=30',
+    }
+    const context = { ...baseContext, cleanUrlFn: (url: string) => url.split('?')[0] ?? url }
+
+    expect(prepareEmbedMetadata(value, context)).toEqual(value)
+  })
+
+  it('should keep the resolved url when the cleaner answers with nothing', () => {
+    const value: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      url: 'https://blog.example.com/watch/abc',
+    }
+    const context = { ...baseContext, cleanUrlFn: () => '' }
+
+    expect(prepareEmbedMetadata(value, context)).toEqual(value)
+  })
+
+  it('should hand the date to the parser', () => {
+    const value: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      date: '3 March 2026',
+    }
+    const expected: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      date: '2026-03-03T00:00:00.000Z',
+    }
+    const context = { ...baseContext, parseDateFn: () => '2026-03-03T00:00:00.000Z' }
+
+    expect(prepareEmbedMetadata(value, context)).toEqual(expected)
+  })
+
+  // A card's date is whatever string the site chose to display, so what the parser cannot read is
+  // kept verbatim rather than dropped.
+  it('should keep a date the parser rejects', () => {
+    const value: Partial<EmbedResolverResult> = {
+      provider: 'example',
+      date: 'last Tuesday',
+    }
+    const context = { ...baseContext, parseDateFn: () => undefined }
+
+    expect(prepareEmbedMetadata(value, context)).toEqual(value)
+  })
+})
+
+describe('prepareCiteMetadata', () => {
+  const baseUrl = 'https://blog.example.com/post'
+
+  it('should resolve every url it carries against the base', () => {
+    const value: Partial<CiteResolverResult> = {
+      provider: 'example',
+      url: '/article',
+      icon: '/favicon.ico',
+      thumbnail: '/thumbs/article.jpg',
+    }
+    const expected: Partial<CiteResolverResult> = {
+      provider: 'example',
+      url: 'https://blog.example.com/article',
+      icon: 'https://blog.example.com/favicon.ico',
+      thumbnail: 'https://blog.example.com/thumbs/article.jpg',
+    }
+
+    expect(prepareCiteMetadata(value, { ...baseContext, baseUrl })).toEqual(expected)
+  })
+
+  it('should pass the fields it does not touch through unchanged', () => {
+    const value: Partial<CiteResolverResult> = {
+      provider: 'example',
+      title: 'Article title',
+      description: 'What the article says',
+      kind: 'bookmark',
+    }
+
+    expect(prepareCiteMetadata(value, baseContext)).toEqual(value)
+  })
+
+  // Unlike an embed's, which is dropped: a cite is mostly text, so a card with a dead link still
+  // reads as the title, description and image it carries.
+  it('should keep a canonical url that will not resolve', () => {
+    const value: Partial<CiteResolverResult> = {
+      provider: 'example',
+      url: '/article',
+      title: 'Article title',
+    }
+
+    expect(prepareCiteMetadata(value, baseContext)).toEqual(value)
+  })
+
+  // cleanAnchorUrls runs earlier, so a resolver reading its url from an anchor href arrives with
+  // it already cleaned. The ones reading an attribute or a JSON blob never pass through it, and
+  // neither does an enricher's payload.
+  it('should clean the url once it resolves', () => {
+    const value: Partial<CiteResolverResult> = {
+      provider: 'example',
+      url: 'https://blog.example.com/article?utm_source=feed',
+    }
+    const expected: Partial<CiteResolverResult> = {
+      provider: 'example',
+      url: 'https://blog.example.com/article',
+    }
+    const context = { ...baseContext, cleanUrlFn: (url: string) => url.split('?')[0] ?? url }
+
+    expect(prepareCiteMetadata(value, context)).toEqual(expected)
+  })
+
+  it('should keep the resolved url when the cleaner answers with nothing', () => {
+    const value: Partial<CiteResolverResult> = {
+      provider: 'example',
+      url: 'https://blog.example.com/article',
+    }
+    const context = { ...baseContext, cleanUrlFn: () => '' }
+
+    expect(prepareCiteMetadata(value, context)).toEqual(value)
+  })
+
+  it('should hand the date to the parser', () => {
+    const value: Partial<CiteResolverResult> = {
+      provider: 'example',
+      date: '3 March 2026',
+    }
+    const expected: Partial<CiteResolverResult> = {
+      provider: 'example',
+      date: '2026-03-03T00:00:00.000Z',
+    }
+    const context = { ...baseContext, parseDateFn: () => '2026-03-03T00:00:00.000Z' }
+
+    expect(prepareCiteMetadata(value, context)).toEqual(expected)
+  })
+
+  it('should keep a date the parser rejects', () => {
+    const value: Partial<CiteResolverResult> = {
+      provider: 'example',
+      date: 'last Tuesday',
+    }
+    const context = { ...baseContext, parseDateFn: () => undefined }
+
+    expect(prepareCiteMetadata(value, context)).toEqual(value)
   })
 })
 
@@ -646,12 +1581,12 @@ describeForEachParser('rewriteGalleryItemUrls', (parseHtml) => {
     return element
   }
 
-  it('should rewrite url and fullUrl via the callback and keep other fields', () => {
+  it('should rewrite url and fullUrl via the callback and keep other fields', async () => {
     const element = withItems([
       { url: 'https://e.com/a.jpg', fullUrl: 'https://e.com/full.jpg', alt: 'Alt', caption: 'Cap' },
     ])
 
-    rewriteGalleryItemUrls(element, (url) => `proxied:${url}`)
+    await rewriteGalleryItemUrls(element, (url) => `proxied:${url}`)
 
     const [item] = JSON.parse(element.getAttribute('data-gallery-items') ?? '')
     expect(item).toMatchObject({
@@ -662,11 +1597,11 @@ describeForEachParser('rewriteGalleryItemUrls', (parseHtml) => {
     })
   })
 
-  it('should pass the field name so callers can apply a per-field policy', () => {
+  it('should pass the field name so callers can apply a per-field policy', async () => {
     const element = withItems([{ url: 'https://e.com/a.jpg', fullUrl: 'https://e.com/full.jpg' }])
     const keys: Array<string> = []
 
-    rewriteGalleryItemUrls(element, (url, key) => {
+    await rewriteGalleryItemUrls(element, (url, key) => {
       keys.push(key)
 
       return url
@@ -675,20 +1610,22 @@ describeForEachParser('rewriteGalleryItemUrls', (parseHtml) => {
     expect(keys).toEqual(['url', 'fullUrl'])
   })
 
-  it('should leave the attribute untouched when the callback changes nothing', () => {
+  it('should leave the attribute untouched when the callback changes nothing', async () => {
     const raw = JSON.stringify([{ url: 'https://e.com/a.jpg' }])
     const element = parseHtml('').createElement('div')
     element.setAttribute('data-gallery-items', raw)
 
-    rewriteGalleryItemUrls(element, () => undefined)
+    await rewriteGalleryItemUrls(element, () => undefined)
 
     expect(element.getAttribute('data-gallery-items')).toBe(raw)
   })
 
-  it('should skip non-string url values without throwing', () => {
+  it('should skip non-string url values without throwing', async () => {
     const element = withItems([{ url: 42 }])
 
-    expect(() => rewriteGalleryItemUrls(element, (url) => `proxied:${url}`)).not.toThrow()
+    await expect(
+      rewriteGalleryItemUrls(element, (url) => `proxied:${url}`),
+    ).resolves.toBeUndefined()
 
     const [item] = JSON.parse(element.getAttribute('data-gallery-items') ?? '')
     expect(item).toMatchObject({
@@ -696,14 +1633,14 @@ describeForEachParser('rewriteGalleryItemUrls', (parseHtml) => {
     })
   })
 
-  it('should ignore malformed JSON and a non-array payload', () => {
+  it('should ignore malformed JSON and a non-array payload', async () => {
     const malformed = parseHtml('').createElement('div')
     malformed.setAttribute('data-gallery-items', 'not json')
     const object = parseHtml('').createElement('div')
     object.setAttribute('data-gallery-items', '{"url":"https://e.com/a.jpg"}')
 
-    rewriteGalleryItemUrls(malformed, () => 'changed')
-    rewriteGalleryItemUrls(object, () => 'changed')
+    await rewriteGalleryItemUrls(malformed, () => 'changed')
+    await rewriteGalleryItemUrls(object, () => 'changed')
 
     expect(malformed.getAttribute('data-gallery-items')).toBe('not json')
     expect(object.getAttribute('data-gallery-items')).toBe('{"url":"https://e.com/a.jpg"}')

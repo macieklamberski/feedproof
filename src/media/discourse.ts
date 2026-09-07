@@ -4,9 +4,10 @@ import { videoFileRegex } from '../utils/urls.js'
 
 // Discourse (3.2+) renders a video uploaded to a post as an empty div that only its web
 // client turns into a player, so in a feed nothing renders. The div carries the upload's
-// direct file URL and its thumbnail; rebuild the native <video> with the thumbnail as
+// direct file URL and its thumbnail. Rebuild the native <video> with the thumbnail as
 // poster. The markup never carries dimensions or an aspect ratio, so none are minted.
 export const discourseMediaResolver: MediaResolver = {
+  kind: 'media',
   selector: '.video-placeholder-container[data-video-src]',
   extract: (element): MediaResolverResult | undefined => {
     const source = attr(element, 'data-video-src')

@@ -1,10 +1,8 @@
 import {
   defaultAllDomTransforms,
   defaultAvatarImageHosts,
-  defaultCiteResolvers,
   defaultDeferredIframeSources,
   defaultEmojiImageHosts,
-  defaultGalleryResolvers,
   defaultHighlightFn,
   defaultLazyIframeAttributes,
   defaultLazySrcAttributes,
@@ -29,21 +27,20 @@ export const transformContent = async (
   const context: TransformContext = {
     baseUrl: options.baseUrl,
     sameSiteUrls: options.sameSiteUrls,
+    feedImageUrls: options.feedImageUrls,
     enclosures: options.enclosures,
-    widgetResolvers: options.widgetResolvers ?? defaultWidgetResolvers,
-    citeResolvers: options.citeResolvers ?? defaultCiteResolvers,
-    galleryResolvers: options.galleryResolvers ?? defaultGalleryResolvers,
-    mediaSrcAttributes: options.mediaSrcAttributes ?? defaultMediaSrcAttributes,
-    lazySrcAttributes: options.lazySrcAttributes ?? defaultLazySrcAttributes,
-    lazySrcsetAttributes: options.lazySrcsetAttributes ?? defaultLazySrcsetAttributes,
-    lazyIframeAttributes: options.lazyIframeAttributes ?? defaultLazyIframeAttributes,
-    deferredIframeSources: options.deferredIframeSources ?? defaultDeferredIframeSources,
-    trackingHosts: options.trackingHosts ?? defaultTrackingHosts,
-    trackingPathSegments: options.trackingPathSegments ?? defaultTrackingPathSegments,
-    emojiImageHosts: options.emojiImageHosts ?? defaultEmojiImageHosts,
-    avatarImageHosts: options.avatarImageHosts ?? defaultAvatarImageHosts,
-    nonContentSelectors: options.nonContentSelectors ?? defaultNonContentSelectors,
-    preservedPreClasses: options.preservedPreClasses ?? defaultPreservedPreClasses,
+    widgetResolvers: defaultWidgetResolvers,
+    mediaSrcAttributes: defaultMediaSrcAttributes,
+    lazySrcAttributes: defaultLazySrcAttributes,
+    lazySrcsetAttributes: defaultLazySrcsetAttributes,
+    lazyIframeAttributes: defaultLazyIframeAttributes,
+    deferredIframeSources: defaultDeferredIframeSources,
+    trackingHosts: defaultTrackingHosts,
+    trackingPathSegments: defaultTrackingPathSegments,
+    emojiImageHosts: defaultEmojiImageHosts,
+    avatarImageHosts: defaultAvatarImageHosts,
+    nonContentSelectors: defaultNonContentSelectors,
+    preservedPreClasses: defaultPreservedPreClasses,
     resolveUrlFn: options.resolveUrlFn ?? defaultResolveUrlFn,
     cleanUrlFn: options.cleanUrlFn,
     assetProxyFn: options.assetProxyFn,
@@ -74,138 +71,15 @@ export const transformContent = async (
   return afterDom
 }
 
-export { affingerCiteResolver } from './cites/affinger.js'
-export { amebaCiteResolver } from './cites/ameba.js'
-export { blogCardCiteResolver } from './cites/blogcard.js'
-export { cocoonCiteResolver } from './cites/cocoon.js'
-export {
-  devtoLegacyPostCiteResolver,
-  devtoLinkCiteResolver,
-  devtoPostCiteResolver,
-} from './cites/devto.js'
-export { discourseCiteResolver } from './cites/discourse.js'
-export { embedlyCiteResolver } from './cites/embedly.js'
-export { ghostCiteResolver } from './cites/ghost.js'
-export { hatenaCiteResolver } from './cites/hatena.js'
-export { mediumCiteResolver } from './cites/medium.js'
-export { microformatsCiteResolver } from './cites/microformats.js'
-export { nodebbCiteResolver } from './cites/nodebb.js'
-export { notecomCiteResolver } from './cites/notecom.js'
-export { paragraphCiteResolver } from './cites/paragraph.js'
-export { pzlinkcardCiteResolver } from './cites/pzlinkcard.js'
-export {
-  substackCrossPostCiteResolver,
-  substackOwnPostCiteResolver,
-} from './cites/substack.js'
-export { swellCiteResolver } from './cites/swell.js'
-export { tcdCiteResolver } from './cites/tcd.js'
-export { tistoryCiteResolver } from './cites/tistory.js'
-export { tumblrCiteResolver } from './cites/tumblr.js'
-export { xenforoCiteResolver } from './cites/xenforo.js'
 export {
   defaultAllDomTransforms,
+  defaultEmbedRenderHints,
   defaultHighlightFn,
   defaultResolveUrlFn,
   defaultStandardDomTransforms,
   heuristicDomTransforms,
 } from './defaults.js'
-export { acastEmbedResolver } from './embeds/acast.js'
-export { anchorEmbedResolver } from './embeds/anchor.js'
-export { appleEmbedResolver } from './embeds/apple.js'
-export {
-  archiveFlashEmbedResolver,
-  archiveIframeEmbedResolver,
-} from './embeds/archive.js'
-export { audioboomEmbedResolver } from './embeds/audioboom.js'
-export { bandcampEmbedResolver } from './embeds/bandcamp.js'
-export { bloggerEmbedResolver } from './embeds/blogger.js'
-export { blubrryEmbedResolver } from './embeds/blubrry.js'
-export {
-  brightcoveFlashEmbedResolver,
-  brightcoveIframeEmbedResolver,
-  brightcoveVideoJsEmbedResolver,
-} from './embeds/brightcove.js'
-export {
-  buzzsproutIframeEmbedResolver,
-  buzzsproutScriptEmbedResolver,
-} from './embeds/buzzsprout.js'
-export { captivateEmbedResolver } from './embeds/captivate.js'
-export { dailymotionEmbedResolver } from './embeds/dailymotion.js'
-export { firesideEmbedResolver } from './embeds/fireside.js'
-export { flickrEmbedResolver } from './embeds/flickr.js'
-export { flourishEmbedResolver } from './embeds/flourish.js'
-export { geniallyEmbedResolver } from './embeds/genially.js'
-export {
-  imgurBlockquoteEmbedResolver,
-  imgurIframeEmbedResolver,
-} from './embeds/imgur.js'
-export {
-  issuuIframeEmbedResolver,
-  issuuWidgetEmbedResolver,
-} from './embeds/issuu.js'
-export { ivooxEmbedResolver } from './embeds/ivoox.js'
-export {
-  jwplayerAmpEmbedResolver,
-  jwplayerIframeEmbedResolver,
-  jwplayerScriptEmbedResolver,
-} from './embeds/jwplayer.js'
-export { libsynEmbedResolver } from './embeds/libsyn.js'
-export { mediavineEmbedResolver } from './embeds/mediavine.js'
-export { megaphoneEmbedResolver } from './embeds/megaphone.js'
-export { mixcloudEmbedResolver } from './embeds/mixcloud.js'
-export {
-  nicovideoIframeEmbedResolver,
-  nicovideoScriptEmbedResolver,
-} from './embeds/nicovideo.js'
-export { omnyEmbedResolver } from './embeds/omny.js'
-export { podbeanEmbedResolver } from './embeds/podbean.js'
-export { podigeeEmbedResolver } from './embeds/podigee.js'
-export { redditIframeEmbedResolver, redditWidgetEmbedResolver } from './embeds/reddit.js'
-export { scribdFlashEmbedResolver, scribdIframeEmbedResolver } from './embeds/scribd.js'
-export { simplecastEmbedResolver } from './embeds/simplecast.js'
-export {
-  slideshareFlashEmbedResolver,
-  slideshareIframeEmbedResolver,
-} from './embeds/slideshare.js'
-
-export { soundcloudEmbedResolver } from './embeds/soundcloud.js'
-export {
-  speakerdeckIframeEmbedResolver,
-  speakerdeckScriptEmbedResolver,
-} from './embeds/speakerdeck.js'
-export { spotifyEmbedResolver } from './embeds/spotify.js'
-export {
-  spreakerAnchorEmbedResolver,
-  spreakerIframeEmbedResolver,
-} from './embeds/spreaker.js'
-export { tedEmbedResolver } from './embeds/ted.js'
-export {
-  telegramIframeEmbedResolver,
-  telegramScriptEmbedResolver,
-} from './embeds/telegram.js'
-export { transistorEmbedResolver } from './embeds/transistor.js'
-export {
-  typeformIframeEmbedResolver,
-  typeformWidgetEmbedResolver,
-} from './embeds/typeform.js'
-export { vimeoEmbedResolver } from './embeds/vimeo.js'
-export { wistiaEmbedResolver } from './embeds/wistia.js'
-export {
-  composeThumbnailUrl,
-  youtubeAmpEmbedResolver,
-  youtubeIframeEmbedResolver,
-} from './embeds/youtube.js'
-export { coblocksGalleryResolver } from './galleries/coblocks.js'
-export { ghostGalleryResolver } from './galleries/ghost.js'
-export { jetpackSlideshowResolver } from './galleries/jetpack.js'
-export { wordpressGalleryResolver } from './galleries/wordpress.js'
 export { hljsHighlightFn } from './highlighters/hljs.js'
-export { discourseMediaResolver } from './media/discourse.js'
-export { ghostMediaResolver } from './media/ghost.js'
-export { podloveMediaResolver } from './media/podlove.js'
-export { substackMediaResolver } from './media/substack.js'
-export { wechatMediaResolver } from './media/wechat.js'
-export { weeblyMediaResolver } from './media/weebly.js'
 export { assignVideoPosters } from './transforms/dom/assignVideoPosters.js'
 export { canonicalizeAlignment } from './transforms/dom/canonicalizeAlignment.js'
 export { cleanAnchorUrls } from './transforms/dom/cleanAnchorUrls.js'
@@ -217,6 +91,7 @@ export { convertGalleries } from './transforms/dom/convertGalleries.js'
 export { convertGiphyEmbeds } from './transforms/dom/convertGiphyEmbeds.js'
 export { convertLazyImageContainers } from './transforms/dom/convertLazyImageContainers.js'
 export { convertNoteEmbeds } from './transforms/dom/convertNoteEmbeds.js'
+export { convertSmartframeEmbeds } from './transforms/dom/convertSmartframeEmbeds.js'
 export { convertWidgets } from './transforms/dom/convertWidgets.js'
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
@@ -238,6 +113,7 @@ export { linkifyUrls } from './transforms/dom/linkifyUrls.js'
 export { markTimestamps, parseTimestampSeconds } from './transforms/dom/markTimestamps.js'
 export { mergeConsecutiveOneLinerPres } from './transforms/dom/mergeConsecutiveOneLinerPres.js'
 export { mergeFragmentedLists } from './transforms/dom/mergeFragmentedLists.js'
+export { mergeWrappedCaptionText } from './transforms/dom/mergeWrappedCaptionText.js'
 export { neutralizeUnsafeUrls } from './transforms/dom/neutralizeUnsafeUrls.js'
 export { normalizeAnchoredHeadings } from './transforms/dom/normalizeAnchoredHeadings.js'
 export { proxyAssetUrls } from './transforms/dom/proxyAssetUrls.js'
@@ -276,12 +152,14 @@ export { surfaceParkedMarkup } from './transforms/dom/surfaceParkedMarkup.js'
 export { surfaceTemplateEmbeds } from './transforms/dom/surfaceTemplateEmbeds.js'
 export { trimPreWhitespace } from './transforms/dom/trimPreWhitespace.js'
 export { unwrapDoublyNestedLists } from './transforms/dom/unwrapDoublyNestedLists.js'
+export { unwrapDrupalOembedIframes } from './transforms/dom/unwrapDrupalOembedIframes.js'
 export { unwrapEmojiImages } from './transforms/dom/unwrapEmojiImages.js'
 export { unwrapHeadingBold } from './transforms/dom/unwrapHeadingBold.js'
 export { unwrapNestedCodeWrappers } from './transforms/dom/unwrapNestedCodeWrappers.js'
 export { unwrapWrappers } from './transforms/dom/unwrapWrappers.js'
 export { wrapBareInlineInParagraphs } from './transforms/dom/wrapBareInlineInParagraphs.js'
 export { wrapCargoGalleryImages } from './transforms/dom/wrapCargoGalleryImages.js'
+export { wrapOrphanFigcaptions } from './transforms/dom/wrapOrphanFigcaptions.js'
 export { wrapTablesForScroll } from './transforms/dom/wrapTablesForScroll.js'
 export { paragraphizePlainText } from './transforms/string/paragraphizePlainText.js'
 export { stripControlChars } from './transforms/string/stripControlChars.js'
@@ -292,10 +170,13 @@ export type {
   AssetProxyFn,
   AssetType,
   CiteKind,
+  CiteRef,
   CiteResolver,
   CiteResolverResult,
   CleanUrlFn,
   DomTransform,
+  EmbedRef,
+  EmbedRenderHint,
   EmbedResolver,
   EmbedResolverResult,
   Enclosure,

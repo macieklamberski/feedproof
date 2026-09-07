@@ -1,54 +1,65 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolver, EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolver, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
+import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// Buzzsprout embeds a podcast episode player two ways: a WordPress shortcode shipping an
-// empty div plus a <script> whose src carries the podcast and episode ids, and a direct
-// player iframe. Both name the same player, so both resolve to the same placeholder. The
-// script never runs in a reader and its div dies as an empty tag, so without resolving it
-// the episode vanishes; blog feeds carrying the shortcode have no enclosure for the episode
-// either (verified across the corpus carriers). The slug-less player URL resolves with no
-// key (verified 2026-08-08, 200 on a live episode); any slug after the episode id is
-// decorative. The show-level embed carries no episode id and is deliberately not matched.
+// Buzzsprout embeds a player two ways: a WordPress shortcode shipping an empty div plus a
+// <script> whose src carries the ids, and a direct player iframe. Both name the same player, so
+// both resolve to the same placeholder. The script never runs in a reader and its div dies as an
+// empty tag, so without resolving it the player vanishes. Blog feeds carrying the shortcode have
+// no enclosure for the episode either (verified across the corpus carriers). The slug-less player
+// URL resolves with no key (verified 2026-08-08, 200 on a live episode). Any slug after the
+// episode id is decorative.
 //
-// Both observed script forms:
-//   https://www.buzzsprout.com/{podcast}/{episode}.js?container_id=…
-//   https://www.buzzsprout.com/{podcast}/episodes/{episode}-{slug}.js?container_id=…
-const buzzsproutHost = 'buzzsprout.com'
+// A script naming the podcast alone is the show player, which carries every episode. The
+// url-keyed resolver deliberately leaves the show-level *page* url unmatched: there it falls
+// through to the generic fallback, which still renders a placeholder. The script carrier has no
+// such fallback, so the same shape costs the whole player.
+const buzzsproutHosts = ['buzzsprout.com']
 const episodeScriptPathRegex = /^\/(\d+)\/(?:episodes\/)?(\d+)(?:-[^/]*)?\.js$/
-const episodePagePathRegex = /^\/(\d+)\/(?:episodes\/)?(\d+)(?:-[^/]*)?$/
+const showScriptPathRegex = /^\/(\d+)\.js$/
+// The page slug may not carry a dot, which is what keeps the enclosure out: the episode audio is
+// `buzzsprout.com/{podcast}/{episode}-{slug}.mp3` on the same host, identical up to the extension,
+// in both the bare and the `episodes/` spellings. The player minted from it would be the same
+// episode's, so nothing is gained by claiming it, and a playable file is what the feed stated.
+const episodePagePathRegex = /^\/(\d+)\/(?:episodes\/)?(\d+)(?:-[^/.]*)?$/
 
-const composeEmbed = (podcastId: string, episodeId: string): EmbedResolverResult => {
+// Both heights are what Buzzsprout's own script writes onto the iframe it builds: 200 for the
+// small episode player, 375 for the large show player (read from the served script, 2026-08-15).
+const episodeHeight = 200
+const showHeight = 375
+
+const composeEmbed = (podcastId: string, episodeId?: string): EmbedResolverResult => {
+  const path = episodeId ? `${podcastId}/${episodeId}` : podcastId
+
   return {
     provider: 'buzzsprout',
-    id: `${podcastId}/${episodeId}`,
-    src: `https://www.buzzsprout.com/${podcastId}/${episodeId}?iframe=true`,
-    url: `https://www.buzzsprout.com/${podcastId}/${episodeId}`,
-    height: 200,
+    id: path,
+    src: `https://www.buzzsprout.com/${path}?iframe=true`,
+    url: `https://www.buzzsprout.com/${path}`,
+    height: episodeId ? episodeHeight : showHeight,
   }
 }
 
 export const buzzsproutResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(url, 'https://example.com')
+  const parsed = parseUrlOnHosts(url, buzzsproutHosts)
 
-  if (!parsed || (!isHostOf(parsed, buzzsproutHost) && !isSubdomainOf(parsed, buzzsproutHost))) {
+  if (!parsed) {
     return
   }
 
   const match = parsed.pathname.match(episodePagePathRegex)
-  const podcastId = match?.[1]
-  const episodeId = match?.[2]
 
-  if (!podcastId || !episodeId) {
+  if (!match) {
     return
   }
 
-  return composeEmbed(podcastId, episodeId)
+  return composeEmbed(match[1], match[2])
 }
 
 export const buzzsproutIframeEmbedResolver: EmbedResolver = createUrlEmbedResolver(
-  [buzzsproutHost],
+  buzzsproutHosts,
   buzzsproutResolveEmbed,
 )
 
@@ -57,20 +68,29 @@ export const buzzsproutScriptEmbedResolver = createMarkupEmbedResolver(
   (element) => {
     // The selector guarantees a src containing the host substring, so only the host and
     // path checks can reject.
-    const url = parseUrl(attr(element, 'src') ?? '', 'https://example.com')
+    const url = parseUrlOnHosts(attr(element, 'src'), buzzsproutHosts)
 
-    if (!url || (!isHostOf(url, buzzsproutHost) && !isSubdomainOf(url, buzzsproutHost))) {
+    if (!url) {
       return
     }
 
-    const match = url.pathname.match(episodeScriptPathRegex)
-    const podcastId = match?.[1]
-    const episodeId = match?.[2]
+    const episode = url.pathname.match(episodeScriptPathRegex)
 
-    if (!podcastId || !episodeId) {
-      return
+    if (episode?.[1] && episode[2]) {
+      return composeEmbed(episode[1], episode[2])
     }
 
-    return composeEmbed(podcastId, episodeId)
+    const show = url.pathname.match(showScriptPathRegex)
+
+    if (show?.[1]) {
+      return composeEmbed(show[1])
+    }
   },
 )
+
+// The player takes no query to start, and Buzzsprout's help says so; it speaks player.js.
+export const buzzsproutRenderHint: EmbedRenderHint = {
+  provider: 'buzzsprout',
+  isReady: isPlayerJsReady,
+  requestPlay: playerJsPlayRequest,
+}

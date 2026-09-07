@@ -9,14 +9,14 @@ const withFn = (enrichEmbedFn: EnrichEmbedFn): TransformContext => {
 }
 
 describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [enrichEmbedPlaceholders(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [enrichEmbedPlaceholders(context)])
   }
 
   it('should be a no-op when enrichEmbedFn is not provided', async () => {
     const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should not call enrichEmbedFn when no placeholders have provider and id', async () => {
@@ -27,7 +27,7 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     let called = false
     const fn: EnrichEmbedFn = () => {
       called = true
-      return new Map()
+      return []
     }
 
     await transform(value, withFn(fn))
@@ -43,7 +43,7 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     const calls: Array<Array<{ provider: string; id: string }>> = []
     const fn: EnrichEmbedFn = (embeds) => {
       calls.push(embeds)
-      return new Map()
+      return []
     }
 
     await transform(value, withFn(fn))
@@ -66,43 +66,161 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
         date: '2026-08-09',
         duration: 125,
       }
-      return new Map([['youtube:abc', data]])
+      return [{ ...data }]
     }
-    const result = await transform(value, withFn(fn))
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-title="Sample Title"
+        data-embed-description="Sample description"
+        data-embed-author="channel name"
+        data-embed-publisher="r/example"
+        data-embed-date="2026-08-09"
+        data-embed-duration="125"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-title="Sample Title"')
-    expect(result).toContain('data-embed-description="Sample description"')
-    expect(result).toContain('data-embed-author="channel name"')
-    expect(result).toContain('data-embed-publisher="r/example"')
-    expect(result).toContain('data-embed-date="2026-08-09"')
-    expect(result).toContain('data-embed-duration="125"')
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
   it('should write the enriched date normalized through parseDateFn', async () => {
     const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
     const fn: EnrichEmbedFn = () => {
-      return new Map([['youtube:abc', { date: '2018.10.14' }]])
+      return [{ date: '2018.10.14' }]
     }
     const parseDateFn = (raw: string) => {
       return raw.replaceAll('.', '-')
     }
-    const result = await transform(value, { ...withFn(fn), parseDateFn })
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-date="2018-10-14"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-date="2018-10-14"')
+    expect(await transform(value, { ...withFn(fn), parseDateFn })).toEqualHtml(expected)
+  })
+
+  // A payload is a platform's API answering, not the feed, so its urls get the same treatment a
+  // resolver's do: an enricher that hands back a path is describing something on its own host.
+  it('should resolve an enriched thumbnail against the base url', async () => {
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+      ></div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ thumbnail: '/vi/abc/hq.jpg' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-thumbnail="https://cdn.example.com/vi/abc/hq.jpg"
+      ></div>
+    `
+    const context: TransformContext = { ...withFn(fn), baseUrl: 'https://cdn.example.com/post' }
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
+  it('should resolve an enriched src against the base url', async () => {
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-src="https://www.youtube.com/embed/abc"
+      ></div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ src: '/embed/abc?start=30' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-src="https://www.youtube.com/embed/abc?start=30"
+      ></div>
+    `
+    const context: TransformContext = { ...withFn(fn), baseUrl: 'https://www.youtube.com/watch' }
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
+  // Written unresolved, a payload src points at a path on the reader's own origin. The
+  // placeholder already carries a src the resolver built, so leaving the field out keeps a
+  // player that works instead of replacing it with one that cannot load.
+  it('should keep the existing src when an enriched src will not resolve', async () => {
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-src="https://www.youtube.com/embed/abc"
+      ></div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ src: '/embed/abc', title: 'Video title' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-src="https://www.youtube.com/embed/abc"
+        data-embed-title="Video title"
+      ></div>
+    `
+
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
+  })
+
+  it('should clean an enriched url with the provided cleanUrlFn', async () => {
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+      ></div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ url: 'https://example.com/watch/abc?utm_source=api' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-url="https://example.com/watch/abc"
+      ></div>
+    `
+    const context: TransformContext = {
+      ...withFn(fn),
+      cleanUrlFn: (url) => url.split('?')[0] ?? url,
+    }
+
+    expect(await transform(value, context)).toEqualHtml(expected)
   })
 
   it('should keep the raw enriched date when parseDateFn returns undefined', async () => {
     const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
     const fn: EnrichEmbedFn = () => {
-      return new Map([['youtube:abc', { date: 'Jul 14' }]])
+      return [{ date: 'Jul 14' }]
     }
     const parseDateFn = () => undefined
-    const result = await transform(value, { ...withFn(fn), parseDateFn })
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-date="Jul 14"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-date="Jul 14"')
+    expect(await transform(value, { ...withFn(fn), parseDateFn })).toEqualHtml(expected)
   })
 
-  it('should not overwrite existing data-embed-* attributes', async () => {
+  // The enricher is the platform's own API answering about this exact embed, so what it sets
+  // beats what a resolver read off the markup, for every field it chooses to set.
+  it('should overwrite existing data-embed-* attributes', async () => {
     const value = html`
       <div
         data-embed-provider="youtube"
@@ -112,12 +230,67 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
       </div>
     `
     const fn: EnrichEmbedFn = () => {
-      return new Map([['youtube:abc', { title: 'Enrichment Title' }]])
+      return [{ title: 'Enrichment Title' }]
     }
-    const result = await transform(value, withFn(fn))
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-title="Enrichment Title"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-title="Resolver Title"')
-    expect(result).not.toContain('Enrichment Title')
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
+  })
+
+  it('should leave an attribute the enricher does not set', async () => {
+    const value = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-title="Resolver Title"
+      >
+      </div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ author: 'Channel' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-title="Resolver Title"
+        data-embed-author="Channel"
+      ></div>
+    `
+
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
+  })
+
+  // A resolver's fixed height or a wrapper's guessed shape is the pipeline's best effort before
+  // the API answered. Once it does, its size replaces that whole, never half of it.
+  it('should replace a resolver size with the size the enricher brings', async () => {
+    const value = html`
+      <div
+        data-embed-provider="acast"
+        data-embed-id="show/episode"
+        data-embed-height="190"
+      >
+      </div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ width: 560, height: 315 }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="acast"
+        data-embed-id="show/episode"
+        data-embed-width="560"
+        data-embed-height="315"
+      ></div>
+    `
+
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
   it('should propagate an exception thrown by enrichEmbedFn', async () => {
@@ -129,32 +302,70 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
     await expect(transform(value, withFn(fn))).rejects.toThrow('boom')
   })
 
-  it('should silently skip placeholders missing from the returned map', async () => {
+  // The answer is positional, so nothing found for a placeholder is an undefined in its slot.
+  it('should leave a placeholder alone when its slot is undefined', async () => {
     const value = html`
       <div data-embed-provider="youtube" data-embed-id="known"></div>
       <div data-embed-provider="youtube" data-embed-id="unknown"></div>
     `
     const fn: EnrichEmbedFn = () => {
-      return new Map([['youtube:known', { title: 'Found' }]])
+      return [{ title: 'Found' }, undefined]
     }
-    const result = await transform(value, withFn(fn))
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="known"
+        data-embed-title="Found"
+      ></div>
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="unknown"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-id="known"')
-    expect(result).toContain('data-embed-id="unknown"')
-    expect(result).toContain('data-embed-title="Found"')
-    const titleMatches = result.match(/data-embed-title=/g)
-    expect(titleMatches).toHaveLength(1)
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
+  })
+
+  // An enricher that answers for fewer embeds than it was sent leaves the tail untouched rather
+  // than failing the whole pass.
+  it('should treat a short answer as nothing for the placeholders past its end', async () => {
+    const value = html`
+      <div data-embed-provider="youtube" data-embed-id="first"></div>
+      <div data-embed-provider="youtube" data-embed-id="second"></div>
+    `
+    const fn: EnrichEmbedFn = () => {
+      return [{ title: 'Found' }]
+    }
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="first"
+        data-embed-title="Found"
+      ></div>
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="second"
+      ></div>
+    `
+
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
   it('should accept async (Promise-returning) enrichEmbedFn', async () => {
     const value = '<div data-embed-provider="youtube" data-embed-id="abc"></div>'
     const fn: EnrichEmbedFn = async (embeds) => {
       await new Promise((resolve) => setTimeout(resolve, 1))
-      return new Map(embeds.map((e) => [`${e.provider}:${e.id}`, { title: `t-${e.id}` }]))
+      return embeds.map((embed) => ({ title: `t-${embed.id}` }))
     }
-    const result = await transform(value, withFn(fn))
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="abc"
+        data-embed-title="t-abc"
+      ></div>
+    `
 
-    expect(result).toContain('data-embed-title="t-abc"')
+    expect(await transform(value, withFn(fn))).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
@@ -166,11 +377,11 @@ describeForEachParser('enrichEmbedPlaceholders', (parseHtml) => {
         author: 'channel name',
         duration: 125,
       }
-      return new Map([['youtube:abc', data]])
+      return [{ ...data }]
     }
     const once = await transform(value, withFn(fn))
     const twice = await transform(once, withFn(fn))
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

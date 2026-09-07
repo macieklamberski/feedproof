@@ -32,6 +32,11 @@ export type EmbedResolverResult = {
   thumbnail?: string
   width?: number
   height?: number
+  // The shape the embed was inferred to have, as CSS spells it (`16/9`), for the case where
+  // nothing states a size at all. It is the alternative to `width`/`height`, never a companion
+  // to them: a real dimension is a measurement of this player, and a ratio only stands in for
+  // one, so a placeholder carries the one or the other.
+  ratio?: string
   title?: string
   description?: string
   author?: string
@@ -41,27 +46,69 @@ export type EmbedResolverResult = {
   duration?: number
 }
 
+// What a reader needs from a provider once it turns the placeholder into a frame: the query that
+// starts playback on the click, and how the player reports its height once it has rendered. A
+// social post has no height until then, so the frame posts one and the reader sizes the box from
+// it. Each hint is a fact about the player and a pure reader of its messages; when to load and
+// what to do with a height stay the reader's decisions.
+export type EmbedRenderHint = {
+  provider: string
+  // The origin the player's messages arrive from, for a reader to check `event.origin` against.
+  // Absent where the player is served from the publisher's own host, a Mastodon instance or a
+  // Podigee show, and the frame's own origin is the one to match.
+  origin?: string
+  // Query parameters that start playback, for a load that follows a person's click. They never
+  // go on the placeholder's url, since a placeholder must not start on page load.
+  autoplayParams?: Record<string, string>
+  // How playback is started for a player that takes no query for it: which of the frame's own
+  // messages says it is ready to take a command, for a player that ignores one before then, and
+  // what to post into the frame. A reader posts the request once, on that message where the hint
+  // names one and on `load` otherwise. Posting twice pauses a player whose command toggles.
+  isReady?: (data: unknown) => boolean
+  requestPlay?: unknown
+  // How the player's height is obtained: what to post into the frame once it has loaded, for a
+  // player that reports only when asked, and the rendered height in pixels out of a message the
+  // frame posted, or nothing when the message is about something else or the player has not
+  // rendered yet.
+  requestHeight?: unknown
+  readHeight?: (data: unknown) => number | undefined
+}
+
+// What the pipeline hands an enricher: the two attributes that name a placeholder's embed, and
+// nothing else. The id must be enough to rebuild the platform's endpoint on its own, which is why
+// TikTok's carries the handle beside the video id.
+export type EmbedRef = { provider: string; id: string }
+
+// Fills in the fields a resolver could not read off the markup, from the platform's own API. One
+// call per document, every embed at once, so an implementation can batch, cache or dedupe as the
+// platform allows.
+//
+// The answer is positional: one entry per embed sent, in the same order, the way `Promise.all`
+// returns. An entry is whatever was found for that embed, or `undefined` for nothing, and the
+// placeholder is then left as it was. Reassembling a batched response into input order is the
+// implementation's job, since only it knows how it batched.
 export type EnrichEmbedFn = (
-  embeds: Array<{ provider: string; id: string }>,
-) => MaybePromise<Map<string, Partial<EmbedResolverResult>>>
+  embeds: Array<EmbedRef>,
+) => MaybePromise<Array<Partial<EmbedResolverResult> | undefined>>
 
 export type EmbedResolver = {
+  kind: 'embed'
   selector: string
   extract: (element: Element) => MaybePromise<EmbedResolverResult | undefined>
 }
 
 // A convention that parks an iframe's real URL in a `<div>` attribute and builds the iframe
-// with JS at runtime — Pym.js (`data-pym-src`) and @newswire/frames (`data-frame-src`) are the
-// two seen in the wild. A reader runs no JS, so `rebuildDeferredIframes` materializes the iframe
-// from `attribute` on each `selector` match.
+// with JS at runtime: Pym.js (`data-pym-src`), @newswire/frames (`data-frame-src`) and the
+// Drupal/CKEditor oEmbed convention (`data-oembed-url`). A reader runs no JS, so
+// `rebuildDeferredIframes` materializes the iframe from `attribute` on each `selector` match.
 export type DeferredIframeSource = {
   selector: string
   attribute: string
 }
 
 // The relationship a citation expresses toward the linked work. Sparse: only sources that
-// carry a real relationship set it (today just microformats h-cite, via its `u-*-of` class);
-// every platform card leaves it unset, meaning a plain link preview with no relationship.
+// carry a real relationship set it (today only microformats h-cite, via its `u-*-of` class).
+// Every platform card leaves it unset, meaning a plain link preview with no relationship.
 export type CiteKind = 'bookmark' | 'repost' | 'like' | 'reply' | 'read' | 'listen' | 'watch'
 
 export type CiteResolverResult = {
@@ -78,33 +125,41 @@ export type CiteResolverResult = {
   // source carries one (Substack's JSON payload), a site-formatted string where it does not
   // (Cocoon renders the blog's own date setting, e.g. "2018.10.14"). So it is displayable
   // but not reliably parseable, and a resolver skips it rather than guessing when the card
-  // shows only a partial date — dev.to's "Jul 14" carries no year to recover.
+  // shows only a partial date: dev.to's "Jul 14" carries no year to recover.
   date?: string
   icon?: string
   thumbnail?: string
   kind?: CiteKind
 }
 
-// Fills in the fields a card's markup does not carry (e.g. a Tumblr link block naming its
-// poster by a media key that only Tumblr's own media service resolves), keyed by the cited
-// url. Unlike an embed's `provider:id`, the provider is not part of the key: it names the
-// platform the card was scraped from, not the linked page, so two cards from different
-// platforms pointing at one url share a single entry. It stays in the payload because an
+// What the pipeline hands a cite enricher. The url is what identifies the card: the provider names
+// the platform the card was scraped from, not the linked page, so two cards from different
+// platforms pointing at one url are the same cite. It stays in the payload because an
 // implementation still dispatches on it.
+export type CiteRef = { provider: string; url: string }
+
+// Fills in the fields a card's markup does not carry (e.g. a Tumblr link block naming its poster by
+// a media key that only Tumblr's own media service resolves). One call per document, every cite at
+// once.
+//
+// The answer is positional: one entry per cite sent, in the same order, the way `Promise.all`
+// returns, or `undefined` where nothing was found. Two placeholders citing one url arrive as two
+// entries and expect two answers. An implementation that fetches each url once fills both slots
+// from the one result.
 export type EnrichCiteFn = (
-  cites: Array<{ provider: string; url: string }>,
-) => MaybePromise<Map<string, Partial<CiteResolverResult>>>
+  cites: Array<CiteRef>,
+) => MaybePromise<Array<Partial<CiteResolverResult> | undefined>>
 
 export type CiteResolver = {
+  kind: 'cite'
   selector: string
   extract: (element: Element) => MaybePromise<CiteResolverResult | undefined>
 }
 
-// A platform that ships its own media as a container naming the file by an id, with no url
-// anywhere in the markup, so the element renders as nothing until the id is turned into a
-// url. Unlike the embed and cite resolvers, which mint opaque placeholders, this one
-// produces an ordinary <video>/<audio> that the later media passes then treat as any other:
-// dimensioned, proxied and deduplicated against the enclosures.
+// A platform that ships its own media as a container naming the file by an id, with no url anywhere
+// in the markup, so the element renders as nothing until the id is turned into a url. The result is
+// an ordinary <video>/<audio>, not an opaque placeholder, so the later media passes treat it as any
+// other: dimensioned, proxied and deduplicated against the enclosures.
 export type MediaResolverResult = {
   tag: 'video' | 'audio'
   src: string
@@ -114,18 +169,10 @@ export type MediaResolverResult = {
 }
 
 export type MediaResolver = {
+  kind: 'media'
   selector: string
   extract: (element: Element) => MaybePromise<MediaResolverResult | undefined>
 }
-
-// One registry for everything the widget pass recognizes. A resolver keeps a single honest
-// contract (an EmbedResolver only ever returns embed results), and the union describes what
-// the array accepts; the pass discriminates on the result shape to emit either an opaque
-// placeholder or a real media element. Cite resolvers stay out: their pass reads card markup
-// earlier in the pipeline, before link and prose normalization can disturb it.
-export type WidgetResolver = EmbedResolver | MediaResolver
-
-export type WidgetResolverResult = EmbedResolverResult | MediaResolverResult
 
 export type GalleryItem = {
   url: string // Displayed <img src> (preview / display size).
@@ -142,9 +189,25 @@ export type GalleryResolverResult = {
 }
 
 export type GalleryResolver = {
+  kind: 'gallery'
   selector: string
   extract: (element: Element) => MaybePromise<GalleryResolverResult | undefined>
 }
+
+// One registry for every widget resolver. A resolver keeps a single honest contract (an
+// EmbedResolver only ever returns embed results), and the kind tag is what lets each pass
+// pick its own resolvers: convertCiteCards runs the cite ones early, before link and prose
+// normalization can disturb card markup, convertGalleries runs the gallery ones once the urls
+// they read are resolved, and convertWidgets runs the embed and media ones late and
+// discriminates on the result shape to emit either an opaque placeholder or a real media
+// element.
+export type WidgetResolver = EmbedResolver | MediaResolver | CiteResolver | GalleryResolver
+
+export type WidgetResolverResult =
+  | EmbedResolverResult
+  | MediaResolverResult
+  | CiteResolverResult
+  | GalleryResolverResult
 
 export type CleanUrlFn = (url: string) => string
 
@@ -153,12 +216,12 @@ export type CleanUrlFn = (url: string) => string
 export type UrlRole = 'media' | 'link'
 
 // Whether a URL is safe to emit for its role. Optional consumer policy (e.g. SSRF or a
-// scheme allowlist); feedsweep always enforces its own dangerous-scheme floor regardless.
+// scheme allowlist). Feedsweep always enforces its own dangerous-scheme floor regardless.
 export type IsSafeUrlFn = (url: string, type: UrlRole) => boolean
 
 export type AssetType = 'image' | 'video' | 'audio'
 
-export type AssetProxyFn = (url: string, type: AssetType) => string | undefined
+export type AssetProxyFn = (url: string, type: AssetType) => MaybePromise<string | undefined>
 
 // Normalizes a cite card's site-formatted display date (e.g. "2018.10.14") into the
 // caller's preferred form. Returning undefined keeps the raw string verbatim, so an
@@ -175,13 +238,14 @@ export type TransformContext = {
   // Other URLs that also stand for this item's own page (e.g. the feed's site
   // page and feed URL, alongside the item permalink in `baseUrl`). Some feeds,
   // notably HTML-to-Atom bridges, absolutize in-page fragments against one of
-  // these rather than the permalink, so transforms that recognize self-page
+  // these, not the permalink, so transforms that recognize self-page
   // links check these too. See `shortenSamePageLinkFragments`.
   sameSiteUrls?: Array<string>
+  // The feed's own images (logo, icon, cover), so an enclosure that repeats one of them is
+  // read as decoration rather than as this item's picture. See `injectEnclosures`.
+  feedImageUrls?: Array<string>
   enclosures?: Array<Enclosure>
   widgetResolvers: Array<WidgetResolver>
-  citeResolvers: Array<CiteResolver>
-  galleryResolvers: Array<GalleryResolver>
   mediaSrcAttributes: Array<string>
   lazySrcAttributes: Array<string>
   lazySrcsetAttributes: Array<string>
@@ -214,21 +278,8 @@ export type TransformContentOptions = {
   parseHtmlFn: ParseHtmlFn
   baseUrl?: string
   sameSiteUrls?: Array<string>
+  feedImageUrls?: Array<string>
   enclosures?: Array<Enclosure>
-  widgetResolvers?: Array<WidgetResolver>
-  citeResolvers?: Array<CiteResolver>
-  galleryResolvers?: Array<GalleryResolver>
-  mediaSrcAttributes?: Array<string>
-  lazySrcAttributes?: Array<string>
-  lazySrcsetAttributes?: Array<string>
-  lazyIframeAttributes?: Array<string>
-  deferredIframeSources?: Array<DeferredIframeSource>
-  trackingHosts?: Array<string>
-  trackingPathSegments?: Array<string>
-  emojiImageHosts?: Array<string>
-  avatarImageHosts?: Array<string>
-  nonContentSelectors?: Array<string>
-  preservedPreClasses?: Array<string>
   resolveUrlFn?: ResolveUrlFn
   cleanUrlFn?: CleanUrlFn
   assetProxyFn?: AssetProxyFn
@@ -240,7 +291,7 @@ export type TransformContentOptions = {
   articleTitle?: string
   stringTransforms?: Array<StringTransform>
   domTransforms?: Array<DomTransform>
-  // Opt into the "best judgement" heuristic transforms (enclosure-duplicate and
-  // video-poster stripping). Ignored when `domTransforms` is set explicitly.
+  // Opt into the "best judgement" heuristic transforms (video-poster assignment, duplicate
+  // enclosures and duplicate leading images). Ignored when `domTransforms` is set explicitly.
   heuristics?: boolean
 }

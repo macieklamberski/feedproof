@@ -1,35 +1,15 @@
 import { describe, expect, it } from 'bun:test'
 import {
-  defaultCiteResolvers,
-  defaultGalleryResolvers,
+  defaultEmbedRenderHints,
   defaultNonContentSelectors,
   defaultWidgetResolvers,
 } from './defaults.js'
-import * as index from './index.js'
 import { parseHtml } from './parsers/linkedom.js'
 import { createCitePlaceholder, createGalleryPlaceholder } from './utils/widgets.js'
 
 describe('defaults', () => {
-  // A resolver reachable only through the default array cannot be named, so a consumer
-  // has no way to drop one or reorder the registry — the array is all or nothing. Every
-  // registered resolver therefore has to be exported individually as well; this pins that,
-  // since the two lists drifted apart once already as resolvers were added.
-  it('should export every registered resolver individually', () => {
-    const exported = new Set(Object.values(index))
-    const registered = [
-      ...defaultCiteResolvers,
-      ...defaultWidgetResolvers,
-      ...defaultGalleryResolvers,
-    ]
-    const missing = registered.filter((resolver) => {
-      return !exported.has(resolver)
-    })
-
-    expect(missing).toEqual([])
-  })
-
   // convertCiteCards hands every resolver the same document, in registration order, with
-  // the earlier replacements already applied — so a resolver has to stay off the others'
+  // the earlier replacements already applied, so a resolver has to stay off the others'
   // toes. The next two tests pin the two ways one could tread on another.
 
   // Claiming a placeholder an earlier resolver already produced: that converts finished
@@ -66,7 +46,7 @@ describe('defaults', () => {
       document.body.appendChild(wrapper)
     }
 
-    const matched = [...defaultCiteResolvers, ...defaultWidgetResolvers, ...defaultGalleryResolvers]
+    const matched = defaultWidgetResolvers
       .filter((resolver) => document.querySelectorAll(resolver.selector).length > 0)
       .map((resolver) => resolver.selector)
 
@@ -74,11 +54,13 @@ describe('defaults', () => {
   })
 
   // Claiming a selector another resolver already owns: the later one only ever sees the
-  // cards the first declined, so it looks registered while never really firing.
-  it('should not register the same selector twice', () => {
-    const selectors = [...defaultCiteResolvers, ...defaultGalleryResolvers].map((resolver) => {
-      return resolver.selector
-    })
+  // cards the first declined, so it looks registered while never really firing. Cites and
+  // galleries only: the url-keyed embed resolvers share the generic iframe selector on purpose.
+  it('should not register the same cite or gallery selector twice', () => {
+    const claimingKinds = new Set(['cite', 'gallery'])
+    const selectors = defaultWidgetResolvers
+      .filter((resolver) => claimingKinds.has(resolver.kind))
+      .map((resolver) => resolver.selector)
     const duplicates = selectors.filter((selector, index) => {
       return selectors.indexOf(selector) !== index
     })
@@ -89,11 +71,7 @@ describe('defaults', () => {
   // stripNonContentElements runs before the embed, cite and gallery transforms, so a
   // selector registered in both lists is always stripped and its resolver can never fire.
   it('should not list any resolver selector as a non-content selector', () => {
-    const resolverSelectors = [
-      ...defaultCiteResolvers,
-      ...defaultWidgetResolvers,
-      ...defaultGalleryResolvers,
-    ]
+    const resolverSelectors = defaultWidgetResolvers
       .flatMap((resolver) => resolver.selector.split(','))
       .map((selector) => selector.trim())
     const overlap = resolverSelectors.filter((selector) => {
@@ -102,4 +80,45 @@ describe('defaults', () => {
 
     expect(overlap).toEqual([])
   })
+})
+
+const named = defaultEmbedRenderHints.map((hint) => [hint.provider, hint] as const)
+
+describe('defaultEmbedRenderHints', () => {
+  it('should name each provider once', () => {
+    const providers = defaultEmbedRenderHints.map((hint) => hint.provider)
+
+    expect(new Set(providers).size).toBe(providers.length)
+  })
+
+  // A hint with nothing in it would register a provider and change nothing for a reader.
+  it.each(named)('should give %s something a reader can act on', (_, hint) => {
+    expect(hint.autoplayParams ?? hint.requestPlay ?? hint.readHeight).toBeDefined()
+  })
+
+  // A reader compares `event.origin` with it by equality, so a path or a trailing slash
+  // would never match.
+  it.each(named.filter(([, hint]) => hint.origin))(
+    'should state the %s origin as a bare origin',
+    (_, hint) => {
+      const origin = hint.origin ?? ''
+
+      expect(new URL(origin).origin).toBe(origin)
+    },
+  )
+
+  // A ready signal is only worth reading for a request that waits on it.
+  it.each(named.filter(([, hint]) => hint.isReady))(
+    'should have a %s play request to send once ready',
+    (_, hint) => {
+      expect(hint.requestPlay).toBeDefined()
+    },
+  )
+
+  it.each(named.filter(([, hint]) => hint.requestHeight !== undefined))(
+    'should read the answer to the %s height request',
+    (_, hint) => {
+      expect(hint.readHeight).toBeDefined()
+    },
+  )
 })

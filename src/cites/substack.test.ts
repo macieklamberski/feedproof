@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html, resolverExtractor, substackAttrs } from '../tests.js'
+import { describeForEachParser, html, jsonAttrValue, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
-import { substackCrossPostCiteResolver, substackOwnPostCiteResolver } from './substack.js'
+import {
+  substackCrossPostCiteResolver,
+  substackOwnPostCiteResolver,
+  substackPostEmbedCiteResolver,
+  substackPublicationCiteResolver,
+} from './substack.js'
 
 // Substack ships these cards as empty divs whose data lives in a `data-attrs` JSON blob,
-// stored in a double-quoted attribute with the inner quotes HTML-encoded — that is what
+// stored in a double-quoted attribute with the inner quotes HTML-encoded, which is what
 // survives a parse/serialise roundtrip. Tests pass the attrs object with Substack's own
 // key names so the wire keys stay visible at the call site.
 const makeContainer = (className: string, attrs?: Record<string, unknown> | string): string => {
@@ -12,7 +17,7 @@ const makeContainer = (className: string, attrs?: Record<string, unknown> | stri
     return `<div class="${className}"></div>`
   }
 
-  return `<div class="${className}" data-attrs="${substackAttrs(attrs)}"></div>`
+  return `<div class="${className}" data-attrs="${jsonAttrValue(attrs)}"></div>`
 }
 
 describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
@@ -90,8 +95,6 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // Optional fields pass through raw; createCitePlaceholder trims every field
-    // when it writes the attributes. Only the guard-checked title is trimmed here.
     it('should trim every text field', async () => {
       const value = makeContainer('digest-post-embed', {
         title: '  Model Drop  ',
@@ -175,7 +178,9 @@ describeForEachParser('substackOwnPostCiteResolver', (parseHtml) => {
                   <div class="pencraft pc-reset">·</div>
                   <div class="pencraft pc-reset">October 5, 2025</div>
                 </div>
-                <a href="https://thereader.example.com/p/model-drop"><span>Read full story</span></a>
+                <a href="https://thereader.example.com/p/model-drop">
+                  <span>Read full story</span>
+                </a>
               </div>
             </div>
           </a>
@@ -322,5 +327,217 @@ describeForEachParser('substackCrossPostCiteResolver', (parseHtml) => {
     })
 
     expect(await extract(value)).toBeUndefined()
+  })
+})
+
+describeForEachParser('substackPostEmbedCiteResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, substackPostEmbedCiteResolver)
+
+  describe('happy paths', () => {
+    it('should read the title, subtitle and link out of the markup', async () => {
+      const value = html`
+        <div class="substack-post-embed">
+          <p lang="en">The Quiet Part</p>
+          <p>What the numbers actually said.</p>
+          <a data-post-link href="https://thereader.example.com/p/the-quiet-part">Read on Substack</a>
+        </div>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'substack',
+        url: 'https://thereader.example.com/p/the-quiet-part',
+        title: 'The Quiet Part',
+        description: 'What the numbers actually said.',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // A publication on a custom domain still serves the standard post path, and the href is
+    // used as given, so no host check is involved.
+    it('should keep a custom-domain href', async () => {
+      const value = html`
+        <div class="substack-post-embed">
+          <p lang="en">Model Drop by The Reader</p>
+          <p>Subtitle.</p>
+          <a data-post-link href="https://www.example-custom.com/p/model-drop">Read on Substack</a>
+        </div>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'substack',
+        url: 'https://www.example-custom.com/p/model-drop',
+        title: 'Model Drop by The Reader',
+        description: 'Subtitle.',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should state no description when the card carries only a title', async () => {
+      const value = html`
+        <div class="substack-post-embed">
+          <p lang="en">The Quiet Part</p>
+          <a data-post-link href="https://thereader.example.com/p/the-quiet-part">Read on Substack</a>
+        </div>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'substack',
+        url: 'https://thereader.example.com/p/the-quiet-part',
+        title: 'The Quiet Part',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    // A Note is the same shell with a comment link, and it has no title: its first paragraph
+    // is the note's body. A cite states a title by contract, and calling body text a title
+    // would be a worse answer than the paragraphs and link the card already reads as.
+    it('should leave a note card alone', async () => {
+      const value = html`
+        <div class="substack-post-embed">
+          <p lang="en">Note text body, taken verbatim.</p>
+          <p> - Author Display Name</p>
+          <a data-comment-link href="https://substack.com/@handle/note/c-12345">Read on Substack</a>
+        </div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the card names no post', async () => {
+      const value = html`
+        <div class="substack-post-embed">
+          <p lang="en">The Quiet Part</p>
+          <p>What the numbers actually said.</p>
+        </div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the card carries no title', async () => {
+      const value = html`
+        <div class="substack-post-embed">
+          <a data-post-link href="https://thereader.example.com/p/the-quiet-part">Read on Substack</a>
+        </div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+})
+
+describeForEachParser('substackPublicationCiteResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, substackPublicationCiteResolver)
+
+  describe('happy paths', () => {
+    it('should extract all fields from a complete publication card', async () => {
+      const value = makeContainer('embedded-publication-wrap', {
+        id: 729184,
+        name: 'Deep State Marauder',
+        base_url: 'https://marauder.example.com',
+        hero_text: 'Removing the Constitutional Crisis we are currently in.',
+        author_name: 'Author name',
+        logo_url: 'https://cdn.example.com/logo.png',
+        logo_bg_color: '#016161',
+        show_subscribe: true,
+        language: 'en',
+      })
+      const expected: CiteResolverResult = {
+        provider: 'substack',
+        url: 'https://marauder.example.com',
+        title: 'Deep State Marauder',
+        description: 'Removing the Constitutional Crisis we are currently in.',
+        author: 'Author name',
+        icon: 'https://cdn.example.com/logo.png',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should extract a card carrying no logo', async () => {
+      const value = makeContainer('embedded-publication-wrap', {
+        name: 'Deep State Marauder',
+        base_url: 'https://marauder.example.com',
+        hero_text: 'Removing the Constitutional Crisis we are currently in.',
+        author_name: 'Author name',
+      })
+      const result = await extract(value)
+
+      expect(result?.icon).toBeUndefined()
+      expect(result?.title).toBe('Deep State Marauder')
+    })
+
+    it('should extract a card carrying no hero text', async () => {
+      const value = makeContainer('embedded-publication-wrap', {
+        name: 'Deep State Marauder',
+        base_url: 'https://marauder.example.com',
+        author_name: 'Author name',
+      })
+      const result = await extract(value)
+
+      expect(result?.description).toBeUndefined()
+      expect(result?.url).toBe('https://marauder.example.com')
+    })
+
+    it('should trim every text field', async () => {
+      const value = makeContainer('embedded-publication-wrap', {
+        name: '  Deep State Marauder  ',
+        base_url: '  https://marauder.example.com  ',
+        hero_text: '  A tagline.  ',
+        author_name: '  Author name  ',
+        logo_url: '  https://cdn.example.com/logo.png  ',
+      })
+      const expected: CiteResolverResult = {
+        provider: 'substack',
+        url: 'https://marauder.example.com',
+        title: 'Deep State Marauder',
+        description: 'A tagline.',
+        author: 'Author name',
+        icon: 'https://cdn.example.com/logo.png',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should return undefined when base_url is missing', async () => {
+      const value = makeContainer('embedded-publication-wrap', { name: 'Deep State Marauder' })
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when name is missing', async () => {
+      const value = makeContainer('embedded-publication-wrap', {
+        base_url: 'https://marauder.example.com',
+      })
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when name is whitespace-only', async () => {
+      const value = makeContainer('embedded-publication-wrap', {
+        name: '   ',
+        base_url: 'https://marauder.example.com',
+      })
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when data-attrs is malformed json', async () => {
+      const value = makeContainer('embedded-publication-wrap', '{"name":')
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when data-attrs is absent', async () => {
+      const value = makeContainer('embedded-publication-wrap')
+
+      expect(await extract(value)).toBeUndefined()
+    })
   })
 })

@@ -5,6 +5,7 @@ import { extractGalleryItems } from './common.js'
 // `wp-block-coblocks-gallery-*` token is distinct from `wp-block-gallery`, so this never
 // overlaps the core WordPress gallery resolver.
 export const coblocksGalleryResolver: GalleryResolver = {
+  kind: 'gallery',
   selector: '[class*="wp-block-coblocks-gallery"]',
   extract: (element) => {
     const items = extractGalleryItems(element, 'img')
