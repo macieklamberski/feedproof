@@ -23,8 +23,10 @@ const spotifyHeights: Record<string, number> = {
   artist: 352,
 }
 
-// Every type's id is 22 base62 characters.
-const safeIdRegex = /^[a-zA-Z0-9]{22}$/
+// Base62 with no separator, since the id is written into the player path and the `type/id`
+// key. The length is not checked: a wrong id fails the same whether it is minted or passed
+// through, and a bound would refuse the next id space.
+const safeIdRegex = /^[a-zA-Z0-9]+$/
 // `embed` opens a player path, `embed-podcast` its older podcast-only twin, `intl-{lang}` a
 // localized page path. Whatever follows the id (`/video` on a video podcast) is decorative.
 const pathPrefixRegex = /^(?:embed|embed-podcast|intl-[a-z]{2})$/
