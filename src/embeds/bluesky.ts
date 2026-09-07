@@ -30,9 +30,12 @@ const atUriRegex = /^at:\/\/([^/]+)\/([^/]+)\/([^/?#]+)/
 // The authority is either a DID (`did:plc:…`, `did:web:…`) or a handle, which is a domain
 // name. The record key is base32-sortable in practice. The wider charset here is the whole
 // of what a record key may hold. Both are interpolated into urls, so anything outside these
-// alphabets is refused, not escaped.
+// alphabets is refused, not escaped. The AT URI comes off raw attribute text, so nothing has
+// folded a dot segment away before it gets here, and a record key of `.` or `..` would climb out
+// of the collection in the minted player url. The AT Protocol forbids exactly those two keys, so
+// refusing them costs no real post.
 const safeAuthorityRegex = /^(?:did:[a-z]+:[\w.:%-]+|[a-z\d-]+(?:\.[a-z\d-]+)+)$/i
-const safeRecordKeyRegex = /^[\w.~-]+$/
+const safeRecordKeyRegex = /^(?!\.{1,2}$)[\w.~-]+$/
 
 // The author label sits between the post text and the date link, and the leading separator is
 // whatever the snippet generator emitted: `&mdash;`, an en dash, or a plain `--`.

@@ -10,6 +10,17 @@ const safeSegmentRegex = /^[A-Za-z0-9._-]+$/
 const anchorHosts = ['anchor.fm', 'podcasters.spotify.com', 'creators.spotify.com']
 
 // The anchor and podcasters players are 102 tall, the creators one 204.
+//
+// Measured 2026-09-07 in Chrome: `anchor.fm/{show}/embed/episodes/{slug}` and the podcasters
+// spelling both redirect to `creators.spotify.com/pod/profile/{show}/embed/episodes/{slug}`, so
+// the three hosts serve one player today. Its painted card, artwork, title, play button and
+// progress bar, is 100 tall at 320 and 640 wide and 161 at 1280, where the artwork grows; the
+// page fills any taller frame with white below the card. So 102 matches the card at post-column
+// widths on every host, and 204 has no rendered counterpart. Publishers write 102 on all three:
+// 98 of 111 anchor.fm iframes, 58 of 65 podcasters ones and 13 of 14 creators ones in the corpus
+// feeds the census lists. Left as is here because a size change is a behaviour change. Either
+// number only fires when the carrier states no size, since `decideSize` takes the carrier's
+// first.
 const playerHeights = { creators: 204, other: 102 }
 
 // `anchor.fm/{show}/embed/episodes/{slug}`,
