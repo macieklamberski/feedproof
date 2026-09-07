@@ -106,6 +106,7 @@ import { podbeanEmbedResolver } from '../embeds/podbean.js'
 import { podigeeEmbedResolver, podigeeIframeEmbedResolver } from '../embeds/podigee.js'
 import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from '../embeds/reddit.js'
 import { reverbnationEmbedResolver } from '../embeds/reverbnation.js'
+import { rutubeEmbedResolver } from '../embeds/rutube.js'
 import { scribdFlashEmbedResolver, scribdIframeEmbedResolver } from '../embeds/scribd.js'
 import { simplecastEmbedResolver } from '../embeds/simplecast.js'
 import { sketchfabEmbedResolver } from '../embeds/sketchfab.js'
@@ -260,6 +261,7 @@ const embedResolvers: Array<EmbedResolver> = [
   telegramScriptEmbedResolver,
   telegramIframeEmbedResolver,
   mastodonEmbedResolver,
+  rutubeEmbedResolver,
   zencastrBlockquoteEmbedResolver,
   zencastrIframeEmbedResolver,
   mailruEmbedResolver,
