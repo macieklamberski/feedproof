@@ -116,6 +116,14 @@ describeForEachParser('tencentEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    // A snippet pasted with the route word still standing in for the id: `cover` names Tencent's
+    // series route, and the poster and page urls minted from it are both dead.
+    it('should ignore the route word left in the vid parameter', async () => {
+      const value = '<iframe src="https://v.qq.com/txp/iframe/player.html?vid=cover"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     it('should ignore a swf on the static host that is not the player', async () => {
       const value = '<embed src="http://static.video.qq.com/loader.swf?vid=u0015tdk4pp">'
 
