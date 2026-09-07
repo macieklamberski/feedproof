@@ -3,10 +3,12 @@ import { attr, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// An integration id is a run of lowercase letters and digits, 15 to 17 characters in the wild.
-// A playlist id is `v-` and twelve more, and the loader also accepts the word `auto`, so the
-// same class covers both with the hyphen admitted.
-const safeIdRegex = /^[a-z0-9-]{4,40}$/
+// An integration id is a run of lowercase letters and digits, a playlist id is `v-` and twelve
+// more, and the loader also takes `auto` for a playlist the integration picks itself, so one class
+// covers all three with the hyphen admitted. No length is checked: both ids arrive as query values
+// on an exact route on a host that serves nothing but the player, so an id is the only thing that
+// reaches them.
+const safeIdRegex = /^[a-z0-9-]+$/
 
 const glomexHost = 'player.glomex.com'
 const playerPathRegex = /^\/integration\/[^/]+\/(?:integration|iframe-player)\.html$/

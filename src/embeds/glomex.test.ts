@@ -73,6 +73,36 @@ describeForEachParser('glomexIframeEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // glomex has minted fifteen and sixteen character integration ids, so only the alphabet is
+    // checked.
+    it('should resolve an integration id longer than the ones minted so far', async () => {
+      const value =
+        '<iframe src="https://player.glomex.com/integration/1/integration.html?integrationId=40599x1hkkig7d8l40599x1hkkig7d8l40599x1hkkig7d8l"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'glomex',
+        id: '40599x1hkkig7d8l40599x1hkkig7d8l40599x1hkkig7d8l',
+        src: 'https://player.glomex.com/integration/1/integration.html?integrationId=40599x1hkkig7d8l40599x1hkkig7d8l40599x1hkkig7d8l',
+        ratio: '16/9',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // `auto` is the loader's own word for a playlist the integration chooses, so it travels as
+    // the playlist id rather than being read as a malformed one.
+    it('should carry the playlist word the integration picks its own with', async () => {
+      const value =
+        '<iframe src="https://player.glomex.com/integration/1/integration.html?integrationId=eexbs16lxoopubw&playlistId=auto"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'glomex',
+        id: 'eexbs16lxoopubw/auto',
+        src: 'https://player.glomex.com/integration/1/integration.html?integrationId=eexbs16lxoopubw&playlistId=auto',
+        ratio: '16/9',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
