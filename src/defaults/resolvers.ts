@@ -77,6 +77,7 @@ import { flickrEmbedResolver } from '../embeds/flickr.js'
 import { flourishIframeEmbedResolver, flourishWidgetEmbedResolver } from '../embeds/flourish.js'
 import { geniallyEmbedResolver } from '../embeds/genially.js'
 import { gettyImagesEmbedResolver } from '../embeds/gettyimages.js'
+import { guardianEmbedResolver } from '../embeds/guardian.js'
 import { imgurBlockquoteEmbedResolver, imgurIframeEmbedResolver } from '../embeds/imgur.js'
 import {
   instagramAmpEmbedResolver,
@@ -179,6 +180,7 @@ const embedResolvers: Array<EmbedResolver> = [
   codesandboxIframeEmbedResolver,
   dailymotionEmbedResolver,
   donorboxEmbedResolver,
+  guardianEmbedResolver,
   imgurBlockquoteEmbedResolver,
   imgurIframeEmbedResolver,
   issuuWidgetEmbedResolver,
