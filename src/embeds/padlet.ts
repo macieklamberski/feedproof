@@ -14,7 +14,7 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // probe offers every attachment a feed carries to this resolver.
 const safeBoardIdRegex = /^[a-z0-9]+$/
 
-const padletHost = 'padlet.com'
+const padletHosts = ['padlet.com']
 const embedPathRegex = /^\/embed\/([^/]+)\/?$/
 const previewPathRegex = /^\/padlets\/([^/]+)\/embeds\/preview_embed\/?$/
 
@@ -28,7 +28,7 @@ const boardHeight = 608
 // and neither half is in the embed url, so no page url is minted. The slideshow view of a board
 // is a different presentation and is left as the publisher wrote it.
 export const padletResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrlOnHosts(url, padletHost)
+  const parsed = parseUrlOnHosts(url, padletHosts)
   const boardId =
     parsed?.pathname.match(embedPathRegex)?.[1] ?? parsed?.pathname.match(previewPathRegex)?.[1]
 
@@ -45,4 +45,4 @@ export const padletResolveEmbed = (url: string): EmbedResolverResult | undefined
   }
 }
 
-export const padletEmbedResolver = createUrlEmbedResolver([padletHost], padletResolveEmbed)
+export const padletEmbedResolver = createUrlEmbedResolver(padletHosts, padletResolveEmbed)

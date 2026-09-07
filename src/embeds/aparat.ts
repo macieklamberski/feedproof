@@ -3,7 +3,7 @@ import { attr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-const aparatHost = 'aparat.com'
+const aparatHosts = ['aparat.com']
 const scriptPathRegex = /^\/embed\/([a-zA-Z0-9]+)$/
 const framePathRegex = /^\/video\/video\/embed\/videohash\/([a-zA-Z0-9]+)(?:\/vt\/frame)?\/?$/
 
@@ -41,7 +41,7 @@ const composeEmbed = (videoHash: string): EmbedResolverResult => {
 }
 
 const readVideoHash = (url: string | undefined, pathRegex: RegExp): string | undefined => {
-  return parseUrlOnHosts(url, aparatHost)?.pathname.match(pathRegex)?.[1]
+  return parseUrlOnHosts(url, aparatHosts)?.pathname.match(pathRegex)?.[1]
 }
 
 const aparatResolveEmbed = (link: string): EmbedResolverResult | undefined => {
@@ -51,7 +51,7 @@ const aparatResolveEmbed = (link: string): EmbedResolverResult | undefined => {
 }
 
 export const aparatIframeEmbedResolver: EmbedResolver = createUrlEmbedResolver(
-  [aparatHost],
+  aparatHosts,
   aparatResolveEmbed,
 )
 

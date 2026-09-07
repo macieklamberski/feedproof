@@ -79,6 +79,20 @@ describeForEachParser('telegramScriptEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should accept a channel longer than the signup form allows', async () => {
+      const value =
+        '<script data-telegram-post="international_documentary_festival_news/42"></script>'
+      const expected: EmbedResolverResult = {
+        provider: 'telegram',
+        id: 'international_documentary_festival_news/42',
+        src: 'https://t.me/international_documentary_festival_news/42?embed=1',
+        url: 'https://t.me/international_documentary_festival_news/42',
+        author: 'international_documentary_festival_news',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('the width the snippet states', () => {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { rtveFlashEmbedResolver, rtveIframeEmbedResolver, rtveResolveEmbed } from './rtve.js'
@@ -26,6 +27,21 @@ describe('rtveResolveEmbed', () => {
         id: 'audio/1925451',
         src: 'https://www.rtve.es/drmn/embed/audio/1925451/',
         url: 'https://www.rtve.es/a/1925451/',
+      }
+
+      expect(rtveResolveEmbed(value)).toEqual(expected)
+    })
+
+    // RTVE's asset ids have been growing since 2008, and the length is not what names one.
+    it('should build the placeholder from an id longer than the ones minted so far', () => {
+      const value = 'https://www.rtve.es/drmn/embed/video/1628101512345'
+      const expected: EmbedResolverResult = {
+        provider: 'rtve',
+        id: 'video/1628101512345',
+        src: 'https://www.rtve.es/drmn/embed/video/1628101512345/',
+        url: 'https://www.rtve.es/v/1628101512345/',
+        thumbnail: 'https://img.rtve.es/v/1628101512345/',
+        ratio: '16/9',
       }
 
       expect(rtveResolveEmbed(value)).toEqual(expected)
@@ -309,5 +325,31 @@ describeForEachParser('rtveFlashEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+// The enclosure probe offers every attachment a feed carries to this resolver, and RTVE serves
+// its podcast and video files under its own domain, so the id shape is what keeps one playable.
+describeForEachParser('rtve through the pipeline', (parseHtml) => {
+  it('should leave an audio enclosure on the rtve host playable', async () => {
+    const enclosures = [
+      {
+        url: 'https://mvod.rtve.es/resources/TE_SBUENOS/mp3/1/2/1234567890121.mp3',
+        type: 'audio/mpeg',
+      },
+    ]
+
+    const expected = html`
+      <audio data-enclosure="" controls src="https://mvod.rtve.es/resources/TE_SBUENOS/mp3/1/2/1234567890121.mp3"></audio>
+      <p>Body</p>
+    `
+
+    expect(
+      await transformContent('<p>Body</p>', {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/post',
+        enclosures,
+      }),
+    ).toEqualHtml(expected)
   })
 })

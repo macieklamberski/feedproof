@@ -23,6 +23,27 @@ describe('extractTransistorEmbed', () => {
     expect(extractTransistorEmbed(value)).toEqual(expected)
   })
 
+  // Transistor has minted eight-character episode ids so far, so only the alphabet is checked.
+  it('should read an episode id longer than the ones minted so far', () => {
+    const value = 'https://share.transistor.fm/e/a1b2c3d4e5f6g7h8'
+    const expected = {
+      kind: 'e',
+      id: 'a1b2c3d4e5f6g7h8',
+    } as const
+
+    expect(extractTransistorEmbed(value)).toEqual(expected)
+  })
+
+  it('should read an episode id shorter than the ones minted so far', () => {
+    const value = 'https://share.transistor.fm/e/a1b2c'
+    const expected = {
+      kind: 'e',
+      id: 'a1b2c',
+    } as const
+
+    expect(extractTransistorEmbed(value)).toEqual(expected)
+  })
+
   // The share page and the player take the same id, so the share url reads as the episode.
   it('should read an episode from its share page url', () => {
     const value = 'https://share.transistor.fm/s/9f8e7d6c'
@@ -77,6 +98,26 @@ describe('extractTransistorEmbed', () => {
     } as const
 
     expect(extractTransistorEmbed(value)).toEqual(expected)
+  })
+
+  it('should read a single-character show slug', () => {
+    const value = 'https://share.transistor.fm/e/z/playlist'
+    const expected = {
+      kind: 'playlist',
+      id: 'z',
+    } as const
+
+    expect(extractTransistorEmbed(value)).toEqual(expected)
+  })
+
+  // With no length left on either id, the alphabet is the whole guard, and excluding the dot is
+  // what keeps a file on the host from reading as an episode.
+  it.each([
+    'https://share.transistor.fm/e/9f8e7d6c.mp3',
+    'https://share.transistor.fm/s/9f8e7d6c.mp3',
+    'https://share.transistor.fm/e/build-your-saas.mp3/latest',
+  ])('should return undefined for a file on the host at %s', (value) => {
+    expect(extractTransistorEmbed(value)).toBeUndefined()
   })
 
   it('should return undefined for a transistor url naming nothing', () => {

@@ -10,7 +10,7 @@ const stackblitzHosts = ['stackblitz.com', 'www.stackblitz.com']
 
 // A project is addressed by its own slug rather than by a hash behind one, so the whole segment is
 // the id. Hyphens and dots are both legal in it (`vitejs-vite-jfnozz`, `angular-ivy-snow`).
-const slugRegex = /^[A-Za-z0-9][A-Za-z0-9._-]{0,80}$/
+const slugRegex = /^[A-Za-z0-9][A-Za-z0-9._-]*$/
 
 // A slug carries dots, so a filename passes it. The enclosure probe offers every attachment a feed
 // carries to this resolver, so an `.mp3` on the host would otherwise be minted as a project and take

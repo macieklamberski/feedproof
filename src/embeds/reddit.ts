@@ -7,10 +7,15 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 const redditHosts = ['reddit.com', 'redditmedia.com']
 
-// Subreddit and account names are letters, digits, underscore and hyphen. Posts and comments
-// are named by a base36 id. Both are interpolated into the minted url, so both are bounded.
-const safeNameRegex = /^[A-Za-z0-9_-]{1,32}$/
-const safeThingIdRegex = /^[a-z0-9]{4,13}$/i
+// Subreddit and account names are letters, digits, underscore and hyphen, and a post or a comment
+// is named by a base36 id. Both are interpolated into the minted url, so the alphabet is the
+// guard: neither admits a slash or a dot, so an id cannot climb out of the minted path or name a
+// file on the host. Neither length is checked. `r` or `user` sits in front of a name and
+// `comments` in front of an id, so a bound refuses nothing but what Reddit has already minted,
+// and the post counter started at one base36 character in 2005: two-character permalinks are
+// still linked from real feeds today.
+const safeNameRegex = /^[A-Za-z0-9_-]+$/
+const safeThingIdRegex = /^[a-z0-9]+$/i
 
 // What a permalink names. A post carries a title, a comment does not, and a subreddit names
 // neither, so the kind decides which fields the widget can fill.

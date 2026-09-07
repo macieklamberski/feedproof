@@ -17,6 +17,7 @@ import { mediumCiteResolver } from '../cites/medium.js'
 import { microformatsCiteResolver } from '../cites/microformats.js'
 import { nodebbCiteResolver } from '../cites/nodebb.js'
 import { notecomCiteResolver } from '../cites/notecom.js'
+import { nytimesCiteResolver } from '../cites/nytimes.js'
 import { paragraphCiteResolver } from '../cites/paragraph.js'
 import { pzlinkcardCiteResolver } from '../cites/pzlinkcard.js'
 import {
@@ -37,7 +38,10 @@ import { appleEmbedResolver } from '../embeds/apple.js'
 import { archiveFlashEmbedResolver, archiveIframeEmbedResolver } from '../embeds/archive.js'
 import { arteEmbedResolver } from '../embeds/arte.js'
 import { audioboomEmbedResolver, audioboomPlayerEmbedResolver } from '../embeds/audioboom.js'
+import { audiomackEmbedResolver } from '../embeds/audiomack.js'
+import { aushaEmbedResolver } from '../embeds/ausha.js'
 import { bandcampEmbedResolver } from '../embeds/bandcamp.js'
+import { bbcIframeEmbedResolver } from '../embeds/bbc.js'
 import { bitchuteEmbedResolver } from '../embeds/bitchute.js'
 import { bloggerEmbedResolver } from '../embeds/blogger.js'
 import { blubrryEmbedResolver } from '../embeds/blubrry.js'
@@ -60,6 +64,11 @@ import {
 } from '../embeds/buzzsprout.js'
 import { captivateEmbedResolver } from '../embeds/captivate.js'
 import { cnbcIframeEmbedResolver } from '../embeds/cnbc.js'
+import {
+  cnnFlashEmbedResolver,
+  cnnIframeEmbedResolver,
+  cnnScriptEmbedResolver,
+} from '../embeds/cnn.js'
 import { codepenIframeEmbedResolver, codepenWidgetEmbedResolver } from '../embeds/codepen.js'
 import { codesandboxIframeEmbedResolver } from '../embeds/codesandbox.js'
 import { dailymotionEmbedResolver } from '../embeds/dailymotion.js'
@@ -96,6 +105,7 @@ import {
   jwplayerScriptEmbedResolver,
   jwplayerSetupEmbedResolver,
 } from '../embeds/jwplayer.js'
+import { kalturaIframeEmbedResolver, kalturaScriptEmbedResolver } from '../embeds/kaltura.js'
 import { libsynEmbedResolver } from '../embeds/libsyn.js'
 import { linkedinEmbedResolver } from '../embeds/linkedin.js'
 import { mailruEmbedResolver } from '../embeds/mailru.js'
@@ -106,12 +116,14 @@ import { megatvEmbedResolver } from '../embeds/megatv.js'
 import { mixcloudEmbedResolver } from '../embeds/mixcloud.js'
 import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from '../embeds/nicovideo.js'
 import { notecomIframeEmbedResolver } from '../embeds/notecom.js'
+import { nytimesIframeEmbedResolver } from '../embeds/nytimes.js'
 import { odyseeEmbedResolver } from '../embeds/odysee.js'
 import { omnyEmbedResolver } from '../embeds/omny.js'
 import { padletEmbedResolver } from '../embeds/padlet.js'
 import { podbeanEmbedResolver } from '../embeds/podbean.js'
 import { podetizeIframeEmbedResolver, podetizeScriptEmbedResolver } from '../embeds/podetize.js'
 import { podigeeEmbedResolver, podigeeIframeEmbedResolver } from '../embeds/podigee.js'
+import { podomaticEmbedResolver } from '../embeds/podomatic.js'
 import { redcircleIframeEmbedResolver, redcircleScriptEmbedResolver } from '../embeds/redcircle.js'
 import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from '../embeds/reddit.js'
 import { reverbnationEmbedResolver } from '../embeds/reverbnation.js'
@@ -182,6 +194,9 @@ const embedResolvers: Array<EmbedResolver> = [
   videopressFlashEmbedResolver,
   wistiaEmbedResolver,
   captivateEmbedResolver,
+  cnnScriptEmbedResolver,
+  cnnFlashEmbedResolver,
+  cnnIframeEmbedResolver,
   cnbcIframeEmbedResolver,
   codepenWidgetEmbedResolver,
   codepenIframeEmbedResolver,
@@ -223,6 +238,7 @@ const embedResolvers: Array<EmbedResolver> = [
   megatvEmbedResolver,
   podigeeEmbedResolver,
   podigeeIframeEmbedResolver,
+  podomaticEmbedResolver,
   redcircleScriptEmbedResolver,
   redcircleIframeEmbedResolver,
   redditWidgetEmbedResolver,
@@ -262,6 +278,7 @@ const embedResolvers: Array<EmbedResolver> = [
   archiveFlashEmbedResolver,
   arteEmbedResolver,
   bandcampEmbedResolver,
+  bbcIframeEmbedResolver,
   bitchuteEmbedResolver,
   bloggerEmbedResolver,
   blueskyBlockquoteEmbedResolver,
@@ -269,8 +286,11 @@ const embedResolvers: Array<EmbedResolver> = [
   blueskyS9eEmbedResolver,
   blueskyPostElementEmbedResolver,
   audioboomEmbedResolver,
+  audiomackEmbedResolver,
+  aushaEmbedResolver,
   audioboomPlayerEmbedResolver,
   notecomIframeEmbedResolver,
+  nytimesIframeEmbedResolver,
   omnyEmbedResolver,
   padletEmbedResolver,
   odyseeEmbedResolver,
@@ -287,6 +307,8 @@ const embedResolvers: Array<EmbedResolver> = [
   telegramScriptEmbedResolver,
   telegramIframeEmbedResolver,
   mastodonEmbedResolver,
+  kalturaIframeEmbedResolver,
+  kalturaScriptEmbedResolver,
   bridEmbedResolver,
   rutubeEmbedResolver,
   zencastrBlockquoteEmbedResolver,
@@ -329,6 +351,7 @@ const citeResolvers: Array<CiteResolver> = [
   buddypressCiteResolver,
   pzlinkcardCiteResolver,
   notecomCiteResolver,
+  nytimesCiteResolver,
   tumblrCiteResolver,
   embedlyCiteResolver,
   paragraphCiteResolver,

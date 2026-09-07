@@ -5,7 +5,7 @@ import * as styles from '../utils/styles.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-const tiktokHost = 'tiktok.com'
+const tiktokHosts = ['tiktok.com']
 
 // A handle is the character set TikTok allows at signup, with no length: the `@` opens every
 // handle position read here and `/video/` closes the watch path, so a bound separates a handle
@@ -38,7 +38,7 @@ const playerHeight = 738
 type Clip = { handle?: string; videoId?: string }
 
 const readWatchUrl = (url: string | undefined): Clip => {
-  const parsed = parseUrlOnHosts(url, tiktokHost)
+  const parsed = parseUrlOnHosts(url, tiktokHosts)
 
   if (!parsed) {
     return {}
@@ -65,7 +65,7 @@ const hydratedSize = (element: Element): { width?: number; height?: number } => 
   // The stored iframe is matched by the same player paths the direct carrier resolver claims,
   // so a hydrated copy keeps its measurement whichever player url the CMS wrote.
   const frame = find(element, 'iframe[src]', (iframe) => {
-    const parsed = parseUrlOnHosts(attr(iframe, 'src'), tiktokHost)
+    const parsed = parseUrlOnHosts(attr(iframe, 'src'), tiktokHosts)
 
     return Boolean(parsed && playerPathRegex.test(parsed.pathname))
   })
@@ -159,7 +159,7 @@ const readHandle = (element: Element): string | undefined => {
   }
 
   for (const anchor of element.querySelectorAll('a[href]')) {
-    const parsed = parseUrlOnHosts(attr(anchor, 'href'), tiktokHost)
+    const parsed = parseUrlOnHosts(attr(anchor, 'href'), tiktokHosts)
 
     if (parsed) {
       const handle = parsed.pathname.match(profilePathRegex)?.[1]
@@ -184,7 +184,7 @@ const resolveAccount = (element: Element): EmbedResolverResult | undefined => {
   }
 
   const cite = attr(element, 'cite')
-  const isCitedProfile = Boolean(cite && parseUrlOnHosts(cite, tiktokHost))
+  const isCitedProfile = Boolean(cite && parseUrlOnHosts(cite, tiktokHosts))
 
   return {
     provider: 'tiktok',
@@ -229,7 +229,7 @@ export const tiktokBlockquoteEmbedResolver = createMarkupEmbedResolver(
 // a real measurement, which lands on 738 instead. Telling that apart from a pasted box needs a
 // heuristic worth less than the 20 pixels it recovers.
 export const tiktokIframeEmbedResolver = createUrlEmbedResolver(
-  [tiktokHost],
+  tiktokHosts,
   (src) => {
     const parsed = parseUrl(src, 'https://example.com')
     const playerId = parsed?.pathname.match(playerPathRegex)?.[1]

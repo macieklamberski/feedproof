@@ -8,7 +8,9 @@ const safeVideoIdRegex = /^\d+$/
 
 // An unlisted video's privacy hash, which the player takes only in the query: the
 // `player.vimeo.com/video/{id}/{hash}` path spelling is a 404. Ten lowercase hex characters, and
-// case-sensitive, so it travels exactly as written.
+// case-sensitive, so it travels exactly as written. The query's `h` arrives decoded and is written
+// into the page url's path and the id, so it is held to this shape too: a `/` or a dot segment
+// there would let the feed choose the page.
 const unlistedHashRegex = /^[0-9a-f]{10}$/
 
 const vimeoHosts = ['vimeo.com', 'player.vimeo.com']
@@ -65,6 +67,39 @@ const readCollectionVideoId = (segments: Array<string>): string | undefined => {
   }
 }
 
+// A showcase is a playlist with its own player and its own id space, and `album` is what Vimeo
+// called one before renaming them in 2018. The album spelling is normalised away here because
+// `vimeo.com/album/{id}/embed` 301s onto the showcase player. oEmbed settles nothing either way:
+// it answers the two spellings of one id identically, down to the byte, live or dead alike.
+const showcasePaths = new Set(['showcase', 'album'])
+
+// No video id, so no poster, and no size: the showcase player is a grid whose shape is whatever
+// box the publisher gave it, and the carrier already states one. What the resolver adds is the
+// enrichment key, since `vimeo.com/showcase/{id}` resolves through Vimeo's keyless oEmbed to a
+// title, an author and a thumbnail, and a fabricated id answers 404 there (probed 2026-09-06).
+// The id is qualified because a showcase and a video share one numeric grammar.
+const composeShowcaseEmbed = (showcaseId: string): EmbedResolverResult => {
+  return {
+    provider: 'vimeo',
+    id: `showcase/${showcaseId}`,
+    src: `https://vimeo.com/showcase/${showcaseId}/embed`,
+    url: `https://vimeo.com/showcase/${showcaseId}`,
+  }
+}
+
+const resolveShowcaseEmbed = (link: string): EmbedResolverResult | undefined => {
+  const url = parseUrl(link)
+  const segments = url ? getPathSegments(url) : []
+
+  if (!showcasePaths.has(segments[0])) {
+    return
+  }
+
+  const showcaseId = keepIfMatches(segments[1], safeVideoIdRegex)
+
+  return showcaseId ? composeShowcaseEmbed(showcaseId) : undefined
+}
+
 type VimeoReference = {
   id: string
   hash?: string
@@ -118,7 +153,10 @@ const readReference = (link: string): VimeoReference | undefined => {
 
   return {
     id,
-    hash: (hashIndex === -1 ? url.searchParams.get('h') : segments[hashIndex]) ?? undefined,
+    hash:
+      hashIndex === -1
+        ? keepIfMatches(url.searchParams.get('h'), unlistedHashRegex)
+        : segments[hashIndex],
   }
 }
 
@@ -140,7 +178,7 @@ export const vimeoResolveEmbed = (
   const reference = readReference(url)
 
   if (!reference) {
-    return
+    return resolveShowcaseEmbed(url)
   }
 
   const { id: videoId, hash } = reference

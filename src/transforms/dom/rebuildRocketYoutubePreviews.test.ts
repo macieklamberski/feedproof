@@ -38,12 +38,49 @@ describeForEachParser('rebuildRocketYoutubePreviews', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
-  it('should leave the element untouched when there is no data-src', async () => {
+  it('should rebuild an iframe from data-id when there is no data-src', async () => {
     const value = html`
       <div
         class="rll-youtube-player"
         data-id="dQw4w9WgXcQ"
       ></div>
+    `
+    const expected = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should carry the data-query through onto a src built from data-id', async () => {
+    const value = html`
+      <div
+        class="rll-youtube-player"
+        data-id="dQw4w9WgXcQ"
+        data-query="version=3&amp;rel=1&amp;wmode=transparent"
+      ></div>
+    `
+    const expected = html`
+      <iframe
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ?version=3&amp;rel=1&amp;wmode=transparent"
+      ></iframe>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should leave the element untouched when data-id is not a video id', async () => {
+    const value = html`
+      <div
+        class="rll-youtube-player"
+        data-id="watch"
+      ></div>
+    `
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
+  it('should leave the element untouched when it states no video at all', async () => {
+    const value = html`
+      <div class="rll-youtube-player" data-query="feature=oembed"></div>
     `
 
     expect(await transform(value)).toEqualHtml(value)
