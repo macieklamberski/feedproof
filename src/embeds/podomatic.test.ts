@@ -213,16 +213,15 @@ describeForEachParser('podomaticEmbedResolver', (parseHtml) => {
     })
   })
 
-  describe('the zeros the snippet writes', () => {
-    // Podomatic's own embed code states `width="0" height="0"` on 171 of the 251 html5 frames in
-    // the corpus and sizes the frame from a stylesheet the feed never carries, so the measured
-    // height wins over what the carrier declares.
-    it('should keep the measured height over a zero box', async () => {
+  describe('the box the snippet writes', () => {
+    // The player is 208 tall at every width, so the width beside that height is what has to go:
+    // a reader reserving space from the pair would hold 2.42:1 open at any width but 504.
+    it('should drop the width the snippet states beside the right height', async () => {
       const value = html`
         <iframe
           src="https://podomatic.com/embed/html5/episode/10076958?autoplay=false"
-          width="0"
-          height="0"
+          width="504"
+          height="208"
         ></iframe>
       `
       const expected: EmbedResolverResult = {
@@ -235,19 +234,22 @@ describeForEachParser('podomaticEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    it('should keep the measured height over a box a publisher chose', async () => {
+    // The small player's frames state the browser's own default 300 by 150 and put the real
+    // height in a style, so the attributes say 2:1 about a 97 pixel bar.
+    it('should keep the small style height over the default box', async () => {
       const value = html`
         <iframe
-          src="https://podomatic.com/embed/html5/episode/10076958"
-          width="504"
-          height="250"
+          src="https://podomatic.com/embed/html5/episode/10076958?style=small"
+          width="300"
+          height="150"
+          style="width: 100%; height: 97px;"
         ></iframe>
       `
       const expected: EmbedResolverResult = {
         provider: 'podomatic',
         id: 'episode/10076958',
-        src: 'https://www.podomatic.com/embed/html5/episode/10076958',
-        height: 208,
+        src: 'https://www.podomatic.com/embed/html5/episode/10076958?style=small',
+        height: 97,
       }
 
       expect(await extract(value)).toEqual(expected)
