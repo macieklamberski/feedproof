@@ -19,8 +19,13 @@ const rutubeHost = 'rutube.ru'
 
 // `/video/embed/{id}` and `/embed/{id}` both 301 to `/play/embed/{id}`, and the playlist route
 // `/pl/?pl_video={id}` does the same, so all four spellings mint the one the player serves.
-// The Flash player on `video.rutube.ru/{id}` is not one of them: every id it names answers 404
-// on the API today, so the carrier is left alone.
+// The Flash player on `video.rutube.ru/{id}` is not one of them, and the carrier is left alone
+// because the videos are gone rather than because the id cannot be read: it is the same 32
+// character space, so minting from it would work. Every `video.rutube.ru` id in a 1 in 32 sample
+// of the corpus was probed on 2026-09-07, 83 distinct ids across 328 occurrences, and 82 answer
+// 404 on the API. The one that lives is `01857e300b4af7ea778e473eeb77dd79`, so a resolver here
+// would recover one feed in eighty-three and give the other eighty-two the player's own
+// "incorrect link" screen where they now get nothing.
 const embedPathRegex = /^\/(?:play\/embed|video\/embed|embed)\/([^/]+)\/?$/
 const playlistPathRegex = /^\/pl\/?$/
 
