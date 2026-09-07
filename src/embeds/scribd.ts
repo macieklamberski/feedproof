@@ -7,8 +7,8 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // The embed routes are the site's own. `scribdassets.com` served the Flash player and serves the
 // document images beside it, `img/document/{id}/…` among them, so only the Flash resolver takes
 // it: read as an embed those images mint a player over a picture the feed attached.
-const scribdHost = 'scribd.com'
-const scribdFlashHosts = [scribdHost, 'scribdassets.com']
+const scribdHosts = ['scribd.com']
+const scribdFlashHosts = [...scribdHosts, 'scribdassets.com']
 
 // The id is the segment after `embeds`, `document` or `doc`, so a marker word is what selects a
 // document and the length is not. Digits are what stays: they refuse a route word in that
@@ -49,7 +49,7 @@ export const scribdResolveEmbed = (
   link: string,
   element: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrlOnHosts(link, [scribdHost])
+  const parsed = parseUrlOnHosts(link, scribdHosts)
 
   if (!parsed) {
     return
@@ -71,7 +71,7 @@ export const scribdResolveEmbed = (
   return ratio ? { ...result, ratio } : result
 }
 
-export const scribdIframeEmbedResolver = createUrlEmbedResolver([scribdHost], scribdResolveEmbed, {
+export const scribdIframeEmbedResolver = createUrlEmbedResolver(scribdHosts, scribdResolveEmbed, {
   preferResolverSize: true,
 })
 
