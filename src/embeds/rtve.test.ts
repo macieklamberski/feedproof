@@ -94,7 +94,7 @@ describeForEachParser('rtveIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    it('should prefer the ratio over a declared size', async () => {
+    it('should keep a declared size over the default ratio', async () => {
       const value = html`
         <iframe
           src="https://secure-embed.rtve.es/drmn/embed/video/5544716"
@@ -108,7 +108,8 @@ describeForEachParser('rtveIframeEmbedResolver', (parseHtml) => {
         src: 'https://www.rtve.es/drmn/embed/video/5544716/',
         url: 'https://www.rtve.es/v/5544716/',
         thumbnail: 'https://img.rtve.es/v/5544716/',
-        ratio: '100/57.6',
+        width: 300,
+        height: 150,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -147,8 +148,8 @@ describeForEachParser('rtveIframeEmbedResolver', (parseHtml) => {
 describeForEachParser('rtveFlashEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, rtveFlashEmbedResolver)
 
-  // The v2 player names the asset in the swf query. Its declared box is the old player's, so
-  // the ratio takes over.
+  // The v2 player names the asset in the swf query, and its declared box stands: the modern
+  // player fills whatever it is given, so there is no measured shape to prefer over it.
   describe('the v2 player', () => {
     it('should repair the dead player to the modern video embed', async () => {
       const value = html`
@@ -171,7 +172,8 @@ describeForEachParser('rtveFlashEmbedResolver', (parseHtml) => {
         src: 'https://www.rtve.es/drmn/embed/video/309749/',
         url: 'https://www.rtve.es/v/309749/',
         thumbnail: 'https://img.rtve.es/v/309749/',
-        ratio: '100/57.6',
+        width: 425,
+        height: 300,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -219,7 +221,8 @@ describeForEachParser('rtveFlashEmbedResolver', (parseHtml) => {
         src: 'https://www.rtve.es/drmn/embed/video/1081934/',
         url: 'https://www.rtve.es/v/1081934/',
         thumbnail: 'https://img.rtve.es/v/1081934/',
-        ratio: '100/57.6',
+        width: 425,
+        height: 239,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -230,8 +233,6 @@ describeForEachParser('rtveFlashEmbedResolver', (parseHtml) => {
         <object
           data="http://www.rtve.es/swf/4.1.14/RTVEPlayerVideo.swf"
           type="application/x-shockwave-flash"
-          width="425"
-          height="239"
         >
           <param name="flashvars" value="assetID=1551723_es_videos&amp;location=embed_videos" />
           <a href="https://example.com/alacarta/videos/mitos-y-leyendas/aquiles/1551723/">

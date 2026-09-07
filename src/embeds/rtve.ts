@@ -27,12 +27,15 @@ const flashPlayerPathRegex = /^\/swf\/.*\.swf$/i
 // `img.rtve.es/v/{id}/` and `/v/{id}/` answer for a video id, `/a/{id}/` for an audio id, and
 // each 404s for the other kind and for an invented id. No poster route exists for audio.
 //
-// The player fills whatever box it gets, measured at 500 and 1000 pixels wide, so the box is
-// the snippet's to state: RTVE's pads a wrapper to 64% of its width and sets the frame to 90%
-// of that, 57.6% of the width, and that is the ratio stated here, as the snippet spells it. The
-// Flash carriers state the old player's 425x239 or 425x300 instead, so the ratio is preferred.
-// The audio player is a card that fills its box too, and the 37 pixel bar the old snippet states
-// describes the Flash player, so audio states no size and the carrier's stands.
+// The player has no shape of its own. It fills whatever box it gets, measured at 500 and 1000
+// pixels wide and again in a portrait viewport, so neither a ratio nor a fixed height is
+// measurable and the box is the caller's. The `100/57.6` below is not a measurement: it is the
+// arithmetic of RTVE's own share snippet, which pads a wrapper to 64% of its width and sets the
+// frame to 90% of that. It stands only where the carrier declares nothing, which is 59 of the
+// 71 iframe feeds in the census, since those size the frame through that wrapper. Where a
+// carrier does state a box it wins, because the Flash video carriers state 425x239 in 42 of 47
+// feeds and that is 16:9 to within 0.03%. Audio states no size at all and the carrier's bar
+// stands.
 const composeEmbed = (kind: Kind, id: string): EmbedResolverResult => {
   const result: EmbedResolverResult = {
     provider: 'rtve',
@@ -75,9 +78,7 @@ export const rtveResolveEmbed = (
   return { ...composeEmbed(kind, id), title }
 }
 
-export const rtveIframeEmbedResolver = createUrlEmbedResolver(rtveHosts, rtveResolveEmbed, {
-  preferResolverSize: true,
-})
+export const rtveIframeEmbedResolver = createUrlEmbedResolver(rtveHosts, rtveResolveEmbed)
 
 export const rtveFlashResolveEmbed = (
   link: string,
@@ -104,6 +105,4 @@ export const rtveFlashResolveEmbed = (
   return { ...composeEmbed(match[2] === 'audios' ? 'audio' : 'video', match[1]), title }
 }
 
-export const rtveFlashEmbedResolver = createUrlEmbedResolver(rtveHosts, rtveFlashResolveEmbed, {
-  preferResolverSize: true,
-})
+export const rtveFlashEmbedResolver = createUrlEmbedResolver(rtveHosts, rtveFlashResolveEmbed)
