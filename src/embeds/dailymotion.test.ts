@@ -23,6 +23,9 @@ const videoUrls = [
   'https://geo.dailymotion.com/player.html?video=x7tgad0',
   // Share urls append a title slug to the id.
   'https://www.dailymotion.com/video/x7tgad0_some-title',
+  // The locale Dailymotion writes into the path, on the embed route and on the watch page.
+  'https://www.dailymotion.com/embed/fr/video/x7tgad0',
+  'https://www.dailymotion.com/es/video/x7tgad0',
 ]
 
 // Every spelling that names a playlist rather than one video. None may yield a video id, and all
@@ -31,6 +34,9 @@ const playlistUrls = [
   'https://www.dailymotion.com/embed/playlist/x6zqmk',
   'https://www.dailymotion.com/playlist/x6zqmk',
   'https://geo.dailymotion.com/player.html?playlist=x6zqmk',
+  // The locale form loads an empty player, so the id is repaired onto the plain playlist route.
+  'https://www.dailymotion.com/embed/fr/playlist/x6zqmk',
+  'https://www.dailymotion.com/fr/playlist/x6zqmk',
 ]
 
 // The kinds Dailymotion's embed route serves besides a video. Probed 2026-09-07: each of these
@@ -75,6 +81,15 @@ describe('extractDailymotionId', () => {
     'https://dai.ly/x13i',
   ])('should extract a four-character id from %s', (value) => {
     expect(extractDailymotionId(value)).toBe('x13i')
+  })
+
+  // A locale is only stepped over where a route word follows it. Dailymotion's own account
+  // pages sit at the head of the path, so a two-letter handle there names no video.
+  it.each([
+    'https://www.dailymotion.com/fr/dailymotion',
+    'https://www.dailymotion.com/embed/fr/user/dailymotion',
+  ])('should extract no id from %s', (value) => {
+    expect(extractDailymotionId(value)).toBeUndefined()
   })
 
   it('should return undefined for an invalid url', () => {

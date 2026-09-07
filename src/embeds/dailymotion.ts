@@ -26,6 +26,12 @@ const dailymotionHosts = [
 // the second of the two forms the Flash player shipped.
 const pathWords = new Set(['embed', 'video', 'swf'])
 
+// `/embed/{locale}/video/{id}` serves the player and redirects to
+// `geo.dailymotion.com/player.html?video={id}`, checked 2026-09-07 for ar, ca, de, en, es, fr,
+// he, id, it, nl, pl, pt, ro, ru, th, tr and vi, with `ja` and an invented `zz` answering 404.
+// The shape is read rather than that list, which would start refusing the next language added.
+const localeRegex = /^[a-z]{2}$/
+
 // Kinds Dailymotion's embed route serves besides a video, so the segment names a listing or a
 // landing page and never a video. Measured 2026-09-07 against `/embed/{word}/x7tgad0`: only
 // `video` and `playlist` reach the player carrying the id, each word below reaches it with an
@@ -46,6 +52,10 @@ const nonVideoWords = new Set([
   'videos',
   'live',
 ])
+
+const isRouteWord = (segment: string): boolean => {
+  return pathWords.has(segment) || nonVideoWords.has(segment)
+}
 
 // A playlist names no single video, so it is read separately and only once the video readers have
 // found nothing: `/embed/video/{id}?playlist={id}` is a video playing inside one, not a playlist.
@@ -72,7 +82,15 @@ const readPathId = (url: URL, segments: Array<string>): string | undefined => {
 
   let index = 0
 
-  while (index < segments.length && pathWords.has(segments[index])) {
+  // A locale is stepped over only where a route word follows it, so `/embed/fr/video/{id}` reaches
+  // the id while a two-letter account name at the head of a path still names no video. The word
+  // may be a listing one: `/embed/fr/playlist/{id}` loses the playlist and loads an empty player,
+  // so the id has to reach the playlist reader for the working url to be minted.
+  while (
+    index < segments.length &&
+    (pathWords.has(segments[index]) ||
+      (localeRegex.test(segments[index]) && isRouteWord(segments[index + 1])))
+  ) {
     index++
   }
 
