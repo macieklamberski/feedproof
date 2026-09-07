@@ -6,6 +6,10 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 const imgurHosts = ['imgur.com']
 
+// The routes that name an album: the prefix the platform's own script writes, and the gallery
+// path the older share links took.
+const albumRoutes = new Set(['a', 'gallery'])
+
 // Post ids are short alphanumerics. The album form is the same id behind an `a/` prefix, which
 // is how the platform's own script tells the two apart.
 const safePostIdRegex = /^[a-zA-Z0-9]{5,12}$/
@@ -77,8 +81,15 @@ export const imgurResolveEmbed = (url: string): EmbedResolverResult | undefined 
   }
 
   const segments = getPathSegments(parsed)
-  // `/<id>/embed`, `/a/<id>/embed`, and the gallery path the older share links used.
-  const isAlbum = segments[0] === 'a' || segments[0] === 'gallery'
+  const isAlbum = albumRoutes.has(segments[0] ?? '')
+
+  // A first segment on its own is a site page as often as it is a post, so a route word has to
+  // say a post is there: an album prefix, the gallery share path, or the `embed` route the
+  // script's frame ends on. Without one, `imgur.com/upload` reads as a post called `upload`.
+  if (!isAlbum && segments[1] !== 'embed') {
+    return
+  }
+
   const id = isAlbum ? segments[1] : segments[0]
   const post = id ? parsePost(isAlbum ? `${albumPrefix}${id}` : id) : undefined
 
