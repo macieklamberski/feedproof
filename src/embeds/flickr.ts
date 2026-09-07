@@ -86,6 +86,10 @@ const composeShortAlbumUrl = (setId: string): string => {
 // The endpoint renders `width: NaNpx` when it is given no size, so the dimensions travel in the
 // url instead of being left to the reader. These are the size Flickr's own dialog wrote for
 // years, used only when the carrier states nothing.
+//
+// They are an instruction to the endpoint, not a claim about the player: the slideshow renders at
+// whatever box the query names, so there is no rendered height to measure them against, and
+// `preferResolverSize` below keeps the placeholder equal to what the src asks for.
 const defaultWidth = 400
 const defaultHeight = 300
 

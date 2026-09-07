@@ -1,6 +1,6 @@
-import { startsWithAnyOf } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { attr, hasText } from '../../utils/dom.js'
+import { isUrlShaped } from '../../utils/urls.js'
 import { createIframe } from '../../utils/widgets.js'
 
 // note.com ships every embed as an empty <figure> that only its web client hydrates, naming the
@@ -33,7 +33,7 @@ export const convertNoteEmbeds: DomTransform = () => (document) => {
   for (const element of document.querySelectorAll('figure[embedded-service][data-src]')) {
     const source = attr(element, 'data-src')
 
-    if (!source || !startsWithAnyOf(source, ['http://', 'https://'])) {
+    if (!source || !isUrlShaped(source)) {
       continue
     }
 
