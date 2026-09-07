@@ -3,8 +3,12 @@ import { keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// A Tencent Video id is eleven lowercase letters and digits, `g3364rmlrwd`.
-const safeVideoIdRegex = /^[a-z0-9]{11}$/
+// A Tencent Video id is a run of lowercase letters and digits, eleven characters in the wild.
+// The length is not checked: the id is read out of `vid` on the player's own path, so nothing
+// but an id reaches that position and a bound would only refuse the next length Tencent mints.
+// The alphabet stays because it excludes the dot, which is what keeps a media file on the host
+// playable, since the enclosure probe offers every attachment a feed carries to this resolver.
+const safeVideoIdRegex = /^[a-z0-9]+$/
 
 // `v.qq.com` serves the player; the other two served the Flash player.
 const tencentHosts = ['v.qq.com', 'static.video.qq.com', 'imgcache.qq.com']
