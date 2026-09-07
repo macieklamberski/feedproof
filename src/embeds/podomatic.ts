@@ -24,8 +24,11 @@ const html5Heights: Record<string, number> = {
 // what Podomatic's own snippet writes on all 11 frames in the corpus, and it sits between the two.
 const currentHeight = 205
 
-// The two things an html5 frame can name, and the only kinds the resolver mints an id for.
-const html5Kinds = new Set(['episode', 'podcast'])
+// The kind an html5 frame names. Read as a shape rather than enumerated: `episode` and `podcast`
+// are the two PodOmatic answers today, and everything else under `embed/html5` answers 404,
+// including the id position left empty (checked 2026-09-07), so listing them buys nothing the
+// route and the numeric id do not already do.
+const html5KindRegex = /^[a-z]+$/
 
 type Player = { kind: string; id: string; src: string; height: number }
 
@@ -38,7 +41,7 @@ const readPlayer = (url: URL): Player | undefined => {
 
   // `embed/html5/{episode|podcast}/{id}`, with an optional `style` selecting one of three
   // player shapes. The style is kept because it is what chose the height.
-  if (segments[1] === 'html5' && html5Kinds.has(segments[2] ?? '')) {
+  if (segments[1] === 'html5' && html5KindRegex.test(segments[2] ?? '')) {
     const style = url.searchParams.get('style') ?? ''
     const named = style in html5Heights ? style : 'normal'
     const query = named === 'normal' ? '' : `?style=${named}`

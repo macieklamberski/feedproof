@@ -58,8 +58,20 @@ describe('podomaticResolveEmbed', () => {
       expect(podomaticResolveEmbed(value)).toBeUndefined()
     })
 
-    it('should refuse a kind the html5 route does not serve', () => {
+    it('should read a kind PodOmatic has not published yet', () => {
       const value = 'https://www.podomatic.com/embed/html5/channel/2295001'
+      const expected: EmbedResolverResult = {
+        provider: 'podomatic',
+        id: 'channel/2295001',
+        src: 'https://www.podomatic.com/embed/html5/channel/2295001',
+        height: 208,
+      }
+
+      expect(podomaticResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should refuse an id sitting where the kind belongs', () => {
+      const value = 'https://www.podomatic.com/embed/html5/2295001'
 
       expect(podomaticResolveEmbed(value)).toBeUndefined()
     })
