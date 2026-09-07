@@ -4,8 +4,10 @@ import { flashVars, keepIfMatches } from '../utils/dom.js'
 import { splitStrayParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen.
-const safeIdentifierRegex = /^[\w.-]+$/
+// Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen. The Flash
+// config and the stranded `&` spelling reach this as raw text no `URL` has folded, so a segment
+// of dots alone is refused too: it would climb out of every path minted from it.
+const safeIdentifierRegex = /^(?!\.+$)[\w.-]+$/
 
 const archiveHosts = ['archive.org']
 
