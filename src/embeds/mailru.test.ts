@@ -113,6 +113,12 @@ describe('mailruResolveEmbed', () => {
 
       expect(mailruResolveEmbed(value)).toBeUndefined()
     })
+
+    it('should refuse a movieSrc whose segments climb out of the minted path', () => {
+      const value = 'http://img.mail.ru/r/video2/uvpv3.swf?2&movieSrc=mail/../../885&autoplay=0'
+
+      expect(mailruResolveEmbed(value)).toBeUndefined()
+    })
   })
 })
 

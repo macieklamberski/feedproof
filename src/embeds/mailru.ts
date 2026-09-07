@@ -10,11 +10,13 @@ const mailruHosts = ['my.mail.ru', 'api.video.mail.ru', 'img.mail.ru']
 // A video is addressed two ways. The share dialog writes a numeric id, negative for some
 // accounts, `/video/embed/253943806846567285`. The older embed and the Flash player name the
 // same video by its place instead: an account type, the account, an album and a counter,
-// `mail/shels_1991/20/885`, which is also how the watch page is spelled.
+// `mail/shels_1991/20/885`, which is also how the watch page is spelled. `movieSrc` comes off
+// the query or the flashvars decoded, so a segment of dots alone in it would climb out of the
+// minted path and is refused; the path routes cannot carry one, `URL` folds it first.
 const numericPathRegex = /^\/video\/embed\/(-?\d+)\/?$/
 const legacyPathRegex = /^\/videos\/embed\/(.+)\.html$/
 const modernPathRegex = /^\/([a-z]+)\/([\w.-]+)\/video\/embed\/([\w.-]+)\/(\d+)\/?$/
-const subjectRegex = /^([a-z]+)\/([\w.-]+)\/([\w.-]+)\/(\d+)$/
+const subjectRegex = /^([a-z]+)\/((?!\.+\/)[\w.-]+)\/((?!\.+\/)[\w.-]+)\/(\d+)$/
 const flashPlayerPathRegex = /^\/r\/video2\/\w+\.swf$/
 
 const composeNumeric = (videoId: string): EmbedResolverResult => {
