@@ -10,13 +10,18 @@ const captivateHosts = ['captivate.fm']
 // of what this states beyond the provider tag.
 const playerHeight = 200
 
-const embedKinds = ['episode', 'show']
+// The kind is matched on its shape rather than against a list of the two Captivate publishes
+// today, so a kind added later still reaches the player. Nothing else rests on which kind it is:
+// the height is the same for both and the player host answers an identical 1,566-byte shell for
+// every path it does not serve (probed 2026-09-07), so a wrong guess renders what refusing would
+// have rendered.
+const embedKindRegex = /^[a-z]+$/
 
 export const extractCaptivateEmbed = (link: string): { kind: string; id: string } | undefined => {
   const segments = getPathSegments(link)
   const [kind, id] = segments
 
-  if (!kind || !id || !embedKinds.includes(kind) || !uuidRegex.test(id)) {
+  if (!kind || !id || !embedKindRegex.test(kind) || !uuidRegex.test(id)) {
     return
   }
 

@@ -19,6 +19,15 @@ describe('extractCaptivateEmbed', () => {
     expect(extractCaptivateEmbed(value)).toEqual(expected)
   })
 
+  // Nothing downstream reads which kind it is, so a kind Captivate adds later reaches the same
+  // player instead of falling through to a carrier that has lost its height.
+  it('should read a kind the platform has not published yet', () => {
+    const value = `https://player.captivate.fm/clip/${uuid}`
+    const expected = { kind: 'clip', id: uuid }
+
+    expect(extractCaptivateEmbed(value)).toEqual(expected)
+  })
+
   it('should return undefined for an id that is not a uuid', () => {
     const value = 'https://player.captivate.fm/episode/12345'
 
@@ -27,6 +36,12 @@ describe('extractCaptivateEmbed', () => {
 
   it('should return undefined for a captivate url that is not a player', () => {
     const value = 'https://captivate.fm/pricing'
+
+    expect(extractCaptivateEmbed(value)).toBeUndefined()
+  })
+
+  it('should return undefined for a first segment that is not a route word', () => {
+    const value = `https://player.captivate.fm/2024/${uuid}`
 
     expect(extractCaptivateEmbed(value)).toBeUndefined()
   })
