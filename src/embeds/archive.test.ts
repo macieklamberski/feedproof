@@ -24,6 +24,29 @@ describe('extractArchiveIdentifier', () => {
     expect(extractArchiveIdentifier(value)).toBe(expected)
   })
 
+  // The retired BookReader route names the same item, with the book's own file after it.
+  it('should read the identifier from a stream url', () => {
+    const value = 'https://archive.org/stream/hoursofdevotionb00neudrich'
+    const expected = 'hoursofdevotionb00neudrich'
+
+    expect(extractArchiveIdentifier(value)).toBe(expected)
+  })
+
+  it('should read the identifier from a stream url naming a file inside the item', () => {
+    const value = 'https://archive.org/stream/westandunitedand006948mbp/westandunitedand006948mbp'
+    const expected = 'westandunitedand006948mbp'
+
+    expect(extractArchiveIdentifier(value)).toBe(expected)
+  })
+
+  // `download` serves the item's files rather than a viewer of them, so an enclosure on the
+  // same host must not be read as an item.
+  it('should return undefined for a download url', () => {
+    const value = 'https://archive.org/download/nasa_hubble/nasa_hubble.mp3'
+
+    expect(extractArchiveIdentifier(value)).toBeUndefined()
+  })
+
   it('should return undefined for an archive url naming no item', () => {
     const value = 'https://archive.org/about'
 
@@ -113,6 +136,19 @@ describe('archiveResolveEmbed', () => {
 
       expect(archiveResolveEmbed(value)).toEqual(expected)
     })
+
+    it('should send a BookReader stream url to the modern player', () => {
+      const value = 'https://archive.org/stream/hoursofdevotionb00neudrich?ui=embed'
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'hoursofdevotionb00neudrich',
+        src: 'https://archive.org/embed/hoursofdevotionb00neudrich?ui=embed',
+        url: 'https://archive.org/details/hoursofdevotionb00neudrich',
+        thumbnail: 'https://archive.org/services/img/hoursofdevotionb00neudrich',
+      }
+
+      expect(archiveResolveEmbed(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
@@ -124,6 +160,13 @@ describe('archiveResolveEmbed', () => {
 
     it('should return undefined for a url that cannot be parsed', () => {
       const value = 'https://['
+
+      expect(archiveResolveEmbed(value)).toBeUndefined()
+    })
+
+    // The stranded `&` keeps the dot segment out of `URL`'s reach, so nothing has folded it.
+    it('should refuse an identifier that is only dots', () => {
+      const value = 'https://archive.org/embed/..&playlist=1'
 
       expect(archiveResolveEmbed(value)).toBeUndefined()
     })
@@ -255,6 +298,18 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
 
     it('should ignore a player carrying no config', async () => {
       const value = '<embed src="http://www.archive.org/flow/flowplayer.commercial-3.2.1.swf">'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // The config is raw text, so a dot segment in it reaches the mint unfolded.
+    it('should ignore a config whose identifier is only dots', async () => {
+      const value = html`
+        <embed
+          src="http://www.archive.org/flow/flowplayer.commercial-3.2.1.swf"
+          flashvars='config={"playlist":[{"url":"http://www.archive.org/download/../clip.mp4"}]}'
+        />
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
