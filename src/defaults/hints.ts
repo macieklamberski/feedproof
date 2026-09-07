@@ -8,6 +8,7 @@ import { buzzsproutRenderHint } from '../embeds/buzzsprout.js'
 import { captivateRenderHint } from '../embeds/captivate.js'
 import { codesandboxRenderHint } from '../embeds/codesandbox.js'
 import { deezerRenderHint } from '../embeds/deezer.js'
+import { flourishRenderHint } from '../embeds/flourish.js'
 import { instagramRenderHint } from '../embeds/instagram.js'
 import { kalturaRenderHint } from '../embeds/kaltura.js'
 import { mastodonRenderHint } from '../embeds/mastodon.js'
@@ -44,6 +45,7 @@ export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
   captivateRenderHint,
   codesandboxRenderHint,
   deezerRenderHint,
+  flourishRenderHint,
   instagramRenderHint,
   kalturaRenderHint,
   mastodonRenderHint,

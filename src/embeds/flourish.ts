@@ -1,6 +1,7 @@
-import { getPathSegments, isHostOf, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { getPathSegments, isHostOf, isPlainObject, parseUrl } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
+import { readPixels } from '../utils/hints.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const flourishHosts = ['flo.uri.sh', 'public.flourish.studio']
@@ -94,3 +95,32 @@ export const flourishIframeEmbedResolver = createUrlEmbedResolver(
   flourishHosts,
   flourishResolveEmbed,
 )
+
+// The chart posts its rendered height unasked, as a JSON string and not an object, so the payload
+// is parsed before it is read. It settles rather than arriving final: 400 and then 324.0625 on one
+// chart (2026-09-07), so the value can be fractional and the last message is the one to draw.
+export const readFlourishHeight = (data: unknown): number | undefined => {
+  if (typeof data !== 'string') {
+    return
+  }
+
+  try {
+    const message: unknown = JSON.parse(data)
+
+    if (isPlainObject(message) && message.sender === 'Flourish') {
+      return readPixels(message.height)
+    }
+  } catch {}
+}
+
+// `auto=1` is what switches the height reporting on: without it the frame posts nothing at all.
+// It stays off the minted `src` because it also changes what the chart draws. Under `auto=1` the
+// chart lays itself out at the height it wants and leaves the box to the parent, so at 600x340 it
+// clips the axis labels and the credit line that the bare url fits (measured 2026-09-08).
+//
+// A story's `#play-on-load` is a fragment, not a query parameter, so there is no `autoplayParams`.
+export const flourishRenderHint: EmbedRenderHint = {
+  provider: 'flourish',
+  params: { auto: '1' },
+  readHeight: readFlourishHeight,
+}
