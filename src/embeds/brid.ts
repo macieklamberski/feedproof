@@ -82,7 +82,10 @@ export const bridEmbedResolver = createMarkupEmbedResolver(
 
     return {
       provider: 'brid',
-      id: `${videoId}/${playerId}`,
+      // The player scopes the video the way a partner scopes a Kaltura entry, so it leads the
+      // id, which is the order every other two-part id in the tree uses. The minted url keeps
+      // Brid's own `/video/{video}/{player}` order, which is the platform's, not ours.
+      id: `${playerId}/${videoId}`,
       src: `https://services.brid.tv/services/iframe/video/${videoId}/${playerId}`,
       ...(title && { title: decodeTitle(title) }),
       ...readSize(config.match(widthRegex)?.[1], config.match(heightRegex)?.[1]),
