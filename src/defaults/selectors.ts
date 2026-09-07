@@ -137,6 +137,9 @@ export const defaultNonContentSelectors = [
   // survives is the mount's own fallback, a boilerplate link to the entry form.
   'a.rcptr', // Rafflecopter giveaway mount, a link reading "a Rafflecopter giveaway".
   'a.rafl', // The same mount as Rafflecopter's earlier loader wrote it.
+  // Gleam competition mount. The loader would replace it with the entry form; without it the
+  // anchor survives as a bare link named after the competition.
+  'a.e-widget',
 
   // Platform UI chrome and non-rendered scaffolding.
   '.image-link-expand', // Substack restack/zoom buttons next to images.
