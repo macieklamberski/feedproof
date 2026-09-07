@@ -143,8 +143,8 @@ describeForEachParser('tedEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // TED cut the ad key off at 55 characters, so a slug that long is a prefix of the real one
-    // and the player 404s on it. Refusing leaves the generic placeholder, which is honest.
+    // A slug sitting at the truncation cap is a prefix of the real one two times in three, and
+    // refusing it leaves the generic placeholder rather than a TED one whose link does not serve.
     it('should refuse a slug sitting at the truncation cap', async () => {
       const value = html`
         <embed
