@@ -41,6 +41,7 @@ import { audioboomEmbedResolver, audioboomPlayerEmbedResolver } from '../embeds/
 import { audiomackEmbedResolver } from '../embeds/audiomack.js'
 import { aushaEmbedResolver } from '../embeds/ausha.js'
 import { bandcampEmbedResolver } from '../embeds/bandcamp.js'
+import { bbcIframeEmbedResolver } from '../embeds/bbc.js'
 import { bitchuteEmbedResolver } from '../embeds/bitchute.js'
 import { bloggerEmbedResolver } from '../embeds/blogger.js'
 import { blubrryEmbedResolver } from '../embeds/blubrry.js'
@@ -277,6 +278,7 @@ const embedResolvers: Array<EmbedResolver> = [
   archiveFlashEmbedResolver,
   arteEmbedResolver,
   bandcampEmbedResolver,
+  bbcIframeEmbedResolver,
   bitchuteEmbedResolver,
   bloggerEmbedResolver,
   blueskyBlockquoteEmbedResolver,
