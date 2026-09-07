@@ -83,8 +83,15 @@ const readPageKind = (segments: Array<string>): string | undefined => {
 // there it is a `secret_token` parameter of its own.
 const secretTokenRegex = /^s-[\w-]+$/
 
-// The reference hosts are not pages. They share the site's domain, so a page read has to say so.
-const referenceHostRegex = /^api(?:-v2)?\./
+// None of these is a page. They share the site's domain, so a page read has to say so: `api`
+// and `api-v2` serve the track references, and `player` served the Flash swf, whose own path
+// would otherwise read as a user handle and mint `soundcloud.com/player.swf` as somebody's page.
+const nonPageHostRegex = /^(?:api(?:-v2)?|player)\./
+
+// `player.soundcloud.com` has no DNS record at all (2026-09-06), so a carrier still pointing at
+// `player.swf` frames a host that cannot answer. It takes the same `url=` value the widget does,
+// so what it names survives and moving that value onto the widget repairs the whole embed.
+const flashPlayerHostRegex = /^player\./
 
 // `on.soundcloud.com/{code}` is the share shortener, and the code is a short id rather than a
 // permalink. Reading it as a path names `soundcloud.com/{code}`, which does not exist, so the
@@ -178,7 +185,7 @@ export const soundcloudResolveEmbed = (
     reference || streamTrackId ? undefined : parseUrlOnHosts(inner ?? src, soundcloudHosts)
   const shortLink = page && shortLinkHostRegex.test(page.hostname) ? page : undefined
   const pageSegments =
-    page && !shortLink && !referenceHostRegex.test(page.hostname) ? getPathSegments(page) : []
+    page && !shortLink && !nonPageHostRegex.test(page.hostname) ? getPathSegments(page) : []
   const secretToken = pageSegments.find((segment) => secretTokenRegex.test(segment))
   const permalink = pageSegments.filter((segment) => segment !== secretToken)
   const pageKind = readPageKind(permalink)
@@ -196,6 +203,18 @@ export const soundcloudResolveEmbed = (
     // the code names is unknown until it is followed, so the placeholder gets the player and no
     // canonical url of its own.
     result.src = composeWidgetUrl(shortLink.href)
+  }
+
+  // The Flash carrier's own url cannot load, so whatever the reads above made of it, the
+  // placeholder points at the widget instead. The value moves across as the feed wrote it,
+  // reference or page url alike, private tracks included: their `secret_token` rides inside it.
+  // A swf carrying no `url=` names nothing that could be moved, so it is left alone.
+  if (flashPlayerHostRegex.test(parsed?.hostname ?? '')) {
+    if (!inner) {
+      return
+    }
+
+    result.src = composeWidgetUrl(inner)
   }
 
   // Nothing here names a track and the url is the audio itself, so the enclosure stays a file

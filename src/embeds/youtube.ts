@@ -145,6 +145,13 @@ const safePlaylistChannelIdRegex = /^[a-zA-Z0-9_-]+$/
 // same id without the prefix 404s.
 const legacyPlaylistIdRegex = /^[0-9A-F]{16}$/
 
+// The shape of the frame, not of the video. YouTube serves every embed through the same
+// landscape player and fits the clip inside it, so a vertical Short gets the same box as a film:
+// checked 2026-09-07 on `Kp5HTcGZsx0`, whose original-aspect still (`oardefault.jpg`) is
+// 1080x1920 while its `maxresdefault.jpg` and `hq720.jpg` are both 1280x720 and oEmbed
+// recommends 200x113 for it. That is why the ratio outranks the carrier: whatever box a
+// publisher wrote, the player they get is 16:9, and a portrait box would reserve height the
+// frame never fills.
 const playerRatio = '16/9'
 
 // A playlist or channel live embed is not a single video: it has no video id, no single poster

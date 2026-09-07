@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, find, text } from '../utils/dom.js'
+import { attr, find, keepIfMatches, text } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -20,6 +20,12 @@ const wrapperIdRegex = /^__ss[e_]?(\d{4,12})$/
 
 // Two players, the presentation one and the document one, sharing a query.
 const flashPlayerPathRegex = /\/swf\/(?:ssplayer\d?|doc_player)\.swf$/
+
+// The owner and the slug come off the swf query decoded, and both are written into the deck's
+// page url as path segments, so a separator or a dot segment in either would let the feed pick
+// the path. The class is the url-safe alphabet; the lookahead refuses `.` and `..`, which the
+// class would otherwise admit.
+const safePageSegmentRegex = /^(?!\.+$)[A-Za-z0-9_.-]+$/
 
 const composeEmbed = (deck: string, url?: string, title?: string): EmbedResolverResult => {
   return {
@@ -120,8 +126,8 @@ export const slideshareFlashResolveEmbed = (
   // The swf query names the deck's owner and slug, which compose the same page the wrapper
   // links to. It is the fallback for a snippet that kept the player and dropped the wrapper's
   // anchor.
-  const account = parsed.searchParams.get('userName')
-  const slug = parsed.searchParams.get('stripped_title')
+  const account = keepIfMatches(parsed.searchParams.get('userName'), safePageSegmentRegex)
+  const slug = keepIfMatches(parsed.searchParams.get('stripped_title'), safePageSegmentRegex)
   const composed = account && slug ? `https://www.slideshare.net/${account}/${slug}` : undefined
 
   return composeEmbed(deck, url ?? composed, title || undefined)
