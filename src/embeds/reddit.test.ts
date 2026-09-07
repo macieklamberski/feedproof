@@ -333,6 +333,35 @@ describe('redditResolveEmbed', () => {
     expect(redditResolveEmbed(value)).toEqual(expected)
   })
 
+  // Reddit's post counter started at one base36 character, so the oldest permalinks a feed still
+  // links to are two characters long.
+  it('should resolve a two-character post id', () => {
+    const value = 'https://www.reddit.com/r/Birdwatching/comments/mn/'
+    const expected: EmbedResolverResult = {
+      provider: 'reddit',
+      id: 'r/Birdwatching/comments/mn',
+      src: 'https://embed.reddit.com/r/Birdwatching/comments/mn/',
+      url: 'https://www.reddit.com/r/Birdwatching/comments/mn/',
+      publisher: 'r/Birdwatching',
+    }
+
+    expect(redditResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should resolve a subreddit name longer than Reddit lets anyone pick today', () => {
+    const value =
+      'https://www.reddit.com/r/aVeryLongSubredditNameLongerThanReddit/comments/1x9y8z7/heron/'
+    const expected: EmbedResolverResult = {
+      provider: 'reddit',
+      id: 'r/aVeryLongSubredditNameLongerThanReddit/comments/1x9y8z7',
+      src: 'https://embed.reddit.com/r/aVeryLongSubredditNameLongerThanReddit/comments/1x9y8z7/',
+      url: 'https://www.reddit.com/r/aVeryLongSubredditNameLongerThanReddit/comments/1x9y8z7/',
+      publisher: 'r/aVeryLongSubredditNameLongerThanReddit',
+    }
+
+    expect(redditResolveEmbed(value)).toEqual(expected)
+  })
+
   it('should drop the query naming the embedding page', () => {
     const value =
       'https://www.redditmedia.com/r/Birdwatching/comments/1x9y8z7/?ref_source=embed&ref=share&embed=true'

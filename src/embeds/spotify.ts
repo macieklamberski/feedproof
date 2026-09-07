@@ -59,8 +59,8 @@ type SubstackItemAttributes = {
   description?: string
 }
 
-const spotifyHost = 'spotify.com'
-const spotifyImageHost = 'scdn.co'
+const spotifyHosts = ['spotify.com']
+const spotifyImageHosts = ['scdn.co']
 
 // The card prints the item's type where a description would go, so that field usually repeats
 // what the id already says.
@@ -83,7 +83,7 @@ const readSubstackItem = (element: Element): Partial<EmbedResolverResult> => {
     author: attributes.subtitle,
     description:
       description && !typeLabels.has(description.toLowerCase()) ? description : undefined,
-    thumbnail: parseUrlOnHosts(attributes.image, spotifyImageHost) ? attributes.image : undefined,
+    thumbnail: parseUrlOnHosts(attributes.image, spotifyImageHosts) ? attributes.image : undefined,
   }
 }
 
@@ -106,7 +106,7 @@ export const spotifyResolveEmbed = (
   url: string,
   element?: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrlOnHosts(url, spotifyHost)
+  const parsed = parseUrlOnHosts(url, spotifyHosts)
 
   if (!parsed) {
     return
@@ -119,7 +119,7 @@ export const spotifyResolveEmbed = (
   // resource's id under another's type.
   const pair =
     readPathPair(parsed) ??
-    (legacy ? [legacy[1], legacy[2]] : readPathPair(parseUrlOnHosts(uri, spotifyHost)))
+    (legacy ? [legacy[1], legacy[2]] : readPathPair(parseUrlOnHosts(uri, spotifyHosts)))
   const [type, id] = pair ?? []
 
   if (!type || !id || !(type in spotifyHeights) || !safeIdRegex.test(id)) {
@@ -144,7 +144,7 @@ export const spotifyResolveEmbed = (
   }
 }
 
-export const spotifyEmbedResolver = createUrlEmbedResolver([spotifyHost], spotifyResolveEmbed)
+export const spotifyEmbedResolver = createUrlEmbedResolver(spotifyHosts, spotifyResolveEmbed)
 
 // No play request. The player posts `{ type: 'ready' }` and takes a `{ command: 'play' }` object,
 // answering that it is playing and buffering, but loaded in Chrome by a click the audio never

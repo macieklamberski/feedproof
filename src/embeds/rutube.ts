@@ -15,7 +15,7 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // ten-trillion shape.
 const safeVideoIdRegex = /^(?=[0-9a-f]*\d)[0-9a-f]+$/
 
-const rutubeHost = 'rutube.ru'
+const rutubeHosts = ['rutube.ru']
 
 // `/video/embed/{id}` and `/embed/{id}` both 301 to `/play/embed/{id}`, and the playlist route
 // `/pl/?pl_video={id}` does the same, so all four spellings mint the one the player serves.
@@ -57,7 +57,7 @@ export const rutubeResolveEmbed = (
   url: string,
   element?: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrlOnHosts(url, rutubeHost)
+  const parsed = parseUrlOnHosts(url, rutubeHosts)
 
   if (!parsed) {
     return
@@ -78,4 +78,4 @@ export const rutubeResolveEmbed = (
   return title ? { ...result, title } : result
 }
 
-export const rutubeEmbedResolver = createUrlEmbedResolver([rutubeHost], rutubeResolveEmbed)
+export const rutubeEmbedResolver = createUrlEmbedResolver(rutubeHosts, rutubeResolveEmbed)
