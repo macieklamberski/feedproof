@@ -11,16 +11,17 @@ const sizeRegex = /^size=([a-z0-9_]+)$/
 // would hand a publisher who chose `large` a short wide bar instead. Preserved in the minted
 // url, and used for the height the markup may not state.
 //
-// Measured 2026-09-07 in Chrome against album 1578579597 (8 tracks), track 1637967854, each
-// preset framed at 350 wide and again at 700, with the frame first at the height below and then
-// at 1200. No preset tracks its width, and only `large` stretches to the frame, its tracklist
-// scrolling inside whatever it gets; the rest lay out to a height of their own and leave the
+// Measured 2026-09-07 in Chrome against album 1578579597 (8 tracks), track 1637967854, each preset
+// framed at 350 wide and again at 700, with the frame first at the height below and then at 1200.
+// No preset tracks its width, and the four that carry a tracklist stretch to the frame, scrolling
+// their rows inside whatever they get; the rest lay out to a height of their own and leave the
 // remainder blank. `medium` 120, `small` 42 and `venti` 100 match to the pixel. `grande` paints
-// 100, its controls overlapping a 100-square artwork. `grande2` and `grande3` paint 318 and 376
-// for this album, both tracklist-long, inside 355 and 415. `short` paints its play and info row
-// inside 23 and shows a second row when given 42. `tall2` paints 493 for this album against 450,
-// the tracklist running past the frame. Every one of them fires only where the carrier states no
-// size, since `decideSize` takes the carrier's first.
+// 100, its controls overlapping a 100-square artwork. `grande2` and `grande3` paint 318 and 376 for
+// this album, both tracklist-long, inside 355 and 415. `short` paints its play and info row inside
+// 23 and shows a second row when given 42. `tall2` ends its chrome at 320 whatever the width, and
+// whatever the release: albums of 2, 8 and 20 tracks all put the tracklist at 325 and scroll the
+// rows inside it, so 450 stands for a long release as well as a short one. Every one of them fires
+// only where the carrier states no size, since `decideSize` takes the carrier's first.
 //
 // There is no `tall_album` or `tall_track` preset. Bandcamp spells one `size=tall`, and asking
 // for either of those two serves the `venti` fallback instead, so keying the map by them meant

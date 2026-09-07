@@ -64,6 +64,20 @@ describe('extractBandcampRelease', () => {
   })
 })
 
+// Every preset name Bandcamp serves, paired with the height it lays out to. Each row is
+// [preset, height]; `tall` is missing because its height is keyed on the release instead.
+const presetCases: Array<[string, number]> = [
+  ['venti', 100],
+  ['grande', 100],
+  ['grande2', 355],
+  ['grande3', 415],
+  ['large', 470],
+  ['medium', 120],
+  ['small', 42],
+  ['short', 23],
+  ['tall2', 450],
+]
+
 describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, bandcampEmbedResolver)
 
@@ -171,6 +185,20 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it.each(presetCases)('should state the height of the %s preset', async (preset, height) => {
+      const value = html`
+        <iframe src="https://bandcamp.com/EmbeddedPlayer/album=42/size=${preset}/"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'bandcamp',
+        id: 'album/42',
+        src: `https://bandcamp.com/EmbeddedPlayer/album=42/size=${preset}/`,
+        height,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should size a tall album player by its own layout', async () => {
       const value = html`
         <iframe src="https://bandcamp.com/EmbeddedPlayer/album=42/size=tall/"></iframe>
@@ -209,6 +237,21 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
         id: 'track/99',
         src: 'https://bandcamp.com/EmbeddedPlayer/album=42/track=99/size=tall/',
         height: 295,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // A name Bandcamp does not serve, which it answers with the `venti` document. Reading a
+    // height off it would state the fallback's pixels for a player the publisher never chose.
+    it('should state no height for a preset Bandcamp does not serve', async () => {
+      const value = html`
+        <iframe src="https://bandcamp.com/EmbeddedPlayer/album=42/size=tall3/"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'bandcamp',
+        id: 'album/42',
+        src: 'https://bandcamp.com/EmbeddedPlayer/album=42/size=tall3/',
       }
 
       expect(await extract(value)).toEqual(expected)
