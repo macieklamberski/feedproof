@@ -21,8 +21,27 @@ describe('zencastrResolveEmbed', () => {
     expect(zencastrResolveEmbed(value)).toEqual(expected)
   })
 
+  it('should build the placeholder from the short host that forwards to the embed', () => {
+    const value = 'https://zen.ai/embed/6nm7PLty'
+    const expected: EmbedResolverResult = {
+      provider: 'zencastr',
+      id: '6nm7PLty',
+      src: 'https://zencastr.com/embed/6nm7PLty',
+      ratio: '1/1',
+    }
+
+    expect(zencastrResolveEmbed(value)).toEqual(expected)
+  })
+
   it('should return undefined for a page that is not the embed', () => {
     const value = 'https://zencastr.com/pricing'
+
+    expect(zencastrResolveEmbed(value)).toBeUndefined()
+  })
+
+  // The short host forwards the whole site, so Zencastr's vanity show links reach the resolver too.
+  it('should return undefined for a show link on the short host', () => {
+    const value = 'https://zen.ai/engineeringourfuture'
 
     expect(zencastrResolveEmbed(value)).toBeUndefined()
   })
@@ -164,6 +183,27 @@ describeForEachParser('zencastr through the pipeline', (parseHtml) => {
         data-enclosure=""
         controls
         src="https://redirect.zencastr.com/r/episode/64de3da78e19f12c49e2fd18/audio-files/6450f854d339593de5629577/ef3d2453-c708-476d-bf9b-4f5749ad3098.mp3"
+      ></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+
+  // A census feed serves its episodes from `redirect.zen.ai`, the same files behind the short host.
+  it('should leave an audio enclosure on the short host playable', async () => {
+    const enclosures = [
+      {
+        url: 'https://redirect.zen.ai/r/episode/64de3da78e19f12c49e2fd18/audio-files/6450f854d339593de5629577/ef3d2453-c708-476d-bf9b-4f5749ad3098.mp3',
+        type: 'audio/mpeg',
+      },
+    ]
+
+    const expected = html`
+      <audio
+        data-enclosure=""
+        controls
+        src="https://redirect.zen.ai/r/episode/64de3da78e19f12c49e2fd18/audio-files/6450f854d339593de5629577/ef3d2453-c708-476d-bf9b-4f5749ad3098.mp3"
       ></audio>
       <p>Body</p>
     `

@@ -7,7 +7,9 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // Eight url-safe base64 characters, in all 179 embeds the corpus carries.
 const safeIdRegex = /^[A-Za-z0-9_-]{8}$/
 
-const zencastrHosts = ['zencastr.com']
+// `zen.ai` 301s every zencastr.com path, the episode files on `redirect.zen.ai` included, so the
+// route check below is what keeps an enclosure playable.
+const zencastrHosts = ['zencastr.com', 'zen.ai']
 
 // The embed page sets its `aspect-ratio` from the episode's own `videoResolution` and falls back to
 // a hardcoded `1/1`, and both come out square: all 68 episodes publishers embed are, and the only
