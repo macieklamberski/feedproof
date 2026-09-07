@@ -1,10 +1,8 @@
 import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { parseUrlOnHosts, uuidRegex } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
-
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 // The loader is served from `api.podcache.net` and the player it builds from `redcircle.com`, on
 // the same path, so one reader covers both.
