@@ -1,5 +1,6 @@
 import { parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
 import { audioFileRegex, videoFileRegex } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -71,6 +72,13 @@ export const megaphoneResolveEmbed = (url: string): EmbedResolverResult | undefi
 
 export const megaphoneEmbedResolver = createUrlEmbedResolver(megaphoneHosts, megaphoneResolveEmbed)
 
-// No play request. The player speaks player.js and takes its `play`, flipping to its playing
-// state, but loaded in Chrome by a click the audio never started from it. Nothing to send until
-// it does.
+// The player takes no query to start; it speaks player.js and posts its own `ready` unasked,
+// listing `play` among the events it takes (2026-09-07).
+//
+// No height is read. The player posts an `iframe.resize` too, but the number in it is fixed at
+// mount from the kind in the query, so it only ever repeats the height `embedKinds` states above.
+export const megaphoneRenderHint: EmbedRenderHint = {
+  provider: 'megaphone',
+  isReady: isPlayerJsReady,
+  requestPlay: playerJsPlayRequest,
+}

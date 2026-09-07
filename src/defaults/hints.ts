@@ -9,17 +9,20 @@ import { captivateRenderHint } from '../embeds/captivate.js'
 import { codesandboxRenderHint } from '../embeds/codesandbox.js'
 import { instagramRenderHint } from '../embeds/instagram.js'
 import { mastodonRenderHint } from '../embeds/mastodon.js'
+import { megaphoneRenderHint } from '../embeds/megaphone.js'
 import { mixcloudRenderHint } from '../embeds/mixcloud.js'
 import { notecomRenderHint } from '../embeds/notecom.js'
 import { omnyRenderHint } from '../embeds/omny.js'
 import { podbeanRenderHint } from '../embeds/podbean.js'
 import { podigeeRenderHint } from '../embeds/podigee.js'
 import { redditRenderHint } from '../embeds/reddit.js'
+import { simplecastRenderHint } from '../embeds/simplecast.js'
 import { sketchfabRenderHint } from '../embeds/sketchfab.js'
 import { soundcloudRenderHint } from '../embeds/soundcloud.js'
 import { spreakerRenderHint } from '../embeds/spreaker.js'
 import { tedRenderHint } from '../embeds/ted.js'
 import { telegramRenderHint } from '../embeds/telegram.js'
+import { transistorRenderHint } from '../embeds/transistor.js'
 import { twitterRenderHint } from '../embeds/twitter.js'
 import { videopressRenderHint } from '../embeds/videopress.js'
 import { vimeoRenderHint } from '../embeds/vimeo.js'
@@ -42,17 +45,20 @@ export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
   codesandboxRenderHint,
   instagramRenderHint,
   mastodonRenderHint,
+  megaphoneRenderHint,
   mixcloudRenderHint,
   notecomRenderHint,
   omnyRenderHint,
   podbeanRenderHint,
   podigeeRenderHint,
   redditRenderHint,
+  simplecastRenderHint,
   sketchfabRenderHint,
   soundcloudRenderHint,
   spreakerRenderHint,
   tedRenderHint,
   telegramRenderHint,
+  transistorRenderHint,
   twitterRenderHint,
   videopressRenderHint,
   vimeoRenderHint,

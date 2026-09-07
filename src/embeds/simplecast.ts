@@ -1,5 +1,6 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
 import { uuidRegex } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -67,6 +68,13 @@ export const simplecastEmbedResolver = createUrlEmbedResolver(
   simplecastResolveEmbed,
 )
 
-// No play request. The player speaks player.js and takes its `play`, flipping to its playing
-// state, but loaded in Chrome by a click the audio never started from it. Nothing to send until
-// it does.
+// The player takes no query to start; it speaks player.js and posts its own `ready` unasked
+// (2026-09-07).
+//
+// No height is read. The player posts an `iframe.resize` too, but the height in it is hardcoded
+// to the one every iframe already states above.
+export const simplecastRenderHint: EmbedRenderHint = {
+  provider: 'simplecast',
+  isReady: isPlayerJsReady,
+  requestPlay: playerJsPlayRequest,
+}

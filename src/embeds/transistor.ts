@@ -1,5 +1,6 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Neither length is checked. `/e/` and `/s/` are the only routes read here and Transistor serves
@@ -87,6 +88,13 @@ export const transistorEmbedResolver = createUrlEmbedResolver(
   transistorResolveEmbed,
 )
 
-// No play request. The player speaks player.js and takes its `play`, flipping to its playing
-// state, but loaded in Chrome by a click the audio never started from it. Nothing to send until
-// it does.
+// The player takes no query to start; it speaks player.js and posts its own `ready` unasked
+// (2026-09-07).
+//
+// Its `play` is a toggle rather than a command, so a request sent twice would pause the episode
+// it just started. A reader posts the request once, on the ready message.
+export const transistorRenderHint: EmbedRenderHint = {
+  provider: 'transistor',
+  isReady: isPlayerJsReady,
+  requestPlay: playerJsPlayRequest,
+}
