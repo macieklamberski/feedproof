@@ -9,10 +9,11 @@ const safeIdRegex = /^[A-Za-z0-9_-]{8}$/
 
 const zencastrHosts = ['zencastr.com']
 
-// The player is a square that tracks its width: the video sits in an `aspect-ratio: 1080 / 1080`
-// box at `max-width: 100%` (Chrome, 2026-09-06), and Zencastr's own snippet frames it at 480 by
-// 480. A ratio keeps that shape at any width, which is why it is preferred over the snippet's
-// pixels.
+// The embed page takes its `aspect-ratio` from the episode's own `videoResolution` and falls back
+// to the square cover art where there is none, so the shape is per episode and landscape ones
+// exist: `embed/gH4MR9sB` is 1920 by 1080. Nothing in the eight character id says which, so this
+// states the square the snippet frames every episode at and leaves the rest to enrichment. It is
+// preferred over that snippet's `width: 480px`, one vendor constant repeated on every carrier.
 const playerRatio = '480/480'
 
 // The embed page answers 200 for a real episode and 404 for an invented one (2026-09-06).
