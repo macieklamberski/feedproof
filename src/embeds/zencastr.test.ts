@@ -33,6 +33,18 @@ describe('zencastrResolveEmbed', () => {
     expect(zencastrResolveEmbed(value)).toEqual(expected)
   })
 
+  it('should build the placeholder from an id longer than the eight characters minted today', () => {
+    const value = 'https://zencastr.com/embed/cK98nMcr9'
+    const expected: EmbedResolverResult = {
+      provider: 'zencastr',
+      id: 'cK98nMcr9',
+      src: 'https://zencastr.com/embed/cK98nMcr9',
+      ratio: '1/1',
+    }
+
+    expect(zencastrResolveEmbed(value)).toEqual(expected)
+  })
+
   it('should return undefined for a page that is not the embed', () => {
     const value = 'https://zencastr.com/pricing'
 
@@ -46,8 +58,14 @@ describe('zencastrResolveEmbed', () => {
     expect(zencastrResolveEmbed(value)).toBeUndefined()
   })
 
-  it('should return undefined for an id of the wrong shape', () => {
-    const value = 'https://zencastr.com/embed/an-episode-slug'
+  it('should return undefined for an embed path going on past the id', () => {
+    const value = 'https://zencastr.com/embed/cK98nMcr/transcript'
+
+    expect(zencastrResolveEmbed(value)).toBeUndefined()
+  })
+
+  it('should return undefined for an id holding a dot', () => {
+    const value = 'https://zencastr.com/embed/cK98nMcr.mp3'
 
     expect(zencastrResolveEmbed(value)).toBeUndefined()
   })

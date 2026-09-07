@@ -4,8 +4,11 @@ import { attr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// Eight url-safe base64 characters, in all 179 embeds the corpus carries.
-const safeIdRegex = /^[A-Za-z0-9_-]{8}$/
+// Url-safe base64, which is what the embed path takes: a dot or a slash marks a file or a deeper
+// route, and the `embed` route serves neither. Not the eight characters every corpus embed has,
+// since a wrong id fails the same whether it is minted or passed through, and a bound would
+// refuse the next id space.
+const safeIdRegex = /^[A-Za-z0-9_-]+$/
 
 // `zen.ai` 301s every zencastr.com path, the episode files on `redirect.zen.ai` included, so the
 // route check below is what keeps an enclosure playable.
