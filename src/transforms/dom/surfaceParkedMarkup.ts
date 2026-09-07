@@ -1,14 +1,19 @@
 import type { DomTransform } from '../../types.js'
+import { isUrlShaped } from '../../utils/urls.js'
 
-const httpUrlRegex = /^https?:\/\//i
+// An address that names its own host: absolute, or protocol-relative and given its scheme by
+// `resolveRelativeUrls` below. A relative path is deliberately not matched, because this runs
+// over every attribute on every recovered element and `class`, `style` and the rest would read
+// as addresses.
+const statedUrlRegex = /^(?:https?:)?\/\//i
 
 // Whether the recovered markup names an address of its own, in any attribute. Anything the
-// downstream passes can resolve, link or placeholder is an http(s) URL in some attribute, and
-// which attribute it is differs per platform, so every one is read instead of a listed few.
+// downstream passes can resolve, link or placeholder is a URL in some attribute, and which
+// attribute it is differs per platform, so every one is read instead of a listed few.
 const hasStatedUrl = (holder: Element): boolean => {
   for (const element of holder.querySelectorAll('*')) {
     for (const attribute of element.attributes) {
-      if (httpUrlRegex.test(attribute.value)) {
+      if (statedUrlRegex.test(attribute.value)) {
         return true
       }
     }
@@ -53,7 +58,7 @@ export const surfaceParkedMarkup: DomTransform = () => (document) => {
     // itself stripped of every link, that address is the only thing left to reach the post by.
     const url = container.getAttribute('data-url')
 
-    if (url && httpUrlRegex.test(url) && !hasStatedUrl(holder)) {
+    if (url && isUrlShaped(url) && !hasStatedUrl(holder)) {
       const link = document.createElement('a')
 
       link.setAttribute('href', url)
