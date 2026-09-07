@@ -1,6 +1,6 @@
-import { startsWithAnyOf } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { attr } from '../../utils/dom.js'
+import { isUrlShaped } from '../../utils/urls.js'
 
 // Drupal's media module frames a remote video through the site's own oEmbed route,
 // `/media/oembed?url={page url}&max_width=0&max_height=0&hash=…`, which renders the provider's
@@ -15,7 +15,12 @@ export const unwrapDrupalOembedIframes: DomTransform = () => (document) => {
     const query = attr(iframe, 'src')?.split('?')[1] ?? ''
     const url = new URLSearchParams(query).get('url')
 
-    if (!url || !startsWithAnyOf(url, ['http://', 'https://'])) {
+    // Only that the value is url-shaped, never that it carries a scheme. This runs long before
+    // `resolveRelativeUrls`, which gives a protocol-relative url a scheme and resolves a
+    // feed-relative one against the base, and before `neutralizeUnsafeUrls`, which is what
+    // refuses a dangerous one. Testing for `http` here would refuse `//provider.test/x` and
+    // `/node/12`, both of which those passes turn into the page this frame is meant to name.
+    if (!url || !isUrlShaped(url)) {
       continue
     }
 

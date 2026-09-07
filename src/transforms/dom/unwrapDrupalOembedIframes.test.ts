@@ -34,12 +34,37 @@ describeForEachParser('unwrapDrupalOembedIframes', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
-  it('should leave a route whose url is not an http url', async () => {
+  it('should leave a route whose url parameter is not url-shaped', async () => {
     const value = html`
-      <iframe src="https://www.example.com/media/oembed?url=javascript%3Aalert(1)&amp;hash=abc"></iframe>
+      <iframe src="https://www.example.com/media/oembed?url=just some words&amp;hash=abc"></iframe>
     `
 
     expect(await transform(value)).toEqualHtml(value)
+  })
+
+  // A scheme is not tested here, because `neutralizeUnsafeUrls` is what refuses one and it runs
+  // over every url in the document rather than this one attribute. The pipeline case below shows
+  // where a dangerous scheme actually lands.
+  it('should point the iframe at a protocol-relative page url', async () => {
+    const value = html`
+      <iframe src="https://www.example.com/media/oembed?url=%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D2dEj10uaqAs&amp;hash=abc"></iframe>
+    `
+    const expected = html`
+      <iframe src="//www.youtube.com/watch?v=2dEj10uaqAs"></iframe>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should point the iframe at a site-relative page url', async () => {
+    const value = html`
+      <iframe src="https://www.example.com/media/oembed?url=%2Fnode%2F12&amp;hash=abc"></iframe>
+    `
+    const expected = html`
+      <iframe src="/node/12"></iframe>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a route naming no url', async () => {
@@ -97,5 +122,21 @@ describeForEachParser('unwrapDrupalOembedIframes through the pipeline', (parseHt
     `
 
     expect(result).toEqualHtml(expected)
+  })
+
+  // The scheme guard this transform used to carry is the pipeline's job, and doing it here would
+  // have refused the two relative shapes above as well.
+  it('should leave a dangerous scheme to the pipeline, which neutralises it', async () => {
+    const value = html`
+      <iframe src="https://www.example.com/media/oembed?url=javascript%3Aalert(1)&amp;hash=abc"></iframe>
+    `
+    const expected = html`<iframe src="about:blank"></iframe>`
+
+    expect(
+      await transformContent(value, {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/post',
+      }),
+    ).toEqualHtml(expected)
   })
 })
