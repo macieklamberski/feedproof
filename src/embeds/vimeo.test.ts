@@ -92,6 +92,19 @@ describe('vimeoResolveEmbed', () => {
     expect(vimeoResolveEmbed(value)).toEqual(expected)
   })
 
+  // The query is decoded, so a `..` there would climb out of the page url the hash is written into.
+  it('should drop a query hash that is not one', () => {
+    const value = 'https://player.vimeo.com/video/76979871?h=../../showcase/1'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871',
+      src: 'https://player.vimeo.com/video/76979871',
+      url: 'https://vimeo.com/76979871',
+    }
+
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
+  })
+
   // The share link states it as a path segment, which the player refuses: it takes the hash
   // only as a query parameter.
   it('should move an unlisted hash stated in the path into the query', () => {

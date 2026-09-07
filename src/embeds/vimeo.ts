@@ -8,7 +8,9 @@ const safeVideoIdRegex = /^\d+$/
 
 // An unlisted video's privacy hash, which the player takes only in the query: the
 // `player.vimeo.com/video/{id}/{hash}` path spelling is a 404. Ten lowercase hex characters, and
-// case-sensitive, so it travels exactly as written.
+// case-sensitive, so it travels exactly as written. The query's `h` arrives decoded and is written
+// into the page url's path and the id, so it is held to this shape too: a `/` or a dot segment
+// there would let the feed choose the page.
 const unlistedHashRegex = /^[0-9a-f]{10}$/
 
 const vimeoHosts = ['vimeo.com', 'player.vimeo.com']
@@ -115,7 +117,10 @@ const readReference = (link: string): VimeoReference | undefined => {
 
   return {
     id,
-    hash: (hashIndex === -1 ? url.searchParams.get('h') : segments[hashIndex]) ?? undefined,
+    hash:
+      hashIndex === -1
+        ? keepIfMatches(url.searchParams.get('h'), unlistedHashRegex)
+        : segments[hashIndex],
   }
 }
 
