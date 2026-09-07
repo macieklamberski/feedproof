@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
@@ -115,7 +116,31 @@ describeForEachParser('scribdIframeEmbedResolver', (parseHtml) => {
     })
   })
 
+  // Scribd's ids have been growing since 2008, and the length is not what names a document.
+  describe('an id outside the lengths minted so far', () => {
+    it('should resolve a document id longer than the ones in the wild', async () => {
+      const value =
+        '<iframe src="https://www.scribd.com/embeds/1089924191234567890/content"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'scribd',
+        id: '1089924191234567890',
+        src: 'https://www.scribd.com/embeds/1089924191234567890/content',
+        url: 'https://www.scribd.com/document/1089924191234567890',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
   describe('sad paths', () => {
+    it('should return undefined for the asset host, which serves no embed route', async () => {
+      const value = html`
+        <iframe src="https://html.scribdassets.com/doc/108992419"></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     it('should return undefined for a scribd url naming no document', async () => {
       const value = '<iframe src="https://www.scribd.com/explore"></iframe>'
 
@@ -305,5 +330,49 @@ describe('scribdFlashResolveEmbed', () => {
     const value = 'https://['
 
     expect(scribdFlashResolveEmbed(value)).toBeUndefined()
+  })
+})
+
+// The enclosure probe offers every attachment a feed carries to these resolvers, and the asset
+// host spells a document image as `img/document/{id}/…`, which the embed reader would take for a
+// document url. Scoping it to the site's own host is what leaves the attachment as itself.
+describeForEachParser('scribd through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should leave a document image enclosure an image', async () => {
+    const enclosures = [
+      {
+        url: 'https://imgv2-1-f.scribdassets.com/img/document/108992419/149x198/abc/1234.jpg',
+        type: 'image/jpeg',
+      },
+    ]
+
+    const expected = html`
+      <img data-enclosure="" src="https://imgv2-1-f.scribdassets.com/img/document/108992419/149x198/abc/1234.jpg">
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+
+  it('should claim a document framed as an embed', async () => {
+    const value = '<iframe src="https://www.scribd.com/doc/108992419"></iframe>'
+
+    const expected = html`
+      <div
+        data-embed-url="https://www.scribd.com/document/108992419"
+        data-embed-id="108992419"
+        data-embed-provider="scribd"
+        data-embed-src="https://www.scribd.com/embeds/108992419/content"
+      ></div>
+    `
+
+    expect(await convert(value, [])).toEqualHtml(expected)
   })
 })
