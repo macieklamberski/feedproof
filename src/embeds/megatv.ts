@@ -5,7 +5,11 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const megatvHosts = ['megatv.com']
 
-const safeEmbedIdRegex = /^\d{6,12}$/
+// The digits are the whole shape. `/embed/` is an exact route taking nothing but this parameter,
+// so a length separates the id from nothing, and the embed id is an article's post id behind a
+// four-character prefix: a ceiling of twelve starts refusing real ids the day Mega TV's post
+// counter reaches nine digits, which the ids in the wild are two short of.
+const safeEmbedIdRegex = /^\d+$/
 
 // The share dialog's embed id is the article's post id behind a `2020` prefix: 86 of the 91
 // corpus embeds carry it, and every one probed plays the video of the post whose id follows

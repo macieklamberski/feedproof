@@ -17,6 +17,7 @@ import { mediumCiteResolver } from '../cites/medium.js'
 import { microformatsCiteResolver } from '../cites/microformats.js'
 import { nodebbCiteResolver } from '../cites/nodebb.js'
 import { notecomCiteResolver } from '../cites/notecom.js'
+import { nytimesCiteResolver } from '../cites/nytimes.js'
 import { paragraphCiteResolver } from '../cites/paragraph.js'
 import { pzlinkcardCiteResolver } from '../cites/pzlinkcard.js'
 import {
@@ -38,6 +39,7 @@ import { archiveFlashEmbedResolver, archiveIframeEmbedResolver } from '../embeds
 import { arteEmbedResolver } from '../embeds/arte.js'
 import { audioboomEmbedResolver, audioboomPlayerEmbedResolver } from '../embeds/audioboom.js'
 import { audiomackEmbedResolver } from '../embeds/audiomack.js'
+import { aushaEmbedResolver } from '../embeds/ausha.js'
 import { bandcampEmbedResolver } from '../embeds/bandcamp.js'
 import { bitchuteEmbedResolver } from '../embeds/bitchute.js'
 import { bloggerEmbedResolver } from '../embeds/blogger.js'
@@ -80,6 +82,7 @@ import { flourishIframeEmbedResolver, flourishWidgetEmbedResolver } from '../emb
 import { foxnewsIframeEmbedResolver, foxnewsScriptEmbedResolver } from '../embeds/foxnews.js'
 import { geniallyEmbedResolver } from '../embeds/genially.js'
 import { gettyImagesEmbedResolver } from '../embeds/gettyimages.js'
+import { glomexElementEmbedResolver, glomexIframeEmbedResolver } from '../embeds/glomex.js'
 import { guardianEmbedResolver } from '../embeds/guardian.js'
 import { imgurBlockquoteEmbedResolver, imgurIframeEmbedResolver } from '../embeds/imgur.js'
 import {
@@ -106,6 +109,7 @@ import { megatvEmbedResolver } from '../embeds/megatv.js'
 import { mixcloudEmbedResolver } from '../embeds/mixcloud.js'
 import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from '../embeds/nicovideo.js'
 import { notecomIframeEmbedResolver } from '../embeds/notecom.js'
+import { nytimesIframeEmbedResolver } from '../embeds/nytimes.js'
 import { odyseeEmbedResolver } from '../embeds/odysee.js'
 import { omnyEmbedResolver } from '../embeds/omny.js'
 import { padletEmbedResolver } from '../embeds/padlet.js'
@@ -251,6 +255,8 @@ const embedResolvers: Array<EmbedResolver> = [
   foxnewsIframeEmbedResolver,
   geniallyEmbedResolver,
   gettyImagesEmbedResolver,
+  glomexIframeEmbedResolver,
+  glomexElementEmbedResolver,
   acastEmbedResolver,
   anchorEmbedResolver,
   aparatIframeEmbedResolver,
@@ -268,8 +274,10 @@ const embedResolvers: Array<EmbedResolver> = [
   blueskyPostElementEmbedResolver,
   audioboomEmbedResolver,
   audiomackEmbedResolver,
+  aushaEmbedResolver,
   audioboomPlayerEmbedResolver,
   notecomIframeEmbedResolver,
+  nytimesIframeEmbedResolver,
   omnyEmbedResolver,
   padletEmbedResolver,
   odyseeEmbedResolver,
@@ -328,6 +336,7 @@ const citeResolvers: Array<CiteResolver> = [
   buddypressCiteResolver,
   pzlinkcardCiteResolver,
   notecomCiteResolver,
+  nytimesCiteResolver,
   tumblrCiteResolver,
   embedlyCiteResolver,
   paragraphCiteResolver,

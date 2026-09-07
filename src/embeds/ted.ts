@@ -31,11 +31,11 @@ export const extractTedTalk = (link: string): string | undefined => {
 const flashPlayerPathRegex = /\/assets\/player\/swf\/embedplayer\.swf$/i
 const adKeysTalkRegex = /(?:^|;)talk=([a-z0-9_]+)/i
 
-// TED cut the adKeys value off at 55 characters, so a slug of exactly that length is a prefix of
-// the real one and the player 404s on it. Measured 2026-09-06 against 151 distinct slugs mined
-// from 200 corpus feeds: every one of 20 probed below the cap answered 200 and all 4 probed at
-// the cap answered 404, and 13 of the 151 sit at it. A truncated slug is refused rather than
-// minted into a url that does not serve.
+// TED cut the talk key off at this length, so a slug that long is usually a prefix of the real one
+// but not always. Of the 17 sitting at the cap among 196 slugs mined from the corpus, 11 answered
+// 404 when probed on 2026-09-07 and 6 reached a real talk. Nothing else in the flashVars tells the
+// two apart, so the cap is refused whole: that costs those 6 talks and avoids 11 TED placeholders
+// whose link does not serve.
 const truncatedSlugLength = 55
 
 const readFlashTalk = (

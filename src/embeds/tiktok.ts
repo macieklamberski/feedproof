@@ -5,10 +5,14 @@ import * as styles from '../utils/styles.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-const tiktokHost = 'tiktok.com'
+const tiktokHosts = ['tiktok.com']
 
-// A handle is the same character set TikTok allows at signup.
-const safeHandleRegex = /^[a-zA-Z0-9_.]{1,24}$/
+// A handle is the character set TikTok allows at signup, with no length: the `@` opens every
+// handle position read here and `/video/` closes the watch path, so a bound separates a handle
+// from nothing. The signup form's 24-character ceiling is a rule about who can pick a name, not
+// about what the namespace holds. The class is the guard that matters, since it admits neither a
+// slash nor a query and so keeps a minted profile url on the account the markup named.
+const safeHandleRegex = /^[a-zA-Z0-9_.]+$/
 const safeVideoIdRegex = /^\d+$/
 
 // Every player url TikTok has issued frames the clip by its numeric id: `/embed/{id}` and
@@ -18,7 +22,7 @@ const playerPathRegex = /^\/(?:embed(?:\/v2)?|player\/v1)\/(\d+)\/?$/
 
 // A watch url names the clip's owner and the clip: `/@handle/video/{id}`. Sanitized copies
 // sometimes keep only the `/video/{id}` half, so the handle is optional.
-const watchPathRegex = /^(?:\/@([a-zA-Z0-9_.]{1,24}))?\/video\/(\d+)\/?$/
+const watchPathRegex = /^(?:\/@([a-zA-Z0-9_.]+))?\/video\/(\d+)\/?$/
 
 // The player is fluid in width and fixed in height, so it states a height and no shape. Loading
 // `/embed/v2/{id}` at 500, 700 and 1000 pixels wide measured 738 every time (2026-08-20): the box
@@ -34,7 +38,7 @@ const playerHeight = 738
 type Clip = { handle?: string; videoId?: string }
 
 const readWatchUrl = (url: string | undefined): Clip => {
-  const parsed = parseUrlOnHosts(url, tiktokHost)
+  const parsed = parseUrlOnHosts(url, tiktokHosts)
 
   if (!parsed) {
     return {}
@@ -61,7 +65,7 @@ const hydratedSize = (element: Element): { width?: number; height?: number } => 
   // The stored iframe is matched by the same player paths the direct carrier resolver claims,
   // so a hydrated copy keeps its measurement whichever player url the CMS wrote.
   const frame = find(element, 'iframe[src]', (iframe) => {
-    const parsed = parseUrlOnHosts(attr(iframe, 'src'), tiktokHost)
+    const parsed = parseUrlOnHosts(attr(iframe, 'src'), tiktokHosts)
 
     return Boolean(parsed && playerPathRegex.test(parsed.pathname))
   })
@@ -142,7 +146,7 @@ const resolveClip = (element: Element): EmbedResolverResult | undefined => {
 }
 
 // A profile url and nothing else: `/@handle`, with no video segment after it.
-const profilePathRegex = /^\/@([a-zA-Z0-9_.]{1,24})\/?$/
+const profilePathRegex = /^\/@([a-zA-Z0-9_.]+)\/?$/
 
 // The account a blockquote names, from `data-unique-id` where the creator widget declares it,
 // otherwise from the profile anchor. The half-encoded shape keeps no data attributes at all,
@@ -155,7 +159,7 @@ const readHandle = (element: Element): string | undefined => {
   }
 
   for (const anchor of element.querySelectorAll('a[href]')) {
-    const parsed = parseUrlOnHosts(attr(anchor, 'href'), tiktokHost)
+    const parsed = parseUrlOnHosts(attr(anchor, 'href'), tiktokHosts)
 
     if (parsed) {
       const handle = parsed.pathname.match(profilePathRegex)?.[1]
@@ -180,7 +184,7 @@ const resolveAccount = (element: Element): EmbedResolverResult | undefined => {
   }
 
   const cite = attr(element, 'cite')
-  const isCitedProfile = Boolean(cite && parseUrlOnHosts(cite, tiktokHost))
+  const isCitedProfile = Boolean(cite && parseUrlOnHosts(cite, tiktokHosts))
 
   return {
     provider: 'tiktok',
@@ -225,7 +229,7 @@ export const tiktokBlockquoteEmbedResolver = createMarkupEmbedResolver(
 // a real measurement, which lands on 738 instead. Telling that apart from a pasted box needs a
 // heuristic worth less than the 20 pixels it recovers.
 export const tiktokIframeEmbedResolver = createUrlEmbedResolver(
-  [tiktokHost],
+  tiktokHosts,
   (src) => {
     const parsed = parseUrl(src, 'https://example.com')
     const playerId = parsed?.pathname.match(playerPathRegex)?.[1]

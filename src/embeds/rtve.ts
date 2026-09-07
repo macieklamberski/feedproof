@@ -10,11 +10,24 @@ const rtveHosts = ['rtve.es', 'irtve.es']
 
 type Kind = 'audio' | 'video'
 
-const safeAssetIdRegex = /^\d{4,12}$/
+// The id is the last segment of `/drmn/embed/{audio|video}/`, where nothing but an asset id
+// sits, so the length is not what selects one. Checked live 2026-09-07: two real ids answer 200
+// with the player, while `directo`, a three-digit id and a fourteen-digit one all answer 404,
+// the same as an invented id. Digits are what stays, and they exclude the dot, which keeps an
+// RTVE media file playable when the enclosure probe offers it here.
+const safeAssetIdRegex = /^\d+$/
 
 // The Flash player names its asset as `{id}_es_{audios|videos}`, in the swf query on the v2
 // player and in the flashvars on the 4.x one. The language segment varies with the site's
 // locale and says nothing about the asset.
+//
+// The two bands are records rather than bets and stay for that reason. RTVE retired this player,
+// so no snippet naming a new asset or a new locale will ever be written and the population
+// cannot grow: a bound on it can never refuse a real id, while dropping it only widens what a
+// malformed `assetID` mints. RTVE's asset ids start above a million, so every id from the Flash
+// era is seven or eight digits and sits well inside the band. `audios|videos` is a different
+// question and stays on its own merits: it carries the kind, which is what decides the player,
+// the page and the poster the repair is minted onto.
 const flashAssetRegex = /^(\d{4,12})_[a-z]{2}_(audios|videos)$/
 
 const flashPlayerPathRegex = /^\/swf\/.*\.swf$/i
