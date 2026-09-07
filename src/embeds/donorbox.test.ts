@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { donorboxEmbedResolver, donorboxResolveEmbed } from './donorbox.js'
+import { donorboxEmbedResolver, donorboxResolveEmbed, readDonorboxHeight } from './donorbox.js'
 
 describe('donorboxResolveEmbed', () => {
   describe('happy paths', () => {
@@ -126,5 +126,24 @@ describeForEachParser('donorboxEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+describe('readDonorboxHeight', () => {
+  // What the form posts on its own and answers a resize request with, at 640 wide.
+  it('should read the height out of a form message', () => {
+    const value = {
+      from: 'dbox',
+      src: 'https://donorbox.org/embed/donation-form-248?language=en',
+      height: 572,
+    }
+
+    expect(readDonorboxHeight(value)).toBe(572)
+  })
+
+  it('should read nothing from another sender or an unrendered form', () => {
+    expect(readDonorboxHeight({ from: 'dbox', height: 0 })).toBeUndefined()
+    expect(readDonorboxHeight({ from: 'stripe', height: 572 })).toBeUndefined()
+    expect(readDonorboxHeight('dbox')).toBeUndefined()
   })
 })

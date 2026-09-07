@@ -1,6 +1,7 @@
-import { getPathSegments, isHostOf, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { getPathSegments, isHostOf, isPlainObject, parseUrl } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, text } from '../utils/dom.js'
+import { readPixels } from '../utils/hints.js'
 import { placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -130,3 +131,32 @@ export const imgurResolveEmbed = (url: string): EmbedResolverResult | undefined 
 }
 
 export const imgurIframeEmbedResolver = createUrlEmbedResolver(imgurHosts, imgurResolveEmbed)
+
+// The embed posts its rendered height on load, unasked, as a JSON string carrying
+// `message: 'resize_imgur'`. It has to be parsed before it can be read. Verified in a browser on
+// 2026-09-07 at 640 wide, where one post reported 595 and another 1389, which is why the resolver
+// states no height at all: there is no one box that fits both.
+//
+// Two things the message does not cover. An album is served by an older template that posts
+// nothing (11 seconds, no message). And the height is the one the post needs at the width it
+// loaded at, 415 at 400 wide against 595 at 640, sent once and never again, so a box that changes
+// width afterwards keeps the first number.
+export const readImgurHeight = (data: unknown): number | undefined => {
+  if (typeof data !== 'string') {
+    return
+  }
+
+  try {
+    const message: unknown = JSON.parse(data)
+
+    if (isPlainObject(message) && message.message === 'resize_imgur') {
+      return readPixels(message.height)
+    }
+  } catch {}
+}
+
+export const imgurRenderHint: EmbedRenderHint = {
+  provider: 'imgur',
+  origin: 'https://imgur.com',
+  readHeight: readImgurHeight,
+}
