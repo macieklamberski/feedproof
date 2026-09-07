@@ -16,9 +16,9 @@ const zencastrHosts = ['zencastr.com', 'zen.ai']
 
 // The embed page sets its `aspect-ratio` from the episode's own `videoResolution` and falls back to
 // a hardcoded `1/1`, so the shape is per episode and the id says nothing about it. Square is what
-// Zencastr's recorder writes: 200 of 228 episodes across 21 shows are, and so is every one of the
-// 68 a publisher has embedded. It beats the carrier's box, which the snippet fixes at a square in
-// pixels no publisher chose.
+// Zencastr's recorder writes and the commonest case by a distance: 176 of 228 episodes sampled
+// across 116 shows, against 46 landscape and 6 portrait. It beats the carrier's box, which the
+// snippet fixes at a square in pixels no publisher chose.
 const playerRatio = '1/1'
 
 // The embed page answers 200 for a real episode and 404 for an invented one (2026-09-06).
