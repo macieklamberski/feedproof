@@ -44,7 +44,7 @@ describeForEachParser('bridEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brid',
-        id: '820211/23442',
+        id: '23442/820211',
         src: 'https://services.brid.tv/services/iframe/video/820211/23442',
         title: 'FEAR STREET PART 2 1978  Official Trailer',
         ratio: '16/9',
@@ -70,7 +70,7 @@ describeForEachParser('bridEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brid',
-        id: '755958/26602',
+        id: '26602/755958',
         src: 'https://services.brid.tv/services/iframe/video/755958/26602',
         width: 540,
         height: 300,
@@ -92,7 +92,7 @@ describeForEachParser('bridEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brid',
-        id: '755958/26602',
+        id: '26602/755958',
         src: 'https://services.brid.tv/services/iframe/video/755958/26602',
       }
 
@@ -111,7 +111,7 @@ describeForEachParser('bridEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brid',
-        id: '755958/26602',
+        id: '26602/755958',
         src: 'https://services.brid.tv/services/iframe/video/755958/26602',
         title: '100%25%',
       }
@@ -175,7 +175,7 @@ describeForEachParser('brid facades through the pipeline', (parseHtml) => {
     `
     const expected = {
       provider: 'brid',
-      id: '755958/26602',
+      id: '26602/755958',
       src: 'https://services.brid.tv/services/iframe/video/755958/26602',
       width: '540',
       height: '300',
