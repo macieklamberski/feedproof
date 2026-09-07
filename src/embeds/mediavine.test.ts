@@ -97,6 +97,18 @@ describeForEachParser('mediavineScriptEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should read an id outside the 19 and 20 characters mined from the corpus', async () => {
+      const value =
+        '<script src="https://video.mediavine.com/videos/dx6ydyrbrjbbu2tncqzi9.js"></script>'
+      const expected: EmbedResolverResult = {
+        provider: 'mediavine',
+        id: 'dx6ydyrbrjbbu2tncqzi9',
+        src: 'https://embed.mediavine.com/videos/dx6ydyrbrjbbu2tncqzi9',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should state no shape when the script stands alone', async () => {
       const value =
         '<script src="https://video.mediavine.com/videos/dx6ydyrbrjbbu2tncqzi.js"></script>'
@@ -144,10 +156,8 @@ describeForEachParser('mediavineScriptEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
-    // The 94 distinct ids mined from the corpus are 19 or 20 alphanumeric characters, so anything
-    // else is left to the generic handling rather than interpolated into a player url.
-    it('should refuse an id outside the measured shape', async () => {
-      const value = '<script src="https://video.mediavine.com/videos/short.js"></script>'
+    it('should ignore the videos route naming no file', async () => {
+      const value = '<script src="https://video.mediavine.com/videos/"></script>'
 
       expect(await extract(value)).toBeUndefined()
     })

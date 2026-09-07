@@ -35,10 +35,11 @@ export const mediavineEmbedResolver = createMarkupEmbedResolver(
 
 // The older snippet names the video only in the loader script's url and leaves the div beside it
 // with nothing but an `id` matching that same video id, so neither element renders and the div is
-// stripped as empty: the video is gone from the item. Mined uncapped from 140 corpus feeds, the
-// 94 distinct ids are 84 of 20 characters and 10 of 19, alphanumeric in both cases, so an id
-// outside that is refused rather than interpolated into a player url.
-const scriptIdRegex = /^\/videos\/([A-Za-z0-9]{19,20})\.js$/
+// stripped as empty: the video is gone from the item. The id is letters and digits, the grammar
+// the `data-video-id` carrier takes unchecked, and only that is checked before it goes into the
+// player url: a wrong id fails the same whether it is minted or passed through, and a length
+// bound would refuse the next id space.
+const scriptIdRegex = /^\/videos\/([A-Za-z0-9]+)\.js$/
 
 // The selector matches on a substring, so any host can spell `video.mediavine.com/videos` inside
 // its own path and reach this. The path shape alone must not mint a Mediavine url.
