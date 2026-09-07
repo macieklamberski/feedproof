@@ -9,8 +9,13 @@ const arteHosts = ['arte.tv']
 // A program id is `{6 digits}-{3 digits}-{version letter}`, the same in every language.
 const programIdRegex = /^\d{6}-\d{3}-[A-Z]$/
 
-// The languages ARTE publishes in, which are the only ones the player's config API answers for.
-const languages = new Set(['fr', 'de', 'en', 'es', 'pl', 'it'])
+// A shape rather than a list: ARTE has gone from two languages to four to six to seven since
+// 2015, and each addition would have silently refused a real program. Romanian is the one a list
+// would miss today, checked against the config API on 2026-09-07, which answers with Romanian
+// metadata for real programs while a `zz` 404s. A wrong language is not visibly wrong here,
+// because the embed page serves the same shell whatever it says, so one only arrives when a
+// publisher writes it. The program id is what does the safety work.
+const languageRegex = /^[a-z]{2}$/
 
 // The retired players, `player/v{3..7}/index.{php,html}`, and `player/index.*` they redirect to.
 const legacyPlayerPathRegex = /^\/player\/(?:v\d+\/)?index\.(?:php|html)$/
@@ -18,7 +23,7 @@ const legacyPlayerPathRegex = /^\/player\/(?:v\d+\/)?index\.(?:php|html)$/
 type Program = { language: string; id: string }
 
 const readProgram = (language: string | undefined, id: string | undefined): Program | undefined => {
-  if (!language || !id || !languages.has(language) || !programIdRegex.test(id)) {
+  if (!language || !id || !languageRegex.test(language) || !programIdRegex.test(id)) {
     return
   }
 

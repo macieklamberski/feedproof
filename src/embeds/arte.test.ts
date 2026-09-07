@@ -54,6 +54,19 @@ describeForEachParser('arteEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should resolve a program in a language beyond the ones ARTE started with', async () => {
+      const value = '<iframe src="https://www.arte.tv/embeds/ro/057471-000-A"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'arte',
+        id: 'ro/057471-000-A',
+        src: 'https://www.arte.tv/embeds/ro/057471-000-A',
+        url: 'https://www.arte.tv/ro/videos/057471-000-A/',
+        ratio: '16/9',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
@@ -63,8 +76,8 @@ describeForEachParser('arteEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
-    it('should ignore a language the player does not serve', async () => {
-      const value = '<iframe src="https://www.arte.tv/embeds/xx/095172-005-A"></iframe>'
+    it('should ignore a language outside the two-letter shape', async () => {
+      const value = '<iframe src="https://www.arte.tv/embeds/fra/095172-005-A"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })
