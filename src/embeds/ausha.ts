@@ -1,5 +1,6 @@
-import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { getPathSegments, isPlainObject } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -23,6 +24,12 @@ const verticalHeight = 501
 // of them declares a height, so there is nothing here the carrier does not already say.
 const widgetHosts = ['widget.ausha.co']
 const playerHosts = ['player.ausha.co']
+
+// The player reports its rendered height only to a frame whose url names a `playerId`, which it
+// echoes back so a page holding several players can tell their messages apart. Without it the
+// frame sends nothing but its companion-script check (probed 2026-09-07). Minting one changes a
+// url the publisher wrote, and it is the narrowest change that reaches the report: any value works.
+const playerName = 'feedsweep'
 
 export const aushaResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, aushaHost)
@@ -55,6 +62,12 @@ export const aushaResolveEmbed = (url: string): EmbedResolverResult | undefined 
   const [kind, id] = named
 
   const vertical = parsed.searchParams.get('display') === 'vertical'
+  let src = url
+
+  if (isPlayer && !parsed.searchParams.has('playerId')) {
+    parsed.searchParams.set('playerId', playerName)
+    src = parsed.href
+  }
 
   return {
     provider: 'ausha',
@@ -62,9 +75,25 @@ export const aushaResolveEmbed = (url: string): EmbedResolverResult | undefined 
     // publication date, description and audio url, and 404s on a fabricated id. There is no
     // matching route for a show, so the kind says which of the two an enricher is holding.
     id: `${kind}/${id}`,
-    src: url,
+    src,
     ...(isPlayer && { height: vertical ? verticalHeight : playerHeight }),
   }
 }
 
 export const aushaEmbedResolver = createUrlEmbedResolver([aushaHost], aushaResolveEmbed)
+
+// The heights above stay as the fallback. The first `resize-player-iframe` of a run carries 0,
+// which `readPixels` refuses, so a reader draws the stated box until a later message arrives, and
+// `display=vertical` sent no resize at all in twenty seconds (2026-09-07).
+export const readAushaHeight = (data: unknown): number | undefined => {
+  if (!isPlainObject(data) || data.source !== 'ausha-player' || !isPlainObject(data.payload)) {
+    return
+  }
+
+  return readPixels(data.payload.playerHeight)
+}
+
+export const aushaRenderHint: EmbedRenderHint = {
+  provider: 'ausha',
+  readHeight: readAushaHeight,
+}

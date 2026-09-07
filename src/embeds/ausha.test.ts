@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { aushaEmbedResolver, aushaResolveEmbed } from './ausha.js'
+import { aushaEmbedResolver, aushaResolveEmbed, readAushaHeight } from './ausha.js'
 
 describe('aushaResolveEmbed', () => {
   describe('happy paths', () => {
@@ -11,7 +11,7 @@ describe('aushaResolveEmbed', () => {
       const expected: EmbedResolverResult = {
         provider: 'ausha',
         id: 'podcast/BGKwJUJG8D9m',
-        src: 'https://player.ausha.co/?podcastId=BGKwJUJG8D9m&color=%23001B2D&v=3',
+        src: 'https://player.ausha.co/?podcastId=BGKwJUJG8D9m&color=%23001B2D&v=3&playerId=feedsweep',
         height: 220,
       }
 
@@ -23,7 +23,7 @@ describe('aushaResolveEmbed', () => {
       const expected: EmbedResolverResult = {
         provider: 'ausha',
         id: 'podcast/b3GxmHMGPEaQ',
-        src: 'https://player.ausha.co/index.html?podcastId=b3GxmHMGPEaQ&v=3',
+        src: 'https://player.ausha.co/index.html?podcastId=b3GxmHMGPEaQ&v=3&playerId=feedsweep',
         height: 220,
       }
 
@@ -69,7 +69,7 @@ describe('aushaResolveEmbed', () => {
       const expected: EmbedResolverResult = {
         provider: 'ausha',
         id: 'podcast/BGKwJUJG8D9mX',
-        src: 'https://player.ausha.co/?podcastId=BGKwJUJG8D9mX&v=3',
+        src: 'https://player.ausha.co/?podcastId=BGKwJUJG8D9mX&v=3&playerId=feedsweep',
         height: 220,
       }
 
@@ -102,7 +102,7 @@ describe('aushaResolveEmbed', () => {
       const expected: EmbedResolverResult = {
         provider: 'ausha',
         id: 'show/4qgQzfO219p2',
-        src: 'https://player.ausha.co/?showId=4qgQzfO219p2&multishow=false&v=3',
+        src: 'https://player.ausha.co/?showId=4qgQzfO219p2&multishow=false&v=3&playerId=feedsweep',
         height: 220,
       }
 
@@ -117,7 +117,7 @@ describe('aushaResolveEmbed', () => {
       const expected: EmbedResolverResult = {
         provider: 'ausha',
         id: 'podcast/yknWu4dagvGo',
-        src: 'https://player.ausha.co/?podcastId=yknWu4dagvGo&display=vertical&showId=yXGrf5edXR3o&v=3',
+        src: 'https://player.ausha.co/?podcastId=yknWu4dagvGo&display=vertical&showId=yXGrf5edXR3o&v=3&playerId=feedsweep',
         height: 501,
       }
 
@@ -129,7 +129,21 @@ describe('aushaResolveEmbed', () => {
       const expected: EmbedResolverResult = {
         provider: 'ausha',
         id: 'podcast/yknWu4dagvGo',
-        src: 'https://player.ausha.co/?podcastId=yknWu4dagvGo&display=horizontal&v=3',
+        src: 'https://player.ausha.co/?podcastId=yknWu4dagvGo&display=horizontal&v=3&playerId=feedsweep',
+        height: 220,
+      }
+
+      expect(aushaResolveEmbed(value)).toEqual(expected)
+    })
+  })
+
+  describe('the player id the height report needs', () => {
+    it('should keep a player id the publisher wrote', () => {
+      const value = 'https://player.ausha.co/?podcastId=BGKwJUJG8D9m&v=3&playerId=ausha-vZGt'
+      const expected: EmbedResolverResult = {
+        provider: 'ausha',
+        id: 'podcast/BGKwJUJG8D9m',
+        src: 'https://player.ausha.co/?podcastId=BGKwJUJG8D9m&v=3&playerId=ausha-vZGt',
         height: 220,
       }
 
@@ -169,7 +183,7 @@ describeForEachParser('aushaEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'ausha',
         id: 'podcast/BGKwJUJG8D9m',
-        src: 'https://player.ausha.co/?podcastId=BGKwJUJG8D9m&v=3',
+        src: 'https://player.ausha.co/?podcastId=BGKwJUJG8D9m&v=3&playerId=feedsweep',
         height: 220,
       }
 
@@ -188,7 +202,7 @@ describeForEachParser('aushaEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'ausha',
         id: 'podcast/BGKwJUJG8D9m',
-        src: 'https://player.ausha.co/?podcastId=BGKwJUJG8D9m&v=3',
+        src: 'https://player.ausha.co/?podcastId=BGKwJUJG8D9m&v=3&playerId=feedsweep',
         height: 220,
       }
 
@@ -217,7 +231,7 @@ describeForEachParser('aushaEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'ausha',
         id: 'podcast/BGKwJUJG8D9m',
-        src: 'https://player.ausha.co/?podcastId=BGKwJUJG8D9m&display=vertical&v=3',
+        src: 'https://player.ausha.co/?podcastId=BGKwJUJG8D9m&display=vertical&v=3&playerId=feedsweep',
         height: 420,
       }
 
@@ -246,7 +260,7 @@ describeForEachParser('ausha through the pipeline', (parseHtml) => {
       <div
         data-embed-id="podcast/BGKwJUJG8D9m"
         data-embed-provider="ausha"
-        data-embed-src="https://player.ausha.co/?podcastId=BGKwJUJG8D9m&amp;v=3"
+        data-embed-src="https://player.ausha.co/?podcastId=BGKwJUJG8D9m&amp;v=3&amp;playerId=feedsweep"
         data-embed-height="220"
       ></div>
     `
@@ -263,5 +277,42 @@ describeForEachParser('ausha through the pipeline', (parseHtml) => {
     `
 
     expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+})
+
+describe('readAushaHeight', () => {
+  // What the player posts once it has drawn, with the minted id echoed back.
+  it('should read the height out of a resize message', () => {
+    const value = {
+      source: 'ausha-player',
+      name: 'resize-player-iframe',
+      payload: { playerHeight: 231, playerId: 'feedsweep' },
+    }
+
+    expect(readAushaHeight(value)).toBe(231)
+  })
+
+  // The first message of a run carries 0, so a reader has to keep taking the later ones.
+  it('should read nothing before the player has drawn', () => {
+    const value = {
+      source: 'ausha-player',
+      name: 'resize-player-iframe',
+      payload: { playerHeight: 0, playerId: 'feedsweep' },
+    }
+
+    expect(readAushaHeight(value)).toBeUndefined()
+  })
+
+  it('should ignore the companion-script check the player also posts', () => {
+    const value = { source: 'ausha-player', name: 'check-companion-script-loaded', payload: {} }
+
+    expect(readAushaHeight(value)).toBeUndefined()
+  })
+
+  it('should ignore a message from another player', () => {
+    const value = { source: 'other-player', payload: { playerHeight: 231 } }
+
+    expect(readAushaHeight(value)).toBeUndefined()
+    expect(readAushaHeight('resize-player-iframe')).toBeUndefined()
   })
 })
