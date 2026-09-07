@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
@@ -190,7 +191,7 @@ describeForEachParser('speakerdeckScriptEmbedResolver', (parseHtml) => {
   })
 
   describe('sad paths', () => {
-    it('should return undefined for an id that is not 32 hex chars', async () => {
+    it('should return undefined for an id outside the hex alphabet', async () => {
       const value = html`
         <script
           class="speakerdeck-embed"
@@ -233,6 +234,19 @@ describe('speakerdeckResolveEmbed', () => {
     expect(speakerdeckResolveEmbed(value)).toEqual(expected)
   })
 
+  // Speaker Deck has minted 24 and 32 character ids, and the length is not what names a deck.
+  it('should resolve a deck id longer than the ones minted so far', () => {
+    const value = 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0abcdef'
+    const expected: EmbedResolverResult = {
+      provider: 'speakerdeck',
+      id: '40746bbd65b944eb848e90ab1be552c0abcdef',
+      src: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0abcdef',
+      ratio: '16/9',
+    }
+
+    expect(speakerdeckResolveEmbed(value)).toEqual(expected)
+  })
+
   // The script form has always kept the slide, so the same deck at two slides collapsed into
   // one placeholder when it arrived as an iframe instead.
   it('should carry the slide the player url states', () => {
@@ -265,7 +279,7 @@ describe('speakerdeckResolveEmbed', () => {
     expect(speakerdeckResolveEmbed(value)).toBeUndefined()
   })
 
-  it('should ignore a player id that is not a 32-char hex', () => {
+  it('should ignore a player id outside the hex alphabet', () => {
     const value = 'https://speakerdeck.com/player/not-a-deck'
 
     expect(speakerdeckResolveEmbed(value)).toBeUndefined()
@@ -369,5 +383,31 @@ describeForEachParser('speakerdeckIframeEmbedResolver', (parseHtml) => {
     }
 
     expect(await extract(value)).toEqual(expected)
+  })
+})
+
+// The enclosure probe offers every attachment a feed carries to this resolver, and the deck
+// route is on Speaker Deck's own host, so the id alphabet is what keeps a file playable.
+describeForEachParser('speakerdeck through the pipeline', (parseHtml) => {
+  it('should leave a video enclosure on the speakerdeck host playable', async () => {
+    const enclosures = [
+      {
+        url: 'https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0.mp4',
+        type: 'video/mp4',
+      },
+    ]
+
+    const expected = html`
+      <video data-enclosure="" controls src="https://speakerdeck.com/player/40746bbd65b944eb848e90ab1be552c0.mp4"></video>
+      <p>Body</p>
+    `
+
+    expect(
+      await transformContent('<p>Body</p>', {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/post',
+        enclosures,
+      }),
+    ).toEqualHtml(expected)
   })
 })
