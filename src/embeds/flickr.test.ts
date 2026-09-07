@@ -251,6 +251,86 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
     })
   })
 
+  // The page an album's own "view slideshow" link opened, pasted as the iframe src. Flickr
+  // refuses to be framed, so it is the same empty frame the legacy player leaves.
+  describe('the album or stream page framed directly', () => {
+    it('should map a framed album slideshow page onto the album player', async () => {
+      const value = html`
+        <iframe
+          src="http://www.flickr.com/photos/bees/sets/72157623516208778/show/"
+          style="height: 450px; width: 99%;"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: 'bees/72157623516208778',
+        src: 'https://embedr.flickr.com/photosets/72157623516208778?width=400&height=450',
+        url: 'https://www.flickr.com/photos/bees/sets/72157623516208778',
+        width: 400,
+        height: 450,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should map a framed album page without the show segment', async () => {
+      const value = html`
+        <iframe src="https://www.flickr.com/photos/12345678@N00/sets/72157624341/"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: '12345678@N00/72157624341',
+        src: 'https://embedr.flickr.com/photosets/72157624341?width=400&height=300',
+        url: 'https://www.flickr.com/photos/12345678@N00/sets/72157624341',
+        width: 400,
+        height: 300,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should map a framed photostream slideshow page onto the stream player', async () => {
+      const value = html`
+        <iframe src="https://www.flickr.com/photos/12345678@N04/show/"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: 'photostreams/12345678@N04',
+        src: 'https://embedr.flickr.com/photostreams/12345678@N04?width=400&height=300',
+        url: 'https://www.flickr.com/photos/12345678@N04/',
+        width: 400,
+        height: 300,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should map a framed group pool slideshow page onto the group player', async () => {
+      const value = html`
+        <iframe src="https://www.flickr.com/groups/797770@N21/pool/show/"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: 'groups/797770@N21',
+        src: 'https://embedr.flickr.com/groups/797770@N21?width=400&height=300',
+        url: 'https://www.flickr.com/groups/797770@N21/',
+        width: 400,
+        height: 300,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // A single photo page names no slideshow, and nothing here can mint a player for it.
+    it('should return undefined for a framed photo page', async () => {
+      const value = html`
+        <iframe src="https://www.flickr.com/photos/12345678@N00/4362718294/"></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
   describe('sad paths', () => {
     it('should return undefined when the config names no set', async () => {
       const value = html`
