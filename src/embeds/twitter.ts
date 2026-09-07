@@ -42,7 +42,7 @@ const isTweetUrl = (url: URL): boolean => {
 }
 
 // `/{handle}/status/{id}`, with the plural `statuses` form from the earliest era.
-const statusPathRegex = /^\/([a-zA-Z0-9_]{1,15})\/status(?:es)?\/(\d+)/
+const statusPathRegex = /^\/([a-zA-Z0-9_]+)\/status(?:es)?\/(\d+)/
 
 // The paths that name a status and carry no handle: the web client's permalink, the 2015-2017
 // video frames, and the card frame before them. The frames are dead, answering 404 or a stub
@@ -58,7 +58,7 @@ const handleStandIn = 'i'
 // skeleton blockquote keeps the byline's punctuation and fills in neither half, so what it holds
 // is `—  (@)`. That matches here and yields an empty name, which is how it gets dropped instead
 // of being carried through as an author.
-const bylineRegex = /^[—–-]\s*(.*?)\s*\(@[a-zA-Z0-9_]{0,15}\)\s*$/
+const bylineRegex = /^[—–-]\s*(.*?)\s*\(@[a-zA-Z0-9_]*\)\s*$/
 const safeStatusIdRegex = /^\d+$/
 
 type Status = { handle: string; id: string }
