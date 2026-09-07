@@ -128,6 +128,19 @@ describeForEachParser('getElementDimensions', (parseHtml) => {
 
     expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
   })
+
+  // A feed writes the attribute, so the read has to stay linear in its length. This input took
+  // 6.8 seconds before the unit was bounded and takes 2 milliseconds now, so the threshold sits
+  // an order of magnitude above the fast path and an order below the slow one: a loaded machine
+  // moves it nowhere near either side.
+  it('should read a long unit-like attribute in linear time', () => {
+    const document = parseHtml(`<img width="${'a'.repeat(120000)}1">`)
+    const image = queryElement(document, 'img')
+    const start = performance.now()
+
+    expect(getElementDimensions(image)).toEqual({ width: undefined, height: undefined })
+    expect(performance.now() - start).toBeLessThan(500)
+  })
 })
 
 describeForEachParser('isElementHidden', (parseHtml) => {
@@ -267,6 +280,18 @@ describeForEachParser('getWrapperRatio reading only the element itself', (parseH
     const iframe = queryElement(document, 'iframe')
 
     expect(getWrapperRatio(iframe, 0)).toBe('16/9')
+  })
+
+  // A feed writes the attribute, so the read has to stay linear in its length. This input took
+  // 2 seconds before the keyword was dropped by token and takes 3 milliseconds now, so the
+  // threshold sits well clear of both and a loaded machine cannot flip it.
+  it('should read a ratio holding a long run of spaces in linear time', () => {
+    const document = parseHtml(`<iframe style="aspect-ratio: 16${' '.repeat(120000)}9"></iframe>`)
+    const iframe = queryElement(document, 'iframe')
+    const start = performance.now()
+
+    expect(getWrapperRatio(iframe, 0)).toBeUndefined()
+    expect(performance.now() - start).toBeLessThan(500)
   })
 
   it('should read a wp-embed-aspect class from the element itself', () => {
