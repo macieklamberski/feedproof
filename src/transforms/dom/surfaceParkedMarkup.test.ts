@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../../index.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { surfaceParkedMarkup } from './surfaceParkedMarkup.js'
@@ -171,6 +172,42 @@ describeForEachParser('surfaceParkedMarkup', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
+    // The url passes below give the href its scheme and its base, so a container url that
+    // names neither still reaches the reader as the link.
+    it('should append a container url that states no scheme', async () => {
+      const value = html`
+        <div
+          class="load-later load-later-vendor-wwwinstagramcom"
+          data-url="//www.instagram.com/p/ABC123/"
+          data-content="%3Cblockquote%20class%3D%22instagram-media%22%3E%3C%2Fblockquote%3E"
+        ></div>
+      `
+      const expected = html`
+        <blockquote class="instagram-media"></blockquote>
+        <a href="//www.instagram.com/p/ABC123/">//www.instagram.com/p/ABC123/</a>
+      `
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should leave the recovered markup alone when its own url states no scheme', async () => {
+      const value = html`
+        <div
+          class="load-later load-later-vendor-wwwinstagramcom"
+          data-url="https://www.instagram.com/p/ABC123/"
+          data-content="%3Cblockquote%20class%3D%22instagram-media%22%20data-instgrm-permalink%3D%22%2F%2Fwww.instagram.com%2Fp%2FABC123%2F%22%3E%3C%2Fblockquote%3E"
+        ></div>
+      `
+      const expected = html`
+        <blockquote
+          class="instagram-media"
+          data-instgrm-permalink="//www.instagram.com/p/ABC123/"
+        ></blockquote>
+      `
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
     it('should recover the markup without a link when the container states no url', async () => {
       const value = html`
         <div
@@ -265,6 +302,28 @@ describeForEachParser('surfaceParkedMarkup', (parseHtml) => {
 
       expect(await transform(value)).toEqualHtml(expected)
     })
+  })
+
+  it('should resolve a feed-relative container url against the base url end to end', async () => {
+    const value = html`
+      <div
+        class="load-later load-later-vendor-wwwinstagramcom"
+        data-url="/p/ABC123/"
+        data-content="%3Cblockquote%3E%3Cp%3EA%20parked%20post.%3C%2Fp%3E%3C%2Fblockquote%3E"
+      ></div>
+    `
+    const expected = html`
+      <blockquote>
+        <p>A parked post.</p>
+      </blockquote>
+      <p><a href="https://www.instagram.com/p/ABC123/">/p/ABC123/</a></p>
+    `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://www.instagram.com/feed',
+    })
+
+    expect(result).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
