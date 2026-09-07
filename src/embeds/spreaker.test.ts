@@ -41,6 +41,23 @@ describe('extractSpreakerEmbed', () => {
 
     expect(extractSpreakerEmbed(value)).toBeUndefined()
   })
+
+  it('should read the site host embed route', () => {
+    const value = 'https://www.spreaker.com/embed/player/mini?episode_id=4901266'
+    const expected = {
+      kind: 'episode',
+      param: 'episode_id',
+      id: '4901266',
+    }
+
+    expect(extractSpreakerEmbed(value)).toEqual(expected)
+  })
+
+  it('should return undefined for a segment that merely starts with the player route', () => {
+    const value = 'https://www.spreaker.com/user/foo/players?episode_id=42'
+
+    expect(extractSpreakerEmbed(value)).toBeUndefined()
+  })
 })
 
 describe('spreakerResolveEmbed', () => {
@@ -86,7 +103,9 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         provider: 'spreaker',
         id: 'episode/42',
         src: 'https://widget.spreaker.com/player?episode_id=42',
+        url: 'https://www.spreaker.com/episode/42',
         height: 200,
+        title: 'Listen to "An episode" on Spreaker.',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -98,7 +117,9 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         provider: 'spreaker',
         id: 'show/99',
         src: 'https://widget.spreaker.com/player?show_id=99',
+        url: 'https://www.spreaker.com/episode/42',
         height: 200,
+        title: 'Listen to "An episode" on Spreaker.',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -111,7 +132,9 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         provider: 'spreaker',
         id: 'episode/42',
         src: 'https://widget.spreaker.com/player?episode_id=42',
+        url: 'https://www.spreaker.com/episode/42',
         height: 350,
+        title: 'Listen to "An episode" on Spreaker.',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -123,7 +146,9 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         provider: 'spreaker',
         id: 'episode/42',
         src: 'https://widget.spreaker.com/player?episode_id=42',
+        url: 'https://www.spreaker.com/episode/42',
         height: 120,
+        title: 'Listen to "An episode" on Spreaker.',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -137,7 +162,30 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         provider: 'spreaker',
         id: 'episode/42',
         src: 'https://widget.spreaker.com/player?episode_id=42',
+        url: 'https://www.spreaker.com/episode/42',
         height: 200,
+        title: 'Listen to "An episode" on Spreaker.',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The href is the placeholder's click target, and a foreign host can spell the platform
+    // anywhere in its path, so the page is taken from the host and not from the string.
+    it('should refuse an href on a foreign host', async () => {
+      const value = html`
+        <a
+          class="spreaker-player"
+          href="https://evil.test/www.spreaker.com/episode/42"
+          data-resource="episode_id=42"
+        >Listen to "An episode" on Spreaker.</a>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spreaker',
+        id: 'episode/42',
+        src: 'https://widget.spreaker.com/player?episode_id=42',
+        height: 200,
+        title: 'Listen to "An episode" on Spreaker.',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -163,6 +211,25 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
     `
 
       expect(parseHtml(value).querySelector(spreakerAnchorEmbedResolver.selector)).toBeNull()
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should state no url or title for an anchor carrying neither', async () => {
+      const value = html`
+        <a
+          class="spreaker-player"
+          data-resource="episode_id=42"
+        ></a>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spreaker',
+        id: 'episode/42',
+        src: 'https://widget.spreaker.com/player?episode_id=42',
+        height: 200,
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 })

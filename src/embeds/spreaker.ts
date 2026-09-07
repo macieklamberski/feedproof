@@ -1,7 +1,8 @@
-import { parseUrl } from 'trousse'
+import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { attr, parsePixelSize } from '../utils/dom.js'
+import { attr, parsePixelSize, text } from '../utils/dom.js'
 import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^\d+$/
@@ -22,7 +23,9 @@ export const extractSpreakerEmbed = (
 ): { kind: string; param: string; id: string } | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
 
-  if (!parsed?.pathname.includes('/player')) {
+  // The route is `player` on the widget host and `embed/player/{variant}` on the site host,
+  // read as a whole segment so a longer name starting with it is not the player route.
+  if (!parsed || !getPathSegments(parsed).includes('player')) {
     return
   }
 
@@ -68,6 +71,11 @@ export const spreakerIframeEmbedResolver = createUrlEmbedResolver(
 // turn an ordinary link into a player on thin evidence. It would also buy nothing: the feeds
 // that carry the class without the attribute do not ship the loader script that would have
 // made a player of it.
+//
+// Spreaker's documented snippet leaves the href on `www.spreaker.com` itself, so it is not
+// always the episode page. The text around the episode name is localized and inconsistently
+// quoted, `Listen to "X" on Spreaker.` beside `Escucha»X" en Spreaker.`, so it is carried whole
+// rather than stripped off the name.
 export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
   'a.spreaker-player[data-resource]',
   (element) => {
@@ -82,8 +90,16 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
 
     // The anchor states its own size, e.g. `data-height="200px"`.
     const stated = parsePixelSize(attr(element, 'data-height'))
+    const href = attr(element, 'href')
+    const url = parseUrlOnHosts(href, spreakerHosts) ? href : undefined
+    const title = text(element)
 
-    return stated ? { ...result, height: stated } : result
+    return {
+      ...result,
+      ...(stated && { height: stated }),
+      ...(url && { url }),
+      ...(title && { title }),
+    }
   },
 )
 
