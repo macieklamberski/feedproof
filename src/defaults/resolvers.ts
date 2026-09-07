@@ -17,6 +17,7 @@ import { mediumCiteResolver } from '../cites/medium.js'
 import { microformatsCiteResolver } from '../cites/microformats.js'
 import { nodebbCiteResolver } from '../cites/nodebb.js'
 import { notecomCiteResolver } from '../cites/notecom.js'
+import { nytimesCiteResolver } from '../cites/nytimes.js'
 import { paragraphCiteResolver } from '../cites/paragraph.js'
 import { pzlinkcardCiteResolver } from '../cites/pzlinkcard.js'
 import {
@@ -106,6 +107,7 @@ import { megatvEmbedResolver } from '../embeds/megatv.js'
 import { mixcloudEmbedResolver } from '../embeds/mixcloud.js'
 import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from '../embeds/nicovideo.js'
 import { notecomIframeEmbedResolver } from '../embeds/notecom.js'
+import { nytimesIframeEmbedResolver } from '../embeds/nytimes.js'
 import { odyseeEmbedResolver } from '../embeds/odysee.js'
 import { omnyEmbedResolver } from '../embeds/omny.js'
 import { padletEmbedResolver } from '../embeds/padlet.js'
@@ -271,6 +273,7 @@ const embedResolvers: Array<EmbedResolver> = [
   audioboomEmbedResolver,
   audioboomPlayerEmbedResolver,
   notecomIframeEmbedResolver,
+  nytimesIframeEmbedResolver,
   omnyEmbedResolver,
   padletEmbedResolver,
   odyseeEmbedResolver,
@@ -329,6 +332,7 @@ const citeResolvers: Array<CiteResolver> = [
   buddypressCiteResolver,
   pzlinkcardCiteResolver,
   notecomCiteResolver,
+  nytimesCiteResolver,
   tumblrCiteResolver,
   embedlyCiteResolver,
   paragraphCiteResolver,
