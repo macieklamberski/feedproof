@@ -30,6 +30,20 @@ describe('donorboxResolveEmbed', () => {
 
       expect(donorboxResolveEmbed(value)).toEqual(expected)
     })
+
+    it('should read a slug longer than the campaign names in circulation', () => {
+      const value =
+        'https://donorbox.org/embed/help-us-rebuild-the-old-town-library-roof-after-the-storm-and-keep-the-reading-room-open-to-every-family-in-the-county-this-winter'
+      const expected: EmbedResolverResult = {
+        provider: 'donorbox',
+        id: 'help-us-rebuild-the-old-town-library-roof-after-the-storm-and-keep-the-reading-room-open-to-every-family-in-the-county-this-winter',
+        src: 'https://donorbox.org/embed/help-us-rebuild-the-old-town-library-roof-after-the-storm-and-keep-the-reading-room-open-to-every-family-in-the-county-this-winter',
+        url: 'https://donorbox.org/help-us-rebuild-the-old-town-library-roof-after-the-storm-and-keep-the-reading-room-open-to-every-family-in-the-county-this-winter',
+        height: 900,
+      }
+
+      expect(donorboxResolveEmbed(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
