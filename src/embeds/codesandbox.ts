@@ -17,12 +17,6 @@ const idRegex = /^[A-Za-z0-9]+$/
 // hash's own alphabet. `new` opens a starter template with nothing saved behind it.
 const reservedSlugSegments = new Set(['github', 'github.com', 'fork', 'new'])
 
-// The sandbox's own name, which is what the share dialog writes and what a rendered DEV.to or
-// Hashnode embed carries. `title` on the carrier is the only place a sandbox names itself offline.
-const readTitle = (element: Element | undefined): string | undefined => {
-  return attr(element, 'title') || undefined
-}
-
 // What the share dialog writes and what 86 of 90 corpus iframes carry. A fixed height and not a
 // ratio: an unsized embed measured 150 at both 500 and 1000 pixels wide, the HTML default, because
 // the editor fills whatever box it is handed rather than reporting one.
@@ -93,7 +87,10 @@ export const codesandboxResolveEmbed = (
     return
   }
 
-  const title = readTitle(element)
+  // The sandbox's own name, which is what the share dialog writes and what a rendered DEV.to or
+  // Hashnode embed carries. `title` on the carrier is the only place a sandbox names itself
+  // offline.
+  const title = attr(element, 'title') || undefined
 
   return {
     provider: 'codesandbox',
