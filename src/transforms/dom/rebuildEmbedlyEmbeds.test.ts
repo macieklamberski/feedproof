@@ -197,31 +197,28 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(value)
     })
 
-    it('should leave a video payload whose url is not http', async () => {
-      const unsafeUrlPayload = jsonAttrValue({
+    // An oEmbed payload can name its target and its poster without a scheme, and the url
+    // passes below supply one, so both are read as they were written.
+    it('should convert a video payload whose url is protocol-relative', async () => {
+      const relativePayload = jsonAttrValue({
         type: 'video',
-        url: 'javascript:alert(1)',
+        url: '//www.youtube.com/watch?v=dQw4w9WgXcQ',
+        thumbnail_url: '//i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       })
       const value = html`
         <div
           data-type="embedly"
-          src="https://example.com/thing"
-          data="${unsafeUrlPayload}"
+          data="${relativePayload}"
         ></div>
       `
-
-      expect(await transform(value)).toEqualHtml(value)
-    })
-
-    it('should leave a payloadless block whose src is not http', async () => {
-      const value = html`
-        <div
-          data-type="embedly"
-          src="javascript:alert(1)"
-        ></div>
+      const expected = html`
+        <iframe
+          src="//www.youtube.com/watch?v=dQw4w9WgXcQ"
+          data-thumbnail="//i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        ></iframe>
       `
 
-      expect(await transform(value)).toEqualHtml(value)
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should produce a youtube placeholder end to end', async () => {
@@ -246,6 +243,62 @@ describeForEachParser('rebuildEmbedlyEmbeds', (parseHtml) => {
           data-embed-ratio="16/9"
         ></div>
       `
+
+      expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+    })
+
+    it('should resolve a protocol-relative payload url end to end', async () => {
+      const relativePayload = jsonAttrValue({
+        type: 'video',
+        url: '//www.youtube.com/watch?v=dQw4w9WgXcQ',
+      })
+      const value = html`
+        <div
+          data-type="embedly"
+          data="${relativePayload}"
+        ></div>
+      `
+      const expected = html`
+        <div
+          data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+          data-embed-provider="youtube"
+          data-embed-id="dQw4w9WgXcQ"
+          data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+          data-embed-ratio="16/9"
+        ></div>
+      `
+
+      expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+    })
+
+    // The scheme floor belongs to neutralizeUnsafeUrls, which runs over every carrier the
+    // pipeline builds, so the payload url reaches it as Embedly wrote it.
+    it('should render a dangerous payload url inert end to end', async () => {
+      const unsafeUrlPayload = jsonAttrValue({
+        type: 'video',
+        url: 'javascript:alert(1)',
+      })
+      const value = html`
+        <div
+          data-type="embedly"
+          src="https://example.com/thing"
+          data="${unsafeUrlPayload}"
+        ></div>
+      `
+      const expected = html`<iframe src="about:blank"></iframe>`
+
+      expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+    })
+
+    it('should strip the link from a payloadless block with a dangerous src end to end', async () => {
+      const value = html`
+        <div
+          data-type="embedly"
+          src="javascript:alert(1)"
+        ></div>
+      `
+      const expected = html`<p>javascript:alert(1)</p>`
 
       expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
     })
