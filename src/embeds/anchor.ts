@@ -16,11 +16,12 @@ const anchorHosts = ['anchor.fm', 'podcasters.spotify.com', 'creators.spotify.co
 // button and progress bar, is 100 tall at 320, 640, 700 and 720 wide and 161 from 768 up, where
 // the artwork grows, and the page fills any taller frame with white below the card. So the height
 // steps at one breakpoint rather than tracking the width, and a reader's post column sits on the
-// short side of it. The 102 is what Spotify's own snippet writes, two more than the card, and
-// publishers write it on every host: 2,124 of the 2,532 embed carriers that declare a height
-// across 744 corpus feeds. The 245 that declare none are what this reaches, since `decideSize`
-// takes the carrier's first.
-const playerHeight = 102
+// short side of it. The measured 100 is what this states rather than the 102 Spotify's own
+// snippet writes, because 102 is the snippet's number and 100 is the card's: the two extra pixels
+// render as white. Publishers write 102 on every host, 2,124 of the 2,532 embed carriers that
+// declare a height across 744 corpus feeds, and those carriers keep their own number anyway. The
+// 245 that declare none are what this reaches, since `decideSize` takes the carrier's first.
+const playerHeight = 100
 
 // `anchor.fm/{show}/embed/episodes/{slug}`,
 // `podcasters.spotify.com/pod/show/{show}/embed/episodes/{slug}`,

@@ -58,7 +58,7 @@ describe('anchorResolveEmbed', () => {
       provider: 'anchor',
       id: 'myshow/my-title-e123',
       src: 'https://anchor.fm/myshow/embed/episodes/my-title-e123',
-      height: 102,
+      height: 100,
     }
 
     expect(anchorResolveEmbed(value)).toEqual(expected)
@@ -71,7 +71,7 @@ describe('anchorResolveEmbed', () => {
       provider: 'anchor',
       id: 'me/my-title-e1',
       src: 'https://creators.spotify.com/pod/profile/me/embed/episodes/my-title-e1/a-abc',
-      height: 102,
+      height: 100,
     }
 
     expect(anchorResolveEmbed(value)).toEqual(expected)
