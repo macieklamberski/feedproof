@@ -43,6 +43,8 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `convertLazyImageContainers` | Convert a container parking an image URL in a lazy attribute into a real `<img>` |
 | `flattenPictureElements` | Collapse `<picture>` to one `<img>`, keeping the best modern-format source |
 | `hoistFigcaptionFromAnchor` | Move a `<figcaption>` out of the figure's click-through link |
+| `wrapOrphanFigcaptions` | Wrap an image and its detached `<figcaption>` in a `<figure>` |
+| `mergeWrappedCaptionText` | Fold caption text sharing a wrapper with the `<figcaption>` into it |
 | `canonicalizeAlignment` | Normalize media alignment into a single `data-align` hook |
 | `mergeConsecutiveOneLinerPres` | Merge consecutive single-line `<pre>` blocks into one |
 | `replacePreLineBreaks` | Replace `<br>` with newlines inside `<pre>` |
@@ -76,6 +78,8 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `rebuildLazyYtEmbeds` | Rebuild a real `<iframe>` from a jQuery lazyYT facade (`div.lazyYT[data-youtube-id]`) |
 | `rebuildElementorVideoEmbeds` | Rebuild a real `<iframe>` from an Elementor video widget's deferred `data-settings` (YouTube / Vimeo / Dailymotion / VideoPress) |
 | `rebuildEmbedlyEmbeds` | Unwrap an Embedly media widget to the inner provider iframe, carrying the poster as `data-thumbnail` |
+| `unwrapDrupalOembedIframes` | Point a Drupal media oEmbed proxy frame (`/media/oembed?url=`) at the page url it wraps |
+| `rebuildGettyImagesEmbeds` | Rebuild a real `<iframe>` from a Getty Images `gie` widget facade, composing the player URL from the inline config the loader script never runs |
 | `rebuildDeferredIframes` | Rebuild a real `<iframe>` from a URL parked in a `<div>` attribute (Pym.js `data-pym-src`, @newswire/frames `data-frame-src`) |
 | `linkifyGistEmbeds` | Replace a GitHub Gist script embed or `<amp-gist>` with a link to the gist |
 | `fixSubstackMentions` | Rebuild a Substack @-mention (empty `span.mention-wrap`) into an inline `<a>@name</a>` link, so the name survives instead of vanishing mid-sentence |
@@ -83,7 +87,8 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `convertNoteEmbeds` | Convert note.com's empty embed figures (`figure[embedded-service][data-src]`): media services become plain iframes for the widget pass, own-post embeds become plain links |
 | `convertAmpNativeElements` | Convert AMP custom elements with a native equivalent (`amp-img`, `amp-anim`, `amp-video`, `amp-audio`, `amp-iframe`) into that element |
 | `convertDatawrapperEmbeds` | Convert Datawrapper chart embeds (iframe, script/noscript, and link forms) into a static image linking to the interactive chart |
-| `convertWidgets` | Convert recognized widgets: embeds become `data-embed-*` placeholders, platform-hosted media becomes a real `<video>`/`<audio>` (from an id template, a media-file src, or a URL parked in a `mediaSrcAttributes` attribute) |
+| `convertSmartframeEmbeds` | Convert SmartFrame's `<smartframe-embed>` element into the picture it names as a static image |
+| `convertWidgets` | Convert recognized widgets: embeds become `data-embed-*` placeholders, platform-hosted media becomes a real `<video>`/`<audio>` (from an id template, a media-file src, or a URL parked in a lazy media attribute) |
 | `assignVideoPosters` | _Heuristic (opt-in):_ move a redundant video-poster image (inline or an enclosure) onto the embed as its poster, then drop the standalone image |
 | `stripDuplicateEnclosures` | _Heuristic (opt-in):_ remove an injected enclosure that duplicates inline content (image size-variants, exact audio/video/embed) |
 | `stripDuplicateLeadingImages` | _Heuristic (opt-in):_ remove a leading image the body repeats as the very next image (featured-image prepends), keeping the larger copy |
@@ -115,16 +120,12 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `unwrapCdataMarkers` | Unwrap a whole-value `<![CDATA[ … ]]>` marker so content isn't dropped |
 | `stripControlChars` | Strip rendering-hostile control characters before parsing |
 
+An embed placeholder states how big it is in one of two ways, never both. Where something really measured the player, it carries `data-embed-width` and `data-embed-height` in pixels, or just one of them where that is all the platform states (a podcast player 200 pixels tall has no width worth naming). Where nothing measured it and only the shape is known, from a responsive wrapper or the platform's own ratio attribute, it carries `data-embed-ratio` instead: a CSS aspect-ratio value written from the numbers the source stated, such as `16/9`, `800/600` or `1.7777777777777777/1`, and ready to assign to `style.aspectRatio` as it stands. Nothing is reduced or rounded, so the value traces back to what the markup said.
+
 ## Options
 
 ```typescript
-import {
-  fixLazyImages,
-  ghostCiteResolver,
-  resolveRelativeUrls,
-  transformContent,
-  youtubeIframeEmbedResolver,
-} from 'feedsweep'
+import { fixLazyImages, resolveRelativeUrls, transformContent } from 'feedsweep'
 import { parseHtml } from 'feedsweep/linkedom'
 import { cleanUrl } from 'urlpurify'
 
@@ -137,24 +138,21 @@ const result = transformContent(html, {
   cleanUrlFn: cleanUrl,
   // Feed item enclosures (audio/video/image), injected into the content.
   enclosures: [{ url: 'https://example.com/audio.mp3', type: 'audio/mpeg' }],
+  // Images also attached to the feed itself (logo, icon). An item enclosure that repeats one of them is not injected.
+  feedImageUrls: ['https://example.com/logo.png'],
   // Route image/video/audio URLs through a proxy. Return `undefined` to leave a URL untouched.
   assetProxyFn: (url, type) => `https://proxy.example.com/?type=${type}&url=${encodeURIComponent(url)}`,
   // Extra URL safety policy (e.g. SSRF/allowlist); return `false` to neutralize. A dangerous-scheme floor always applies.
   isSafeUrlFn: (url, type) => isSafe(url, type),
-  // Populate embed placeholder metadata from a remote source (e.g. YouTube oEmbed).
-  enrichEmbedFn: async (embeds) => {
-    return new Map(embeds.map(({ provider, id }) => [`${provider}:${id}`, { title: '…' }]))
-  },
+  // Populate embed placeholder metadata from a remote source (e.g. YouTube oEmbed). Called once
+  // per document with every embed; answer positionally, one entry per embed in the same order,
+  // undefined where nothing was found.
+  enrichEmbedFn: (embeds) => Promise.all(embeds.map(({ provider, id }) => fetchMetadata(provider, id))),
   // Normalize a cite card's site-formatted display date (e.g. "2018.10.14"); return
   // undefined to keep the raw string verbatim.
   parseDateFn: (raw) => parseDate(raw),
   // Swap the code highlighter (defaults to highlight.js; may be async).
   highlightFn: (text, language) => myHighlighter.highlight(text, language),
-  // Widget resolvers: embed results become placeholders, media results become real
-  // <video>/<audio> elements.
-  widgetResolvers: [youtubeIframeEmbedResolver, myEmbedResolver],
-  // Resolvers turning link-preview cards into `data-cite-*` placeholders.
-  citeResolvers: [ghostCiteResolver, myCiteResolver],
   // Opt into the heuristic transforms. Ignored if a custom domTransforms is set.
   heuristics: true,
   // Run a custom DOM transform pipeline (omit to use defaults).
@@ -162,15 +160,13 @@ const result = transformContent(html, {
 })
 ```
 
-All caller-provided functions (`parseHtmlFn`, `resolveUrlFn`, `cleanUrlFn`, `assetProxyFn`, `isSafeUrlFn`, `enrichEmbedFn`, `parseDateFn`, `highlightFn`, and resolver extracts) must not throw — an exception is not caught and rejects the `transformContent` promise.
+All caller-provided functions (`parseHtmlFn`, `resolveUrlFn`, `cleanUrlFn`, `assetProxyFn`, `isSafeUrlFn`, `enrichEmbedFn`, `parseDateFn`, `highlightFn`) must not throw — an exception is not caught and rejects the `transformContent` promise.
 
 Code blocks are highlighted only when they declare a language (`language-*` class, `data-language`, Pandoc/Rouge/Expressive Code/etc.); unlabeled blocks are left plain rather than guessed at. The default highlighter is highlight.js (exported as `defaultHighlightFn` / `hljsHighlightFn`); replace it with `highlightFn`.
 
 The `stringTransforms` and `domTransforms` options each fully replace the corresponding default phase when provided. The `heuristics` flag (default `false`) selects between two exported DOM pipelines: `defaultStandardDomTransforms` (the safe defaults) and `defaultAllDomTransforms` (standard plus `heuristicDomTransforms` spliced in after `injectEnclosures`). Setting `domTransforms` explicitly overrides `heuristics`. Every transform and pipeline is also exported individually from `feedsweep`, so you can compose any pipeline — list transforms explicitly, or spread `defaultStandardDomTransforms` / `heuristicDomTransforms` to extend or filter the defaults.
 
-`widgetResolvers` and `citeResolvers` each fully replace their default resolver list when provided; omit them for the defaults. Every resolver is exported individually from `feedsweep`, so a custom list is composed by naming the built-ins you want alongside your own.
-
-Embed resolvers are named `{service}EmbedResolver` where a service ships one, and `{service}{Carrier}EmbedResolver` where it ships several, since the carrier is the only thing that differs between them: `buzzsproutIframeEmbedResolver` beside `buzzsproutScriptEmbedResolver`, `brightcoveVideoJsEmbedResolver` beside `brightcoveFlashEmbedResolver`.
+The platforms feedsweep recognizes, the hosts it treats as trackers, the selectors it strips as non-content and the lazy-loading attributes it reads are all built in and not configurable. A platform or attribute that is missing belongs in the library: open an issue or a pull request.
 
 ## DOM library
 

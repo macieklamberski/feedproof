@@ -5,23 +5,25 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { resolveMediaDimensions } from './resolveMediaDimensions.js'
 
 describeForEachParser('resolveMediaDimensions', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [resolveMediaDimensions(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [resolveMediaDimensions(context)])
   }
 
   describe('promotion from own style', () => {
     it('should promote numeric style width and height to attributes on img', async () => {
       const value = '<img src="photo.jpg" style="width:300px;height:200px">'
-      const expected =
-        '<img src="photo.jpg" style="width:300px;height:200px" width="300" height="200">'
+      const expected = html`
+        <img src="photo.jpg" style="width:300px;height:200px" width="300" height="200">
+      `
 
       expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should promote style dimensions on video', async () => {
       const value = '<video src="clip.mp4" style="width:640px;height:360px"></video>'
-      const expected =
-        '<video src="clip.mp4" style="width:640px;height:360px" width="640" height="360"></video>'
+      const expected = html`
+        <video src="clip.mp4" style="width:640px;height:360px" width="640" height="360"></video>
+      `
 
       expect(await transform(value)).toEqualHtml(expected)
     })
@@ -42,8 +44,9 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
 
     it('should round fractional style dimensions', async () => {
       const value = '<img src="photo.jpg" style="width:300.6px;height:200.2px">'
-      const expected =
-        '<img src="photo.jpg" style="width:300.6px;height:200.2px" width="301" height="200">'
+      const expected = html`
+        <img src="photo.jpg" style="width:300.6px;height:200.2px" width="301" height="200">
+      `
 
       expect(await transform(value)).toEqualHtml(expected)
     })
@@ -150,7 +153,7 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
       const once = await transform(value)
       const twice = await transform(once)
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
   })
 
@@ -164,8 +167,9 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
 
     it('should read dimensions from width/height query params', async () => {
       const value = '<img src="https://example.com/p.jpg?width=800&height=600">'
-      const expected =
-        '<img src="https://example.com/p.jpg?width=800&height=600" width="800" height="600">'
+      const expected = html`
+        <img src="https://example.com/p.jpg?width=800&height=600" width="800" height="600">
+      `
 
       expect(await transform(value)).toEqualHtml(expected)
     })
@@ -179,8 +183,9 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
 
     it('should read dimensions from an s=WxH param', async () => {
       const value = '<img src="https://example.com/p.jpg?s=612x612&w=0">'
-      const expected =
-        '<img src="https://example.com/p.jpg?s=612x612&w=0" width="612" height="612">'
+      const expected = html`
+        <img src="https://example.com/p.jpg?s=612x612&w=0" width="612" height="612">
+      `
 
       expect(await transform(value)).toEqualHtml(expected)
     })
@@ -200,10 +205,17 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
     })
 
     it('should prefer own style dimensions over the URL', async () => {
-      const value =
-        '<img src="https://example.com/photo-800x600.jpg" style="width:300px;height:200px">'
-      const expected =
-        '<img src="https://example.com/photo-800x600.jpg" style="width:300px;height:200px" width="300" height="200">'
+      const value = html`
+        <img src="https://example.com/photo-800x600.jpg" style="width:300px;height:200px">
+      `
+      const expected = html`
+        <img
+          src="https://example.com/photo-800x600.jpg"
+          style="width:300px;height:200px"
+          width="300"
+          height="200"
+        >
+      `
 
       expect(await transform(value)).toEqualHtml(expected)
     })
@@ -252,15 +264,17 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
 
   describe('left unchanged', () => {
     it('should not touch an element that already has both attributes', async () => {
-      const value =
-        '<img src="photo.jpg" width="800" height="600" style="width:300px;height:200px">'
+      const value = html`
+        <img src="photo.jpg" width="800" height="600" style="width:300px;height:200px">
+      `
 
       expect(await transform(value)).toEqualHtml(value)
     })
 
     it('should not promote max-width/max-height/auto', async () => {
-      const value =
-        '<video src="clip.mp4" style="max-width:550px;height:auto;max-height:500px"></video>'
+      const value = html`
+        <video src="clip.mp4" style="max-width:550px;height:auto;max-height:500px"></video>
+      `
 
       expect(await transform(value)).toEqualHtml(value)
     })
@@ -292,8 +306,9 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
 
   describe('invalid attribute values', () => {
     it('should drop an auto width on video', async () => {
-      const value =
-        '<video src="https://example.com/clip.mp4" width="auto" style="width:100%"></video>'
+      const value = html`
+        <video src="https://example.com/clip.mp4" width="auto" style="width:100%"></video>
+      `
       const expected = '<video src="https://example.com/clip.mp4" style="width:100%"></video>'
 
       expect(await transform(value)).toEqualHtml(expected)
@@ -336,30 +351,56 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
 
   describe('inheritance from srcset URL', () => {
     it('should read dimensions from the widest srcset candidate when there is no src', async () => {
-      const value =
-        '<img srcset="https://example.com/p-400x300.jpg 400w, https://example.com/p-800x600.jpg 800w">'
-      const expected =
-        '<img srcset="https://example.com/p-400x300.jpg 400w, https://example.com/p-800x600.jpg 800w" width="800" height="600">'
+      const value = html`
+        <img
+          srcset="https://example.com/p-400x300.jpg 400w, https://example.com/p-800x600.jpg 800w"
+        >
+      `
+      const expected = html`
+        <img
+          srcset="https://example.com/p-400x300.jpg 400w, https://example.com/p-800x600.jpg 800w"
+          width="800"
+          height="600"
+        >
+      `
 
       expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should prefer src dimensions over srcset', async () => {
-      const value =
-        '<img src="https://example.com/p-300x200.jpg" srcset="https://example.com/p-800x600.jpg 800w">'
-      const expected =
-        '<img src="https://example.com/p-300x200.jpg" srcset="https://example.com/p-800x600.jpg 800w" width="300" height="200">'
+      const value = html`
+        <img
+          src="https://example.com/p-300x200.jpg"
+          srcset="https://example.com/p-800x600.jpg 800w"
+        >
+      `
+      const expected = html`
+        <img
+          src="https://example.com/p-300x200.jpg"
+          srcset="https://example.com/p-800x600.jpg 800w"
+          width="300"
+          height="200"
+        >
+      `
 
       expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should pick the widest candidate regardless of order', async () => {
-      const value =
-        '<img srcset="https://example.com/p-800x600.jpg 800w, https://example.com/p-400x300.jpg 400w">'
-      const result = await transform(value)
+      const value = html`
+        <img
+          srcset="https://example.com/p-800x600.jpg 800w, https://example.com/p-400x300.jpg 400w"
+        >
+      `
+      const expected = html`
+        <img
+          srcset="https://example.com/p-800x600.jpg 800w, https://example.com/p-400x300.jpg 400w"
+          width="800"
+          height="600"
+        >
+      `
 
-      expect(result).toContain('width="800"')
-      expect(result).toContain('height="600"')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should leave dimensions unset for an unparseable srcset', async () => {
@@ -374,6 +415,6 @@ describeForEachParser('resolveMediaDimensions', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

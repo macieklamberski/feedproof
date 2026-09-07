@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { decodeDoubleEncodedTags } from './decodeDoubleEncodedTags.js'
 
 describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [decodeDoubleEncodedTags(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [decodeDoubleEncodedTags(context)])
   }
 
   describe('decodes whole escaped fragments', () => {
@@ -183,12 +183,12 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
       const once = await transform(value)
       const twice = await transform(once)
 
-      expect(twice).toBe(once)
+      expect(twice).toEqualHtml(once)
     })
   })
 
   it('should handle an empty string', async () => {
-    expect(await transform('')).toBe('')
+    expect(await transform('')).toEqualHtml('')
   })
 
   it('should be idempotent', async () => {
@@ -196,6 +196,6 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

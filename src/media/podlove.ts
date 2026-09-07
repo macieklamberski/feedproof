@@ -1,10 +1,11 @@
 import { isAnyOf } from 'trousse'
 import type { MediaResolver, MediaResolverResult } from '../types.js'
+import { findConfigScript } from '../utils/dom.js'
 
 // Podlove Publisher ships the episode as a `<div class="podlove-web-player">` holding nothing
 // but custom elements (`<tab-chapters>`, `<icon>`, `<subscribe-button>`), with a sibling
 // `<script>` that builds the player on load. None of it renders in a reader, so the episode is
-// lost outright. The script body carries the whole config inline rather than a url to fetch,
+// lost outright. The script body carries the whole config inline, not a url to fetch,
 // which is what makes this recoverable without a network hop:
 //
 //   podlovePlayerCache.add([{"url":"…","data":{"audio":[{"url":"…mp3","mimeType":"audio/mpeg"}],
@@ -27,26 +28,6 @@ type PodloveConfig = Array<{
   }
 }>
 
-// The script sits beside the player. Where an item holds several episodes each player has its
-// own script, so the id is what ties the two together when they are not adjacent.
-const findConfigScript = (element: Element): Element | undefined => {
-  const sibling = element.nextElementSibling
-
-  if (sibling?.localName === 'script') {
-    return sibling
-  }
-
-  if (!element.id) {
-    return
-  }
-
-  for (const script of element.parentElement?.querySelectorAll('script') ?? []) {
-    if (script.textContent?.includes(element.id)) {
-      return script
-    }
-  }
-}
-
 const parseConfig = (script: Element): PodloveConfig | undefined => {
   const raw = script.textContent?.match(configRegex)?.[1]
 
@@ -60,6 +41,7 @@ const parseConfig = (script: Element): PodloveConfig | undefined => {
 }
 
 export const podloveMediaResolver: MediaResolver = {
+  kind: 'media',
   selector: 'div.podlove-web-player',
   extract: (element): MediaResolverResult | undefined => {
     const script = findConfigScript(element)
@@ -77,18 +59,18 @@ export const podloveMediaResolver: MediaResolver = {
     const file = files?.find((audio) => isAnyOf(audio.mimeType, preferredMimeTypes)) ?? files?.[0]
     const source = file?.url
 
-    // The config is interpolated straight into the element, so anything that is not an
-    // absolute url is dropped rather than emitted.
-    if (!source?.startsWith('http')) {
+    if (!source) {
       return
     }
 
-    const poster = data.poster ?? data.show?.poster
-
+    // Both urls travel as the config wrote them. convertWidgets resolves whatever a resolver
+    // returns, which is what gives a protocol-relative or feed-relative config the same
+    // treatment as one written in markup, and it drops the media when the src resolves to
+    // nothing at all.
     return {
       tag: 'audio',
       src: source,
-      ...(poster?.startsWith('http') ? { poster } : {}),
+      poster: data.poster ?? data.show?.poster,
     }
   },
 }

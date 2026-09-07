@@ -4,11 +4,9 @@ import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { trimPreWhitespace } from './trimPreWhitespace.js'
 
-const trailingNewlineBeforeCodeRegex = /\n<\/code>/
-
 describeForEachParser('trimPreWhitespace', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [trimPreWhitespace(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [trimPreWhitespace(context)])
   }
 
   it('should trim trailing newlines from code inside pre', async () => {
@@ -29,13 +27,13 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
     const value = '<pre>\n   \n</pre>'
     const expected = '<pre></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave an empty pre unchanged', async () => {
     const value = '<pre></pre>'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should trim leading newlines', async () => {
@@ -69,10 +67,10 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
   it('should trim trailing whitespace from highlighted code', async () => {
     const value =
       '<pre><code class="hljs"><span class="hljs-keyword">const</span> x = 1\n\n</code></pre>'
-    const result = await transform(value)
+    const expected =
+      '<pre><code class="hljs"><span class="hljs-keyword">const</span> x = 1</code></pre>'
 
-    expect(result).toContain('<span class="hljs-keyword">const</span> x = 1</code>')
-    expect(result).not.toMatch(trailingNewlineBeforeCodeRegex)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should dedent common leading indentation', async () => {
@@ -144,22 +142,21 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
     const value = '<pre>\n<span>x</span></pre>'
     const expected = '<pre><span>x</span></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should trim a trailing newline when the first child is an element', async () => {
     const value = '<pre><span>x</span>\n</pre>'
     const expected = '<pre><span>x</span></pre>'
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should handle multiple pre blocks', async () => {
     const value = '<pre><code>first\n</code></pre><pre><code>second\n</code></pre>'
-    const result = await transform(value)
+    const expected = '<pre><code>first</code></pre><pre><code>second</code></pre>'
 
-    expect(result).toContain('<code>first</code>')
-    expect(result).toContain('<code>second</code>')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should handle html with no pre blocks', async () => {
@@ -169,14 +166,14 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
   })
 
   it('should not stack extra entity encoding when no trimming is needed', async () => {
-    // <pre><code><xmp>…</xmp></code></pre> has nothing to trim; the transform
+    // <pre><code><xmp>…</xmp></code></pre> has nothing to trim. The transform
     // must skip the innerHTML write so linkedom doesn't double-escape the
     // raw-text entities inside <xmp> a second time.
     const value = '<pre><code><xmp>&lt;p&gt;Hi&lt;/p&gt;</xmp></code></pre>'
     const result = await transform(value)
     const baseline = await applyDomTransforms(parseHtml(value), [() => {}])
 
-    expect(result).toBe(baseline)
+    expect(result).toEqualHtml(baseline)
   })
 
   it('should trim trailing whitespace and dedent together', async () => {
@@ -198,6 +195,6 @@ describeForEachParser('trimPreWhitespace', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

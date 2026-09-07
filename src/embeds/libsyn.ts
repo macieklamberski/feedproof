@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { parsePixelSize } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -7,10 +7,16 @@ const safeIdRegex = /^\d+$/
 
 const libsynHosts = ['libsyn.com']
 
-// Libsyn spells its player options as path segments rather than a query string:
-// `/embed/episode/id/{id}/height/{px}/theme/{name}/thumbnail/{yes|no}/…`. `episode` and `show`
-// are the two kinds; a show player plays the latest episode.
-const embedKinds = ['episode', 'show', 'destination']
+// Libsyn spells its player options as path segments, not a query string:
+// `/embed/episode/id/{id}/height/{px}/theme/{name}/thumbnail/{yes|no}/…`.
+//
+// `show` reads like a kind and is not one: given a real show id it renders the same "Episode
+// Does Not Exist" error a nonsense kind does. `destination` is what plays a show's latest
+// episode, and it cannot repair a show carrier: the two are different id spaces naming different
+// podcasts. Show 45546 is The Feed while destination 45546 belongs to show 26465, and show 20000
+// is StarQuest while destination 20000 belongs to show 20290 (api, 2026-08-31). Rewriting the
+// kind would mint another show's player, so a show carrier falls through instead.
+const embedKinds = ['episode', 'destination']
 
 const readPathOption = (segments: Array<string>, name: string): string | undefined => {
   const index = segments.indexOf(name)
@@ -21,13 +27,7 @@ const readPathOption = (segments: Array<string>, name: string): string | undefin
 export const extractLibsynEmbed = (
   link: string,
 ): { kind: string; id: string; height?: number } | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const segments = getPathSegments(link)
 
   if (segments[0] !== 'embed' || !embedKinds.includes(segments[1] ?? '')) {
     return
@@ -56,7 +56,7 @@ export const extractLibsynEmbed = (
 //
 // No thumbnail and no canonical url. There is an `oembed.libsyn.com` endpoint, but it does not
 // answer for what the markup gives us: `?item_id={id}` returns `No valid media found` and
-// `?url={player url}` returns an HTML page rather than JSON (both checked 2026-08-11). The
+// `?url={player url}` returns an HTML page, not JSON (both checked 2026-08-11). The
 // episode title lives on the player page and artwork needs an authenticated api call.
 export const libsynResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const embed = extractLibsynEmbed(url)
@@ -71,7 +71,7 @@ export const libsynResolveEmbed = (url: string): EmbedResolverResult | undefined
     provider: 'libsyn',
     id: `${embed.kind}/${embed.id}`,
     src: `https://play.libsyn.com/embed/${embed.kind}/id/${embed.id}/${height}`,
-    ...(embed.height ? { height: embed.height } : {}),
+    height: embed.height,
   }
 }
 

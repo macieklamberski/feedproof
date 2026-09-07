@@ -71,7 +71,13 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
   // The corpus shape: the loader swaps this anchor for the player, so without it a reader sees
   // the fallback text and nothing else.
   const anchor = (attributes: string) =>
-    html`<a class="spreaker-player" href="https://www.spreaker.com/episode/42" ${attributes}>Listen to "An episode" on Spreaker.</a>`
+    html`
+      <a
+        class="spreaker-player"
+        href="https://www.spreaker.com/episode/42"
+        ${attributes}
+      >Listen to "An episode" on Spreaker.</a>
+    `
 
   describe('happy paths', () => {
     it('should read the episode out of data-resource', async () => {
@@ -160,6 +166,3 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
     })
   })
 })
-
-// The anchor is what a reader actually receives, so this asserts the whole placeholder the
-// pipeline emits from it rather than the resolver's return value alone.

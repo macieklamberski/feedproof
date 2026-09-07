@@ -50,9 +50,13 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
       const value = html`
         <div class="blog-card">
           <div class="blog-card-body">
-            <h5 class="blog-card-title"><a href="https://example.com/post">Page title</a></h5>
+            <h5 class="blog-card-title">
+              <a href="https://example.com/post">Page title</a>
+            </h5>
             <p class="blog-card-text">Preview text</p>
-            <div class="blog-card-site-title"><a href="https://example.com">Example Blog</a></div>
+            <div class="blog-card-site-title">
+              <a href="https://example.com">Example Blog</a>
+            </div>
           </div>
           <div class="blog-card-image-outer">
             <a href="https://example.com/post" class="blog-card-image-frame">
@@ -81,7 +85,9 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
       const value = html`
         <div class="blog-card">
           <div class="blog-card-content">
-            <div class="blog-card-title"><a href="https://example.com/post">Page title</a></div>
+            <div class="blog-card-title">
+              <a href="https://example.com/post">Page title</a>
+            </div>
           </div>
           <div class="blog-card-hatebu">
             <a href="//b.hatena.ne.jp/entry/https://example.com/post" rel="nofollow">
@@ -143,7 +149,9 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
       const value = html`
         <div class="blog-card">
           <a href="https://example.com/post">
-            <div class="blog-card-thumbnail"><img src="https://example.com/thumb.jpg" alt="Page title" width="150" height="150"></div>
+            <div class="blog-card-thumbnail">
+              <img src="https://example.com/thumb.jpg" alt="Page title" width="150" height="150">
+            </div>
             <div class="blog-card-content">
               <div class="blog-card-title">Page title</div>
               <div class="blog-card-excerpt">Preview text</div>
@@ -165,7 +173,9 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
     it('should leave optional fields undefined when only the title link is present', async () => {
       const value = html`
         <div class="blog-card">
-          <div class="blog-card-title"><a href="https://example.com/post">Page title</a></div>
+          <div class="blog-card-title">
+            <a href="https://example.com/post">Page title</a>
+          </div>
         </div>
       `
       const expected: CiteResolverResult = {
@@ -182,7 +192,9 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
     it('should return undefined when the title link has no href', async () => {
       const value = html`
         <div class="blog-card">
-          <div class="blog-card-title"><a>Page title</a></div>
+          <div class="blog-card-title">
+            <a>Page title</a>
+          </div>
           <div class="blog-card-excerpt">Preview text</div>
         </div>
       `

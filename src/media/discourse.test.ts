@@ -58,13 +58,18 @@ describeForEachParser('discourseMediaResolver', (parseHtml) => {
     })
 
     it('should return undefined when the src is empty', async () => {
-      const value = html`<div class="video-placeholder-container" data-video-src=""></div>`
+      const value = html`
+        <div
+          class="video-placeholder-container"
+          data-video-src=""
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should not match a container without data-video-src', async () => {
-      const value = html`<div class="video-placeholder-container"></div>`
+      const value = '<div class="video-placeholder-container"></div>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -79,17 +84,19 @@ describeForEachParser('discourseMediaResolver', (parseHtml) => {
         data-thumbnail-src="${thumbnailSrc}"
       ></div>
     `
+    const expected = html`
+      <p>Watch this:</p>
+      <video
+        src="${videoSrc}"
+        poster="${thumbnailSrc}"
+        controls
+      ></video>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://forum.example.com/t/1',
     })
 
-    // The two parsers serialize the video's attributes in different orders, so each is
-    // asserted on its own.
-    expect(result).toContain('<video')
-    expect(result).toContain(`src="${videoSrc}"`)
-    expect(result).toContain(`poster="${thumbnailSrc}"`)
-    expect(result).toContain('controls')
-    expect(result).not.toContain('video-placeholder-container')
+    expect(result).toEqualHtml(expected)
   })
 })

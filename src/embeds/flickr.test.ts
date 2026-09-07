@@ -186,6 +186,24 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // embedr takes only the NSID and nothing offline converts an alias into one, so an alias
+    // goes through the page player instead, which serves both owner spellings.
+    it('should mint the page player for an owner named by its path alias', async () => {
+      const value = html`
+        <iframe src="https://www.flickr.com/slideShow/index.gne?user_id=bees"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: 'photostreams/bees',
+        src: 'https://www.flickr.com/photos/bees/player?width=400&height=300',
+        url: 'https://www.flickr.com/photos/bees/',
+        width: 400,
+        height: 300,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // Without the owner the album page path cannot be built, but the platform's short url can:
     // it is the set id in base58, and flic.kr routes it to the owned page.
     it('should reach the album through the short url when the query names no user', async () => {
@@ -233,6 +251,86 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
     })
   })
 
+  // The page an album's own "view slideshow" link opened, pasted as the iframe src. Flickr
+  // refuses to be framed, so it is the same empty frame the legacy player leaves.
+  describe('the album or stream page framed directly', () => {
+    it('should map a framed album slideshow page onto the album player', async () => {
+      const value = html`
+        <iframe
+          src="http://www.flickr.com/photos/bees/sets/72157623516208778/show/"
+          style="height: 450px; width: 99%;"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: 'bees/72157623516208778',
+        src: 'https://embedr.flickr.com/photosets/72157623516208778?width=400&height=450',
+        url: 'https://www.flickr.com/photos/bees/sets/72157623516208778',
+        width: 400,
+        height: 450,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should map a framed album page without the show segment', async () => {
+      const value = html`
+        <iframe src="https://www.flickr.com/photos/12345678@N00/sets/72157624341/"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: '12345678@N00/72157624341',
+        src: 'https://embedr.flickr.com/photosets/72157624341?width=400&height=300',
+        url: 'https://www.flickr.com/photos/12345678@N00/sets/72157624341',
+        width: 400,
+        height: 300,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should map a framed photostream slideshow page onto the stream player', async () => {
+      const value = html`
+        <iframe src="https://www.flickr.com/photos/12345678@N04/show/"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: 'photostreams/12345678@N04',
+        src: 'https://embedr.flickr.com/photostreams/12345678@N04?width=400&height=300',
+        url: 'https://www.flickr.com/photos/12345678@N04/',
+        width: 400,
+        height: 300,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should map a framed group pool slideshow page onto the group player', async () => {
+      const value = html`
+        <iframe src="https://www.flickr.com/groups/797770@N21/pool/show/"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'flickr',
+        id: 'groups/797770@N21',
+        src: 'https://embedr.flickr.com/groups/797770@N21?width=400&height=300',
+        url: 'https://www.flickr.com/groups/797770@N21/',
+        width: 400,
+        height: 300,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // A single photo page names no slideshow, and nothing here can mint a player for it.
+    it('should return undefined for a framed photo page', async () => {
+      const value = html`
+        <iframe src="https://www.flickr.com/photos/12345678@N00/4362718294/"></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
   describe('sad paths', () => {
     it('should return undefined when the config names no set', async () => {
       const value = html`
@@ -246,7 +344,7 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for a carrier with no config at all', async () => {
-      const value = html`<embed src="https://www.flickr.com/apps/slideshow/show.swf?v=143567" />`
+      const value = '<embed src="https://www.flickr.com/apps/slideshow/show.swf?v=143567" />'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -273,7 +371,7 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
-    // A dots-only owner never reaches a minted path; the set beside it still resolves through
+    // A dots-only owner never reaches a minted path. The set beside it still resolves through
     // the ownerless shape.
     it('should keep the set when the owner is a traversal segment', async () => {
       const value = html`
