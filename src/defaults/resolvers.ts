@@ -79,6 +79,7 @@ import { flourishIframeEmbedResolver, flourishWidgetEmbedResolver } from '../emb
 import { foxnewsIframeEmbedResolver, foxnewsScriptEmbedResolver } from '../embeds/foxnews.js'
 import { geniallyEmbedResolver } from '../embeds/genially.js'
 import { gettyImagesEmbedResolver } from '../embeds/gettyimages.js'
+import { glomexElementEmbedResolver, glomexIframeEmbedResolver } from '../embeds/glomex.js'
 import { guardianEmbedResolver } from '../embeds/guardian.js'
 import { imgurBlockquoteEmbedResolver, imgurIframeEmbedResolver } from '../embeds/imgur.js'
 import {
@@ -250,6 +251,8 @@ const embedResolvers: Array<EmbedResolver> = [
   foxnewsIframeEmbedResolver,
   geniallyEmbedResolver,
   gettyImagesEmbedResolver,
+  glomexIframeEmbedResolver,
+  glomexElementEmbedResolver,
   acastEmbedResolver,
   anchorEmbedResolver,
   aparatIframeEmbedResolver,

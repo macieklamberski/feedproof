@@ -9,10 +9,17 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // subdomain, and the blog would come through with it.
 const codepenHosts = ['codepen.io', 'www.codepen.io']
 
-// Slugs are opaque and come in three lengths: 5 characters on pens from around 2012, 7 on
-// everything CodePen has minted since, and 32 hex characters on the ones its own team embeds.
-const slugRegex = /^[A-Za-z0-9]{5,32}$/
-const userRegex = /^[A-Za-z0-9_-]{1,32}$/
+// Slugs are opaque and come in three lengths already: 5 characters on pens from around 2012, 7
+// on everything CodePen has minted since, and 32 hex characters on the ones its own team embeds.
+// Neither length is checked. A slug sits behind the `pen` or `embed` route word and a username
+// in front of it, past the reserved segments below, so both positions take an id and nothing
+// else and a bound would only refuse the next length CodePen mints.
+//
+// The classes are what do the work. Neither admits a separator, which is what keeps the pen page
+// this composes on CodePen's own path, and neither admits a dot, which keeps a file on the host
+// playable when the enclosure probe offers it here.
+const slugRegex = /^[A-Za-z0-9]+$/
+const userRegex = /^[A-Za-z0-9_-]+$/
 const playerParamRegex = /^[A-Za-z0-9,_-]{1,64}$/
 const leadingAtRegex = /^@/
 // The player names itself in the title when the pen has none, as "CodePen by {user}".
