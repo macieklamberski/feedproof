@@ -3,10 +3,6 @@ import { attr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// A video hash is a short run of letters and digits, five or seven characters in the wild, so
-// the range is held open a little past both.
-const safeVideoHashRegex = /^[a-zA-Z0-9]{5,10}$/
-
 const aparatHost = 'aparat.com'
 const scriptPathRegex = /^\/embed\/([a-zA-Z0-9]+)$/
 const framePathRegex = /^\/video\/video\/embed\/videohash\/([a-zA-Z0-9]+)(?:\/vt\/frame)?\/?$/
@@ -45,10 +41,7 @@ const composeEmbed = (videoHash: string): EmbedResolverResult => {
 }
 
 const readVideoHash = (url: string | undefined, pathRegex: RegExp): string | undefined => {
-  const parsed = parseUrlOnHosts(url, aparatHost)
-  const videoHash = parsed?.pathname.match(pathRegex)?.[1]
-
-  return videoHash && safeVideoHashRegex.test(videoHash) ? videoHash : undefined
+  return parseUrlOnHosts(url, aparatHost)?.pathname.match(pathRegex)?.[1]
 }
 
 const aparatResolveEmbed = (link: string): EmbedResolverResult | undefined => {
