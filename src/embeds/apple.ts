@@ -59,7 +59,9 @@ export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined 
   // prefixed for a playlist or station, and `id`-prefixed for a podcast.
   const trackId = keepIfMatches(parsed.searchParams.get('i'), trackIdRegex)
   const id = trackId ?? pathId.replace(podcastIdPrefixRegex, '')
-  const query = pickUrlParams(url, ['i'])
+  // A refused `i` is dropped from the player url as well: the resolver does not forward a value
+  // it would not put in the id, and the collection player is what the path names without it.
+  const query = trackId ? pickUrlParams(url, ['i']) : ''
 
   return {
     provider: isPodcast ? 'applepodcasts' : 'applemusic',
