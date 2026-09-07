@@ -15,22 +15,54 @@ const unlistedHashRegex = /^[0-9a-f]{10}$/
 
 const vimeoHosts = ['vimeo.com', 'player.vimeo.com']
 
-// Paths whose leading numeric id is not a video: a showcase and an album are playlists, an event
-// is a livestream and an on-demand page is a store front, and each lives in its own id space, so
-// that id would mint a player for an unrelated video. A collection can still name a real video
-// deeper in its path, which is what readCollectionVideoId reads.
-const collectionPaths = new Set(['showcase', 'album', 'event', 'ondemand'])
+// Paths whose leading numeric id is not a video: a showcase and an album are playlists, a channel
+// and a group are listings, an event is a livestream and an on-demand page is a store front, and
+// each lives in its own id space, so that id would mint a player for an unrelated video. Channel
+// 927 and video 927 are both live and belong to different people. A collection can still name a
+// real video deeper in its path, which is what readCollectionVideoId reads.
+const collectionPaths = new Set(['showcase', 'album', 'channels', 'groups', 'event', 'ondemand'])
 
-// An album spells it `/album/{albumId}/video/{videoId}` and a showcase the same way, while an
-// on-demand page puts the video straight after its own segment. An event names its videos under
-// `/videos/`, but its bare and `/embed` forms are the common ones and both would read as a video
-// here, so the event player keeps going to the generic placeholder.
+// Vimeo's own pages sit where a video id does, and some of them carry a numeric id of their own:
+// `/users/{userId}` and `/manage/folders/{folderId}` both read as a video today, and user 152184
+// is also video 152184, which belongs to somebody else. The rest carry no numeric segment and are
+// named here anyway, so that refusing them does not rest on their last segment happening to be
+// non-numeric.
+const sitePathSegments = new Set([
+  'about',
+  'blog',
+  'categories',
+  'create',
+  'features',
+  'help',
+  'join',
+  'jobs',
+  'log_in',
+  'manage',
+  'privacy',
+  'search',
+  'settings',
+  'stock',
+  'terms',
+  'upgrade',
+  'users',
+  'watch',
+])
+
+// An album spells it `/album/{albumId}/video/{videoId}` and a showcase the same way, a group
+// spells it `/groups/{group}/videos/{videoId}`, while an on-demand page and a channel put the
+// video straight after their own segment. An event names its videos under `/videos/`, but its
+// bare and `/embed` forms are the common ones and both would read as a video here, so the event
+// player keeps going to the generic placeholder.
 const readCollectionVideoId = (segments: Array<string>): string | undefined => {
   if (segments[0] === 'showcase' || segments[0] === 'album') {
     return segments[2] === 'video' ? segments[3] : undefined
   }
 
-  if (segments[0] === 'ondemand') {
+  if (segments[0] === 'groups') {
+    return segments[2] === 'videos' ? segments[3] : undefined
+  }
+
+  if (segments[0] === 'ondemand' || segments[0] === 'channels') {
     return segments.length === 3 ? segments[2] : undefined
   }
 }
@@ -90,6 +122,10 @@ const readReference = (link: string): VimeoReference | undefined => {
     return id ? { id } : undefined
   }
 
+  if (sitePathSegments.has(segments[0])) {
+    return
+  }
+
   if (collectionPaths.has(segments[0])) {
     const id = keepIfMatches(readCollectionVideoId(segments), safeVideoIdRegex)
 
@@ -104,7 +140,7 @@ const readReference = (link: string): VimeoReference | undefined => {
     )
   })
   // The last numeric segment, which is the video in every remaining spelling: `/{id}`,
-  // `/video/{id}`, `/channels/{name}/{id}`, `/groups/{name}/videos/{id}` and the review pages.
+  // `/video/{id}` and the review pages.
   const path = hashIndex === -1 ? segments : segments.slice(0, hashIndex)
   const id = keepIfMatches(
     path.findLast((segment) => safeVideoIdRegex.test(segment)),

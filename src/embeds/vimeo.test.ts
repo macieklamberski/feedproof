@@ -26,11 +26,18 @@ describe('extractVimeoId', () => {
     expect(extractVimeoId(value)).toBeUndefined()
   })
 
-  // A showcase and an album are playlists, an event is a livestream and an on-demand page is a
-  // store front, each in its own id space, so their numeric segment names no video.
+  // A showcase and an album are playlists, a channel and a group are listings, an event is a
+  // livestream and an on-demand page is a store front, each in its own id space, so their numeric
+  // segment names no video. Channel 927 and group 195 are both live and 927 is also somebody's
+  // video, so reading the id off the listing serves a video the feed never named.
   const collectionUrls = [
     'https://vimeo.com/showcase/7060635',
     'https://vimeo.com/album/2632481',
+    'https://vimeo.com/channels/927',
+    'https://vimeo.com/channels/staffpicks',
+    'https://vimeo.com/groups/195',
+    'https://vimeo.com/groups/motion',
+    'https://vimeo.com/groups/motion/videos',
     'https://player.vimeo.com/event/1234567',
     'https://vimeo.com/ondemand/20704',
     'https://vimeo.com/ondemand/nazmaalik',
@@ -46,10 +53,41 @@ describe('extractVimeoId', () => {
     'https://vimeo.com/album/2632481/video/76979871',
     'https://vimeo.com/showcase/3253534/video/76979871',
     'https://vimeo.com/ondemand/36938/76979871',
+    'https://vimeo.com/channels/927/76979871',
+    'https://vimeo.com/groups/195/videos/76979871',
   ]
 
   it.each(collectionVideoUrls)('should extract the video the collection names in %s', (value) => {
     expect(extractVimeoId(value)).toBe('76979871')
+  })
+
+  // Vimeo's own pages sit where a video id does. `/users/{userId}` and `/manage/folders/{id}`
+  // carry a number of their own, and user 152184 is also somebody's video 152184. The rest carry
+  // no number and are pinned so the refusal does not rest on that.
+  const sitePaths = [
+    'https://vimeo.com/about',
+    'https://vimeo.com/blog',
+    'https://vimeo.com/categories/12345',
+    'https://vimeo.com/create',
+    'https://vimeo.com/features',
+    'https://vimeo.com/help',
+    'https://vimeo.com/join',
+    'https://vimeo.com/jobs',
+    'https://vimeo.com/log_in',
+    'https://vimeo.com/manage/folders/12345',
+    'https://vimeo.com/manage/videos/76979871',
+    'https://vimeo.com/privacy',
+    'https://vimeo.com/search/76979871',
+    'https://vimeo.com/settings/12345',
+    'https://vimeo.com/stock/clip-1234567-example',
+    'https://vimeo.com/terms',
+    'https://vimeo.com/upgrade',
+    'https://vimeo.com/users/152184',
+    'https://vimeo.com/watch/76979871',
+  ]
+
+  it.each(sitePaths)('should return undefined for the site path %s', (value) => {
+    expect(extractVimeoId(value)).toBeUndefined()
   })
 
   it('should return undefined when there is no numeric id', () => {
@@ -247,6 +285,14 @@ describe('vimeoResolveEmbed', () => {
 
       expect(vimeoResolveEmbed(value)).toBeUndefined()
     })
+  })
+
+  // The channel's id space is its own, and 927 is also a video somebody else made, so minting a
+  // player here plays the wrong video rather than none.
+  it('should not mint a player from a channel listing', () => {
+    const value = 'https://vimeo.com/channels/927'
+
+    expect(vimeoResolveEmbed(value)).toBeUndefined()
   })
 })
 

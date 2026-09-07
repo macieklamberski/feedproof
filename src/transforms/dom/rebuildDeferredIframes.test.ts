@@ -79,6 +79,28 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  // ARVE's lazyload play button. Its widget holds no image, so without this the reader is left
+  // with an empty box: 155 of the 276 corpus feeds carrying it have no YouTube player anywhere.
+  it('should rebuild an iframe from an ARVE play button', async () => {
+    const value = html`
+      <button
+        class="arve-play-btn arve-play-btn--youtube"
+        data-iframe="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1"
+      ></button>
+    `
+    const expected =
+      '<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1"></iframe>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  // `data-iframe` is a name anyone could pick, so the class is what says this is ARVE.
+  it('should leave a data-iframe attribute that ARVE did not write', async () => {
+    const value = '<div data-iframe="https://example.com/player"></div>'
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
   // 566 of the 624 corpus wrappers already hold the iframe, and this transform replaces what it
   // matches, so acting on those would discard a working player and the size it states.
   it('should leave a data-oembed-url wrapper that already holds a player', async () => {

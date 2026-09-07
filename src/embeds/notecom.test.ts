@@ -54,6 +54,20 @@ describeForEachParser('notecomIframeEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // A note under one of the platform's own publications, where the subdomain stands in for
+    // the user segment. The player serves it like any other note.
+    it('should mint the player from a publication post url', async () => {
+      const value = html`<iframe src="https://biz.note.com/n/n449782c9c270"></iframe>`
+      const expected: EmbedResolverResult = {
+        provider: 'notecom',
+        id: 'n449782c9c270',
+        src: 'https://note.com/embed/notes/n449782c9c270',
+        url: 'https://biz.note.com/n/n449782c9c270',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {

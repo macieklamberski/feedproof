@@ -29,6 +29,13 @@ export const flashFileRegex = /\.swf(\?|#|$)/i
 
 export const documentFileRegex = /\.(pdf|epub|docx?|pptx?|xlsx?)(\?|#|$)/i
 
+// The RFC 4122 form, which four platforms name an episode, a show or an upload by. It is not a
+// bet on a platform's current id length the way a measured band is, because the shape is fixed
+// by the spec rather than by whoever mints them, and Simplecast leans on the exactness: it is
+// what tells the current id space from the legacy eight hex characters, so a looser class would
+// read a legacy id as a current one and speak it to the wrong host.
+export const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 // A real, loadable src, not empty and not the `about:blank` lazy placeholder.
 export const isUsableSrc = (src: string | null): src is string => {
   const trimmed = src?.trim()
