@@ -50,6 +50,13 @@ describe('extractJwplayerId', () => {
     expect(extractJwplayerId(value)).toBeUndefined()
   })
 
+  it('should read an id longer than the eight characters JW mints today', () => {
+    const value = 'https://cdn.jwplayer.com/players/H4GXr873xyz-abc12345.html'
+    const expected = 'H4GXr873xyz'
+
+    expect(extractJwplayerId(value)).toBe(expected)
+  })
+
   it('should return undefined when the media id is malformed', () => {
     const value = 'https://cdn.jwplayer.com/players/short.html'
 

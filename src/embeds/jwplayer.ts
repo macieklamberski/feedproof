@@ -5,7 +5,13 @@ import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const fileExtensionRegex = /\.[a-z]+$/i
-const safeMediaIdRegex = /^[a-zA-Z0-9]{8}$/
+
+// Letters and digits, which is the whole of what a media id is written in. The length is not
+// checked: the id sits at a fixed position in every carrier, before the first dash of the file
+// name or after `/v2/media/` in a setup call, so no route word can land there, and a wrong id
+// fails the same whether it is minted or passed through. JW has minted eight characters so far,
+// and a bound on that would refuse the next id space silently.
+const safeMediaIdRegex = /^[a-zA-Z0-9]+$/
 
 const jwplayerHosts = ['jwplayer.com', 'jwplatform.com']
 
@@ -93,7 +99,7 @@ export const jwplayerAmpEmbedResolver = createMarkupEmbedResolver(
 // deleted as an empty tag and the video is gone. The setup object points its playlist at
 // `cdn.jwplayer.com/v2/media/{mediaId}`, which is the same id the other carriers name, so all
 // four resolve to one placeholder.
-const setupPlaylistRegex = /\/v2\/media\/([a-zA-Z0-9]{8})/
+const setupPlaylistRegex = /\/v2\/media\/([a-zA-Z0-9]+)/
 
 export const jwplayerSetupEmbedResolver = createMarkupEmbedResolver('div.jwplayer', (element) => {
   const config = findConfigScript(element)?.textContent
