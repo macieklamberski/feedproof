@@ -127,6 +127,13 @@ describe('archiveResolveEmbed', () => {
 
       expect(archiveResolveEmbed(value)).toBeUndefined()
     })
+
+    // The stranded `&` keeps the dot segment out of `URL`'s reach, so nothing has folded it.
+    it('should refuse an identifier that is only dots', () => {
+      const value = 'https://archive.org/embed/..&playlist=1'
+
+      expect(archiveResolveEmbed(value)).toBeUndefined()
+    })
   })
 })
 
@@ -304,6 +311,18 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
 
     it('should ignore a player carrying no config', async () => {
       const value = '<embed src="http://www.archive.org/flow/flowplayer.commercial-3.2.1.swf">'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // The config is raw text, so a dot segment in it reaches the mint unfolded.
+    it('should ignore a config whose identifier is only dots', async () => {
+      const value = html`
+        <embed
+          src="http://www.archive.org/flow/flowplayer.commercial-3.2.1.swf"
+          flashvars='config={"playlist":[{"url":"http://www.archive.org/download/../clip.mp4"}]}'
+        />
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
