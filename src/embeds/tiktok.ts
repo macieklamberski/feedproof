@@ -45,11 +45,18 @@ const readWatchUrl = (url: string | undefined): Clip => {
   return { handle, videoId }
 }
 
-// A blockquote declares only `max-width` and `min-width`, never a height, so a TikTok normally
-// reaches the reader with no size and is drawn as a video-shaped box, which is wrong for a
-// vertical clip on both axes. One shape does carry a real one: where a CMS stored the page
-// after `embed.js` ran, the hydrated iframe keeps the height it rendered at in its inline
-// style. That is a measurement of this clip at this width, so it is taken when it is there.
+// A blockquote declares only `max-width` and `min-width`, never a height, so on its own a
+// TikTok would reach the reader with no size and be drawn as a video-shaped box, wrong for a
+// vertical clip on both axes. The player's fixed height is what the placeholder states instead.
+// One shape carries a better number: where a CMS stored the page after `embed.js` ran, the
+// hydrated iframe keeps the height it rendered at in its inline style. That is a measurement of
+// this clip at this width, so it wins when it is there.
+const clipSize = (element: Element): { width?: number; height: number } => {
+  const { width, height } = hydratedSize(element)
+
+  return height ? { width, height } : { height: playerHeight }
+}
+
 const hydratedSize = (element: Element): { width?: number; height?: number } => {
   // The stored iframe is matched by the same player paths the direct carrier resolver claims,
   // so a hydrated copy keeps its measurement whichever player url the CMS wrote.
@@ -130,7 +137,7 @@ const resolveClip = (element: Element): EmbedResolverResult | undefined => {
     url: cited.videoId ? cite : undefined,
     description: text(caption),
     author,
-    ...hydratedSize(element),
+    ...clipSize(element),
   }
 }
 

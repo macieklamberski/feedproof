@@ -44,6 +44,23 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
+    // The url passes below give the carrier its scheme and its base, so a data-src that
+    // names neither is a carrier like any other.
+    it('should convert a figure with a protocol-relative data-src into an iframe', async () => {
+      const value = html`
+        <figure
+          name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
+          data-src="//www.youtube.com/watch?v=dQw4w9WgXcQ"
+          data-identifier="n1234"
+          embedded-service="youtube"
+          embedded-content-key="emb123"
+        ></figure>
+      `
+      const expected = html`<iframe src="//www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>`
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
     it('should convert a note figure into an iframe', async () => {
       const value = html`
         <figure
@@ -164,20 +181,6 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(value)
     })
 
-    it('should leave a figure with a non-http data-src untouched', async () => {
-      const value = html`
-        <figure
-          name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
-          data-src="javascript:alert(1)"
-          data-identifier="n1234"
-          embedded-service="youtube"
-          embedded-content-key="emb123"
-        ></figure>
-      `
-
-      expect(await transform(value)).toEqualHtml(value)
-    })
-
     it('should leave a figure with an empty data-src untouched', async () => {
       const value = html`
         <figure
@@ -197,6 +200,53 @@ describeForEachParser('convertNoteEmbeds', (parseHtml) => {
 
       expect(await transform(value)).toEqualHtml(value)
     })
+  })
+
+  it('should resolve a feed-relative data-src against the base url end to end', async () => {
+    const value = html`
+      <figure
+        name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
+        data-src="/n/n1234"
+        data-identifier="n1234"
+        embedded-service="note"
+        embedded-content-key="emb123"
+      ></figure>
+    `
+    const expected = html`
+      <div
+        data-embed-src="https://note.com/embed/notes/n1234"
+        data-embed-provider="notecom"
+        data-embed-id="n1234"
+        data-embed-url="https://note.com/n/n1234"
+      ></div>
+    `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://note.com/user/n/n1234',
+    })
+
+    expect(result).toEqualHtml(expected)
+  })
+
+  // The scheme floor belongs to neutralizeUnsafeUrls, which runs over every carrier the
+  // pipeline builds, so this transform reads the url note.com stated and hands it on.
+  it('should render a dangerous data-src inert end to end', async () => {
+    const value = html`
+      <figure
+        name="80c4d437-61f6-4500-9007-1a4ac10bdd2e"
+        data-src="javascript:alert(1)"
+        data-identifier="n1234"
+        embedded-service="youtube"
+        embedded-content-key="emb123"
+      ></figure>
+    `
+    const expected = html`<iframe src="about:blank"></iframe>`
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://note.com/user/n/n1234',
+    })
+
+    expect(result).toEqualHtml(expected)
   })
 
   it('should produce a youtube placeholder end to end', async () => {

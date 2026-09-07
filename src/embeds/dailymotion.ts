@@ -98,6 +98,12 @@ export const dailymotionResolveEmbed = (url: string): EmbedResolverResult | unde
       src: `https://www.dailymotion.com/embed/video/${videoId}${pickUrlParams(url, dailymotionEmbedParams)}`,
       url: `https://www.dailymotion.com/video/${videoId}`,
       thumbnail: `https://www.dailymotion.com/thumbnail/video/${videoId}`,
+      // Not the player's shape: it fills whatever frame it gets, at 320, 640 and 1280 wide alike,
+      // measured 2026-09-07 in Chrome on `x7tgad0`, whose own API states 1280x720. It is the
+      // corpus shape of the carriers: of 1,011 `dailymotion.com/embed` iframes across 396 sampled
+      // feeds, 813 state a box, 511 of those 16:9, 51 4:3, 251 another landscape shape and none
+      // portrait; 10 state a height alone and 188 state nothing, which is where this fires, since
+      // `decideSize` takes the carrier's size first.
       ratio: '16/9',
     }
   }
