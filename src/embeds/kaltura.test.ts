@@ -62,6 +62,20 @@ describe('kalturaResolveEmbed', () => {
 
       expect(kalturaResolveEmbed(value)).toEqual(expected)
     })
+
+    it('should read an entry on a namespace past the first two', () => {
+      const value =
+        'https://cdnapisec.kaltura.com/p/2851211/embedPlaykitJs/uiconf_id/53021102?iframeembed=true&entry_id=2_rq4nfd7g'
+      const expected: EmbedResolverResult = {
+        provider: 'kaltura',
+        id: '2851211/2_rq4nfd7g',
+        src: 'https://cdnapisec.kaltura.com/p/2851211/embedPlaykitJs/uiconf_id/53021102?iframeembed=true&entry_id=2_rq4nfd7g',
+        thumbnail:
+          'https://cdnapisec.kaltura.com/p/2851211/thumbnail/entry_id/2_rq4nfd7g/width/640',
+      }
+
+      expect(kalturaResolveEmbed(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
