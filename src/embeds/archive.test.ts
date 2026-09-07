@@ -4,6 +4,7 @@ import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   archiveFlashEmbedResolver,
+  archiveIframeEmbedResolver,
   archiveResolveEmbed,
   extractArchiveIdentifier,
 } from './archive.js'
@@ -170,6 +171,47 @@ describe('archiveResolveEmbed', () => {
 
       expect(archiveResolveEmbed(value)).toBeUndefined()
     })
+  })
+})
+
+describeForEachParser('archiveIframeEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, archiveIframeEmbedResolver)
+
+  // `embed/{identifier}` serves audio and video alike, so the carrier's height is the only thing
+  // that says which one this is. The bar is 30 tall at every width, so its width goes: kept, the
+  // frontend would read the pair as a ratio and grow the box with the column.
+  it('should keep the audio bar height alone when the carrier states it', async () => {
+    const value = html`
+      <iframe src="https://archive.org/embed/pcast400" width="350" height="30"></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'archive',
+      id: 'pcast400',
+      src: 'https://archive.org/embed/pcast400',
+      url: 'https://archive.org/details/pcast400',
+      thumbnail: 'https://archive.org/services/img/pcast400',
+      height: 30,
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
+  // A video carrier's box measures the player it gets, so it stands whole.
+  it('should keep a video carrier box whole', async () => {
+    const value = html`
+      <iframe src="https://archive.org/embed/TheGoodOldGasMask" width="560" height="384"></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'archive',
+      id: 'TheGoodOldGasMask',
+      src: 'https://archive.org/embed/TheGoodOldGasMask',
+      url: 'https://archive.org/details/TheGoodOldGasMask',
+      thumbnail: 'https://archive.org/services/img/TheGoodOldGasMask',
+      width: 560,
+      height: 384,
+    }
+
+    expect(await extract(value)).toEqual(expected)
   })
 })
 
