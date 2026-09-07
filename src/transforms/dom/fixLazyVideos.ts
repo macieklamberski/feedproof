@@ -3,8 +3,8 @@ import { isUrlShaped, isUsableSrc } from '../../utils/urls.js'
 
 // Promote a lazy <video> src (the real clip URL parked in a data-* attribute) into
 // `src`, and a lazy `data-poster` into `poster`, so a no-JS reader shows the still
-// frame and can play the clip. Mirrors fixLazyIframes for the <video> element itself;
-// lazy <source> children are already handled by fixLazyImages.
+// frame and can play the clip. Only the <video> element itself is fixed here: lazy
+// <source> children are already handled by fixLazyImages.
 export const fixLazyVideos: DomTransform = (context) => (document) => {
   for (const video of document.querySelectorAll('video')) {
     if (!isUsableSrc(video.getAttribute('poster'))) {
@@ -15,7 +15,7 @@ export const fixLazyVideos: DomTransform = (context) => (document) => {
       }
     }
 
-    // Promote a lazy src only when the element itself has nothing to play from — a
+    // Promote a lazy src only when the element itself has nothing to play from: a
     // usable src or a <source> child means the clip already resolves.
     if (isUsableSrc(video.getAttribute('src')) || video.querySelector('source')) {
       continue

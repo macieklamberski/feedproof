@@ -4,7 +4,6 @@ import {
   hasText,
   isBlockElement,
   isElement,
-  isGeneratedWrapper,
   isText,
 } from '../../utils/dom.js'
 
@@ -32,7 +31,7 @@ const inlineHostTags = new Set([
 const mediaSelector = 'img, picture, video, audio, iframe, embed, object'
 
 // Standalone media at a run's edge (bare or wrapped in a textless anchor/span)
-// renders as a block of its own; pulling it into the text's paragraph would glue
+// renders as a block of its own. Pulling it into the text's paragraph would glue
 // the text to it and hide it from media-specific styling.
 const isMediaBoundary = (node: Node): boolean => {
   if (isText(node)) {
@@ -50,7 +49,7 @@ const isMediaBoundary = (node: Node): boolean => {
   return node.matches(mediaSelector) || node.querySelector(mediaSelector) !== null
 }
 
-// Wrappers unwrapWrappers later dissolves into a flow root; their inline content
+// Wrappers unwrapWrappers later dissolves into a flow root. Their inline content
 // would otherwise become bare text, so even a single full-container run is wrapped.
 const dissolvingTags = new Set(['div', 'article', 'section', 'main', 'header', 'footer'])
 
@@ -70,14 +69,6 @@ export const wrapBareInlineInParagraphs: DomTransform = () => {
         continue
       }
 
-      // A placeholder's fallback link is its whole content and is replaced wholesale by a
-      // consumer, so wrapping it gains nothing. Skipping also keeps the pipeline stable on
-      // a second run: cite placeholders exist by the time this runs and embed placeholders
-      // do not, so wrapping produced two different shapes and a re-run changed the output.
-      if (isGeneratedWrapper(container)) {
-        continue
-      }
-
       const children: Array<Node> = []
       let hasBlockChild = false
 
@@ -90,8 +81,8 @@ export const wrapBareInlineInParagraphs: DomTransform = () => {
       }
 
       // Non-dissolving containers (li, td, blockquote, aside) only get paragraphs
-      // when content is split by a block sibling; a plain single-run cell or item
-      // is left as-is, mirroring convertBreaksToParagraphs' single-chunk skip.
+      // when content is split by a block sibling. A plain single-run cell or item
+      // is left as-is.
       const shouldWrap =
         alwaysWrapTags.has(container.localName) ||
         dissolvingTags.has(container.localName) ||

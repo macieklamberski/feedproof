@@ -11,6 +11,7 @@ import { attr, find, text } from '../utils/dom.js'
 // The anchor sits directly in the blockquote on some installs and inside a `<p>` on
 // others, so it is found by descendant rather than by child.
 export const wordpressCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: 'blockquote.wp-embedded-content',
   extract: (element) => {
     const link = find(element, 'a[href]')

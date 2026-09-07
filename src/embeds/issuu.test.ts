@@ -29,7 +29,12 @@ describeForEachParser('issuuWidgetEmbedResolver', (parseHtml) => {
     })
 
     it('should resolve a div that states no size', async () => {
-      const value = html`<div class="issuuembed" data-configid="1016421/47623369"></div>`
+      const value = html`
+        <div
+          class="issuuembed"
+          data-configid="1016421/47623369"
+        ></div>
+      `
       const expected: EmbedResolverResult = {
         provider: 'issuu',
         id: '1016421/47623369',
@@ -100,13 +105,23 @@ describeForEachParser('issuuWidgetEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined for a config id that is not a counter pair', async () => {
-      const value = html`<div class="issuuembed" data-configid="../evil/1"></div>`
+      const value = html`
+        <div
+          class="issuuembed"
+          data-configid="../evil/1"
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined for an empty config id', async () => {
-      const value = html`<div class="issuuembed" data-configid=""></div>`
+      const value = html`
+        <div
+          class="issuuembed"
+          data-configid=""
+        ></div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -128,14 +143,14 @@ describeForEachParser('issuuWidgetEmbedResolver', (parseHtml) => {
     })
 
     it('should not match a div carrying neither attribute', async () => {
-      const value = html`<div class="issuuembed"></div>`
+      const value = '<div class="issuuembed"></div>'
 
       expect(await extract(value)).toBeUndefined()
     })
 
     // The bare attribute is not the platform: the class is the other half of the guard.
     it('should not match a data-configid div without the issuu class', async () => {
-      const value = html`<div data-configid="1016421/47623369"></div>`
+      const value = '<div data-configid="1016421/47623369"></div>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -229,7 +244,7 @@ describeForEachParser('issuuIframeEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should return undefined for an issuu url naming no document', async () => {
-      const value = html`<iframe src="https://e.issuu.com/embed.html"></iframe>`
+      const value = '<iframe src="https://e.issuu.com/embed.html"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -252,6 +267,12 @@ describeForEachParser('issuuIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    it('should return undefined for names that are dot segments', async () => {
+      const value = '<iframe src="https://e.issuu.com/embed.html?u=..&d=.."></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     it('should not claim another host spelling the embed path', async () => {
       const value = html`
         <iframe src="https://evil.test/embed.html?u=ecosistemaurbano&d=paisaje_transversal"></iframe>
@@ -266,6 +287,113 @@ describeForEachParser('issuuIframeEmbedResolver', (parseHtml) => {
       `
 
       expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  describe('the publication name the snippet states', () => {
+    it('should carry the title across from a query-form iframe', async () => {
+      const value = html`
+        <iframe
+          title="The Beast - July 2026"
+          src="https://e.issuu.com/embed.html?d=the_beast_-_july_2026&u=thebeastmag"
+          allowfullscreen="true"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'issuu',
+        id: 'thebeastmag/the_beast_-_july_2026',
+        src: 'https://e.issuu.com/embed.html?u=thebeastmag&d=the_beast_-_july_2026',
+        url: 'https://issuu.com/thebeastmag/docs/the_beast_-_july_2026',
+        title: 'The Beast - July 2026',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should carry the title across from a hash-form iframe', async () => {
+      const value = html`
+        <iframe
+          title="Vermont Cynic Drug Issue 2026"
+          src="https://e.issuu.com/embed.html#1016421/47623369"
+          frameborder="0"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'issuu',
+        id: '1016421/47623369',
+        src: 'https://e.issuu.com/embed.html#1016421/47623369',
+        title: 'Vermont Cynic Drug Issue 2026',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should state no title when the attribute holds only whitespace', async () => {
+      const value = html`
+        <iframe
+          title="   "
+          src="https://e.issuu.com/embed.html?d=the_beast_-_july_2026&u=thebeastmag"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'issuu',
+        id: 'thebeastmag/the_beast_-_july_2026',
+        src: 'https://e.issuu.com/embed.html?u=thebeastmag&d=the_beast_-_july_2026',
+        url: 'https://issuu.com/thebeastmag/docs/the_beast_-_july_2026',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  // A carrier framing the reader page rather than the embed, which is what a publisher pastes
+  // from the address bar. The document is named the same way the widget div's `data-url` names
+  // it, so both go through one reader.
+  describe('the reader page', () => {
+    it('should mint the embed url from a reader page', async () => {
+      const value =
+        '<iframe title="The Beast" src="https://issuu.com/basilikimetatroulou/docs/xyz_9_1_final"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'issuu',
+        id: 'basilikimetatroulou/xyz_9_1_final',
+        src: 'https://e.issuu.com/embed.html?u=basilikimetatroulou&d=xyz_9_1_final',
+        url: 'https://issuu.com/basilikimetatroulou/docs/xyz_9_1_final',
+        title: 'The Beast',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should carry the page number a reader page states', async () => {
+      const value =
+        '<iframe src="https://issuu.com/basilikimetatroulou/docs/xyz_9_1_final/1"></iframe>'
+
+      const expected: EmbedResolverResult = {
+        provider: 'issuu',
+        id: 'basilikimetatroulou/xyz_9_1_final',
+        src: 'https://e.issuu.com/embed.html?u=basilikimetatroulou&d=xyz_9_1_final&p=1',
+        url: 'https://issuu.com/basilikimetatroulou/docs/xyz_9_1_final',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The enclosure probe offers every attachment a feed carries to each url resolver, so a
+    // document name that is a filename would take the place of a playable or downloadable file.
+    it.each([
+      '<iframe src="https://issuu.com/pub/docs/report.pdf"></iframe>',
+      '<iframe src="https://issuu.com/pub/docs/episode.mp3"></iframe>',
+      '<iframe src="https://issuu.com/pub/docs/cover.jpg"></iframe>',
+    ])('should return undefined for %s', async (value) => {
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for an issuu path naming no document', async () => {
+      const publisher = '<iframe src="https://issuu.com/basilikimetatroulou"></iframe>'
+      const stack = '<iframe src="https://issuu.com/basilikimetatroulou/stacks/abc"></iframe>'
+
+      expect(await extract(publisher)).toBeUndefined()
+      expect(await extract(stack)).toBeUndefined()
     })
   })
 

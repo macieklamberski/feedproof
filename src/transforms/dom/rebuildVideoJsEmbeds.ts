@@ -1,22 +1,11 @@
 import type { DomTransform } from '../../types.js'
-import { attr } from '../../utils/dom.js'
+import { attr, jsonAttr } from '../../utils/dom.js'
 import { videoFileRegex } from '../../utils/urls.js'
+import { createMediaElement } from '../../utils/widgets.js'
 
 type SetupConfig = {
   sources?: Array<{ src?: string }>
   poster?: string
-}
-
-const readSetup = (element: Element): SetupConfig | undefined => {
-  const raw = attr(element, 'data-setup')
-
-  if (!raw) {
-    return
-  }
-
-  try {
-    return JSON.parse(raw)
-  } catch {}
 }
 
 // The file sits either in a `<source>` child or in the
@@ -25,7 +14,7 @@ const readSetup = (element: Element): SetupConfig | undefined => {
 // so a native element pointed at one shows an empty box everywhere except Safari.
 // `videoFileRegex` draws that line already, so nothing here has to detect "live".
 const buildVideo = (document: Document, element: Element): Element | undefined => {
-  const setup = readSetup(element)
+  const setup = jsonAttr<SetupConfig>(element, 'data-setup')
   const child = Array.from(element.querySelectorAll('source'))
     .map((source) => attr(source, 'src'))
     .find((source) => source && videoFileRegex.test(source))
@@ -35,17 +24,11 @@ const buildVideo = (document: Document, element: Element): Element | undefined =
     return
   }
 
-  const video = document.createElement('video')
-  video.setAttribute('src', source)
-  video.setAttribute('controls', '')
-
-  const poster = attr(element, 'poster') ?? setup?.poster
-
-  if (poster) {
-    video.setAttribute('poster', poster)
-  }
-
-  return video
+  return createMediaElement(document, {
+    tag: 'video',
+    src: source,
+    poster: attr(element, 'poster') ?? setup?.poster,
+  })
 }
 
 // `<video-js>` is a custom element, so it renders as nothing at all until the Video.js script

@@ -5,7 +5,7 @@ import { attr, find, text } from '../utils/dom.js'
 // A hyphenated `blog-card-*` link-card vocabulary emitted by several WordPress themes, distinct
 // from Cocoon's unhyphenated `blogcard-*` one. A card cannot be attributed to a theme from its
 // markup, so they share one resolver. Two dialects name the same three fields differently, so
-// each is read from both spellings. `blog-card-title` is the only class every card carries.
+// each is read from every spelling. `blog-card-title` is the only class every card carries.
 //
 // Where the url sits varies with the dialect: some themes make the card itself the anchor, others
 // link only the title, others wrap the whole card body in one anchor. The Hatena bookmark button
@@ -20,6 +20,7 @@ const cardUrl = (element: Element): string | undefined => {
 }
 
 export const blogCardCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.blog-card',
   extract: (element) => {
     return buildCite({

@@ -4,9 +4,13 @@ import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { flattenPictureElements } from './flattenPictureElements.js'
 
+// Cases asserted with `toEqualHtml` are the ones where the transform adds an attribute the img
+// did not already carry: linkedom and jsdom serialise the added `src`/`srcset` on opposite sides
+// of the attributes already there, so only the attribute order differs. Every other case is
+// byte-identical under both parsers and uses `toBe`.
 describeForEachParser('flattenPictureElements', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [flattenPictureElements(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [flattenPictureElements(context)])
   }
 
   it('should promote a webp source onto the inner img', async () => {
@@ -25,16 +29,17 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
         >
       </picture>
     `
-    const result = await transform(value)
+    const expected = html`
+      <img
+        src="https://example.com/a-1400.webp"
+        srcset="https://example.com/a-650.webp 650w, https://example.com/a-1400.webp 1400w"
+        alt="photo"
+        width="1400"
+        height="1023"
+      >
+    `
 
-    expect(result).not.toContain('<picture')
-    expect(result).not.toContain('<source')
-    expect(result).toContain('src="https://example.com/a-1400.webp"')
-    expect(result).toContain('https://example.com/a-650.webp 650w')
-    expect(result).not.toContain('.jpeg')
-    expect(result).toContain('alt="photo"')
-    expect(result).toContain('width="1400"')
-    expect(result).toContain('height="1023"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should prefer an avif source over a webp source', async () => {
@@ -45,11 +50,15 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
         <img src="https://example.com/a.jpeg" alt="photo">
       </picture>
     `
-    const result = await transform(value)
+    const expected = html`
+      <img
+        src="https://example.com/a.avif"
+        srcset="https://example.com/a.avif 1000w"
+        alt="photo"
+      >
+    `
 
-    expect(result).toContain('src="https://example.com/a.avif"')
-    expect(result).not.toContain('.webp')
-    expect(result).not.toContain('.jpeg')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should not promote an art-direction source carrying a media attribute', async () => {
@@ -63,12 +72,14 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
         <img src="https://example.com/a.jpeg" alt="photo">
       </picture>
     `
-    const result = await transform(value)
+    const expected = html`
+      <img
+        src="https://example.com/a.jpeg"
+        alt="photo"
+      >
+    `
 
-    expect(result).not.toContain('<picture')
-    expect(result).not.toContain('<source')
-    expect(result).toContain('src="https://example.com/a.jpeg"')
-    expect(result).not.toContain('.webp')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should lift the inner img unchanged when there is no modern source', async () => {
@@ -77,13 +88,16 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
         <img src="https://example.com/a.jpeg" alt="photo" width="800" height="600">
       </picture>
     `
-    const result = await transform(value)
+    const expected = html`
+      <img
+        src="https://example.com/a.jpeg"
+        alt="photo"
+        width="800"
+        height="600"
+      >
+    `
 
-    expect(result).not.toContain('<picture')
-    expect(result).toContain('src="https://example.com/a.jpeg"')
-    expect(result).toContain('alt="photo"')
-    expect(result).toContain('width="800"')
-    expect(result).toContain('height="600"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should drop a stale sizes attribute when promoting', async () => {
@@ -98,16 +112,21 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
         >
       </picture>
     `
-    const result = await transform(value)
+    const expected = html`
+      <img
+        src="https://example.com/a.webp"
+        srcset="https://example.com/a.webp 1000w"
+        alt="photo"
+      >
+    `
 
-    expect(result).not.toContain('sizes=')
-    expect(result).toContain('src="https://example.com/a.webp"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave a bare img unchanged', async () => {
     const value = '<img src="https://example.com/a.jpeg" alt="photo">'
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should synthesize an img when the picture has no img fallback', async () => {
@@ -119,13 +138,14 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
         >
       </picture>
     `
-    const result = await transform(value)
+    const expected = html`
+      <img
+        src="https://example.com/a-1400.webp"
+        srcset="https://example.com/a-650.webp 650w, https://example.com/a-1400.webp 1400w"
+      >
+    `
 
-    expect(result).not.toContain('<picture')
-    expect(result).not.toContain('<source')
-    expect(result).toContain('<img')
-    expect(result).toContain('src="https://example.com/a-1400.webp"')
-    expect(result).toContain('https://example.com/a-650.webp 650w')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should drop a picture that has no img and no usable source', async () => {
@@ -134,11 +154,9 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
         <source type="image/webp">
       </picture>
     `
-    const result = await transform(value)
+    const expected = ''
 
-    expect(result).not.toContain('<picture')
-    expect(result).not.toContain('<source')
-    expect(result).not.toContain('<img')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should drop a picture whose only source has an empty srcset', async () => {
@@ -147,10 +165,9 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
         <source srcset=",">
       </picture>
     `
-    const result = await transform(value)
+    const expected = ''
 
-    expect(result).not.toContain('<picture')
-    expect(result).not.toContain('<img')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should give a src-less img a src from its own srcset', async () => {
@@ -159,10 +176,14 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
         <img srcset="https://example.com/a-400.jpg 400w, https://example.com/a-800.jpg 800w">
       </picture>
     `
-    const result = await transform(value)
+    const expected = html`
+      <img
+        src="https://example.com/a-800.jpg"
+        srcset="https://example.com/a-400.jpg 400w, https://example.com/a-800.jpg 800w"
+      >
+    `
 
-    expect(result).not.toContain('<picture')
-    expect(result).toContain('src="https://example.com/a-800.jpg"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should flatten multiple pictures in one document', async () => {
@@ -176,11 +197,20 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
         <img src="https://example.com/b.jpeg" alt="b">
       </picture>
     `
-    const result = await transform(value)
+    const expected = html`
+      <img
+        src="https://example.com/a.webp"
+        srcset="https://example.com/a.webp 1000w"
+        alt="a"
+      >
+      <img
+        src="https://example.com/b.webp"
+        srcset="https://example.com/b.webp 1000w"
+        alt="b"
+      >
+    `
 
-    expect(result).not.toContain('<picture')
-    expect(result).toContain('src="https://example.com/a.webp"')
-    expect(result).toContain('src="https://example.com/b.webp"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should fall back to a valid source when the preferred one has an empty srcset', async () => {
@@ -190,10 +220,14 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
         <source srcset="https://example.com/ok.jpg 800w">
       </picture>
     `
-    const result = await transform(value)
+    const expected = html`
+      <img
+        src="https://example.com/ok.jpg"
+        srcset="https://example.com/ok.jpg 800w"
+      >
+    `
 
-    expect(result).not.toContain('<picture')
-    expect(result).toContain('src="https://example.com/ok.jpg"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should keep a real sizes attribute when promoting', async () => {
@@ -206,10 +240,15 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
         <img src="https://example.com/a.jpg" srcset="https://example.com/a.jpg 400w" sizes="50vw">
       </picture>
     `
-    const result = await transform(value)
+    const expected = html`
+      <img
+        src="https://example.com/b.webp"
+        srcset="https://example.com/a.webp 400w, https://example.com/b.webp 800w"
+        sizes="50vw"
+      >
+    `
 
-    expect(result).toContain('sizes="50vw"')
-    expect(result).toContain('src="https://example.com/b.webp"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should take the last candidate of a density-only srcset', async () => {
@@ -222,9 +261,15 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
         <img src="https://example.com/a.jpeg" alt="photo">
       </picture>
     `
-    const result = await transform(value)
+    const expected = html`
+      <img
+        src="https://example.com/a@2x.webp"
+        srcset="https://example.com/a.webp 1x, https://example.com/a@2x.webp 2x"
+        alt="photo"
+      >
+    `
 
-    expect(result).toContain('src="https://example.com/a@2x.webp"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should be idempotent', async () => {
@@ -237,6 +282,6 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

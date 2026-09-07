@@ -48,7 +48,10 @@ describeForEachParser('paragraphCiteResolver', (parseHtml) => {
         <div data-type="embedly" data='{"url":"https://example.com/post","title":"Page title"}'>
           <div class="react-component embed my-5">
             <a class="link-embed-link" href="https://example.com/post">
-              <div class="link-embed"><h2>Rendered title</h2><p>Rendered text</p></div>
+              <div class="link-embed">
+                <h2>Rendered title</h2>
+                <p>Rendered text</p>
+              </div>
             </a>
           </div>
         </div>

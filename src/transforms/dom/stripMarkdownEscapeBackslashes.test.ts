@@ -5,8 +5,8 @@ import { applyDomTransforms } from '../../utils/transforms.js'
 import { stripMarkdownEscapeBackslashes } from './stripMarkdownEscapeBackslashes.js'
 
 describeForEachParser('stripMarkdownEscapeBackslashes', (parseHtml) => {
-  const transform = (html: string, context: TransformContext = baseContext) => {
-    return applyDomTransforms(parseHtml(html), [stripMarkdownEscapeBackslashes(context)])
+  const transform = (value: string, context: TransformContext = baseContext) => {
+    return applyDomTransforms(parseHtml(value), [stripMarkdownEscapeBackslashes(context)])
   }
 
   it('should empty a lone-backslash paragraph', async () => {
@@ -61,7 +61,7 @@ describeForEachParser('stripMarkdownEscapeBackslashes', (parseHtml) => {
   })
 
   it('should handle empty input', async () => {
-    expect(await transform('')).toBe('')
+    expect(await transform('')).toEqualHtml('')
   })
 
   it('should be idempotent', async () => {
@@ -69,6 +69,6 @@ describeForEachParser('stripMarkdownEscapeBackslashes', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

@@ -9,6 +9,7 @@ import { attr, find, text, textNode } from '../utils/dom.js'
 // title, footer) all carry the same target url. The footer holds the site name as a bare
 // text node next to a `(domain)` span, so `textNode` gets the name without the domain.
 export const nodebbCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.link-preview',
   extract: (element) => {
     return buildCite({

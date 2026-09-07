@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { MediaResolverResult } from '../types.js'
 import { weeblyMediaResolver } from './weebly.js'
@@ -24,9 +25,9 @@ describeForEachParser('weeblyMediaResolver', (parseHtml) => {
       )
       const expected: MediaResolverResult = {
         tag: 'video',
-        src: 'https://www.weebly.com/uploads/b/5005989-475656185621122208/delaware_behaving_badly_176.mp4',
+        src: '//www.weebly.com/uploads/b/5005989-475656185621122208/delaware_behaving_badly_176.mp4',
         poster:
-          'https://www.weebly.com/uploads/b/5005989-475656185621122208/delaware_behaving_badly_176.jpg',
+          '//www.weebly.com/uploads/b/5005989-475656185621122208/delaware_behaving_badly_176.jpg',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -39,8 +40,8 @@ describeForEachParser('weeblyMediaResolver', (parseHtml) => {
       )
       const expected: MediaResolverResult = {
         tag: 'video',
-        src: 'https://www.weebly.com/uploads/b/1/clip_176.mp4',
-        poster: 'https://www.weebly.com/uploads/b/1/clip_176.jpg',
+        src: '//www.weebly.com/uploads/b/1/clip_176.mp4',
+        poster: '//www.weebly.com/uploads/b/1/clip_176.jpg',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -52,8 +53,8 @@ describeForEachParser('weeblyMediaResolver', (parseHtml) => {
       )
       const expected: MediaResolverResult = {
         tag: 'video',
-        src: 'https://www.weebly.com/uploads/b/1/03.05.2022_12.10.58_rec_649.mp4',
-        poster: 'https://www.weebly.com/uploads/b/1/03.05.2022_12.10.58_rec_649.jpg',
+        src: '//www.weebly.com/uploads/b/1/03.05.2022_12.10.58_rec_649.mp4',
+        poster: '//www.weebly.com/uploads/b/1/03.05.2022_12.10.58_rec_649.jpg',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -97,6 +98,21 @@ describeForEachParser('weeblyMediaResolver', (parseHtml) => {
       `
 
       expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  describe('through the pipeline', () => {
+    // The resolver hands on the protocol-relative url the style block states, and both fields
+    // come out with a scheme.
+    it('should give the video and its poster a scheme', async () => {
+      const value = facade(
+        '#wsite-video-container-807467334470573958{ background: url(//www.weebly.com/uploads/b/1/clip_176.jpg); }',
+      )
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toContainHtml(
+        '<video src="https://www.weebly.com/uploads/b/1/clip_176.mp4" poster="https://www.weebly.com/uploads/b/1/clip_176.jpg" controls></video>',
+      )
     })
   })
 })

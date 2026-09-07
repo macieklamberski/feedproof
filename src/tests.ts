@@ -1,9 +1,9 @@
 import { describe, expect } from 'bun:test'
 import { JSDOM } from 'jsdom'
+import { parseHTML } from 'linkedom'
 import type { MaybePromise } from 'trousse'
 import {
   defaultAvatarImageHosts,
-  defaultCiteResolvers,
   defaultDeferredIframeSources,
   defaultEmojiImageHosts,
   defaultHighlightFn,
@@ -22,12 +22,11 @@ import { parseHtml as parseWithLinkedom } from './parsers/linkedom.js'
 import type { TransformContext } from './types.js'
 
 // Test adapters are synchronous, unlike the public `ParseHtmlFn` which allows a
-// promise — a sync return keeps `parseHtml(html).querySelector(...)` typechecking.
+// promise: a sync return keeps `parseHtml(html).querySelector(...)` typechecking.
 type ParseHtml = (html: string) => Document
 
 export const baseContext: TransformContext = {
   widgetResolvers: defaultWidgetResolvers,
-  citeResolvers: defaultCiteResolvers,
   mediaSrcAttributes: defaultMediaSrcAttributes,
   emojiImageHosts: defaultEmojiImageHosts,
   avatarImageHosts: defaultAvatarImageHosts,
@@ -53,7 +52,7 @@ const parsers: Record<string, ParseHtml> = {
   jsdom: parseWithJsdom,
 }
 
-// A bare `bun test` exercises every suite under all parsers; `DOM_LIBRARY` narrows
+// A bare `bun test` exercises every suite under all parsers. `DOM_LIBRARY` narrows
 // to one for focused debugging.
 export const selectParsers = (selected: string | undefined): Array<[string, ParseHtml]> => {
   if (selected !== undefined && !(selected in parsers)) {
@@ -94,11 +93,12 @@ export const resolverExtractor = <Result>(parseHtml: ParseHtml, resolver: AnyRes
   }
 }
 
-// Substack writes a component's whole payload as JSON in `data-attrs`, with the inner quotes
-// entity-encoded, which is what survives a parse and serialise roundtrip. The element around it
+// The value side of `jsonAttr`: a JSON payload written into an attribute with its inner quotes
+// entity-encoded, which is what survives a parse and serialise roundtrip. Several platforms ship
+// whole cards this way, Substack in `data-attrs` and Embedly in `data`, and the element around it
 // differs per component, so each fixture keeps its own builder and only the encoding is shared.
 // A string payload is written through untouched, which is how a test states malformed JSON.
-export const substackAttrs = (attrs: Record<string, unknown> | string): string => {
+export const jsonAttrValue = (attrs: Record<string, unknown> | string): string => {
   const raw = typeof attrs === 'string' ? attrs : JSON.stringify(attrs)
 
   return raw.replace(/"/g, '&quot;')
@@ -117,13 +117,20 @@ export const queryElement = (document: Document, selector: string): Element => {
 }
 
 // Lets long HTML fixtures be written multi-line and indented while producing the exact compact
-// string. Each line is trimmed; lines are joined with nothing where a tag ends and the next begins
-// (> meets <) or where a line starts with the closing > of a multi-attribute tag, and with a single
-// space otherwise. Long tags therefore break one attribute per line with the closing > on its own
-// line (a standalone /> joins with a space, matching the ` />` form). Whitespace that matters to
-// the assertion must stay inside a line. Built from the cooked template strings, not String.raw:
-// Bun transpiles non-ASCII source characters into \u escapes, and the raw strings would contain
-// those escapes as literal text.
+// string. Each line is trimmed. Lines are joined with nothing where a tag ends and the next
+// begins (> meets <) or where a line starts with the closing > of a multi-attribute tag, and with
+// a single space otherwise. Long tags therefore break one attribute per line with the closing >
+// on its own line (a standalone /> joins with a space, matching the ` />` form). Whitespace that
+// matters to the assertion must stay inside a line.
+//
+// Built from the cooked template strings, not String.raw: Bun transpiles non-ASCII source
+// characters into \u escapes, and the raw strings would contain those escapes as literal text.
+//
+// A fixture is written one of two ways: on a single line, or broken one element per line with the
+// nesting shown by indentation. It is never broken to fit a width, because a break at an arbitrary
+// point implies a structure the markup does not have. A break may only sit where a `>` meets a `<`.
+// Anywhere else the join puts in a space that was not in the string, so text content stays glued to
+// its tags: `<p>Hello world</p>` is one line, and only the seams between elements become breaks.
 export const html = (strings: TemplateStringsArray, ...values: Array<unknown>): string => {
   let joined = strings[0] ?? ''
 
@@ -157,8 +164,8 @@ export const html = (strings: TemplateStringsArray, ...values: Array<unknown>): 
 // escaping `&` vs `&amp;`, boolean attributes `controls` vs `controls=""`,
 // attribute order). Parsing once and sorting attributes collapses those
 // differences while leaving genuine DOM differences intact.
-const normalizeHtml = (html: string): string => {
-  const document = parseWithLinkedom(html)
+const normalizeHtml = (value: string): string => {
+  const document = parseWithLinkedom(value)
 
   for (const element of document.querySelectorAll('*')) {
     const attributes = Array.from(element.attributes)
@@ -178,7 +185,29 @@ const normalizeHtml = (html: string): string => {
 }
 
 const toEqualHtml = (received: unknown, expected: string) => {
-  const normalizedReceived = normalizeHtml(received as string)
+  const value = received as string
+
+  // A parser reproduces well-formed HTML exactly and repairs anything else, and `normalizeHtml`
+  // parses both sides, so without this the same repair lands on both and malformed output still
+  // passes. Unwrapped, because `parseWithLinkedom` lowercases attribute names and so cannot
+  // reproduce its own output. Either one matching is enough, since they disagree on void elements
+  // and entity escaping and the string came from one of them.
+  const parseUntouched = (html: string) => {
+    return parseHTML(`<!doctype html><html><head></head><body>${html}</body></html>`).document
+  }
+  const isWellFormed = [parseUntouched, parseWithJsdom].some((parse) => {
+    return parse(value).body.innerHTML === value
+  })
+
+  if (!isWellFormed) {
+    return {
+      pass: false,
+      message: () =>
+        `expected HTML a parser would not repair\n  received: ${value}\n  repaired: ${normalizeHtml(value)}`,
+    }
+  }
+
+  const normalizedReceived = normalizeHtml(value)
   const normalizedExpected = normalizeHtml(expected)
   const pass = normalizedReceived === normalizedExpected
 

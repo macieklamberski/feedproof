@@ -23,31 +23,42 @@ describeForEachParser('convertGiphyEmbeds', (parseHtml) => {
       </a>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
-  // Asserted piecewise rather than whole: the two parsers serialise the added `alt` on
-  // opposite sides of the existing `src`, so a full-output comparison passes under one and
-  // fails under the other.
+  // Compared with `toEqualHtml`: the two parsers serialise the added `alt` on opposite sides
+  // of the existing `src`, so only an attribute-order-insensitive comparison holds under both.
   it('should carry the iframe title across as alt text', async () => {
-    const result = await transform(
-      html`<iframe src="https://giphy.com/embed/abc123" title="a cat waving"></iframe>`,
-    )
+    const value = html`
+      <iframe
+        src="https://giphy.com/embed/abc123"
+        title="a
+        cat
+        waving"
+      ></iframe>
+    `
+    const expected = html`
+      <a href="https://giphy.com/gifs/abc123">
+        <img
+          alt="a cat waving"
+          src="https://media.giphy.com/media/abc123/giphy.gif"
+        >
+      </a>
+    `
 
-    expect(result).toContain('alt="a cat waving"')
-    expect(result).toContain('src="https://media.giphy.com/media/abc123/giphy.gif"')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   // Some feeds put the media url itself in the iframe rather than the embed page.
   it('should read the media host spelling', async () => {
-    const value = html`<iframe src="https://media.giphy.com/media/abc123/giphy.gif"></iframe>`
+    const value = '<iframe src="https://media.giphy.com/media/abc123/giphy.gif"></iframe>'
     const expected = html`
       <a href="https://giphy.com/gifs/abc123">
         <img src="https://media.giphy.com/media/abc123/giphy.gif">
       </a>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   // The padding wrapper is not this transform's job: unwrapWrappers dissolves a sole-child
@@ -67,7 +78,7 @@ describeForEachParser('convertGiphyEmbeds', (parseHtml) => {
       </div>
     `
 
-    expect(await transform(value)).toBe(expected)
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should leave no wrapper behind once the whole pipeline has run', async () => {
@@ -82,23 +93,25 @@ describeForEachParser('convertGiphyEmbeds', (parseHtml) => {
       </a>
     `
 
-    expect(
-      await transformContent(value, { parseHtmlFn: parseHtml, baseUrl: 'https://x.test/p' }),
-    ).toBe(expected)
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://x.test/p',
+    })
+
+    expect(result).toEqualHtml(expected)
   })
 
   it('should leave a giphy url naming no gif alone', async () => {
-    const value = html`<iframe src="https://giphy.com/about"></iframe>`
-    const result = await transform(value)
+    const value = '<iframe src="https://giphy.com/about"></iframe>'
 
-    expect(result).toContain('<iframe')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should be idempotent', async () => {
-    const value = html`<iframe src="https://giphy.com/embed/abc123"></iframe>`
+    const value = '<iframe src="https://giphy.com/embed/abc123"></iframe>'
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

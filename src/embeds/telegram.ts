@@ -1,22 +1,27 @@
-import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { getPathSegments, isPlainObject } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize } from '../utils/dom.js'
+import { readPixels } from '../utils/hints.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// A channel and a message id, the pair the widget spells `channel/111424`. Telegram usernames
-// are 5 to 32 characters, start with a letter and hold letters, digits and underscores; a
-// message id is a plain counter. A forum channel writes a third segment for the topic, and that
-// shape is left alone: no corpus specimen carries one and the census stores only the first path
-// segment, so the url could not be checked.
-const postRegex = /^([a-zA-Z][a-zA-Z0-9_]{4,31})\/(\d+)$/
+// A channel and a message id, the pair the widget spells `channel/111424`. Telegram's signup
+// form asks for five characters, but shorter names exist: Telegram holds some itself and
+// Fragment auctions the rest, and `t.me/nft/3?embed=1` serves a real post (checked 2026-09-07).
+// Three is the floor because every reserved route that takes a numeric second segment is
+// shorter than that, the private channel's own `c/{id}` included. A message id is a plain
+// counter. A forum channel writes a third segment for the topic, and that shape is left alone:
+// no real specimen was available to check the url against.
+const postRegex = /^([a-zA-Z][a-zA-Z0-9_]{2,})\/(\d+)$/
 
-const telegramHosts = ['t.me', 'telegram.me']
+// The third apex Telegram has always answered on, serving the identical widget: probed live, a
+// real post answers 200 there.
+const telegramHosts = ['t.me', 'telegram.me', 'telegram.dog']
 
 // `?embed=1` is what makes t.me answer with the post itself. The same path without it serves the
-// "open in Telegram" page that wraps the post in action buttons, 37,524 bytes against 18,593
-// (checked 2026-08-14), so the parameter repairs a bare link as much as it normalizes the two
-// carriers onto one url. A fabricated message id answers with a "Post not found" bubble at
-// 12,847 bytes, which is how the mint was verified against a real one.
+// "open in Telegram" page that wraps the post in action buttons (checked 2026-08-14), so the
+// parameter repairs a bare link as much as it normalizes the two carriers onto one url. A
+// fabricated message id answers with a "Post not found" bubble, which is how the mint was
+// verified against a real one.
 const composePost = (channel: string, messageId: string): EmbedResolverResult => {
   return {
     provider: 'telegram',
@@ -39,8 +44,8 @@ const readPost = (value: string | undefined): EmbedResolverResult | undefined =>
 
 // Telegram ships a post as a bare `<script async src="https://telegram.org/js/telegram-widget.js"
 // data-telegram-post="channel/111424">` that builds the player iframe at runtime. The script is
-// stripped and the post goes with it, so the pipeline returns only the paragraphs around it: 197
-// corpus feeds carry the script and 194 hold no t.me iframe anywhere.
+// stripped and the post goes with it, so the pipeline returns only the paragraphs around it:
+// feeds carrying the script almost never hold a t.me iframe anywhere.
 export const telegramScriptEmbedResolver = createMarkupEmbedResolver(
   'script[data-telegram-post]',
   (element) => {
@@ -70,3 +75,15 @@ export const telegramIframeEmbedResolver = createUrlEmbedResolver(
   telegramHosts,
   telegramResolveEmbed,
 )
+
+// The player reports a `resize` event with its height, `null` for a post it could not load,
+// which reads as nothing.
+export const readTelegramHeight = (data: unknown): number | undefined => {
+  return isPlainObject(data) && data.event === 'resize' ? readPixels(data.height) : undefined
+}
+
+export const telegramRenderHint: EmbedRenderHint = {
+  provider: 'telegram',
+  origin: 'https://t.me',
+  readHeight: readTelegramHeight,
+}

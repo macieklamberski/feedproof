@@ -1,11 +1,20 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, parseRatioDimensions } from '../utils/dom.js'
-import { createUrlEmbedResolver, withDeclaredSize } from '../utils/widgets.js'
+import { attr, flashVars, keepIfMatches, parseRatio } from '../utils/dom.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
+import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-const scribdHosts = ['scribd.com', 'scribdassets.com']
+// The embed routes are the site's own. `scribdassets.com` served the Flash player and serves the
+// document images beside it, `img/document/{id}/…` among them, so only the Flash resolver takes
+// it: read as an embed those images mint a player over a picture the feed attached.
+const scribdHosts = ['scribd.com']
+const scribdFlashHosts = [...scribdHosts, 'scribdassets.com']
 
-const safeDocumentIdRegex = /^\d{4,18}$/
+// The id is the segment after `embeds`, `document` or `doc`, so a marker word is what selects a
+// document and the length is not. Digits are what stays: they refuse a route word in that
+// position, and they exclude the dot, which keeps a file on the host playable when the enclosure
+// probe offers it here.
+const safeDocumentIdRegex = /^\d+$/
 
 const flashPlayerPathRegex = /\/scribdviewer\.swf$/i
 
@@ -30,19 +39,19 @@ const readDocumentId = (parsed: URL): string | undefined => {
   })
   const document = marker < 0 ? undefined : segments[marker + 1]
 
-  return document && safeDocumentIdRegex.test(document) ? document : undefined
+  return keepIfMatches(document, safeDocumentIdRegex)
 }
 
 // The modern player, `scribd.com/embeds/{id}/content`. `/doc/{id}` is the pre-2018 spelling of
-// the same document and its embed lived at `/embeds/{id}` with no `/content` suffix; both
+// the same document and its embed lived at `/embeds/{id}` with no `/content` suffix. Both
 // address the id space this composes from.
 export const scribdResolveEmbed = (
   link: string,
   element: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrlOnHosts(link, scribdHosts)
 
-  if (!parsed || (!isHostOf(parsed, scribdHosts) && !isSubdomainOf(parsed, scribdHosts))) {
+  if (!parsed) {
     return
   }
 
@@ -52,39 +61,51 @@ export const scribdResolveEmbed = (
     return
   }
 
-  const result = composeEmbed(document)
-  const dimensions = parseRatioDimensions(attr(element, aspectRatioAttribute) ?? '')
+  const title = attr(element, 'title')
+  const result = { ...composeEmbed(document), title }
+  const ratio = parseRatio(attr(element, aspectRatioAttribute) ?? '')
 
   // The ratio describes the document and the declared height is a constant, so where both are
-  // present the ratio wins. Where the snippet states no ratio the declared size is all there
-  // is, and it is read here rather than by the factory because that would overwrite the ratio.
-  return dimensions ? { ...result, ...dimensions } : withDeclaredSize(element, result)
+  // present the ratio wins. Where the snippet states no ratio, stating none here hands the
+  // question back to the factory, and the declared size is all there is.
+  return ratio ? { ...result, ratio } : result
 }
 
 export const scribdIframeEmbedResolver = createUrlEmbedResolver(scribdHosts, scribdResolveEmbed, {
-  declaredSize: false,
+  preferResolverSize: true,
 })
 
 // Flash died in 2020, so these have rendered nothing since and the placeholder the generic
-// carrier builds points at the dead `.swf` itself. The repair is exact: the swf query names the
+// carrier builds points at the dead `.swf` itself. The repair is exact: the snippet names the
 // document in `document_id`, and that is the same id space the modern route reads. Scribd
 // distinguishes the two cases itself, answering a Flash-era id with "Document deleted by owner"
 // and an invented one with "Document Not Found" (checked in a browser 2026-08-13), which is
 // what proves the spaces are shared. A status code cannot: the route answers 200 with an
 // identical body either way.
 //
+// Where the id sits depends on the snippet's age: the later one puts it in the swf query, the
+// earlier one leaves the swf bare and passes it in the flashvars beside it.
+//
 // The declared size carries over. Both generations of the snippet state the same 500, so it
 // describes the replacement as well as it described the player it replaces.
-export const scribdFlashResolveEmbed = (link: string): EmbedResolverResult | undefined => {
+export const scribdFlashResolveEmbed = (
+  link: string,
+  element?: Element,
+): EmbedResolverResult | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
 
   if (!parsed || !flashPlayerPathRegex.test(parsed.pathname)) {
     return
   }
 
-  const document = parsed.searchParams.get('document_id')
+  const document =
+    parsed.searchParams.get('document_id') ??
+    new URLSearchParams(flashVars(element) ?? '').get('document_id')
 
   return document && safeDocumentIdRegex.test(document) ? composeEmbed(document) : undefined
 }
 
-export const scribdFlashEmbedResolver = createUrlEmbedResolver(scribdHosts, scribdFlashResolveEmbed)
+export const scribdFlashEmbedResolver = createUrlEmbedResolver(
+  scribdFlashHosts,
+  scribdFlashResolveEmbed,
+)

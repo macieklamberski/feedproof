@@ -1,9 +1,41 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, text } from '../utils/dom.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const imgurHosts = ['imgur.com']
+
+// The routes that name an album: the prefix the platform's own script writes, and the gallery
+// path the older share links took.
+const albumRoutes = new Set(['a', 'gallery'])
+
+// Imgur's own pages sit at the same depth as a post, so a first segment is a site page as often
+// as it is an id. The longer ones are live pages that pass the id shape, which is why the shape
+// alone let `imgur.com/upload` mint a post called `upload`. The short ones, `r`, `t` and `user`,
+// are refused by the id length today and are named here anyway, so that dropping the length band
+// cannot quietly turn a subreddit, a tag or a profile into a post.
+const sitePathSegments = new Set([
+  'about',
+  'account',
+  'apps',
+  'emerald',
+  'memegen',
+  'new',
+  'privacy',
+  'r',
+  'register',
+  'search',
+  'signin',
+  't',
+  'tos',
+  'upload',
+  'user',
+  'vidgif',
+])
+
+// The gallery's own listings sit where an album id would, so they are refused the same way.
+const galleryListingSegments = new Set(['hot', 'new', 'top'])
 
 // Post ids are short alphanumerics. The album form is the same id behind an `a/` prefix, which
 // is how the platform's own script tells the two apart.
@@ -48,7 +80,7 @@ const composeEmbed = (post: ImgurPost, title?: string): EmbedResolverResult => {
 // Imgur's embed is a blockquote plus `s.imgur.com/min/embed.js`, and the script is what turns it
 // into the player. Without the script a reader gets the quote and its link, so the picture never
 // appears. The blockquote is the only shape the platform has issued since the feature shipped in
-// 2015; a bare `i.imgur.com/<id>.jpg` hotlink is an ordinary image and not this.
+// 2015. A bare `i.imgur.com/<id>.jpg` hotlink is an ordinary image and not this.
 export const imgurBlockquoteEmbedResolver = createMarkupEmbedResolver(
   'blockquote.imgur-embed-pub[data-id]',
   (element) => {
@@ -67,19 +99,23 @@ export const imgurBlockquoteEmbedResolver = createMarkupEmbedResolver(
 
 // The frame the script builds, kept by exports that stored the page after it rendered. Its query
 // describes the embedding page (`pub`, `ref`, `context`, `analytics`, `w`), so the url is rebuilt
-// from the path rather than carried across.
+// from the path instead of carried across.
 export const imgurResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(url)
+  const parsed = parseUrlOnHosts(url, imgurHosts)
 
-  if (!parsed || (!isHostOf(parsed, imgurHosts) && !isSubdomainOf(parsed, imgurHosts))) {
+  if (!parsed) {
     return
   }
 
   const segments = getPathSegments(parsed)
-  // `/<id>/embed`, `/a/<id>/embed`, and the gallery path the older share links used.
-  const isAlbum = segments[0] === 'a' || segments[0] === 'gallery'
+  const isAlbum = albumRoutes.has(segments[0] ?? '')
   const id = isAlbum ? segments[1] : segments[0]
-  const post = id ? parsePost(isAlbum ? `${albumPrefix}${id}` : id) : undefined
+
+  if (!id || (isAlbum ? galleryListingSegments : sitePathSegments).has(id)) {
+    return
+  }
+
+  const post = parsePost(isAlbum ? `${albumPrefix}${id}` : id)
 
   return post ? composeEmbed(post) : undefined
 }

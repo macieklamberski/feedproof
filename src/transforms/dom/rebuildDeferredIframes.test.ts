@@ -10,19 +10,22 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
   }
 
   it('should rebuild an iframe from a Pym.js data-pym-src div', async () => {
-    const value = html`<div id="chart" data-pym-src="https://apps.npr.org/chart/">Loading…</div>`
-    const result = await transform(value)
+    const value = html`
+      <div
+        id="chart"
+        data-pym-src="https://apps.npr.org/chart/"
+      >Loading…</div>
+    `
+    const expected = '<iframe src="https://apps.npr.org/chart/"></iframe>'
 
-    expect(result).toContain('<iframe src="https://apps.npr.org/chart/">')
-    expect(result).not.toContain('data-pym-src')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should rebuild an iframe from a @newswire/frames data-frame-src div', async () => {
-    const value = html`<div data-frame-src="https://embed.example.org/graphic/"></div>`
-    const result = await transform(value)
+    const value = '<div data-frame-src="https://embed.example.org/graphic/"></div>'
+    const expected = '<iframe src="https://embed.example.org/graphic/"></iframe>'
 
-    expect(result).toContain('<iframe src="https://embed.example.org/graphic/">')
-    expect(result).not.toContain('data-frame-src')
+    expect(await transform(value)).toEqualHtml(expected)
   })
 
   it('should skip an already-initialized Pym node', async () => {
@@ -32,52 +35,70 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
         data-pym-auto-initialized="true"
       ></div>
     `
-    const result = await transform(value)
 
-    expect(result).not.toContain('<iframe')
-    expect(result).toContain('data-pym-src')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a div whose attribute is not a URL untouched', async () => {
-    const value = html`<div data-frame-src="not a url"></div>`
-    const result = await transform(value)
+    const value = '<div data-frame-src="not a url"></div>'
 
-    expect(result).not.toContain('<iframe')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave an unrelated div untouched', async () => {
-    const value = html`<div class="content">Hello</div>`
-    const result = await transform(value)
+    const value = '<div class="content">Hello</div>'
 
-    expect(result).not.toContain('<iframe')
-    expect(result).toContain('Hello')
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should be idempotent', async () => {
-    const value = html`<div data-frame-src="https://embed.example.org/graphic/"></div>`
+    const value = '<div data-frame-src="https://embed.example.org/graphic/"></div>'
     const once = await transform(value)
     const twice = await applyDomTransforms(parseHtml(once), [rebuildDeferredIframes(baseContext)])
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 
   it('should surface a deferred embed into a placeholder end to end', async () => {
-    const value = html`<div data-frame-src="https://embed.example.org/graphic/"></div>`
+    const value = '<div data-frame-src="https://embed.example.org/graphic/"></div>'
+    const expected = '<div data-embed-src="https://embed.example.org/graphic/"></div>'
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com',
     })
 
-    expect(result).toContain('embed.example.org/graphic/')
+    expect(result).toEqualHtml(expected)
   })
+
   // The Drupal/CKEditor convention. Its value is a watch page rather than a player url, which
   // the resolvers turn into a player downstream.
   it('should rebuild an iframe from data-oembed-url', async () => {
-    const value = html`<div data-oembed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></div>`
+    const value = '<div data-oembed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></div>'
+    const expected = '<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>'
 
-    expect(await transform(value)).toContain(
-      '<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ">',
-    )
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  // ARVE's lazyload play button. Its widget holds no image, so without this the reader is left
+  // with an empty box: 155 of the 276 corpus feeds carrying it have no YouTube player anywhere.
+  it('should rebuild an iframe from an ARVE play button', async () => {
+    const value = html`
+      <button
+        class="arve-play-btn arve-play-btn--youtube"
+        data-iframe="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1"
+      ></button>
+    `
+    const expected =
+      '<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1"></iframe>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  // `data-iframe` is a name anyone could pick, so the class is what says this is ARVE.
+  it('should leave a data-iframe attribute that ARVE did not write', async () => {
+    const value = '<div data-iframe="https://example.com/player"></div>'
+
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   // 566 of the 624 corpus wrappers already hold the iframe, and this transform replaces what it
@@ -89,6 +110,6 @@ describeForEachParser('rebuildDeferredIframes', (parseHtml) => {
       </div>
     `
 
-    expect(await transform(value)).toBe(value)
+    expect(await transform(value)).toEqualHtml(value)
   })
 })

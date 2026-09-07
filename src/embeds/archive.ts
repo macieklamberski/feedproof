@@ -1,38 +1,48 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
-import { attr, flashVars } from '../utils/dom.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import { flashVars, keepIfMatches } from '../utils/dom.js'
+import { audioFileRegex, splitStrayParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen.
-const safeIdentifierRegex = /^[\w.-]+$/
+// Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen. The Flash
+// config and the stranded `&` spelling reach this as raw text no `URL` has folded, so a segment
+// of dots alone is refused too: it would climb out of every path minted from it.
+const safeIdentifierRegex = /^(?!\.+$)[\w.-]+$/
 
 const archiveHosts = ['archive.org']
 
-// The Internet Archive embeds an item as `archive.org/embed/{identifier}`, in 1,530 corpus
-// feeds. The iframe renders on its own, so what this adds is the poster: every item has a
-// thumbnail at `archive.org/services/img/{identifier}`, derivable from the identifier with no
-// network call, which is the whole of the class 1 case. It also has a real page to open, at
-// `archive.org/details/{identifier}`.
+// The Internet Archive embeds an item as `archive.org/embed/{identifier}`. The iframe renders
+// on its own, so what this adds is the poster: every item has a
+// thumbnail at `archive.org/services/img/{identifier}`, filled from the identifier alone with no
+// network call, which is what earns a resolver over the generic iframe placeholder. It also has a
+// real page to open, at `archive.org/details/{identifier}`.
 //
 // Checked live 2026-08-13 with a browser user agent, which matters here: the earlier attempt
 // used curl's default and read the service as unavailable. A real identifier answers 200
 // image/jpeg and its details page 200, while an invented one answers 404 for both embed and
 // details. The thumbnail service is the exception, answering 200 for anything: an unknown
-// identifier gets a generic 2,212-byte png rather than an error, so a poster that turns out
+// identifier gets a generic placeholder png, not an error, so a poster that turns out
 // to be the placeholder is the one failure this cannot rule out.
+// Some publisher tooling wrote `embed/{identifier}&playlist=1`, an ampersand where the query
+// should begin, so the whole tail lands inside the path segment. Feeds carry it with
+// `playlist=1` and `autoplay=1`, and with the ampersand entity-encoded. Against a live item the
+// `&` spelling answers 404 and the `?` spelling answers 200.
+// The three routes that name an item in their second segment. `stream` is the retired
+// BookReader url and it still resolves: `archive.org/stream/{identifier}` 302s to
+// `details/{identifier}?view=theater` for a real item and 404s for an invented one, and the
+// same identifier answers 200 on `embed` (2026-09-06), so it is the modern player's item under
+// an old name. `download` is deliberately absent: that route serves the files themselves.
+const itemRoutes = ['embed', 'details', 'stream']
+
+const readSegmentParts = (link: string): { head: string; strayParams: string } => {
+  const segments = getPathSegments(link)
+  const segment = itemRoutes.includes(segments[0] ?? '') ? segments[1] : undefined
+
+  return splitStrayParams(segment ?? '')
+}
+
 export const extractArchiveIdentifier = (link: string): string | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
-  const identifier = segments[0] === 'embed' || segments[0] === 'details' ? segments[1] : undefined
-
-  if (identifier && safeIdentifierRegex.test(identifier)) {
-    return identifier
-  }
+  return keepIfMatches(readSegmentParts(link).head, safeIdentifierRegex)
 }
 
 const composeEmbedResult = (identifier: string, query = ''): EmbedResolverResult => {
@@ -53,8 +63,11 @@ export const archiveResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 
   // The query carries what the publisher chose to embed, a track within a playlist or a start
-  // offset, so it goes through rather than being rebuilt away.
-  const query = parseUrl(url, 'https://example.com')?.search ?? ''
+  // offset, so it goes through untouched. Anything the ampersand form stranded in the path
+  // rejoins it here.
+  const search = parseUrl(url, 'https://example.com')?.search ?? ''
+  const { strayParams } = readSegmentParts(url)
+  const query = strayParams ? `${search ? `${search}&` : '?'}${strayParams}` : search
 
   return composeEmbedResult(identifier, query)
 }
@@ -75,7 +88,26 @@ export const archiveIframeEmbedResolver = createUrlEmbedResolver(archiveHosts, a
 // A config can point the archive's player at a file somebody else hosts, so the identifier is
 // read from the download host rather than from whichever url the config happens to carry.
 const flashPlayerPathRegex = /^\/+flow\//
-const downloadIdentifierRegex = /archive\.org\/download\/([^/'"?&]+)\//
+const downloadIdentifierRegex = /\/\/(?:[\w-]+\.)*archive\.org\/download\/([^/'"?&]+)\//
+
+// The modern audio player is a controls bar and nothing else: measured in a browser at 320,
+// 558 and 800 pixels wide on 2026-09-06, it is 30 pixels tall at every width. A height that
+// does not move with the width is a fixed height, and a bar that fills whatever width it is
+// given states no width at all, so the result carries the height alone. The carrier declares
+// the 26 pixels of the Flash bar it replaced, which is close but describes a player that is
+// gone. A video carrier's size still describes the player it gets, and the video branch states
+// no size, so `preferResolverSize` leaves it to the carrier.
+// The files the config names are what tell the two apart, since the swf is the same. Both
+// dialects write them as `url` entries, quoted in either style and with the key bare in the
+// older query form.
+const configFileRegex = /\burl['"]?\s*:\s*['"]([^'"]+)['"]/g
+const audioPlayerHeight = 30
+
+const namesAudioFile = (config: string): boolean => {
+  return Array.from(config.matchAll(configFileRegex), (match) => match[1]).some((file) => {
+    return audioFileRegex.test(file)
+  })
+}
 
 export const archiveFlashResolveEmbed = (
   src: string,
@@ -90,14 +122,23 @@ export const archiveFlashResolveEmbed = (
   const config = flashVars(element) ?? parsed.searchParams.get('config')
   const identifier = config?.match(downloadIdentifierRegex)?.[1]
 
-  if (!identifier || !safeIdentifierRegex.test(identifier)) {
+  if (!identifier || !safeIdentifierRegex.test(identifier) || !config) {
     return
   }
 
-  return composeEmbedResult(identifier)
+  const result = composeEmbedResult(identifier)
+
+  return namesAudioFile(config) ? { ...result, height: audioPlayerHeight } : result
 }
 
 export const archiveFlashEmbedResolver = createUrlEmbedResolver(
   archiveHosts,
   archiveFlashResolveEmbed,
+  { preferResolverSize: true },
 )
+
+// Starts playback on the click that loads the player, for video and audio items alike.
+export const archiveRenderHint: EmbedRenderHint = {
+  provider: 'archive',
+  autoplayParams: { autoplay: '1' },
+}

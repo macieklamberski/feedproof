@@ -2,8 +2,12 @@ import type { StringTransform } from '../../types.js'
 import { isEscapedHtmlFragment } from '../../utils/html.js'
 
 // Matches `<tag>`, `<tag …>`, `<tag />` AND `<tag/>` (XHTML self-close without
-// a space before the slash, common in podcast feeds for `<br/>`).
-const hasHtmlRegex = /<[a-z][a-z0-9]*[\s/>]/i
+// a space before the slash, common in podcast feeds for `<br/>`). The name may carry a
+// namespace prefix or a hyphen: Atom `type="xhtml"` content keeps `<xhtml:div>`, Facebook's
+// pre-SDK snippet writes `<fb:post>`, and AMP and Web Components write `<amp-img>`. Missing
+// those reads real markup as plain text and autop's it into a paragraph per blank line and a
+// `<br />` per newline.
+const hasHtmlRegex = /<[a-z][a-z0-9]*(?:[:-][a-z0-9]+)*[\s/>]/i
 const carriageReturnRegex = /\r\n|\r/g
 const paragraphSeparatorRegex = /\n\s*\n/
 const edgeNewlinesRegex = /^\n+|\n+$/g
@@ -32,8 +36,8 @@ export const paragraphizePlainText: StringTransform = () => {
       return html
     }
 
-    // The appended newline mirrors autop: it turns end-of-text whitespace into
-    // its own (dropped) chunk instead of an inline break.
+    // The appended newline matches what autop does: it turns end-of-text whitespace
+    // into its own (dropped) chunk instead of an inline break.
     const chunks = `${html.replace(carriageReturnRegex, '\n')}\n`.split(paragraphSeparatorRegex)
     const paragraphs: Array<string> = []
 

@@ -10,7 +10,10 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
 
   const transform = (value: string) => {
     return applyDomTransforms(parseHtml(value), [
-      convertWidgets({ ...baseContext, widgetResolvers: [ghostMediaResolver] }),
+      convertWidgets({
+        ...baseContext,
+        widgetResolvers: [ghostMediaResolver],
+      }),
     ])
   }
 
@@ -27,9 +30,14 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
               playsinline
               preload="metadata"
             ></video>
-            <div class="kg-video-overlay"><button class="kg-video-large-play-icon"></button></div>
+            <div class="kg-video-overlay">
+              <button class="kg-video-large-play-icon"></button>
+            </div>
             <div class="kg-video-player-container">
-              <div class="kg-video-player"><span>0:00</span><span>1:24</span></div>
+              <div class="kg-video-player">
+                <span>0:00</span>
+                <span>1:24</span>
+              </div>
             </div>
           </div>
         </figure>
@@ -52,7 +60,9 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
           data-kg-thumbnail="https://example.com/auto.jpg"
           data-kg-custom-thumbnail="https://example.com/custom.jpg"
         >
-          <div class="kg-video-container"><video src="https://example.com/clip.mp4"></video></div>
+          <div class="kg-video-container">
+            <video src="https://example.com/clip.mp4"></video>
+          </div>
         </figure>
       `
       const expected: MediaResolverResult = {
@@ -83,21 +93,34 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
           <div class="kg-video-container">
             <video src="https://example.com/clip.mp4"></video>
             <div class="kg-video-overlay"></div>
-            <div class="kg-video-player-container"><div class="kg-video-player"></div></div>
+            <div class="kg-video-player-container">
+              <div class="kg-video-player"></div>
+            </div>
           </div>
           <figcaption>Watch the full demo below</figcaption>
         </figure>
       `
-      const result = await transform(value)
+      const expected = html`
+        <figure class="kg-card kg-video-card kg-card-hascaption">
+          <video
+            src="https://example.com/clip.mp4"
+            controls
+          ></video>
+          <figcaption>Watch the full demo below</figcaption>
+        </figure>
+      `
 
-      expect(result).toContain('<figcaption>Watch the full demo below</figcaption>')
-      expect(result).toContain('controls')
-      expect(result).not.toContain('kg-video-player')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should return undefined for a container without a video element', async () => {
-      const value =
-        '<figure class="kg-video-card"><div class="kg-video-container"><div class="kg-video-overlay"></div></div></figure>'
+      const value = html`
+        <figure class="kg-video-card">
+          <div class="kg-video-container">
+            <div class="kg-video-overlay"></div>
+          </div>
+        </figure>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -121,16 +144,21 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
           <div class="kg-audio-player-container">
             <audio src="https://example.com/content/media/track.mp3" preload="metadata"></audio>
             <div class="kg-audio-title">Track title</div>
-            <div class="kg-audio-player"><span>0:00</span><span>125.94</span></div>
+            <div class="kg-audio-player">
+              <span>0:00</span>
+              <span>125.94</span>
+            </div>
           </div>
         </div>
       `
-      const result = await transform(value)
+      const expected = html`
+        <audio
+          src="https://example.com/content/media/track.mp3"
+          controls
+        ></audio>
+      `
 
-      expect(result).toContain('src="https://example.com/content/media/track.mp3"')
-      expect(result).toContain('controls')
-      expect(result).not.toContain('kg-audio')
-      expect(result).not.toContain('125.94')
+      expect(await transform(value)).toEqualHtml(expected)
     })
 
     it('should return undefined for a card without an audio element', async () => {
@@ -152,6 +180,6 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
     const once = await transform(value)
     const twice = await transform(once)
 
-    expect(twice).toBe(once)
+    expect(twice).toEqualHtml(once)
   })
 })

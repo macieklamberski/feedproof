@@ -1,17 +1,31 @@
-import { getPathSegments, isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { getPathSegments, isAnyOf } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr } from '../utils/dom.js'
+import { attr, findConfigScript, keepIfMatches } from '../utils/dom.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const fileExtensionRegex = /\.[a-z]+$/i
-const safeMediaIdRegex = /^[a-zA-Z0-9]{8}$/
+
+// Letters and digits, which is the whole of what a media id is written in. The length is not
+// checked: the route above and the `/v2/media/` prefix in a setup call are what put the id in
+// its place, and a wrong id fails the same whether it is minted or passed through. JW has minted
+// eight characters so far, and a bound on that would refuse the next id space silently.
+const safeMediaIdRegex = /^[a-zA-Z0-9]+$/
 
 const jwplayerHosts = ['jwplayer.com', 'jwplatform.com']
 
-export const extractJwplayerId = (link: string): string | undefined => {
-  const lastSegment = getPathSegments(link).at(-1)
+// `players` is the embed and `previews` its share page, and both serve the same player for the
+// same id: checked 2026-09-07, `H4GXr873` answers 200 on both and a fabricated id 404 on both.
+// The route is what separates a media id from the marketing site's paths, `jwplayer.com/pricing`,
+// which the eight-character bound used to do by accident and leakily (`products` and `partners`
+// are eight characters). It is also what keeps a `cdn.jwplayer.com/videos/{id}-1280.mp4`
+// enclosure a video rather than a player.
+const playerRoutes = ['players', 'previews']
 
-  if (!lastSegment) {
+export const extractJwplayerId = (link: string): string | undefined => {
+  const [route, lastSegment] = getPathSegments(link).slice(-2)
+
+  if (!lastSegment || !isAnyOf(route ?? '', playerRoutes)) {
     return
   }
 
@@ -19,20 +33,21 @@ export const extractJwplayerId = (link: string): string | undefined => {
   // first dash, with the file extension dropped.
   const mediaId = lastSegment.replace(fileExtensionRegex, '').split('-')[0]
 
-  if (mediaId && safeMediaIdRegex.test(mediaId)) {
-    return mediaId
-  }
+  return keepIfMatches(mediaId, safeMediaIdRegex)
 }
 
-const composeJwplayerEmbed = (mediaId: string): EmbedResolverResult => {
+// The poster endpoint answers about a media and 404s for anything else, so a playlist id must
+// not reach it. AMP's own component applies the same rule, rendering a placeholder image only
+// when the element names a media.
+const composeJwplayerEmbed = (id: string, isPlaylist = false): EmbedResolverResult => {
   return {
     provider: 'jwplayer',
-    id: mediaId,
+    id: isPlaylist ? `playlist/${id}` : id,
     // Rebuilt from the id, so the empty player-id segment some feeds ship
     // (`{mediaId}-.html`, which 404s) is dropped and the URL loads the default player.
-    // JW Player has no public watch page, so no `url` — the placeholder anchors to the src.
-    src: `https://cdn.jwplayer.com/players/${mediaId}.html`,
-    thumbnail: `https://cdn.jwplayer.com/v2/media/${mediaId}/poster.jpg`,
+    // JW Player has no public watch page, so no `url`: the placeholder anchors to the src.
+    src: `https://cdn.jwplayer.com/players/${id}.html`,
+    ...(!isPlaylist && { thumbnail: `https://cdn.jwplayer.com/v2/media/${id}/poster.jpg` }),
   }
 }
 
@@ -58,9 +73,8 @@ export const jwplayerScriptEmbedResolver = createMarkupEmbedResolver(
   'script[src*="jwplayer.com/players/"], script[src*="jwplatform.com/players/"]',
   (element) => {
     const src = attr(element, 'src') ?? ''
-    const url = parseUrl(src, 'https://example.com')
 
-    if (!url || (!isHostOf(url, jwplayerHosts) && !isSubdomainOf(url, jwplayerHosts))) {
+    if (!parseUrlOnHosts(src, jwplayerHosts)) {
       return
     }
 
@@ -69,17 +83,38 @@ export const jwplayerScriptEmbedResolver = createMarkupEmbedResolver(
 )
 
 // AMP's own JW Player element, which renders nothing without the AMP runtime. It names the
-// media in `data-media-id` beside the account's `data-player-id`; the player id only picks a
+// media in `data-media-id` beside the account's `data-player-id`. The player id only picks a
 // skin, so the media id alone rebuilds the same player page as the other two forms.
+// A playlist is named by `data-playlist-id`, and AMP's own builder gives it precedence over the
+// media id when both are present, so the same order is followed here.
 export const jwplayerAmpEmbedResolver = createMarkupEmbedResolver(
-  'amp-jwplayer[data-media-id]',
+  'amp-jwplayer[data-media-id], amp-jwplayer[data-playlist-id]',
   (element) => {
-    const mediaId = attr(element, 'data-media-id')
+    const playlistId = attr(element, 'data-playlist-id')
+    const id = playlistId ?? attr(element, 'data-media-id')
 
-    if (!mediaId || !safeMediaIdRegex.test(mediaId)) {
+    if (!id || !safeMediaIdRegex.test(id)) {
       return
     }
 
-    return composeJwplayerEmbed(mediaId)
+    return composeJwplayerEmbed(id, !!playlistId)
   },
 )
+
+// The fourth carrier: an empty `<div class="jwplayer">` beside an inline `jwplayer(...).setup()`
+// call. Nothing here names the media in the markup, so without reading the script the div is
+// deleted as an empty tag and the video is gone. The setup object points its playlist at
+// `cdn.jwplayer.com/v2/media/{mediaId}`, which is the same id the other carriers name, so all
+// four resolve to one placeholder.
+const setupPlaylistRegex = /\/v2\/media\/([a-zA-Z0-9]+)/
+
+export const jwplayerSetupEmbedResolver = createMarkupEmbedResolver('div.jwplayer', (element) => {
+  const config = findConfigScript(element)?.textContent
+  const mediaId = config?.match(setupPlaylistRegex)?.[1]
+
+  if (!mediaId || !safeMediaIdRegex.test(mediaId)) {
+    return
+  }
+
+  return composeJwplayerEmbed(mediaId)
+})
