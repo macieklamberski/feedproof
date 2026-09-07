@@ -65,6 +65,21 @@ describeForEachParser('megatvEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // The embed id is an article's post id behind a four-character prefix, so it grows with the
+    // post counter.
+    it('should resolve an embed id longer than the ones in the wild', async () => {
+      const value = '<iframe src="https://www.megatv.com/embed/?p=2020248035106"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'megatv',
+        id: '2020248035106',
+        src: 'https://www.megatv.com/embed/?p=2020248035106',
+        url: 'https://www.megatv.com/?p=248035106',
+        ratio: '16/9',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {

@@ -61,6 +61,40 @@ describe('codepenResolveEmbed', () => {
 
       expect(codepenResolveEmbed(value)).toEqual(expected)
     })
+
+    // Three slug lengths are already in the wild, and the length is not what names a pen.
+    it('should resolve a slug longer than the ones minted so far', () => {
+      const value = 'https://codepen.io/argyleink/embed/XJpKqXmAndThenSomeMoreCharactersStillGoing'
+      const expected: EmbedResolverResult = {
+        provider: 'codepen',
+        id: 'XJpKqXmAndThenSomeMoreCharactersStillGoing',
+        src: 'https://codepen.io/argyleink/embed/XJpKqXmAndThenSomeMoreCharactersStillGoing',
+        url: 'https://codepen.io/argyleink/pen/XJpKqXmAndThenSomeMoreCharactersStillGoing',
+        thumbnail:
+          'https://shots.codepen.io/argyleink/pen/XJpKqXmAndThenSomeMoreCharactersStillGoing-512.jpg',
+        author: '@argyleink',
+        height: 300,
+      }
+
+      expect(codepenResolveEmbed(value)).toEqual(expected)
+    })
+
+    // The username selects the pen's page and its screenshot, and its length selects neither.
+    it('should keep an author longer than the handles CodePen issues today', () => {
+      const value = 'https://codepen.io/argyleink-with-a-much-longer-handle/embed/XJpKqXm'
+      const expected: EmbedResolverResult = {
+        provider: 'codepen',
+        id: 'XJpKqXm',
+        src: 'https://codepen.io/argyleink-with-a-much-longer-handle/embed/XJpKqXm',
+        url: 'https://codepen.io/argyleink-with-a-much-longer-handle/pen/XJpKqXm',
+        thumbnail:
+          'https://shots.codepen.io/argyleink-with-a-much-longer-handle/pen/XJpKqXm-512.jpg',
+        author: '@argyleink-with-a-much-longer-handle',
+        height: 300,
+      }
+
+      expect(codepenResolveEmbed(value)).toEqual(expected)
+    })
   })
 
   // A team owns its pens one segment deeper. No sampled feed carries one, and CodePen blocks
@@ -132,8 +166,8 @@ describe('codepenResolveEmbed', () => {
       expect(codepenResolveEmbed(value)).toBeUndefined()
     })
 
-    it('should ignore a slug too short to be a pen', () => {
-      const value = 'https://codepen.io/argyleink/embed/abc'
+    it('should ignore a slug carrying a file name', () => {
+      const value = 'https://codepen.io/argyleink/embed/XJpKqXm.mp4'
 
       expect(codepenResolveEmbed(value)).toBeUndefined()
     })
@@ -1126,5 +1160,28 @@ describeForEachParser('codepen shapes the pipeline settles first', (parseHtml) =
 
       expect(await placeholder(value)).toEqual(expected)
     })
+  })
+})
+
+// The enclosure probe offers every attachment a feed carries to this resolver, and CodePen serves
+// uploads on its own host, so the slug alphabet is what keeps a file playable.
+describeForEachParser('codepen through the pipeline', (parseHtml) => {
+  it('should leave a video enclosure on the codepen host playable', async () => {
+    const enclosures = [
+      { url: 'https://codepen.io/argyleink/embed/XJpKqXm.mp4', type: 'video/mp4' },
+    ]
+
+    const expected = html`
+      <video data-enclosure="" controls src="https://codepen.io/argyleink/embed/XJpKqXm.mp4"></video>
+      <p>Body</p>
+    `
+
+    expect(
+      await transformContent('<p>Body</p>', {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/post',
+        enclosures,
+      }),
+    ).toEqualHtml(expected)
   })
 })
