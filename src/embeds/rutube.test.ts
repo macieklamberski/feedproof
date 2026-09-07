@@ -18,6 +18,21 @@ describe('rutubeResolveEmbed', () => {
       expect(rutubeResolveEmbed(value)).toEqual(expected)
     })
 
+    // The player still plays the numeric ids it minted before the uuid, so they are read like any
+    // other id rather than refused for their length.
+    it('should mint the player for a legacy numeric id', () => {
+      const value = 'https://rutube.ru/play/embed/16879846'
+      const expected: EmbedResolverResult = {
+        provider: 'rutube',
+        id: '16879846',
+        src: 'https://rutube.ru/play/embed/16879846',
+        url: 'https://rutube.ru/video/16879846/',
+        ratio: '16/9',
+      }
+
+      expect(rutubeResolveEmbed(value)).toEqual(expected)
+    })
+
     it('should keep the access key a private video carries', () => {
       const value =
         'https://rutube.ru/play/embed/08fa24c07c55aa24504f0ac93f7c2d01/?p=KKiFZe0ka-lmMTIbZyvWig'
@@ -63,12 +78,6 @@ describe('rutubeResolveEmbed', () => {
   describe('sad paths', () => {
     it('should ignore a foreign host carrying the same path', () => {
       const value = 'https://evil.test/rutube.ru/play/embed/c91d5d8847c7c5391a090fff38c86f34/'
-
-      expect(rutubeResolveEmbed(value)).toBeUndefined()
-    })
-
-    it('should leave the numeric ids of the old player alone', () => {
-      const value = 'https://rutube.ru/play/embed/9955425'
 
       expect(rutubeResolveEmbed(value)).toBeUndefined()
     })

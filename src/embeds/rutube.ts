@@ -3,10 +3,14 @@ import { attr, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts, pickUrlParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// A Rutube video id is a uuid with the dashes stripped. The older numeric ids the same routes
-// once carried are not taken: `api/video/{id}/` answers 404 for every one probed, the same as
-// for an invented id, so nothing can be minted for them.
-const safeVideoIdRegex = /^[0-9a-f]{32}$/
+// A Rutube video id is a uuid with the dashes stripped, and the older numeric ids the same routes
+// carried are taken too, because the player still plays them. Checked 2026-09-07: the player's own
+// options endpoint answers 200 with the title and a stream for the legacy `16879846` and for the
+// uuid `a104813a026655f245ce34e3ac10ebf5` that `api/video/16879846/` names as the same video,
+// while an invented id answers `default_does_not_exists_video`. So the length is not checked: it
+// would refuse a live legacy video, and a wrong id fails the same whether it is minted or passed
+// through. The routes above are exact, so nothing but an id reaches this.
+const safeVideoIdRegex = /^[0-9a-f]+$/
 
 const rutubeHost = 'rutube.ru'
 
