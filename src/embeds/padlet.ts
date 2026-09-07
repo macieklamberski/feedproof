@@ -3,7 +3,16 @@ import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A board id is a run of lowercase letters and digits, twelve or sixteen characters in the wild.
-const safeBoardIdRegex = /^[a-z0-9]{8,32}$/
+// The length is not checked: both routes below are exact and take an id and nothing else, so a
+// bound would only refuse the next length Padlet mints. It was not keeping site pages out either,
+// which is the job it looked like it was doing: `padlet.com/embed/dashboard` is nine characters
+// and resolved under the old bound. Nothing needs keeping out, because Padlet serves nothing but
+// a board behind `/embed/` — checked 2026-09-07, `dashboard`, `gallery`, `settings`, `help` and
+// `about` all answer 404 at nine bytes there, the same as an invented id, while the site's own
+// pages live at the first path segment this resolver never reads. What the alphabet does do is
+// exclude the dot, which is what keeps a media file on the host playable, since the enclosure
+// probe offers every attachment a feed carries to this resolver.
+const safeBoardIdRegex = /^[a-z0-9]+$/
 
 const padletHost = 'padlet.com'
 const embedPathRegex = /^\/embed\/([^/]+)\/?$/

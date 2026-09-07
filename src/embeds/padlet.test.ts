@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { padletEmbedResolver } from './padlet.js'
@@ -64,6 +65,22 @@ describeForEachParser('padletEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // Padlet has minted twelve and sixteen character ids, so only the alphabet is checked.
+    it('should resolve a board id longer than the ones minted so far', async () => {
+      const value =
+        '<iframe src="https://padlet.com/embed/a61rwkel0vfblmszlongerthanbeforeandthensome"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'padlet',
+        id: 'a61rwkel0vfblmszlongerthanbeforeandthensome',
+        src: 'https://padlet.com/embed/a61rwkel0vfblmszlongerthanbeforeandthensome',
+        thumbnail:
+          'https://padlet.net/social-previews/board/a61rwkel0vfblmszlongerthanbeforeandthensome/opengraph.jpg',
+        height: 608,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
@@ -92,5 +109,26 @@ describeForEachParser('padletEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+// The enclosure probe offers every attachment a feed carries to this resolver, and Padlet serves
+// uploads on the same domain as the board, so the id alphabet is what keeps a file playable.
+describeForEachParser('padlet through the pipeline', (parseHtml) => {
+  it('should leave an audio enclosure on the padlet host playable', async () => {
+    const enclosures = [{ url: 'https://padlet.com/uploads/board/track.mp3', type: 'audio/mpeg' }]
+
+    const expected = html`
+      <audio data-enclosure="" controls src="https://padlet.com/uploads/board/track.mp3"></audio>
+      <p>Body</p>
+    `
+
+    expect(
+      await transformContent('<p>Body</p>', {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/post',
+        enclosures,
+      }),
+    ).toEqualHtml(expected)
   })
 })
