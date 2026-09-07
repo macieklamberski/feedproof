@@ -12,6 +12,7 @@ import { attr } from '../utils/dom.js'
 // audio card is matched whole since Ghost's own cleanup keeps nothing else from it.
 // Cleaned feeds carry no `.kg-video-container`, so their video cards are left alone.
 export const ghostMediaResolver: MediaResolver = {
+  kind: 'media',
   selector: '.kg-video-card .kg-video-container, .kg-audio-card',
   extract: (element): MediaResolverResult | undefined => {
     if (element.classList.contains('kg-video-container')) {

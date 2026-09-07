@@ -20,6 +20,7 @@ const imageSrc = (element: Element | undefined): string | undefined => {
 }
 
 export const affingerCiteResolver: CiteResolver = {
+  kind: 'cite',
   // The anchor is the match so that replacing it swaps out the whole link. The second arm
   // takes cards that are not wrapped, and excludes wrapped ones so the two never overlap.
   //

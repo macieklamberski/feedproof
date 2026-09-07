@@ -1,4 +1,5 @@
-import { expect, it } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
+import { parseHtml } from '../../parsers/linkedom.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
@@ -268,6 +269,47 @@ describeForEachParser('stripInterBlockBreaks', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  it('should remove br between table rows and cells', async () => {
+    const value = html`
+      <p>Intro</p>
+      <table>
+        <br>
+        <tbody>
+          <br>
+          <tr>
+            <br>
+            <th>Model</th>
+            <br>
+            <th>Price</th>
+          </tr>
+          <br>
+          <tr>
+            <td>A<br>B</td>
+            <br>
+            <td>1</td>
+          </tr>
+        </tbody>
+      </table>
+    `
+    const expected = html`
+      <p>Intro</p>
+      <table>
+        <tbody>
+          <tr>
+            <th>Model</th>
+            <th>Price</th>
+          </tr>
+          <tr>
+            <td>A<br>B</td>
+            <td>1</td>
+          </tr>
+        </tbody>
+      </table>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
   it('should handle empty input', async () => {
     expect(await transform('')).toEqualHtml('')
   })
@@ -282,5 +324,33 @@ describeForEachParser('stripInterBlockBreaks', (parseHtml) => {
     const twice = await transform(once)
 
     expect(twice).toEqualHtml(once)
+  })
+})
+
+// linkedom only: jsdom's parser closes the colgroup at the <br> and opens a second one for
+// the <col>, so its output differs by parser rather than by transform.
+describe('stripInterBlockBreaks in a colgroup', () => {
+  it('should remove br between col elements', async () => {
+    const value = html`
+      <table>
+        <colgroup>
+          <br>
+          <col>
+          <br>
+          <col>
+        </colgroup>
+      </table>
+    `
+    const expected = html`
+      <table>
+        <colgroup>
+          <col>
+          <col>
+        </colgroup>
+      </table>
+    `
+    const result = await applyDomTransforms(parseHtml(value), [stripInterBlockBreaks(baseContext)])
+
+    expect(result).toEqualHtml(expected)
   })
 })

@@ -40,13 +40,13 @@ import vim from 'highlight.js/lib/languages/vim'
 import x86asm from 'highlight.js/lib/languages/x86asm'
 import type { HighlightFn } from '../types.js'
 
-// Languages absent from highlight.js's common build but common in feed code blocks (ranked by
-// real-corpus hint frequency). Registering them lets an explicit class/attribute hint resolve to
-// a grammar. A block with no match is left as plain text. Built-in aliases (hs->haskell,
-// clj->clojure, ...) come along for free.
+// Languages absent from highlight.js's common build but common in feed code blocks.
+// Registering them lets an explicit class/attribute hint resolve to a grammar. A block with no
+// match is left as plain text. Built-in aliases (hs->haskell, clj->clojure, ...) come along
+// for free.
 //
-// Mathematica is deliberately left out for now: its grammar is ~148 KB (a built-in symbol
-// table), too heavy for the ~0.006% of blocks that declare it.
+// Mathematica is deliberately left out for now: its grammar is a large built-in symbol table,
+// too heavy for the rare blocks that declare it.
 export const extraLanguages: Record<string, LanguageFn> = {
   applescript,
   arduino,
@@ -93,8 +93,8 @@ for (const [name, grammar] of Object.entries(extraLanguages)) {
 }
 
 // Popular hint tokens highlight.js does not resolve on its own, mapped to an
-// already-registered grammar (frequencies from the real-feed corpus). Tokens it
-// already aliases (console, objc, golang, cs, jsx, yml, sh, ...) need nothing.
+// already-registered grammar. Tokens it already aliases (console, objc, golang,
+// cs, jsx, yml, sh, ...) need nothing.
 // A few are dialect approximations to the nearest grammar (emacs-lisp/elisp and
 // cl -> lisp, racket -> scheme, fish/tcsh/csh -> bash, terminal -> shell).
 export const languageAliases: Record<string, Array<string>> = {

@@ -3,6 +3,7 @@ import { transformContent } from '../index.js'
 import { describeForEachParser, html, jsonAttrValue, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
+  readTwitterHeight,
   twitterAmpEmbedResolver,
   twitterBlockquoteEmbedResolver,
   twitterIframeEmbedResolver,
@@ -87,6 +88,29 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should read the display name out of a byline whose handle runs long', async () => {
+      const value = html`
+        <blockquote class="twitter-tweet">
+          <p lang="en" dir="ltr">Tweet text here.</p>
+          <p>
+            &mdash; Display Name (@sixteencharacter)
+            <a href="https://twitter.com/sixteencharacter/status/123456789012345">May 12, 2020</a>
+          </p>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: `https://x.com/sixteencharacter/status/${statusId}`,
+        description: 'Tweet text here.',
+        author: 'Display Name',
+        date: 'May 12, 2020',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should join every paragraph of a long tweet into the description', async () => {
       const value = html`
         <blockquote class="twitter-tweet">
@@ -141,6 +165,28 @@ describeForEachParser('twitterBlockquoteEmbedResolver', (parseHtml) => {
       `
 
       expect(await extract(value)).toBeUndefined()
+    })
+
+    // A block copied between platforms carries several generations of the attribute, and only
+    // the later one is intact, so each is validated rather than the first present one winning.
+    it('should read a later id attribute when an earlier one is malformed', async () => {
+      const value = html`
+        <blockquote
+          class="twitter-tweet"
+          data-twitter-tweet-id="../evil"
+          data-tweet-id="${statusId}"
+        >
+          <p>Text.</p>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: `https://platform.twitter.com/embed/Tweet.html?id=${statusId}`,
+        description: 'Text.',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -998,6 +1044,18 @@ describe('twitterResolveEmbed', () => {
   it('should return undefined for an invalid url', () => {
     expect(twitterResolveEmbed('not a url')).toBeUndefined()
   })
+
+  it('should resolve a status page whose handle runs past fifteen characters', () => {
+    const value = `https://x.com/sixteencharacter/status/${statusId}`
+    const expected: EmbedResolverResult = {
+      provider: 'twitter',
+      id: statusId,
+      src: playerUrl,
+      url: `https://x.com/sixteencharacter/status/${statusId}`,
+    }
+
+    expect(twitterResolveEmbed(value)).toEqual(expected)
+  })
 })
 
 describeForEachParser('twitterIframeEmbedResolver', (parseHtml) => {
@@ -1022,6 +1080,29 @@ describeForEachParser('twitterIframeEmbedResolver', (parseHtml) => {
     `
 
     expect(await extract(value)).toBeUndefined()
+  })
+
+  // Twitter's own internal paths, which name a status and no handle. Both video frames and the
+  // card frame are dead, answering a stub or a 404, so the id in them is worth more than
+  // the url they point at. `i` stands in for the handle, which Twitter itself redirects.
+  describe('the internal paths that carry a status and no handle', () => {
+    it.each([
+      'https://twitter.com/i/videos/tweet/123456789012345',
+      'https://twitter.com/i/videos/123456789012345',
+      'https://twitter.com/i/cards/tfw/v1/123456789012345',
+      'https://x.com/i/web/status/123456789012345',
+      'https://x.com/statuses/123456789012345',
+    ])('should mint the player from %s', async (url) => {
+      const value = html`<iframe src="${url}"></iframe>`
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: `https://x.com/i/status/${statusId}`,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   // The url a wrapper writes when it stores what the author pasted rather than the player, which
@@ -1210,5 +1291,33 @@ describeForEachParser('twitter shapes the pipeline repairs first', (parseHtml) =
 
       expect(await placeholder(value)).toEqual(expected)
     })
+  })
+})
+
+describe('readTwitterHeight', () => {
+  it('should read the height out of a resize call', () => {
+    const value = {
+      'twttr.embed': {
+        jsonrpc: '2.0',
+        method: 'twttr.private.resize',
+        id: 'embed-0',
+        params: [{ width: 550, height: 321, data: { tweet_id: '2095839790608363813' } }],
+      },
+    }
+
+    expect(readTwitterHeight(value)).toBe(321)
+  })
+
+  it('should read nothing out of the other calls', () => {
+    const value = {
+      'twttr.embed': {
+        jsonrpc: '2.0',
+        method: 'twttr.private.rendered',
+        id: 'embed-0',
+        params: [{ data: { tweet_id: '2095839790608363813' } }],
+      },
+    }
+
+    expect(readTwitterHeight(value)).toBeUndefined()
   })
 })

@@ -52,26 +52,26 @@ describe('extractAnchorEpisode', () => {
 })
 
 describe('anchorResolveEmbed', () => {
-  it('should size the legacy players at their own height', () => {
+  it('should state the player height', () => {
     const value = 'https://anchor.fm/myshow/embed/episodes/my-title-e123'
     const expected: EmbedResolverResult = {
       provider: 'anchor',
       id: 'myshow/my-title-e123',
       src: 'https://anchor.fm/myshow/embed/episodes/my-title-e123',
-      height: 102,
+      height: 100,
     }
 
     expect(anchorResolveEmbed(value)).toEqual(expected)
   })
 
-  // The newest generation renders taller, so the two are not averaged.
-  it('should size the creators player taller', () => {
+  // The three hosts redirect to one player, so the newest generation gets the same height.
+  it('should state the same height for the creators host', () => {
     const value = 'https://creators.spotify.com/pod/profile/me/embed/episodes/my-title-e1/a-abc'
     const expected: EmbedResolverResult = {
       provider: 'anchor',
       id: 'me/my-title-e1',
       src: 'https://creators.spotify.com/pod/profile/me/embed/episodes/my-title-e1/a-abc',
-      height: 204,
+      height: 100,
     }
 
     expect(anchorResolveEmbed(value)).toEqual(expected)

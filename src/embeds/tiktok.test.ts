@@ -39,6 +39,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
         url: 'https://www.tiktok.com/@cookingwithlynja/video/7001234567890123456',
         description: 'Midnight pasta #pasta',
         author: '@cookingwithlynja',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -64,6 +65,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
         url: 'https://www.tiktok.com/@cookingwithlynja/video/7001234567890123456',
         description: 'Midnight pasta',
         author: '@cookingwithlynja',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -96,6 +98,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
         url: 'https://www.tiktok.com/@user/video/7000000000000000000',
         description: 'caption text #tag',
         author: '@user',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -116,6 +119,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
         description: 'Midnight pasta',
         author: '@cookingwithlynja',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -136,6 +140,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
         id: '@user/video/7001234567890123456',
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
         url: 'https://www.tiktok.com/@user/video/7001234567890123456',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -165,15 +170,16 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
         url: 'https://www.tiktok.com/@cookingwithlynja/video/7001234567890123456',
         description: 'Midnight pasta #pasta',
         author: '@cookingwithlynja',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
     })
 
-    // No other shape declares a height, so without this a vertical clip is drawn as a
-    // video-shaped box. The hydrated iframe rendered at this height against the blockquote's
-    // own max-width, so the pair is a real measurement rather than a guess. The text is gone,
-    // replaced by the frame, so there is no caption or author left to take.
+    // The other shapes state the player's fixed height. The hydrated iframe rendered at this
+    // height against the blockquote's own max-width, so the pair is a real measurement of this
+    // clip and wins over it. The text is gone, replaced by the frame, so there is no caption or
+    // author left to take.
     it('should keep the size the hydrated player rendered at', async () => {
       const value = html`
         <blockquote
@@ -228,6 +234,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
         id: '@user/video/7000000000000000000',
         src: 'https://www.tiktok.com/embed/v2/7000000000000000000',
         url: 'https://www.tiktok.com/@user/video/7000000000000000000',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -256,6 +263,47 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
         src: 'https://www.tiktok.com/embed/@user',
         url: 'https://www.tiktok.com/@user',
         author: '@user',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Both handle readers take the account with no length checked, the declared attribute here
+    // and the profile anchor below, so a name past the 24 characters the signup form allows still
+    // resolves.
+    it('should resolve a declared handle longer than the signup form allows', async () => {
+      const value = html`
+        <blockquote
+          class="tiktok-embed"
+          data-unique-id="averylonghandlepastwhatsignupallows"
+          data-embed-type="creator"
+        >
+          <section></section>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '@averylonghandlepastwhatsignupallows',
+        src: 'https://www.tiktok.com/embed/@averylonghandlepastwhatsignupallows',
+        url: 'https://www.tiktok.com/@averylonghandlepastwhatsignupallows',
+        author: '@averylonghandlepastwhatsignupallows',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should resolve a long handle from the profile anchor alone', async () => {
+      const value = html`
+        <blockquote class="tiktok-embed">
+          <a href="https://www.tiktok.com/@averylonghandlepastwhatsignupallows">Profile</a>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '@averylonghandlepastwhatsignupallows',
+        src: 'https://www.tiktok.com/embed/@averylonghandlepastwhatsignupallows',
+        url: 'https://www.tiktok.com/@averylonghandlepastwhatsignupallows',
+        author: '@averylonghandlepastwhatsignupallows',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -323,6 +371,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
         provider: 'tiktok',
         id: '@user/video/7001234567890123456',
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -343,6 +392,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
         id: '@user/video/7001234567890123456',
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
         url: 'https://www.tiktok.com/@user/video/7001234567890123456',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -390,6 +440,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
         id: '7001234567890123456',
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
         description: 'Midnight pasta',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -410,6 +461,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
         url: 'https://www.tiktok.com/@user/video/7001234567890123456',
         author: '@user',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -428,6 +480,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
         id: '@user/video/7001234567890123456',
         src: 'https://www.tiktok.com/embed/v2/7001234567890123456',
         url: 'https://www.tiktok.com/@user/video/7001234567890123456',
+        height: 738,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -496,6 +549,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
           data-embed-url="https://www.tiktok.com/@user/video/7000000000000000000"
           data-embed-description="caption text #tag"
           data-embed-author="@user"
+          data-embed-height="738"
         ></div>
       `
 
@@ -515,6 +569,7 @@ describeForEachParser('tiktokBlockquoteEmbedResolver', (parseHtml) => {
           data-embed-url="https://www.tiktok.com/@user/video/7000000000000000000"
           data-embed-description="caption text #tag"
           data-embed-author="@user"
+          data-embed-height="738"
         ></div>
       `
 
@@ -623,6 +678,23 @@ describeForEachParser('tiktokIframeEmbedResolver', (parseHtml) => {
         id: '@user/video/7520573541146692886',
         src: 'https://www.tiktok.com/embed/v2/7520573541146692886',
         url: 'https://www.tiktok.com/@user/video/7520573541146692886',
+        height: 738,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should mint the player from a watch page whose handle is long', async () => {
+      const value = html`
+        <iframe
+          src="https://www.tiktok.com/@averylonghandlepastwhatsignupallows/video/7520573541146692886"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'tiktok',
+        id: '@averylonghandlepastwhatsignupallows/video/7520573541146692886',
+        src: 'https://www.tiktok.com/embed/v2/7520573541146692886',
+        url: 'https://www.tiktok.com/@averylonghandlepastwhatsignupallows/video/7520573541146692886',
         height: 738,
       }
 

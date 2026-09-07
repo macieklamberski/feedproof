@@ -33,6 +33,7 @@ const bareUrl = (value: string): string => {
 // or `href.li`), sometimes nested. Unwrapping is left to the injected cleanUrlFn, which
 // already handles wrappers and nesting.
 export const tumblrCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.npf_link, .npf-link-block',
   extract: (element) => {
     if (element.matches('.npf-link-block')) {

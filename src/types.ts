@@ -46,6 +46,34 @@ export type EmbedResolverResult = {
   duration?: number
 }
 
+// What a reader needs from a provider once it turns the placeholder into a frame: the query that
+// starts playback on the click, and how the player reports its height once it has rendered. A
+// social post has no height until then, so the frame posts one and the reader sizes the box from
+// it. Each hint is a fact about the player and a pure reader of its messages; when to load and
+// what to do with a height stay the reader's decisions.
+export type EmbedRenderHint = {
+  provider: string
+  // The origin the player's messages arrive from, for a reader to check `event.origin` against.
+  // Absent where the player is served from the publisher's own host, a Mastodon instance or a
+  // Podigee show, and the frame's own origin is the one to match.
+  origin?: string
+  // Query parameters that start playback, for a load that follows a person's click. They never
+  // go on the placeholder's url, since a placeholder must not start on page load.
+  autoplayParams?: Record<string, string>
+  // How playback is started for a player that takes no query for it: which of the frame's own
+  // messages says it is ready to take a command, for a player that ignores one before then, and
+  // what to post into the frame. A reader posts the request once, on that message where the hint
+  // names one and on `load` otherwise. Posting twice pauses a player whose command toggles.
+  isReady?: (data: unknown) => boolean
+  requestPlay?: unknown
+  // How the player's height is obtained: what to post into the frame once it has loaded, for a
+  // player that reports only when asked, and the rendered height in pixels out of a message the
+  // frame posted, or nothing when the message is about something else or the player has not
+  // rendered yet.
+  requestHeight?: unknown
+  readHeight?: (data: unknown) => number | undefined
+}
+
 // What the pipeline hands an enricher: the two attributes that name a placeholder's embed, and
 // nothing else. The id must be enough to rebuild the platform's endpoint on its own, which is why
 // TikTok's carries the handle beside the video id.
@@ -64,6 +92,7 @@ export type EnrichEmbedFn = (
 ) => MaybePromise<Array<Partial<EmbedResolverResult> | undefined>>
 
 export type EmbedResolver = {
+  kind: 'embed'
   selector: string
   extract: (element: Element) => MaybePromise<EmbedResolverResult | undefined>
 }
@@ -122,6 +151,7 @@ export type EnrichCiteFn = (
 ) => MaybePromise<Array<Partial<CiteResolverResult> | undefined>>
 
 export type CiteResolver = {
+  kind: 'cite'
   selector: string
   extract: (element: Element) => MaybePromise<CiteResolverResult | undefined>
 }
@@ -139,18 +169,20 @@ export type MediaResolverResult = {
 }
 
 export type MediaResolver = {
+  kind: 'media'
   selector: string
   extract: (element: Element) => MaybePromise<MediaResolverResult | undefined>
 }
 
-// One registry for everything the widget pass recognizes. A resolver keeps a single honest
-// contract (an EmbedResolver only ever returns embed results), and the union describes what
-// the array accepts. The pass discriminates on the result shape to emit either an opaque
-// placeholder or a real media element. Cite resolvers stay out: their pass reads card markup
-// earlier in the pipeline, before link and prose normalization can disturb it.
-export type WidgetResolver = EmbedResolver | MediaResolver
+// One registry for every widget resolver. A resolver keeps a single honest contract (an
+// EmbedResolver only ever returns embed results), and the kind tag is what lets each pass
+// pick its own resolvers: convertCiteCards runs the cite ones early, before link and prose
+// normalization can disturb card markup, while convertWidgets runs the embed and media ones
+// late and discriminates on the result shape to emit either an opaque placeholder or a real
+// media element.
+export type WidgetResolver = EmbedResolver | MediaResolver | CiteResolver
 
-export type WidgetResolverResult = EmbedResolverResult | MediaResolverResult
+export type WidgetResolverResult = EmbedResolverResult | MediaResolverResult | CiteResolverResult
 
 export type CleanUrlFn = (url: string) => string
 
@@ -164,7 +196,7 @@ export type IsSafeUrlFn = (url: string, type: UrlRole) => boolean
 
 export type AssetType = 'image' | 'video' | 'audio'
 
-export type AssetProxyFn = (url: string, type: AssetType) => string | undefined
+export type AssetProxyFn = (url: string, type: AssetType) => MaybePromise<string | undefined>
 
 // Normalizes a cite card's site-formatted display date (e.g. "2018.10.14") into the
 // caller's preferred form. Returning undefined keeps the raw string verbatim, so an
@@ -184,9 +216,11 @@ export type TransformContext = {
   // these, not the permalink, so transforms that recognize self-page
   // links check these too. See `shortenSamePageLinkFragments`.
   sameSiteUrls?: Array<string>
+  // The feed's own images (logo, icon, cover), so an enclosure that repeats one of them is
+  // read as decoration rather than as this item's picture. See `injectEnclosures`.
+  feedImageUrls?: Array<string>
   enclosures?: Array<Enclosure>
   widgetResolvers: Array<WidgetResolver>
-  citeResolvers: Array<CiteResolver>
   mediaSrcAttributes: Array<string>
   lazySrcAttributes: Array<string>
   lazySrcsetAttributes: Array<string>
@@ -219,6 +253,7 @@ export type TransformContentOptions = {
   parseHtmlFn: ParseHtmlFn
   baseUrl?: string
   sameSiteUrls?: Array<string>
+  feedImageUrls?: Array<string>
   enclosures?: Array<Enclosure>
   resolveUrlFn?: ResolveUrlFn
   cleanUrlFn?: CleanUrlFn

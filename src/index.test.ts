@@ -587,9 +587,36 @@ describeForEachParser('transformContent', (parseHtml) => {
     // a data-cite-* placeholder, like the built-in ghost resolver does.
   })
 
-  it.todo('should strip a duplicated leading heading when articleTitle matches', () => {
-    // With articleTitle equal to the first heading text, stripDuplicateTitleHeading
-    // should remove that heading from the output.
+  it('should strip a duplicated leading heading when articleTitle matches', async () => {
+    const value = '<h1>Breaking News Today</h1><p>Article body.</p>'
+    const expected = '<p>Article body.</p>'
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      articleTitle: 'Breaking News Today',
+    })
+
+    expect(result).toBe(expected)
+  })
+
+  it('should strip a duplicated leading heading that carries a permalink glyph', async () => {
+    const value = html`
+      <h1 id="breaking-news-today">
+        <a
+          href="#breaking-news-today"
+          class="header-anchor"
+        >#</a>
+        Breaking News Today
+      </h1>
+      <p>Article body.</p>
+    `
+    const expected = '<p>Article body.</p>'
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      articleTitle: 'Breaking News Today',
+    })
+
+    expect(result).toEqualHtml(expected)
   })
 
   it('should remove hidden elements', async () => {

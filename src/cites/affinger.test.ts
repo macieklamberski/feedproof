@@ -9,7 +9,10 @@ describeForEachParser('affingerCiteResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, affingerCiteResolver)
 
   const transform = (value: string) => {
-    const context: TransformContext = { ...baseContext, citeResolvers: [affingerCiteResolver] }
+    const context: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [affingerCiteResolver],
+    }
 
     return applyDomTransforms(parseHtml(value), [convertCiteCards(context)])
   }

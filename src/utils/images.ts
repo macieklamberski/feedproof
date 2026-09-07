@@ -34,8 +34,8 @@ export const countSrcsetCandidates = (srcset: string): number => {
 // Conservative on purpose: "main"/"cover"/"default"/"wide"/"full" are left out. They
 // read as size hints but turn up as real content filenames often enough that a false
 // match would drop a genuine image. (wide/full are still covered when paired with
-// dimensions, e.g. "wide__148x84", via dimensionLeaf.) Add a keyword here only if the
-// corpus shows it earns its keep against that false-match risk.
+// dimensions, e.g. "wide__148x84", via dimensionLeaf.) Add a keyword here only if it
+// earns its keep against that false-match risk.
 const sizeKeywordRanks: Record<string, number> = {
   thumb: 1,
   thumbnail: 1,
@@ -149,6 +149,12 @@ const pathTransforms: Array<PathTransform> = [
   // Medium: miro.medium.com/v2/{transforms}/{id}(-{width}).{ext}: key on the bare id.
   { host: /miro\.medium\.com$/i, strip: /\/v2\/(?:[^/]+\/)+/i, replace: '/' },
   { host: /miro\.medium\.com$/i, strip: /(?:-\d{2,4})?\.[a-z]+$/i, replace: '' },
+  // Dwell: images.dwell.com/{album}/{id}-{size}/{file}: key on the bare id.
+  {
+    host: /images\.dwell\.com$/i,
+    strip: new RegExp(`(?<=/\\d{6,})-(?:${sizeKeywordLiterals.join('|')})(?=/[^/]+$)`, 'i'),
+    replace: '',
+  },
 ]
 
 // Server scripts that pick which image to serve from the query, so the query carries the
@@ -162,9 +168,9 @@ const scriptLeaf = new RegExp(`\\.(?:${scriptExtensionLiterals.join('|')})$`, 'i
 // name, "original__640x360" / "wide__148x84". No shared filename stem survives.
 const dimensionLeaf = /^(.*__)?\d{1,5}x\d{1,5}(\.[a-z0-9]+)?$/i
 // A dimension suffix on an otherwise-shared stem: a scaled copy, e.g.
-// "photo-800x450.jpg" or "photo_800x450.jpg" of "photo.jpg". Both separators occur
-// in the corpus: hyphen (WordPress) on ~10% of feeds, underscore on ~1.5%. The
-// width-only "_800x" and retina "@2x" shapes stay out, each below 0.1% of feeds.
+// "photo-800x450.jpg" or "photo_800x450.jpg" of "photo.jpg". Both separators are
+// real: hyphen (WordPress) is common, underscore rarer. The width-only "_800x" and
+// retina "@2x" shapes are deliberately left out as too rare to earn the match.
 const dimensionSuffix = /[-_]\d{1,5}x\d{1,5}(\.[a-z0-9]+)$/i
 
 // If the URL is a known image-proxy wrapper, return its inner source URL so the key is built

@@ -49,20 +49,37 @@ export const stripDuplicateTitleHeading: DomTransform = (context) => {
       return
     }
 
-    if (text !== normalize(getTitleText(document, articleTitle))) {
+    const title = normalize(getTitleText(document, articleTitle))
+    const headings = [heading]
+
+    // A layout that breaks the title over several lines ships one heading per line, so the
+    // title is only recognized once the run of headings is read as one text.
+    let sibling = heading.nextElementSibling
+
+    while (text !== title && title.startsWith(text) && sibling?.matches(headingSelector)) {
+      headings.push(sibling)
+      text = normalize(`${text} ${sibling.textContent ?? ''}`)
+      sibling = sibling.nextElementSibling
+    }
+
+    if (text !== title) {
       return
     }
 
-    // A nested heading (`<h2><h1>x</h1></h2>`) would go with the outer one, so the outer stays.
-    if (heading.querySelector(headingSelector)) {
-      return
+    for (const candidate of headings) {
+      // A nested heading (`<h2><h1>x</h1></h2>`) would go with the outer one, so the outer stays.
+      if (candidate.querySelector(headingSelector)) {
+        return
+      }
+
+      // Media inside the heading would be silently deleted along with it.
+      if (candidate.querySelector(mediaSelector)) {
+        return
+      }
     }
 
-    // Media inside the heading would be silently deleted along with it.
-    if (heading.querySelector(mediaSelector)) {
-      return
+    for (const candidate of headings) {
+      candidate.remove()
     }
-
-    heading.remove()
   }
 }

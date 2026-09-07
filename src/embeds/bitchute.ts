@@ -8,8 +8,8 @@ const safeVideoIdRegex = /^[a-zA-Z0-9]{8,24}$/
 
 const bitchuteHosts = ['bitchute.com']
 
-// The player is `bitchute.com/embed/{id}/`, in 132 corpus feeds, and the page is
-// `bitchute.com/video/{id}/`, both on `www` and on the `old` host the previous site keeps.
+// The player is `bitchute.com/embed/{id}/` and the page is `bitchute.com/video/{id}/`, both
+// on `www` and on the `old` host the previous site keeps.
 // Checked live 2026-08-16: the player answers 200 for a real id and 404 for an invented one.
 //
 // The cover image sits under the channel's hash, which the video url does not carry, so the
@@ -41,3 +41,7 @@ const bitchuteResolveEmbed = (link: string, element: Element): EmbedResolverResu
 }
 
 export const bitchuteEmbedResolver = createUrlEmbedResolver(bitchuteHosts, bitchuteResolveEmbed)
+
+// No autoplay hint. The player's script reads `autoPlay` off its query, then gates `play()` on an
+// unmuted 250 ms autoplay probe, and loaded in Chrome by a click with `autoPlay=true` the player
+// still sat on its poster. Not a hint until the player honours it.

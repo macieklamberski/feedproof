@@ -9,14 +9,15 @@ import { attr, find, text } from '../utils/dom.js'
 // in the editor, unlike the related-posts widgets we strip, which themes append to every post
 // automatically.
 export const cocoonCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.blogcard-wrap',
   extract: (element) => {
     return buildCite({
       provider: 'cocoon',
       url: attr(element, 'href'),
       title: text(element, '.blogcard-title') ?? attr(element, 'title'),
-      // Both spellings of the snippet class ship in the wild: `blogcard-snippet` in 1,289
-      // corpus feeds and the misspelled `blogcard-snipet` in another 40.
+      // Both spellings of the snippet class ship in the wild: `blogcard-snippet` is the
+      // common one, and the misspelled `blogcard-snipet` still occurs.
       description: text(element, '.blogcard-snippet, .blogcard-snipet'),
       // The bar above the card, holding either the theme's stock wording or the author's own
       // note about the link. Carried whichever it is, the way SWELL carries its equivalent:

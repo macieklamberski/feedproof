@@ -15,23 +15,20 @@ const structuralWrapperTags = new Set(['picture', 'figure', 'a'])
 
 // Generic block wrappers that count only when they wrap media and nothing else (a
 // "media-primary" wrapper), e.g. classic-editor <p style="text-align:center"><img></p>.
-// <center> appears in 0.38% of feeds; inline text-align in 7.3% (mostly text: only the
-// media-primary slice is in scope).
+// Inline text-align mostly sits on text, so only the media-primary slice is in scope.
 const genericWrapperTags = new Set(['div', 'p', 'center'])
 
 // WordPress block/editor classes: the dominant explicit media-alignment signal.
 // `alignnone` is an explicit "no alignment" that terminates resolution without a hook.
-// Corpus feed shares (on an <img>): center 3.39%, left 1.88%, right 1.39%.
 const classDirections = new Map<string, Direction | 'none'>([
-  ['aligncenter', 'center'], // 154,871 feeds (5.7%); on <img> 91,757 (3.4%).
-  ['alignleft', 'left'], // 72,307 feeds (2.7%); on <img> 50,936 (1.9%).
-  ['alignright', 'right'], // 58,094 feeds (2.1%); on <img> 37,519 (1.4%).
-  ['alignnone', 'none'], // 103,250 feeds (3.8%).
+  ['aligncenter', 'center'],
+  ['alignleft', 'left'],
+  ['alignright', 'right'],
+  ['alignnone', 'none'],
 ])
 
 // Deprecated `align` attribute: horizontal values only. `middle`/`top`/`bottom`
-// are vertical image alignment and must not map to a horizontal hook. On <img>:
-// center 0.04%, left 0.18%, right 0.11%, middle 0.04% (excluded).
+// are vertical image alignment and must not map to a horizontal hook.
 const attrDirections = new Map<string, Direction>([
   ['center', 'center'],
   ['left', 'left'],
@@ -85,7 +82,7 @@ const getStyleDirection = (element: Element, isImage: boolean): Direction | unde
   }
 
   // Auto horizontal margins center an <img> (a block layout idiom); ambiguous on
-  // other elements, so restricted to images. 0.16% of feeds.
+  // other elements, so restricted to images.
   if (isImage && hasAutoHorizontalMargins(element)) {
     return 'center'
   }

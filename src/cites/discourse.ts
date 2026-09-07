@@ -56,11 +56,12 @@ export const socialPostHosts = ['bsky.app', 'threads.net', 'threads.com']
 const fediverseHandleRegex = /@[\w.-]+@[\w-]+(?:\.[\w-]+)+/
 
 // Discourse forums expand a pasted link into a "onebox" card. The engine that built the
-// card varies (a generic one covers 979 of the 1,118 corpus feeds, the rest are per-site
-// engines like github or wikipedia), and each engine renders its own body markup, so this
+// card varies (a generic one covers most feeds, the rest are per-site engines like github
+// or wikipedia), and each engine renders its own body markup, so this
 // keys on the wrapper and the fields the generic shape shares rather than on the engine
 // subclass. The canonical URL sits on the wrapper, so no inner anchor is needed.
 export const discourseCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: `aside.onebox${omittedOneboxClasses.map((name) => `:not(.${name})`).join('')}`,
   extract: (element) => {
     const body = find(element, '.onebox-body')

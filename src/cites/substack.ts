@@ -4,9 +4,8 @@ import { attr, find, jsonAttr, text } from '../utils/dom.js'
 
 // Substack's two post-embed shapes are separate components, not generations of one:
 // today's editor emits `.embedded-post-wrap` when embedding another creator's post and
-// `.digest-post-embed` when embedding the publication's own post (verified 2026-07 at
-// 100% separation across 235 dated live embeds; the two key sets are disjoint across
-// 4,078 corpus specimens with zero mixed blobs). Both carry their card data in the
+// `.digest-post-embed` when embedding the publication's own post (verified 2026-07: the two
+// key sets are disjoint, with no mixed blobs). Both carry their card data in the
 // `data-attrs` JSON and are rendered client-side on Substack itself.
 type CrossPostAttrs = {
   title?: string
@@ -34,6 +33,7 @@ type OwnPostAttrs = {
 // (publication logo header, body preview, a Read more button, engagement counts),
 // because the reader may not know the linked publication.
 export const substackCrossPostCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.embedded-post-wrap',
   extract: (element) => {
     const attrs = jsonAttr<CrossPostAttrs>(element, 'data-attrs')
@@ -69,6 +69,7 @@ export const substackCrossPostCiteResolver: CiteResolver = {
 // branding, and dates it long-form ("October 5, 2025") rather than as the ISO string
 // `data-cite-date` holds, so those fields stay empty.
 export const substackOwnPostCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.digest-post-embed, [data-component-name="DigestPostEmbed"]',
   extract: (element) => {
     const attrs = jsonAttr<OwnPostAttrs>(element, 'data-attrs')
@@ -112,6 +113,7 @@ export const substackOwnPostCiteResolver: CiteResolver = {
 // host here while still serving the standard `/p/{slug}` path, so a host check would drop the
 // variant it is meant to keep.
 export const substackPostEmbedCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: 'div.substack-post-embed',
   extract: (element) => {
     const paragraphs = element.querySelectorAll('p')
@@ -121,6 +123,38 @@ export const substackPostEmbedCiteResolver: CiteResolver = {
       url: attr(find(element, 'a[data-post-link]'), 'href'),
       title: text(paragraphs[0]),
       description: text(paragraphs[1]),
+    })
+  },
+}
+
+type PublicationAttrs = {
+  name?: string
+  base_url?: string
+  hero_text?: string
+  author_name?: string
+  logo_url?: string
+}
+
+// A card for a whole publication rather than a post. In a feed the div ships childless and every
+// field comes from `data-attrs`, which carries no `description` or `hero_image` despite the post
+// shapes above having equivalents. Substack's own site ships the same card hydrated, and there
+// the blob omits `base_url` while the anchor carries the url, so each field falls back to the
+// markup. Nothing in either shape separates a card the author introduced from one Substack
+// injected, so every card renders.
+export const substackPublicationCiteResolver: CiteResolver = {
+  kind: 'cite',
+  selector:
+    '.embedded-publication-wrap, [data-component-name="EmbeddedPublicationToDOMWithSubscribe"]',
+  extract: (element) => {
+    const attrs = jsonAttr<PublicationAttrs>(element, 'data-attrs')
+
+    return buildCite({
+      provider: 'substack',
+      url: attrs?.base_url ?? attr(find(element, 'a.embedded-publication-link-part'), 'href'),
+      title: attrs?.name ?? text(find(element, '.embedded-publication-name')),
+      description: attrs?.hero_text ?? text(find(element, '.embedded-publication-hero-text')),
+      author: attrs?.author_name,
+      icon: attrs?.logo_url ?? attr(find(element, 'img.embedded-publication-logo'), 'src'),
     })
   },
 }

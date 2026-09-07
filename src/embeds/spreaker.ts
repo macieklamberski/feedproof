@@ -1,6 +1,7 @@
 import { parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize } from '../utils/dom.js'
+import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^\d+$/
@@ -11,8 +12,8 @@ const spreakerHosts = ['spreaker.com']
 const embedKinds = { episode_id: 'episode', show_id: 'show' } as const
 
 // The height Spreaker documents in its own embed snippet (`height="200px"`), and the reason
-// this resolver earns its place: the corpus iframes carry no height attribute at all, so
-// without it a reader reserves nothing. Spreaker's oEmbed also returns title, author and a
+// this resolver earns its place: real iframes carry no height attribute at all, so without it
+// a reader reserves nothing. Spreaker's oEmbed also returns title, author and a
 // thumbnail, which the enrichment hook can fill once provider and id are tagged here.
 const playerHeight = 200
 
@@ -55,18 +56,18 @@ export const spreakerIframeEmbedResolver = createUrlEmbedResolver(
 )
 
 // Spreaker's other embed code is an `<a class="spreaker-player">` beside a `widgets.js` loader
-// that swaps the anchor for the player at runtime. 73 corpus feeds carry that loader and 63 of
-// them have no player iframe anywhere, so what a reader sees is the anchor's fallback text
-// ("Listen to ... on Spreaker") and no player at all.
+// that swaps the anchor for the player at runtime. Feeds that carry the loader mostly hold no
+// player iframe anywhere, so what a reader sees is the anchor's fallback text ("Listen to ...
+// on Spreaker") and no player at all.
 //
 // The resource is spelled as a query fragment, not a url, `data-resource="episode_id=42"`,
 // so it is read by pasting it onto the player url the iframe form already uses. Where the anchor
 // states its own `data-height` that wins over the constant, since the publisher sized this one.
 // `data-resource` is required, not merely read. The class alone is styling anyone can copy, and
 // the anchor already renders as a working link, so resolving one without the attribute would
-// turn an ordinary link into a player on thin evidence. It would also buy nothing: 4 corpus
-// feeds carry the class without the attribute, and none of the 4 ships the loader script that
-// would have made a player of it.
+// turn an ordinary link into a player on thin evidence. It would also buy nothing: the feeds
+// that carry the class without the attribute do not ship the loader script that would have
+// made a player of it.
 export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
   'a.spreaker-player[data-resource]',
   (element) => {
@@ -85,3 +86,11 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
     return stated ? { ...result, height: stated } : result
   },
 )
+
+// The widget guide documents `autoplay=true`, but the player bundle holds no code for it and the
+// server-rendered config is identical with and without it. The widget speaks player.js instead.
+export const spreakerRenderHint: EmbedRenderHint = {
+  provider: 'spreaker',
+  isReady: isPlayerJsReady,
+  requestPlay: playerJsPlayRequest,
+}

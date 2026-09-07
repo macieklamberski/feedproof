@@ -1,10 +1,19 @@
-import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { getPathSegments, isPlainObject } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, isBlockElement, isBr, isElement, jsonAttr, text } from '../utils/dom.js'
+import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-const blueskyHosts = ['bsky.app']
+// The AppView front ends serve the identical `/profile/{authority}/post/{rkey}` path, and both
+// answer 200 for a real post. The minted player is `embed.bsky.app` either way, so naming them
+// only widens what is read, the way the Twitter resolver already names its mirrors. They differ
+// in provenance: `main.bsky.dev` is first-party, listed beside `bsky.app` in bskyweb's own CORS
+// origins, while `deer.social` is a third-party soft fork. The fork is safe to name because the
+// host only recognises the url: authority and rkey are regex-gated before anything is built, and
+// the frame is always fetched from `embed.bsky.app`, so its cost is drift if it changes its
+// paths, not a security surface.
+export const blueskyHosts = ['bsky.app', 'deer.social', 'main.bsky.dev']
 
 // Images come off `cdn.bsky.app` today and off `cdn.bsky.social` in older records. Both are
 // plain paths with no signature and no expiry (checked live 2026-08-13: 200, public,
@@ -21,9 +30,12 @@ const atUriRegex = /^at:\/\/([^/]+)\/([^/]+)\/([^/?#]+)/
 // The authority is either a DID (`did:plc:…`, `did:web:…`) or a handle, which is a domain
 // name. The record key is base32-sortable in practice. The wider charset here is the whole
 // of what a record key may hold. Both are interpolated into urls, so anything outside these
-// alphabets is refused, not escaped.
+// alphabets is refused, not escaped. The AT URI comes off raw attribute text, so nothing has
+// folded a dot segment away before it gets here, and a record key of `.` or `..` would climb out
+// of the collection in the minted player url. The AT Protocol forbids exactly those two keys, so
+// refusing them costs no real post.
 const safeAuthorityRegex = /^(?:did:[a-z]+:[\w.:%-]+|[a-z\d-]+(?:\.[a-z\d-]+)+)$/i
-const safeRecordKeyRegex = /^[\w.~-]+$/
+const safeRecordKeyRegex = /^(?!\.{1,2}$)[\w.~-]+$/
 
 // The author label sits between the post text and the date link, and the leading separator is
 // whatever the snippet generator emitted: `&mdash;`, an en dash, or a plain `--`.
@@ -215,18 +227,21 @@ const readQuotedPost = (
 // data attributes stripped, so the permalink in the footer is read as a second source. The
 // opposite stripping happens too: some feeds drop the class and keep the attributes, so the
 // second selector half claims the quote by its declared AT URI.
+// Both carriers name the post in one attribute and hold their text in the same place, so only
+// the attribute separates them.
+const extractQuotedPost = (
+  element: Element,
+  attribute: string,
+): EmbedResolverResult | undefined => {
+  const quoted = readQuotedPost(element)
+  const post = extractBlueskyPost(attr(element, attribute) ?? '') ?? quoted.post
+
+  return post ? { ...composeEmbedResult(post), ...quoted.fields } : undefined
+}
+
 export const blueskyBlockquoteEmbedResolver = createMarkupEmbedResolver(
   'blockquote.bluesky-embed, blockquote[data-bluesky-uri]',
-  (element) => {
-    const quoted = readQuotedPost(element)
-    const post = extractBlueskyPost(attr(element, 'data-bluesky-uri') ?? '') ?? quoted.post
-
-    if (!post) {
-      return
-    }
-
-    return { ...composeEmbedResult(post), ...quoted.fields }
-  },
+  (element) => extractQuotedPost(element, 'data-bluesky-uri'),
 )
 
 // Substack renders every Bluesky embed as an iframe inside its own wrapper, and that wrapper
@@ -289,14 +304,16 @@ export const blueskyS9eEmbedResolver = createMarkupEmbedResolver(
 // DID, and the fallback blockquote inside it holds the post text.
 export const blueskyPostElementEmbedResolver = createMarkupEmbedResolver(
   'bluesky-post[src]',
-  (element) => {
-    const quoted = readQuotedPost(element)
-    const post = extractBlueskyPost(attr(element, 'src') ?? '') ?? quoted.post
-
-    if (!post) {
-      return
-    }
-
-    return { ...composeEmbedResult(post), ...quoted.fields }
-  },
+  (element) => extractQuotedPost(element, 'src'),
 )
+
+// The player posts its height whenever the post's size changes.
+export const readBlueskyHeight = (data: unknown): number | undefined => {
+  return isPlainObject(data) ? readPixels(data.height) : undefined
+}
+
+export const blueskyRenderHint: EmbedRenderHint = {
+  provider: 'bluesky',
+  origin: 'https://embed.bsky.app',
+  readHeight: readBlueskyHeight,
+}

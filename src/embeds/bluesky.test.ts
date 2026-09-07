@@ -3,9 +3,11 @@ import { describeForEachParser, html, jsonAttrValue, resolverExtractor } from '.
 import type { EmbedResolverResult } from '../types.js'
 import {
   blueskyBlockquoteEmbedResolver,
+  blueskyHosts,
   blueskyIframeEmbedResolver,
   blueskyPostElementEmbedResolver,
   blueskyS9eEmbedResolver,
+  readBlueskyHeight,
 } from './bluesky.js'
 
 describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
@@ -576,6 +578,19 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    it('should refuse a record key that is a dot segment', async () => {
+      const value = html`
+        <blockquote
+          class="bluesky-embed"
+          data-bluesky-uri="at://did:plc:9hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/.."
+        >
+          <p lang="en">The record key would climb out of the collection.</p>
+        </blockquote>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     it('should return nothing for a blockquote naming no post at all', async () => {
       const value = html`
         <blockquote class="bluesky-embed">
@@ -709,7 +724,7 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
           data-attrs="${payload}"
           data-component-name="BlueskyCreateBlueskyEmbed"
         >
-          <iframe src="https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42?id=1"></iframe>
+          <iframe src="https://embed.bsky.app/embed/did:plc:chz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mcq7aeuwbg42"></iframe>
         </div>
       `
       const expected: EmbedResolverResult = {
@@ -740,7 +755,7 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
           data-attrs="${payload}"
           data-component-name="BlueskyCreateBlueskyEmbed"
         >
-          <iframe src="https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42?id=1"></iframe>
+          <iframe src="https://embed.bsky.app/embed/did:plc:dhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mdq7aeuwbg42"></iframe>
         </div>
       `
       const expected: EmbedResolverResult = {
@@ -795,6 +810,23 @@ describeForEachParser('blueskyIframeEmbedResolver', (parseHtml) => {
         id: 'did:plc:fhz4agnyzcrsvpnprxrbjrpa/3mfq7aeuwbg42',
         src: 'https://embed.bsky.app/embed/did:plc:fhz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/3mfq7aeuwbg42',
         url: 'https://bsky.app/profile/did:plc:fhz4agnyzcrsvpnprxrbjrpa/post/3mfq7aeuwbg42',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  // Every accepted host serves the identical post path, and the minted player is
+  // `embed.bsky.app` whichever one the carrier names. Iterating the exported list keeps a new
+  // entry covered the moment it is added.
+  describe('post pasted from an accepted host', () => {
+    it.each(blueskyHosts)('should resolve a post on %s', async (host) => {
+      const value = `<iframe src="https://${host}/profile/did:plc:z72i7hdynmk6r22z27h6tvur/post/3kq7aeuwbg42k"></iframe>`
+      const expected: EmbedResolverResult = {
+        provider: 'bluesky',
+        id: 'did:plc:z72i7hdynmk6r22z27h6tvur/3kq7aeuwbg42k',
+        src: 'https://embed.bsky.app/embed/did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3kq7aeuwbg42k',
+        url: 'https://bsky.app/profile/did:plc:z72i7hdynmk6r22z27h6tvur/post/3kq7aeuwbg42k',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -930,5 +962,18 @@ describeForEachParser('blueskyPostElementEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+describe('readBlueskyHeight', () => {
+  it('should read the height out of the frame report', () => {
+    const value = { height: 687.125, id: '1' }
+
+    expect(readBlueskyHeight(value)).toBe(687.125)
+  })
+
+  it('should read nothing out of a message without a height', () => {
+    expect(readBlueskyHeight({ id: '1' })).toBeUndefined()
+    expect(readBlueskyHeight('ready')).toBeUndefined()
   })
 })

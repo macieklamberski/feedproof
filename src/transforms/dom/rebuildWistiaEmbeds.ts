@@ -5,11 +5,15 @@ import { createIframe } from '../../utils/widgets.js'
 // Pulls the hashed id out of the `wistia_async_{id}` class the facade carries.
 const wistiaIdPattern = /\bwistia_async_([A-Za-z0-9]+)/
 
+// The facade states its kind in a second class token beside the id. A channel is its own player,
+// so building the media route from a channel id yields a url that names no media.
+const channelFacadePattern = /\bwistia_channel\b/
+
 // The script form names the media as a JSONP payload: `/embed/medias/{id}.jsonp`.
 const scriptMediaPattern = /\/embed\/medias\/([A-Za-z0-9]+)(?:\.jsonp)?/
 
-// Every id sampled from the corpus is exactly 10 alphanumeric characters.
-const mediaIdRegex = /^[A-Za-z0-9]{10}$/
+// The grammar `wistiaResolveEmbed` checks, so a facade and the iframe it becomes agree.
+const mediaIdRegex = /^[A-Za-z0-9]+$/
 
 // Three carriers, one player. The `wistia_async_{id}` div is the JS-API inline embed, the
 // `<wistia-player media-id>` custom element is Wistia's current form, and a bare
@@ -73,7 +77,8 @@ export const rebuildWistiaEmbeds: DomTransform = () => (document) => {
       continue
     }
 
-    const iframe = createIframe(document, `https://fast.wistia.net/embed/iframe/${mediaId}`)
+    const route = channelFacadePattern.test(element.className ?? '') ? 'channel' : 'iframe'
+    const iframe = createIframe(document, `https://fast.wistia.net/embed/${route}/${mediaId}`)
 
     const ratio = parseRatio(attr(element, 'aspect') ?? '')
 

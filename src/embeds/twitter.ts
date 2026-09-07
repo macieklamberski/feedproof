@@ -1,6 +1,7 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { isHostOf, isPlainObject, isSubdomainOf, parseUrl } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, text } from '../utils/dom.js'
+import { readPixels } from '../utils/hints.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A tweet ships as `<blockquote class="twitter-tweet">` holding the tweet text in a `<p>`, then
@@ -28,9 +29,9 @@ const tweetHosts = [
   'twittpr.com',
 ]
 
-// Nitter is self-hosted, so its instances cannot be listed: the corpus holds seven of them and
-// xcancel.com is an eighth under a name of its own. What the rest share is the software's name as
-// a whole host label, so that is the guard, together with the status path a match still needs.
+// Nitter is self-hosted, so its instances cannot be listed: real feeds frame a handful of them,
+// and xcancel.com is one more under a name of its own. What the rest share is the software's name
+// as a whole host label, so that is the guard, together with the status path a match still needs.
 // Matching `nitter` as a substring would claim theordinaryknitter.net, a real feed host.
 const nitterHostRegex = /(^|\.)nitter\./
 
@@ -41,13 +42,23 @@ const isTweetUrl = (url: URL): boolean => {
 }
 
 // `/{handle}/status/{id}`, with the plural `statuses` form from the earliest era.
-const statusPathRegex = /^\/([a-zA-Z0-9_]{1,15})\/status(?:es)?\/(\d+)/
+const statusPathRegex = /^\/([a-zA-Z0-9_]+)\/status(?:es)?\/(\d+)/
+
+// The paths that name a status and carry no handle: the web client's permalink, the 2015-2017
+// video frames, and the card frame before them. The frames are dead, answering 404 or a stub
+// for a real id and a fabricated one alike, so the id in them is worth more than the url.
+const handlelessPathRegex =
+  /^\/(?:i\/(?:web\/status|videos\/tweet|videos|cards\/tfw\/v\d+)|status(?:es)?)\/(\d+)/
+
+// Twitter takes `i` where a handle belongs and redirects to the real one, so a status recovered
+// without a handle still yields a url a reader can follow.
+const handleStandIn = 'i'
 // The byline the embed dialog writes, whose parenthesised handle is dropped: the display name
 // is the readable half and the handle is already in the url. The handle may be empty because a
 // skeleton blockquote keeps the byline's punctuation and fills in neither half, so what it holds
 // is `—  (@)`. That matches here and yields an empty name, which is how it gets dropped instead
 // of being carried through as an author.
-const bylineRegex = /^[—–-]\s*(.*?)\s*\(@[a-zA-Z0-9_]{0,15}\)\s*$/
+const bylineRegex = /^[—–-]\s*(.*?)\s*\(@[a-zA-Z0-9_]*\)\s*$/
 const safeStatusIdRegex = /^\d+$/
 
 type Status = { handle: string; id: string }
@@ -61,7 +72,13 @@ const readStatusUrl = (value: string | undefined): Status | undefined => {
 
   const match = parsed.pathname.match(statusPathRegex)
 
-  return match ? { handle: match[1], id: match[2] } : undefined
+  if (match) {
+    return { handle: match[1], id: match[2] }
+  }
+
+  const handleless = parsed.pathname.match(handlelessPathRegex)
+
+  return handleless ? { handle: handleStandIn, id: handleless[1] } : undefined
 }
 
 // Where the tweet is named, in the order the shapes provide it. The dated anchor is the usual
@@ -78,21 +95,20 @@ const findStatus = (element: Element): { status: Status; anchor?: Element } | un
     }
   }
 
-  const declared =
-    attr(element, 'data-twitter-tweet-id') ??
-    attr(element, 'data-tweet-id') ??
-    attr(element, 'data-tweetid')
-
-  if (declared && safeStatusIdRegex.test(declared)) {
-    return { status: { handle: '', id: declared } }
-  }
-
+  // The frame has to be the platform's own: `id` is an ordinary parameter name, so any other
+  // iframe a publisher nested in the quote would otherwise name the tweet.
   const frame = parseUrl(attr(find(element, 'iframe[src]'), 'src') ?? '', 'https://example.com')
-  const framed = frame?.searchParams.get('id')
+  const framed = frame && isTweetUrl(frame) ? frame.searchParams.get('id') : undefined
+  // Each id is validated on its own, because the attributes disagree: a block copied between
+  // platforms carries several generations of them and only one is guaranteed to be intact.
+  const declared = [
+    attr(element, 'data-twitter-tweet-id'),
+    attr(element, 'data-tweet-id'),
+    attr(element, 'data-tweetid'),
+    framed,
+  ].find((id) => id && safeStatusIdRegex.test(id))
 
-  return framed && safeStatusIdRegex.test(framed)
-    ? { status: { handle: '', id: framed } }
-    : undefined
+  return declared ? { status: { handle: '', id: declared } } : undefined
 }
 
 // A byline the embed dialog wrote gives up its display name. Anything else is taken whole, since
@@ -236,8 +252,7 @@ export const twitterSubstackEmbedResolver = createMarkupEmbedResolver(
 
 // The player a stored-after-render copy already points at, and the one this resolver mints, so
 // a feed carrying the frame alone still names its provider. The player has two spellings with
-// the same `id` query: the corpus holds 1,390 `Tweet.html` and 161 `index.html` frames across
-// 445 feeds.
+// the same `id` query, and both occur in real feeds.
 const playerPaths = new Set(['/embed/Tweet.html', '/embed/index.html'])
 
 // A carrier framing the status page rather than the player, which is what a wrapper writes when
@@ -267,3 +282,22 @@ export const twitterIframeEmbedResolver = createUrlEmbedResolver(
   ['twitter.com', 'x.com'],
   twitterResolveEmbed,
 )
+
+// The player reports its rendered height in a JSON-RPC envelope, unprompted, once the frame is
+// in view, and again when a reader expands a truncated post. The other calls in the same
+// envelope, `initialized`, `results` and `rendered`, carry no size.
+export const readTwitterHeight = (data: unknown): number | undefined => {
+  const call = isPlainObject(data) ? data['twttr.embed'] : undefined
+  const params =
+    isPlainObject(call) && call.method === 'twttr.private.resize' && Array.isArray(call.params)
+      ? call.params[0]
+      : undefined
+
+  return isPlainObject(params) ? readPixels(params.height) : undefined
+}
+
+export const twitterRenderHint: EmbedRenderHint = {
+  provider: 'twitter',
+  origin: 'https://platform.twitter.com',
+  readHeight: readTwitterHeight,
+}

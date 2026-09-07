@@ -13,6 +13,7 @@ import { attr, find, text } from '../utils/dom.js'
 // class sits either on the `<img>` itself or on a wrapper `<div>` around it; and a card
 // may have no wrapping anchor at all, printing the target in `.lkc-url` instead.
 export const pzlinkcardCiteResolver: CiteResolver = {
+  kind: 'cite',
   // The match is the wrapping anchor, so replacing it swaps out the whole link. Matching the
   // card inside it leaves the anchor wrapping the placeholder, and anchors cannot nest, so it
   // reparses into a stray empty link. The second arm excludes wrapped cards, so the two never

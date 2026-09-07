@@ -22,6 +22,15 @@ describeForEachParser('rebuildWistiaEmbeds', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  // A channel is a separate player. Built onto the media route, the id names no media and Wistia
+  // answers 200 with an error body, so the frame renders nothing.
+  it('should rebuild a channel facade onto the channel route', async () => {
+    const value = '<div class="wistia_channel wistia_async_sapab9p6qd mode=inline"></div>'
+    const expected = '<iframe src="https://fast.wistia.net/embed/channel/sapab9p6qd"></iframe>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
   it('should rebuild an iframe from a standalone embed div with no wrapper', async () => {
     const value = '<div class="wistia_embed wistia_async_zyl6xrmj10"></div>'
     const expected = '<iframe src="https://fast.wistia.net/embed/iframe/zyl6xrmj10"></iframe>'
@@ -76,6 +85,13 @@ describeForEachParser('rebuildWistiaEmbeds', (parseHtml) => {
   it('should rebuild the custom element without an aspect, stating no size', async () => {
     const value = '<wistia-player media-id="zyl6xrmj10"></wistia-player>'
     const expected = '<iframe src="https://fast.wistia.net/embed/iframe/zyl6xrmj10"></iframe>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should rebuild an id longer than the ten characters Wistia mints today', async () => {
+    const value = '<wistia-player media-id="zyl6xrmj10x"></wistia-player>'
+    const expected = '<iframe src="https://fast.wistia.net/embed/iframe/zyl6xrmj10x"></iframe>'
 
     expect(await transform(value)).toEqualHtml(expected)
   })

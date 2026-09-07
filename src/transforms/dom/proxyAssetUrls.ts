@@ -58,19 +58,19 @@ const preservedAttribute = (attribute: string): string => {
 // keeps the transform idempotent: on a second run the value is already proxied, an
 // idempotent assetProxyFn returns it unchanged, so the first run's original is not
 // overwritten with the proxied URL.
-const proxyAttribute = (
+const proxyAttribute = async (
   element: Element,
   attribute: string,
   type: AssetType,
   assetProxyFn: AssetProxyFn,
-): void => {
+): Promise<void> => {
   const value = element.getAttribute(attribute)
 
   if (!value || !isProxyableUrl(value)) {
     return
   }
 
-  const proxied = assetProxyFn(value, type)
+  const proxied = await assetProxyFn(value, type)
 
   if (proxied && proxied !== value) {
     element.setAttribute(preservedAttribute(attribute), value)
@@ -78,7 +78,11 @@ const proxyAttribute = (
   }
 }
 
-const proxySrcset = (element: Element, type: AssetType, assetProxyFn: AssetProxyFn): void => {
+const proxySrcset = async (
+  element: Element,
+  type: AssetType,
+  assetProxyFn: AssetProxyFn,
+): Promise<void> => {
   const srcset = element.getAttribute('srcset')
 
   if (!srcset) {
@@ -86,20 +90,22 @@ const proxySrcset = (element: Element, type: AssetType, assetProxyFn: AssetProxy
   }
 
   let changed = false
-  const rewritten = parseSrcset(srcset).map((entry) => {
-    if (!isProxyableUrl(entry.url)) {
+  const rewritten = await Promise.all(
+    parseSrcset(srcset).map(async (entry) => {
+      if (!isProxyableUrl(entry.url)) {
+        return entry
+      }
+
+      const proxied = await assetProxyFn(entry.url, type)
+
+      if (proxied && proxied !== entry.url) {
+        changed = true
+        return { ...entry, url: proxied }
+      }
+
       return entry
-    }
-
-    const proxied = assetProxyFn(entry.url, type)
-
-    if (proxied && proxied !== entry.url) {
-      changed = true
-      return { ...entry, url: proxied }
-    }
-
-    return entry
-  })
+    }),
+  )
 
   if (!changed) {
     return
@@ -119,7 +125,7 @@ export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
     return () => {}
   }
 
-  return (document) => {
+  return async (document) => {
     const elements = document.querySelectorAll(proxyableSelectors.join(', '))
 
     for (const element of elements) {
@@ -127,17 +133,17 @@ export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
         const type = assetTypeOf(element, asset)
 
         if (attribute === 'srcset') {
-          proxySrcset(element, type, assetProxyFn)
+          await proxySrcset(element, type, assetProxyFn)
           continue
         }
 
         const name = attribute === 'href' ? hrefAttribute(element) : attribute
 
-        proxyAttribute(element, name, type, assetProxyFn)
+        await proxyAttribute(element, name, type, assetProxyFn)
       }
 
       for (const { asset, attribute } of genericAttributes) {
-        proxyAttribute(element, attribute, assetTypeOf(element, asset), assetProxyFn)
+        await proxyAttribute(element, attribute, assetTypeOf(element, asset), assetProxyFn)
       }
     }
   }

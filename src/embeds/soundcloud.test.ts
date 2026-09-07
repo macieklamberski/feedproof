@@ -16,7 +16,10 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
 
   const transform = (value: string) => {
     return applyDomTransforms(parseHtml(value), [
-      convertWidgets({ ...baseContext, widgetResolvers: [soundcloudEmbedResolver] }),
+      convertWidgets({
+        ...baseContext,
+        widgetResolvers: [soundcloudEmbedResolver],
+      }),
     ])
   }
 
@@ -88,9 +91,10 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
   })
 
   // The Flash player put the same `url=` reference on the legacy carriers, so the same
-  // extraction reaches them once the selector stops naming the iframe player path.
+  // extraction reaches them once the selector stops naming the iframe player path. Its host is
+  // gone, so the reference moves onto the widget rather than staying on a src that cannot load.
   describe('legacy Flash carriers', () => {
-    it('should read the track reference from an <embed> carrier', async () => {
+    it('should move the track reference onto the widget from an <embed> carrier', async () => {
       const value = html`
         <embed
           src="https://player.soundcloud.com/player.swf?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F34695066"
@@ -99,14 +103,14 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'soundcloud',
         id: 'tracks/34695066',
-        src: 'https://player.soundcloud.com/player.swf?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F34695066',
+        src: 'https://w.soundcloud.com/player/?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F34695066',
         height: 166,
       }
 
       expect(await extract(value)).toEqual(expected)
     })
 
-    it('should read the track reference from an <object> carrier', async () => {
+    it('should move the track reference onto the widget from an <object> carrier', async () => {
       const value = html`
         <object
           data="https://player.soundcloud.com/player.swf?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F34695066"
@@ -115,11 +119,52 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'soundcloud',
         id: 'tracks/34695066',
-        src: 'https://player.soundcloud.com/player.swf?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F34695066',
+        src: 'https://w.soundcloud.com/player/?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F34695066',
         height: 166,
       }
 
       expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should move a page url the swf names onto the widget and keep the page as the url', async () => {
+      const value = html`
+        <embed
+          src="http://player.soundcloud.com/player.swf?url=http%3A%2F%2Fsoundcloud.com%2Ferwtenpeller%2Fwar-of-the-worlds"
+        >
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=http%3A%2F%2Fsoundcloud.com%2Ferwtenpeller%2Fwar-of-the-worlds',
+        url: 'https://soundcloud.com/erwtenpeller/war-of-the-worlds',
+        height: 166,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should carry a private track across with the secret token the reference holds', async () => {
+      const value = html`
+        <embed
+          src="https://player.soundcloud.com/player.swf?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F42888746%3Fsecret_token%3Ds-zV49D&secret_url=true"
+        >
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        id: 'tracks/42888746',
+        src: 'https://w.soundcloud.com/player/?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F42888746%3Fsecret_token%3Ds-zV49D',
+        height: 166,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The swf's own path is two words on a host that is not the site, so without a `url=` there
+    // is nothing to move and nothing to name. Reading `player.swf` as a permalink minted
+    // `soundcloud.com/player.swf` as somebody's page.
+    it('should ignore a swf carrying no reference at all', async () => {
+      const value = '<embed src="https://player.soundcloud.com/player.swf">'
+
+      expect(await extract(value)).toBeUndefined()
     })
 
     it('should ignore a carrier pointing somewhere else', async () => {
@@ -273,6 +318,156 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
         title: 'Youth Is A Fugitive',
         thumbnail: 'https://i1.sndcdn.com/artworks-j4ziiQ-t500x500.jpg',
         author: 'Fonograf Editions',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  // SoundCloud hosts podcast audio at `feeds.soundcloud.com`, and a feed states that file as an
+  // enclosure. It is the audio itself, so framing it shows nothing, but the file is named after
+  // the track and the player is recoverable from it.
+  describe('the podcast host, which serves the episode audio directly', () => {
+    it('should build the player from the track the file is named after', async () => {
+      const value = html`
+        <iframe
+          src="https://feeds.soundcloud.com/stream/2386923495-linear-digressions-ai.mp3"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        id: 'tracks/2386923495',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2386923495',
+        height: 166,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Without a track id there is no player to build, and the file plays on its own, so the
+    // resolver leaves it to be a native audio element.
+    it('should not claim an audio file that names no track', async () => {
+      const value =
+        '<iframe src="https://feeds.soundcloud.com/stream/nameless-episode.mp3"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should not claim an audio file anywhere else on the host', async () => {
+      const value = '<iframe src="https://soundcloud.com/downloads/session.mp3"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  // soundcloud.com answers `x-frame-options: SAMEORIGIN`, so a carrier naming a page renders
+  // nothing. The widget takes a page url in place of a reference, which is what repairs it.
+  describe('a carrier naming a page rather than the player', () => {
+    it('should build the widget around a track page', async () => {
+      const value = '<iframe src="https://soundcloud.com/anjunadeep/edition-586"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fanjunadeep%2Fedition-586',
+        url: 'https://soundcloud.com/anjunadeep/edition-586',
+        height: 166,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should size a set as a playlist', async () => {
+      const value = '<iframe src="https://soundcloud.com/anjunadeep/sets/edition"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fanjunadeep%2Fsets%2Fedition',
+        url: 'https://soundcloud.com/anjunadeep/sets/edition',
+        height: 450,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should size a profile as a user', async () => {
+      const value = '<iframe src="https://soundcloud.com/anjunadeep"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fanjunadeep',
+        url: 'https://soundcloud.com/anjunadeep',
+        height: 450,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The widget refuses the token as a path segment and takes it as a parameter of its own.
+    it('should move a private share token into the widget parameter', async () => {
+      const value = '<iframe src="https://soundcloud.com/anjunadeep/demo/s-Xy12Ab"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fanjunadeep%2Fdemo&secret_token=s-Xy12Ab',
+        url: 'https://soundcloud.com/anjunadeep/demo',
+        height: 166,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Already a working player, so only the url and the height are recovered from the page.
+    it('should keep a widget src that already names a page', async () => {
+      const value = html`
+        <iframe
+          src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fanjunadeep%2Fedition-586"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fanjunadeep%2Fedition-586',
+        url: 'https://soundcloud.com/anjunadeep/edition-586',
+        height: 166,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // These first segments are SoundCloud's own sections, so none of them is a permalink and
+    // none names a single item to size or to link to.
+    it.each([
+      'https://soundcloud.com/tags/jazz',
+      'https://soundcloud.com/discover',
+      'https://soundcloud.com/search?q=jazz',
+      'https://soundcloud.com/stream',
+      'https://soundcloud.com/upload',
+      'https://soundcloud.com/pages/terms',
+      'https://soundcloud.com/imprint',
+      'https://soundcloud.com/you/collection',
+    ])('should not read a site section as user content (%s)', async (url) => {
+      const value = `<iframe src="${url}"></iframe>`
+      const expected: EmbedResolverResult = { provider: 'soundcloud', src: url }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The shortener answers a redirect, so the code is not a permalink: reading it as one names
+    // `soundcloud.com/{code}`, which does not exist. The widget resolves the short url itself.
+    it('should hand a share short link to the widget rather than rebuild it as a page', async () => {
+      const value = '<iframe src="https://on.soundcloud.com/AbCdEf"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fon.soundcloud.com%2FAbCdEf',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should read a reference on the api-v2 host', async () => {
+      const value = html`
+        <iframe src="https://w.soundcloud.com/player/?url=https%3A//api-v2.soundcloud.com/tracks/293"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A//api-v2.soundcloud.com/tracks/293',
+        id: 'tracks/293',
+        height: 166,
       }
 
       expect(await extract(value)).toEqual(expected)
