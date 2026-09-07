@@ -84,7 +84,7 @@ describe('codesandboxResolveEmbed', () => {
   })
 
   describe('edge cases', () => {
-    it('should read a hash that is a bare word of legal length', () => {
+    it('should read a hash that is a bare word', () => {
       const value = 'https://codesandbox.io/embed/nihul'
       const expected: EmbedResolverResult = {
         provider: 'codesandbox',
@@ -99,6 +99,19 @@ describe('codesandboxResolveEmbed', () => {
   })
 
   describe('the eras of the sandbox id', () => {
+    it('should read the three-character hash of the Vue template sandbox', () => {
+      const value = 'https://codesandbox.io/embed/vue'
+      const expected: EmbedResolverResult = {
+        provider: 'codesandbox',
+        id: 'vue',
+        src: 'https://codesandbox.io/embed/vue',
+        url: 'https://codesandbox.io/s/vue',
+        height: 500,
+      }
+
+      expect(codesandboxResolveEmbed(value)).toEqual(expected)
+    })
+
     it('should read the mixed-case nine-character hash of the 2018 era', () => {
       const value = 'https://codesandbox.io/embed/NkB6R6O2L'
       const expected: EmbedResolverResult = {
@@ -166,7 +179,7 @@ describe('codesandboxResolveEmbed', () => {
   })
 
   describe('shapes that name no sandbox', () => {
-    it('should refuse a repository embed, whose route word passes the id test on length', () => {
+    it('should refuse a repository embed, whose route word is spelled like a hash', () => {
       const value =
         'https://codesandbox.io/embed/github/crimx/observable-hooks/tree/master/examples/pomodoro-timer'
 
@@ -187,10 +200,6 @@ describe('codesandboxResolveEmbed', () => {
 
     it('should refuse the starter-template route, which saves no sandbox', () => {
       expect(codesandboxResolveEmbed('https://codesandbox.io/embed/new')).toBeUndefined()
-    })
-
-    it('should refuse a named template, whose word is too short to be a hash', () => {
-      expect(codesandboxResolveEmbed('https://codesandbox.io/embed/vue')).toBeUndefined()
     })
   })
 })

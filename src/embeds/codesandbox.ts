@@ -8,14 +8,13 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // `parseUrlOnHosts` for that reason: the latter admits every subdomain.
 const codesandboxHosts = ['codesandbox.io', 'www.codesandbox.io']
 
-// The slug in front of the hash is renamable, so only the hash identifies a sandbox. Across 165
-// sandbox urls mined from corpus specimens it runs 5 characters (73), 6 (61), 10 (27) or 9 (4),
-// mixed case only in the 9-character era.
-const idRegex = /^[A-Za-z0-9]{5,10}$/
+// The slug in front of the hash is renamable, so only the hash identifies a sandbox. Letters and
+// digits in both cases, and no length: the hash has run 5, 6, 9 and 10 characters across the
+// corpus, and the Vue template sandbox is three (`/embed/vue` answers its own page, 2026-09-07).
+const idRegex = /^[A-Za-z0-9]+$/
 
-// Words CodeSandbox owns where a slug sits. `github` is the one that bites, being six lowercase
-// alphanumerics that pass the id test on length alone. `new` opens a starter template with nothing
-// saved behind it, which is what the id bound refuses the shorter template names like `vue` for too.
+// Words CodeSandbox owns where a slug sits. `github` is the one that bites, being spelled in the
+// hash's own alphabet. `new` opens a starter template with nothing saved behind it.
 const reservedSlugSegments = new Set(['github', 'github.com', 'fork', 'new'])
 
 // The sandbox's own name, which is what the share dialog writes and what a rendered DEV.to or
