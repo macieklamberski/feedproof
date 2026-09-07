@@ -170,6 +170,49 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should size a tall album player by its own layout', async () => {
+      const value = html`
+        <iframe src="https://bandcamp.com/EmbeddedPlayer/album=42/size=tall/"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'bandcamp',
+        id: 'album/42',
+        src: 'https://bandcamp.com/EmbeddedPlayer/album=42/size=tall/',
+        height: 295,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should size a tall track player shorter than a tall album one', async () => {
+      const value = html`
+        <iframe src="https://bandcamp.com/EmbeddedPlayer/track=42/size=tall/"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'bandcamp',
+        id: 'track/42',
+        src: 'https://bandcamp.com/EmbeddedPlayer/track=42/size=tall/',
+        height: 270,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // A player naming both is an album player opened on the track, tracklist and all.
+    it('should keep the album height when a tall player names both releases', async () => {
+      const value = html`
+        <iframe src="https://bandcamp.com/EmbeddedPlayer/album=42/track=99/size=tall/"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'bandcamp',
+        id: 'track/99',
+        src: 'https://bandcamp.com/EmbeddedPlayer/album=42/track=99/size=tall/',
+        height: 295,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {

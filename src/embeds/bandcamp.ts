@@ -12,18 +12,24 @@ const sizeRegex = /^size=([a-z0-9_]+)$/
 // url, and used for the height the markup may not state.
 //
 // Measured 2026-09-07 in Chrome against album 1578579597 (8 tracks), track 1637967854, each
-// preset framed at 350 wide and again at 700, the `tall_*` ones at 150, with the frame first at
-// the height below and then at 1200. No preset tracks its width, and only `large` stretches to
-// the frame, its tracklist scrolling inside whatever it gets; the rest lay out to a height of
-// their own and leave the remainder blank. `medium` 120, `small` 42 and `venti` 100 match to
-// the pixel. `grande` paints 100, its controls overlapping a 100-square artwork. `grande2` and
-// `grande3` paint 318 and 376 for this album, both tracklist-long, inside 355 and 415. `short`
-// paints its play and info row inside 23 and shows a second row when given 42. `tall_album` and
-// `tall_track` now serve the same 100-tall bar as `venti`, about 390 wide, clipped at 150 and
-// blank below, so 295 and 270 have no rendered counterpart. `tall2` paints 493 for this album
-// against 450, the tracklist running past the frame. Left as they are because a size change is a
-// behaviour change; they only fire when the carrier states no size, since `decideSize` takes the
-// carrier's first.
+// preset framed at 350 wide and again at 700, with the frame first at the height below and then
+// at 1200. No preset tracks its width, and only `large` stretches to the frame, its tracklist
+// scrolling inside whatever it gets; the rest lay out to a height of their own and leave the
+// remainder blank. `medium` 120, `small` 42 and `venti` 100 match to the pixel. `grande` paints
+// 100, its controls overlapping a 100-square artwork. `grande2` and `grande3` paint 318 and 376
+// for this album, both tracklist-long, inside 355 and 415. `short` paints its play and info row
+// inside 23 and shows a second row when given 42. `tall2` paints 493 for this album against 450,
+// the tracklist running past the frame. Every one of them fires only where the carrier states no
+// size, since `decideSize` takes the carrier's first.
+//
+// There is no `tall_album` or `tall_track` preset. Bandcamp spells one `size=tall`, and asking
+// for either of those two serves the `venti` fallback instead, so keying the map by them meant
+// no tall player ever got a height. What `tall` renders depends on the release, which is what
+// the two keys below hold. Measured 2026-09-07 in Chrome against album 1003538090 and track
+// 1092382717 at 150, 300, 600 and 700 wide: the chrome ends at 292 for an album and 268 for a
+// track, does not move with the width, and the tracklist below it stretches into whatever height
+// is left. A player naming both is an album player opened on a track, so the album decides. The
+// eight `size=tall` carriers in the corpus declare 295 and 270, a couple of pixels more.
 const presetHeights: Record<string, number> = {
   venti: 100,
   grande: 100,
@@ -33,8 +39,8 @@ const presetHeights: Record<string, number> = {
   medium: 120,
   small: 42,
   short: 23,
-  tall_album: 295,
-  tall_track: 270,
+  'tall/album': 295,
+  'tall/track': 270,
   tall2: 450,
 }
 const releaseKinds = ['album', 'track']
@@ -141,7 +147,9 @@ export const bandcampResolveEmbed = (
     .flatMap((wanted) => releases.filter(([named]) => named === wanted))
     .map(([named, value]) => `${named}=${value}/`)
     .join('')
-  const height = preset ? presetHeights[preset] : undefined
+  const isAlbum = releases.some(([named]) => named === 'album')
+  const tallKey = isAlbum ? 'tall/album' : 'tall/track'
+  const height = preset ? presetHeights[preset === 'tall' ? tallKey : preset] : undefined
   const anchor = parseFallback(element)
   const url = attr(anchor, 'href')
   // Bandcamp writes the label as "{title} by {artist}". It is kept whole instead of split
