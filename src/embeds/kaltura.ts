@@ -3,10 +3,12 @@ import { attr, keepIfMatches, parsePixelSize } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// A Kaltura entry id is a namespace counter, an underscore and eight letters or digits,
+// A Kaltura entry id is a namespace counter, an underscore and lowercase letters or digits,
 // `1_w0bwzism`. Every id Kaltura documents is `0_` or `1_`, but the counter is not a fixed pair,
-// so any digit is taken. The partner is the number after `/p/` in every player url.
-const safeEntryIdRegex = /^\d_[a-z0-9]{8}$/
+// so any digit is taken, and the tail is eight characters today but not checked for it: a wrong
+// id fails the same whether it is minted or passed through, and a bound would refuse the next id
+// space. The partner is the number after `/p/` in every player url.
+const safeEntryIdRegex = /^\d_[a-z0-9]+$/
 const partnerPathRegex = /^\/p\/(\d+)\//
 
 const kalturaHost = 'kaltura.com'

@@ -63,6 +63,20 @@ describe('kalturaResolveEmbed', () => {
       expect(kalturaResolveEmbed(value)).toEqual(expected)
     })
 
+    it('should read an entry whose tail runs past eight characters', () => {
+      const value =
+        'https://cdnapisec.kaltura.com/p/2296822/embedPlaykitJs/uiconf_id/52714152?iframeembed=true&entry_id=1_bs3s0fie9'
+      const expected: EmbedResolverResult = {
+        provider: 'kaltura',
+        id: '2296822/1_bs3s0fie9',
+        src: 'https://cdnapisec.kaltura.com/p/2296822/embedPlaykitJs/uiconf_id/52714152?iframeembed=true&entry_id=1_bs3s0fie9',
+        thumbnail:
+          'https://cdnapisec.kaltura.com/p/2296822/thumbnail/entry_id/1_bs3s0fie9/width/640',
+      }
+
+      expect(kalturaResolveEmbed(value)).toEqual(expected)
+    })
+
     it('should read an entry on a namespace past the first two', () => {
       const value =
         'https://cdnapisec.kaltura.com/p/2851211/embedPlaykitJs/uiconf_id/53021102?iframeembed=true&entry_id=2_rq4nfd7g'
