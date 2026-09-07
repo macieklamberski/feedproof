@@ -8,6 +8,7 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // `embed.podcasts.apple.com`, so both resolve here and only the provider name differs.
 const appleHosts = ['music.apple.com', 'podcasts.apple.com']
 const applePodcastsHost = 'podcasts.apple.com'
+const applePodcastsHosts = [applePodcastsHost]
 
 // The path is `/{storefront}/{kind}/{slug}/{id}`, with the storefront and the slug both
 // optional. A music id is numeric, a playlist or station id carries a two-letter prefix
@@ -61,7 +62,8 @@ export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined 
     return
   }
 
-  const isPodcast = isHostOf(parsed, applePodcastsHost) || isSubdomainOf(parsed, applePodcastsHost)
+  const isPodcast =
+    isHostOf(parsed, applePodcastsHosts) || isSubdomainOf(parsed, applePodcastsHosts)
   const host = isPodcast ? applePodcastsHost : 'music.apple.com'
   // `i` names the track inside an album or the episode inside a show, so where it is present
   // it is the thing being embedded, and the player is the song one whatever the path says.

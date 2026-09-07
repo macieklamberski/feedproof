@@ -10,7 +10,7 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // reaches them.
 const safeIdRegex = /^[a-z0-9-]+$/
 
-const glomexHost = 'player.glomex.com'
+const glomexHosts = ['player.glomex.com']
 const playerPathRegex = /^\/integration\/[^/]+\/(?:integration|iframe-player)\.html$/
 
 // The url glomex's own loader builds from a `<glomex-player>` element (read 2026-09-06). The
@@ -47,7 +47,7 @@ const readEmbed = (
 }
 
 export const glomexResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrlOnHosts(url, glomexHost)
+  const parsed = parseUrlOnHosts(url, glomexHosts)
 
   if (!parsed || !playerPathRegex.test(parsed.pathname)) {
     return
@@ -59,7 +59,7 @@ export const glomexResolveEmbed = (url: string): EmbedResolverResult | undefined
   return readEmbed(integrationId, playlistId)
 }
 
-export const glomexIframeEmbedResolver = createUrlEmbedResolver([glomexHost], glomexResolveEmbed)
+export const glomexIframeEmbedResolver = createUrlEmbedResolver(glomexHosts, glomexResolveEmbed)
 
 export const glomexElementEmbedResolver = createMarkupEmbedResolver(
   'glomex-player[data-integration-id], glomex-integration[integration-id]',

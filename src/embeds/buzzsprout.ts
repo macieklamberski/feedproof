@@ -16,7 +16,7 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // url-keyed resolver deliberately leaves the show-level *page* url unmatched: there it falls
 // through to the generic fallback, which still renders a placeholder. The script carrier has no
 // such fallback, so the same shape costs the whole player.
-const buzzsproutHost = 'buzzsprout.com'
+const buzzsproutHosts = ['buzzsprout.com']
 const episodeScriptPathRegex = /^\/(\d+)\/(?:episodes\/)?(\d+)(?:-[^/]*)?\.js$/
 const showScriptPathRegex = /^\/(\d+)\.js$/
 // The page slug may not carry a dot, which is what keeps the enclosure out: the episode audio is
@@ -43,7 +43,7 @@ const composeEmbed = (podcastId: string, episodeId?: string): EmbedResolverResul
 }
 
 export const buzzsproutResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrlOnHosts(url, buzzsproutHost)
+  const parsed = parseUrlOnHosts(url, buzzsproutHosts)
 
   if (!parsed) {
     return
@@ -59,7 +59,7 @@ export const buzzsproutResolveEmbed = (url: string): EmbedResolverResult | undef
 }
 
 export const buzzsproutIframeEmbedResolver: EmbedResolver = createUrlEmbedResolver(
-  [buzzsproutHost],
+  buzzsproutHosts,
   buzzsproutResolveEmbed,
 )
 
@@ -68,7 +68,7 @@ export const buzzsproutScriptEmbedResolver = createMarkupEmbedResolver(
   (element) => {
     // The selector guarantees a src containing the host substring, so only the host and
     // path checks can reject.
-    const url = parseUrlOnHosts(attr(element, 'src'), buzzsproutHost)
+    const url = parseUrlOnHosts(attr(element, 'src'), buzzsproutHosts)
 
     if (!url) {
       return
