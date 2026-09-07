@@ -46,6 +46,36 @@ describeForEachParser('Instagram', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
+  // A sanitizer strips the class and keeps the data attributes, which leaves a bare blockquote
+  // that the cite pass reads before the widget pass does. This pins that the quote reaches the
+  // widget resolvers whole rather than being claimed as a quotation on the way.
+  it('should convert the quote a sanitizer stripped the class from', async () => {
+    const value = html`
+      <blockquote
+        data-instgrm-permalink="https://www.instagram.com/p/CpiRiksOLDF/?utm_source=ig_embed&amp;utm_campaign=loading"
+        data-instgrm-version="14"
+        style="background: #FFF; border: 0;"
+      >
+        <div style="padding: 16px">
+          <a href="https://www.instagram.com/p/CpiRiksOLDF/" target="_blank">
+            <div>View this post on Instagram</div>
+          </a>
+        </div>
+      </blockquote>
+      <script async src="//www.instagram.com/embed.js"></script>
+    `
+    const expected = html`
+      <div
+        data-embed-provider="instagram"
+        data-embed-id="p/CpiRiksOLDF"
+        data-embed-src="https://www.instagram.com/p/CpiRiksOLDF/embed/"
+        data-embed-url="https://www.instagram.com/p/CpiRiksOLDF/"
+      ></div>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
   // The 2018 dialog wrote the caption, the account and the date into the quote. That text is all
   // a reader ever gets of the post, so the placeholder has to carry it out of markup that is
   // otherwise replaced whole.

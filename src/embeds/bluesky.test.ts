@@ -578,6 +578,19 @@ describeForEachParser('blueskyBlockquoteEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    it('should refuse a record key that is a dot segment', async () => {
+      const value = html`
+        <blockquote
+          class="bluesky-embed"
+          data-bluesky-uri="at://did:plc:9hz4agnyzcrsvpnprxrbjrpa/app.bsky.feed.post/.."
+        >
+          <p lang="en">The record key would climb out of the collection.</p>
+        </blockquote>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     it('should return nothing for a blockquote naming no post at all', async () => {
       const value = html`
         <blockquote class="bluesky-embed">
