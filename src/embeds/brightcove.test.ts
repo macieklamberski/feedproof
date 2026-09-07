@@ -87,7 +87,7 @@ describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '4188894097001',
+        id: '1265527910001/4188894097001',
         src: 'https://players.brightcove.net/1265527910001/default_default/index.html?videoId=4188894097001',
         width: 486,
         height: 412,
@@ -115,7 +115,7 @@ describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '4188894097001',
+        id: '1265527910001/4188894097001',
         src: 'https://players.brightcove.net/1265527910001/default_default/index.html?videoId=4188894097001',
         width: 486,
         height: 412,
@@ -136,7 +136,7 @@ describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '3758718092001',
+        id: '85688293001/3758718092001',
         src: 'https://players.brightcove.net/85688293001/default_default/index.html?videoId=3758718092001',
       }
 
@@ -426,7 +426,7 @@ describeForEachParser('brightcoveExperienceEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '4188894097001',
+        id: '1265527910001/4188894097001',
         src: 'https://players.brightcove.net/1265527910001/default_default/index.html?videoId=4188894097001',
         width: 638,
         height: 361,
@@ -444,7 +444,7 @@ describeForEachParser('brightcoveExperienceEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '4188894097001',
+        id: '1265527910001/4188894097001',
         src: 'https://players.brightcove.net/1265527910001/default_default/index.html?videoId=4188894097001',
       }
 
@@ -533,7 +533,7 @@ describeForEachParser('brightcove experience through the pipeline', (parseHtml) 
       <div
         data-embed-src="https://players.brightcove.net/1265527910001/default_default/index.html?videoId=4188894097001"
         data-embed-provider="brightcove"
-        data-embed-id="4188894097001"
+        data-embed-id="1265527910001/4188894097001"
       ></div>
     `
 

@@ -195,7 +195,7 @@ export const brightcoveExperienceEmbedResolver = createMarkupEmbedResolver(
 
     return {
       provider: 'brightcove',
-      id: videoId,
+      id: `${account}/${videoId}`,
       src: composePlayerUrl(account, videoId),
     }
   },
