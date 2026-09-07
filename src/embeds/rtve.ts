@@ -19,6 +19,8 @@ const flashAssetRegex = /^(\d{4,12})_[a-z]{2}_(audios|videos)$/
 
 const flashPlayerPathRegex = /^\/swf\/.*\.swf$/i
 
+const playerRatio = '16/9'
+
 // The modern player is `rtve.es/drmn/embed/{audio|video}/{id}/`. Checked live 2026-09-06 with a
 // browser user agent: nine Flash-era asset ids from the corpus, dated 2008 to 2014, each answer
 // 200 with the player and its title, and a fabricated id answers 404. Audio and video are two
@@ -29,13 +31,16 @@ const flashPlayerPathRegex = /^\/swf\/.*\.swf$/i
 //
 // The player has no shape of its own. It fills whatever box it gets, measured at 500 and 1000
 // pixels wide and again in a portrait viewport, so neither a ratio nor a fixed height is
-// measurable and the box is the caller's. The `100/57.6` below is not a measurement: it is the
-// arithmetic of RTVE's own share snippet, which pads a wrapper to 64% of its width and sets the
-// frame to 90% of that. It stands only where the carrier declares nothing, which is 59 of the
-// 71 iframe feeds in the census, since those size the frame through that wrapper. Where a
-// carrier does state a box it wins, because the Flash video carriers state 425x239 in 42 of 47
-// feeds and that is 16:9 to within 0.03%. Audio states no size at all and the carrier's bar
-// stands.
+// measurable and the box is the caller's. What the video is, though, is 16:9: the Flash video
+// carriers state 425x239 in 42 of 47 feeds, which is 16:9 to within 0.03%.
+//
+// This said `100/57.6` first, which is not a measurement of anything. It is the arithmetic of
+// RTVE's own share snippet, a wrapper padded to 64% of its width holding a frame at 90% of that,
+// and 0.64 x 0.90 is 0.576. That is 2.3% taller than 16:9, so it reserved a strip of blank under
+// a video the platform's own carriers call 16:9, and it was the one decimal ratio in the tree.
+// The ratio stands only where the carrier declares nothing, which is 59 of the 71 iframe feeds in
+// the census, since those size the frame through that wrapper. Where a carrier states a box it
+// wins. Audio states no size at all and the carrier's bar stands.
 const composeEmbed = (kind: Kind, id: string): EmbedResolverResult => {
   const result: EmbedResolverResult = {
     provider: 'rtve',
@@ -46,7 +51,7 @@ const composeEmbed = (kind: Kind, id: string): EmbedResolverResult => {
 
   if (kind === 'video') {
     result.thumbnail = `https://img.rtve.es/v/${id}/`
-    result.ratio = '100/57.6'
+    result.ratio = playerRatio
   }
 
   return result
