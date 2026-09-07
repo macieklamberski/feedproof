@@ -6,17 +6,16 @@ const safeIdRegex = /^\d+$/
 
 const blubrryHosts = ['blubrry.com']
 
-// The player is 138 tall. Blubrry publishes no oEmbed, so this and the provider tag are what
-// the resolver adds.
+// The player is a fixed height on a fluid width. Blubrry publishes no oEmbed, so this and the
+// provider tag are what the resolver adds.
 //
-// Measured 2026-09-07 in Chrome against `player.blubrry.com/id/109738465/`: the player box is
-// 164 tall at 320, 640 and 1280 wide, and still 164 inside a 100-tall frame, so it is a fixed
-// height that ignores its width, and it is 26 more than the 138 above. The carriers say the same:
-// of 1,423 `player.blubrry.com` iframes across 40 corpus feeds, 1,285 state 165, 124 state 138, 8
-// state 150 and 6 state 230. Left at 138 here because a size change is a behaviour change. The
-// number only fires when the carrier states no size, since `decideSize` takes the carrier's first,
-// and every one of those 1,423 states a height.
-const playerHeight = 138
+// Measured 2026-09-07 in Chrome against `player.blubrry.com/id/153989314/` and the `?media_url=`
+// form: 164 at 320, 640 and 1280 wide, and still 164 inside a 100-tall frame. Publishers write one
+// more than that, and nearly all of them write something: of 13,604 `player.blubrry.com` iframes
+// across 305 corpus feeds, 13,001 state 165, 311 state 138, and exactly one states no height at
+// all. That one carrier is about all this number reaches, since `decideSize` takes the carrier's
+// first.
+const playerHeight = 164
 
 // Two forms: `/id/{episodeId}/` names the episode, while `/?media_url={mp3}` names the file
 // directly. The media url is not promoted to a native <audio>: a provider's player iframe stays
