@@ -15,9 +15,11 @@ const issuuHosts = ['issuu.com']
 // Two id spaces, and neither converts into the other. A config id is a pair of counters
 // (`1016421/47623369`) and addresses the reader through the url hash. A publisher and document
 // name pair addresses the same reader through the query. Each has its own url, which is what
-// makes both resolvable with nothing fetched.
+// makes both resolvable with nothing fetched. A name is also refused when it is only dots: the
+// query route hands the names back decoded and writes them into the page url as path segments,
+// so `u=..&d=..` would otherwise mint `issuu.com/../docs/..`.
 const configIdRegex = /^\d+\/\d+$/
-const safeNameRegex = /^[\w.-]+$/
+const safeNameRegex = /^(?!\.+$)[\w.-]+$/
 
 // A document name is a slug and never a filename. The reader shares this url shape with the
 // enclosure probe, which offers it every attachment a feed carries, so a `.pdf` or `.mp3` on
