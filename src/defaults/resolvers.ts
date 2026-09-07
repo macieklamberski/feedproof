@@ -121,6 +121,7 @@ import { padletEmbedResolver } from '../embeds/padlet.js'
 import { podbeanEmbedResolver } from '../embeds/podbean.js'
 import { podetizeIframeEmbedResolver, podetizeScriptEmbedResolver } from '../embeds/podetize.js'
 import { podigeeEmbedResolver, podigeeIframeEmbedResolver } from '../embeds/podigee.js'
+import { podomaticEmbedResolver } from '../embeds/podomatic.js'
 import { redcircleIframeEmbedResolver, redcircleScriptEmbedResolver } from '../embeds/redcircle.js'
 import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from '../embeds/reddit.js'
 import { reverbnationEmbedResolver } from '../embeds/reverbnation.js'
@@ -235,6 +236,7 @@ const embedResolvers: Array<EmbedResolver> = [
   megatvEmbedResolver,
   podigeeEmbedResolver,
   podigeeIframeEmbedResolver,
+  podomaticEmbedResolver,
   redcircleScriptEmbedResolver,
   redcircleIframeEmbedResolver,
   redditWidgetEmbedResolver,
