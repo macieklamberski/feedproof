@@ -200,9 +200,11 @@ const readContent = (element: Element): Partial<EmbedResolverResult> => {
 }
 
 // The blockquote in all its versions and wrappers, which is what the share dialog writes and
-// what every CMS re-wraps.
+// what every CMS re-wraps. The permalink attribute is the second handle on purpose: a sanitizer
+// that strips classes keeps data attributes, so some feeds carry the quote with the attributes
+// alone, and the attribute is Instagram's own namespace rather than a name anyone else picked.
 export const instagramBlockquoteEmbedResolver = createMarkupEmbedResolver(
-  'blockquote.instagram-media',
+  'blockquote.instagram-media, blockquote[data-instgrm-permalink]',
   (element): EmbedResolverResult | undefined => {
     const wrapper = readWrapper(element)
     const post = findPost(element) ?? wrapper.post

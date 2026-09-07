@@ -85,6 +85,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `convertNoteEmbeds` | Convert note.com's empty embed figures (`figure[embedded-service][data-src]`): media services become plain iframes for the widget pass, own-post embeds become plain links |
 | `convertAmpNativeElements` | Convert AMP custom elements with a native equivalent (`amp-img`, `amp-anim`, `amp-video`, `amp-audio`, `amp-iframe`) into that element |
 | `convertDatawrapperEmbeds` | Convert Datawrapper chart embeds (iframe, script/noscript, and link forms) into a static image linking to the interactive chart |
+| `convertSmartframeEmbeds` | Convert SmartFrame's `<smartframe-embed>` element into the picture it names as a static image |
 | `convertWidgets` | Convert recognized widgets: embeds become `data-embed-*` placeholders, platform-hosted media becomes a real `<video>`/`<audio>` (from an id template, a media-file src, or a URL parked in a lazy media attribute) |
 | `assignVideoPosters` | _Heuristic (opt-in):_ move a redundant video-poster image (inline or an enclosure) onto the embed as its poster, then drop the standalone image |
 | `stripDuplicateEnclosures` | _Heuristic (opt-in):_ remove an injected enclosure that duplicates inline content (image size-variants, exact audio/video/embed) |

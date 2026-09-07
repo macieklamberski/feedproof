@@ -1,8 +1,18 @@
 import { getPathSegments } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { createUrlEmbedResolver } from '../utils/widgets.js'
+import { attr } from '../utils/dom.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
+import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-const safeIdRegex = /^\d+$/
+// The post is named by a numeric id which Audioboom's own share code usually writes with the
+// episode slug hanging off it, `/posts/6479208-eddie-jones-england-s-forward-power/embed/v4`.
+// The slug is decoration: both spellings answer 200 with the same 10,733-byte body while an
+// invented id answers 404 (2026-09-06), so the id alone addresses the post.
+//
+// The slug may not carry a dot, which is what keeps the enclosure out: the episode audio is
+// `audioboom.com/posts/{id}-{slug}.mp3` on the same host, identical up to the extension, so a
+// slug read that stopped at the first hyphen would turn every playable file into a placeholder.
+const postIdRegex = /^(\d+)(?:-[^.]*)?$/
 
 // `audioboo.fm` is the pre-rename host and still appears in feeds.
 const audioboomHosts = ['audioboom.com', 'audioboo.fm']
@@ -18,9 +28,9 @@ export const extractAudioboomPost = (
   const segments = getPathSegments(link)
   // `/posts/{id}/embed[/v4]` is current. `/boos/{id}/embed` is the pre-rename spelling.
   const marker = segments.findIndex((segment) => segment === 'posts' || segment === 'boos')
-  const id = marker >= 0 ? segments[marker + 1] : undefined
+  const id = marker >= 0 ? segments[marker + 1]?.match(postIdRegex)?.[1] : undefined
 
-  if (!id || !safeIdRegex.test(id)) {
+  if (!id) {
     return
   }
 
@@ -50,6 +60,20 @@ export const audioboomResolveEmbed = (url: string): EmbedResolverResult | undefi
 }
 
 export const audioboomEmbedResolver = createUrlEmbedResolver(audioboomHosts, audioboomResolveEmbed)
+
+// Audioboo's WordPress plugin ships the player as `<div class="ab-player" data-boourl="{player
+// url}">` and swaps in the iframe from a script the feed does not carry, so nothing but the
+// anchor inside it reaches a reader. The attribute holds the same url the iframe form holds, so
+// it goes through the same reader; the host is checked here because a markup resolver gets no
+// host check from the factory.
+export const audioboomPlayerEmbedResolver = createMarkupEmbedResolver(
+  'div.ab-player[data-boourl]',
+  (element) => {
+    const parsed = parseUrlOnHosts(attr(element, 'data-boourl'), audioboomHosts)
+
+    return parsed && audioboomResolveEmbed(parsed.href)
+  },
+)
 
 // Starts playback on the click that loads the player: the v4 player reads `autoplay` off its
 // query and starts from 0 once the audio node is ready. Undocumented, read from its chunks.

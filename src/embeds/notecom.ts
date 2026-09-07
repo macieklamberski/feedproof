@@ -40,9 +40,13 @@ const composeEmbed = (noteId: string, pageUrl?: string): EmbedResolverResult | u
   }
 }
 
-// The two note.com url shapes, both naming the id in their last segment: the canonical post
-// `note.com/{user}/n/{id}` and the player `note.com/embed/notes/{id}`. Which one a carrier holds
-// decides whether a canonical url can be stated, since only the post form names the user.
+// The note.com url shapes, all naming the id in their last segment: the canonical post
+// `note.com/{user}/n/{id}`, the same post under one of the platform's own publications, where
+// the subdomain stands in for the user (`biz.note.com/n/{id}`), and the player
+// `note.com/embed/notes/{id}`. Which one a carrier holds decides whether a canonical url can be
+// stated, since only the two post forms name where the note lives. The player serves a
+// publication's note like any other: a real id answers the full body and an invented one the
+// empty shell (checked 2026-09-05).
 type NoteUrl = { noteId: string; kind: 'post' | 'player' }
 
 const readNoteUrl = (link: string): NoteUrl | undefined => {
@@ -55,6 +59,10 @@ const readNoteUrl = (link: string): NoteUrl | undefined => {
   }
 
   if (segments[1] === 'n' && segments.length > 2) {
+    return { noteId, kind: 'post' }
+  }
+
+  if (segments[0] === 'n' && segments.length === 2) {
     return { noteId, kind: 'post' }
   }
 

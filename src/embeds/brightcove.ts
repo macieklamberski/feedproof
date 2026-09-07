@@ -65,13 +65,19 @@ const readPlayerKeyAccount = (key: Nullish<string>): string | undefined => {
   return String(account)
 }
 
+// The account and the video id are checked against `brightcoveIdRegex` before they get here, but
+// the player and the embed are whatever the element carried, so they are encoded: unescaped,
+// `data-player="../../999999/stolen"` names another account's player and `data-player="p?a=1"`
+// moves the rest of the path into the query.
 const composePlayerUrl = (
   account: string,
   videoId: string,
   player = 'default',
   embed = 'default',
 ): string => {
-  return `https://players.brightcove.net/${account}/${player}_${embed}/index.html?videoId=${videoId}`
+  const segment = `${encodeURIComponent(player)}_${encodeURIComponent(embed)}`
+
+  return `https://players.brightcove.net/${account}/${segment}/index.html?videoId=${videoId}`
 }
 
 // Brightcove's in-page embed is a bare `<video-js>` that its loader script turns into a player,

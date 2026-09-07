@@ -354,8 +354,10 @@ export const parsePixelSize = (value: Nullish<string>): number | undefined => {
 // An empty or whitespace-only width/height attribute (`width=""`, common in editor output)
 // is not a declared dimension. coerceNumber treats those as absent. A trailing unit is dropped
 // first and never converted, since a browser reads `height="900px"` and `height="900pt"` alike
-// as 900 pixels, while `90%` stays unparsed.
-const trailingUnitRegex = /\s*[a-z]+\s*$/i
+// as 900 pixels, while `90%` stays unparsed. The unit is bounded and nothing is matched ahead of
+// it, since an unbounded run of letters, or of whitespace in front of them, costs six seconds on
+// a 120 KB attribute. Whatever whitespace the unit leaves behind is coerceNumber's to ignore.
+const trailingUnitRegex = /[a-z]{1,6}\s*$/i
 
 const dimensionAttribute = (element: Element, name: string): number | undefined => {
   return coerceNumber(element.getAttribute(name)?.replace(trailingUnitRegex, ''))
@@ -386,10 +388,8 @@ export const getElementDimensions = (element: Element): { width?: number; height
 
 // How many ancestors above the element to also check for a responsive wrapper.
 const maxWrapperAncestorDepth = 3
-// `aspect-ratio` takes the ratio with an optional `auto` beside it, on either side.
-const autoRatioRegex = /^auto\s+|\s+auto$/gi
 const paddingPercentRegex = /^([\d.]+)%$/
-const paddingSidesRegex = /\s+/
+const whitespaceRegex = /\s+/
 const wpEmbedAspectRegex = /wp-embed-aspect-(\d+)-(\d+)/
 
 // The bottom padding as the `padding` shorthand states it, which some embed wrappers write the
@@ -403,7 +403,7 @@ const shorthandBottom = (declarations: styles.Declarations): string | undefined 
     return
   }
 
-  const sides = padding.split(paddingSidesRegex)
+  const sides = padding.split(whitespaceRegex)
 
   return sides.length >= 3 ? sides[2] : undefined
 }
@@ -411,11 +411,19 @@ const shorthandBottom = (declarations: styles.Declarations): string | undefined 
 // The ways an element can declare its aspect ratio, in the order they are trusted.
 const elementRatioSources: Array<(element: Element) => string | undefined> = [
   // Modern CSS: the whole `aspect-ratio` value (`16 / 9`, or a single number), parsed
-  // like any other ratio string.
+  // like any other ratio string. The value takes an optional `auto` beside the ratio, on
+  // either side, dropped here as a token: matching it around an unbounded `\s+` costs two
+  // seconds on 120 KB of spaces.
   (element) => {
     const ratio = styles.declarations(element)['aspect-ratio']
 
-    return ratio ? parseRatio(ratio.replace(autoRatioRegex, '')) : undefined
+    if (!ratio) {
+      return
+    }
+
+    const stated = ratio.split(whitespaceRegex).filter((token) => token.toLowerCase() !== 'auto')
+
+    return parseRatio(stated.join(' '))
   },
 
   // WordPress responsive embeds carry the ratio as a class (`wp-embed-aspect-16-9`),

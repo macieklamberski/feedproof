@@ -192,6 +192,18 @@ describeForEachParser('declarations', (parseHtml) => {
     expect(styles.declarations(element)['max-width']).toBe('800px')
   })
 
+  // A feed writes the attribute, so the parse has to stay linear in its length. This input took
+  // 2 seconds before nothing was matched ahead of the `!` and takes 11 milliseconds now, so the
+  // threshold sits well clear of both and a loaded machine cannot flip it.
+  it('should parse a value holding a long run of spaces in linear time', () => {
+    const document = parseHtml(`<div style="aspect-ratio: 16/9${' '.repeat(120000)}"></div>`)
+    const element = queryElement(document, 'div')
+    const start = performance.now()
+
+    expect(styles.declarations(element)['aspect-ratio']).toBe('16/9')
+    expect(performance.now() - start).toBeLessThan(500)
+  })
+
   // The later declaration is the one a browser applies.
   it('should take the last value of a repeated property', () => {
     const document = parseHtml('<div style="width: 10px; width: 20px"></div>')

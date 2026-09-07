@@ -768,6 +768,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       ['smiley-embarrassed', 'Smiley Embarrassed', '😳'],
       ['smiley-indifferent', 'Smiley Indifferent', '😐'],
       ['heart', 'Cœur', '❤️'],
+      ['cat-happy', 'Chat heureux', '😺'],
+      ['cat-very-happy', 'Chat très heureux', '😸'],
+      ['cat-lol', 'Chat MDR', '😹'],
     ]
 
     it.each(faceCases)('should replace the %s face', async (name, alt, expected) => {
@@ -786,8 +789,9 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(`<p>${expected}</p>`)
     })
 
-    // The set also draws each expression on a cat, a man, a woman and a robot. Unicode has cat
-    // faces but not a winking or tongue-out one, so swapping these would change the expression.
+    // The set also draws each expression on a cat, a man, a woman and a robot. Unicode's cat
+    // faces cover the three smiles but not a winking or tongue-out one, so swapping those would
+    // change the expression.
     const keptCases: Array<[string, string]> = [
       ['cat', '16x16_cat-wink'],
       ['woman', '16x16_woman-happy'],
