@@ -14,6 +14,13 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // video podcast answers 624x351 for a `/video` frame it appends itself, while the same show's
 // plain frame is the 152 audio card. Reading show heights off oEmbed therefore suggests a
 // per-type difference that does not exist: the video answers describe a different url.
+//
+// Measured 2026-09-07 in Chrome at 320, 640 and 1280 wide: the width never moves the height. The
+// player takes its height from the frame instead, from 80 up to 352 for a track, an episode and a
+// show, where it stops growing, and with no ceiling found for an album, a playlist and an artist,
+// which filled a 600-tall frame. So 152 and 352 are frames the player fits, not heights it
+// renders on its own, and they fire only when the carrier states no size, since `decideSize`
+// takes the carrier's first.
 const spotifyHeights: Record<string, number> = {
   track: 152,
   episode: 152,
@@ -23,8 +30,10 @@ const spotifyHeights: Record<string, number> = {
   artist: 352,
 }
 
-// Every type's id is 22 base62 characters.
-const safeIdRegex = /^[a-zA-Z0-9]{22}$/
+// Base62 with no separator, since the id is written into the player path and the `type/id`
+// key. The length is not checked: a wrong id fails the same whether it is minted or passed
+// through, and a bound would refuse the next id space.
+const safeIdRegex = /^[a-zA-Z0-9]+$/
 // `embed` opens a player path, `embed-podcast` its older podcast-only twin, `intl-{lang}` a
 // localized page path. Whatever follows the id (`/video` on a video podcast) is decorative.
 const pathPrefixRegex = /^(?:embed|embed-podcast|intl-[a-z]{2})$/

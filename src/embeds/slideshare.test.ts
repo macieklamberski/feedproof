@@ -113,6 +113,48 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // `searchParams` hands the owner and slug back decoded, so a separator written encoded
+    // reaches the composed page url as a path of the feed's choosing.
+    it('should drop a composed page whose owner smuggles a separator', async () => {
+      const value = html`
+        <div id="__ss_6435157">
+          <object id="__sse6435157">
+            <embed
+              src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=110103quotes&amp;stripped_title=business-quotes-for-2011&amp;userName=..%2F..%2Fadmin"
+              type="application/x-shockwave-flash"
+            ></embed>
+          </object>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '6435157',
+        src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should drop a composed page whose owner and slug are dot segments', async () => {
+      const value = html`
+        <div id="__ss_6435157">
+          <object id="__sse6435157">
+            <embed
+              src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=110103quotes&amp;stripped_title=..&amp;userName=.."
+              type="application/x-shockwave-flash"
+            ></embed>
+          </object>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '6435157',
+        src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // The div spells the id with an underscore and the object without one. Every other fixture
     // here carries both, so only this shape exercises the div's spelling.
     it('should read the id off the div when the object carries none', async () => {

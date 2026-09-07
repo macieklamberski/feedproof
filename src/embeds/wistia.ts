@@ -3,9 +3,10 @@ import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// Real ids are exactly 10 alphanumeric characters. Anything else is left to the generic
-// placeholder instead of interpolated into a player url.
-const safeMediaIdRegex = /^[a-zA-Z0-9]{10}$/
+// Letters and digits, which is all the player path takes: a hyphen marks a slug and a dot a
+// file, and no route here serves either as a player. The length is not checked, since a wrong id
+// fails the same whether it is minted or passed through, and a bound refuses the next id space.
+const safeMediaIdRegex = /^[a-zA-Z0-9]+$/
 
 // The script form names the media through a JSONP callback, with no page in the url.
 const jsonpSuffixRegex = /\.jsonp$/
@@ -19,8 +20,8 @@ const wistiaHosts = ['wistia.net', 'wistia.com']
 // `channels` is the account host's spelling: `{account}.wistia.com/channels/{id}` is the channel's
 // own page, login-gated even for a public channel, so rebuilding it onto the public player repairs
 // a frame that would otherwise show a login screen. A channel has no vanity slug anywhere in the
-// url space: the segment is the same 10-character hashed id every route shares, which is what
-// lets the id grammar stand guard for all of them.
+// url space: the segment is the same hashed id every route shares, which is what lets one id
+// grammar stand guard for all of them.
 const playerRoutes: Record<string, string | undefined> = {
   iframe: 'iframe',
   medias: 'iframe',

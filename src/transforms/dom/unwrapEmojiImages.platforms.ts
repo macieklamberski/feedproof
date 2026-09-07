@@ -272,9 +272,13 @@ export const emojiPlatforms: Array<EmojiPlatform> = [
       '16x16_smiley-embarrassed': '😳',
       '16x16_smiley-indifferent': '😐',
       '16x16_heart': '❤️',
+      '16x16_cat-happy': '😺',
+      '16x16_cat-very-happy': '😸',
+      '16x16_cat-lol': '😹',
       // 16x16_smiley-frustrated: annoyed, weary and pouting are all defensible.
-      // 16x16_cat-*, _woman-*, _man-*, _robot-*: Unicode has no winking cat, and no man,
-      // woman or robot faces at all.
+      // 16x16_cat-wink, -tongue, -embarrassed: Unicode's cat faces stop at the three smiles
+      // above, so these would change the expression. _woman-*, _man-*, _robot-*: no such faces
+      // at all.
     },
   },
   {

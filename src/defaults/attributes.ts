@@ -125,4 +125,11 @@ export const defaultDeferredIframeSources: Array<DeferredIframeSource> = [
     selector: '[data-oembed-url]:not(:has(iframe, embed, object, video, audio))',
     attribute: 'data-oembed-url',
   },
+  // Advanced Responsive Video Embedder's lazyload mode replaces the player with a play button
+  // that holds the ready embed url and builds the iframe on click, so a reader is left with an
+  // empty widget: the button carries no image either, only an inline svg. 276 corpus feeds carry
+  // the attribute and 155 of them hold no YouTube player anywhere, and the destination is
+  // youtube-nocookie.com or youtube.com in 275 of the 276. The class is what qualifies it, since
+  // `data-iframe` is a name anyone could pick.
+  { selector: '.arve-play-btn[data-iframe]', attribute: 'data-iframe' },
 ]
