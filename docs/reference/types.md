@@ -20,8 +20,8 @@ Every type feedsweep exports, with a one-line description. All link into the sou
 
 | Type | Description |
 |------|-------------|
-| [`WidgetResolver`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | `EmbedResolver \| MediaResolver`: what the widget pass accepts |
-| [`WidgetResolverResult`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | `EmbedResolverResult \| MediaResolverResult` |
+| [`WidgetResolver`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | `EmbedResolver \| MediaResolver \| CiteResolver`: the one registry, tagged by `kind` |
+| [`WidgetResolverResult`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | `EmbedResolverResult \| MediaResolverResult \| CiteResolverResult` |
 | [`EmbedResolver`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | Selector plus `extract` returning embed metadata |
 | [`EmbedResolverResult`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | The fields of an [embed placeholder](/widgets/embeds) |
 | [`MediaResolver`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | Selector plus `extract` returning a native media element's fields |
@@ -31,6 +31,7 @@ Every type feedsweep exports, with a one-line description. All link into the sou
 | [`EmbedRef`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | `{ provider, id }`, what an embed enricher is handed for one placeholder |
 | [`CiteRef`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | `{ provider, url }`, the cite counterpart |
 | [`CiteKind`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | `'bookmark' \| 'repost' \| 'like' \| 'reply' \| 'read' \| 'listen' \| 'watch'` |
+| [`EmbedRenderHint`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | What a reader needs from one provider once it turns a placeholder into a frame: the origin its messages come from, how playback starts, and how the player reports its rendered height |
 | [`GeneratedWrapperType`](https://github.com/macieklamberski/feedsweep/blob/main/src/utils/dom.ts) | `'embed' \| 'cite' \| 'table' \| 'pre'`: the wrappers feedsweep mints |
 
 ## Enclosures
@@ -45,7 +46,7 @@ Every type feedsweep exports, with a one-line description. All link into the sou
 |------|-------------|
 | [`ResolveUrlFn`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | Resolves a URL against a base URL |
 | [`CleanUrlFn`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | `(url: string) => string`: tracking-param and redirect cleanup |
-| [`AssetProxyFn`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | `(url, type) => string \| undefined`: rewrites an asset URL through your proxy |
+| [`AssetProxyFn`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | `(url, type) => MaybePromise<string \| undefined>`: rewrites an asset URL through your proxy |
 | [`AssetType`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | `'image' \| 'video' \| 'audio'`: the role passed to `AssetProxyFn` |
 | [`IsSafeUrlFn`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | `(url, role) => boolean`: consumer URL policy. See [Security](/guides/security) |
 | [`UrlRole`](https://github.com/macieklamberski/feedsweep/blob/main/src/types.ts) | `'media' \| 'link'`: the role passed to `IsSafeUrlFn` |

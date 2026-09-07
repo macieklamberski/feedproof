@@ -6,7 +6,7 @@ title: Feedsweep, Tidy HTML Content in Web Feeds
 
 Tidy up the HTML content in web feeds. Fix feed-specific quirks so content displays in its best possible form.
 
-Feed items arrive with markup written for a JavaScript-enabled browser on the publisher's own site: lazy-loaded images with empty `src` attributes, video embeds that render as blank divs, tracking pixels, subscribe forms, and code blocks flattened into single lines. Feedsweep takes that HTML and runs it through a pipeline of 81 transforms that repairs, cleans, and normalizes it into content a reader can render as-is.
+Feed items arrive with markup written for a JavaScript-enabled browser on the publisher's own site: lazy-loaded images with empty `src` attributes, video embeds that render as blank divs, tracking pixels, subscribe forms, and code blocks flattened into single lines. Feedsweep takes that HTML and runs it through a pipeline of 86 transforms that repairs, cleans, and normalizes it into content a reader can render as-is.
 
 Perfect for feed readers, read-it-later apps, and newsletter digests that render third-party feed content.
 

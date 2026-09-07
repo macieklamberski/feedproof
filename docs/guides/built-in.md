@@ -14,8 +14,8 @@ What you do control is the pipeline itself, plus the hooks around it: [`stringTr
 
 | Export | What it drives |
 |--------|----------------|
-| `defaultWidgetResolvers` | Embed and media recognition in `convertWidgets`. See [Embeds](/widgets/embeds) |
-| `defaultCiteResolvers` | Link-preview card recognition in `convertCiteCards`. See [Cites](/widgets/cites) |
+| `defaultWidgetResolvers` | Every resolver, tagged by kind: the embed and media ones drive `convertWidgets`, the cite ones drive `convertCiteCards`. See [Embeds](/widgets/embeds) and [Cites](/widgets/cites) |
+| `defaultEmbedRenderHints` | Per-provider facts a reader needs once it turns a placeholder into a frame: the query that starts playback on the click, and how the player reports its rendered height |
 
 ## Attribute Lists
 

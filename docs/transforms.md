@@ -4,7 +4,7 @@ title: Transforms
 
 # Transforms
 
-A transform is a single, focused pass over the content. Feedsweep runs two phases: string transforms operate on the raw HTML text before parsing, DOM transforms operate on the parsed document. The default pipeline runs 5 string transforms and 73 DOM transforms; 3 more DOM transforms are opt-in [heuristics](/transforms/heuristics).
+A transform is a single, focused pass over the content. Feedsweep runs two phases: string transforms operate on the raw HTML text before parsing, DOM transforms operate on the parsed document. The default pipeline runs 5 string transforms and 78 DOM transforms; 3 more DOM transforms are opt-in [heuristics](/transforms/heuristics).
 
 Every transform is idempotent: running the pipeline twice produces the same output as running it once, and every transform is tested for exactly that.
 
@@ -52,6 +52,8 @@ Setting `heuristics: true` selects the extended pipeline with the 3 opt-in trans
 | `rebuildLazyYtEmbeds` | [Embed Recovery](/transforms/embeds) | Rebuild the iframe from a jQuery lazyYT facade |
 | `rebuildElementorVideoEmbeds` | [Embed Recovery](/transforms/embeds) | Rebuild the iframe an Elementor video widget defers to JS |
 | `rebuildEmbedlyEmbeds` | [Embed Recovery](/transforms/embeds) | Unwrap an Embedly media widget to its inner provider iframe |
+| `unwrapDrupalOembedIframes` | [Embed Recovery](/transforms/embeds) | Point a Drupal media oEmbed proxy frame at the page url it wraps |
+| `rebuildGettyImagesEmbeds` | [Embed Recovery](/transforms/embeds) | Rebuild Getty's `gie` widget into the player its inline config describes |
 | `linkifyGistEmbeds` | [Embed Recovery](/transforms/embeds) | Replace a GitHub Gist script embed with a link to the gist |
 | `fixSubstackMentions` | [Text and Structure](/transforms/structure) | Rebuild a Substack @-mention into an inline profile link |
 | `fixSubstackImageLinks` | [Media Recovery](/transforms/media) | Remint the image inside an emptied Substack lightbox anchor |
@@ -61,9 +63,8 @@ Setting `heuristics: true` selects the extended pipeline with the 3 opt-in trans
 | `rebuildDeferredIframes` | [Embed Recovery](/transforms/embeds) | Materialize an iframe parked in a `<div>` attribute (Pym.js, @newswire/frames, oEmbed) |
 | `convertDatawrapperEmbeds` | [Embed Recovery](/transforms/embeds) | Convert Datawrapper chart embeds into a linked static image |
 | `convertGiphyEmbeds` | [Embed Recovery](/transforms/embeds) | Convert a Giphy iframe into the linked gif itself |
+| `convertSmartframeEmbeds` | [Embed Recovery](/transforms/embeds) | Convert SmartFrame's `<smartframe-embed>` element into the picture it names |
 | `unwrapDoublyNestedLists` | [Text and Structure](/transforms/structure) | Dissolve a list nested directly inside another list |
-| `stripDuplicateTitleHeading` | [Text and Structure](/transforms/structure) | Remove a leading heading that repeats the article title |
-| `demoteHeadings` | [Text and Structure](/transforms/structure) | Demote `h1`–`h5` one level when the body contains an `h1` |
 | `canonicalizeAlignment` | [Media Recovery](/transforms/media) | Resolve alignment signals into a `data-align` attribute on the media |
 | `convertLazyImageContainers` | [Media Recovery](/transforms/media) | Recover a real `<img>` from a media-less lazy-image container |
 | `fixLazyImages` | [Media Recovery](/transforms/media) | Promote a lazy image URL from its `data-*` attribute into `src` / `srcset` |
@@ -80,6 +81,8 @@ Setting `heuristics: true` selects the extended pipeline with the 3 opt-in trans
 | `normalizeAnchoredHeadings` | [Text and Structure](/transforms/structure) | Collapse heading permalink markup to one canonical anchor form |
 | `stripDeadAnchors` | [Links and URLs](/transforms/urls) | Unwrap anchors that link nowhere |
 | `convertCiteCards` | [Widgets](/widgets) | Read link-preview cards into `data-cite-*` placeholders |
+| `stripDuplicateTitleHeading` | [Text and Structure](/transforms/structure) | Remove a leading heading that repeats the article title |
+| `demoteHeadings` | [Text and Structure](/transforms/structure) | Demote `h1`–`h5` one level when the body contains an `h1` |
 | `unwrapEmojiImages` | [Media Recovery](/transforms/media) | Replace platform emoji images with the real glyph, or mark them `data-emoji` |
 | `stripMarkdownEscapeBackslashes` | [Text and Structure](/transforms/structure) | Empty paragraphs holding a lone Markdown escape backslash |
 | `convertBreaksToParagraphs` | [Text and Structure](/transforms/structure) | Convert `<br>`-separated prose into real paragraphs |
@@ -105,7 +108,9 @@ Setting `heuristics: true` selects the extended pipeline with the 3 opt-in trans
 | `proxyAssetUrls` | [Links and URLs](/transforms/urls) | Rewrite asset URLs through the caller's `assetProxyFn` |
 | `stripEmptyTags` | [Text and Structure](/transforms/structure) | Remove empty elements that render nothing |
 | `unwrapHeadingBold` | [Text and Structure](/transforms/structure) | Unwrap a `<b>`/`<strong>` that spans a whole heading |
+| `mergeWrappedCaptionText` | [Media Recovery](/transforms/media) | Fold caption text sharing a wrapper with the `<figcaption>` into it |
 | `unwrapWrappers` | [Text and Structure](/transforms/structure) | Dissolve meaningless wrapper elements |
+| `wrapOrphanFigcaptions` | [Media Recovery](/transforms/media) | Wrap media and its detached `<figcaption>` in a `<figure>` |
 | `stripDuplicateRules` | [Text and Structure](/transforms/structure) | Remove consecutive duplicate `<hr>` rules |
 | `wrapTablesForScroll` | [Text and Structure](/transforms/structure) | Wrap tables in a `data-table` scroll container |
 | `hoistBlocksFromParagraphs` | [Text and Structure](/transforms/structure) | Hoist block elements out of paragraphs |

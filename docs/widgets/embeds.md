@@ -60,7 +60,7 @@ The `src` is rebuilt from the extracted id, so tracking params are dropped while
 
 ## Built-in Providers
 
-Fifty-six platforms resolve out of the box. Each resolver reads the platform's own markup and derives what the id alone allows, a canonical page URL or a thumbnail. No network requests are ever made.
+Eighty-eight platforms resolve out of the box. Each resolver reads the platform's own markup and derives what the id alone allows, a canonical page URL or a thumbnail. No network requests are ever made.
 
 Most platforms ship their embed in more than one shape, and each shape gets its own resolver: an ordinary `<iframe>`, a `<blockquote>` the platform's script upgrades, an AMP element, a `<script>` tag beside an empty div, a Flash `<object>` in an old post. The script, blockquote, and custom-element forms are the ones that matter most, because they render nothing at all without JavaScript.
 
@@ -81,6 +81,19 @@ Most platforms ship their embed in more than one shape, and each shape gets its 
 | Blogger | Video iframe |
 | Internet Archive | Iframe, Flash object |
 | Flickr | Photo and video iframe |
+| Getty Images | Photo iframe (the `gie` widget script is rebuilt into one first) |
+| Aparat | Script facade inside an empty div, iframe |
+| ARTE | Iframe; the language is read off the player path |
+| BBC | Programme player iframe |
+| Brid.TV | Inline player config the loader script is handed |
+| CNBC, Mega TV, The Guardian | Iframe |
+| CNN | Iframe, script embed, Flash object |
+| Fox News | Script embed, iframe |
+| Glomex | Iframe, `<glomex-player>` element |
+| Kaltura | Iframe, script embed |
+| Mail.ru, RTVE | Iframe, Flash object |
+| The New York Times | Video player iframe |
+| Rutube, Youku, Tencent Video | Iframe |
 
 ### Audio and Podcasts
 
@@ -93,6 +106,10 @@ Most platforms ship their embed in more than one shape, and each shape gets its 
 | Buzzsprout | Episode iframe, WordPress shortcode script embed |
 | Acast, Anchor, Audioboom, Blubrry, Captivate, Fireside, iVoox, Libsyn, Megaphone, Omny, Podbean, Podigee, Simplecast, Transistor, stand.fm | Player iframe |
 | Spreaker | Iframe, player anchor |
+| Audiomack | Iframe; the kind (song, album, playlist) sets the player height |
+| Ausha, Deezer, Podomatic, ReverbNation | Widget iframe |
+| Podetize, RedCircle | Script embed, iframe |
+| Zencastr | Blockquote, iframe |
 
 ### Social Posts
 
@@ -108,6 +125,7 @@ Most platforms ship their embed in more than one shape, and each shape gets its 
 | Telegram | Script embed, iframe |
 | Imgur | Blockquote, iframe |
 | note.com | Iframe |
+| LinkedIn | Post iframe, keyed on the urn the embed path carries |
 
 A social post is always an embed, never a [cite](/widgets/cites): the post is the content, not a preview of somewhere else.
 
@@ -119,6 +137,7 @@ A social post is always an embed, never a [cite](/widgets/cites): the post is th
 | SlideShare | Iframe, Flash object |
 | Speaker Deck | Script embed, iframe |
 | Issuu | Widget div, iframe |
+| Figshare | Iframe |
 
 ### Interactive
 
@@ -128,6 +147,9 @@ A social post is always an embed, never a [cite](/widgets/cites): the post is th
 | Typeform | Widget div, iframe |
 | Flourish | Widget div, iframe |
 | Genially, Sketchfab | Iframe |
+| CodeSandbox, StackBlitz | Project iframe |
+| Padlet | Board iframe |
+| Donorbox | Donation form iframe |
 
 ## Media Resolvers
 

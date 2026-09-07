@@ -139,6 +139,56 @@ Moves a `<figcaption>` out of a figure-wide click-through anchor, so the caption
 <figure><a href="/post"><img src="photo.jpg"></a><figcaption>Caption</figcaption></figure>
 ```
 
+### wrapOrphanFigcaptions
+
+Wraps media and the `<figcaption>` that follows it in a `<figure>`, so a caption a publisher left as a loose sibling is bound to what it describes instead of reading as body prose. A caption sitting in a wrapper of its own counts too, and a run of figures sharing one caption is wrapped together.
+
+**Before**
+
+```html
+<p><img src="chart.png"></p>
+<figcaption>The device listing.</figcaption>
+```
+
+**After**
+
+```html
+<figure>
+  <p><img src="chart.png"></p>
+  <figcaption>The device listing.</figcaption>
+</figure>
+```
+
+### mergeWrappedCaptionText
+
+Folds text blocks sharing a wrapper with a `<figcaption>` into the caption itself. Some publishers put the image description in site-classed divs and keep only the credit line in the `<figcaption>`, so once the classes are gone the description reads as body prose. Runs before `unwrapWrappers`, which dissolves the wrapper and with it the evidence that the blocks belong together.
+
+**Before**
+
+```html
+<figure>
+  <img src="ceres.jpg">
+  <div class="img-caption">
+    <div>The dwarf planet Ceres.</div>
+    <figcaption>Credit: NASA/JPL</figcaption>
+  </div>
+</figure>
+```
+
+**After**
+
+```html
+<figure>
+  <img src="ceres.jpg">
+  <div class="img-caption">
+    <figcaption>
+      <div>The dwarf planet Ceres.</div>
+      <p>Credit: NASA/JPL</p>
+    </figcaption>
+  </div>
+</figure>
+```
+
 ### canonicalizeAlignment
 
 Resolves the many ways feeds express media alignment into one `data-align="left|center|right"` attribute on the media element: WordPress `aligncenter` / `alignleft` / `alignright` classes, the deprecated `align` attribute, inline `text-align` and auto margins, read from the media itself or from a wrapper whose only content is the media. See [Data Attributes](/output/data-attributes) for how a consumer styles it.

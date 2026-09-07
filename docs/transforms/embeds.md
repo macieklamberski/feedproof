@@ -214,6 +214,39 @@ Unwraps an Embedly media widget to the third-party iframe it wraps. The real emb
 <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" data-thumbnail="https://example.com/poster.jpg"></iframe>
 ```
 
+### unwrapDrupalOembedIframes
+
+Points a Drupal media oEmbed frame at the page url it wraps. Drupal frames a remote video through the site's own `/media/oembed?url=…` route, which plays but names the site rather than the provider, so the placeholder gets no poster, no shape and no provider, and the `hash` ties the url to one site's settings. The page url the route carries is what the provider resolvers read.
+
+**Before**
+
+```html
+<iframe src="https://example.com/media/oembed?url=https%3A//www.youtube.com/watch%3Fv%3D2dEj10uaqAs&max_width=0&hash=sy5_ZDQX3OKG"></iframe>
+```
+
+**After**
+
+```html
+<iframe src="https://www.youtube.com/watch?v=2dEj10uaqAs"></iframe>
+```
+
+### rebuildGettyImagesEmbeds
+
+Rebuilds Getty's `gie` widget into the player iframe its inline config describes. The configuration sits in a script the feed carries but never runs, so the photo shows as a bare "Embed from Getty Images" link. The anchor is paired with its config by the token Getty writes into both, which is what keeps several photos in one post apart; where no anchor carries the token, the script is replaced in place.
+
+**Before**
+
+```html
+<a id="iPo3qjCKSVJU" href="http://www.gettyimages.com/detail/491183014">Embed from Getty Images</a>
+<script>gie.widgets.load({id:'iPo3qjCKSVJU',sig:'OOM9B40x=',w:'594px',h:'395px',items:'491183014',caption: true ,tld:'com'})</script>
+```
+
+**After**
+
+```html
+<iframe src="https://embed.gettyimages.com/embed/491183014?et=iPo3qjCKSVJU&tld=com&sig=OOM9B40x%3D&caption=true" width="594" height="395"></iframe>
+```
+
 ### rebuildDeferredIframes
 
 Materializes an iframe whose URL is parked in a `<div>` attribute by an embed convention that builds the iframe at runtime: Pym.js (`data-pym-src`), @newswire/frames (`data-frame-src`), and the Drupal/CKEditor oEmbed convention (`data-oembed-url`). The oEmbed wrapper parks a watch page rather than a player URL, which is fine here, because the widget pass asks the resolvers what the URL means and they mint the player from it.
@@ -292,6 +325,22 @@ Converts a Giphy iframe into the gif itself, linked to its Giphy page. Every Gip
 
 ```html
 <a href="https://giphy.com/gifs/l0HlQoLBhTNMxHkaA"><img src="https://media.giphy.com/media/l0HlQoLBhTNMxHkaA/giphy.gif"></a>
+```
+
+### convertSmartframeEmbeds
+
+Converts SmartFrame's `<smartframe-embed>` element into the picture it names. The element has no children, so unupgraded it renders as nothing at all, and the platform's own WordPress plugin writes the thumbnail url into the feed beside it. A static image is more immediate than a viewer that never loads, and it rejoins the image pipeline.
+
+**Before**
+
+```html
+<smartframe-embed customer-id="b0c95bc04383cef69c6b47df872135cf" image-id="WmOBDE33lTbF"></smartframe-embed>
+```
+
+**After**
+
+```html
+<img src="https://thumbs.smartframe.io/b0c95bc04383cef69c6b47df872135cf/WmOBDE33lTbF.webp">
 ```
 
 ### convertNoteEmbeds

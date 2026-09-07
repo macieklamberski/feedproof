@@ -17,7 +17,7 @@ Feedsweep is a pure function over HTML. One call to [`transformContent`](/refere
  parseHtmlFn ────────── your DOM parser (linkedom, jsdom, happy-dom, browser)
       │
       ▼
- DOM transforms ─────── 73 passes over the document, in a fixed order
+ DOM transforms ─────── 78 passes over the document, in a fixed order
       │
       ▼
  serialized <body>

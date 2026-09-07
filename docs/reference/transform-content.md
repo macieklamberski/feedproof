@@ -24,6 +24,7 @@ Runs the string transforms on the raw HTML, parses it with your `parseHtmlFn`, r
 | `parseHtmlFn` | `ParseHtmlFn` | none | **Required.** Parses HTML into a `Document`. See [DOM Parsing](/guides/customization/dom-parsing) |
 | `baseUrl` | `string` | none | The item's permalink; anchors relative URL resolution. See [URL Handling](/guides/customization/url-handling) |
 | `sameSiteUrls` | `Array<string>` | none | Other URLs that stand for the item's own page (site page, feed URL). See [URL Handling](/guides/customization/url-handling) |
+| `feedImageUrls` | `Array<string>` | none | The feed's own images (logo, icon, cover), so an enclosure repeating one is read as decoration rather than as the item's picture. See [Enclosures](/guides/enclosures) |
 | `enclosures` | `Array<Enclosure>` | none | Feed enclosures to inject into the content. See [Enclosures](/guides/enclosures) |
 | `articleTitle` | `string` | none | The item's title, so a duplicated leading heading can be stripped |
 | `resolveUrlFn` | `ResolveUrlFn` | `defaultResolveUrlFn` | Resolves a URL against a base URL |

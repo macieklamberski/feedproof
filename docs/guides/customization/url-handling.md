@@ -59,7 +59,7 @@ The hook rewrites a URL; it cannot refuse one. Returning an empty string keeps t
 Rewrites media URLs to your proxy or cache, keeping the reader's requests off publisher origins:
 
 ```typescript
-type AssetProxyFn = (url: string, type: 'image' | 'video' | 'audio') => string | undefined
+type AssetProxyFn = (url: string, type: 'image' | 'video' | 'audio') => MaybePromise<string | undefined>
 ```
 
 `proxyAssetUrls` applies it to `src`, `srcset`, `poster`, and the URL-carrying placeholder attributes, passing the role so images and video can route to different endpoints. Returning `undefined` leaves a URL untouched.

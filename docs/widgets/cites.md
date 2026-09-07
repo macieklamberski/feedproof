@@ -76,7 +76,7 @@ Two fields carry text about the link, and they are not interchangeable. `data-ci
 
 ## Built-in Resolvers
 
-25 resolvers ship by default, each reading one platform's card markup.
+29 resolvers ship by default, each reading one platform's card markup.
 
 ### Blog Platforms
 
@@ -92,6 +92,7 @@ Two fields carry text about the link, and they are not interchangeable. `data-ci
 | Ameba | OGP cards |
 | Tistory | Open Graph source cards |
 | Hatena | Embed-card iframes |
+| The New York Times | The oEmbed article card the paper serves as an iframe |
 
 ### WordPress Theme Blog Cards
 
@@ -104,6 +105,8 @@ Popular themes (widely used on Japanese-language blogs) render internal and exte
 | Discourse | Onebox link previews (`aside.onebox`) |
 | XenForo | Unfurled-link blocks |
 | NodeBB | Link previews |
+| BuddyBoss | Link previews an activity post unfurls into its body |
+| BuddyPress | Link previews an activity update unfurls into itself |
 
 Discourse's social-post oneboxes (a quoted tweet, for example) are deliberately not converted. A quoted post is not a link preview, and flattening it to a titled link would lose the post itself.
 
