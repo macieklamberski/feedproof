@@ -20,6 +20,15 @@ const audioboomHosts = ['audioboom.com', 'audioboo.fm']
 // The player version decides the size, and the url names it: `/embed/v4` is the full player at
 // 300 while the older `/posts/{id}/embed` is the compact bar at 95. Sizing them alike would
 // misreserve one of the two.
+//
+// Measured 2026-09-07 in Chrome against post 6479208, which a browser loads even though curl is
+// refused. Neither player has a height of its own: both fill whatever frame they get, at 320, 640
+// and 1280 wide alike, so the height does not track the width and these two are floors, not
+// rendered heights. `/embed/v4` renders 300 inside a 200- or 250-tall frame and swaps in a
+// too-small notice at 150; `/posts/{id}/embed` now serves a `v5-embed` player that renders 95
+// inside a 60-tall frame and fills anything taller. So 300 and 95 are the smallest box each
+// accepts, and they fire only when the carrier states no size, since `decideSize` takes the
+// carrier's first.
 const playerHeights = { v4: 300, legacy: 95 }
 
 export const extractAudioboomPost = (

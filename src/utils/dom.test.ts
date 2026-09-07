@@ -13,6 +13,7 @@ import {
   isElementHidden,
   isEmptyElement,
   keepIfMatches,
+  paramValue,
   parsePixelSize,
   parseRatio,
   removeWithEmptyWrappers,
@@ -980,6 +981,99 @@ describeForEachParser('flashVars', (parseHtml) => {
 
   it('should return undefined for a nullish element', () => {
     expect(flashVars(undefined)).toBeUndefined()
+  })
+})
+
+// `flashVars` exercises this helper with one name only, so the branches its other two callers
+// rest on are pinned here rather than through whichever caller happens to reach them.
+describeForEachParser('paramValue', (parseHtml) => {
+  it('should read the value of the named param', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="playerkey" value="AQ~~,abc,def" />
+      </object>
+    `)
+    const element = queryElement(document, 'object')
+
+    expect(paramValue(element, 'playerkey')).toBe('AQ~~,abc,def')
+  })
+
+  // The name is matched lowercased, so a caller passing anything else never matches. Brightcove
+  // writes `@videoplayer` and `playerKey`, and both reach here as the lowercase spelling.
+  it('should match the param name whatever the markup casing', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="PlayerKey" value="AQ~~,abc,def" />
+      </object>
+    `)
+    const element = queryElement(document, 'object')
+
+    expect(paramValue(element, 'playerkey')).toBe('AQ~~,abc,def')
+  })
+
+  it('should return undefined when the caller states the name in another casing', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="playerkey" value="AQ~~,abc,def" />
+      </object>
+    `)
+    const element = queryElement(document, 'object')
+
+    expect(paramValue(element, 'playerKey')).toBeUndefined()
+  })
+
+  it('should pick the named param out of several', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="movie" value="player.swf" />
+        <param name="@videoplayer" value="6098765432" />
+        <param name="wmode" value="transparent" />
+      </object>
+    `)
+    const element = queryElement(document, 'object')
+
+    expect(paramValue(element, '@videoplayer')).toBe('6098765432')
+  })
+
+  // The search is over descendants, not children, because the Flash-era wrappers nest a player
+  // inside a second `<object>` for the browsers that needed it.
+  it('should read a param nested below the root', () => {
+    const document = parseHtml(html`
+      <object>
+        <object>
+          <param name="flashvars" value="config=1" />
+        </object>
+      </object>
+    `)
+    const element = queryElement(document, 'object')
+
+    expect(paramValue(element, 'flashvars')).toBe('config=1')
+  })
+
+  it('should return undefined for a param that states no value', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="playerkey" />
+      </object>
+    `)
+    const element = queryElement(document, 'object')
+
+    expect(paramValue(element, 'playerkey')).toBeUndefined()
+  })
+
+  it('should return undefined when no param carries the name', () => {
+    const document = parseHtml(html`
+      <object>
+        <param name="movie" value="player.swf" />
+      </object>
+    `)
+    const element = queryElement(document, 'object')
+
+    expect(paramValue(element, 'playerkey')).toBeUndefined()
+  })
+
+  it('should return undefined for no root', () => {
+    expect(paramValue(undefined, 'playerkey')).toBeUndefined()
   })
 })
 
