@@ -139,6 +139,7 @@ import {
 import { vimeoEmbedResolver } from '../embeds/vimeo.js'
 import { wistiaEmbedResolver } from '../embeds/wistia.js'
 import { youtubeAmpEmbedResolver, youtubeIframeEmbedResolver } from '../embeds/youtube.js'
+import { zencastrBlockquoteEmbedResolver, zencastrIframeEmbedResolver } from '../embeds/zencastr.js'
 import { discourseMediaResolver } from '../media/discourse.js'
 import { ghostMediaResolver } from '../media/ghost.js'
 import { podloveMediaResolver } from '../media/podlove.js'
@@ -255,6 +256,8 @@ const embedResolvers: Array<EmbedResolver> = [
   telegramScriptEmbedResolver,
   telegramIframeEmbedResolver,
   mastodonEmbedResolver,
+  zencastrBlockquoteEmbedResolver,
+  zencastrIframeEmbedResolver,
   mailruEmbedResolver,
   tencentEmbedResolver,
 ]
