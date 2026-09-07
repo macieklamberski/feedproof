@@ -21,9 +21,10 @@ const cdnHosts = ['cdn.turner.com']
 // The page at `cnn.com/videos/{id}` discriminates the same way. Of 15 Flash-era ids read out of
 // the corpus, dated 2008 to 2013, the 5 from 2011 on still serve and the older 10 answer 404.
 //
-// CNN's snippet sizes the player 416 by 234 and the API's posters are 640 by 360, both 16:9. The
-// Flash carriers state the old player's box, 416 by 374 with its chrome, so the ratio is
-// preferred over the carrier. Not measured in a browser, which refused the player's host.
+// The fave shell is a `padding-bottom: 56.25%` box, measured 2026-09-07 at 300, 600 and 900
+// pixels wide as 169, 338 and 506 tall, and the API serves 16:9 renditions and posters for every
+// id in this path form. CNN's vertical clips are named by a `me{40 hex}` media id instead, which
+// this file's id shape refuses, so no portrait clip reaches the ratio.
 const playerRatio = '16/9'
 
 const composeEmbed = (id: string): EmbedResolverResult => {
@@ -65,9 +66,7 @@ export const cnnResolveEmbed = (url: string): EmbedResolverResult | undefined =>
   }
 }
 
-export const cnnIframeEmbedResolver = createUrlEmbedResolver(cnnHosts, cnnResolveEmbed, {
-  preferResolverSize: true,
-})
+export const cnnIframeEmbedResolver = createUrlEmbedResolver(cnnHosts, cnnResolveEmbed)
 
 // The Flash player, `i.cdn.turner.com/cnn/.element/apps/cvp/3.0/swf/{player}.swf?…&videoId={id}`,
 // as an `<embed>` or an `<object>`. The id sits in the swf's own query on every specimen, and in
@@ -89,6 +88,8 @@ export const cnnFlashResolveEmbed = (
   return resolveVideoId(parsed.searchParams.get('videoId') ?? stated)
 }
 
+// 85% of the swf carriers state a box the old chrome made, 416 by 374 on most of them, against
+// the 83% of iframe carriers that state the player's own 16:9 and are believed instead.
 export const cnnFlashEmbedResolver = createUrlEmbedResolver(cdnHosts, cnnFlashResolveEmbed, {
   preferResolverSize: true,
 })
@@ -103,5 +104,4 @@ export const cnnScriptEmbedResolver = createMarkupEmbedResolver(
 
     return resolveVideoId(parsed?.searchParams.get('vid'))
   },
-  { preferResolverSize: true },
 )

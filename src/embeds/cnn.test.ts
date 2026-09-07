@@ -119,14 +119,31 @@ describe('cnnFlashResolveEmbed', () => {
 describeForEachParser('cnnIframeEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, cnnIframeEmbedResolver)
 
-  // The pasted iframe states 416 by 234, and the resolver's ratio is preferred over it.
-  it('should resolve the pasted player iframe', async () => {
+  it('should keep the box the pasted player iframe states', async () => {
     const value = html`
       <iframe
         frameborder="0"
         height="234"
         src="https://fave.api.cnn.io/v1/fav/?video=us/2018/06/24/finding-hope-suicide-special-report-full-show.cnn&amp;customer=cnn&amp;edition=domestic&amp;env=prod"
         width="416"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'cnn',
+      id: 'us/2018/06/24/finding-hope-suicide-special-report-full-show.cnn',
+      src: 'https://fave.api.cnn.io/v1/fav/?video=us/2018/06/24/finding-hope-suicide-special-report-full-show.cnn&customer=cnn&edition=domestic&env=prod',
+      url: 'https://www.cnn.com/videos/us/2018/06/24/finding-hope-suicide-special-report-full-show.cnn',
+      width: 416,
+      height: 234,
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
+  it('should state the ratio for an iframe declaring no box', async () => {
+    const value = html`
+      <iframe
+        src="https://fave.api.cnn.io/v1/fav/?video=us/2018/06/24/finding-hope-suicide-special-report-full-show.cnn&amp;customer=cnn&amp;edition=domestic&amp;env=prod"
       ></iframe>
     `
     const expected: EmbedResolverResult = {
