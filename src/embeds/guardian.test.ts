@@ -46,14 +46,31 @@ describe('guardianResolveEmbed', () => {
 describeForEachParser('guardianEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, guardianEmbedResolver)
 
-  // The snippet states 560 by 315, and the measured ratio is preferred over it.
-  it('should resolve the pasted player iframe', async () => {
+  it('should keep the box the pasted player iframe states', async () => {
     const value = html`
       <iframe
         src="https://embed.theguardian.com/embed/video/world/video/2015/oct/08/ashton-carter-nato-russian-forces-behaving-unprofessionally-syria-video"
         width="560"
         height="315"
         allowfullscreen="yes"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'guardian',
+      id: 'world/video/2015/oct/08/ashton-carter-nato-russian-forces-behaving-unprofessionally-syria-video',
+      src: 'https://embed.theguardian.com/embed/video/world/video/2015/oct/08/ashton-carter-nato-russian-forces-behaving-unprofessionally-syria-video',
+      url: 'https://www.theguardian.com/world/video/2015/oct/08/ashton-carter-nato-russian-forces-behaving-unprofessionally-syria-video',
+      width: 560,
+      height: 315,
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
+  it('should state the ratio for an iframe declaring no box', async () => {
+    const value = html`
+      <iframe
+        src="https://embed.theguardian.com/embed/video/world/video/2015/oct/08/ashton-carter-nato-russian-forces-behaving-unprofessionally-syria-video"
       ></iframe>
     `
     const expected: EmbedResolverResult = {

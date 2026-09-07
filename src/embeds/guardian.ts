@@ -9,10 +9,8 @@ const guardianHosts = ['theguardian.com']
 // path answers 200 with the player and its title, a fabricated slug 404.
 const playerPathRegex = /^\/embed\/video\/([a-z0-9-]+\/video\/\d{4}\/[a-z]{3}\/\d{2}\/[a-z0-9-]+)$/
 
-// Measured 2026-09-06 in a browser at 300 and 600 pixels wide: the `<video>` is 169 and 338
-// tall and is the whole page, so the height is 16:9 of the width with nothing around it. The
-// Guardian's snippet states 560 by 315, and publishers who resized it by hand kept the 315
-// (400 by 315 in one specimen), so the ratio is preferred over the carrier.
+// Measured 2026-09-07 in a browser at 300, 600 and 900 pixels wide: the `<video>` is 169, 338
+// and 506 tall and is the whole page, so the height is 16:9 of the width with nothing around it.
 const playerRatio = '16/9'
 
 export const guardianResolveEmbed = (url: string): EmbedResolverResult | undefined => {
@@ -32,6 +30,4 @@ export const guardianResolveEmbed = (url: string): EmbedResolverResult | undefin
   }
 }
 
-export const guardianEmbedResolver = createUrlEmbedResolver(guardianHosts, guardianResolveEmbed, {
-  preferResolverSize: true,
-})
+export const guardianEmbedResolver = createUrlEmbedResolver(guardianHosts, guardianResolveEmbed)
