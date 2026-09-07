@@ -15,6 +15,7 @@ describe('zencastrResolveEmbed', () => {
       provider: 'zencastr',
       id: 'cK98nMcr',
       src: 'https://zencastr.com/embed/cK98nMcr',
+      url: 'https://zencastr.com/z/cK98nMcr',
       ratio: '1/1',
     }
 
@@ -27,6 +28,7 @@ describe('zencastrResolveEmbed', () => {
       provider: 'zencastr',
       id: '6nm7PLty',
       src: 'https://zencastr.com/embed/6nm7PLty',
+      url: 'https://zencastr.com/z/6nm7PLty',
       ratio: '1/1',
     }
 
@@ -39,6 +41,7 @@ describe('zencastrResolveEmbed', () => {
       provider: 'zencastr',
       id: 'cK98nMcr9',
       src: 'https://zencastr.com/embed/cK98nMcr9',
+      url: 'https://zencastr.com/z/cK98nMcr9',
       ratio: '1/1',
     }
 
@@ -106,6 +109,7 @@ describeForEachParser('zencastrBlockquoteEmbedResolver', (parseHtml) => {
         provider: 'zencastr',
         id: 'cK98nMcr',
         src: 'https://zencastr.com/embed/cK98nMcr',
+        url: 'https://zencastr.com/z/cK98nMcr',
         ratio: '1/1',
       }
 
@@ -143,6 +147,7 @@ describeForEachParser('zencastrIframeEmbedResolver', (parseHtml) => {
       provider: 'zencastr',
       id: 'cK98nMcr',
       src: 'https://zencastr.com/embed/cK98nMcr',
+      url: 'https://zencastr.com/z/cK98nMcr',
       ratio: '1/1',
     }
 
@@ -179,6 +184,7 @@ describeForEachParser('zencastr through the pipeline', (parseHtml) => {
         data-embed-id="0C_Xr4ma"
         data-embed-provider="zencastr"
         data-embed-src="https://zencastr.com/embed/0C_Xr4ma"
+        data-embed-url="https://zencastr.com/z/0C_Xr4ma"
         data-embed-ratio="1/1"
       ></div>
     `
