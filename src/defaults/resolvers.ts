@@ -35,7 +35,8 @@ import { anchorEmbedResolver } from '../embeds/anchor.js'
 import { aparatIframeEmbedResolver, aparatScriptEmbedResolver } from '../embeds/aparat.js'
 import { appleEmbedResolver } from '../embeds/apple.js'
 import { archiveFlashEmbedResolver, archiveIframeEmbedResolver } from '../embeds/archive.js'
-import { audioboomEmbedResolver } from '../embeds/audioboom.js'
+import { arteEmbedResolver } from '../embeds/arte.js'
+import { audioboomEmbedResolver, audioboomPlayerEmbedResolver } from '../embeds/audioboom.js'
 import { bandcampEmbedResolver } from '../embeds/bandcamp.js'
 import { bitchuteEmbedResolver } from '../embeds/bitchute.js'
 import { bloggerEmbedResolver } from '../embeds/blogger.js'
@@ -47,6 +48,7 @@ import {
   blueskyS9eEmbedResolver,
 } from '../embeds/bluesky.js'
 import {
+  brightcoveExperienceEmbedResolver,
   brightcoveFlashEmbedResolver,
   brightcoveIframeEmbedResolver,
   brightcoveVideoJsEmbedResolver,
@@ -57,6 +59,7 @@ import {
 } from '../embeds/buzzsprout.js'
 import { captivateEmbedResolver } from '../embeds/captivate.js'
 import { codepenIframeEmbedResolver, codepenWidgetEmbedResolver } from '../embeds/codepen.js'
+import { codesandboxIframeEmbedResolver } from '../embeds/codesandbox.js'
 import { dailymotionEmbedResolver } from '../embeds/dailymotion.js'
 import { donorboxEmbedResolver } from '../embeds/donorbox.js'
 import {
@@ -90,8 +93,9 @@ import { libsynEmbedResolver } from '../embeds/libsyn.js'
 import { linkedinEmbedResolver } from '../embeds/linkedin.js'
 import { mailruEmbedResolver } from '../embeds/mailru.js'
 import { mastodonEmbedResolver } from '../embeds/mastodon.js'
-import { mediavineEmbedResolver } from '../embeds/mediavine.js'
+import { mediavineEmbedResolver, mediavineScriptEmbedResolver } from '../embeds/mediavine.js'
 import { megaphoneEmbedResolver } from '../embeds/megaphone.js'
+import { megatvEmbedResolver } from '../embeds/megatv.js'
 import { mixcloudEmbedResolver } from '../embeds/mixcloud.js'
 import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from '../embeds/nicovideo.js'
 import { notecomIframeEmbedResolver } from '../embeds/notecom.js'
@@ -117,6 +121,7 @@ import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from '../emb
 import { standfmEmbedResolver } from '../embeds/standfm.js'
 import { tedEmbedResolver } from '../embeds/ted.js'
 import { telegramIframeEmbedResolver, telegramScriptEmbedResolver } from '../embeds/telegram.js'
+import { tencentEmbedResolver } from '../embeds/tencent.js'
 import { tiktokBlockquoteEmbedResolver, tiktokIframeEmbedResolver } from '../embeds/tiktok.js'
 import { transistorEmbedResolver } from '../embeds/transistor.js'
 import {
@@ -162,6 +167,7 @@ const embedResolvers: Array<EmbedResolver> = [
   captivateEmbedResolver,
   codepenWidgetEmbedResolver,
   codepenIframeEmbedResolver,
+  codesandboxIframeEmbedResolver,
   dailymotionEmbedResolver,
   donorboxEmbedResolver,
   imgurBlockquoteEmbedResolver,
@@ -173,6 +179,7 @@ const embedResolvers: Array<EmbedResolver> = [
   jwplayerScriptEmbedResolver,
   jwplayerAmpEmbedResolver,
   jwplayerSetupEmbedResolver,
+  brightcoveExperienceEmbedResolver,
   brightcoveFlashEmbedResolver,
   brightcoveIframeEmbedResolver,
   brightcoveVideoJsEmbedResolver,
@@ -187,9 +194,11 @@ const embedResolvers: Array<EmbedResolver> = [
   facebookXfbmlEmbedResolver,
   facebookAmpEmbedResolver,
   mediavineEmbedResolver,
+  mediavineScriptEmbedResolver,
   mixcloudEmbedResolver,
   podbeanEmbedResolver,
   megaphoneEmbedResolver,
+  megatvEmbedResolver,
   podigeeEmbedResolver,
   podigeeIframeEmbedResolver,
   redditWidgetEmbedResolver,
@@ -218,6 +227,7 @@ const embedResolvers: Array<EmbedResolver> = [
   appleEmbedResolver,
   archiveIframeEmbedResolver,
   archiveFlashEmbedResolver,
+  arteEmbedResolver,
   bandcampEmbedResolver,
   bitchuteEmbedResolver,
   bloggerEmbedResolver,
@@ -226,6 +236,7 @@ const embedResolvers: Array<EmbedResolver> = [
   blueskyS9eEmbedResolver,
   blueskyPostElementEmbedResolver,
   audioboomEmbedResolver,
+  audioboomPlayerEmbedResolver,
   notecomIframeEmbedResolver,
   omnyEmbedResolver,
   odyseeEmbedResolver,
@@ -243,6 +254,7 @@ const embedResolvers: Array<EmbedResolver> = [
   telegramIframeEmbedResolver,
   mastodonEmbedResolver,
   mailruEmbedResolver,
+  tencentEmbedResolver,
 ]
 
 const mediaResolvers: Array<MediaResolver> = [

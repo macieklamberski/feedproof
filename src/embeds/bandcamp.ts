@@ -10,6 +10,20 @@ const sizeRegex = /^size=([a-z0-9_]+)$/
 // The size preset is a path segment and it decides the player's exact pixels, so dropping it
 // would hand a publisher who chose `large` a short wide bar instead. Preserved in the minted
 // url, and used for the height the markup may not state.
+//
+// Measured 2026-09-07 in Chrome against album 1578579597 (8 tracks), track 1637967854, each
+// preset framed at 350 wide and again at 700, the `tall_*` ones at 150, with the frame first at
+// the height below and then at 1200. No preset tracks its width, and only `large` stretches to
+// the frame, its tracklist scrolling inside whatever it gets; the rest lay out to a height of
+// their own and leave the remainder blank. `medium` 120, `small` 42 and `venti` 100 match to
+// the pixel. `grande` paints 100, its controls overlapping a 100-square artwork. `grande2` and
+// `grande3` paint 318 and 376 for this album, both tracklist-long, inside 355 and 415. `short`
+// paints its play and info row inside 23 and shows a second row when given 42. `tall_album` and
+// `tall_track` now serve the same 100-tall bar as `venti`, about 390 wide, clipped at 150 and
+// blank below, so 295 and 270 have no rendered counterpart. `tall2` paints 493 for this album
+// against 450, the tracklist running past the frame. Left as they are because a size change is a
+// behaviour change; they only fire when the carrier states no size, since `decideSize` takes the
+// carrier's first.
 const presetHeights: Record<string, number> = {
   venti: 100,
   grande: 100,

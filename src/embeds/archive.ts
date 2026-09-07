@@ -4,8 +4,10 @@ import { flashVars, keepIfMatches } from '../utils/dom.js'
 import { splitStrayParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen.
-const safeIdentifierRegex = /^[\w.-]+$/
+// Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen. The Flash
+// config and the stranded `&` spelling reach this as raw text no `URL` has folded, so a segment
+// of dots alone is refused too: it would climb out of every path minted from it.
+const safeIdentifierRegex = /^(?!\.+$)[\w.-]+$/
 
 const archiveHosts = ['archive.org']
 
@@ -25,9 +27,16 @@ const archiveHosts = ['archive.org']
 // should begin, so the whole tail lands inside the path segment. Feeds carry it with
 // `playlist=1` and `autoplay=1`, and with the ampersand entity-encoded. Against a live item the
 // `&` spelling answers 404 and the `?` spelling answers 200.
+// The three routes that name an item in their second segment. `stream` is the retired
+// BookReader url and it still resolves: `archive.org/stream/{identifier}` 302s to
+// `details/{identifier}?view=theater` for a real item and 404s for an invented one, and the
+// same identifier answers 200 on `embed` (2026-09-06), so it is the modern player's item under
+// an old name. `download` is deliberately absent: that route serves the files themselves.
+const itemRoutes = ['embed', 'details', 'stream']
+
 const readSegmentParts = (link: string): { head: string; strayParams: string } => {
   const segments = getPathSegments(link)
-  const segment = segments[0] === 'embed' || segments[0] === 'details' ? segments[1] : undefined
+  const segment = itemRoutes.includes(segments[0] ?? '') ? segments[1] : undefined
 
   return splitStrayParams(segment ?? '')
 }
