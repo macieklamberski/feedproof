@@ -1,4 +1,4 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, isAnyOf } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, findConfigScript, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -7,18 +7,25 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 const fileExtensionRegex = /\.[a-z]+$/i
 
 // Letters and digits, which is the whole of what a media id is written in. The length is not
-// checked: the id sits at a fixed position in every carrier, before the first dash of the file
-// name or after `/v2/media/` in a setup call, so no route word can land there, and a wrong id
-// fails the same whether it is minted or passed through. JW has minted eight characters so far,
-// and a bound on that would refuse the next id space silently.
+// checked: the route above and the `/v2/media/` prefix in a setup call are what put the id in
+// its place, and a wrong id fails the same whether it is minted or passed through. JW has minted
+// eight characters so far, and a bound on that would refuse the next id space silently.
 const safeMediaIdRegex = /^[a-zA-Z0-9]+$/
 
 const jwplayerHosts = ['jwplayer.com', 'jwplatform.com']
 
-export const extractJwplayerId = (link: string): string | undefined => {
-  const lastSegment = getPathSegments(link).at(-1)
+// `players` is the embed and `previews` its share page, and both serve the same player for the
+// same id: checked 2026-09-07, `H4GXr873` answers 200 on both and a fabricated id 404 on both.
+// The route is what separates a media id from the marketing site's paths, `jwplayer.com/pricing`,
+// which the eight-character bound used to do by accident and leakily (`products` and `partners`
+// are eight characters). It is also what keeps a `cdn.jwplayer.com/videos/{id}-1280.mp4`
+// enclosure a video rather than a player.
+const playerRoutes = ['players', 'previews']
 
-  if (!lastSegment) {
+export const extractJwplayerId = (link: string): string | undefined => {
+  const [route, lastSegment] = getPathSegments(link).slice(-2)
+
+  if (!lastSegment || !isAnyOf(route ?? '', playerRoutes)) {
     return
   }
 
