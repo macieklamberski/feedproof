@@ -6,7 +6,9 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 const podomaticHost = 'podomatic.com'
 
 // Every id here is decimal, and an episode id and a podcast id look identical, which is why the
-// kind travels with the id.
+// kind travels with the id. The v2 route's podcast segment is held to it as well, even when the
+// episode is the id that travels, because the segment is written into the player url either way
+// and one `URL` never folded, `..%2F..`, would let the feed choose the path.
 const safeIdRegex = /^\d+$/
 
 // The html5 player's three styles, each measured in Chrome at 1200, 500 and 320 pixels wide:
@@ -58,6 +60,11 @@ const readPlayer = (url: URL): Player | undefined => {
   // the canonical link each player page carries.
   if (segments[1] === 'v2' && segments[2] === 'podcast') {
     const podcast = segments[3] ?? ''
+
+    if (!safeIdRegex.test(podcast)) {
+      return
+    }
+
     const episode = url.searchParams.get('episode_id') ?? ''
     const theme = url.searchParams.get('theme')
     const named = safeIdRegex.test(episode) ? `?episode_id=${episode}` : ''

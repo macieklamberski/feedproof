@@ -165,6 +165,14 @@ describe('podomaticResolveEmbed', () => {
 
       expect(podomaticResolveEmbed(value)).toEqual(expected)
     })
+
+    // The episode is a real id, so the podcast segment is the only thing standing between the
+    // feed and the minted path.
+    it('should refuse a podcast segment that is not an id', () => {
+      const value = 'https://www.podomatic.com/embed/v2/podcast/..%2F..%2Fadmin?episode_id=11083318'
+
+      expect(podomaticResolveEmbed(value)).toBeUndefined()
+    })
   })
 
   describe('the carriers left to the generic fallback', () => {
