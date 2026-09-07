@@ -35,9 +35,11 @@ type Subject = { kind: keyof typeof playerHeights; id: string }
 
 // `/e/{id}` is the episode player and `/s/{id}` the same episode's share page: the per-item
 // link a feed carries and the url the per-episode Share menu copies. The two paths take the
-// same id, so the share page collapses onto the player it fronts. Framing the share page
-// itself renders nothing, because it answers under `frame-ancestors 'self'`, and Transistor's
-// own oEmbed for a `/s/` url points its iframe at `/e/{id}` at 180.
+// same id, so the share page collapses onto the player it fronts and stays as the page a reader
+// opens: `/s/9c22a01c` answers 200 at 215,226 bytes while a fabricated id answers 404 at 13,699
+// (probed 2026-09-07). Framing the share page itself renders nothing, because it answers under
+// `frame-ancestors 'self'`, and Transistor's own oEmbed for a `/s/` url points its iframe at
+// `/e/{id}` at 180.
 export const extractTransistorEmbed = (link: string): Subject | undefined => {
   const segments = getPathSegments(link)
   const kind = segments[0]
@@ -78,6 +80,10 @@ export const transistorResolveEmbed = (url: string): EmbedResolverResult | undef
     provider: 'transistor',
     id: `${subjectNames[embed.kind]}/${embed.id}`,
     src: `https://share.transistor.fm/${path}`,
+    // A show mode names no page of its own. The embed slug is not the show's website
+    // subdomain, so `/e/build-your-saas/playlist` plays while `build-your-saas.transistor.fm`
+    // answers 404 and the show sits at `saas.transistor.fm` (probed 2026-09-07).
+    ...(embed.kind === 'e' && { url: `https://share.transistor.fm/s/${embed.id}` }),
     height: playerHeights[embed.kind],
   }
 }
