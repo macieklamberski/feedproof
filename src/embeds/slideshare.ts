@@ -34,13 +34,12 @@ const flashPlayerPathRegex = /\/swf\/(?:ssplayer\d?|doc_player)\.swf$/
 // class would otherwise admit.
 const safePageSegmentRegex = /^(?!\.+$)[A-Za-z0-9_.-]+$/
 
-const composeEmbed = (deck: string, url?: string, title?: string): EmbedResolverResult => {
+const composeEmbed = (deck: string, fields?: Partial<EmbedResolverResult>): EmbedResolverResult => {
   return {
     provider: 'slideshare',
     id: deck,
     src: `https://www.slideshare.net/slideshow/embed_code/${deck}`,
-    url,
-    title,
+    ...fields,
   }
 }
 
@@ -82,34 +81,77 @@ export const slideshareResolveEmbed = (link: string): EmbedResolverResult | unde
     : composeEmbed(deck)
 }
 
-export const slideshareIframeEmbedResolver = createUrlEmbedResolver(
-  slideshareHosts,
-  slideshareResolveEmbed,
-)
+const captionLinkSelector = 'a[href*="slideshare.net/"]'
 
-// The wrapper the Flash snippet builds around the player, which is where the deck's numeric id
-// and its human-facing link live. The player itself carries neither: its swf query names the
-// deck by a document key from a different id space, so the wrapper is the only route to a url
-// that can be minted.
-const readWrapper = (element: Element): { deck?: string; url?: string; title?: string } => {
+// The caption's links all sit on the platform's own host, so the path is what tells them apart:
+// the deck's page is `/{account}/{slug}` and its owner `/{account}`. Counting is also what drops
+// the bare `slideshare.net/` link the 2011 caption writes in the same sentence, which reading the
+// first anchor takes for the deck whenever the deck's own anchor has been stripped.
+const countPageSegments = (anchor: Element): number => {
+  const parsed = parseUrlOnHosts(attr(anchor, 'href'), slideshareHosts)
+
+  return parsed ? getPathSegments(parsed).length : 0
+}
+
+// How far above the carrier the wrapper is looked for, measured over 125 SlideShare carriers
+// sampled from the corpus: 82 of the 90 Flash ones reach the caption within two levels, the
+// `<embed>` sitting inside the `<object>` inside the `__ss_{id}` div, and so do all 20 iframes
+// that carry one. The seven that put a `<span>`, `<p>` or second `<div>` between the object and
+// the wrapper lose their caption here, which is the price of the bound: one more level reaches
+// the post itself, where the first `slideshare.net` link is whichever deck was mentioned
+// earlier, and another deck's caption on this deck's player is worse than none.
+const maxWrapperDepth = 2
+
+// The wrapper the snippet builds around the player, which is where the deck's numeric id and its
+// human-facing links live. Neither player carries them: the swf query names the deck by a
+// document key from a different id space, and the iframe url by an embed key or the numeric id
+// alone, so the wrapper is the only route to a page, a name and an owner.
+const readWrapper = (
+  element: Element,
+): { deck?: string; url?: string; title?: string; author?: string } => {
   let node: Element | null = element
   let deck: string | undefined
-  let anchor: Element | undefined
+  let wrapper: Element | undefined
+  let depth = 0
 
   // Both the outer div and the object inside it carry the id, and only the outer one holds the
-  // deck's link, so finding an id is not a reason to stop climbing.
-  while (node && (!deck || !anchor)) {
+  // deck's links, so finding an id is not a reason to stop climbing.
+  while (node && depth <= maxWrapperDepth && (!deck || !wrapper)) {
     deck ??= attr(node, 'id')?.match(wrapperIdRegex)?.[1]
-    anchor ??= find(node, 'a[href*="slideshare.net/"]')
+    wrapper ??= find(node, captionLinkSelector) ? node : undefined
     node = node.parentElement
+    depth++
   }
+
+  // Both links are read off the one element, so a caption cannot supply the deck while the
+  // owner comes from something else entirely.
+  const page = find(wrapper, captionLinkSelector, (anchor) => countPageSegments(anchor) > 1)
+  const owner = find(wrapper, captionLinkSelector, (anchor) => countPageSegments(anchor) === 1)
 
   return {
     deck,
-    url: attr(anchor, 'href'),
-    title: attr(anchor, 'title') ?? text(anchor),
+    url: attr(page, 'href'),
+    title: attr(page, 'title') ?? text(page),
+    author: text(owner),
   }
 }
+
+// The embed url names the deck and nothing else, so its page, its name and its owner come from
+// the caption the snippet ships with the iframe, the same one the Flash repair reads.
+const slideshareResolveIframeEmbed = (
+  link: string,
+  element: Element,
+): EmbedResolverResult | undefined => {
+  const resolved = slideshareResolveEmbed(link)
+  const { url, title, author } = readWrapper(element)
+
+  return resolved && { ...resolved, url, title, author }
+}
+
+export const slideshareIframeEmbedResolver = createUrlEmbedResolver(
+  slideshareHosts,
+  slideshareResolveIframeEmbed,
+)
 
 // Flash died in 2020 and these embeds have rendered nothing since, but the markup is still in
 // old posts and their feeds. The numeric id in the wrapper is the same id the modern embed
@@ -124,7 +166,7 @@ export const slideshareFlashResolveEmbed = (
     return
   }
 
-  const { deck, url, title } = readWrapper(element)
+  const { deck, ...caption } = readWrapper(element)
 
   if (!deck) {
     return
@@ -137,7 +179,7 @@ export const slideshareFlashResolveEmbed = (
   const slug = keepIfMatches(parsed.searchParams.get('stripped_title'), safePageSegmentRegex)
   const composed = account && slug ? `https://www.slideshare.net/${account}/${slug}` : undefined
 
-  return composeEmbed(deck, url ?? composed, title || undefined)
+  return composeEmbed(deck, { ...caption, url: caption.url ?? composed })
 }
 
 export const slideshareFlashEmbedResolver = createUrlEmbedResolver(

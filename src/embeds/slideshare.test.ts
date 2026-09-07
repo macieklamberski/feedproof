@@ -248,6 +248,99 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // The 2011 snippet trails the wrapper with "View more presentations from {owner}", so the
+    // owner's page and the bare `slideshare.net/` link sit beside the deck's own anchor.
+    it('should read the owner out of the caption the snippet trails', async () => {
+      const value = html`
+        <div id="__ss_6435157">
+          <strong>
+            <a
+              href="http://www.slideshare.net/haraldf/business-quotes-for-2011"
+              title="Business Quotes for 2011"
+              >Business Quotes for 2011</a
+            >
+          </strong>
+          <object id="__sse6435157">
+            <embed
+              src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=110103quotes"
+              type="application/x-shockwave-flash"
+            ></embed>
+          </object>
+          <div>
+            View more <a href="http://www.slideshare.net/">presentations</a> from
+            <a href="http://www.slideshare.net/haraldf">Harald Felgner</a>.
+          </div>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '6435157',
+        src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
+        url: 'http://www.slideshare.net/haraldf/business-quotes-for-2011',
+        title: 'Business Quotes for 2011',
+        author: 'Harald Felgner',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The bare link names no deck, so the word it wraps is not this deck's name.
+    it('should not read the caption home link as the deck when the deck anchor is gone', async () => {
+      const value = html`
+        <div id="__ss_6435157">
+          <object id="__sse6435157">
+            <embed
+              src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=110103quotes"
+              type="application/x-shockwave-flash"
+            ></embed>
+          </object>
+          <div>
+            View more <a href="http://www.slideshare.net/">presentations</a> from
+            <a href="http://www.slideshare.net/haraldf">Harald Felgner</a>.
+          </div>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '6435157',
+        src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
+        author: 'Harald Felgner',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // A wrapper carrying no caption of its own leaves the climb one level short of the post,
+    // where the first slideshare link is whichever deck was mentioned earlier.
+    it('should ignore a deck link that sits outside the wrapper', async () => {
+      const value = html`
+        <div>
+          <p>
+            <a
+              href="https://www.slideshare.net/someoneelse/a-different-deck"
+              title="A Different Deck"
+              >A Different Deck</a
+            >
+          </p>
+          <div id="__ss_6435157">
+            <object id="__sse6435157">
+              <embed
+                src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=110103quotes"
+                type="application/x-shockwave-flash"
+              ></embed>
+            </object>
+          </div>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '6435157',
+        src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should read the id off the object when the outer div is gone', async () => {
       const value = html`
         <object id="__sse6435157">
@@ -384,6 +477,81 @@ describeForEachParser('slideshareIframeEmbedResolver', (parseHtml) => {
     `
 
     expect(await extract(value)).toBeUndefined()
+  })
+
+  // The embed url names the deck by key or id alone, so everything a reader could read comes
+  // from the caption the share dialog ships with the iframe.
+  describe('the caption the share dialog ships beside the iframe', () => {
+    it('should take the deck page, its name and its owner from the caption', async () => {
+      const value = html`
+        <div>
+          <iframe
+            src="https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAY"
+            width="427"
+            height="356"
+          ></iframe>
+          <div>
+            <strong>
+              <a
+                href="https://www.slideshare.net/haraldf/business-quotes-for-2011"
+                title="Business Quotes for 2011"
+                >Business Quotes for 2011</a
+              >
+            </strong>
+            from <strong><a href="https://www.slideshare.net/haraldf">Harald Felgner</a></strong>
+          </div>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '6PCWPGFw9SwsAY',
+        src: 'https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAY',
+        url: 'https://www.slideshare.net/haraldf/business-quotes-for-2011',
+        title: 'Business Quotes for 2011',
+        author: 'Harald Felgner',
+        width: 427,
+        height: 356,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The generation between Flash and the current dialog kept the `__ss_{id}` wrapper and put
+    // an iframe where the object had been, so the caption surrounds the player instead.
+    it('should read the caption out of the wrapper the numeric snippet keeps', async () => {
+      const value = html`
+        <div id="__ss_10579166">
+          <strong>
+            <a
+              href="http://www.slideshare.net/null0x00/make-profit-with-uiredressing-attacks"
+              title="Make profit with UI-Redressing attacks."
+              >Make profit with UI-Redressing attacks.</a
+            >
+          </strong>
+          <iframe
+            src="http://www.slideshare.net/slideshow/embed_code/10579166"
+            width="425"
+            height="355"
+          ></iframe>
+          <div>
+            View more <a href="http://www.slideshare.net/">presentations</a> from
+            <a href="http://www.slideshare.net/null0x00">n|u - The Open Security Community</a>
+          </div>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '10579166',
+        src: 'https://www.slideshare.net/slideshow/embed_code/10579166',
+        url: 'http://www.slideshare.net/null0x00/make-profit-with-uiredressing-attacks',
+        title: 'Make profit with UI-Redressing attacks.',
+        author: 'n|u - The Open Security Community',
+        width: 425,
+        height: 355,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 })
 
