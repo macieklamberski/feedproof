@@ -1,6 +1,6 @@
 import { getPathSegments, isHostOf, isSubdomainOf } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { jsonAttr } from '../utils/dom.js'
+import { jsonAttr, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts, pickUrlParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -16,12 +16,26 @@ const storefrontRegex = /^[a-z]{2}$/
 const safeIdRegex = /^(?:id\d+|\d+|[a-z]{2}\.[a-z0-9-]+)$/i
 const podcastIdPrefixRegex = /^id/
 
+// A track or episode id is always numeric. It comes off the query decoded and is written into
+// the id, so anything else, a separator or a dot segment included, is refused.
+const trackIdRegex = /^\d+$/
+
 // The player is fluid-width and fixed-height, and one item gets a much shorter box than a
 // collection. These are the heights the players render at, measured across widths, and they are
 // a fallback for the shapes that ship no size at all: a height the markup declares is the
 // publisher's choice and wins over these. Apple's own embed code declares 150 for a song, which
 // cuts 25px off the player it opens. A music video is the one kind that keeps a 16:9 picture
 // instead, so it has none. The map doubles as the set of kinds that embed.
+//
+// Re-measured 2026-09-07 in Chrome. Music could not be: `embed.music.apple.com` sat at its grey
+// placeholder with an empty `<main>` for 16 seconds, at top level and inside a frame, so the
+// "measured across widths" above carries no widths, no date and no check. Podcasts rendered. The
+// show player at `podcast/the-daily/id1200361736` fills any frame it gets and has a floor that
+// tracks the width: 180 at 320 wide, 360 at 640, 422 at 1280, inside a 100-tall frame. The
+// episode player, `?i=1000788126765`, has a fixed floor of 160 at all three widths and fills
+// 175 and 450 alike. So 450 and 175 are frames the player fits, not heights it renders on its
+// own, and each fires only when the carrier states no size, since `decideSize` takes the
+// carrier's first.
 const appleHeights: Record<string, number | undefined> = {
   album: 450,
   artist: 450,
@@ -53,9 +67,11 @@ export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined 
   // it is the thing being embedded, and the player is the song one whatever the path says.
   // Where it is absent the id is the path's own, which is numeric for music, `pl.`/`ra.`
   // prefixed for a playlist or station, and `id`-prefixed for a podcast.
-  const trackId = parsed.searchParams.get('i')
+  const trackId = keepIfMatches(parsed.searchParams.get('i'), trackIdRegex)
   const id = trackId ?? pathId.replace(podcastIdPrefixRegex, '')
-  const query = pickUrlParams(url, ['i'])
+  // A refused `i` is dropped from the player url as well: the resolver does not forward a value
+  // it would not put in the id, and the collection player is what the path names without it.
+  const query = trackId ? pickUrlParams(url, ['i']) : ''
 
   return {
     provider: isPodcast ? 'applepodcasts' : 'applemusic',
