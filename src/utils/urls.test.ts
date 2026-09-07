@@ -2,11 +2,13 @@ import { describe, expect, it } from 'bun:test'
 import { baseContext } from '../tests.js'
 import {
   cleanUrl,
+  decodeSegment,
   parseUrlOnHosts,
   pickQueryParams,
   pickUrlParams,
   resolveOrDropUrl,
   resolveOrKeepUrl,
+  splitStrayParams,
 } from './urls.js'
 
 describe('parseUrlOnHosts', () => {
@@ -174,6 +176,53 @@ describe('cleanUrl', () => {
 
     expect(cleanUrl(undefined, { ...baseContext, cleanUrlFn })).toBeUndefined()
     expect(called).toBe(false)
+  })
+})
+
+describe('decodeSegment', () => {
+  it('should decode a percent-encoded segment', () => {
+    const value = 'urn%3Ali%3Ashare%3A6626097641602281472'
+    const expected = 'urn:li:share:6626097641602281472'
+
+    expect(decodeSegment(value)).toBe(expected)
+  })
+
+  it('should leave a plain segment unchanged', () => {
+    const value = 'urn:li:share:6626097641602281472'
+
+    expect(decodeSegment(value)).toBe(value)
+  })
+
+  it('should return undefined for a malformed escape', () => {
+    const value = '%E0%A4%A'
+
+    expect(decodeSegment(value)).toBeUndefined()
+  })
+
+  it('should return undefined for undefined', () => {
+    expect(decodeSegment(undefined)).toBeUndefined()
+  })
+})
+
+describe('splitStrayParams', () => {
+  it('should split the id from the tail at the first ampersand', () => {
+    const value = 'mhrk1978&playlist=1&autoplay=1'
+    const expected = { head: 'mhrk1978', strayParams: 'playlist=1&autoplay=1' }
+
+    expect(splitStrayParams(value)).toEqual(expected)
+  })
+
+  it('should leave a clean segment whole', () => {
+    const value = 'mhrk1978'
+    const expected = { head: 'mhrk1978', strayParams: '' }
+
+    expect(splitStrayParams(value)).toEqual(expected)
+  })
+
+  it('should return an empty head for an empty segment', () => {
+    const expected = { head: '', strayParams: '' }
+
+    expect(splitStrayParams('')).toEqual(expected)
   })
 })
 

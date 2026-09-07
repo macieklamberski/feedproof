@@ -36,6 +36,18 @@ describe('extractBloggerToken', () => {
     expect(extractBloggerToken(value)).toBeUndefined()
   })
 
+  it('should return undefined for an empty token', () => {
+    const value = 'https://www.blogger.com/video.g?token='
+
+    expect(extractBloggerToken(value)).toBeUndefined()
+  })
+
+  it('should read a token shorter than the ones Blogger writes today', () => {
+    const value = 'https://www.blogger.com/video.g?token=AD6v5dz1'
+
+    expect(extractBloggerToken(value)).toBe('AD6v5dz1')
+  })
+
   it('should return undefined for a url that cannot be parsed', () => {
     const value = 'https://['
 

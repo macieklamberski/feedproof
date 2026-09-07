@@ -6,9 +6,16 @@ const safeIdRegex = /^\d+$/
 
 const blubrryHosts = ['blubrry.com']
 
-// 138 across the sampled corpus specimens. Blubrry publishes no oEmbed, so this and the
+// The player is a fixed height on a fluid width. Blubrry publishes no oEmbed, so this and the
 // provider tag are what the resolver adds.
-const playerHeight = 138
+//
+// Measured 2026-09-07 in Chrome against `player.blubrry.com/id/153989314/` and the `?media_url=`
+// form: 164 at 320, 640 and 1280 wide, and still 164 inside a 100-tall frame. Publishers write one
+// more than that, and nearly all of them write something: of 13,604 `player.blubrry.com` iframes
+// across 305 corpus feeds, 13,001 state 165, 311 state 138, and exactly one states no height at
+// all. That one carrier is about all this number reaches, since `decideSize` takes the carrier's
+// first.
+const playerHeight = 164
 
 // Two forms: `/id/{episodeId}/` names the episode, while `/?media_url={mp3}` names the file
 // directly. The media url is not promoted to a native <audio>: a provider's player iframe stays
@@ -54,3 +61,7 @@ export const blubrryResolveEmbed = (url: string): EmbedResolverResult | undefine
 }
 
 export const blubrryEmbedResolver = createUrlEmbedResolver(blubrryHosts, blubrryResolveEmbed)
+
+// No play request. The page listens for a bare number, `-1` clicks Play, and the button flips
+// to its playing state, but loaded in Chrome by a click the audio never started from it. Nothing
+// to send until it does.

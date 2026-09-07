@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { acastEmbedResolver } from '../../embeds/acast.js'
 import { blubrryEmbedResolver } from '../../embeds/blubrry.js'
+import { soundcloudEmbedResolver } from '../../embeds/soundcloud.js'
 import { youtubeIframeEmbedResolver } from '../../embeds/youtube.js'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
 import type { EmbedResolver, Enclosure, TransformContext } from '../../types.js'
@@ -21,6 +22,56 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
   const transform = (value: string, context: TransformContext = baseContext) => {
     return applyDomTransforms(parseHtml(value), [injectEnclosures(context)])
   }
+
+  // SoundCloud distributes a podcast as the audio file itself, named after the track, so the
+  // enclosure names a player even though it is a media url. Framing the file shows nothing,
+  // which is what makes claiming it without recovering the track worse than leaving it alone.
+  it('should inject a soundcloud podcast enclosure as its player', async () => {
+    const value = '<p>Episode notes</p>'
+    const context: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [soundcloudEmbedResolver],
+      enclosures: [
+        {
+          url: 'https://feeds.soundcloud.com/stream/2386923495-linear-digressions-ai.mp3',
+          type: 'audio/mpeg',
+        },
+      ],
+    }
+    const expected = html`
+      <div
+        data-enclosure=""
+        data-embed-height="166"
+        data-embed-id="tracks/2386923495"
+        data-embed-provider="soundcloud"
+        data-embed-src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2386923495"
+      ></div>
+      <p>Episode notes</p>
+    `
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
+
+  it('should inject a soundcloud audio enclosure naming no track as a native audio element', async () => {
+    const value = '<p>Episode notes</p>'
+    const context: TransformContext = {
+      ...baseContext,
+      widgetResolvers: [soundcloudEmbedResolver],
+      enclosures: [
+        { url: 'https://feeds.soundcloud.com/stream/nameless-episode.mp3', type: 'audio/mpeg' },
+      ],
+    }
+    const expected = html`
+      <audio
+        src="https://feeds.soundcloud.com/stream/nameless-episode.mp3"
+        controls
+        data-enclosure=""
+      ></audio>
+      <p>Episode notes</p>
+    `
+
+    expect(await transform(value, context)).toEqualHtml(expected)
+  })
 
   it('should inject video enclosure as native video element', async () => {
     const value = '<p>Episode notes</p>'
@@ -218,6 +269,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
   // the markup: every url resolved, and the canonical one cleaned.
   describe('placeholder fields', () => {
     const exampleResolver: EmbedResolver = {
+      kind: 'embed',
       selector: 'iframe[src*="example.com"]',
       extract: () => ({
         provider: 'example',
@@ -474,6 +526,51 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       ])
 
       expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    // Substack puts a post's cover image in the enclosure, and a post with no cover gets the
+    // publication logo there instead, so the logo would head every imageless post.
+    it('should not inject an image enclosure that is the feed image', async () => {
+      const value = '<p>Content</p>'
+      const context: TransformContext = {
+        ...withEnclosures([{ url: 'https://example.com/logo.png', type: 'image/jpeg' }]),
+        feedImageUrls: ['https://example.com/logo.png'],
+      }
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    it('should not inject the feed image served as another rendition', async () => {
+      const value = '<p>Content</p>'
+      const logo = 'https%3A%2F%2Fmedia.example.com%2Fpublic%2Fimages%2Flogo_1010x1010.png'
+      const context: TransformContext = {
+        ...withEnclosures([
+          {
+            url: `https://substackcdn.com/image/fetch/$s_!9H2b!,w_256,c_limit,f_auto/${logo}`,
+            type: 'image/jpeg',
+          },
+        ]),
+        feedImageUrls: [`https://substackcdn.com/image/fetch/w_512,c_limit,f_auto/${logo}`],
+      }
+
+      expect(await transform(value, context)).toEqualHtml(value)
+    })
+
+    it('should keep a real image enclosure and skip the feed image in the same item', async () => {
+      const value = '<p>Content</p>'
+      const context: TransformContext = {
+        ...withEnclosures([
+          { url: 'https://example.com/logo.png', type: 'image/jpeg' },
+          { url: 'https://example.com/photo.jpg', type: 'image/jpeg' },
+        ]),
+        feedImageUrls: ['https://example.com/logo.png'],
+      }
+      const expected = html`
+        <img src="https://example.com/photo.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
     })
 
     it('should collapse a WordPress -WxH variant to the full-res original', async () => {

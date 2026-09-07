@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import {
-  defaultCiteResolvers,
+  defaultEmbedRenderHints,
   defaultNonContentSelectors,
   defaultWidgetResolvers,
 } from './defaults.js'
@@ -35,7 +35,7 @@ describe('defaults', () => {
     wrapper.appendChild(placeholder)
     document.body.appendChild(wrapper)
 
-    const matched = [...defaultCiteResolvers, ...defaultWidgetResolvers]
+    const matched = defaultWidgetResolvers
       .filter((resolver) => document.querySelectorAll(resolver.selector).length > 0)
       .map((resolver) => resolver.selector)
 
@@ -43,9 +43,12 @@ describe('defaults', () => {
   })
 
   // Claiming a selector another resolver already owns: the later one only ever sees the
-  // cards the first declined, so it looks registered while never really firing.
-  it('should not register the same selector twice', () => {
-    const selectors = defaultCiteResolvers.map((resolver) => resolver.selector)
+  // cards the first declined, so it looks registered while never really firing. Cite-only:
+  // the url-keyed embed resolvers share the generic iframe selector on purpose.
+  it('should not register the same cite selector twice', () => {
+    const selectors = defaultWidgetResolvers
+      .filter((resolver) => resolver.kind === 'cite')
+      .map((resolver) => resolver.selector)
     const duplicates = selectors.filter((selector, index) => {
       return selectors.indexOf(selector) !== index
     })
@@ -56,7 +59,7 @@ describe('defaults', () => {
   // stripNonContentElements runs before the embed and cite transforms, so a selector
   // registered in both lists is always stripped and its resolver can never fire.
   it('should not list any resolver selector as a non-content selector', () => {
-    const resolverSelectors = [...defaultCiteResolvers, ...defaultWidgetResolvers]
+    const resolverSelectors = defaultWidgetResolvers
       .flatMap((resolver) => resolver.selector.split(','))
       .map((selector) => selector.trim())
     const overlap = resolverSelectors.filter((selector) => {
@@ -65,4 +68,45 @@ describe('defaults', () => {
 
     expect(overlap).toEqual([])
   })
+})
+
+const named = defaultEmbedRenderHints.map((hint) => [hint.provider, hint] as const)
+
+describe('defaultEmbedRenderHints', () => {
+  it('should name each provider once', () => {
+    const providers = defaultEmbedRenderHints.map((hint) => hint.provider)
+
+    expect(new Set(providers).size).toBe(providers.length)
+  })
+
+  // A hint with nothing in it would register a provider and change nothing for a reader.
+  it.each(named)('should give %s something a reader can act on', (_, hint) => {
+    expect(hint.autoplayParams ?? hint.requestPlay ?? hint.readHeight).toBeDefined()
+  })
+
+  // A reader compares `event.origin` with it by equality, so a path or a trailing slash
+  // would never match.
+  it.each(named.filter(([, hint]) => hint.origin))(
+    'should state the %s origin as a bare origin',
+    (_, hint) => {
+      const origin = hint.origin ?? ''
+
+      expect(new URL(origin).origin).toBe(origin)
+    },
+  )
+
+  // A ready signal is only worth reading for a request that waits on it.
+  it.each(named.filter(([, hint]) => hint.isReady))(
+    'should have a %s play request to send once ready',
+    (_, hint) => {
+      expect(hint.requestPlay).toBeDefined()
+    },
+  )
+
+  it.each(named.filter(([, hint]) => hint.requestHeight !== undefined))(
+    'should read the answer to the %s height request',
+    (_, hint) => {
+      expect(hint.readHeight).toBeDefined()
+    },
+  )
 })

@@ -10,7 +10,10 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
 
   const transform = (value: string) => {
     return applyDomTransforms(parseHtml(value), [
-      convertWidgets({ ...baseContext, widgetResolvers: [ghostMediaResolver] }),
+      convertWidgets({
+        ...baseContext,
+        widgetResolvers: [ghostMediaResolver],
+      }),
     ])
   }
 

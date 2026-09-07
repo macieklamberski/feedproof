@@ -5,7 +5,10 @@ import type { Nullish } from 'trousse'
 // missing property reads as a `string` the callers would stop guarding.
 export type Declarations = Record<string, string | undefined>
 
-const importantRegex = /\s*!\s*important\s*$/i
+// Nothing is matched ahead of the `!`, because the value comes off a feed and an unbounded
+// `\s*` in front of it costs two seconds on a 120 KB declaration. The whitespace it leaves
+// behind is trimmed with the rest of the value.
+const importantRegex = /!\s*important\s*$/i
 // An unterminated comment runs to the end of the attribute, the way a browser closes it.
 const commentRegex = /\/\*.*?(?:\*\/|$)/gs
 

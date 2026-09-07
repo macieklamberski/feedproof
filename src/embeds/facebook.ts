@@ -43,6 +43,23 @@ const readFallback = (blockquote: Nullish<Element>): Partial<EmbedResolverResult
 
 const fallbackSelector = '.fb-xfbml-parse-ignore blockquote, blockquote.fb-xfbml-parse-ignore'
 
+// A carrier that does not already hold a plugin url resolves to one built around the page it
+// named, which is the only form Facebook frames. The page is also the canonical url, so a caller
+// that knows a better id than the href states it in `extra`.
+const composePluginEmbed = (
+  plugin: string,
+  href: string,
+  extra: Partial<EmbedResolverResult>,
+): EmbedResolverResult => {
+  return {
+    provider: 'facebook',
+    id: href,
+    src: `https://www.facebook.com/plugins/${plugin}.php?href=${encodeURIComponent(href)}`,
+    url: href,
+    ...extra,
+  }
+}
+
 const extractEmbed = (
   element: Element,
   plugin: string,
@@ -60,13 +77,7 @@ const extractEmbed = (
     return
   }
 
-  return {
-    provider: 'facebook',
-    id: href,
-    src: `https://www.facebook.com/plugins/${plugin}.php?href=${encodeURIComponent(href)}`,
-    url: href,
-    ...readFallback(find(element, fallbackSelector)),
-  }
+  return composePluginEmbed(plugin, href, readFallback(find(element, fallbackSelector)))
 }
 
 // The SDK widget div, which is one carrier and not two: a post and a video arrive as the same
@@ -128,6 +139,30 @@ const querySize = (url: URL): { width?: number; height?: number } => {
   }
 }
 
+// A video, reel or watch path is the video player; everything else Facebook frames is a post.
+// The word has to be a whole segment: `\b` also matches before `-` and `.`, both legal in a
+// page's vanity name, so it read `reel-big-fish` and `video.game.news` as videos.
+const videoPathRegex = /(?:^|\/)(?:videos?|reel|watch)(?:\/|$)/i
+
+// The content pages Facebook frames, as a carrier holds them: a page's post, a page's video
+// (with the `vb.{id}` segment old exports wrote, or without) and a reel. Each needs something
+// after the route word, because `/{page}/posts/` and `/{page}/videos/` with nothing after them
+// are that page's Posts and Videos tabs, which are listings rather than content.
+const contentPathRegex = /^\/(?:reel\/[^/]+|[^/]+\/(?:posts|videos)\/[^/]+)/
+
+// The watch page names its video in the query rather than the path, so the bare `/watch` hub is
+// not content: it is Facebook's video front page and every visitor sees something different.
+const watchPathRegex = /^\/watch\/?$/
+
+// A Watch video id is numeric, in every spelling the corpus and the platform's own share urls
+// carry. Junk in `v` would otherwise mint a plugin frame that cannot load, where the generic
+// placeholder at least holds the url the publisher wrote.
+const safeWatchIdRegex = /^\d+$/
+
+const isWatchPage = (url: URL): boolean => {
+  return watchPathRegex.test(url.pathname) && safeWatchIdRegex.test(url.searchParams.get('v') ?? '')
+}
+
 export const facebookResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url)
 
@@ -144,13 +179,17 @@ export const facebookResolveEmbed = (url: string): EmbedResolverResult | undefin
 
     const watchUrl = `https://www.facebook.com/watch/?v=${videoId}`
 
-    return {
-      provider: 'facebook',
-      id: videoId,
-      src: `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(watchUrl)}`,
-      url: watchUrl,
-      ...querySize(parsed),
-    }
+    return composePluginEmbed('video', watchUrl, { id: videoId, ...querySize(parsed) })
+  }
+
+  // A carrier holding the page itself rather than a plugin url, which is what a publisher pastes
+  // straight from the address bar. Facebook refuses to be framed (`x-frame-options`), so left
+  // unclaimed it reaches a reader as a placeholder pointing at a blank frame. The plugin takes the
+  // page url as its href, which is the same repair the fallback blockquote already performs.
+  if (contentPathRegex.test(parsed.pathname) || isWatchPage(parsed)) {
+    const plugin = videoPathRegex.test(parsed.pathname) ? 'video' : 'post'
+
+    return composePluginEmbed(plugin, url, querySize(parsed))
   }
 
   if (!pluginPathRegex.test(parsed.pathname)) {
@@ -181,11 +220,8 @@ export const facebookIframeEmbedResolver = createUrlEmbedResolver(
 )
 
 // The same fallback blockquote as above, but the publisher kept only it and dropped the widget
-// div, so nothing names the plugin. The url in `cite` does: a video, reel or watch path is the
-// video player, everything else is a post. Registered after the widget div, whose subtree this
-// would otherwise match a second time.
-const videoPathRegex = /\/(?:videos?|reel|watch)\b/i
-
+// div, so nothing names the plugin. Registered after the widget div, whose subtree this would
+// otherwise match a second time.
 export const facebookBlockquoteEmbedResolver = createMarkupEmbedResolver(
   fallbackSelector,
   (element) => {
@@ -198,12 +234,6 @@ export const facebookBlockquoteEmbedResolver = createMarkupEmbedResolver(
 
     const plugin = videoPathRegex.test(parsed.pathname) ? 'video' : 'post'
 
-    return {
-      provider: 'facebook',
-      id: cite,
-      src: `https://www.facebook.com/plugins/${plugin}.php?href=${encodeURIComponent(cite)}`,
-      url: cite,
-      ...readFallback(element),
-    }
+    return composePluginEmbed(plugin, cite, readFallback(element))
   },
 )

@@ -5,6 +5,7 @@ import {
   substackCrossPostCiteResolver,
   substackOwnPostCiteResolver,
   substackPostEmbedCiteResolver,
+  substackPublicationCiteResolver,
 } from './substack.js'
 
 // Substack ships these cards as empty divs whose data lives in a `data-attrs` JSON blob,
@@ -423,6 +424,118 @@ describeForEachParser('substackPostEmbedCiteResolver', (parseHtml) => {
           <a data-post-link href="https://thereader.example.com/p/the-quiet-part">Read on Substack</a>
         </div>
       `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+})
+
+describeForEachParser('substackPublicationCiteResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, substackPublicationCiteResolver)
+
+  describe('happy paths', () => {
+    it('should extract all fields from a complete publication card', async () => {
+      const value = makeContainer('embedded-publication-wrap', {
+        id: 729184,
+        name: 'Deep State Marauder',
+        base_url: 'https://marauder.example.com',
+        hero_text: 'Removing the Constitutional Crisis we are currently in.',
+        author_name: 'Author name',
+        logo_url: 'https://cdn.example.com/logo.png',
+        logo_bg_color: '#016161',
+        show_subscribe: true,
+        language: 'en',
+      })
+      const expected: CiteResolverResult = {
+        provider: 'substack',
+        url: 'https://marauder.example.com',
+        title: 'Deep State Marauder',
+        description: 'Removing the Constitutional Crisis we are currently in.',
+        author: 'Author name',
+        icon: 'https://cdn.example.com/logo.png',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should extract a card carrying no logo', async () => {
+      const value = makeContainer('embedded-publication-wrap', {
+        name: 'Deep State Marauder',
+        base_url: 'https://marauder.example.com',
+        hero_text: 'Removing the Constitutional Crisis we are currently in.',
+        author_name: 'Author name',
+      })
+      const result = await extract(value)
+
+      expect(result?.icon).toBeUndefined()
+      expect(result?.title).toBe('Deep State Marauder')
+    })
+
+    it('should extract a card carrying no hero text', async () => {
+      const value = makeContainer('embedded-publication-wrap', {
+        name: 'Deep State Marauder',
+        base_url: 'https://marauder.example.com',
+        author_name: 'Author name',
+      })
+      const result = await extract(value)
+
+      expect(result?.description).toBeUndefined()
+      expect(result?.url).toBe('https://marauder.example.com')
+    })
+
+    it('should trim every text field', async () => {
+      const value = makeContainer('embedded-publication-wrap', {
+        name: '  Deep State Marauder  ',
+        base_url: '  https://marauder.example.com  ',
+        hero_text: '  A tagline.  ',
+        author_name: '  Author name  ',
+        logo_url: '  https://cdn.example.com/logo.png  ',
+      })
+      const expected: CiteResolverResult = {
+        provider: 'substack',
+        url: 'https://marauder.example.com',
+        title: 'Deep State Marauder',
+        description: 'A tagline.',
+        author: 'Author name',
+        icon: 'https://cdn.example.com/logo.png',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should return undefined when base_url is missing', async () => {
+      const value = makeContainer('embedded-publication-wrap', { name: 'Deep State Marauder' })
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when name is missing', async () => {
+      const value = makeContainer('embedded-publication-wrap', {
+        base_url: 'https://marauder.example.com',
+      })
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when name is whitespace-only', async () => {
+      const value = makeContainer('embedded-publication-wrap', {
+        name: '   ',
+        base_url: 'https://marauder.example.com',
+      })
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when data-attrs is malformed json', async () => {
+      const value = makeContainer('embedded-publication-wrap', '{"name":')
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when data-attrs is absent', async () => {
+      const value = makeContainer('embedded-publication-wrap')
 
       expect(await extract(value)).toBeUndefined()
     })

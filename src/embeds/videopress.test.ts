@@ -68,6 +68,18 @@ describeForEachParser('videopressIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should read a guid longer than the eight characters minted so far', async () => {
+      const value = '<iframe src="https://videopress.com/embed/bDC13L49x"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'videopress',
+        id: 'bDC13L49x',
+        src: 'https://videopress.com/embed/bDC13L49x',
+        url: 'https://videopress.com/v/bDC13L49x',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should resolve the page url a page builder frames as the player', async () => {
       const value = '<iframe src="https://videopress.com/v/FLEAXUMB"></iframe>'
       const expected: EmbedResolverResult = {
@@ -82,7 +94,7 @@ describeForEachParser('videopressIframeEmbedResolver', (parseHtml) => {
   })
 
   describe('sad paths', () => {
-    it('should ignore a guid that is not eight letters and digits', async () => {
+    it('should ignore a guid holding a separator', async () => {
       const value = '<iframe src="https://videopress.com/embed/FLEAXUMB-extra"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
@@ -222,6 +234,25 @@ describeForEachParser('videopressFlashEmbedResolver', (parseHtml) => {
       `
 
       expect(await extract(value)).toBeUndefined()
+    })
+
+    // The carrier states a guid in two places and they disagree, so each is validated rather
+    // than the flashvars one winning merely by being present.
+    it('should read the src guid when the flashvars guid is malformed', async () => {
+      const value = html`
+        <embed
+          src="http://s0.videopress.com/player.swf?guid=kUJmAcSf&v=1"
+          flashvars="guid=../etc&isDynamicSeeking=false"
+        ></embed>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'videopress',
+        id: 'kUJmAcSf',
+        src: 'https://videopress.com/embed/kUJmAcSf',
+        url: 'https://videopress.com/v/kUJmAcSf',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should ignore a swf that is not the player', async () => {

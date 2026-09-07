@@ -28,8 +28,44 @@ describe('extractMixcloudShow', () => {
     expect(extractMixcloudShow(value)).toBe(expected)
   })
 
-  it('should return undefined when there is no feed parameter', () => {
-    const value = 'https://www.mixcloud.com/discover/house/'
+  // The page url a person copies from the address bar. It carries no `feed` parameter, so the
+  // show comes from the path itself.
+  it('should read a show from the page path', () => {
+    const value = 'https://www.mixcloud.com/photogmusic/no-filter-may-28-2018-hour-one/'
+    const expected = 'photogmusic/no-filter-may-28-2018-hour-one'
+
+    expect(extractMixcloudShow(value)).toBe(expected)
+  })
+
+  // Each of these takes the shape of a show and is a page of the site instead. The show above
+  // is the control: it has the same two-segment shape and still reads.
+  it.each([
+    'https://www.mixcloud.com/discover/house/',
+    'https://www.mixcloud.com/genres/house/',
+    'https://www.mixcloud.com/categories/house/',
+    'https://www.mixcloud.com/tag/house/',
+    'https://www.mixcloud.com/live/photogmusic/',
+    'https://www.mixcloud.com/photogmusic/uploads/',
+    'https://www.mixcloud.com/photogmusic/favorites/',
+    'https://www.mixcloud.com/photogmusic/listens/',
+    'https://www.mixcloud.com/photogmusic/stream/',
+    'https://www.mixcloud.com/photogmusic/playlists/',
+  ])('should return undefined for the site page %s', (value) => {
+    expect(extractMixcloudShow(value)).toBeUndefined()
+  })
+
+  // Without the site-segment check the widget's own two-segment url reads as the user `widget`
+  // with the show `iframe`, which is what a carrier stripped of its parameters would be.
+  it('should return undefined for the widget url carrying no feed parameter', () => {
+    const value = 'https://www.mixcloud.com/widget/iframe/'
+
+    expect(extractMixcloudShow(value)).toBeUndefined()
+  })
+
+  // The same exclusion reaches the parameter, where it was already wrong: this minted
+  // `mixcloud.com/photogmusic/uploads/` as though a listing page were a show.
+  it('should return undefined for a feed parameter naming a listing page', () => {
+    const value = 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fuploads%2F'
 
     expect(extractMixcloudShow(value)).toBeUndefined()
   })
@@ -85,6 +121,55 @@ describe('mixcloudResolveEmbed', () => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      height: 160,
+    }
+
+    expect(mixcloudResolveEmbed(value)).toEqual(expected)
+  })
+
+  // The display options pick the player, so they ride through and the height follows them.
+  it('should carry the display options and size the mini player by them', () => {
+    const value =
+      'https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&light=1&mini=1&feed=%2Fdjgavinboyd%2Fsoul-has-no-tempo%2F'
+    const expected: EmbedResolverResult = {
+      provider: 'mixcloud',
+      id: 'djgavinboyd/soul-has-no-tempo',
+      src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fdjgavinboyd%2Fsoul-has-no-tempo%2F&mini=1&hide_cover=1&light=1',
+      url: 'https://www.mixcloud.com/djgavinboyd/soul-has-no-tempo/',
+      height: 60,
+    }
+
+    expect(mixcloudResolveEmbed(value)).toEqual(expected)
+  })
+
+  // The bar shrinks to the mini height only with the cover hidden: with it on, the artwork
+  // player is what `mini` selects, and that one fills whatever height it gets.
+  it('should keep the full height for a mini player showing its cover', () => {
+    const value =
+      'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F&mini=1'
+    const expected: EmbedResolverResult = {
+      provider: 'mixcloud',
+      id: 'photogmusic/no-filter',
+      src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F&mini=1',
+      url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      height: 160,
+    }
+
+    expect(mixcloudResolveEmbed(value)).toEqual(expected)
+  })
+
+  // Only a flag set to `1` is a display option. Anything else in the query, the legacy
+  // `embed_type` or a flag switched off, is not written back.
+  it('should drop a display option that is not switched on', () => {
+    const value =
+      'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F&mini=0&autoplay=1'
+
+    const expected: EmbedResolverResult = {
+      provider: 'mixcloud',
+      id: 'photogmusic/no-filter',
+      src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
+      url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      height: 160,
     }
 
     expect(mixcloudResolveEmbed(value)).toEqual(expected)
@@ -94,7 +179,8 @@ describe('mixcloudResolveEmbed', () => {
 describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, mixcloudEmbedResolver)
 
-  it('should resolve the widget iframe', async () => {
+  // The carrier's height is for a player Mixcloud no longer draws, so the measured one wins.
+  it('should size the widget iframe by the player, not the carrier', async () => {
     const value = html`
       <iframe
         width="100%"
@@ -107,7 +193,7 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
-      height: 400,
+      height: 160,
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -127,6 +213,7 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
       id: 'FakeIDRadio/4-natty-champs',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2FFakeIDRadio%2F4-natty-champs%2F',
       url: 'https://www.mixcloud.com/FakeIDRadio/4-natty-champs/',
+      height: 160,
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -136,5 +223,20 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
     const value = '<iframe src="https://www.mixcloud.com/discover/house/"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
+  })
+
+  // `injectEnclosures` synthesizes a carrier for every enclosure and offers it to the url
+  // resolvers, so a feed naming its show by its page url reaches the resolver this way.
+  it('should resolve a show page framed as an embed', async () => {
+    const value = '<iframe src="https://www.mixcloud.com/photogmusic/no-filter/"></iframe>'
+    const expected: EmbedResolverResult = {
+      provider: 'mixcloud',
+      id: 'photogmusic/no-filter',
+      src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
+      url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      height: 160,
+    }
+
+    expect(await extract(value)).toEqual(expected)
   })
 })

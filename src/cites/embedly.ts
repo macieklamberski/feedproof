@@ -15,6 +15,7 @@ import { attr, find, text } from '../utils/dom.js'
 // The rich card (thumbnail, publisher) only exists in the hydrated iframe, so even the
 // blockquote carries only url, title and description.
 export const embedlyCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: 'blockquote.embedly-card',
   extract: (element) => {
     return buildCite({

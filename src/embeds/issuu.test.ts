@@ -267,6 +267,12 @@ describeForEachParser('issuuIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    it('should return undefined for names that are dot segments', async () => {
+      const value = '<iframe src="https://e.issuu.com/embed.html?u=..&d=.."></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     it('should not claim another host spelling the embed path', async () => {
       const value = html`
         <iframe src="https://evil.test/embed.html?u=ecosistemaurbano&d=paisaje_transversal"></iframe>
@@ -337,6 +343,57 @@ describeForEachParser('issuuIframeEmbedResolver', (parseHtml) => {
       }
 
       expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  // A carrier framing the reader page rather than the embed, which is what a publisher pastes
+  // from the address bar. The document is named the same way the widget div's `data-url` names
+  // it, so both go through one reader.
+  describe('the reader page', () => {
+    it('should mint the embed url from a reader page', async () => {
+      const value =
+        '<iframe title="The Beast" src="https://issuu.com/basilikimetatroulou/docs/xyz_9_1_final"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'issuu',
+        id: 'basilikimetatroulou/xyz_9_1_final',
+        src: 'https://e.issuu.com/embed.html?u=basilikimetatroulou&d=xyz_9_1_final',
+        url: 'https://issuu.com/basilikimetatroulou/docs/xyz_9_1_final',
+        title: 'The Beast',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should carry the page number a reader page states', async () => {
+      const value =
+        '<iframe src="https://issuu.com/basilikimetatroulou/docs/xyz_9_1_final/1"></iframe>'
+
+      const expected: EmbedResolverResult = {
+        provider: 'issuu',
+        id: 'basilikimetatroulou/xyz_9_1_final',
+        src: 'https://e.issuu.com/embed.html?u=basilikimetatroulou&d=xyz_9_1_final&p=1',
+        url: 'https://issuu.com/basilikimetatroulou/docs/xyz_9_1_final',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The enclosure probe offers every attachment a feed carries to each url resolver, so a
+    // document name that is a filename would take the place of a playable or downloadable file.
+    it.each([
+      '<iframe src="https://issuu.com/pub/docs/report.pdf"></iframe>',
+      '<iframe src="https://issuu.com/pub/docs/episode.mp3"></iframe>',
+      '<iframe src="https://issuu.com/pub/docs/cover.jpg"></iframe>',
+    ])('should return undefined for %s', async (value) => {
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for an issuu path naming no document', async () => {
+      const publisher = '<iframe src="https://issuu.com/basilikimetatroulou"></iframe>'
+      const stack = '<iframe src="https://issuu.com/basilikimetatroulou/stacks/abc"></iframe>'
+
+      expect(await extract(publisher)).toBeUndefined()
+      expect(await extract(stack)).toBeUndefined()
     })
   })
 

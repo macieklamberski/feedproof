@@ -1,5 +1,6 @@
 import type { MediaResolver, MediaResolverResult } from '../types.js'
 import { jsonAttr } from '../utils/dom.js'
+import { uuidRegex } from '../utils/urls.js'
 
 // Substack uploads reach a feed as an empty div naming the file by a UUID, with no url in
 // the markup and none on the rendered page either: the web player fetches it after load.
@@ -21,9 +22,8 @@ type MediaAttrs = {
   mediaUploadId?: string
 }
 
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
 export const substackMediaResolver: MediaResolver = {
+  kind: 'media',
   selector: '.native-video-embed, .native-audio-embed',
   extract: (element): MediaResolverResult | undefined => {
     const attrs = jsonAttr<MediaAttrs>(element, 'data-attrs')

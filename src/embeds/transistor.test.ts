@@ -23,14 +23,48 @@ describe('extractTransistorEmbed', () => {
     expect(extractTransistorEmbed(value)).toEqual(expected)
   })
 
-  it('should read a show playlist', () => {
+  // Transistor has minted eight-character episode ids so far, so only the alphabet is checked.
+  it('should read an episode id longer than the ones minted so far', () => {
+    const value = 'https://share.transistor.fm/e/a1b2c3d4e5f6g7h8'
+    const expected = {
+      kind: 'e',
+      id: 'a1b2c3d4e5f6g7h8',
+    } as const
+
+    expect(extractTransistorEmbed(value)).toEqual(expected)
+  })
+
+  it('should read an episode id shorter than the ones minted so far', () => {
+    const value = 'https://share.transistor.fm/e/a1b2c'
+    const expected = {
+      kind: 'e',
+      id: 'a1b2c',
+    } as const
+
+    expect(extractTransistorEmbed(value)).toEqual(expected)
+  })
+
+  // The share page and the player take the same id, so the share url reads as the episode.
+  it('should read an episode from its share page url', () => {
     const value = 'https://share.transistor.fm/s/9f8e7d6c'
     const expected = {
-      kind: 's',
+      kind: 'e',
       id: '9f8e7d6c',
     } as const
 
     expect(extractTransistorEmbed(value)).toEqual(expected)
+  })
+
+  // Transistor writes an episode's transcript beside it as `/s/{id}/{token}.{ext}`. The share
+  // url above uses the same id, so it is the control: the sidecar is refused and the episode
+  // it sits beside still reads.
+  it.each([
+    'https://share.transistor.fm/s/9f8e7d6c/8a7b6c5d.vtt',
+    'https://share.transistor.fm/s/9f8e7d6c/8a7b6c5d.srt',
+    'https://share.transistor.fm/s/9f8e7d6c/8a7b6c5d.txt',
+    'https://share.transistor.fm/s/9f8e7d6c/8a7b6c5d.json',
+  ])('should return undefined for the transcript sidecar %s', (value) => {
+    expect(extractTransistorEmbed(value)).toBeUndefined()
   })
 
   // Real Transistor examples. Dropping the mode segment would mint `/e/{slug}`, which asks for
@@ -66,6 +100,26 @@ describe('extractTransistorEmbed', () => {
     expect(extractTransistorEmbed(value)).toEqual(expected)
   })
 
+  it('should read a single-character show slug', () => {
+    const value = 'https://share.transistor.fm/e/z/playlist'
+    const expected = {
+      kind: 'playlist',
+      id: 'z',
+    } as const
+
+    expect(extractTransistorEmbed(value)).toEqual(expected)
+  })
+
+  // With no length left on either id, the alphabet is the whole guard, and excluding the dot is
+  // what keeps a file on the host from reading as an episode.
+  it.each([
+    'https://share.transistor.fm/e/9f8e7d6c.mp3',
+    'https://share.transistor.fm/s/9f8e7d6c.mp3',
+    'https://share.transistor.fm/e/build-your-saas.mp3/latest',
+  ])('should return undefined for a file on the host at %s', (value) => {
+    expect(extractTransistorEmbed(value)).toBeUndefined()
+  })
+
   it('should return undefined for a transistor url naming nothing', () => {
     const value = 'https://share.transistor.fm/pricing'
 
@@ -93,13 +147,15 @@ describe('transistorResolveEmbed', () => {
     expect(transistorResolveEmbed(value)).toEqual(expected)
   })
 
-  it('should size a show playlist taller', () => {
+  // The share page refuses framing, so the mint has to be the `/e/` player it fronts, which
+  // takes the same id.
+  it('should mint the episode player from a share page url', () => {
     const value = 'https://share.transistor.fm/s/9f8e7d6c'
     const expected: EmbedResolverResult = {
       provider: 'transistor',
-      id: 'show/9f8e7d6c',
-      src: 'https://share.transistor.fm/s/9f8e7d6c',
-      height: 390,
+      id: 'episode/9f8e7d6c',
+      src: 'https://share.transistor.fm/e/9f8e7d6c',
+      height: 180,
     }
 
     expect(transistorResolveEmbed(value)).toEqual(expected)
@@ -132,6 +188,14 @@ describe('transistorResolveEmbed', () => {
 
   it('should return undefined for a transistor url naming no episode', () => {
     const value = 'https://share.transistor.fm/about'
+
+    expect(transistorResolveEmbed(value)).toBeUndefined()
+  })
+
+  // `injectEnclosures` offers every enclosure to every url resolver, so a transcript listed as
+  // one reached this and came back as the show player.
+  it('should return undefined for a transcript listed as an enclosure', () => {
+    const value = 'https://share.transistor.fm/s/9f8e7d6c/8a7b6c5d.vtt'
 
     expect(transistorResolveEmbed(value)).toBeUndefined()
   })

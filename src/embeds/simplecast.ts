@@ -1,14 +1,14 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { uuidRegex } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const legacyIdRegex = /^[0-9a-f]{8}$/i
 const numericIdRegex = /^\d+$/
 
 const simplecastHosts = ['simplecast.com']
 
-// Fixed across every specimen: 200 in 75 of 75 sampled corpus iframes.
+// The one height every iframe states.
 const playerHeight = 200
 
 // Four generations, all naming the same episode: `player.simplecast.com/{uuid}` is current,
@@ -18,13 +18,7 @@ const playerHeight = 200
 export const extractSimplecastEpisode = (
   link: string,
 ): { id: string; isCurrent: boolean } | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
-
-  if (!parsed) {
-    return
-  }
-
-  const segments = getPathSegments(parsed)
+  const segments = getPathSegments(link)
   const id = segments[0] === 'e' ? segments[1] : segments[0]
 
   if (!id) {
@@ -51,8 +45,8 @@ export const extractSimplecastEpisode = (
 // episode that does not exist. One redirect hop is the cost of not knowing the modern id.
 //
 // Status codes prove nothing on this host: `player.simplecast.com/{anything}` answers 200 with
-// the same 835-byte app shell, because the id is resolved by javascript. Only the legacy host
-// validates, answering 404 for an unknown id.
+// the same app shell, because the id is resolved by javascript. Only the legacy host validates,
+// answering 404 for an unknown id.
 export const simplecastResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const episode = extractSimplecastEpisode(url)
 
@@ -72,3 +66,7 @@ export const simplecastEmbedResolver = createUrlEmbedResolver(
   simplecastHosts,
   simplecastResolveEmbed,
 )
+
+// No play request. The player speaks player.js and takes its `play`, flipping to its playing
+// state, but loaded in Chrome by a click the audio never started from it. Nothing to send until
+// it does.

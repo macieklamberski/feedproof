@@ -3,26 +3,32 @@ import type { EmbedResolverResult } from '../types.js'
 import { attr, parseRatio } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// Ids are lowercase hex, in two lengths. 32 chars is the current dashless UUID. 24 is the
-// legacy Mongo ObjectId Speaker Deck issued around 2011-2012, and those decks still play:
-// every sampled one returns 200 on the player url. Accepting only the 32-char form costs 36
-// feeds, 25 of them resolving to nothing (measured 2026-08-11).
-const deckIdRegex = /^[0-9a-f]{24}(?:[0-9a-f]{8})?$/
+// Ids are lowercase hex, in two lengths already. 32 chars is the current dashless UUID. 24 is
+// the legacy Mongo ObjectId Speaker Deck issued around 2011-2012, and those decks still play:
+// the player url answers 200 (verified live 2026-08-11).
+//
+// The lengths are not checked. The id is read either off Speaker Deck's own `data-id` or from
+// the segment after `player`, and `/player/` serves decks and nothing else: checked live
+// 2026-09-07, a real deck id answers 200 at 125 KB while `abc` and the hex word `decade` both
+// answer the same 404 as the site's other missing paths. So a bound would only refuse whatever
+// length Speaker Deck mints next. Hex is what stays, and it excludes the dot, which keeps a file
+// on the host playable when the enclosure probe offers it here.
+const deckIdRegex = /^[0-9a-f]+$/
 
 // A few feeds fold the slide number into the id attribute itself.
 const slideSuffixRegex = /\?slide=(\d+)$/
 const safeSlideRegex = /^\d+$/
 
 // What a deck is when its own script does not say. Speaker Deck's snippet always carries the
-// ratio, so this is for the feeds that strip the attribute, and 16:9 is what decks mostly are:
-// of 11 sampled off Speaker Deck's own listings, 8 render 640x360 and the rest are 4:3 or
-// wider (2026-08-09). Stated here rather than left to the consumer's default, so the
-// placeholder describes the deck whatever a reader assumes about a size-less embed.
+// ratio, so this is for the feeds that strip the attribute, and 16:9 is what decks mostly are
+// (Speaker Deck's own listings, 2026-08-09). Stated here rather than left to the consumer's
+// default, so the placeholder describes the deck whatever a reader assumes about a size-less
+// embed.
 const defaultDeckRatio = '16/9'
 
 // The deck's title, which the player url does not carry. Speaker Deck's snippet writes the
-// four-character string `null` when the deck has no title, twice in a 200-file sample, so that
-// spelling is treated as absent.
+// four-character string `null` when the deck has no title, so that spelling is treated as
+// absent.
 const readTitle = (element: Element): string | undefined => {
   const title = attr(element, 'title')
 

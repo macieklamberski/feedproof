@@ -1,6 +1,7 @@
-import { parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { isPlainObject, parseUrl } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, parsePixelSize, text } from '../utils/dom.js'
+import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -20,7 +21,27 @@ const instagramHosts = ['instagram.com', 'instagr.am']
 // the retired IGTV route. They are not interchangeable: a live photo serves its picture at
 // `/p/{shortcode}/media/` and answers 404 at `/reel/{shortcode}/media/` (checked 2026-08-13),
 // so the path stays part of the id.
-const postPathRegex = /^\/(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/
+// `audio` sits where a shortcode does, under `/reels/audio/{id}`, and names a sound, not a post.
+const nonShortcodeSegments = new Set(['audio'])
+
+// Instagram's own routes sit where an account does: `share/p/{token}` carries a redirect
+// token, not a shortcode, and reading it as one mints a frame that cannot load.
+const sitePathSegments = new Set([
+  'about',
+  'accounts',
+  'api',
+  'challenge',
+  'developer',
+  'direct',
+  'explore',
+  'legal',
+  'share',
+  'stories',
+  'web',
+])
+
+// The account names the poster, not the post, so it is matched and dropped.
+const postPathRegex = /^\/(?:([A-Za-z0-9_.]+)\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/
 const safeShortcodeRegex = /^[A-Za-z0-9_-]+$/
 
 type Post = { kind: string; shortcode: string }
@@ -38,7 +59,15 @@ const readPostUrl = (value: string | undefined): Post | undefined => {
     return
   }
 
-  return { kind: match[1] === 'reels' ? 'reel' : match[1], shortcode: match[2] }
+  if (match[1] && sitePathSegments.has(match[1])) {
+    return
+  }
+
+  if (nonShortcodeSegments.has(match[3])) {
+    return
+  }
+
+  return { kind: match[2] === 'reels' ? 'reel' : match[2], shortcode: match[3] }
 }
 
 // The captioned frame renders the post's text under the picture, so which of the two a
@@ -171,9 +200,11 @@ const readContent = (element: Element): Partial<EmbedResolverResult> => {
 }
 
 // The blockquote in all its versions and wrappers, which is what the share dialog writes and
-// what every CMS re-wraps.
+// what every CMS re-wraps. The permalink attribute is the second handle on purpose: a sanitizer
+// that strips classes keeps data attributes, so some feeds carry the quote with the attributes
+// alone, and the attribute is Instagram's own namespace rather than a name anyone else picked.
 export const instagramBlockquoteEmbedResolver = createMarkupEmbedResolver(
-  'blockquote.instagram-media',
+  'blockquote.instagram-media, blockquote[data-instgrm-permalink]',
   (element): EmbedResolverResult | undefined => {
     const wrapper = readWrapper(element)
     const post = findPost(element) ?? wrapper.post
@@ -286,3 +317,17 @@ export const instagramIframeEmbedResolver = createUrlEmbedResolver(
   instagramHosts,
   instagramResolveEmbed,
 )
+
+// The player measures itself once mounted and reports it under a `MEASURE` type. `LOADING`
+// and `MOUNTED` come through the same channel without a size.
+export const readInstagramHeight = (data: unknown): number | undefined => {
+  return isPlainObject(data) && data.type === 'MEASURE' && isPlainObject(data.details)
+    ? readPixels(data.details.height)
+    : undefined
+}
+
+export const instagramRenderHint: EmbedRenderHint = {
+  provider: 'instagram',
+  origin: 'https://www.instagram.com',
+  readHeight: readInstagramHeight,
+}

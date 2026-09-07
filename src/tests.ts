@@ -4,7 +4,6 @@ import { parseHTML } from 'linkedom'
 import type { MaybePromise } from 'trousse'
 import {
   defaultAvatarImageHosts,
-  defaultCiteResolvers,
   defaultDeferredIframeSources,
   defaultEmojiImageHosts,
   defaultHighlightFn,
@@ -28,7 +27,6 @@ type ParseHtml = (html: string) => Document
 
 export const baseContext: TransformContext = {
   widgetResolvers: defaultWidgetResolvers,
-  citeResolvers: defaultCiteResolvers,
   mediaSrcAttributes: defaultMediaSrcAttributes,
   emojiImageHosts: defaultEmojiImageHosts,
   avatarImageHosts: defaultAvatarImageHosts,

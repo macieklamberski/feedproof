@@ -1,12 +1,14 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { flashVars, keepIfMatches } from '../utils/dom.js'
 import { pickUrlParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// A VideoPress guid is eight letters and digits, and has been since the service started: a
-// guid minted in 2009 for the Flash player still answers on the current routes.
-const safeGuidRegex = /^[a-zA-Z0-9]{8}$/
+// A guid is letters and digits, and a guid minted in 2009 for the Flash player still answers on
+// the current routes. Only the alphabet is checked, since the guid is written into the player
+// path: a wrong guid fails the same whether it is minted or passed through, and a length bound
+// would refuse the next guid space.
+const safeGuidRegex = /^[a-zA-Z0-9]+$/
 
 // `video.wordpress.com` is the older alias of the same player, and the Flash player lived on
 // `s0.videopress.com` and `v0.wordpress.com`. `wordpress.com` itself is not claimed: every
@@ -75,9 +77,14 @@ const videopressFlashResolveEmbed = (
     return
   }
 
-  const guid =
-    new URLSearchParams(flashVars(element)).get('guid') ?? parsed.searchParams.get('guid')
-  const safeGuid = keepIfMatches(guid, safeGuidRegex)
+  // Each guid is validated on its own: the Flash carrier states one in its flashvars and one on
+  // its src, and the two disagree often enough that neither can be trusted to be the good one.
+  const safeGuid = [
+    new URLSearchParams(flashVars(element)).get('guid'),
+    parsed.searchParams.get('guid'),
+  ]
+    .map((guid) => keepIfMatches(guid, safeGuidRegex))
+    .find(Boolean)
 
   if (!safeGuid) {
     return
@@ -90,3 +97,10 @@ export const videopressFlashEmbedResolver = createUrlEmbedResolver(
   videopressHosts,
   videopressFlashResolveEmbed,
 )
+
+// Starts playback on the click that loads the player. The player's routes read the boolean
+// keys `1`, `true` and empty, and alias `autoplay` to this spelling.
+export const videopressRenderHint: EmbedRenderHint = {
+  provider: 'videopress',
+  autoplayParams: { autoPlay: '1' },
+}

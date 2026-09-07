@@ -38,7 +38,7 @@ describe('blubrryResolveEmbed', () => {
       provider: 'blubrry',
       id: '12345678',
       src: 'https://player.blubrry.com/id/12345678/',
-      height: 138,
+      height: 164,
     }
 
     expect(blubrryResolveEmbed(value)).toEqual(expected)
@@ -52,7 +52,7 @@ describe('blubrryResolveEmbed', () => {
       provider: 'blubrry',
       id: 'https://media.blubrry.com/show/ep.mp3',
       src: 'https://player.blubrry.com/?media_url=https%3A%2F%2Fmedia.blubrry.com%2Fshow%2Fep.mp3',
-      height: 138,
+      height: 164,
     }
 
     expect(blubrryResolveEmbed(value)).toEqual(expected)

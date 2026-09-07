@@ -13,6 +13,7 @@ import { attr, find, text } from '../utils/dom.js'
 // would need the sibling consumed too, which a resolver cannot do, and replacing the card without
 // it would leave the title and excerpt behind as loose text beside the placeholder.
 export const tcdCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.cardlink',
   extract: (element) => {
     return buildCite({

@@ -20,12 +20,21 @@ export const absoluteUrlRegex = /^[a-z][a-z0-9+.-]*:/i
 // a player that is broken everywhere else.
 export const imageFileRegex = /\.(avif|gif|jpe?g|png|svg|webp)(\?|#|$)/i
 export const videoFileRegex = /\.(mp4|m4v|webm|mov|ogv)(\?|#|$)/i
-export const audioFileRegex = /\.(mp3|m4a|ogg|oga|wav|flac|opus)(\?|#|$)/i
+export const audioFileRegex = /\.(aac|mp3|m4a|ogg|oga|wav|flac|opus)(\?|#|$)/i
 
 // A file no browser can play. Flash was blocked everywhere in January 2021, and hosts still
 // serve the `.swf` bytes, so a URL that reaches this is one that answers 200 and renders
 // nothing whatever a reader does with it.
 export const flashFileRegex = /\.swf(\?|#|$)/i
+
+export const documentFileRegex = /\.(pdf|epub|docx?|pptx?|xlsx?)(\?|#|$)/i
+
+// The RFC 4122 form, which four platforms name an episode, a show or an upload by. It is not a
+// bet on a platform's current id length the way a measured band is, because the shape is fixed
+// by the spec rather than by whoever mints them, and Simplecast leans on the exactness: it is
+// what tells the current id space from the legacy eight hex characters, so a looser class would
+// read a legacy id as a current one and speak it to the wrong host.
+export const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 // A real, loadable src, not empty and not the `about:blank` lazy placeholder.
 export const isUsableSrc = (src: string | null): src is string => {
@@ -54,6 +63,25 @@ export const parseUrlOnHosts = (
   if (parsed && (isHostOf(parsed, hosts) || isSubdomainOf(parsed, hosts))) {
     return parsed
   }
+}
+
+// A path segment arrives with its percent-encoding intact, unlike a query value, which
+// `searchParams` decodes on read — so only path-reading extraction needs this. A malformed
+// escape decodes to nothing usable and is refused rather than thrown.
+export const decodeSegment = (segment: string | undefined): string | undefined => {
+  try {
+    return segment === undefined ? undefined : decodeURIComponent(segment)
+  } catch {}
+}
+
+// A Flash-era player took its options with `&` and no `?`, so `{id}&autoplay=1` arrives as one
+// path segment. The head is the id the platform's own client reads out of it; whether the tail
+// is carried into the minted query or dropped is each platform's own call, decided by what its
+// player's query selects.
+export const splitStrayParams = (segment: string): { head: string; strayParams: string } => {
+  const [head = '', ...rest] = segment.split('&')
+
+  return { head, strayParams: rest.join('&') }
 }
 
 // The same pick as `pickUrlParams`, for a query that arrives on its own, not on a url, which is

@@ -9,12 +9,12 @@ import { attr, find, text } from '../utils/dom.js'
 // as a stray domain link, and hand the card to the generic embed path, which emits a placeholder
 // pointing at the card renderer rather than a viewable embed.
 //
-// Replacing the whole paragraph drops any prose the author wrote beside the card, measured
-// at 1.22% of corpus occurrences (19 of 1,558, across 7 feeds). Kept anyway.
+// Replacing the whole paragraph drops any prose the author wrote beside the card. That case is
+// rare, and kept anyway.
 //
 // The card renderer's host is matched beside the class because the class is not dependable:
-// of 756 corpus feeds framing that host, 684 spell `embed-card` and the remaining 72 spell
-// `hatenablogcard`, `wp-embedded-content`, a theme's own class, or nothing at all.
+// `embed-card` is the common spelling, and the rest ship `hatenablogcard`,
+// `wp-embedded-content`, a theme's own class, or nothing at all.
 const cardIframeSelector = [
   'iframe.embed-card',
   'iframe.hatenablogcard',
@@ -27,6 +27,7 @@ const cardParagraphSelector = cardIframeSelector
   .join(', ')
 
 export const hatenaCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: cardParagraphSelector,
   extract: (element) => {
     const iframe = find(element, cardIframeSelector)

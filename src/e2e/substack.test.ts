@@ -49,15 +49,37 @@ describeForEachParser('Substack', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toBe(expected)
   })
 
-  it('should strip substack publication embeds as non-content', async () => {
-    const value = `<p>Text</p><div class="embedded-publication-wrap" data-attrs='{"name":"Other Pub","base_url":"https://other.substack.com","hero_text":"A great read"}'></div>`
-    const expected = '<p>Text</p>'
+  // The card follows a sentence introducing it often enough that stripping it left the sentence
+  // pointing at nothing, so it converts instead of going the way of the subscribe widgets below.
+  it('should convert a substack publication embed into a cite placeholder', async () => {
+    const publicationAttrs = jsonAttrValue({
+      name: 'Other Pub',
+      base_url: 'https://otherpub.example.com',
+      hero_text: 'A great read',
+      author_name: 'Author name',
+      logo_url: 'https://cdn.example.com/logo.png',
+    })
+    const value = html`
+      <p>Check out the other newsletter here:</p>
+      <div class="embedded-publication-wrap" data-attrs="${publicationAttrs}"></div>
+    `
+    const expected = html`
+      <p>Check out the other newsletter here:</p>
+      <div
+        data-cite-provider="substack"
+        data-cite-url="https://otherpub.example.com"
+        data-cite-title="Other Pub"
+        data-cite-description="A great read"
+        data-cite-author="Author name"
+        data-cite-icon="https://cdn.example.com/logo.png"
+      ></div>
+    `
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com/',
     })
 
-    expect(result).toBe(expected)
+    expect(result).toEqualHtml(expected)
   })
 
   // Markup that reaches a clean shape through the interaction of generic transforms alone,
@@ -538,9 +560,8 @@ describeForEachParser('Substack', (parseHtml) => {
     expect(result).toEqualHtml(expected)
   })
 
-  it('should keep a standalone ButtonCreateButton paragraph untouched', async () => {
-    // Passes through: no selector claims the bare CTA paragraph, so the subscribe button
-    // link survives outside a captioned-button wrap.
+  it('should strip a standalone ButtonCreateButton subscribe CTA', async () => {
+    // nonContentSelectors owns it: the subscribe button is chrome outside a captioned wrap too.
     const buttonAttrs = jsonAttrValue({
       url: 'https://examplepub.substack.com/subscribe?',
       text: 'Subscribe now',
@@ -554,6 +575,71 @@ describeForEachParser('Substack', (parseHtml) => {
         data-attrs="${buttonAttrs}"
         data-component-name="ButtonCreateButton"
       ><a class="button primary" href="https://examplepub.substack.com/subscribe?"><span>Subscribe now</span></a></p>
+    `
+    const expected = '<p>Please feel free to share this.</p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toEqualHtml(expected)
+  })
+
+  it('should strip a standalone ButtonCreateButton comment CTA', async () => {
+    const buttonAttrs = jsonAttrValue({
+      url: 'https://examplepub.substack.com/p/the-post/comments',
+      text: 'Leave a comment',
+      action: null,
+      class: null,
+    })
+    const value = html`
+      <p>Before.</p>
+      <p
+        class="button-wrapper"
+        data-attrs="${buttonAttrs}"
+        data-component-name="ButtonCreateButton"
+      ><a class="button primary" href="https://examplepub.substack.com/p/the-post/comments"><span>Leave a comment</span></a></p>
+    `
+    const expected = '<p>Before.</p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toEqualHtml(expected)
+  })
+
+  it('should strip a standalone ButtonCreateButton share CTA', async () => {
+    const buttonAttrs = jsonAttrValue({
+      url: 'https://examplepub.substack.com/p/the-post?action=share',
+      text: 'Share',
+      action: null,
+      class: null,
+    })
+    const value = html`
+      <p>Before.</p>
+      <p
+        class="button-wrapper"
+        data-attrs="${buttonAttrs}"
+        data-component-name="ButtonCreateButton"
+      ><a class="button primary" href="https://examplepub.substack.com/p/the-post?action=share"><span>Share</span></a></p>
+    `
+    const expected = '<p>Before.</p>'
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toEqualHtml(expected)
+  })
+
+  it('should keep a ButtonCreateButton the author pointed somewhere of their own', async () => {
+    // Passes through: the component wraps author-authored buttons too, so only the platform
+    // actions are claimed and a donate button keeps its link.
+    const buttonAttrs = jsonAttrValue({
+      url: 'https://example.com/donate?campaign=spring',
+      text: 'One-time and recurring donations',
+      action: null,
+      class: 'button-wrapper',
+    })
+    const value = html`
+      <p>Before.</p>
+      <p
+        class="button-wrapper"
+        data-attrs="${buttonAttrs}"
+        data-component-name="ButtonCreateButton"
+      ><a class="button primary button-wrapper" href="https://example.com/donate?campaign=spring"><span>One-time and recurring donations</span></a></p>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -1027,8 +1113,11 @@ describeForEachParser('Substack', (parseHtml) => {
       </div>
     `
     const expected = html`
-      <div data-embed-src="https://manifold.markets/embed/ExampleUser/will-the-thing-happen">
-      </div>
+      <div
+        data-embed-src="https://manifold.markets/embed/ExampleUser/will-the-thing-happen"
+        data-embed-width="560"
+        data-embed-height="405"
+      ></div>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
@@ -1236,9 +1325,9 @@ describeForEachParser('Substack', (parseHtml) => {
     expect(result).toEqualHtml(value)
   })
 
-  it('should strip an EmbeddedPublicationToDOMWithSubscribe promo as non-content', async () => {
-    // nonContentSelectors owns it (.embedded-publication-wrap): a cross-publication
-    // subscribe promo is chrome, so removal is the desired end state.
+  it('should convert an EmbeddedPublicationToDOMWithSubscribe promo into a cite placeholder', async () => {
+    // substackPublicationCiteResolver owns it. This shape omits base_url from the blob, so the
+    // url and the logo come off the anchor and its image instead.
     const publicationAttrs = jsonAttrValue({
       url: 'https://otherpub.substack.com?utm_medium=web',
       publication_id: 1,
@@ -1264,7 +1353,17 @@ describeForEachParser('Substack', (parseHtml) => {
         </div>
       </div>
     `
-    const expected = '<p>Before.</p>'
+    const expected = html`
+      <p>Before.</p>
+      <div
+        data-cite-provider="substack"
+        data-cite-url="https://otherpub.substack.com?utm_medium=web"
+        data-cite-title="Other Pub"
+        data-cite-description="A newsletter."
+        data-cite-author="Casey Author"
+        data-cite-icon="https://substackcdn.com/image/fetch/f_auto/logo.png"
+      ></div>
+    `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
     expect(result).toEqualHtml(expected)

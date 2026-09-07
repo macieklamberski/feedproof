@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { describeForEachParser, html } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { type MastodonStatus, mastodonEmbedResolver, parseMastodonStatus } from './mastodon.js'
+import {
+  type MastodonStatus,
+  mastodonEmbedResolver,
+  parseMastodonStatus,
+  readMastodonHeight,
+} from './mastodon.js'
 
 describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
   const extract = (value: string): EmbedResolverResult | undefined => {
@@ -239,6 +244,31 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
       expect(extract(value)).toEqual(expected)
     })
 
+    // The AP-canonical spelling routes to the same page but is deliberately not matched, so a
+    // carrier stating it has to leave the anchor beside it free to name the post.
+    it('should fall back to the anchor when the embed url is a spelling it does not match', () => {
+      const value = html`
+        <blockquote
+          class="mastodon-embed"
+          data-embed-url="https://ruby.social/users/coder/statuses/110000000000000009/embed"
+        >
+          <a href="https://ruby.social/@coder/110000000000000009" target="_blank">
+            <div>Post by @coder@ruby.social</div>
+          </a>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'mastodon',
+        id: 'ruby.social/110000000000000009',
+        src: 'https://ruby.social/@coder/110000000000000009/embed',
+        url: 'https://ruby.social/@coder/110000000000000009',
+        author: '@coder@ruby.social',
+        publisher: 'ruby.social',
+      }
+
+      expect(extract(value)).toEqual(expected)
+    })
+
     it('should return undefined for a blockquote naming no status at all', () => {
       const value = html`
         <blockquote class="mastodon-embed">
@@ -250,8 +280,13 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
     })
   })
 
+  // Mastodon's username route constraint excludes `@`, so this path never reaches the embed
+  // action: it answers with the application shell under `frame-ancestors 'none'` instead of the
+  // status. The embeddable copy lives on the remote instance
+  // under a different id, which only `/redirect/statuses/<id>` maps to, so nothing offline
+  // recovers it and a minted player would be a frame that cannot load.
   describe('remote post filed under a full handle', () => {
-    it('should keep the handle the path already carries', () => {
+    it('should not claim a status filed under a remote handle', () => {
       const value = html`
         <iframe
           src="https://mas.to/@author@example.social/113222333444555666/embed"
@@ -259,17 +294,8 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
           width="400"
         ></iframe>
       `
-      const expected: EmbedResolverResult = {
-        provider: 'mastodon',
-        id: 'mas.to/113222333444555666',
-        src: 'https://mas.to/@author@example.social/113222333444555666/embed',
-        url: 'https://mas.to/@author@example.social/113222333444555666',
-        width: 400,
-        author: '@author@example.social',
-        publisher: 'mas.to',
-      }
 
-      expect(extract(value)).toEqual(expected)
+      expect(extract(value)).toBeUndefined()
     })
   })
 
@@ -449,5 +475,15 @@ describe('parseMastodonStatus', () => {
 
   it('should reject a template that never rendered', () => {
     expect(parseMastodonStatus('{{ $status }}/embed')).toBeUndefined()
+  })
+})
+
+describe('readMastodonHeight', () => {
+  it('should read the height out of the answer to its request', () => {
+    expect(readMastodonHeight({ type: 'setHeight', id: 0, height: 747 })).toBe(747)
+  })
+
+  it('should read nothing out of another message', () => {
+    expect(readMastodonHeight({ type: 'ready' })).toBeUndefined()
   })
 })

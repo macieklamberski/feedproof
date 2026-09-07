@@ -248,4 +248,35 @@ describeForEachParser('Facebook', (parseHtml) => {
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
+
+  // Facebook refuses to be framed, so a carrier holding the page itself reaches a reader as a
+  // blank frame. The plugin takes the page as its href, which is the repair the widget div and
+  // the fallback blockquote already perform from their own attributes.
+  it('should convert a watch page framed as an embed', async () => {
+    const value = '<iframe src="https://www.facebook.com/watch/?v=1010445561578533"></iframe>'
+    const expected = html`
+      <div
+        data-embed-url="https://www.facebook.com/watch/?v=1010445561578533"
+        data-embed-id="https://www.facebook.com/watch/?v=1010445561578533"
+        data-embed-provider="facebook"
+        data-embed-src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fwatch%2F%3Fv%3D1010445561578533"
+      ></div>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
+  // A page's Videos tab is a listing rather than one video, and the bare watch path is
+  // Facebook's video front page. Neither is the article's content.
+  it('should leave a page tab and the watch hub to the generic placeholder', async () => {
+    const tab = '<iframe src="https://www.facebook.com/nasa/videos/"></iframe>'
+    const hub = '<iframe src="https://www.facebook.com/watch"></iframe>'
+
+    expect(await transformContent(tab, { parseHtmlFn: parseHtml })).toEqualHtml(
+      '<div data-embed-src="https://www.facebook.com/nasa/videos/"></div>',
+    )
+    expect(await transformContent(hub, { parseHtmlFn: parseHtml })).toEqualHtml(
+      '<div data-embed-src="https://www.facebook.com/watch"></div>',
+    )
+  })
 })

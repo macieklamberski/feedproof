@@ -1,17 +1,18 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, keepIfMatches, parsePixelSize, text, textNode } from '../utils/dom.js'
 import * as styles from '../utils/styles.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-const tiktokHost = 'tiktok.com'
+const tiktokHosts = ['tiktok.com']
 
-const isTiktokUrl = (url: URL): boolean => {
-  return isHostOf(url, tiktokHost) || isSubdomainOf(url, tiktokHost)
-}
-
-// A handle is the same character set TikTok allows at signup.
-const safeHandleRegex = /^[a-zA-Z0-9_.]{1,24}$/
+// A handle is the character set TikTok allows at signup, with no length: the `@` opens every
+// handle position read here and `/video/` closes the watch path, so a bound separates a handle
+// from nothing. The signup form's 24-character ceiling is a rule about who can pick a name, not
+// about what the namespace holds. The class is the guard that matters, since it admits neither a
+// slash nor a query and so keeps a minted profile url on the account the markup named.
+const safeHandleRegex = /^[a-zA-Z0-9_.]+$/
 const safeVideoIdRegex = /^\d+$/
 
 // Every player url TikTok has issued frames the clip by its numeric id: `/embed/{id}` and
@@ -21,7 +22,7 @@ const playerPathRegex = /^\/(?:embed(?:\/v2)?|player\/v1)\/(\d+)\/?$/
 
 // A watch url names the clip's owner and the clip: `/@handle/video/{id}`. Sanitized copies
 // sometimes keep only the `/video/{id}` half, so the handle is optional.
-const watchPathRegex = /^(?:\/@([a-zA-Z0-9_.]{1,24}))?\/video\/(\d+)\/?$/
+const watchPathRegex = /^(?:\/@([a-zA-Z0-9_.]+))?\/video\/(\d+)\/?$/
 
 // The player is fluid in width and fixed in height, so it states a height and no shape. Loading
 // `/embed/v2/{id}` at 500, 700 and 1000 pixels wide measured 738 every time (2026-08-20): the box
@@ -37,9 +38,9 @@ const playerHeight = 738
 type Clip = { handle?: string; videoId?: string }
 
 const readWatchUrl = (url: string | undefined): Clip => {
-  const parsed = parseUrl(url ?? '', 'https://example.com')
+  const parsed = parseUrlOnHosts(url, tiktokHosts)
 
-  if (!parsed || !isTiktokUrl(parsed)) {
+  if (!parsed) {
     return {}
   }
 
@@ -48,18 +49,25 @@ const readWatchUrl = (url: string | undefined): Clip => {
   return { handle, videoId }
 }
 
-// A blockquote declares only `max-width` and `min-width`, never a height, so a TikTok normally
-// reaches the reader with no size and is drawn as a video-shaped box, which is wrong for a
-// vertical clip on both axes. One shape does carry a real one: where a CMS stored the page
-// after `embed.js` ran, the hydrated iframe keeps the height it rendered at in its inline
-// style. That is a measurement of this clip at this width, so it is taken when it is there.
+// A blockquote declares only `max-width` and `min-width`, never a height, so on its own a
+// TikTok would reach the reader with no size and be drawn as a video-shaped box, wrong for a
+// vertical clip on both axes. The player's fixed height is what the placeholder states instead.
+// One shape carries a better number: where a CMS stored the page after `embed.js` ran, the
+// hydrated iframe keeps the height it rendered at in its inline style. That is a measurement of
+// this clip at this width, so it wins when it is there.
+const clipSize = (element: Element): { width?: number; height: number } => {
+  const { width, height } = hydratedSize(element)
+
+  return height ? { width, height } : { height: playerHeight }
+}
+
 const hydratedSize = (element: Element): { width?: number; height?: number } => {
   // The stored iframe is matched by the same player paths the direct carrier resolver claims,
   // so a hydrated copy keeps its measurement whichever player url the CMS wrote.
   const frame = find(element, 'iframe[src]', (iframe) => {
-    const parsed = parseUrl(attr(iframe, 'src') ?? '', 'https://example.com')
+    const parsed = parseUrlOnHosts(attr(iframe, 'src'), tiktokHosts)
 
-    return Boolean(parsed && isTiktokUrl(parsed) && playerPathRegex.test(parsed.pathname))
+    return Boolean(parsed && playerPathRegex.test(parsed.pathname))
   })
   const height = parsePixelSize(styles.pixels(frame, 'height'))
 
@@ -133,12 +141,12 @@ const resolveClip = (element: Element): EmbedResolverResult | undefined => {
     url: cited.videoId ? cite : undefined,
     description: text(caption),
     author,
-    ...hydratedSize(element),
+    ...clipSize(element),
   }
 }
 
 // A profile url and nothing else: `/@handle`, with no video segment after it.
-const profilePathRegex = /^\/@([a-zA-Z0-9_.]{1,24})\/?$/
+const profilePathRegex = /^\/@([a-zA-Z0-9_.]+)\/?$/
 
 // The account a blockquote names, from `data-unique-id` where the creator widget declares it,
 // otherwise from the profile anchor. The half-encoded shape keeps no data attributes at all,
@@ -151,9 +159,9 @@ const readHandle = (element: Element): string | undefined => {
   }
 
   for (const anchor of element.querySelectorAll('a[href]')) {
-    const parsed = parseUrl(attr(anchor, 'href') ?? '', 'https://example.com')
+    const parsed = parseUrlOnHosts(attr(anchor, 'href'), tiktokHosts)
 
-    if (parsed && isTiktokUrl(parsed)) {
+    if (parsed) {
       const handle = parsed.pathname.match(profilePathRegex)?.[1]
 
       if (handle) {
@@ -176,8 +184,7 @@ const resolveAccount = (element: Element): EmbedResolverResult | undefined => {
   }
 
   const cite = attr(element, 'cite')
-  const parsedCite = parseUrl(cite ?? '', 'https://example.com')
-  const isCitedProfile = Boolean(cite && parsedCite && isTiktokUrl(parsedCite))
+  const isCitedProfile = Boolean(cite && parseUrlOnHosts(cite, tiktokHosts))
 
   return {
     provider: 'tiktok',
@@ -222,7 +229,7 @@ export const tiktokBlockquoteEmbedResolver = createMarkupEmbedResolver(
 // a real measurement, which lands on 738 instead. Telling that apart from a pasted box needs a
 // heuristic worth less than the 20 pixels it recovers.
 export const tiktokIframeEmbedResolver = createUrlEmbedResolver(
-  [tiktokHost],
+  tiktokHosts,
   (src) => {
     const parsed = parseUrl(src, 'https://example.com')
     const playerId = parsed?.pathname.match(playerPathRegex)?.[1]
