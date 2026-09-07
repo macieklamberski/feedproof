@@ -41,7 +41,7 @@ const sitePathSegments = new Set([
 ])
 
 // The account names the poster, not the post, so it is matched and dropped.
-const postPathRegex = /^\/(?:([A-Za-z0-9_.]{1,30})\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/
+const postPathRegex = /^\/(?:([A-Za-z0-9_.]+)\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/
 const safeShortcodeRegex = /^[A-Za-z0-9_-]+$/
 
 type Post = { kind: string; shortcode: string }
@@ -200,9 +200,11 @@ const readContent = (element: Element): Partial<EmbedResolverResult> => {
 }
 
 // The blockquote in all its versions and wrappers, which is what the share dialog writes and
-// what every CMS re-wraps.
+// what every CMS re-wraps. The permalink attribute is the second handle on purpose: a sanitizer
+// that strips classes keeps data attributes, so some feeds carry the quote with the attributes
+// alone, and the attribute is Instagram's own namespace rather than a name anyone else picked.
 export const instagramBlockquoteEmbedResolver = createMarkupEmbedResolver(
-  'blockquote.instagram-media',
+  'blockquote.instagram-media, blockquote[data-instgrm-permalink]',
   (element): EmbedResolverResult | undefined => {
     const wrapper = readWrapper(element)
     const post = findPost(element) ?? wrapper.post

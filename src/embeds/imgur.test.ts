@@ -7,6 +7,21 @@ import {
   imgurResolveEmbed,
 } from './imgur.js'
 
+// Imgur's own routes, none of which names a post to mint from.
+const sitePaths = [
+  'https://imgur.com/upload',
+  'https://imgur.com/about',
+  'https://imgur.com/signin',
+  'https://imgur.com/memegen',
+  'https://imgur.com/search?q=cats',
+  'https://imgur.com/new',
+  'https://imgur.com/tos',
+  'https://imgur.com/privacy',
+  'https://imgur.com/user/someone',
+  'https://imgur.com/r/funny/abc12345',
+  'https://imgur.com/t/cats/abc12345',
+]
+
 describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, imgurBlockquoteEmbedResolver)
 
@@ -181,10 +196,48 @@ describe('imgurResolveEmbed', () => {
     expect(imgurResolveEmbed(value)).toEqual(expected)
   })
 
+  it('should resolve an album page url, which the prefix already names as one', () => {
+    const value = 'https://imgur.com/a/16lVn5E'
+    const expected: EmbedResolverResult = {
+      provider: 'imgur',
+      id: 'a/16lVn5E',
+      src: 'https://imgur.com/a/16lVn5E/embed',
+      url: 'https://imgur.com/a/16lVn5E',
+    }
+
+    expect(imgurResolveEmbed(value)).toEqual(expected)
+  })
+
+  // A publisher pastes the post page as often as the frame, and both name the same post.
+  it('should read the post page url', () => {
+    const value = 'https://imgur.com/pVa2rXL'
+    const expected: EmbedResolverResult = {
+      provider: 'imgur',
+      id: 'pVa2rXL',
+      src: 'https://imgur.com/pVa2rXL/embed',
+      url: 'https://imgur.com/pVa2rXL',
+      thumbnail: 'https://i.imgur.com/pVa2rXLm.jpg',
+    }
+
+    expect(imgurResolveEmbed(value)).toEqual(expected)
+  })
+
   it('should ignore an imgur url that names no post', () => {
     const value = 'https://imgur.com/'
 
     expect(imgurResolveEmbed(value)).toBeUndefined()
+  })
+
+  describe('shapes that name no post', () => {
+    it.each(sitePaths)('should ignore the site path %s', (value) => {
+      expect(imgurResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should ignore a gallery listing, which sits where an album id would', () => {
+      const value = 'https://imgur.com/gallery/hot'
+
+      expect(imgurResolveEmbed(value)).toBeUndefined()
+    })
   })
 
   it('should ignore another host carrying the post path', () => {

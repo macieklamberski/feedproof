@@ -4,6 +4,7 @@ import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   archiveFlashEmbedResolver,
+  archiveIframeEmbedResolver,
   archiveResolveEmbed,
   extractArchiveIdentifier,
 } from './archive.js'
@@ -22,6 +23,29 @@ describe('extractArchiveIdentifier', () => {
     const expected = 'nasa_hubble'
 
     expect(extractArchiveIdentifier(value)).toBe(expected)
+  })
+
+  // The retired BookReader route names the same item, with the book's own file after it.
+  it('should read the identifier from a stream url', () => {
+    const value = 'https://archive.org/stream/hoursofdevotionb00neudrich'
+    const expected = 'hoursofdevotionb00neudrich'
+
+    expect(extractArchiveIdentifier(value)).toBe(expected)
+  })
+
+  it('should read the identifier from a stream url naming a file inside the item', () => {
+    const value = 'https://archive.org/stream/westandunitedand006948mbp/westandunitedand006948mbp'
+    const expected = 'westandunitedand006948mbp'
+
+    expect(extractArchiveIdentifier(value)).toBe(expected)
+  })
+
+  // `download` serves the item's files rather than a viewer of them, so an enclosure on the
+  // same host must not be read as an item.
+  it('should return undefined for a download url', () => {
+    const value = 'https://archive.org/download/nasa_hubble/nasa_hubble.mp3'
+
+    expect(extractArchiveIdentifier(value)).toBeUndefined()
   })
 
   it('should return undefined for an archive url naming no item', () => {
@@ -113,6 +137,19 @@ describe('archiveResolveEmbed', () => {
 
       expect(archiveResolveEmbed(value)).toEqual(expected)
     })
+
+    it('should send a BookReader stream url to the modern player', () => {
+      const value = 'https://archive.org/stream/hoursofdevotionb00neudrich?ui=embed'
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'hoursofdevotionb00neudrich',
+        src: 'https://archive.org/embed/hoursofdevotionb00neudrich?ui=embed',
+        url: 'https://archive.org/details/hoursofdevotionb00neudrich',
+        thumbnail: 'https://archive.org/services/img/hoursofdevotionb00neudrich',
+      }
+
+      expect(archiveResolveEmbed(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
@@ -127,6 +164,54 @@ describe('archiveResolveEmbed', () => {
 
       expect(archiveResolveEmbed(value)).toBeUndefined()
     })
+
+    // The stranded `&` keeps the dot segment out of `URL`'s reach, so nothing has folded it.
+    it('should refuse an identifier that is only dots', () => {
+      const value = 'https://archive.org/embed/..&playlist=1'
+
+      expect(archiveResolveEmbed(value)).toBeUndefined()
+    })
+  })
+})
+
+describeForEachParser('archiveIframeEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, archiveIframeEmbedResolver)
+
+  // `embed/{identifier}` serves audio and video alike, so the carrier's height is the only thing
+  // that says which one this is. The bar is 30 tall at every width, so its width goes: kept, the
+  // frontend would read the pair as a ratio and grow the box with the column.
+  it('should keep the audio bar height alone when the carrier states it', async () => {
+    const value = html`
+      <iframe src="https://archive.org/embed/pcast400" width="350" height="30"></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'archive',
+      id: 'pcast400',
+      src: 'https://archive.org/embed/pcast400',
+      url: 'https://archive.org/details/pcast400',
+      thumbnail: 'https://archive.org/services/img/pcast400',
+      height: 30,
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
+  // A video carrier's box measures the player it gets, so it stands whole.
+  it('should keep a video carrier box whole', async () => {
+    const value = html`
+      <iframe src="https://archive.org/embed/TheGoodOldGasMask" width="560" height="384"></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'archive',
+      id: 'TheGoodOldGasMask',
+      src: 'https://archive.org/embed/TheGoodOldGasMask',
+      url: 'https://archive.org/details/TheGoodOldGasMask',
+      thumbnail: 'https://archive.org/services/img/TheGoodOldGasMask',
+      width: 560,
+      height: 384,
+    }
+
+    expect(await extract(value)).toEqual(expected)
   })
 })
 
@@ -153,7 +238,8 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // The audio player names the file on its own and puts the item on the clip instead.
+    // The audio player names the file on its own and puts the item on the clip instead. An
+    // audio item takes the modern bar's height, since the bar the carrier was sized for is gone.
     it('should read the identifier from the clip base url', async () => {
       const value = html`
         <embed
@@ -168,6 +254,54 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
         src: 'https://archive.org/embed/EndCameTooSoon',
         url: 'https://archive.org/details/EndCameTooSoon',
         thumbnail: 'https://archive.org/services/img/EndCameTooSoon',
+        height: 30,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The carrier states the 26 pixels of the Flash bar, and the modern bar measures 30, so the
+    // resolver's height wins over it. The width is the carrier's business either way.
+    it('should replace the audio bar height with the modern player height', async () => {
+      const value = html`
+        <embed
+          type="application/x-shockwave-flash"
+          src="https://www.archive.org/flow/flowplayer.commercial-3.2.1.swf"
+          flashvars="config={'playlist':[{'url':'EndCameTooSoon-Mixtape.mp3','autoPlay':false}],'clip':{'autoPlay':true,'baseUrl':'https://www.archive.org/download/EndCameTooSoon/'},'plugins':{'audio':{'url':'https://www.archive.org/flow/flowplayer.audio-3.2.1-dev.swf'}}}"
+          width="640"
+          height="26"
+        />
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'EndCameTooSoon',
+        src: 'https://archive.org/embed/EndCameTooSoon',
+        url: 'https://archive.org/details/EndCameTooSoon',
+        thumbnail: 'https://archive.org/services/img/EndCameTooSoon',
+        height: 30,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should keep the declared size for a video item', async () => {
+      const value = html`
+        <embed
+          type="application/x-shockwave-flash"
+          src="http://www.archive.org/flow/flowplayer.commercial-3.0.3.swf"
+          flashvars='config={"playlist":[{"url":"http://www.archive.org/download/TheGoodOldGasMask/TheGoodOldGasMask_512kb.mp4"}]}'
+          width="640"
+          height="504"
+        />
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'TheGoodOldGasMask',
+        src: 'https://archive.org/embed/TheGoodOldGasMask',
+        url: 'https://archive.org/details/TheGoodOldGasMask',
+        thumbnail: 'https://archive.org/services/img/TheGoodOldGasMask',
+        width: 640,
+        height: 504,
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -255,6 +389,18 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
 
     it('should ignore a player carrying no config', async () => {
       const value = '<embed src="http://www.archive.org/flow/flowplayer.commercial-3.2.1.swf">'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // The config is raw text, so a dot segment in it reaches the mint unfolded.
+    it('should ignore a config whose identifier is only dots', async () => {
+      const value = html`
+        <embed
+          src="http://www.archive.org/flow/flowplayer.commercial-3.2.1.swf"
+          flashvars='config={"playlist":[{"url":"http://www.archive.org/download/../clip.mp4"}]}'
+        />
+      `
 
       expect(await extract(value)).toBeUndefined()
     })

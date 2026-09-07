@@ -58,6 +58,8 @@ const specimens: Record<string, string | [string, string]> = {
   '[data-component-name="ButtonCreateButton"]:has(> a[href*="action=share"])':
     '<p class="button-wrapper" data-component-name="ButtonCreateButton"><a class="button primary" href="https://example.com/p/post?action=share"><span>Share</span></a></p>',
   '[class*="social-share"]': '<div class="social-share"><a href="/x">X</a></div>',
+  'p:has(> a.redcircle-link)':
+    '<p style="font-size: 10px; color: gray;">Powered by <a class="redcircle-link" href="https://example.com/?utm_source=rc_embedded_player">RedCircle</a></p>',
   '[class*="share-buttons"]': '<div class="share-buttons"><a href="/fb">Facebook</a></div>',
   '.sharethis-inline-share-buttons': '<div class="sharethis-inline-share-buttons"></div>',
   '.sharedaddy': '<div class="sharedaddy sd-sharing-enabled"></div>',
@@ -137,6 +139,12 @@ const specimens: Record<string, string | [string, string]> = {
     '<span class="reading-time reading-time-article"><i class="far fa-file-alt" aria-hidden="true"></i> <span class="d-none d-sm-inline">Lesezeit: </span>3 Minuten</span>',
   '.reading-time-teaser':
     '<span class="reading-time reading-time-teaser"><i class="far fa-file-alt" aria-hidden="true"></i> 3 Minuten</span>',
+  'a.rcptr':
+    '<a class="rcptr" data-raflid="0b78662439" data-template="" data-theme="classic" href="https://example.com/rafl/display/0b78662439/" id="rcwidget_cq72wtxg" rel="nofollow">a Rafflecopter giveaway</a>',
+  'a.rafl':
+    '<a class="rafl" href="https://example.com/rafl/display/70b9a02412/" id="rc-70b9a02412" rel="nofollow">a Rafflecopter giveaway</a>',
+  'a.e-widget':
+    '<a class="e-widget no-button" href="https://example.com/3wKIE/win-100-amazon-gift-card" rel="nofollow">Win $100 Amazon Gift Card</a>',
   '.image-link-expand': '<div class="image-link-expand"><button><svg></svg></button></div>',
   'drupal-render-placeholder':
     '<drupal-render-placeholder callback="comment.lazy_builders:renderLinks" arguments="0=node:1"></drupal-render-placeholder>',

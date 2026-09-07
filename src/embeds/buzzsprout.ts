@@ -16,10 +16,14 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 // url-keyed resolver deliberately leaves the show-level *page* url unmatched: there it falls
 // through to the generic fallback, which still renders a placeholder. The script carrier has no
 // such fallback, so the same shape costs the whole player.
-const buzzsproutHost = 'buzzsprout.com'
+const buzzsproutHosts = ['buzzsprout.com']
 const episodeScriptPathRegex = /^\/(\d+)\/(?:episodes\/)?(\d+)(?:-[^/]*)?\.js$/
 const showScriptPathRegex = /^\/(\d+)\.js$/
-const episodePagePathRegex = /^\/(\d+)\/(?:episodes\/)?(\d+)(?:-[^/]*)?$/
+// The page slug may not carry a dot, which is what keeps the enclosure out: the episode audio is
+// `buzzsprout.com/{podcast}/{episode}-{slug}.mp3` on the same host, identical up to the extension,
+// in both the bare and the `episodes/` spellings. The player minted from it would be the same
+// episode's, so nothing is gained by claiming it, and a playable file is what the feed stated.
+const episodePagePathRegex = /^\/(\d+)\/(?:episodes\/)?(\d+)(?:-[^/.]*)?$/
 
 // Both heights are what Buzzsprout's own script writes onto the iframe it builds: 200 for the
 // small episode player, 375 for the large show player (read from the served script, 2026-08-15).
@@ -39,7 +43,7 @@ const composeEmbed = (podcastId: string, episodeId?: string): EmbedResolverResul
 }
 
 export const buzzsproutResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrlOnHosts(url, buzzsproutHost)
+  const parsed = parseUrlOnHosts(url, buzzsproutHosts)
 
   if (!parsed) {
     return
@@ -55,7 +59,7 @@ export const buzzsproutResolveEmbed = (url: string): EmbedResolverResult | undef
 }
 
 export const buzzsproutIframeEmbedResolver: EmbedResolver = createUrlEmbedResolver(
-  [buzzsproutHost],
+  buzzsproutHosts,
   buzzsproutResolveEmbed,
 )
 
@@ -64,7 +68,7 @@ export const buzzsproutScriptEmbedResolver = createMarkupEmbedResolver(
   (element) => {
     // The selector guarantees a src containing the host substring, so only the host and
     // path checks can reject.
-    const url = parseUrlOnHosts(attr(element, 'src'), buzzsproutHost)
+    const url = parseUrlOnHosts(attr(element, 'src'), buzzsproutHosts)
 
     if (!url) {
       return

@@ -11,7 +11,7 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // `urn%3Ali%3Ashare%3A…` and would fail the pattern. LinkedIn serves both spellings, probed
 // live 2026-08-31: the escaped one answers 200 with a body byte-identical to the plain one,
 // and a urn that names no post answers 404 either way.
-const safeUrnRegex = /^urn:li:[a-zA-Z]+:\d{6,32}$/
+const safeUrnRegex = /^urn:li:[a-zA-Z]+:\d+$/
 
 const linkedinHosts = ['linkedin.com']
 

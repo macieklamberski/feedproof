@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, find, text } from '../utils/dom.js'
+import { attr, find, keepIfMatches, text } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -9,17 +9,30 @@ const slideshareHosts = ['slideshare.net', 'slidesharecdn.com']
 // Two id spaces address one deck. The modern embed names it by an opaque key, the pre-2015
 // one by the deck's numeric id, and both still serve: opening `/slideshow/embed_code/6435157`
 // lands on the key form and renders the deck (checked in a browser 2026-08-13).
-const safeDeckKeyRegex = /^[A-Za-z0-9]{10,20}$/
-const safeDeckIdRegex = /^\d{4,12}$/
+//
+// Neither length is checked. `embed_code` and the `key` segment after it are what select a
+// deck, and each id sits in the one position behind them, so a bound would only refuse the next
+// length SlideShare mints. What the classes do is separate the two spaces from each other,
+// since digits cannot be read as a key nor `key` as a numeric id, and exclude the dot, which
+// keeps a file on the host playable when the enclosure probe offers it here.
+const safeDeckKeyRegex = /^[A-Za-z0-9]+$/
+const safeDeckIdRegex = /^\d+$/
 
 // The Flash wrapper carries the numeric id twice, on the div that holds the player and on the
 // object inside it: `id="__ss_6435157"` and `id="__sse6435157"`. The div's spelling is the one
 // that matters: many carriers name the deck on the div alone, so accepting only the object's
-// spelling would lose them.
-const wrapperIdRegex = /^__ss[e_]?(\d{4,12})$/
+// spelling would lose them. The `__ss` prefix is what tells the wrapper from any other element
+// carrying an id, so only the digits are checked after it.
+const wrapperIdRegex = /^__ss[e_]?(\d+)$/
 
 // Two players, the presentation one and the document one, sharing a query.
 const flashPlayerPathRegex = /\/swf\/(?:ssplayer\d?|doc_player)\.swf$/
+
+// The owner and the slug come off the swf query decoded, and both are written into the deck's
+// page url as path segments, so a separator or a dot segment in either would let the feed pick
+// the path. The class is the url-safe alphabet; the lookahead refuses `.` and `..`, which the
+// class would otherwise admit.
+const safePageSegmentRegex = /^(?!\.+$)[A-Za-z0-9_.-]+$/
 
 const composeEmbed = (deck: string, url?: string, title?: string): EmbedResolverResult => {
   return {
@@ -120,8 +133,8 @@ export const slideshareFlashResolveEmbed = (
   // The swf query names the deck's owner and slug, which compose the same page the wrapper
   // links to. It is the fallback for a snippet that kept the player and dropped the wrapper's
   // anchor.
-  const account = parsed.searchParams.get('userName')
-  const slug = parsed.searchParams.get('stripped_title')
+  const account = keepIfMatches(parsed.searchParams.get('userName'), safePageSegmentRegex)
+  const slug = keepIfMatches(parsed.searchParams.get('stripped_title'), safePageSegmentRegex)
   const composed = account && slug ? `https://www.slideshare.net/${account}/${slug}` : undefined
 
   return composeEmbed(deck, url ?? composed, title || undefined)

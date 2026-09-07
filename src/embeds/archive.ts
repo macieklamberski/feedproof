@@ -1,11 +1,13 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { flashVars, keepIfMatches } from '../utils/dom.js'
-import { splitStrayParams } from '../utils/urls.js'
-import { createUrlEmbedResolver } from '../utils/widgets.js'
+import { audioFileRegex, splitStrayParams } from '../utils/urls.js'
+import { createUrlEmbedResolver, getEmbedSize } from '../utils/widgets.js'
 
-// Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen.
-const safeIdentifierRegex = /^[\w.-]+$/
+// Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen. The Flash
+// config and the stranded `&` spelling reach this as raw text no `URL` has folded, so a segment
+// of dots alone is refused too: it would climb out of every path minted from it.
+const safeIdentifierRegex = /^(?!\.+$)[\w.-]+$/
 
 const archiveHosts = ['archive.org']
 
@@ -25,9 +27,16 @@ const archiveHosts = ['archive.org']
 // should begin, so the whole tail lands inside the path segment. Feeds carry it with
 // `playlist=1` and `autoplay=1`, and with the ampersand entity-encoded. Against a live item the
 // `&` spelling answers 404 and the `?` spelling answers 200.
+// The three routes that name an item in their second segment. `stream` is the retired
+// BookReader url and it still resolves: `archive.org/stream/{identifier}` 302s to
+// `details/{identifier}?view=theater` for a real item and 404s for an invented one, and the
+// same identifier answers 200 on `embed` (2026-09-06), so it is the modern player's item under
+// an old name. `download` is deliberately absent: that route serves the files themselves.
+const itemRoutes = ['embed', 'details', 'stream']
+
 const readSegmentParts = (link: string): { head: string; strayParams: string } => {
   const segments = getPathSegments(link)
-  const segment = segments[0] === 'embed' || segments[0] === 'details' ? segments[1] : undefined
+  const segment = itemRoutes.includes(segments[0] ?? '') ? segments[1] : undefined
 
   return splitStrayParams(segment ?? '')
 }
@@ -46,7 +55,27 @@ const composeEmbedResult = (identifier: string, query = ''): EmbedResolverResult
   }
 }
 
-export const archiveResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+// The modern audio player is a controls bar and nothing else: measured in a browser at 320, 558
+// and 800 pixels wide on 2026-09-06, it is 30 pixels tall at every width. A height that does not
+// move with the width is a fixed height, and a bar that fills whatever width it is given states
+// no width at all, so the result carries the height alone.
+//
+// Both branches need it, and only one of them can read the kind from a config. `embed/{identifier}`
+// serves audio and video alike, so the iframe branch has nothing in the url to tell them apart.
+// What it has is the carrier, and a carrier stating this height is stating the bar: nothing else
+// the platform renders is 30 pixels tall. Keeping its width alongside would hand the frontend two
+// dimensions, which it reads as a ratio, so the box would grow with the column while the bar
+// inside stayed 30 and the rest went blank.
+const audioPlayerHeight = 30
+
+const declaresAudioPlayer = (element: Element): boolean => {
+  return getEmbedSize(element, 0).height === audioPlayerHeight
+}
+
+export const archiveResolveEmbed = (
+  url: string,
+  element?: Element,
+): EmbedResolverResult | undefined => {
   const identifier = extractArchiveIdentifier(url)
 
   if (!identifier) {
@@ -60,10 +89,16 @@ export const archiveResolveEmbed = (url: string): EmbedResolverResult | undefine
   const { strayParams } = readSegmentParts(url)
   const query = strayParams ? `${search ? `${search}&` : '?'}${strayParams}` : search
 
-  return composeEmbedResult(identifier, query)
+  const result = composeEmbedResult(identifier, query)
+
+  return element && declaresAudioPlayer(element) ? { ...result, height: audioPlayerHeight } : result
 }
 
-export const archiveIframeEmbedResolver = createUrlEmbedResolver(archiveHosts, archiveResolveEmbed)
+export const archiveIframeEmbedResolver = createUrlEmbedResolver(
+  archiveHosts,
+  archiveResolveEmbed,
+  { preferResolverSize: true },
+)
 
 // The Flash player names no item in its url: the `src` is only the Flowplayer swf under
 // `/flow/`, so the item sits in the player's config instead, which arrives as the `flashvars`
@@ -81,6 +116,20 @@ export const archiveIframeEmbedResolver = createUrlEmbedResolver(archiveHosts, a
 const flashPlayerPathRegex = /^\/+flow\//
 const downloadIdentifierRegex = /\/\/(?:[\w-]+\.)*archive\.org\/download\/([^/'"?&]+)\//
 
+// This carrier declares the 26 pixels of the Flash bar it replaced, which is close but describes
+// a player that is gone. A video carrier's size still describes the player it gets, and the video
+// branch states no size, so `preferResolverSize` leaves it to the carrier.
+// The files the config names are what tell the two apart, since the swf is the same. Both
+// dialects write them as `url` entries, quoted in either style and with the key bare in the
+// older query form.
+const configFileRegex = /\burl['"]?\s*:\s*['"]([^'"]+)['"]/g
+
+const namesAudioFile = (config: string): boolean => {
+  return Array.from(config.matchAll(configFileRegex), (match) => match[1]).some((file) => {
+    return audioFileRegex.test(file)
+  })
+}
+
 export const archiveFlashResolveEmbed = (
   src: string,
   element: Element,
@@ -94,16 +143,19 @@ export const archiveFlashResolveEmbed = (
   const config = flashVars(element) ?? parsed.searchParams.get('config')
   const identifier = config?.match(downloadIdentifierRegex)?.[1]
 
-  if (!identifier || !safeIdentifierRegex.test(identifier)) {
+  if (!identifier || !safeIdentifierRegex.test(identifier) || !config) {
     return
   }
 
-  return composeEmbedResult(identifier)
+  const result = composeEmbedResult(identifier)
+
+  return namesAudioFile(config) ? { ...result, height: audioPlayerHeight } : result
 }
 
 export const archiveFlashEmbedResolver = createUrlEmbedResolver(
   archiveHosts,
   archiveFlashResolveEmbed,
+  { preferResolverSize: true },
 )
 
 // Starts playback on the click that loads the player, for video and audio items alike.

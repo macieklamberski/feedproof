@@ -43,6 +43,20 @@ describeForEachParser('aparatIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should resolve a hash longer than the ones in circulation', async () => {
+      const value =
+        '<iframe src="https://www.aparat.com/video/video/embed/videohash/aB3dE5fG7hJ/vt/frame"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'aparat',
+        id: 'aB3dE5fG7hJ',
+        src: 'https://www.aparat.com/video/video/embed/videohash/aB3dE5fG7hJ/vt/frame',
+        url: 'https://www.aparat.com/v/aB3dE5fG7hJ',
+        ratio: '16/9',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should resolve a seven-character hash', async () => {
       const value =
         '<iframe src="https://www.aparat.com/video/video/embed/videohash/1W2ndAb/vt/frame"></iframe>'
@@ -126,8 +140,8 @@ describeForEachParser('aparatScriptEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
-    it('should ignore a hash too short to be one', async () => {
-      const value = '<script src="https://www.aparat.com/embed/ab"></script>'
+    it('should ignore a loader script naming no hash', async () => {
+      const value = '<script src="https://www.aparat.com/embed/"></script>'
 
       expect(await extract(value)).toBeUndefined()
     })

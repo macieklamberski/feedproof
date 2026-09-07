@@ -26,11 +26,18 @@ describe('extractVimeoId', () => {
     expect(extractVimeoId(value)).toBeUndefined()
   })
 
-  // A showcase and an album are playlists, an event is a livestream and an on-demand page is a
-  // store front, each in its own id space, so their numeric segment names no video.
+  // A showcase and an album are playlists, a channel and a group are listings, an event is a
+  // livestream and an on-demand page is a store front, each in its own id space, so their numeric
+  // segment names no video. Channel 927 and group 195 are both live and 927 is also somebody's
+  // video, so reading the id off the listing serves a video the feed never named.
   const collectionUrls = [
     'https://vimeo.com/showcase/7060635',
     'https://vimeo.com/album/2632481',
+    'https://vimeo.com/channels/927',
+    'https://vimeo.com/channels/staffpicks',
+    'https://vimeo.com/groups/195',
+    'https://vimeo.com/groups/motion',
+    'https://vimeo.com/groups/motion/videos',
     'https://player.vimeo.com/event/1234567',
     'https://vimeo.com/ondemand/20704',
     'https://vimeo.com/ondemand/nazmaalik',
@@ -46,10 +53,41 @@ describe('extractVimeoId', () => {
     'https://vimeo.com/album/2632481/video/76979871',
     'https://vimeo.com/showcase/3253534/video/76979871',
     'https://vimeo.com/ondemand/36938/76979871',
+    'https://vimeo.com/channels/927/76979871',
+    'https://vimeo.com/groups/195/videos/76979871',
   ]
 
   it.each(collectionVideoUrls)('should extract the video the collection names in %s', (value) => {
     expect(extractVimeoId(value)).toBe('76979871')
+  })
+
+  // Vimeo's own pages sit where a video id does. `/users/{userId}` and `/manage/folders/{id}`
+  // carry a number of their own, and user 152184 is also somebody's video 152184. The rest carry
+  // no number and are pinned so the refusal does not rest on that.
+  const sitePaths = [
+    'https://vimeo.com/about',
+    'https://vimeo.com/blog',
+    'https://vimeo.com/categories/12345',
+    'https://vimeo.com/create',
+    'https://vimeo.com/features',
+    'https://vimeo.com/help',
+    'https://vimeo.com/join',
+    'https://vimeo.com/jobs',
+    'https://vimeo.com/log_in',
+    'https://vimeo.com/manage/folders/12345',
+    'https://vimeo.com/manage/videos/76979871',
+    'https://vimeo.com/privacy',
+    'https://vimeo.com/search/76979871',
+    'https://vimeo.com/settings/12345',
+    'https://vimeo.com/stock/clip-1234567-example',
+    'https://vimeo.com/terms',
+    'https://vimeo.com/upgrade',
+    'https://vimeo.com/users/152184',
+    'https://vimeo.com/watch/76979871',
+  ]
+
+  it.each(sitePaths)('should return undefined for the site path %s', (value) => {
+    expect(extractVimeoId(value)).toBeUndefined()
   })
 
   it('should return undefined when there is no numeric id', () => {
@@ -87,6 +125,19 @@ describe('vimeoResolveEmbed', () => {
       id: '76979871:a52724358e',
       src: 'https://player.vimeo.com/video/76979871?h=a52724358e',
       url: 'https://vimeo.com/76979871/a52724358e',
+    }
+
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
+  })
+
+  // The query is decoded, so a `..` there would climb out of the page url the hash is written into.
+  it('should drop a query hash that is not one', () => {
+    const value = 'https://player.vimeo.com/video/76979871?h=../../showcase/1'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871',
+      src: 'https://player.vimeo.com/video/76979871',
+      url: 'https://vimeo.com/76979871',
     }
 
     expect(vimeoResolveEmbed(value)).toEqual(expected)
@@ -160,6 +211,89 @@ describe('vimeoResolveEmbed', () => {
 
     expect(vimeoResolveEmbed(value)).toBeUndefined()
   })
+
+  // A showcase is a playlist in its own id space, so it resolves as itself rather than as the
+  // video its number would otherwise be read as.
+  describe('the showcase, and the album it used to be called', () => {
+    it('should resolve a showcase embed to the showcase, posterless', () => {
+      const value = 'https://vimeo.com/showcase/5371408/embed'
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: 'showcase/5371408',
+        src: 'https://vimeo.com/showcase/5371408/embed',
+        url: 'https://vimeo.com/showcase/5371408',
+      }
+
+      expect(vimeoResolveEmbed(value)).toEqual(expected)
+    })
+
+    // The album player 301s onto the showcase one, so the id travels in the spelling Vimeo
+    // itself redirects to.
+    it('should normalise the album spelling onto the showcase', () => {
+      const value = 'https://vimeo.com/album/5480258/embed'
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: 'showcase/5480258',
+        src: 'https://vimeo.com/showcase/5480258/embed',
+        url: 'https://vimeo.com/showcase/5480258',
+      }
+
+      expect(vimeoResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should build the player from a bare showcase page url', () => {
+      const value = 'https://vimeo.com/showcase/5371408'
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: 'showcase/5371408',
+        src: 'https://vimeo.com/showcase/5371408/embed',
+        url: 'https://vimeo.com/showcase/5371408',
+      }
+
+      expect(vimeoResolveEmbed(value)).toEqual(expected)
+    })
+
+    // The deeper path still names a real video, and a video beats the collection around it.
+    it('should resolve the video a showcase path names rather than the showcase', () => {
+      const value = 'https://vimeo.com/showcase/3253534/video/76979871'
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: '76979871',
+        src: 'https://player.vimeo.com/video/76979871',
+        url: 'https://vimeo.com/76979871',
+      }
+
+      expect(vimeoResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should refuse a showcase path whose id is not numeric', () => {
+      const value = 'https://vimeo.com/showcase/highlights/embed'
+
+      expect(vimeoResolveEmbed(value)).toBeUndefined()
+    })
+
+    // An event is a livestream, not a playlist, and it stays with the generic placeholder: the
+    // refusal is deliberate and is pinned here so removing it is a decision rather than a slip.
+    it('should still leave an event embed unresolved', () => {
+      const value = 'https://vimeo.com/event/5933775/embed'
+
+      expect(vimeoResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should still leave an on-demand store front unresolved', () => {
+      const value = 'https://vimeo.com/ondemand/20704'
+
+      expect(vimeoResolveEmbed(value)).toBeUndefined()
+    })
+  })
+
+  // The channel's id space is its own, and 927 is also a video somebody else made, so minting a
+  // player here plays the wrong video rather than none.
+  it('should not mint a player from a channel listing', () => {
+    const value = 'https://vimeo.com/channels/927'
+
+    expect(vimeoResolveEmbed(value)).toBeUndefined()
+  })
 })
 
 describeForEachParser('vimeoEmbedResolver', (parseHtml) => {
@@ -181,6 +315,28 @@ describeForEachParser('vimeoEmbedResolver', (parseHtml) => {
     const value = '<iframe src="https://example.com/video"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
+  })
+
+  // Every corpus showcase carrier states a box, so the size the placeholder ends up with is the
+  // publisher's and the resolver states none of its own.
+  it('should keep the size a showcase iframe states', async () => {
+    const value = html`
+      <iframe
+        src="https://vimeo.com/showcase/5371408/embed"
+        width="525"
+        height="295"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: 'showcase/5371408',
+      src: 'https://vimeo.com/showcase/5371408/embed',
+      url: 'https://vimeo.com/showcase/5371408',
+      width: 525,
+      height: 295,
+    }
+
+    expect(await extract(value)).toEqual(expected)
   })
 
   describe('the title the share snippet writes', () => {

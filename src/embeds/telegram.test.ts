@@ -45,6 +45,22 @@ describeForEachParser('telegramScriptEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // Telegram's signup form asks for five characters, but shorter channels exist and serve
+    // posts: `t.me/nft/3?embed=1` and `t.me/tech/3853?embed=1` both render one, while
+    // `t.me/tech/99999999?embed=1` renders the not-found bubble (checked 2026-09-07).
+    it('should accept a three-character channel', async () => {
+      const value = '<script data-telegram-post="nft/3"></script>'
+      const expected: EmbedResolverResult = {
+        provider: 'telegram',
+        id: 'nft/3',
+        src: 'https://t.me/nft/3?embed=1',
+        url: 'https://t.me/nft/3',
+        author: 'nft',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should accept a channel holding digits and underscores', async () => {
       const value = html`
         <script
@@ -59,6 +75,20 @@ describeForEachParser('telegramScriptEmbedResolver', (parseHtml) => {
         src: 'https://t.me/letletlet_warplanes2/9?embed=1',
         url: 'https://t.me/letletlet_warplanes2/9',
         author: 'letletlet_warplanes2',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should accept a channel longer than the signup form allows', async () => {
+      const value =
+        '<script data-telegram-post="international_documentary_festival_news/42"></script>'
+      const expected: EmbedResolverResult = {
+        provider: 'telegram',
+        id: 'international_documentary_festival_news/42',
+        src: 'https://t.me/international_documentary_festival_news/42?embed=1',
+        url: 'https://t.me/international_documentary_festival_news/42',
+        author: 'international_documentary_festival_news',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -166,7 +196,7 @@ describeForEachParser('telegramScriptEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined for a channel shorter than a username', async () => {
+    it('should return undefined for a two-character channel', async () => {
       const value = '<script data-telegram-post="ab/111424"></script>'
 
       expect(await extract(value)).toBeUndefined()
@@ -325,6 +355,14 @@ describeForEachParser('telegramIframeEmbedResolver', (parseHtml) => {
     // route does not serve.
     it('should return undefined for a private channel message', async () => {
       const value = '<iframe src="https://t.me/c/1234567/89"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // The same route without the message is the shape the two-segment pattern could claim, and
+    // the only thing refusing it is that `c` sits under the channel floor.
+    it('should return undefined for a private channel id', async () => {
+      const value = '<iframe src="https://t.me/c/1234567"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })

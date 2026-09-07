@@ -10,6 +10,7 @@ import { convertDatawrapperEmbeds } from '../transforms/dom/convertDatawrapperEm
 import { convertGiphyEmbeds } from '../transforms/dom/convertGiphyEmbeds.js'
 import { convertLazyImageContainers } from '../transforms/dom/convertLazyImageContainers.js'
 import { convertNoteEmbeds } from '../transforms/dom/convertNoteEmbeds.js'
+import { convertSmartframeEmbeds } from '../transforms/dom/convertSmartframeEmbeds.js'
 import { convertWidgets } from '../transforms/dom/convertWidgets.js'
 import { decodeDoubleEncodedTags } from '../transforms/dom/decodeDoubleEncodedTags.js'
 import { demoteHeadings } from '../transforms/dom/demoteHeadings.js'
@@ -72,6 +73,7 @@ import { surfaceParkedMarkup } from '../transforms/dom/surfaceParkedMarkup.js'
 import { surfaceTemplateEmbeds } from '../transforms/dom/surfaceTemplateEmbeds.js'
 import { trimPreWhitespace } from '../transforms/dom/trimPreWhitespace.js'
 import { unwrapDoublyNestedLists } from '../transforms/dom/unwrapDoublyNestedLists.js'
+import { unwrapDrupalOembedIframes } from '../transforms/dom/unwrapDrupalOembedIframes.js'
 import { unwrapEmojiImages } from '../transforms/dom/unwrapEmojiImages.js'
 import { unwrapHeadingBold } from '../transforms/dom/unwrapHeadingBold.js'
 import { unwrapNestedCodeWrappers } from '../transforms/dom/unwrapNestedCodeWrappers.js'
@@ -123,6 +125,9 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // Runs before convertCiteCards so a payload naming `link` still reaches the cite pass, and
   // before stripEmptyTags, which is what deletes an empty carrier nothing has claimed.
   rebuildEmbedlyEmbeds,
+  // Points a Drupal media oEmbed frame at the page url it wraps, so the provider resolvers
+  // below see the video and not the site's proxy route.
+  unwrapDrupalOembedIframes,
   rebuildGettyImagesEmbeds,
   // A GitHub Gist embed is a JS-only <script> that renders nothing in a reader. Replace it
   // with a link to the gist so the content is at least reachable.
@@ -161,6 +166,7 @@ export const defaultStandardDomTransforms: Array<DomTransform> = [
   // cluster so the emitted <img> is dimensioned and proxied by the image transforms below.
   convertDatawrapperEmbeds,
   convertGiphyEmbeds,
+  convertSmartframeEmbeds,
   unwrapDoublyNestedLists,
   // Runs before flattenPictureElements and unwrapWrappers so an alignment signal on
   // a soon-dissolved <picture> or wrapper <div> is relocated onto the surviving media.

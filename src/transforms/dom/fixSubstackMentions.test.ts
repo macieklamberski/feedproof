@@ -41,6 +41,23 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
+    // The url passes below give the href its scheme and its base, so a payload url that
+    // names neither still becomes the link.
+    it('should link a publication mention whose payload url is protocol-relative', async () => {
+      const mention = makeMention({
+        name: 'Morning Letters',
+        id: 654321,
+        type: 'pub',
+        url: '//open.substack.com/pub/morningletters',
+      })
+      const value = `<p>She hosts ${mention} now.</p>`
+      const expected = html`
+        <p>She hosts <a href="//open.substack.com/pub/morningletters">@Morning Letters</a> now.</p>
+      `
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
     it('should convert every mention in a paragraph', async () => {
       const first = makeMention({ name: 'Ana', id: 1, type: 'user', url: null })
       const second = makeMention({ name: 'Ben', id: 2, type: 'user', url: null })
@@ -60,19 +77,6 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
       const mention = makeMention({ name: 'Sam Fields', id: null, type: 'user', url: null })
       const value = `<p>With ${mention} on stage.</p>`
       const expected = '<p>With @Sam Fields on stage.</p>'
-
-      expect(await transform(value)).toEqualHtml(expected)
-    })
-
-    it('should fall back to the profile url when the payload url is not http', async () => {
-      const mention = makeMention({
-        name: 'Ana',
-        id: 42,
-        type: 'user',
-        url: 'javascript:alert(1)',
-      })
-      const value = `<p>${mention}</p>`
-      const expected = '<p><a href="https://substack.com/profile/42">@Ana</a></p>'
 
       expect(await transform(value)).toEqualHtml(expected)
     })
@@ -112,6 +116,34 @@ describeForEachParser('fixSubstackMentions', (parseHtml) => {
     const expected = html`
       <p>Thanks to <a href="https://substack.com/profile/123456">@Jane Miller</a> for the idea.</p>
     `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com',
+    })
+
+    expect(result).toEqualHtml(expected)
+  })
+
+  it('should resolve a feed-relative payload url against the base url end to end', async () => {
+    const mention = makeMention({ name: 'Ana', type: 'pub', url: '/p/a-post' })
+    const value = `<p>Thanks to ${mention} for the idea.</p>`
+    const expected = html`
+      <p>Thanks to <a href="https://example.com/p/a-post">@Ana</a> for the idea.</p>
+    `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com',
+    })
+
+    expect(result).toEqualHtml(expected)
+  })
+
+  // The scheme floor belongs to neutralizeUnsafeUrls, which runs over every anchor the
+  // pipeline builds, and stripDeadAnchors then unwraps the neutralized link.
+  it('should render a mention with a dangerous payload url as plain text end to end', async () => {
+    const mention = makeMention({ name: 'Ana', id: 42, type: 'user', url: 'javascript:alert(1)' })
+    const value = `<p>Thanks to ${mention} for the idea.</p>`
+    const expected = html`<p>Thanks to @Ana for the idea.</p>`
     const result = await transformContent(value, {
       parseHtmlFn: parseHtml,
       baseUrl: 'https://example.com',
