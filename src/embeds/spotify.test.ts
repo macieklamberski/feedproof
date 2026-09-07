@@ -18,6 +18,19 @@ describe('spotifyResolveEmbed', () => {
       expect(spotifyResolveEmbed(value)).toEqual(expected)
     })
 
+    it('should read an id longer than the 22 characters Spotify mints today', () => {
+      const value = 'https://open.spotify.com/embed/track/4cOdK2wGLETKBW3PvgPWqTx'
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'track/4cOdK2wGLETKBW3PvgPWqTx',
+        src: 'https://open.spotify.com/embed/track/4cOdK2wGLETKBW3PvgPWqTx',
+        url: 'https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqTx',
+        height: 152,
+      }
+
+      expect(spotifyResolveEmbed(value)).toEqual(expected)
+    })
+
     it('should give a collection the taller player height', () => {
       const value = 'https://open.spotify.com/embed/album/1DFixLWuPkv3KT3TnV35m3'
       const expected: EmbedResolverResult = {
@@ -179,8 +192,8 @@ describe('spotifyResolveEmbed', () => {
       expect(spotifyResolveEmbed(value)).toBeUndefined()
     })
 
-    it('should return undefined for an id that is not 22 characters', () => {
-      const value = 'https://open.spotify.com/embed/track/abc'
+    it('should return undefined for a path naming a type and no id', () => {
+      const value = 'https://open.spotify.com/embed/track'
 
       expect(spotifyResolveEmbed(value)).toBeUndefined()
     })

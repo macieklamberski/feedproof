@@ -1,4 +1,3 @@
-import { startsWithAnyOf } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { attr, jsonAttr } from '../../utils/dom.js'
 import { isUrlShaped } from '../../utils/urls.js'
@@ -25,12 +24,8 @@ type EmbedlyPayload = {
   thumbnail_url?: string
 }
 
-// The div is empty, so what a refusal costs here is the whole block: `stripEmptyTags` deletes it
-// and the embed is gone. A link is minted from the author's own `src` as the last resort, and a
-// link to nowhere is worse than none, so this one demands a real scheme rather than the loose
-// url shape the wrapper's own query is trusted with.
-const isHttpUrl = (value: string | undefined): value is string => {
-  return !!value && startsWithAnyOf(value, ['http://', 'https://'])
+const isUsableUrl = (value: string | null | undefined): value is string => {
+  return !!value && isUrlShaped(value)
 }
 
 const composeIframe = (document: Document, source: string, poster?: string): Element => {
@@ -51,15 +46,13 @@ export const rebuildEmbedlyEmbeds: DomTransform = () => (document) => {
       const params = new URLSearchParams(attr(element, 'src')?.split('?')[1] ?? '')
       const inner = params.get('src')
 
-      if (!inner || !isUrlShaped(inner)) {
+      if (!isUsableUrl(inner)) {
         continue
       }
 
       const poster = params.get('image')
 
-      element.replaceWith(
-        composeIframe(document, inner, poster && isUrlShaped(poster) ? poster : undefined),
-      )
+      element.replaceWith(composeIframe(document, inner, isUsableUrl(poster) ? poster : undefined))
       continue
     }
 
@@ -71,12 +64,12 @@ export const rebuildEmbedlyEmbeds: DomTransform = () => (document) => {
       continue
     }
 
-    if (payload && isHttpUrl(payload.url)) {
+    if (payload && isUsableUrl(payload.url)) {
       element.replaceWith(
         composeIframe(
           document,
           payload.url,
-          isHttpUrl(payload.thumbnail_url) ? payload.thumbnail_url : undefined,
+          isUsableUrl(payload.thumbnail_url) ? payload.thumbnail_url : undefined,
         ),
       )
       continue
@@ -84,7 +77,7 @@ export const rebuildEmbedlyEmbeds: DomTransform = () => (document) => {
 
     const source = attr(element, 'src')
 
-    if (!payload && isHttpUrl(source)) {
+    if (!payload && isUsableUrl(source)) {
       const link = document.createElement('a')
 
       link.setAttribute('href', source)

@@ -32,6 +32,21 @@ describe('standfmResolveEmbed', () => {
       expect(standfmResolveEmbed(value)).toEqual(expected)
     })
 
+    // A kind stand.fm has not published yet still gets the prefix, which is the whole point of
+    // reading the kind by shape. Its page form is `x-frame-options: SAMEORIGIN` like every other
+    // (probed 2026-09-07), so refusing it would leave a reader a blank frame.
+    it('should build the player from a kind the platform has not published yet', () => {
+      const value = 'https://stand.fm/lives/645af1b90b5e6b2d87ce1dc9'
+      const expected: EmbedResolverResult = {
+        provider: 'standfm',
+        id: 'lives/645af1b90b5e6b2d87ce1dc9',
+        src: 'https://stand.fm/embed/lives/645af1b90b5e6b2d87ce1dc9',
+        url: 'https://stand.fm/lives/645af1b90b5e6b2d87ce1dc9',
+      }
+
+      expect(standfmResolveEmbed(value)).toEqual(expected)
+    })
+
     // The player url is what a CMS saves once it has run note.com's client, so it arrives too.
     it('should take the player url a carrier already states', () => {
       const value = 'https://stand.fm/embed/episodes/6a8065825e9572e804f8a5cb'
@@ -48,8 +63,8 @@ describe('standfmResolveEmbed', () => {
   })
 
   describe('sad paths', () => {
-    it('should state nothing for a kind it does not know', () => {
-      const value = 'https://stand.fm/users/6a8065825e9572e804f8a5cb'
+    it('should state nothing for a first segment that is not a route word', () => {
+      const value = 'https://stand.fm/2024/6a8065825e9572e804f8a5cb'
 
       expect(standfmResolveEmbed(value)).toBeUndefined()
     })

@@ -267,6 +267,12 @@ describeForEachParser('issuuIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    it('should return undefined for names that are dot segments', async () => {
+      const value = '<iframe src="https://e.issuu.com/embed.html?u=..&d=.."></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     it('should not claim another host spelling the embed path', async () => {
       const value = html`
         <iframe src="https://evil.test/embed.html?u=ecosistemaurbano&d=paisaje_transversal"></iframe>

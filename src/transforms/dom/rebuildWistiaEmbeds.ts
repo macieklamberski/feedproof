@@ -12,8 +12,8 @@ const channelFacadePattern = /\bwistia_channel\b/
 // The script form names the media as a JSONP payload: `/embed/medias/{id}.jsonp`.
 const scriptMediaPattern = /\/embed\/medias\/([A-Za-z0-9]+)(?:\.jsonp)?/
 
-// Real ids are exactly 10 alphanumeric characters.
-const mediaIdRegex = /^[A-Za-z0-9]{10}$/
+// The grammar `wistiaResolveEmbed` checks, so a facade and the iframe it becomes agree.
+const mediaIdRegex = /^[A-Za-z0-9]+$/
 
 // Three carriers, one player. The `wistia_async_{id}` div is the JS-API inline embed, the
 // `<wistia-player media-id>` custom element is Wistia's current form, and a bare

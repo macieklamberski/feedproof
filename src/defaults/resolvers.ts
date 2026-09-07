@@ -35,7 +35,8 @@ import { anchorEmbedResolver } from '../embeds/anchor.js'
 import { aparatIframeEmbedResolver, aparatScriptEmbedResolver } from '../embeds/aparat.js'
 import { appleEmbedResolver } from '../embeds/apple.js'
 import { archiveFlashEmbedResolver, archiveIframeEmbedResolver } from '../embeds/archive.js'
-import { audioboomEmbedResolver } from '../embeds/audioboom.js'
+import { arteEmbedResolver } from '../embeds/arte.js'
+import { audioboomEmbedResolver, audioboomPlayerEmbedResolver } from '../embeds/audioboom.js'
 import { bandcampEmbedResolver } from '../embeds/bandcamp.js'
 import { bitchuteEmbedResolver } from '../embeds/bitchute.js'
 import { bloggerEmbedResolver } from '../embeds/blogger.js'
@@ -46,7 +47,9 @@ import {
   blueskyPostElementEmbedResolver,
   blueskyS9eEmbedResolver,
 } from '../embeds/bluesky.js'
+import { bridEmbedResolver } from '../embeds/brid.js'
 import {
+  brightcoveExperienceEmbedResolver,
   brightcoveFlashEmbedResolver,
   brightcoveIframeEmbedResolver,
   brightcoveVideoJsEmbedResolver,
@@ -56,8 +59,11 @@ import {
   buzzsproutScriptEmbedResolver,
 } from '../embeds/buzzsprout.js'
 import { captivateEmbedResolver } from '../embeds/captivate.js'
+import { cnbcIframeEmbedResolver } from '../embeds/cnbc.js'
 import { codepenIframeEmbedResolver, codepenWidgetEmbedResolver } from '../embeds/codepen.js'
+import { codesandboxIframeEmbedResolver } from '../embeds/codesandbox.js'
 import { dailymotionEmbedResolver } from '../embeds/dailymotion.js'
+import { deezerEmbedResolver } from '../embeds/deezer.js'
 import { donorboxEmbedResolver } from '../embeds/donorbox.js'
 import {
   facebookAmpEmbedResolver,
@@ -66,11 +72,14 @@ import {
   facebookWidgetEmbedResolver,
   facebookXfbmlEmbedResolver,
 } from '../embeds/facebook.js'
+import { figshareEmbedResolver } from '../embeds/figshare.js'
 import { firesideEmbedResolver } from '../embeds/fireside.js'
 import { flickrEmbedResolver } from '../embeds/flickr.js'
 import { flourishIframeEmbedResolver, flourishWidgetEmbedResolver } from '../embeds/flourish.js'
+import { foxnewsIframeEmbedResolver, foxnewsScriptEmbedResolver } from '../embeds/foxnews.js'
 import { geniallyEmbedResolver } from '../embeds/genially.js'
 import { gettyImagesEmbedResolver } from '../embeds/gettyimages.js'
+import { guardianEmbedResolver } from '../embeds/guardian.js'
 import { imgurBlockquoteEmbedResolver, imgurIframeEmbedResolver } from '../embeds/imgur.js'
 import {
   instagramAmpEmbedResolver,
@@ -89,17 +98,25 @@ import {
 import { kalturaIframeEmbedResolver, kalturaScriptEmbedResolver } from '../embeds/kaltura.js'
 import { libsynEmbedResolver } from '../embeds/libsyn.js'
 import { linkedinEmbedResolver } from '../embeds/linkedin.js'
+import { mailruEmbedResolver } from '../embeds/mailru.js'
 import { mastodonEmbedResolver } from '../embeds/mastodon.js'
-import { mediavineEmbedResolver } from '../embeds/mediavine.js'
+import { mediavineEmbedResolver, mediavineScriptEmbedResolver } from '../embeds/mediavine.js'
 import { megaphoneEmbedResolver } from '../embeds/megaphone.js'
+import { megatvEmbedResolver } from '../embeds/megatv.js'
 import { mixcloudEmbedResolver } from '../embeds/mixcloud.js'
 import { nicovideoIframeEmbedResolver, nicovideoScriptEmbedResolver } from '../embeds/nicovideo.js'
 import { notecomIframeEmbedResolver } from '../embeds/notecom.js'
 import { odyseeEmbedResolver } from '../embeds/odysee.js'
 import { omnyEmbedResolver } from '../embeds/omny.js'
+import { padletEmbedResolver } from '../embeds/padlet.js'
 import { podbeanEmbedResolver } from '../embeds/podbean.js'
+import { podetizeIframeEmbedResolver, podetizeScriptEmbedResolver } from '../embeds/podetize.js'
 import { podigeeEmbedResolver, podigeeIframeEmbedResolver } from '../embeds/podigee.js'
+import { redcircleIframeEmbedResolver, redcircleScriptEmbedResolver } from '../embeds/redcircle.js'
 import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from '../embeds/reddit.js'
+import { reverbnationEmbedResolver } from '../embeds/reverbnation.js'
+import { rtveFlashEmbedResolver, rtveIframeEmbedResolver } from '../embeds/rtve.js'
+import { rutubeEmbedResolver } from '../embeds/rutube.js'
 import { scribdFlashEmbedResolver, scribdIframeEmbedResolver } from '../embeds/scribd.js'
 import { simplecastEmbedResolver } from '../embeds/simplecast.js'
 import { sketchfabEmbedResolver } from '../embeds/sketchfab.js'
@@ -114,9 +131,11 @@ import {
 } from '../embeds/speakerdeck.js'
 import { spotifyEmbedResolver } from '../embeds/spotify.js'
 import { spreakerAnchorEmbedResolver, spreakerIframeEmbedResolver } from '../embeds/spreaker.js'
+import { stackblitzIframeEmbedResolver } from '../embeds/stackblitz.js'
 import { standfmEmbedResolver } from '../embeds/standfm.js'
 import { tedEmbedResolver } from '../embeds/ted.js'
 import { telegramIframeEmbedResolver, telegramScriptEmbedResolver } from '../embeds/telegram.js'
+import { tencentEmbedResolver } from '../embeds/tencent.js'
 import { tiktokBlockquoteEmbedResolver, tiktokIframeEmbedResolver } from '../embeds/tiktok.js'
 import { transistorEmbedResolver } from '../embeds/transistor.js'
 import {
@@ -132,7 +151,9 @@ import {
 } from '../embeds/videopress.js'
 import { vimeoEmbedResolver } from '../embeds/vimeo.js'
 import { wistiaEmbedResolver } from '../embeds/wistia.js'
+import { youkuEmbedResolver } from '../embeds/youku.js'
 import { youtubeAmpEmbedResolver, youtubeIframeEmbedResolver } from '../embeds/youtube.js'
+import { zencastrBlockquoteEmbedResolver, zencastrIframeEmbedResolver } from '../embeds/zencastr.js'
 import { discourseMediaResolver } from '../media/discourse.js'
 import { ghostMediaResolver } from '../media/ghost.js'
 import { podloveMediaResolver } from '../media/podlove.js'
@@ -146,6 +167,7 @@ import type { CiteResolver, EmbedResolver, MediaResolver, WidgetResolver } from 
 // meta-providers like Embedly that wrap other providers) before broader ones.
 const embedResolvers: Array<EmbedResolver> = [
   youtubeIframeEmbedResolver,
+  youkuEmbedResolver,
   youtubeAmpEmbedResolver,
   twitterBlockquoteEmbedResolver,
   twitterAmpEmbedResolver,
@@ -160,10 +182,14 @@ const embedResolvers: Array<EmbedResolver> = [
   videopressFlashEmbedResolver,
   wistiaEmbedResolver,
   captivateEmbedResolver,
+  cnbcIframeEmbedResolver,
   codepenWidgetEmbedResolver,
   codepenIframeEmbedResolver,
+  codesandboxIframeEmbedResolver,
   dailymotionEmbedResolver,
+  deezerEmbedResolver,
   donorboxEmbedResolver,
+  guardianEmbedResolver,
   imgurBlockquoteEmbedResolver,
   imgurIframeEmbedResolver,
   issuuWidgetEmbedResolver,
@@ -173,6 +199,7 @@ const embedResolvers: Array<EmbedResolver> = [
   jwplayerScriptEmbedResolver,
   jwplayerAmpEmbedResolver,
   jwplayerSetupEmbedResolver,
+  brightcoveExperienceEmbedResolver,
   brightcoveFlashEmbedResolver,
   brightcoveIframeEmbedResolver,
   brightcoveVideoJsEmbedResolver,
@@ -187,18 +214,28 @@ const embedResolvers: Array<EmbedResolver> = [
   facebookXfbmlEmbedResolver,
   facebookAmpEmbedResolver,
   mediavineEmbedResolver,
+  mediavineScriptEmbedResolver,
   mixcloudEmbedResolver,
   podbeanEmbedResolver,
   megaphoneEmbedResolver,
+  podetizeScriptEmbedResolver,
+  podetizeIframeEmbedResolver,
+  megatvEmbedResolver,
   podigeeEmbedResolver,
   podigeeIframeEmbedResolver,
+  redcircleScriptEmbedResolver,
+  redcircleIframeEmbedResolver,
   redditWidgetEmbedResolver,
   redditIframeEmbedResolver,
+  reverbnationEmbedResolver,
   simplecastEmbedResolver,
   scribdFlashEmbedResolver,
   scribdIframeEmbedResolver,
+  rtveIframeEmbedResolver,
+  rtveFlashEmbedResolver,
   slideshareFlashEmbedResolver,
   slideshareIframeEmbedResolver,
+  stackblitzIframeEmbedResolver,
   sketchfabEmbedResolver,
   tiktokBlockquoteEmbedResolver,
   tiktokIframeEmbedResolver,
@@ -206,9 +243,12 @@ const embedResolvers: Array<EmbedResolver> = [
   speakerdeckScriptEmbedResolver,
   speakerdeckIframeEmbedResolver,
   firesideEmbedResolver,
+  figshareEmbedResolver,
   flickrEmbedResolver,
   flourishWidgetEmbedResolver,
   flourishIframeEmbedResolver,
+  foxnewsScriptEmbedResolver,
+  foxnewsIframeEmbedResolver,
   geniallyEmbedResolver,
   gettyImagesEmbedResolver,
   acastEmbedResolver,
@@ -218,6 +258,7 @@ const embedResolvers: Array<EmbedResolver> = [
   appleEmbedResolver,
   archiveIframeEmbedResolver,
   archiveFlashEmbedResolver,
+  arteEmbedResolver,
   bandcampEmbedResolver,
   bitchuteEmbedResolver,
   bloggerEmbedResolver,
@@ -226,8 +267,10 @@ const embedResolvers: Array<EmbedResolver> = [
   blueskyS9eEmbedResolver,
   blueskyPostElementEmbedResolver,
   audioboomEmbedResolver,
+  audioboomPlayerEmbedResolver,
   notecomIframeEmbedResolver,
   omnyEmbedResolver,
+  padletEmbedResolver,
   odyseeEmbedResolver,
   nicovideoScriptEmbedResolver,
   nicovideoIframeEmbedResolver,
@@ -244,6 +287,12 @@ const embedResolvers: Array<EmbedResolver> = [
   mastodonEmbedResolver,
   kalturaIframeEmbedResolver,
   kalturaScriptEmbedResolver,
+  bridEmbedResolver,
+  rutubeEmbedResolver,
+  zencastrBlockquoteEmbedResolver,
+  zencastrIframeEmbedResolver,
+  mailruEmbedResolver,
+  tencentEmbedResolver,
 ]
 
 const mediaResolvers: Array<MediaResolver> = [

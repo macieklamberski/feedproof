@@ -1,8 +1,8 @@
 import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { uuidRegex } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const legacyIdRegex = /^[0-9a-f]{8}$/i
 const numericIdRegex = /^\d+$/
 
