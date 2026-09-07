@@ -10,7 +10,9 @@ const safeEmbedIdRegex = /^\d{6,12}$/
 // The share dialog's embed id is the article's post id behind a `2020` prefix: 86 of the 91
 // corpus embeds carry it, and every one probed plays the video of the post whose id follows
 // the prefix. The five without it name posts under some other mapping, so no page is minted
-// for those.
+// for those. The prefix is a fixed namespace the player plugin writes, not the year: checked
+// 2026-09-07, a June 2022 article (`postid-687366`) embeds `2020687366` and a June 2026 one
+// (`postid-2420350`) embeds `20202420350`.
 const prefixedPostIdRegex = /^2020(\d+)$/
 
 // Mega TV's player is `megatv.com/embed/?p={id}`. Checked live 2026-09-06 with a browser user
