@@ -253,7 +253,7 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '6098765432',
+        id: '1234567890/6098765432',
         src: 'https://players.brightcove.net/1234567890/..%2F..%2F999999%2Fstolen_default/index.html?videoId=6098765432',
       }
 
@@ -270,7 +270,7 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
       `
       const expected: EmbedResolverResult = {
         provider: 'brightcove',
-        id: '6098765432',
+        id: '1234567890/6098765432',
         src: 'https://players.brightcove.net/1234567890/default_e%3Fautoplay%3D1/index.html?videoId=6098765432',
       }
 
