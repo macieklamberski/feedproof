@@ -12,9 +12,10 @@ const pidRegex = /^[a-z](?=[0-9a-z]*\d)[0-9a-z]{7}$/
 const articleIdRegex = /^\d{6,9}$/
 
 // The news player answers 200 with the clip and its title for a real pid and article pair and
-// 404 when either is fabricated, so both are kept. Measured 2026-09-06 in a browser at 300 and
-// 600 pixels wide, the page is 171 and 340 tall: 16:9 of the width. The BBC's snippet states
-// 400 by 500 for the same player, which is why the ratio is preferred over the carrier.
+// 404 when either is fabricated, so both are kept. Measured 2026-09-07 in a browser at 300, 600
+// and 900 pixels wide, both the news and the World Service page are 169, 338 and 506 tall: 16:9
+// of the width. 63% of the carriers state a portrait box, most of them the BBC's own 400 by 500,
+// which reserves 275 pixels of blank at that width, so the ratio is preferred over the carrier.
 const newsPlayerRatio = '16/9'
 
 const isPid = (segment: string | undefined): segment is string => {
@@ -38,8 +39,8 @@ const composeNewsEmbed = (article: string, pid: string): EmbedResolverResult => 
 // `/news/av/embed/{pid}/{article}`, which 301s to `/news/av-embeds/{article}/vpid/{pid}`, the
 // form minted here. The World Service one, `/ws/av-embeds/articles/{article}/{pid}/{lang}/`,
 // is the same player app and is passed through. The programmes one, `/programmes/{pid}/player`,
-// answers 200 for a real pid and 404 for a fabricated one, and its size was not measured, so
-// it states none. No page url is derivable from any of them: a news page needs its section
+// answers 200 for a real pid and 404 for a fabricated one, and its size was not measured, so it
+// states none and the carrier's stands whatever this file asks to prefer. No page url is derivable from any of them: a news page needs its section
 // slug, which the embed does not carry.
 export const bbcResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, bbcHosts)
