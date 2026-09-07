@@ -1,5 +1,6 @@
 import type { EmbedResolverResult } from '../types.js'
 import { findConfigScript, formatRatio } from '../utils/dom.js'
+import * as styles from '../utils/styles.js'
 import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
 // The config the inline script hands the loader, in one of its two spellings:
@@ -46,6 +47,34 @@ const readSize = (
     : { width: parsedWidth, height: parsedHeight }
 }
 
+// A CSS length has to carry a unit for anything but zero, so `width: 16` is a declaration a
+// browser draws nothing from: it is the config's own numbers written a second time, not a box.
+// A length with its unit is a box the publisher meant, and stays the carrier's to state.
+const unitlessLengthRegex = /^\d+$/
+
+const unitlessLength = (value: string | undefined): string | undefined => {
+  return value && unitlessLengthRegex.test(value) ? value : undefined
+}
+
+// The config where it names a size, else the div's own style, whole from whichever spoke: a
+// config width beside a style height is a box nobody wrote. The style is read here because the
+// carrier tier reading it instead took `style="width: 16; height: 9;"` for a pixel box.
+const readEmbedSize = (
+  config: string,
+  element: Element,
+): Pick<EmbedResolverResult, 'width' | 'height' | 'ratio'> => {
+  const width = config.match(widthRegex)?.[1]
+  const height = config.match(heightRegex)?.[1]
+
+  if (width && height) {
+    return readSize(width, height)
+  }
+
+  const declarations = styles.declarations(element)
+
+  return readSize(unitlessLength(declarations.width), unitlessLength(declarations.height))
+}
+
 // Brid.tv (now TargetVideo) embeds a player as an empty `<div class="brid" id="Brid_…">`, an
 // inline script naming the player and the video, and the loader script. Nothing runs in a
 // reader, so the div dies as an empty tag and the video is deleted outright: 193 census feeds
@@ -57,7 +86,7 @@ const readSize = (
 // enrichment.
 //
 // The div's own `style="width: 16; height: 9;"` mirrors the config, ratio spelling included, so
-// the size read here stands over the box the carrier appears to declare.
+// the size is read from the markup here and stands over what the carrier appears to declare.
 export const bridEmbedResolver = createMarkupEmbedResolver(
   'div.brid[id^="Brid_"]',
   (element) => {
@@ -88,7 +117,7 @@ export const bridEmbedResolver = createMarkupEmbedResolver(
       id: `${playerId}/${videoId}`,
       src: `https://services.brid.tv/services/iframe/video/${videoId}/${playerId}`,
       ...(title && { title: decodeTitle(title) }),
-      ...readSize(config.match(widthRegex)?.[1], config.match(heightRegex)?.[1]),
+      ...readEmbedSize(config, element),
     }
   },
   { preferResolverSize: true },

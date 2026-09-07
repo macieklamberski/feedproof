@@ -146,6 +146,51 @@ describeForEachParser('bridEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
   })
+
+  describe('the size the div states when the config does not', () => {
+    it('should read the unitless pair as the shape it spells', async () => {
+      const value = html`
+        <div
+          id="Brid_19464537"
+          class="brid"
+          style="width: 16; height: 9;"
+        ></div>
+        <script type="text/javascript">
+          $bp("Brid_19464537", {"id":"26602","video":"755958"});
+        </script>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'brid',
+        id: '26602/755958',
+        src: 'https://services.brid.tv/services/iframe/video/755958/26602',
+        ratio: '16/9',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should read a length that carries its unit as the box it is', async () => {
+      const value = html`
+        <div
+          id="Brid_19464537"
+          class="brid"
+          style="width: 640px; height: 360px;"
+        ></div>
+        <script type="text/javascript">
+          $bp("Brid_19464537", {"id":"26602","video":"755958"});
+        </script>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'brid',
+        id: '26602/755958',
+        src: 'https://services.brid.tv/services/iframe/video/755958/26602',
+        width: 640,
+        height: 360,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
 })
 
 describeForEachParser('brid facades through the pipeline', (parseHtml) => {
