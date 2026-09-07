@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { youkuEmbedResolver } from './youku.js'
@@ -35,6 +36,21 @@ describeForEachParser('youkuEmbedResolver', (parseHtml) => {
         id: 'XNTg1ODI0MTE1Mg==',
         src: 'https://player.youku.com/embed/XNTg1ODI0MTE1Mg==',
         url: 'https://v.youku.com/v_show/id_XNTg1ODI0MTE1Mg==.html',
+        ratio: '16/9',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Youku has minted ids of several lengths, so only the `X` and the alphabet are checked.
+    it('should read an id longer than the ones minted so far', async () => {
+      const value =
+        '<iframe src="https://player.youku.com/embed/XNDUyNTczMDEyOFdvcmtpbmdMb25nZXI="></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'youku',
+        id: 'XNDUyNTczMDEyOFdvcmtpbmdMb25nZXI=',
+        src: 'https://player.youku.com/embed/XNDUyNTczMDEyOFdvcmtpbmdMb25nZXI=',
+        url: 'https://v.youku.com/v_show/id_XNDUyNTczMDEyOFdvcmtpbmdMb25nZXI=.html',
         ratio: '16/9',
       }
 
@@ -110,5 +126,32 @@ describeForEachParser('youkuEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+  })
+})
+
+// The enclosure probe offers every attachment a feed carries to this resolver, and the player
+// hosts are the ones a Youku file would sit on, so the id alphabet is what keeps a file playable.
+describeForEachParser('youku through the pipeline', (parseHtml) => {
+  it('should leave a video enclosure on the player host playable', async () => {
+    const enclosures = [
+      { url: 'https://player.youku.com/embed/XODczMzU0NTAw.mp4', type: 'video/mp4' },
+    ]
+
+    const expected = html`
+      <video
+        data-enclosure=""
+        controls
+        src="https://player.youku.com/embed/XODczMzU0NTAw.mp4"
+      ></video>
+      <p>Body</p>
+    `
+
+    expect(
+      await transformContent('<p>Body</p>', {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/post',
+        enclosures,
+      }),
+    ).toEqualHtml(expected)
   })
 })

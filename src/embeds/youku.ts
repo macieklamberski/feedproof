@@ -4,8 +4,13 @@ import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A Youku video id is an `X` followed by the base64 spelling of a number, with the padding kept:
-// `XODczMzU0NTAw`, `XNDUyNTczMDEyOA==`.
-const safeVideoIdRegex = /^X[A-Za-z0-9]{8,24}={0,2}$/
+// `XODczMzU0NTAw`, `XNDUyNTczMDEyOA==`. The length is not checked, since a wrong id fails the same
+// whether it is minted or passed through and a bound would refuse the next id space. The `X` is
+// checked, and it is the guard rather than decoration: the routes here take an id and nothing
+// else, so it is what stops a bare word in that position, `embed/about`, being read as a video.
+// Excluding the dot is what keeps a media file out, since the enclosure probe offers every
+// attachment a feed carries to this resolver.
+const safeVideoIdRegex = /^X[A-Za-z0-9=]+$/
 
 const youkuHosts = ['player.youku.com', 'static.youku.com']
 
