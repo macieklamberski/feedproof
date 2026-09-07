@@ -1,6 +1,7 @@
 import type { DomTransform } from '../../types.js'
 import { getElementDimensions, pixelDimensionLimit } from '../../utils/dom.js'
 import { getUrlDimensions, parseSrcset } from '../../utils/images.js'
+import { setDimensions } from '../../utils/widgets.js'
 
 // Largest-width candidate URL in a srcset, so a src-less responsive image can still
 // have its dimensions read from a rendition URL. Falls back to the last candidate when
@@ -48,8 +49,8 @@ const promotableDimensions = (element: Element): { width: number; height: number
 // A valid width/height attribute value: a positive integer of pixels.
 const positiveIntegerRegex = /^[1-9]\d*$/
 
-// An <img> often declares its size on the wrapping <picture>/<source> rather than
-// itself. First <source> carrying both dimensions wins, else the <picture> element.
+// An <img> often leaves its size to the wrapping <picture>/<source>. First <source> carrying
+// both dimensions wins, else the <picture> element.
 const pictureDimensions = (picture: Element): { width: number; height: number } | undefined => {
   for (const source of picture.querySelectorAll('source')) {
     const dimensions = promotableDimensions(source)
@@ -62,14 +63,13 @@ const pictureDimensions = (picture: Element): { width: number; height: number } 
   return promotableDimensions(picture)
 }
 
-// Backfills width/height attributes on media that lacks them, from (in order) the
-// element's own inline style, a size encoded in its src URL, or — for an <img> in a
-// <picture> — the wrapping picture/source. The width/height attributes drive the
-// browser's `aspect-ratio: auto w/h`, so space is reserved and the ratio survives
-// under reader CSS like `img { height: auto }`.
-// Runs after fixLazyImages, so a lazy image's real URL is already in src and is read
-// like any other, and before flattenPictureElements, so the picture/source carriers it
-// reads still exist.
+// Backfills width/height attributes on media that lacks them, from (in order) the element's own
+// inline style, a size encoded in its src URL, or, for an <img> in a <picture>, the wrapping
+// picture/source. The width/height attributes drive the browser's `aspect-ratio: auto w/h`, so
+// space is reserved and the ratio survives under reader CSS like `img { height: auto }`.
+//
+// Runs after fixLazyImages, so a lazy image's real URL is already in src and is read like any
+// other, and before flattenPictureElements, so the picture/source carriers it reads still exist.
 export const resolveMediaDimensions: DomTransform = () => {
   return (document) => {
     for (const element of document.querySelectorAll('img, video')) {
@@ -101,9 +101,7 @@ export const resolveMediaDimensions: DomTransform = () => {
       if (
         !dimensions &&
         element.localName === 'img' &&
-        element.parentElement?.localName === 'picture' &&
-        !element.hasAttribute('width') &&
-        !element.hasAttribute('height')
+        element.parentElement?.localName === 'picture'
       ) {
         dimensions = pictureDimensions(element.parentElement)
       }
@@ -112,13 +110,30 @@ export const resolveMediaDimensions: DomTransform = () => {
         continue
       }
 
-      if (!element.hasAttribute('width')) {
-        element.setAttribute('width', String(Math.round(dimensions.width)))
+      // When the element already declares one dimension, the resolved pair only supplies
+      // the aspect ratio: a feed that says height="60" for a 480x512 source is asking for
+      // a 56x60 rendering, not 480x60.
+      const declaredWidth = Number(element.getAttribute('width'))
+      const declaredHeight = Number(element.getAttribute('height'))
+
+      if (declaredWidth) {
+        setDimensions(element, {
+          height: Math.round((declaredWidth * dimensions.height) / dimensions.width),
+        })
+        continue
       }
 
-      if (!element.hasAttribute('height')) {
-        element.setAttribute('height', String(Math.round(dimensions.height)))
+      if (declaredHeight) {
+        setDimensions(element, {
+          width: Math.round((declaredHeight * dimensions.width) / dimensions.height),
+        })
+        continue
       }
+
+      setDimensions(element, {
+        width: Math.round(dimensions.width),
+        height: Math.round(dimensions.height),
+      })
     }
   }
 }

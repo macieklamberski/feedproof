@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { blogCardCiteResolver } from './blogcard.js'
 
 describeForEachParser('blogCardCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, blogCardCiteResolver)
+  const extract = resolverExtractor(parseHtml, blogCardCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from the excerpt dialect', async () => {
@@ -50,9 +50,13 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
       const value = html`
         <div class="blog-card">
           <div class="blog-card-body">
-            <h5 class="blog-card-title"><a href="https://example.com/post">Page title</a></h5>
+            <h5 class="blog-card-title">
+              <a href="https://example.com/post">Page title</a>
+            </h5>
             <p class="blog-card-text">Preview text</p>
-            <div class="blog-card-site-title"><a href="https://example.com">Example Blog</a></div>
+            <div class="blog-card-site-title">
+              <a href="https://example.com">Example Blog</a>
+            </div>
           </div>
           <div class="blog-card-image-outer">
             <a href="https://example.com/post" class="blog-card-image-frame">
@@ -81,7 +85,9 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
       const value = html`
         <div class="blog-card">
           <div class="blog-card-content">
-            <div class="blog-card-title"><a href="https://example.com/post">Page title</a></div>
+            <div class="blog-card-title">
+              <a href="https://example.com/post">Page title</a>
+            </div>
           </div>
           <div class="blog-card-hatebu">
             <a href="//b.hatena.ne.jp/entry/https://example.com/post" rel="nofollow">
@@ -90,10 +96,13 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
           </div>
         </div>
       `
-      const result = await extract(value)
+      const expected: CiteResolverResult = {
+        provider: 'blogcard',
+        url: 'https://example.com/post',
+        title: 'Page title',
+      }
 
-      expect(result?.url).toBe('https://example.com/post')
-      expect(result?.thumbnail).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the url from the card itself when the card is the anchor', async () => {
@@ -126,17 +135,23 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
           </a>
         </div>
       `
-      const result = await extract(value)
+      const expected: CiteResolverResult = {
+        provider: 'blogcard',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        thumbnail: 'https://example.com/thumb.jpg',
+      }
 
-      expect(result?.url).toBe('https://example.com/post')
-      expect(result?.title).toBe('Page title')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the thumbnail from the wrapper-classed dialect with a bare img', async () => {
       const value = html`
         <div class="blog-card">
           <a href="https://example.com/post">
-            <div class="blog-card-thumbnail"><img src="https://example.com/thumb.jpg" alt="Page title" width="150" height="150"></div>
+            <div class="blog-card-thumbnail">
+              <img src="https://example.com/thumb.jpg" alt="Page title" width="150" height="150">
+            </div>
             <div class="blog-card-content">
               <div class="blog-card-title">Page title</div>
               <div class="blog-card-excerpt">Preview text</div>
@@ -144,16 +159,23 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
           </a>
         </div>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'blogcard',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        description: 'Preview text',
         thumbnail: 'https://example.com/thumb.jpg',
-      })
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave optional fields undefined when only the title link is present', async () => {
       const value = html`
         <div class="blog-card">
-          <div class="blog-card-title"><a href="https://example.com/post">Page title</a></div>
+          <div class="blog-card-title">
+            <a href="https://example.com/post">Page title</a>
+          </div>
         </div>
       `
       const expected: CiteResolverResult = {
@@ -170,7 +192,9 @@ describeForEachParser('blogCardCiteResolver', (parseHtml) => {
     it('should return undefined when the title link has no href', async () => {
       const value = html`
         <div class="blog-card">
-          <div class="blog-card-title"><a>Page title</a></div>
+          <div class="blog-card-title">
+            <a>Page title</a>
+          </div>
           <div class="blog-card-excerpt">Preview text</div>
         </div>
       `

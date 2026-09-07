@@ -1,74 +1,387 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
+import type { EmbedResolverResult } from '../types.js'
 import { extractVimeoId, vimeoEmbedResolver, vimeoResolveEmbed } from './vimeo.js'
 
+// Every url spelling that names a single video. All extract the same id, so a deleted row is a
+// format that silently lost support.
+const videoUrls = [
+  'https://vimeo.com/76979871',
+  'https://player.vimeo.com/video/76979871',
+  'https://vimeo.com/channels/staffpicks/76979871',
+  'https://vimeo.com/groups/motion/videos/76979871',
+  // The Flash player carried no id in the path at all, and shipped its options beside it.
+  'http://vimeo.com/moogaloop.swf?clip_id=76979871',
+  'http://vimeo.com/moogaloop.swf?clip_id=76979871&force_embed=1&server=vimeo.com&color=00adef',
+]
+
 describe('extractVimeoId', () => {
-  it('should extract id from a vimeo.com url', () => {
-    expect(extractVimeoId('https://vimeo.com/76979871')).toBe('76979871')
+  it.each(videoUrls)('should extract the id from %s', (value) => {
+    expect(extractVimeoId(value)).toBe('76979871')
   })
 
-  it('should extract id from a player embed url', () => {
-    expect(extractVimeoId('https://player.vimeo.com/video/76979871')).toBe('76979871')
+  it('should return undefined for a moogaloop.swf url with no clip id', () => {
+    const value = 'http://vimeo.com/moogaloop.swf?server=vimeo.com'
+
+    expect(extractVimeoId(value)).toBeUndefined()
   })
 
-  it('should extract id from a channel url', () => {
-    expect(extractVimeoId('https://vimeo.com/channels/staffpicks/76979871')).toBe('76979871')
+  // A showcase and an album are playlists, a channel and a group are listings, an event is a
+  // livestream and an on-demand page is a store front, each in its own id space, so their numeric
+  // segment names no video. Channel 927 and group 195 are both live and 927 is also somebody's
+  // video, so reading the id off the listing serves a video the feed never named.
+  const collectionUrls = [
+    'https://vimeo.com/showcase/7060635',
+    'https://vimeo.com/album/2632481',
+    'https://vimeo.com/channels/927',
+    'https://vimeo.com/channels/staffpicks',
+    'https://vimeo.com/groups/195',
+    'https://vimeo.com/groups/motion',
+    'https://vimeo.com/groups/motion/videos',
+    'https://player.vimeo.com/event/1234567',
+    'https://vimeo.com/ondemand/20704',
+    'https://vimeo.com/ondemand/nazmaalik',
+  ]
+
+  it.each(collectionUrls)('should return undefined for %s', (value) => {
+    expect(extractVimeoId(value)).toBeUndefined()
+  })
+
+  // The same collections still name a real video deeper in the path, and there the last numeric
+  // segment is an ordinary video id.
+  const collectionVideoUrls = [
+    'https://vimeo.com/album/2632481/video/76979871',
+    'https://vimeo.com/showcase/3253534/video/76979871',
+    'https://vimeo.com/ondemand/36938/76979871',
+    'https://vimeo.com/channels/927/76979871',
+    'https://vimeo.com/groups/195/videos/76979871',
+  ]
+
+  it.each(collectionVideoUrls)('should extract the video the collection names in %s', (value) => {
+    expect(extractVimeoId(value)).toBe('76979871')
+  })
+
+  // Vimeo's own pages sit where a video id does. `/users/{userId}` and `/manage/folders/{id}`
+  // carry a number of their own, and user 152184 is also somebody's video 152184. The rest carry
+  // no number and are pinned so the refusal does not rest on that.
+  const sitePaths = [
+    'https://vimeo.com/about',
+    'https://vimeo.com/blog',
+    'https://vimeo.com/categories/12345',
+    'https://vimeo.com/create',
+    'https://vimeo.com/features',
+    'https://vimeo.com/help',
+    'https://vimeo.com/join',
+    'https://vimeo.com/jobs',
+    'https://vimeo.com/log_in',
+    'https://vimeo.com/manage/folders/12345',
+    'https://vimeo.com/manage/videos/76979871',
+    'https://vimeo.com/privacy',
+    'https://vimeo.com/search/76979871',
+    'https://vimeo.com/settings/12345',
+    'https://vimeo.com/stock/clip-1234567-example',
+    'https://vimeo.com/terms',
+    'https://vimeo.com/upgrade',
+    'https://vimeo.com/users/152184',
+    'https://vimeo.com/watch/76979871',
+  ]
+
+  it.each(sitePaths)('should return undefined for the site path %s', (value) => {
+    expect(extractVimeoId(value)).toBeUndefined()
   })
 
   it('should return undefined when there is no numeric id', () => {
-    expect(extractVimeoId('https://vimeo.com/user/profile')).toBeUndefined()
+    const value = 'https://vimeo.com/user/profile'
+
+    expect(extractVimeoId(value)).toBeUndefined()
+  })
+
+  it('should return undefined for an unparseable url', () => {
+    const value = 'not a url'
+
+    expect(extractVimeoId(value)).toBeUndefined()
   })
 })
 
 describe('vimeoResolveEmbed', () => {
   it('should build the embed without a thumbnail', () => {
-    const result = vimeoResolveEmbed('https://vimeo.com/76979871')
-    const expected = {
+    const value = 'https://vimeo.com/76979871'
+    const expected: EmbedResolverResult = {
       provider: 'vimeo',
       id: '76979871',
       src: 'https://player.vimeo.com/video/76979871',
       url: 'https://vimeo.com/76979871',
     }
 
-    expect(result).toEqual(expected)
-    expect(result?.thumbnail).toBeUndefined()
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
   })
 
-  it('should preserve an unlisted hash', () => {
-    const result = vimeoResolveEmbed('https://player.vimeo.com/video/76979871?h=abc123')
+  // The player answers 401 for an unlisted video with no hash, so it has to survive whichever
+  // spelling it arrives in. The id carries it because an oEmbed lookup for the bare id 404s.
+  it('should preserve an unlisted hash stated in the query', () => {
+    const value = 'https://player.vimeo.com/video/76979871?h=a52724358e'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871:a52724358e',
+      src: 'https://player.vimeo.com/video/76979871?h=a52724358e',
+      url: 'https://vimeo.com/76979871/a52724358e',
+    }
 
-    expect(result?.src).toBe('https://player.vimeo.com/video/76979871?h=abc123')
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
+  })
+
+  // The query is decoded, so a `..` there would climb out of the page url the hash is written into.
+  it('should drop a query hash that is not one', () => {
+    const value = 'https://player.vimeo.com/video/76979871?h=../../showcase/1'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871',
+      src: 'https://player.vimeo.com/video/76979871',
+      url: 'https://vimeo.com/76979871',
+    }
+
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
+  })
+
+  // The share link states it as a path segment, which the player refuses: it takes the hash
+  // only as a query parameter.
+  it('should move an unlisted hash stated in the path into the query', () => {
+    const value = 'https://vimeo.com/76979871/a52724358e'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871:a52724358e',
+      src: 'https://player.vimeo.com/video/76979871?h=a52724358e',
+      url: 'https://vimeo.com/76979871/a52724358e',
+    }
+
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
+  })
+
+  // A review link states the hash the same way, two segments further down.
+  it('should read the video and hash out of a review link', () => {
+    const value = 'https://vimeo.com/user170863801/review/76979871/a52724358e'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871:a52724358e',
+      src: 'https://player.vimeo.com/video/76979871?h=a52724358e',
+      url: 'https://vimeo.com/76979871/a52724358e',
+    }
+
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should keep the hash ahead of the start offset', () => {
+    const value = 'https://vimeo.com/76979871/a52724358e?t=30s'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871:a52724358e',
+      src: 'https://player.vimeo.com/video/76979871?h=a52724358e&t=30s',
+      url: 'https://vimeo.com/76979871/a52724358e',
+    }
+
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
   })
 
   it('should preserve the start offset', () => {
-    const result = vimeoResolveEmbed('https://player.vimeo.com/video/76979871?t=30s')
+    const value = 'https://player.vimeo.com/video/76979871?t=30s'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871',
+      src: 'https://player.vimeo.com/video/76979871?t=30s',
+      url: 'https://vimeo.com/76979871',
+    }
 
-    expect(result?.src).toBe('https://player.vimeo.com/video/76979871?t=30s')
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
   })
 
   it('should drop tracking parameters', () => {
-    const result = vimeoResolveEmbed('https://player.vimeo.com/video/76979871?utm_source=feed')
+    const value = 'https://player.vimeo.com/video/76979871?utm_source=feed'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871',
+      src: 'https://player.vimeo.com/video/76979871',
+      url: 'https://vimeo.com/76979871',
+    }
 
-    expect(result?.src).toBe('https://player.vimeo.com/video/76979871')
+    expect(vimeoResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should return undefined for a url naming no video', () => {
+    const value = 'https://vimeo.com/user/profile'
+
+    expect(vimeoResolveEmbed(value)).toBeUndefined()
+  })
+
+  // A showcase is a playlist in its own id space, so it resolves as itself rather than as the
+  // video its number would otherwise be read as.
+  describe('the showcase, and the album it used to be called', () => {
+    it('should resolve a showcase embed to the showcase, posterless', () => {
+      const value = 'https://vimeo.com/showcase/5371408/embed'
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: 'showcase/5371408',
+        src: 'https://vimeo.com/showcase/5371408/embed',
+        url: 'https://vimeo.com/showcase/5371408',
+      }
+
+      expect(vimeoResolveEmbed(value)).toEqual(expected)
+    })
+
+    // The album player 301s onto the showcase one, so the id travels in the spelling Vimeo
+    // itself redirects to.
+    it('should normalise the album spelling onto the showcase', () => {
+      const value = 'https://vimeo.com/album/5480258/embed'
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: 'showcase/5480258',
+        src: 'https://vimeo.com/showcase/5480258/embed',
+        url: 'https://vimeo.com/showcase/5480258',
+      }
+
+      expect(vimeoResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should build the player from a bare showcase page url', () => {
+      const value = 'https://vimeo.com/showcase/5371408'
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: 'showcase/5371408',
+        src: 'https://vimeo.com/showcase/5371408/embed',
+        url: 'https://vimeo.com/showcase/5371408',
+      }
+
+      expect(vimeoResolveEmbed(value)).toEqual(expected)
+    })
+
+    // The deeper path still names a real video, and a video beats the collection around it.
+    it('should resolve the video a showcase path names rather than the showcase', () => {
+      const value = 'https://vimeo.com/showcase/3253534/video/76979871'
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: '76979871',
+        src: 'https://player.vimeo.com/video/76979871',
+        url: 'https://vimeo.com/76979871',
+      }
+
+      expect(vimeoResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should refuse a showcase path whose id is not numeric', () => {
+      const value = 'https://vimeo.com/showcase/highlights/embed'
+
+      expect(vimeoResolveEmbed(value)).toBeUndefined()
+    })
+
+    // An event is a livestream, not a playlist, and it stays with the generic placeholder: the
+    // refusal is deliberate and is pinned here so removing it is a decision rather than a slip.
+    it('should still leave an event embed unresolved', () => {
+      const value = 'https://vimeo.com/event/5933775/embed'
+
+      expect(vimeoResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should still leave an on-demand store front unresolved', () => {
+      const value = 'https://vimeo.com/ondemand/20704'
+
+      expect(vimeoResolveEmbed(value)).toBeUndefined()
+    })
+  })
+
+  // The channel's id space is its own, and 927 is also a video somebody else made, so minting a
+  // player here plays the wrong video rather than none.
+  it('should not mint a player from a channel listing', () => {
+    const value = 'https://vimeo.com/channels/927'
+
+    expect(vimeoResolveEmbed(value)).toBeUndefined()
   })
 })
 
 describeForEachParser('vimeoEmbedResolver', (parseHtml) => {
-  const resolve = (value: string) => {
-    const element = parseHtml(value).querySelector(vimeoEmbedResolver.selector) ?? undefined
-    return element ? vimeoEmbedResolver.extract(element) : undefined
-  }
+  const extract = resolverExtractor(parseHtml, vimeoEmbedResolver)
 
   it('should resolve a vimeo iframe', async () => {
-    const result = await resolve('<iframe src="https://player.vimeo.com/video/76979871"></iframe>')
+    const value = '<iframe src="https://player.vimeo.com/video/76979871"></iframe>'
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: '76979871',
+      src: 'https://player.vimeo.com/video/76979871',
+      url: 'https://vimeo.com/76979871',
+    }
 
-    expect(result?.provider).toBe('vimeo')
-    expect(result?.id).toBe('76979871')
+    expect(await extract(value)).toEqual(expected)
   })
 
   it('should ignore a non-vimeo iframe', async () => {
-    const result = await resolve('<iframe src="https://example.com/video"></iframe>')
+    const value = '<iframe src="https://example.com/video"></iframe>'
 
-    expect(result).toBeUndefined()
+    expect(await extract(value)).toBeUndefined()
+  })
+
+  // Every corpus showcase carrier states a box, so the size the placeholder ends up with is the
+  // publisher's and the resolver states none of its own.
+  it('should keep the size a showcase iframe states', async () => {
+    const value = html`
+      <iframe
+        src="https://vimeo.com/showcase/5371408/embed"
+        width="525"
+        height="295"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'vimeo',
+      id: 'showcase/5371408',
+      src: 'https://vimeo.com/showcase/5371408/embed',
+      url: 'https://vimeo.com/showcase/5371408',
+      width: 525,
+      height: 295,
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
+  describe('the title the share snippet writes', () => {
+    it('should carry the video title across', async () => {
+      const value = html`
+        <iframe
+          src="https://player.vimeo.com/video/76979871"
+          width="640"
+          height="360"
+          title="Scott M. Graffius - Speaker Reel"
+          frameborder="0"
+          allowfullscreen
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: '76979871',
+        src: 'https://player.vimeo.com/video/76979871',
+        url: 'https://vimeo.com/76979871',
+        title: 'Scott M. Graffius - Speaker Reel',
+        width: 640,
+        height: 360,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The label is carried like any other stated title. Half of them are the real thing and the
+    // labels are localised into at least five languages, so filtering would be a list that ages.
+    it('should carry a player label as stated rather than judging it', async () => {
+      const value = html`
+        <iframe
+          src="https://player.vimeo.com/video/76979871"
+          title="Vimeo video player"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'vimeo',
+        id: '76979871',
+        src: 'https://player.vimeo.com/video/76979871',
+        url: 'https://vimeo.com/76979871',
+        title: 'Vimeo video player',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 })

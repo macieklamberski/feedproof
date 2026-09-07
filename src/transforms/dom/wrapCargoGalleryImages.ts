@@ -1,6 +1,8 @@
 import type { DomTransform } from '../../types.js'
 import { hasText } from '../../utils/dom.js'
 
+const cargoImageSelector = 'img[src*="cargo.site"], img[data-src*="cargo.site"]'
+
 // Cargo (cargo.site) portfolio feeds emit each project as bare caption text plus a
 // run of standalone images served from freight.cargo.site, with no block wrappers.
 // wrapBareInlineInParagraphs would then sweep the caption, every image, and the
@@ -8,8 +10,6 @@ import { hasText } from '../../utils/dom.js'
 // each Cargo image in its own <figure> gives the run block boundaries, so the
 // caption, images, and nav land in separate blocks. Runs before
 // wrapBareInlineInParagraphs.
-const cargoImageSelector = 'img[src*="cargo.site"], img[data-src*="cargo.site"]'
-
 export const wrapCargoGalleryImages: DomTransform = () => {
   return (document) => {
     for (const image of document.querySelectorAll(cargoImageSelector)) {

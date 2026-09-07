@@ -4,7 +4,7 @@ import { blockElements, hasText, mediaElements } from '../../utils/dom.js'
 const blockInParagraphSelector = [...blockElements].map((tag) => `p ${tag}`).join(', ')
 const mediaSelector = [...mediaElements].join(', ')
 
-// A paragraph half left with neither text nor media renders as a blank line; one that
+// A paragraph half left with neither text nor media renders as a blank line. One that
 // kept either stays.
 const hasRenderableContent = (element: Element): boolean => {
   return hasText(element) || element.querySelector(mediaSelector) !== null

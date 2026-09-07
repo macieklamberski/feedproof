@@ -59,8 +59,9 @@ describe('unwrapCdataComments', () => {
   })
 
   it('should unwrap CDATA with multiple internal --> markers', () => {
-    const value =
-      '<!--[CDATA[<p>one</p><!--StartFragment--><p>two</p><!--EndFragment--><p>three</p>]]-->'
+    const value = html`
+      <!--[CDATA[<p>one</p><!--StartFragment--><p>two</p><!--EndFragment--><p>three</p>]]-->
+    `
     const expected = html`
       <p>one</p>
       <!--StartFragment-->
@@ -94,7 +95,7 @@ describe('unwrapCdataComments', () => {
   })
 
   it('should leave unterminated CDATA shape alone', () => {
-    // No matching `]]-->` — leave verbatim; the HTML parser will treat it
+    // No matching `]]-->`, so leave it verbatim. The HTML parser will treat it
     // as a bogus/unterminated comment.
     const value = '<!--[CDATA[unterminated'
 

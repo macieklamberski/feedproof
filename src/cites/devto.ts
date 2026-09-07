@@ -1,6 +1,6 @@
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
-import { attr, find, text, textNode } from '../utils/dom.js'
+import { attr, find, keepIfMatches, text, textNode } from '../utils/dom.js'
 
 // Forem renders the card date without a year when the post's year matched the embedding
 // article's save year ("Jul 25"), and the save year itself is unrecoverable later, so only
@@ -8,15 +8,16 @@ import { attr, find, text, textNode } from '../utils/dom.js'
 const yearRegex = /\b(19|20)\d{2}\b|'\d{2}\b/
 
 const dateWithYear = (value: string | undefined): string | undefined => {
-  return value && yearRegex.test(value) ? value : undefined
+  return keepIfMatches(value, yearRegex)
 }
 
 // dev.to (Forem) turns a pasted link into an embed card. Forem compiles its liquid tags to
 // HTML when the article is saved, so the card is already in the stored body by the time the
 // feed renders, and the feed sanitizer's allowlist keeps `div`, `class` and `id` intact.
-// An external link becomes `.c-embed`; a link to another dev.to post becomes one of the two
+// An external link becomes `.c-embed`. A link to another dev.to post becomes one of the two
 // shapes below.
 export const devtoLinkCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.c-embed',
   extract: (element) => {
     const body = find(element, '.c-embed__body')
@@ -27,8 +28,8 @@ export const devtoLinkCiteResolver: CiteResolver = {
       url: attr(find(body, 'h2 a'), 'href') ?? attr(find(element, '.c-embed__cover a'), 'href'),
       title: text(body, 'h2'),
       description: text(body, 'p'),
-      // The publisher is a bare text node beside the favicon image rather than an element
-      // of its own, so it is read from the favicon's parent, text nodes only.
+      // The publisher is a bare text node beside the favicon image, with no element of its
+      // own, so it is read from the favicon's parent, text nodes only.
       publisher: textNode(favicon?.parentElement),
       icon: attr(favicon, 'src'),
       thumbnail: attr(find(element, '.c-embed__cover img'), 'src'),
@@ -40,6 +41,7 @@ export const devtoLinkCiteResolver: CiteResolver = {
 // article keeps whatever markup its generator emitted, so both this shape and the older one
 // below stay in circulation indefinitely and each needs its own resolver.
 export const devtoPostCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.ltag__link--embedded',
   extract: (element) => {
     const heading = find(element, '.crayons-story__title')
@@ -51,12 +53,14 @@ export const devtoPostCiteResolver: CiteResolver = {
         attr(find(heading, 'a'), 'href'),
       title: text(heading, 'a'),
       // Only posts carrying a context note or a status preview have any text beside the
-      // title; an ordinary post card has none.
+      // title. An ordinary post card has none.
       description:
         text(element, '.crayons-article__context-note') ??
         text(element, '.crayons-story__contentpreview'),
       // Author and organization share a class. The author comes first in the document, and
-      // the organization is the one wrapped in the `for <org>` span.
+      // the organization is the one wrapped in the `for <org>` span. Forem renders the author
+      // anchor unconditionally and the organization only after it, so the first match is never
+      // the organization.
       author: text(element, 'a.crayons-story__secondary'),
       publisher: text(element, 'span > a.crayons-story__secondary'),
       date: dateWithYear(text(element, 'time')),
@@ -70,14 +74,9 @@ export const devtoPostCiteResolver: CiteResolver = {
 const authorSeparator = '・'
 
 export const devtoLegacyPostCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.ltag__link',
   extract: (element) => {
-    // The Medium liquid tag renders into the same class tree. It has no tag list and names
-    // the service instead, which separates the two.
-    if (find(element, '.ltag__link__servicename')) {
-      return
-    }
-
     const content = find(element, '.ltag__link__content')
     const [author, date] = text(content, 'h3')?.split(authorSeparator) ?? []
 
@@ -86,6 +85,10 @@ export const devtoLegacyPostCiteResolver: CiteResolver = {
       url: attr(content?.closest('a'), 'href'),
       title: text(content, 'h2'),
       author,
+      // The Medium liquid tag compiles into the same tree and names the service where a dev.to
+      // card has a tag list, writing the article's host into it. Everything else it renders is
+      // in the same place, so the card reads whole and the service is the publisher.
+      publisher: text(element, '.ltag__link__servicename'),
       date: dateWithYear(date),
       icon: attr(find(element, '.ltag__link__pic img'), 'src'),
     })

@@ -6,13 +6,12 @@ import type { StringTransform } from '../../types.js'
 // comment/markup-stripping pass erases it (the markers read as a bogus comment),
 // so the article body or summary disappears.
 //
-// Unlike unwrapCdataComments, this only unwraps when a single block makes up the
-// entire value. A bare `<![CDATA[` in the middle of content is a legitimate
-// example (e.g. an XML tutorial) and must survive verbatim.
+// The value is only unwrapped when a single block makes it up whole. A bare
+// `<![CDATA[` in the middle of content is a legitimate example (e.g. an XML
+// tutorial) and must survive verbatim.
 //
-// The regex is anchored at both ends, so a non-match bails at the start without
-// scanning or copying the whole string; the inner string is only built when a
-// wrapper actually matches.
+// The wrapper regex is anchored at both ends so a non-match bails at the start,
+// without scanning or copying the whole string.
 const cdataStart = '<![CDATA['
 const cdataEnd = ']]>'
 const wrapperRegex = /^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/

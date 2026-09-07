@@ -2,7 +2,6 @@ import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
 import type {
   CleanUrlFn,
   DomTransform,
-  EmbedResolver,
   EmbedResolverResult,
   Enclosure,
   TransformContext,
@@ -10,11 +9,20 @@ import type {
 } from '../../types.js'
 import { getElementDimensions } from '../../utils/dom.js'
 import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
-import { absoluteUrlRegex, resolveOrKeepUrl } from '../../utils/urls.js'
-import { createEmbedPlaceholder, isMediaResult } from '../../utils/widgets.js'
+import { absoluteUrlRegex, cleanUrl, resolveOrDropUrl, resolveOrKeepUrl } from '../../utils/urls.js'
+import {
+  createEmbedPlaceholder,
+  createImage,
+  createMediaElement,
+  isEmbedOrMediaResolver,
+  isMediaResult,
+  prepareEmbedMetadata,
+  setDimensions,
+} from '../../utils/widgets.js'
 
-// Marks an injected element so stripDuplicateEnclosures (an opt-in heuristic) can
-// tell it from the item's own inline content. Exported because that pass reads it.
+// Marks an injected element so a repeat run skips it and stripDuplicateEnclosures (an
+// opt-in heuristic) can tell it from the item's own inline content. Exported because
+// stripDuplicateEnclosures and assignVideoPosters both read it.
 export const enclosureMarker = 'data-enclosure'
 
 const isAudioEnclosure = (enclosure: Enclosure): boolean => {
@@ -35,15 +43,22 @@ const isAvatarEnclosure = (url: string, avatarHosts: ReadonlyArray<string>): boo
 
 // Run resolvers against a synthesized iframe carrying the enclosure URL so that
 // iframe-shaped resolvers (YouTube etc.) can claim platform-specific enclosures.
+//
+// The feed's dimensions ride along on the probe, which puts them in the same tier as the size a
+// publisher states on a carrier in the content: they win over the resolver's, unless the resolver
+// measured the platform better and opted out of declared sizes.
 const resolveEnclosure = async (
   url: string,
+  enclosure: Enclosure,
   resolvers: ReadonlyArray<WidgetResolver>,
   document: Document,
 ): Promise<EmbedResolverResult | undefined> => {
+  const embedOrMediaResolvers = resolvers.filter(isEmbedOrMediaResolver)
   const probe = document.createElement('iframe')
   probe.setAttribute('src', url)
+  setDimensions(probe, enclosure)
 
-  for (const resolver of resolvers) {
+  for (const resolver of embedOrMediaResolvers) {
     if (probe.matches(resolver.selector)) {
       const metadata = await resolver.extract(probe)
 
@@ -61,89 +76,59 @@ const resolveEnclosure = async (
 // aria-label, data-* attributes, etc.) needs a separate design pass.
 const createNativeMediaElement = (
   document: Document,
-  tagName: 'audio' | 'video',
+  tag: 'audio' | 'video',
+  src: string,
   enclosure: Enclosure,
   context: TransformContext,
 ): HTMLElement => {
-  const element = document.createElement(tagName)
-  const src = resolveOrKeepUrl(enclosure.url, context.resolveUrlFn, context.baseUrl)
+  const poster = resolveOrKeepUrl(enclosure.thumbnails?.[0]?.url, context)
 
-  if (src) {
-    element.setAttribute('src', src)
-  }
-
-  element.setAttribute('controls', '')
-  element.setAttribute('preload', 'none')
-
-  if (tagName === 'video') {
-    if (enclosure.width) {
-      element.setAttribute('width', String(enclosure.width))
-    }
-
-    if (enclosure.height) {
-      element.setAttribute('height', String(enclosure.height))
-    }
-
-    const poster = resolveOrKeepUrl(
-      enclosure.thumbnails?.[0]?.url,
-      context.resolveUrlFn,
-      context.baseUrl,
-    )
-    if (poster) {
-      element.setAttribute('poster', poster)
-    }
-  }
-
-  return element
+  return createMediaElement(document, {
+    tag,
+    src,
+    poster,
+    width: enclosure.width,
+    height: enclosure.height,
+  })
 }
 
+// The src arrives resolved from the loop, the way createNativeMediaElement takes its own: an
+// image enclosure never carries a player url, so what the loop resolved is this enclosure's own
+// url and resolving it a second time here would only be a second chance to disagree.
 const injectImageEnclosure = (
   document: Document,
   enclosure: Enclosure,
-  context: TransformContext,
+  src: string,
 ): HTMLElement | undefined => {
   if (!isImageEnclosure(enclosure)) {
     return
   }
 
-  const element = document.createElement('img')
-  const src = resolveOrKeepUrl(enclosure.url, context.resolveUrlFn, context.baseUrl)
-
-  if (src) {
-    element.setAttribute('src', src)
-  }
-
-  if (enclosure.width) {
-    element.setAttribute('width', String(enclosure.width))
-  }
-
-  if (enclosure.height) {
-    element.setAttribute('height', String(enclosure.height))
-  }
-
-  if (enclosure.title) {
-    element.setAttribute('alt', enclosure.title)
-  }
-
-  return element
+  return createImage(document, {
+    src,
+    alt: enclosure.title,
+    width: enclosure.width,
+    height: enclosure.height,
+  })
 }
 
 // Layers the enclosure's own metadata over the resolver result, preferring the feed's
 // values for the display fields. The resolver only has URL-derived guesses (e.g. YouTube's
 // composed hqdefault thumbnail), while the feed carries the publisher's real thumbnail,
-// title, dimensions, and duration. Identity fields (provider/id/src/url) stay from the
-// resolver.
+// title, and duration. Identity fields (provider/id/src/url) stay from the resolver.
+//
+// The size is settled before this: a resolver read the feed's dimensions off the probe, whole,
+// through the rule that governs content markup too. Where no resolver claimed the enclosure, the
+// feed's dimensions are the only ones there are.
 const mergeEnclosureMetadata = (
   resolved: EmbedResolverResult | undefined,
   enclosure: Enclosure,
 ): Partial<EmbedResolverResult> => {
   return {
-    ...resolved,
+    ...(resolved ?? { width: enclosure.width, height: enclosure.height }),
     thumbnail: enclosure.thumbnails?.[0]?.url ?? resolved?.thumbnail,
     title: enclosure.title ?? resolved?.title,
     description: enclosure.description ?? resolved?.description,
-    width: enclosure.width ?? resolved?.width,
-    height: enclosure.height ?? resolved?.height,
     duration: enclosure.duration ?? resolved?.duration,
   }
 }
@@ -151,7 +136,7 @@ const mergeEnclosureMetadata = (
 // Whether `incoming` is a better variant of the same image to keep than `kept`. A URL
 // with no size encoded in it (`hint === 0`) is treated as the full-res original and
 // preferred over any sized copy (a bare `photo.jpg` outranks `photo-800x450.jpg`).
-// Between two sized variants the larger wins; on a true tie the no-query URL wins, else
+// Between two sized variants the larger wins. On a true tie the no-query URL wins, else
 // the first stays.
 const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
   const incomingUrl = incoming.url ?? ''
@@ -172,7 +157,7 @@ const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
   return keptUrl.includes('?') && !incomingUrl.includes('?')
 }
 
-// Collapse image enclosures that are the same picture at a different size or render —
+// Collapse image enclosures that are the same picture at a different size or render:
 // a scaled copy, a CDN-proxied variant, or just a `?w=` query (a feed often lists one
 // image as a native enclosure plus a media:content). Without this they each inject as a
 // stacked copy. Keyed by getImageFingerprint (the same size-agnostic key the duplicate
@@ -243,7 +228,7 @@ const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): En
   container.innerHTML = playerEmbed
 
   // In real feeds (corpus sample, July 2026) rawvoice:embed is an iframe player in 36 of
-  // 40 feeds; the rest wrap a native <audio> for the same file as the enclosure, or plain
+  // 40 feeds. The rest wrap a native <audio> for the same file as the enclosure, or plain
   // text. Only frame-able elements count as players, so those others fall through and the
   // enclosure itself still renders.
   const frame = container.querySelector('iframe[src], embed[src]')
@@ -262,6 +247,30 @@ const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): En
   }
 }
 
+// An enclosure in the shape the rest of the pass works with: its player embed folded in, both
+// urls absolute. Absolute here rather than at each use, because the fingerprint that collapses
+// duplicate images and the gravatar check both read the url as it stands, and one naming no
+// host keys as itself and matches nothing.
+const readEnclosure = (
+  enclosure: Enclosure,
+  document: Document,
+  context: TransformContext,
+): Enclosure => {
+  const extracted = extractEnclosureFromEmbed(enclosure, document)
+
+  return {
+    ...extracted,
+    url: resolveOrKeepUrl(extracted.url, context),
+    playerUrl: resolveOrKeepUrl(extracted.playerUrl, context),
+  }
+}
+
+// The attribute the injected element carries its source in: `src` on native audio, video,
+// and img elements, `data-embed-src` on embed placeholders.
+const getInjectedSource = (element: Element): string | null => {
+  return element.getAttribute('src') ?? element.getAttribute('data-embed-src')
+}
+
 // A feed sometimes lists the same media twice: once as the raw file and once as a
 // player page carrying the file URL in a query param (podcast hosts pair a plain
 // <enclosure> with a player entry like …/?media_url=<file>; the param name varies
@@ -272,10 +281,6 @@ const mergePlayerEnclosures = (
   enclosures: ReadonlyArray<Enclosure>,
   cleanUrlFn?: CleanUrlFn,
 ): Array<Enclosure> => {
-  const cleanUrl = (url: string): string => {
-    return cleanUrlFn ? cleanUrlFn(url) : url
-  }
-
   const result = [...enclosures]
   const removed = new Set<number>()
 
@@ -285,7 +290,9 @@ const mergePlayerEnclosures = (
         return false
       }
 
-      return typeof candidate.url === 'string' && cleanUrl(candidate.url) === nestedUrl
+      return (
+        typeof candidate.url === 'string' && cleanUrl(candidate.url, { cleanUrlFn }) === nestedUrl
+      )
     })
   }
 
@@ -297,7 +304,7 @@ const mergePlayerEnclosures = (
     }
 
     for (const nested of extractNestedUrls(player.url)) {
-      const fileIndex = findFileIndex(cleanUrl(nested), playerIndex)
+      const fileIndex = findFileIndex(cleanUrl(nested, { cleanUrlFn }), playerIndex)
 
       if (fileIndex === -1) {
         continue
@@ -326,6 +333,10 @@ export const injectEnclosures: DomTransform = (context) => {
     return () => {}
   }
 
+  const feedImageFingerprints = new Set(
+    context.feedImageUrls?.map((url) => getImageFingerprint(url, context.cleanUrlFn)),
+  )
+
   return async (document) => {
     const created: Array<HTMLElement> = []
 
@@ -337,7 +348,7 @@ export const injectEnclosures: DomTransform = (context) => {
     const hasContentImage = !!document.querySelector('img[src], picture, [data-embed-thumbnail]')
 
     const resolvedEnclosures = enclosures.map((enclosure) => {
-      return extractEnclosureFromEmbed(enclosure, document)
+      return readEnclosure(enclosure, document, context)
     })
     const mergedEnclosures = mergePlayerEnclosures(
       dedupeImageEnclosures(resolvedEnclosures, context.cleanUrlFn),
@@ -354,37 +365,55 @@ export const injectEnclosures: DomTransform = (context) => {
         continue
       }
 
-      if (!context.resolveUrlFn(embedSource, context.baseUrl)) {
+      // Whatever this enclosure becomes, a player or a native element, the reader loads this url,
+      // so an enclosure stating one that will not resolve is not injected at all.
+      const src = resolveOrDropUrl(embedSource, context)
+
+      if (!src) {
         continue
       }
 
-      const resolved = await resolveEnclosure(embedSource, context.widgetResolvers, document)
+      const resolved = await resolveEnclosure(
+        embedSource,
+        enclosure,
+        context.widgetResolvers,
+        document,
+      )
 
       // A resolver match, or an explicit player URL (embeddable by the Media RSS spec even
       // when no resolver claims it), produces an embed placeholder.
       if (resolved || enclosure.playerUrl) {
-        const src = resolveOrKeepUrl(embedSource, context.resolveUrlFn, context.baseUrl)
-        // A resolver rebuilds the src from the parsed id; without one the enclosure's own
-        // URL stands in.
         const metadata = mergeEnclosureMetadata(resolved, enclosure)
-        created.push(createEmbedPlaceholder(document, { ...metadata, src: metadata.src ?? src }))
+
+        // A resolver rebuilds the src from the parsed id. Without one the enclosure's own
+        // URL stands in.
+        const prepared = prepareEmbedMetadata(metadata, context)
+
+        created.push(createEmbedPlaceholder(document, { ...prepared, src: metadata.src ?? src }))
         continue
       }
 
+      // Only an enclosure with no player page reaches here, so `embedSource` is the enclosure's
+      // own URL and `src` is the resolved form of it.
       if (isAudioEnclosure(enclosure)) {
-        created.push(createNativeMediaElement(document, 'audio', enclosure, context))
+        created.push(createNativeMediaElement(document, 'audio', src, enclosure, context))
         continue
       }
 
       if (isVideoEnclosure(enclosure)) {
-        created.push(createNativeMediaElement(document, 'video', enclosure, context))
+        created.push(createNativeMediaElement(document, 'video', src, enclosure, context))
         continue
       }
 
-      // WordPress attaches the author's gravatar as a per-item media:content image.
-      // It is the author's avatar, not post imagery, so never inject it as the lead
-      // image of an otherwise imageless item.
-      if (isImageEnclosure(enclosure) && isAvatarEnclosure(embedSource, context.avatarImageHosts)) {
+      // WordPress attaches the author's gravatar as a per-item media:content image, and
+      // Substack fills the enclosure of a post with no cover with the publication logo.
+      // Neither is post imagery, so never inject one as the lead image of an otherwise
+      // imageless item.
+      if (
+        isImageEnclosure(enclosure) &&
+        (isAvatarEnclosure(embedSource, context.avatarImageHosts) ||
+          feedImageFingerprints.has(getImageFingerprint(embedSource, context.cleanUrlFn)))
+      ) {
         continue
       }
 
@@ -392,22 +421,39 @@ export const injectEnclosures: DomTransform = (context) => {
         continue
       }
 
-      const imageElement = injectImageEnclosure(document, enclosure, context)
+      const imageElement = injectImageEnclosure(document, enclosure, src)
       if (imageElement) {
         created.push(imageElement)
       }
     }
 
+    // Content that already carries a marked element with the same source (typically
+    // a previous run of this transform over the same item) already shows that
+    // enclosure, so injecting it again would stack a visible duplicate.
+    const existingSources = new Set<string>()
+
+    for (const element of document.querySelectorAll(`[${enclosureMarker}]`)) {
+      const source = getInjectedSource(element)
+
+      if (source) {
+        existingSources.add(source)
+      }
+    }
+
+    const injected = created.filter((element) => {
+      return !existingSources.has(getInjectedSource(element) ?? '')
+    })
+
     // Tag each injected element so the optional stripDuplicateEnclosures pass can
-    // recognize it as injected media rather than the item's own content.
-    for (const element of created) {
+    // recognize it as injected media, not the item's own content.
+    for (const element of injected) {
       element.setAttribute(enclosureMarker, '')
     }
 
-    // Prepend ahead of the existing content while preserving enclosure order; a
+    // Prepend ahead of the existing content while preserving enclosure order. A
     // per-item prepend would reverse the order of multi-enclosure items.
-    for (let index = created.length - 1; index >= 0; index--) {
-      document.body.prepend(created[index])
+    for (let index = injected.length - 1; index >= 0; index--) {
+      document.body.prepend(injected[index])
     }
   }
 }

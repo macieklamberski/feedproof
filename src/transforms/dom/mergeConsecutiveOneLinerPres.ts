@@ -1,21 +1,21 @@
 import type { DomTransform } from '../../types.js'
 import { hasText, isElement, isText } from '../../utils/dom.js'
 
-// Feeds like Medium wrap each code line in its own <pre>, which renders as
-// a stack of separate boxes instead of a unified code block. This merges
-// consecutive single-line <pre> siblings into one <pre> joined by newlines.
 const trailingBrRegex = /<br\s*\/?>\s*$/i
 const surroundingNewlinesRegex = /^\n+|\n+$/g
 const classTokenSeparatorRegex = /\s+/
 
 // Read from a sole <code> child so consecutive <pre><code> lines merge into one
-// block rather than a stack of <code> elements.
+// block instead of a stack of <code> elements.
 const contentElement = (element: Element): Element => {
   const children = element.children
 
   return children.length === 1 && children[0].localName === 'code' ? children[0] : element
 }
 
+// Feeds like Medium wrap each code line in its own <pre>, which renders as
+// a stack of separate boxes instead of a unified code block. This merges
+// consecutive single-line <pre> siblings into one <pre> joined by newlines.
 export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses }) => {
   const preservedSet = new Set(preservedPreClasses)
 
@@ -75,7 +75,7 @@ export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses
       }
 
       // Skip runs that contain a <pre> marked as author-distinct content
-      // (poetry stanzas, scriptural verses, leader-dotted ToCs) — those
+      // (poetry stanzas, scriptural verses, leader-dotted ToCs): those
       // are meant to render as separate blocks even when single-line.
       if (run.some(isPreserved)) {
         continue

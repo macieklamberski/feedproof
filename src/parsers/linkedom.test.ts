@@ -73,8 +73,14 @@ describe('parseHtml', () => {
     it('should handle nested svg regions independently', () => {
       const document = parseHtml(
         html`
-          <svg><circle r="5" /></svg>
-          <div><svg><rect width="1" /></svg></div>
+          <svg>
+            <circle r="5" />
+          </svg>
+          <div>
+            <svg>
+              <rect width="1" />
+            </svg>
+          </div>
         `,
       )
 

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { discourseCiteResolver, omittedOneboxClasses, socialPostHosts } from './discourse.js'
 
 describeForEachParser('discourseCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, discourseCiteResolver)
+  const extract = resolverExtractor(parseHtml, discourseCiteResolver)
 
   describe('generic oneboxes', () => {
     it('should extract all fields from a complete card', async () => {
@@ -31,7 +31,9 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
                 height="362"
               />
             </div>
-            <h3><a href="https://example.com/page#comment-1" target="_blank" rel="noopener nofollow ugc">Page title</a></h3>
+            <h3>
+              <a href="https://example.com/page#comment-1" target="_blank" rel="noopener nofollow ugc">Page title</a>
+            </h3>
             <p>Preview text</p>
           </article>
           <div class="onebox-metadata"></div>
@@ -80,11 +82,16 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </article>
         </aside>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://example.com/page',
+        title: 'Page title',
         publisher: 'Example',
         date: '13 Jan 23',
-      })
+        icon: 'https://example.com/favicon.svg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should leave the date unset when the source has no suffix', async () => {
@@ -98,22 +105,33 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </article>
         </aside>
       `
-      const result = await extract(value)
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://example.com/page',
+        title: 'Page title',
+        publisher: 'Example Forum',
+      }
 
-      expect(result?.publisher).toBe('Example Forum')
-      expect(result?.date).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should prefer the wrapper source over the inner anchor href', async () => {
       const value = html`
         <aside class="onebox" data-onebox-src="https://example.com/canonical">
           <article class="onebox-body">
-            <h3><a href="https://example.com/tracked">Page title</a></h3>
+            <h3>
+              <a href="https://example.com/tracked">Page title</a>
+            </h3>
           </article>
         </aside>
       `
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://example.com/canonical',
+        title: 'Page title',
+      }
 
-      expect((await extract(value))?.url).toBe('https://example.com/canonical')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -127,8 +145,14 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </article>
         </aside>
       `
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://example.com/owner/repo/issues/1',
+        title: 'Issue title',
+        description: 'Issue body',
+      }
 
-      expect((await extract(value))?.title).toBe('Issue title')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should extract the author, date, avatar and rejoined body from a GitHub onebox', async () => {
@@ -140,7 +164,9 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           <article class="onebox-body">
             <div class="github-row">
               <div class="github-info-container">
-                <h4><a href="https://github.com/owner/repo/issues/284" target="_blank" rel="noopener">Issue title</a></h4>
+                <h4>
+                  <a href="https://github.com/owner/repo/issues/284" target="_blank" rel="noopener">Issue title</a>
+                </h4>
                 <div class="github-info">
                   <div class="date">
                     opened <span class="discourse-local-date" data-format="ll" data-date="2024-12-06" data-time="01:33:49" data-timezone="UTC">01:33AM - 06 Dec 24 UTC</span>
@@ -155,7 +181,11 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
               </div>
             </div>
             <div class="github-row">
-              <p class="github-body-container">The visible half of the configur<span class="show-more-container"><a href="" rel="noopener" class="show-more">…</a></span><span class="excerpt hidden">ation preview.</span></p>
+              <p class="github-body-container">The visible half of the configur<span class="show-more-container">
+                  <a href="" rel="noopener" class="show-more">…</a>
+                </span>
+                <span class="excerpt hidden">ation preview.</span>
+              </p>
             </div>
           </article>
         </aside>
@@ -174,6 +204,81 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // The comment shape puts the author in a bare span and repeats it in the heading.
+    it('should read the comment author from its span and drop it from the title', async () => {
+      const value = html`
+        <aside class="onebox githubpullrequest" data-onebox-src="https://github.com/owner/repo/pull/12#issuecomment-99">
+          <header class="source">
+            <a href="https://github.com/owner/repo/pull/12" target="_blank" rel="noopener">github.com/owner/repo</a>
+          </header>
+          <article class="onebox-body">
+            <div class="github-row">
+              <div class="github-info-container">
+                <h4>
+                  <a href="https://github.com/owner/repo/pull/12" target="_blank" rel="noopener">Comment by octocat - Fix the thing</a>
+                </h4>
+                <div class="github-info">
+                  <div class="date">
+                    commented <span class="discourse-local-date" data-format="ll" data-date="2025-03-04" data-time="09:12:00" data-timezone="UTC">09:12AM - 04 Mar 25 UTC</span>
+                  </div>
+                  <span>
+                    <a href="https://github.com/octocat" target="_blank" rel="noopener">octocat</a>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="github-row">
+              <p class="github-body-container">The comment body.</p>
+            </div>
+          </article>
+        </aside>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://github.com/owner/repo/pull/12#issuecomment-99',
+        title: 'Fix the thing',
+        description: 'The comment body.',
+        author: 'octocat',
+        publisher: 'github.com/owner/repo',
+        date: '2025-03-04',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should keep a title that does not name the author', async () => {
+      const value = html`
+        <aside class="onebox githubpullrequest" data-onebox-src="https://github.com/owner/repo/pull/12">
+          <header class="source">
+            <a href="https://github.com/owner/repo/pull/12" target="_blank" rel="noopener">github.com/owner/repo</a>
+          </header>
+          <article class="onebox-body">
+            <div class="github-row">
+              <div class="github-info-container">
+                <h4>
+                  <a href="https://github.com/owner/repo/pull/12" target="_blank" rel="noopener">Fix the thing (#12)</a>
+                </h4>
+                <div class="github-info">
+                  <span>
+                    <a href="https://github.com/octocat" target="_blank" rel="noopener">octocat</a>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </article>
+        </aside>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://github.com/owner/repo/pull/12',
+        title: 'Fix the thing (#12)',
+        author: 'octocat',
+        publisher: 'github.com/owner/repo',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should read the folder description from its label span, not the path', async () => {
       const value = html`
         <aside class="onebox githubfolder" data-onebox-src="https://github.com/owner/repo/tree/main/lib">
@@ -181,16 +286,27 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
             <a href="https://github.com/owner/repo/tree/main/lib" target="_blank">github.com</a>
           </header>
           <article class="onebox-body">
-            <h3><a href="https://github.com/owner/repo/tree/main/lib">repo/lib at main</a></h3>
-            <p><a href="https://github.com/owner/repo/tree/main/lib">main/lib</a></p>
-            <p><span class="label1">The repo description text.</span></p>
+            <h3>
+              <a href="https://github.com/owner/repo/tree/main/lib">repo/lib at main</a>
+            </h3>
+            <p>
+              <a href="https://github.com/owner/repo/tree/main/lib">main/lib</a>
+            </p>
+            <p>
+              <span class="label1">The repo description text.</span>
+            </p>
           </article>
         </aside>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://github.com/owner/repo/tree/main/lib',
+        title: 'repo/lib at main',
         description: 'The repo description text.',
-      })
+        publisher: 'github.com',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read a githubrepo onebox through the generic reads', async () => {
@@ -202,8 +318,12 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           <article class="onebox-body">
             <div class="github-row">
               <img width="690" height="344" src="https://cdn.example.com/preview.png" class="thumbnail" />
-              <h3><a href="https://github.com/owner/repo" target="_blank">GitHub - owner/repo</a></h3>
-              <p><span class="github-repo-description">Repo description text.</span></p>
+              <h3>
+                <a href="https://github.com/owner/repo" target="_blank">GitHub - owner/repo</a>
+              </h3>
+              <p>
+                <span class="github-repo-description">Repo description text.</span>
+              </p>
             </div>
           </article>
         </aside>
@@ -230,7 +350,9 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </header>
           <article class="onebox-body">
             <span class="pdf-onebox-logo"></span>
-            <h3><a href="https://example.com/paper.pdf">paper.pdf</a></h3>
+            <h3>
+              <a href="https://example.com/paper.pdf">paper.pdf</a>
+            </h3>
             <p class="filesize">697 KB</p>
           </article>
         </aside>
@@ -251,11 +373,15 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
             <a href="https://stackoverflow.com/users/1/author" target="_blank">
               <img alt="Author name" src="https://www.gravatar.com/avatar/abc?s=128" class="thumbnail" width="" height="">
             </a>
-            <h4><a href="https://stackoverflow.com/questions/1" target="_blank">Question title</a></h4>
+            <h4>
+              <a href="https://stackoverflow.com/questions/1" target="_blank">Question title</a>
+            </h4>
             <div class="date">
               asked by <a href="https://stackoverflow.com/users/1/author" target="_blank">Author name</a> on <a href="https://stackoverflow.com/questions/1" target="_blank">12:42AM - 07 Sep 08</a>
             </div>
-            <div><strong>c++, c, bit-manipulation</strong></div>
+            <div>
+              <strong>c++, c, bit-manipulation</strong>
+            </div>
           </article>
         </aside>
       `
@@ -282,7 +408,9 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
             <a href="https://news.ycombinator.com/item?id=28680387" target="_blank" rel="noopener">news.ycombinator.com</a>
           </header>
           <article class="onebox-body">
-            <h3><a href="https://news.ycombinator.com/item?id=28680387" target="_blank" rel="noopener">Story title</a></h3>
+            <h3>
+              <a href="https://news.ycombinator.com/item?id=28680387" target="_blank" rel="noopener">Story title</a>
+            </h3>
             <p>
               <span class="label1">379 points</span> —
               <span class="label2">127 comments</span> —
@@ -292,10 +420,15 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </article>
         </aside>
       `
-      const result = await extract(value)
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://news.ycombinator.com/item?id=28680387',
+        title: 'Story title',
+        publisher: 'news.ycombinator.com',
+        icon: 'https://cdn.example.com/y18.svg',
+      }
 
-      expect(result?.title).toBe('Story title')
-      expect(result?.description).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should read the self-post text over the stats line', async () => {
@@ -305,7 +438,9 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
             <a href="https://news.ycombinator.com/item?id=12759520" target="_blank" rel="noopener">news.ycombinator.com</a>
           </header>
           <article class="onebox-body">
-            <h3><a href="https://news.ycombinator.com/item?id=12759520" target="_blank" rel="noopener">Story title</a></h3>
+            <h3>
+              <a href="https://news.ycombinator.com/item?id=12759520" target="_blank" rel="noopener">Story title</a>
+            </h3>
             <p>The text the poster wrote for the self-post.</p>
             <p>
               <span class="label1">391 points</span> —
@@ -316,10 +451,15 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </article>
         </aside>
       `
-
-      expect(await extract(value)).toMatchObject({
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://news.ycombinator.com/item?id=12759520',
+        title: 'Story title',
         description: 'The text the poster wrote for the self-post.',
-      })
+        publisher: 'news.ycombinator.com',
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -364,7 +504,9 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
             <a href="https://mastodon.social/@Gargron/117060465546524768" target="_blank" rel="noopener">mastodon.social</a>
           </header>
           <article class="onebox-body">
-            <h3><a href="https://mastodon.social/@Gargron/117060465546524768">Eugen Rochko (@Gargron@mastodon.social)</a></h3>
+            <h3>
+              <a href="https://mastodon.social/@Gargron/117060465546524768">Eugen Rochko (@Gargron@mastodon.social)</a>
+            </h3>
             <p>Post text</p>
           </article>
         </aside>
@@ -396,15 +538,22 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
             <a href="https://blog.example.com/@author/why-i-did-it-3f2a1b9c" target="_blank">blog.example.com</a>
           </header>
           <article class="onebox-body">
-            <h3><a href="https://blog.example.com/@author/why-i-did-it-3f2a1b9c">Why I did it</a></h3>
+            <h3>
+              <a href="https://blog.example.com/@author/why-i-did-it-3f2a1b9c">Why I did it</a>
+            </h3>
             <p>Preview text</p>
           </article>
         </aside>
       `
-      const result = await extract(value)
+      const expected: CiteResolverResult = {
+        provider: 'discourse',
+        url: 'https://blog.example.com/@author/why-i-did-it-3f2a1b9c',
+        title: 'Why I did it',
+        description: 'Preview text',
+        publisher: 'blog.example.com',
+      }
 
-      expect(result?.title).toBe('Why I did it')
-      expect(result?.url).toBe('https://blog.example.com/@author/why-i-did-it-3f2a1b9c')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should skip a social post whose url only sits on the source anchor', async () => {
@@ -414,7 +563,9 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
             <a href="https://bsky.app/profile/user/post/1" target="_blank">bsky.app</a>
           </header>
           <article class="onebox-body">
-            <h3><a href="https://bsky.app/profile/user/post/1">Author name (@handle)</a></h3>
+            <h3>
+              <a href="https://bsky.app/profile/user/post/1">Author name (@handle)</a>
+            </h3>
             <p>Post text</p>
           </article>
         </aside>
@@ -432,9 +583,15 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
           </header>
           <article class="onebox-body">
             <img src="https://cdn.example.com/avatar.jpeg" class="thumbnail onebox-avatar" alt="" width="200" height="200">
-            <h4><a href="https://twitter.com/handle/status/1" target="_blank" rel="noopener">Display name (@handle) on X</a></h4>
-            <div class="twitter-screen-name"><a href="https://twitter.com/handle/status/1" target="_blank" rel="noopener">@handle</a></div>
-            <div class="tweet"><span class="tweet-description">Tweet text</span></div>
+            <h4>
+              <a href="https://twitter.com/handle/status/1" target="_blank" rel="noopener">Display name (@handle) on X</a>
+            </h4>
+            <div class="twitter-screen-name">
+              <a href="https://twitter.com/handle/status/1" target="_blank" rel="noopener">@handle</a>
+            </div>
+            <div class="tweet">
+              <span class="tweet-description">Tweet text</span>
+            </div>
           </article>
         </aside>
       `

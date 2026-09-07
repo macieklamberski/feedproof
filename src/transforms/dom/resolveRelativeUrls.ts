@@ -3,12 +3,12 @@ import type { DomTransform } from '../../types.js'
 import { countSrcsetCandidates, parseSrcset } from '../../utils/images.js'
 import { absoluteUrlRegex } from '../../utils/urls.js'
 
+// Runs without a `baseUrl` too. A protocol-relative url needs a scheme, not a base, and
+// `resolveUrlFn` supplies one, so those are absolutised for every caller. Anything genuinely
+// relative resolves to nothing without a base and is left as it stands, which is what the
+// `if (resolved)` guards below already express.
 export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => {
   return (document) => {
-    if (!baseUrl) {
-      return
-    }
-
     const elements = document.querySelectorAll(
       'a[href], [src], video[poster], img[srcset], source[srcset], object[data], image',
     )
@@ -83,7 +83,7 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => 
         if (srcset) {
           const entries = parseSrcset(srcset)
           const hasRelative = entries.some((entry) => !absoluteUrlRegex.test(entry.url))
-          // parseSrcset drops malformed descriptor-only candidates; rewriting when it did
+          // parseSrcset drops malformed descriptor-only candidates. Rewriting when it did
           // keeps them out of the attribute even when no url needed resolving.
           const droppedCandidate = entries.length < countSrcsetCandidates(srcset)
 

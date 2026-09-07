@@ -3,6 +3,7 @@ import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
 export const ghostCiteResolver: CiteResolver = {
+  kind: 'cite',
   selector: '.kg-bookmark-card',
   extract: (element) => {
     return buildCite({

@@ -42,8 +42,18 @@ const separatesFlow = (node: Node): boolean => {
   return isBlockElement(node) || isMediaBlock(node)
 }
 
+// A <br> directly inside a table's structure is a break the author wrote between rows or
+// cells. A spec parser foster-parents it out in front of the table, where the block walk
+// below removes it; linkedom leaves it in place, so it is removed here first.
+const tableStructureBrSelector =
+  'table > br, colgroup > br, thead > br, tbody > br, tfoot > br, tr > br'
+
 export const stripInterBlockBreaks: DomTransform = () => {
   return (document) => {
+    for (const br of document.querySelectorAll(tableStructureBrSelector)) {
+      br.remove()
+    }
+
     const brs = document.querySelectorAll('br')
 
     // Group by parent so each parent walks its children once, avoiding O(n²)

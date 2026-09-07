@@ -36,8 +36,9 @@ describe('buildCite', () => {
         title: 'Page title',
         kind: 'reply',
       } as const
+      const expected = 'reply'
 
-      expect(buildCite(value)?.kind).toBe('reply')
+      expect(buildCite(value)?.kind).toBe(expected)
     })
   })
 

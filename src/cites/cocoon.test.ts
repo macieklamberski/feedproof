@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
-import { citeExtractor, describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { CiteResolverResult } from '../types.js'
 import { cocoonCiteResolver } from './cocoon.js'
 
 describeForEachParser('cocoonCiteResolver', (parseHtml) => {
-  const extract = citeExtractor(parseHtml, cocoonCiteResolver)
+  const extract = resolverExtractor(parseHtml, cocoonCiteResolver)
 
   describe('happy paths', () => {
     it('should extract all fields from a complete card', async () => {
@@ -65,6 +65,52 @@ describeForEachParser('cocoonCiteResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should carry the label bar as the caption', async () => {
+      const value = html`
+        <a href="https://example.com/post" class="blogcard-wrap internal-blogcard-wrap">
+          <div class="blogcard-label internal-blogcard-label">
+            <span class="blogcard-label-text">関連記事</span>
+          </div>
+          <div class="blogcard internal-blogcard">
+            <div class="blogcard-content internal-blogcard-content">
+              <div class="blogcard-title internal-blogcard-title">Post title</div>
+            </div>
+            <div class="blogcard-domain internal-blogcard-domain">example.com</div>
+          </div>
+        </a>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'cocoon',
+        url: 'https://example.com/post',
+        title: 'Post title',
+        caption: '関連記事',
+        publisher: 'example.com',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should carry an author-written label rather than the stock one', async () => {
+      const value = html`
+        <a href="https://example.com/post" class="blogcard-wrap external-blogcard-wrap">
+          <div class="blogcard-label external-blogcard-label">前にも書いたのですが</div>
+          <div class="blogcard external-blogcard">
+            <div class="blogcard-content external-blogcard-content">
+              <div class="blogcard-title external-blogcard-title">Post title</div>
+            </div>
+          </div>
+        </a>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'cocoon',
+        url: 'https://example.com/post',
+        title: 'Post title',
+        caption: '前にも書いたのですが',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should extract an external card the same way as an internal one', async () => {
       const value = html`
         <a href="https://example.com/post" class="blogcard-wrap external-blogcard-wrap a-wrap cf">
@@ -110,8 +156,14 @@ describeForEachParser('cocoonCiteResolver', (parseHtml) => {
           <div class="blogcard-snipet">Preview text</div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'cocoon',
+        url: 'https://example.com/post',
+        title: 'Post title',
+        description: 'Preview text',
+      }
 
-      expect((await extract(value))?.description).toBe('Preview text')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should pass the date through in the theme format', async () => {
@@ -121,8 +173,14 @@ describeForEachParser('cocoonCiteResolver', (parseHtml) => {
           <div class="blogcard-post-date">2018.10.14</div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'cocoon',
+        url: 'https://example.com/post',
+        title: 'Post title',
+        date: '2018.10.14',
+      }
 
-      expect((await extract(value))?.date).toBe('2018.10.14')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should fall back to the anchor title attribute when the title element is missing', async () => {
@@ -131,8 +189,14 @@ describeForEachParser('cocoonCiteResolver', (parseHtml) => {
           <div class="blogcard-snippet">Preview text</div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'cocoon',
+        url: 'https://example.com/post',
+        title: 'Title from attribute',
+        description: 'Preview text',
+      }
 
-      expect((await extract(value))?.title).toBe('Title from attribute')
+      expect(await extract(value)).toEqual(expected)
     })
 
     it('should prefer the title element over the anchor title attribute', async () => {
@@ -141,8 +205,13 @@ describeForEachParser('cocoonCiteResolver', (parseHtml) => {
           <div class="blogcard-title">Title from element</div>
         </a>
       `
+      const expected: CiteResolverResult = {
+        provider: 'cocoon',
+        url: 'https://example.com/post',
+        title: 'Title from element',
+      }
 
-      expect((await extract(value))?.title).toBe('Title from element')
+      expect(await extract(value)).toEqual(expected)
     })
   })
 

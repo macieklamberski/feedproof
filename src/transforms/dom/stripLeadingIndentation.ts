@@ -1,11 +1,6 @@
 import type { DomTransform } from '../../types.js'
 import { isBlockElement, isElement, isText } from '../../utils/dom.js'
 
-// Some feeds fake indentation by prefixing block text with non-breaking spaces
-// (e.g. `<p>&nbsp;&nbsp;&nbsp;Lorem…`). Ordinary leading whitespace collapses at
-// the start of a block, so it renders no indent and is left alone; non-collapsing
-// spaces (nbsp and the other fixed-width Unicode spaces) do render as a hard left
-// indent, so the leading run is stripped whenever it contains one.
 const targetSelector = [
   'p',
   'div',
@@ -26,6 +21,11 @@ const leadingWhitespaceRegex = /^\s+/
 // U+202F, U+205F, U+3000, …) is fixed-width and renders as indentation.
 const nonCollapsingWhitespaceRegex = /[^ \t\n\f\r]/
 
+// Some feeds fake indentation by prefixing block text with non-breaking spaces
+// (e.g. `<p>&nbsp;&nbsp;&nbsp;Lorem…`). Ordinary leading whitespace collapses at
+// the start of a block, so it renders no indent and is left alone. Non-collapsing
+// spaces (nbsp and the other fixed-width Unicode spaces) do render as a hard left
+// indent, so the leading run is stripped whenever it contains one.
 export const stripLeadingIndentation: DomTransform = () => {
   return (document) => {
     for (const block of document.querySelectorAll(targetSelector)) {
