@@ -46,6 +46,22 @@ describeForEachParser('nytimesCiteResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should read a card pointing off the paper', async () => {
+      const value = html`
+        <iframe
+          title="A post worth reading"
+          src="https://www.nytimes.com/svc/oembed/html/?url=https%3A%2F%2Fexample.com%2Fpost%2F"
+        ></iframe>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'nytimes',
+        url: 'https://example.com/post/',
+        title: 'A post worth reading',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
@@ -60,11 +76,22 @@ describeForEachParser('nytimesCiteResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
-    it('should refuse a card pointing off the paper', async () => {
+    it('should refuse a card naming no article url', async () => {
       const value = html`
         <iframe
           title="A post"
-          src="https://www.nytimes.com/svc/oembed/html/?url=https%3A%2F%2Fexample.com%2Fpost%2F"
+          src="https://www.nytimes.com/svc/oembed/html/"
+        ></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should refuse a card whose article url is relative', async () => {
+      const value = html`
+        <iframe
+          title="A post"
+          src="https://www.nytimes.com/svc/oembed/html/?url=%2F2020%2F04%2F13%2Fscience%2Fputin.html"
         ></iframe>
       `
 

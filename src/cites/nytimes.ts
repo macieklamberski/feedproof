@@ -1,3 +1,4 @@
+import { parseUrl } from 'trousse'
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr } from '../utils/dom.js'
@@ -21,8 +22,11 @@ export const nytimesCiteResolver: CiteResolver = {
       return
     }
 
-    // The card only ever renders the paper's own articles, so a url elsewhere is not one.
-    const article = parseUrlOnHosts(card.searchParams.get('url') ?? undefined, cardHosts)
+    // The article url is taken as the publisher wrote it. It names no route, nothing is composed
+    // from it, and the card answers 404 for a url off the paper (checked 2026-09-07), so holding
+    // it to the Times' own hosts would only turn a card the reader could still follow into a
+    // frame that renders nothing.
+    const article = parseUrl(card.searchParams.get('url') ?? '')
 
     return buildCite({
       provider: 'nytimes',
