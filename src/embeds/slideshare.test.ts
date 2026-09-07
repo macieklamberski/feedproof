@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
@@ -14,6 +15,29 @@ describe('slideshareResolveEmbed', () => {
       provider: 'slideshare',
       id: '6435157',
       src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
+    }
+
+    expect(slideshareResolveEmbed(value)).toEqual(expected)
+  })
+
+  // Both spaces have grown since 2011, and neither length is what selects a deck.
+  it('should keep a key longer than the ones minted so far', () => {
+    const value = 'https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAYlongerkey'
+    const expected: EmbedResolverResult = {
+      provider: 'slideshare',
+      id: '6PCWPGFw9SwsAYlongerkey',
+      src: 'https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAYlongerkey',
+    }
+
+    expect(slideshareResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should keep a numeric deck id longer than the ones minted so far', () => {
+    const value = 'https://www.slideshare.net/slideshow/embed_code/6435157123456'
+    const expected: EmbedResolverResult = {
+      provider: 'slideshare',
+      id: '6435157123456',
+      src: 'https://www.slideshare.net/slideshow/embed_code/6435157123456',
     }
 
     expect(slideshareResolveEmbed(value)).toEqual(expected)
@@ -85,6 +109,28 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
         src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
         url: 'http://www.slideshare.net/haraldf/business-quotes-for-2011',
         title: 'Business Quotes for 2011',
+        width: 425,
+        height: 355,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should read a wrapper id longer than the ones the snippet era minted', async () => {
+      const value = html`
+        <div id="__ss_6435157123456">
+          <embed
+            src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=quotes-phpapp01"
+            type="application/x-shockwave-flash"
+            width="425"
+            height="355"
+          ></embed>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '6435157123456',
+        src: 'https://www.slideshare.net/slideshow/embed_code/6435157123456',
         width: 425,
         height: 355,
       }
@@ -338,5 +384,28 @@ describeForEachParser('slideshareIframeEmbedResolver', (parseHtml) => {
     `
 
     expect(await extract(value)).toBeUndefined()
+  })
+})
+
+// The enclosure probe offers every attachment a feed carries to this resolver, and SlideShare's
+// asset host is in its list, so the id shapes are what keep a file playable.
+describeForEachParser('slideshare through the pipeline', (parseHtml) => {
+  it('should leave an audio enclosure on the asset host playable', async () => {
+    const enclosures = [
+      { url: 'https://cdn.slidesharecdn.com/embed_code/6435157.mp3', type: 'audio/mpeg' },
+    ]
+
+    const expected = html`
+      <audio data-enclosure="" controls src="https://cdn.slidesharecdn.com/embed_code/6435157.mp3"></audio>
+      <p>Body</p>
+    `
+
+    expect(
+      await transformContent('<p>Body</p>', {
+        parseHtmlFn: parseHtml,
+        baseUrl: 'https://example.com/post',
+        enclosures,
+      }),
+    ).toEqualHtml(expected)
   })
 })
