@@ -1,5 +1,5 @@
-import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { getPathSegments, isPlainObject } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, jsonAttr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -146,6 +146,19 @@ export const spotifyResolveEmbed = (
 
 export const spotifyEmbedResolver = createUrlEmbedResolver(spotifyHosts, spotifyResolveEmbed)
 
-// No play request. The player posts `{ type: 'ready' }` and takes a `{ command: 'play' }` object,
-// answering that it is playing and buffering, but loaded in Chrome by a click the audio never
-// started from it. Nothing to send until it does.
+// The player takes no query to start. It posts `{ type: 'ready' }` when it will take commands and
+// plays on a `{ command: 'play' }` object, answering with a `playback_update` that says it is no
+// longer paused. Both messages are plain objects, not the JSON strings the player.js players send,
+// so the ready check is its own. Observed in a browser on 2026-09-07.
+//
+// Every embed this resolver mints is framed from `open.spotify.com`, which is where the messages
+// arrive from, so there is no origin to name here.
+export const isSpotifyReady = (data: unknown): boolean => {
+  return isPlainObject(data) && data.type === 'ready'
+}
+
+export const spotifyRenderHint: EmbedRenderHint = {
+  provider: 'spotify',
+  isReady: isSpotifyReady,
+  requestPlay: { command: 'play' },
+}

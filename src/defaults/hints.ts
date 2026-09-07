@@ -17,6 +17,7 @@ import { podigeeRenderHint } from '../embeds/podigee.js'
 import { redditRenderHint } from '../embeds/reddit.js'
 import { sketchfabRenderHint } from '../embeds/sketchfab.js'
 import { soundcloudRenderHint } from '../embeds/soundcloud.js'
+import { spotifyRenderHint } from '../embeds/spotify.js'
 import { spreakerRenderHint } from '../embeds/spreaker.js'
 import { tedRenderHint } from '../embeds/ted.js'
 import { telegramRenderHint } from '../embeds/telegram.js'
@@ -50,6 +51,7 @@ export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
   redditRenderHint,
   sketchfabRenderHint,
   soundcloudRenderHint,
+  spotifyRenderHint,
   spreakerRenderHint,
   tedRenderHint,
   telegramRenderHint,
