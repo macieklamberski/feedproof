@@ -1,6 +1,6 @@
 import type { EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { parseUrlOnHosts, pickUrlParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A Rutube video id is a uuid with the dashes stripped. The older numeric ids the same routes
@@ -17,8 +17,11 @@ const rutubeHost = 'rutube.ru'
 const embedPathRegex = /^\/(?:play\/embed|video\/embed|embed)\/([^/]+)\/?$/
 const playlistPathRegex = /^\/pl\/?$/
 
-// The route's own parameters, which name the playlist and not the video.
-const playlistParams = new Set(['pl_id', 'pl_type', 'pl_video'])
+// The parameters that change what plays: the offsets playback starts and stops at, and the access
+// key a private video will not play without (rutube.ru/info/embed, checked 2026-09-07). The skin
+// colour, the quality preference and autoplay go with the rest of the publisher's query, as do
+// the playlist route's own parameters, which name the playlist and not the video.
+const rutubeEmbedParams = ['p', 't', 'stopTime']
 
 // `api/video/{id}/` and `api/oembed/?url=` both answer key-free with the title, the author, the
 // duration and a poster, 200 for a real id and 404 for an invented one (checked 2026-09-06), so
@@ -28,19 +31,11 @@ const playlistParams = new Set(['pl_id', 'pl_type', 'pl_video'])
 // The player fills its box, and Rutube's own snippet and oEmbed size it 720x405, which 384 of
 // 1,491 corpus iframes repeat exactly; the ratio stands in only where a carrier states nothing,
 // since vertical clips are embedded at their own shape.
-const composeEmbed = (videoId: string, search: URLSearchParams): EmbedResolverResult => {
-  const query = new URLSearchParams()
-
-  for (const [name, value] of search) {
-    if (!playlistParams.has(name)) {
-      query.set(name, value)
-    }
-  }
-
+const composeEmbed = (videoId: string, link: string): EmbedResolverResult => {
   return {
     provider: 'rutube',
     id: videoId,
-    src: `https://rutube.ru/play/embed/${videoId}${query.size ? `?${query}` : ''}`,
+    src: `https://rutube.ru/play/embed/${videoId}${pickUrlParams(link, rutubeEmbedParams)}`,
     url: `https://rutube.ru/video/${videoId}/`,
     ratio: '16/9',
   }
@@ -65,7 +60,7 @@ export const rutubeResolveEmbed = (
     return
   }
 
-  const result = composeEmbed(videoId, parsed.searchParams)
+  const result = composeEmbed(videoId, parsed.href)
   const title = attr(element, 'title')
 
   return title ? { ...result, title } : result

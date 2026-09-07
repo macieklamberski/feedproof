@@ -31,6 +31,33 @@ describe('rutubeResolveEmbed', () => {
 
       expect(rutubeResolveEmbed(value)).toEqual(expected)
     })
+
+    it('should keep the start offset the publisher states', () => {
+      const value = 'https://rutube.ru/play/embed/c91d5d8847c7c5391a090fff38c86f34/?t=300'
+      const expected: EmbedResolverResult = {
+        provider: 'rutube',
+        id: 'c91d5d8847c7c5391a090fff38c86f34',
+        src: 'https://rutube.ru/play/embed/c91d5d8847c7c5391a090fff38c86f34?t=300',
+        url: 'https://rutube.ru/video/c91d5d8847c7c5391a090fff38c86f34/',
+        ratio: '16/9',
+      }
+
+      expect(rutubeResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should drop the player skin and the tracking riding with it', () => {
+      const value =
+        'https://rutube.ru/play/embed/c91d5d8847c7c5391a090fff38c86f34/?skinColor=e53935&utm_source=feed'
+      const expected: EmbedResolverResult = {
+        provider: 'rutube',
+        id: 'c91d5d8847c7c5391a090fff38c86f34',
+        src: 'https://rutube.ru/play/embed/c91d5d8847c7c5391a090fff38c86f34',
+        url: 'https://rutube.ru/video/c91d5d8847c7c5391a090fff38c86f34/',
+        ratio: '16/9',
+      }
+
+      expect(rutubeResolveEmbed(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
