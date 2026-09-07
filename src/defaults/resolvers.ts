@@ -38,6 +38,7 @@ import { appleEmbedResolver } from '../embeds/apple.js'
 import { archiveFlashEmbedResolver, archiveIframeEmbedResolver } from '../embeds/archive.js'
 import { arteEmbedResolver } from '../embeds/arte.js'
 import { audioboomEmbedResolver, audioboomPlayerEmbedResolver } from '../embeds/audioboom.js'
+import { aushaEmbedResolver } from '../embeds/ausha.js'
 import { bandcampEmbedResolver } from '../embeds/bandcamp.js'
 import { bitchuteEmbedResolver } from '../embeds/bitchute.js'
 import { bloggerEmbedResolver } from '../embeds/blogger.js'
@@ -271,6 +272,7 @@ const embedResolvers: Array<EmbedResolver> = [
   blueskyS9eEmbedResolver,
   blueskyPostElementEmbedResolver,
   audioboomEmbedResolver,
+  aushaEmbedResolver,
   audioboomPlayerEmbedResolver,
   notecomIframeEmbedResolver,
   nytimesIframeEmbedResolver,
