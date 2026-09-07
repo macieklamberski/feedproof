@@ -59,6 +59,7 @@ import {
   buzzsproutScriptEmbedResolver,
 } from '../embeds/buzzsprout.js'
 import { captivateEmbedResolver } from '../embeds/captivate.js'
+import { cnbcIframeEmbedResolver } from '../embeds/cnbc.js'
 import { codepenIframeEmbedResolver, codepenWidgetEmbedResolver } from '../embeds/codepen.js'
 import { codesandboxIframeEmbedResolver } from '../embeds/codesandbox.js'
 import { dailymotionEmbedResolver } from '../embeds/dailymotion.js'
@@ -172,6 +173,7 @@ const embedResolvers: Array<EmbedResolver> = [
   videopressFlashEmbedResolver,
   wistiaEmbedResolver,
   captivateEmbedResolver,
+  cnbcIframeEmbedResolver,
   codepenWidgetEmbedResolver,
   codepenIframeEmbedResolver,
   codesandboxIframeEmbedResolver,
