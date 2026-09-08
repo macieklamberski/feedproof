@@ -1,7 +1,21 @@
 import { expect, it } from 'bun:test'
 import { baseContext as defaultContext, describeForEachParser, html } from '../../tests.js'
-import type { AssetProxyFn, TransformContext } from '../../types.js'
+import type {
+  AssetProxyFn,
+  CiteResolverResult,
+  EmbedResolverResult,
+  TransformContext,
+} from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
+import { urlAttributes } from '../../utils/urls.js'
+import {
+  createCitePlaceholder,
+  createEmbedPlaceholder,
+  normalizeCiteFields,
+  normalizeEmbedFields,
+  prepareCiteMetadata,
+  prepareEmbedMetadata,
+} from '../../utils/widgets.js'
 import { proxyAssetUrls } from './proxyAssetUrls.js'
 
 const wrapProxy: AssetProxyFn = (url, type) => {
@@ -491,5 +505,71 @@ describeForEachParser('proxyAssetUrls', (parseHtml) => {
     const twice = await transform(once, idempotentProxy)
 
     expect(twice).toEqualHtml(expected)
+  })
+  // A url a placeholder mints is an asset or it is not, and the `asset` column of urlAttributes is
+  // the only place that says which: `data-embed-src` is a media url and is right to stay
+  // unproxied, being the player a reader frames, while the `data-embed-thumbnail` beside it is a
+  // file the proxy serves. So the table is the ground truth for the classification, and what the
+  // next two check is the pass against it. A url field added to utils/widgets.ts and never
+  // classified is caught: the pass leaves it alone and the table declares nothing about it, so it
+  // shows up as a url neither proxied nor accounted for.
+  //
+  // Every field is handed the same non-url marker and the context resolver answers with the asset
+  // url, so whatever the placeholder ends up carrying is exactly what the mint path treats as a
+  // url.
+  const assetUrl = 'https://cdn.example.com/asset.jpg'
+  const mintContext: TransformContext = {
+    ...defaultContext,
+    resolveUrlFn: () => assetUrl,
+    assetProxyFn: wrapProxy,
+  }
+  // Attributes the table declares carry a url but no asset, so the pass is right to skip them.
+  const unproxyableAttributes = urlAttributes
+    .filter(({ tag, asset }) => !tag && !asset)
+    .map(({ attribute }) => attribute)
+
+  // Stands in for a result with every field populated. The point is to fill each field the mint
+  // path knows, not to be a valid result, so the declared field types are asserted away.
+  const markerFields = <Type>(names: Array<string>): Type => {
+    return Object.fromEntries(names.map((name) => [name, 'not-a-url'])) as unknown as Type
+  }
+
+  // Read against the names the placeholder was minted with, since a proxied attribute leaves its
+  // original url behind on a `data-proxied-*` companion, which would otherwise read as unproxied.
+  const unproxied = async (document: Document, placeholder: Element): Promise<Array<string>> => {
+    const names = placeholder.getAttributeNames()
+
+    document.body.appendChild(placeholder)
+    await proxyAssetUrls(mintContext)(document)
+
+    return names.filter((name) => placeholder.getAttribute(name) === assetUrl)
+  }
+
+  it('should proxy every asset url an embed placeholder can mint', async () => {
+    const document = parseHtml('')
+    const metadata = markerFields<EmbedResolverResult>(Object.keys(normalizeEmbedFields({})))
+    const placeholder = createEmbedPlaceholder(
+      document,
+      prepareEmbedMetadata(metadata, mintContext) as EmbedResolverResult,
+    )
+    const expected = placeholder
+      .getAttributeNames()
+      .filter((name) => unproxyableAttributes.includes(name))
+
+    expect(await unproxied(document, placeholder)).toEqual(expected)
+  })
+
+  it('should proxy every asset url a cite placeholder can mint', async () => {
+    const document = parseHtml('')
+    const metadata = markerFields<CiteResolverResult>(Object.keys(normalizeCiteFields({})))
+    const placeholder = createCitePlaceholder(
+      document,
+      prepareCiteMetadata(metadata, mintContext) as CiteResolverResult,
+    )
+    const expected = placeholder
+      .getAttributeNames()
+      .filter((name) => unproxyableAttributes.includes(name))
+
+    expect(await unproxied(document, placeholder)).toEqual(expected)
   })
 })

@@ -1,6 +1,7 @@
 import { parseSrcset, stringifySrcset } from 'srcset'
 import type { DomTransform, IsSafeUrlFn, UrlRole } from '../../types.js'
 import { svgHrefAttribute, walkElements } from '../../utils/dom.js'
+import { groupUrlAttributesByTag, urlAttributes } from '../../utils/urls.js'
 
 // Inert replacements that keep the element but render nothing: a same-page no-op for
 // links, the empty document for media (about:blank loads nothing and runs nothing).
@@ -72,36 +73,13 @@ const neutralizeSrcset = (element: Element, isSafeUrlFn: IsSafeUrlFn | undefined
   element.setAttribute('srcset', safe.length > 0 ? stringifySrcset(safe) : sentinels.media)
 }
 
-// URL-carrying attributes checked on every element, whatever its tag. Embed and
-// cite placeholders put their URLs on data-* attributes of arbitrary elements.
-const genericAttributeRoles: Array<[string, UrlRole]> = [
-  ['data-embed-url', 'link'],
-  ['data-cite-url', 'link'],
-  ['formaction', 'link'],
-  ['data-embed-src', 'media'],
-  ['data-embed-thumbnail', 'media'],
-  ['data-embed-avatar', 'media'],
-  ['data-cite-icon', 'media'],
-  ['data-cite-thumbnail', 'media'],
-]
-// URL-carrying attributes specific to a tag.
-const tagAttributeRoles: Record<string, Array<[string, UrlRole]>> = {
-  img: [['src', 'media']],
-  video: [
-    ['src', 'media'],
-    ['poster', 'media'],
-  ],
-  audio: [['src', 'media']],
-  source: [['src', 'media']],
-  track: [['src', 'media']],
-  iframe: [['src', 'media']],
-  embed: [['src', 'media']],
-  object: [['data', 'media']],
-}
+// Attributes checked on every element, whatever its tag: embed and cite placeholders put their
+// urls on data-* attributes of arbitrary elements.
+const genericAttributes = urlAttributes.filter(({ tag }) => !tag)
+const tagAttributes = groupUrlAttributesByTag(urlAttributes)
+// srcset is not a url but a list of them, so it is not a table row: it is rewritten whole, by
+// dropping the unsafe candidates rather than by swapping a sentinel in.
 const srcsetTags = new Set(['img', 'source'])
-// The two tags carrying their URL on href, which is read per element below because SVG1 spells
-// it xlink:href.
-const hrefTagRoles: Record<string, UrlRole> = { a: 'link', image: 'media' }
 
 // Replaces unsafe URLs with an inert, role-appropriate sentinel while keeping the element.
 // Always enforces a dangerous-scheme floor (javascript:/vbscript:/data:text/html), plus the
@@ -118,29 +96,23 @@ export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
         return
       }
 
-      for (const [attribute, role] of genericAttributeRoles) {
+      for (const { attribute, role } of genericAttributes) {
         neutralizeAttribute(element, attribute, role, isSafeUrlFn)
       }
 
       const name = element.localName
-      const tagAttributes = tagAttributeRoles[name]
 
-      if (tagAttributes !== undefined) {
-        for (const [attribute, role] of tagAttributes) {
-          neutralizeAttribute(element, attribute, role, isSafeUrlFn)
-        }
+      for (const { attribute, role } of tagAttributes[name] ?? []) {
+        // Walking the DOM rather than running a selector is what lets this pass reach an
+        // xlink:href, on an <a> as well as on an SVG <image>: a colon cannot appear in a CSS
+        // attribute selector, so a pass driven by one only ever sees the plain spelling.
+        const spelling = attribute === 'href' ? svgHrefAttribute(element) : attribute
 
-        if (srcsetTags.has(name)) {
-          neutralizeSrcset(element, isSafeUrlFn)
-        }
-
-        return
+        neutralizeAttribute(element, spelling, role, isSafeUrlFn)
       }
 
-      const hrefRole = hrefTagRoles[name]
-
-      if (hrefRole !== undefined) {
-        neutralizeAttribute(element, svgHrefAttribute(element), hrefRole, isSafeUrlFn)
+      if (srcsetTags.has(name)) {
+        neutralizeSrcset(element, isSafeUrlFn)
       }
     })
   }

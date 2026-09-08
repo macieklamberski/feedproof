@@ -61,10 +61,16 @@ export const isFileName = (value: string): boolean => {
 // read a legacy id as a current one and speak it to the wrong host.
 export const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-// One attribute that can carry a url, on one element. Both passes that act on a url by its
-// element and attribute, neutralizeUnsafeUrls and proxyAssetUrls, filter the table below for
-// their own list, so an attribute is declared once and neither can quietly fall behind the
-// other. resolveRelativeUrls deliberately stays out: it asks nothing of the tag.
+// One attribute carrying one url, on one element. The two passes that act on a url by its element
+// and attribute, neutralizeUnsafeUrls and proxyAssetUrls, filter the table below for their own
+// list, so an attribute is declared once and neither can quietly fall behind the other.
+//
+// Two passes and no more. resolveRelativeUrls stays out because it asks nothing of the tag: it
+// matches `src` on any element at all, which several widget resolvers rely on to reach a
+// `script[src]` carrier, and it keeps its own list. `srcset` stays out because it is not one url
+// but a list of them: both passes rewrite the whole attribute, and each does so on terms this
+// table cannot state, neutralizeUnsafeUrls dropping the unsafe candidates and proxyAssetUrls
+// rewriting only when the proxy changed one.
 export type UrlAttribute = {
   // Element carrying the attribute. Absent where any element can carry it: an embed or cite
   // placeholder parks its urls on data-* attributes of whatever element it replaced.
@@ -73,15 +79,18 @@ export type UrlAttribute = {
   // Safety class of the value, which picks the sentinel neutralizeUnsafeUrls swaps an unsafe
   // url for.
   role: UrlRole
-  // Kind of asset proxyAssetUrls hands to the caller's proxy. `parent` reads the kind off the
-  // element above, which is where a <source> or <track> says whether it belongs to a video or
-  // an audio. Absent where the value is not an asset a proxy can serve.
-  asset?: AssetType | 'parent'
+  // Kind of asset proxyAssetUrls hands to the caller's proxy, absent where the value is not an
+  // asset a proxy can serve. This is the only place that distinction is written down.
+  //
+  // `fromParent` is not a kind but the instruction to go and find one: a <source> or <track> is a
+  // video track inside a <video> and an audio one inside an <audio>, so nothing about the row
+  // itself can answer, and only the pass, holding the element, can.
+  asset?: AssetType | 'fromParent'
 }
 
-// The url-carrying attributes of the whole pipeline. The tag-less rows come first: they are the
-// embed and cite placeholder attributes, which sit on whatever element the placeholder replaced,
-// so every pass reads them on every element it visits.
+// The url-carrying attributes of the two passes. The tag-less rows come first: they are the embed
+// and cite placeholder attributes, which sit on whatever element the placeholder replaced, so a
+// pass reads them on every element it visits.
 export const urlAttributes: Array<UrlAttribute> = [
   { attribute: 'data-embed-url', role: 'link' },
   { attribute: 'data-cite-url', role: 'link' },
@@ -93,13 +102,11 @@ export const urlAttributes: Array<UrlAttribute> = [
   { attribute: 'data-cite-thumbnail', role: 'media', asset: 'image' },
   { tag: 'a', attribute: 'href', role: 'link' },
   { tag: 'img', attribute: 'src', role: 'media', asset: 'image' },
-  { tag: 'img', attribute: 'srcset', role: 'media', asset: 'image' },
   { tag: 'video', attribute: 'src', role: 'media', asset: 'video' },
   { tag: 'video', attribute: 'poster', role: 'media', asset: 'image' },
   { tag: 'audio', attribute: 'src', role: 'media', asset: 'audio' },
-  { tag: 'source', attribute: 'src', role: 'media', asset: 'parent' },
-  { tag: 'source', attribute: 'srcset', role: 'media', asset: 'image' },
-  { tag: 'track', attribute: 'src', role: 'media', asset: 'parent' },
+  { tag: 'source', attribute: 'src', role: 'media', asset: 'fromParent' },
+  { tag: 'track', attribute: 'src', role: 'media', asset: 'fromParent' },
   { tag: 'iframe', attribute: 'src', role: 'media' },
   { tag: 'embed', attribute: 'src', role: 'media' },
   { tag: 'object', attribute: 'data', role: 'media' },
