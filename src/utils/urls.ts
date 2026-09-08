@@ -29,6 +29,13 @@ export const flashFileRegex = /\.swf(\?|#|$)/i
 
 export const documentFileRegex = /\.(pdf|epub|docx?|pptx?|xlsx?)(\?|#|$)/i
 
+// Whether a url names audio or video the reader can play as it stands. A podcast host serves the
+// episode file from the same domain as its player, so a media url that skips this check reads as
+// a player id and the enclosure loses its audio element to a placeholder.
+export const isMediaFile = (value: string): boolean => {
+  return audioFileRegex.test(value) || videoFileRegex.test(value)
+}
+
 // The RFC 4122 form, which four platforms name an episode, a show or an upload by. It is not a
 // bet on a platform's current id length the way a measured band is, because the shape is fixed
 // by the spec rather than by whoever mints them, and Simplecast leans on the exactness: it is

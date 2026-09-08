@@ -1,10 +1,8 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, jsonAttr, text } from '../utils/dom.js'
-import { audioFileRegex, parseUrlOnHosts, videoFileRegex } from '../utils/urls.js'
+import { isMediaFile, parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
-
-const provider = 'soundcloud'
 
 // SoundCloud's embed is an iframe whose `url=` query names the track as an
 // `api.soundcloud.com/tracks/{id}` reference. Some feeds name the id twice in it, as a bare
@@ -48,12 +46,6 @@ const userCollectionSegments = new Set([
   'spotlight',
   'tracks',
 ])
-
-// A direct media file, which SoundCloud serves from its podcast host. It is neither a player nor
-// a page, so it must not be read as either: the reader can play the file itself.
-const isMediaFile = (value: string): boolean => {
-  return audioFileRegex.test(value) || videoFileRegex.test(value)
-}
 
 // `feeds.soundcloud.com/stream/{trackId}-{slug}.mp3` is the episode audio, and it is named after
 // the track it belongs to, so an enclosure carrying it still names a player.
@@ -188,7 +180,7 @@ export const soundcloudResolveEmbed = (
   const inner = params?.get('url')
   const reference = inner?.match(referenceRegex)
   const streamTrackId = parsed?.pathname.match(streamPathRegex)?.[1]
-  const result: EmbedResolverResult = { provider, src }
+  const result: EmbedResolverResult = { provider: 'soundcloud', src }
 
   if (reference) {
     result.id = `${reference[1]}/${reference[2]}`
@@ -290,6 +282,6 @@ export const soundcloudEmbedResolver = createUrlEmbedResolver(
 
 // Starts playback on the click that loads the widget.
 export const soundcloudRenderHint: EmbedRenderHint = {
-  provider,
+  provider: 'soundcloud',
   autoplayParams: { auto_play: 'true' },
 }
