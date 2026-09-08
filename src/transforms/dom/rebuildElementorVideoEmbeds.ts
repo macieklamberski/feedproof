@@ -2,6 +2,7 @@ import {
   composeEmbedUrl as composeDailymotionUrl,
   extractDailymotionId,
 } from '../../embeds/dailymotion.js'
+import { readVideopressEmbedSrc } from '../../embeds/videopress.js'
 import { composeEmbedUrl as composeVimeoUrl, extractVimeoId } from '../../embeds/vimeo.js'
 import { composeEmbedUrl as composeYoutubeUrl, extractVideoId } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
@@ -34,12 +35,11 @@ const iframeSources: Record<string, (settings: Record<string, unknown>) => strin
     return videoId ? composeDailymotionUrl('video', videoId) : undefined
   },
   videopress: (settings) => {
-    // The insert-URL mode (videopress.com/v/{guid}) is the embeddable iframe src as-is, so
-    // it is used directly and stays a posterless raw iframe (there is no VideoPress
-    // resolver). The media-library mode resolves server-side and isn't in data-settings.
+    // The insert-url mode stores the pasted share link whole, so the guid comes back out of it
+    // through the platform's own reader. The media-library mode is not in data-settings at all.
     const url = settings.videopress_url
 
-    return typeof url === 'string' && url ? url : undefined
+    return typeof url === 'string' ? readVideopressEmbedSrc(url) : undefined
   },
 }
 

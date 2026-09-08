@@ -75,6 +75,8 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  // The widget stores the share link, and the platform's reader rebuilds it onto the player
+  // route the other three branches also mint.
   it('should rebuild a videopress iframe from the widget settings', async () => {
     const value = html`
       <div
@@ -89,12 +91,29 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
     const expected = html`
       <div class="elementor-widget elementor-widget-video">
         <div class="elementor-widget-container">
-          <iframe src="https://videopress.com/v/kUJmAcSf"></iframe>
+          <iframe src="https://videopress.com/embed/kUJmAcSf"></iframe>
         </div>
       </div>
     `
 
     expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  // The settings payload is not markup, so nothing has checked what the url names before it
+  // reaches a src: a foreign host would otherwise be framed exactly as the platform's own.
+  it('should leave a videopress widget naming a foreign host alone', async () => {
+    const value = html`
+      <div
+        class="elementor-widget elementor-widget-video"
+        data-settings='{"videopress_url":"https://evil.test/anything","video_type":"videopress"}'
+      >
+        <div class="elementor-widget-container">
+          <div class="elementor-video"></div>
+        </div>
+      </div>
+    `
+
+    expect(await transform(value)).toEqualHtml(value)
   })
 
   it('should leave a widget with malformed data-settings alone', async () => {
