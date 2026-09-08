@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { bbcIframeEmbedResolver, bbcResolveEmbed } from './bbc.js'
@@ -51,9 +52,35 @@ describe('bbcResolveEmbed', () => {
 
       expect(bbcResolveEmbed(value)).toEqual(expected)
     })
+
+    // The article numbers in the corpus are eight digits and BBC keeps adding them.
+    it('should take a news player whose article number runs past nine digits', () => {
+      const value = 'https://www.bbc.com/news/av-embeds/4629236104/vpid/p06sf6tr'
+      const expected: EmbedResolverResult = {
+        provider: 'bbc',
+        id: 'p06sf6tr',
+        src: 'https://www.bbc.com/news/av-embeds/4629236104/vpid/p06sf6tr',
+        ratio: '16/9',
+      }
+
+      expect(bbcResolveEmbed(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
+    // BBC's newer article ids are a different space entirely and name no news player.
+    it('should return undefined for a lettered article id on the news player', () => {
+      const value = 'https://www.bbc.com/news/av-embeds/cx2g0z9q7lno/vpid/p06sf6tr'
+
+      expect(bbcResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a route word standing where the article number goes', () => {
+      const value = 'https://www.bbc.com/news/av/embed/p06sf6tr/av-embeds'
+
+      expect(bbcResolveEmbed(value)).toBeUndefined()
+    })
+
     it('should return undefined for the news page itself', () => {
       const value = 'https://www.bbc.com/news/av/science-environment-47799042'
 
@@ -144,5 +171,33 @@ describeForEachParser('bbcIframeEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+// BBC serves podcast audio from subdomains of the two hosts the players sit on, and the enclosure
+// probe offers each one to this resolver. Only the route words at the front of the path keep a
+// playable file from becoming a placeholder no reader can play.
+describeForEachParser('bbc through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should leave a bbc media enclosure playable', async () => {
+    const enclosures = [
+      {
+        url: 'https://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/vpid/p06sf6tr.mp3',
+        type: 'audio/mpeg',
+      },
+    ]
+    const expected = html`
+      <audio data-enclosure="" controls src="https://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/vpid/p06sf6tr.mp3"></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })
