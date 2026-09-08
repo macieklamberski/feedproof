@@ -21,7 +21,9 @@ const saasHosts = new Set(['kaltura.com', 'www.kaltura.com', 'cdnapi.kaltura.com
 // gives the iframe. The player options in `flashvars[…]` travel with the rebuilt url.
 const scriptOnlyParams = ['autoembed', 'playerId', 'cache_st', 'width', 'height']
 
-// KMS writes this label on every iframe it produces, so it never names the video.
+// The label a generated Kaltura iframe carries in place of the video's name. Nothing measures it:
+// the corpus run that asked every other platform whether its carriers name the content never
+// scanned kaltura.com, so the label's prevalence and its localised spellings are both unknown.
 const boilerplateTitle = 'Kaltura Player'
 
 type Entry = {
