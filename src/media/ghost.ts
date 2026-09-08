@@ -1,6 +1,5 @@
-import { coerceNumber } from 'trousse'
 import type { MediaResolver, MediaResolverResult } from '../types.js'
-import { attr } from '../utils/dom.js'
+import { attr, getElementDimensions } from '../utils/dom.js'
 
 // Ghost's video and audio cards carry a real media element pointing at the author's upload,
 // but in feeds from Ghost versions before its own June 2026 RSS cleanup the element ships
@@ -35,8 +34,7 @@ export const ghostMediaResolver: MediaResolver = {
         result.poster = thumbnail
       }
 
-      const width = coerceNumber(attr(video, 'width'))
-      const height = coerceNumber(attr(video, 'height'))
+      const { width, height } = getElementDimensions(video)
 
       if (width && height) {
         result.width = width

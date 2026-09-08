@@ -1,8 +1,7 @@
-import { parseUrl } from 'trousse'
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr } from '../utils/dom.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { absoluteUrlRegex, parseUrlOnHosts } from '../utils/urls.js'
 
 // The Times answers oEmbed with an iframe of its own article card, `/svc/oembed/html/?url=…`,
 // and that is what a pasted article link becomes on WordPress and on anything else that asks.
@@ -26,11 +25,17 @@ export const nytimesCiteResolver: CiteResolver = {
     // from it, and the card answers 404 for a url off the paper (checked 2026-09-07), so holding
     // it to the Times' own hosts would only turn a card the reader could still follow into a
     // frame that renders nothing.
-    const article = parseUrl(card.searchParams.get('url') ?? '')
+    //
+    // It does have to name a host though, its own or the one it borrows by leaving the scheme
+    // off. The url rides as a query value, which nothing upstream absolutises, so a bare
+    // `/2020/…` would be resolved against the feed's own base and point at a page the paper
+    // never served.
+    const article = card.searchParams.get('url') ?? ''
+    const hasHost = absoluteUrlRegex.test(article) || article.startsWith('//')
 
     return buildCite({
       provider: 'nytimes',
-      url: article?.href,
+      url: hasHost ? article : undefined,
       title: attr(element, 'title'),
     })
   },

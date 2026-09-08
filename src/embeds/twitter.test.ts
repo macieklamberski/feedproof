@@ -949,6 +949,47 @@ describeForEachParser('twitterSubstackEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should take a photo url that carries no scheme', async () => {
+      const value = makeSubstackTweet({
+        url: 'https://twitter.com/user/status/123456789012345',
+        full_text: 'Tweet text here.',
+        username: 'user',
+        name: 'Display Name',
+        photos: [{ img_url: '//pbs.substack.com/media/DVgu7f1WsAAkNMr.jpg' }],
+      })
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: statusUrl,
+        description: 'Tweet text here.',
+        author: 'Display Name',
+        thumbnail: '//pbs.substack.com/media/DVgu7f1WsAAkNMr.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should leave a scheme-less photo url carrying a query for enrichment', async () => {
+      const value = makeSubstackTweet({
+        url: 'https://twitter.com/user/status/123456789012345',
+        full_text: 'Tweet text here.',
+        username: 'user',
+        name: 'Display Name',
+        photos: [{ img_url: '//pbs.twimg.com/media/DVgu7f1WsAAkNMr?format=jpg&name=large' }],
+      })
+      const expected: EmbedResolverResult = {
+        provider: 'twitter',
+        id: statusId,
+        src: playerUrl,
+        url: statusUrl,
+        description: 'Tweet text here.',
+        author: 'Display Name',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('the quoted tweet the payload nests', () => {

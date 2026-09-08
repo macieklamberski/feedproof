@@ -189,4 +189,23 @@ describeForEachParser('libsyn through the pipeline', (parseHtml) => {
 
     expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
+
+  // The player is read out of path segments, and nothing about `embed/episode/id/{digits}` stops a
+  // media path from spelling it, so an mp3 under those segments used to come back as a placeholder
+  // pointing at a player instead of as the audio.
+  it('should leave an audio enclosure playable when its path spells a player', async () => {
+    const enclosures = [
+      {
+        url: 'https://traffic.libsyn.com/embed/episode/id/5508311/JDR_020418.mp3',
+        type: 'audio/mpeg',
+      },
+    ]
+
+    const expected = html`
+      <audio data-enclosure="" controls src="https://traffic.libsyn.com/embed/episode/id/5508311/JDR_020418.mp3"></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
 })

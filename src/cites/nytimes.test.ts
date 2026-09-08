@@ -62,6 +62,22 @@ describeForEachParser('nytimesCiteResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should read a card whose article url carries no scheme', async () => {
+      const value = html`
+        <iframe
+          title="Putin’s Long War Against American Science"
+          src="https://www.nytimes.com/svc/oembed/html/?url=%2F%2Fwww.nytimes.com%2F2020%2F04%2F13%2Fscience%2Fputin.html"
+        ></iframe>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'nytimes',
+        url: '//www.nytimes.com/2020/04/13/science/putin.html',
+        title: 'Putin’s Long War Against American Science',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
@@ -92,6 +108,17 @@ describeForEachParser('nytimesCiteResolver', (parseHtml) => {
         <iframe
           title="A post"
           src="https://www.nytimes.com/svc/oembed/html/?url=%2F2020%2F04%2F13%2Fscience%2Fputin.html"
+        ></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should refuse a card whose article url is a bare file name', async () => {
+      const value = html`
+        <iframe
+          title="A post"
+          src="https://www.nytimes.com/svc/oembed/html/?url=putin.html"
         ></iframe>
       `
 

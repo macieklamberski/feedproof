@@ -148,7 +148,7 @@ describeForEachParser('scribdIframeEmbedResolver', (parseHtml) => {
     })
 
     it('should return undefined for a document id that is not numeric', async () => {
-      const value = '<iframe src="https://www.scribd.com/embeds/../evil/content"></iframe>'
+      const value = '<iframe src="https://www.scribd.com/document/my-document-slug"></iframe>'
 
       expect(await extract(value)).toBeUndefined()
     })

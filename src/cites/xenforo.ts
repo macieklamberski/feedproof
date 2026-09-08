@@ -7,6 +7,11 @@ import { attr, find, text } from '../utils/dom.js'
 // hooks are what this reads first: they are near-universal while the theme classes vary from
 // site to site. The theme classes are the fallback for the rare feeds whose markup ships without
 // the hooks, or whose figure carries the image under its own class instead of under the hook.
+//
+// No test observes the `[data-url]` half of the selector, and none can: `data-url` is the only
+// url this reads, so a block without it resolves to nothing whether the selector claims it or
+// not, and `buildCite` refuses the result either way. The attribute stays in the selector to
+// say what the block has to carry, not because a case can tell the two paths apart.
 export const xenforoCiteResolver: CiteResolver = {
   kind: 'cite',
   selector: '.bbCodeBlock--unfurl[data-url]',
