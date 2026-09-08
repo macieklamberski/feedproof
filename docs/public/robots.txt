@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://feedsweep.dev/sitemap.xml
