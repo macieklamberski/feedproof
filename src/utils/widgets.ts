@@ -85,10 +85,14 @@ type EmbedSize = Pick<EmbedResolverResult, 'width' | 'height' | 'ratio'>
 // The two questions asked of a size wherever one is merged: does it carry any dimension, and does
 // it carry anything at all. Named once so every merge reads as the rule it applies. Typed on the
 // field names alone so the normalized string record and the numeric result both qualify.
+//
+// A zero is not a dimension. `getElementDimensions` parses one so removeTrackingPixels can find a
+// 0 by 2 image, and every write side has always skipped it, so counting it as a claim here let a
+// `width="0"` carrier take the size slot off a resolver and then write nothing into it.
 type SizeFields = { width?: unknown; height?: unknown; ratio?: unknown }
 
 const hasDimensions = (size: SizeFields): boolean => {
-  return size.width !== undefined || size.height !== undefined
+  return !!size.width || !!size.height
 }
 
 const hasSize = (size: SizeFields): boolean => {
@@ -146,8 +150,8 @@ export const getEmbedSize = (element: Element, wrapperDepth?: number): EmbedSize
 
   if (hasDimensions(dimensions)) {
     return {
-      ...(dimensions.width !== undefined && { width: dimensions.width }),
-      ...(dimensions.height !== undefined && { height: dimensions.height }),
+      ...(!!dimensions.width && { width: dimensions.width }),
+      ...(!!dimensions.height && { height: dimensions.height }),
     }
   }
 

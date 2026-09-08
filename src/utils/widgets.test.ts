@@ -1030,6 +1030,48 @@ describeForEachParser('preferResolverSize', (parseHtml) => {
         expect(build(withRatio, value)).toEqual(withRatio)
       })
     })
+
+    // A zero reserves nothing, so a carrier stating one has not claimed a size. It used to take
+    // the slot from the resolver and then write nothing into it, since every write side skips a
+    // falsy dimension, and the placeholder came out sizeless. Only this side needed the rule:
+    // normalizeEmbedFields drops a zero before updateEmbedPlaceholder asks the same question.
+    describe('a zero the carrier states as a dimension', () => {
+      it('should keep the resolver ratio over a zero width', () => {
+        const value = html`
+          <div
+            class="player"
+            width="0"
+          ></div>
+        `
+
+        expect(build(withRatio, value)).toEqual(withRatio)
+      })
+
+      it('should keep the resolver height over a zero pair', () => {
+        const value = html`
+          <div
+            class="player"
+            width="0"
+            height="0"
+          ></div>
+        `
+
+        expect(build(withHeight, value)).toEqual(withHeight)
+      })
+
+      it('should drop the zero from a pair the carrier states half of', () => {
+        const value = html`
+          <div
+            class="player"
+            width="0"
+            height="360"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...base, height: 360 }
+
+        expect(build(withRatio, value)).toEqual(expected)
+      })
+    })
   })
 })
 
