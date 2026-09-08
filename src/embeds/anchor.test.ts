@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { anchorResolveEmbed, extractAnchorEpisode } from './anchor.js'
+import { anchorEmbedResolver, anchorResolveEmbed, extractAnchorEpisode } from './anchor.js'
 
 describe('extractAnchorEpisode', () => {
   it('should read the original anchor.fm form', () => {
@@ -81,5 +82,66 @@ describe('anchorResolveEmbed', () => {
     const value = 'https://anchor.fm/pricing'
 
     expect(anchorResolveEmbed(value)).toBeUndefined()
+  })
+})
+
+describeForEachParser('anchorEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, anchorEmbedResolver)
+
+  describe('happy paths', () => {
+    it('should state the player height for a carrier declaring none', async () => {
+      const value = html`
+        <iframe
+          src="https://anchor.fm/myshow/embed/episodes/my-title-e123"
+          frameborder="0"
+          scrolling="no"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'anchor',
+        id: 'myshow/my-title-e123',
+        src: 'https://anchor.fm/myshow/embed/episodes/my-title-e123',
+        height: 100,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The height the publisher pasted is the one their player was measured against, so the
+    // 102 Spotify's own snippet writes stands over the resolver's 100.
+    it('should keep the size the carrier declares', async () => {
+      const value = html`
+        <iframe
+          src="https://creators.spotify.com/pod/profile/me/embed/episodes/my-title-e1/a-abc"
+          width="400"
+          height="102"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'anchor',
+        id: 'me/my-title-e1',
+        src: 'https://creators.spotify.com/pod/profile/me/embed/episodes/my-title-e1/a-abc',
+        width: 400,
+        height: 102,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    it('should ignore a foreign host carrying the same path', async () => {
+      const value = html`
+        <iframe src="https://evil.test/anchor.fm/myshow/embed/episodes/my-title-e123"></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should ignore an anchor url naming no episode', async () => {
+      const value = '<iframe src="https://anchor.fm/pricing"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
   })
 })
