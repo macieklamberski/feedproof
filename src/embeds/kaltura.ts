@@ -1,4 +1,4 @@
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches, parsePixelSize } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
@@ -104,3 +104,14 @@ export const kalturaScriptEmbedResolver = createMarkupEmbedResolver(
     return width && height ? { ...result, width, height } : result
   },
 )
+
+// Starts playback on the click that loads the player. The player takes its options in the
+// `flashvars[…]` namespace the carrier already writes, so the key is the bracketed one and comes
+// out of a url as `flashvars%5BautoPlay%5D`; the script carrier's strip list above leaves that
+// namespace alone, so it survives into the minted `src` too. Verified live 2026-09-07 by diffing
+// the config the embed endpoint serves for one entry: the response without the parameter carries
+// `"autoPlay":false` and the one with it carries `"autoPlay":true`, 16 bytes apart in 207 KB.
+export const kalturaRenderHint: EmbedRenderHint = {
+  provider: 'kaltura',
+  autoplayParams: { 'flashvars[autoPlay]': 'true' },
+}

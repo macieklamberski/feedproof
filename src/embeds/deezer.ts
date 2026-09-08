@@ -1,5 +1,5 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -107,3 +107,14 @@ export const deezerResolveEmbed = (url: string): EmbedResolverResult | undefined
 }
 
 export const deezerEmbedResolver = createUrlEmbedResolver(deezerHosts, deezerResolveEmbed)
+
+// Starts playback on the click that loads the widget, and the value is what makes it work: the
+// widget parses its own query and tests `autoplay:"1"===f`, so `autoplay=true` matches nothing.
+// Verified live 2026-09-07 by framing both urls and logging what each posted. The bare
+// `/widget/dark/album/6924049` posted `{"action":"pause"}` and stopped there; the same url with
+// `?autoplay=1` posted `{"action":"pause"}` and then `{"action":"play"}`, which is the player's
+// own play callback, the one that also calls `s.play()`.
+export const deezerRenderHint: EmbedRenderHint = {
+  provider: 'deezer',
+  autoplayParams: { autoplay: '1' },
+}
