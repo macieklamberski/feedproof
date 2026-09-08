@@ -1,6 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, text } from '../utils/dom.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A release is either an album or a single track, and the id is Bandcamp's own numeric one.
@@ -96,9 +97,18 @@ export const extractBandcampRelease = (link: string): string | undefined => {
   return release ? `${release[0]}/${release[1]}` : undefined
 }
 
+const bandcampHosts = ['bandcamp.com']
+
 // Bandcamp's own embed snippet puts a fallback anchor inside the iframe, and that anchor is
 // the only place the release page appears: the player url names the release by number and
 // never names the artist's subdomain.
+//
+// The href decides the placeholder's click target and its title, so the anchor is matched on
+// its host and not on the string `bandcamp.com` appearing anywhere in the href: that substring
+// sits happily inside a foreign path, and `https://evil.test/bandcamp.com/album/x` was read as
+// the release page. Artists publish on their own subdomain, which is why the check admits one,
+// and it goes through `parseUrlOnHosts` so a protocol-relative href is matched on its real host
+// while a relative path lands on the placeholder base and correctly fails.
 //
 // Reading it takes one step, because the two parsers disagree about what an iframe contains.
 // Fallback content is raw text per the spec, which is what jsdom produces, while linkedom
@@ -106,13 +116,14 @@ export const extractBandcampRelease = (link: string): string | undefined => {
 // other. `innerHTML` is the view they agree on, and re-parsing it into a throwaway element
 // turns it back into a real anchor in both. That also makes the parser the entity decoder,
 // so the label arrives decoded, as `Sam & Dave – Hold On`.
-const parseFallback = (element: Element): Element | null => {
+const parseFallback = (element: Element): Element | undefined => {
   const holder = element.ownerDocument.createElement('div')
   holder.innerHTML = element.innerHTML
 
-  return holder.querySelector('a[href*="bandcamp.com"]')
+  return Array.from(holder.querySelectorAll('a[href]')).find((anchor) =>
+    parseUrlOnHosts(attr(anchor, 'href'), bandcampHosts),
+  )
 }
-const bandcampHosts = ['bandcamp.com']
 
 // The player url is rebuilt from the release rather than kept, but the `size=` preset in the
 // publisher's own url is carried across, because the stated height was measured against the

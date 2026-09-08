@@ -6,7 +6,10 @@ import { blueskyRenderHint } from '../embeds/bluesky.js'
 import { brightcoveRenderHint } from '../embeds/brightcove.js'
 import { buzzsproutRenderHint } from '../embeds/buzzsprout.js'
 import { captivateRenderHint } from '../embeds/captivate.js'
+import { codesandboxRenderHint } from '../embeds/codesandbox.js'
+import { deezerRenderHint } from '../embeds/deezer.js'
 import { instagramRenderHint } from '../embeds/instagram.js'
+import { kalturaRenderHint } from '../embeds/kaltura.js'
 import { mastodonRenderHint } from '../embeds/mastodon.js'
 import { mixcloudRenderHint } from '../embeds/mixcloud.js'
 import { notecomRenderHint } from '../embeds/notecom.js'
@@ -14,6 +17,7 @@ import { omnyRenderHint } from '../embeds/omny.js'
 import { podbeanRenderHint } from '../embeds/podbean.js'
 import { podigeeRenderHint } from '../embeds/podigee.js'
 import { redditRenderHint } from '../embeds/reddit.js'
+import { rutubeRenderHint } from '../embeds/rutube.js'
 import { sketchfabRenderHint } from '../embeds/sketchfab.js'
 import { soundcloudRenderHint } from '../embeds/soundcloud.js'
 import { spreakerRenderHint } from '../embeds/spreaker.js'
@@ -38,7 +42,10 @@ export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
   brightcoveRenderHint,
   buzzsproutRenderHint,
   captivateRenderHint,
+  codesandboxRenderHint,
+  deezerRenderHint,
   instagramRenderHint,
+  kalturaRenderHint,
   mastodonRenderHint,
   mixcloudRenderHint,
   notecomRenderHint,
@@ -46,6 +53,7 @@ export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
   podbeanRenderHint,
   podigeeRenderHint,
   redditRenderHint,
+  rutubeRenderHint,
   sketchfabRenderHint,
   soundcloudRenderHint,
   spreakerRenderHint,

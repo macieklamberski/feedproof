@@ -1,4 +1,4 @@
-import { startsWithAnyOf } from 'trousse'
+import { type Nullish, startsWithAnyOf } from 'trousse'
 import type { CiteKind, CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
@@ -19,6 +19,33 @@ const citeKindByResponseProperty: Record<string, CiteKind> = {
 }
 
 const responsePrefixes = ['u-', 'p-']
+
+// microformats2 reads a dt-* property through an order, not a single attribute: `datetime` on a
+// `<time>`, `<ins>` or `<del>`, then `title` on an `<abbr>`, then `value` on a `<data>`, then the
+// element's text (https://microformats.org/wiki/microformats2-parsing#parsing_a_dt-_property). An
+// element carrying one of those attributes spells the date out for a reader in its text, so the
+// text alone loses the year that the attribute beside it states. `title` and `value` are taken
+// from their own element only, since elsewhere one is a tooltip and the other a form default.
+const readDateValue = (element: Nullish<Element>): string | undefined => {
+  if (element?.localName === 'abbr') {
+    return attr(element, 'title') ?? text(element)
+  }
+
+  if (element?.localName === 'data') {
+    return attr(element, 'value') ?? text(element)
+  }
+
+  return attr(element, 'datetime') ?? text(element)
+}
+
+// A u-* property has an order of its own: `href` on an `<a>`, `<area>` or `<link>`, then `src` on
+// an `<img>` or a media element, then `data` on an `<object>`, then `alt`, `title` and the text
+// (https://microformats.org/wiki/microformats2-parsing#parsing_a_u-_property). The image
+// properties read here take the first two, which is how a card spells a picture. The tail says
+// what the image shows rather than where it is, and a caption in a thumbnail renders nothing.
+const readImageUrl = (element: Nullish<Element>): string | undefined => {
+  return attr(element, 'href') ?? attr(element, 'src')
+}
 
 // h-cite is the microformats2 citation format (https://microformats.org/wiki/h-cite): a standard,
 // cross-site way to mark up a reference to another work. It is not one platform's convention: any
@@ -64,12 +91,10 @@ export const microformatsCiteResolver: CiteResolver = {
       description: text(description),
       author: text(author, '.p-name') ?? text(author),
       publisher: text(find(element, '.p-publication', notInAuthor)),
-      // A dt-* property carries its machine-readable value in the `datetime` attribute of a
-      // `<time>`. Other elements only have their text. Passed through unparsed, as the spec
-      // allows a bare date as well as a full timestamp.
-      date: attr(published, 'datetime') ?? text(published),
-      icon: attr(find(element, '.p-author .u-photo'), 'src'),
-      thumbnail: attr(image, 'src'),
+      // Passed through unparsed, as the spec allows a bare date as well as a full timestamp.
+      date: readDateValue(published),
+      icon: readImageUrl(find(element, '.p-author .u-photo')),
+      thumbnail: readImageUrl(image),
       kind,
     })
   },

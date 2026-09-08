@@ -17,7 +17,13 @@ const safeEmbedIdRegex = /^\d+$/
 // for those. The prefix is a fixed namespace the player plugin writes, not the year: checked
 // 2026-09-07, a June 2022 article (`postid-687366`) embeds `2020687366` and a June 2026 one
 // (`postid-2420350`) embeds `20202420350`.
-const prefixedPostIdRegex = /^2020(\d+)$/
+//
+// The floor is where the prefix era starts: Mega switched to it in October 2020 at post 151920,
+// while its September 2020 articles still carry the older eight-digit ids, and post ids only
+// grow. A shorter number behind the prefix belongs to some other id space, and stripping it
+// there is invisible, because `megatv.com/?p={post}` serves a live article for every post id
+// from 7 up.
+const prefixedPostIdRegex = /^2020(\d{6,})$/
 
 // Mega TV's player is `megatv.com/embed/?p={id}`. Checked live 2026-09-06 with a browser user
 // agent: the embed page answers 200 for any id and plays some other post's video for an unknown

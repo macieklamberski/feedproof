@@ -272,5 +272,25 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+
+    // The href is the placeholder's click target, and a foreign host can spell `bandcamp.com`
+    // anywhere in its path, so the release page is taken from the host and not from the string.
+    it('should refuse a fallback anchor naming Bandcamp inside a foreign path', async () => {
+      const value = html`
+        <iframe src="https://bandcamp.com/EmbeddedPlayer/album=42/size=large/" seamless>
+          <a href="https://evil.test/bandcamp.com/album/do-you-wanna-be-rich">
+            Do You Wanna Be Rich? by My Expansive Awareness
+          </a>
+        </iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'bandcamp',
+        id: 'album/42',
+        src: 'https://bandcamp.com/EmbeddedPlayer/album=42/size=large/',
+        height: 470,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 })

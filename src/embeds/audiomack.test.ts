@@ -60,6 +60,18 @@ describe('audiomackResolveEmbed', () => {
       expect(audiomackResolveEmbed(value)).toBeUndefined()
     })
 
+    it('should refuse a kind naming an inherited method', () => {
+      const value = 'https://audiomack.com/embed/larrynorman/toString/burn-2'
+
+      expect(audiomackResolveEmbed(value)).toBeUndefined()
+    })
+
+    it('should refuse a kind naming the prototype itself', () => {
+      const value = 'https://audiomack.com/embed/larrynorman/__proto__/burn-2'
+
+      expect(audiomackResolveEmbed(value)).toBeUndefined()
+    })
+
     it('should refuse an embed path with no slug', () => {
       const value = 'https://audiomack.com/embed/larrynorman/song'
 
@@ -94,6 +106,21 @@ describe('audiomackResolveEmbed', () => {
         id: 'mlgmusiz/song/new-year-new-glory',
         src: 'https://audiomack.com/embed/mlgmusiz/song/new-year-new-glory?background=1',
         url: 'https://audiomack.com/mlgmusiz/song/new-year-new-glory',
+        height: 252,
+      }
+
+      expect(audiomackResolveEmbed(value)).toEqual(expected)
+    })
+
+    // Which order the path is in is decided by whether the second segment is a kind, so a handle
+    // that happens to spell an inherited method has to read as the artist it is, not as a kind.
+    it('should read a handle spelling an inherited method as the artist', () => {
+      const value = 'https://audiomack.com/embed/toString/song/burn-2'
+      const expected: EmbedResolverResult = {
+        provider: 'audiomack',
+        id: 'toString/song/burn-2',
+        src: 'https://audiomack.com/embed/toString/song/burn-2',
+        url: 'https://audiomack.com/toString/song/burn-2',
         height: 252,
       }
 

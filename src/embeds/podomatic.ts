@@ -43,7 +43,7 @@ const readPlayer = (url: URL): Player | undefined => {
   // player shapes. The style is kept because it is what chose the height.
   if (segments[1] === 'html5' && html5KindRegex.test(segments[2] ?? '')) {
     const style = url.searchParams.get('style') ?? ''
-    const named = style in html5Heights ? style : 'normal'
+    const named = Object.hasOwn(html5Heights, style) ? style : 'normal'
     const query = named === 'normal' ? '' : `?style=${named}`
     const kind = segments[2] as string
     const id = segments[3] ?? ''
