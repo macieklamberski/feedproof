@@ -1,11 +1,13 @@
 import { getPathSegments, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, flashVars } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // `irtve.es` is the older spelling of the same broadcaster's asset domain and carries the
 // Flash player under the same path.
+const provider = 'rtve'
+
 const rtveHosts = ['rtve.es', 'irtve.es']
 
 type Kind = 'audio' | 'video'
@@ -56,7 +58,7 @@ const playerRatio = '16/9'
 // wins. Audio states no size at all and the carrier's bar stands.
 const composeEmbed = (kind: Kind, id: string): EmbedResolverResult => {
   const result: EmbedResolverResult = {
-    provider: 'rtve',
+    provider,
     id: `${kind}/${id}`,
     src: `https://www.rtve.es/drmn/embed/${kind}/${id}/`,
     url: `https://www.rtve.es/${kind === 'video' ? 'v' : 'a'}/${id}/`,
@@ -124,3 +126,13 @@ export const rtveFlashResolveEmbed = (
 }
 
 export const rtveFlashEmbedResolver = createUrlEmbedResolver(rtveHosts, rtveFlashResolveEmbed)
+
+// Starts playback on the click that loads the player, on both kinds this file mints. The page
+// carries `"autoplay":false` escaped inside its own payload and the parameter flips it, compared
+// as a string. Verified live 2026-09-08 on `/drmn/embed/video/2474214/` and
+// `/drmn/embed/audio/1925451/`: `?autoplay=true` reads `"autoplay":true` on both, while
+// `?autoplay=1` and an unrelated `?foo=bar` each leave it false.
+export const rtveRenderHint: EmbedRenderHint = {
+  provider,
+  autoplayParams: { autoplay: 'true' },
+}
