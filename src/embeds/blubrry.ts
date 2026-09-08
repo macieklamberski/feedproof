@@ -14,8 +14,8 @@ const blubrryHosts = ['blubrry.com']
 // form: 164 at 320, 640 and 1280 wide, and still 164 inside a 100-tall frame. Publishers write one
 // more than that, and nearly all of them write something: of 13,604 `player.blubrry.com` iframes
 // across 305 corpus feeds, 13,001 state 165, 311 state 138, and exactly one states no height at
-// all. That one carrier is about all this number reaches, since `decideSize` takes the carrier's
-// first.
+// all. This number reaches that carrier and every one stating a width and no height, since a lone
+// carrier width does not outrank a resolver's size.
 const playerHeight = 164
 
 // Two forms: `/id/{episodeId}/` names the episode, while `/?media_url={mp3}` names the file
