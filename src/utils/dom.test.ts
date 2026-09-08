@@ -7,6 +7,7 @@ import {
   flashVars,
   formatRatio,
   getElementDimensions,
+  getUnitlessStyleRatio,
   getWrapperRatio,
   hasAncestorWithTagName,
   hasZeroOpacity,
@@ -21,6 +22,55 @@ import {
   textNode,
   walkElements,
 } from './dom.js'
+
+describeForEachParser('getUnitlessStyleRatio', (parseHtml) => {
+  it('should read a small unitless pair as the shape it spells', () => {
+    const document = parseHtml('<div style="width: 16; height: 9;"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(getUnitlessStyleRatio(element)).toBe('16/9')
+  })
+
+  // Above the ceiling the same spelling is a forgotten unit on a real box, which
+  // getElementDimensions already reads as pixels.
+  it('should refuse a large unitless pair', () => {
+    const document = parseHtml('<div style="width: 540; height: 300;"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(getUnitlessStyleRatio(element)).toBeUndefined()
+  })
+
+  it('should refuse a pair that carries its unit', () => {
+    const document = parseHtml('<div style="width: 16px; height: 9px;"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(getUnitlessStyleRatio(element)).toBeUndefined()
+  })
+
+  // Zero is the one length CSS takes bare, and a zero pair is a decorative div rather than a
+  // carrier.
+  it('should refuse a zero pair', () => {
+    const document = parseHtml('<div style="width: 0; height: 0; border-top: 2px solid red"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(getUnitlessStyleRatio(element)).toBeUndefined()
+  })
+
+  it('should refuse a lone unitless length', () => {
+    const document = parseHtml('<div style="height: 9;"></div>')
+    const element = queryElement(document, 'div')
+
+    expect(getUnitlessStyleRatio(element)).toBeUndefined()
+  })
+
+  // A dimension attribute is a box the browser did apply, and dimensions outrank a ratio.
+  it('should refuse where the element states a dimension attribute', () => {
+    const document = parseHtml('<iframe width="640" style="width: 16; height: 9;"></iframe>')
+    const element = queryElement(document, 'iframe')
+
+    expect(getUnitlessStyleRatio(element)).toBeUndefined()
+  })
+})
 
 describeForEachParser('getElementDimensions', (parseHtml) => {
   it('should return both dimensions from attributes', () => {

@@ -510,6 +510,39 @@ export const formatRatio = (width: number, height = 1): string => {
   return `${width}/${height}`
 }
 
+// A CSS length carries a unit for anything but zero, so `width: 16` is a declaration the browser
+// applies nothing from: both halves are dropped and the author's intent is all that survives. Two
+// small numbers spelled that way are a shape rather than a box, which is the only reading that
+// makes `width: 16; height: 9` mean anything, and the ceiling is what separates them from a
+// forgotten `px` on a real box, which `getElementDimensions` already repairs by reading the digits
+// as pixels. Zero is excluded because it is the one length CSS takes bare, and because a `0`
+// dimension is a decorative div rather than a carrier.
+//
+// Only where the element states no `width`/`height` attribute of its own: those are a box a
+// browser did apply, and dimensions outrank a ratio.
+const unitlessRatioCeiling = 100
+const unitlessLengthRegex = /^\d+$/
+
+const readUnitlessLength = (value: string | undefined): number | undefined => {
+  return value !== undefined && unitlessLengthRegex.test(value) ? Number(value) : undefined
+}
+
+export const getUnitlessStyleRatio = (element: Element): string | undefined => {
+  if (element.hasAttribute('width') || element.hasAttribute('height')) {
+    return
+  }
+
+  const declarations = styles.declarations(element)
+  const width = readUnitlessLength(declarations.width)
+  const height = readUnitlessLength(declarations.height)
+
+  if (!width || !height || width >= unitlessRatioCeiling || height >= unitlessRatioCeiling) {
+    return
+  }
+
+  return formatRatio(width, height)
+}
+
 const ratioRegexes = [
   /^\s*(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)\s*$/, // 16:9, 690 : 362
   /^\s*(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*$/, // 100/56, 690 / 362

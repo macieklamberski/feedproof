@@ -348,6 +348,45 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  // The rule is the carrier tier's, not a platform's: an unknown iframe gets it too. A CSS length
+  // carries a unit for anything but zero, so a browser applies neither declaration, and two small
+  // numbers written that way are a shape rather than a box.
+  it('should wrap an unknown iframe stating a unitless pair as a ratio', async () => {
+    const value = html`
+      <iframe
+        src="https://unknown-site.com/123"
+        style="width: 16; height: 9;"
+      ></iframe>
+    `
+    const expected = html`
+      <div
+        data-embed-ratio="16/9"
+        data-embed-src="https://unknown-site.com/123"
+      ></div>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  // Above the ceiling the same spelling is a forgotten unit on a real box.
+  it('should wrap an unknown iframe stating a large unitless pair as pixels', async () => {
+    const value = html`
+      <iframe
+        src="https://unknown-site.com/123"
+        style="width: 540; height: 300;"
+      ></iframe>
+    `
+    const expected = html`
+      <div
+        data-embed-width="540"
+        data-embed-src="https://unknown-site.com/123"
+        data-embed-height="300"
+      ></div>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
   it('should wrap every generic iframe when several are adjacent', async () => {
     const value = html`
       <iframe src="https://a-site.com/1"></iframe>
