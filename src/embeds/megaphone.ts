@@ -1,6 +1,6 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { isMediaFile, placeholderBaseUrl } from '../utils/urls.js'
+import { isFileName, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // An episode id is a publisher's letter prefix followed by a run of digits, and the letters are
@@ -36,10 +36,12 @@ export const extractMegaphoneEmbed = (
 ): { param: string; kind: string; id: string; height: number } | undefined => {
   const parsed = parseUrl(link, placeholderBaseUrl)
 
-  // Megaphone serves the episode audio from the same domain as the players, and parameters on a
-  // media url are the publisher's own analytics rather than Megaphone's: NPR writes `?e=` for its
-  // story and `?p=` for its programme, and both would otherwise read as ids.
-  if (!parsed || isMediaFile(parsed.pathname)) {
+  // Megaphone serves the episode files from the same domain as the players, and parameters on a
+  // file url are the publisher's own analytics rather than Megaphone's: NPR writes `?e=` for its
+  // story and `?p=` for its programme, and both would otherwise read as ids. Every file the reader
+  // can already show is refused and not only the playable ones, because a claimed enclosure becomes
+  // a click-to-load player box: the episode art and the transcript disappear the way the audio did.
+  if (!parsed || isFileName(parsed.pathname)) {
     return
   }
 
