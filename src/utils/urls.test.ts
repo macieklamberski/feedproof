@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { baseContext } from '../tests.js'
 import {
   cleanUrl,
+  composeQuery,
   decodeSegment,
   parseUrlOnHosts,
   pickQueryParams,
@@ -262,6 +263,47 @@ describe('pickQueryParams', () => {
     const expected = { start: '10' }
 
     expect(pickQueryParams(value, ['start'])).toEqual(expected)
+  })
+})
+
+describe('composeQuery', () => {
+  it('should return an empty string for an empty record', () => {
+    expect(composeQuery({})).toBe('')
+  })
+
+  it('should return an empty string when nothing is passed', () => {
+    expect(composeQuery()).toBe('')
+  })
+
+  it('should prefix a single parameter with a question mark', () => {
+    const value = { start: '90' }
+    const expected = '?start=90'
+
+    expect(composeQuery(value)).toBe(expected)
+  })
+
+  it('should join several parameters in the order given', () => {
+    const value = { start: '90', list: 'PLabc', index: '4' }
+    const expected = '?start=90&list=PLabc&index=4'
+
+    expect(composeQuery(value)).toBe(expected)
+  })
+
+  it('should encode a value that needs it', () => {
+    const value = { clipt: 'a+b/c' }
+    const expected = '?clipt=a%2Bb%2Fc'
+
+    expect(composeQuery(value)).toBe(expected)
+  })
+
+  // `pickQueryParams` drops an empty value, so this only arrives from a caller that built the
+  // record itself. The pair is still stated, since the platform's player may read the parameter's
+  // presence rather than its value.
+  it('should state a parameter whose value is empty', () => {
+    const value = { theme: '' }
+    const expected = '?theme='
+
+    expect(composeQuery(value)).toBe(expected)
   })
 })
 
