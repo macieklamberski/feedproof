@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { extractSimplecastEpisode, simplecastResolveEmbed } from './simplecast.js'
+import {
+  extractSimplecastEpisode,
+  simplecastEmbedResolver,
+  simplecastResolveEmbed,
+} from './simplecast.js'
 
 const uuid = '7f2c9a10-3b4d-4e5f-8a9b-0c1d2e3f4a5b'
 
@@ -110,5 +116,86 @@ describe('simplecastResolveEmbed', () => {
     const value = 'https://simplecast.com/pricing'
 
     expect(simplecastResolveEmbed(value)).toBeUndefined()
+  })
+})
+
+describeForEachParser('simplecastEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, simplecastEmbedResolver)
+
+  describe('happy paths', () => {
+    it('should read the player off an iframe carrier', async () => {
+      const value =
+        '<iframe src="https://player.simplecast.com/7f2c9a10-3b4d-4e5f-8a9b-0c1d2e3f4a5b?dark=false"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'simplecast',
+        id: '7f2c9a10-3b4d-4e5f-8a9b-0c1d2e3f4a5b',
+        src: 'https://player.simplecast.com/7f2c9a10-3b4d-4e5f-8a9b-0c1d2e3f4a5b',
+        height: 200,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    // The carrier selector matches every iframe, so the host gate is the only thing that turns
+    // this away, and a lookalike is the specimen that reaches it: host matching admits subdomains.
+    it('should ignore a lookalike host carrying the episode path', async () => {
+      const value = '<iframe src="https://simplecast.com.evil.test/e/1234567"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  describe('edge cases', () => {
+    // 200 is the height every iframe in the corpus sample stated, and a publisher who stated a
+    // box of their own still outranks it.
+    it('should take the size the carrier states over the fixed player height', async () => {
+      const value = html`
+        <iframe
+          src="https://player.simplecast.com/7f2c9a10-3b4d-4e5f-8a9b-0c1d2e3f4a5b"
+          width="640"
+          height="52"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'simplecast',
+        id: '7f2c9a10-3b4d-4e5f-8a9b-0c1d2e3f4a5b',
+        src: 'https://player.simplecast.com/7f2c9a10-3b4d-4e5f-8a9b-0c1d2e3f4a5b',
+        width: 640,
+        height: 52,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+})
+
+// injectEnclosures offers every attachment to every url-keyed resolver, and simplecast serves the
+// episode audio from the same domain as the players, so only an enclosure test reaches the path
+// where claiming a media url would cost a reader a playable element.
+describeForEachParser('simplecast through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should leave a simplecast audio enclosure playable', async () => {
+    const enclosures = [
+      {
+        url: 'https://cdn.simplecast.com/audio/47011cc2/014911c0/69a4632d/default_tc.mp3',
+        type: 'audio/mpeg',
+      },
+    ]
+
+    const expected = html`
+      <audio data-enclosure="" controls src="https://cdn.simplecast.com/audio/47011cc2/014911c0/69a4632d/default_tc.mp3"></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })

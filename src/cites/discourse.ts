@@ -113,14 +113,25 @@ export const discourseCiteResolver: CiteResolver = {
     // `.date` div.
     const dateAnchors = Array.from(body?.querySelectorAll('.date a') ?? [])
 
+    // The submitter and the item's time, from the stats paragraph the description skips. No
+    // other engine's body carries either anchor, and the timestamp is the site's own
+    // formatting ("8:09 AM - 28 Sep 2021").
+    const hackernewsAuthor = text(find(body, 'a.author'))
+    const hackernewsDate = text(find(body, 'a.timestamp'))
+
     return buildCite({
       provider: 'discourse',
       url,
       title: githubAuthor ? stripCommentPrefix(title, githubAuthor) : title,
       description,
-      author: githubAuthor ?? text(dateAnchors[0]),
+      author: githubAuthor ?? text(dateAnchors[0]) ?? hackernewsAuthor,
       publisher,
-      date: date ?? attr(githubDate, 'data-date') ?? text(githubDate) ?? text(dateAnchors[1]),
+      date:
+        date ??
+        attr(githubDate, 'data-date') ??
+        text(githubDate) ??
+        text(dateAnchors[1]) ??
+        hackernewsDate,
       // GitHub oneboxes render no site icon. The inline author avatar stands in for it.
       icon:
         attr(find(element, 'img.site-icon'), 'src') ??

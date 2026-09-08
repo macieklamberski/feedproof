@@ -125,6 +125,30 @@ describe('podomaticResolveEmbed', () => {
 
       expect(podomaticResolveEmbed(value)).toEqual(expected)
     })
+
+    it('should fall back to the normal box for a style naming an inherited method', () => {
+      const value = 'https://www.podomatic.com/embed/html5/episode/10198381?style=toString'
+      const expected: EmbedResolverResult = {
+        provider: 'podomatic',
+        id: 'episode/10198381',
+        src: 'https://www.podomatic.com/embed/html5/episode/10198381',
+        height: 208,
+      }
+
+      expect(podomaticResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should fall back to the normal box for a style naming the prototype itself', () => {
+      const value = 'https://www.podomatic.com/embed/html5/episode/10198381?style=__proto__'
+      const expected: EmbedResolverResult = {
+        provider: 'podomatic',
+        id: 'episode/10198381',
+        src: 'https://www.podomatic.com/embed/html5/episode/10198381',
+        height: 208,
+      }
+
+      expect(podomaticResolveEmbed(value)).toEqual(expected)
+    })
   })
 
   describe('the current player, which names a podcast and picks an episode out of it', () => {

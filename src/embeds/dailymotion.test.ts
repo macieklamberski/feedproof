@@ -169,6 +169,15 @@ describe('dailymotionResolveEmbed', () => {
     expect(dailymotionResolveEmbed(value)).toEqual(expected)
   })
 
+  // The word only names a playlist where the route prefix ends. Scanning the whole path for it
+  // read this search page, whose query is the word itself, as the playlist `videos`, which
+  // `api.dailymotion.com/playlist/videos` answers 404 for.
+  it('should refuse the playlist word sitting deeper in the path', () => {
+    const value = 'https://www.dailymotion.com/search/playlist/videos'
+
+    expect(dailymotionResolveEmbed(value)).toBeUndefined()
+  })
+
   // Reading one of these as an id mints a player for whichever video happens to own the word:
   // `/embed/channel/{id}` yielded `channel` and pointed the placeholder at
   // `dailymotion.com/video/channel`.
@@ -239,7 +248,8 @@ describeForEachParser('dailymotionEmbedResolver', (parseHtml) => {
 })
 
 // The probe offers every enclosure a feed carries to the url resolvers, and Dailymotion serves
-// its own files under `/cdn/`, so the id test has to leave a media url alone.
+// its own files under `/cdn/`. What leaves the media url alone is the route-word rule rather than
+// the id test: `/cdn/` opens no route word, so no segment is read as an id at all.
 describeForEachParser('dailymotion through the pipeline', (parseHtml) => {
   const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
     return transformContent(value, {

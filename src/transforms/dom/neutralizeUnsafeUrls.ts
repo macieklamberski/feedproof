@@ -99,8 +99,8 @@ const tagAttributeRoles: Record<string, Array<[string, UrlRole]>> = {
   object: [['data', 'media']],
 }
 const srcsetTags = new Set(['img', 'source'])
-// Anchors and SVG <image> carry their URL on href/xlink:href, matched by tag because the
-// colon in xlink:href is invalid in a CSS attribute selector.
+// The two tags carrying their URL on href, which is read per element below because SVG1 spells
+// it xlink:href.
 const hrefTagRoles: Record<string, UrlRole> = { a: 'link', image: 'media' }
 
 // Replaces unsafe URLs with an inert, role-appropriate sentinel while keeping the element.

@@ -424,7 +424,9 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
         provider: 'discourse',
         url: 'https://news.ycombinator.com/item?id=28680387',
         title: 'Story title',
+        author: 'poster',
         publisher: 'news.ycombinator.com',
+        date: '8:09 AM - 28 Sep 2021',
         icon: 'https://cdn.example.com/y18.svg',
       }
 
@@ -456,7 +458,9 @@ describeForEachParser('discourseCiteResolver', (parseHtml) => {
         url: 'https://news.ycombinator.com/item?id=12759520',
         title: 'Story title',
         description: 'The text the poster wrote for the self-post.',
+        author: 'poster',
         publisher: 'news.ycombinator.com',
+        date: '11:30 AM - 21 Oct 2016',
       }
 
       expect(await extract(value)).toEqual(expected)

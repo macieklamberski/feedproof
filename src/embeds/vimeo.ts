@@ -13,7 +13,7 @@ const safeVideoIdRegex = /^\d+$/
 // there would let the feed choose the page.
 const unlistedHashRegex = /^[0-9a-f]{10}$/
 
-const vimeoHosts = ['vimeo.com', 'player.vimeo.com']
+const vimeoHosts = ['vimeo.com']
 
 // Paths whose leading numeric id is not a video: a showcase and an album are playlists, a channel
 // and a group are listings, an event is a livestream and an on-demand page is a store front, and
@@ -164,6 +164,20 @@ export const extractVimeoId = (link: string): string | undefined => {
   return readReference(link)?.id
 }
 
+// The player url every caller that recovers an id has to build. Params are given as values, not
+// as a ready query string, so one carrying an `&` cannot open a parameter of its own. A start
+// offset is not one of them: it travels in the fragment, in Vimeo's `{n}s` form.
+export const composeEmbedUrl = (
+  videoId: string,
+  params?: Record<string, string>,
+  startSeconds?: string,
+): string => {
+  const query = params && Object.keys(params).length ? `?${new URLSearchParams(params)}` : ''
+  const start = startSeconds ? `#t=${startSeconds}s` : ''
+
+  return `https://player.vimeo.com/video/${videoId}${query}${start}`
+}
+
 // `t` is the start offset, in Vimeo's `{n}s` form. The unlisted hash is carried by the reference
 // rather than picked from the query, because it also arrives as a path segment.
 const vimeoEmbedParams = ['t']
@@ -183,17 +197,17 @@ export const vimeoResolveEmbed = (
 
   const { id: videoId, hash } = reference
   const title = element ? attr(element, 'title') : undefined
-  const query = new URLSearchParams({
+  const params = {
     ...(hash && { h: hash }),
     ...pickQueryParams(parseUrl(url)?.search ?? '', vimeoEmbedParams),
-  }).toString()
+  }
 
   return {
     provider: 'vimeo',
     // Vimeo's own identity for an unlisted video joins the two with a colon, and the hash has to
     // travel with the id: an oEmbed lookup for the bare id answers 404.
     id: hash ? `${videoId}:${hash}` : videoId,
-    src: `https://player.vimeo.com/video/${videoId}${query ? `?${query}` : ''}`,
+    src: composeEmbedUrl(videoId, params),
     // Without the hash the page loses its title and its poster, so it stays on the url too.
     url: `https://vimeo.com/${videoId}${hash ? `/${hash}` : ''}`,
     title,
