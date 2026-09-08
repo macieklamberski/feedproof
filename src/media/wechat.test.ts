@@ -1,26 +1,40 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, resolverExtractor } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { MediaResolverResult } from '../types.js'
 import { wechatMediaResolver } from './wechat.js'
-
-const mediaId = 'MjM5NjYyMjM0MF8yNjUwOTc3MjQy'
-const mediaSrc = `https://res.wx.qq.com/voice/getvoice?mediaid=${mediaId}`
 
 describeForEachParser('wechatMediaResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, wechatMediaResolver)
 
   describe('happy paths', () => {
     it('should build an audio source url from the encoded file id', async () => {
-      const value = `<mpvoice class="js_editor_audio" voice_encode_fileid="${mediaId}" name="Episode"></mpvoice>`
-      const expected: MediaResolverResult = { tag: 'audio', src: mediaSrc }
+      const value = html`
+        <mpvoice
+          class="js_editor_audio"
+          voice_encode_fileid="MjM5NjYyMjM0MF8yNjUwOTc3MjQy"
+          name="Episode"
+        ></mpvoice>
+      `
+      const expected: MediaResolverResult = {
+        tag: 'audio',
+        src: 'https://res.wx.qq.com/voice/getvoice?mediaid=MjM5NjYyMjM0MF8yNjUwOTc3MjQy',
+      }
 
       expect(await extract(value)).toEqual(expected)
     })
 
     // The element's own src points at a WeChat template page, never at the audio.
     it('should ignore the element src', async () => {
-      const value = `<mpvoice src="/cgi-bin/readtemplate?t=tmpl/audio_tmpl" voice_encode_fileid="${mediaId}"></mpvoice>`
-      const expected: MediaResolverResult = { tag: 'audio', src: mediaSrc }
+      const value = html`
+        <mpvoice
+          src="/cgi-bin/readtemplate?t=tmpl/audio_tmpl"
+          voice_encode_fileid="MjM5NjYyMjM0MF8yNjUwOTc3MjQy"
+        ></mpvoice>
+      `
+      const expected: MediaResolverResult = {
+        tag: 'audio',
+        src: 'https://res.wx.qq.com/voice/getvoice?mediaid=MjM5NjYyMjM0MF8yNjUwOTc3MjQy',
+      }
 
       expect(await extract(value)).toEqual(expected)
     })
@@ -41,7 +55,8 @@ describeForEachParser('wechatMediaResolver', (parseHtml) => {
     })
 
     it('should return undefined when the id carries a query separator', async () => {
-      const value = `<mpvoice voice_encode_fileid="${mediaId}&mediaid=stolen"></mpvoice>`
+      const value =
+        '<mpvoice voice_encode_fileid="MjM5NjYyMjM0MF8yNjUwOTc3MjQy&mediaid=stolen"></mpvoice>'
 
       expect(await extract(value)).toBeUndefined()
     })
