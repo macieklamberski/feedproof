@@ -2,18 +2,20 @@ import { attr, parseRatio } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
-// The player page, which is the only page Mediavine publishes for a video: there is no watch
-// page, so the placeholder carries no `url`. The id is encoded on the way into the path because
-// the div carrier takes its attribute as written: unescaped, `data-video-id="../../evil"` names a
-// different page on the host and `data-video-id="a?autoplay=1"` appends a query.
+// The video.js player page that Mediavine's own dashboard frames to preview a video. The same
+// route without the `/iframe` suffix also answers 200, but it is the embed-code generator behind
+// a login and it is served `x-frame-options: SAMEORIGIN`, so a reader that framed it would show
+// an empty box. The id is encoded on the way into the path because the div carrier takes its
+// attribute as written: unescaped, `data-video-id="../../evil"` names a different page on the
+// host and `data-video-id="a?autoplay=1"` appends a query.
 const composeEmbedUrl = (videoId: string): string => {
-  return `https://embed.mediavine.com/videos/${encodeURIComponent(videoId)}`
+  return `https://embed.mediavine.com/videos/${encodeURIComponent(videoId)}/iframe`
 }
 
 // Mediavine ships a video as an empty `<div class="mv-video-target mv-video-id-{id}"
 // data-video-id="{id}">` that its script builds into a player, so a reader shows nothing at
-// all. The embed player page is mintable from the id alone (verified live, 200). Mediavine
-// has no public watch page, so the placeholder carries no `url`.
+// all. The player page is mintable from the id alone, and a fabricated id answers 404 there.
+// Mediavine has no public watch page, so the placeholder carries no `url`.
 export const mediavineEmbedResolver = createMarkupEmbedResolver(
   'div.mv-video-target[data-video-id]',
   (element) => {

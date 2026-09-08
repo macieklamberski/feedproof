@@ -102,6 +102,29 @@ describeForEachParser('hatenaCiteResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should extract a card whose src is protocol-relative', async () => {
+      const value = html`
+        <p>
+          <iframe
+            src="//hatenablog-parts.com/embed?url=https%3A%2F%2Fexample.com%2Fentry"
+            title="Page title"
+            class="embed-card"
+          ></iframe>
+          <cite class="hatena-citation">
+            <a href="https://example.com/entry">example.com</a>
+          </cite>
+        </p>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'hatena',
+        url: 'https://example.com/entry',
+        title: 'Page title',
+        publisher: 'example.com',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('edge cases', () => {
@@ -176,6 +199,49 @@ describeForEachParser('hatenaCiteResolver', (parseHtml) => {
       const value = html`
         <p>
           <iframe src="http://[" title="Page title" class="embed-card"></iframe>
+        </p>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should ignore a foreign player carrying the card class', async () => {
+      const value = html`
+        <p>
+          <iframe
+            src="https://cdn.other.test/player?url=https%3A%2F%2Fexample.com%2Fvideo"
+            title="A video"
+            class="embed-card"
+          ></iframe>
+        </p>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should ignore a foreign host naming the card renderer in its path', async () => {
+      const value = html`
+        <p>
+          <iframe
+            src="https://evil.test/hatenablog-parts.com/embed?url=https%3A%2F%2Fexample.com%2Fvideo"
+            title="A video"
+          ></iframe>
+        </p>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined when the iframe states no src', async () => {
+      const value = html`
+        <p>
+          <iframe
+            title="Page title"
+            class="embed-card"
+          ></iframe>
+          <cite class="hatena-citation">
+            <a href="https://example.com/entry">example.com</a>
+          </cite>
         </p>
       `
 

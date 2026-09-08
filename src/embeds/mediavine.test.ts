@@ -20,7 +20,7 @@ describeForEachParser('mediavineEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'mediavine',
         id: 't9z9zameefjmqvtghsvu',
-        src: 'https://embed.mediavine.com/videos/t9z9zameefjmqvtghsvu',
+        src: 'https://embed.mediavine.com/videos/t9z9zameefjmqvtghsvu/iframe',
         ratio: '16/9',
       }
 
@@ -54,7 +54,7 @@ describeForEachParser('mediavineEmbedResolver', (parseHtml) => {
 
   describe('edge cases', () => {
     // The attribute is whatever the feed wrote, and unescaped it picks the page: `../../evil`
-    // resolves to `embed.mediavine.com/evil` and a `?` moves the rest of it into the query.
+    // climbs out of the `videos` route and a `?` moves the rest of it into the query.
     it('should keep a traversing video id inside its own path segment', async () => {
       const value = html`
         <div
@@ -65,7 +65,7 @@ describeForEachParser('mediavineEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'mediavine',
         id: '../../evil',
-        src: 'https://embed.mediavine.com/videos/..%2F..%2Fevil',
+        src: 'https://embed.mediavine.com/videos/..%2F..%2Fevil/iframe',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -81,7 +81,7 @@ describeForEachParser('mediavineEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'mediavine',
         id: 'a?autoplay=1',
-        src: 'https://embed.mediavine.com/videos/a%3Fautoplay%3D1',
+        src: 'https://embed.mediavine.com/videos/a%3Fautoplay%3D1/iframe',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -98,7 +98,7 @@ describeForEachParser('mediavineEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'mediavine',
         id: 't9z9zameefjmqvtghsvu',
-        src: 'https://embed.mediavine.com/videos/t9z9zameefjmqvtghsvu',
+        src: 'https://embed.mediavine.com/videos/t9z9zameefjmqvtghsvu/iframe',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -124,7 +124,7 @@ describeForEachParser('mediavineScriptEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'mediavine',
         id: 'dx6ydyrbrjbbu2tncqzi',
-        src: 'https://embed.mediavine.com/videos/dx6ydyrbrjbbu2tncqzi',
+        src: 'https://embed.mediavine.com/videos/dx6ydyrbrjbbu2tncqzi/iframe',
         ratio: '16/9',
       }
 
@@ -137,7 +137,7 @@ describeForEachParser('mediavineScriptEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'mediavine',
         id: 'dx6ydyrbrjbbu2tncqzi9',
-        src: 'https://embed.mediavine.com/videos/dx6ydyrbrjbbu2tncqzi9',
+        src: 'https://embed.mediavine.com/videos/dx6ydyrbrjbbu2tncqzi9/iframe',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -149,7 +149,7 @@ describeForEachParser('mediavineScriptEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'mediavine',
         id: 'dx6ydyrbrjbbu2tncqzi',
-        src: 'https://embed.mediavine.com/videos/dx6ydyrbrjbbu2tncqzi',
+        src: 'https://embed.mediavine.com/videos/dx6ydyrbrjbbu2tncqzi/iframe',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -172,7 +172,7 @@ describeForEachParser('mediavineScriptEmbedResolver', (parseHtml) => {
       const expected: EmbedResolverResult = {
         provider: 'mediavine',
         id: 'decp0ejel1ozsqy4i63s',
-        src: 'https://embed.mediavine.com/videos/decp0ejel1ozsqy4i63s',
+        src: 'https://embed.mediavine.com/videos/decp0ejel1ozsqy4i63s/iframe',
         ratio: '16/9',
       }
 
@@ -221,7 +221,7 @@ describeForEachParser('mediavine through the pipeline', (parseHtml) => {
       <div
         data-embed-provider="mediavine"
         data-embed-id="g14l64f4ixtzzffxbm1o"
-        data-embed-src="https://embed.mediavine.com/videos/g14l64f4ixtzzffxbm1o"
+        data-embed-src="https://embed.mediavine.com/videos/g14l64f4ixtzzffxbm1o/iframe"
         data-embed-ratio="16/9"
       ></div>
     `

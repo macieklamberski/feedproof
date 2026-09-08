@@ -50,8 +50,25 @@ describe('extractMixcloudShow', () => {
     'https://www.mixcloud.com/photogmusic/listens/',
     'https://www.mixcloud.com/photogmusic/stream/',
     'https://www.mixcloud.com/photogmusic/playlists/',
+    'https://www.mixcloud.com/photogmusic/followers/',
+    'https://www.mixcloud.com/photogmusic/following/',
+    'https://www.mixcloud.com/photogmusic/community/',
+    'https://www.mixcloud.com/photogmusic/reposts/',
+    'https://www.mixcloud.com/photogmusic/tracks/',
+    'https://www.mixcloud.com/photogmusic/activity/',
+    'https://www.mixcloud.com/photogmusic/select/',
+    'https://www.mixcloud.com/photogmusic/subscribe/',
+    'https://www.mixcloud.com/photogmusic/dashboard/',
   ])('should return undefined for the site page %s', (value) => {
     expect(extractMixcloudShow(value)).toBeUndefined()
+  })
+
+  // The section words are matched whole, so a show whose title starts with one is still a show.
+  it('should read a show whose slug begins with a section word', () => {
+    const value = 'https://www.mixcloud.com/photogmusic/followers-only-mix/'
+    const expected = 'photogmusic/followers-only-mix'
+
+    expect(extractMixcloudShow(value)).toBe(expected)
   })
 
   // Without the site-segment check the widget's own two-segment url reads as the user `widget`
