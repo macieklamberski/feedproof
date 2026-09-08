@@ -7,7 +7,7 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // Letters and digits, which is all the player path takes: a hyphen marks a slug and a dot a
 // file, and no route here serves either as a player. The length is not checked, since a wrong id
 // fails the same whether it is minted or passed through, and a bound refuses the next id space.
-const safeMediaIdRegex = /^[a-zA-Z0-9]+$/
+export const safeMediaIdRegex = /^[a-zA-Z0-9]+$/
 
 // The script form names the media through a JSONP callback, with no page in the url.
 const jsonpSuffixRegex = /\.jsonp$/
@@ -29,6 +29,12 @@ const playerRoutes: Record<string, string | undefined> = {
   channel: 'channel',
   channels: 'channel',
   playlists: 'playlists',
+}
+
+// The player url every caller that recovers an id has to build, on the route `playerRoutes`
+// names.
+export const composeEmbedUrl = (route: string, mediaId: string): string => {
+  return `https://fast.wistia.net/embed/${route}/${mediaId}`
 }
 
 export const extractWistiaEmbed = (
@@ -66,7 +72,7 @@ export const wistiaResolveEmbed = (
   return {
     provider: 'wistia',
     id: embed.route === 'iframe' ? embed.id : `${embed.route}/${embed.id}`,
-    src: `https://fast.wistia.net/embed/${embed.route}/${embed.id}`,
+    src: composeEmbedUrl(embed.route, embed.id),
     url: embed.page,
     // Wistia's own snippet writes the media's name here with the word `Video` appended.
     title: element ? attr(element, 'title') : undefined,

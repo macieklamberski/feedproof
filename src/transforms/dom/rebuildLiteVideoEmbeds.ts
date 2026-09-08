@@ -1,4 +1,5 @@
-import { composeEmbedUrl, youtubeEmbedParams } from '../../embeds/youtube.js'
+import { composeEmbedUrl as composeVimeoUrl } from '../../embeds/vimeo.js'
+import { composeEmbedUrl as composeYoutubeUrl, youtubeEmbedParams } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 import { pickQueryParams } from '../../utils/urls.js'
 import { createIframe } from '../../utils/widgets.js'
@@ -24,13 +25,11 @@ type EmbedSource = {
 const embedSources: Record<string, EmbedSource> = {
   'lite-youtube': {
     params: youtubeEmbedParams,
-    compose: (id, params) => composeEmbedUrl(id, params),
+    compose: (id, params) => composeYoutubeUrl(id, params),
   },
   'lite-vimeo': {
     params: ['start'],
-    compose: (id, params) => {
-      return `https://player.vimeo.com/video/${id}${params.start ? `#t=${params.start}s` : ''}`
-    },
+    compose: (id, params) => composeVimeoUrl(id, undefined, params.start),
   },
 }
 
