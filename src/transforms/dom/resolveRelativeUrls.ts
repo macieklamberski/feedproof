@@ -10,7 +10,7 @@ import { absoluteUrlRegex } from '../../utils/urls.js'
 export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => {
   return (document) => {
     const elements = document.querySelectorAll(
-      'a[href], [src], video[poster], img[srcset], source[srcset], object[data], image',
+      'a[href], [src], video[poster], img[srcset], source[srcset], object[data], image, blockquote[cite], q[cite], ins[cite], del[cite]',
     )
 
     for (const element of elements) {
@@ -59,6 +59,25 @@ export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => 
 
           if (resolved) {
             element.setAttribute('data', resolved)
+          }
+        }
+      }
+
+      // The url a quotation, insertion or deletion came from. Unlike an anchor's href, a
+      // fragment-only cite names no source to scroll to, so it is resolved like any other.
+      if (
+        localName === 'blockquote' ||
+        localName === 'q' ||
+        localName === 'ins' ||
+        localName === 'del'
+      ) {
+        const cite = element.getAttribute('cite')
+
+        if (cite && !absoluteUrlRegex.test(cite)) {
+          const resolved = resolveUrlFn(cite, baseUrl)
+
+          if (resolved) {
+            element.setAttribute('cite', resolved)
           }
         }
       }

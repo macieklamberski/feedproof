@@ -50,6 +50,43 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  it('should resolve relative cite on blockquotes', async () => {
+    const value = '<blockquote cite="/posts/123">quote</blockquote>'
+    const expected = '<blockquote cite="https://example.com/posts/123">quote</blockquote>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should resolve relative cite on q, ins and del elements', async () => {
+    const value = html`
+      <q cite="/quoted">quoted</q>
+      <ins cite="/added">added</ins>
+      <del cite="/removed">removed</del>
+    `
+    const expected = html`
+      <q cite="https://example.com/quoted">quoted</q>
+      <ins cite="https://example.com/added">added</ins>
+      <del cite="https://example.com/removed">removed</del>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should preserve an already-absolute cite', async () => {
+    const value = '<blockquote cite="https://other.com/posts/123">quote</blockquote>'
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
+  // An anchor keeps a fragment-only href so it scrolls locally. A cite names the source of the
+  // quotation instead, so a bare fragment belongs to the citing page and is resolved against it.
+  it('should resolve a fragment-only cite against the base URL', async () => {
+    const value = '<blockquote cite="#note">quote</blockquote>'
+    const expected = '<blockquote cite="https://example.com/#note">quote</blockquote>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
   it('should resolve relative src on audio elements', async () => {
     const value = '<audio src="/audio.mp3"></audio>'
     const expected = '<audio src="https://example.com/audio.mp3"></audio>'
@@ -254,6 +291,19 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     const value = `<img srcset="${srcset}">`
 
     expect(await transform(value)).toEqualHtml(value)
+  })
+
+  it('should leave a relative cite untouched when baseUrl is missing', async () => {
+    const value = '<blockquote cite="/posts/123">quote</blockquote>'
+
+    expect(await transform(value, defaultContext)).toEqualHtml(value)
+  })
+
+  it('should give a protocol-relative cite a scheme when baseUrl is missing', async () => {
+    const value = '<blockquote cite="//www.other.test/posts/123">quote</blockquote>'
+    const expected = '<blockquote cite="https://www.other.test/posts/123">quote</blockquote>'
+
+    expect(await transform(value, defaultContext)).toEqualHtml(expected)
   })
 
   it('should resolve a relative href on an svg image', async () => {
