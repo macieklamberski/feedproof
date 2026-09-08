@@ -30,6 +30,7 @@ import { swellCiteResolver } from '../cites/swell.js'
 import { tcdCiteResolver } from '../cites/tcd.js'
 import { tistoryCiteResolver } from '../cites/tistory.js'
 import { tumblrCiteResolver } from '../cites/tumblr.js'
+import { wordpressCiteResolver } from '../cites/wordpress.js'
 import { xenforoCiteResolver } from '../cites/xenforo.js'
 import { acastEmbedResolver } from '../embeds/acast.js'
 import { anchorEmbedResolver } from '../embeds/anchor.js'
@@ -353,6 +354,7 @@ const citeResolvers: Array<CiteResolver> = [
   notecomCiteResolver,
   nytimesCiteResolver,
   tumblrCiteResolver,
+  wordpressCiteResolver,
   embedlyCiteResolver,
   paragraphCiteResolver,
   devtoPostCiteResolver,

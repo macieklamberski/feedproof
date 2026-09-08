@@ -1,4 +1,11 @@
 export const defaultNonContentSelectors = [
+  // The other half of a WordPress post embed, whose blockquote `wordpressCiteResolver` converts.
+  // Its src is a `/embed/#?secret=…` handshake url that renders nothing outside WordPress's
+  // postMessage bridge, so left alone it becomes an embed placeholder pointing at a blank page:
+  // 14,353 feeds (0.113%). Scoped to that handshake path, because the class is also stamped on
+  // frames a site embeds from elsewhere, and an unscoped strip deletes those before a cite
+  // resolver reads them.
+  'iframe.wp-embedded-content[src*="/embed/"]',
   // Subscribe and newsletter signup forms.
   '[data-component-name="SubscribeWidget"]', // Substack inline subscribe widget.
   '.subscription-widget-wrap-editor', // Substack paywall / subscribe CTA.
