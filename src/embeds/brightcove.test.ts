@@ -5,6 +5,7 @@ import type { EmbedResolverResult } from '../types.js'
 import {
   brightcoveExperienceEmbedResolver,
   brightcoveFlashEmbedResolver,
+  brightcoveIframeEmbedResolver,
   brightcoveResolveEmbed,
   brightcoveVideoJsEmbedResolver,
 } from './brightcove.js'
@@ -241,6 +242,62 @@ describe('brightcoveResolveEmbed', () => {
       const value = 'https://['
 
       expect(brightcoveResolveEmbed(value)).toBeUndefined()
+    })
+  })
+})
+
+describeForEachParser('brightcoveIframeEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, brightcoveIframeEmbedResolver)
+
+  describe('happy paths', () => {
+    it('should claim the player page framed as an ordinary iframe', async () => {
+      const value = html`
+        <iframe
+          src="https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432"
+          allowfullscreen
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'brightcove',
+        id: '1234567890/6098765432',
+        src: 'https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    // The url reader admits any host starting `players.`, so a lookalike suffixing the whole
+    // domain passes it and the resolver's host list is the only thing refusing this.
+    it('should ignore a lookalike host suffixing the player domain', async () => {
+      const value =
+        '<iframe src="https://players.brightcove.net.evil.test/1234567890/default_default/index.html?videoId=6098765432"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  describe('the size a publisher states', () => {
+    // Brightcove's player is whatever shape the account configured it to be, so the resolver
+    // states no size and the box on the carrier is the only measurement there is.
+    it('should take the whole box the carrier states', async () => {
+      const value = html`
+        <iframe
+          src="https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432"
+          width="640"
+          height="360"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'brightcove',
+        id: '1234567890/6098765432',
+        src: 'https://players.brightcove.net/1234567890/default_default/index.html?videoId=6098765432',
+        width: 640,
+        height: 360,
+      }
+
+      expect(await extract(value)).toEqual(expected)
     })
   })
 })

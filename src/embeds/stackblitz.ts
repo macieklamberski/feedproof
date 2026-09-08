@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { audioFileRegex, documentFileRegex, imageFileRegex, videoFileRegex } from '../utils/urls.js'
+import { isFileName, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // `blog.stackblitz.com` and `developer.stackblitz.com` are prose, and a project's running preview
@@ -11,18 +11,6 @@ const stackblitzHosts = ['stackblitz.com', 'www.stackblitz.com']
 // A project is addressed by its own slug rather than by a hash behind one, so the whole segment is
 // the id. Hyphens and dots are both legal in it (`vitejs-vite-jfnozz`, `angular-ivy-snow`).
 const slugRegex = /^[A-Za-z0-9][A-Za-z0-9._-]*$/
-
-// A slug carries dots, so a filename passes it. The enclosure probe offers every attachment a feed
-// carries to this resolver, so an `.mp3` on the host would otherwise be minted as a project and take
-// the place of a playable element.
-const isFileName = (value: string): boolean => {
-  return (
-    documentFileRegex.test(value) ||
-    audioFileRegex.test(value) ||
-    videoFileRegex.test(value) ||
-    imageFileRegex.test(value)
-  )
-}
 
 // What the share dialog writes beside `width="100%"`, and the commonest of the corpus values. A
 // fixed height and not a ratio: an unsized embed measured 150 tall at both 500 and 1000 pixels wide,
@@ -37,7 +25,7 @@ type StackblitzTarget = {
 }
 
 const parseTarget = (value: string | undefined): StackblitzTarget | undefined => {
-  const parsed = parseUrl(value ?? '', 'https://example.com')
+  const parsed = parseUrl(value ?? '', placeholderBaseUrl)
 
   if (!parsed || !isHostOf(parsed, stackblitzHosts)) {
     return

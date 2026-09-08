@@ -1,22 +1,15 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import { decodeSegment, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
+
+const provider = 'mixcloud'
 
 // A show is `{user}/{slug}`. Mixcloud keeps whatever script the publisher titled it in, so the
 // segments hold Japanese, Greek and accented Latin as well as ascii. What a segment may not
 // hold is anything that would end the path early or climb out of it, because the show is also
 // written into a url without escaping.
 const unsafeSegmentRegex = /[/?#\\]|\s|^\.+$/
-
-// Segments arrive percent-encoded, and both the check and the value need them decoded: the
-// check because a separator arrives disguised as often as plain (`..%2Fetc` is one), and the
-// value because the widget url encodes it again on the way out. A malformed escape decodes to
-// nothing usable, so it is refused.
-const decodeSegment = (segment: string): string | undefined => {
-  try {
-    return decodeURIComponent(segment)
-  } catch {}
-}
 
 const mixcloudHosts = ['mixcloud.com']
 
@@ -60,6 +53,8 @@ const siteSegments = new Set([
 // Exactly a user and a slug: a deeper path is a section of the site, not a show, and the value
 // goes back into a url, so anything else is left to the generic placeholder.
 const readShowPath = (segments: Array<string>): string | undefined => {
+  // Decoded before the check, because a separator arrives disguised as often as it arrives
+  // plain: `..%2Fetc` is one.
   const [user, slug] = segments.map(decodeSegment)
 
   if (segments.length !== 2 || !user || !slug) {
@@ -89,7 +84,7 @@ const readShowPath = (segments: Array<string>): string | undefined => {
 export const extractMixcloudShow = (link: string): string | undefined => {
   const parsed = parseUrl(link)
   const feed = parsed?.searchParams.get('feed')
-  const source = feed ? parseUrl(feed, 'https://example.com') : parsed
+  const source = feed ? parseUrl(feed, placeholderBaseUrl) : parsed
 
   return source ? readShowPath(getPathSegments(source)) : undefined
 }
@@ -131,7 +126,7 @@ export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefin
   }
 
   return {
-    provider: 'mixcloud',
+    provider,
     id: show,
     src: `https://www.mixcloud.com/widget/iframe/?${query}`,
     url: `https://www.mixcloud.com/${show}/`,
@@ -150,6 +145,6 @@ export const mixcloudEmbedResolver = createUrlEmbedResolver(mixcloudHosts, mixcl
 // `src`, so a reader has to grant autoplay to any origin (`autoplay *`) or the redirect loses it
 // and the widget sits at 00:00.
 export const mixcloudRenderHint: EmbedRenderHint = {
-  provider: 'mixcloud',
+  provider,
   autoplayParams: { autoplay: '1' },
 }

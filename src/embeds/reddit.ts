@@ -5,6 +5,8 @@ import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'reddit'
+
 const redditHosts = ['reddit.com', 'redditmedia.com']
 
 // Subreddit and account names are letters, digits, underscore and hyphen, and a post or a comment
@@ -101,7 +103,7 @@ const composeEmbed = (
   extra: Partial<EmbedResolverResult> = {},
 ): EmbedResolverResult => {
   return {
-    provider: 'reddit',
+    provider,
     id: target.path,
     src: `https://embed.reddit.com/${target.path}/`,
     url: `https://www.reddit.com/${target.path}/`,
@@ -179,7 +181,7 @@ export const readRedditHeight = (data: unknown): number | undefined => {
 }
 
 export const redditRenderHint: EmbedRenderHint = {
-  provider: 'reddit',
+  provider,
   origin: 'https://embed.reddit.com',
   readHeight: readRedditHeight,
 }

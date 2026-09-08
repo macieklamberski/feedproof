@@ -46,17 +46,23 @@ export type EmbedResolverResult = {
   duration?: number
 }
 
-// What a reader needs from a provider once it turns the placeholder into a frame: the query that
-// starts playback on the click, and how the player reports its height once it has rendered. A
-// social post has no height until then, so the frame posts one and the reader sizes the box from
-// it. Each hint is a fact about the player and a pure reader of its messages; when to load and
-// what to do with a height stay the reader's decisions.
+// What a reader needs from a provider once it turns the placeholder into a frame: the query every
+// load of the player wants, the query that starts playback on the click, and how the player
+// reports its height once it has rendered. A social post has no height until then, so the frame
+// posts one and the reader sizes the box from it. Each hint is a fact about the player and a pure
+// reader of its messages; when to load and what to do with a height stay the reader's decisions.
 export type EmbedRenderHint = {
   provider: string
   // The origin the player's messages arrive from, for a reader to check `event.origin` against.
   // Absent where the player is served from the publisher's own host, a Mastodon instance or a
   // Podigee show, and the frame's own origin is the one to match.
   origin?: string
+  // Query parameters the player wants on every load, not only the one that follows a click. A
+  // reader assigns each over whatever the placeholder's url already carries: a key is listed here
+  // only where this value is the one that has to hold, so a publisher's own spelling of it is what
+  // the entry exists to replace. They stay off the placeholder's url because a reader that draws
+  // the frame differently, or draws no frame at all, should not be handed them.
+  params?: Record<string, string>
   // Query parameters that start playback, for a load that follows a person's click. They never
   // go on the placeholder's url, since a placeholder must not start on page load.
   autoplayParams?: Record<string, string>

@@ -1,5 +1,6 @@
-import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { getPathSegments, isPlainObject } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -40,3 +41,22 @@ export const donorboxResolveEmbed = (url: string): EmbedResolverResult | undefin
 }
 
 export const donorboxEmbedResolver = createUrlEmbedResolver(donorboxHosts, donorboxResolveEmbed)
+
+// The form posts its rendered height unasked, as `{ from: 'dbox', src, height }`, and answers a
+// posted `{ action: 'please-resize-me' }` with the same message, so a reader that misses the first
+// one can ask for it. Verified in a browser on 2026-09-07: a form at 640 wide reported 572 and
+// settled at 573, against the 900 stated above.
+//
+// The origin is spelled out rather than left to the frame's own. The src is the publisher's url
+// whole and this resolver takes subdomains, so a carrier written against `www.donorbox.org`, which
+// 301s to the apex, would have a src saying `www` while every message arrives from the apex.
+export const readDonorboxHeight = (data: unknown): number | undefined => {
+  return isPlainObject(data) && data.from === 'dbox' ? readPixels(data.height) : undefined
+}
+
+export const donorboxRenderHint: EmbedRenderHint = {
+  provider: 'donorbox',
+  origin: 'https://donorbox.org',
+  requestHeight: { action: 'please-resize-me' },
+  readHeight: readDonorboxHeight,
+}

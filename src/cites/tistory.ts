@@ -1,6 +1,7 @@
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
+import * as styles from '../utils/styles.js'
 
 // Tistory renders a pasted link as a card built from the linked page's Open Graph tags. The
 // `data-og-*` attribute names and the `og-*` class names below are Tistory's, but they map
@@ -30,8 +31,12 @@ export const tistoryCiteResolver: CiteResolver = {
       title: attr(element, 'data-og-title') ?? text(element, '.og-title'),
       description: attr(element, 'data-og-description') ?? text(element, '.og-desc'),
       publisher: attr(element, 'data-og-host') ?? text(element, '.og-host'),
-      // A card can list several candidate images in one attribute, comma separated.
-      thumbnail: attr(element, 'data-og-image')?.split(',')[0],
+      // A card can list several candidate images, comma separated, and both forms carry the
+      // same list: the attribute states it outright and the element paints it as a CSS
+      // background rather than as an `<img>`. So the split runs after the two are chained.
+      thumbnail: (
+        attr(element, 'data-og-image') ?? styles.bgImage(find(element, '.og-image'))
+      )?.split(',')[0],
     })
   },
 }

@@ -4,6 +4,8 @@ import { attr, find } from '../utils/dom.js'
 import { readPixels } from '../utils/hints.js'
 import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'mastodon'
+
 export type MastodonStatus = {
   origin: string
   host: string
@@ -51,7 +53,7 @@ export const parseMastodonStatus = (link: string): MastodonStatus | undefined =>
 
 const composeEmbedResult = (status: MastodonStatus): EmbedResolverResult => {
   return {
-    provider: 'mastodon',
+    provider,
     // `EnrichEmbedFn` is handed `{provider, id}` and nothing else, and a status id is unique
     // only within the instance that minted it: two instances number their posts from the
     // same sequence. So the instance travels inside the id, or no lookup can be addressed
@@ -83,6 +85,10 @@ const composeEmbedResult = (status: MastodonStatus): EmbedResolverResult => {
 // body text and no embed at all, and `div.mastodon-embed`, which only wraps the iframe that is
 // matched inside it.
 //
+// A bare anchor is not matched either, and that is the only thing keeping a foreign host out:
+// `parseMastodonStatus` reads a status from any host filing an author and a long number, so a
+// Medium post url takes the shape. Its test pins that, since no reject case can be written here.
+//
 // No size is derived here. The embed page reports its height by posting a message to the parent
 // once it has rendered, so the publisher's markup holds the only height that exists offline, and
 // the factory applies whatever the carrier declares.
@@ -112,7 +118,7 @@ export const readMastodonHeight = (data: unknown): number | undefined => {
 }
 
 export const mastodonRenderHint: EmbedRenderHint = {
-  provider: 'mastodon',
+  provider,
   requestHeight: { type: 'setHeight', id: 0 },
   readHeight: readMastodonHeight,
 }

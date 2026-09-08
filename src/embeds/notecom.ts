@@ -4,6 +4,8 @@ import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'notecom'
+
 // A note id is `n` followed by lowercase hex, e.g. `nf938ce640465`.
 const safeNoteIdRegex = /^n[0-9a-f]+$/
 
@@ -33,7 +35,7 @@ const composeEmbed = (noteId: string, pageUrl?: string): EmbedResolverResult | u
   }
 
   return {
-    provider: 'notecom',
+    provider,
     id: noteId,
     src: composePlayer(noteId),
     url: composePostUrl(noteId, pageUrl),
@@ -98,7 +100,7 @@ export const readNotecomHeight = (data: unknown): number | undefined => {
 }
 
 export const notecomRenderHint: EmbedRenderHint = {
-  provider: 'notecom',
+  provider,
   origin: 'https://note.com',
   readHeight: readNotecomHeight,
 }

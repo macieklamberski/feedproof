@@ -205,6 +205,52 @@ describeForEachParser('hatenaCiteResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    // Every Hatena blog also serves the card from its own host, and a custom domain does too, so
+    // no host list reaches it. The citation beside it names the same host, which is the blog
+    // citing its own entry.
+    it('should read a card the blog serves from its own host', async () => {
+      const value = html`
+        <p>
+          <iframe
+            src="http://nogutyo.hatenablog.com/embed/2013/09/07/004036"
+            title="An entry"
+            class="embed-card embed-blogcard"
+          ></iframe>
+          <cite class="hatena-citation">
+            <a href="http://nogutyo.hatenablog.com/entry/2013/09/07/004036">nogutyo.hatenablog.com</a>
+          </cite>
+        </p>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'hatena',
+        url: 'http://nogutyo.hatenablog.com/entry/2013/09/07/004036',
+        title: 'An entry',
+        publisher: 'nogutyo.hatenablog.com',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The citation on its own is not enough: a foreign player beside one names a different host,
+    // so the pair is what separates a blog citing itself from a player that happens to sit next
+    // to a citation.
+    it('should ignore a foreign player beside a citation naming another host', async () => {
+      const value = html`
+        <p>
+          <iframe
+            src="https://cdn.other.test/player?url=https%3A%2F%2Fexample.com%2Fvideo"
+            title="A video"
+            class="embed-card"
+          ></iframe>
+          <cite class="hatena-citation">
+            <a href="http://nogutyo.hatenablog.com/entry/2013/09/07/004036">nogutyo.hatenablog.com</a>
+          </cite>
+        </p>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     it('should ignore a foreign player carrying the card class', async () => {
       const value = html`
         <p>

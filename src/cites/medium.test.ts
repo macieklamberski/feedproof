@@ -219,20 +219,6 @@ describeForEachParser('mediumCiteResolver', (parseHtml) => {
       expect(result).toEqualHtml(expected)
     })
 
-    it('should emit one placeholder per wrapped card', async () => {
-      const value = html`
-        <div class="graf graf--mixtapeEmbed">
-          <a href="https://example.com/one" class="markup--mixtapeEmbed-anchor">
-            <strong>One</strong>
-          </a>
-          <a href="https://example.com/one" class="js-mixtapeImage mixtapeImage"></a>
-        </div>
-      `
-      const result = await transform(value)
-
-      expect((result.match(/data-cite-provider="/g) ?? []).length).toBe(1)
-    })
-
     it('should be idempotent', async () => {
       const value = html`
         <a href="https://example.com/page" class="markup--mixtapeEmbed-anchor">

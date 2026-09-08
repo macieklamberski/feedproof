@@ -1,30 +1,22 @@
 import { stringifySrcset } from 'srcset'
 import type { AssetProxyFn, AssetType, DomTransform } from '../../types.js'
-import { hrefAttribute } from '../../utils/dom.js'
+import { svgHrefAttribute } from '../../utils/dom.js'
 import { parseSrcset } from '../../utils/images.js'
-import { groupUrlAttributesByTag, type UrlAttribute, urlAttributes } from '../../utils/urls.js'
 
-type ProxyableAttribute = UrlAttribute & { asset: NonNullable<UrlAttribute['asset']> }
-
-const proxyableAttributes = urlAttributes.filter((attribute): attribute is ProxyableAttribute => {
-  return attribute.asset !== undefined
-})
-// A tag-less attribute is matched on its own, since a placeholder parks it on whatever element
-// it replaced; the rest are matched by tag, which is also how an SVG <image> carrying its url
-// on xlink:href is reached.
 const proxyableSelectors = [
-  ...new Set(proxyableAttributes.map(({ attribute, tag }) => tag ?? `[${attribute}]`)),
+  'img',
+  'video',
+  'audio',
+  'source',
+  'track',
+  'image',
+  '[data-embed-thumbnail]',
+  '[data-embed-avatar]',
+  '[data-cite-icon]',
+  '[data-cite-thumbnail]',
 ]
-const genericAttributes = proxyableAttributes.filter((attribute) => !attribute.tag)
-const tagAttributes = groupUrlAttributesByTag(proxyableAttributes)
 
-// A `parent` attribute takes its kind from the element above: a <source> or <track> is a video
-// track inside a <video>, an audio one inside an <audio>, and an image anywhere else.
-const assetTypeOf = (element: Element, asset: ProxyableAttribute['asset']): AssetType => {
-  if (asset !== 'parent') {
-    return asset
-  }
-
+const sourceTypeFromParent = (element: Element): AssetType => {
   const parent = element.parentElement?.localName
 
   if (parent === 'video') {
@@ -129,21 +121,50 @@ export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
     const elements = document.querySelectorAll(proxyableSelectors.join(', '))
 
     for (const element of elements) {
-      for (const { asset, attribute } of tagAttributes[element.localName] ?? []) {
-        const type = assetTypeOf(element, asset)
-
-        if (attribute === 'srcset') {
-          await proxySrcset(element, type, assetProxyFn)
-          continue
+      switch (element.localName) {
+        case 'img': {
+          await proxyAttribute(element, 'src', 'image', assetProxyFn)
+          await proxySrcset(element, 'image', assetProxyFn)
+          break
         }
-
-        const name = attribute === 'href' ? hrefAttribute(element) : attribute
-
-        await proxyAttribute(element, name, type, assetProxyFn)
+        case 'video': {
+          await proxyAttribute(element, 'src', 'video', assetProxyFn)
+          await proxyAttribute(element, 'poster', 'image', assetProxyFn)
+          break
+        }
+        case 'audio': {
+          await proxyAttribute(element, 'src', 'audio', assetProxyFn)
+          break
+        }
+        case 'source': {
+          await proxyAttribute(element, 'src', sourceTypeFromParent(element), assetProxyFn)
+          await proxySrcset(element, 'image', assetProxyFn)
+          break
+        }
+        case 'track': {
+          await proxyAttribute(element, 'src', sourceTypeFromParent(element), assetProxyFn)
+          break
+        }
+        case 'image': {
+          await proxyAttribute(element, svgHrefAttribute(element), 'image', assetProxyFn)
+          break
+        }
       }
 
-      for (const { asset, attribute } of genericAttributes) {
-        await proxyAttribute(element, attribute, assetTypeOf(element, asset), assetProxyFn)
+      if (element.hasAttribute('data-embed-thumbnail')) {
+        await proxyAttribute(element, 'data-embed-thumbnail', 'image', assetProxyFn)
+      }
+
+      if (element.hasAttribute('data-embed-avatar')) {
+        await proxyAttribute(element, 'data-embed-avatar', 'image', assetProxyFn)
+      }
+
+      if (element.hasAttribute('data-cite-icon')) {
+        await proxyAttribute(element, 'data-cite-icon', 'image', assetProxyFn)
+      }
+
+      if (element.hasAttribute('data-cite-thumbnail')) {
+        await proxyAttribute(element, 'data-cite-thumbnail', 'image', assetProxyFn)
       }
     }
   }
