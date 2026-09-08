@@ -45,22 +45,24 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, podloveMediaResolver)
 
   describe('happy paths', () => {
-    it('should read the audio file, title and poster out of the inlined config', async () => {
+    it('should read the audio file and title out of the inlined config', async () => {
       const value = makePlayer(episodeConfig)
       const expected: MediaResolverResult = {
         tag: 'audio',
         src: 'https://300hertz.de/podlove/file/1036/s/webplayer/c/website/300Hertz_E043.mp3',
         title: 'Schallwellentherapie',
-        poster: 'https://300hertz.de/podlove/image/deadbeef/500/0/0/300hertz',
       }
 
       expect(await extract(value)).toEqual(expected)
     })
 
-    it('should fall back to the show poster when the episode has none', async () => {
+    // The config states a poster for the episode and another for the show, and an episode is
+    // audio, which HTML gives no poster attribute. Neither reaches a reader, so neither is read.
+    it('should state no poster for an episode the config gives one', async () => {
       const config = JSON.stringify([
         {
           data: {
+            poster: 'https://example.com/episode.jpg',
             show: { poster: 'https://example.com/show.jpg' },
             audio: [{ url: 'https://example.com/e.mp3', mimeType: 'audio/mpeg' }],
           },
@@ -70,7 +72,6 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
       const expected: MediaResolverResult = {
         tag: 'audio',
         src: 'https://example.com/e.mp3',
-        poster: 'https://example.com/show.jpg',
       }
 
       expect(await extract(value)).toEqual(expected)

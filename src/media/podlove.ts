@@ -24,8 +24,6 @@ type PodloveConfig = Array<{
   data?: {
     audio?: Array<{ url?: string; mimeType?: string }>
     title?: string
-    poster?: string
-    show?: { poster?: string }
   }
 }>
 
@@ -64,15 +62,17 @@ export const podloveMediaResolver: MediaResolver = {
       return
     }
 
-    // Both urls travel as the config wrote them. convertWidgets resolves whatever a resolver
+    // Both values travel as the config wrote them. convertWidgets resolves whatever a resolver
     // returns, which is what gives a protocol-relative or feed-relative config the same
     // treatment as one written in markup, and it drops the media when the src resolves to
     // nothing at all.
+    //
+    // The config's episode and show posters are left where they are. An episode is audio, and
+    // `poster` is a `<video>` attribute, so nothing downstream has anywhere to put one.
     return {
       tag: 'audio',
       src: source,
       title: data.title,
-      poster: data.poster ?? data.show?.poster,
     }
   },
 }
