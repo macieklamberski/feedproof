@@ -1,4 +1,4 @@
-import { getPathSegments, isHostOf, parseUrl } from 'trousse'
+import { getPathSegments, isHostOf, parseUrl, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches, parsePixelSize, text } from '../utils/dom.js'
 import { composeQuery, placeholderBaseUrl } from '../utils/urls.js'
@@ -141,11 +141,13 @@ const parseTarget = (value: string | undefined): CodepenTarget | undefined => {
 
   return {
     kind,
-    user,
-    ownerPath: user && (isTeam ? `team/${user}` : user),
-    ...(Object.keys(grants).length > 0 && { grants }),
-    ...(height !== undefined && { height }),
     slug,
+    ...trimObject({
+      user,
+      ownerPath: user && (isTeam ? `team/${user}` : user),
+      grants: trimObject(grants),
+      height,
+    }),
   }
 }
 
