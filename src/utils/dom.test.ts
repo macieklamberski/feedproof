@@ -7,7 +7,7 @@ import {
   flashVars,
   formatRatio,
   getElementDimensions,
-  getUnitlessStyleRatio,
+  getStylePairRatio,
   getWrapperRatio,
   hasAncestorWithTagName,
   hasZeroOpacity,
@@ -23,28 +23,49 @@ import {
   walkElements,
 } from './dom.js'
 
-describeForEachParser('getUnitlessStyleRatio', (parseHtml) => {
+describeForEachParser('getStylePairRatio', (parseHtml) => {
   it('should read a small unitless pair as the shape it spells', () => {
     const document = parseHtml('<div style="width: 16; height: 9;"></div>')
     const element = queryElement(document, 'div')
 
-    expect(getUnitlessStyleRatio(element)).toBe('16/9')
+    expect(getStylePairRatio(element)).toBe('16/9')
   })
 
   // Above the ceiling the same spelling is a forgotten unit on a real box, which
   // getElementDimensions already reads as pixels.
-  it('should refuse a large unitless pair', () => {
+  it('should refuse a large pair', () => {
     const document = parseHtml('<div style="width: 540; height: 300;"></div>')
     const element = queryElement(document, 'div')
 
-    expect(getUnitlessStyleRatio(element)).toBeUndefined()
+    expect(getStylePairRatio(element)).toBeUndefined()
   })
 
-  it('should refuse a pair that carries its unit', () => {
+  // The unit changes nothing: no player is nine pixels tall either way, so the pair is a shape
+  // however it is spelled.
+  it('should read a small pair that carries its unit as the same shape', () => {
     const document = parseHtml('<div style="width: 16px; height: 9px;"></div>')
     const element = queryElement(document, 'div')
 
-    expect(getUnitlessStyleRatio(element)).toBeUndefined()
+    expect(getStylePairRatio(element)).toBe('16/9')
+  })
+
+  // What the ceiling actually admits, and why nothing is lost by it: every small pair on a carrier
+  // in the corpus is a social button, and each is stripped as non-content before a size is asked
+  // for. Facebook's is 88x21, Google's 90x20 and 32x20, Twitter's 61x20.
+  it('should read a social button box as a shape', () => {
+    const document = parseHtml('<iframe style="width: 88px; height: 21px;"></iframe>')
+    const element = queryElement(document, 'iframe')
+
+    expect(getStylePairRatio(element)).toBe('88/21')
+  })
+
+  // A fixed-height bar states a real width beside a small height, so both halves have to be under
+  // the ceiling. archive.org's audio player is 350x30.
+  it('should refuse a pair where only the height is small', () => {
+    const document = parseHtml('<iframe style="width: 350px; height: 30px;"></iframe>')
+    const element = queryElement(document, 'iframe')
+
+    expect(getStylePairRatio(element)).toBeUndefined()
   })
 
   // Zero is the one length CSS takes bare, and a zero pair is a decorative div rather than a
@@ -53,14 +74,14 @@ describeForEachParser('getUnitlessStyleRatio', (parseHtml) => {
     const document = parseHtml('<div style="width: 0; height: 0; border-top: 2px solid red"></div>')
     const element = queryElement(document, 'div')
 
-    expect(getUnitlessStyleRatio(element)).toBeUndefined()
+    expect(getStylePairRatio(element)).toBeUndefined()
   })
 
   it('should refuse a lone unitless length', () => {
     const document = parseHtml('<div style="height: 9;"></div>')
     const element = queryElement(document, 'div')
 
-    expect(getUnitlessStyleRatio(element)).toBeUndefined()
+    expect(getStylePairRatio(element)).toBeUndefined()
   })
 
   // A dimension attribute is a box the browser did apply, and dimensions outrank a ratio.
@@ -68,7 +89,7 @@ describeForEachParser('getUnitlessStyleRatio', (parseHtml) => {
     const document = parseHtml('<iframe width="640" style="width: 16; height: 9;"></iframe>')
     const element = queryElement(document, 'iframe')
 
-    expect(getUnitlessStyleRatio(element)).toBeUndefined()
+    expect(getStylePairRatio(element)).toBeUndefined()
   })
 })
 

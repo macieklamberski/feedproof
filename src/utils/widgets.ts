@@ -13,7 +13,7 @@ import type {
 import {
   type GeneratedWrapperType,
   getElementDimensions,
-  getUnitlessStyleRatio,
+  getStylePairRatio,
   getWrapperRatio,
 } from './dom.js'
 import { cleanUrl, resolveOrDropUrl, resolveOrKeepUrl } from './urls.js'
@@ -136,10 +136,10 @@ const decideSize = (
 // measure this player, while the wrapper only says what shape the box around it is. `wrapperDepth`
 // bounds how far up the wrapper is looked for; 0 reads only the carrier itself.
 export const getEmbedSize = (element: Element, wrapperDepth?: number): EmbedSize => {
-  const unitlessRatio = getUnitlessStyleRatio(element)
+  const shapeRatio = getStylePairRatio(element)
 
-  if (unitlessRatio) {
-    return { ratio: unitlessRatio }
+  if (shapeRatio) {
+    return { ratio: shapeRatio }
   }
 
   const dimensions = getElementDimensions(element)

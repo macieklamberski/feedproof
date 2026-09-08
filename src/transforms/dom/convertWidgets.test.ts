@@ -348,10 +348,9 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
-  // The rule is the carrier tier's, not a platform's: an unknown iframe gets it too. A CSS length
-  // carries a unit for anything but zero, so a browser applies neither declaration, and two small
-  // numbers written that way are a shape rather than a box.
-  it('should wrap an unknown iframe stating a unitless pair as a ratio', async () => {
+  // The rule is the carrier tier's, not a platform's: an unknown iframe gets it too. No player is
+  // nine pixels tall, so a pair this small is the shape it spells however it is spelled.
+  it('should wrap an unknown iframe stating a small pair as a ratio', async () => {
     const value = html`
       <iframe
         src="https://unknown-site.com/123"
@@ -368,8 +367,8 @@ describeForEachParser('convertWidgets', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
-  // Above the ceiling the same spelling is a forgotten unit on a real box.
-  it('should wrap an unknown iframe stating a large unitless pair as pixels', async () => {
+  // Above the ceiling the same spelling is a real box, or a forgotten unit on one.
+  it('should wrap an unknown iframe stating a large pair as pixels', async () => {
     const value = html`
       <iframe
         src="https://unknown-site.com/123"
