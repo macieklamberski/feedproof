@@ -1,46 +1,20 @@
-import {
-  composeEmbedUrl as composeDailymotionUrl,
-  extractDailymotionId,
-} from '../../embeds/dailymotion.js'
+import { readDailymotionEmbedSrc } from '../../embeds/dailymotion.js'
 import { readVideopressEmbedSrc } from '../../embeds/videopress.js'
-import { composeEmbedUrl as composeVimeoUrl, extractVimeoId } from '../../embeds/vimeo.js'
-import { composeEmbedUrl as composeYoutubeUrl, extractVideoId } from '../../embeds/youtube.js'
+import { readVimeoEmbedSrc } from '../../embeds/vimeo.js'
+import { readYoutubeEmbedSrc } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 import { jsonAttr } from '../../utils/dom.js'
 import { createIframe } from '../../utils/widgets.js'
 
-// The Elementor video widget defers its player for the embed sources (YouTube, Vimeo,
-// Dailymotion, VideoPress): the real URL lives only in the widget's `data-settings` JSON and
-// the `.elementor-video` div is left empty for JS to fill at runtime. A reader runs no JS, so
-// the video never appears. Each entry takes the parsed settings and returns the URL the
-// matching platform's iframe player loads. The self-hosted source is the exception: it is
-// rendered server-side as a real `<video>`, so it already works in a reader and is skipped.
-const iframeSources: Record<string, (settings: Record<string, unknown>) => string | undefined> = {
-  youtube: (settings) => {
-    const url = settings.youtube_url
-    const videoId = typeof url === 'string' ? extractVideoId(url) : undefined
-
-    return videoId ? composeYoutubeUrl(videoId) : undefined
-  },
-  vimeo: (settings) => {
-    const url = settings.vimeo_url
-    const videoId = typeof url === 'string' ? extractVimeoId(url) : undefined
-
-    return videoId ? composeVimeoUrl(videoId) : undefined
-  },
-  dailymotion: (settings) => {
-    const url = settings.dailymotion_url
-    const videoId = typeof url === 'string' ? extractDailymotionId(url) : undefined
-
-    return videoId ? composeDailymotionUrl('video', videoId) : undefined
-  },
-  videopress: (settings) => {
-    // The insert-url mode stores the pasted share link whole, so the guid comes back out of it
-    // through the platform's own reader. The media-library mode is not in data-settings at all.
-    const url = settings.videopress_url
-
-    return typeof url === 'string' ? readVideopressEmbedSrc(url) : undefined
-  },
+// The Elementor video widget defers its player for the embed sources: the real url lives only in
+// the widget's `data-settings` JSON and the `.elementor-video` div is left empty for JS to fill
+// at runtime, so in a reader the video never appears. The self-hosted source is missing here
+// because it is rendered server-side as a real `<video>` and already works.
+const iframeSources: Record<string, (link: string) => string | undefined> = {
+  youtube: readYoutubeEmbedSrc,
+  vimeo: readVimeoEmbedSrc,
+  dailymotion: readDailymotionEmbedSrc,
+  videopress: readVideopressEmbedSrc,
 }
 
 // Rebuilds a real <iframe> from an Elementor video widget that defers a YouTube, Vimeo,
@@ -58,11 +32,14 @@ export const rebuildElementorVideoEmbeds: DomTransform = () => (document) => {
 
     const videoType = settings.video_type
 
-    if (typeof videoType !== 'string') {
+    if (typeof videoType !== 'string' || !Object.hasOwn(iframeSources, videoType)) {
       continue
     }
 
-    const source = iframeSources[videoType]?.(settings)
+    // Elementor names the url after the source that owns it, `{video_type}_url`, and the type is
+    // one of the four above by the time it is read.
+    const link = settings[`${videoType}_url`]
+    const source = typeof link === 'string' ? iframeSources[videoType]?.(link) : undefined
 
     if (!source) {
       continue

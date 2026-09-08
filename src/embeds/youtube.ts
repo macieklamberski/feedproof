@@ -1,7 +1,12 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { pickUrlParams, placeholderBaseUrl, splitStrayParams } from '../utils/urls.js'
+import {
+  parseUrlOnHosts,
+  pickUrlParams,
+  placeholderBaseUrl,
+  splitStrayParams,
+} from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'youtube'
@@ -119,6 +124,15 @@ export const extractVideoId = (link: string): string | undefined => {
       )
       .find((candidate) => !!candidate && isVideoId(candidate))
   )
+}
+
+// The player url for a caller holding a url nothing has checked: a page builder stores whatever
+// the publisher pasted, so the host is checked here the way the factory checks it for a carrier.
+export const readYoutubeEmbedSrc = (link: string): string | undefined => {
+  const url = parseUrlOnHosts(link, youtubeHosts)
+  const videoId = url && extractVideoId(url.href)
+
+  return videoId ? composeEmbedUrl(videoId) : undefined
 }
 
 // Parameters that change what the player shows; everything else the publisher wrote, autoplay,

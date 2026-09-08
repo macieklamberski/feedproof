@@ -125,7 +125,53 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
   })
 
   // The settings payload is not markup, so nothing has checked what the url names before it
-  // reaches a src: a foreign host would otherwise be framed exactly as the platform's own.
+  // reaches a src. The three id readers find an id in a foreign path as readily as in the
+  // platform's own, and the player is then minted around it.
+  it('should leave a youtube widget naming a foreign host alone', async () => {
+    const value = html`
+      <div
+        class="elementor-widget elementor-widget-video"
+        data-settings='{"youtube_url":"https://evil.test/embed/dQw4w9WgXcQ","video_type":"youtube"}'
+      >
+        <div class="elementor-widget-container">
+          <div class="elementor-video"></div>
+        </div>
+      </div>
+    `
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
+  it('should leave a vimeo widget naming a foreign host alone', async () => {
+    const value = html`
+      <div
+        class="elementor-widget elementor-widget-video"
+        data-settings='{"vimeo_url":"https://evil.test/76979871","video_type":"vimeo"}'
+      >
+        <div class="elementor-widget-container">
+          <div class="elementor-video"></div>
+        </div>
+      </div>
+    `
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
+  it('should leave a dailymotion widget naming a foreign host alone', async () => {
+    const value = html`
+      <div
+        class="elementor-widget elementor-widget-video"
+        data-settings='{"dailymotion_url":"https://evil.test/video/x7tgad0","video_type":"dailymotion"}'
+      >
+        <div class="elementor-widget-container">
+          <div class="elementor-video"></div>
+        </div>
+      </div>
+    `
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
   it('should leave a videopress widget naming a foreign host alone', async () => {
     const value = html`
       <div

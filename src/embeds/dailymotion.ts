@@ -1,7 +1,12 @@
 import { getPathSegments, type Nullish, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { keepIfMatches } from '../utils/dom.js'
-import { pickUrlParams, placeholderBaseUrl, splitStrayParams } from '../utils/urls.js'
+import {
+  parseUrlOnHosts,
+  pickUrlParams,
+  placeholderBaseUrl,
+  splitStrayParams,
+} from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Dailymotion's own alphabet, with no length. A `{5,}` floor sat here and refused real videos:
@@ -141,6 +146,15 @@ export const extractDailymotionId = (link: string): string | undefined => {
 // query arrives ready to append from `pickUrlParams`.
 export const composeEmbedUrl = (route: 'video' | 'playlist', id: string, query = ''): string => {
   return `https://www.dailymotion.com/embed/${route}/${id}${query}`
+}
+
+// The player url for a caller holding a url nothing has checked: a page builder stores whatever
+// the publisher pasted, so the host is checked here the way the factory checks it for a carrier.
+export const readDailymotionEmbedSrc = (link: string): string | undefined => {
+  const url = parseUrlOnHosts(link, dailymotionHosts)
+  const videoId = url && extractDailymotionId(url.href)
+
+  return videoId ? composeEmbedUrl('video', videoId) : undefined
 }
 
 // Where playback starts, and the playlist the video sits in. The rest of the publisher's

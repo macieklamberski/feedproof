@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
-import { pickQueryParams, placeholderBaseUrl } from '../utils/urls.js'
+import { parseUrlOnHosts, pickQueryParams, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'vimeo'
@@ -178,6 +178,15 @@ export const composeEmbedUrl = (
   const start = startSeconds ? `#t=${startSeconds}s` : ''
 
   return `https://player.vimeo.com/video/${videoId}${query}${start}`
+}
+
+// The player url for a caller holding a url nothing has checked: a page builder stores whatever
+// the publisher pasted, so the host is checked here the way the factory checks it for a carrier.
+export const readVimeoEmbedSrc = (link: string): string | undefined => {
+  const url = parseUrlOnHosts(link, vimeoHosts)
+  const videoId = url && extractVimeoId(url.href)
+
+  return videoId ? composeEmbedUrl(videoId) : undefined
 }
 
 // `t` is the start offset, in Vimeo's `{n}s` form. The unlisted hash is carried by the reference
