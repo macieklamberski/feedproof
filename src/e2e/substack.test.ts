@@ -5,9 +5,10 @@ import { describeForEachParser, html, jsonAttrValue } from '../tests.js'
 describeForEachParser('Substack', (parseHtml) => {
   // substackOwnPostCiteResolver and substackCrossPostCiteResolver claim the post embeds,
   // substackMediaResolver rebuilds the video and audio uploads from their id-only divs,
-  // fixSubstackMentions and fixSubstackImageLinks repair the two components that ship broken,
-  // and defaultNonContentSelectors drops the subscribe and publication promos. Everything else
-  // (captioned images, galleries, buttons, footnotes, code, the third-party wraps) reaches its
+  // fixSubstackMentions, fixSubstackImageLinks and fixSubstackGalleries repair the three
+  // components that ship broken, and defaultNonContentSelectors drops the subscribe and
+  // publication promos. Everything else (captioned images, hydrated galleries, buttons,
+  // footnotes, code, the third-party wraps) reaches its
   // shape through the generic passes: unwrapWrappers, flattenPictureElements,
   // stripNonContentElements and convertWidgets. The Twitter, Instagram and Bluesky wraps are
   // in open PRs #520, #548 and #547; their cases stay todo until those merge.
@@ -1197,6 +1198,60 @@ describeForEachParser('Substack', (parseHtml) => {
           height="480"
         >
         <figcaption class="imageCaption-iHC8xR">Flowers from a grab bag</figcaption>
+      </figure>
+    `
+    const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+    expect(result).toEqualHtml(expected)
+  })
+
+  it('should rebuild a feed-side image gallery from its payload', async () => {
+    // fixSubstackGalleries mints the images and resolveMediaDimensions reads their size from
+    // the `_WxH` filename suffix.
+    const galleryAttrs = jsonAttrValue({
+      gallery: {
+        images: [
+          {
+            type: 'image/jpeg',
+            src: 'https://cdn.example.com/public/images/0a1b2c3d-4e5f-4a6b-8c7d-000000000001_1500x1000.jpeg',
+          },
+          {
+            type: 'image/jpeg',
+            src: 'https://cdn.example.com/public/images/0a1b2c3d-4e5f-4a6b-8c7d-000000000002_1500x1000.jpeg',
+          },
+        ],
+        caption: 'Flowers from a grab bag',
+        alt: 'Two bunches of flowers',
+        staticGalleryImage: {
+          type: 'image/png',
+          src: 'https://cdn.example.com/public/images/0a1b2c3d-4e5f-4a6b-8c7d-000000000003_1456x720.png',
+        },
+      },
+      isEditorNode: true,
+    })
+    const value = html`
+      <p>Intro</p>
+      <div
+        class="image-gallery-embed"
+        data-attrs="${galleryAttrs}"
+      ></div>
+    `
+    const expected = html`
+      <p>Intro</p>
+      <figure>
+        <img
+          src="https://cdn.example.com/public/images/0a1b2c3d-4e5f-4a6b-8c7d-000000000001_1500x1000.jpeg"
+          alt="Two bunches of flowers"
+          width="1500"
+          height="1000"
+        />
+        <img
+          src="https://cdn.example.com/public/images/0a1b2c3d-4e5f-4a6b-8c7d-000000000002_1500x1000.jpeg"
+          alt="Two bunches of flowers"
+          width="1500"
+          height="1000"
+        />
+        <figcaption>Flowers from a grab bag</figcaption>
       </figure>
     `
     const result = await transformContent(value, { parseHtmlFn: parseHtml })
