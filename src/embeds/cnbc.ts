@@ -6,9 +6,11 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 const cnbcHosts = ['cnbc.com']
 const playerHost = 'player.cnbc.com'
 
-const safeGuidRegex = /^\d{6,}$/
-// Both path tokens go into the minted src, so each is bounded rather than taken as written.
-const safePathTokenRegex = /^[A-Za-z0-9_-]{1,64}$/
+// The guid and both path tokens go into the minted src unencoded, so each is checked for the
+// characters it may hold. Not for a width: the `byGuid` slot and the three-segment route already
+// say which is which, and a band would only refuse the next account CNBC opens.
+const safeGuidRegex = /^\d+$/
+const safePathTokenRegex = /^[A-Za-z0-9_-]+$/
 
 // The player is `player.cnbc.com/p/{account}/{player}?playertype=synd&byGuid={guid}`, the same
 // account and player on every corpus specimen. It answers 200 for any guid, but with the

@@ -9,7 +9,10 @@ const bbcHosts = ['bbc.com', 'bbc.co.uk']
 // A programme id: eight characters, letters and digits with at least one digit, `p06sf6tr` or
 // `b0bkqt8j`. The digit is what keeps a path word like `articles` from reading as one.
 const pidRegex = /^[a-z](?=[0-9a-z]*\d)[0-9a-z]{7}$/
-const articleIdRegex = /^\d{6,9}$/
+// An article id is read where the route pins it and goes back into the minted src, so digits and
+// nothing else is the whole check. BBC has grown the number a digit at a time, so a width band
+// would refuse the next one.
+const articleIdRegex = /^\d+$/
 
 // The news player answers 200 with the clip and its title for a real pid and article pair and
 // 404 when either is fabricated, so both are kept. Measured 2026-09-07 in a browser at 300, 600

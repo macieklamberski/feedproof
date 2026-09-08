@@ -5,12 +5,10 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 const provider = 'kaltura'
 
-// A Kaltura entry id is a namespace counter, an underscore and lowercase letters or digits,
-// `1_w0bwzism`. Every id Kaltura documents is `0_` or `1_`, but the counter is not a fixed pair,
-// so any digit is taken, and the tail is eight characters today but not checked for it: a wrong
-// id fails the same whether it is minted or passed through, and a bound would refuse the next id
-// space. The partner is the number after `/p/` in every player url.
-const safeEntryIdRegex = /^\d_[a-z0-9]+$/
+// An entry id is a namespace counter, an underscore and lowercase letters or digits,
+// `1_w0bwzism`. The shape is what makes it safe to mint into the thumbnail path. Neither half
+// carries a width, because that would refuse the next id space.
+const safeEntryIdRegex = /^\d+_[a-z0-9]+$/
 const partnerPathRegex = /^\/p\/(\d+)\//
 
 const kalturaHost = 'kaltura.com'

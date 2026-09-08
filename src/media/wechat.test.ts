@@ -24,14 +24,32 @@ describeForEachParser('wechatMediaResolver', (parseHtml) => {
     expect(await extract(value)).toEqual(expected)
   })
 
+  // Nothing has measured how long these run, and refusing one costs the narration outright.
+  it('should build the source url from an id shorter than the corpus ones', async () => {
+    const value = '<mpvoice voice_encode_fileid="MjM5Ng"></mpvoice>'
+    const expected: MediaResolverResult = {
+      tag: 'audio',
+      src: 'https://res.wx.qq.com/voice/getvoice?mediaid=MjM5Ng',
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
   it('should return undefined when the id is missing', async () => {
     const value = '<mpvoice class="js_editor_audio"></mpvoice>'
 
     expect(await extract(value)).toBeUndefined()
   })
 
+  // Both would move the mint off the query slot the id belongs in.
   it('should return undefined when the id is not the shape WeChat emits', async () => {
     const value = '<mpvoice voice_encode_fileid="../../etc/passwd"></mpvoice>'
+
+    expect(await extract(value)).toBeUndefined()
+  })
+
+  it('should return undefined when the id carries a query separator', async () => {
+    const value = `<mpvoice voice_encode_fileid="${mediaId}&mediaid=stolen"></mpvoice>`
 
     expect(await extract(value)).toBeUndefined()
   })

@@ -33,6 +33,24 @@ describeForEachParser('brightcoveFlashEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // The `federated_` path already names the platform, so the id shape is only keeping the two
+    // numbers safe to mint with.
+    it('should read a short account and video id off a federated player', async () => {
+      const value = html`
+        <embed
+          src="http://c.brightcove.com/services/viewer/federated_f9/1951?isVid=1&publisherID=1660"
+          flashVars="@videoPlayer=1952&playerID=1951&domain=embed&"
+        />
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'brightcove',
+        id: '1660/1952',
+        src: 'https://players.brightcove.net/1660/default_default/index.html?videoId=1952',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
@@ -204,6 +222,19 @@ describe('brightcoveResolveEmbed', () => {
         provider: 'brightcove',
         id: '1234567890/6098765432',
         src: playerUrl,
+      }
+
+      expect(brightcoveResolveEmbed(value)).toEqual(expected)
+    })
+
+    // The `players.` host, the `{player}_{embed}` segment and the `videoId` slot already pin the
+    // route, so the two numbers need only be safe to mint with.
+    it('should read a short account and video id out of the player url', () => {
+      const value = 'https://players.brightcove.net/1234/default_default/index.html?videoId=6098'
+      const expected: EmbedResolverResult = {
+        provider: 'brightcove',
+        id: '1234/6098',
+        src: 'https://players.brightcove.net/1234/default_default/index.html?videoId=6098',
       }
 
       expect(brightcoveResolveEmbed(value)).toEqual(expected)
@@ -466,6 +497,19 @@ describeForEachParser('brightcoveVideoJsEmbedResolver', (parseHtml) => {
         <video-js
           data-account="acme"
           data-video-id="6098765432"
+        ></video-js>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // The carriers that name Brightcove take any run of digits. This element names nothing, so
+    // the floor stands here and hand-numbered ids stay with whoever emitted them.
+    it('should return undefined for hand-numbered ids the other carriers would take', async () => {
+      const value = html`
+        <video-js
+          data-account="1234"
+          data-video-id="42"
         ></video-js>
       `
 

@@ -16,6 +16,32 @@ describe('cnbcResolveEmbed', () => {
 
       expect(cnbcResolveEmbed(value)).toEqual(expected)
     })
+
+    // The `byGuid` slot says which value is the clip, so nothing is left for a width to tell.
+    it('should build the placeholder from a guid shorter than the corpus ones', () => {
+      const value = 'https://player.cnbc.com/p/gZWlPC/cnbc_global?playertype=synd&byGuid=30045'
+      const expected: EmbedResolverResult = {
+        provider: 'cnbc',
+        id: '30045',
+        src: 'https://player.cnbc.com/p/gZWlPC/cnbc_global?playertype=synd&byGuid=30045',
+        ratio: '16/9',
+      }
+
+      expect(cnbcResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should build the placeholder from a player token past sixty-four characters', () => {
+      const value =
+        'https://player.cnbc.com/p/gZWlPC/cnbc_global_syndication_partner_player_for_long_form_video_and_live_streams?playertype=synd&byGuid=7000344703'
+      const expected: EmbedResolverResult = {
+        provider: 'cnbc',
+        id: '7000344703',
+        src: 'https://player.cnbc.com/p/gZWlPC/cnbc_global_syndication_partner_player_for_long_form_video_and_live_streams?playertype=synd&byGuid=7000344703',
+        ratio: '16/9',
+      }
+
+      expect(cnbcResolveEmbed(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
