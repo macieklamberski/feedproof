@@ -4,6 +4,8 @@ import { attr, jsonAttr, text } from '../utils/dom.js'
 import { audioFileRegex, parseUrlOnHosts, videoFileRegex } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'soundcloud'
+
 // SoundCloud's embed is an iframe whose `url=` query names the track as an
 // `api.soundcloud.com/tracks/{id}` reference. Some feeds name the id twice in it, as a bare
 // number under the path and again as a `soundcloud:tracks:{id}` URN in place of it. The colons
@@ -186,7 +188,7 @@ export const soundcloudResolveEmbed = (
   const inner = params?.get('url')
   const reference = inner?.match(referenceRegex)
   const streamTrackId = parsed?.pathname.match(streamPathRegex)?.[1]
-  const result: EmbedResolverResult = { provider: 'soundcloud', src }
+  const result: EmbedResolverResult = { provider, src }
 
   if (reference) {
     result.id = `${reference[1]}/${reference[2]}`
@@ -288,6 +290,6 @@ export const soundcloudEmbedResolver = createUrlEmbedResolver(
 
 // Starts playback on the click that loads the widget.
 export const soundcloudRenderHint: EmbedRenderHint = {
-  provider: 'soundcloud',
+  provider,
   autoplayParams: { auto_play: 'true' },
 }

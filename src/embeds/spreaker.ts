@@ -5,6 +5,8 @@ import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'spreaker'
+
 const safeIdRegex = /^\d+$/
 
 const spreakerHosts = ['spreaker.com']
@@ -46,7 +48,7 @@ export const spreakerResolveEmbed = (url: string): EmbedResolverResult | undefin
   }
 
   return {
-    provider: 'spreaker',
+    provider,
     id: `${embed.kind}/${embed.id}`,
     src: `https://widget.spreaker.com/player?${embed.param}=${embed.id}`,
     height: playerHeight,
@@ -106,7 +108,7 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
 // The widget guide documents `autoplay=true`, but the player bundle holds no code for it and the
 // server-rendered config is identical with and without it. The widget speaks player.js instead.
 export const spreakerRenderHint: EmbedRenderHint = {
-  provider: 'spreaker',
+  provider,
   isReady: isPlayerJsReady,
   requestPlay: playerJsPlayRequest,
 }

@@ -3,6 +3,8 @@ import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { uuidRegex } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'captivate'
+
 const captivateHosts = ['captivate.fm']
 
 // Every specimen states 200, and Captivate publishes no oEmbed, so the height is the whole
@@ -39,7 +41,7 @@ export const captivateResolveEmbed = (url: string): EmbedResolverResult | undefi
   }
 
   return {
-    provider: 'captivate',
+    provider,
     id: `${embed.kind}/${embed.id}`,
     src: `https://player.captivate.fm/${embed.kind}/${embed.id}`,
     height: playerHeight,
@@ -51,6 +53,6 @@ export const captivateEmbedResolver = createUrlEmbedResolver(captivateHosts, cap
 // The player takes no query to start. Its own embed API posts this action into the frame, and
 // the frame posts nothing first, so the request goes on load.
 export const captivateRenderHint: EmbedRenderHint = {
-  provider: 'captivate',
+  provider,
   requestPlay: { action: 'CP.API.PLAY' },
 }

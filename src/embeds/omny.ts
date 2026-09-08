@@ -2,6 +2,8 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'omny'
+
 const safeSegmentRegex = /^[A-Za-z0-9._-]+$/
 
 const omnyHosts = ['omny.fm']
@@ -42,7 +44,7 @@ export const omnyResolveEmbed = (url: string): EmbedResolverResult | undefined =
   const query = parseUrl(url, 'https://example.com')?.search ?? ''
 
   return {
-    provider: 'omny',
+    provider,
     id: clip,
     src: `https://omny.fm/shows/${clip}/embed${query}`,
     height: playerHeight,
@@ -53,6 +55,6 @@ export const omnyEmbedResolver = createUrlEmbedResolver(omnyHosts, omnyResolveEm
 
 // Starts playback on the click that loads the player.
 export const omnyRenderHint: EmbedRenderHint = {
-  provider: 'omny',
+  provider,
   autoplayParams: { autoplay: '1' },
 }

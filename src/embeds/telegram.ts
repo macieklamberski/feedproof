@@ -4,6 +4,8 @@ import { attr, parsePixelSize } from '../utils/dom.js'
 import { readPixels } from '../utils/hints.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'telegram'
+
 // A channel and a message id, the pair the widget spells `channel/111424`. Telegram's signup
 // form asks for five characters, but shorter names exist: Telegram holds some itself and
 // Fragment auctions the rest, and `t.me/nft/3?embed=1` serves a real post (checked 2026-09-07).
@@ -24,7 +26,7 @@ const telegramHosts = ['t.me', 'telegram.me', 'telegram.dog']
 // verified against a real one.
 const composePost = (channel: string, messageId: string): EmbedResolverResult => {
   return {
-    provider: 'telegram',
+    provider,
     id: `${channel}/${messageId}`,
     src: `https://t.me/${channel}/${messageId}?embed=1`,
     url: `https://t.me/${channel}/${messageId}`,
@@ -83,7 +85,7 @@ export const readTelegramHeight = (data: unknown): number | undefined => {
 }
 
 export const telegramRenderHint: EmbedRenderHint = {
-  provider: 'telegram',
+  provider,
   origin: 'https://t.me',
   readHeight: readTelegramHeight,
 }

@@ -5,6 +5,8 @@ import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'instagram'
+
 // Instagram's embed dialog ships a post as `<blockquote class="instagram-media">` holding the
 // permalink, a skeleton of empty divs and an `embed.js` loader beside it. The loader never runs
 // in a reader, so the quote arrives as its own chrome: a "View this post on Instagram" line and
@@ -80,7 +82,7 @@ const composeEmbed = (
   const path = `${post.kind}/${post.shortcode}`
 
   return {
-    provider: 'instagram',
+    provider,
     id: path,
     src: `https://www.instagram.com/${path}/embed/${captioned ? 'captioned/' : ''}`,
     url: `https://www.instagram.com/${path}/`,
@@ -327,7 +329,7 @@ export const readInstagramHeight = (data: unknown): number | undefined => {
 }
 
 export const instagramRenderHint: EmbedRenderHint = {
-  provider: 'instagram',
+  provider,
   origin: 'https://www.instagram.com',
   readHeight: readInstagramHeight,
 }
