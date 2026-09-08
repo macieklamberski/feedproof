@@ -1,8 +1,10 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
+
+const provider = 'arte'
 
 const arteHosts = ['arte.tv']
 
@@ -62,7 +64,7 @@ const readLegacyProgram = (parsed: URL): Program | undefined => {
 // 16:9 in 64 of the 84 sized ones, so that ratio stands in for the 13 that state `100%` alone.
 const composeEmbed = ({ language, id }: Program): EmbedResolverResult => {
   return {
-    provider: 'arte',
+    provider,
     id: `${language}/${id}`,
     src: `https://www.arte.tv/embeds/${language}/${id}`,
     url: `https://www.arte.tv/${language}/videos/${id}/`,
@@ -83,7 +85,7 @@ const readProgramFromPlayer = (parsed: URL): Program | undefined => {
 }
 
 const arteResolveEmbed = (link: string, element: Element): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
   const program = parsed && readProgramFromPlayer(parsed)
 
   if (!program) {
@@ -97,6 +99,6 @@ export const arteEmbedResolver = createUrlEmbedResolver(arteHosts, arteResolveEm
 
 // The share snippet's own parameters, muted off so the click that loads it hears the sound.
 export const arteRenderHint: EmbedRenderHint = {
-  provider: 'arte',
+  provider,
   autoplayParams: { autoplay: 'true', mute: '0' },
 }

@@ -1,6 +1,6 @@
 import { parseSrcset, stringifySrcset } from 'srcset'
 import type { DomTransform, IsSafeUrlFn, UrlRole } from '../../types.js'
-import { walkElements } from '../../utils/dom.js'
+import { svgHrefAttribute, walkElements } from '../../utils/dom.js'
 
 // Inert replacements that keep the element but render nothing: a same-page no-op for
 // links, the empty document for media (about:blank loads nothing and runs nothing).
@@ -137,12 +137,10 @@ export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
         return
       }
 
-      // href wins over xlink:href when both are present.
       const hrefRole = hrefTagRoles[name]
 
       if (hrefRole !== undefined) {
-        const attribute = element.hasAttribute('href') ? 'href' : 'xlink:href'
-        neutralizeAttribute(element, attribute, hrefRole, isSafeUrlFn)
+        neutralizeAttribute(element, svgHrefAttribute(element), hrefRole, isSafeUrlFn)
       }
     })
   }

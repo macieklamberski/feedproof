@@ -1,6 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const megatvHosts = ['megatv.com']
@@ -35,7 +36,7 @@ const prefixedPostIdRegex = /^2020(\d{6,})$/
 // The player is Video.js in fluid mode, measured 225 tall at 400 wide and 450 at 800, and the
 // dialog boxes it at 560x315, which is what every corpus carrier states.
 const megatvResolveEmbed = (link: string, element: Element): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
 
   if (!parsed || getPathSegments(parsed).join('/') !== 'embed') {
     return

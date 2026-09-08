@@ -2,7 +2,7 @@ import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, keepIfMatches, parsePixelSize, text, textNode } from '../utils/dom.js'
 import * as styles from '../utils/styles.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const tiktokHosts = ['tiktok.com']
@@ -231,7 +231,7 @@ export const tiktokBlockquoteEmbedResolver = createMarkupEmbedResolver(
 export const tiktokIframeEmbedResolver = createUrlEmbedResolver(
   tiktokHosts,
   (src) => {
-    const parsed = parseUrl(src, 'https://example.com')
+    const parsed = parseUrl(src, placeholderBaseUrl)
     const playerId = parsed?.pathname.match(playerPathRegex)?.[1]
 
     if (playerId) {

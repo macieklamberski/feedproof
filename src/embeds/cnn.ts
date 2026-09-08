@@ -1,7 +1,9 @@
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, flashVars } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
+
+const provider = 'cnn'
 
 // CNN names a video by the path of its page, `{section}/{yyyy}/{mm}/{dd}/{slug}.cnn`, and every
 // player it has shipped since the Flash one carries that path: the swf query's `videoId`, the
@@ -29,7 +31,7 @@ const playerRatio = '16/9'
 
 const composeEmbed = (id: string): EmbedResolverResult => {
   return {
-    provider: 'cnn',
+    provider,
     id,
     src: `https://fave.api.cnn.io/v1/fav/?video=${id}&customer=cnn&edition=domestic&env=prod`,
     url: `https://www.cnn.com/videos/${id}`,
@@ -105,3 +107,15 @@ export const cnnScriptEmbedResolver = createMarkupEmbedResolver(
     return resolveVideoId(parsed?.searchParams.get('vid'))
   },
 )
+
+// Starts playback on the click that loads the player, and the spelling is what makes it work.
+// The shell injects the parameter into `autostart: COMMON.getAutostart('{value}')`, and
+// `fave.api.cnn.io/js/lib/components/common.js` defines that as
+// `autostart === 'true' ? true : false`, so nothing but the literal string turns it on. Verified
+// live 2026-09-08 on one video: the bare url and `?autoplay=true` both leave the slot
+// `getAutostart('')`, `?autostart=1` fills it with `'1'` which the function reads as false, and
+// `?autostart=true` is the one that yields true.
+export const cnnRenderHint: EmbedRenderHint = {
+  provider,
+  autoplayParams: { autostart: 'true' },
+}

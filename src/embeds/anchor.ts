@@ -1,5 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeSegmentRegex = /^[A-Za-z0-9._-]+$/
@@ -50,7 +51,7 @@ export const extractAnchorEpisode = (link: string): string | undefined => {
 // an unverified rewrite would risk a working embed.
 export const anchorResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const episode = extractAnchorEpisode(url)
-  const parsed = parseUrl(url, 'https://example.com')
+  const parsed = parseUrl(url, placeholderBaseUrl)
 
   if (!episode || !parsed) {
     return

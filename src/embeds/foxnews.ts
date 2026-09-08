@@ -1,8 +1,10 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
+
+const provider = 'foxnews'
 
 const safeIdRegex = /^\d+$/
 
@@ -18,7 +20,7 @@ const playerRatio = '16/9'
 // invented one.
 const composeEmbed = (id: string): EmbedResolverResult => {
   return {
-    provider: 'foxnews',
+    provider,
     id,
     src: `https://video.foxnews.com/v/video-embed.html?video_id=${id}`,
     url: `https://www.foxnews.com/video/${id}`,
@@ -51,3 +53,16 @@ export const foxnewsScriptEmbedResolver = createMarkupEmbedResolver(
 )
 
 export const foxnewsIframeEmbedResolver = createUrlEmbedResolver(foxnewsHosts, foxnewsResolveEmbed)
+
+// Starts playback on the click that loads the player, unmuted. The embed page loads
+// `static.foxnews.com/static/orion/scripts/core/video/embed.js`, which reads
+// `API.getQueryVar("autoplay")` and pushes the rule `autoplay` on the literal `"true"` and
+// `noAutoplay` on `"false"`, ignoring every other value. `video/ag.app.js` applies that rule as
+// `{autoplay: true, usersettings: {enabled: false}}` against a player default of
+// `autoplay: false`, and the muted start is a separate `"muted"` prop on the rule that the bare
+// one does not carry. Both scripts read live 2026-09-08, brotli-compressed on the wire. The page
+// itself is the same with the parameter and without it, so the read is the player's.
+export const foxnewsRenderHint: EmbedRenderHint = {
+  provider,
+  autoplayParams: { autoplay: 'true' },
+}

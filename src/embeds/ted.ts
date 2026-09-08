@@ -4,6 +4,8 @@ import { flashVars, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'ted'
+
 // Talk slugs are the speaker and title joined by underscores, e.g. `ethan_zuckerman`.
 const safeSlugRegex = /^[a-z0-9_]+$/i
 const htmlSuffixRegex = /\.html$/
@@ -85,7 +87,7 @@ export const tedResolveEmbed = (
   }
 
   return {
-    provider: 'ted',
+    provider,
     id: talk.slug,
     src: `https://embed.ted.com/embed/${talk.slug}`,
     url: `https://www.ted.com/talks/${talk.slug}`,
@@ -99,6 +101,6 @@ export const tedEmbedResolver = createUrlEmbedResolver(tedHosts, tedResolveEmbed
 // query. It reaches the player only when the url does not redirect, since the embed's 308 from
 // a legacy talk slug to the canonical one drops the query.
 export const tedRenderHint: EmbedRenderHint = {
-  provider: 'ted',
+  provider,
   autoplayParams: { autoplay: 'true' },
 }
