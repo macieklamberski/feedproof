@@ -130,5 +130,19 @@ describeForEachParser('nodebbCiteResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+
+    it('should ignore a link-preview element that is not a card', async () => {
+      const value = html`
+        <div class="link-preview">
+          <div class="card-body">
+            <h5 class="card-title">
+              <a href="https://example.com/post">Page title</a>
+            </h5>
+          </div>
+        </div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
   })
 })

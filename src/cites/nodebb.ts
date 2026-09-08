@@ -4,13 +4,13 @@ import { attr, find, text, textNode } from '../utils/dom.js'
 
 // NodeBB's bundled link-preview plugin (on by default since v3.1) rewrites a pasted link
 // into a Bootstrap card that it stores in the post HTML, so it survives into the feed body.
-// The wrapper shares the generic `card` class, so this keys on the co-occurring
-// `link-preview` class to avoid matching unrelated Bootstrap cards. The three anchors (image,
-// title, footer) all carry the same target url. The footer holds the site name as a bare
+// The wrapper is a generic Bootstrap `card` carrying a `link-preview` class beside it, and either
+// name alone is one any theme can mint, so the selector asks for the pair. The three anchors
+// (image, title, footer) all carry the same target url. The footer holds the site name as a bare
 // text node next to a `(domain)` span, so `textNode` gets the name without the domain.
 export const nodebbCiteResolver: CiteResolver = {
   kind: 'cite',
-  selector: '.link-preview',
+  selector: '.card.link-preview',
   extract: (element) => {
     return buildCite({
       provider: 'nodebb',
