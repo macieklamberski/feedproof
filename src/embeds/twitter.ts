@@ -1,7 +1,8 @@
-import { isHostOf, isPlainObject, isSubdomainOf, parseUrl } from 'trousse'
+import { isPlainObject, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, text } from '../utils/dom.js'
 import { readPixels } from '../utils/hints.js'
+import { isOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A tweet ships as `<blockquote class="twitter-tweet">` holding the tweet text in a `<p>`, then
@@ -36,7 +37,7 @@ const tweetHosts = [
 const nitterHostRegex = /(^|\.)nitter\./
 
 const isTweetUrl = (url: URL): boolean => {
-  const isKnownHost = isHostOf(url, tweetHosts) || isSubdomainOf(url, tweetHosts)
+  const isKnownHost = isOnHosts(url, tweetHosts)
 
   return isKnownHost || nitterHostRegex.test(url.hostname)
 }

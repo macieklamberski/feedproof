@@ -1,6 +1,7 @@
-import { isHostOf, isSubdomainOf, type Nullish, parseUrl } from 'trousse'
+import { type Nullish, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, parsePixelSize, text } from '../utils/dom.js'
+import { isOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Facebook's embed SDK ships a post as `<div class="fb-post" data-href="{post url}">` and a
@@ -17,7 +18,7 @@ const facebookHosts = ['facebook.com', 'fb.watch']
 // Posts live on the apex and on `web.`/`m.`/`business.` alike, so both checks are the guard,
 // and only a url passing it may be interpolated into the plugin template.
 const isFacebookUrl = (url: URL): boolean => {
-  return isHostOf(url, facebookHosts) || isSubdomainOf(url, facebookHosts)
+  return isOnHosts(url, facebookHosts)
 }
 
 // The copy-paste embed dialog ships the post text, the page and the date inside a fallback

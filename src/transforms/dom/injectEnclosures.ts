@@ -1,4 +1,4 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { parseUrl } from 'trousse'
 import type {
   CleanUrlFn,
   DomTransform,
@@ -9,7 +9,13 @@ import type {
 } from '../../types.js'
 import { getElementDimensions } from '../../utils/dom.js'
 import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
-import { absoluteUrlRegex, cleanUrl, resolveOrDropUrl, resolveOrKeepUrl } from '../../utils/urls.js'
+import {
+  absoluteUrlRegex,
+  cleanUrl,
+  isOnHosts,
+  resolveOrDropUrl,
+  resolveOrKeepUrl,
+} from '../../utils/urls.js'
 import {
   createEmbedPlaceholder,
   createImage,
@@ -38,7 +44,7 @@ const isImageEnclosure = (enclosure: Enclosure): boolean => {
 }
 
 const isAvatarEnclosure = (url: string, avatarHosts: ReadonlyArray<string>): boolean => {
-  return isHostOf(url, avatarHosts) || isSubdomainOf(url, avatarHosts)
+  return isOnHosts(url, avatarHosts)
 }
 
 // Run resolvers against a synthesized iframe carrying the enclosure URL so that

@@ -1,4 +1,3 @@
-import { isHostOf, isSubdomainOf } from 'trousse'
 import type {
   CiteResolverResult,
   EmbedResolver,
@@ -16,7 +15,7 @@ import {
   getStylePairRatio,
   getWrapperRatio,
 } from './dom.js'
-import { cleanUrl, resolveOrDropUrl, resolveOrKeepUrl } from './urls.js'
+import { cleanUrl, isOnHosts, resolveOrDropUrl, resolveOrKeepUrl } from './urls.js'
 
 // A card's date is whatever string the site chose to display, so the caller gets one chance to
 // normalize it and anything the parser rejects is kept verbatim, not dropped. Every path that
@@ -194,7 +193,7 @@ export const createUrlEmbedResolver = (
     extract: (element) => {
       const src = readCarrierUrl(element)
 
-      if (!isHostOf(src, hosts) && !isSubdomainOf(src, hosts)) {
+      if (!isOnHosts(src, hosts)) {
         return
       }
 
