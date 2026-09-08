@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { parsePixelSize } from '../utils/dom.js'
-import { audioFileRegex, videoFileRegex } from '../utils/urls.js'
+import { isMediaFile } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^\d+$/
@@ -33,7 +33,7 @@ export const extractLibsynEmbed = (
   // Libsyn serves the episode audio from the same domain as the players, so a media path that also
   // spells the player's segments reads as an episode and the enclosure loses its audio element to
   // a placeholder.
-  if (!parsed || audioFileRegex.test(parsed.pathname) || videoFileRegex.test(parsed.pathname)) {
+  if (!parsed || isMediaFile(parsed.pathname)) {
     return
   }
 

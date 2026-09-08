@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, jsonAttr, text } from '../utils/dom.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { isMediaFile, parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // SoundCloud's embed is an iframe whose `url=` query names the track as an
@@ -47,10 +47,6 @@ const userCollectionSegments = new Set([
   'tracks',
 ])
 
-// A direct media file, which SoundCloud serves from its podcast host. It is neither a player nor
-// a page, so it must not be read as either: the reader can play the file itself.
-const mediaFileRegex = /\.(?:aac|flac|m4a|m4v|mp3|mp4|ogg|opus|wav)$/i
-
 // `feeds.soundcloud.com/stream/{trackId}-{slug}.mp3` is the episode audio, and it is named after
 // the track it belongs to, so an enclosure carrying it still names a player.
 const streamPathRegex = /^\/stream\/(\d+)-/
@@ -80,7 +76,7 @@ const sitePathSegments = new Set([
 
 const readPageKind = (segments: Array<string>): string | undefined => {
   // The audio file sits two segments deep, which would otherwise read as a user and a track.
-  if (mediaFileRegex.test(segments[segments.length - 1] ?? '')) {
+  if (isMediaFile(segments[segments.length - 1] ?? '')) {
     return
   }
 
@@ -240,7 +236,7 @@ export const soundcloudResolveEmbed = (
 
   // Nothing here names a track and the url is the audio itself, so the enclosure stays a file
   // the reader can play rather than becoming a frame pointing at one.
-  if (!result.id && !pageKind && mediaFileRegex.test(parsed?.pathname ?? '')) {
+  if (!result.id && !pageKind && isMediaFile(parsed?.pathname ?? '')) {
     return
   }
 
