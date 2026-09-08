@@ -3,6 +3,8 @@ import { attr, keepIfMatches, parsePixelSize } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'kaltura'
+
 // A Kaltura entry id is a namespace counter, an underscore and lowercase letters or digits,
 // `1_w0bwzism`. Every id Kaltura documents is `0_` or `1_`, but the counter is not a fixed pair,
 // so any digit is taken, and the tail is eight characters today but not checked for it: a wrong
@@ -46,7 +48,7 @@ const composeEmbed = ({ partner, entryId, parsed }: Entry, src: string): EmbedRe
   const thumbnailHost = saasHosts.has(parsed.hostname) ? 'cdnapisec.kaltura.com' : parsed.hostname
 
   return {
-    provider: 'kaltura',
+    provider,
     id: `${partner}/${entryId}`,
     src,
     thumbnail: `https://${thumbnailHost}/p/${partner}/thumbnail/entry_id/${entryId}/width/640`,
@@ -112,6 +114,6 @@ export const kalturaScriptEmbedResolver = createMarkupEmbedResolver(
 // the config the embed endpoint serves for one entry: the response without the parameter carries
 // `"autoPlay":false` and the one with it carries `"autoPlay":true`, 16 bytes apart in 207 KB.
 export const kalturaRenderHint: EmbedRenderHint = {
-  provider: 'kaltura',
+  provider,
   autoplayParams: { 'flashvars[autoPlay]': 'true' },
 }
