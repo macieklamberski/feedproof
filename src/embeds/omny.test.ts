@@ -104,6 +104,25 @@ describeForEachParser('omnyEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should take the clip name off the stated title', async () => {
+      const value = html`
+        <iframe
+          src="https://omny.fm/shows/the-show/an-episode/embed"
+          title="S5E10 Christmas Waltz"
+          allow="autoplay; clipboard-write"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'omny',
+        id: 'the-show/an-episode',
+        src: 'https://omny.fm/shows/the-show/an-episode/embed',
+        height: 180,
+        title: 'S5E10 Christmas Waltz',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {

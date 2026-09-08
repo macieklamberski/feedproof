@@ -1,5 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import { attr } from '../utils/dom.js'
 import { decodeSegment, isFileName, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -118,7 +119,13 @@ const playerHeight = 160
 // The `www` widget url is what publishers write and what Mixcloud documents. It 301s to
 // `player-widget.mixcloud.com`, so it is kept instead of pre-resolved to a host that is one
 // redirect away from changing.
-export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+//
+// The carrier's title names the show rather than the player: across 77 titled frames in a 1/16
+// corpus sample the commonest value covered 3% of them.
+export const mixcloudResolveEmbed = (
+  url: string,
+  element?: Element,
+): EmbedResolverResult | undefined => {
   const show = extractMixcloudShow(url)
 
   if (!show) {
@@ -133,6 +140,8 @@ export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefin
     query.set(option, '1')
   }
 
+  const title = attr(element, 'title')
+
   return {
     provider,
     id: show,
@@ -140,6 +149,7 @@ export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefin
     url: `https://www.mixcloud.com/${show}/`,
     height:
       options.includes('mini') && options.includes('hide_cover') ? miniPlayerHeight : playerHeight,
+    ...(title && { title }),
   }
 }
 

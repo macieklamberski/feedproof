@@ -227,6 +227,25 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
     expect(await extract(value)).toEqual(expected)
   })
 
+  it('should take the show name off the stated title', async () => {
+    const value = html`
+      <iframe
+        title="Dark Synthesis #25"
+        src="https://www.mixcloud.com/widget/iframe/?feed=%2Fdjselarom%2Fdark-synthesis-25%2F&hide_cover=1"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'mixcloud',
+      id: 'djselarom/dark-synthesis-25',
+      src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fdjselarom%2Fdark-synthesis-25%2F&hide_cover=1',
+      url: 'https://www.mixcloud.com/djselarom/dark-synthesis-25/',
+      height: 160,
+      title: 'Dark Synthesis #25',
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
   // The legacy Flash carrier reaches the resolver through the shared carrier selector. Feeds
   // write this src protocol-relative. ResolveRelativeUrls makes it absolute earlier in the
   // pipeline, so the url is absolute by the time the resolver sees it.

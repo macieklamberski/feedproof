@@ -118,6 +118,24 @@ describeForEachParser('geniallyEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should take the deck name off the stated title', async () => {
+      const value = html`
+        <iframe
+          title="Raisonnement argumenté"
+          src="https://view.genially.com/60294f8b2ec856159ae0baa5"
+          allowfullscreen
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'genially',
+        id: '60294f8b2ec856159ae0baa5',
+        src: 'https://view.genially.com/60294f8b2ec856159ae0baa5',
+        title: 'Raisonnement argumenté',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
