@@ -4,6 +4,8 @@ import { attr } from '../utils/dom.js'
 import { readPixels } from '../utils/hints.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'flourish'
+
 const flourishHosts = ['flo.uri.sh', 'public.flourish.studio']
 
 // The resource segment is carried, not checked against a list. `visualisation` (a single chart)
@@ -44,7 +46,7 @@ const composeEmbed = (resource: string, id: string): EmbedResolverResult | undef
   }
 
   return {
-    provider: 'flourish',
+    provider,
     id: `${resource}/${id}`,
     src: `https://flo.uri.sh/${resource}/${id}/embed`,
     url: `https://public.flourish.studio/${resource}/${id}/`,
@@ -120,7 +122,7 @@ export const readFlourishHeight = (data: unknown): number | undefined => {
 //
 // A story's `#play-on-load` is a fragment, not a query parameter, so there is no `autoplayParams`.
 export const flourishRenderHint: EmbedRenderHint = {
-  provider: 'flourish',
+  provider,
   params: { auto: '1' },
   readHeight: readFlourishHeight,
 }
