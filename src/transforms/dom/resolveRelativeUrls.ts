@@ -1,6 +1,5 @@
 import { stringifySrcset } from 'srcset'
 import type { DomTransform, ResolveUrlFn } from '../../types.js'
-import { walkElements } from '../../utils/dom.js'
 import { countSrcsetCandidates, parseSrcset } from '../../utils/images.js'
 import { absoluteUrlRegex } from '../../utils/urls.js'
 
@@ -54,74 +53,52 @@ const resolveSrcset = (
   element.setAttribute('srcset', stringifySrcset(resolved))
 }
 
-// Url-carrying attributes read on every element, whatever its tag: widget resolvers claim
-// `script[src*="…"]` carriers, and a protocol-relative one has to gain a scheme here before it
-// can be parsed.
-const genericAttributes = ['src']
-// Url-carrying attributes specific to a tag. `cite` is the url a quotation, insertion or
-// deletion came from.
-const tagAttributes: Record<string, Array<string>> = {
-  video: ['poster'],
-  object: ['data'],
-  blockquote: ['cite'],
-  q: ['cite'],
-  ins: ['cite'],
-  del: ['cite'],
+// SVG2 spells it `href`, SVG1 `xlink:href`. Read rather than selected because jsdom matches
+// `image[href]` on an element carrying only `xlink:href` and linkedom does not, so `:not([href])`
+// would drop the SVG1 spelling on jsdom alone. `hasAttribute` answers alike in both.
+const hrefAttribute = (element: Element): string => {
+  return element.hasAttribute('href') ? 'href' : 'xlink:href'
 }
-const srcsetTags = new Set(['img', 'source'])
+
+type UrlAttribute = {
+  selector: string
+  // The name to read, or how to pick it where the element decides.
+  attribute: string | ((element: Element) => string)
+  // `srcset` holds many urls and is rewritten even when none resolved, so it takes its own pass.
+  srcset?: boolean
+}
+
+// `src` matches any element, not a list of tags: widget resolvers claim `script[src*="…"]`
+// carriers. The anchor keeps fragment-only hrefs so in-article links still scroll; a `cite` names
+// nothing to scroll to, so it takes no such exception.
+const urlAttributes: Array<UrlAttribute> = [
+  { selector: '[src]', attribute: 'src' },
+  { selector: 'a[href]:not([href^="#"])', attribute: 'href' },
+  { selector: 'video[poster]', attribute: 'poster' },
+  { selector: 'object[data]', attribute: 'data' },
+  { selector: 'blockquote[cite], q[cite], ins[cite], del[cite]', attribute: 'cite' },
+  { selector: 'image', attribute: hrefAttribute },
+  { selector: 'img[srcset], source[srcset]', attribute: 'srcset', srcset: true },
+]
 
 // Runs without a `baseUrl` too. A protocol-relative url needs a scheme, not a base, and
 // `resolveUrlFn` supplies one, so those are absolutised for every caller. Anything genuinely
 // relative resolves to nothing without a base and is left as it stands, which is what the
 // `if (resolved)` guard in `resolveAttribute` expresses.
-//
-// One walk covers every attribute (see `walkElements`): a querySelectorAll per attribute measured
-// 1.7x this pass's cost on linkedom, which compiles the selector on every call.
 export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => {
   return (document) => {
-    walkElements(document, (element) => {
-      // Skip elements with no attributes. hasAttributes is O(1) in linkedom.
-      if (!element.hasAttributes()) {
-        return
-      }
+    for (const { selector, attribute, srcset } of urlAttributes) {
+      for (const element of document.querySelectorAll(selector)) {
+        if (srcset) {
+          resolveSrcset(element, baseUrl, resolveUrlFn)
 
-      for (const attribute of genericAttributes) {
-        resolveAttribute(element, attribute, baseUrl, resolveUrlFn)
-      }
-
-      const name = element.localName
-      const attributes = tagAttributes[name]
-
-      if (attributes !== undefined) {
-        for (const attribute of attributes) {
-          resolveAttribute(element, attribute, baseUrl, resolveUrlFn)
+          continue
         }
 
-        return
+        const name = typeof attribute === 'string' ? attribute : attribute(element)
+
+        resolveAttribute(element, name, baseUrl, resolveUrlFn)
       }
-
-      if (srcsetTags.has(name)) {
-        resolveSrcset(element, baseUrl, resolveUrlFn)
-
-        return
-      }
-
-      // Preserve fragment-only hrefs so in-article anchors keep scrolling locally. A `cite` takes
-      // the opposite rule: it names no target to scroll to, so a fragment-only one is resolved.
-      if (name === 'a') {
-        if (!element.getAttribute('href')?.startsWith('#')) {
-          resolveAttribute(element, 'href', baseUrl, resolveUrlFn)
-        }
-
-        return
-      }
-
-      // SVG <image> carries its url on href (SVG2) or xlink:href (SVG1).
-      if (name === 'image') {
-        const attribute = element.hasAttribute('href') ? 'href' : 'xlink:href'
-
-        resolveAttribute(element, attribute, baseUrl, resolveUrlFn)
-      }
-    })
+    }
   }
 }
