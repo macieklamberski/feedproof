@@ -421,6 +421,21 @@ describe('parseMastodonStatus', () => {
     expect(parseMastodonStatus(value)).toEqual(expected)
   })
 
+  // The consequence of reading the host rather than checking it: a Medium post url files an
+  // author and a snowflake-shaped number the same way, so the reader takes it. Only the
+  // resolver's selector keeps one out, which is why no reject case can be written here.
+  it('should take a medium url that files an author and a number', () => {
+    const value = 'https://medium.com/@author/116535232552529093'
+    const expected: MastodonStatus = {
+      origin: 'https://medium.com',
+      host: 'medium.com',
+      user: 'author',
+      id: '116535232552529093',
+    }
+
+    expect(parseMastodonStatus(value)).toEqual(expected)
+  })
+
   it('should read the status behind the embed suffix', () => {
     const value = 'https://en.osm.town/@mapper/111222333444555666/embed'
     const expected: MastodonStatus = {
