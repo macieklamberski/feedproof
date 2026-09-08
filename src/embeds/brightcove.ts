@@ -4,6 +4,8 @@ import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, flashVars, keepIfMatches, paramValue } from '../utils/dom.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'brightcove'
+
 // Brightcove builds its player page from four ids the in-page embed carries as attributes. The
 // account is usually one of them, but some plugins leave it only in the loader script's url, so
 // both places are read here instead of by whoever holds the element.
@@ -112,7 +114,7 @@ export const brightcoveVideoJsEmbedResolver = createMarkupEmbedResolver(
     }
 
     return {
-      provider: 'brightcove',
+      provider,
       id: `${account}/${videoId}`,
       src: composePlayerUrl(
         account,
@@ -166,7 +168,7 @@ const brightcoveFlashResolveEmbed = (
   }
 
   return {
-    provider: 'brightcove',
+    provider,
     id: `${account}/${videoId}`,
     src: composePlayerUrl(account, videoId),
   }
@@ -200,7 +202,7 @@ export const brightcoveExperienceEmbedResolver = createMarkupEmbedResolver(
     }
 
     return {
-      provider: 'brightcove',
+      provider,
       id: `${account}/${videoId}`,
       src: composePlayerUrl(account, videoId),
     }
@@ -243,7 +245,7 @@ export const brightcoveResolveEmbed = (url: string): EmbedResolverResult | undef
   }
 
   return {
-    provider: 'brightcove',
+    provider,
     id: `${account}/${videoId}`,
     src: `https://players.brightcove.net/${account}/${player}/index.html?videoId=${videoId}`,
   }
@@ -257,6 +259,6 @@ export const brightcoveIframeEmbedResolver = createUrlEmbedResolver(
 // Starts playback on the click that loads the player, which sets `playsinline` on its own.
 // Never `autoplay=muted` or `autoplay=any`, which mute.
 export const brightcoveRenderHint: EmbedRenderHint = {
-  provider: 'brightcove',
+  provider,
   autoplayParams: { autoplay: 'true' },
 }

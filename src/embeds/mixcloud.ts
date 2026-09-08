@@ -2,6 +2,8 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'mixcloud'
+
 // A show is `{user}/{slug}`. Mixcloud keeps whatever script the publisher titled it in, so the
 // segments hold Japanese, Greek and accented Latin as well as ascii. What a segment may not
 // hold is anything that would end the path early or climb out of it, because the show is also
@@ -113,7 +115,7 @@ export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefin
   }
 
   return {
-    provider: 'mixcloud',
+    provider,
     id: show,
     src: `https://www.mixcloud.com/widget/iframe/?${query}`,
     url: `https://www.mixcloud.com/${show}/`,
@@ -132,6 +134,6 @@ export const mixcloudEmbedResolver = createUrlEmbedResolver(mixcloudHosts, mixcl
 // `src`, so a reader has to grant autoplay to any origin (`autoplay *`) or the redirect loses it
 // and the widget sits at 00:00.
 export const mixcloudRenderHint: EmbedRenderHint = {
-  provider: 'mixcloud',
+  provider,
   autoplayParams: { autoplay: '1' },
 }

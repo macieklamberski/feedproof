@@ -4,6 +4,8 @@ import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'buzzsprout'
+
 // Buzzsprout embeds a player two ways: a WordPress shortcode shipping an empty div plus a
 // <script> whose src carries the ids, and a direct player iframe. Both name the same player, so
 // both resolve to the same placeholder. The script never runs in a reader and its div dies as an
@@ -34,7 +36,7 @@ const composeEmbed = (podcastId: string, episodeId?: string): EmbedResolverResul
   const path = episodeId ? `${podcastId}/${episodeId}` : podcastId
 
   return {
-    provider: 'buzzsprout',
+    provider,
     id: path,
     src: `https://www.buzzsprout.com/${path}?iframe=true`,
     url: `https://www.buzzsprout.com/${path}`,
@@ -90,7 +92,7 @@ export const buzzsproutScriptEmbedResolver = createMarkupEmbedResolver(
 
 // The player takes no query to start, and Buzzsprout's help says so; it speaks player.js.
 export const buzzsproutRenderHint: EmbedRenderHint = {
-  provider: 'buzzsprout',
+  provider,
   isReady: isPlayerJsReady,
   requestPlay: playerJsPlayRequest,
 }

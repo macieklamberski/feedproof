@@ -3,6 +3,8 @@ import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'acast'
+
 // A show is a 24-hex object id, a UUID or the alias the publisher chose. An episode is an
 // object id or a slug. Every form is one run of word characters and hyphens, so a single class
 // covers them all and keeps `..` and `/` out of the minted path.
@@ -54,7 +56,7 @@ const acastResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const path = embed.episode ? `${embed.show}/${embed.episode}` : embed.show
 
   return {
-    provider: 'acast',
+    provider,
     id: path,
     src: `https://embed.acast.com/${path}`,
     height: playerHeight,
@@ -67,7 +69,7 @@ export const acastEmbedResolver = createUrlEmbedResolver(acastHosts, acastResolv
 
 // The player takes no query to start; it speaks player.js.
 export const acastRenderHint: EmbedRenderHint = {
-  provider: 'acast',
+  provider,
   isReady: isPlayerJsReady,
   requestPlay: playerJsPlayRequest,
 }
