@@ -241,12 +241,13 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
   })
 
   // The video type comes out of the widget's own JSON, so `constructor` names a member every
-  // object inherits and the source table has to refuse it the way it refuses `facebook`.
+  // object inherits and the source table has to refuse it the way it refuses `facebook`. The
+  // widget states a `constructor_url` too, so the table is the only thing left to stop it.
   it('should skip a widget whose video type names an inherited member', async () => {
     const value = html`
       <div
         class="elementor-widget elementor-widget-video"
-        data-settings='{"video_type":"constructor"}'
+        data-settings='{"video_type":"constructor","constructor_url":"https://example.com/watch?v=abc123"}'
       >
         <div class="elementor-widget-container">
           <div class="elementor-video"></div>
@@ -256,7 +257,7 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
     const expected = html`
       <div
         class="elementor-widget elementor-widget-video"
-        data-settings="{&quot;video_type&quot;:&quot;constructor&quot;}"
+        data-settings="{&quot;video_type&quot;:&quot;constructor&quot;,&quot;constructor_url&quot;:&quot;https://example.com/watch?v=abc123&quot;}"
       >
         <div class="elementor-widget-container">
           <div class="elementor-video"></div>
