@@ -646,6 +646,37 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(await transform(value, context)).toEqualHtml(expected)
     })
 
+    // The size keyword is read off the path, so a segment naming a member every object inherits
+    // reaches that table too. Read as a rank it outranks nothing and decides nothing, which
+    // leaves the no-query url to settle the pair, exactly as the unknown segment below does.
+    it('should let no size keyword decide when a segment names an inherited member', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/photos/constructor/small.jpg?v=2', type: 'image/jpeg' },
+        { url: 'https://example.com/photos/constructor', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/photos/constructor" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should let no size keyword decide when a segment is one nothing ranks', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/photos/sunset/small.jpg?v=2', type: 'image/jpeg' },
+        { url: 'https://example.com/photos/sunset', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/photos/sunset" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
     it('should prefer the no-query URL when colliding variants have no size to compare', async () => {
       const value = '<p>Content</p>'
       const context = withEnclosures([

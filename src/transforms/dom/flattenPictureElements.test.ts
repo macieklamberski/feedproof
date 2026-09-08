@@ -61,6 +61,38 @@ describeForEachParser('flattenPictureElements', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  // The type attribute is whatever the publisher wrote, and `constructor` names a member every
+  // object inherits, so the format table has to refuse it the way it refuses any other type.
+  it('should not promote a source whose type names an inherited member', async () => {
+    const value = html`
+      <picture>
+        <source
+          type="constructor"
+          srcset="https://example.com/photo.jxl"
+        >
+        <img src="https://example.com/photo.jpg">
+      </picture>
+    `
+    const expected = '<img src="https://example.com/photo.jpg">'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should not promote a source carrying a type nothing ranks', async () => {
+    const value = html`
+      <picture>
+        <source
+          type="image/jxl"
+          srcset="https://example.com/photo.jxl"
+        >
+        <img src="https://example.com/photo.jpg">
+      </picture>
+    `
+    const expected = '<img src="https://example.com/photo.jpg">'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
   it('should not promote an art-direction source carrying a media attribute', async () => {
     const value = html`
       <picture>

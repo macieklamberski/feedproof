@@ -256,6 +256,34 @@ describeForEachParser('bandcampEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // `size=` admits any lowercase word, and two of them name members every object inherits.
+    // The preset table has to answer those the way it answers `tall3` above: with no height.
+    it('should state no height for a preset naming an inherited member', async () => {
+      const value = html`
+        <iframe src="https://bandcamp.com/EmbeddedPlayer/album=42/size=constructor/"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'bandcamp',
+        id: 'album/42',
+        src: 'https://bandcamp.com/EmbeddedPlayer/album=42/size=constructor/',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should state no height for a preset naming the prototype itself', async () => {
+      const value = html`
+        <iframe src="https://bandcamp.com/EmbeddedPlayer/album=42/size=__proto__/"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'bandcamp',
+        id: 'album/42',
+        src: 'https://bandcamp.com/EmbeddedPlayer/album=42/size=__proto__/',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {

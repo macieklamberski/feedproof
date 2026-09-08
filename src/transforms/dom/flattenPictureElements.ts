@@ -22,7 +22,8 @@ const pickModernSource = (picture: Element): Element | undefined => {
       continue
     }
 
-    const rank = formatRank[source.getAttribute('type')?.toLowerCase() ?? ''] ?? 0
+    const type = source.getAttribute('type')?.toLowerCase() ?? ''
+    const rank = Object.hasOwn(formatRank, type) ? (formatRank[type] ?? 0) : 0
 
     if (rank > bestRank) {
       best = source

@@ -90,6 +90,20 @@ describe('extractWistiaEmbed', () => {
     expect(extractWistiaEmbed(value)).toBeUndefined()
   })
 
+  // The route is a path segment, so it can name a member every object inherits. That has to
+  // read as no route at all, the way any word the player does not serve does.
+  it('should return undefined for a route naming an inherited member', () => {
+    const value = 'https://fast.wistia.net/embed/constructor/sapab9p6qd'
+
+    expect(extractWistiaEmbed(value)).toBeUndefined()
+  })
+
+  it('should return undefined for a route the player does not serve', () => {
+    const value = 'https://fast.wistia.net/embed/gallery/sapab9p6qd'
+
+    expect(extractWistiaEmbed(value)).toBeUndefined()
+  })
+
   it('should read a playlist with its own route', () => {
     const value = 'https://fast.wistia.net/embed/playlists/aodt9etokc'
     const expected = { route: 'playlists', id: 'aodt9etokc' }

@@ -161,7 +161,9 @@ export const bandcampResolveEmbed = (
     .join('')
   const isAlbum = releases.some(([named]) => named === 'album')
   const tallKey = isAlbum ? 'tall/album' : 'tall/track'
-  const height = preset ? presetHeights[preset === 'tall' ? tallKey : preset] : undefined
+  const presetKey = preset === 'tall' ? tallKey : preset
+  const height =
+    presetKey && Object.hasOwn(presetHeights, presetKey) ? presetHeights[presetKey] : undefined
   const anchor = parseFallback(element)
   const url = attr(anchor, 'href')
   // Bandcamp writes the label as "{title} by {artist}". It is kept whole instead of split
