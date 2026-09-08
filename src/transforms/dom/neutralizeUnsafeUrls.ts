@@ -97,8 +97,6 @@ const tagAttributeRoles: Record<string, Array<[string, UrlRole]>> = {
   iframe: [['src', 'media']],
   embed: [['src', 'media']],
   object: [['data', 'media']],
-  // A submit navigates to the action, so it takes the link role and the link sentinel, the same
-  // way the button-level formaction that overrides it already does.
   form: [['action', 'link']],
 }
 const srcsetTags = new Set(['img', 'source'])
