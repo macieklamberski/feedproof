@@ -1,7 +1,12 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { flashVars, keepIfMatches } from '../utils/dom.js'
-import { audioFileRegex, placeholderBaseUrl, splitStrayParams } from '../utils/urls.js'
+import {
+  audioFileRegex,
+  pickQueryParams,
+  placeholderBaseUrl,
+  splitStrayParams,
+} from '../utils/urls.js'
 import { createUrlEmbedResolver, getEmbedSize } from '../utils/widgets.js'
 
 const provider = 'archive'
@@ -47,6 +52,19 @@ export const extractArchiveIdentifier = (link: string): string | undefined => {
   return keepIfMatches(readSegmentParts(link).head, safeIdentifierRegex)
 }
 
+// What the player's query is allowed to say: which of the item's files play and which part of
+// them. `playlist` puts the item's whole file list in the player instead of one default track,
+// `list_height` sizes that list, and `start` and `end` name a span within a recording.
+//
+// Everything else publishers wrote is how the player behaves for whoever is reading, which the
+// render hint owns: `autoplay`, plus the `ui`, `wrapper` and `view` that describe the details
+// page this rewrites away from. Naming what to keep rather than what to drop, because only six
+// parameters appear across 1,439 sampled carriers, so there is little for the list to miss.
+//
+// Nobody wrote `start` or `end` in that sample. They stay because the player takes them and
+// dropping one would move a reader to the top of a recording the publisher pointed into.
+const archiveEmbedParams = ['playlist', 'list_height', 'start', 'end']
+
 const composeEmbedResult = (identifier: string, query = ''): EmbedResolverResult => {
   return {
     provider,
@@ -84,14 +102,17 @@ export const archiveResolveEmbed = (
     return
   }
 
-  // The query carries what the publisher chose to embed, a track within a playlist or a start
-  // offset, so it goes through untouched. Anything the ampersand form stranded in the path
-  // rejoins it here.
+  // The parameters that say what plays are carried over; the rest is dropped. Anything the
+  // ampersand form stranded in the path is read alongside the real query, since that spelling
+  // 404s and rejoining it is what makes those embeds work at all.
   const search = parseUrl(url, placeholderBaseUrl)?.search ?? ''
   const { strayParams } = readSegmentParts(url)
-  const query = strayParams ? `${search ? `${search}&` : '?'}${strayParams}` : search
+  const params = new URLSearchParams({
+    ...pickQueryParams(search, archiveEmbedParams),
+    ...pickQueryParams(strayParams, archiveEmbedParams),
+  }).toString()
 
-  const result = composeEmbedResult(identifier, query)
+  const result = composeEmbedResult(identifier, params ? `?${params}` : '')
 
   return element && declaresAudioPlayer(element) ? { ...result, height: audioPlayerHeight } : result
 }

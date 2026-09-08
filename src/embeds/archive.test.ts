@@ -83,8 +83,8 @@ describe('archiveResolveEmbed', () => {
       expect(archiveResolveEmbed(value)).toEqual(expected)
     })
 
-    // The query says which track or offset the publisher embedded.
-    it('should keep the query the publisher wrote', () => {
+    // The query says which of the item's files play and which part of them.
+    it('should keep the parameters that say what plays', () => {
       const value = 'https://archive.org/embed/some_album?playlist=1&start=42'
       const expected: EmbedResolverResult = {
         provider: 'archive',
@@ -113,13 +113,44 @@ describe('archiveResolveEmbed', () => {
     })
 
     it('should keep every stranded parameter, not just the first', () => {
+      const value = 'https://archive.org/embed/some_album&playlist=1&list_height=150'
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'some_album',
+        src: 'https://archive.org/embed/some_album?playlist=1&list_height=150',
+        url: 'https://archive.org/details/some_album',
+        thumbnail: 'https://archive.org/services/img/some_album',
+      }
+
+      expect(archiveResolveEmbed(value)).toEqual(expected)
+    })
+
+    // Autoplay is the reader's call and the render hint carries it, so a publisher who asked for
+    // it does not get to ask on every consumer's behalf. Eleven carriers spell it in the stranded
+    // form, which is why it is filtered after the rejoining rather than before.
+    it('should drop autoplay the publisher stranded in the path', () => {
       const value = 'https://archive.org/embed/some_album&playlist=1&autoplay=1'
       const expected: EmbedResolverResult = {
         provider: 'archive',
         id: 'some_album',
-        src: 'https://archive.org/embed/some_album?playlist=1&autoplay=1',
+        src: 'https://archive.org/embed/some_album?playlist=1',
         url: 'https://archive.org/details/some_album',
         thumbnail: 'https://archive.org/services/img/some_album',
+      }
+
+      expect(archiveResolveEmbed(value)).toEqual(expected)
+    })
+
+    // `ui`, `wrapper` and `view` describe the details page, and this mints the embed route, so
+    // they say nothing about the player the reader gets.
+    it('should drop the details-page options from a stream url', () => {
+      const value = 'https://archive.org/embed/minitel_follies?ui=embed&wrapper=false&view=theater'
+      const expected: EmbedResolverResult = {
+        provider: 'archive',
+        id: 'minitel_follies',
+        src: 'https://archive.org/embed/minitel_follies',
+        url: 'https://archive.org/details/minitel_follies',
+        thumbnail: 'https://archive.org/services/img/minitel_follies',
       }
 
       expect(archiveResolveEmbed(value)).toEqual(expected)
@@ -143,7 +174,7 @@ describe('archiveResolveEmbed', () => {
       const expected: EmbedResolverResult = {
         provider: 'archive',
         id: 'hoursofdevotionb00neudrich',
-        src: 'https://archive.org/embed/hoursofdevotionb00neudrich?ui=embed',
+        src: 'https://archive.org/embed/hoursofdevotionb00neudrich',
         url: 'https://archive.org/details/hoursofdevotionb00neudrich',
         thumbnail: 'https://archive.org/services/img/hoursofdevotionb00neudrich',
       }
@@ -416,6 +447,40 @@ describeForEachParser('archiveFlashEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+  })
+})
+
+// The placeholder's src is what every consumer of the feed gets, so what the query carries has
+// to be asserted where it lands rather than one step earlier.
+describeForEachParser('archive iframe embeds through the pipeline', (parseHtml) => {
+  const convert = (value: string) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+    })
+  }
+
+  it('should place the item without the autoplay the publisher wrote', async () => {
+    const value = html`
+      <iframe
+        src="https://archive.org/embed/some_album?playlist=1&autoplay=1&utm_source=news"
+        width="500"
+        height="140"
+      ></iframe>
+    `
+    const expected = html`
+      <div
+        data-embed-src="https://archive.org/embed/some_album?playlist=1"
+        data-embed-provider="archive"
+        data-embed-id="some_album"
+        data-embed-url="https://archive.org/details/some_album"
+        data-embed-thumbnail="https://archive.org/services/img/some_album"
+        data-embed-width="500"
+        data-embed-height="140"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
   })
 })
 

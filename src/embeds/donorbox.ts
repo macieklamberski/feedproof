@@ -4,6 +4,8 @@ import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'donorbox'
+
 const donorboxHosts = ['donorbox.org']
 
 // A campaign slug as Donorbox writes it: one run of word characters and hyphens.
@@ -30,7 +32,7 @@ export const donorboxResolveEmbed = (url: string): EmbedResolverResult | undefin
   }
 
   return {
-    provider: 'donorbox',
+    provider,
     id: slug,
     // The publisher's query picks the default interval, amount and meter, so the url travels
     // whole rather than rebuilt from the slug.
@@ -55,7 +57,7 @@ export const readDonorboxHeight = (data: unknown): number | undefined => {
 }
 
 export const donorboxRenderHint: EmbedRenderHint = {
-  provider: 'donorbox',
+  provider,
   origin: 'https://donorbox.org',
   requestHeight: { action: 'please-resize-me' },
   readHeight: readDonorboxHeight,
