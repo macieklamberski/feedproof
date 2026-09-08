@@ -122,7 +122,7 @@ export const spotifyResolveEmbed = (
     (legacy ? [legacy[1], legacy[2]] : readPathPair(parseUrlOnHosts(uri, spotifyHosts)))
   const [type, id] = pair ?? []
 
-  if (!type || !id || !(type in spotifyHeights) || !safeIdRegex.test(id)) {
+  if (!type || !id || !Object.hasOwn(spotifyHeights, type) || !safeIdRegex.test(id)) {
     return
   }
 
