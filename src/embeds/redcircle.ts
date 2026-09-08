@@ -1,7 +1,7 @@
 import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { parseUrlOnHosts, uuidRegex } from '../utils/urls.js'
+import { parseUrlOnHosts, pickQueryParams, uuidRegex } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The loader is served from `api.podcache.net` and the player it builds from `redcircle.com`, on
@@ -54,7 +54,12 @@ const readSubject = (
   return { kind, show, episode }
 }
 
-// The query is kept because it is where the publisher's `theme=` lives.
+// What the player's query is allowed to say: the light or dark rendering the publisher picked.
+// That choice is made per embed, so the per-provider render hint has nowhere to hold it. It is
+// also the only parameter publishers wrote: the three show loaders in the census spell it, and
+// the 172 episode loaders carry no query at all.
+const redcircleEmbedParams = ['theme']
+
 export const redcircleResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, redcircleHosts)
   const subject = parsed ? readSubject(getPathSegments(parsed)) : undefined
@@ -63,11 +68,16 @@ export const redcircleResolveEmbed = (url: string): EmbedResolverResult | undefi
     return
   }
 
+  const params = new URLSearchParams(
+    pickQueryParams(parsed.search, redcircleEmbedParams),
+  ).toString()
+  const query = params ? `?${params}` : ''
+
   if (subject.kind === 'show') {
     return {
       provider: 'redcircle',
       id: `show/${subject.show}`,
-      src: `https://redcircle.com/embedded-show-webplayer/${subject.show}${parsed.search}`,
+      src: `https://redcircle.com/embedded-show-webplayer/${subject.show}${query}`,
       url: `https://redcircle.com/shows/${subject.show}`,
       height: playerHeights.show,
     }
@@ -76,7 +86,7 @@ export const redcircleResolveEmbed = (url: string): EmbedResolverResult | undefi
   return {
     provider: 'redcircle',
     id: `episode/${subject.show}/${subject.episode}`,
-    src: `https://redcircle.com/embedded-player/sh/${subject.show}/ep/${subject.episode}${parsed.search}`,
+    src: `https://redcircle.com/embedded-player/sh/${subject.show}/ep/${subject.episode}${query}`,
     url: `https://redcircle.com/shows/${subject.show}/episodes/${subject.episode}`,
     height: playerHeights.episode,
   }

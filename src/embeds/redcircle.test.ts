@@ -53,6 +53,36 @@ describe('redcircleResolveEmbed', () => {
 
       expect(redcircleResolveEmbed(value)).toEqual(expected)
     })
+
+    // The theme is picked per embed, so it is the one thing the query says about which player
+    // this is; anything beside it would be forced on every consumer of the feed.
+    it('should keep the theme and drop the rest of the show query', () => {
+      const value =
+        'https://api.podcache.net/embedded-show-player/sh/7bc4f231-9280-445a-a62b-b5727083ddca?theme=dark&utm_source=newsletter&rc_share=1'
+      const expected: EmbedResolverResult = {
+        provider: 'redcircle',
+        id: 'show/7bc4f231-9280-445a-a62b-b5727083ddca',
+        src: 'https://redcircle.com/embedded-show-webplayer/7bc4f231-9280-445a-a62b-b5727083ddca?theme=dark',
+        url: 'https://redcircle.com/shows/7bc4f231-9280-445a-a62b-b5727083ddca',
+        height: 320,
+      }
+
+      expect(redcircleResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should drop a tracking query from the episode player', () => {
+      const value =
+        'https://redcircle.com/embedded-player/sh/638d4a39-ade6-47d8-9dd2-aa1cc5bef21a/ep/cb6cd735-0017-48dd-b387-ecc8a20818e5?utm_source=rss&utm_medium=podcast'
+      const expected: EmbedResolverResult = {
+        provider: 'redcircle',
+        id: 'episode/638d4a39-ade6-47d8-9dd2-aa1cc5bef21a/cb6cd735-0017-48dd-b387-ecc8a20818e5',
+        src: 'https://redcircle.com/embedded-player/sh/638d4a39-ade6-47d8-9dd2-aa1cc5bef21a/ep/cb6cd735-0017-48dd-b387-ecc8a20818e5',
+        url: 'https://redcircle.com/shows/638d4a39-ade6-47d8-9dd2-aa1cc5bef21a/episodes/cb6cd735-0017-48dd-b387-ecc8a20818e5',
+        height: 170,
+      }
+
+      expect(redcircleResolveEmbed(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
@@ -166,6 +196,28 @@ describeForEachParser('redcircleIframeEmbedResolver', (parseHtml) => {
     expect(await extract(value)).toEqual(expected)
   })
 
+  // 170 is what the loader states, and a publisher who framed the player in a box of their own
+  // outranks it. Narrowing the query leaves that untouched.
+  it('should take the size the carrier states over the player height', async () => {
+    const value = html`
+      <iframe
+        src="https://redcircle.com/embedded-player/sh/638d4a39-ade6-47d8-9dd2-aa1cc5bef21a/ep/cb6cd735-0017-48dd-b387-ecc8a20818e5?utm_source=rss"
+        width="640"
+        height="200"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'redcircle',
+      id: 'episode/638d4a39-ade6-47d8-9dd2-aa1cc5bef21a/cb6cd735-0017-48dd-b387-ecc8a20818e5',
+      src: 'https://redcircle.com/embedded-player/sh/638d4a39-ade6-47d8-9dd2-aa1cc5bef21a/ep/cb6cd735-0017-48dd-b387-ecc8a20818e5',
+      url: 'https://redcircle.com/shows/638d4a39-ade6-47d8-9dd2-aa1cc5bef21a/episodes/cb6cd735-0017-48dd-b387-ecc8a20818e5',
+      width: 640,
+      height: 200,
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
   it('should ignore an iframe framing the show page', async () => {
     const value =
       '<iframe src="https://redcircle.com/shows/638d4a39-ade6-47d8-9dd2-aa1cc5bef21a"></iframe>'
@@ -189,6 +241,27 @@ describeForEachParser('redcircle through the pipeline', (parseHtml) => {
     const value = html`
       <script
         src="https://api.podcache.net/embedded-show-player/sh/7bc4f231-9280-445a-a62b-b5727083ddca?theme=light"
+      ></script>
+    `
+    const expected = html`
+      <div
+        data-embed-id="show/7bc4f231-9280-445a-a62b-b5727083ddca"
+        data-embed-provider="redcircle"
+        data-embed-src="https://redcircle.com/embedded-show-webplayer/7bc4f231-9280-445a-a62b-b5727083ddca?theme=light"
+        data-embed-url="https://redcircle.com/shows/7bc4f231-9280-445a-a62b-b5727083ddca"
+        data-embed-height="320"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
+  })
+
+  // The placeholder's src is what every consumer of the feed gets, so what the query carries has
+  // to be asserted where it lands.
+  it('should place the show player without the tracking the publisher wrote', async () => {
+    const value = html`
+      <script
+        src="https://api.podcache.net/embedded-show-player/sh/7bc4f231-9280-445a-a62b-b5727083ddca?theme=light&utm_source=newsletter"
       ></script>
     `
     const expected = html`
