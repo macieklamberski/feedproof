@@ -2,12 +2,13 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize, text } from '../utils/dom.js'
 import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
-import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'spreaker'
 
 const safeIdRegex = /^\d+$/
+const quotedNameRegex = /["“”„«»](.+)["“”„«»]/s
 
 const spreakerHosts = ['spreaker.com']
 
@@ -47,10 +48,13 @@ export const spreakerResolveEmbed = (url: string): EmbedResolverResult | undefin
     return
   }
 
+  // Both kinds name a page that takes the bare id and redirects to its canonical slugged form,
+  // `/episode/{id}` and `/show/{id}`, so the click target is the resource the player plays.
   return {
     provider,
     id: `${embed.kind}/${embed.id}`,
     src: `https://widget.spreaker.com/player?${embed.param}=${embed.id}`,
+    url: `https://www.spreaker.com/${embed.kind}/${embed.id}`,
     height: playerHeight,
   }
 }
@@ -74,10 +78,12 @@ export const spreakerIframeEmbedResolver = createUrlEmbedResolver(
 // that carry the class without the attribute do not ship the loader script that would have
 // made a player of it.
 //
-// Spreaker's documented snippet leaves the href on `www.spreaker.com` itself, so it is not
-// always the episode page. The text around the episode name is localized and inconsistently
-// quoted, `Listen to "X" on Spreaker.` beside `Escucha»X" en Spreaker.`, so it is carried whole
-// rather than stripped off the name.
+// The anchor's own href is not the click target, because it can name the show while the
+// resource names an episode, and the id already mints the exact page. The text is a call to
+// action that wraps the episode name in quotes and is otherwise localized, `Listen to "X" on
+// Spreaker.` beside `Escucha"X" en Spreaker.`, so the name is read from the quotes and the
+// wording is dropped. Where the snippet generator also writes `data-title`, that is the same
+// name with nothing to parse.
 export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
   'a.spreaker-player[data-resource]',
   (element) => {
@@ -92,14 +98,12 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
 
     // The anchor states its own size, e.g. `data-height="200px"`.
     const stated = parsePixelSize(attr(element, 'data-height'))
-    const href = attr(element, 'href')
-    const url = parseUrlOnHosts(href, spreakerHosts) ? href : undefined
-    const title = text(element)
+    const quoted = text(element)?.match(quotedNameRegex)?.[1].trim()
+    const title = attr(element, 'data-title') ?? quoted
 
     return {
       ...result,
       ...(stated && { height: stated }),
-      ...(url && { url }),
       ...(title && { title }),
     }
   },
