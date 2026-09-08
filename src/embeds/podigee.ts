@@ -43,7 +43,7 @@ const composeEmbed = (parsed: URL, src: string): EmbedResolverResult | undefined
 // The rest point the attribute at an inline config object (`data-configuration="podigee"` or
 // `="playerConfiguration"`), where the data lives in a script body this resolver deliberately
 // does not read: those keep the generic treatment.
-export const podigeeEmbedResolver = createMarkupEmbedResolver(
+export const podigeeScriptEmbedResolver = createMarkupEmbedResolver(
   'script.podigee-podcast-player[data-configuration]',
   (element) => {
     const configuration = attr(element, 'data-configuration')
