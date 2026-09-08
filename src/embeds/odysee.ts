@@ -1,6 +1,7 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // `lbry.tv` was the same site under its previous name and every one of its urls redirects to
@@ -74,7 +75,7 @@ const readClaimPath = (parsed: URL): string | undefined => {
 }
 
 const odyseeResolveEmbed = (link: string, element: Element): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
   const claimPath = parsed ? readClaimPath(parsed) : undefined
 
   if (!claimPath) {

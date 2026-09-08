@@ -4,6 +4,8 @@ import { attr, find } from '../utils/dom.js'
 import { readPixels } from '../utils/hints.js'
 import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'mastodon'
+
 export type MastodonStatus = {
   origin: string
   host: string
@@ -51,7 +53,7 @@ export const parseMastodonStatus = (link: string): MastodonStatus | undefined =>
 
 const composeEmbedResult = (status: MastodonStatus): EmbedResolverResult => {
   return {
-    provider: 'mastodon',
+    provider,
     // `EnrichEmbedFn` is handed `{provider, id}` and nothing else, and a status id is unique
     // only within the instance that minted it: two instances number their posts from the
     // same sequence. So the instance travels inside the id, or no lookup can be addressed
@@ -116,7 +118,7 @@ export const readMastodonHeight = (data: unknown): number | undefined => {
 }
 
 export const mastodonRenderHint: EmbedRenderHint = {
-  provider: 'mastodon',
+  provider,
   requestHeight: { type: 'setHeight', id: 0 },
   readHeight: readMastodonHeight,
 }

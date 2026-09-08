@@ -1,7 +1,7 @@
-import { getPathSegments, isHostOf, isSubdomainOf } from 'trousse'
+import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { jsonAttr, keepIfMatches } from '../utils/dom.js'
-import { parseUrlOnHosts, pickUrlParams } from '../utils/urls.js'
+import { isOnHosts, parseUrlOnHosts, pickUrlParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Music and podcasts embed through the same player, served from `embed.music.apple.com` and
@@ -61,8 +61,7 @@ export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined 
     return
   }
 
-  const isPodcast =
-    isHostOf(parsed, applePodcastsHosts) || isSubdomainOf(parsed, applePodcastsHosts)
+  const isPodcast = isOnHosts(parsed, applePodcastsHosts)
   const host = isPodcast ? 'podcasts.apple.com' : 'music.apple.com'
   // `i` names the track inside an album or the episode inside a show, so where it is present
   // it is the thing being embedded, and the player is the song one whatever the path says.

@@ -1,4 +1,4 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { parseUrl } from 'trousse'
 import type {
   CleanUrlFn,
   DomTransform,
@@ -8,8 +8,14 @@ import type {
   WidgetResolver,
 } from '../../types.js'
 import { getElementDimensions } from '../../utils/dom.js'
-import { getImageFingerprint, getUrlSizeHint } from '../../utils/images.js'
-import { absoluteUrlRegex, cleanUrl, resolveOrDropUrl, resolveOrKeepUrl } from '../../utils/urls.js'
+import { getImageFingerprint, getSizeKeywordRank, getUrlSizeHint } from '../../utils/images.js'
+import {
+  absoluteUrlRegex,
+  cleanUrl,
+  isOnHosts,
+  resolveOrDropUrl,
+  resolveOrKeepUrl,
+} from '../../utils/urls.js'
 import {
   createEmbedPlaceholder,
   createImage,
@@ -38,7 +44,7 @@ const isImageEnclosure = (enclosure: Enclosure): boolean => {
 }
 
 const isAvatarEnclosure = (url: string, avatarHosts: ReadonlyArray<string>): boolean => {
-  return isHostOf(url, avatarHosts) || isSubdomainOf(url, avatarHosts)
+  return isOnHosts(url, avatarHosts)
 }
 
 // Run resolvers against a synthesized iframe carrying the enclosure URL so that
@@ -136,8 +142,9 @@ const mergeEnclosureMetadata = (
 // Whether `incoming` is a better variant of the same image to keep than `kept`. A URL
 // with no size encoded in it (`hint === 0`) is treated as the full-res original and
 // preferred over any sized copy (a bare `photo.jpg` outranks `photo-800x450.jpg`).
-// Between two sized variants the larger wins. On a true tie the no-query URL wins, else
-// the first stays.
+// Between two sized variants the larger wins. When neither encodes a size, two ranked
+// size keywords decide (`large.jpg` beside `small.jpg`), the way pickLargerImageUrl
+// reads the same pair. On a true tie the no-query URL wins, else the first stays.
 const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
   const incomingUrl = incoming.url ?? ''
   const keptUrl = kept.url ?? ''
@@ -152,6 +159,17 @@ const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
 
   if (incomingHint !== keptHint) {
     return incomingHint > keptHint
+  }
+
+  // A rank of 0 is a keyword the table cannot order (`preview` is a thumbnail on one host
+  // and full-size on another) or none at all, so it decides nothing and falls through.
+  if (incomingIsOriginal && keptIsOriginal) {
+    const incomingRank = getSizeKeywordRank(incomingUrl)
+    const keptRank = getSizeKeywordRank(keptUrl)
+
+    if (incomingRank !== 0 && keptRank !== 0 && incomingRank !== keptRank) {
+      return incomingRank > keptRank
+    }
   }
 
   return keptUrl.includes('?') && !incomingUrl.includes('?')

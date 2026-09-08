@@ -2,7 +2,10 @@ import type { Nullish } from 'trousse'
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, flashVars, keepIfMatches, paramValue } from '../utils/dom.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
+
+const provider = 'brightcove'
 
 // Brightcove builds its player page from four ids the in-page embed carries as attributes. The
 // account is usually one of them, but some plugins leave it only in the loader script's url, so
@@ -112,7 +115,7 @@ export const brightcoveVideoJsEmbedResolver = createMarkupEmbedResolver(
     }
 
     return {
-      provider: 'brightcove',
+      provider,
       id: `${account}/${videoId}`,
       src: composePlayerUrl(
         account,
@@ -135,7 +138,7 @@ const brightcoveFlashResolveEmbed = (
   src: string,
   element: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(src, 'https://example.com')
+  const parsed = parseUrl(src, placeholderBaseUrl)
 
   if (!parsed || !federatedPathRegex.test(parsed.pathname)) {
     return
@@ -166,7 +169,7 @@ const brightcoveFlashResolveEmbed = (
   }
 
   return {
-    provider: 'brightcove',
+    provider,
     id: `${account}/${videoId}`,
     src: composePlayerUrl(account, videoId),
   }
@@ -200,7 +203,7 @@ export const brightcoveExperienceEmbedResolver = createMarkupEmbedResolver(
     }
 
     return {
-      provider: 'brightcove',
+      provider,
       id: `${account}/${videoId}`,
       src: composePlayerUrl(account, videoId),
     }
@@ -217,7 +220,7 @@ export const brightcoveExperienceEmbedResolver = createMarkupEmbedResolver(
 const playerPathRegex = /^([^_]+)_(.+)$/
 
 export const brightcoveResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(url, 'https://example.com')
+  const parsed = parseUrl(url, placeholderBaseUrl)
 
   if (!parsed?.hostname.startsWith('players.')) {
     return
@@ -243,7 +246,7 @@ export const brightcoveResolveEmbed = (url: string): EmbedResolverResult | undef
   }
 
   return {
-    provider: 'brightcove',
+    provider,
     id: `${account}/${videoId}`,
     src: `https://players.brightcove.net/${account}/${player}/index.html?videoId=${videoId}`,
   }
@@ -257,6 +260,6 @@ export const brightcoveIframeEmbedResolver = createUrlEmbedResolver(
 // Starts playback on the click that loads the player, which sets `playsinline` on its own.
 // Never `autoplay=muted` or `autoplay=any`, which mute.
 export const brightcoveRenderHint: EmbedRenderHint = {
-  provider: 'brightcove',
+  provider,
   autoplayParams: { autoplay: 'true' },
 }

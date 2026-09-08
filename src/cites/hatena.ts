@@ -2,7 +2,7 @@ import { parseUrl } from 'trousse'
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 
 // Hatena Blog renders a pasted link as an iframe pointing at its card renderer, followed by
 // a `<cite>` holding the real link. Both sit inside one paragraph, and the paragraph is what
@@ -43,9 +43,9 @@ const cardParagraphSelector = cardIframeSelector
 // The blog serving its own card, which the citation beside it names on the same host. Both are
 // parsed against one placeholder base so a relative pair is compared on the page's own terms.
 const isSelfHosted = (source: string, citationHref: string | undefined): boolean => {
-  const citation = citationHref ? parseUrl(citationHref, 'https://example.com') : undefined
+  const citation = citationHref ? parseUrl(citationHref, placeholderBaseUrl) : undefined
 
-  return citation !== undefined && parseUrl(source, 'https://example.com')?.host === citation.host
+  return citation !== undefined && parseUrl(source, placeholderBaseUrl)?.host === citation.host
 }
 
 export const hatenaCiteResolver: CiteResolver = {

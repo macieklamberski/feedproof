@@ -1,6 +1,7 @@
 import { getPathSegments, isHostOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches, parsePixelSize, text } from '../utils/dom.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // `blog.codepen.io` is the marketing blog and `cdpn.io` serves a pen's raw output, so neither
@@ -97,7 +98,7 @@ const readTitle = (element: Element | undefined): string | undefined => {
 const parseTarget = (value: string | undefined): CodepenTarget | undefined => {
   // A feed that encoded its html twice leaves a literal `&amp;` inside the url, which makes the
   // parameter after it read as `amp;key` and hides it. Real feeds ship iframes like that.
-  const parsed = parseUrl(value?.replaceAll('&amp;', '&') ?? '', 'https://example.com')
+  const parsed = parseUrl(value?.replaceAll('&amp;', '&') ?? '', placeholderBaseUrl)
 
   if (!parsed || !isHostOf(parsed, codepenHosts)) {
     return

@@ -1,4 +1,4 @@
-import { isHostOf, isSubdomainOf } from 'trousse'
+import type { MaybePromise } from 'trousse'
 import type {
   CiteResolverResult,
   EmbedResolver,
@@ -16,7 +16,7 @@ import {
   getStylePairRatio,
   getWrapperRatio,
 } from './dom.js'
-import { cleanUrl, resolveOrDropUrl, resolveOrKeepUrl } from './urls.js'
+import { cleanUrl, isOnHosts, resolveOrDropUrl, resolveOrKeepUrl } from './urls.js'
 
 // A card's date is whatever string the site chose to display, so the caller gets one chance to
 // normalize it and anything the parser rejects is kept verbatim, not dropped. Every path that
@@ -194,7 +194,7 @@ export const createUrlEmbedResolver = (
     extract: (element) => {
       const src = readCarrierUrl(element)
 
-      if (!isHostOf(src, hosts) && !isSubdomainOf(src, hosts)) {
+      if (!isOnHosts(src, hosts)) {
         return
       }
 
@@ -490,4 +490,39 @@ export const createCitePlaceholder = (
   result: CiteResolverResult,
 ): HTMLElement => {
   return createPlaceholder(document, 'cite', normalizeCiteFields(result))
+}
+
+// The pass both placeholder kinds run for enrichment: read a ref off every placeholder in the
+// document, hand the whole set to the caller's enricher in one call, and write the answers back by
+// position. A slot the enricher left undefined leaves its placeholder as the resolver built it.
+export const createPlaceholderEnricher = <TRef, TData>(
+  selector: string,
+  readRef: (element: Element) => TRef,
+  enrich: (refs: Array<TRef>) => MaybePromise<Array<TData | undefined>>,
+  update: (element: Element, data: TData) => void,
+) => {
+  return async (document: Document): Promise<void> => {
+    const placeholders = document.querySelectorAll(selector)
+    const count = placeholders.length
+
+    if (!count) {
+      return
+    }
+
+    const refs: Array<TRef> = new Array(count)
+
+    for (let i = 0; i < count; i++) {
+      refs[i] = readRef(placeholders[i])
+    }
+
+    const enriched = await enrich(refs)
+
+    for (let i = 0; i < count; i++) {
+      const data = enriched[i]
+
+      if (data) {
+        update(placeholders[i], data)
+      }
+    }
+  }
 }

@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, text } from '../utils/dom.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A release is either an album or a single track, and the id is Bandcamp's own numeric one.
@@ -58,7 +58,7 @@ const videoPathRegex = /\/videoembed/i
 // first and the legacy `v=2/` path writes `track=` first. The track segment also moves around
 // within the path, so the whole url is read before anything is decided.
 const readReleases = (link: string): Array<[string, string]> => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
   const releases: Array<[string, string]> = []
 
   if (!parsed) {
@@ -132,7 +132,7 @@ export const bandcampResolveEmbed = (
   src: string,
   element: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(src, 'https://example.com')
+  const parsed = parseUrl(src, placeholderBaseUrl)
   const releases = readReleases(src)
   // A player naming both is a track inside an album, which is what the builder writes when the
   // publisher picks a track from an album page. The track is what they linked, so it names the

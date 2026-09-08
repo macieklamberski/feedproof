@@ -4,6 +4,8 @@ import { attr, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'wistia'
+
 // Letters and digits, which is all the player path takes: a hyphen marks a slug and a dot a
 // file, and no route here serves either as a player. The length is not checked, since a wrong id
 // fails the same whether it is minted or passed through, and a bound refuses the next id space.
@@ -70,7 +72,7 @@ export const wistiaResolveEmbed = (
   // A media keeps the bare id it has always carried. The other two qualify it, because the three
   // share one id grammar and enrichment receives the provider and the id alone.
   return {
-    provider: 'wistia',
+    provider,
     id: embed.route === 'iframe' ? embed.id : `${embed.route}/${embed.id}`,
     src: composeEmbedUrl(embed.route, embed.id),
     url: embed.page,
@@ -84,6 +86,6 @@ export const wistiaEmbedResolver = createUrlEmbedResolver(wistiaHosts, wistiaRes
 // Starts playback on the click that loads the player: the iframe copies every query entry into
 // its embed options. Never `silentAutoPlay=true`, which forces a muted start.
 export const wistiaRenderHint: EmbedRenderHint = {
-  provider: 'wistia',
+  provider,
   autoplayParams: { autoPlay: 'true' },
 }

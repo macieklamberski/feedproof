@@ -2,8 +2,10 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize, text } from '../utils/dom.js'
 import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
+
+const provider = 'spreaker'
 
 const safeIdRegex = /^\d+$/
 
@@ -21,7 +23,7 @@ const playerHeight = 200
 export const extractSpreakerEmbed = (
   link: string,
 ): { kind: string; param: string; id: string } | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
 
   // The route is `player` on the widget host and `embed/player/{variant}` on the site host,
   // read as a whole segment so a longer name starting with it is not the player route.
@@ -46,7 +48,7 @@ export const spreakerResolveEmbed = (url: string): EmbedResolverResult | undefin
   }
 
   return {
-    provider: 'spreaker',
+    provider,
     id: `${embed.kind}/${embed.id}`,
     src: `https://widget.spreaker.com/player?${embed.param}=${embed.id}`,
     height: playerHeight,
@@ -106,7 +108,7 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
 // The widget guide documents `autoplay=true`, but the player bundle holds no code for it and the
 // server-rendered config is identical with and without it. The widget speaks player.js instead.
 export const spreakerRenderHint: EmbedRenderHint = {
-  provider: 'spreaker',
+  provider,
   isReady: isPlayerJsReady,
   requestPlay: playerJsPlayRequest,
 }

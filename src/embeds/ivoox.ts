@@ -1,5 +1,6 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // `playerivoox_ee_`, `_ep_` and `_em_` are three generations of the legacy episode player, and
@@ -37,7 +38,7 @@ export type IvooxSubject = {
 }
 
 export const extractIvooxSubject = (link: string): IvooxSubject | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
 
   if (!parsed) {
     return

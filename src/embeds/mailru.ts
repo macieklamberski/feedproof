@@ -1,7 +1,9 @@
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { flashVars } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
+
+const provider = 'mailru'
 
 // `my.mail.ru` serves the player, `api.video.mail.ru` was the host of the older embed and no
 // longer resolves, and `img.mail.ru` served the Flash player.
@@ -21,7 +23,7 @@ const flashPlayerPathRegex = /^\/r\/video2\/\w+\.swf$/
 
 const composeNumeric = (videoId: string): EmbedResolverResult => {
   return {
-    provider: 'mailru',
+    provider,
     id: videoId,
     src: `https://my.mail.ru/video/embed/${videoId}`,
   }
@@ -43,7 +45,7 @@ const composeSubject = (subject: string): EmbedResolverResult | undefined => {
   const [, type, user, album, counter] = match
 
   return {
-    provider: 'mailru',
+    provider,
     id: `${type}/${user}/${album}/${counter}`,
     src: `https://my.mail.ru/${type}/${user}/video/embed/${album}/${counter}`,
     url: `https://my.mail.ru/${type}/${user}/video/${album}/${counter}.html`,
@@ -89,3 +91,22 @@ export const mailruResolveEmbed = (
 }
 
 export const mailruEmbedResolver = createUrlEmbedResolver(mailruHosts, mailruResolveEmbed)
+
+// Starts playback on the click that loads the player. The parameter lands in the page's
+// server-rendered `flashVars` block, which the player reads through
+// `getParam(a) { return this.options.flashVars[a] }` and hands to
+// `playVideo(a) { void 0 === a && (a = !0), a = a && !isMobile(), this.setOption('autoPlay', a) }`.
+// That is a truthiness read rather than a comparison, so the value is `1` because it is the one
+// Mail.ru's own player writes when it navigates the frame on to the next video,
+// `?backscreen=&autoplay=1&currentReferrer=`. Verified live 2026-09-08 on both spellings this
+// file mints: the bare page carries `"autoplay":0`, a number and so falsy, `?autoplay=1` makes it
+// `"autoplay":"1"`, and an unrelated `?foo=bar` leaves it 0. The player refuses the start on a
+// mobile user agent whatever the value says.
+//
+// `video/embed/yandex-api` also plays on the bare string `play` posted into the frame, with no
+// origin check on its listener, and posts `{event:'inited'}` out. That is where to go if the
+// parameter ever stops working; sending both would be redundant.
+export const mailruRenderHint: EmbedRenderHint = {
+  provider,
+  autoplayParams: { autoplay: '1' },
+}

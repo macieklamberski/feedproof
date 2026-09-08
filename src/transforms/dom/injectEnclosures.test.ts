@@ -601,6 +601,51 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(await transform(value, context)).toEqualHtml(expected)
     })
 
+    it('should keep the higher-ranked size keyword when neither URL encodes a size', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/photos/sunset/large.jpg', type: 'image/jpeg' },
+        { url: 'https://example.com/photos/sunset/small.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/photos/sunset/large.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    // Order is what the ranking replaces, so the smaller keyword arriving first has to lose too.
+    it('should keep the higher-ranked size keyword when the smaller one comes first', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/photos/sunset/small.jpg', type: 'image/jpeg' },
+        { url: 'https://example.com/photos/sunset/large.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/photos/sunset/large.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    // "preview" is a thumbnail on one host and the full image on another, so it ranks 0 and
+    // cannot decide: the first enclosure stays, as it did before any keyword was read.
+    it('should keep the first variant when one size keyword is unrankable', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/photos/sunset/preview.jpg', type: 'image/jpeg' },
+        { url: 'https://example.com/photos/sunset/small.jpg', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/photos/sunset/preview.jpg" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
     it('should prefer the no-query URL when colliding variants have no size to compare', async () => {
       const value = '<p>Content</p>'
       const context = withEnclosures([

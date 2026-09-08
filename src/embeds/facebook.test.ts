@@ -49,6 +49,26 @@ describeForEachParser('facebookWidgetEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // The id goes absolute alongside the plugin href, so it reads the same here as it does off a
+    // plugin iframe. `url` is the one field left as written, because `resolveUrlFn` gives that
+    // one its scheme on the way to the placeholder.
+    it('should mint an absolute plugin href and id from a protocol-relative data-href', async () => {
+      const value = html`
+        <div
+          class="fb-post"
+          data-href="//www.facebook.com/PageName/posts/123"
+        ></div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/posts/123',
+        src: 'https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123',
+        url: '//www.facebook.com/PageName/posts/123',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('the video div', () => {
@@ -355,6 +375,28 @@ describeForEachParser('facebookBlockquoteEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // Nothing in the pipeline absolutises a `cite`, so a CMS that rewrites urls to `//` hands
+    // the resolver one with no scheme.
+    it('should read a protocol-relative cite', async () => {
+      const value = html`
+        <blockquote
+          cite="//www.facebook.com/PageName/posts/123"
+          class="fb-xfbml-parse-ignore"
+        >
+          <p>A post caption.</p>
+        </blockquote>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/posts/123',
+        src: 'https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123',
+        url: '//www.facebook.com/PageName/posts/123',
+        description: 'A post caption.',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
@@ -413,6 +455,25 @@ describeForEachParser('facebookIframeEmbedResolver', (parseHtml) => {
         src: 'https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123&show_text=true&width=500',
         url: 'https://www.facebook.com/PageName/posts/123',
         width: 500,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The href rides as a query value, which `resolveUrlFn` never descends into, so the resolver
+    // is the only thing that can give it a scheme. Refused outright it took the whole embed with
+    // it, since the plugin url is what names the provider. The src is left as published.
+    it('should name a plugin iframe whose href carries no scheme', async () => {
+      const value = html`
+        <iframe
+          src="https://www.facebook.com/plugins/post.php?href=%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123&show_text=true"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'facebook',
+        id: 'https://www.facebook.com/PageName/posts/123',
+        src: 'https://www.facebook.com/plugins/post.php?href=%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123&show_text=true',
+        url: '//www.facebook.com/PageName/posts/123',
       }
 
       expect(await extract(value)).toEqual(expected)

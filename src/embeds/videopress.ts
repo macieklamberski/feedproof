@@ -1,8 +1,10 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { flashVars, keepIfMatches } from '../utils/dom.js'
-import { pickUrlParams } from '../utils/urls.js'
+import { pickUrlParams, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
+
+const provider = 'videopress'
 
 // A guid is letters and digits, and a guid minted in 2009 for the Flash player still answers on
 // the current routes. Only the alphabet is checked, since the guid is written into the player
@@ -28,7 +30,7 @@ const videopressEmbedParams = ['at', 'hd', 'loop']
 // not derivable from the guid.
 const composeEmbed = (guid: string, query = ''): EmbedResolverResult => {
   return {
-    provider: 'videopress',
+    provider,
     id: guid,
     src: `https://videopress.com/embed/${guid}${query}`,
     url: `https://videopress.com/v/${guid}`,
@@ -71,7 +73,7 @@ const videopressFlashResolveEmbed = (
   link: string,
   element: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
 
   if (!parsed || !flashPlayerPathRegex.test(parsed.pathname)) {
     return
@@ -101,6 +103,6 @@ export const videopressFlashEmbedResolver = createUrlEmbedResolver(
 // Starts playback on the click that loads the player. The player's routes read the boolean
 // keys `1`, `true` and empty, and alias `autoplay` to this spelling.
 export const videopressRenderHint: EmbedRenderHint = {
-  provider: 'videopress',
+  provider,
   autoplayParams: { autoPlay: '1' },
 }
