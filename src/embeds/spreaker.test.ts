@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
@@ -42,6 +43,9 @@ describe('extractSpreakerEmbed', () => {
     expect(extractSpreakerEmbed(value)).toBeUndefined()
   })
 
+  // This route is gone: it answers 404 for a live episode id and for a fabricated one alike,
+  // while the widget host serves the same id. So reading it repairs dead markup rather than
+  // passing a working url through.
   it('should read the site host embed route', () => {
     const value = 'https://www.spreaker.com/embed/player/mini?episode_id=4901266'
     const expected = {
@@ -63,12 +67,26 @@ describe('extractSpreakerEmbed', () => {
 describe('spreakerResolveEmbed', () => {
   // The corpus iframes carry no height at all, so stating Spreaker's documented 200 is what a
   // reader gains beyond the provider label.
-  it('should state the documented player height', () => {
+  it('should mint the episode page and state the documented height', () => {
     const value = 'https://widget.spreaker.com/player?episode_id=52842990&theme=dark'
     const expected: EmbedResolverResult = {
       provider: 'spreaker',
       id: 'episode/52842990',
       src: 'https://widget.spreaker.com/player?episode_id=52842990',
+      url: 'https://www.spreaker.com/episode/52842990',
+      height: 200,
+    }
+
+    expect(spreakerResolveEmbed(value)).toEqual(expected)
+  })
+
+  it('should mint the show page for a show player', () => {
+    const value = 'https://widget.spreaker.com/player?show_id=1433865'
+    const expected: EmbedResolverResult = {
+      provider: 'spreaker',
+      id: 'show/1433865',
+      src: 'https://widget.spreaker.com/player?show_id=1433865',
+      url: 'https://www.spreaker.com/show/1433865',
       height: 200,
     }
 
@@ -85,41 +103,83 @@ describe('spreakerResolveEmbed', () => {
 describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, spreakerAnchorEmbedResolver)
 
-  // The corpus shape: the loader swaps this anchor for the player, so without it a reader sees
-  // the fallback text and nothing else.
-  const anchor = (attributes: string) =>
-    html`
-      <a
-        class="spreaker-player"
-        href="https://www.spreaker.com/episode/42"
-        ${attributes}
-      >Listen to "An episode" on Spreaker.</a>
-    `
-
   describe('happy paths', () => {
+    // The corpus shape: the loader swaps this anchor for the player, so without it a reader sees
+    // the fallback text and nothing else.
     it('should read the episode out of data-resource', async () => {
-      const value = anchor('data-resource="episode_id=42"')
+      const value = html`
+        <a
+          class="spreaker-player"
+          href="https://www.spreaker.com/episode/42"
+          data-resource="episode_id=42"
+        >Listen to "An episode" on Spreaker.</a>
+      `
       const expected: EmbedResolverResult = {
         provider: 'spreaker',
         id: 'episode/42',
         src: 'https://widget.spreaker.com/player?episode_id=42',
         url: 'https://www.spreaker.com/episode/42',
         height: 200,
-        title: 'Listen to "An episode" on Spreaker.',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The href names the show while the resource names an episode, which is where taking the
+    // click target off the anchor answers with the wrong page rather than with none.
+    it('should mint the page from the resource rather than from the href', async () => {
+      const value = html`
+        <a
+          class="spreaker-player"
+          href="https://www.spreaker.com/show/1433865"
+          data-resource="episode_id=42"
+        >Listen to "An episode" on Spreaker.</a>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spreaker',
+        id: 'episode/42',
+        src: 'https://widget.spreaker.com/player?episode_id=42',
+        url: 'https://www.spreaker.com/episode/42',
+        height: 200,
       }
 
       expect(await extract(value)).toEqual(expected)
     })
 
     it('should read a show resource', async () => {
-      const value = anchor('data-resource="show_id=99"')
+      const value = html`
+        <a
+          class="spreaker-player"
+          href="https://www.spreaker.com/episode/42"
+          data-resource="show_id=99"
+        >Listen to "A show" on Spreaker.</a>
+      `
       const expected: EmbedResolverResult = {
         provider: 'spreaker',
         id: 'show/99',
         src: 'https://widget.spreaker.com/player?show_id=99',
+        url: 'https://www.spreaker.com/show/99',
+        height: 200,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should take the name from data-title when the anchor states one', async () => {
+      const value = html`
+        <a
+          class="spreaker-player"
+          data-resource="episode_id=42"
+          data-title="An episode"
+        >Listen to "Something else" on Spreaker.</a>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spreaker',
+        id: 'episode/42',
+        src: 'https://widget.spreaker.com/player?episode_id=42',
         url: 'https://www.spreaker.com/episode/42',
         height: 200,
-        title: 'Listen to "An episode" on Spreaker.',
+        title: 'An episode',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -127,28 +187,38 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
 
     // The publisher sized this one, so their height wins over the documented constant.
     it('should prefer the stated data-height', async () => {
-      const value = anchor('data-resource="episode_id=42" data-height="350px"')
+      const value = html`
+        <a
+          class="spreaker-player"
+          data-resource="episode_id=42"
+          data-height="350px"
+        >Listen to "An episode" on Spreaker.</a>
+      `
       const expected: EmbedResolverResult = {
         provider: 'spreaker',
         id: 'episode/42',
         src: 'https://widget.spreaker.com/player?episode_id=42',
         url: 'https://www.spreaker.com/episode/42',
         height: 350,
-        title: 'Listen to "An episode" on Spreaker.',
       }
 
       expect(await extract(value)).toEqual(expected)
     })
 
     it('should accept a bare pixel count', async () => {
-      const value = anchor('data-resource="episode_id=42" data-height="120"')
+      const value = html`
+        <a
+          class="spreaker-player"
+          data-resource="episode_id=42"
+          data-height="120"
+        >Listen to "An episode" on Spreaker.</a>
+      `
       const expected: EmbedResolverResult = {
         provider: 'spreaker',
         id: 'episode/42',
         src: 'https://widget.spreaker.com/player?episode_id=42',
         url: 'https://www.spreaker.com/episode/42',
         height: 120,
-        title: 'Listen to "An episode" on Spreaker.',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -157,48 +227,44 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
 
   describe('sad paths', () => {
     it('should keep the constant when data-height is not a pixel count', async () => {
-      const value = anchor('data-resource="episode_id=42" data-height="100%"')
-      const expected: EmbedResolverResult = {
-        provider: 'spreaker',
-        id: 'episode/42',
-        src: 'https://widget.spreaker.com/player?episode_id=42',
-        url: 'https://www.spreaker.com/episode/42',
-        height: 200,
-        title: 'Listen to "An episode" on Spreaker.',
-      }
-
-      expect(await extract(value)).toEqual(expected)
-    })
-
-    // The href is the placeholder's click target, and a foreign host can spell the platform
-    // anywhere in its path, so the page is taken from the host and not from the string.
-    it('should refuse an href on a foreign host', async () => {
       const value = html`
         <a
           class="spreaker-player"
-          href="https://evil.test/www.spreaker.com/episode/42"
           data-resource="episode_id=42"
+          data-height="100%"
         >Listen to "An episode" on Spreaker.</a>
       `
       const expected: EmbedResolverResult = {
         provider: 'spreaker',
         id: 'episode/42',
         src: 'https://widget.spreaker.com/player?episode_id=42',
+        url: 'https://www.spreaker.com/episode/42',
         height: 200,
-        title: 'Listen to "An episode" on Spreaker.',
       }
 
       expect(await extract(value)).toEqual(expected)
     })
 
     it('should return undefined when the resource names no id', async () => {
-      const value = anchor('data-resource="episode_id=abc"')
+      const value = html`
+        <a
+          class="spreaker-player"
+          data-resource="episode_id=abc"
+        >Listen to "An episode" on Spreaker.</a>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
+    // A user player is documented and dead, and nothing else names a resource this resolver
+    // can place, so the anchor is left as the working link it already is.
     it('should return undefined for an unknown resource kind', async () => {
-      const value = anchor('data-resource="playlist_id=42"')
+      const value = html`
+        <a
+          class="spreaker-player"
+          data-resource="user_id=8114541"
+        >Listen to "An episode" on Spreaker.</a>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -215,7 +281,7 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
   })
 
   describe('edge cases', () => {
-    it('should state no url or title for an anchor carrying neither', async () => {
+    it('should state no title for an anchor carrying no text', async () => {
       const value = html`
         <a
           class="spreaker-player"
@@ -226,10 +292,81 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         provider: 'spreaker',
         id: 'episode/42',
         src: 'https://widget.spreaker.com/player?episode_id=42',
+        url: 'https://www.spreaker.com/episode/42',
         height: 200,
       }
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should state no title when the text quotes nothing', async () => {
+      const value = html`
+        <a
+          class="spreaker-player"
+          data-resource="episode_id=42"
+        >Listen on Spreaker.</a>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spreaker',
+        id: 'episode/42',
+        src: 'https://widget.spreaker.com/player?episode_id=42',
+        url: 'https://www.spreaker.com/episode/42',
+        height: 200,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  // Pins the decision not to read the name out of the sentence. Spreaker writes it in the
+  // publisher's own language and quotes it with whichever pair that language uses, so parsing it
+  // back means enumerating quote characters against a handful of sampled anchors: a pair nobody
+  // sampled drops the name silently, and any two quote characters in the sentence bind a wrong
+  // one. `data-title` states it without parsing, and Spreaker's oEmbed states it for the rest.
+  describe('the localized call to action', () => {
+    it.each([
+      ['Spanish, straight quotes', 'Escucha"FREEROCK #433 270418 INCOGNITO" en Spreaker.'],
+      [
+        'English, curly quotes',
+        'Listen to \u201C306. Italy Ancestry Research Tips\u201D on Spreaker.',
+      ],
+      ['a name quoting something itself', 'Listen to "The "best" episode" on Spreaker.'],
+    ])('should state no title for %s', async (_, text) => {
+      const value = `<a class="spreaker-player" data-resource="episode_id=42">${text}</a>`
+      const expected: EmbedResolverResult = {
+        provider: 'spreaker',
+        id: 'episode/42',
+        src: 'https://widget.spreaker.com/player?episode_id=42',
+        url: 'https://www.spreaker.com/episode/42',
+        height: 200,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+})
+
+// `api.spreaker.com` is a subdomain of the host the url resolver claims and every episode's
+// audio is served from it, so this is the path where claiming one would cost a reader the audio.
+describeForEachParser('spreaker through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should leave a spreaker audio enclosure playable', async () => {
+    const enclosures = [
+      { url: 'https://api.spreaker.com/download/episode/25675659/7559816.mp3', type: 'audio/mpeg' },
+    ]
+
+    const expected = html`
+      <audio data-enclosure="" controls src="https://api.spreaker.com/download/episode/25675659/7559816.mp3"></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })
