@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { attr, keepIfMatches } from '../utils/dom.js'
+import { keepIfMatches } from '../utils/dom.js'
 import { placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -37,8 +37,10 @@ const readModelUid = (parsed: URL): string | undefined => {
   }
 }
 
-// The share snippet writes the model's title on the iframe. The oEmbed one writes it empty.
-const sketchfabResolveEmbed = (link: string, element: Element): EmbedResolverResult | undefined => {
+// The carrier's `title` is not read. Of the 55 carriers in the corpus, 10 name the model, 16 carry
+// the snippet's own `A 3D model` label and 29 state nothing, so the attribute names the model for
+// under a fifth of them. The title comes from the oEmbed endpoint above instead.
+const sketchfabResolveEmbed = (link: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(link, placeholderBaseUrl)
   const uid = parsed ? readModelUid(parsed) : undefined
 
@@ -46,14 +48,11 @@ const sketchfabResolveEmbed = (link: string, element: Element): EmbedResolverRes
     return
   }
 
-  const title = attr(element, 'title')
-
   return {
     provider,
     id: uid,
     src: `https://sketchfab.com/models/${uid}/embed`,
     url: `https://sketchfab.com/models/${uid}`,
-    title,
   }
 }
 
