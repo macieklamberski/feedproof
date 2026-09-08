@@ -9,7 +9,7 @@ import * as styles from '../utils/styles.js'
 // the figure), and the card's scripted player chrome survives as junk. Resolving the inner
 // element into a fresh native one drops the chrome wholesale. The video selector matches
 // the chrome container, not the figure, so the author's figcaption beside it survives. The
-// audio card is matched whole since Ghost's own cleanup keeps nothing else from it.
+// audio card is matched whole and its one piece of content, the track title, is carried over.
 // Cleaned feeds carry no `.kg-video-container`, so their video cards are left alone.
 export const ghostMediaResolver: MediaResolver = {
   kind: 'media',
@@ -52,6 +52,19 @@ export const ghostMediaResolver: MediaResolver = {
 
     const source = attr(element.querySelector('audio[src]'), 'src')
 
-    return source ? { tag: 'audio', src: source } : undefined
+    if (!source) {
+      return
+    }
+
+    const result: MediaResolverResult = { tag: 'audio', src: source }
+    // The track name Ghost prints beside the file. It is the one piece of the audio card that is
+    // content rather than chrome, and matching the card whole would otherwise delete it.
+    const title = element.querySelector('.kg-audio-title')?.textContent?.trim()
+
+    if (title) {
+      result.title = title
+    }
+
+    return result
   },
 }

@@ -996,6 +996,74 @@ describeForEachParser('convertWidgets (media results)', (parseHtml) => {
     expect(await transform(value, withResolver(sizedResolver))).toEqualHtml(expected)
   })
 
+  // A native element has nowhere to put a name, so a title travels in a figcaption beside it.
+  it('should hang a stated title off the media in a figcaption', async () => {
+    const titledResolver: MediaResolver = {
+      kind: 'media',
+      selector: '.titled-embed',
+      extract: () => ({
+        tag: 'audio',
+        src: 'https://example.com/track.mp3',
+        title: 'Track title',
+      }),
+    }
+    const value = '<div class="titled-embed"></div>'
+    const expected = html`
+      <figure>
+        <audio
+          src="https://example.com/track.mp3"
+          controls
+        ></audio>
+        <figcaption>Track title</figcaption>
+      </figure>
+    `
+
+    expect(await transform(value, withResolver(titledResolver))).toEqualHtml(expected)
+  })
+
+  it('should mint the bare element when the title is nothing but whitespace', async () => {
+    const blankTitleResolver: MediaResolver = {
+      kind: 'media',
+      selector: '.titled-embed',
+      extract: () => ({ tag: 'audio', src: 'https://example.com/track.mp3', title: '   ' }),
+    }
+    const value = '<div class="titled-embed"></div>'
+    const expected = '<audio src="https://example.com/track.mp3" controls></audio>'
+
+    expect(await transform(value, withResolver(blankTitleResolver))).toEqualHtml(expected)
+  })
+
+  // The markup already gives the player a figure to sit in, which is where a caption of the
+  // author's own hangs, so a second one around it would nest two figures for one player.
+  it('should add no figure around media landing inside one already', async () => {
+    const titledResolver: MediaResolver = {
+      kind: 'media',
+      selector: '.titled-embed',
+      extract: () => ({
+        tag: 'audio',
+        src: 'https://example.com/track.mp3',
+        title: 'Track title',
+      }),
+    }
+    const value = html`
+      <figure>
+        <div class="titled-embed"></div>
+        <figcaption>The author's own caption</figcaption>
+      </figure>
+    `
+    const expected = html`
+      <figure>
+        <audio
+          src="https://example.com/track.mp3"
+          controls
+        ></audio>
+        <figcaption>The author's own caption</figcaption>
+      </figure>
+    `
+
+    expect(await transform(value, withResolver(titledResolver))).toEqualHtml(expected)
+  })
+
   it('should await an async media resolver', async () => {
     const asyncResolver: MediaResolver = {
       kind: 'media',

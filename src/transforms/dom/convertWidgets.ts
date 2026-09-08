@@ -76,6 +76,32 @@ const carrierOrShell = (element: Element): Element => {
   return others.length ? element : parent
 }
 
+// A native <audio> or <video> has nowhere of its own to put a human-readable title, so a media
+// result carrying one is hung in a <figcaption> beside the player. Only where there is a title:
+// with none, or with nothing but whitespace, the bare element is what a reader gets. And only
+// where the player is not landing inside a figure already, which is where Ghost's video card puts
+// it, beside the author's own caption.
+const captionMedia = (
+  document: Document,
+  media: HTMLElement,
+  target: Element,
+  title: string | undefined,
+): Element => {
+  const text = title?.trim()
+
+  if (!text || target.parentElement?.closest('figure')) {
+    return media
+  }
+
+  const figure = document.createElement('figure')
+  const caption = document.createElement('figcaption')
+
+  caption.textContent = text
+  figure.append(media, caption)
+
+  return figure
+}
+
 // The widget pass: one registry of resolvers whose result shape decides the output. An
 // embed result becomes an opaque `data-embed-*` placeholder. A media result becomes a real
 // <video>/<audio> that the later passes then neutralize, proxy and deduplicate against the
@@ -158,8 +184,9 @@ export const convertWidgets: DomTransform = (context) => {
         if (isMediaResult(metadata)) {
           const poster = resolveOrKeepUrl(metadata.poster, context)
           const mediaElement = createMediaElement(document, { ...metadata, src, poster })
+          const target = carrierOrShell(element)
 
-          carrierOrShell(element).replaceWith(mediaElement)
+          target.replaceWith(captionMedia(document, mediaElement, target, metadata.title))
           continue
         }
 
