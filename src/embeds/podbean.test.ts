@@ -154,4 +154,19 @@ describeForEachParser('podbean through the pipeline', (parseHtml) => {
 
     expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
+
+  // The `?i=` reader takes any query parameter of that name, whoever wrote it, so an mp3 carrying
+  // one used to come back as a placeholder pointing at a player instead of as the audio.
+  it('should leave an audio enclosure playable when its query spells a player id', async () => {
+    const enclosures = [
+      { url: 'https://mcdn.podbean.com/mf/web/x/ep.mp3?i=yx4hr-f3d1e1', type: 'audio/mpeg' },
+    ]
+
+    const expected = html`
+      <audio data-enclosure="" controls src="https://mcdn.podbean.com/mf/web/x/ep.mp3?i=yx4hr-f3d1e1"></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
 })
