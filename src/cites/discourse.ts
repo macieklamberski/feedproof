@@ -1,8 +1,9 @@
-import { isHostOf } from 'trousse'
+import { parseUrl } from 'trousse'
 import { parseMastodonStatus } from '../embeds/mastodon.js'
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, isElement, text } from '../utils/dom.js'
+import { isOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 
 // When the linked article has a date, the generic onebox appends it to the source anchor's
 // text ("Whonix – 13 Jan 23") behind this spaced en dash.
@@ -73,7 +74,12 @@ export const discourseCiteResolver: CiteResolver = {
     // Engines differ on the heading level they use for the title.
     const title = text(body, 'h3, h4')
 
-    if (url && (isHostOf(url, socialPostHosts) || parseMastodonStatus(url))) {
+    // `data-onebox-src` is not one of the attributes resolveRelativeUrls rewrites, so it arrives
+    // as the feed wrote it, and a protocol-relative url names no host until it is parsed against
+    // a base. Both checks below read the host, and a social post is never a cite.
+    const cited = url ? parseUrl(url, placeholderBaseUrl) : undefined
+
+    if (cited && (isOnHosts(cited, socialPostHosts) || parseMastodonStatus(cited.href))) {
       return
     }
 
