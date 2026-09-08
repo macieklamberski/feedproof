@@ -16,7 +16,7 @@ const deezerHosts = ['deezer.com']
 // `artist` is deliberately absent. The widget answers 200 for `/widget/dark/artist/27` and
 // renders nothing at all: no heading, no controls. Refusing it leaves the generic placeholder,
 // which is the honest outcome for a frame that has no player behind it.
-const deezerHeights: Record<string, number> = {
+const deezerHeights: Record<string, number | undefined> = {
   track: 150,
   album: 300,
   playlist: 300,
