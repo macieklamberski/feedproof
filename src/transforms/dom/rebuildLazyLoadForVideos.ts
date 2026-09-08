@@ -15,6 +15,10 @@ const resolveEmbedSource = [youtubeResolveEmbed, vimeoResolveEmbed]
 // convertWidgets turns it into a placeholder (YouTube gains a thumbnail; Vimeo
 // stays posterless). Recovers the URL from `data-video-uri`, falling back to `href`, and
 // carries `data-video-title` over as the iframe title.
+//
+// Only Vimeo reads that title back. YouTube's resolver ignores a carrier's `title`, so on a
+// YouTube facade the attribute reaches the iframe and stops there, and no assertion on the
+// placeholder can tell whether the write happened.
 export const rebuildLazyLoadForVideos: DomTransform = () => (document) => {
   for (const anchor of document.querySelectorAll('a.preview-lazyload')) {
     const url = anchor.getAttribute('data-video-uri') ?? anchor.getAttribute('href')
