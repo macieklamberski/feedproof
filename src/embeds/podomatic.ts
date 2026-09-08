@@ -15,7 +15,7 @@ const safeIdRegex = /^\d+$/
 // the height is the same at every width, so this is a fixed height on a fluid width and never a
 // ratio. Publishers agree on the default, 166 of 233 html5 frames state 208.
 const defaultHtml5Height = 208
-const html5Heights: ReadonlyMap<string, number> = toMap({
+const html5Heights = toMap({
   normal: defaultHtml5Height,
   small: 97,
   square: 504,

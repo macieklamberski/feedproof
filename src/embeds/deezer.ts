@@ -16,7 +16,7 @@ const deezerHosts = ['deezer.com']
 // `artist` is deliberately absent. The widget answers 200 for `/widget/dark/artist/27` and
 // renders nothing at all: no heading, no controls. Refusing it leaves the generic placeholder,
 // which is the honest outcome for a frame that has no player behind it.
-const deezerHeights: ReadonlyMap<string, number> = toMap({
+const deezerHeights = toMap({
   track: 150,
   album: 300,
   playlist: 300,
@@ -27,7 +27,7 @@ const deezerHeights: ReadonlyMap<string, number> = toMap({
 // The dead plugin player names a resource with a plural, and a podcast with the word `podcast`
 // where the widget path says `show`. Verified live 2026-09-06: the plugin's `type=podcast&id=32049`
 // is the widget's `/widget/dark/show/32049`, which plays StarTalk Radio.
-const pluginTypes: ReadonlyMap<string, string> = toMap({
+const pluginTypes = toMap({
   album: 'album',
   episode: 'episode',
   episodes: 'episode',

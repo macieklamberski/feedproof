@@ -32,7 +32,7 @@ const sizeRegex = /^size=([a-z0-9_]+)$/
 // track, does not move with the width, and the tracklist below it stretches into whatever height
 // is left. A player naming both is an album player opened on a track, so the album decides. The
 // eight `size=tall` carriers in the corpus declare 295 and 270, a couple of pixels more.
-const presetHeights: ReadonlyMap<string, number> = toMap({
+const presetHeights = toMap({
   venti: 100,
   grande: 100,
   grande2: 355,
