@@ -165,6 +165,39 @@ describeForEachParser('Facebook', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
+  // A CMS that rewrites every url to `//` reaches both carriers, and only the pipeline shows what
+  // that costs. `resolveRelativeUrls` covers `src` and `href` but not `data-href`, and nothing at
+  // all descends into a query, so the widget div and the plugin iframe hand the resolver a url
+  // with no scheme. Both are the same post, so both placeholders have to carry the same id, which
+  // is the only thing `EnrichEmbedFn` is given to address the post with.
+  it('should give the same id to both carriers of a scheme-less post url', async () => {
+    const value = html`
+      <div
+        class="fb-post"
+        data-href="//www.facebook.com/PageName/posts/123"
+      ></div>
+      <iframe
+        src="//www.facebook.com/plugins/post.php?href=%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123&show_text=true"
+      ></iframe>
+    `
+    const expected = html`
+      <div
+        data-embed-provider="facebook"
+        data-embed-id="https://www.facebook.com/PageName/posts/123"
+        data-embed-src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123"
+        data-embed-url="https://www.facebook.com/PageName/posts/123"
+      ></div>
+      <div
+        data-embed-provider="facebook"
+        data-embed-id="https://www.facebook.com/PageName/posts/123"
+        data-embed-src="https://www.facebook.com/plugins/post.php?href=%2F%2Fwww.facebook.com%2FPageName%2Fposts%2F123&show_text=true"
+        data-embed-url="https://www.facebook.com/PageName/posts/123"
+      ></div>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
   // The publisher kept the dialog's fallback and dropped the widget div around it. The byline is
   // a run of bare text nodes and anchors, which the paragraphizer would otherwise split into
   // paragraphs, so the resolver has to claim the blockquote whole.

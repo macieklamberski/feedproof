@@ -1,7 +1,7 @@
 import { type Nullish, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, parsePixelSize, text } from '../utils/dom.js'
-import { isOnHosts } from '../utils/urls.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Facebook's embed SDK ships a post as `<div class="fb-post" data-href="{post url}">` and a
@@ -13,13 +13,10 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 //   https://www.facebook.com/plugins/video.php?href={encoded href}
 // `fb.watch` is the short-link host the mobile app hands out, and it turns up inside both
 // widget divs, so it is treated as a Facebook url even though the plugin lives elsewhere.
+// Posts live on the apex and on `web.`/`m.`/`business.` alike, so every check goes through
+// `parseUrlOnHosts`, which admits the subdomains and supplies the base a url with no scheme
+// needs to name its host at all. Only a url passing it may reach the plugin template.
 const facebookHosts = ['facebook.com', 'fb.watch']
-
-// Posts live on the apex and on `web.`/`m.`/`business.` alike, so both checks are the guard,
-// and only a url passing it may be interpolated into the plugin template.
-const isFacebookUrl = (url: URL): boolean => {
-  return isOnHosts(url, facebookHosts)
-}
 
 // The copy-paste embed dialog ships the post text, the page and the date inside a fallback
 // `<blockquote cite>` that renders when the SDK never loads. Replacing the widget without
@@ -52,15 +49,16 @@ const composePluginEmbed = (
   href: string,
   extra: Partial<EmbedResolverResult>,
 ): EmbedResolverResult => {
-  // The plugin frames a post only for an absolute href. Handed `//www.facebook.com/…` it serves
-  // the same 47 KB shell an unknown id gets, against 173 KB for a real video, so the scheme is
-  // filled in for the mint while `id` and `url` keep the form the publisher wrote.
-  const pluginHref = parseUrl(href, 'https://www.facebook.com')?.href ?? href
+  // Here is the only place that can absolutise the href. `resolveUrlFn` gives a scheme to `src`,
+  // `url`, `poster`, `thumbnail` and `avatar`, but never descends into a query, and the id is not
+  // a url it touches at all. `EnrichEmbedFn` gets `{provider, id}` and nothing else, so a
+  // scheme-less id addresses nothing and has to read alike whichever carrier it came from.
+  const absoluteHref = parseUrl(href, 'https://www.facebook.com')?.href ?? href
 
   return {
     provider: 'facebook',
-    id: href,
-    src: `https://www.facebook.com/plugins/${plugin}.php?href=${encodeURIComponent(pluginHref)}`,
+    id: absoluteHref,
+    src: `https://www.facebook.com/plugins/${plugin}.php?href=${encodeURIComponent(absoluteHref)}`,
     url: href,
     ...extra,
   }
@@ -73,13 +71,7 @@ const extractEmbed = (
 ): EmbedResolverResult | undefined => {
   const href = attr(element, attribute)
 
-  if (!href) {
-    return
-  }
-
-  const parsed = parseUrl(href, 'https://example.com')
-
-  if (!parsed || !isFacebookUrl(parsed)) {
+  if (!href || !parseUrlOnHosts(href, facebookHosts)) {
     return
   }
 
@@ -202,10 +194,10 @@ export const facebookResolveEmbed = (url: string): EmbedResolverResult | undefin
     return
   }
 
-  const href = parsed.searchParams.get('href')
-  const target = href ? parseUrl(href) : undefined
+  const href = parsed.searchParams.get('href') ?? undefined
+  const target = parseUrlOnHosts(href, facebookHosts)
 
-  if (!href || !target || !isFacebookUrl(target)) {
+  if (!href || !target) {
     return
   }
 
@@ -213,7 +205,7 @@ export const facebookResolveEmbed = (url: string): EmbedResolverResult | undefin
   // `show_text`, which decides whether a video carries its caption.
   return {
     provider: 'facebook',
-    id: href,
+    id: target.href,
     src: url,
     url: href,
     ...querySize(parsed),
@@ -232,9 +224,9 @@ export const facebookBlockquoteEmbedResolver = createMarkupEmbedResolver(
   fallbackSelector,
   (element) => {
     const cite = attr(element, 'cite')
-    const parsed = cite ? parseUrl(cite, 'https://example.com') : undefined
+    const parsed = parseUrlOnHosts(cite, facebookHosts)
 
-    if (!cite || !parsed || !isFacebookUrl(parsed)) {
+    if (!cite || !parsed) {
       return
     }
 
