@@ -2,6 +2,7 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { keepIfMatches, parsePixelSize } from '../utils/dom.js'
 import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
+import { audioFileRegex, videoFileRegex } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Ids are a slug pair, e.g. `yx4hr-f3d1e1`, and the v2 player appends `-pb` to its own.
@@ -17,7 +18,10 @@ const defaultPlayerHeight = 150
 export const extractPodbeanId = (link: string): string | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
 
-  if (!parsed) {
+  // Podbean serves the episode audio from the same domain as the players, and a query on a media
+  // url belongs to whoever published it, not to the player: an `?i=` beside an mp3 reads as an id
+  // and the enclosure loses its audio element to a placeholder.
+  if (!parsed || audioFileRegex.test(parsed.pathname) || videoFileRegex.test(parsed.pathname)) {
     return
   }
 
