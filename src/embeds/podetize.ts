@@ -48,9 +48,11 @@ export const podetizeResolveEmbed = (url: string): EmbedResolverResult | undefin
 export const podetizeScriptEmbedResolver = createMarkupEmbedResolver(
   'script[src*="player.podetize.com/loadShowcasePlayer.js"][data]',
   (element) => {
+    // The selector only proves the src contains the host substring, which a foreign host
+    // carrying the same path satisfies too, so the host is checked on the parsed url.
     const id = attr(element, 'data')
 
-    if (!id || !safeIdRegex.test(id)) {
+    if (!parseUrlOnHosts(attr(element, 'src'), podetizeHosts) || !id || !safeIdRegex.test(id)) {
       return
     }
 
