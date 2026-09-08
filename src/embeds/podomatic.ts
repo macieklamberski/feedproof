@@ -14,8 +14,9 @@ const safeIdRegex = /^\d+$/
 // The html5 player's three styles, each measured in Chrome at 1200, 500 and 320 pixels wide:
 // the height is the same at every width, so this is a fixed height on a fluid width and never a
 // ratio. Publishers agree on the default, 166 of 233 html5 frames state 208.
-const html5Heights: Record<string, number> = {
-  normal: 208,
+const defaultHtml5Height = 208
+const html5Heights: Record<string, number | undefined> = {
+  normal: defaultHtml5Height,
   small: 97,
   square: 504,
 }
@@ -52,7 +53,7 @@ const readPlayer = (url: URL): Player | undefined => {
       kind,
       id,
       src: `https://www.podomatic.com/embed/html5/${kind}/${id}${query}`,
-      height: html5Heights[named] as number,
+      height: html5Heights[named] ?? defaultHtml5Height,
     }
   }
 

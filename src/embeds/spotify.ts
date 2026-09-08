@@ -21,7 +21,7 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // which filled a 600-tall frame. So 152 and 352 are frames the player fits, not heights it
 // renders on its own, and they fire only when the carrier states no size, since `decideSize`
 // takes the carrier's first.
-const spotifyHeights: Record<string, number> = {
+const spotifyHeights: Record<string, number | undefined> = {
   track: 152,
   episode: 152,
   show: 152,

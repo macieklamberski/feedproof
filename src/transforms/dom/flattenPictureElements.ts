@@ -4,7 +4,7 @@ import { createImage } from '../../utils/widgets.js'
 
 // Prefer AVIF, then WebP. Other source types are not worth promoting over the
 // <img> fallback, which is already a widely-supported format.
-const formatRank: Record<string, number> = {
+const formatRank: Record<string, number | undefined> = {
   'image/avif': 2,
   'image/webp': 1,
 }

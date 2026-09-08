@@ -9,7 +9,7 @@ const audiomackHost = 'audiomack.com'
 // corpus's own frames state, unanimously: 287 of the 287 song frames say 252 and 52 of the 57
 // album and playlist frames say 400, against a width that is `100%` on 343 of 379. The player
 // itself could not be measured in a browser, because the embed opens behind a consent wall.
-const audiomackHeights: Record<string, number> = {
+const audiomackHeights: Record<string, number | undefined> = {
   album: 400,
   playlist: 400,
   song: 252,
