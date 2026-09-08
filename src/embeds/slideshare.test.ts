@@ -746,6 +746,115 @@ describeForEachParser('slideshare through the pipeline', (parseHtml) => {
     expect(placeholders(await convert(value), parseHtml)).toEqual(expected)
   })
 
+  // The placeholder carries the deck's name and its owner, so a caption block left in the
+  // document renders both a second time as loose prose under the player.
+  it('should take the caption block it read with it', async () => {
+    const value = html`
+      <div>
+        <iframe
+          src="https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAY"
+        ></iframe>
+        <div style="margin-bottom: 5px;">
+          <strong>
+            <a
+              href="https://www.slideshare.net/haraldf/business-quotes-for-2011"
+              title="Business Quotes for 2011"
+              >Business Quotes for 2011</a
+            >
+          </strong>
+          from <strong><a href="https://www.slideshare.net/haraldf">Harald Felgner</a></strong>
+        </div>
+      </div>
+    `
+    const expected = html`
+      <div
+        data-embed-author="Harald Felgner"
+        data-embed-title="Business Quotes for 2011"
+        data-embed-url="https://www.slideshare.net/haraldf/business-quotes-for-2011"
+        data-embed-id="6PCWPGFw9SwsAY"
+        data-embed-provider="slideshare"
+        data-embed-src="https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAY"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
+  })
+
+  // A block naming the deck's page without its owner is a sentence about the deck as often as a
+  // caption, so its words stay where the publisher wrote them.
+  it('should leave a block that names no owner where it is', async () => {
+    const value = html`
+      <div>
+        <iframe
+          src="https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAY"
+        ></iframe>
+        <div>
+          Slides for
+          <a href="https://www.slideshare.net/haraldf/business-quotes-for-2011"
+            >Business Quotes for 2011</a
+          >, worth a look.
+        </div>
+      </div>
+    `
+    const expected = html`
+      <div
+        data-embed-title="Business Quotes for 2011"
+        data-embed-url="https://www.slideshare.net/haraldf/business-quotes-for-2011"
+        data-embed-id="6PCWPGFw9SwsAY"
+        data-embed-provider="slideshare"
+        data-embed-src="https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAY"
+      ></div>
+      <p>
+        Slides for
+        <a href="https://www.slideshare.net/haraldf/business-quotes-for-2011"
+          >Business Quotes for 2011</a
+        >, worth a look.
+      </p>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
+  })
+
+  // The pre-2015 wrapper holds the player, so it cannot be the block that goes: removing it would
+  // take the deck with it. Its caption is the one that still reads twice.
+  it('should keep the wrapper the pre-2015 snippet builds around the player', async () => {
+    const value = html`
+      <div id="__ss_10579166">
+        <strong>
+          <a
+            href="https://www.slideshare.net/null0x00/make-profit-with-uiredressing-attacks"
+            title="Make profit with UI-redressing attacks"
+            >Make profit with UI-redressing attacks</a
+          >
+        </strong>
+        from <strong><a href="https://www.slideshare.net/null0x00">Krzysztof Kotowicz</a></strong>
+        <iframe src="https://www.slideshare.net/slideshow/embed_code/10579166"></iframe>
+      </div>
+    `
+    const expected = html`
+      <p>
+        <strong>
+          <a
+            href="https://www.slideshare.net/null0x00/make-profit-with-uiredressing-attacks"
+            title="Make profit with UI-redressing attacks"
+            >Make profit with UI-redressing attacks</a
+          >
+        </strong>
+        from <strong><a href="https://www.slideshare.net/null0x00">Krzysztof Kotowicz</a></strong>
+      </p>
+      <div
+        data-embed-author="Krzysztof Kotowicz"
+        data-embed-title="Make profit with UI-redressing attacks"
+        data-embed-url="https://www.slideshare.net/null0x00/make-profit-with-uiredressing-attacks"
+        data-embed-id="10579166"
+        data-embed-provider="slideshare"
+        data-embed-src="https://www.slideshare.net/slideshow/embed_code/10579166"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
+  })
+
   // The enclosure probe offers every attachment a feed carries to this resolver, and SlideShare's
   // asset host is in its list, so the id shapes are what keep a file playable.
   it('should leave an audio enclosure on the asset host playable', async () => {
