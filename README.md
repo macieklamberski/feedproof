@@ -74,7 +74,7 @@ Inventory of every transform exported from the package. Most are enabled by defa
 | `rebuildRocketYoutubePreviews` | Rebuild a real `<iframe>` from a WP Rocket YouTube preview facade (`.rll-youtube-player[data-id]`), carrying over `data-query` |
 | `rebuildWistiaEmbeds` | Rebuild a real `<iframe>` from a Wistia JS-API inline embed facade (`wistia_async_{id}` class) |
 | `rebuildLazyLoadForVideos` | Rebuild a real `<iframe>` from a "Lazy Load for Videos" facade (`a.preview-lazyload`), recovering the YouTube/Vimeo id from `data-video-uri` or `href` and carrying over `data-video-title` |
-| `rebuildLazyYtEmbeds` | Rebuild a real `<iframe>` from a jQuery lazyYT facade (`div.lazyYT[data-youtube-id]`) |
+| `rebuildLazyYtEmbeds` | Rebuild a real `<iframe>` from a lazy YouTube facade parking the id in a data attribute (`data-youtube-id`, `data-youtube`, `.youtube-embed`, `.youtube-player`) |
 | `rebuildElementorVideoEmbeds` | Rebuild a real `<iframe>` from an Elementor video widget's deferred `data-settings` (YouTube / Vimeo / Dailymotion / VideoPress) |
 | `rebuildEmbedlyEmbeds` | Unwrap an Embedly media widget to the inner provider iframe, carrying the poster as `data-thumbnail` |
 | `unwrapDrupalOembedIframes` | Point a Drupal media oEmbed proxy frame (`/media/oembed?url=`) at the page url it wraps |

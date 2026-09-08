@@ -17,7 +17,6 @@ import { createIframe, setDimensions } from '../../utils/widgets.js'
 // so leaving it unmatched is not an empty box on the page: `stripEmptyTags` removes it and the
 // video is gone from the item entirely.
 const facadeSources: Array<{ selector: string; attribute: string }> = [
-  { selector: 'div.lazyYT[data-youtube-id]', attribute: 'data-youtube-id' },
   { selector: 'div[data-youtube-id]', attribute: 'data-youtube-id' },
   { selector: 'div[data-youtube]', attribute: 'data-youtube' },
   { selector: 'div.youtube-embed[data-video_id]', attribute: 'data-video_id' },
