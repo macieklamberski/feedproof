@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, flashVars, keepIfMatches, parseRatio } from '../utils/dom.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The embed routes are the site's own. `scribdassets.com` served the Flash player and serves the
@@ -92,7 +92,7 @@ export const scribdFlashResolveEmbed = (
   link: string,
   element?: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
 
   if (!parsed || !flashPlayerPathRegex.test(parsed.pathname)) {
     return

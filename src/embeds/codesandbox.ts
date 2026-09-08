@@ -2,6 +2,7 @@ import { getPathSegments, isHostOf, isPlainObject, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
 import { readPixels } from '../utils/hints.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'codesandbox'
@@ -43,7 +44,7 @@ const readId = (slug: string): string | undefined => {
 }
 
 const parseTarget = (value: string | undefined): CodesandboxTarget | undefined => {
-  const parsed = parseUrl(value ?? '', 'https://example.com')
+  const parsed = parseUrl(value ?? '', placeholderBaseUrl)
 
   if (!parsed || !isHostOf(parsed, codesandboxHosts)) {
     return

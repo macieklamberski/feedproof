@@ -2,7 +2,7 @@ import { isPlainObject, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, text } from '../utils/dom.js'
 import { readPixels } from '../utils/hints.js'
-import { isOnHosts } from '../utils/urls.js'
+import { isOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'twitter'
@@ -67,7 +67,7 @@ const safeStatusIdRegex = /^\d+$/
 type Status = { handle: string; id: string }
 
 const readStatusUrl = (value: string | undefined): Status | undefined => {
-  const parsed = parseUrl(value ?? '', 'https://example.com')
+  const parsed = parseUrl(value ?? '', placeholderBaseUrl)
 
   if (!parsed || !isTweetUrl(parsed)) {
     return
@@ -100,7 +100,7 @@ const findStatus = (element: Element): { status: Status; anchor?: Element } | un
 
   // The frame has to be the platform's own: `id` is an ordinary parameter name, so any other
   // iframe a publisher nested in the quote would otherwise name the tweet.
-  const frame = parseUrl(attr(find(element, 'iframe[src]'), 'src') ?? '', 'https://example.com')
+  const frame = parseUrl(attr(find(element, 'iframe[src]'), 'src') ?? '', placeholderBaseUrl)
   const framed = frame && isTweetUrl(frame) ? frame.searchParams.get('id') : undefined
   // Each id is validated on its own, because the attributes disagree: a block copied between
   // platforms carries several generations of them and only one is guaranteed to be intact.

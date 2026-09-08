@@ -1,5 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const standfmHosts = ['stand.fm']
@@ -25,7 +26,7 @@ const episodePlayerHeight = 190
 // answers 200 and a fabricated one answers 404, and neither sends `x-frame-options` (probed
 // 2026-08-16).
 export const standfmResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(url, 'https://example.com')
+  const parsed = parseUrl(url, placeholderBaseUrl)
   const segments = parsed ? getPathSegments(parsed) : []
   const [kind, id] = segments[0] === 'embed' ? segments.slice(1) : segments
 

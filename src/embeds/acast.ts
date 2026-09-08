@@ -1,6 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'acast'
@@ -24,7 +25,7 @@ const playerHeight = 190
 // the same path without the `$`, and the older `player.acast.com/{show}/episodes/{episode}`.
 // A show alone on the embed host, with or without the `$`, is the playlist player.
 const extractAcastEmbed = (link: string): { show: string; episode?: string } | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
   const allSegments = parsed ? getPathSegments(parsed) : []
   const segments = allSegments[0] === '$' ? allSegments.slice(1) : allSegments
   const isPlayerHost = parsed?.hostname === 'player.acast.com'

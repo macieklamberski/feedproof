@@ -1,6 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'sketchfab'
@@ -38,7 +39,7 @@ const readModelUid = (parsed: URL): string | undefined => {
 
 // The share snippet writes the model's title on the iframe. The oEmbed one writes it empty.
 const sketchfabResolveEmbed = (link: string, element: Element): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
   const uid = parsed ? readModelUid(parsed) : undefined
 
   if (!uid) {

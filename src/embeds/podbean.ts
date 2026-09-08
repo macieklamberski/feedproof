@@ -2,7 +2,7 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { keepIfMatches, parsePixelSize } from '../utils/dom.js'
 import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
-import { isMediaFile } from '../utils/urls.js'
+import { isMediaFile, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'podbean'
@@ -18,7 +18,7 @@ const podbeanHosts = ['podbean.com']
 const defaultPlayerHeight = 150
 
 export const extractPodbeanId = (link: string): string | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
 
   // Podbean serves the episode audio from the same domain as the players, and a query on a media
   // url belongs to whoever published it, not to the player: an `?i=` beside an mp3 reads as an id
@@ -55,7 +55,7 @@ export const podbeanResolveEmbed = (url: string): EmbedResolverResult | undefine
     return
   }
 
-  const stated = parseUrl(url, 'https://example.com')?.searchParams.get('size')
+  const stated = parseUrl(url, placeholderBaseUrl)?.searchParams.get('size')
   const height = parsePixelSize(stated) ?? defaultPlayerHeight
 
   return {

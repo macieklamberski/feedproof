@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { decodeSegment } from '../utils/urls.js'
+import { decodeSegment, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'mixcloud'
@@ -84,7 +84,7 @@ const readShowPath = (segments: Array<string>): string | undefined => {
 export const extractMixcloudShow = (link: string): string | undefined => {
   const parsed = parseUrl(link)
   const feed = parsed?.searchParams.get('feed')
-  const source = feed ? parseUrl(feed, 'https://example.com') : parsed
+  const source = feed ? parseUrl(feed, placeholderBaseUrl) : parsed
 
   return source ? readShowPath(getPathSegments(source)) : undefined
 }
