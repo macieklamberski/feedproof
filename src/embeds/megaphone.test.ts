@@ -60,6 +60,18 @@ describe('extractMegaphoneEmbed', () => {
     expect(extractMegaphoneEmbed(value)).toBeUndefined()
   })
 
+  // The refusal covers every file the reader can already show and not only the playable ones. A
+  // picture or a document carrying one of these parameters pays the price audio does: the
+  // attachment becomes a click-to-load player box and the file itself never renders.
+  it.each([
+    'https://dcs.megaphone.fm/ART9963319425.jpg?e=AUDD4761726018',
+    'https://traffic.megaphone.fm/cover.png?p=NSM7546490835',
+    'https://dcs.megaphone.fm/transcript.pdf?e=AUDD4761726018',
+    'https://dcs.megaphone.fm/shownotes.docx?e=AUDD4761726018',
+  ])('should not read a publisher parameter off a file url (%s)', (url) => {
+    expect(extractMegaphoneEmbed(url)).toBeUndefined()
+  })
+
   // An episode id is letters followed by exactly ten digits, so a bare number is not one.
   it('should not read a bare number as an episode id', () => {
     const value = 'https://playlist.megaphone.fm/?e=510310'
@@ -192,8 +204,8 @@ describeForEachParser('megaphoneEmbedResolver', (parseHtml) => {
 })
 
 // injectEnclosures offers every attachment to every url-keyed resolver, and megaphone serves the
-// episode audio from the same domain as the players, so only an enclosure test reaches the path
-// where claiming a media url would cost a reader a playable element.
+// episode files from the same domain as the players, so only an enclosure test reaches the path
+// where claiming a file url would cost a reader the element they can already see.
 describeForEachParser('megaphone through the pipeline', (parseHtml) => {
   const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
     return transformContent(value, {
@@ -214,5 +226,28 @@ describeForEachParser('megaphone through the pipeline', (parseHtml) => {
     `
 
     expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+
+  it('should leave a megaphone image enclosure an image', async () => {
+    const enclosures = [
+      { url: 'https://dcs.megaphone.fm/ART9963319425.jpg?e=AUDD4761726018', type: 'image/jpeg' },
+    ]
+
+    const expected = html`
+      <img data-enclosure="" src="https://dcs.megaphone.fm/ART9963319425.jpg?e=AUDD4761726018">
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+
+  // Nothing renders a document, so the reader gets the body alone. That is the point: a placeholder
+  // promising a player for a transcript is worse than the attachment going unrendered.
+  it('should not turn a megaphone document enclosure into a player', async () => {
+    const enclosures = [
+      { url: 'https://dcs.megaphone.fm/transcript.pdf?e=AUDD4761726018', type: 'application/pdf' },
+    ]
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml('<p>Body</p>')
   })
 })

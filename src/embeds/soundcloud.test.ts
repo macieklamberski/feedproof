@@ -374,6 +374,24 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
     })
   })
 
+  // A permalink admits letters, digits, dashes and underscores and no dot, so a path ending in a
+  // file extension names a file whatever the extension is. The playable ones are refused above
+  // because a player would replace them; these are refused because there is no track behind them
+  // to play, and a widget minted around one hides the picture and frames a page that is not there.
+  describe('files that are not media but are still files', () => {
+    it.each([
+      'https://soundcloud.com/artist/artwork.jpg',
+      'https://soundcloud.com/artist/cover.png',
+      'https://soundcloud.com/artist/sets/photos.webp',
+      'https://soundcloud.com/press/kit.pdf',
+      'https://soundcloud.com/artist/transcript.docx',
+    ])('should not claim a picture or a document (%s)', async (url) => {
+      const value = `<iframe src="${url}"></iframe>`
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
   // soundcloud.com answers `x-frame-options: SAMEORIGIN`, so a carrier naming a page renders
   // nothing. The widget takes a page url in place of a reference, which is what repairs it.
   describe('a carrier naming a page rather than the player', () => {
@@ -678,5 +696,23 @@ describeForEachParser('soundcloud through the pipeline', (parseHtml) => {
     `
 
     expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+
+  it('should leave an image enclosure an image', async () => {
+    const enclosures = [{ url: 'https://soundcloud.com/artist/artwork.jpg', type: 'image/jpeg' }]
+    const expected = html`
+      <img data-enclosure="" src="https://soundcloud.com/artist/artwork.jpg">
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+
+  // Nothing renders a document, so the reader gets the body alone. That is the point: a placeholder
+  // promising a track for a press kit is worse than the attachment going unrendered.
+  it('should not turn a document enclosure into a player', async () => {
+    const enclosures = [{ url: 'https://soundcloud.com/press/kit.pdf', type: 'application/pdf' }]
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml('<p>Body</p>')
   })
 })

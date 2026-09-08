@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, jsonAttr, text } from '../utils/dom.js'
-import { isMediaFile, parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
+import { isFileName, parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // SoundCloud's embed is an iframe whose `url=` query names the track as an
@@ -75,8 +75,11 @@ const sitePathSegments = new Set([
 ])
 
 const readPageKind = (segments: Array<string>): string | undefined => {
-  // The audio file sits two segments deep, which would otherwise read as a user and a track.
-  if (isMediaFile(segments[segments.length - 1] ?? '')) {
+  // A permalink admits letters, digits, dashes and underscores and no dot at all, so a last
+  // segment naming a file of any kind is a file: it sits two segments deep, which would otherwise
+  // read as a user and a track. A picture or a document is refused alongside the playable ones,
+  // since minting a widget around one both hides the file and names a track that does not exist.
+  if (isFileName(segments[segments.length - 1] ?? '')) {
     return
   }
 
@@ -234,9 +237,11 @@ export const soundcloudResolveEmbed = (
     result.src = composeWidgetUrl(inner)
   }
 
-  // Nothing here names a track and the url is the audio itself, so the enclosure stays a file
-  // the reader can play rather than becoming a frame pointing at one.
-  if (!result.id && !pageKind && isMediaFile(parsed?.pathname ?? '')) {
+  // Nothing here names a track and the url is the file itself, so the enclosure stays what the
+  // reader can already show, a picture and a document as much as audio, rather than becoming a
+  // frame pointing at one. It reads the same file set as the page check above: a url that fails
+  // that one and passes this one would leave a placeholder carrying neither an id nor a page url.
+  if (!result.id && !pageKind && isFileName(parsed?.pathname ?? '')) {
     return
   }
 
