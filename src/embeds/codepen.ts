@@ -149,15 +149,17 @@ const parseTarget = (value: string | undefined): CodepenTarget | undefined => {
   }
 }
 
-// The pen's own page takes what unlocks it and nothing else: it has no panes to choose. The
-// player takes the panes and the theme as well, and the loader spells the panes plural in the
-// url it builds whatever the attribute is called: `?default-tabs=css%2Cresult` is what a
-// rendered block carries.
+// The loader spells the panes plural in the url it builds whatever the attribute is called:
+// `?default-tabs=css%2Cresult` is what a rendered block carries.
 const composePenQuery = (target: CodepenTarget, forPlayer: boolean): string => {
+  if (!forPlayer) {
+    return composeQuery(target.grants)
+  }
+
   return composeQuery({
     ...target.grants,
-    ...(forPlayer && target.defaultTab && { 'default-tabs': target.defaultTab }),
-    ...(forPlayer && target.themeId && { 'theme-id': target.themeId }),
+    ...(target.defaultTab && { 'default-tabs': target.defaultTab }),
+    ...(target.themeId && { 'theme-id': target.themeId }),
   })
 }
 
