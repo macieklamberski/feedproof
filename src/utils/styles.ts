@@ -15,7 +15,7 @@ const commentRegex = /\/\*.*?(?:\*\/|$)/gs
 // A shorthand sets every longhand it covers, so `background-image:url(a);background:red` paints
 // no image at all. Reading both names without this would answer with the url the shorthand threw
 // away. Only the longhands this package reads are listed, since nothing else is asked for.
-const resetByShorthand = new Map<string, Array<string>>([
+const resetByShorthand = new Map([
   ['background', ['background-image']],
   ['margin', ['margin-left', 'margin-right']],
   ['padding', ['padding-top', 'padding-bottom']],
