@@ -30,9 +30,22 @@ const composeWidgetUrl = (target: string, secretToken?: string): string => {
 }
 
 // A page url names its kind by shape: one segment is the user, `sets` marks a playlist, and a
-// second segment is otherwise the track. A few reserved words name a collection of the user's
-// own rather than a track.
-const userCollectionSegments = new Set(['favorites', 'spotlight', 'tracks', 'albums', 'reposts'])
+// second segment is otherwise the track. These second segments are the user's own tabs, and each
+// answers with the profile. `spotlight` and `groups` answer 410, so the platform still holds them
+// and no track can take the slug.
+const userCollectionSegments = new Set([
+  'albums',
+  'comments',
+  'favorites',
+  'followers',
+  'following',
+  'groups',
+  'likes',
+  'popular-tracks',
+  'reposts',
+  'spotlight',
+  'tracks',
+])
 
 // A direct media file, which SoundCloud serves from its podcast host. It is neither a player nor
 // a page, so it must not be read as either: the reader can play the file itself.
@@ -44,12 +57,21 @@ const streamPathRegex = /^\/stream\/(\d+)-/
 
 // SoundCloud keeps these first segments for its own sections, so none of them can be a
 // permalink. Without the check `soundcloud.com/tags/{tag}` reads as a track and `/discover` as a
-// user, and each mints a widget around a page that names no single item.
+// user, and each mints a widget around a page that names no single item. A word that reads like
+// a section is not automatically one: `soundcloud.com/library` is somebody's account.
 const sitePathSegments = new Set([
+  'charts',
   'discover',
+  'feed',
   'imprint',
+  'messages',
+  'notifications',
   'pages',
+  'people',
   'search',
+  'settings',
+  'signin',
+  'stations',
   'stream',
   'tags',
   'upload',
@@ -83,10 +105,10 @@ const readPageKind = (segments: Array<string>): string | undefined => {
 // there it is a `secret_token` parameter of its own.
 const secretTokenRegex = /^s-[\w-]+$/
 
-// None of these is a page. They share the site's domain, so a page read has to say so: `api`
-// and `api-v2` serve the track references, and `player` served the Flash swf, whose own path
-// would otherwise read as a user handle and mint `soundcloud.com/player.swf` as somebody's page.
-const nonPageHostRegex = /^(?:api(?:-v2)?|player)\./
+// Only these hosts serve permalinks. Every other subdomain is machinery whose own path would
+// otherwise read as a handle: `api` and `api-v2` carry the track references, `player` served the
+// Flash swf, and `w` is the widget, whose own `/player/` path names no user.
+const pageHostRegex = /^(?:www\.|m\.)?soundcloud\.com$/
 
 // `player.soundcloud.com` has no DNS record at all (2026-09-06), so a carrier still pointing at
 // `player.swf` frames a host that cannot answer. It takes the same `url=` value the widget does,
@@ -184,8 +206,7 @@ export const soundcloudResolveEmbed = (
   const page =
     reference || streamTrackId ? undefined : parseUrlOnHosts(inner ?? src, soundcloudHosts)
   const shortLink = page && shortLinkHostRegex.test(page.hostname) ? page : undefined
-  const pageSegments =
-    page && !shortLink && !nonPageHostRegex.test(page.hostname) ? getPathSegments(page) : []
+  const pageSegments = page && pageHostRegex.test(page.hostname) ? getPathSegments(page) : []
   const secretToken = pageSegments.find((segment) => secretTokenRegex.test(segment))
   const permalink = pageSegments.filter((segment) => segment !== secretToken)
   const pageKind = readPageKind(permalink)

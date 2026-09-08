@@ -387,6 +387,19 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // The mint rebuilds the permalink on the bare host, which is the spelling the widget takes.
+    it('should read a page the publisher spelled on the www host', async () => {
+      const value = '<iframe src="https://www.soundcloud.com/anjunadeep/edition-586"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fanjunadeep%2Fedition-586',
+        url: 'https://soundcloud.com/anjunadeep/edition-586',
+        height: 166,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should size a profile as a user', async () => {
       const value = '<iframe src="https://soundcloud.com/anjunadeep"></iframe>'
       const expected: EmbedResolverResult = {
@@ -429,6 +442,33 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // A second segment that is one of the user's own tabs names the profile, so the page is the
+    // user and the player is the 450-tall one rather than the 166-tall track bar.
+    it.each([
+      'albums',
+      'comments',
+      'favorites',
+      'followers',
+      'following',
+      'groups',
+      'likes',
+      'popular-tracks',
+      'reposts',
+      'spotlight',
+      'tracks',
+    ])('should read a user tab as the profile it belongs to (/%s)', async (segment) => {
+      const url = `https://soundcloud.com/anjunadeep/${segment}`
+      const value = `<iframe src="${url}"></iframe>`
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}`,
+        url,
+        height: 450,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // These first segments are SoundCloud's own sections, so none of them is a permalink and
     // none names a single item to size or to link to.
     it.each([
@@ -440,6 +480,14 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
       'https://soundcloud.com/pages/terms',
       'https://soundcloud.com/imprint',
       'https://soundcloud.com/you/collection',
+      'https://soundcloud.com/charts/top',
+      'https://soundcloud.com/feed',
+      'https://soundcloud.com/messages',
+      'https://soundcloud.com/notifications',
+      'https://soundcloud.com/people',
+      'https://soundcloud.com/settings',
+      'https://soundcloud.com/signin',
+      'https://soundcloud.com/stations',
     ])('should not read a site section as user content (%s)', async (url) => {
       const value = `<iframe src="${url}"></iframe>`
       const expected: EmbedResolverResult = { provider: 'soundcloud', src: url }
@@ -468,6 +516,38 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
         src: 'https://w.soundcloud.com/player/?url=https%3A//api-v2.soundcloud.com/tracks/293',
         id: 'tracks/293',
         height: 166,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('a widget carrying no reference the resolver can read', () => {
+    // The widget is served from a host of its own, so its `/player/` path is not a handle. The
+    // carrier already frames a working player, and the publisher's query is the only thing that
+    // says what it holds, so it survives untouched and nothing is minted around it.
+    it('should leave the widget alone when no url parameter names anything', async () => {
+      const value = html`
+        <iframe src="https://w.soundcloud.com/player/?visual=true&color=ff5500"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?visual=true&color=ff5500',
+        height: 450,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // A feed that escapes its own ampersands twice names the parameter `amp;url`, which holds the
+    // reference but is not the parameter the widget reads either.
+    it('should leave the widget alone when the feed escaped the url parameter away', async () => {
+      const value = html`
+        <iframe src="https://w.soundcloud.com/player/?amp;url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F293"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        src: 'https://w.soundcloud.com/player/?amp;url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F293',
       }
 
       expect(await extract(value)).toEqual(expected)
