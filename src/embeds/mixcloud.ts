@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { decodeSegment, placeholderBaseUrl } from '../utils/urls.js'
+import { decodeSegment, isFileName, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'mixcloud'
@@ -86,7 +86,15 @@ export const extractMixcloudShow = (link: string): string | undefined => {
   const feed = parsed?.searchParams.get('feed')
   const source = feed ? parseUrl(feed, placeholderBaseUrl) : parsed
 
-  return source ? readShowPath(getPathSegments(source)) : undefined
+  // Mixcloud serves the show audio and the artwork from subdomains of the same domain, which the
+  // host list admits, and a file path carries exactly the two segments a show does. Every kind of
+  // file is refused and not only the playable ones: a claimed enclosure loses its element to a
+  // click-to-load box naming a show that does not exist, the artwork as much as the audio.
+  if (!source || isFileName(source.pathname)) {
+    return
+  }
+
+  return readShowPath(getPathSegments(source))
 }
 
 // The widget's display options, in the order they are written back. Each is a flag the

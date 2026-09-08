@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { extractMixcloudShow, mixcloudEmbedResolver, mixcloudResolveEmbed } from './mixcloud.js'
@@ -128,6 +129,16 @@ describe('extractMixcloudShow', () => {
 
     expect(extractMixcloudShow(value)).toBeUndefined()
   })
+
+  // The audio, the artwork and their subdomains are all on the host list, and each file path
+  // carries the two segments a show does, so nothing but the file name tells them apart.
+  it.each([
+    'https://audio.mixcloud.com/x/y.m4a',
+    'https://stream.mixcloud.com/c/set.mp3',
+    'https://thumbnailer.mixcloud.com/unsafe/cover.jpg',
+  ])('should return undefined for the file %s', (value) => {
+    expect(extractMixcloudShow(value)).toBeUndefined()
+  })
 })
 
 describe('mixcloudResolveEmbed', () => {
@@ -255,5 +266,42 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
     }
 
     expect(await extract(value)).toEqual(expected)
+  })
+})
+
+// The resolver reaches a feed's own enclosures only through the registered default list, so this
+// is the only place the cost of claiming a media url shows up.
+describeForEachParser('mixcloud through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should claim a show page framed as an embed', async () => {
+    const value = '<iframe src="https://www.mixcloud.com/photogmusic/no-filter/"></iframe>'
+    const expected = html`
+      <div
+        data-embed-src="https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F"
+        data-embed-provider="mixcloud"
+        data-embed-id="photogmusic/no-filter"
+        data-embed-url="https://www.mixcloud.com/photogmusic/no-filter/"
+        data-embed-height="160"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
+  })
+
+  it('should leave a mixcloud audio enclosure playable', async () => {
+    const enclosures = [{ url: 'https://audio.mixcloud.com/x/y.m4a', type: 'audio/mp4' }]
+    const expected = html`
+      <audio data-enclosure="" controls src="https://audio.mixcloud.com/x/y.m4a"></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })
