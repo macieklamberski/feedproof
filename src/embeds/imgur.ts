@@ -5,6 +5,8 @@ import { readPixels } from '../utils/hints.js'
 import { placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'imgur'
+
 const imgurHosts = ['imgur.com']
 
 // `i.imgur.com` is the media CDN and `s.imgur.com` the embed script, so neither names a post, and
@@ -91,7 +93,7 @@ const composeEmbed = (post: ImgurPost, title?: string): EmbedResolverResult => {
   const path = post.isAlbum ? `${albumPrefix}${post.id}` : post.id
 
   const result: EmbedResolverResult = {
-    provider: 'imgur',
+    provider,
     // The prefix travels because it is what addresses the post: an album and a single image can
     // hold the same id, and only the prefix separates them.
     id: path,
@@ -197,7 +199,7 @@ export const readImgurHeight = (data: unknown): number | undefined => {
 }
 
 export const imgurRenderHint: EmbedRenderHint = {
-  provider: 'imgur',
+  provider,
   origin: 'https://imgur.com',
   readHeight: readImgurHeight,
 }
