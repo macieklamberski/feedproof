@@ -320,6 +320,14 @@ describeForEachParser('resolveRelativeUrls', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  it('should resolve href and leave xlink:href when an svg image carries both', async () => {
+    const value = '<svg><image href="/img.png" xlink:href="/legacy.png"></image></svg>'
+    const expected =
+      '<svg><image href="https://example.com/img.png" xlink:href="/legacy.png"></image></svg>'
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
   it('should be idempotent', async () => {
     const value = '<a href="/page">link</a>'
     const once = await transform(value)
