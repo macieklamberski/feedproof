@@ -284,8 +284,11 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // The bare link names no deck, so the word it wraps is not this deck's name.
-    it('should not read the caption home link as the deck when the deck anchor is gone', async () => {
+    // The bare link names no deck, so the word it wraps is not this deck's name, and with no
+    // deck page beside it there is nothing the remaining link can be checked against: a handle
+    // and a route word are the same shape. `slideshare.net/langwitches/` reached a placeholder
+    // as `author="SlideShare"` this way.
+    it('should read nothing from a caption whose deck anchor is gone', async () => {
       const value = html`
         <div id="__ss_6435157">
           <object id="__sse6435157">
@@ -304,7 +307,38 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
         provider: 'slideshare',
         id: '6435157',
         src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
-        author: 'Harald Felgner',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The 2008 caption offers the reader the upload page in the sentence that names the deck,
+    // and `/upload` has exactly the shape of a handle.
+    it('should not read the upload route as the deck owner', async () => {
+      const value = html`
+        <div id="__ss_755576">
+          <object id="__sse755576">
+            <embed
+              src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=cloud-computing-hadoop"
+              type="application/x-shockwave-flash"
+            ></embed>
+          </object>
+          <div>
+            View SlideShare
+            <a href="http://www.slideshare.net/darugar/cloud-computing-hadoop-presentation"
+              >presentation</a
+            >
+            or <a href="http://www.slideshare.net/upload?src=embed">Upload your own</a>. (tags:
+            <a href="http://www.slideshare.net/tag/pig">pig</a>)
+          </div>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '755576',
+        src: 'https://www.slideshare.net/slideshow/embed_code/755576',
+        url: 'http://www.slideshare.net/darugar/cloud-computing-hadoop-presentation',
+        title: 'presentation',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -552,12 +586,168 @@ describeForEachParser('slideshareIframeEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // A CMS that put the caption's `<div>` inside the paragraph the iframe ends leaves the
+    // parser to split the paragraph, so an empty half sits between the two.
+    it('should read past an empty block the parser left between the two', async () => {
+      const value = html`
+        <div>
+          <iframe src="https://www.slideshare.net/slideshow/embed_code/23660334"></iframe>
+          <p></p>
+          <div>
+            <strong>
+              <a
+                href="http://www.slideshare.net/commonplace0807/java-23660334"
+                title="Shibuya Java"
+                >Shibuya Java</a
+              >
+            </strong>
+            from <strong><a href="http://www.slideshare.net/commonplace0807">commonplace0807</a></strong>
+          </div>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '23660334',
+        src: 'https://www.slideshare.net/slideshow/embed_code/23660334',
+        url: 'http://www.slideshare.net/commonplace0807/java-23660334',
+        title: 'Shibuya Java',
+        author: 'commonplace0807',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Blogger and WordPress put the iframe at the end of a paragraph and the caption in the
+    // block after it, so the caption is the paragraph's sibling rather than the iframe's.
+    it('should read the caption that follows the paragraph the iframe ends', async () => {
+      const value = html`
+        <div>
+          <p>
+            Es geht nur mit Strategie.
+            <iframe src="https://de.slideshare.net/slideshow/embed_code/key/2nCJtB7MpHuSpf"></iframe>
+          </p>
+          <div>
+            <strong>
+              <a href="https://de.slideshare.net/BLM_Bayern/christian-sieh" title="Christian Sieh"
+                >Christian Sieh</a
+              >
+            </strong>
+            from <strong><a href="https://www.slideshare.net/BLM_Bayern">BLM Bayern</a></strong>
+          </div>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '2nCJtB7MpHuSpf',
+        src: 'https://www.slideshare.net/slideshow/embed_code/key/2nCJtB7MpHuSpf',
+        url: 'https://de.slideshare.net/BLM_Bayern/christian-sieh',
+        title: 'Christian Sieh',
+        author: 'BLM Bayern',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // A post that walks through several decks links the next one in the paragraph after this
+    // player, which is the same position the caption takes. Only the dialog's own shape, the
+    // deck's page beside its owner's, is read from that distance, and prose does not write it.
+    it('should not read a deck the paragraph after the player mentions', async () => {
+      const value = html`
+        <div>
+          <p>
+            <iframe
+              src="https://www.slideshare.net/slideshow/embed_code/key/hmqg4DDLz9bf1k"
+            ></iframe>
+          </p>
+          <ul>
+            <li>
+              Minter's 2016 presentation:
+              <a href="https://www.slideshare.net/mdial/new-tech-trends">New tech trends 2016</a>
+            </li>
+          </ul>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: 'hmqg4DDLz9bf1k',
+        src: 'https://www.slideshare.net/slideshow/embed_code/key/hmqg4DDLz9bf1k',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 })
 
-// The enclosure probe offers every attachment a feed carries to this resolver, and SlideShare's
-// asset host is in its list, so the id shapes are what keep a file playable.
+// A post carrying one deck cannot tell a caption read from the deck's own snippet apart from one
+// read off the post, which is why this case runs whole: two decks, each with its own caption, in
+// the flat sequence Blogger writes.
 describeForEachParser('slideshare through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) =>
+    transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+
+  const placeholders = (value: string, parse: typeof parseHtml) =>
+    Array.from(parse(value).querySelectorAll('[data-embed-src]')).map((element) => ({
+      id: element.getAttribute('data-embed-id'),
+      url: element.getAttribute('data-embed-url'),
+      title: element.getAttribute('data-embed-title'),
+    }))
+
+  it('should caption each deck of a post from its own snippet', async () => {
+    const value = html`
+      <div>
+        <iframe
+          src="//www.slideshare.net/slideshow/embed_code/key/yL3QPf2q0urefj"
+        ></iframe>
+        <br />
+        <div style="margin-bottom: 5px;">
+          <strong>
+            <a
+              href="https://www.slideshare.net/ssuser9cf90a/story-of-lazarus"
+              title="Story of lazarus"
+              >Story of lazarus</a
+            >
+          </strong>
+          from <strong><a href="https://www.slideshare.net/ssuser9cf90a">Sofia Adamou</a></strong>
+        </div>
+        <iframe
+          src="//www.slideshare.net/slideshow/embed_code/key/ckeA90Dumf28Z6"
+        ></iframe>
+        <br />
+        <div style="margin-bottom: 5px;">
+          <strong>
+            <a
+              href="https://www.slideshare.net/ssuser9cf90a/drasthriothtes"
+              title="Drasthriothtes"
+              >Drasthriothtes</a
+            >
+          </strong>
+          from <strong><a href="https://www.slideshare.net/ssuser9cf90a">Sofia Adamou</a></strong>
+        </div>
+      </div>
+    `
+    const expected = [
+      {
+        id: 'yL3QPf2q0urefj',
+        url: 'https://www.slideshare.net/ssuser9cf90a/story-of-lazarus',
+        title: 'Story of lazarus',
+      },
+      {
+        id: 'ckeA90Dumf28Z6',
+        url: 'https://www.slideshare.net/ssuser9cf90a/drasthriothtes',
+        title: 'Drasthriothtes',
+      },
+    ]
+
+    expect(placeholders(await convert(value), parseHtml)).toEqual(expected)
+  })
+
+  // The enclosure probe offers every attachment a feed carries to this resolver, and SlideShare's
+  // asset host is in its list, so the id shapes are what keep a file playable.
   it('should leave an audio enclosure on the asset host playable', async () => {
     const enclosures = [
       { url: 'https://cdn.slidesharecdn.com/embed_code/6435157.mp3', type: 'audio/mpeg' },
@@ -568,12 +758,6 @@ describeForEachParser('slideshare through the pipeline', (parseHtml) => {
       <p>Body</p>
     `
 
-    expect(
-      await transformContent('<p>Body</p>', {
-        parseHtmlFn: parseHtml,
-        baseUrl: 'https://example.com/post',
-        enclosures,
-      }),
-    ).toEqualHtml(expected)
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })

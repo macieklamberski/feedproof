@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, type Nullish, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, keepIfMatches, text } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -87,53 +87,106 @@ const captionLinkSelector = 'a[href*="slideshare.net/"]'
 // the deck's page is `/{account}/{slug}` and its owner `/{account}`. Counting is also what drops
 // the bare `slideshare.net/` link the 2011 caption writes in the same sentence, which reading the
 // first anchor takes for the deck whenever the deck's own anchor has been stripped.
-const countPageSegments = (anchor: Element): number => {
+const readPageSegments = (anchor: Nullish<Element>): Array<string> => {
   const parsed = parseUrlOnHosts(attr(anchor, 'href'), slideshareHosts)
 
-  return parsed ? getPathSegments(parsed).length : 0
+  return parsed ? getPathSegments(parsed) : []
 }
 
-// How far above the carrier the wrapper is looked for, measured over 125 SlideShare carriers
-// sampled from the corpus: 82 of the 90 Flash ones reach the caption within two levels, the
-// `<embed>` sitting inside the `<object>` inside the `__ss_{id}` div, and so do all 20 iframes
-// that carry one. The seven that put a `<span>`, `<p>` or second `<div>` between the object and
-// the wrapper lose their caption here, which is the price of the bound: one more level reaches
-// the post itself, where the first `slideshare.net` link is whichever deck was mentioned
-// earlier, and another deck's caption on this deck's player is worse than none.
-const maxWrapperDepth = 2
+// Reads one deck's caption out of the block that holds it, never across two. `find` takes the
+// first match in document order, and the deck's own anchor leads every dialect of the caption.
+//
+// The owner is taken only where its single segment is the account the deck's page names. A route
+// word has exactly the shape of a handle, so that agreement is the only thing separating them:
+// the 2008 caption offers `slideshare.net/upload` one anchor after the deck it names, and a post
+// linking `slideshare.net/langwitches/` in prose put `author="SlideShare"` on a placeholder. That
+// is discrimination rather than plausibility, and it is why an owner with no deck page beside it
+// is dropped instead of guessed at.
+const readCaption = (caption: Nullish<Element>): Partial<EmbedResolverResult> => {
+  const page = find(caption, captionLinkSelector, (anchor) => readPageSegments(anchor).length > 1)
+  const account = readPageSegments(page)[0]
+  const owner = account
+    ? find(caption, captionLinkSelector, (anchor) => {
+        const segments = readPageSegments(anchor)
 
-// The wrapper the snippet builds around the player, which is where the deck's numeric id and its
-// human-facing links live. Neither player carries them: the swf query names the deck by a
-// document key from a different id space, and the iframe url by an embed key or the numeric id
-// alone, so the wrapper is the only route to a page, a name and an owner.
-const readWrapper = (
-  element: Element,
-): { deck?: string; url?: string; title?: string; author?: string } => {
-  let node: Element | null = element
-  let deck: string | undefined
-  let wrapper: Element | undefined
-  let depth = 0
-
-  // Both the outer div and the object inside it carry the id, and only the outer one holds the
-  // deck's links, so finding an id is not a reason to stop climbing.
-  while (node && depth <= maxWrapperDepth && (!deck || !wrapper)) {
-    deck ??= attr(node, 'id')?.match(wrapperIdRegex)?.[1]
-    wrapper ??= find(node, captionLinkSelector) ? node : undefined
-    node = node.parentElement
-    depth++
-  }
-
-  // Both links are read off the one element, so a caption cannot supply the deck while the
-  // owner comes from something else entirely.
-  const page = find(wrapper, captionLinkSelector, (anchor) => countPageSegments(anchor) > 1)
-  const owner = find(wrapper, captionLinkSelector, (anchor) => countPageSegments(anchor) === 1)
+        return segments.length === 1 && segments[0] === account
+      })
+    : undefined
 
   return {
-    deck,
     url: attr(page, 'href'),
     title: attr(page, 'title') ?? text(page),
     author: text(owner),
   }
+}
+
+// A CMS leaves debris between the player and its caption: a `<br>`, or the empty half of a
+// paragraph the parser split when the caption's `<div>` turned up inside a `<p>`. None of it
+// carries anything, so none of it is the caption, and none of it is a player either, which is
+// what keeps the walk below from reaching the next deck's snippet.
+const skipEmptyBlocks = (node: Nullish<Element>): Nullish<Element> => {
+  let candidate = node
+
+  while (
+    candidate &&
+    (candidate.localName === 'br' || (!candidate.firstElementChild && !text(candidate)))
+  ) {
+    candidate = candidate.nextElementSibling
+  }
+
+  return candidate
+}
+
+// Where one deck's caption sits, which is the whole difficulty here: a post carrying several
+// decks puts each deck's caption exactly where a climb finds an earlier deck's.
+//
+// The pre-2015 snippets wrap the player and the caption in one `__ss_{id}` div named for the
+// deck, so everything inside it is this deck's and nothing outside it is, and the id is the
+// bound. The share dialog dropped that wrapper and ships the caption as the block right after
+// the iframe, where Blogger and WordPress leave it, and that adjacency is the whole of the
+// association.
+const findCaption = (element: Element, wrapper: Nullish<Element>): Nullish<Element> => {
+  if (wrapper) {
+    return wrapper
+  }
+
+  const sibling = element.nextElementSibling
+
+  if (find(sibling, captionLinkSelector)) {
+    return sibling
+  }
+
+  // Anything further is prose as often as it is a caption: a post listing several decks names
+  // the next one in the paragraph after this player, and reading any slideshare link from that
+  // distance labels this deck with another deck's page. So the dialog's own shape is the only
+  // one taken from there, the deck's page beside its owner's, which prose does not write.
+  const parent = element.parentElement
+  const candidate =
+    skipEmptyBlocks(sibling) ??
+    (parent?.lastElementChild === element ? skipEmptyBlocks(parent.nextElementSibling) : undefined)
+
+  return readCaption(candidate).author ? candidate : undefined
+}
+
+// The wrapper the pre-2015 snippet builds around the player, which is where the deck's numeric
+// id lives. Neither player carries it: the swf query names the deck by a document key from a
+// different id space, and the iframe url by an embed key. Both the outer div and the object
+// inside it spell it, `__ss_6435157` and `__sse6435157`, and only the outer one holds the
+// caption, so the climb takes the outermost that matches rather than the first.
+const readWrapper = (element: Element): { deck?: string; wrapper?: Element } => {
+  let deck: string | undefined
+  let wrapper: Element | undefined
+
+  for (let node: Element | null = element; node; node = node.parentElement) {
+    const id = attr(node, 'id')?.match(wrapperIdRegex)?.[1]
+
+    if (id) {
+      deck = id
+      wrapper = node
+    }
+  }
+
+  return { deck, wrapper }
 }
 
 // The embed url names the deck and nothing else, so its page, its name and its owner come from
@@ -143,9 +196,9 @@ const slideshareResolveIframeEmbed = (
   element: Element,
 ): EmbedResolverResult | undefined => {
   const resolved = slideshareResolveEmbed(link)
-  const { url, title, author } = readWrapper(element)
+  const { wrapper } = readWrapper(element)
 
-  return resolved && { ...resolved, url, title, author }
+  return resolved && { ...resolved, ...readCaption(findCaption(element, wrapper)) }
 }
 
 export const slideshareIframeEmbedResolver = createUrlEmbedResolver(
@@ -166,11 +219,13 @@ export const slideshareFlashResolveEmbed = (
     return
   }
 
-  const { deck, ...caption } = readWrapper(element)
+  const { deck, wrapper } = readWrapper(element)
 
   if (!deck) {
     return
   }
+
+  const caption = readCaption(findCaption(element, wrapper))
 
   // The swf query names the deck's owner and slug, which compose the same page the wrapper
   // links to. It is the fallback for a snippet that kept the player and dropped the wrapper's
