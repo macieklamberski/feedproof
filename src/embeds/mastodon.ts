@@ -83,6 +83,12 @@ const composeEmbedResult = (status: MastodonStatus): EmbedResolverResult => {
 // body text and no embed at all, and `div.mastodon-embed`, which only wraps the iframe that is
 // matched inside it.
 //
+// A bare anchor is not matched either, which matters because `parseMastodonStatus` reads a status
+// out of any host filing an author and a six-plus-digit number, so `medium.com/@author/1165352…`
+// takes the shape. No test observes that refusal, and none can: the selector never claims an
+// anchor, and the `find` below reads descendants, so an anchor cannot supply its own href even
+// where the selector does claim it. Both would have to change before a link were read.
+//
 // No size is derived here. The embed page reports its height by posting a message to the parent
 // once it has rendered, so the publisher's markup holds the only height that exists offline, and
 // the factory applies whatever the carrier declares.

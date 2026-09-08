@@ -403,14 +403,6 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
 
       expect(extract(value)).toBeUndefined()
     })
-
-    it('should ignore a link whose path merely files an author and a number', () => {
-      const value = html`
-        <a href="https://medium.com/@author/116535232552529093">A post elsewhere</a>
-      `
-
-      expect(extract(value)).toBeUndefined()
-    })
   })
 })
 

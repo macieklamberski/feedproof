@@ -62,7 +62,7 @@ describe('slideshareResolveEmbed', () => {
   })
 
   it('should ignore a key outside the url-safe alphabet', () => {
-    const value = 'https://www.slideshare.net/slideshow/embed_code/key/../evil'
+    const value = 'https://www.slideshare.net/slideshow/embed_code/key/6PCW.PGFw9SwsAY'
 
     expect(slideshareResolveEmbed(value)).toBeUndefined()
   })
@@ -490,7 +490,7 @@ describeForEachParser('slideshareIframeEmbedResolver', (parseHtml) => {
 
   it('should ignore a key outside the url-safe alphabet', async () => {
     const value = html`
-      <iframe src="https://www.slideshare.net/slideshow/embed_code/key/../evil"></iframe>
+      <iframe src="https://www.slideshare.net/slideshow/embed_code/key/6PCW.PGFw9SwsAY"></iframe>
     `
 
     expect(await extract(value)).toBeUndefined()
