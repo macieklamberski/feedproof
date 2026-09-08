@@ -61,7 +61,10 @@ const sitePathSegments = new Set([
 ])
 
 // The gallery's own listings sit where an album id would, so they are refused the same way.
-const galleryListingSegments = new Set(['hot', 'new', 'top'])
+// All four served the ~138 kB listing shell on 2026-09-08, against 9.9 kB for a real post and
+// 6.7 kB for an id nobody has taken. `trending` is the one that also passes the id shape, so
+// without it `imgur.com/gallery/trending` minted a post called `a/trending`.
+const galleryListingSegments = new Set(['hot', 'new', 'top', 'trending'])
 
 // Post ids are short alphanumerics. The album form is the same id behind an `a/` prefix, which
 // is how the platform's own script tells the two apart.
