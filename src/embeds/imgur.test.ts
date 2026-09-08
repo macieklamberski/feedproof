@@ -300,9 +300,12 @@ describe('imgurResolveEmbed', () => {
       expect(imgurResolveEmbed(value)).toBeUndefined()
     })
 
-    it('should ignore a gallery listing, which sits where an album id would', () => {
-      const value = 'https://imgur.com/gallery/hot'
-
+    it.each([
+      'https://imgur.com/gallery/hot',
+      'https://imgur.com/gallery/new',
+      'https://imgur.com/gallery/top',
+      'https://imgur.com/gallery/trending',
+    ])('should ignore %s, a gallery listing sitting where an album id would', (value) => {
       expect(imgurResolveEmbed(value)).toBeUndefined()
     })
 
