@@ -1,5 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import { decodeSegment } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'mixcloud'
@@ -9,16 +10,6 @@ const provider = 'mixcloud'
 // hold is anything that would end the path early or climb out of it, because the show is also
 // written into a url without escaping.
 const unsafeSegmentRegex = /[/?#\\]|\s|^\.+$/
-
-// Segments arrive percent-encoded, and both the check and the value need them decoded: the
-// check because a separator arrives disguised as often as plain (`..%2Fetc` is one), and the
-// value because the widget url encodes it again on the way out. A malformed escape decodes to
-// nothing usable, so it is refused.
-const decodeSegment = (segment: string): string | undefined => {
-  try {
-    return decodeURIComponent(segment)
-  } catch {}
-}
 
 const mixcloudHosts = ['mixcloud.com']
 
@@ -62,6 +53,8 @@ const siteSegments = new Set([
 // Exactly a user and a slug: a deeper path is a section of the site, not a show, and the value
 // goes back into a url, so anything else is left to the generic placeholder.
 const readShowPath = (segments: Array<string>): string | undefined => {
+  // Decoded before the check, because a separator arrives disguised as often as it arrives
+  // plain: `..%2Fetc` is one.
   const [user, slug] = segments.map(decodeSegment)
 
   if (segments.length !== 2 || !user || !slug) {

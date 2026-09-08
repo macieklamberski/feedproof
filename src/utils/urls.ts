@@ -36,6 +36,18 @@ export const isMediaFile = (value: string): boolean => {
   return audioFileRegex.test(value) || videoFileRegex.test(value)
 }
 
+// Whether a value names a file of any kind the reader can already show. The enclosure probe offers
+// every attachment a feed carries to every resolver, so a platform whose id shape admits a dot
+// would otherwise mint a player for an `.mp3` and take the place of a playable element.
+export const isFileName = (value: string): boolean => {
+  return (
+    documentFileRegex.test(value) ||
+    audioFileRegex.test(value) ||
+    videoFileRegex.test(value) ||
+    imageFileRegex.test(value)
+  )
+}
+
 // The RFC 4122 form, which four platforms name an episode, a show or an upload by. It is not a
 // bet on a platform's current id length the way a measured band is, because the shape is fixed
 // by the spec rather than by whoever mints them, and Simplecast leans on the exactness: it is
@@ -56,6 +68,12 @@ export const isUrlShaped = (value: string): boolean => {
   return urlShapeRegex.test(value)
 }
 
+// A url sits on one of the hosts when it is that host exactly or a subdomain of it. The pair is
+// the whole question every host-keyed resolver asks, and half of it silently claims too little.
+export const isOnHosts = (url: string | URL, hosts: string | ReadonlyArray<string>): boolean => {
+  return isHostOf(url, hosts) || isSubdomainOf(url, hosts)
+}
+
 // Parses the url and keeps it only when it sits on one of the hosts, exactly or on a subdomain,
 // which is the check every resolver keyed on a platform makes before reading an id out of it.
 // The base is what lets a protocol-relative url still name its host. A relative path lands on
@@ -67,7 +85,7 @@ export const parseUrlOnHosts = (
 ): URL | undefined => {
   const parsed = url ? parseUrl(url, 'https://example.com') : undefined
 
-  if (parsed && (isHostOf(parsed, hosts) || isSubdomainOf(parsed, hosts))) {
+  if (parsed && isOnHosts(parsed, hosts)) {
     return parsed
   }
 }
