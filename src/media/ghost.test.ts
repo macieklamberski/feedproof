@@ -53,6 +53,28 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should read dimensions stated with a trailing unit', async () => {
+      const value = html`
+        <figure class="kg-card kg-video-card">
+          <div class="kg-video-container">
+            <video
+              src="https://example.com/clip.mp4"
+              width="640px"
+              height="360px"
+            ></video>
+          </div>
+        </figure>
+      `
+      const expected: MediaResolverResult = {
+        tag: 'video',
+        src: 'https://example.com/clip.mp4',
+        width: 640,
+        height: 360,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should prefer the custom thumbnail over the generated one', async () => {
       const value = html`
         <figure
