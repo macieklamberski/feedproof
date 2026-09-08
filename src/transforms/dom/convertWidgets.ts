@@ -76,11 +76,9 @@ const carrierOrShell = (element: Element): Element => {
   return others.length ? element : parent
 }
 
-// A native <audio> or <video> has nowhere of its own to put a human-readable title, so a media
-// result carrying one is hung in a <figcaption> beside the player. Only where there is a title:
-// with none, or with nothing but whitespace, the bare element is what a reader gets. And only
-// where the player is not landing inside a figure already, which is where Ghost's video card puts
-// it, beside the author's own caption.
+// A native <audio> or <video> has nowhere of its own to put a human-readable title, so one is hung
+// in a <figcaption> beside the player. Ghost's video card already lands inside a figure carrying
+// the author's own caption, which is the case the ancestor check leaves alone.
 const captionMedia = (
   document: Document,
   media: HTMLElement,

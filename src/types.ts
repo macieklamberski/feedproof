@@ -169,11 +169,6 @@ export type CiteResolver = {
 export type MediaResolverResult = {
   tag: 'video' | 'audio'
   src: string
-  // The media's own name, where the carrier states one beside the file: a Ghost audio card's
-  // title div, a Podlove config's `title`. Named as on EmbedResolverResult, where it means the
-  // same thing, rather than `caption`, which on CiteResolverResult is the embedder's note about
-  // a link and not the content's own name. convertWidgets hangs it off the minted element in a
-  // <figcaption>, since a native <audio> or <video> has nowhere of its own to put text.
   title?: string
   poster?: string
   width?: number
