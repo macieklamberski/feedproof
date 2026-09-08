@@ -13,6 +13,7 @@ import type {
 import {
   type GeneratedWrapperType,
   getElementDimensions,
+  getPairRatio,
   getStylePairRatio,
   getWrapperRatio,
 } from './dom.js'
@@ -154,6 +155,16 @@ export const getEmbedSize = (element: Element, wrapperDepth?: number): EmbedSize
   }
 
   const dimensions = getElementDimensions(element)
+
+  // A pair too small to be a box is the shape it spells, whichever way the carrier wrote it. AMP
+  // states an element's aspect ratio in the same two attributes a plain iframe states pixels in,
+  // so `<amp-jwplayer width="16" height="9">` asks a reader to reserve sixteen pixels unless the
+  // pair is read as the 16/9 it means.
+  const pairRatio = getPairRatio(dimensions.width, dimensions.height)
+
+  if (pairRatio) {
+    return { ratio: pairRatio }
+  }
 
   if (hasDimensions(dimensions)) {
     return {

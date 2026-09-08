@@ -1029,6 +1029,51 @@ describeForEachParser('preferResolverSize', (parseHtml) => {
       })
     })
 
+    // AMP states an element's aspect ratio in the same two attributes a plain iframe states pixels
+    // in, so a carrier declaring `16` by `9` is declaring a shape. Read as pixels it would ask a
+    // reader to reserve sixteen of them.
+    describe('a pair too small to be a box', () => {
+      it('should read a small carrier pair as the shape it spells', () => {
+        const value = html`
+          <div
+            class="player"
+            width="16"
+            height="9"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...base, ratio: '16/9' }
+
+        expect(build(withHeight, value)).toEqual(expected)
+      })
+
+      it('should keep a pair above the ceiling as the box it is', () => {
+        const value = html`
+          <div
+            class="player"
+            width="100"
+            height="60"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...base, width: 100, height: 60 }
+
+        expect(build(withRatio, value)).toEqual(expected)
+      })
+
+      // A fixed-height bar states a real width beside a small height, and that is a box.
+      it('should keep a small height beside a real width', () => {
+        const value = html`
+          <div
+            class="player"
+            width="350"
+            height="30"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...base, width: 350, height: 30 }
+
+        expect(build(withRatio, value)).toEqual(expected)
+      })
+    })
+
     // A size the carrier states in a form nothing can read is the same as stating none, so the
     // resolver's own pair survives intact.
     describe('a size the carrier states unreadably', () => {
