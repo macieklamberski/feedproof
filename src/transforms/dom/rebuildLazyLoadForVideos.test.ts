@@ -124,6 +124,37 @@ describeForEachParser('rebuildLazyLoadForVideos', (parseHtml) => {
     expect(result).toEqualHtml(expected)
   })
 
+  // Vimeo is the only platform whose resolver reads the carrier's `title` back, so this is the
+  // one place the whole path from `data-video-title` to `data-embed-title` is observable.
+  it('should carry data-video-title into the vimeo placeholder title end to end', async () => {
+    const value = html`
+      <div class="container-lazyload preview-lazyload container-vimeo">
+        <a
+          href="https://vimeo.com/76979871"
+          class="lazy-load-vimeo preview-lazyload preview-vimeo"
+          data-video-title="Glass Beach"
+        >
+          https://vimeo.com/76979871
+        </a>
+      </div>
+    `
+    const expected = html`
+      <div
+        data-embed-src="https://player.vimeo.com/video/76979871"
+        data-embed-provider="vimeo"
+        data-embed-id="76979871"
+        data-embed-url="https://vimeo.com/76979871"
+        data-embed-title="Glass Beach"
+      ></div>
+    `
+    const result = await transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com',
+    })
+
+    expect(result).toEqualHtml(expected)
+  })
+
   it('should be idempotent', async () => {
     const value = html`
       <div class="container-lazyload preview-lazyload container-youtube">
