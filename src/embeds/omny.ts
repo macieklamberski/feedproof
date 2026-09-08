@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { pickQueryParams, placeholderBaseUrl } from '../utils/urls.js'
+import { composeQuery, pickQueryParams, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'omny'
@@ -61,15 +61,15 @@ export const omnyResolveEmbed = (
     return
   }
 
-  const params = new URLSearchParams(
+  const query = composeQuery(
     pickQueryParams(parseUrl(url, placeholderBaseUrl)?.search ?? '', omnyEmbedParams),
-  ).toString()
+  )
   const title = attr(element, 'title')
 
   return {
     provider,
     id: clip,
-    src: `https://omny.fm/shows/${clip}/embed${params ? `?${params}` : ''}`,
+    src: `https://omny.fm/shows/${clip}/embed${query}`,
     height: playerHeight,
     ...(title && { title }),
   }

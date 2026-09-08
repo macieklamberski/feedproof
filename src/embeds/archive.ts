@@ -3,6 +3,7 @@ import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { flashVars, keepIfMatches } from '../utils/dom.js'
 import {
   audioFileRegex,
+  composeQuery,
   pickQueryParams,
   placeholderBaseUrl,
   splitStrayParams,
@@ -107,12 +108,12 @@ export const archiveResolveEmbed = (
   // 404s and rejoining it is what makes those embeds work at all.
   const search = parseUrl(url, placeholderBaseUrl)?.search ?? ''
   const { strayParams } = readSegmentParts(url)
-  const params = new URLSearchParams({
+  const query = composeQuery({
     ...pickQueryParams(search, archiveEmbedParams),
     ...pickQueryParams(strayParams, archiveEmbedParams),
-  }).toString()
+  })
 
-  const result = composeEmbedResult(identifier, params ? `?${params}` : '')
+  const result = composeEmbedResult(identifier, query)
 
   return element && declaresAudioPlayer(element) ? { ...result, height: audioPlayerHeight } : result
 }

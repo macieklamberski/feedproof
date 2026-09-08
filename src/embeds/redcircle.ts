@@ -1,7 +1,7 @@
 import { getPathSegments } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { parseUrlOnHosts, pickQueryParams, uuidRegex } from '../utils/urls.js'
+import { composeQuery, parseUrlOnHosts, pickQueryParams, uuidRegex } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The loader is served from `api.podcache.net` and the player it builds from `redcircle.com`, on
@@ -68,10 +68,7 @@ export const redcircleResolveEmbed = (url: string): EmbedResolverResult | undefi
     return
   }
 
-  const params = new URLSearchParams(
-    pickQueryParams(parsed.search, redcircleEmbedParams),
-  ).toString()
-  const query = params ? `?${params}` : ''
+  const query = composeQuery(pickQueryParams(parsed.search, redcircleEmbedParams))
 
   if (subject.kind === 'show') {
     return {

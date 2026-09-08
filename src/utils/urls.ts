@@ -136,6 +136,15 @@ export const pickQueryParams = (
   return picked
 }
 
+// The other half of `pickQueryParams`: the pairs it returns, back into a query ready to append.
+// A resolver that has nothing to carry over gets an empty string, so its src stays bare rather
+// than ending on a lone `?`.
+export const composeQuery = (params?: Record<string, string>): string => {
+  const query = new URLSearchParams(params).toString()
+
+  return query ? `?${query}` : ''
+}
+
 // The query string an embed resolver carries over when it rebuilds a src from the video id:
 // only the parameters that change what plays. Returns it ready to append, so a src with
 // nothing worth keeping stays bare.
