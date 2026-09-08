@@ -92,6 +92,7 @@ export { convertLazyImageContainers } from './transforms/dom/convertLazyImageCon
 export { convertNoteEmbeds } from './transforms/dom/convertNoteEmbeds.js'
 export { convertSmartframeEmbeds } from './transforms/dom/convertSmartframeEmbeds.js'
 export { convertWidgets } from './transforms/dom/convertWidgets.js'
+export { decodeDoubleEncodedEntities } from './transforms/dom/decodeDoubleEncodedEntities.js'
 export { decodeDoubleEncodedTags } from './transforms/dom/decodeDoubleEncodedTags.js'
 export { demoteHeadings } from './transforms/dom/demoteHeadings.js'
 export { enrichCitePlaceholders } from './transforms/dom/enrichCitePlaceholders.js'
