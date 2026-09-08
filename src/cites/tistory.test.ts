@@ -46,6 +46,7 @@ describeForEachParser('tistoryCiteResolver', (parseHtml) => {
       const value = html`
         <figure data-og-source-url="https://example.com/post">
           <a href="https://example.com/post">
+            <div class="og-image" style="background-image: url('https://cdn.example.com/thumb.jpg');">&nbsp;</div>
             <div class="og-text">
               <p class="og-title">Page title</p>
               <p class="og-desc">Preview text</p>
@@ -60,6 +61,7 @@ describeForEachParser('tistoryCiteResolver', (parseHtml) => {
         title: 'Page title',
         description: 'Preview text',
         publisher: 'example.com',
+        thumbnail: 'https://cdn.example.com/thumb.jpg',
       }
 
       expect(await extract(value)).toEqual(expected)
