@@ -20,6 +20,8 @@ export type Enclosure = {
   thumbnails?: Array<EnclosureThumbnail>
   playerUrl?: string
   playerEmbed?: string
+  isDefault?: boolean
+  groupIndex?: number
 }
 
 export type ResolveUrlFn = DiscoverResolveUrlFn

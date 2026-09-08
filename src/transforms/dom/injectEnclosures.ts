@@ -1,21 +1,19 @@
-import { parseUrl } from 'trousse'
 import type {
-  CleanUrlFn,
   DomTransform,
   EmbedResolverResult,
   Enclosure,
   TransformContext,
   WidgetResolver,
 } from '../../types.js'
-import { getElementDimensions } from '../../utils/dom.js'
-import { getImageFingerprint, getSizeKeywordRank, getUrlSizeHint } from '../../utils/images.js'
 import {
-  absoluteUrlRegex,
-  cleanUrl,
-  isOnHosts,
-  resolveOrDropUrl,
-  resolveOrKeepUrl,
-} from '../../utils/urls.js'
+  isAudioEnclosure,
+  isAvatarEnclosure,
+  isImageEnclosure,
+  isVideoEnclosure,
+  prepareEnclosures,
+} from '../../utils/enclosures.js'
+import { getImageFingerprint } from '../../utils/images.js'
+import { cleanUrl, resolveOrDropUrl, resolveOrKeepUrl } from '../../utils/urls.js'
 import {
   createEmbedPlaceholder,
   createImage,
@@ -30,22 +28,6 @@ import {
 // opt-in heuristic) can tell it from the item's own inline content. Exported because
 // stripDuplicateEnclosures and assignVideoPosters both read it.
 export const enclosureMarker = 'data-enclosure'
-
-const isAudioEnclosure = (enclosure: Enclosure): boolean => {
-  return enclosure.medium === 'audio' || !!enclosure.type?.startsWith('audio/')
-}
-
-const isVideoEnclosure = (enclosure: Enclosure): boolean => {
-  return enclosure.medium === 'video' || !!enclosure.type?.startsWith('video/')
-}
-
-const isImageEnclosure = (enclosure: Enclosure): boolean => {
-  return enclosure.medium === 'image' || !!enclosure.type?.startsWith('image/')
-}
-
-const isAvatarEnclosure = (url: string, avatarHosts: ReadonlyArray<string>): boolean => {
-  return isOnHosts(url, avatarHosts)
-}
 
 // Run resolvers against a synthesized iframe carrying the enclosure URL so that
 // iframe-shaped resolvers (YouTube etc.) can claim platform-specific enclosures.
@@ -139,209 +121,10 @@ const mergeEnclosureMetadata = (
   }
 }
 
-// Whether `incoming` is a better variant of the same image to keep than `kept`. A URL
-// with no size encoded in it (`hint === 0`) is treated as the full-res original and
-// preferred over any sized copy (a bare `photo.jpg` outranks `photo-800x450.jpg`).
-// Between two sized variants the larger wins. When neither encodes a size, two ranked
-// size keywords decide (`large.jpg` beside `small.jpg`), the way pickLargerImageUrl
-// reads the same pair. On a true tie the no-query URL wins, else the first stays.
-const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
-  const incomingUrl = incoming.url ?? ''
-  const keptUrl = kept.url ?? ''
-  const incomingHint = getUrlSizeHint(incomingUrl)
-  const keptHint = getUrlSizeHint(keptUrl)
-
-  const incomingIsOriginal = incomingHint === 0
-  const keptIsOriginal = keptHint === 0
-  if (incomingIsOriginal !== keptIsOriginal) {
-    return incomingIsOriginal
-  }
-
-  if (incomingHint !== keptHint) {
-    return incomingHint > keptHint
-  }
-
-  // A rank of 0 is a keyword the table cannot order (`preview` is a thumbnail on one host
-  // and full-size on another) or none at all, so it decides nothing and falls through.
-  if (incomingIsOriginal && keptIsOriginal) {
-    const incomingRank = getSizeKeywordRank(incomingUrl)
-    const keptRank = getSizeKeywordRank(keptUrl)
-
-    if (incomingRank !== 0 && keptRank !== 0 && incomingRank !== keptRank) {
-      return incomingRank > keptRank
-    }
-  }
-
-  return keptUrl.includes('?') && !incomingUrl.includes('?')
-}
-
-// Collapse image enclosures that are the same picture at a different size or render:
-// a scaled copy, a CDN-proxied variant, or just a `?w=` query (a feed often lists one
-// image as a native enclosure plus a media:content). Without this they each inject as a
-// stacked copy. Keyed by getImageFingerprint (the same size-agnostic key the duplicate
-// stripper uses), keeping the largest variant, then the no-query original, then the
-// first. Only images collapse: audio/video query strings often carry identity (podcast
-// proxies), so those pass through untouched.
-const dedupeImageEnclosures = (
-  enclosures: ReadonlyArray<Enclosure>,
-  cleanUrlFn?: CleanUrlFn,
-): Array<Enclosure> => {
-  const indexByKey = new Map<string, number>()
-  const result: Array<Enclosure> = []
-
-  for (const enclosure of enclosures) {
-    if (typeof enclosure.url !== 'string' || !isImageEnclosure(enclosure)) {
-      result.push(enclosure)
-      continue
-    }
-
-    const key = getImageFingerprint(enclosure.url, cleanUrlFn)
-    const existingIndex = indexByKey.get(key)
-
-    if (existingIndex === undefined) {
-      indexByKey.set(key, result.length)
-      result.push(enclosure)
-      continue
-    }
-
-    if (isPreferredVariant(enclosure, result[existingIndex])) {
-      result[existingIndex] = enclosure
-    }
-  }
-
-  return result
-}
-
-// Query param values that are themselves absolute URLs, e.g. the file URL inside
-// a player page like player.example.com/?media_url=<file>.
-const extractNestedUrls = (url: string): Array<string> => {
-  const parsed = parseUrl(url)
-
-  if (!parsed) {
-    return []
-  }
-
-  const nested: Array<string> = []
-
-  for (const value of parsed.searchParams.values()) {
-    if (absoluteUrlRegex.test(value)) {
-      nested.push(value)
-    }
-  }
-
-  return nested
-}
-
-// A player sometimes arrives as raw embed HTML (e.g. rawvoice:embed) instead of a
-// URL. Parse it through the DOM so entity decoding and attribute quoting are
-// handled properly, and turn the entry into a plain player page entry (url plus
-// display size) that mergePlayerEnclosures can pair with its media file.
-const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): Enclosure => {
-  if (!enclosure.playerEmbed) {
-    return enclosure
-  }
-
-  const { playerEmbed, ...rest } = enclosure
-  const container = document.createElement('div')
-  container.innerHTML = playerEmbed
-
-  // In real feeds (corpus sample, July 2026) rawvoice:embed is an iframe player in 36 of
-  // 40 feeds. The rest wrap a native <audio> for the same file as the enclosure, or plain
-  // text. Only frame-able elements count as players, so those others fall through and the
-  // enclosure itself still renders.
-  const frame = container.querySelector('iframe[src], embed[src]')
-
-  if (!frame) {
-    return rest
-  }
-
-  const dimensions = getElementDimensions(frame)
-
-  return {
-    ...rest,
-    url: rest.url ?? frame.getAttribute('src') ?? undefined,
-    width: rest.width ?? dimensions.width,
-    height: rest.height ?? dimensions.height,
-  }
-}
-
-// An enclosure in the shape the rest of the pass works with: its player embed folded in, both
-// urls absolute. Absolute here rather than at each use, because the fingerprint that collapses
-// duplicate images and the gravatar check both read the url as it stands, and one naming no
-// host keys as itself and matches nothing.
-const readEnclosure = (
-  enclosure: Enclosure,
-  document: Document,
-  context: TransformContext,
-): Enclosure => {
-  const extracted = extractEnclosureFromEmbed(enclosure, document)
-
-  return {
-    ...extracted,
-    url: resolveOrKeepUrl(extracted.url, context),
-    playerUrl: resolveOrKeepUrl(extracted.playerUrl, context),
-  }
-}
-
 // The attribute the injected element carries its source in: `src` on native audio, video,
 // and img elements, `data-embed-src` on embed placeholders.
 const getInjectedSource = (element: Element): string | null => {
   return element.getAttribute('src') ?? element.getAttribute('data-embed-src')
-}
-
-// A feed sometimes lists the same media twice: once as the raw file and once as a
-// player page carrying the file URL in a query param (podcast hosts pair a plain
-// <enclosure> with a player entry like …/?media_url=<file>; the param name varies
-// by host, so any URL-shaped param value counts). Collapse such pairs into the
-// file entry with the player page as its playerUrl, so the item renders one
-// embedded player instead of a player iframe next to a bare audio element.
-const mergePlayerEnclosures = (
-  enclosures: ReadonlyArray<Enclosure>,
-  cleanUrlFn?: CleanUrlFn,
-): Array<Enclosure> => {
-  const result = [...enclosures]
-  const removed = new Set<number>()
-
-  const findFileIndex = (nestedUrl: string, playerIndex: number): number => {
-    return result.findIndex((candidate, index) => {
-      if (index === playerIndex || removed.has(index)) {
-        return false
-      }
-
-      return (
-        typeof candidate.url === 'string' && cleanUrl(candidate.url, { cleanUrlFn }) === nestedUrl
-      )
-    })
-  }
-
-  for (let playerIndex = 0; playerIndex < result.length; playerIndex++) {
-    const player = result[playerIndex]
-
-    if (removed.has(playerIndex) || typeof player.url !== 'string') {
-      continue
-    }
-
-    for (const nested of extractNestedUrls(player.url)) {
-      const fileIndex = findFileIndex(cleanUrl(nested, { cleanUrlFn }), playerIndex)
-
-      if (fileIndex === -1) {
-        continue
-      }
-
-      // Keep the file entry's own fields and fill only what it lacks from the
-      // player entry (a player page often carries the display size the file
-      // doesn't). The earlier position of the two is kept so injection order
-      // stays stable.
-      const file = result[fileIndex]
-      const merged: Enclosure = { ...player, ...file, playerUrl: file.playerUrl ?? player.url }
-
-      result[Math.min(playerIndex, fileIndex)] = merged
-      removed.add(Math.max(playerIndex, fileIndex))
-      break
-    }
-  }
-
-  return result.filter((_, index) => !removed.has(index))
 }
 
 export const injectEnclosures: DomTransform = (context) => {
@@ -365,15 +148,7 @@ export const injectEnclosures: DomTransform = (context) => {
     // markup). Audio and video enclosures have no inline equivalent, so they always inject.
     const hasContentImage = !!document.querySelector('img[src], picture, [data-embed-thumbnail]')
 
-    const resolvedEnclosures = enclosures.map((enclosure) => {
-      return readEnclosure(enclosure, document, context)
-    })
-    const mergedEnclosures = mergePlayerEnclosures(
-      dedupeImageEnclosures(resolvedEnclosures, context.cleanUrlFn),
-      context.cleanUrlFn,
-    )
-
-    for (const enclosure of mergedEnclosures) {
+    for (const enclosure of prepareEnclosures(enclosures, document, context)) {
       // The embeddable URL: a media:player console (when present) is the canonical thing to
       // embed, otherwise the content URL. Enclosures come from untrusted feed data that
       // doesn't honor the required-`url` type, so guard before any URL handling.
@@ -440,26 +215,41 @@ export const injectEnclosures: DomTransform = (context) => {
       }
 
       const imageElement = injectImageEnclosure(document, enclosure, src)
+
       if (imageElement) {
         created.push(imageElement)
       }
     }
 
-    // Content that already carries a marked element with the same source (typically
-    // a previous run of this transform over the same item) already shows that
-    // enclosure, so injecting it again would stack a visible duplicate.
-    const existingSources = new Set<string>()
+    // A source that is already on the page, put there by a previous run or by an earlier entry
+    // in this one, would show up twice. That happens when a feed names one file twice, or when
+    // every enclosure of an item inherits the same media:embed. Sources compare cleaned, so a
+    // tracking parameter does not make two copies of one file look different.
+    const injectedSources = new Set<string>()
 
     for (const element of document.querySelectorAll(`[${enclosureMarker}]`)) {
       const source = getInjectedSource(element)
 
       if (source) {
-        existingSources.add(source)
+        injectedSources.add(cleanUrl(source, { cleanUrlFn: context.cleanUrlFn }))
       }
     }
 
     const injected = created.filter((element) => {
-      return !existingSources.has(getInjectedSource(element) ?? '')
+      const source = getInjectedSource(element)
+
+      if (!source) {
+        return true
+      }
+
+      const key = cleanUrl(source, { cleanUrlFn: context.cleanUrlFn })
+
+      if (injectedSources.has(key)) {
+        return false
+      }
+
+      injectedSources.add(key)
+      return true
     })
 
     // Tag each injected element so the optional stripDuplicateEnclosures pass can
