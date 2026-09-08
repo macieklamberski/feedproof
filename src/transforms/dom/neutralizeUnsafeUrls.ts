@@ -124,7 +124,9 @@ export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
       }
 
       const name = element.localName
-      const tagAttributes = tagAttributeRoles[name]
+      const tagAttributes = Object.hasOwn(tagAttributeRoles, name)
+        ? tagAttributeRoles[name]
+        : undefined
 
       if (tagAttributes !== undefined) {
         for (const [attribute, role] of tagAttributes) {
@@ -138,7 +140,7 @@ export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
         return
       }
 
-      const hrefRole = hrefTagRoles[name]
+      const hrefRole = Object.hasOwn(hrefTagRoles, name) ? hrefTagRoles[name] : undefined
 
       if (hrefRole !== undefined) {
         neutralizeAttribute(element, svgHrefAttribute(element), hrefRole, isSafeUrlFn)

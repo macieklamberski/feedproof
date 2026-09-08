@@ -592,6 +592,18 @@ describe('getSizeKeywordRank', () => {
     expect(relative).toBeGreaterThan(0)
   })
 
+  // A path segment is whatever the publisher wrote, and `constructor` and `__proto__` name
+  // members every object inherits. Both have to rank the way any unknown segment ranks.
+  it('should rank a segment naming an inherited member as it ranks an unknown one', () => {
+    const inherited = getSizeKeywordRank('https://example.com/photos/constructor/abc.jpg')
+    const prototype = getSizeKeywordRank('https://example.com/photos/__proto__/abc.jpg')
+    const unknown = getSizeKeywordRank('https://example.com/photos/sunset/abc.jpg')
+
+    expect(inherited).toBe(unknown)
+    expect(prototype).toBe(unknown)
+    expect(unknown).toBe(0)
+  })
+
   it('should return 0 for a keyword carrying a dimension suffix', () => {
     // The name is `large-800x600`, not `large`: the dimension branch owns this URL.
     const value = 'https://example.com/photos/123/large-800x600.jpg'

@@ -268,6 +268,21 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(value)
     })
 
+    // Every element is walked and its tag name looked up in the role maps, so a feed naming a
+    // tag after a member every object inherits reaches those maps with it. It has to answer the
+    // way it answers a tag it does not know.
+    it('should leave an element named after an inherited member untouched', async () => {
+      const value = '<constructor href="javascript:alert(1)">text</constructor>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should leave an element with an unknown tag name untouched', async () => {
+      const value = '<sunset href="javascript:alert(1)">text</sunset>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
     // genericAttributeRoles restates by hand the url-carrying field names minted in
     // utils/widgets.ts, so a url field added there and not here ships unchecked and nothing
     // fails. The next two derive both sides instead of listing them a third time: the field set

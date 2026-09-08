@@ -367,7 +367,7 @@ export const getSizeKeywordRank = (url: string): number => {
   // segments from the leaf outwards and take the first one the table knows.
   for (const segment of [...getPathSegments(parsed)].reverse()) {
     const stem = segment.replace(leafExtensionRegex, '').toLowerCase()
-    const rank = sizeKeywordRanks[stem]
+    const rank = Object.hasOwn(sizeKeywordRanks, stem) ? sizeKeywordRanks[stem] : undefined
 
     if (rank !== undefined) {
       return rank

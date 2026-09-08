@@ -44,7 +44,8 @@ export const extractWistiaEmbed = (
 ): { route: string; id: string; page?: string } | undefined => {
   const segments = getPathSegments(link)
   const start = segments[0] === 'embed' ? 1 : 0
-  const route = playerRoutes[segments[start] ?? '']
+  const named = segments[start] ?? ''
+  const route = Object.hasOwn(playerRoutes, named) ? playerRoutes[named] : undefined
   const id = keepIfMatches(segments[start + 1]?.replace(jsonpSuffixRegex, ''), safeMediaIdRegex)
 
   if (!route || !id) {
