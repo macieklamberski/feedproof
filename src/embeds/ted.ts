@@ -1,4 +1,4 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, trimObject } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, flashVars, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -96,8 +96,7 @@ export const tedResolveEmbed = (
     id: talk.slug,
     src: `https://embed.ted.com/embed/${talk.slug}`,
     url: `https://www.ted.com/talks/${talk.slug}`,
-    ...(talk.thumbnail && { thumbnail: talk.thumbnail }),
-    ...(title && { title }),
+    ...trimObject({ thumbnail: talk.thumbnail, title }),
   }
 }
 

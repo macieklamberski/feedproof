@@ -1,3 +1,4 @@
+import { trimObject } from 'trousse'
 import { attr, parseRatio } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver } from '../utils/widgets.js'
@@ -32,7 +33,7 @@ export const mediavineWidgetEmbedResolver = createMarkupEmbedResolver(
       provider: 'mediavine',
       id: videoId,
       src: composeEmbedUrl(videoId),
-      ...(ratio && { ratio }),
+      ...trimObject({ ratio }),
     }
   },
 )
@@ -72,7 +73,7 @@ export const mediavineScriptEmbedResolver = createMarkupEmbedResolver(
       provider: 'mediavine',
       id: videoId,
       src: composeEmbedUrl(videoId),
-      ...(ratio && { ratio }),
+      ...trimObject({ ratio }),
     }
   },
 )
