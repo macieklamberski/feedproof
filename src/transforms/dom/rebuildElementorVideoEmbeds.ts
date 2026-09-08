@@ -1,3 +1,4 @@
+import { toMap } from 'trousse'
 import { readDailymotionEmbedSrc } from '../../embeds/dailymotion.js'
 import { readVideopressEmbedSrc } from '../../embeds/videopress.js'
 import { readVimeoEmbedSrc } from '../../embeds/vimeo.js'
@@ -10,14 +11,12 @@ import { createIframe } from '../../utils/widgets.js'
 // the widget's `data-settings` JSON and the `.elementor-video` div is left empty for JS to fill
 // at runtime, so in a reader the video never appears. The self-hosted source is missing here
 // because it is rendered server-side as a real `<video>` and already works.
-const iframeSources = new Map(
-  Object.entries<(link: string) => string | undefined>({
-    youtube: readYoutubeEmbedSrc,
-    vimeo: readVimeoEmbedSrc,
-    dailymotion: readDailymotionEmbedSrc,
-    videopress: readVideopressEmbedSrc,
-  }),
-)
+const iframeSources: ReadonlyMap<string, (link: string) => string | undefined> = toMap({
+  youtube: readYoutubeEmbedSrc,
+  vimeo: readVimeoEmbedSrc,
+  dailymotion: readDailymotionEmbedSrc,
+  videopress: readVideopressEmbedSrc,
+})
 
 // Rebuilds a real <iframe> from an Elementor video widget that defers a YouTube, Vimeo,
 // Dailymotion, or VideoPress embed, so the later convertWidgets turns it into a placeholder

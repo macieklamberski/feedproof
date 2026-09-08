@@ -1,15 +1,14 @@
+import { toMap } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { widestSrcsetUrl } from '../../utils/images.js'
 import { createImage } from '../../utils/widgets.js'
 
 // Prefer AVIF, then WebP. Other source types are not worth promoting over the
 // <img> fallback, which is already a widely-supported format.
-const formatRank = new Map(
-  Object.entries({
-    'image/avif': 2,
-    'image/webp': 1,
-  }),
-)
+const formatRank: ReadonlyMap<string, number> = toMap({
+  'image/avif': 2,
+  'image/webp': 1,
+})
 
 // Best format-only <source>: has a srcset, has no media attribute (so
 // art-direction crops are skipped), preferring AVIF over WebP.

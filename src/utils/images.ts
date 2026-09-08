@@ -1,6 +1,6 @@
 import { addMissingProtocol, normalizeUrl, resolveUrl } from 'feedcanon'
 import { parseSrcset as parseRawSrcset } from 'srcset'
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, toMap } from 'trousse'
 import type { CleanUrlFn } from '../types.js'
 import { pixelDimensionLimit } from './dom.js'
 import { placeholderBaseUrl } from './urls.js'
@@ -56,20 +56,18 @@ export const widestSrcsetUrl = (srcset: string | null | undefined): string | und
 // match would drop a genuine image. (wide/full are still covered when paired with
 // dimensions, e.g. "wide__148x84", via dimensionLeaf.) Add a keyword here only if it
 // earns its keep against that false-match risk.
-const sizeKeywordRanks = new Map(
-  Object.entries({
-    thumb: 1,
-    thumbnail: 1,
-    xsmall: 2,
-    small: 3,
-    medium: 4,
-    large: 5,
-    xlarge: 6,
-    orig: 7,
-    original: 7,
-    preview: 0, // Ambiguous: a "preview" is a thumbnail on one host and full-size on another.
-  }),
-)
+const sizeKeywordRanks: ReadonlyMap<string, number> = toMap({
+  thumb: 1,
+  thumbnail: 1,
+  xsmall: 2,
+  small: 3,
+  medium: 4,
+  large: 5,
+  xlarge: 6,
+  orig: 7,
+  original: 7,
+  preview: 0, // Ambiguous: a "preview" is a thumbnail on one host and full-size on another.
+})
 export const sizeKeywordLiterals = [...sizeKeywordRanks.keys()]
 const sizeKeywordLeaf = new RegExp(`^(?:${sizeKeywordLiterals.join('|')})(\\.[a-z0-9]+)?$`, 'i')
 

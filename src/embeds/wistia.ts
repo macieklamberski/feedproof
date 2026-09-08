@@ -1,4 +1,4 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, toMap } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -25,15 +25,13 @@ const wistiaHosts = ['wistia.net', 'wistia.com']
 // a frame that would otherwise show a login screen. A channel has no vanity slug anywhere in the
 // url space: the segment is the same hashed id every route shares, which is what lets one id
 // grammar stand guard for all of them.
-const playerRoutes = new Map(
-  Object.entries({
-    iframe: 'iframe',
-    medias: 'iframe',
-    channel: 'channel',
-    channels: 'channel',
-    playlists: 'playlists',
-  }),
-)
+const playerRoutes: ReadonlyMap<string, string> = toMap({
+  iframe: 'iframe',
+  medias: 'iframe',
+  channel: 'channel',
+  channels: 'channel',
+  playlists: 'playlists',
+})
 
 // The player url every caller that recovers an id has to build, on the route `playerRoutes`
 // names.

@@ -1,4 +1,5 @@
 import { parseSrcset, stringifySrcset } from 'srcset'
+import { toMap } from 'trousse'
 import type { DomTransform, IsSafeUrlFn, UrlRole } from '../../types.js'
 import { svgHrefAttribute, walkElements } from '../../utils/dom.js'
 
@@ -85,26 +86,24 @@ const genericAttributeRoles: Array<[string, UrlRole]> = [
   ['data-cite-thumbnail', 'media'],
 ]
 // URL-carrying attributes specific to a tag.
-const tagAttributeRoles = new Map(
-  Object.entries<Array<[string, UrlRole]>>({
-    img: [['src', 'media']],
-    video: [
-      ['src', 'media'],
-      ['poster', 'media'],
-    ],
-    audio: [['src', 'media']],
-    source: [['src', 'media']],
-    track: [['src', 'media']],
-    iframe: [['src', 'media']],
-    embed: [['src', 'media']],
-    object: [['data', 'media']],
-    form: [['action', 'link']],
-  }),
-)
+const tagAttributeRoles: ReadonlyMap<string, Array<[string, UrlRole]>> = toMap({
+  img: [['src', 'media']],
+  video: [
+    ['src', 'media'],
+    ['poster', 'media'],
+  ],
+  audio: [['src', 'media']],
+  source: [['src', 'media']],
+  track: [['src', 'media']],
+  iframe: [['src', 'media']],
+  embed: [['src', 'media']],
+  object: [['data', 'media']],
+  form: [['action', 'link']],
+})
 const srcsetTags = new Set(['img', 'source'])
 // The two tags carrying their URL on href, which is read per element below because SVG1 spells
 // it xlink:href.
-const hrefTagRoles = new Map(Object.entries<UrlRole>({ a: 'link', image: 'media' }))
+const hrefTagRoles: ReadonlyMap<string, UrlRole> = toMap({ a: 'link', image: 'media' })
 
 // Replaces unsafe URLs with an inert, role-appropriate sentinel while keeping the element.
 // Always enforces a dangerous-scheme floor (javascript:/vbscript:/data:text/html), plus the

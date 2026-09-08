@@ -1,4 +1,4 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, toMap } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, jsonAttr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -21,16 +21,14 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // which filled a 600-tall frame. So 152 and 352 are frames the player fits, not heights it
 // renders on its own, and they fire only when the carrier states no size, since `decideSize`
 // takes the carrier's first.
-const spotifyHeights = new Map(
-  Object.entries({
-    track: 152,
-    episode: 152,
-    show: 152,
-    album: 352,
-    playlist: 352,
-    artist: 352,
-  }),
-)
+const spotifyHeights: ReadonlyMap<string, number> = toMap({
+  track: 152,
+  episode: 152,
+  show: 152,
+  album: 352,
+  playlist: 352,
+  artist: 352,
+})
 
 // Base62 with no separator, since the id is written into the player path and the `type/id`
 // key. The length is not checked: a wrong id fails the same whether it is minted or passed

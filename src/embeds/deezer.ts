@@ -1,4 +1,4 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, toMap } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -16,31 +16,27 @@ const deezerHosts = ['deezer.com']
 // `artist` is deliberately absent. The widget answers 200 for `/widget/dark/artist/27` and
 // renders nothing at all: no heading, no controls. Refusing it leaves the generic placeholder,
 // which is the honest outcome for a frame that has no player behind it.
-const deezerHeights = new Map(
-  Object.entries({
-    track: 150,
-    album: 300,
-    playlist: 300,
-    episode: 300,
-    show: 300,
-  }),
-)
+const deezerHeights: ReadonlyMap<string, number> = toMap({
+  track: 150,
+  album: 300,
+  playlist: 300,
+  episode: 300,
+  show: 300,
+})
 
 // The dead plugin player names a resource with a plural, and a podcast with the word `podcast`
 // where the widget path says `show`. Verified live 2026-09-06: the plugin's `type=podcast&id=32049`
 // is the widget's `/widget/dark/show/32049`, which plays StarTalk Radio.
-const pluginTypes = new Map(
-  Object.entries({
-    album: 'album',
-    episode: 'episode',
-    episodes: 'episode',
-    playlist: 'playlist',
-    podcast: 'show',
-    show: 'show',
-    track: 'track',
-    tracks: 'track',
-  }),
-)
+const pluginTypes: ReadonlyMap<string, string> = toMap({
+  album: 'album',
+  episode: 'episode',
+  episodes: 'episode',
+  playlist: 'playlist',
+  podcast: 'show',
+  show: 'show',
+  track: 'track',
+  tracks: 'track',
+})
 
 // Every Deezer id is decimal, and the type is what tells two of them apart: 11969917 is a real
 // playlist and a real track at once, and no album.

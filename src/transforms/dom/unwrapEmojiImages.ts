@@ -1,4 +1,4 @@
-import { anyWordMatchesAnyOf, includesAnyOf, isAnyOf } from 'trousse'
+import { anyWordMatchesAnyOf, includesAnyOf, isAnyOf, toMap } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { attr, walkElements } from '../../utils/dom.js'
 import vocabularies from './unwrapEmojiImages.json' with { type: 'json' }
@@ -36,7 +36,7 @@ const isEmojiShaped = (text: string): boolean => {
   return emojiSequenceRegex.test(text) && emojiPictureRegex.test(text)
 }
 
-const shortcodes = new Map(Object.entries(vocabularies.shortcodes))
+const shortcodes: ReadonlyMap<string, string> = toMap(vocabularies.shortcodes)
 
 // Two platforms shipping the same filename is fine while they agree on what it depicts. When
 // they disagree the filename cannot be resolved without knowing which engine produced it, and
@@ -59,7 +59,7 @@ export const mergeEmojiNames = (platforms: Array<EmojiPlatform>): Record<string,
   return merged
 }
 
-const names = new Map(Object.entries(mergeEmojiNames(emojiPlatforms)))
+const names: ReadonlyMap<string, string> = toMap(mergeEmojiNames(emojiPlatforms))
 
 // Platforms sharing a marker list it each, so the derived lookups dedup. A `Set` leaves every
 // regex in place, since each literal is a distinct object, which is what we want.

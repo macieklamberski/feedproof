@@ -1,4 +1,4 @@
-import { type Nullish, startsWithAnyOf } from 'trousse'
+import { type Nullish, startsWithAnyOf, toMap } from 'trousse'
 import type { CiteKind, CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
@@ -8,17 +8,15 @@ import { attr, find, text } from '../utils/dom.js'
 // The class carries a `u-` or `p-` prefix depending on whether the value is a URL or the
 // nested h-cite itself (WordPress Post Kinds emits `p-in-reply-to`), so both prefixes are
 // accepted for every property.
-const citeKindByResponseProperty = new Map(
-  Object.entries<CiteKind>({
-    'bookmark-of': 'bookmark',
-    'repost-of': 'repost',
-    'like-of': 'like',
-    'in-reply-to': 'reply',
-    'read-of': 'read',
-    'listen-of': 'listen',
-    'watch-of': 'watch',
-  }),
-)
+const citeKindByResponseProperty: ReadonlyMap<string, CiteKind> = toMap({
+  'bookmark-of': 'bookmark',
+  'repost-of': 'repost',
+  'like-of': 'like',
+  'in-reply-to': 'reply',
+  'read-of': 'read',
+  'listen-of': 'listen',
+  'watch-of': 'watch',
+})
 
 const responsePrefixes = ['u-', 'p-']
 

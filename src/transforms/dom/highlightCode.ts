@@ -1,3 +1,4 @@
+import { toMap } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { hasAncestorWithTagName, isElement, isText, text, walkElements } from '../../utils/dom.js'
 // Token -> display-label map for the languages feedsweep recognizes (canonical
@@ -8,7 +9,7 @@ import labels from './highlightCode.json' with { type: 'json' }
 
 // The languages feedsweep recognizes, keyed by token (and alias). Used both to
 // disambiguate the wrapper-class detection paths below and to label the badge.
-const supportedLabels = new Map(Object.entries(labels))
+const supportedLabels: ReadonlyMap<string, string> = toMap(labels)
 
 const isSupportedLanguage = (token: string): boolean => {
   return supportedLabels.has(token.toLowerCase())

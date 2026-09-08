@@ -1,4 +1,4 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, toMap } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { jsonAttr, keepIfMatches } from '../utils/dom.js'
 import { isOnHosts, parseUrlOnHosts, pickUrlParams } from '../utils/urls.js'
@@ -36,17 +36,15 @@ const trackIdRegex = /^\d+$/
 // 175 and 450 alike. So 450 and 175 are frames the player fits, not heights it renders on its
 // own, and each fires only when the carrier states no size, since `decideSize` takes the
 // carrier's first.
-const appleHeights = new Map(
-  Object.entries({
-    album: 450,
-    artist: 450,
-    playlist: 450,
-    podcast: 450,
-    station: 450,
-    song: 175,
-    'music-video': undefined,
-  }),
-)
+const appleHeights: ReadonlyMap<string, number | undefined> = toMap({
+  album: 450,
+  artist: 450,
+  playlist: 450,
+  podcast: 450,
+  station: 450,
+  song: 175,
+  'music-video': undefined,
+})
 
 export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, appleHosts)
