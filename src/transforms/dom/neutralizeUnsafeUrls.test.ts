@@ -141,6 +141,19 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
 
       expect(await transform(value)).toEqualHtml(expected)
     })
+
+    it('should neutralize a javascript: form action', async () => {
+      const value = '<form action="javascript:alert(1)"><button>go</button></form>'
+      const expected = '<form action="#unsafe-link"><button>go</button></form>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should leave a safe form action untouched', async () => {
+      const value = '<form action="https://ok.test/submit"><button>go</button></form>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
   })
 
   describe('with a caller isSafeUrlFn', () => {

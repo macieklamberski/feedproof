@@ -97,6 +97,7 @@ const tagAttributeRoles: Record<string, Array<[string, UrlRole]>> = {
   iframe: [['src', 'media']],
   embed: [['src', 'media']],
   object: [['data', 'media']],
+  form: [['action', 'link']],
 }
 const srcsetTags = new Set(['img', 'source'])
 // The two tags carrying their URL on href, which is read per element below because SVG1 spells
