@@ -263,10 +263,15 @@ export const soundcloudResolveEmbed = (
 
   Object.assign(result, readSubstackTrack(element))
 
+  // Both anchors are permalinks, so they are matched on the page hosts: a substring of the href
+  // takes `evil.test/soundcloud.com/b` for the track page, and two of those write the author,
+  // the title and the url before the block is deleted.
   const sibling = element.nextElementSibling
-  const anchors = Array.from(sibling?.querySelectorAll('a[href*="soundcloud.com"]') ?? []).filter(
-    (anchor) => !anchor.getAttribute('href')?.includes('api.soundcloud.com'),
-  )
+  const anchors = Array.from(sibling?.querySelectorAll('a[href]') ?? []).filter((anchor) => {
+    const page = parseUrlOnHosts(attr(anchor, 'href'), soundcloudHosts)
+
+    return page && pageHostRegex.test(page.hostname)
+  })
 
   // The snippet's shape is fixed: artist first, track second. Anything else is not the
   // share snippet, so the sibling stays untouched.
