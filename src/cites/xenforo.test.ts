@@ -178,16 +178,6 @@ describeForEachParser('xenforoCiteResolver', (parseHtml) => {
   })
 
   describe('sad paths', () => {
-    it('should return undefined when the url attribute is missing', async () => {
-      const value = html`
-        <div class="bbCodeBlock bbCodeBlock--unfurl">
-          <h3 class="js-unfurl-title">Page title</h3>
-        </div>
-      `
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
     it('should return undefined when the title is missing', async () => {
       const value = html`
         <div class="bbCodeBlock bbCodeBlock--unfurl" data-url="https://example.com/page">

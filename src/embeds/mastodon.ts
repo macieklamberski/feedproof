@@ -85,6 +85,10 @@ const composeEmbedResult = (status: MastodonStatus): EmbedResolverResult => {
 // body text and no embed at all, and `div.mastodon-embed`, which only wraps the iframe that is
 // matched inside it.
 //
+// A bare anchor is not matched either, and that is the only thing keeping a foreign host out:
+// `parseMastodonStatus` reads a status from any host filing an author and a long number, so a
+// Medium post url takes the shape. Its test pins that, since no reject case can be written here.
+//
 // No size is derived here. The embed page reports its height by posting a message to the parent
 // once it has rendered, so the publisher's markup holds the only height that exists offline, and
 // the factory applies whatever the carrier declares.

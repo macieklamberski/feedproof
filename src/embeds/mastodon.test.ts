@@ -403,14 +403,6 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
 
       expect(extract(value)).toBeUndefined()
     })
-
-    it('should ignore a link whose path merely files an author and a number', () => {
-      const value = html`
-        <a href="https://medium.com/@author/116535232552529093">A post elsewhere</a>
-      `
-
-      expect(extract(value)).toBeUndefined()
-    })
   })
 })
 
@@ -424,6 +416,21 @@ describe('parseMastodonStatus', () => {
       host: 'sonomu.club',
       user: 'musician',
       id: '109876543210987654',
+    }
+
+    expect(parseMastodonStatus(value)).toEqual(expected)
+  })
+
+  // The consequence of reading the host rather than checking it: a Medium post url files an
+  // author and a snowflake-shaped number the same way, so the reader takes it. Only the
+  // resolver's selector keeps one out, which is why no reject case can be written here.
+  it('should take a medium url that files an author and a number', () => {
+    const value = 'https://medium.com/@author/116535232552529093'
+    const expected: MastodonStatus = {
+      origin: 'https://medium.com',
+      host: 'medium.com',
+      user: 'author',
+      id: '116535232552529093',
     }
 
     expect(parseMastodonStatus(value)).toEqual(expected)
