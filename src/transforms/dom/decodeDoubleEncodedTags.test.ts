@@ -59,6 +59,31 @@ describeForEachParser('decodeDoubleEncodedTags', (parseHtml) => {
     })
   })
 
+  describe('strips an escaped paragraph pair around real elements', () => {
+    // The generator escaped the paragraph tags and left the links inside as markup, so the
+    // tags reach the reader as literal text on either side of the links.
+    it('should drop the escaped tags and keep the elements between them', async () => {
+      const value =
+        '<p>&lt;p&gt;The post <a href="https://example.com/news/burrito">Burrito news</a> first appeared on <a href="https://example.com">Example</a>.&lt;/p&gt;</p>'
+      const expected =
+        '<p>The post <a href="https://example.com/news/burrito">Burrito news</a> first appeared on <a href="https://example.com">Example</a>.</p>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should leave an escaped pair that is not a paragraph', async () => {
+      const value = '<p>&lt;b&gt;The post <a href="https://example.com">Example</a>&lt;/b&gt;</p>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should leave an escaped paragraph tag with no closing pair', async () => {
+      const value = '<p>&lt;p&gt;The post <a href="https://example.com">Example</a> ends here.</p>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+  })
+
   describe('leaves ambiguous content as text', () => {
     it('should not decode an escaped tag embedded in prose', async () => {
       const value = '<p>Build &lt;a href="/products"&gt;eight products&lt;/a&gt; today.</p>'

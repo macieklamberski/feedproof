@@ -6,6 +6,12 @@ import { isEscapedHtmlFragment } from '../../utils/html.js'
 // `<img>`), so their descendants are left untouched.
 const opaqueTags = new Set(['code', 'pre', 'script', 'style', 'textarea', 'noscript'])
 
+// A paragraph escaped around real elements: the generator escaped the `<p>` pair and left the
+// links inside it as markup, so the tags arrive as text on either side of them,
+// `<p>&lt;p&gt;The post <a>…</a> first appeared on <a>…</a>.&lt;/p&gt;</p>`.
+const escapedParagraphOpenRegex = /^\s*<p>/i
+const escapedParagraphCloseRegex = /<\/p>\s*$/i
+
 // Decodes HTML that a buggy feed generator entity-escaped so it shipped as visible text.
 // Only a whole escaped fragment is decoded. An escaped tag embedded in prose, a lone tag,
 // or non-HTML markup is left as text, since those are ambiguous and likely intentional.
@@ -48,6 +54,27 @@ export const decodeDoubleEncodedTags: DomTransform = () => {
       }
 
       node.replaceWith(...tempDiv.childNodes)
+    }
+
+    // The escaped pair wraps the whole paragraph, which is the paragraph the real `<p>` around
+    // it already is, so the two tags are dropped and the elements between them stay.
+    for (const paragraph of document.querySelectorAll('p')) {
+      const first = paragraph.firstChild
+      const last = paragraph.lastChild
+
+      if (!isText(first) || !isText(last) || first === last) {
+        continue
+      }
+
+      if (
+        !escapedParagraphOpenRegex.test(first.data) ||
+        !escapedParagraphCloseRegex.test(last.data)
+      ) {
+        continue
+      }
+
+      first.data = first.data.replace(escapedParagraphOpenRegex, '')
+      last.data = last.data.replace(escapedParagraphCloseRegex, '')
     }
   }
 }
