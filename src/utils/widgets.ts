@@ -166,6 +166,10 @@ export const getEmbedSize = (element: Element, wrapperDepth?: number): EmbedSize
     return { ratio: pairRatio }
   }
 
+  // The pair is not handed back whole, because the check above only says one half is real. A
+  // carrier that states `width="0" height="360"` has claimed a height and nothing else, so the
+  // zero is left out rather than travelling as a dimension nobody stated. Flickr folds this
+  // answer into a query the endpoint honours literally, and a zero reaching it renders nothing.
   if (hasDimensions(dimensions)) {
     return {
       ...(!!dimensions.width && { width: dimensions.width }),

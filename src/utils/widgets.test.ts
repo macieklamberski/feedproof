@@ -11,6 +11,7 @@ import {
   createMediaElement,
   createPlaceholder,
   createUrlEmbedResolver,
+  getEmbedSize,
   normalizeEmbedFields,
   prepareCiteMetadata,
   prepareEmbedMetadata,
@@ -1131,6 +1132,46 @@ describeForEachParser('preferResolverSize', (parseHtml) => {
         expect(build(withRatio, value)).toEqual(expected)
       })
     })
+  })
+})
+
+// What a carrier states about its own size, read straight rather than through the merge below it.
+// `getElementDimensions` reads a 0 through so removeTrackingPixels can find a 0 by 2 image, so a
+// zero reaches here and is dropped: a carrier stating one has claimed the other half and nothing
+// else. Only the width half of that shows up in the merged result, since a lone height and a lone
+// width are already treated differently there, so the height half is pinned at this layer or
+// nowhere. Flickr and archive.org both read this answer directly.
+describeForEachParser('getEmbedSize', (parseHtml) => {
+  const build = (markup: string) => {
+    const element = parseHtml(markup).querySelector('div.player')
+
+    return element ? getEmbedSize(element, 0) : undefined
+  }
+
+  it('should drop a zero width and keep the height the carrier states', () => {
+    const value = html`
+      <div
+        class="player"
+        width="0"
+        height="360"
+      ></div>
+    `
+    const expected = { height: 360 }
+
+    expect(build(value)).toEqual(expected)
+  })
+
+  it('should drop a zero height and keep the width the carrier states', () => {
+    const value = html`
+      <div
+        class="player"
+        width="640"
+        height="0"
+      ></div>
+    `
+    const expected = { width: 640 }
+
+    expect(build(value)).toEqual(expected)
   })
 })
 
