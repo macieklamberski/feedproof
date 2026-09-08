@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl, toMap } from 'trousse'
+import { getPathSegments, parseUrl, toMap, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, text } from '../utils/dom.js'
 import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
@@ -175,9 +175,7 @@ export const bandcampResolveEmbed = (
     src: isVideo
       ? `https://bandcamp.com/VideoEmbed?${kind}=${id}`
       : `https://bandcamp.com/EmbeddedPlayer/${selection}${size}`,
-    ...(height && { height }),
-    ...(url && { url }),
-    ...(title && { title }),
+    ...trimObject({ height, url, title }),
   }
 }
 

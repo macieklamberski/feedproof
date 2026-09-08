@@ -1,4 +1,4 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -44,7 +44,7 @@ export const geniallyResolveEmbed = (
     provider: 'genially',
     id: viewId,
     src: `https://view.genially.com/${viewId}`,
-    ...(title && { title }),
+    ...trimObject({ title }),
   }
 }
 

@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, trimObject } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize } from '../utils/dom.js'
 import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
@@ -63,7 +63,7 @@ export const spreakerResolveEmbed = (
     src: `https://widget.spreaker.com/player?${embed.param}=${embed.id}`,
     url: `https://www.spreaker.com/${embed.kind}/${embed.id}`,
     height: playerHeight,
-    ...(title && { title }),
+    ...trimObject({ title }),
   }
 }
 
@@ -114,8 +114,7 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
 
     return {
       ...result,
-      ...(stated && { height: stated }),
-      ...(title && { title }),
+      ...trimObject({ height: stated, title }),
     }
   },
 )

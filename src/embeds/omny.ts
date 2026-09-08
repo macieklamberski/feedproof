@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, trimObject } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
 import { composeQuery, pickQueryParams, placeholderBaseUrl } from '../utils/urls.js'
@@ -71,7 +71,7 @@ export const omnyResolveEmbed = (
     id: clip,
     src: `https://omny.fm/shows/${clip}/embed${query}`,
     height: playerHeight,
-    ...(title && { title }),
+    ...trimObject({ title }),
   }
 }
 
