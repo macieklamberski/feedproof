@@ -9,7 +9,10 @@ const safeSegmentRegex = /^[A-Za-z0-9._-]+$/
 
 const omnyHosts = ['omny.fm']
 
-// The height most iframes state, and Omny's own oEmbed agrees.
+// The height most carriers state, and Omny's own oEmbed agrees. Neither player shape was loaded
+// in a browser, so this is what publishers declare and not what either one renders. It does span
+// both shapes: of 99 omny.fm frames in a 1/16 corpus sample, 39 carried `style=cover` and 60 did
+// not, and this is the height stated on 35 and 55 of them.
 const playerHeight = 180
 
 // `/shows/{show}/{clip}/embed` is a clip and `/shows/{show}/playlists/{slug}/embed` a playlist.
