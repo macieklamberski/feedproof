@@ -17,14 +17,19 @@ const imgurHosts = ['imgur.com']
 const imgurPageHosts = ['imgur.com', 'www.imgur.com', 'm.imgur.com']
 
 // The routes that name an album: the prefix the platform's own script writes, and the gallery
-// path the older share links took.
+// path both the older share links and the current slugged ones take.
 const albumRoutes = new Set(['a', 'gallery'])
+
+// `imgur.com/t/{tag}/{slug}-{id}` served byte-for-byte the same page as `imgur.com/gallery/{id}`
+// on 2026-09-08, and served it under a tag that does not exist, so the tag is decoration in
+// front of a post one segment deeper. `imgur.com/t/{tag}` alone names no post.
+const tagRoute = 't'
 
 // Imgur's own pages sit at the same depth as a post, so a first segment is a site page as often
 // as it is an id. The longer ones are live pages that pass the id shape, which is why the shape
-// alone let `imgur.com/upload` mint a post called `upload`. The short ones, `r`, `t` and `user`,
-// are refused by the id length today and are named here anyway, so that dropping the length band
-// cannot quietly turn a subreddit, a tag or a profile into a post.
+// alone let `imgur.com/upload` mint a post called `upload`. The short ones, `r` and `user`, are
+// refused by the id length today and are named here anyway, so that dropping the length band
+// cannot quietly turn a subreddit or a profile into a post.
 // No route word can pin the id's position instead: the post page is `imgur.com/{id}` with the id
 // as the whole path. So each word is here because the platform answered for it, not because it
 // reads like one. `memes`, `tools` and `viral` all read like site pages and are posts a person
@@ -46,7 +51,6 @@ const sitePathSegments = new Set([
   'rules',
   'search',
   'signin',
-  't',
   'tos',
   'trending',
   'upload',
@@ -61,6 +65,13 @@ const galleryListingSegments = new Set(['hot', 'new', 'top'])
 // is how the platform's own script tells the two apart.
 const safePostIdRegex = /^[a-zA-Z0-9]{5,12}$/
 const albumPrefix = 'a/'
+
+// A share link puts a title slug in front of the id, `gallery/{slug}-{id}`. The id was the last
+// hyphen-separated word in all 600 posts the platform's own listing API named on 2026-09-08, and
+// the slug alone addresses nothing: `gallery/pikachu-face` redirects to the home page while
+// `gallery/pikachu-face-BnabGVX` and `gallery/BnabGVX` served the same bytes. The hyphen is what
+// pins the id, not the band: without it a longer word reads as its own last twelve characters.
+const sluggedPostIdRegex = /(?:^|-)([a-zA-Z0-9]{5,12})$/
 
 type ImgurPost = {
   id: string
@@ -97,6 +108,18 @@ const composeEmbed = (post: ImgurPost, title?: string): EmbedResolverResult => {
   return title ? { ...result, title } : result
 }
 
+// Only a route word puts the id at a known depth, so only behind one can a slug in front of the
+// id be read off. The bare post page has nothing to say where the id starts.
+const composeAlbumEmbed = (segment: string | undefined): EmbedResolverResult | undefined => {
+  if (!segment || galleryListingSegments.has(segment)) {
+    return
+  }
+
+  const id = segment.match(sluggedPostIdRegex)?.[1]
+
+  return id ? composeEmbed({ id, isAlbum: true }) : undefined
+}
+
 // Imgur's embed is a blockquote plus `s.imgur.com/min/embed.js`, and the script is what turns it
 // into the player. Without the script a reader gets the quote and its link, so the picture never
 // appears. The blockquote is the only shape the platform has issued since the feature shipped in
@@ -127,15 +150,23 @@ export const imgurResolveEmbed = (url: string): EmbedResolverResult | undefined 
     return
   }
 
-  const segments = getPathSegments(parsed)
-  const isAlbum = albumRoutes.has(segments[0] ?? '')
-  const id = isAlbum ? segments[1] : segments[0]
+  const [route, second, third] = getPathSegments(parsed)
 
-  if (!id || (isAlbum ? galleryListingSegments : sitePathSegments).has(id)) {
+  // A tag sits between its route and the post, so a tagged url names the post one segment deeper
+  // than an album route does.
+  if (route === tagRoute) {
+    return composeAlbumEmbed(third)
+  }
+
+  if (albumRoutes.has(route ?? '')) {
+    return composeAlbumEmbed(second)
+  }
+
+  if (!route || sitePathSegments.has(route)) {
     return
   }
 
-  const post = parsePost(isAlbum ? `${albumPrefix}${id}` : id)
+  const post = parsePost(route)
 
   return post ? composeEmbed(post) : undefined
 }

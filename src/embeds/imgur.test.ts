@@ -21,7 +21,7 @@ const sitePaths = [
   'https://imgur.com/privacy',
   'https://imgur.com/user/someone',
   'https://imgur.com/r/funny/abc12345',
-  'https://imgur.com/t/cats/abc12345',
+  'https://imgur.com/t/cats',
   'https://imgur.com/rules',
   'https://imgur.com/contact',
   'https://imgur.com/login',
@@ -203,6 +203,51 @@ describe('imgurResolveEmbed', () => {
     expect(imgurResolveEmbed(value)).toEqual(expected)
   })
 
+  // What the share button writes today. The slug is the post's title and addresses nothing on
+  // its own; the id ending it is what the platform reads.
+  it('should read the id out of the slug a share link puts in front of it', () => {
+    const value = 'https://imgur.com/gallery/this-is-why-KVfuRXc'
+    const expected: EmbedResolverResult = {
+      provider: 'imgur',
+      id: 'a/KVfuRXc',
+      src: 'https://imgur.com/a/KVfuRXc/embed',
+      url: 'https://imgur.com/a/KVfuRXc',
+    }
+
+    expect(imgurResolveEmbed(value)).toEqual(expected)
+  })
+
+  // A tag is decoration in front of the same post one segment deeper, and the platform serves
+  // the page under a tag that does not exist, so the tag itself carries nothing.
+  it('should read a post the tag route carries', () => {
+    const value = 'https://imgur.com/t/aww/nom-nom-9xCXfv8'
+    const expected: EmbedResolverResult = {
+      provider: 'imgur',
+      id: 'a/9xCXfv8',
+      src: 'https://imgur.com/a/9xCXfv8/embed',
+      url: 'https://imgur.com/a/9xCXfv8',
+    }
+
+    expect(imgurResolveEmbed(value)).toEqual(expected)
+  })
+
+  // The accepted limit of reading the last word: a slug word can be id-shaped, and this one is
+  // read as the id. Imgur does not serve a slug without an id after it, so the shape only
+  // arrives hand-written, and the word addresses nothing rather than another post: `flights`,
+  // `pendant`, `submitted`, `parton` and `kittens` were all untaken album ids on 2026-09-08.
+  // Refusing a lowercase word instead would refuse the 10 real ids in 600 that carry no capital.
+  it('should read a slug word that is shaped like an id as one', () => {
+    const value = 'https://imgur.com/gallery/grounds-all-flights'
+    const expected: EmbedResolverResult = {
+      provider: 'imgur',
+      id: 'a/flights',
+      src: 'https://imgur.com/a/flights/embed',
+      url: 'https://imgur.com/a/flights',
+    }
+
+    expect(imgurResolveEmbed(value)).toEqual(expected)
+  })
+
   it('should resolve an album page url, which the prefix already names as one', () => {
     const value = 'https://imgur.com/a/16lVn5E'
     const expected: EmbedResolverResult = {
@@ -260,6 +305,15 @@ describe('imgurResolveEmbed', () => {
 
       expect(imgurResolveEmbed(value)).toBeUndefined()
     })
+
+    // The hyphen is what says where the id starts, so a single word is read whole and a word
+    // longer than an id is not one.
+    it.each(['https://imgur.com/gallery/this-is-why', 'https://imgur.com/gallery/misadventures'])(
+      'should ignore %s, which ends in no id',
+      (value) => {
+        expect(imgurResolveEmbed(value)).toBeUndefined()
+      },
+    )
   })
 
   it('should ignore another host carrying the post path', () => {
