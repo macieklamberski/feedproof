@@ -4,6 +4,8 @@ import { attr } from '../utils/dom.js'
 import { readPixels } from '../utils/hints.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'codesandbox'
+
 // `sse.codesandbox.io` serves a sandbox's running preview and `blog.codesandbox.io` the marketing
 // blog, so only the bare host and its `www.` spelling name something embeddable. `isHostOf` and not
 // `parseUrlOnHosts` for that reason: the latter admits every subdomain.
@@ -94,7 +96,7 @@ export const codesandboxResolveEmbed = (
   const title = attr(element, 'title') || undefined
 
   return {
-    provider: 'codesandbox',
+    provider,
     id: target.id,
     // The publisher's url whole: their query is what opens the editor on the file and the pane they
     // meant, and CodeSandbox serves every one of these routes as a player.
@@ -129,7 +131,7 @@ export const readCodesandboxHeight = (data: unknown): number | undefined => {
 }
 
 export const codesandboxRenderHint: EmbedRenderHint = {
-  provider: 'codesandbox',
+  provider,
   origin: 'https://codesandbox.io',
   readHeight: readCodesandboxHeight,
 }

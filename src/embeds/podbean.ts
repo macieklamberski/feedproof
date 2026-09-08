@@ -5,6 +5,8 @@ import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
 import { isMediaFile } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'podbean'
+
 // Ids are a slug pair, e.g. `yx4hr-f3d1e1`, and the v2 player appends `-pb` to its own.
 const safeIdRegex = /^[a-z0-9]+-[a-z0-9]+(?:-pb)?$/i
 
@@ -57,7 +59,7 @@ export const podbeanResolveEmbed = (url: string): EmbedResolverResult | undefine
   const height = parsePixelSize(stated) ?? defaultPlayerHeight
 
   return {
-    provider: 'podbean',
+    provider,
     id,
     src: `https://www.podbean.com/player-v2/?i=${id}`,
     height,
@@ -68,7 +70,7 @@ export const podbeanEmbedResolver = createUrlEmbedResolver(podbeanHosts, podbean
 
 // The player takes no query to start; it speaks player.js.
 export const podbeanRenderHint: EmbedRenderHint = {
-  provider: 'podbean',
+  provider,
   isReady: isPlayerJsReady,
   requestPlay: playerJsPlayRequest,
 }

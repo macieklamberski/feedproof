@@ -3,6 +3,8 @@ import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'sketchfab'
+
 // A model uid is 32 hex characters, and it also ends the slugged page url
 // (`/3d-models/{slug}-{uid}`), which is how a pasted page link is read.
 const safeUidRegex = /^[0-9a-f]{32}$/i
@@ -46,7 +48,7 @@ const sketchfabResolveEmbed = (link: string, element: Element): EmbedResolverRes
   const title = attr(element, 'title')
 
   return {
-    provider: 'sketchfab',
+    provider,
     id: uid,
     src: `https://sketchfab.com/models/${uid}/embed`,
     url: `https://sketchfab.com/models/${uid}`,
@@ -58,6 +60,6 @@ export const sketchfabEmbedResolver = createUrlEmbedResolver(sketchfabHosts, ske
 
 // Starts the viewer on the click that loads it; there is no audio to hold back.
 export const sketchfabRenderHint: EmbedRenderHint = {
-  provider: 'sketchfab',
+  provider,
   autoplayParams: { autostart: '1' },
 }
