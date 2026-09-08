@@ -16,14 +16,22 @@ const liveIdRegex = /^lv\d+$/
 
 const nicovideoHosts = ['nicovideo.jp']
 
-// The illustration and manga site shares the video site's domain, its `thumb` path word and its
-// id grammar, so `ext.seiga.nicovideo.jp/thumb/im4572423` and `ext.manga.nicovideo.jp/thumb/
-// mg316785` pass the video id test on the two-letter prefix and the digits. Manga has its own
-// host and the seiga spelling of a chapter 301s onto it, so both are named. Checked 2026-09-07:
-// each card answers 200 with the work's title and 404 for an invented id, while
-// `embed.nicovideo.jp/watch/{id}` answers 500 for either, so reading one as a video would swap a
-// card that renders for a player url that does not.
-const nonVideoHosts = ['seiga.nicovideo.jp', 'manga.nicovideo.jp']
+// Three of Niconico's sites share the video site's domain, its route words and its id grammar, so
+// their ids pass the video id test on the two-letter prefix and the digits alone.
+//
+// Illustration and manga write `thumb/{kind}{digits}`: `ext.seiga.nicovideo.jp/thumb/im4572423`
+// and `ext.manga.nicovideo.jp/thumb/mg316785`. Manga has its own host and the seiga spelling of a
+// chapter 301s onto it, so both are named. Checked 2026-09-07: each card answers 200 with the
+// work's title and 404 for an invented id, while `embed.nicovideo.jp/watch/{id}` answers 500 for
+// either, so reading one as a video would swap a card that renders for a player url that does not.
+//
+// News writes the `watch` word itself, `news.nicovideo.jp/watch/nw15391705`, and `nw` is two
+// letters like every video kind. The mint is dead: `embed.nicovideo.jp/watch/nw15391705` answers
+// 500 at 62,848 bytes against 62,849 for a fabricated video id and 200 at 128,065 for a real one,
+// so a news article fails exactly as an invented id does, and the page url answers 400. The news
+// host 403s every user agent, so whether its own card renders is unmeasured, and no feed carrying
+// one has been seen; the refusal rests on the shape reaching the mint and the mint being dead.
+const nonVideoHosts = ['seiga.nicovideo.jp', 'manga.nicovideo.jp', 'news.nicovideo.jp']
 
 // Three spellings, one video, and the legacy two are dead or dying.
 //

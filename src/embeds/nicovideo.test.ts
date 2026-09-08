@@ -76,16 +76,17 @@ describe('extractNicovideoId', () => {
     expect(extractNicovideoId(value)).toBe('lv346883570')
   })
 
-  // The illustration and manga site sits on the same domain and writes the same
-  // `thumb/{kind}{digits}` card, so its ids pass the video id test on shape alone. Its cards
-  // still render, and the video player answers 500 for one, so these are left where they are.
+  // The illustration, manga and news sites sit on the same domain and write the same route words
+  // and id grammar, so their ids pass the video id test on shape alone. Each addresses something
+  // the video player answers 500 for, so none is read as a video.
   it.each([
     'https://ext.seiga.nicovideo.jp/thumb/im4572423',
     'https://ext.seiga.nicovideo.jp/thumb/mg316785',
     'https://seiga.nicovideo.jp/seiga/im4572423',
     'https://ext.manga.nicovideo.jp/thumb/mg316785',
     'https://manga.nicovideo.jp/watch/mg316785',
-  ])('should refuse the illustration and manga card at %s', (value) => {
+    'https://news.nicovideo.jp/watch/nw15391705',
+  ])('should refuse the illustration, manga and news card at %s', (value) => {
     expect(extractNicovideoId(value)).toBeUndefined()
   })
 })
