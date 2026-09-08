@@ -126,7 +126,14 @@ const decideSize = (
   const wrapperDepth = hasSize(result) ? 0 : undefined
   const declared = getEmbedSize(element, wrapperDepth)
 
-  if (!hasSize(declared)) {
+  // A width on its own is the one carrier claim that does not outrank a resolver's. A reader draws
+  // a pair as an aspect ratio and a lone height as a pixel height, but has nothing to draw from a
+  // width alone, so taking one over a resolver's ratio or height trades a box that reserves space
+  // for an attribute that reserves none. Where the resolver claims no size it still stands, and it
+  // is still never merged with one: the two sides stay whole either way.
+  const loneWidth = !!declared.width && !declared.height && !declared.ratio
+
+  if (!hasSize(declared) || (loneWidth && hasSize(result))) {
     return result
   }
 
