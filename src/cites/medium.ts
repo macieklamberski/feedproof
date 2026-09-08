@@ -20,6 +20,11 @@ export const mediumCiteResolver: CiteResolver = {
   // Medium wraps the pair in `.graf--mixtapeEmbed`. Matching that replaces both anchors and
   // leaves no empty image anchor behind. Exports drop the wrapper, so the bare anchor is the
   // second arm, excluded inside a wrapper so the two never match the same card.
+  //
+  // No test observes the exclusion, and none can: `convertCiteCards` walks one `querySelectorAll`
+  // list, a wrapper precedes its own descendant anchor in it, and `replaceWith` on the anchor the
+  // wrapper has already taken out of the tree does nothing. Dropping `:not(...)` changes no
+  // output. The exclusion states the intent rather than earning a case.
   selector: '.graf--mixtapeEmbed, a.markup--mixtapeEmbed-anchor:not(.graf--mixtapeEmbed a)',
   extract: (element) => {
     const anchor = element.matches('a.markup--mixtapeEmbed-anchor')

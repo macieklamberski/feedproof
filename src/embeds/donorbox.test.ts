@@ -102,7 +102,7 @@ describeForEachParser('donorboxEmbedResolver', (parseHtml) => {
           src="https://donorbox.org/embed/donation-form-248"
           name="donorbox"
           width="100%"
-          height="900px"
+          height="640px"
           frameborder="0"
           scrolling="no"
           seamless="seamless"
@@ -113,7 +113,7 @@ describeForEachParser('donorboxEmbedResolver', (parseHtml) => {
         id: 'donation-form-248',
         src: 'https://donorbox.org/embed/donation-form-248',
         url: 'https://donorbox.org/donation-form-248',
-        height: 900,
+        height: 640,
       }
 
       expect(await extract(value)).toEqual(expected)
