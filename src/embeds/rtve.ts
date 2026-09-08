@@ -4,10 +4,10 @@ import { attr, flashVars } from '../utils/dom.js'
 import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// `irtve.es` is the older spelling of the same broadcaster's asset domain and carries the
-// Flash player under the same path.
 const provider = 'rtve'
 
+// `irtve.es` is the older spelling of the same broadcaster's asset domain and carries the
+// Flash player under the same path.
 const rtveHosts = ['rtve.es', 'irtve.es']
 
 type Kind = 'audio' | 'video'

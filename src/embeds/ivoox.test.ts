@@ -63,9 +63,10 @@ describe('extractIvooxSubject', () => {
     expect(extractIvooxSubject(value)).toEqual(expected)
   })
 
-  // The letters are a list, not a range: nothing outside the three seen in the corpus is read
-  // as a player, so an unknown generation keeps the generic placeholder.
-  it('should ignore a legacy generation letter the corpus never carries', () => {
+  // The letters are enumerated because they are not a sequence: the ones outside the list answer
+  // 404 while the listed ones serve (probed 2026-08-15 with real ids), so matching a shape would
+  // mint dead urls. An unlisted generation keeps the generic placeholder.
+  it('should ignore an unlisted legacy generation letter', () => {
     const value = 'http://www.ivoox.com/playerivoox_ez_1617339_1.html'
 
     expect(extractIvooxSubject(value)).toBeUndefined()
