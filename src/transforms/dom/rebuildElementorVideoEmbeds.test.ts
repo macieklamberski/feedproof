@@ -31,6 +31,31 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  // `data-settings` is a JSON payload, so resolveRelativeUrls never reaches inside it and a url
+  // the publisher wrote protocol-relative arrives naming no host of its own. With no base to
+  // parse it against there is no id, and the empty player div goes with the rest of the widget.
+  it('should rebuild a youtube iframe from a protocol-relative settings url', async () => {
+    const value = html`
+      <div
+        class="elementor-widget elementor-widget-video"
+        data-settings='{"youtube_url":"//www.youtube.com/watch?v=dQw4w9WgXcQ","video_type":"youtube"}'
+      >
+        <div class="elementor-widget-container">
+          <div class="elementor-video"></div>
+        </div>
+      </div>
+    `
+    const expected = html`
+      <div class="elementor-widget elementor-widget-video">
+        <div class="elementor-widget-container">
+          <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+        </div>
+      </div>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
   it('should rebuild a vimeo iframe from the widget settings', async () => {
     const value = html`
       <div

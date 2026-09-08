@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { pickUrlParams, splitStrayParams } from '../utils/urls.js'
+import { pickUrlParams, placeholderBaseUrl, splitStrayParams } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'youtube'
@@ -93,7 +93,7 @@ const readPathId = (url: URL): string | undefined => {
 }
 
 export const extractVideoId = (link: string): string | undefined => {
-  const url = parseUrl(link)
+  const url = parseUrl(link, placeholderBaseUrl)
 
   if (!url) {
     return
@@ -232,7 +232,7 @@ export const youtubeResolveEmbed = (
   url: string,
   element?: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(url)
+  const parsed = parseUrl(url, placeholderBaseUrl)
   const segments = parsed ? getPathSegments(parsed) : []
   const title = element ? attr(element, 'title') : undefined
 

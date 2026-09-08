@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
-import { pickQueryParams } from '../utils/urls.js'
+import { pickQueryParams, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'vimeo'
@@ -90,7 +90,7 @@ const composeShowcaseEmbed = (showcaseId: string): EmbedResolverResult => {
 }
 
 const resolveShowcaseEmbed = (link: string): EmbedResolverResult | undefined => {
-  const url = parseUrl(link)
+  const url = parseUrl(link, placeholderBaseUrl)
   const segments = url ? getPathSegments(url) : []
 
   if (!showcasePaths.has(segments[0])) {
@@ -108,7 +108,7 @@ type VimeoReference = {
 }
 
 const readReference = (link: string): VimeoReference | undefined => {
-  const url = parseUrl(link)
+  const url = parseUrl(link, placeholderBaseUrl)
 
   if (!url) {
     return
@@ -201,7 +201,7 @@ export const vimeoResolveEmbed = (
   const title = element ? attr(element, 'title') : undefined
   const params = {
     ...(hash && { h: hash }),
-    ...pickQueryParams(parseUrl(url)?.search ?? '', vimeoEmbedParams),
+    ...pickQueryParams(parseUrl(url, placeholderBaseUrl)?.search ?? '', vimeoEmbedParams),
   }
 
   return {

@@ -14,6 +14,9 @@ const videoUrls = [
   'https://www.dailymotion.com/video/x7tgad0',
   'https://dai.ly/x7tgad0',
   'https://www.dailymotion.com/embed/video/x7tgad0',
+  // A page builder keeps the url inside a JSON payload that no url pass rewrites, so the
+  // protocol-relative spelling arrives exactly as the publisher wrote it.
+  '//www.dailymotion.com/video/x7tgad0',
   // Both forms the Flash player shipped.
   'http://www.dailymotion.com/swf/x7tgad0',
   'http://www.dailymotion.com/swf/video/x7tgad0',

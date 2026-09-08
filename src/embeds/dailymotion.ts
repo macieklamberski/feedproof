@@ -1,7 +1,7 @@
 import { getPathSegments, type Nullish, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { keepIfMatches } from '../utils/dom.js'
-import { pickUrlParams, splitStrayParams } from '../utils/urls.js'
+import { pickUrlParams, placeholderBaseUrl, splitStrayParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Dailymotion's own alphabet, with no length. A `{5,}` floor sat here and refused real videos:
@@ -88,7 +88,7 @@ const readId = (candidate: Nullish<string>): string | undefined => {
 // A playlist names no single video, so it is read separately and only once the video readers have
 // found nothing: `/embed/video/{id}?playlist={id}` is a video playing inside one, not a playlist.
 export const extractDailymotionPlaylistId = (link: string): string | undefined => {
-  const url = parseUrl(link)
+  const url = parseUrl(link, placeholderBaseUrl)
 
   if (!url) {
     return
@@ -123,7 +123,7 @@ const readPathId = (url: URL, segments: Array<string>): string | undefined => {
 }
 
 export const extractDailymotionId = (link: string): string | undefined => {
-  const url = parseUrl(link)
+  const url = parseUrl(link, placeholderBaseUrl)
 
   if (!url) {
     return
