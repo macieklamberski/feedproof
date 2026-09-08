@@ -2,6 +2,7 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
 import {
+  composeQuery,
   parseUrlOnHosts,
   pickUrlParams,
   placeholderBaseUrl,
@@ -74,7 +75,7 @@ export const composeThumbnailUrl = (videoId: string): string => {
 // not as a ready query string, so they get encoded here, and one carrying an `&` cannot open a
 // parameter of its own.
 export const composeEmbedUrl = (videoId: string, params?: Record<string, string>): string => {
-  const query = params && Object.keys(params).length ? `?${new URLSearchParams(params)}` : ''
+  const query = composeQuery(params)
 
   return `https://www.youtube.com/embed/${videoId}${query}`
 }

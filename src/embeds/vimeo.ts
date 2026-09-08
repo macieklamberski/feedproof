@@ -1,7 +1,12 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
-import { parseUrlOnHosts, pickQueryParams, placeholderBaseUrl } from '../utils/urls.js'
+import {
+  composeQuery,
+  parseUrlOnHosts,
+  pickQueryParams,
+  placeholderBaseUrl,
+} from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'vimeo'
@@ -174,7 +179,7 @@ export const composeEmbedUrl = (
   params?: Record<string, string>,
   startSeconds?: string,
 ): string => {
-  const query = params && Object.keys(params).length ? `?${new URLSearchParams(params)}` : ''
+  const query = composeQuery(params)
   const start = startSeconds ? `#t=${startSeconds}s` : ''
 
   return `https://player.vimeo.com/video/${videoId}${query}${start}`
