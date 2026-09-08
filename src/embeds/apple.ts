@@ -1,4 +1,4 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, toMap } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { jsonAttr, keepIfMatches } from '../utils/dom.js'
 import { isOnHosts, parseUrlOnHosts, pickUrlParams } from '../utils/urls.js'
@@ -36,7 +36,7 @@ const trackIdRegex = /^\d+$/
 // 175 and 450 alike. So 450 and 175 are frames the player fits, not heights it renders on its
 // own, and each fires only when the carrier states no size, since `decideSize` takes the
 // carrier's first.
-const appleHeights: Record<string, number | undefined> = {
+const appleHeights: ReadonlyMap<string, number | undefined> = toMap({
   album: 450,
   artist: 450,
   playlist: 450,
@@ -44,7 +44,7 @@ const appleHeights: Record<string, number | undefined> = {
   station: 450,
   song: 175,
   'music-video': undefined,
-}
+})
 
 export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, appleHosts)
@@ -57,7 +57,7 @@ export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined 
   const [kind, ...rest] = storefrontRegex.test(segments[0] ?? '') ? segments.slice(1) : segments
   const pathId = rest[rest.length - 1]
 
-  if (!kind || !pathId || !Object.hasOwn(appleHeights, kind) || !safeIdRegex.test(pathId)) {
+  if (!kind || !pathId || !appleHeights.has(kind) || !safeIdRegex.test(pathId)) {
     return
   }
 
@@ -78,7 +78,7 @@ export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined 
     id: `${kind}/${id}`,
     src: `https://embed.${host}${parsed.pathname}${query}`,
     url: `https://${host}${parsed.pathname}${query}`,
-    height: appleHeights[trackId ? 'song' : kind],
+    height: appleHeights.get(trackId ? 'song' : kind),
   }
 }
 

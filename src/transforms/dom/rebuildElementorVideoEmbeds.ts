@@ -1,3 +1,4 @@
+import { toMap } from 'trousse'
 import { readDailymotionEmbedSrc } from '../../embeds/dailymotion.js'
 import { readVideopressEmbedSrc } from '../../embeds/videopress.js'
 import { readVimeoEmbedSrc } from '../../embeds/vimeo.js'
@@ -10,12 +11,12 @@ import { createIframe } from '../../utils/widgets.js'
 // the widget's `data-settings` JSON and the `.elementor-video` div is left empty for JS to fill
 // at runtime, so in a reader the video never appears. The self-hosted source is missing here
 // because it is rendered server-side as a real `<video>` and already works.
-const iframeSources: Record<string, (link: string) => string | undefined> = {
+const iframeSources: ReadonlyMap<string, (link: string) => string | undefined> = toMap({
   youtube: readYoutubeEmbedSrc,
   vimeo: readVimeoEmbedSrc,
   dailymotion: readDailymotionEmbedSrc,
   videopress: readVideopressEmbedSrc,
-}
+})
 
 // Rebuilds a real <iframe> from an Elementor video widget that defers a YouTube, Vimeo,
 // Dailymotion, or VideoPress embed, so the later convertWidgets turns it into a placeholder
@@ -32,14 +33,14 @@ export const rebuildElementorVideoEmbeds: DomTransform = () => (document) => {
 
     const videoType = settings.video_type
 
-    if (typeof videoType !== 'string' || !Object.hasOwn(iframeSources, videoType)) {
+    if (typeof videoType !== 'string' || !iframeSources.has(videoType)) {
       continue
     }
 
     // Elementor names the url after the source that owns it, `{video_type}_url`, and the type is
     // one of the four above by the time it is read.
     const link = settings[`${videoType}_url`]
-    const source = typeof link === 'string' ? iframeSources[videoType]?.(link) : undefined
+    const source = typeof link === 'string' ? iframeSources.get(videoType)?.(link) : undefined
 
     if (!source) {
       continue

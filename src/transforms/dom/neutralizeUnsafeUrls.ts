@@ -1,4 +1,5 @@
 import { parseSrcset, stringifySrcset } from 'srcset'
+import { toMap } from 'trousse'
 import type { DomTransform, IsSafeUrlFn, UrlRole } from '../../types.js'
 import { svgHrefAttribute, walkElements } from '../../utils/dom.js'
 
@@ -85,7 +86,7 @@ const genericAttributeRoles: Array<[string, UrlRole]> = [
   ['data-cite-thumbnail', 'media'],
 ]
 // URL-carrying attributes specific to a tag.
-const tagAttributeRoles: Record<string, Array<[string, UrlRole]>> = {
+const tagAttributeRoles: ReadonlyMap<string, Array<[string, UrlRole]>> = toMap({
   img: [['src', 'media']],
   video: [
     ['src', 'media'],
@@ -98,11 +99,11 @@ const tagAttributeRoles: Record<string, Array<[string, UrlRole]>> = {
   embed: [['src', 'media']],
   object: [['data', 'media']],
   form: [['action', 'link']],
-}
+})
 const srcsetTags = new Set(['img', 'source'])
 // The two tags carrying their URL on href, which is read per element below because SVG1 spells
 // it xlink:href.
-const hrefTagRoles: Record<string, UrlRole> = { a: 'link', image: 'media' }
+const hrefTagRoles: ReadonlyMap<string, UrlRole> = toMap({ a: 'link', image: 'media' })
 
 // Replaces unsafe URLs with an inert, role-appropriate sentinel while keeping the element.
 // Always enforces a dangerous-scheme floor (javascript:/vbscript:/data:text/html), plus the
@@ -124,9 +125,7 @@ export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
       }
 
       const name = element.localName
-      const tagAttributes = Object.hasOwn(tagAttributeRoles, name)
-        ? tagAttributeRoles[name]
-        : undefined
+      const tagAttributes = tagAttributeRoles.get(name)
 
       if (tagAttributes !== undefined) {
         for (const [attribute, role] of tagAttributes) {
@@ -140,7 +139,7 @@ export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
         return
       }
 
-      const hrefRole = Object.hasOwn(hrefTagRoles, name) ? hrefTagRoles[name] : undefined
+      const hrefRole = hrefTagRoles.get(name)
 
       if (hrefRole !== undefined) {
         neutralizeAttribute(element, svgHrefAttribute(element), hrefRole, isSafeUrlFn)
