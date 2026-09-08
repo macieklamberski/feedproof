@@ -1,5 +1,6 @@
 import type { MediaResolver, MediaResolverResult } from '../types.js'
 import { attr, getElementDimensions } from '../utils/dom.js'
+import * as styles from '../utils/styles.js'
 
 // Ghost's video and audio cards carry a real media element pointing at the author's upload,
 // but in feeds from Ghost versions before its own June 2026 RSS cleanup the element ships
@@ -22,11 +23,16 @@ export const ghostMediaResolver: MediaResolver = {
         return
       }
 
-      // The element's own poster is the transparent spacer, so only the figure's
-      // thumbnail attributes are worth carrying over.
+      // The element's own poster is the transparent spacer, so it is never read. The figure's
+      // thumbnail attributes carry the real one, the custom thumbnail first since it is the
+      // author's own choice over the frame Ghost picked. Cards from before those attributes
+      // existed state the thumbnail as the video's own background instead, which is the only
+      // place it is written on them.
       const figure = element.closest('.kg-video-card')
       const thumbnail =
-        attr(figure, 'data-kg-custom-thumbnail') ?? attr(figure, 'data-kg-thumbnail')
+        attr(figure, 'data-kg-custom-thumbnail') ??
+        attr(figure, 'data-kg-thumbnail') ??
+        styles.bgImage(video)
 
       const result: MediaResolverResult = { tag: 'video', src: source }
 

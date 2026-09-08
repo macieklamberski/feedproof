@@ -96,6 +96,54 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should read the thumbnail off the video background when the figure states none', async () => {
+      const value = html`
+        <figure class="kg-card kg-video-card">
+          <div class="kg-video-container">
+            <video
+              src="https://www.game-makers.xyz/content/media/2022/02/IMG_0046.mp4"
+              poster="https://img.spacergif.org/v1/1920x1080/0a/spacer.png"
+              width="1920"
+              height="1080"
+              playsinline
+              preload="metadata"
+              style="background: transparent url(&apos;https://www.game-makers.xyz/content/images/2022/02/media-thumbnail-ember1913.jpg&apos;) 50% 50% / cover no-repeat;"
+            ></video>
+            <div class="kg-video-overlay"></div>
+          </div>
+        </figure>
+      `
+      const expected: MediaResolverResult = {
+        tag: 'video',
+        src: 'https://www.game-makers.xyz/content/media/2022/02/IMG_0046.mp4',
+        poster: 'https://www.game-makers.xyz/content/images/2022/02/media-thumbnail-ember1913.jpg',
+        width: 1920,
+        height: 1080,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should prefer the figure thumbnail over the video background', async () => {
+      const value = html`
+        <figure class="kg-video-card" data-kg-thumbnail="https://example.com/thumb.jpg">
+          <div class="kg-video-container">
+            <video
+              src="https://example.com/clip.mp4"
+              style="background: transparent url('https://example.com/background.jpg') 50% 50% / cover no-repeat;"
+            ></video>
+          </div>
+        </figure>
+      `
+      const expected: MediaResolverResult = {
+        tag: 'video',
+        src: 'https://example.com/clip.mp4',
+        poster: 'https://example.com/thumb.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should leave the spacer poster behind when no thumbnail is available', async () => {
       const value = html`
         <figure class="kg-video-card">
