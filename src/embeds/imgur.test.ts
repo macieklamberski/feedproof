@@ -6,6 +6,7 @@ import {
   imgurBlockquoteEmbedResolver,
   imgurIframeEmbedResolver,
   imgurResolveEmbed,
+  readImgurHeight,
 } from './imgur.js'
 
 // Imgur's own routes, none of which names a post to mint from.
@@ -356,5 +357,33 @@ describeForEachParser('imgur through the pipeline', (parseHtml) => {
     `
 
     expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+})
+
+describe('readImgurHeight', () => {
+  // What a post posts on load, at 640 wide, as the JSON string the embed document builds.
+  it('should read the height out of a resize message', () => {
+    const value = JSON.stringify({
+      message: 'resize_imgur',
+      href: 'https://imgur.com/pVa2rXL/embed',
+      height: 595,
+      width: 640,
+      context: true,
+    })
+
+    expect(readImgurHeight(value)).toBe(595)
+  })
+
+  it('should read nothing from another message or an unrendered post', () => {
+    const unrendered = JSON.stringify({ message: 'resize_imgur', height: 0 })
+    const other = JSON.stringify({ message: 'imgur_loaded', height: 595 })
+
+    expect(readImgurHeight(unrendered)).toBeUndefined()
+    expect(readImgurHeight(other)).toBeUndefined()
+  })
+
+  it('should read nothing from a payload that is not a JSON string', () => {
+    expect(readImgurHeight({ message: 'resize_imgur', height: 595 })).toBeUndefined()
+    expect(readImgurHeight('resize_imgur')).toBeUndefined()
   })
 })
