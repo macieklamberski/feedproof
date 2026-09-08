@@ -56,7 +56,7 @@ export const widestSrcsetUrl = (srcset: string | null | undefined): string | und
 // match would drop a genuine image. (wide/full are still covered when paired with
 // dimensions, e.g. "wide__148x84", via dimensionLeaf.) Add a keyword here only if it
 // earns its keep against that false-match risk.
-const sizeKeywordRanks: ReadonlyMap<string, number> = toMap({
+const sizeKeywordRanks = toMap({
   thumb: 1,
   thumbnail: 1,
   xsmall: 2,

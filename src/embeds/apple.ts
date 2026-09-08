@@ -33,7 +33,7 @@ const trackIdRegex = /^\d+$/
 // and floored at 180 at 320 wide, 360 at 640 and 422 at 1280, so 450 is a frame it fits rather
 // than a height it asks for. The episode player, `?i=1000788126765`, floored at 160 at all three
 // widths and filled 175 and 450 alike. Changing any of them needs a browser at two widths.
-const appleHeights: ReadonlyMap<string, number | undefined> = toMap({
+const appleHeights = toMap({
   album: 450,
   artist: 450,
   playlist: 450,

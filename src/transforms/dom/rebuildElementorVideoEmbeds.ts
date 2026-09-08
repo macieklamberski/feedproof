@@ -11,7 +11,7 @@ import { createIframe } from '../../utils/widgets.js'
 // the widget's `data-settings` JSON and the `.elementor-video` div is left empty for JS to fill
 // at runtime, so in a reader the video never appears. The self-hosted source is missing here
 // because it is rendered server-side as a real `<video>` and already works.
-const iframeSources: ReadonlyMap<string, (link: string) => string | undefined> = toMap({
+const iframeSources = toMap({
   youtube: readYoutubeEmbedSrc,
   vimeo: readVimeoEmbedSrc,
   dailymotion: readDailymotionEmbedSrc,

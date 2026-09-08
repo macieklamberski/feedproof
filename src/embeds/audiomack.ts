@@ -9,7 +9,7 @@ const audiomackHost = 'audiomack.com'
 // corpus's own frames state, unanimously: 287 of the 287 song frames say 252 and 52 of the 57
 // album and playlist frames say 400, against a width that is `100%` on 343 of 379. The player
 // itself could not be measured in a browser, because the embed opens behind a consent wall.
-const audiomackHeights: ReadonlyMap<string, number> = toMap({
+const audiomackHeights = toMap({
   album: 400,
   playlist: 400,
   song: 252,
@@ -22,7 +22,7 @@ const safeSlugRegex = /^[\w-]+$/
 // `embed3/hhs1987/pound-cake-freestyle-2` and `embed3-album/chuuwee/cool-world` both answer 404
 // while `embed/chuuwee/album/cool-world` serves that same album. So the route word is the only
 // place the kind is recorded, and it is what this map recovers.
-const retiredRoutes: ReadonlyMap<string, string> = toMap({
+const retiredRoutes = toMap({
   embed3: 'song',
   'embed3-album': 'album',
   embed4: 'song',

@@ -25,7 +25,7 @@ const wistiaHosts = ['wistia.net', 'wistia.com']
 // a frame that would otherwise show a login screen. A channel has no vanity slug anywhere in the
 // url space: the segment is the same hashed id every route shares, which is what lets one id
 // grammar stand guard for all of them.
-const playerRoutes: ReadonlyMap<string, string> = toMap({
+const playerRoutes = toMap({
   iframe: 'iframe',
   medias: 'iframe',
   channel: 'channel',
