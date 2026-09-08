@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'bun:test'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { extractTransistorEmbed, transistorResolveEmbed } from './transistor.js'
+import {
+  extractTransistorEmbed,
+  transistorEmbedResolver,
+  transistorResolveEmbed,
+} from './transistor.js'
 
 describe('extractTransistorEmbed', () => {
   it('should read an episode embed', () => {
@@ -216,5 +221,67 @@ describe('transistorResolveEmbed', () => {
     const value = 'https://share.transistor.fm/s/9f8e7d6c/8a7b6c5d.vtt'
 
     expect(transistorResolveEmbed(value)).toBeUndefined()
+  })
+})
+
+describeForEachParser('transistorEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, transistorEmbedResolver)
+
+  describe('happy paths', () => {
+    it('should state the episode height for a carrier declaring none', async () => {
+      const value = html`
+        <iframe
+          src="https://share.transistor.fm/e/a1b2c3d4"
+          frameborder="no"
+          scrolling="no"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'transistor',
+        id: 'episode/a1b2c3d4',
+        src: 'https://share.transistor.fm/e/a1b2c3d4',
+        url: 'https://share.transistor.fm/s/a1b2c3d4',
+        height: 180,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The publisher stretched the playlist player past the 390 the resolver measured, and the
+    // number they chose is the one their embed was laid out against.
+    it('should keep the size the carrier declares', async () => {
+      const value = html`
+        <iframe
+          src="https://share.transistor.fm/e/build-your-saas/playlist"
+          width="600"
+          height="440"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'transistor',
+        id: 'playlist/build-your-saas',
+        src: 'https://share.transistor.fm/e/build-your-saas/playlist',
+        width: 600,
+        height: 440,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    it('should ignore a foreign host carrying the player path', async () => {
+      const value = '<iframe src="https://evil.test/e/a1b2c3d4"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // The route word is what the kind check reads, so a marketing path with a slug behind it
+    // is the shape that would resolve if it stopped reading one.
+    it('should ignore a transistor url naming no episode', async () => {
+      const value = '<iframe src="https://transistor.fm/blog/analytics"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
   })
 })

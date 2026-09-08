@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { describeForEachParser, html } from '../tests.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   type MastodonStatus,
@@ -9,14 +9,10 @@ import {
 } from './mastodon.js'
 
 describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
-  const extract = (value: string): EmbedResolverResult | undefined => {
-    const element = parseHtml(value).querySelector(mastodonEmbedResolver.selector)
+  const extract = resolverExtractor(parseHtml, mastodonEmbedResolver)
 
-    return element ? (mastodonEmbedResolver.extract(element) as EmbedResolverResult) : undefined
-  }
-
-  describe('classic iframe beside the instance embed script', () => {
-    it('should resolve the status the player url names', () => {
+  describe('happy paths', () => {
+    it('should resolve the status the player url names', async () => {
       const value = html`
         <iframe
           src="https://mastodon.social/@Gargron/116535232552529093/embed"
@@ -37,10 +33,10 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
         publisher: 'mastodon.social',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
-    it('should resolve an iframe shipped without the script', () => {
+    it('should resolve an iframe shipped without the script', async () => {
       const value = html`
         <iframe
           src="https://octodon.social/@author/109734012345678901/embed"
@@ -59,94 +55,10 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
         publisher: 'octodon.social',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
-  })
 
-  describe('iframe wrapped in a mastodon-embed div', () => {
-    // The class sits on both the wrapper and the iframe. Only the iframe is selected, so the
-    // status is emitted once.
-    it('should resolve the inner iframe rather than the wrapper', () => {
-      const value = html`
-        <div class="mastodon-embed">
-          <iframe
-            src="https://chaos.social/@writer/109500123456789012/embed"
-            class="mastodon-embed"
-            style="max-width: 100%; border: 0"
-            width="600"
-            height="333"
-          ></iframe>
-        </div>
-      `
-      const expected: EmbedResolverResult = {
-        provider: 'mastodon',
-        id: 'chaos.social/109500123456789012',
-        src: 'https://chaos.social/@writer/109500123456789012/embed',
-        url: 'https://chaos.social/@writer/109500123456789012',
-        width: 600,
-        height: 333,
-        author: '@writer@chaos.social',
-        publisher: 'chaos.social',
-      }
-
-      expect(extract(value)).toEqual(expected)
-    })
-  })
-
-  describe('iframe whose hydration script comes from an asset subdomain', () => {
-    // Large instances serve embed.js from a CDN host, so the script host is no evidence about
-    // the instance and the carrier url is the only source read.
-    it('should take the instance from the carrier, not from the script', () => {
-      const value = html`
-        <iframe
-          src="https://vmst.io/@admin/111234567890123456/embed"
-          class="mastodon-embed"
-          style="max-width: 100%; border: 0"
-          width="400"
-        ></iframe>
-        <script src="https://cdn-a.vmst.io/embed.js" async="async"></script>
-      `
-      const expected: EmbedResolverResult = {
-        provider: 'mastodon',
-        id: 'vmst.io/111234567890123456',
-        src: 'https://vmst.io/@admin/111234567890123456/embed',
-        url: 'https://vmst.io/@admin/111234567890123456',
-        width: 400,
-        author: '@admin@vmst.io',
-        publisher: 'vmst.io',
-      }
-
-      expect(extract(value)).toEqual(expected)
-    })
-  })
-
-  describe('sandboxed iframe', () => {
-    it('should resolve a hardened iframe the same way', () => {
-      const value = html`
-        <iframe
-          src="https://fosstodon.org/@dev/110987654321098765/embed"
-          sandbox="allow-scripts allow-same-origin allow-popups"
-          allow="fullscreen"
-          loading="lazy"
-          style="width:100%;border:0"
-          class="mastodon-embed"
-        ></iframe>
-      `
-      const expected: EmbedResolverResult = {
-        provider: 'mastodon',
-        id: 'fosstodon.org/110987654321098765',
-        src: 'https://fosstodon.org/@dev/110987654321098765/embed',
-        url: 'https://fosstodon.org/@dev/110987654321098765',
-        author: '@dev@fosstodon.org',
-        publisher: 'fosstodon.org',
-      }
-
-      expect(extract(value)).toEqual(expected)
-    })
-  })
-
-  describe('privacy-friendly blockquote placeholder', () => {
-    it('should resolve the status the embed url names', () => {
+    it('should resolve the status the embed url names', async () => {
       const value = html`
         <blockquote
           class="mastodon-embed"
@@ -169,12 +81,134 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
         publisher: 'hachyderm.io',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
-  describe('blockquote with the embed url before the class', () => {
-    it('should resolve whatever order the attributes are written in', () => {
+  describe('sad paths', () => {
+    it('should return undefined for an iframe holding an unrendered template', async () => {
+      const value = html`
+        <iframe
+          src="{{ $status }}/embed"
+          class="mastodon-embed"
+          style="max-width: 100%; border: 0"
+          width="{{ $width }}"
+        ></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for an iframe pointing at a profile', async () => {
+      const value = html`
+        <iframe
+          src="https://mastodon.social/@username"
+          class="mastodon-embed"
+          width="400"
+          height="400"
+        ></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for an iframe with no src to read', async () => {
+      const value = html`
+        <iframe class="mastodon-embed" style="width:100%;height:820px;" height="500px"></iframe>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should return undefined for a blockquote naming no status at all', async () => {
+      const value = html`
+        <blockquote class="mastodon-embed">
+          <a href="https://mastodon.social/@Gargron">View on Mastodon</a>
+        </blockquote>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  describe('edge cases', () => {
+    // The class sits on both the wrapper and the iframe. Only the iframe is selected, so the
+    // status is emitted once.
+    it('should resolve the inner iframe rather than the wrapper', async () => {
+      const value = html`
+        <div class="mastodon-embed">
+          <iframe
+            src="https://chaos.social/@writer/109500123456789012/embed"
+            class="mastodon-embed"
+            style="max-width: 100%; border: 0"
+            width="600"
+            height="333"
+          ></iframe>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'mastodon',
+        id: 'chaos.social/109500123456789012',
+        src: 'https://chaos.social/@writer/109500123456789012/embed',
+        url: 'https://chaos.social/@writer/109500123456789012',
+        width: 600,
+        height: 333,
+        author: '@writer@chaos.social',
+        publisher: 'chaos.social',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Large instances serve embed.js from a CDN host, so the script host is no evidence about
+    // the instance and the carrier url is the only source read.
+    it('should take the instance from the carrier, not from the script', async () => {
+      const value = html`
+        <iframe
+          src="https://vmst.io/@admin/111234567890123456/embed"
+          class="mastodon-embed"
+          style="max-width: 100%; border: 0"
+          width="400"
+        ></iframe>
+        <script src="https://cdn-a.vmst.io/embed.js" async="async"></script>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'mastodon',
+        id: 'vmst.io/111234567890123456',
+        src: 'https://vmst.io/@admin/111234567890123456/embed',
+        url: 'https://vmst.io/@admin/111234567890123456',
+        width: 400,
+        author: '@admin@vmst.io',
+        publisher: 'vmst.io',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should resolve a hardened iframe the same way', async () => {
+      const value = html`
+        <iframe
+          src="https://fosstodon.org/@dev/110987654321098765/embed"
+          sandbox="allow-scripts allow-same-origin allow-popups"
+          allow="fullscreen"
+          loading="lazy"
+          style="width:100%;border:0"
+          class="mastodon-embed"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'mastodon',
+        id: 'fosstodon.org/110987654321098765',
+        src: 'https://fosstodon.org/@dev/110987654321098765/embed',
+        url: 'https://fosstodon.org/@dev/110987654321098765',
+        author: '@dev@fosstodon.org',
+        publisher: 'fosstodon.org',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should resolve whatever order the attributes are written in', async () => {
       const value = html`
         <blockquote
           data-embed-url="https://social.lol/@maker/112345678901234567/embed"
@@ -192,12 +226,10 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
         publisher: 'social.lol',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
-  })
 
-  describe('blockquote carrying a second class token', () => {
-    it('should resolve a blockquote whose class also names the fallback', () => {
+    it('should resolve a blockquote whose class also names the fallback', async () => {
       const value = html`
         <blockquote
           class="mastodon-embed mastodon-embed-fallback"
@@ -216,14 +248,14 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
         publisher: 'mstdn.social',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
   describe('blockquote stripped of its embed url', () => {
     // WordPress filters an auto-discovered oEmbed down to links and blockquotes, which can
     // leave the placeholder with only its anchor to name the status.
-    it('should fall back to the anchor inside the blockquote', () => {
+    it('should fall back to the anchor inside the blockquote', async () => {
       const value = html`
         <blockquote class="mastodon-embed">
           <a href="https://ruby.social/@coder/110000000000000009" target="_blank">
@@ -241,12 +273,12 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
         publisher: 'ruby.social',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
 
     // The AP-canonical spelling routes to the same page but is deliberately not matched, so a
     // carrier stating it has to leave the anchor beside it free to name the post.
-    it('should fall back to the anchor when the embed url is a spelling it does not match', () => {
+    it('should fall back to the anchor when the embed url is a spelling it does not match', async () => {
       const value = html`
         <blockquote
           class="mastodon-embed"
@@ -266,36 +298,7 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
         publisher: 'ruby.social',
       }
 
-      expect(extract(value)).toEqual(expected)
-    })
-
-    it('should return undefined for a blockquote naming no status at all', () => {
-      const value = html`
-        <blockquote class="mastodon-embed">
-          <a href="https://mastodon.social/@Gargron">View on Mastodon</a>
-        </blockquote>
-      `
-
-      expect(extract(value)).toBeUndefined()
-    })
-  })
-
-  // Mastodon's username route constraint excludes `@`, so this path never reaches the embed
-  // action: it answers with the application shell under `frame-ancestors 'none'` instead of the
-  // status. The embeddable copy lives on the remote instance
-  // under a different id, which only `/redirect/statuses/<id>` maps to, so nothing offline
-  // recovers it and a minted player would be a frame that cannot load.
-  describe('remote post filed under a full handle', () => {
-    it('should not claim a status filed under a remote handle', () => {
-      const value = html`
-        <iframe
-          src="https://mas.to/@author@example.social/113222333444555666/embed"
-          class="mastodon-embed"
-          width="400"
-        ></iframe>
-      `
-
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
@@ -303,7 +306,7 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
     // Found on a live site rather than in the census, which cannot see this shape: its
     // tokenizer skips path segments starting with `@`, so the prevalence is unmeasured. The
     // embed suffix claims the iframe and the status parse is the only guard left.
-    it('should resolve a classless iframe through the status parse alone', () => {
+    it('should resolve a classless iframe through the status parse alone', async () => {
       const value = html`
         <iframe
           src="https://mastodon.green/@pvonhellermannn/116798038528869495/embed"
@@ -321,50 +324,33 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
         publisher: 'mastodon.green',
       }
 
-      expect(extract(value)).toEqual(expected)
+      expect(await extract(value)).toEqual(expected)
     })
   })
 
-  describe('carriers that name no status', () => {
-    it('should return undefined for an iframe holding an unrendered template', () => {
+  // Mastodon's username route constraint excludes `@`, so this path never reaches the embed
+  // action: it answers with the application shell under `frame-ancestors 'none'` instead of the
+  // status. The embeddable copy lives on the remote instance
+  // under a different id, which only `/redirect/statuses/<id>` maps to, so nothing offline
+  // recovers it and a minted player would be a frame that cannot load.
+  describe('remote post filed under a full handle', () => {
+    it('should not claim a status filed under a remote handle', async () => {
       const value = html`
         <iframe
-          src="{{ $status }}/embed"
-          class="mastodon-embed"
-          style="max-width: 100%; border: 0"
-          width="{{ $width }}"
-        ></iframe>
-      `
-
-      expect(extract(value)).toBeUndefined()
-    })
-
-    it('should return undefined for an iframe pointing at a profile', () => {
-      const value = html`
-        <iframe
-          src="https://mastodon.social/@username"
+          src="https://mas.to/@author@example.social/113222333444555666/embed"
           class="mastodon-embed"
           width="400"
-          height="400"
         ></iframe>
       `
 
-      expect(extract(value)).toBeUndefined()
-    })
-
-    it('should return undefined for an iframe with no src to read', () => {
-      const value = html`
-        <iframe class="mastodon-embed" style="width:100%;height:820px;" height="500px"></iframe>
-      `
-
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 
   describe('markup that only looks like a mastodon embed', () => {
     // A hand-typed quote of a post: the class is the author's own styling hook, the body text
     // is the content, and there is no embed to place. Replacing it would delete the text.
-    it('should leave an aside quoting a post by hand alone', () => {
+    it('should leave an aside quoting a post by hand alone', async () => {
       const value = html`
         <aside class="mastodon-embed">
           <blockquote>
@@ -373,10 +359,10 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
         </aside>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
-    it('should ignore a WordPress oEmbed of a page titled "Mastodon Embed"', () => {
+    it('should ignore a WordPress oEmbed of a page titled "Mastodon Embed"', async () => {
       const value = html`
         <blockquote class="wp-embedded-content" data-secret="XwPlrHUEnv">
           <a href="https://blog.example/mastodon-embed/">Mastodon Embed</a>
@@ -391,17 +377,17 @@ describeForEachParser('mastodonEmbedResolver', (parseHtml) => {
         ></iframe>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
 
     // The embed suffix claims classless iframes, so a url the status parse rejects is the
     // only thing keeping some other site's `/embed` route out of a minted player.
-    it('should ignore an embed-suffixed iframe that names no status', () => {
+    it('should ignore an embed-suffixed iframe that names no status', async () => {
       const value = html`
         <iframe src="https://blog.example/gallery/slideshow/embed" width="400"></iframe>
       `
 
-      expect(extract(value)).toBeUndefined()
+      expect(await extract(value)).toBeUndefined()
     })
   })
 })
