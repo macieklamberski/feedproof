@@ -4,17 +4,22 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // `playerivoox_ee_`, `_ep_` and `_em_` are three generations of the legacy episode player, and
 // `player_ej_` and `player_ek_` are two live generations of the current one. All of them name
-// the episode by the same numeric id. `player_ek_` also appears without the skin segment.
+// the episode by the same numeric id.
 //
 // The letters are enumerated rather than matched as a shape, because they are not a sequence:
 // `player_el_` and `player_en_podcast_` both answer 404 while `ej`, `ek` and `es_podcast` serve
 // (probed 2026-08-15 with real ids). A `player_e[a-z]_` pattern would mint dead urls.
-const legacyPlayerRegex = /playerivoox_e[emp]_(\d+)_\d+\.html/
-const episodePlayerRegex = /player_e[jk]_(\d+)(?:_(\d+))?_\d+\.html/
+//
+// The two trailing segments are the skin and the playlist page, and either may be written alone.
+// The skin picks the episode player's layout (`_1_1` serves a 30,277 byte bar against 60,108 for
+// `_6_1`), the page picks which episode a show's playlist opens on, and each is inert on the
+// other player, so both are carried through rather than rebuilt (probed 2026-09-07).
+const legacyPlayerRegex = /\/playerivoox_e[emp]_(\d+)_\d+\.html$/
+const episodePlayerRegex = /\/player_e[jk]_(\d+)(?:_(\d+))?_(\d+)\.html$/
 
 // The show player, which carries every episode. Its id is the podcast's, a different id space
 // from an episode's, so it cannot share the episode kind.
-const showPlayerRegex = /player_es_podcast_(\d+)(?:_\d+)?_\d+\.html/
+const showPlayerRegex = /\/player_es_podcast_(\d+)(?:_(\d+))?_(\d+)\.html$/
 
 const ivooxHosts = ['ivoox.com']
 
@@ -23,7 +28,13 @@ const ivooxHosts = ['ivoox.com']
 // none.
 const playerHeight = 200
 
-export type IvooxSubject = { kind: 'episode' | 'show'; id: string; skin: string; player: string }
+export type IvooxSubject = {
+  kind: 'episode' | 'show'
+  id: string
+  skin: string
+  page: string
+  player: string
+}
 
 export const extractIvooxSubject = (link: string): IvooxSubject | undefined => {
   const parsed = parseUrl(link, 'https://example.com')
@@ -35,7 +46,13 @@ export const extractIvooxSubject = (link: string): IvooxSubject | undefined => {
   const show = parsed.pathname.match(showPlayerRegex)
 
   if (show?.[1]) {
-    return { kind: 'show', id: show[1], skin: '1', player: 'es_podcast' }
+    return {
+      kind: 'show',
+      id: show[1],
+      skin: show[2] ?? '1',
+      page: show[3],
+      player: 'es_podcast',
+    }
   }
 
   const episode = parsed.pathname.match(episodePlayerRegex)
@@ -43,14 +60,16 @@ export const extractIvooxSubject = (link: string): IvooxSubject | undefined => {
   if (episode?.[1]) {
     // The generation the publisher chose is kept: `ek` serves, so rewriting it to `ej` would
     // swap a working player for a different one on nothing but preference.
-    const player = episode[0].startsWith('player_ek_') ? 'ek' : 'ej'
+    const player = episode[0].startsWith('/player_ek_') ? 'ek' : 'ej'
 
-    return { kind: 'episode', id: episode[1], skin: episode[2] ?? '1', player }
+    return { kind: 'episode', id: episode[1], skin: episode[2] ?? '1', page: episode[3], player }
   }
 
   const legacy = parsed.pathname.match(legacyPlayerRegex)
 
-  return legacy?.[1] ? { kind: 'episode', id: legacy[1], skin: '1', player: 'ej' } : undefined
+  return legacy?.[1]
+    ? { kind: 'episode', id: legacy[1], skin: '1', page: '1', player: 'ej' }
+    : undefined
 }
 
 // The legacy player is gone: `playerivoox_ee_8292430_1.html` and `playerivoox_ep_1617339_1.html`
@@ -63,7 +82,7 @@ export const extractIvooxSubject = (link: string): IvooxSubject | undefined => {
 // form is not verifiable the same way, since
 // `player_ej_` answers 200 to any id at all: it is a javascript shell that resolves the id on
 // load. What the rewrite rests on is the 404 and the shared id, not a status code off the
-// target. The skin segment is carried through when the source states one.
+// target.
 //
 // No thumbnail or title: iVoox publishes no key-free metadata endpoint for an episode id.
 export const ivooxResolveEmbed = (url: string): EmbedResolverResult | undefined => {
@@ -76,7 +95,7 @@ export const ivooxResolveEmbed = (url: string): EmbedResolverResult | undefined 
   return {
     provider: 'ivoox',
     id: subject.kind === 'show' ? `podcast/${subject.id}` : subject.id,
-    src: `https://www.ivoox.com/player_${subject.player}_${subject.id}_${subject.skin}_1.html`,
+    src: `https://www.ivoox.com/player_${subject.player}_${subject.id}_${subject.skin}_${subject.page}.html`,
     height: playerHeight,
   }
 }
