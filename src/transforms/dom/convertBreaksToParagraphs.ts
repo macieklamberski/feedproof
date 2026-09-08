@@ -9,6 +9,9 @@ import {
   isWhitespaceText,
 } from '../../utils/dom.js'
 
+// One entry shorter than the same-named list in wrapBareInlineInParagraphs, which also takes
+// `figure`: a figure's bare caption text needs a <p> to carry spacing, a <br> run inside one does
+// not.
 const processContainersSelector =
   'body, div, blockquote, td, li, article, section, main, header, footer, aside'
 

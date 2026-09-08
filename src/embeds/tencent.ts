@@ -5,8 +5,10 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // A Tencent Video id is a run of lowercase letters and digits, eleven characters in the wild.
 // The length is not checked: a bound would only refuse the next length Tencent mints. The
-// alphabet stays because it excludes the dot, which is what keeps a media file on the host
-// playable, since the enclosure probe offers every attachment a feed carries to this resolver.
+// enclosure probe offers every attachment a feed carries to this resolver, and a media file on the
+// host is refused by the anchored player path below, since `vid` only ever arrives in a query. The
+// alphabet excludes the dot, which refuses the one shape that gets past the path: a player url
+// whose `vid` is a file name.
 const safeVideoIdRegex = /^[a-z0-9]+$/
 
 // Tencent's own route word, from `v.qq.com/x/cover/{cid}/{vid}.html`, left in `vid` by an embed
