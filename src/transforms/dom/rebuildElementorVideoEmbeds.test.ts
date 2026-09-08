@@ -240,6 +240,33 @@ describeForEachParser('rebuildElementorVideoEmbeds', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  // The video type comes out of the widget's own JSON, so `constructor` names a member every
+  // object inherits and the source table has to refuse it the way it refuses `facebook`.
+  it('should skip a widget whose video type names an inherited member', async () => {
+    const value = html`
+      <div
+        class="elementor-widget elementor-widget-video"
+        data-settings='{"video_type":"constructor"}'
+      >
+        <div class="elementor-widget-container">
+          <div class="elementor-video"></div>
+        </div>
+      </div>
+    `
+    const expected = html`
+      <div
+        class="elementor-widget elementor-widget-video"
+        data-settings="{&quot;video_type&quot;:&quot;constructor&quot;}"
+      >
+        <div class="elementor-widget-container">
+          <div class="elementor-video"></div>
+        </div>
+      </div>
+    `
+
+    expect(await transform(value)).toEqualHtml(expected)
+  })
+
   it('should produce a youtube placeholder end to end', async () => {
     const value = html`
       <div

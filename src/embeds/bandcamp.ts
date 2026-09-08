@@ -32,19 +32,21 @@ const sizeRegex = /^size=([a-z0-9_]+)$/
 // track, does not move with the width, and the tracklist below it stretches into whatever height
 // is left. A player naming both is an album player opened on a track, so the album decides. The
 // eight `size=tall` carriers in the corpus declare 295 and 270, a couple of pixels more.
-const presetHeights: Record<string, number | undefined> = {
-  venti: 100,
-  grande: 100,
-  grande2: 355,
-  grande3: 415,
-  large: 470,
-  medium: 120,
-  small: 42,
-  short: 23,
-  'tall/album': 295,
-  'tall/track': 270,
-  tall2: 450,
-}
+const presetHeights = new Map(
+  Object.entries({
+    venti: 100,
+    grande: 100,
+    grande2: 355,
+    grande3: 415,
+    large: 470,
+    medium: 120,
+    small: 42,
+    short: 23,
+    'tall/album': 295,
+    'tall/track': 270,
+    tall2: 450,
+  }),
+)
 const releaseKinds = ['album', 'track']
 const numericIdRegex = /^\d+$/
 
@@ -162,8 +164,7 @@ export const bandcampResolveEmbed = (
   const isAlbum = releases.some(([named]) => named === 'album')
   const tallKey = isAlbum ? 'tall/album' : 'tall/track'
   const presetKey = preset === 'tall' ? tallKey : preset
-  const height =
-    presetKey && Object.hasOwn(presetHeights, presetKey) ? presetHeights[presetKey] : undefined
+  const height = presetHeights.get(presetKey ?? '')
   const anchor = parseFallback(element)
   const url = attr(anchor, 'href')
   // Bandcamp writes the label as "{title} by {artist}". It is kept whole instead of split

@@ -56,19 +56,21 @@ export const widestSrcsetUrl = (srcset: string | null | undefined): string | und
 // match would drop a genuine image. (wide/full are still covered when paired with
 // dimensions, e.g. "wide__148x84", via dimensionLeaf.) Add a keyword here only if it
 // earns its keep against that false-match risk.
-const sizeKeywordRanks: Record<string, number | undefined> = {
-  thumb: 1,
-  thumbnail: 1,
-  xsmall: 2,
-  small: 3,
-  medium: 4,
-  large: 5,
-  xlarge: 6,
-  orig: 7,
-  original: 7,
-  preview: 0, // Ambiguous: a "preview" is a thumbnail on one host and full-size on another.
-}
-export const sizeKeywordLiterals = Object.keys(sizeKeywordRanks)
+const sizeKeywordRanks = new Map(
+  Object.entries({
+    thumb: 1,
+    thumbnail: 1,
+    xsmall: 2,
+    small: 3,
+    medium: 4,
+    large: 5,
+    xlarge: 6,
+    orig: 7,
+    original: 7,
+    preview: 0, // Ambiguous: a "preview" is a thumbnail on one host and full-size on another.
+  }),
+)
+export const sizeKeywordLiterals = [...sizeKeywordRanks.keys()]
 const sizeKeywordLeaf = new RegExp(`^(?:${sizeKeywordLiterals.join('|')})(\\.[a-z0-9]+)?$`, 'i')
 
 const decodeUrlPart = (value: string): string => {
@@ -367,7 +369,7 @@ export const getSizeKeywordRank = (url: string): number => {
   // segments from the leaf outwards and take the first one the table knows.
   for (const segment of [...getPathSegments(parsed)].reverse()) {
     const stem = segment.replace(leafExtensionRegex, '').toLowerCase()
-    const rank = Object.hasOwn(sizeKeywordRanks, stem) ? sizeKeywordRanks[stem] : undefined
+    const rank = sizeKeywordRanks.get(stem)
 
     if (rank !== undefined) {
       return rank

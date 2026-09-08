@@ -4,10 +4,12 @@ import { createImage } from '../../utils/widgets.js'
 
 // Prefer AVIF, then WebP. Other source types are not worth promoting over the
 // <img> fallback, which is already a widely-supported format.
-const formatRank: Record<string, number | undefined> = {
-  'image/avif': 2,
-  'image/webp': 1,
-}
+const formatRank = new Map(
+  Object.entries({
+    'image/avif': 2,
+    'image/webp': 1,
+  }),
+)
 
 // Best format-only <source>: has a srcset, has no media attribute (so
 // art-direction crops are skipped), preferring AVIF over WebP.
@@ -23,7 +25,7 @@ const pickModernSource = (picture: Element): Element | undefined => {
     }
 
     const type = source.getAttribute('type')?.toLowerCase() ?? ''
-    const rank = Object.hasOwn(formatRank, type) ? (formatRank[type] ?? 0) : 0
+    const rank = formatRank.get(type) ?? 0
 
     if (rank > bestRank) {
       best = source

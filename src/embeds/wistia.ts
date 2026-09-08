@@ -25,13 +25,15 @@ const wistiaHosts = ['wistia.net', 'wistia.com']
 // a frame that would otherwise show a login screen. A channel has no vanity slug anywhere in the
 // url space: the segment is the same hashed id every route shares, which is what lets one id
 // grammar stand guard for all of them.
-const playerRoutes: Record<string, string | undefined> = {
-  iframe: 'iframe',
-  medias: 'iframe',
-  channel: 'channel',
-  channels: 'channel',
-  playlists: 'playlists',
-}
+const playerRoutes = new Map(
+  Object.entries({
+    iframe: 'iframe',
+    medias: 'iframe',
+    channel: 'channel',
+    channels: 'channel',
+    playlists: 'playlists',
+  }),
+)
 
 // The player url every caller that recovers an id has to build, on the route `playerRoutes`
 // names.
@@ -45,7 +47,7 @@ export const extractWistiaEmbed = (
   const segments = getPathSegments(link)
   const start = segments[0] === 'embed' ? 1 : 0
   const named = segments[start] ?? ''
-  const route = Object.hasOwn(playerRoutes, named) ? playerRoutes[named] : undefined
+  const route = playerRoutes.get(named)
   const id = keepIfMatches(segments[start + 1]?.replace(jsonpSuffixRegex, ''), safeMediaIdRegex)
 
   if (!route || !id) {

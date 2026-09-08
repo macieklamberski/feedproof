@@ -16,27 +16,31 @@ const deezerHosts = ['deezer.com']
 // `artist` is deliberately absent. The widget answers 200 for `/widget/dark/artist/27` and
 // renders nothing at all: no heading, no controls. Refusing it leaves the generic placeholder,
 // which is the honest outcome for a frame that has no player behind it.
-const deezerHeights: Record<string, number | undefined> = {
-  track: 150,
-  album: 300,
-  playlist: 300,
-  episode: 300,
-  show: 300,
-}
+const deezerHeights = new Map(
+  Object.entries({
+    track: 150,
+    album: 300,
+    playlist: 300,
+    episode: 300,
+    show: 300,
+  }),
+)
 
 // The dead plugin player names a resource with a plural, and a podcast with the word `podcast`
 // where the widget path says `show`. Verified live 2026-09-06: the plugin's `type=podcast&id=32049`
 // is the widget's `/widget/dark/show/32049`, which plays StarTalk Radio.
-const pluginTypes: Record<string, string> = {
-  album: 'album',
-  episode: 'episode',
-  episodes: 'episode',
-  playlist: 'playlist',
-  podcast: 'show',
-  show: 'show',
-  track: 'track',
-  tracks: 'track',
-}
+const pluginTypes = new Map(
+  Object.entries({
+    album: 'album',
+    episode: 'episode',
+    episodes: 'episode',
+    playlist: 'playlist',
+    podcast: 'show',
+    show: 'show',
+    track: 'track',
+    tracks: 'track',
+  }),
+)
 
 // Every Deezer id is decimal, and the type is what tells two of them apart: 11969917 is a real
 // playlist and a real track at once, and no album.
@@ -71,7 +75,7 @@ const readResource = (url: URL): Resource | undefined => {
   // and renders Deezer's own "Page not found" for every id, real ones included, which is why
   // this is a repair rather than a label: without it those frames click through to nothing.
   if (route[0] === 'plugins' && route[1] === 'player') {
-    return { type: pluginTypes[query('type')] ?? '', id: query('id'), theme }
+    return { type: pluginTypes.get(query('type')) ?? '', id: query('id'), theme }
   }
 
   // `deezer.com/embedded/{player}.swf?idSong={id}` and its `swf/singlePlayer.swf` twin.
@@ -90,7 +94,7 @@ export const deezerResolveEmbed = (url: string): EmbedResolverResult | undefined
   const parsed = parseUrlOnHosts(url, deezerHosts)
   const resource = parsed && readResource(parsed)
 
-  if (!resource || !Object.hasOwn(deezerHeights, resource.type) || !safeIdRegex.test(resource.id)) {
+  if (!resource || !deezerHeights.has(resource.type) || !safeIdRegex.test(resource.id)) {
     return
   }
 
@@ -104,7 +108,7 @@ export const deezerResolveEmbed = (url: string): EmbedResolverResult | undefined
     id: `${type}/${id}`,
     src: `https://widget.deezer.com/widget/${theme}/${type}/${id}`,
     url: `https://www.deezer.com/${type}/${id}`,
-    height: deezerHeights[type],
+    height: deezerHeights.get(type),
   }
 }
 

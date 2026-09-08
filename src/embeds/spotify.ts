@@ -21,14 +21,16 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 // which filled a 600-tall frame. So 152 and 352 are frames the player fits, not heights it
 // renders on its own, and they fire only when the carrier states no size, since `decideSize`
 // takes the carrier's first.
-const spotifyHeights: Record<string, number | undefined> = {
-  track: 152,
-  episode: 152,
-  show: 152,
-  album: 352,
-  playlist: 352,
-  artist: 352,
-}
+const spotifyHeights = new Map(
+  Object.entries({
+    track: 152,
+    episode: 152,
+    show: 152,
+    album: 352,
+    playlist: 352,
+    artist: 352,
+  }),
+)
 
 // Base62 with no separator, since the id is written into the player path and the `type/id`
 // key. The length is not checked: a wrong id fails the same whether it is minted or passed
@@ -64,7 +66,7 @@ const spotifyImageHosts = ['scdn.co']
 
 // The card prints the item's type where a description would go, so that field usually repeats
 // what the id already says.
-const typeLabels = new Set([...Object.keys(spotifyHeights), 'podcast episode'])
+const typeLabels = new Set([...spotifyHeights.keys(), 'podcast episode'])
 
 // Substack renders the player inside its own iframe and hangs the item's card on the same
 // element as JSON: the artwork, the title and the act. The description is kept only when it is
@@ -122,7 +124,7 @@ export const spotifyResolveEmbed = (
     (legacy ? [legacy[1], legacy[2]] : readPathPair(parseUrlOnHosts(uri, spotifyHosts)))
   const [type, id] = pair ?? []
 
-  if (!type || !id || !Object.hasOwn(spotifyHeights, type) || !safeIdRegex.test(id)) {
+  if (!type || !id || !spotifyHeights.has(type) || !safeIdRegex.test(id)) {
     return
   }
 
@@ -134,7 +136,7 @@ export const spotifyResolveEmbed = (
     id: `${type}/${id}`,
     src: `https://open.spotify.com/embed/${type}/${id}`,
     url: `https://open.spotify.com/${type}/${id}`,
-    height: spotifyHeights[type],
+    height: spotifyHeights.get(type),
     // Some payloads carry the title key with an empty string, so a blank card title falls
     // through to the stated one instead of shadowing it.
     title: card.title?.trim() || stated,

@@ -36,7 +36,7 @@ const isEmojiShaped = (text: string): boolean => {
   return emojiSequenceRegex.test(text) && emojiPictureRegex.test(text)
 }
 
-const shortcodes: Record<string, string> = vocabularies.shortcodes
+const shortcodes = new Map(Object.entries(vocabularies.shortcodes))
 
 // Two platforms shipping the same filename is fine while they agree on what it depicts. When
 // they disagree the filename cannot be resolved without knowing which engine produced it, and
@@ -59,7 +59,7 @@ export const mergeEmojiNames = (platforms: Array<EmojiPlatform>): Record<string,
   return merged
 }
 
-const names = mergeEmojiNames(emojiPlatforms)
+const names = new Map(Object.entries(mergeEmojiNames(emojiPlatforms)))
 
 // Platforms sharing a marker list it each, so the derived lookups dedup. A `Set` leaves every
 // regex in place, since each literal is a distinct object, which is what we want.
@@ -140,7 +140,7 @@ const glyphFromCodepoints = (stem: string): string | undefined => {
 
 // The filename is the second key because it is what survives an empty alt.
 const glyphFromVocabularies = (token: string | undefined, src: string): string | undefined => {
-  const byShortcode = token ? shortcodes[token.toLowerCase()] : undefined
+  const byShortcode = token ? shortcodes.get(token.toLowerCase()) : undefined
 
   if (byShortcode) {
     return byShortcode
@@ -157,7 +157,7 @@ const glyphFromVocabularies = (token: string | undefined, src: string): string |
     .replace(namePrefixRegex, '')
     .replace(nameVariantRegex, '')
 
-  return names[stem] ?? glyphFromCodepoints(stem)
+  return names.get(stem) ?? glyphFromCodepoints(stem)
 }
 
 const readEmojiImage = (element: Element, hosts: Array<string>): EmojiImage | undefined => {

@@ -85,24 +85,26 @@ const genericAttributeRoles: Array<[string, UrlRole]> = [
   ['data-cite-thumbnail', 'media'],
 ]
 // URL-carrying attributes specific to a tag.
-const tagAttributeRoles: Record<string, Array<[string, UrlRole]>> = {
-  img: [['src', 'media']],
-  video: [
-    ['src', 'media'],
-    ['poster', 'media'],
-  ],
-  audio: [['src', 'media']],
-  source: [['src', 'media']],
-  track: [['src', 'media']],
-  iframe: [['src', 'media']],
-  embed: [['src', 'media']],
-  object: [['data', 'media']],
-  form: [['action', 'link']],
-}
+const tagAttributeRoles = new Map(
+  Object.entries<Array<[string, UrlRole]>>({
+    img: [['src', 'media']],
+    video: [
+      ['src', 'media'],
+      ['poster', 'media'],
+    ],
+    audio: [['src', 'media']],
+    source: [['src', 'media']],
+    track: [['src', 'media']],
+    iframe: [['src', 'media']],
+    embed: [['src', 'media']],
+    object: [['data', 'media']],
+    form: [['action', 'link']],
+  }),
+)
 const srcsetTags = new Set(['img', 'source'])
 // The two tags carrying their URL on href, which is read per element below because SVG1 spells
 // it xlink:href.
-const hrefTagRoles: Record<string, UrlRole> = { a: 'link', image: 'media' }
+const hrefTagRoles = new Map(Object.entries<UrlRole>({ a: 'link', image: 'media' }))
 
 // Replaces unsafe URLs with an inert, role-appropriate sentinel while keeping the element.
 // Always enforces a dangerous-scheme floor (javascript:/vbscript:/data:text/html), plus the
@@ -124,9 +126,7 @@ export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
       }
 
       const name = element.localName
-      const tagAttributes = Object.hasOwn(tagAttributeRoles, name)
-        ? tagAttributeRoles[name]
-        : undefined
+      const tagAttributes = tagAttributeRoles.get(name)
 
       if (tagAttributes !== undefined) {
         for (const [attribute, role] of tagAttributes) {
@@ -140,7 +140,7 @@ export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
         return
       }
 
-      const hrefRole = Object.hasOwn(hrefTagRoles, name) ? hrefTagRoles[name] : undefined
+      const hrefRole = hrefTagRoles.get(name)
 
       if (hrefRole !== undefined) {
         neutralizeAttribute(element, svgHrefAttribute(element), hrefRole, isSafeUrlFn)

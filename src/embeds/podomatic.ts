@@ -15,11 +15,13 @@ const safeIdRegex = /^\d+$/
 // the height is the same at every width, so this is a fixed height on a fluid width and never a
 // ratio. Publishers agree on the default, 166 of 233 html5 frames state 208.
 const defaultHtml5Height = 208
-const html5Heights: Record<string, number | undefined> = {
-  normal: defaultHtml5Height,
-  small: 97,
-  square: 504,
-}
+const html5Heights = new Map(
+  Object.entries({
+    normal: defaultHtml5Height,
+    small: 97,
+    square: 504,
+  }),
+)
 
 // The current player, measured at 203 wide and 216 narrow because the episode title wraps. 205 is
 // what Podomatic's own snippet writes on all 11 frames in the corpus, and it sits between the two.
@@ -44,7 +46,7 @@ const readPlayer = (url: URL): Player | undefined => {
   // player shapes. The style is kept because it is what chose the height.
   if (segments[1] === 'html5' && html5KindRegex.test(segments[2] ?? '')) {
     const style = url.searchParams.get('style') ?? ''
-    const named = Object.hasOwn(html5Heights, style) ? style : 'normal'
+    const named = html5Heights.has(style) ? style : 'normal'
     const query = named === 'normal' ? '' : `?style=${named}`
     const kind = segments[2] as string
     const id = segments[3] ?? ''
@@ -53,7 +55,7 @@ const readPlayer = (url: URL): Player | undefined => {
       kind,
       id,
       src: `https://www.podomatic.com/embed/html5/${kind}/${id}${query}`,
-      height: html5Heights[named] ?? defaultHtml5Height,
+      height: html5Heights.get(named) ?? defaultHtml5Height,
     }
   }
 
