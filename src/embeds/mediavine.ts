@@ -16,7 +16,7 @@ const composeEmbedUrl = (videoId: string): string => {
 // data-video-id="{id}">` that its script builds into a player, so a reader shows nothing at
 // all. The player page is mintable from the id alone, and a fabricated id answers 404 there.
 // Mediavine has no public watch page, so the placeholder carries no `url`.
-export const mediavineEmbedResolver = createMarkupEmbedResolver(
+export const mediavineWidgetEmbedResolver = createMarkupEmbedResolver(
   'div.mv-video-target[data-video-id]',
   (element) => {
     const videoId = attr(element, 'data-video-id')

@@ -70,14 +70,17 @@ export const audioboomResolveEmbed = (url: string): EmbedResolverResult | undefi
   }
 }
 
-export const audioboomEmbedResolver = createUrlEmbedResolver(audioboomHosts, audioboomResolveEmbed)
+export const audioboomIframeEmbedResolver = createUrlEmbedResolver(
+  audioboomHosts,
+  audioboomResolveEmbed,
+)
 
 // Audioboo's WordPress plugin ships the player as `<div class="ab-player" data-boourl="{player
 // url}">` and swaps in the iframe from a script the feed does not carry, so nothing but the
 // anchor inside it reaches a reader. The attribute holds the same url the iframe form holds, so
 // it goes through the same reader; the host is checked here because a markup resolver gets no
 // host check from the factory.
-export const audioboomPlayerEmbedResolver = createMarkupEmbedResolver(
+export const audioboomWidgetEmbedResolver = createMarkupEmbedResolver(
   'div.ab-player[data-boourl]',
   (element) => {
     const parsed = parseUrlOnHosts(attr(element, 'data-boourl'), audioboomHosts)
