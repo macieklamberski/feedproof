@@ -877,18 +877,6 @@ describeForEachParser('preferResolverSize', (parseHtml) => {
         expect(build(withRatio, value)).toEqual(expected)
       })
 
-      it('should drop the resolver ratio when the carrier states a width alone', () => {
-        const value = html`
-          <div
-            class="player"
-            width="640"
-          ></div>
-        `
-        const expected: EmbedResolverResult = { ...base, width: 640 }
-
-        expect(build(withRatio, value)).toEqual(expected)
-      })
-
       it('should take the carrier pair whole when it states both', () => {
         const value = html`
           <div
@@ -999,10 +987,36 @@ describeForEachParser('preferResolverSize', (parseHtml) => {
       })
     })
 
-    // A size is one measurement from one source. The carrier naming a width and nothing else does
-    // not get the resolver's height to complete it: 640 by 300 is a ratio no one stated.
-    describe('a size comes from one source', () => {
-      it('should not pair the resolver height with a width the carrier states', () => {
+    // A width on its own is the one thing a carrier can state that the reader cannot draw: it lays
+    // a box out from a pair, from a lone height or from a ratio, and from a width alone it lays out
+    // nothing. So a carrier stating one neither takes the size slot off a resolver that stated
+    // something drawable nor gets the resolver's other half to complete it, which would be 640 by
+    // 300, a ratio no one stated. With nothing else claiming a size it still stands, because there
+    // is then no box being traded away for it.
+    describe('a lone carrier width', () => {
+      it('should keep the resolver ratio the carrier width cannot replace', () => {
+        const value = html`
+          <div
+            class="player"
+            width="640"
+          ></div>
+        `
+
+        expect(build(withRatio, value)).toEqual(withRatio)
+      })
+
+      it('should keep the resolver height rather than pair it with the carrier width', () => {
+        const value = html`
+          <div
+            class="player"
+            width="640"
+          ></div>
+        `
+
+        expect(build(withHeight, value)).toEqual(withHeight)
+      })
+
+      it('should stand on its own when the resolver states no size', () => {
         const value = html`
           <div
             class="player"
@@ -1011,7 +1025,7 @@ describeForEachParser('preferResolverSize', (parseHtml) => {
         `
         const expected: EmbedResolverResult = { ...base, width: 640 }
 
-        expect(build(withHeight, value)).toEqual(expected)
+        expect(build(base, value)).toEqual(expected)
       })
     })
 

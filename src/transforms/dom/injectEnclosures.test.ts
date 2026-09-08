@@ -715,8 +715,9 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
 
     // Width and height are one measurement and come from one side. A feed stating only a width
     // beside a resolver's fixed player height once produced 320x138 for a fluid-width bar, a box
-    // nobody measured. The feed's pair now stands whole where it states any part of one.
-    it('should take the size from the feed as a pair rather than merge it with the resolver height', async () => {
+    // nobody measured. The two never merge, and a lone width does not take the slot either: the
+    // reader lays a bar out from the player height and nothing at all from a width on its own.
+    it('should keep the resolver height rather than merge it with the width the feed states', async () => {
       const value = '<p>Content</p>'
       const context: TransformContext = {
         ...withEnclosures([
@@ -729,7 +730,7 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
           data-embed-src="https://player.blubrry.com/id/12345678/"
           data-embed-provider="blubrry"
           data-embed-id="12345678"
-          data-embed-width="320"
+          data-embed-height="164"
           data-enclosure=""
         ></div>
         <p>Content</p>
