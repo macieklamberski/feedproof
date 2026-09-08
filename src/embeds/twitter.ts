@@ -5,6 +5,8 @@ import { readPixels } from '../utils/hints.js'
 import { isOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'twitter'
+
 // A tweet ships as `<blockquote class="twitter-tweet">` holding the tweet text in a `<p>`, then
 // a byline reading "— Display Name (@user)" beside a dated anchor to the status, followed by a
 // `widgets.js` loader that turns the quote into a player. The script is stripped from most
@@ -145,7 +147,7 @@ const readContent = (element: Element, anchor: Element | undefined) => {
 
 const composeEmbed = (status: Status, extra: Partial<EmbedResolverResult>): EmbedResolverResult => {
   return {
-    provider: 'twitter',
+    provider,
     id: status.id,
     src: `https://platform.twitter.com/embed/Tweet.html?id=${status.id}`,
     url: status.handle ? `https://x.com/${status.handle}/status/${status.id}` : undefined,
@@ -298,7 +300,7 @@ export const readTwitterHeight = (data: unknown): number | undefined => {
 }
 
 export const twitterRenderHint: EmbedRenderHint = {
-  provider: 'twitter',
+  provider,
   origin: 'https://platform.twitter.com',
   readHeight: readTwitterHeight,
 }

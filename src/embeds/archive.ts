@@ -4,6 +4,8 @@ import { flashVars, keepIfMatches } from '../utils/dom.js'
 import { audioFileRegex, splitStrayParams } from '../utils/urls.js'
 import { createUrlEmbedResolver, getEmbedSize } from '../utils/widgets.js'
 
+const provider = 'archive'
+
 // Identifiers are the archive's own slug: letters, digits, dot, underscore and hyphen. The Flash
 // config and the stranded `&` spelling reach this as raw text no `URL` has folded, so a segment
 // of dots alone is refused too: it would climb out of every path minted from it.
@@ -47,7 +49,7 @@ export const extractArchiveIdentifier = (link: string): string | undefined => {
 
 const composeEmbedResult = (identifier: string, query = ''): EmbedResolverResult => {
   return {
-    provider: 'archive',
+    provider,
     id: identifier,
     src: `https://archive.org/embed/${identifier}${query}`,
     url: `https://archive.org/details/${identifier}`,
@@ -160,6 +162,6 @@ export const archiveFlashEmbedResolver = createUrlEmbedResolver(
 
 // Starts playback on the click that loads the player, for video and audio items alike.
 export const archiveRenderHint: EmbedRenderHint = {
-  provider: 'archive',
+  provider,
   autoplayParams: { autoplay: '1' },
 }

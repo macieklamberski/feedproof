@@ -5,6 +5,8 @@ import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'bluesky'
+
 // The AppView front ends serve the identical `/profile/{authority}/post/{rkey}` path, and both
 // answer 200 for a real post. The minted player is `embed.bsky.app` either way, so naming them
 // only widens what is read, the way the Twitter resolver already names its mirrors. They differ
@@ -118,7 +120,7 @@ const extractBlueskyPostFromUrl = (link: string): BlueskyPost | undefined => {
 // player resolves handles itself, those embeds start working with no change here.
 const composeEmbedResult = (post: BlueskyPost): EmbedResolverResult => {
   return {
-    provider: 'bluesky',
+    provider,
     id: `${post.authority}/${post.rkey}`,
     src: `https://embed.bsky.app/embed/${post.authority}/${postCollection}/${post.rkey}`,
     url: `https://bsky.app/profile/${post.authority}/post/${post.rkey}`,
@@ -313,7 +315,7 @@ export const readBlueskyHeight = (data: unknown): number | undefined => {
 }
 
 export const blueskyRenderHint: EmbedRenderHint = {
-  provider: 'bluesky',
+  provider,
   origin: 'https://embed.bsky.app',
   readHeight: readBlueskyHeight,
 }

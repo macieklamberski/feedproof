@@ -29,6 +29,13 @@ export const flashFileRegex = /\.swf(\?|#|$)/i
 
 export const documentFileRegex = /\.(pdf|epub|docx?|pptx?|xlsx?)(\?|#|$)/i
 
+// Whether a url names audio or video the reader can play as it stands. A podcast host serves the
+// episode file from the same domain as its player, so a media url that skips this check reads as
+// a player id and the enclosure loses its audio element to a placeholder.
+export const isMediaFile = (value: string): boolean => {
+  return audioFileRegex.test(value) || videoFileRegex.test(value)
+}
+
 // Whether a value names a file of any kind the reader can already show. The enclosure probe offers
 // every attachment a feed carries to every resolver, so a platform whose id shape admits a dot
 // would otherwise mint a player for an `.mp3` and take the place of a playable element.

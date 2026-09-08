@@ -3,6 +3,8 @@ import { attr, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts, pickUrlParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'rutube'
+
 // A Rutube video id is a uuid with the dashes stripped, and the older numeric ids the same routes
 // carried are taken too, because the player still plays them. Checked 2026-09-07: the player's own
 // options endpoint answers 200 with the title and a stream for the legacy `16879846` and for the
@@ -45,7 +47,7 @@ const rutubeEmbedParams = ['p', 't', 'stopTime']
 // where a carrier states nothing, since vertical clips are embedded at their own shape.
 const composeEmbed = (videoId: string, link: string): EmbedResolverResult => {
   return {
-    provider: 'rutube',
+    provider,
     id: videoId,
     src: `https://rutube.ru/play/embed/${videoId}${pickUrlParams(link, rutubeEmbedParams)}`,
     url: `https://rutube.ru/video/${videoId}/`,
@@ -89,6 +91,6 @@ export const rutubeEmbedResolver = createUrlEmbedResolver(rutubeHosts, rutubeRes
 // where to go if the parameter ever stops working. Checked live 2026-09-07: the frame loads from
 // `https://rutube.ru` and posts `player:ready`, `player:init` and `player:controlsVisibilityChanged`.
 export const rutubeRenderHint: EmbedRenderHint = {
-  provider: 'rutube',
+  provider,
   autoplayParams: { autoplay: 'true' },
 }

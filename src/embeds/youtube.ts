@@ -4,6 +4,8 @@ import { attr } from '../utils/dom.js'
 import { pickUrlParams, splitStrayParams } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'youtube'
+
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
 
 // Some feeds (Steam news) leak the opening quote of the source `[previewyoutube="id]`
@@ -163,7 +165,7 @@ const playerRatio = '16/9'
 // its bare eleven characters.
 const composeListEmbed = (list: string): EmbedResolverResult => {
   return {
-    provider: 'youtube',
+    provider,
     id: `playlist/${list}`,
     src: composeEmbedUrl('videoseries', { list }),
     url: `https://www.youtube.com/playlist?list=${list}`,
@@ -175,7 +177,7 @@ const composeListEmbed = (list: string): EmbedResolverResult => {
 // in the form the player understands rather than becoming a videoseries url.
 const composeUploadsEmbed = (user: string): EmbedResolverResult => {
   return {
-    provider: 'youtube',
+    provider,
     id: `user/${user}`,
     src: `https://www.youtube.com/embed?listType=user_uploads&list=${user}`,
     url: `https://www.youtube.com/user/${user}`,
@@ -185,7 +187,7 @@ const composeUploadsEmbed = (user: string): EmbedResolverResult => {
 
 const composeChannelEmbed = (channel: string): EmbedResolverResult => {
   return {
-    provider: 'youtube',
+    provider,
     id: `channel/${channel}`,
     src: composeEmbedUrl('live_stream', { channel }),
     url: `https://www.youtube.com/channel/${channel}`,
@@ -262,7 +264,7 @@ export const youtubeResolveEmbed = (
   }
 
   return {
-    provider: 'youtube',
+    provider,
     id: videoId,
     src: `${composeEmbedUrl(videoId)}${pickUrlParams(url, youtubeEmbedParams)}`,
     url: `https://www.youtube.com/watch?v=${videoId}`,
@@ -313,7 +315,7 @@ export const youtubeAmpEmbedResolver = createMarkupEmbedResolver(
     }
 
     return {
-      provider: 'youtube',
+      provider,
       id: videoId,
       src: composeEmbedUrl(videoId, params),
       url: `https://www.youtube.com/watch?v=${videoId}`,
@@ -326,6 +328,6 @@ export const youtubeAmpEmbedResolver = createMarkupEmbedResolver(
 
 // What a reader appends to start playback on the click that loads the player.
 export const youtubeRenderHint: EmbedRenderHint = {
-  provider: 'youtube',
+  provider,
   autoplayParams: { autoplay: '1', enablejsapi: '1' },
 }

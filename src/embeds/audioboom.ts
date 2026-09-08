@@ -4,6 +4,8 @@ import { attr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'audioboom'
+
 // The post is named by a numeric id which Audioboom's own share code usually writes with the
 // episode slug hanging off it, `/posts/6479208-eddie-jones-england-s-forward-power/embed/v4`.
 // The slug is decoration: both spellings answer 200 with the same 10,733-byte body while an
@@ -56,7 +58,7 @@ export const audioboomResolveEmbed = (url: string): EmbedResolverResult | undefi
   }
 
   return {
-    provider: 'audioboom',
+    provider,
     id: post.id,
     // The form is preserved rather than upgraded. Minting v4 for a legacy embed would put a
     // 300px player inside the 95px the publisher chose, and neither form can be probed:
@@ -87,6 +89,6 @@ export const audioboomPlayerEmbedResolver = createMarkupEmbedResolver(
 // Starts playback on the click that loads the player: the v4 player reads `autoplay` off its
 // query and starts from 0 once the audio node is ready. Undocumented, read from its chunks.
 export const audioboomRenderHint: EmbedRenderHint = {
-  provider: 'audioboom',
+  provider,
   autoplayParams: { autoplay: '1' },
 }
