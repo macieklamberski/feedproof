@@ -56,15 +56,14 @@ export const ghostMediaResolver: MediaResolver = {
       return
     }
 
-    const result: MediaResolverResult = { tag: 'audio', src: source }
     // The track name Ghost prints beside the file. It is the one piece of the audio card that is
     // content rather than chrome, and matching the card whole would otherwise delete it.
     const title = element.querySelector('.kg-audio-title')?.textContent?.trim()
 
-    if (title) {
-      result.title = title
+    return {
+      tag: 'audio',
+      src: source,
+      ...(title && { title }),
     }
-
-    return result
   },
 }
