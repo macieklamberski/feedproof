@@ -124,6 +124,13 @@ export const extractDailymotionId = (link: string): string | undefined => {
   )
 }
 
+// The player url every caller that recovers an id has to build. A video and a playlist are
+// separate players sharing one id grammar, so the route is named rather than assumed, and the
+// query arrives ready to append from `pickUrlParams`.
+export const composeEmbedUrl = (route: 'video' | 'playlist', id: string, query = ''): string => {
+  return `https://www.dailymotion.com/embed/${route}/${id}${query}`
+}
+
 // Where playback starts, and the playlist the video sits in. The rest of the publisher's
 // query is dropped with the rebuilt src.
 const dailymotionEmbedParams = ['start', 'playlist']
@@ -135,7 +142,7 @@ export const dailymotionResolveEmbed = (url: string): EmbedResolverResult | unde
     return {
       provider: 'dailymotion',
       id: videoId,
-      src: `https://www.dailymotion.com/embed/video/${videoId}${pickUrlParams(url, dailymotionEmbedParams)}`,
+      src: composeEmbedUrl('video', videoId, pickUrlParams(url, dailymotionEmbedParams)),
       url: `https://www.dailymotion.com/video/${videoId}`,
       thumbnail: `https://www.dailymotion.com/thumbnail/video/${videoId}`,
       // Not the player's shape: it fills whatever frame it gets, at 320, 640 and 1280 wide alike,
@@ -157,7 +164,7 @@ export const dailymotionResolveEmbed = (url: string): EmbedResolverResult | unde
     return {
       provider: 'dailymotion',
       id: `playlist/${playlistId}`,
-      src: `https://www.dailymotion.com/embed/playlist/${playlistId}`,
+      src: composeEmbedUrl('playlist', playlistId),
       url: `https://www.dailymotion.com/playlist/${playlistId}`,
     }
   }
