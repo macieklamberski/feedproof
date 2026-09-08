@@ -9,6 +9,7 @@ import { captivateRenderHint } from '../embeds/captivate.js'
 import { cnnRenderHint } from '../embeds/cnn.js'
 import { codesandboxRenderHint } from '../embeds/codesandbox.js'
 import { deezerRenderHint } from '../embeds/deezer.js'
+import { flourishRenderHint } from '../embeds/flourish.js'
 import { foxnewsRenderHint } from '../embeds/foxnews.js'
 import { instagramRenderHint } from '../embeds/instagram.js'
 import { kalturaRenderHint } from '../embeds/kaltura.js'
@@ -49,6 +50,7 @@ export const defaultEmbedRenderHints: Array<EmbedRenderHint> = [
   cnnRenderHint,
   codesandboxRenderHint,
   deezerRenderHint,
+  flourishRenderHint,
   foxnewsRenderHint,
   instagramRenderHint,
   kalturaRenderHint,

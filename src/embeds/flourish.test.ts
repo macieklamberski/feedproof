@@ -5,6 +5,7 @@ import {
   flourishIframeEmbedResolver,
   flourishResolveEmbed,
   flourishWidgetEmbedResolver,
+  readFlourishHeight,
 } from './flourish.js'
 
 describeForEachParser('flourishWidgetEmbedResolver', (parseHtml) => {
@@ -308,5 +309,37 @@ describe('flourishResolveEmbed', () => {
     const value = 'visualisation/29132382/embed'
 
     expect(flourishResolveEmbed(value)).toBeUndefined()
+  })
+})
+
+describe('readFlourishHeight', () => {
+  // What a chart posts as it settles, once `auto=1` has switched the reporting on.
+  it('should read the height out of a resize message', () => {
+    const value = JSON.stringify({
+      sender: 'Flourish',
+      context: 'iframe.resize',
+      method: 'resize',
+      height: 324.0625,
+      src: 'https://flo.uri.sh/visualisation/18458742/embed?auto=1',
+    })
+
+    expect(readFlourishHeight(value)).toBe(324.0625)
+  })
+
+  it('should read nothing before the chart has drawn', () => {
+    const value = JSON.stringify({ sender: 'Flourish', context: 'iframe.resize', height: 0 })
+
+    expect(readFlourishHeight(value)).toBeUndefined()
+  })
+
+  it('should ignore another frame posting the same shape', () => {
+    const value = JSON.stringify({ sender: 'Other', context: 'iframe.resize', height: 400 })
+
+    expect(readFlourishHeight(value)).toBeUndefined()
+  })
+
+  it('should ignore a payload that never parses as an object', () => {
+    expect(readFlourishHeight({ sender: 'Flourish', height: 400 })).toBeUndefined()
+    expect(readFlourishHeight('iframe.resize')).toBeUndefined()
   })
 })

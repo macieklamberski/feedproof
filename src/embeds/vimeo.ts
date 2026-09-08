@@ -221,9 +221,11 @@ export const vimeoResolveEmbed = (
 
 export const vimeoEmbedResolver = createUrlEmbedResolver(vimeoHosts, vimeoResolveEmbed)
 
-// Starts playback on the click that loads the player. Never `background=1`, which mutes the
-// video and strips its controls.
+// `dnt=1` turns off Vimeo's viewer tracking: no cookies and no analytics. `autoplay=1` starts
+// playback on the click that loads the player. Never `background=1`, which mutes the video and
+// strips its controls.
 export const vimeoRenderHint: EmbedRenderHint = {
   provider,
+  params: { dnt: '1' },
   autoplayParams: { autoplay: '1' },
 }
