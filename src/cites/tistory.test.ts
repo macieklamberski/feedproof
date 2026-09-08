@@ -87,6 +87,28 @@ describeForEachParser('tistoryCiteResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should take the first image when the background lists several', async () => {
+      const value = html`
+        <figure
+          data-og-source-url="https://example.com/post"
+          data-og-title="Page title"
+        >
+          <div
+            class="og-image"
+            style="background-image: url('https://cdn.example.com/a.jpg,https://cdn.example.com/b.jpg');"
+          ></div>
+        </figure>
+      `
+      const expected: CiteResolverResult = {
+        provider: 'tistory',
+        url: 'https://example.com/post',
+        title: 'Page title',
+        thumbnail: 'https://cdn.example.com/a.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should prefer the source url over the canonical url', async () => {
       const value = html`
         <figure

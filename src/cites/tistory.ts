@@ -31,10 +31,12 @@ export const tistoryCiteResolver: CiteResolver = {
       title: attr(element, 'data-og-title') ?? text(element, '.og-title'),
       description: attr(element, 'data-og-description') ?? text(element, '.og-desc'),
       publisher: attr(element, 'data-og-host') ?? text(element, '.og-host'),
-      // A card can list several candidate images in one attribute, comma separated. The
-      // element form paints the image as a CSS background rather than as an `<img>`.
-      thumbnail:
-        attr(element, 'data-og-image')?.split(',')[0] ?? styles.bgImage(find(element, '.og-image')),
+      // A card can list several candidate images, comma separated, and both forms carry the
+      // same list: the attribute states it outright and the element paints it as a CSS
+      // background rather than as an `<img>`. So the split runs after the two are chained.
+      thumbnail: (
+        attr(element, 'data-og-image') ?? styles.bgImage(find(element, '.og-image'))
+      )?.split(',')[0],
     })
   },
 }
