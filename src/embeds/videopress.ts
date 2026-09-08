@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { flashVars, keepIfMatches } from '../utils/dom.js'
-import { pickUrlParams, placeholderBaseUrl } from '../utils/urls.js'
+import { parseUrlOnHosts, pickUrlParams, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'videopress'
@@ -61,6 +61,14 @@ export const videopressIframeEmbedResolver = createUrlEmbedResolver(
   videopressHosts,
   videopressResolveEmbed,
 )
+
+// The player url for a caller holding a url nothing has checked: a page builder stores whatever
+// the publisher pasted, so the host is checked here the way the factory checks it for a carrier.
+export const readVideopressEmbedSrc = (link: string): string | undefined => {
+  const url = parseUrlOnHosts(link, videopressHosts)
+
+  return url ? videopressResolveEmbed(url.href)?.src : undefined
+}
 
 // The Flash player names the video in `flashvars="guid=…"` on the `<embed>`, or on the
 // player's own query where the snippet inlined it, and the swf src carries only the player

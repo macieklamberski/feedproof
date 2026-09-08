@@ -649,6 +649,32 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
       expect(await transform(value)).toEqualHtml(expected)
     })
 
+    // Two anchors is the whole shape check, so a foreign host spelling the platform in its path
+    // supplied the author, the title and the url, and the block they sat in was then deleted.
+    it('should leave a sibling whose anchors are on a foreign host alone', async () => {
+      const value = html`
+        <iframe src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1"></iframe>
+        <div>
+          <a href="https://evil.test/soundcloud.com/artist">Artist</a> ·
+          <a href="https://evil.test/soundcloud.com/artist/track">Track title</a>
+        </div>
+      `
+      const expected = html`
+        <div
+          data-embed-src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1"
+          data-embed-provider="soundcloud"
+          data-embed-id="tracks/1"
+          data-embed-height="166"
+        ></div>
+        <div>
+          <a href="https://evil.test/soundcloud.com/artist">Artist</a> ·
+          <a href="https://evil.test/soundcloud.com/artist/track">Track title</a>
+        </div>
+      `
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
     it('should return undefined for a foreign host carrying the player path', async () => {
       const value = html`
         <iframe

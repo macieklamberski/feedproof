@@ -59,6 +59,21 @@ describeForEachParser('weeblyMediaResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // The style block writes a cache-buster after the file name, and the video keeps it: the
+    // extension is what changes between the two files and nothing else is the resolver's to edit.
+    it('should build the video url from a poster carrying a cache-buster', async () => {
+      const value = facade(
+        '#wsite-video-container-807467334470573958{ background: url(//www.weebly.com/uploads/b/1/clip_176.jpg?1600); }',
+      )
+      const expected: MediaResolverResult = {
+        tag: 'video',
+        src: '//www.weebly.com/uploads/b/1/clip_176.mp4?1600',
+        poster: '//www.weebly.com/uploads/b/1/clip_176.jpg?1600',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {

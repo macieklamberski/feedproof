@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
-import { pickQueryParams } from '../utils/urls.js'
+import { parseUrlOnHosts, pickQueryParams, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'vimeo'
@@ -90,7 +90,7 @@ const composeShowcaseEmbed = (showcaseId: string): EmbedResolverResult => {
 }
 
 const resolveShowcaseEmbed = (link: string): EmbedResolverResult | undefined => {
-  const url = parseUrl(link)
+  const url = parseUrl(link, placeholderBaseUrl)
   const segments = url ? getPathSegments(url) : []
 
   if (!showcasePaths.has(segments[0])) {
@@ -108,7 +108,7 @@ type VimeoReference = {
 }
 
 const readReference = (link: string): VimeoReference | undefined => {
-  const url = parseUrl(link)
+  const url = parseUrl(link, placeholderBaseUrl)
 
   if (!url) {
     return
@@ -180,6 +180,15 @@ export const composeEmbedUrl = (
   return `https://player.vimeo.com/video/${videoId}${query}${start}`
 }
 
+// The player url for a caller holding a url nothing has checked: a page builder stores whatever
+// the publisher pasted, so the host is checked here the way the factory checks it for a carrier.
+export const readVimeoEmbedSrc = (link: string): string | undefined => {
+  const url = parseUrlOnHosts(link, vimeoHosts)
+  const videoId = url && extractVimeoId(url.href)
+
+  return videoId ? composeEmbedUrl(videoId) : undefined
+}
+
 // `t` is the start offset, in Vimeo's `{n}s` form. The unlisted hash is carried by the reference
 // rather than picked from the query, because it also arrives as a path segment.
 const vimeoEmbedParams = ['t']
@@ -201,7 +210,7 @@ export const vimeoResolveEmbed = (
   const title = element ? attr(element, 'title') : undefined
   const params = {
     ...(hash && { h: hash }),
-    ...pickQueryParams(parseUrl(url)?.search ?? '', vimeoEmbedParams),
+    ...pickQueryParams(parseUrl(url, placeholderBaseUrl)?.search ?? '', vimeoEmbedParams),
   }
 
   return {

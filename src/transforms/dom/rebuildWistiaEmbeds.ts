@@ -1,4 +1,4 @@
-import { composeEmbedUrl, safeMediaIdRegex } from '../../embeds/wistia.js'
+import { composeEmbedUrl, readSrcMediaId, safeMediaIdRegex } from '../../embeds/wistia.js'
 import type { DomTransform } from '../../types.js'
 import { attr, parseRatio } from '../../utils/dom.js'
 import { createIframe } from '../../utils/widgets.js'
@@ -10,9 +10,6 @@ const wistiaIdPattern = /\bwistia_async_([A-Za-z0-9]+)/
 // so building the media route from a channel id yields a url that names no media. The token is
 // read here rather than through `playerRoutes`, which maps url segments and not class names.
 const channelFacadePattern = /\bwistia_channel\b/
-
-// The script form names the media as a JSONP payload: `/embed/medias/{id}.jsonp`.
-const scriptMediaPattern = /\/embed\/medias\/([A-Za-z0-9]+)(?:\.jsonp)?/
 
 // Three carriers, one player. The `wistia_async_{id}` div is the JS-API inline embed, the
 // `<wistia-player media-id>` custom element is Wistia's current form, and a bare
@@ -26,7 +23,8 @@ const wistiaSelector = [
   'iframe[src*="wistia"]',
 ].join(', ')
 
-// Both carry the media id in the src path.
+// Both carry the media id in the src path, which the platform module reads: the selector matches
+// them on a substring, so nothing before `readSrcMediaId` has looked at the host.
 const srcCarrierTags = new Set(['script', 'iframe'])
 
 const readMediaId = (element: Element): string | undefined => {
@@ -35,7 +33,7 @@ const readMediaId = (element: Element): string | undefined => {
   }
 
   if (srcCarrierTags.has(element.localName)) {
-    return attr(element, 'src')?.match(scriptMediaPattern)?.[1]
+    return readSrcMediaId(attr(element, 'src'))
   }
 
   return element.className.match(wistiaIdPattern)?.[1]

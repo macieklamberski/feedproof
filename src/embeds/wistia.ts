@@ -59,6 +59,15 @@ export const extractWistiaEmbed = (
   return { route, id, page: host ? `https://${host}/medias/${id}` : undefined }
 }
 
+// The media a `src` names, for the carriers the factory never sees: a `<script>` and an `<iframe>`
+// are matched on a substring of their path, so the host is the only thing telling Wistia's own
+// `/embed/medias/{id}` from a foreign path that spells it.
+export const readSrcMediaId = (src: string | undefined): string | undefined => {
+  const url = parseUrlOnHosts(src, wistiaHosts)
+
+  return url ? extractWistiaEmbed(url.href)?.id : undefined
+}
+
 // No thumbnail: the poster needs Wistia's media JSON hop.
 export const wistiaResolveEmbed = (
   url: string,

@@ -48,6 +48,9 @@ const videoUrls = [
   'https://m.youtube.com/watch?v=dQw4w9WgXcQ',
   'https://music.youtube.com/watch?v=dQw4w9WgXcQ',
   'https://youtube.com/watch?v=dQw4w9WgXcQ',
+  // A page builder keeps the url inside a JSON payload that no url pass rewrites, so the
+  // protocol-relative spelling arrives exactly as the publisher wrote it.
+  '//www.youtube.com/watch?v=dQw4w9WgXcQ',
   // The stray quote Steam news leaks into embed srcs.
   'https://www.youtube-nocookie.com/embed/"dQw4w9WgXcQ?fs=1&rel=0',
 ]
