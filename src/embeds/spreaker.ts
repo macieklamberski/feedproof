@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { attr, parsePixelSize, text } from '../utils/dom.js'
+import { attr, parsePixelSize } from '../utils/dom.js'
 import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
 import { placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
@@ -8,7 +8,6 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 const provider = 'spreaker'
 
 const safeIdRegex = /^\d+$/
-const quotedNameRegex = /["“”„«»](.+)["“”„«»]/s
 
 const spreakerHosts = ['spreaker.com']
 
@@ -79,11 +78,15 @@ export const spreakerIframeEmbedResolver = createUrlEmbedResolver(
 // made a player of it.
 //
 // The anchor's own href is not the click target, because it can name the show while the
-// resource names an episode, and the id already mints the exact page. The text is a call to
-// action that wraps the episode name in quotes and is otherwise localized, `Listen to "X" on
-// Spreaker.` beside `Escucha"X" en Spreaker.`, so the name is read from the quotes and the
-// wording is dropped. Where the snippet generator also writes `data-title`, that is the same
-// name with nothing to parse.
+// resource names an episode, and the id already mints the exact page.
+//
+// Only `data-title` is read for the name. The anchor's text states it too, inside a localized
+// call to action, `Listen to "X" on Spreaker.` beside `Escucha"X" en Spreaker.`, and reading it
+// back out means matching quote characters per language against a sample of eight anchors. A
+// pair nobody sampled, the CJK brackets among them, would drop the title silently, and any two
+// quote characters in the sentence would bind a wrong one, which is worse than none in a field
+// a reader draws. The name is not lost either way: Spreaker's oEmbed returns it, and the
+// enrichment hook can fill it now that provider and a precise id are tagged here.
 export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
   'a.spreaker-player[data-resource]',
   (element) => {
@@ -98,8 +101,7 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
 
     // The anchor states its own size, e.g. `data-height="200px"`.
     const stated = parsePixelSize(attr(element, 'data-height'))
-    const quoted = text(element)?.match(quotedNameRegex)?.[1].trim()
-    const title = attr(element, 'data-title') ?? quoted
+    const title = attr(element, 'data-title')
 
     return {
       ...result,

@@ -120,7 +120,6 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         src: 'https://widget.spreaker.com/player?episode_id=42',
         url: 'https://www.spreaker.com/episode/42',
         height: 200,
-        title: 'An episode',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -142,7 +141,6 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         src: 'https://widget.spreaker.com/player?episode_id=42',
         url: 'https://www.spreaker.com/episode/42',
         height: 200,
-        title: 'An episode',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -162,7 +160,6 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         src: 'https://widget.spreaker.com/player?show_id=99',
         url: 'https://www.spreaker.com/show/99',
         height: 200,
-        title: 'A show',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -203,7 +200,6 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         src: 'https://widget.spreaker.com/player?episode_id=42',
         url: 'https://www.spreaker.com/episode/42',
         height: 350,
-        title: 'An episode',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -223,7 +219,6 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         src: 'https://widget.spreaker.com/player?episode_id=42',
         url: 'https://www.spreaker.com/episode/42',
         height: 120,
-        title: 'An episode',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -245,7 +240,6 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
         src: 'https://widget.spreaker.com/player?episode_id=42',
         url: 'https://www.spreaker.com/episode/42',
         height: 200,
-        title: 'An episode',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -324,64 +318,27 @@ describeForEachParser('spreakerAnchorEmbedResolver', (parseHtml) => {
     })
   })
 
-  // Spreaker writes the sentence in the publisher's own language and quotes the episode name
-  // with whichever pair that language uses, so the quotes are the only part of it every card
-  // has in common.
+  // Pins the decision not to read the name out of the sentence. Spreaker writes it in the
+  // publisher's own language and quotes it with whichever pair that language uses, so parsing it
+  // back means enumerating quote characters against a handful of sampled anchors: a pair nobody
+  // sampled drops the name silently, and any two quote characters in the sentence bind a wrong
+  // one. `data-title` states it without parsing, and Spreaker's oEmbed states it for the rest.
   describe('the localized call to action', () => {
-    it('should read a Spanish name out of straight quotes', async () => {
-      const value = html`
-        <a
-          class="spreaker-player"
-          href="https://www.spreaker.com/user/freerockfm/fr-433-270418-incognito-pd-cs-pod"
-          data-resource="episode_id=14653675"
-          data-height="400px"
-        >Escucha"FREEROCK #433 270418 INCOGNITO-PAJARO DIABLO" en Spreaker.</a>
-      `
-      const expected: EmbedResolverResult = {
-        provider: 'spreaker',
-        id: 'episode/14653675',
-        src: 'https://widget.spreaker.com/player?episode_id=14653675',
-        url: 'https://www.spreaker.com/episode/14653675',
-        height: 400,
-        title: 'FREEROCK #433 270418 INCOGNITO-PAJARO DIABLO',
-      }
-
-      expect(await extract(value)).toEqual(expected)
-    })
-
-    it('should read a name out of curly quotes', async () => {
-      const value = html`
-        <a
-          class="spreaker-player"
-          data-resource="episode_id=69236207"
-        >Listen to “306. Italy Ancestry Research Tips and Travel Stories” on Spreaker.</a>
-      `
-      const expected: EmbedResolverResult = {
-        provider: 'spreaker',
-        id: 'episode/69236207',
-        src: 'https://widget.spreaker.com/player?episode_id=69236207',
-        url: 'https://www.spreaker.com/episode/69236207',
-        height: 200,
-        title: '306. Italy Ancestry Research Tips and Travel Stories',
-      }
-
-      expect(await extract(value)).toEqual(expected)
-    })
-
-    it('should keep a name that quotes something itself', async () => {
-      const value = html`
-        <a
-          class="spreaker-player"
-          data-resource="episode_id=42"
-        >Listen to "The "best" episode" on Spreaker.</a>
-      `
+    it.each([
+      ['Spanish, straight quotes', 'Escucha"FREEROCK #433 270418 INCOGNITO" en Spreaker.'],
+      [
+        'English, curly quotes',
+        'Listen to \u201C306. Italy Ancestry Research Tips\u201D on Spreaker.',
+      ],
+      ['a name quoting something itself', 'Listen to "The "best" episode" on Spreaker.'],
+    ])('should state no title for %s', async (_, text) => {
+      const value = `<a class="spreaker-player" data-resource="episode_id=42">${text}</a>`
       const expected: EmbedResolverResult = {
         provider: 'spreaker',
         id: 'episode/42',
         src: 'https://widget.spreaker.com/player?episode_id=42',
         url: 'https://www.spreaker.com/episode/42',
         height: 200,
-        title: 'The "best" episode',
       }
 
       expect(await extract(value)).toEqual(expected)
