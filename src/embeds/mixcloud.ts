@@ -20,9 +20,27 @@ const decodeSegment = (segment: string): string | undefined => {
 
 const mixcloudHosts = ['mixcloud.com']
 
-// A user's listing pages sit where a show slug does, so `{user}/uploads` reads as a show and
-// mints a player for a list. `playlists` names a collection rather than one show.
-const sectionSlugs = new Set(['favorites', 'listens', 'playlists', 'stream', 'uploads'])
+// An account's own sections sit exactly where a show slug does, so `{user}/uploads` mints a
+// player for a listing page, and the widget answers it with the same 10,589-byte empty shell it
+// answers a fabricated slug with. Mixcloud reserves the words, so nothing about a section's shape
+// separates it from a slug and the set is the whole discrimination. Enumerated 2026-09-07 by
+// probing each against a fabricated slug on the same account.
+const sectionSlugs = new Set([
+  'activity',
+  'community',
+  'dashboard',
+  'favorites',
+  'followers',
+  'following',
+  'listens',
+  'playlists',
+  'reposts',
+  'select',
+  'stream',
+  'subscribe',
+  'tracks',
+  'uploads',
+])
 
 // First segments that are the site, not a user: `genres/{x}` is a listing served at exactly
 // the show shape, `categories/{x}` and `tag/{x}` redirect into it, and the widget's own url is
