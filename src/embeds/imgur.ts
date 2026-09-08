@@ -1,10 +1,19 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, isHostOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, text } from '../utils/dom.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const imgurHosts = ['imgur.com']
+
+// `i.imgur.com` is the media CDN and `s.imgur.com` the embed script, so neither names a post, and
+// `i.stack.imgur.com` is not Imgur's content at all. Only the bare host, its `www.` spelling and
+// the mobile one do, which is why the url is checked with `isHostOf` alone and not through
+// `parseUrlOnHosts`: that one admits every subdomain, and the CDN came through with it. An
+// enclosure names its kind in its MIME type and not in its path, so `i.imgur.com/{id}` typed
+// `video/mp4` arrives with no extension for `videoFileRegex` to read, and the host is the only
+// thing standing between a playable file and a placeholder in its place.
+const imgurPageHosts = ['imgur.com', 'www.imgur.com', 'm.imgur.com']
 
 // The routes that name an album: the prefix the platform's own script writes, and the gallery
 // path the older share links took.
@@ -101,9 +110,9 @@ export const imgurBlockquoteEmbedResolver = createMarkupEmbedResolver(
 // describes the embedding page (`pub`, `ref`, `context`, `analytics`, `w`), so the url is rebuilt
 // from the path instead of carried across.
 export const imgurResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrlOnHosts(url, imgurHosts)
+  const parsed = parseUrl(url, placeholderBaseUrl)
 
-  if (!parsed) {
+  if (!parsed || !isHostOf(parsed, imgurPageHosts)) {
     return
   }
 
