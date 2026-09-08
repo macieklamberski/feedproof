@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { extractFiresideToken, firesideResolveEmbed } from './fireside.js'
+import { extractFiresideToken, firesideEmbedResolver, firesideResolveEmbed } from './fireside.js'
 
 describe('extractFiresideToken', () => {
   it('should read the show and episode token', () => {
@@ -149,5 +151,129 @@ describe('firesideResolveEmbed', () => {
     const value = 'https://fireside.fm/pricing'
 
     expect(firesideResolveEmbed(value)).toBeUndefined()
+  })
+})
+
+describeForEachParser('firesideEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, firesideEmbedResolver)
+
+  describe('happy paths', () => {
+    it('should claim a player iframe and state the fixed height', async () => {
+      const value = html`
+        <iframe
+          src="https://player.fireside.fm/v3/N8LaNbQY+MI2PkJ2g"
+          frameborder="0"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'fireside',
+        id: 'N8LaNbQY+MI2PkJ2g',
+        src: 'https://player.fireside.fm/v3/N8LaNbQY+MI2PkJ2g',
+        height: 200,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The feed-side host writes the `player` segment and 301s to the same path on the player
+    // host, so both forms have to reach the resolver through the one host entry.
+    it('should claim a player iframe on the feed-side host', async () => {
+      const value = html`
+        <iframe
+          src="https://fireside.fm/player/v2/DiNRb69N+Dagp3z15"
+          frameborder="0"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'fireside',
+        id: 'DiNRb69N+Dagp3z15',
+        src: 'https://player.fireside.fm/v2/DiNRb69N+Dagp3z15',
+        height: 200,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    // The host list admits every subdomain of `fireside.fm`, so the specimen that exercises the
+    // gate is one suffixing the whole domain. Its path is a real player path.
+    it('should ignore a lookalike host suffixing the player domain', async () => {
+      const value =
+        '<iframe src="https://player.fireside.fm.evil.test/v3/N8LaNbQY+MI2PkJ2g"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  describe('the size a publisher states', () => {
+    // Every corpus iframe states 200, which is where the resolver's height came from, but the
+    // box a publisher chose for the player they embedded still outranks it.
+    it('should let the carrier height win over the stated one', async () => {
+      const value = html`
+        <iframe
+          src="https://player.fireside.fm/v3/I-2by1pi+kf-gXAOz"
+          width="100%"
+          height="180"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'fireside',
+        id: 'I-2by1pi+kf-gXAOz',
+        src: 'https://player.fireside.fm/v3/I-2by1pi+kf-gXAOz',
+        height: 180,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+})
+
+// The resolver only reaches a feed through the registered default list, and only an enclosure
+// test reaches the path where claiming a media url would cost a reader the audio.
+describeForEachParser('fireside through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should claim a player url framed as an embed', async () => {
+    const value = '<iframe src="https://fireside.fm/player/v3/N8LaNbQY+MI2PkJ2g"></iframe>'
+
+    const expected = html`
+      <div
+        data-embed-id="N8LaNbQY+MI2PkJ2g"
+        data-embed-provider="fireside"
+        data-embed-src="https://player.fireside.fm/v3/N8LaNbQY+MI2PkJ2g"
+        data-embed-height="200"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
+  })
+
+  // Every Fireside show serves its episode audio from `aphid.fireside.fm`, a subdomain the host
+  // list admits, so only the version segment keeps a playable file out of a dead placeholder.
+  it('should leave a fireside audio enclosure playable', async () => {
+    const enclosures = [
+      {
+        url: 'https://aphid.fireside.fm/d/1437767933/02d1ff17-2b18-4b8f-9dc5-b4c78b9e6b21/episode.mp3',
+        type: 'audio/mpeg',
+      },
+    ]
+
+    const expected = html`
+      <audio
+        data-enclosure=""
+        controls
+        src="https://aphid.fireside.fm/d/1437767933/02d1ff17-2b18-4b8f-9dc5-b4c78b9e6b21/episode.mp3"
+      ></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })
