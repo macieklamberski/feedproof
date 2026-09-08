@@ -13,7 +13,7 @@ const safeVideoIdRegex = /^\d+$/
 // there would let the feed choose the page.
 const unlistedHashRegex = /^[0-9a-f]{10}$/
 
-const vimeoHosts = ['vimeo.com', 'player.vimeo.com']
+const vimeoHosts = ['vimeo.com']
 
 // Paths whose leading numeric id is not a video: a showcase and an album are playlists, a channel
 // and a group are listings, an event is a livestream and an on-demand page is a store front, and
