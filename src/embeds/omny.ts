@@ -1,5 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'omny'
@@ -41,7 +42,7 @@ export const omnyResolveEmbed = (url: string): EmbedResolverResult | undefined =
 
   // The query is carried through. `style=cover` and `size=` change the player's shape, so
   // rebuilding a bare url would hand the publisher a different embed than the one they chose.
-  const query = parseUrl(url, 'https://example.com')?.search ?? ''
+  const query = parseUrl(url, placeholderBaseUrl)?.search ?? ''
 
   return {
     provider,

@@ -1,6 +1,6 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { isMediaFile } from '../utils/urls.js'
+import { isMediaFile, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // An episode id is a publisher's letter prefix followed by a run of digits, and the letters are
@@ -34,7 +34,7 @@ const embedKinds = {
 export const extractMegaphoneEmbed = (
   link: string,
 ): { param: string; kind: string; id: string; height: number } | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
 
   // Megaphone serves the episode audio from the same domain as the players, and parameters on a
   // media url are the publisher's own analytics rather than Megaphone's: NPR writes `?e=` for its

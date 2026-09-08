@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, jsonAttr, text } from '../utils/dom.js'
-import { isMediaFile, parseUrlOnHosts } from '../utils/urls.js'
+import { isMediaFile, parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // SoundCloud's embed is an iframe whose `url=` query names the track as an
@@ -175,7 +175,7 @@ export const soundcloudResolveEmbed = (
 ): EmbedResolverResult | undefined => {
   // The factory has already matched the host, which means the url parsed, so there is no
   // unparseable case left to guard here.
-  const parsed = parseUrl(src, 'https://example.com')
+  const parsed = parseUrl(src, placeholderBaseUrl)
   const params = parsed?.searchParams
   const inner = params?.get('url')
   const reference = inner?.match(referenceRegex)

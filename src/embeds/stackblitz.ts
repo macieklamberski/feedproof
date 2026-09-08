@@ -1,7 +1,7 @@
 import { getPathSegments, isHostOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { isFileName } from '../utils/urls.js'
+import { isFileName, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // `blog.stackblitz.com` and `developer.stackblitz.com` are prose, and a project's running preview
@@ -25,7 +25,7 @@ type StackblitzTarget = {
 }
 
 const parseTarget = (value: string | undefined): StackblitzTarget | undefined => {
-  const parsed = parseUrl(value ?? '', 'https://example.com')
+  const parsed = parseUrl(value ?? '', placeholderBaseUrl)
 
   if (!parsed || !isHostOf(parsed, stackblitzHosts)) {
     return

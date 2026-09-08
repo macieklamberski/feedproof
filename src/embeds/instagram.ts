@@ -2,7 +2,7 @@ import { isPlainObject, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, parsePixelSize, text } from '../utils/dom.js'
 import { readPixels } from '../utils/hints.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'instagram'
@@ -310,7 +310,7 @@ export const instagramResolveEmbed = (url: string): EmbedResolverResult | undefi
     return
   }
 
-  const parsed = parseUrl(url, 'https://example.com')
+  const parsed = parseUrl(url, placeholderBaseUrl)
 
   return composeEmbed(post, parsed?.pathname.includes('/embed/captioned') === true)
 }

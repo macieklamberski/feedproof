@@ -6,6 +6,12 @@ import type { ResolveUrlFn, TransformContext } from '../types.js'
 type ResolveContext = Pick<TransformContext, 'resolveUrlFn' | 'baseUrl'>
 type CleanContext = Pick<TransformContext, 'cleanUrlFn'>
 
+// A base for parsing a url that may name no host of its own, which is what a url read out of a
+// query value or a JSON attribute often is. Which host it names never reaches the output: a
+// caller reads the path, the query, or the host the url itself supplied, so any resolvable url
+// serves.
+export const placeholderBaseUrl = 'https://example.com'
+
 const urlShapeRegex = /[:/.]/
 
 // Matches any URL that already carries a scheme (the URL-spec scheme grammar), so it is
@@ -83,7 +89,7 @@ export const parseUrlOnHosts = (
   url: string | undefined,
   hosts: string | ReadonlyArray<string>,
 ): URL | undefined => {
-  const parsed = url ? parseUrl(url, 'https://example.com') : undefined
+  const parsed = url ? parseUrl(url, placeholderBaseUrl) : undefined
 
   if (parsed && isOnHosts(parsed, hosts)) {
     return parsed

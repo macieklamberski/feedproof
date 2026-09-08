@@ -2,6 +2,7 @@ import type { Nullish } from 'trousse'
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, flashVars, keepIfMatches, paramValue } from '../utils/dom.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'brightcove'
@@ -137,7 +138,7 @@ const brightcoveFlashResolveEmbed = (
   src: string,
   element: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(src, 'https://example.com')
+  const parsed = parseUrl(src, placeholderBaseUrl)
 
   if (!parsed || !federatedPathRegex.test(parsed.pathname)) {
     return
@@ -219,7 +220,7 @@ export const brightcoveExperienceEmbedResolver = createMarkupEmbedResolver(
 const playerPathRegex = /^([^_]+)_(.+)$/
 
 export const brightcoveResolveEmbed = (url: string): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(url, 'https://example.com')
+  const parsed = parseUrl(url, placeholderBaseUrl)
 
   if (!parsed?.hostname.startsWith('players.')) {
     return

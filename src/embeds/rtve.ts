@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, flashVars } from '../utils/dom.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // `irtve.es` is the older spelling of the same broadcaster's asset domain and carries the
@@ -104,7 +104,7 @@ export const rtveFlashResolveEmbed = (
   link: string,
   element?: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
 
   if (!parsed || !flashPlayerPathRegex.test(parsed.pathname)) {
     return

@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { flashVars, keepIfMatches } from '../utils/dom.js'
-import { audioFileRegex, splitStrayParams } from '../utils/urls.js'
+import { audioFileRegex, placeholderBaseUrl, splitStrayParams } from '../utils/urls.js'
 import { createUrlEmbedResolver, getEmbedSize } from '../utils/widgets.js'
 
 const provider = 'archive'
@@ -87,7 +87,7 @@ export const archiveResolveEmbed = (
   // The query carries what the publisher chose to embed, a track within a playlist or a start
   // offset, so it goes through untouched. Anything the ampersand form stranded in the path
   // rejoins it here.
-  const search = parseUrl(url, 'https://example.com')?.search ?? ''
+  const search = parseUrl(url, placeholderBaseUrl)?.search ?? ''
   const { strayParams } = readSegmentParts(url)
   const query = strayParams ? `${search ? `${search}&` : '?'}${strayParams}` : search
 
@@ -136,7 +136,7 @@ export const archiveFlashResolveEmbed = (
   src: string,
   element: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(src, 'https://example.com')
+  const parsed = parseUrl(src, placeholderBaseUrl)
 
   if (!parsed || !flashPlayerPathRegex.test(parsed.pathname)) {
     return

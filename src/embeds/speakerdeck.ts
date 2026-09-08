@@ -1,6 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, parseRatio } from '../utils/dom.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Ids are lowercase hex, in two lengths already. 32 chars is the current dashless UUID. 24 is
@@ -91,7 +92,7 @@ export const speakerdeckResolveEmbed = (
     return
   }
 
-  const slide = parseUrl(url, 'https://example.com')?.searchParams.get('slide') ?? undefined
+  const slide = parseUrl(url, placeholderBaseUrl)?.searchParams.get('slide') ?? undefined
 
   return {
     ...composeEmbed(deckId, { slide, title: element ? readTitle(element) : undefined }),

@@ -1,7 +1,7 @@
 import { getPathSegments, type Nullish, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, find, keepIfMatches, text } from '../utils/dom.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const slideshareHosts = ['slideshare.net', 'slidesharecdn.com']
@@ -213,7 +213,7 @@ export const slideshareFlashResolveEmbed = (
   src: string,
   element: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(src, 'https://example.com')
+  const parsed = parseUrl(src, placeholderBaseUrl)
 
   if (!parsed || !flashPlayerPathRegex.test(parsed.pathname)) {
     return

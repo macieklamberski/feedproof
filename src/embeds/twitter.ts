@@ -2,7 +2,7 @@ import { isPlainObject, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, text } from '../utils/dom.js'
 import { readPixels } from '../utils/hints.js'
-import { isOnHosts } from '../utils/urls.js'
+import { isOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'twitter'
@@ -67,7 +67,7 @@ const safeStatusIdRegex = /^\d+$/
 type Status = { handle: string; id: string }
 
 const readStatusUrl = (value: string | undefined): Status | undefined => {
-  const parsed = parseUrl(value ?? '', 'https://example.com')
+  const parsed = parseUrl(value ?? '', placeholderBaseUrl)
 
   if (!parsed || !isTweetUrl(parsed)) {
     return
@@ -100,7 +100,7 @@ const findStatus = (element: Element): { status: Status; anchor?: Element } | un
 
   // The frame has to be the platform's own: `id` is an ordinary parameter name, so any other
   // iframe a publisher nested in the quote would otherwise name the tweet.
-  const frame = parseUrl(attr(find(element, 'iframe[src]'), 'src') ?? '', 'https://example.com')
+  const frame = parseUrl(attr(find(element, 'iframe[src]'), 'src') ?? '', placeholderBaseUrl)
   const framed = frame && isTweetUrl(frame) ? frame.searchParams.get('id') : undefined
   // Each id is validated on its own, because the attributes disagree: a block copied between
   // platforms carries several generations of them and only one is guaranteed to be intact.
@@ -216,12 +216,19 @@ const readTweetText = (element: Element, fullText: string | undefined): string |
 // The first photo, only when its url carries no query. Substack mirrors tweet media on its
 // own host as a bare `pbs.substack.com/media/{key}.jpg` (checked live 2026-08-15: a real key
 // answers 200 image/jpeg, a made-up one 404), so that form is stable. A signature or expiry
-// token can only sit in the query string, so a url carrying one is left for enrichment.
+// token can only sit in the query string, so a url carrying one is left for enrichment. The
+// payload is JSON in an attribute, so nothing upstream has given its urls a scheme, and with no
+// base a scheme-relative one parses to nothing and the photo is dropped without being judged.
 const readPhotoUrl = (photos: SubstackTweetAttrs['photos']): string | undefined => {
   const url = photos?.[0]?.img_url
-  const parsed = parseUrl(url ?? '')
 
-  return parsed && parsed.search === '' ? url : undefined
+  if (!url) {
+    return
+  }
+
+  const parsed = parseUrl(url, placeholderBaseUrl)
+
+  return parsed?.search === '' ? url : undefined
 }
 
 const extractSubstackTweet = (element: Element): EmbedResolverResult | undefined => {

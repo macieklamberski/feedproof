@@ -3,6 +3,7 @@ import { parseSrcset as parseRawSrcset } from 'srcset'
 import { getPathSegments, parseUrl } from 'trousse'
 import type { CleanUrlFn } from '../types.js'
 import { pixelDimensionLimit } from './dom.js'
+import { placeholderBaseUrl } from './urls.js'
 
 // A candidate whose url is only a width/density descriptor (`225w`, `2x`), which a real image
 // url never is. The `srcset` parser is lenient: where a feed leaves a bare descriptor with no
@@ -355,8 +356,7 @@ const leafExtensionRegex = /\.[a-z0-9]+$/i
 // fingerprint: the comparison is then within one host's own directory naming, where
 // small vs large is unambiguous, not a cross-CDN convention.
 export const getSizeKeywordRank = (url: string): number => {
-  // The base only anchors a relative src so its leaf can be read. It never surfaces.
-  const parsed = parseUrl(url, 'https://example.com')
+  const parsed = parseUrl(url, placeholderBaseUrl)
 
   if (!parsed) {
     return 0

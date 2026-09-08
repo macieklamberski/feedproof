@@ -2,7 +2,7 @@ import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize, text } from '../utils/dom.js'
 import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'spreaker'
@@ -23,7 +23,7 @@ const playerHeight = 200
 export const extractSpreakerEmbed = (
   link: string,
 ): { kind: string; param: string; id: string } | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
 
   // The route is `player` on the widget host and `embed/player/{variant}` on the site host,
   // read as a whole segment so a longer name starting with it is not the player route.

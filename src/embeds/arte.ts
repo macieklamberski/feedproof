@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'arte'
@@ -85,7 +85,7 @@ const readProgramFromPlayer = (parsed: URL): Program | undefined => {
 }
 
 const arteResolveEmbed = (link: string, element: Element): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
   const program = parsed && readProgramFromPlayer(parsed)
 
   if (!program) {
