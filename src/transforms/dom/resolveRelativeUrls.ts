@@ -1,5 +1,6 @@
 import { stringifySrcset } from 'srcset'
 import type { DomTransform, ResolveUrlFn } from '../../types.js'
+import { svgHrefAttribute } from '../../utils/dom.js'
 import { countSrcsetCandidates, parseSrcset } from '../../utils/images.js'
 import { absoluteUrlRegex } from '../../utils/urls.js'
 
@@ -53,13 +54,6 @@ const resolveSrcset = (
   element.setAttribute('srcset', stringifySrcset(resolved))
 }
 
-// SVG2 spells it `href`, SVG1 `xlink:href`. Read rather than selected because jsdom matches
-// `image[href]` on an element carrying only `xlink:href` and linkedom does not, so `:not([href])`
-// would drop the SVG1 spelling on jsdom alone. `hasAttribute` answers alike in both.
-const hrefAttribute = (element: Element): string => {
-  return element.hasAttribute('href') ? 'href' : 'xlink:href'
-}
-
 type UrlAttribute = {
   selector: string
   // The name to read, or how to pick it where the element decides.
@@ -77,7 +71,7 @@ const urlAttributes: Array<UrlAttribute> = [
   { selector: 'video[poster]', attribute: 'poster' },
   { selector: 'object[data]', attribute: 'data' },
   { selector: 'blockquote[cite], q[cite], ins[cite], del[cite]', attribute: 'cite' },
-  { selector: 'image', attribute: hrefAttribute },
+  { selector: 'image', attribute: svgHrefAttribute },
   { selector: 'img[srcset], source[srcset]', attribute: 'srcset', srcset: true },
 ]
 
