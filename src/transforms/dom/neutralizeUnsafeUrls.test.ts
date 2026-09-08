@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'bun:test'
 import { baseContext, describeForEachParser, html } from '../../tests.js'
-import type { IsSafeUrlFn, TransformContext } from '../../types.js'
+import type {
+  CiteResolverResult,
+  EmbedResolverResult,
+  IsSafeUrlFn,
+  TransformContext,
+} from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
+import {
+  createCitePlaceholder,
+  createEmbedPlaceholder,
+  normalizeCiteFields,
+  normalizeEmbedFields,
+  prepareCiteMetadata,
+  prepareEmbedMetadata,
+} from '../../utils/widgets.js'
 import { neutralizeUnsafeUrls } from './neutralizeUnsafeUrls.js'
 
 describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
@@ -240,6 +253,56 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
       const value = '<p>text</p>'
 
       expect(await transform(value)).toEqualHtml(value)
+    })
+
+    // genericAttributeRoles restates by hand the url-carrying field names minted in
+    // utils/widgets.ts, so a url field added there and not here ships unchecked and nothing
+    // fails. The next two derive both sides instead of listing them a third time: the field set
+    // from normalizeEmbedFields/normalizeCiteFields, which of them are urls from
+    // prepareEmbedMetadata/prepareCiteMetadata being the pass that resolves one, and the
+    // attribute names from the placeholder the mint path actually builds.
+    //
+    // Every field is handed the same non-url marker and the context resolver answers with the
+    // unsafe url, so whatever the placeholder ends up carrying it is exactly what the mint path
+    // treats as a url. Anything still carrying it after the pass is a url the pass never saw.
+    const unsafeUrl = 'javascript:alert(1)'
+    const mintContext: TransformContext = { ...baseContext, resolveUrlFn: () => unsafeUrl }
+
+    // Stands in for a result with every field populated. The point is to fill each field the mint
+    // path knows, not to be a valid result, so the declared field types are asserted away.
+    const markerFields = <Type>(names: Array<string>): Type => {
+      return Object.fromEntries(names.map((name) => [name, 'not-a-url'])) as unknown as Type
+    }
+
+    const unchecked = async (document: Document, placeholder: Element): Promise<Array<string>> => {
+      document.body.appendChild(placeholder)
+      await neutralizeUnsafeUrls(mintContext)(document)
+
+      return placeholder
+        .getAttributeNames()
+        .filter((name) => placeholder.getAttribute(name) === unsafeUrl)
+    }
+
+    it('should check every url an embed placeholder can mint', async () => {
+      const document = parseHtml('')
+      const metadata = markerFields<EmbedResolverResult>(Object.keys(normalizeEmbedFields({})))
+      const placeholder = createEmbedPlaceholder(
+        document,
+        prepareEmbedMetadata(metadata, mintContext) as EmbedResolverResult,
+      )
+
+      expect(await unchecked(document, placeholder)).toEqual([])
+    })
+
+    it('should check every url a cite placeholder can mint', async () => {
+      const document = parseHtml('')
+      const metadata = markerFields<CiteResolverResult>(Object.keys(normalizeCiteFields({})))
+      const placeholder = createCitePlaceholder(
+        document,
+        prepareCiteMetadata(metadata, mintContext) as CiteResolverResult,
+      )
+
+      expect(await unchecked(document, placeholder)).toEqual([])
     })
   })
 

@@ -1,7 +1,11 @@
-import { getPathSegments, isHostOf, parseUrl } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import { getPathSegments, isHostOf, isPlainObject, parseUrl } from 'trousse'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
+import { readPixels } from '../utils/hints.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
+
+const provider = 'codesandbox'
 
 // `sse.codesandbox.io` serves a sandbox's running preview and `blog.codesandbox.io` the marketing
 // blog, so only the bare host and its `www.` spelling name something embeddable. `isHostOf` and not
@@ -40,7 +44,7 @@ const readId = (slug: string): string | undefined => {
 }
 
 const parseTarget = (value: string | undefined): CodesandboxTarget | undefined => {
-  const parsed = parseUrl(value ?? '', 'https://example.com')
+  const parsed = parseUrl(value ?? '', placeholderBaseUrl)
 
   if (!parsed || !isHostOf(parsed, codesandboxHosts)) {
     return
@@ -93,7 +97,7 @@ export const codesandboxResolveEmbed = (
   const title = attr(element, 'title') || undefined
 
   return {
-    provider: 'codesandbox',
+    provider,
     id: target.id,
     // The publisher's url whole: their query is what opens the editor on the file and the pane they
     // meant, and CodeSandbox serves every one of these routes as a player.
@@ -108,3 +112,27 @@ export const codesandboxIframeEmbedResolver = createUrlEmbedResolver(
   ['codesandbox.io'],
   codesandboxResolveEmbed,
 )
+
+// The editor posts its rendered height unasked, as `{ src, context: 'iframe.resize', height }`,
+// so there is nothing to request: a reader that listens gets the box the sandbox actually needs
+// instead of the 500 stated above. Verified in a browser on 2026-09-07, where one sandbox
+// reported 564 and then 664 as it settled.
+//
+// The origin is spelled out rather than left to the frame's own, which is the trap here. The src
+// is the publisher's url whole, and `www.codesandbox.io` is a spelling this resolver accepts; it
+// 301s to the apex, so the frame's `src` would say `www` while every message arrives from
+// `https://codesandbox.io` and a reader matching the two would drop them all.
+//
+// A publisher who wrote no `autoresize=1` gets a constant 500 rather than the content height,
+// which is the height already stated, so the hint is worth having either way.
+export const readCodesandboxHeight = (data: unknown): number | undefined => {
+  return isPlainObject(data) && data.context === 'iframe.resize'
+    ? readPixels(data.height)
+    : undefined
+}
+
+export const codesandboxRenderHint: EmbedRenderHint = {
+  provider,
+  origin: 'https://codesandbox.io',
+  readHeight: readCodesandboxHeight,
+}

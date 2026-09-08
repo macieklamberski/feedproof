@@ -1,6 +1,9 @@
-import { extractDailymotionId } from '../../embeds/dailymotion.js'
-import { extractVimeoId } from '../../embeds/vimeo.js'
-import { composeEmbedUrl, extractVideoId } from '../../embeds/youtube.js'
+import {
+  composeEmbedUrl as composeDailymotionUrl,
+  extractDailymotionId,
+} from '../../embeds/dailymotion.js'
+import { composeEmbedUrl as composeVimeoUrl, extractVimeoId } from '../../embeds/vimeo.js'
+import { composeEmbedUrl as composeYoutubeUrl, extractVideoId } from '../../embeds/youtube.js'
 import type { DomTransform } from '../../types.js'
 import { jsonAttr } from '../../utils/dom.js'
 import { createIframe } from '../../utils/widgets.js'
@@ -16,19 +19,19 @@ const iframeSources: Record<string, (settings: Record<string, unknown>) => strin
     const url = settings.youtube_url
     const videoId = typeof url === 'string' ? extractVideoId(url) : undefined
 
-    return videoId ? composeEmbedUrl(videoId) : undefined
+    return videoId ? composeYoutubeUrl(videoId) : undefined
   },
   vimeo: (settings) => {
     const url = settings.vimeo_url
     const videoId = typeof url === 'string' ? extractVimeoId(url) : undefined
 
-    return videoId ? `https://player.vimeo.com/video/${videoId}` : undefined
+    return videoId ? composeVimeoUrl(videoId) : undefined
   },
   dailymotion: (settings) => {
     const url = settings.dailymotion_url
     const videoId = typeof url === 'string' ? extractDailymotionId(url) : undefined
 
-    return videoId ? `https://www.dailymotion.com/embed/video/${videoId}` : undefined
+    return videoId ? composeDailymotionUrl('video', videoId) : undefined
   },
   videopress: (settings) => {
     // The insert-URL mode (videopress.com/v/{guid}) is the embeddable iframe src as-is, so

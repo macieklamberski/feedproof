@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
   imgurBlockquoteEmbedResolver,
   imgurIframeEmbedResolver,
   imgurResolveEmbed,
+  readImgurHeight,
 } from './imgur.js'
 
 // Imgur's own routes, none of which names a post to mint from.
@@ -245,6 +247,43 @@ describe('imgurResolveEmbed', () => {
 
     expect(imgurResolveEmbed(value)).toBeUndefined()
   })
+
+  describe('the hosts a post page answers on', () => {
+    it('should read the mobile spelling of the post page', () => {
+      const value = 'https://m.imgur.com/pVa2rXL'
+      const expected: EmbedResolverResult = {
+        provider: 'imgur',
+        id: 'pVa2rXL',
+        src: 'https://imgur.com/pVa2rXL/embed',
+        url: 'https://imgur.com/pVa2rXL',
+        thumbnail: 'https://i.imgur.com/pVa2rXLm.jpg',
+      }
+
+      expect(imgurResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should read the www spelling of the post page', () => {
+      const value = 'https://www.imgur.com/pVa2rXL'
+      const expected: EmbedResolverResult = {
+        provider: 'imgur',
+        id: 'pVa2rXL',
+        src: 'https://imgur.com/pVa2rXL/embed',
+        url: 'https://imgur.com/pVa2rXL',
+        thumbnail: 'https://i.imgur.com/pVa2rXLm.jpg',
+      }
+
+      expect(imgurResolveEmbed(value)).toEqual(expected)
+    })
+
+    it.each([
+      'https://i.imgur.com/pVa2rXL',
+      'https://i.imgur.com/pVa2rXL.mp4',
+      'https://s.imgur.com/min/embed.js',
+      'https://i.stack.imgur.com/pVa2rXL.png',
+    ])('should ignore %s, which names a file rather than a post', (value) => {
+      expect(imgurResolveEmbed(value)).toBeUndefined()
+    })
+  })
 })
 
 describeForEachParser('imgurIframeEmbedResolver', (parseHtml) => {
@@ -277,5 +316,74 @@ describeForEachParser('imgurIframeEmbedResolver', (parseHtml) => {
     const value = '<iframe src="https://evil.test/pVa2rXL/embed"></iframe>'
 
     expect(await extract(value)).toBeUndefined()
+  })
+})
+
+// The enclosure probe offers every attachment to every url resolver, so only a pipeline test
+// reaches the path where claiming a media url would cost a reader the file.
+describeForEachParser('imgur through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should claim a post page offered as an enclosure', async () => {
+    const enclosures = [{ url: 'https://imgur.com/pVa2rXL', type: 'text/html' }]
+
+    const expected = html`
+      <div
+        data-enclosure=""
+        data-embed-thumbnail="https://i.imgur.com/pVa2rXLm.jpg"
+        data-embed-url="https://imgur.com/pVa2rXL"
+        data-embed-id="pVa2rXL"
+        data-embed-provider="imgur"
+        data-embed-src="https://imgur.com/pVa2rXL/embed"
+      ></div>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+
+  it('should leave an extensionless media enclosure playable', async () => {
+    const enclosures = [{ url: 'https://i.imgur.com/pVa2rXL', type: 'video/mp4' }]
+
+    const expected = html`
+      <video data-enclosure="" controls src="https://i.imgur.com/pVa2rXL"></video>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+})
+
+describe('readImgurHeight', () => {
+  // What a post posts on load, at 640 wide, as the JSON string the embed document builds.
+  it('should read the height out of a resize message', () => {
+    const value = JSON.stringify({
+      message: 'resize_imgur',
+      href: 'https://imgur.com/pVa2rXL/embed',
+      height: 595,
+      width: 640,
+      context: true,
+    })
+
+    expect(readImgurHeight(value)).toBe(595)
+  })
+
+  it('should read nothing from another message or an unrendered post', () => {
+    const unrendered = JSON.stringify({ message: 'resize_imgur', height: 0 })
+    const other = JSON.stringify({ message: 'imgur_loaded', height: 595 })
+
+    expect(readImgurHeight(unrendered)).toBeUndefined()
+    expect(readImgurHeight(other)).toBeUndefined()
+  })
+
+  it('should read nothing from a payload that is not a JSON string', () => {
+    expect(readImgurHeight({ message: 'resize_imgur', height: 595 })).toBeUndefined()
+    expect(readImgurHeight('resize_imgur')).toBeUndefined()
   })
 })

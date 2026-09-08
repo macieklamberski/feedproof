@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, type Nullish, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { keepIfMatches } from '../utils/dom.js'
 import { pickUrlParams, splitStrayParams } from '../utils/urls.js'
@@ -26,6 +26,12 @@ const dailymotionHosts = [
 // the second of the two forms the Flash player shipped.
 const pathWords = new Set(['embed', 'video', 'swf'])
 
+// `/embed/{locale}/video/{id}` serves the player and redirects to
+// `geo.dailymotion.com/player.html?video={id}`, checked 2026-09-07 for ar, ca, de, en, es, fr,
+// he, id, it, nl, pl, pt, ro, ru, th, tr and vi, with `ja` and an invented `zz` answering 404.
+// The shape is read rather than that list, which would start refusing the next language added.
+const localeRegex = /^[a-z]{2}$/
+
 // Kinds Dailymotion's embed route serves besides a video, so the segment names a listing or a
 // landing page and never a video. Measured 2026-09-07 against `/embed/{word}/x7tgad0`: only
 // `video` and `playlist` reach the player carrying the id, each word below reaches it with an
@@ -47,6 +53,38 @@ const nonVideoWords = new Set([
   'live',
 ])
 
+const isRouteWord = (segment: string): boolean => {
+  return pathWords.has(segment) || nonVideoWords.has(segment)
+}
+
+// A locale is stepped over only where a route word follows it, so `/embed/fr/video/{id}` reaches
+// the id while a two-letter account name at the head of a path still names no video. The word may
+// be a listing one: `/embed/fr/playlist/{id}` loses the playlist and loads an empty player, so the
+// id has to reach the playlist reader for the working url to be minted.
+const skipRouteWords = (segments: Array<string>): number => {
+  let index = 0
+
+  while (
+    index < segments.length &&
+    (pathWords.has(segments[index]) ||
+      (localeRegex.test(segments[index]) && isRouteWord(segments[index + 1])))
+  ) {
+    index++
+  }
+
+  return index
+}
+
+// Share urls append a `_title-slug` to the id and the platform strips it itself:
+// `api.dailymotion.com/playlist/x5zhzj_long-playlist` and `/video/x7tgad0_some-slug` answer
+// byte identically to their bare ids, while an invented id 404s either way (checked 2026-09-08).
+// The Flash player wrote `/swf/{id}&colors=…`, so the stray query rides on the segment too.
+const readId = (candidate: Nullish<string>): string | undefined => {
+  const head = candidate && splitStrayParams(candidate).head.split('_')[0]
+
+  return keepIfMatches(head, safeVideoIdRegex)
+}
+
 // A playlist names no single video, so it is read separately and only once the video readers have
 // found nothing: `/embed/video/{id}?playlist={id}` is a video playing inside one, not a playlist.
 export const extractDailymotionPlaylistId = (link: string): string | undefined => {
@@ -57,10 +95,15 @@ export const extractDailymotionPlaylistId = (link: string): string | undefined =
   }
 
   const segments = getPathSegments(url)
-  const marker = segments.indexOf('playlist')
-  const candidate = marker < 0 ? url.searchParams.get('playlist') : segments[marker + 1]
+  const marker = skipRouteWords(segments)
 
-  return keepIfMatches(candidate, safeVideoIdRegex)
+  // The word is read where the route prefix ends rather than found anywhere in the path. Scanning
+  // read `/search/playlist/videos`, the search page for the word, as a playlist called `videos`,
+  // and `/embed/{account}/playlist/{id}` answers a real 404, so no working form sits deeper.
+  const candidate =
+    segments[marker] === 'playlist' ? segments[marker + 1] : url.searchParams.get('playlist')
+
+  return readId(candidate)
 }
 
 const readPathId = (url: URL, segments: Array<string>): string | undefined => {
@@ -70,11 +113,7 @@ const readPathId = (url: URL, segments: Array<string>): string | undefined => {
     return segments[0]
   }
 
-  let index = 0
-
-  while (index < segments.length && pathWords.has(segments[index])) {
-    index++
-  }
+  const index = skipRouteWords(segments)
 
   // A path opening with no route word names no video. Site pages would otherwise read as one:
   // `/about` is five legal id characters.
@@ -92,18 +131,16 @@ export const extractDailymotionId = (link: string): string | undefined => {
 
   // Each candidate is validated on its own, so a path segment that is not an id still leaves
   // the geo player's `video` parameter to be read.
-  return (
-    [readPathId(url, getPathSegments(url)), url.searchParams.get('video')]
-      // Share urls append a "_title-slug" to the id. Keep only the id.
-      // The Flash player wrote `/swf/{id}&colors=…`, so the id is the segment's head.
-      .map((candidate) =>
-        keepIfMatches(
-          candidate && splitStrayParams(candidate).head.split('_')[0],
-          safeVideoIdRegex,
-        ),
-      )
-      .find(Boolean)
-  )
+  return [readPathId(url, getPathSegments(url)), url.searchParams.get('video')]
+    .map(readId)
+    .find(Boolean)
+}
+
+// The player url every caller that recovers an id has to build. A video and a playlist are
+// separate players sharing one id grammar, so the route is named rather than assumed, and the
+// query arrives ready to append from `pickUrlParams`.
+export const composeEmbedUrl = (route: 'video' | 'playlist', id: string, query = ''): string => {
+  return `https://www.dailymotion.com/embed/${route}/${id}${query}`
 }
 
 // Where playback starts, and the playlist the video sits in. The rest of the publisher's
@@ -117,7 +154,7 @@ export const dailymotionResolveEmbed = (url: string): EmbedResolverResult | unde
     return {
       provider: 'dailymotion',
       id: videoId,
-      src: `https://www.dailymotion.com/embed/video/${videoId}${pickUrlParams(url, dailymotionEmbedParams)}`,
+      src: composeEmbedUrl('video', videoId, pickUrlParams(url, dailymotionEmbedParams)),
       url: `https://www.dailymotion.com/video/${videoId}`,
       thumbnail: `https://www.dailymotion.com/thumbnail/video/${videoId}`,
       // Not the player's shape: it fills whatever frame it gets, at 320, 640 and 1280 wide alike,
@@ -139,7 +176,7 @@ export const dailymotionResolveEmbed = (url: string): EmbedResolverResult | unde
     return {
       provider: 'dailymotion',
       id: `playlist/${playlistId}`,
-      src: `https://www.dailymotion.com/embed/playlist/${playlistId}`,
+      src: composeEmbedUrl('playlist', playlistId),
       url: `https://www.dailymotion.com/playlist/${playlistId}`,
     }
   }

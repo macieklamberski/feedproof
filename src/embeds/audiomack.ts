@@ -50,7 +50,7 @@ const readTrack = (url: URL): Track | undefined => {
   // The current player spells the kind either side of the artist. `embed/song/{artist}/{slug}`
   // 301s to `embed/{artist}/song/{slug}`, so the second is canonical and the first is written
   // out to it rather than passed on.
-  return second in audiomackHeights
+  return Object.hasOwn(audiomackHeights, second)
     ? { artist: third, kind: second, slug: fourth, search: url.search }
     : { artist: second, kind: third, slug: fourth, search: url.search }
 }
@@ -59,7 +59,7 @@ export const audiomackResolveEmbed = (url: string): EmbedResolverResult | undefi
   const parsed = parseUrlOnHosts(url, audiomackHost)
   const track = parsed && readTrack(parsed)
 
-  if (!track || !(track.kind in audiomackHeights)) {
+  if (!track || !Object.hasOwn(audiomackHeights, track.kind)) {
     return
   }
 

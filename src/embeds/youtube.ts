@@ -4,6 +4,8 @@ import { attr } from '../utils/dom.js'
 import { pickUrlParams, splitStrayParams } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'youtube'
+
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
 
 // Some feeds (Steam news) leak the opening quote of the source `[previewyoutube="id]`
@@ -157,11 +159,14 @@ const playerRatio = '16/9'
 // A playlist or channel live embed is not a single video: it has no video id, no single poster
 // and no `watch?v=` page. Each keeps a working src and a canonical url, posterless, and its
 // list, channel or username becomes the enrichment key (a playlist resolves title and poster
-// through YouTube's keyless oEmbed, a channel through the Data API).
+// through YouTube's keyless oEmbed, a channel through the Data API). Each key names the route it
+// addresses, because the three id spaces overlap: `PBS` is a legal playlist id, channel id and
+// legacy username at once, and enrichment receives the provider and the id alone. A video keeps
+// its bare eleven characters.
 const composeListEmbed = (list: string): EmbedResolverResult => {
   return {
-    provider: 'youtube',
-    id: list,
+    provider,
+    id: `playlist/${list}`,
     src: composeEmbedUrl('videoseries', { list }),
     url: `https://www.youtube.com/playlist?list=${list}`,
     ratio: playerRatio,
@@ -172,8 +177,8 @@ const composeListEmbed = (list: string): EmbedResolverResult => {
 // in the form the player understands rather than becoming a videoseries url.
 const composeUploadsEmbed = (user: string): EmbedResolverResult => {
   return {
-    provider: 'youtube',
-    id: user,
+    provider,
+    id: `user/${user}`,
     src: `https://www.youtube.com/embed?listType=user_uploads&list=${user}`,
     url: `https://www.youtube.com/user/${user}`,
     ratio: playerRatio,
@@ -182,8 +187,8 @@ const composeUploadsEmbed = (user: string): EmbedResolverResult => {
 
 const composeChannelEmbed = (channel: string): EmbedResolverResult => {
   return {
-    provider: 'youtube',
-    id: channel,
+    provider,
+    id: `channel/${channel}`,
     src: composeEmbedUrl('live_stream', { channel }),
     url: `https://www.youtube.com/channel/${channel}`,
     ratio: playerRatio,
@@ -220,9 +225,16 @@ const resolveCollectionEmbed = (
   return listType === 'user_uploads' ? composeUploadsEmbed(list) : composeListEmbed(list)
 }
 
-export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+// YouTube's oEmbed html writes the video's own title on the iframe, and a url carries no name of
+// any kind. Taken as stated, player labels included: they are localised into every language
+// YouTube serves and some name the plugin rather than the platform, so a list of them goes stale.
+export const youtubeResolveEmbed = (
+  url: string,
+  element?: Element,
+): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url)
   const segments = parsed ? getPathSegments(parsed) : []
+  const title = element ? attr(element, 'title') : undefined
 
   if (segments[0] === 'embed' && parsed) {
     const embed = resolveCollectionEmbed(parsed, segments)
@@ -230,7 +242,7 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
     // A `/embed/{id}` path names a video and falls through; the rest of the embed paths name
     // their content here or name nothing resolvable.
     if (embed || segments.length === 1 || nonVideoIds.has(segments[1])) {
-      return embed
+      return embed && { ...embed, title }
     }
   }
 
@@ -240,7 +252,9 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
   if (segments[0] === 'p') {
     const list = splitStrayParams(segments[1] ?? '').head
 
-    return legacyPlaylistIdRegex.test(list) ? composeListEmbed(`PL${list}`) : undefined
+    return legacyPlaylistIdRegex.test(list)
+      ? { ...composeListEmbed(`PL${list}`), title }
+      : undefined
   }
 
   const videoId = extractVideoId(url)
@@ -250,12 +264,13 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 
   return {
-    provider: 'youtube',
+    provider,
     id: videoId,
     src: `${composeEmbedUrl(videoId)}${pickUrlParams(url, youtubeEmbedParams)}`,
     url: `https://www.youtube.com/watch?v=${videoId}`,
     thumbnail: composeThumbnailUrl(videoId),
     ratio: playerRatio,
+    title,
   }
 }
 
@@ -300,7 +315,7 @@ export const youtubeAmpEmbedResolver = createMarkupEmbedResolver(
     }
 
     return {
-      provider: 'youtube',
+      provider,
       id: videoId,
       src: composeEmbedUrl(videoId, params),
       url: `https://www.youtube.com/watch?v=${videoId}`,
@@ -313,6 +328,6 @@ export const youtubeAmpEmbedResolver = createMarkupEmbedResolver(
 
 // What a reader appends to start playback on the click that loads the player.
 export const youtubeRenderHint: EmbedRenderHint = {
-  provider: 'youtube',
+  provider,
   autoplayParams: { autoplay: '1', enablejsapi: '1' },
 }

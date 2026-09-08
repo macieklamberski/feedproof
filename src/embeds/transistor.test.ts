@@ -134,6 +134,21 @@ describe('extractTransistorEmbed', () => {
 })
 
 describe('transistorResolveEmbed', () => {
+  // The player cannot be opened as a page, so the share page the same id addresses is what the
+  // placeholder clicks through to.
+  it('should mint the share page from a player url that names no page', () => {
+    const value = 'https://share.transistor.fm/e/a1b2c3d4'
+    const expected: EmbedResolverResult = {
+      provider: 'transistor',
+      id: 'episode/a1b2c3d4',
+      src: 'https://share.transistor.fm/e/a1b2c3d4',
+      url: 'https://share.transistor.fm/s/a1b2c3d4',
+      height: 180,
+    }
+
+    expect(transistorResolveEmbed(value)).toEqual(expected)
+  })
+
   // 180 across 49 of 49 sampled corpus iframes, and their oEmbed agrees.
   it('should size an episode at the fixed height', () => {
     const value = 'https://share.transistor.fm/e/a1b2c3d4/dark'
@@ -141,6 +156,7 @@ describe('transistorResolveEmbed', () => {
       provider: 'transistor',
       id: 'episode/a1b2c3d4',
       src: 'https://share.transistor.fm/e/a1b2c3d4',
+      url: 'https://share.transistor.fm/s/a1b2c3d4',
       height: 180,
     }
 
@@ -148,19 +164,21 @@ describe('transistorResolveEmbed', () => {
   })
 
   // The share page refuses framing, so the mint has to be the `/e/` player it fronts, which
-  // takes the same id.
+  // takes the same id, and the share page stays as the url.
   it('should mint the episode player from a share page url', () => {
     const value = 'https://share.transistor.fm/s/9f8e7d6c'
     const expected: EmbedResolverResult = {
       provider: 'transistor',
       id: 'episode/9f8e7d6c',
       src: 'https://share.transistor.fm/e/9f8e7d6c',
+      url: 'https://share.transistor.fm/s/9f8e7d6c',
       height: 180,
     }
 
     expect(transistorResolveEmbed(value)).toEqual(expected)
   })
 
+  // A show mode states no url, because the embed slug names no page on the platform.
   it('should keep the mode segment a show player needs', () => {
     const value = 'https://share.transistor.fm/e/megamaker/latest'
     const expected: EmbedResolverResult = {

@@ -23,6 +23,9 @@ const videoUrls = [
   'https://geo.dailymotion.com/player.html?video=x7tgad0',
   // Share urls append a title slug to the id.
   'https://www.dailymotion.com/video/x7tgad0_some-title',
+  // The locale Dailymotion writes into the path, on the embed route and on the watch page.
+  'https://www.dailymotion.com/embed/fr/video/x7tgad0',
+  'https://www.dailymotion.com/es/video/x7tgad0',
 ]
 
 // Every spelling that names a playlist rather than one video. None may yield a video id, and all
@@ -31,6 +34,14 @@ const playlistUrls = [
   'https://www.dailymotion.com/embed/playlist/x6zqmk',
   'https://www.dailymotion.com/playlist/x6zqmk',
   'https://geo.dailymotion.com/player.html?playlist=x6zqmk',
+  // The locale form loads an empty player, so the id is repaired onto the plain playlist route.
+  'https://www.dailymotion.com/embed/fr/playlist/x6zqmk',
+  'https://www.dailymotion.com/fr/playlist/x6zqmk',
+  // Share urls append a title slug here too, and every route spelling can carry one.
+  'https://www.dailymotion.com/playlist/x6zqmk_some-playlist',
+  'https://www.dailymotion.com/embed/playlist/x6zqmk_some-playlist',
+  'https://www.dailymotion.com/embed/fr/playlist/x6zqmk_some-playlist',
+  'https://geo.dailymotion.com/player.html?playlist=x6zqmk_some-playlist',
 ]
 
 // The kinds Dailymotion's embed route serves besides a video. Probed 2026-09-07: each of these
@@ -75,6 +86,15 @@ describe('extractDailymotionId', () => {
     'https://dai.ly/x13i',
   ])('should extract a four-character id from %s', (value) => {
     expect(extractDailymotionId(value)).toBe('x13i')
+  })
+
+  // A locale is only stepped over where a route word follows it. Dailymotion's own account
+  // pages sit at the head of the path, so a two-letter handle there names no video.
+  it.each([
+    'https://www.dailymotion.com/fr/dailymotion',
+    'https://www.dailymotion.com/embed/fr/user/dailymotion',
+  ])('should extract no id from %s', (value) => {
+    expect(extractDailymotionId(value)).toBeUndefined()
   })
 
   it('should return undefined for an invalid url', () => {
@@ -154,6 +174,15 @@ describe('dailymotionResolveEmbed', () => {
     expect(dailymotionResolveEmbed(value)).toEqual(expected)
   })
 
+  // The word only names a playlist where the route prefix ends. Scanning the whole path for it
+  // read this search page, whose query is the word itself, as the playlist `videos`, which
+  // `api.dailymotion.com/playlist/videos` answers 404 for.
+  it('should refuse the playlist word sitting deeper in the path', () => {
+    const value = 'https://www.dailymotion.com/search/playlist/videos'
+
+    expect(dailymotionResolveEmbed(value)).toBeUndefined()
+  })
+
   // Reading one of these as an id mints a player for whichever video happens to own the word:
   // `/embed/channel/{id}` yielded `channel` and pointed the placeholder at
   // `dailymotion.com/video/channel`.
@@ -224,7 +253,8 @@ describeForEachParser('dailymotionEmbedResolver', (parseHtml) => {
 })
 
 // The probe offers every enclosure a feed carries to the url resolvers, and Dailymotion serves
-// its own files under `/cdn/`, so the id test has to leave a media url alone.
+// its own files under `/cdn/`. What leaves the media url alone is the route-word rule rather than
+// the id test: `/cdn/` opens no route word, so no segment is read as an id at all.
 describeForEachParser('dailymotion through the pipeline', (parseHtml) => {
   const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
     return transformContent(value, {

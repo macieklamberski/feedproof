@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { extractMegaphoneEmbed, megaphoneResolveEmbed } from './megaphone.js'
+import {
+  extractMegaphoneEmbed,
+  megaphoneEmbedResolver,
+  megaphoneResolveEmbed,
+} from './megaphone.js'
 
 describe('extractMegaphoneEmbed', () => {
   it('should read an episode embed', () => {
@@ -52,6 +58,18 @@ describe('extractMegaphoneEmbed', () => {
     const value = 'https://dcs.megaphone.fm/NPR9963319425.mp3'
 
     expect(extractMegaphoneEmbed(value)).toBeUndefined()
+  })
+
+  // The refusal covers every file the reader can already show and not only the playable ones. A
+  // picture or a document carrying one of these parameters pays the price audio does: the
+  // attachment becomes a click-to-load player box and the file itself never renders.
+  it.each([
+    'https://dcs.megaphone.fm/ART9963319425.jpg?e=AUDD4761726018',
+    'https://traffic.megaphone.fm/cover.png?p=NSM7546490835',
+    'https://dcs.megaphone.fm/transcript.pdf?e=AUDD4761726018',
+    'https://dcs.megaphone.fm/shownotes.docx?e=AUDD4761726018',
+  ])('should not read a publisher parameter off a file url (%s)', (url) => {
+    expect(extractMegaphoneEmbed(url)).toBeUndefined()
   })
 
   // An episode id is letters followed by exactly ten digits, so a bare number is not one.
@@ -131,5 +149,105 @@ describe('megaphoneResolveEmbed', () => {
     const value = 'https://playlist.megaphone.fm/?x=ABC123'
 
     expect(megaphoneResolveEmbed(value)).toBeUndefined()
+  })
+})
+
+describeForEachParser('megaphoneEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, megaphoneEmbedResolver)
+
+  describe('happy paths', () => {
+    it('should read the player off an iframe carrier', async () => {
+      const value = '<iframe src="https://playlist.megaphone.fm/?e=AUDD4761726018"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'megaphone',
+        id: 'episode/AUDD4761726018',
+        src: 'https://playlist.megaphone.fm/?e=AUDD4761726018',
+        height: 200,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    // The carrier selector matches every iframe, so the host gate is the only thing that turns
+    // this away, and a lookalike is the specimen that reaches it: host matching admits subdomains.
+    it('should ignore a lookalike host carrying the player query', async () => {
+      const value = '<iframe src="https://megaphone.fm.evil.test/?e=AUDD4761726018"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  describe('edge cases', () => {
+    // The two kinds are separated so a playlist is not squeezed into the episode height, but a
+    // publisher who stated a box of their own outranks that measurement.
+    it('should take the size the carrier states over the height the kind implies', async () => {
+      const value = html`
+        <iframe
+          src="https://playlist.megaphone.fm/?p=NSM7546490835"
+          width="640"
+          height="200"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'megaphone',
+        id: 'playlist/NSM7546490835',
+        src: 'https://playlist.megaphone.fm/?p=NSM7546490835',
+        width: 640,
+        height: 200,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+})
+
+// injectEnclosures offers every attachment to every url-keyed resolver, and megaphone serves the
+// episode files from the same domain as the players, so only an enclosure test reaches the path
+// where claiming a file url would cost a reader the element they can already see.
+describeForEachParser('megaphone through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should leave a megaphone audio enclosure playable', async () => {
+    const enclosures = [
+      { url: 'https://traffic.megaphone.fm/APO1003212054.mp3', type: 'audio/mpeg' },
+    ]
+
+    const expected = html`
+      <audio data-enclosure="" controls src="https://traffic.megaphone.fm/APO1003212054.mp3"></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+
+  it('should leave a megaphone image enclosure an image', async () => {
+    const enclosures = [
+      { url: 'https://dcs.megaphone.fm/ART9963319425.jpg?e=AUDD4761726018', type: 'image/jpeg' },
+    ]
+
+    const expected = html`
+      <img data-enclosure="" src="https://dcs.megaphone.fm/ART9963319425.jpg?e=AUDD4761726018">
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+
+  // Nothing renders a document, so the reader gets the body alone. That is the point: a placeholder
+  // promising a player for a transcript is worse than the attachment going unrendered.
+  it('should not turn a megaphone document enclosure into a player', async () => {
+    const enclosures = [
+      { url: 'https://dcs.megaphone.fm/transcript.pdf?e=AUDD4761726018', type: 'application/pdf' },
+    ]
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml('<p>Body</p>')
   })
 })

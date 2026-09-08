@@ -101,6 +101,17 @@ describeForEachParser('podetizeScriptEmbedResolver', (parseHtml) => {
   })
 
   describe('sad paths', () => {
+    it('should ignore a foreign host carrying the same path', async () => {
+      const value = html`
+        <script
+          src="https://evil.test/player.podetize.com/loadShowcasePlayer.js"
+          data="P8RHvvMsf"
+        ></script>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     it('should return undefined for an id that cannot sit in a query', async () => {
       const value = html`
         <script

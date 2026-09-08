@@ -1,101 +1,97 @@
 import { stringifySrcset } from 'srcset'
-import type { DomTransform } from '../../types.js'
+import type { DomTransform, ResolveUrlFn } from '../../types.js'
+import { svgHrefAttribute } from '../../utils/dom.js'
 import { countSrcsetCandidates, parseSrcset } from '../../utils/images.js'
 import { absoluteUrlRegex } from '../../utils/urls.js'
+
+// An absolute value is left byte-identical, and a relative one with no `baseUrl` resolves to
+// nothing and stays as written.
+const resolveAttribute = (
+  element: Element,
+  attribute: string,
+  baseUrl: string | undefined,
+  resolveUrlFn: ResolveUrlFn,
+): void => {
+  const value = element.getAttribute(attribute)
+
+  if (!value || absoluteUrlRegex.test(value)) {
+    return
+  }
+
+  const resolved = resolveUrlFn(value, baseUrl)
+
+  if (resolved) {
+    element.setAttribute(attribute, resolved)
+  }
+}
+
+// Rewritten even when no url needed resolving: `parseSrcset` drops malformed descriptor-only
+// candidates, and the rewrite is what keeps those out of the attribute.
+const resolveSrcset = (
+  element: Element,
+  baseUrl: string | undefined,
+  resolveUrlFn: ResolveUrlFn,
+): void => {
+  const srcset = element.getAttribute('srcset')
+
+  if (!srcset) {
+    return
+  }
+
+  const entries = parseSrcset(srcset)
+  const hasRelative = entries.some((entry) => !absoluteUrlRegex.test(entry.url))
+  const droppedCandidate = entries.length < countSrcsetCandidates(srcset)
+
+  if (!hasRelative && !droppedCandidate) {
+    return
+  }
+
+  const resolved = entries.map((entry) => ({
+    ...entry,
+    url: resolveUrlFn(entry.url, baseUrl) ?? entry.url,
+  }))
+
+  element.setAttribute('srcset', stringifySrcset(resolved))
+}
+
+type UrlAttribute = {
+  selector: string
+  // The name to read, or how to pick it where the element decides.
+  attribute: string | ((element: Element) => string)
+  // `srcset` holds many urls and is rewritten even when none resolved, so it takes its own pass.
+  srcset?: boolean
+}
+
+// `src` matches any element, not a list of tags: widget resolvers claim `script[src*="…"]`
+// carriers. The anchor keeps fragment-only hrefs so in-article links still scroll; a `cite` names
+// nothing to scroll to, so it takes no such exception.
+const urlAttributes: Array<UrlAttribute> = [
+  { selector: '[src]', attribute: 'src' },
+  { selector: 'a[href]:not([href^="#"])', attribute: 'href' },
+  { selector: 'video[poster]', attribute: 'poster' },
+  { selector: 'object[data]', attribute: 'data' },
+  { selector: 'blockquote[cite], q[cite], ins[cite], del[cite]', attribute: 'cite' },
+  { selector: 'image', attribute: svgHrefAttribute },
+  { selector: 'img[srcset], source[srcset]', attribute: 'srcset', srcset: true },
+]
 
 // Runs without a `baseUrl` too. A protocol-relative url needs a scheme, not a base, and
 // `resolveUrlFn` supplies one, so those are absolutised for every caller. Anything genuinely
 // relative resolves to nothing without a base and is left as it stands, which is what the
-// `if (resolved)` guards below already express.
+// `if (resolved)` guard in `resolveAttribute` expresses.
 export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => {
   return (document) => {
-    const elements = document.querySelectorAll(
-      'a[href], [src], video[poster], img[srcset], source[srcset], object[data], image',
-    )
-
-    for (const element of elements) {
-      const localName = element.localName
-
-      if (localName === 'a') {
-        const href = element.getAttribute('href')
-
-        // Preserve fragment-only hrefs so in-article anchors keep scrolling locally.
-        if (href && !href.startsWith('#') && !absoluteUrlRegex.test(href)) {
-          const resolved = resolveUrlFn(href, baseUrl)
-
-          if (resolved) {
-            element.setAttribute('href', resolved)
-          }
-        }
-      }
-
-      const src = element.getAttribute('src')
-
-      if (src && !absoluteUrlRegex.test(src)) {
-        const resolved = resolveUrlFn(src, baseUrl)
-
-        if (resolved) {
-          element.setAttribute('src', resolved)
-        }
-      }
-
-      if (localName === 'video') {
-        const poster = element.getAttribute('poster')
-
-        if (poster && !absoluteUrlRegex.test(poster)) {
-          const resolved = resolveUrlFn(poster, baseUrl)
-
-          if (resolved) {
-            element.setAttribute('poster', resolved)
-          }
-        }
-      }
-
-      if (localName === 'object') {
-        const data = element.getAttribute('data')
-
-        if (data && !absoluteUrlRegex.test(data)) {
-          const resolved = resolveUrlFn(data, baseUrl)
-
-          if (resolved) {
-            element.setAttribute('data', resolved)
-          }
-        }
-      }
-
-      // SVG <image> carries its URL on href (SVG2) or xlink:href (SVG1).
-      if (localName === 'image') {
-        const attribute = element.hasAttribute('href') ? 'href' : 'xlink:href'
-        const href = element.getAttribute(attribute)
-
-        if (href && !absoluteUrlRegex.test(href)) {
-          const resolved = resolveUrlFn(href, baseUrl)
-
-          if (resolved) {
-            element.setAttribute(attribute, resolved)
-          }
-        }
-      }
-
-      if (localName === 'img' || localName === 'source') {
-        const srcset = element.getAttribute('srcset')
-
+    for (const { selector, attribute, srcset } of urlAttributes) {
+      for (const element of document.querySelectorAll(selector)) {
         if (srcset) {
-          const entries = parseSrcset(srcset)
-          const hasRelative = entries.some((entry) => !absoluteUrlRegex.test(entry.url))
-          // parseSrcset drops malformed descriptor-only candidates. Rewriting when it did
-          // keeps them out of the attribute even when no url needed resolving.
-          const droppedCandidate = entries.length < countSrcsetCandidates(srcset)
+          resolveSrcset(element, baseUrl, resolveUrlFn)
 
-          if (hasRelative || droppedCandidate) {
-            const resolved = entries.map((entry) => ({
-              ...entry,
-              url: resolveUrlFn(entry.url, baseUrl) ?? entry.url,
-            }))
-
-            element.setAttribute('srcset', stringifySrcset(resolved))
-          }
+          continue
         }
+
+        const name = typeof attribute === 'string' ? attribute : attribute(element)
+
+        resolveAttribute(element, name, baseUrl, resolveUrlFn)
       }
     }
   }

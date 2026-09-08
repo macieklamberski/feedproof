@@ -46,6 +46,7 @@ describeForEachParser('tistoryCiteResolver', (parseHtml) => {
       const value = html`
         <figure data-og-source-url="https://example.com/post">
           <a href="https://example.com/post">
+            <div class="og-image" style="background-image: url('https://cdn.example.com/thumb.jpg');">&nbsp;</div>
             <div class="og-text">
               <p class="og-title">Page title</p>
               <p class="og-desc">Preview text</p>
@@ -60,6 +61,7 @@ describeForEachParser('tistoryCiteResolver', (parseHtml) => {
         title: 'Page title',
         description: 'Preview text',
         publisher: 'example.com',
+        thumbnail: 'https://cdn.example.com/thumb.jpg',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -112,9 +114,16 @@ describeForEachParser('tistoryCiteResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    // The card carries a title and an anchor href, so it resolves the moment the selector
+    // claims it. The attribute in the selector is the only thing keeping it out.
     it('should not match an element without a source url', async () => {
       const value = html`
-        <figure data-ke-type="opengraph" data-og-title="Page title"></figure>
+        <figure
+          data-ke-type="opengraph"
+          data-og-title="Page title"
+        >
+          <a href="https://example.com/post">Page title</a>
+        </figure>
       `
 
       expect(await extract(value)).toBeUndefined()

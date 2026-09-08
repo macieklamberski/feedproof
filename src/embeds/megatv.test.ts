@@ -122,5 +122,20 @@ describeForEachParser('megatvEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // The prefix era began in October 2020 at post 151920, so a five-digit number behind the
+    // prefix belongs to some other id space, and the page it would mint is a real unrelated
+    // article.
+    it('should mint no page for a post id below the prefix era', async () => {
+      const value = '<iframe src="https://www.megatv.com/embed/?p=202037945"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'megatv',
+        id: '202037945',
+        src: 'https://www.megatv.com/embed/?p=202037945',
+        ratio: '16/9',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 })

@@ -1,8 +1,8 @@
-import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
+import { parseUrl } from 'trousse'
 import type { CleanUrlFn, Enclosure, TransformContext } from '../types.js'
 import { getElementDimensions } from './dom.js'
-import { getImageFingerprint, getUrlSizeHint } from './images.js'
-import { absoluteUrlRegex, cleanUrl, resolveOrKeepUrl } from './urls.js'
+import { getImageFingerprint, getSizeKeywordRank, getUrlSizeHint } from './images.js'
+import { absoluteUrlRegex, cleanUrl, isOnHosts, resolveOrKeepUrl } from './urls.js'
 
 export const isAudioEnclosure = (enclosure: Enclosure): boolean => {
   return enclosure.medium === 'audio' || !!enclosure.type?.startsWith('audio/')
@@ -17,12 +17,13 @@ export const isImageEnclosure = (enclosure: Enclosure): boolean => {
 }
 
 export const isAvatarEnclosure = (url: string, avatarHosts: ReadonlyArray<string>): boolean => {
-  return isHostOf(url, avatarHosts) || isSubdomainOf(url, avatarHosts)
+  return isOnHosts(url, avatarHosts)
 }
 
 // Picks between two copies of one image. A url with no size in it is the original, so a bare
-// photo.jpg beats photo-800x450.jpg. Between two sized copies the bigger one wins, and on a tie
-// the one without a query string.
+// photo.jpg beats photo-800x450.jpg. Between two sized copies the bigger one wins. Where neither
+// states a size, two ranked keywords decide, the way pickLargerImageUrl reads the same pair, and
+// on a tie the one without a query string.
 const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
   const incomingUrl = incoming.url ?? ''
   const keptUrl = kept.url ?? ''
@@ -38,6 +39,17 @@ const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
 
   if (incomingHint !== keptHint) {
     return incomingHint > keptHint
+  }
+
+  // A rank of 0 is a keyword the table cannot order (`preview` is a thumbnail on one host
+  // and full-size on another) or none at all, so it decides nothing and falls through.
+  if (incomingIsOriginal && keptIsOriginal) {
+    const incomingRank = getSizeKeywordRank(incomingUrl)
+    const keptRank = getSizeKeywordRank(keptUrl)
+
+    if (incomingRank !== 0 && keptRank !== 0 && incomingRank !== keptRank) {
+      return incomingRank > keptRank
+    }
   }
 
   return keptUrl.includes('?') && !incomingUrl.includes('?')

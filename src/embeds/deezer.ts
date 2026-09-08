@@ -1,7 +1,9 @@
 import { getPathSegments } from 'trousse'
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
+
+const provider = 'deezer'
 
 const deezerHosts = ['deezer.com']
 
@@ -88,7 +90,7 @@ export const deezerResolveEmbed = (url: string): EmbedResolverResult | undefined
   const parsed = parseUrlOnHosts(url, deezerHosts)
   const resource = parsed && readResource(parsed)
 
-  if (!resource || !(resource.type in deezerHeights) || !safeIdRegex.test(resource.id)) {
+  if (!resource || !Object.hasOwn(deezerHeights, resource.type) || !safeIdRegex.test(resource.id)) {
     return
   }
 
@@ -96,7 +98,7 @@ export const deezerResolveEmbed = (url: string): EmbedResolverResult | undefined
   const theme = themes.has(resource.theme) ? resource.theme : 'dark'
 
   return {
-    provider: 'deezer',
+    provider,
     // The type qualifies the id because the endpoint an enricher would call is
     // `api.deezer.com/{type}/{id}`, and the id alone does not say which one.
     id: `${type}/${id}`,
@@ -107,3 +109,14 @@ export const deezerResolveEmbed = (url: string): EmbedResolverResult | undefined
 }
 
 export const deezerEmbedResolver = createUrlEmbedResolver(deezerHosts, deezerResolveEmbed)
+
+// Starts playback on the click that loads the widget, and the value is what makes it work: the
+// widget parses its own query and tests `autoplay:"1"===f`, so `autoplay=true` matches nothing.
+// Verified live 2026-09-07 by framing both urls and logging what each posted. The bare
+// `/widget/dark/album/6924049` posted `{"action":"pause"}` and stopped there; the same url with
+// `?autoplay=1` posted `{"action":"pause"}` and then `{"action":"play"}`, which is the player's
+// own play callback, the one that also calls `s.play()`.
+export const deezerRenderHint: EmbedRenderHint = {
+  provider,
+  autoplayParams: { autoplay: '1' },
+}

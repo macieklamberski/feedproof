@@ -5,6 +5,8 @@ import { isPlayerJsReady, playerJsPlayRequest, readPixels } from '../utils/hints
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'podigee'
+
 const podigeeHosts = ['podigee.io', 'podigee.com', 'podigee-cdn.net']
 
 // A show is a subdomain of podigee.io and nothing else. The CDN hosts in `podigeeHosts` above
@@ -33,7 +35,7 @@ const composeEmbed = (parsed: URL, src: string): EmbedResolverResult | undefined
     return
   }
 
-  return { provider: 'podigee', id: `${show}/${episode}`, src, height: playerHeight }
+  return { provider, id: `${show}/${episode}`, src, height: playerHeight }
 }
 
 // Podigee ships a generic loader script whose `data-configuration` is the player url itself,
@@ -107,7 +109,7 @@ export const readPodigeeHeight = (data: unknown): number | undefined => {
 }
 
 export const podigeeRenderHint: EmbedRenderHint = {
-  provider: 'podigee',
+  provider,
   isReady: isPlayerJsReady,
   requestPlay: playerJsPlayRequest,
   readHeight: readPodigeeHeight,

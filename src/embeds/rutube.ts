@@ -1,7 +1,9 @@
-import type { EmbedResolverResult } from '../types.js'
+import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts, pickUrlParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
+
+const provider = 'rutube'
 
 // A Rutube video id is a uuid with the dashes stripped, and the older numeric ids the same routes
 // carried are taken too, because the player still plays them. Checked 2026-09-07: the player's own
@@ -40,12 +42,12 @@ const rutubeEmbedParams = ['p', 't', 'stopTime']
 // the id is a self-sufficient enrichment key. The poster file is named by a hash the id does not
 // yield, so it stays with enrichment.
 //
-// The player fills its box, and Rutube's own snippet and oEmbed size it 720x405, which 384 of
-// 1,491 corpus iframes repeat exactly; the ratio stands in only where a carrier states nothing,
-// since vertical clips are embedded at their own shape.
+// The player fills its box, and Rutube's own snippet and oEmbed size it 720x405, which 489 of the
+// 1,491 iframes in the 396 census feeds that carry one repeat exactly; the ratio stands in only
+// where a carrier states nothing, since vertical clips are embedded at their own shape.
 const composeEmbed = (videoId: string, link: string): EmbedResolverResult => {
   return {
-    provider: 'rutube',
+    provider,
     id: videoId,
     src: `https://rutube.ru/play/embed/${videoId}${pickUrlParams(link, rutubeEmbedParams)}`,
     url: `https://rutube.ru/video/${videoId}/`,
@@ -79,3 +81,16 @@ export const rutubeResolveEmbed = (
 }
 
 export const rutubeEmbedResolver = createUrlEmbedResolver(rutubeHosts, rutubeResolveEmbed)
+
+// Starts playback on the click that loads the player. The value is compared as a string in the
+// player's `_prepareParams()`, which sets its config flag only for exactly `true` or `false` and
+// leaves it untouched for anything else, and `handleAutoplay` is what acts on the flag. A start
+// the browser refuses is not a dead end here: the player retries muted and draws an unmute button
+// over the video, which is the state a reader will see when the click did not carry far enough.
+// The player also takes `{"type":"player:play"}` posted in after its own `player:ready`, which is
+// where to go if the parameter ever stops working. Checked live 2026-09-07: the frame loads from
+// `https://rutube.ru` and posts `player:ready`, `player:init` and `player:controlsVisibilityChanged`.
+export const rutubeRenderHint: EmbedRenderHint = {
+  provider,
+  autoplayParams: { autoplay: 'true' },
+}

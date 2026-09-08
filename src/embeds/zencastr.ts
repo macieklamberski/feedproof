@@ -21,7 +21,10 @@ const zencastrHosts = ['zencastr.com', 'zen.ai']
 // snippet fixes at a square in pixels no publisher chose.
 const playerRatio = '1/1'
 
-// The embed page answers 200 for a real episode and 404 for an invented one (2026-09-06).
+// `zencastr.com/z/{id}` is the public episode page and takes the same id the player route does,
+// which is what the blockquote's "View on Zencastr" link opens. Both routes discriminate,
+// checked 2026-09-07 with a browser user agent: `z/cK98nMcr` answers 200 at 2,531,407 bytes
+// against 7,732 for `z/zzzzzzzz`, the same pair `embed/` gives.
 export const zencastrResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, zencastrHosts)
   const [route, id, ...rest] = parsed ? getPathSegments(parsed) : []
@@ -34,6 +37,7 @@ export const zencastrResolveEmbed = (url: string): EmbedResolverResult | undefin
     provider: 'zencastr',
     id,
     src: `https://zencastr.com/embed/${id}`,
+    url: `https://zencastr.com/z/${id}`,
     ratio: playerRatio,
   }
 }

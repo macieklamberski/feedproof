@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, jsonAttr, text } from '../utils/dom.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { isFileName, parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // SoundCloud's embed is an iframe whose `url=` query names the track as an
@@ -30,13 +30,22 @@ const composeWidgetUrl = (target: string, secretToken?: string): string => {
 }
 
 // A page url names its kind by shape: one segment is the user, `sets` marks a playlist, and a
-// second segment is otherwise the track. A few reserved words name a collection of the user's
-// own rather than a track.
-const userCollectionSegments = new Set(['favorites', 'spotlight', 'tracks', 'albums', 'reposts'])
-
-// A direct media file, which SoundCloud serves from its podcast host. It is neither a player nor
-// a page, so it must not be read as either: the reader can play the file itself.
-const mediaFileRegex = /\.(?:aac|flac|m4a|m4v|mp3|mp4|ogg|opus|wav)$/i
+// second segment is otherwise the track. These second segments are the user's own tabs, and each
+// answers with the profile. `spotlight` and `groups` answer 410, so the platform still holds them
+// and no track can take the slug.
+const userCollectionSegments = new Set([
+  'albums',
+  'comments',
+  'favorites',
+  'followers',
+  'following',
+  'groups',
+  'likes',
+  'popular-tracks',
+  'reposts',
+  'spotlight',
+  'tracks',
+])
 
 // `feeds.soundcloud.com/stream/{trackId}-{slug}.mp3` is the episode audio, and it is named after
 // the track it belongs to, so an enclosure carrying it still names a player.
@@ -44,12 +53,21 @@ const streamPathRegex = /^\/stream\/(\d+)-/
 
 // SoundCloud keeps these first segments for its own sections, so none of them can be a
 // permalink. Without the check `soundcloud.com/tags/{tag}` reads as a track and `/discover` as a
-// user, and each mints a widget around a page that names no single item.
+// user, and each mints a widget around a page that names no single item. A word that reads like
+// a section is not automatically one: `soundcloud.com/library` is somebody's account.
 const sitePathSegments = new Set([
+  'charts',
   'discover',
+  'feed',
   'imprint',
+  'messages',
+  'notifications',
   'pages',
+  'people',
   'search',
+  'settings',
+  'signin',
+  'stations',
   'stream',
   'tags',
   'upload',
@@ -57,8 +75,11 @@ const sitePathSegments = new Set([
 ])
 
 const readPageKind = (segments: Array<string>): string | undefined => {
-  // The audio file sits two segments deep, which would otherwise read as a user and a track.
-  if (mediaFileRegex.test(segments[segments.length - 1] ?? '')) {
+  // A permalink admits letters, digits, dashes and underscores and no dot at all, so a last
+  // segment naming a file of any kind is a file: it sits two segments deep, which would otherwise
+  // read as a user and a track. A picture or a document is refused alongside the playable ones,
+  // since minting a widget around one both hides the file and names a track that does not exist.
+  if (isFileName(segments[segments.length - 1] ?? '')) {
     return
   }
 
@@ -83,10 +104,10 @@ const readPageKind = (segments: Array<string>): string | undefined => {
 // there it is a `secret_token` parameter of its own.
 const secretTokenRegex = /^s-[\w-]+$/
 
-// None of these is a page. They share the site's domain, so a page read has to say so: `api`
-// and `api-v2` serve the track references, and `player` served the Flash swf, whose own path
-// would otherwise read as a user handle and mint `soundcloud.com/player.swf` as somebody's page.
-const nonPageHostRegex = /^(?:api(?:-v2)?|player)\./
+// Only these hosts serve permalinks. Every other subdomain is machinery whose own path would
+// otherwise read as a handle: `api` and `api-v2` carry the track references, `player` served the
+// Flash swf, and `w` is the widget, whose own `/player/` path names no user.
+const pageHostRegex = /^(?:www\.|m\.)?soundcloud\.com$/
 
 // `player.soundcloud.com` has no DNS record at all (2026-09-06), so a carrier still pointing at
 // `player.swf` frames a host that cannot answer. It takes the same `url=` value the widget does,
@@ -157,7 +178,7 @@ export const soundcloudResolveEmbed = (
 ): EmbedResolverResult | undefined => {
   // The factory has already matched the host, which means the url parsed, so there is no
   // unparseable case left to guard here.
-  const parsed = parseUrl(src, 'https://example.com')
+  const parsed = parseUrl(src, placeholderBaseUrl)
   const params = parsed?.searchParams
   const inner = params?.get('url')
   const reference = inner?.match(referenceRegex)
@@ -184,8 +205,7 @@ export const soundcloudResolveEmbed = (
   const page =
     reference || streamTrackId ? undefined : parseUrlOnHosts(inner ?? src, soundcloudHosts)
   const shortLink = page && shortLinkHostRegex.test(page.hostname) ? page : undefined
-  const pageSegments =
-    page && !shortLink && !nonPageHostRegex.test(page.hostname) ? getPathSegments(page) : []
+  const pageSegments = page && pageHostRegex.test(page.hostname) ? getPathSegments(page) : []
   const secretToken = pageSegments.find((segment) => secretTokenRegex.test(segment))
   const permalink = pageSegments.filter((segment) => segment !== secretToken)
   const pageKind = readPageKind(permalink)
@@ -217,9 +237,11 @@ export const soundcloudResolveEmbed = (
     result.src = composeWidgetUrl(inner)
   }
 
-  // Nothing here names a track and the url is the audio itself, so the enclosure stays a file
-  // the reader can play rather than becoming a frame pointing at one.
-  if (!result.id && !pageKind && mediaFileRegex.test(parsed?.pathname ?? '')) {
+  // Nothing here names a track and the url is the file itself, so the enclosure stays what the
+  // reader can already show, a picture and a document as much as audio, rather than becoming a
+  // frame pointing at one. It reads the same file set as the page check above: a url that fails
+  // that one and passes this one would leave a placeholder carrying neither an id nor a page url.
+  if (!result.id && !pageKind && isFileName(parsed?.pathname ?? '')) {
     return
   }
 

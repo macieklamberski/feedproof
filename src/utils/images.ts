@@ -3,6 +3,7 @@ import { parseSrcset as parseRawSrcset } from 'srcset'
 import { getPathSegments, parseUrl } from 'trousse'
 import type { CleanUrlFn } from '../types.js'
 import { pixelDimensionLimit } from './dom.js'
+import { placeholderBaseUrl } from './urls.js'
 
 // A candidate whose url is only a width/density descriptor (`225w`, `2x`), which a real image
 // url never is. The `srcset` parser is lenient: where a feed leaves a bare descriptor with no
@@ -24,6 +25,25 @@ export const parseSrcset = (srcset: string): ReturnType<typeof parseRawSrcset> =
 // parseSrcset dropped any and rewrite the attribute accordingly.
 export const countSrcsetCandidates = (srcset: string): number => {
   return parseRawSrcset(srcset).length
+}
+
+// Seeded from the last candidate rather than the first, because a density-only list (`1x, 1.5x,
+// 2x`) states no width to compare and those lists ascend, so its last entry is the largest.
+export const widestSrcsetUrl = (srcset: string | null | undefined): string | undefined => {
+  const entries = srcset ? parseSrcset(srcset) : []
+
+  if (entries.length === 0) {
+    return
+  }
+
+  const widest = entries.reduce(
+    (best, entry) => {
+      return (entry.width ?? 0) > (best.width ?? 0) ? entry : best
+    },
+    entries[entries.length - 1],
+  )
+
+  return widest.url || undefined
 }
 
 // Size words a feed uses as a whole filename for a scaled variant, e.g.
@@ -288,7 +308,7 @@ const urlQueryWidthRegex = /[?&](?:w|width)=(\d{2,5})\b/i
 const urlQueryHeightRegex = /[?&](?:h|height)=(\d{2,5})\b/i
 
 export const getUrlDimensions = (
-  src: string | null,
+  src: string | null | undefined,
 ): { width: number; height: number } | undefined => {
   if (!src || src.startsWith('data:')) {
     return
@@ -336,8 +356,7 @@ const leafExtensionRegex = /\.[a-z0-9]+$/i
 // fingerprint: the comparison is then within one host's own directory naming, where
 // small vs large is unambiguous, not a cross-CDN convention.
 export const getSizeKeywordRank = (url: string): number => {
-  // The base only anchors a relative src so its leaf can be read. It never surfaces.
-  const parsed = parseUrl(url, 'https://example.com')
+  const parsed = parseUrl(url, placeholderBaseUrl)
 
   if (!parsed) {
     return 0
