@@ -37,6 +37,11 @@ const playlistUrls = [
   // The locale form loads an empty player, so the id is repaired onto the plain playlist route.
   'https://www.dailymotion.com/embed/fr/playlist/x6zqmk',
   'https://www.dailymotion.com/fr/playlist/x6zqmk',
+  // Share urls append a title slug here too, and every route spelling can carry one.
+  'https://www.dailymotion.com/playlist/x6zqmk_some-playlist',
+  'https://www.dailymotion.com/embed/playlist/x6zqmk_some-playlist',
+  'https://www.dailymotion.com/embed/fr/playlist/x6zqmk_some-playlist',
+  'https://geo.dailymotion.com/player.html?playlist=x6zqmk_some-playlist',
 ]
 
 // The kinds Dailymotion's embed route serves besides a video. Probed 2026-09-07: each of these

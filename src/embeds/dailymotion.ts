@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, type Nullish, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { keepIfMatches } from '../utils/dom.js'
 import { pickUrlParams, splitStrayParams } from '../utils/urls.js'
@@ -75,6 +75,16 @@ const skipRouteWords = (segments: Array<string>): number => {
   return index
 }
 
+// Share urls append a `_title-slug` to the id and the platform strips it itself:
+// `api.dailymotion.com/playlist/x5zhzj_long-playlist` and `/video/x7tgad0_some-slug` answer
+// byte identically to their bare ids, while an invented id 404s either way (checked 2026-09-08).
+// The Flash player wrote `/swf/{id}&colors=…`, so the stray query rides on the segment too.
+const readId = (candidate: Nullish<string>): string | undefined => {
+  const head = candidate && splitStrayParams(candidate).head.split('_')[0]
+
+  return keepIfMatches(head, safeVideoIdRegex)
+}
+
 // A playlist names no single video, so it is read separately and only once the video readers have
 // found nothing: `/embed/video/{id}?playlist={id}` is a video playing inside one, not a playlist.
 export const extractDailymotionPlaylistId = (link: string): string | undefined => {
@@ -93,7 +103,7 @@ export const extractDailymotionPlaylistId = (link: string): string | undefined =
   const candidate =
     segments[marker] === 'playlist' ? segments[marker + 1] : url.searchParams.get('playlist')
 
-  return keepIfMatches(candidate, safeVideoIdRegex)
+  return readId(candidate)
 }
 
 const readPathId = (url: URL, segments: Array<string>): string | undefined => {
@@ -121,18 +131,9 @@ export const extractDailymotionId = (link: string): string | undefined => {
 
   // Each candidate is validated on its own, so a path segment that is not an id still leaves
   // the geo player's `video` parameter to be read.
-  return (
-    [readPathId(url, getPathSegments(url)), url.searchParams.get('video')]
-      // Share urls append a "_title-slug" to the id. Keep only the id.
-      // The Flash player wrote `/swf/{id}&colors=…`, so the id is the segment's head.
-      .map((candidate) =>
-        keepIfMatches(
-          candidate && splitStrayParams(candidate).head.split('_')[0],
-          safeVideoIdRegex,
-        ),
-      )
-      .find(Boolean)
-  )
+  return [readPathId(url, getPathSegments(url)), url.searchParams.get('video')]
+    .map(readId)
+    .find(Boolean)
 }
 
 // The player url every caller that recovers an id has to build. A video and a playlist are

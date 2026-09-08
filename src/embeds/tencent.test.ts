@@ -178,15 +178,17 @@ describeForEachParser('tencentEmbedResolver', (parseHtml) => {
 })
 
 // The enclosure probe offers every attachment a feed carries to this resolver, and Tencent serves
-// video on the same domains as the player, so the id alphabet is what keeps a file playable.
+// video on the same domains as the player. The url is written onto the player path with the file
+// name in `vid` so the path regex admits it and the id alphabet is the thing that refuses it,
+// which is the guard the module credits with keeping a file playable.
 describeForEachParser('tencent through the pipeline', (parseHtml) => {
   it('should leave a video enclosure on the player host playable', async () => {
     const enclosures = [
-      { url: 'https://v.qq.com/txp/iframe/player.html/v03604lrvan.mp4', type: 'video/mp4' },
+      { url: 'https://v.qq.com/txp/iframe/player.html?vid=v03604lrvan.mp4', type: 'video/mp4' },
     ]
 
     const expected = html`
-      <video data-enclosure="" controls src="https://v.qq.com/txp/iframe/player.html/v03604lrvan.mp4"></video>
+      <video data-enclosure="" controls src="https://v.qq.com/txp/iframe/player.html?vid=v03604lrvan.mp4"></video>
       <p>Body</p>
     `
 

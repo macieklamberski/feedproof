@@ -1,7 +1,10 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
+
+const provider = 'sketchfab'
 
 // A model uid is 32 hex characters, and it also ends the slugged page url
 // (`/3d-models/{slug}-{uid}`), which is how a pasted page link is read.
@@ -36,7 +39,7 @@ const readModelUid = (parsed: URL): string | undefined => {
 
 // The share snippet writes the model's title on the iframe. The oEmbed one writes it empty.
 const sketchfabResolveEmbed = (link: string, element: Element): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
   const uid = parsed ? readModelUid(parsed) : undefined
 
   if (!uid) {
@@ -46,7 +49,7 @@ const sketchfabResolveEmbed = (link: string, element: Element): EmbedResolverRes
   const title = attr(element, 'title')
 
   return {
-    provider: 'sketchfab',
+    provider,
     id: uid,
     src: `https://sketchfab.com/models/${uid}/embed`,
     url: `https://sketchfab.com/models/${uid}`,
@@ -58,6 +61,6 @@ export const sketchfabEmbedResolver = createUrlEmbedResolver(sketchfabHosts, ske
 
 // Starts the viewer on the click that loads it; there is no audio to hold back.
 export const sketchfabRenderHint: EmbedRenderHint = {
-  provider: 'sketchfab',
+  provider,
   autoplayParams: { autostart: '1' },
 }

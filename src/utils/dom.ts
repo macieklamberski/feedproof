@@ -168,6 +168,13 @@ export const jsonAttr = <Value>(element: Nullish<Element>, name: string): Value 
   } catch {}
 }
 
+// SVG2 spells it `href`, SVG1 `xlink:href`. Read rather than selected because jsdom matches
+// `image[href]` on an element carrying only `xlink:href` and linkedom does not, so `:not([href])`
+// would drop the SVG1 spelling on jsdom alone. `hasAttribute` answers alike in both.
+export const svgHrefAttribute = (element: Element): string => {
+  return element.hasAttribute('href') ? 'href' : 'xlink:href'
+}
+
 export const isElement = (node: Node | null | undefined): node is Element => {
   return node?.nodeType === Node.ELEMENT_NODE
 }

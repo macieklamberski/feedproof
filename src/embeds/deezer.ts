@@ -3,6 +3,8 @@ import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'deezer'
+
 const deezerHosts = ['deezer.com']
 
 // The types the widget serves, each with the height the corpus's own widget frames give it.
@@ -96,7 +98,7 @@ export const deezerResolveEmbed = (url: string): EmbedResolverResult | undefined
   const theme = themes.has(resource.theme) ? resource.theme : 'dark'
 
   return {
-    provider: 'deezer',
+    provider,
     // The type qualifies the id because the endpoint an enricher would call is
     // `api.deezer.com/{type}/{id}`, and the id alone does not say which one.
     id: `${type}/${id}`,
@@ -115,6 +117,6 @@ export const deezerEmbedResolver = createUrlEmbedResolver(deezerHosts, deezerRes
 // `?autoplay=1` posted `{"action":"pause"}` and then `{"action":"play"}`, which is the player's
 // own play callback, the one that also calls `s.play()`.
 export const deezerRenderHint: EmbedRenderHint = {
-  provider: 'deezer',
+  provider,
   autoplayParams: { autoplay: '1' },
 }

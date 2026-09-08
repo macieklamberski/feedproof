@@ -136,9 +136,16 @@ describeForEachParser('tistoryCiteResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    // The card carries a title and an anchor href, so it resolves the moment the selector
+    // claims it. The attribute in the selector is the only thing keeping it out.
     it('should not match an element without a source url', async () => {
       const value = html`
-        <figure data-ke-type="opengraph" data-og-title="Page title"></figure>
+        <figure
+          data-ke-type="opengraph"
+          data-og-title="Page title"
+        >
+          <a href="https://example.com/post">Page title</a>
+        </figure>
       `
 
       expect(await extract(value)).toBeUndefined()

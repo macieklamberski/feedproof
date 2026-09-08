@@ -4,6 +4,8 @@ import { attr, keepIfMatches } from '../utils/dom.js'
 import { pickQueryParams } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'vimeo'
+
 const safeVideoIdRegex = /^\d+$/
 
 // An unlisted video's privacy hash, which the player takes only in the query: the
@@ -80,7 +82,7 @@ const showcasePaths = new Set(['showcase', 'album'])
 // The id is qualified because a showcase and a video share one numeric grammar.
 const composeShowcaseEmbed = (showcaseId: string): EmbedResolverResult => {
   return {
-    provider: 'vimeo',
+    provider,
     id: `showcase/${showcaseId}`,
     src: `https://vimeo.com/showcase/${showcaseId}/embed`,
     url: `https://vimeo.com/showcase/${showcaseId}`,
@@ -203,7 +205,7 @@ export const vimeoResolveEmbed = (
   }
 
   return {
-    provider: 'vimeo',
+    provider,
     // Vimeo's own identity for an unlisted video joins the two with a colon, and the hash has to
     // travel with the id: an oEmbed lookup for the bare id answers 404.
     id: hash ? `${videoId}:${hash}` : videoId,
@@ -219,9 +221,11 @@ export const vimeoResolveEmbed = (
 
 export const vimeoEmbedResolver = createUrlEmbedResolver(vimeoHosts, vimeoResolveEmbed)
 
-// Starts playback on the click that loads the player. Never `background=1`, which mutes the
-// video and strips its controls.
+// `dnt=1` turns off Vimeo's viewer tracking: no cookies and no analytics. `autoplay=1` starts
+// playback on the click that loads the player. Never `background=1`, which mutes the video and
+// strips its controls.
 export const vimeoRenderHint: EmbedRenderHint = {
-  provider: 'vimeo',
+  provider,
+  params: { dnt: '1' },
   autoplayParams: { autoplay: '1' },
 }

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import {
   baseContext,
   describeForEachParser,
@@ -358,6 +359,37 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+
+    // A permalink carries no dot, so any extension a browser can play names a file rather than a
+    // handle. The two-segment ones would otherwise read as a track and mint a widget around audio.
+    it.each([
+      'https://feeds.soundcloud.com/stream/nameless-episode.oga',
+      'https://soundcloud.com/downloads/session.webm',
+      'https://soundcloud.com/artist/preview.mov',
+      'https://soundcloud.com/artist/clip.ogv',
+    ])('should not claim a media file the browser can play itself (%s)', async (url) => {
+      const value = `<iframe src="${url}"></iframe>`
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  // A permalink admits letters, digits, dashes and underscores and no dot, so a path ending in a
+  // file extension names a file whatever the extension is. The playable ones are refused above
+  // because a player would replace them; these are refused because there is no track behind them
+  // to play, and a widget minted around one hides the picture and frames a page that is not there.
+  describe('files that are not media but are still files', () => {
+    it.each([
+      'https://soundcloud.com/artist/artwork.jpg',
+      'https://soundcloud.com/artist/cover.png',
+      'https://soundcloud.com/artist/sets/photos.webp',
+      'https://soundcloud.com/press/kit.pdf',
+      'https://soundcloud.com/artist/transcript.docx',
+    ])('should not claim a picture or a document (%s)', async (url) => {
+      const value = `<iframe src="${url}"></iframe>`
+
+      expect(await extract(value)).toBeUndefined()
+    })
   })
 
   // soundcloud.com answers `x-frame-options: SAMEORIGIN`, so a carrier naming a page renders
@@ -640,5 +672,47 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
     const twice = await transform(once)
 
     expect(twice).toEqualHtml(once)
+  })
+})
+
+// injectEnclosures offers every attachment to every url-keyed resolver, so this is the path where
+// claiming a media url costs the reader the audio itself.
+describeForEachParser('soundcloud through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should leave an episode file the podcast host serves playable', async () => {
+    const enclosures = [
+      { url: 'https://feeds.soundcloud.com/stream/nameless-episode.oga', type: 'audio/ogg' },
+    ]
+    const expected = html`
+      <audio data-enclosure="" controls src="https://feeds.soundcloud.com/stream/nameless-episode.oga"></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+
+  it('should leave an image enclosure an image', async () => {
+    const enclosures = [{ url: 'https://soundcloud.com/artist/artwork.jpg', type: 'image/jpeg' }]
+    const expected = html`
+      <img data-enclosure="" src="https://soundcloud.com/artist/artwork.jpg">
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
+  })
+
+  // Nothing renders a document, so the reader gets the body alone. That is the point: a placeholder
+  // promising a track for a press kit is worse than the attachment going unrendered.
+  it('should not turn a document enclosure into a player', async () => {
+    const enclosures = [{ url: 'https://soundcloud.com/press/kit.pdf', type: 'application/pdf' }]
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml('<p>Body</p>')
   })
 })

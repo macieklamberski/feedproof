@@ -1,7 +1,8 @@
 import { parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { flashVars, getElementDimensions, keepIfMatches } from '../utils/dom.js'
-import { createUrlEmbedResolver } from '../utils/widgets.js'
+import { flashVars, keepIfMatches } from '../utils/dom.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
+import { createUrlEmbedResolver, getEmbedSize } from '../utils/widgets.js'
 
 const flickrHosts = ['flickr.com']
 
@@ -84,15 +85,24 @@ const composeShortAlbumUrl = (setId: string): string => {
   return `https://flic.kr/s/${encoded || base58Alphabet[0]}`
 }
 
-// The endpoint renders `width: NaNpx` when it is given no size, so the dimensions travel in the
-// url instead of being left to the reader. These are the size Flickr's own dialog wrote for
-// years, used only when the carrier states nothing.
+// The query is what lays the slideshow out, and the endpoint has no default of its own to fall
+// back on, so a size always travels in the url rather than being left to the reader. Checked
+// 2026-09-08 against a real set, with a fabricated one answering 404 as the control: with no
+// query all 30 of its `<img>` elements come back `width="NaN" height="NaN"` and the container
+// `style="width: NaNpx; height: NaNpx"`, and with one, none of them do. Every spelling answers
+// 200 at the same 119 KB from the same rendition set, so neither the status nor the byte count
+// separates them; the `NaN` count is the only thing that does.
 //
-// They are an instruction to the endpoint, not a claim about the player: the slideshow renders at
+// This is the size Flickr's own dialog wrote for years, used only when the carrier states no
+// usable box. It is one object rather than two constants because it is one box: the choice below
+// is between two whole sizes, never between four halves. Flickr needs one at all, where 32 other
+// resolvers do not, because it is the only one writing the size into the url instead of onto the
+// placeholder, so `decideSize` never gets the chance to arbitrate.
+//
+// It is an instruction to the endpoint, not a claim about the player: the slideshow renders at
 // whatever box the query names, so there is no rendered height to measure them against, and
 // `preferResolverSize` below keeps the placeholder equal to what the src asks for.
-const defaultWidth = 400
-const defaultHeight = 300
+const dialogSize = { width: 400, height: 300 }
 
 // What a page path names, whether it arrived in the flashvars or as the framed page itself.
 const readPageSubject = (page: string): FlickrSubject | undefined => {
@@ -186,7 +196,7 @@ export const flickrResolveEmbed = (
   link: string,
   element: Element,
 ): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
 
   if (!parsed) {
     return
@@ -208,9 +218,15 @@ export const flickrResolveEmbed = (
     return
   }
 
-  const declared = getElementDimensions(element)
-  const width = declared.width ?? defaultWidth
-  const height = declared.height ?? defaultHeight
+  // The query needs two pixel numbers, so the carrier's size is taken whole or not at all: a
+  // stated half beside a default is a box nobody laid out, and the endpoint honours each half
+  // literally, so it would render it. `getEmbedSize` is what decides what the carrier stated,
+  // which is why a zero and a shape too small to be a box both arrive here as nothing.
+  const declared = getEmbedSize(element, 0)
+  const { width, height } =
+    declared.width && declared.height
+      ? { width: declared.width, height: declared.height }
+      : dialogSize
 
   return { ...result, src: `${result.src}?width=${width}&height=${height}`, width, height }
 }

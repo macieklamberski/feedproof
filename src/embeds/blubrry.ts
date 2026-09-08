@@ -1,5 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^\d+$/
@@ -21,7 +22,7 @@ const playerHeight = 164
 // directly. The media url is not promoted to a native <audio>: a provider's player iframe stays
 // an embed placeholder, and the raw file is only input for the enrichment hook.
 export const extractBlubrryEmbed = (link: string): string | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
 
   if (!parsed) {
     return

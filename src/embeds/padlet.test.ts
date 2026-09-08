@@ -113,13 +113,15 @@ describeForEachParser('padletEmbedResolver', (parseHtml) => {
 })
 
 // The enclosure probe offers every attachment a feed carries to this resolver, and Padlet serves
-// uploads on the same domain as the board, so the id alphabet is what keeps a file playable.
+// uploads on the same domain as the board. The url is written onto the embed route so the route
+// regex admits it and the id alphabet is the thing that refuses it, which is the guard the module
+// credits with keeping a file playable.
 describeForEachParser('padlet through the pipeline', (parseHtml) => {
   it('should leave an audio enclosure on the padlet host playable', async () => {
-    const enclosures = [{ url: 'https://padlet.com/uploads/board/track.mp3', type: 'audio/mpeg' }]
+    const enclosures = [{ url: 'https://padlet.com/embed/track.mp3', type: 'audio/mpeg' }]
 
     const expected = html`
-      <audio data-enclosure="" controls src="https://padlet.com/uploads/board/track.mp3"></audio>
+      <audio data-enclosure="" controls src="https://padlet.com/embed/track.mp3"></audio>
       <p>Body</p>
     `
 

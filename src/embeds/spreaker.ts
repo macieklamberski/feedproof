@@ -1,9 +1,11 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { attr, parsePixelSize, text } from '../utils/dom.js'
+import { attr, parsePixelSize } from '../utils/dom.js'
 import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
-import { parseUrlOnHosts } from '../utils/urls.js'
+import { placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
+
+const provider = 'spreaker'
 
 const safeIdRegex = /^\d+$/
 
@@ -21,7 +23,7 @@ const playerHeight = 200
 export const extractSpreakerEmbed = (
   link: string,
 ): { kind: string; param: string; id: string } | undefined => {
-  const parsed = parseUrl(link, 'https://example.com')
+  const parsed = parseUrl(link, placeholderBaseUrl)
 
   // The route is `player` on the widget host and `embed/player/{variant}` on the site host,
   // read as a whole segment so a longer name starting with it is not the player route.
@@ -45,10 +47,13 @@ export const spreakerResolveEmbed = (url: string): EmbedResolverResult | undefin
     return
   }
 
+  // Both kinds name a page that takes the bare id and redirects to its canonical slugged form,
+  // `/episode/{id}` and `/show/{id}`, so the click target is the resource the player plays.
   return {
-    provider: 'spreaker',
+    provider,
     id: `${embed.kind}/${embed.id}`,
     src: `https://widget.spreaker.com/player?${embed.param}=${embed.id}`,
+    url: `https://www.spreaker.com/${embed.kind}/${embed.id}`,
     height: playerHeight,
   }
 }
@@ -72,10 +77,16 @@ export const spreakerIframeEmbedResolver = createUrlEmbedResolver(
 // that carry the class without the attribute do not ship the loader script that would have
 // made a player of it.
 //
-// Spreaker's documented snippet leaves the href on `www.spreaker.com` itself, so it is not
-// always the episode page. The text around the episode name is localized and inconsistently
-// quoted, `Listen to "X" on Spreaker.` beside `Escucha»X" en Spreaker.`, so it is carried whole
-// rather than stripped off the name.
+// The anchor's own href is not the click target, because it can name the show while the
+// resource names an episode, and the id already mints the exact page.
+//
+// Only `data-title` is read for the name. The anchor's text states it too, inside a localized
+// call to action, `Listen to "X" on Spreaker.` beside `Escucha"X" en Spreaker.`, and reading it
+// back out means matching quote characters per language against a sample of eight anchors. A
+// pair nobody sampled, the CJK brackets among them, would drop the title silently, and any two
+// quote characters in the sentence would bind a wrong one, which is worse than none in a field
+// a reader draws. The name is not lost either way: Spreaker's oEmbed returns it, and the
+// enrichment hook can fill it now that provider and a precise id are tagged here.
 export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
   'a.spreaker-player[data-resource]',
   (element) => {
@@ -90,14 +101,11 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
 
     // The anchor states its own size, e.g. `data-height="200px"`.
     const stated = parsePixelSize(attr(element, 'data-height'))
-    const href = attr(element, 'href')
-    const url = parseUrlOnHosts(href, spreakerHosts) ? href : undefined
-    const title = text(element)
+    const title = attr(element, 'data-title')
 
     return {
       ...result,
       ...(stated && { height: stated }),
-      ...(url && { url }),
       ...(title && { title }),
     }
   },
@@ -106,7 +114,7 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
 // The widget guide documents `autoplay=true`, but the player bundle holds no code for it and the
 // server-rendered config is identical with and without it. The widget speaks player.js instead.
 export const spreakerRenderHint: EmbedRenderHint = {
-  provider: 'spreaker',
+  provider,
   isReady: isPlayerJsReady,
   requestPlay: playerJsPlayRequest,
 }

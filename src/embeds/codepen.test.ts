@@ -839,9 +839,10 @@ describeForEachParser('codepenIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // A carrier that states a width and no height must not be given one: 800 by the default
-    // height would describe a box the publisher never asked for.
-    it('should not pair the default with a width the carrier stated', async () => {
+    // A carrier that states a width and no height neither takes the default nor gets paired with
+    // it: 800 by the default height would describe a box the publisher never asked for, and 800
+    // on its own is a number the reader lays nothing out from.
+    it('should keep the default height over a width the carrier stated', async () => {
       const value = '<iframe width="800" src="https://codepen.io/argyleink/embed/XJpKqXm"></iframe>'
       const expected: EmbedResolverResult = {
         provider: 'codepen',
@@ -850,7 +851,7 @@ describeForEachParser('codepenIframeEmbedResolver', (parseHtml) => {
         url: 'https://codepen.io/argyleink/pen/XJpKqXm',
         thumbnail: 'https://shots.codepen.io/argyleink/pen/XJpKqXm-512.jpg',
         author: '@argyleink',
-        width: 800,
+        height: 300,
       }
 
       expect(await extract(value)).toEqual(expected)
