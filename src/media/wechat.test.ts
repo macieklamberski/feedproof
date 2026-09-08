@@ -47,6 +47,14 @@ describeForEachParser('wechatMediaResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
+    // The selector admits an attribute that is present and empty, which `attr` trims away to
+    // undefined. The shape check alone reads that back as the string "undefined" and mints it.
+    it('should return undefined when the id is blank', async () => {
+      const value = '<mpvoice voice_encode_fileid=" "></mpvoice>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
     // Both would move the mint off the query slot the id belongs in.
     it('should return undefined when the id is not the shape WeChat emits', async () => {
       const value = '<mpvoice voice_encode_fileid="../../etc/passwd"></mpvoice>'
