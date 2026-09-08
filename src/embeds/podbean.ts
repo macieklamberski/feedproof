@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, trimObject } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches, parsePixelSize } from '../utils/dom.js'
 import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
@@ -70,7 +70,7 @@ export const podbeanResolveEmbed = (
     id,
     src: `https://www.podbean.com/player-v2/?i=${id}`,
     height,
-    ...(title && { title }),
+    ...trimObject({ title }),
   }
 }
 
