@@ -1,5 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
+import { attr } from '../utils/dom.js'
 import { pickQueryParams, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -47,7 +48,13 @@ const omnyEmbedParams = ['media', 'size', 'style', 't']
 
 // Omny publishes a registry oEmbed, so tagging provider and id is what lets the enricher fetch
 // a title and artwork later. Offline this states the height the markup often omits.
-export const omnyResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+//
+// The carrier's title names the clip rather than the player: across 93 titled frames in a 1/16
+// corpus sample the commonest value covered 2% of them.
+export const omnyResolveEmbed = (
+  url: string,
+  element?: Element,
+): EmbedResolverResult | undefined => {
   const clip = extractOmnyClip(url)
 
   if (!clip) {
@@ -57,12 +64,14 @@ export const omnyResolveEmbed = (url: string): EmbedResolverResult | undefined =
   const params = new URLSearchParams(
     pickQueryParams(parseUrl(url, placeholderBaseUrl)?.search ?? '', omnyEmbedParams),
   ).toString()
+  const title = attr(element, 'title')
 
   return {
     provider,
     id: clip,
     src: `https://omny.fm/shows/${clip}/embed${params ? `?${params}` : ''}`,
     height: playerHeight,
+    ...(title && { title }),
   }
 }
 

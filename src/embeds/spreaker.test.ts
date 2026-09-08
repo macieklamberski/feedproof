@@ -5,6 +5,7 @@ import type { EmbedResolverResult } from '../types.js'
 import {
   extractSpreakerEmbed,
   spreakerAnchorEmbedResolver,
+  spreakerIframeEmbedResolver,
   spreakerResolveEmbed,
 } from './spreaker.js'
 
@@ -97,6 +98,29 @@ describe('spreakerResolveEmbed', () => {
     const value = 'https://widget.spreaker.com/player?x=1'
 
     expect(spreakerResolveEmbed(value)).toBeUndefined()
+  })
+})
+
+describeForEachParser('spreakerIframeEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, spreakerIframeEmbedResolver)
+
+  it('should take the episode name off the stated title', async () => {
+    const value = html`
+      <iframe
+        src="https://widget.spreaker.com/player?episode_id=52842990&theme=light"
+        title="A Special Night In Beverly Hills"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'spreaker',
+      id: 'episode/52842990',
+      src: 'https://widget.spreaker.com/player?episode_id=52842990',
+      url: 'https://www.spreaker.com/episode/52842990',
+      height: 200,
+      title: 'A Special Night In Beverly Hills',
+    }
+
+    expect(await extract(value)).toEqual(expected)
   })
 })
 

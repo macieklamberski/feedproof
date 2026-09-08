@@ -93,6 +93,25 @@ describeForEachParser('podbeanEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should take the episode name off the stated title', async () => {
+      const value = html`
+        <iframe
+          title="The Stormy Success of the Comedy Hour"
+          data-name="pb-iframe-player"
+          src="https://www.podbean.com/player-v2/?i=k4xmn-9228ca-pb&from=pb6admin&skin=1"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'podbean',
+        id: 'k4xmn-9228ca-pb',
+        src: 'https://www.podbean.com/player-v2/?i=k4xmn-9228ca-pb',
+        height: 150,
+        title: 'The Stormy Success of the Comedy Hour',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
