@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
+import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { extractGeniallyViewId, geniallyResolveEmbed } from './genially.js'
+import { extractGeniallyViewId, geniallyEmbedResolver, geniallyResolveEmbed } from './genially.js'
 
 const viewId = '60294f8b2ec856159ae0baa5'
 
@@ -77,5 +78,79 @@ describe('geniallyResolveEmbed', () => {
     const value = 'https://genially.com/pricing'
 
     expect(geniallyResolveEmbed(value)).toBeUndefined()
+  })
+})
+
+describeForEachParser('geniallyEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, geniallyEmbedResolver)
+
+  describe('happy paths', () => {
+    it('should claim a view iframe on the modern host', async () => {
+      const value = html`
+        <iframe
+          src="https://view.genially.com/60294f8b2ec856159ae0baa5"
+          allowfullscreen
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'genially',
+        id: '60294f8b2ec856159ae0baa5',
+        src: 'https://view.genially.com/60294f8b2ec856159ae0baa5',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Neither exported function checks the host, so the legacy domain reaching the resolver at
+    // all is what the second host list entry buys.
+    it('should claim a view iframe on the legacy host', async () => {
+      const value = html`
+        <iframe
+          src="https://view.genial.ly/60294f8b2ec856159ae0baa5"
+          allowfullscreen
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'genially',
+        id: '60294f8b2ec856159ae0baa5',
+        src: 'https://view.genially.com/60294f8b2ec856159ae0baa5',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+  })
+
+  describe('sad paths', () => {
+    // The id is read off the path with no host check of its own, so the host list is the only
+    // thing between a lookalike domain and a minted Genially url.
+    it('should ignore a lookalike host suffixing the view domain', async () => {
+      const value =
+        '<iframe src="https://view.genially.com.evil.test/60294f8b2ec856159ae0baa5"></iframe>'
+
+      expect(await extract(value)).toBeUndefined()
+    })
+  })
+
+  describe('the size a publisher states', () => {
+    // Genially presentations are authored at whatever canvas the author picked, so the resolver
+    // states no size and the publisher's box is the only measurement there is.
+    it('should take the whole box the carrier states', async () => {
+      const value = html`
+        <iframe
+          src="https://view.genially.com/60294f8b2ec856159ae0baa5"
+          width="1200"
+          height="675"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'genially',
+        id: '60294f8b2ec856159ae0baa5',
+        src: 'https://view.genially.com/60294f8b2ec856159ae0baa5',
+        width: 1200,
+        height: 675,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 })

@@ -10,7 +10,12 @@ import type {
   WidgetResolver,
   WidgetResolverResult,
 } from '../types.js'
-import { type GeneratedWrapperType, getElementDimensions, getWrapperRatio } from './dom.js'
+import {
+  type GeneratedWrapperType,
+  getElementDimensions,
+  getStylePairRatio,
+  getWrapperRatio,
+} from './dom.js'
 import { cleanUrl, resolveOrDropUrl, resolveOrKeepUrl } from './urls.js'
 
 // A card's date is whatever string the site chose to display, so the caller gets one chance to
@@ -131,6 +136,12 @@ const decideSize = (
 // measure this player, while the wrapper only says what shape the box around it is. `wrapperDepth`
 // bounds how far up the wrapper is looked for; 0 reads only the carrier itself.
 export const getEmbedSize = (element: Element, wrapperDepth?: number): EmbedSize => {
+  const shapeRatio = getStylePairRatio(element)
+
+  if (shapeRatio) {
+    return { ratio: shapeRatio }
+  }
+
   const dimensions = getElementDimensions(element)
 
   if (hasDimensions(dimensions)) {

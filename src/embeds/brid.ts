@@ -46,6 +46,13 @@ const readSize = (
     : { width: parsedWidth, height: parsedHeight }
 }
 
+// The config where it names a size, whole from whichever spoke: a config width beside a style
+// height is a box nobody wrote. Where the config names none the div's own `style="width: 16;
+// height: 9;"` says the same thing, and the carrier tier reads that shape for every platform.
+const readEmbedSize = (config: string): Pick<EmbedResolverResult, 'width' | 'height' | 'ratio'> => {
+  return readSize(config.match(widthRegex)?.[1], config.match(heightRegex)?.[1])
+}
+
 // Brid.tv (now TargetVideo) embeds a player as an empty `<div class="brid" id="Brid_…">`, an
 // inline script naming the player and the video, and the loader script. Nothing runs in a
 // reader, so the div dies as an empty tag and the video is deleted outright: 193 census feeds
@@ -56,8 +63,9 @@ const readSize = (
 // does not. The poster lives under a partner id the markup never names, so it is left to
 // enrichment.
 //
-// The div's own `style="width: 16; height: 9;"` mirrors the config, ratio spelling included, so
-// the size read here stands over the box the carrier appears to declare.
+// The div's own `style="width: 16; height: 9;"` mirrors the config, ratio spelling included. It
+// is a shape rather than a box and the carrier tier reads it as one, so nothing is stated here
+// when the config names no size.
 export const bridEmbedResolver = createMarkupEmbedResolver(
   'div.brid[id^="Brid_"]',
   (element) => {
@@ -88,7 +96,7 @@ export const bridEmbedResolver = createMarkupEmbedResolver(
       id: `${playerId}/${videoId}`,
       src: `https://services.brid.tv/services/iframe/video/${videoId}/${playerId}`,
       ...(title && { title: decodeTitle(title) }),
-      ...readSize(config.match(widthRegex)?.[1], config.match(heightRegex)?.[1]),
+      ...readEmbedSize(config),
     }
   },
   { preferResolverSize: true },
