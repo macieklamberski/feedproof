@@ -25,20 +25,30 @@ const albumRoutes = new Set(['a', 'gallery'])
 // alone let `imgur.com/upload` mint a post called `upload`. The short ones, `r`, `t` and `user`,
 // are refused by the id length today and are named here anyway, so that dropping the length band
 // cannot quietly turn a subreddit, a tag or a profile into a post.
+// No route word can pin the id's position instead: the post page is `imgur.com/{id}` with the id
+// as the whole path. So each word is here because the platform answered for it, not because it
+// reads like one. `memes`, `tools` and `viral` all read like site pages and are posts a person
+// uploaded, which is why they are absent; `topics` serves the same not-found shell as an id
+// nobody has taken.
 const sitePathSegments = new Set([
   'about',
   'account',
   'apps',
+  'contact',
+  'download',
   'emerald',
+  'login',
   'memegen',
   'new',
   'privacy',
   'r',
   'register',
+  'rules',
   'search',
   'signin',
   't',
   'tos',
+  'trending',
   'upload',
   'user',
   'vidgif',
