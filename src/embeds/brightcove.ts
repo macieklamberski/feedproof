@@ -19,6 +19,12 @@ const provider = 'brightcove'
 // nothing: the playback API is `/playback/v1/accounts/{account}/videos/{video}`, and the
 // account is the half that discriminates, since a fabricated one 404s on the player host
 // while a wrong video id still serves the same shell.
+//
+// Both halves go into the player url unencoded, which is what this shape is for wherever the
+// hostname, the `federated_` path or the `BrightcoveExperience` class already named the platform.
+const safeIdRegex = /^\d+$/
+// A real Brightcove id runs to ten digits and more. The floor is what tells one from a number
+// nothing vouched for, and it is load-bearing in the two places below where nothing does.
 const brightcoveIdRegex = /^\d{5,}$/
 const accountScriptSelector = 'script[src*="players.brightcove.net"]'
 const accountScriptRegex = /players\.brightcove\.net\/(\d+)\//
@@ -65,10 +71,12 @@ const readPlayerKeyAccount = (key: Nullish<string>): string | undefined => {
     account = account * 256n + BigInt(byte.charCodeAt(0))
   }
 
-  return String(account)
+  // Any base64 that decodes at all yields a number here, so the floor is what separates a real
+  // account from a segment that is not one: `AQ~~` decodes to the single byte 1.
+  return keepIfMatches(String(account), brightcoveIdRegex)
 }
 
-// The account and the video id are checked against `brightcoveIdRegex` before they get here, but
+// The account and the video id are checked against one of the id shapes before they get here, but
 // the player and the embed are whatever the element carried, so they are encoded: unescaped,
 // `data-player="../../999999/stolen"` names another account's player and `data-player="p?a=1"`
 // moves the rest of the path into the query.
@@ -101,10 +109,8 @@ export const brightcoveVideoJsEmbedResolver = createMarkupEmbedResolver(
     }
 
     // Video.js is a library anyone can use, and `data-video-id` is not a name only Brightcove
-    // could have chosen, so the ids have to look like Brightcove's before this mints a
-    // Brightcove url from them. Both are long digit strings, the same test the other two
-    // resolvers here apply. In practice the inference is safe anyway: nearly every feed
-    // carrying this element also ships the `players.brightcove.net` loader script.
+    // could have chosen, so the id shape is all this carrier has to go on. The inference is safe
+    // in practice too: nearly every feed carrying the element also ships the loader script.
     const videoId = keepIfMatches(attr(element, 'data-video-id'), brightcoveIdRegex)
     const account = videoId
       ? keepIfMatches(readPlayerAccount(element), brightcoveIdRegex)
@@ -155,13 +161,13 @@ const brightcoveFlashResolveEmbed = (
       parsed.searchParams.get('@videoPlayer') ??
       params?.get('videoId') ??
       parsed.searchParams.get('videoId'),
-    brightcoveIdRegex,
+    safeIdRegex,
   )
   const account = keepIfMatches(
     parsed.searchParams.get('publisherID') ??
       params?.get('publisherID') ??
       readPlayerKeyAccount(params?.get('playerKey')),
-    brightcoveIdRegex,
+    safeIdRegex,
   )
 
   if (!videoId || !account) {
@@ -193,9 +199,9 @@ export const brightcoveFlashEmbedResolver = createUrlEmbedResolver(
 export const brightcoveExperienceEmbedResolver = createMarkupEmbedResolver(
   'object.BrightcoveExperience',
   (element) => {
-    const videoId = keepIfMatches(paramValue(element, '@videoplayer'), brightcoveIdRegex)
+    const videoId = keepIfMatches(paramValue(element, '@videoplayer'), safeIdRegex)
     const account = videoId
-      ? keepIfMatches(readPlayerKeyAccount(paramValue(element, 'playerkey')), brightcoveIdRegex)
+      ? keepIfMatches(readPlayerKeyAccount(paramValue(element, 'playerkey')), safeIdRegex)
       : undefined
 
     if (!videoId || !account) {
@@ -235,13 +241,13 @@ export const brightcoveResolveEmbed = (url: string): EmbedResolverResult | undef
 
   // `{player}_{embed}` is one segment holding two ids. A segment shaped otherwise is not a
   // player path.
-  if (!brightcoveIdRegex.test(account) || !playerPathRegex.test(player)) {
+  if (!safeIdRegex.test(account) || !playerPathRegex.test(player)) {
     return
   }
 
   // A reference id names the video for the account's own api, not the player, the same
   // exclusion the Flash form makes.
-  if (!brightcoveIdRegex.test(videoId)) {
+  if (!safeIdRegex.test(videoId)) {
     return
   }
 
