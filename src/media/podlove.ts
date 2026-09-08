@@ -23,6 +23,7 @@ const preferredMimeTypes = ['audio/mpeg', 'audio/mp3', 'audio/mp4']
 type PodloveConfig = Array<{
   data?: {
     audio?: Array<{ url?: string; mimeType?: string }>
+    title?: string
     poster?: string
     show?: { poster?: string }
   }
@@ -70,6 +71,7 @@ export const podloveMediaResolver: MediaResolver = {
     return {
       tag: 'audio',
       src: source,
+      title: data.title,
       poster: data.poster ?? data.show?.poster,
     }
   },

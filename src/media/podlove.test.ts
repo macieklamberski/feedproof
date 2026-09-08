@@ -45,11 +45,12 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, podloveMediaResolver)
 
   describe('happy paths', () => {
-    it('should read the audio file and poster out of the inlined config', async () => {
+    it('should read the audio file, title and poster out of the inlined config', async () => {
       const value = makePlayer(episodeConfig)
       const expected: MediaResolverResult = {
         tag: 'audio',
         src: 'https://300hertz.de/podlove/file/1036/s/webplayer/c/website/300Hertz_E043.mp3',
+        title: 'Schallwellentherapie',
         poster: 'https://300hertz.de/podlove/image/deadbeef/500/0/0/300hertz',
       }
 
@@ -229,6 +230,24 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
       const result = await transformContent(value, { parseHtmlFn: parseHtml })
 
       expect(result).toContainHtml('<audio src="https://example.com/episode.mp3" controls></audio>')
+    })
+
+    // A native <audio> has nowhere to put the episode name, so the pass gives it a figcaption.
+    it('should hang the episode title off the player it mints', async () => {
+      const config = JSON.stringify([
+        {
+          data: {
+            title: 'Schallwellentherapie',
+            audio: [{ url: 'https://example.com/episode.mp3', mimeType: 'audio/mpeg' }],
+          },
+        },
+      ])
+      const value = makePlayer(config)
+      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+
+      expect(result).toContainHtml(
+        '<figure><audio src="https://example.com/episode.mp3" controls></audio><figcaption>Schallwellentherapie</figcaption></figure>',
+      )
     })
 
     // The config states the url the way the markup around it would, so it earns the same
