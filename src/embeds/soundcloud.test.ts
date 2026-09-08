@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import {
   baseContext,
   describeForEachParser,
@@ -358,6 +359,19 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
+
+    // A permalink carries no dot, so any extension a browser can play names a file rather than a
+    // handle. The two-segment ones would otherwise read as a track and mint a widget around audio.
+    it.each([
+      'https://feeds.soundcloud.com/stream/nameless-episode.oga',
+      'https://soundcloud.com/downloads/session.webm',
+      'https://soundcloud.com/artist/preview.mov',
+      'https://soundcloud.com/artist/clip.ogv',
+    ])('should not claim a media file the browser can play itself (%s)', async (url) => {
+      const value = `<iframe src="${url}"></iframe>`
+
+      expect(await extract(value)).toBeUndefined()
+    })
   })
 
   // soundcloud.com answers `x-frame-options: SAMEORIGIN`, so a carrier naming a page renders
@@ -640,5 +654,29 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
     const twice = await transform(once)
 
     expect(twice).toEqualHtml(once)
+  })
+})
+
+// injectEnclosures offers every attachment to every url-keyed resolver, so this is the path where
+// claiming a media url costs the reader the audio itself.
+describeForEachParser('soundcloud through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should leave an episode file the podcast host serves playable', async () => {
+    const enclosures = [
+      { url: 'https://feeds.soundcloud.com/stream/nameless-episode.oga', type: 'audio/ogg' },
+    ]
+    const expected = html`
+      <audio data-enclosure="" controls src="https://feeds.soundcloud.com/stream/nameless-episode.oga"></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })
