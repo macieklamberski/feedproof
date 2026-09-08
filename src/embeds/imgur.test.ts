@@ -22,6 +22,11 @@ const sitePaths = [
   'https://imgur.com/user/someone',
   'https://imgur.com/r/funny/abc12345',
   'https://imgur.com/t/cats/abc12345',
+  'https://imgur.com/rules',
+  'https://imgur.com/contact',
+  'https://imgur.com/login',
+  'https://imgur.com/trending',
+  'https://imgur.com/download/abc12345',
 ]
 
 describeForEachParser('imgurBlockquoteEmbedResolver', (parseHtml) => {
@@ -219,6 +224,21 @@ describe('imgurResolveEmbed', () => {
       src: 'https://imgur.com/pVa2rXL/embed',
       url: 'https://imgur.com/pVa2rXL',
       thumbnail: 'https://i.imgur.com/pVa2rXLm.jpg',
+    }
+
+    expect(imgurResolveEmbed(value)).toEqual(expected)
+  })
+
+  // A word that reads like a site page is not one: `imgur.com/memes` is a post somebody uploaded.
+  // The site list is the routes the platform answered for and nothing wider.
+  it('should read a post page url whose id is an ordinary word', () => {
+    const value = 'https://imgur.com/memes'
+    const expected: EmbedResolverResult = {
+      provider: 'imgur',
+      id: 'memes',
+      src: 'https://imgur.com/memes/embed',
+      url: 'https://imgur.com/memes',
+      thumbnail: 'https://i.imgur.com/memesm.jpg',
     }
 
     expect(imgurResolveEmbed(value)).toEqual(expected)
