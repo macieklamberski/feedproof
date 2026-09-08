@@ -510,6 +510,47 @@ export const formatRatio = (width: number, height = 1): string => {
   return `${width}/${height}`
 }
 
+// A width and height pair an inline style states, read as the shape it spells rather than the box
+// it appears to be, because no player is that small. Under the ceiling the pair is one of two
+// things and neither is a box worth reserving: a ratio the author wrote without units, which CSS
+// drops entirely since a bare number is a length only at zero, or a social button, which arrives
+// at 88x21 for Facebook, 90x20 and 32x20 for Google and 61x20 for Twitter and is stripped as
+// non-content before a size is ever asked for. Above the ceiling the same spelling is a real box,
+// or a forgotten unit on one, and getElementDimensions reads the digits as pixels either way.
+//
+// Both numbers have to be under it. A fixed-height bar states a real width beside a small height,
+// archive.org's 350x30 among them, and that is a box.
+//
+// Zero is excluded twice over: it is the one length CSS takes bare, and a zero pair is a
+// decorative div rather than a carrier.
+//
+// Read only where the element states no `width`/`height` attribute of its own, since those are a
+// box a browser did apply, and dimensions outrank a ratio.
+const styleShapeCeiling = 100
+const styleLengthRegex = /^(\d+)(?:px)?$/
+
+const readStyleLength = (value: string | undefined): number | undefined => {
+  const digits = value?.match(styleLengthRegex)?.[1]
+
+  return digits === undefined ? undefined : Number(digits)
+}
+
+export const getStylePairRatio = (element: Element): string | undefined => {
+  if (element.hasAttribute('width') || element.hasAttribute('height')) {
+    return
+  }
+
+  const declarations = styles.declarations(element)
+  const width = readStyleLength(declarations.width)
+  const height = readStyleLength(declarations.height)
+
+  if (!width || !height || width >= styleShapeCeiling || height >= styleShapeCeiling) {
+    return
+  }
+
+  return formatRatio(width, height)
+}
+
 const ratioRegexes = [
   /^\s*(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)\s*$/, // 16:9, 690 : 362
   /^\s*(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*$/, // 100/56, 690 / 362
