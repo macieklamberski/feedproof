@@ -6,6 +6,9 @@ import type { HighlightFn, TransformContext } from '../../types.js'
 import { applyDomTransforms } from '../../utils/transforms.js'
 import { detectLanguage, highlightCode } from './highlightCode.js'
 
+const insAfterNewlineRegex = /;\s*\n\s*<ins>/
+const commentSwallowsNextLineRegex = /hljs-comment">[^<]*const y/
+
 describe('detectLanguage', () => {
   const createElement = (value: string): { pre: Element; code: Element | null } => {
     const { document } = parseHTML(`<!doctype html><html><body>${value}</body></html>`)
@@ -564,6 +567,84 @@ describeForEachParser('highlightCode', (parseHtml) => {
       '<pre data-pre-language="js" data-pre-label="JavaScript"><code class="language-js hljs"><span class="hljs-keyword">const</span> x = <span class="hljs-number">1</span>;\n<span class="hljs-keyword">const</span> y = <span class="hljs-number">2</span>;</code></pre>'
 
     expect(await transform(value)).toEqualHtml(expected)
+  })
+
+  it('should keep diff markers while still highlighting', async () => {
+    const value =
+      '<pre><code class="language-js"><div>const x = 1;</div><div><ins>const y = 2;</ins></div></code></pre>'
+    const result = await transform(value)
+
+    expect(result).toContain('<ins>')
+    expect(result).toContain('hljs-keyword')
+  })
+
+  it('should turn block-level line wrappers into newlines, keeping the diff marker', async () => {
+    const value =
+      '<pre><code class="language-js"><div>const x = 1;</div><div><ins>const y = 2;</ins></div></code></pre>'
+    const result = await transform(value)
+
+    expect(result).not.toContain('<div>')
+    expect(result).toContain('<ins>')
+    expect(result).toMatch(insAfterNewlineRegex)
+  })
+
+  it('should not let a line comment in a diff block swallow the next line', async () => {
+    const value =
+      '<pre><code class="language-js"><div>const x = 1; // note</div><div><ins>const y = 2;</ins></div></code></pre>'
+    const result = await transform(value)
+
+    // The // comment must close at its line break, not run on and color `const y`.
+    expect(result).not.toMatch(commentSwallowsNextLineRegex)
+    expect(result).toContain('<ins>')
+  })
+
+  it('should not let merged feed markup carry through anything but its class', async () => {
+    const value =
+      '<pre><code class="language-js"><ins style="color:red" onclick="alert(1)">const x = 1;</ins><del>y</del></code></pre>'
+    const result = await transform(value)
+
+    expect(result).toContain('<ins>')
+    expect(result).not.toContain('onclick')
+    expect(result).not.toContain('style')
+  })
+
+  it('should split a highlight token around a diff marker nested inside it', async () => {
+    const value =
+      '<pre><code class="language-js">const x = "a<ins>b</ins>c";<del>d</del></code></pre>'
+    const result = await transform(value)
+
+    // The string spans "abc" while <ins> wraps only "b", so the string token is
+    // closed before the marker, reopened inside it, then reopened again after.
+    expect(result).toContain('hljs-string')
+    expect(result).toContain('</span><ins><span class="hljs-string">b</span></ins>')
+  })
+
+  it('should re-highlight and badge a block the feed already highlighted with hljs', async () => {
+    const value =
+      '<pre><code class="hljs language-js"><span class="hljs-keyword">const</span> x = 1</code></pre>'
+    const result = await transform(value)
+
+    expect(result).toContain('hljs-keyword')
+    expect(result).toContain('data-pre-language="js"')
+  })
+
+  it('should not double-color a feed-hljs block that also carries diff markers', async () => {
+    const value =
+      '<pre><code class="language-js"><div><span class="hljs-keyword">const</span> x = 1;</div><div><ins>const y = 2;</ins></div></code></pre>'
+    const result = await transform(value)
+
+    expect(result).toContain('<ins>')
+    // One hljs-keyword span per `const`; the feed's own span is dropped, not kept on top.
+    expect((result.match(/class="hljs-keyword"/g) || []).length).toBe(2)
+  })
+
+  it('should be idempotent on a diff-marker block', async () => {
+    const value =
+      '<pre><code class="language-js"><div>const x = 1;</div><div><ins>const y = 2;</ins></div></code></pre>'
+    const once = await transform(value)
+    const twice = await transform(once)
+
+    expect(twice).toBe(once)
   })
 
   it('should promote a block-wrapped standalone code element to a highlighted block', async () => {

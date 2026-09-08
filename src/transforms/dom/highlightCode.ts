@@ -204,46 +204,194 @@ const labelForLanguage = (language: string): string => {
 // code line each, with no newline character between them.
 const blockLineWrappers = new Set(['div', 'p', 'li', 'tr'])
 
-// Read a code block to text, treating those block-level line wrappers as line breaks. Reading
-// textContent alone would flatten every wrapped line onto one row, because it concatenates
-// without honoring the layout. A break is added when a wrapper opens, skipped when the text is
-// empty (so there is no leading break) or already ends with one (so nested wrappers like
-// <div><div>line</div></div> and blank spacer lines collapse back to a single break). Blocks that
-// carry real newlines, and inline highlighters, are unaffected: with no wrappers to open, the
-// result equals textContent.
-const getCodeBlockText = (target: Element): string => {
+// Diff markers a feed's own highlighter may ship inline. Their presence is what switches
+// highlightCode from overwriting the block to merging into it (below).
+const diffMarkerTags = new Set(['ins', 'del'])
+
+// Keeping the feed's own inline markup while highlighting.
+//
+// Some feeds ship code their own highlighter already laid out: each line in a
+// block-level <div> (so the line breaks live in the DOM, not in newlines) and
+// added/removed lines tagged with <ins>/<del>. Overwriting innerHTML with the
+// highlight output would flatten every line onto one row and throw the diff
+// markers away. So when a block carries diff markers, the highlight token spans
+// are merged into its existing markup rather than replacing it.
+//
+// The merge is highlight.js's own algorithm. It was deprecated out of hljs core
+// in v11 and never published as a standalone package, so it is ported here from
+// the last version that shipped it: the mergeHTMLPlugin in
+// highlight.js/src/plugins/merge_html.js at tag 10.7.3 (its nodeStream and
+// mergeStreams functions). Background on the removal: highlightjs/highlight.js#2889.
+//
+// Both the original element and the highlight output are walked into streams of
+// start/stop events keyed by character offset, then interleaved: on each original
+// tag the open highlight spans are closed, the original tag is emitted, and the
+// spans are reopened, so the result stays well nested. Two changes from the
+// upstream plugin: it ran as a browser-DOM after:highlightElement hook, this calls
+// the functions directly so it works server-side under linkedom; and every
+// attribute except `class` (the highlight token) is dropped here, so no
+// feed-supplied style/href/event handler rides through (that injection risk is the
+// reason hljs removed it from core).
+type MarkupEvent = { event: 'start' | 'stop'; offset: number; node: Element }
+
+const collectMarkupStream = (root: Element): Array<MarkupEvent> => {
+  const events: Array<MarkupEvent> = []
+
+  const walk = (node: Node, startOffset: number): number => {
+    let offset = startOffset
+
+    for (let child = node.firstChild; child; child = child.nextSibling) {
+      if (isText(child)) {
+        offset += child.nodeValue?.length ?? 0
+      } else if (isElement(child)) {
+        events.push({ event: 'start', offset, node: child })
+        offset = walk(child, offset)
+        events.push({ event: 'stop', offset, node: child })
+      }
+    }
+
+    return offset
+  }
+
+  walk(root, 0)
+
+  return events
+}
+
+// Walk a block once, producing both its flattened text and the <ins>/<del> diff-marker events
+// keyed to the same offsets. Block-level line wrappers (div/p/li/tr) become `\n`, so
+// textContent's run-together lines are restored. Doing both in one walk is the point: the text
+// fed to the highlighter and the markers fed to the merge can never disagree about where the
+// newlines are. Everything that is not a diff marker is unwrapped (its text kept, the element
+// dropped), so the line wrappers dissolve into the `\n`s and any feed coloring spans are
+// discarded, and the block is re-highlighted cleanly with only its diff markers preserved.
+const collectDiffStream = (target: Element): { text: string; events: Array<MarkupEvent> } => {
   let text = ''
+  const events: Array<MarkupEvent> = []
 
   // Iterative pre-order walk (explicit stack, not recursion) so a deeply nested code
-  // block can't overflow the call stack. Children are pushed in reverse so they pop in
-  // document order. A block wrapper is visited before its children, matching the
-  // recursive order in which the leading newline was inserted.
-  const stack: Array<Node> = [target]
+  // block can't overflow the call stack. A diff marker pushes a close sentinel before
+  // its children so its stop event lands after the subtree. Children are pushed in
+  // reverse to pop in document order, so a block wrapper is visited before its children,
+  // matching the order in which its leading newline is inserted.
+  const stack: Array<Node | { closeFor: Element }> = [target]
 
   while (stack.length > 0) {
-    const node = stack.pop() as Node
+    const item = stack.pop() as Node | { closeFor: Element }
 
-    if (isText(node)) {
-      text += node.nodeValue ?? ''
+    if ('closeFor' in item) {
+      events.push({ event: 'stop', offset: text.length, node: item.closeFor })
       continue
     }
 
-    if (!isElement(node)) {
+    if (isText(item)) {
+      text += item.nodeValue ?? ''
       continue
     }
 
-    if (node !== target && blockLineWrappers.has(node.localName) && text && !text.endsWith('\n')) {
+    if (!isElement(item)) {
+      continue
+    }
+
+    if (item !== target && blockLineWrappers.has(item.localName) && text && !text.endsWith('\n')) {
       text += '\n'
     }
 
-    const children = node.childNodes
+    if (diffMarkerTags.has(item.localName)) {
+      events.push({ event: 'start', offset: text.length, node: item })
+      stack.push({ closeFor: item })
+    }
+
+    const children = item.childNodes
 
     for (let index = children.length - 1; index >= 0; index--) {
       stack.push(children[index])
     }
   }
 
-  return text
+  return { text, events }
+}
+
+const escapeHtml = (value: string): string => {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+const openTag = (node: Element): string => {
+  const className = node.getAttribute('class')
+
+  return className ? `<${node.localName} class="${escapeHtml(className)}">` : `<${node.localName}>`
+}
+
+const closeTag = (node: Element): string => {
+  return `</${node.localName}>`
+}
+
+const mergeMarkupStreams = (
+  original: Array<MarkupEvent>,
+  highlighted: Array<MarkupEvent>,
+  text: string,
+): string => {
+  let processed = 0
+  let result = ''
+  const openSpans: Array<Element> = []
+
+  // The two streams are ordered by offset. At a tie, the original stream opens
+  // first and closes last so it always wraps the highlight spans, never the
+  // other way around.
+  const selectStream = (): Array<MarkupEvent> => {
+    if (!original.length || !highlighted.length) {
+      return original.length ? original : highlighted
+    }
+
+    if (original[0].offset !== highlighted[0].offset) {
+      return original[0].offset < highlighted[0].offset ? original : highlighted
+    }
+
+    return highlighted[0].event === 'start' ? original : highlighted
+  }
+
+  const render = (item: MarkupEvent): void => {
+    result += item.event === 'start' ? openTag(item.node) : closeTag(item.node)
+  }
+
+  while (original.length || highlighted.length) {
+    let stream = selectStream()
+    result += escapeHtml(text.slice(processed, stream[0].offset))
+    processed = stream[0].offset
+
+    if (stream === original) {
+      // Close every open highlight span, emit all original tags landing on this
+      // offset, then reopen the highlight spans so nesting stays valid.
+      for (let index = openSpans.length - 1; index >= 0; index--) {
+        result += closeTag(openSpans[index])
+      }
+
+      do {
+        render(stream.splice(0, 1)[0])
+        stream = selectStream()
+      } while (stream === original && stream.length && stream[0].offset === processed)
+
+      for (const span of openSpans) {
+        result += openTag(span)
+      }
+    } else {
+      const item = stream[0]
+
+      if (item.event === 'start') {
+        openSpans.push(item.node)
+      } else {
+        openSpans.pop()
+      }
+
+      render(stream.splice(0, 1)[0])
+    }
+  }
+
+  return result + escapeHtml(text.slice(processed))
 }
 
 const integerLineRegex = /^\d+$/
@@ -360,7 +508,7 @@ export const highlightCode: DomTransform = ({ highlightFn }) => {
         continue
       }
 
-      const rawContentLines = getCodeBlockText(code).split('\n')
+      const rawContentLines = collectDiffStream(code).text.split('\n')
       const nonEmptyContentLines = rawContentLines.filter((line) => line.trim())
 
       if (nonEmptyContentLines.length < 2) {
@@ -384,7 +532,16 @@ export const highlightCode: DomTransform = ({ highlightFn }) => {
       const code = pre.querySelector('code')
       const target = code ?? pre
 
-      const text = getCodeBlockText(target)
+      // Skip blocks this transform already processed, so a re-run does not re-merge
+      // or re-overwrite. Keyed on our own data-pre-language marker, not the hljs
+      // class: a feed that shipped its own highlight.js output carries hljs but no
+      // marker, so it is still re-highlighted and badged like any other block (its
+      // spans are dropped by reading textContent / the merge's stream, below).
+      if (pre.hasAttribute('data-pre-language')) {
+        continue
+      }
+
+      const { text, events: diffEvents } = collectDiffStream(target)
 
       if (!text.trim()) {
         continue
@@ -406,13 +563,28 @@ export const highlightCode: DomTransform = ({ highlightFn }) => {
 
       const highlighted = await highlightFn(text, language)
 
-      // The highlighter does not know this language: leave the block plain, with
-      // no badge.
+      // The highlighter does not know this language: leave the block plain, with no badge.
       if (highlighted === undefined) {
         continue
       }
 
-      target.innerHTML = highlighted
+      if (diffEvents.length > 0) {
+        // A block with diff markers keeps them: the highlight token spans are merged
+        // into the markers instead of overwriting. `text` and `diffEvents` come from the
+        // same walk, so the highlighter sees real line breaks (block wrappers became \n)
+        // and its offsets line up with the markers. The line wrappers themselves dissolve
+        // into the \n, exactly as the overwrite path flattens them.
+        const highlightedRoot = document.createElement('div')
+        highlightedRoot.innerHTML = highlighted
+        target.innerHTML = mergeMarkupStreams(
+          diffEvents,
+          collectMarkupStream(highlightedRoot),
+          text,
+        )
+      } else {
+        target.innerHTML = highlighted
+      }
+
       target.classList.add('hljs')
 
       // Expose the resolved language for a frontend badge. The attributes stay on
