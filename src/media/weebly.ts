@@ -1,4 +1,5 @@
 import type { MediaResolver, MediaResolverResult } from '../types.js'
+import { imageFileRegex } from '../utils/urls.js'
 
 // Weebly ships an uploaded video as a wrapper whose iframe is `src="about:blank"`, with the
 // player built by JS that never runs in a reader. The file url is not written anywhere in the
@@ -16,9 +17,6 @@ import type { MediaResolver, MediaResolverResult } from '../types.js'
 // `/uploads/b/{user}-{pathId}/{name}`, reachable only through the poster url.
 const posterUrlRegex = /url\(\s*['"]?([^'")]*\/uploads\/[^'")]+)['"]?\s*\)/
 
-// The stored name keeps its `_NNN` suffix. Only the extension changes between the two files.
-const extensionRegex = /\.[a-z0-9]+$/i
-
 // A wrapper already holding a real player is a third-party embed sitting in Weebly's video
 // block, not an upload facade. Replacing it would destroy whatever resolved it.
 const resolvedSelector = '[data-embed-src], video, audio'
@@ -35,16 +33,20 @@ export const weeblyMediaResolver: MediaResolver = {
     const styleText = element.querySelector('style')?.textContent ?? ''
     const posterUrl = styleText.match(posterUrlRegex)?.[1]
 
-    if (!posterUrl || !extensionRegex.test(posterUrl)) {
+    if (!posterUrl || !imageFileRegex.test(posterUrl)) {
       return
     }
 
     // Weebly writes the poster protocol-relative (`//www.weebly.com/uploads/…`), and it travels
     // that way: convertWidgets gives both urls a scheme, so adding one here would only do the
     // same job earlier and in one resolver's own spelling.
+    //
+    // The stored name keeps its `_NNN` suffix, so only the extension changes between the two
+    // files. The style block writes a cache-buster after it often enough that the extension is
+    // not the end of the string (`…/clip_176.jpg?1600`), which is what the trailing group keeps.
     return {
       tag: 'video',
-      src: posterUrl.replace(extensionRegex, '.mp4'),
+      src: posterUrl.replace(imageFileRegex, '.mp4$2'),
       poster: posterUrl,
     }
   },
