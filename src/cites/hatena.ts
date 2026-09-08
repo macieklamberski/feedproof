@@ -1,7 +1,7 @@
-import { parseUrl } from 'trousse'
 import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
+import { parseUrlOnHosts } from '../utils/urls.js'
 
 // Hatena Blog renders a pasted link as an iframe pointing at its card renderer, followed by
 // a `<cite>` holding the real link. Both sit inside one paragraph, and the paragraph is what
@@ -14,11 +14,17 @@ import { attr, find, text } from '../utils/dom.js'
 //
 // The card renderer's host is matched beside the class because the class is not dependable:
 // `embed-card` is the common spelling, and the rest ship `hatenablogcard`,
-// `wp-embedded-content`, a theme's own class, or nothing at all.
+// `wp-embedded-content`, a theme's own class, or nothing at all. The host is what decides,
+// because an iframe elsewhere carrying the class is someone else's player: claiming it mints
+// a cite from that player's own `url=` query and deletes the player with the paragraph. An
+// iframe stating no src is refused too, and loses only the upgrade, since the paragraph and
+// its citation link then survive as written.
+const cardHost = 'hatenablog-parts.com'
+
 const cardIframeSelector = [
   'iframe.embed-card',
   'iframe.hatenablogcard',
-  'iframe[src*="hatenablog-parts.com/embed"]',
+  `iframe[src*="${cardHost}/embed"]`,
 ].join(', ')
 
 const cardParagraphSelector = cardIframeSelector
@@ -31,15 +37,18 @@ export const hatenaCiteResolver: CiteResolver = {
   selector: cardParagraphSelector,
   extract: (element) => {
     const iframe = find(element, cardIframeSelector)
-    const citationLink = find(element, 'cite.hatena-citation a')
+    const cardUrl = parseUrlOnHosts(attr(iframe, 'src'), cardHost)
 
-    const embedUrl = attr(iframe, 'src')
-    const embeddedUrl = parseUrl(embedUrl ?? '', 'https://example.invalid')?.searchParams.get('url')
+    if (!cardUrl) {
+      return
+    }
+
+    const citationLink = find(element, 'cite.hatena-citation a')
 
     return buildCite({
       provider: 'hatena',
       // The citation's href comes first: it is the plain target, so it needs no decoding.
-      url: attr(citationLink, 'href') ?? embeddedUrl,
+      url: attr(citationLink, 'href') ?? cardUrl.searchParams.get('url'),
       title: attr(iframe, 'title'),
       publisher: text(citationLink),
     })
