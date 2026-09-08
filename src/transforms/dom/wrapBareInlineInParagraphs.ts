@@ -5,6 +5,7 @@ import {
   isBlockElement,
   isElement,
   isText,
+  mediaElements,
 } from '../../utils/dom.js'
 
 const processContainersSelector =
@@ -28,7 +29,7 @@ const inlineHostTags = new Set([
   'h6',
 ])
 
-const mediaSelector = 'img, picture, video, audio, iframe, embed, object'
+const mediaSelector = [...mediaElements].join(', ')
 
 // Standalone media at a run's edge (bare or wrapped in a textless anchor/span)
 // renders as a block of its own. Pulling it into the text's paragraph would glue

@@ -1,5 +1,6 @@
 import { stringifySrcset } from 'srcset'
 import type { AssetProxyFn, AssetType, DomTransform } from '../../types.js'
+import { svgHrefAttribute } from '../../utils/dom.js'
 import { parseSrcset } from '../../utils/images.js'
 
 const proxyableSelectors = [
@@ -144,10 +145,8 @@ export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
           await proxyAttribute(element, 'src', sourceTypeFromParent(element), assetProxyFn)
           break
         }
-        // SVG2 uses `href`. Legacy SVG1 uses `xlink:href`.
         case 'image': {
-          const attribute = element.hasAttribute('href') ? 'href' : 'xlink:href'
-          await proxyAttribute(element, attribute, 'image', assetProxyFn)
+          await proxyAttribute(element, svgHrefAttribute(element), 'image', assetProxyFn)
           break
         }
       }
