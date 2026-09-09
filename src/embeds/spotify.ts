@@ -40,16 +40,15 @@ type SubstackItemAttributes = {
 const spotifyHosts = ['spotify.com']
 const spotifyImageHosts = ['scdn.co']
 
-// Substack prints its own word for the type where a description would go, and that word is not
-// the url's type word: a show card says `Podcast`, and a track card says nothing at all.
+// Substack writes its own word for the type where a description would go, and a show card
+// says `Podcast`.
 const typeLabels = new Set(['album', 'episode', 'playlist', 'podcast', 'podcast episode'])
-// The act under the title is the publisher Spotify's own show page prints for these two types:
-// its own for a show card, and the publisher of the show it ran in for an episode card. A track,
-// an album and a playlist name the artist or the owner there instead.
+// The act under the title is the publisher Spotify's own show page prints: the show's own, and
+// for an episode the publisher of the show it ran in.
 const publisherTypes = new Set(['show', 'episode'])
 
 // Substack renders the player inside its own iframe and hangs the item's card on the same
-// element as JSON: the artwork, the title and the act.
+// element as JSON.
 const readSubstackItem = (element: Element, type: string): Partial<EmbedResolverResult> => {
   const attributes = jsonAttr<SubstackItemAttributes>(element, 'data-attrs')
 
