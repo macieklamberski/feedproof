@@ -3,6 +3,7 @@ import { baseContext } from '../tests.js'
 import {
   cleanUrl,
   composeQuery,
+  decodeOrKeep,
   decodeSegment,
   parseUrlOnHosts,
   pickQueryParams,
@@ -202,6 +203,35 @@ describe('decodeSegment', () => {
 
   it('should return undefined for undefined', () => {
     expect(decodeSegment(undefined)).toBeUndefined()
+  })
+})
+
+describe('decodeOrKeep', () => {
+  it('should decode a percent-encoded value', () => {
+    const value = 'FEAR%20STREET%20PART%202'
+    const expected = 'FEAR STREET PART 2'
+
+    expect(decodeOrKeep(value)).toBe(expected)
+  })
+
+  it('should leave a plain value unchanged', () => {
+    const value = 'FEAR STREET PART 2'
+
+    expect(decodeOrKeep(value)).toBe(value)
+  })
+
+  it('should keep a value whose escape is malformed', () => {
+    const value = 'FEAR%STREET'
+
+    expect(decodeOrKeep(value)).toBe(value)
+  })
+
+  it('should return undefined for undefined', () => {
+    expect(decodeOrKeep(undefined)).toBeUndefined()
+  })
+
+  it('should return undefined for an empty string', () => {
+    expect(decodeOrKeep('')).toBeUndefined()
   })
 })
 

@@ -3,7 +3,7 @@ import { parseSrcset as parseRawSrcset } from 'srcset'
 import { getPathSegments, parseUrl, toMap } from 'trousse'
 import type { CleanUrlFn } from '../types.js'
 import { pixelDimensionLimit } from './dom.js'
-import { placeholderBaseUrl } from './urls.js'
+import { decodeOrKeep, placeholderBaseUrl } from './urls.js'
 
 // A candidate whose url is only a width/density descriptor (`225w`, `2x`), which a real image
 // url never is. The `srcset` parser is lenient: where a feed leaves a bare descriptor with no
@@ -71,23 +71,19 @@ const sizeKeywordRanks = toMap({
 export const sizeKeywordLiterals = [...sizeKeywordRanks.keys()]
 const sizeKeywordLeaf = new RegExp(`^(?:${sizeKeywordLiterals.join('|')})(\\.[a-z0-9]+)?$`, 'i')
 
-const decodeUrlPart = (value: string): string => {
-  try {
-    return decodeURIComponent(value)
-  } catch {
-    return value
-  }
-}
-
 // The capture is (or resolves to) a URL: absolute, protocol-relative, or relative
 // to the proxy's own origin (a Cloudflare relative path, Next.js, wsrv).
 const resolvedSource = (capture: string, proxy: URL): string | undefined => {
-  return resolveUrl(decodeUrlPart(capture), proxy.origin)
+  const source = decodeOrKeep(capture)
+
+  return source && resolveUrl(source, proxy.origin)
 }
 
 // The capture is a bare host+path with the scheme stripped (Photon): re-add it.
-const bareHostSource = (capture: string): string => {
-  return addMissingProtocol(decodeUrlPart(capture))
+const bareHostSource = (capture: string): string | undefined => {
+  const source = decodeOrKeep(capture)
+
+  return source && addMissingProtocol(source)
 }
 
 // Image CDNs/proxies that wrap the real source URL inside their own request: one

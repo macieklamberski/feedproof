@@ -1,5 +1,6 @@
 import type { EmbedResolverResult } from '../types.js'
 import { findConfigScript, formatRatio } from '../utils/dom.js'
+import { decodeOrKeep } from '../utils/urls.js'
 import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
 // The config the inline script hands the loader, in one of its two spellings:
@@ -16,14 +17,6 @@ const videoIdRegex = /"video"\s*:\s*"?(\d+)"?/
 const titleRegex = /"title"\s*:\s*"([^"]*)"/
 const widthRegex = /"width"\s*:\s*"?(\d+)"?/
 const heightRegex = /"height"\s*:\s*"?(\d+)"?/
-
-const decodeTitle = (title: string): string => {
-  try {
-    return decodeURIComponent(title)
-  } catch {
-    return title
-  }
-}
 
 // Brid spells a responsive player's shape as a width and height of `16` and `9`, in 95 of 453
 // corpus configs; the other spellings are pixel boxes of 300 and more (540x300, 800x450). Two
@@ -95,9 +88,7 @@ export const bridEmbedResolver = createMarkupEmbedResolver(
       // Brid's own `/video/{video}/{player}` order, which is the platform's, not ours.
       id: `${playerId}/${videoId}`,
       src: `https://services.brid.tv/services/iframe/video/${videoId}/${playerId}`,
-      // Gated before decoding, since decodeURIComponent(undefined) is the string "undefined", so
-      // this stays a spread and not a trimObject field.
-      ...(title && { title: decodeTitle(title) }),
+      title: decodeOrKeep(title),
       ...readEmbedSize(config),
     }
   },

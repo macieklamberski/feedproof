@@ -2,7 +2,7 @@ import { isPlainObject, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, parsePixelSize, text } from '../utils/dom.js'
 import { readPixels } from '../utils/hints.js'
-import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
+import { decodeOrKeep, parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { atUsername, createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'instagram'
@@ -95,18 +95,6 @@ const composeEmbed = (
 // itself declares a max-width and never a height, so the declared-size pass finds nothing on it.
 const wrapperSelector = 'figure[data-provider="instagram"]'
 
-const decodeAttribute = (value: string | undefined): string | undefined => {
-  if (!value) {
-    return
-  }
-
-  try {
-    return decodeURIComponent(value)
-  } catch {
-    return value
-  }
-}
-
 const readWrapper = (
   element: Element,
 ): { post?: Post; size: { width?: number; height?: number } } => {
@@ -120,7 +108,7 @@ const readWrapper = (
   const height = parsePixelSize(attr(figure, 'data-orig-height'))
 
   return {
-    post: readPostUrl(decodeAttribute(attr(figure, 'data-url'))),
+    post: readPostUrl(decodeOrKeep(attr(figure, 'data-url'))),
     // Stated together or not at all: a lone height would claim a fixed box the embed does
     // not have.
     size: width && height ? { width, height } : {},
