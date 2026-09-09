@@ -43,6 +43,25 @@ describeForEachParser('aparatIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should take the title the player frame states', async () => {
+      const value = html`
+        <iframe
+          src="https://www.aparat.com/video/video/embed/videohash/pew7J/vt/frame"
+          title="تاریخچه جشنواره وب و موبایل ایران"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'aparat',
+        id: 'pew7J',
+        src: 'https://www.aparat.com/video/video/embed/videohash/pew7J/vt/frame',
+        url: 'https://www.aparat.com/v/pew7J',
+        ratio: '16/9',
+        title: 'تاریخچه جشنواره وب و موبایل ایران',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should resolve a hash longer than the ones in circulation', async () => {
       const value =
         '<iframe src="https://www.aparat.com/video/video/embed/videohash/aB3dE5fG7hJ/vt/frame"></iframe>'

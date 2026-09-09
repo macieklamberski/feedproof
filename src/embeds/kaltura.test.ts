@@ -187,7 +187,7 @@ describeForEachParser('kalturaIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    it('should drop the label KMS writes on every iframe', async () => {
+    it('should drop the label a generated iframe carries in place of the name', async () => {
       const value = html`
         <iframe
           title="Kaltura Player"
