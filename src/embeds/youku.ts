@@ -3,13 +3,9 @@ import { keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// A Youku video id is an `X` followed by the base64 spelling of a number, with the padding kept:
-// `XODczMzU0NTAw`, `XNDUyNTczMDEyOA==`. The length is not checked, since a wrong id fails the same
-// whether it is minted or passed through and a bound would refuse the next id space. The `X` is
-// checked, and it is the guard rather than decoration: the routes here take an id and nothing
-// else, so it is what stops a bare word in that position, `embed/about`, being read as a video.
-// Excluding the dot is what keeps a media file out, since the enclosure probe offers every
-// attachment a feed carries to this resolver.
+// Every Youku video id opens with a literal X, and without it a route word in the id position,
+// embed/about, reads as a video.
+// The rest is the base64 spelling of a number, padding kept: `XODczMzU0NTAw`, `XNDUyNTczMDEyOA==`.
 const safeVideoIdRegex = /^X[A-Za-z0-9=]+$/
 
 const youkuHosts = ['player.youku.com', 'static.youku.com']
@@ -21,17 +17,8 @@ const embedPathRegex = /^\/embed\/([^/]+)\/?$/
 const flashPathRegex = /^\/player\.php\/sid\/([^/]+)\/v\.swf$/
 const staticFlashPathRegex = /^\/v[\d.]+\/v\/swf\/\w*player\.swf$/
 
-// The Flash player is dead twice over: no browser runs it, and `player.php/sid/{vid}/v.swf` now
-// 302s to a `youkuoffline.swf` on the video host that redirects on to the homepage. The id it
-// names is the one the modern player takes, so the repair is a path rewrite. Checked 2026-09-06
-// through the open API the player page itself calls: 6 of 10 Flash-era ids still answer with a
-// title and a poster, a fabricated id answers "video not exist". The player host is a shell that
-// serves the same 5,164 bytes for any id, so the API is the only check that carries information.
-// The poster lives under a hash the id does not yield, so it is left to enrichment.
-//
-// The modern player is chromeless and fills its box; Youku's own watch page sizes it 16:9
-// (622x350). The 510x498 its old share snippet wrote, and the 480x400 the Flash embeds carry, are
-// boxes with the retired chrome in them, so the ratio stands over what a carrier declares.
+// The 510x498 and 480x400 boxes the carriers state held the retired player's chrome.
+// The modern player is chromeless and fills its box, and Youku's own watch page sizes it 16:9.
 const playerRatio = '16/9'
 
 const readVideoId = (url: string): string | undefined => {
@@ -56,6 +43,8 @@ export const youkuResolveEmbed = (url: string): EmbedResolverResult | undefined 
     return
   }
 
+  // The poster lives under a hash the id does not yield, and the player host serves the same
+  // shell for any id.
   return {
     provider: 'youku',
     id: videoId,
@@ -65,6 +54,7 @@ export const youkuResolveEmbed = (url: string): EmbedResolverResult | undefined 
   }
 }
 
+// A Youku player iframe, or a Flash player embed whose swf now redirects to the homepage.
 export const youkuEmbedResolver = createUrlEmbedResolver(youkuHosts, youkuResolveEmbed, {
   preferResolverSize: true,
 })

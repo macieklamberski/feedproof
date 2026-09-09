@@ -6,20 +6,15 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 const issuuHosts = ['issuu.com']
 
-// Two id spaces, and neither converts into the other. A config id is a pair of counters
-// (`1016421/47623369`) and addresses the reader through the url hash. A publisher and document
-// name pair addresses the same reader through the query. Each has its own url, which is what
-// makes both resolvable with nothing fetched. A name is also refused when it is only dots: the
-// query route hands the names back decoded and writes them into the page url as path segments,
-// so `u=..&d=..` would otherwise mint `issuu.com/../docs/..`.
+// A config id is a pair of counters, `1016421/47623369`, addressing the reader through the url
+// hash, and a publisher and document name pair addresses it through the query.
+// A name of only dots is refused on purpose: `u=..&d=..` would mint `issuu.com/../docs/..`.
 const configIdRegex = /^\d+\/\d+$/
 const safeNameRegex = /^(?!\.+$)[\w.-]+$/
 
 const pageNumberRegex = /^\d+$/
 
-// `anonymous-embed.html` is gone: it answers 403 with an S3 access-denied body for every request,
-// its own documents as well as an invented one, while `embed.html` beside it serves the reader.
-// Both take the same query, so moving it across repairs those embeds.
+// Only `embed.html` is minted: `anonymous-embed.html` answers 403 for every document.
 const embedPaths = ['embed.html', 'anonymous-embed.html']
 
 const composeConfigEmbed = (configId: string | undefined): EmbedResolverResult | undefined => {
@@ -77,14 +72,9 @@ const readDocumentUrl = (url: string): EmbedResolverResult | undefined => {
   return composeDocumentEmbed(publisher, documentName, page)
 }
 
-// Issuu's inline embed is an empty `<div class="issuuembed">` that `e.issuu.com/embed.js`
-// hydrates into an iframe at runtime. With no script running there is nothing in the markup at
-// all, so the div is dropped as empty and the document goes with it.
-//
-// The loader is what says how each attribute addresses the reader. It reads `data-configid` into
-// the hash of `e.issuu.com/embed.html`, and parses `data-url` into the `u`, `d` and `p` query the
-// iframe form already uses. Publishers write the hash form into iframes by hand as well, which is
-// the second place it can be read off.
+// Issuu ships a document as an empty div only its `embed.js` loader hydrates into the reader.
+// The loader reads `data-configid` into the hash of `e.issuu.com/embed.html`, and parses
+// `data-url` into the `u`, `d` and `p` query.
 export const issuuWidgetEmbedResolver = createMarkupEmbedResolver(
   'div.issuuembed[data-configid], div.issuuembed[data-url]',
   (element) => {
@@ -95,12 +85,9 @@ export const issuuWidgetEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
-// The Flash viewer, `static.issuu.com/webembed/…/IssuuReader.swf`, reaches here and is left alone.
-// Its `documentId` flashvar is a third id space that neither url form accepts. The older
-// `IssuuViewer.swf` snippets carry `username` and `docName` beside it, which is what the document
-// composer above mints from, so a repair is writable. It stays unwritten because nothing shows it
-// would help: `e.issuu.com/embed.html` answers the same 10,540 bytes for a real pair and an
-// invented one (2026-09-06), so no probe tells a document that still serves from one that does not.
+// The reader iframe, at `e.issuu.com/embed.html` or the document page pasted from the address bar.
+// The Flash viewer `static.issuu.com/webembed/…/IssuuReader.swf` names its document in a
+// `documentId` flashvar, a third id space neither url form accepts.
 export const issuuResolveEmbed = (
   url: string,
   element?: Element,
@@ -111,15 +98,9 @@ export const issuuResolveEmbed = (
     return
   }
 
-  // The publication name is the only thing an Issuu carrier states that neither url form holds,
-  // and the current share snippet writes it on the iframe. It is read before the branch below,
-  // because a reader-page carrier is the one a publisher pastes with the wrapper around it and
-  // so carries the name at least as often as the embed form does.
+  // The share snippet writes the publication name on the iframe, which neither url form holds.
   const title = attr(element, 'title')
 
-  // A carrier framing the reader page rather than the embed, which is what a publisher pastes
-  // from the address bar. It names the document in its path, and the widget div's `data-url`
-  // states it the same way.
   if (!isAnyOf(getPathSegments(parsed)[0] ?? '', embedPaths)) {
     const embed = readDocumentUrl(url)
 

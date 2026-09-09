@@ -6,15 +6,8 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 const typeformHosts = ['typeform.com']
 
-// Two id generations share one url template. A form id is short and mixed case
-// (`MTt3Pw7K`). A live-embed id is a 26-char Crockford base32 ULID
-// (`01HCZ4DNW8JM6PEGNTQWF2PW87`). The length spanning both is not checked: each id is read
-// either off Typeform's own attribute or from the segment after `/to/`, where nothing but a
-// form id sits. Checked 2026-09-07: `form.typeform.com/to/{invented}` redirects to Typeform's
-// explore page and `/to/pricing` answers 404, so the route holds no word to tell apart.
-//
-// The alphabet is what keeps them safe to interpolate, and it excludes the dot, so a media file
-// on the host stays playable when the enclosure probe offers it here.
+// Two id generations share one url template. A form id is short and mixed case (`MTt3Pw7K`), and
+// a live-embed id is a 26-char Crockford base32 ULID (`01HCZ4DNW8JM6PEGNTQWF2PW87`).
 const safeIdRegex = /^[A-Za-z0-9]+$/
 
 // The share panel writes the form's own title into an iframe-props string, `title=<the
@@ -45,15 +38,9 @@ const readTitle = (element: Element): string | undefined => {
   return attr(element, 'data-tf-iframe-props')?.match(titlePropRegex)?.[1]?.trim() || undefined
 }
 
-// Typeform's inline embed is an empty div that the SDK hydrates into an iframe, so with the
-// script gone the form is not merely unstyled: there is nothing in the markup at all and the
-// div is dropped as empty. Both generations do this, the current `data-tf-*` family and the
-// `typeform-widget` class whose loader is still served.
-//
-// A `data-tf-live` id is not a form id: `form.typeform.com/to/<liveId>` 301s to Typeform's
-// explore page, not a form. The id still travels, because `api.typeform.com/
-// single-embed/<liveId>` answers key-free with the real form id, which is an enrichment step
-// and not something a pure extract can do.
+// Typeform's inline embed is an empty div only the SDK hydrates into an iframe.
+// Both generations do this, the current `data-tf-*` family and the `typeform-widget` class whose
+// loader is still served.
 export const typeformWidgetEmbedResolver = createMarkupEmbedResolver(
   'div[data-tf-widget], div[data-tf-live], div.typeform-widget[data-url]',
   (element) => {
@@ -67,9 +54,9 @@ export const typeformWidgetEmbedResolver = createMarkupEmbedResolver(
     // in another: a block can carry all three, and only the last generation is ever complete.
     return (
       composeEmbed(attr(element, 'data-tf-widget') ?? '', title) ??
+      // A live id's /to/ url lands on the explore page, and enrichment maps it to the form id.
+      // `api.typeform.com/single-embed/<liveId>` answers key-free with the real form id.
       composeEmbed(attr(element, 'data-tf-live') ?? '', title) ??
-      // The legacy generation names the form by its whole url instead of its id, and on the
-      // publisher's own subdomain as often as the canonical host.
       typeformResolveEmbed(attr(element, 'data-url') ?? '')
     )
   },
@@ -90,6 +77,7 @@ export const typeformResolveEmbed = (url: string): EmbedResolverResult | undefin
   return segments[0] === 'to' && segments[1] ? composeEmbed(segments[1]) : undefined
 }
 
+// A Typeform form iframe, on form.typeform.com or a per-account subdomain.
 export const typeformIframeEmbedResolver = createUrlEmbedResolver(
   typeformHosts,
   typeformResolveEmbed,

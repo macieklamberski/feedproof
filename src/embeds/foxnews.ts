@@ -42,9 +42,7 @@ export const foxnewsResolveEmbed = (url: string): EmbedResolverResult | undefine
   return id && safeIdRegex.test(id) ? composeEmbed(id) : undefined
 }
 
-// Fox's old share snippet is `embed.js?id=…&w=…&h=…` beside a `<noscript>` link to the video
-// site. The script no longer exists (404), so even on the page it was pasted into nothing plays,
-// while the video itself still serves from the embed page the id names.
+// Fox's old share snippet is an `embed.js` script tag whose loader is gone, so nothing plays.
 export const foxnewsScriptEmbedResolver = createMarkupEmbedResolver(
   'script[src*="video.foxnews.com/v/embed.js"]',
   (element) => {
@@ -54,15 +52,9 @@ export const foxnewsScriptEmbedResolver = createMarkupEmbedResolver(
 
 export const foxnewsIframeEmbedResolver = createUrlEmbedResolver(foxnewsHosts, foxnewsResolveEmbed)
 
-// Starts playback on the click that loads the player, unmuted. The embed page loads
-// `static.foxnews.com/static/orion/scripts/core/video/embed.js`, which reads
-// `API.getQueryVar("autoplay")` and pushes the rule `autoplay` on the literal `"true"` and
-// `noAutoplay` on `"false"`, ignoring every other value. `video/ag.app.js` applies that rule as
-// `{autoplay: true, usersettings: {enabled: false}}` against a player default of
-// `autoplay: false`, and the muted start is a separate `"muted"` prop on the rule that the bare
-// one does not carry. Both scripts read live 2026-09-08, brotli-compressed on the wire. The page
-// itself is the same with the parameter and without it, so the read is the player's.
 export const foxnewsRenderHint: EmbedRenderHint = {
   provider,
+  // The player reads the literal `true` and ignores every other value.
+  // The player starts unmuted, and muted is a separate rule the bare `autoplay` does not carry.
   autoplayParams: { autoplay: 'true' },
 }

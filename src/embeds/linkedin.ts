@@ -4,33 +4,11 @@ import { keepIfMatches } from '../utils/dom.js'
 import { decodeSegment } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// The urn LinkedIn writes into the embed path. Feeds carry `share`, `ugcPost` and `activity`,
-// and `article` is unobserved, so the type segment is matched as a word rather than enumerated.
-//
-// The urn is decoded before matching: a urn written with its colons escaped arrives as
-// `urn%3Ali%3Ashare%3A…` and would fail the pattern. LinkedIn serves both spellings, probed
-// live 2026-08-31: the escaped one answers 200 with a body byte-identical to the plain one,
-// and a urn that names no post answers 404 either way.
+// The urn LinkedIn writes into the embed path. Feeds carry `share`, `ugcPost` and `activity`.
 const safeUrnRegex = /^urn:li:[a-zA-Z]+:\d+$/
 
 const linkedinHosts = ['linkedin.com']
 
-// LinkedIn is iframe-only: `linkedin.com/embed/feed/update/{urn}`, one path shape. There is no
-// blockquote or script form, in feeds or in LinkedIn's own embed flow, so this resolver is the
-// whole platform.
-//
-// Deliberately states no size. Nearly every iframe declares its own width and height, and the
-// height is a property of the individual post, not of the player. The embed does measure itself
-// and post the height out, but only to LinkedIn's own origins, so a reader never receives it
-// and the publisher's stated number is the best source there is.
-//
-// No title either: carriers overwhelmingly state the boilerplate "Embedded post" in eight
-// languages.
-//
-// `src` keeps the url as the publisher wrote it, because `collapsed` and `compact` select the
-// layout the publisher's stated height belongs to. The canonical `url` drops them. Do not try
-// to mint the activity urn from a share urn; LinkedIn assigns it server-side and it is not
-// computable.
 const linkedinResolveEmbed = (link: string): EmbedResolverResult | undefined => {
   const [route, section, action, urn] = getPathSegments(link)
 
@@ -38,18 +16,25 @@ const linkedinResolveEmbed = (link: string): EmbedResolverResult | undefined => 
     return
   }
 
+  // Some carriers escape the colons, `urn%3Ali%3Ashare%3A…`, and LinkedIn serves both alike.
   const postUrn = keepIfMatches(decodeSegment(urn), safeUrnRegex)
 
   if (!postUrn) {
     return
   }
 
+  // No size: the height is the post's, not the player's, and the embed posts its measured height
+  // only to LinkedIn's own origins. No title: carriers state the boilerplate "Embedded post" in
+  // eight languages.
   return {
     provider: 'linkedin',
     id: postUrn,
+    // Kept as written: `collapsed` and `compact` pick the layout the stated height belongs to.
     src: link,
+    // The activity urn is assigned server-side, so a share urn cannot be rewritten to it.
     url: `https://www.linkedin.com/feed/update/${postUrn}`,
   }
 }
 
+// LinkedIn's post iframe, linkedin.com/embed/feed/update/{urn}, the platform's only embed form.
 export const linkedinEmbedResolver = createUrlEmbedResolver(linkedinHosts, linkedinResolveEmbed)

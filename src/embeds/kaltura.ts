@@ -21,9 +21,7 @@ const saasHosts = new Set(['kaltura.com', 'www.kaltura.com', 'cdnapi.kaltura.com
 // gives the iframe. The player options in `flashvars[…]` travel with the rebuilt url.
 const scriptOnlyParams = ['autoembed', 'playerId', 'cache_st', 'width', 'height']
 
-// The label a generated Kaltura iframe carries in place of the video's name. None of the 16
-// carriers measured states a title of any kind, so the suppression has nothing to fire on and no
-// localised spelling to extend it to. Sixteen is too thin to say the label never appears.
+// The label a generated Kaltura iframe carries in place of the video's name.
 const boilerplateTitle = 'Kaltura Player'
 
 type Entry = {
@@ -40,25 +38,20 @@ const readEntry = (url: string | undefined): Entry | undefined => {
   return parsed && partner && entryId ? { partner, entryId, parsed } : undefined
 }
 
-// `/p/{partner}/thumbnail/entry_id/{entry}/width/640` is the poster, addressed by the two ids
-// the player url already carries: 200 `image/jpeg` for 6 of 8 corpus entries, 404 for an
-// invented one and for a deleted one (checked 2026-09-06). Title and metadata sit behind a
-// session key, so the composite id is what a future enrichment would have to sign for.
 const composeEmbed = ({ partner, entryId, parsed }: Entry, src: string): EmbedResolverResult => {
+  // A regional host serves its thumbnails itself, so the carrier's host is kept there.
   const thumbnailHost = saasHosts.has(parsed.hostname) ? 'cdnapisec.kaltura.com' : parsed.hostname
 
   return {
     provider,
+    // Title and metadata sit behind a session key.
     id: `${partner}/${entryId}`,
     src,
+    // The poster answers 200 `image/jpeg` for a real entry, 404 for an invented or a deleted one.
     thumbnail: `https://${thumbnailHost}/p/${partner}/thumbnail/entry_id/${entryId}/width/640`,
   }
 }
 
-// The iframe embed, `embedIframeJs/…?iframeembed=true&entry_id=` and the newer
-// `embedPlaykitJs/…`, which both render already and only gain the provider, the id and the
-// poster. The Flash-era `index.php/kwidget/…` and `extwidget/embedIframe/…` routes are not
-// taken: their player libraries are gone and the entry alone does not mint a working player.
 export const kalturaResolveEmbed = (
   url: string,
   element?: Element,
@@ -75,13 +68,13 @@ export const kalturaResolveEmbed = (
   return title && title !== boilerplateTitle ? { ...result, title } : result
 }
 
+// Kaltura's embedIframeJs and embedPlaykitJs iframes, which render and only lack a poster.
+// The Flash-era `index.php/kwidget/…` and `extwidget/embedIframe/…` routes have lost their
+// player libraries, and the entry alone does not mint a working player.
 export const kalturaIframeEmbedResolver = createUrlEmbedResolver([kalturaHost], kalturaResolveEmbed)
 
-// The auto-embed script, `<div id="kaltura_player_…"><script src="…?autoembed=true&entry_id=…
-// &playerId=kaltura_player_…&width=560&height=395">`, writes the iframe into the div at load
-// time. The script is stripped and the emptied div with it, so the video is deleted outright.
-// The same url with `iframeembed=true` in place of `autoembed=true` is the iframe the script
-// would have written (checked 2026-09-06), and the box it names is the one the publisher chose.
+// Kaltura's auto-embed script, which writes the iframe into an empty div at load time. Feeds strip
+// the script, and the emptied div dies as an empty tag with the video.
 export const kalturaScriptEmbedResolver = createMarkupEmbedResolver(
   'script[src*="kaltura.com/p/"]',
   (element) => {
@@ -99,6 +92,7 @@ export const kalturaScriptEmbedResolver = createMarkupEmbedResolver(
       src.searchParams.delete(name)
     }
 
+    // The same url with `iframeembed=true` for `autoembed=true` is the iframe the script writes.
     src.searchParams.set('iframeembed', 'true')
 
     const result = composeEmbed(entry, src.toString())
@@ -107,13 +101,9 @@ export const kalturaScriptEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
-// Starts playback on the click that loads the player. The player takes its options in the
-// `flashvars[…]` namespace the carrier already writes, so the key is the bracketed one and comes
-// out of a url as `flashvars%5BautoPlay%5D`; the script carrier's strip list above leaves that
-// namespace alone, so it survives into the minted `src` too. Verified live 2026-09-07 by diffing
-// the config the embed endpoint serves for one entry: the response without the parameter carries
-// `"autoPlay":false` and the one with it carries `"autoPlay":true`, 16 bytes apart in 207 KB.
 export const kalturaRenderHint: EmbedRenderHint = {
   provider,
+  // The player reads its options from the `flashvars[...]` namespace, not a bare `autoPlay`.
+  // Out of a url the key reads `flashvars%5BautoPlay%5D`.
   autoplayParams: { 'flashvars[autoPlay]': 'true' },
 }

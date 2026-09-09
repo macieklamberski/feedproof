@@ -6,36 +6,23 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 const provider = 'flourish'
 
+// `flo.uri.sh` is the canonical player. `public.flourish.studio/{resource}/{id}/embed` answers
+// with a shim whose only job is to rewrite the location to it.
 const flourishHosts = ['flo.uri.sh', 'public.flourish.studio']
 
-// The resource segment is carried, not checked against a list. `visualisation` (a single chart)
-// and `story` (a narrated sequence) are the two kinds feeds carry, and the endpoint validates
-// the pair: a real id answers 200 and a wrong kind, unknown kind or fabricated id all answer
-// 403 (probed 2026-08-15). Enumerating them anyway would be the more dangerous choice. The div
-// carrier is an empty element, so a kind this resolver refuses is not left as markup:
-// `stripEmptyTags` deletes it and the chart is gone, and losing a real chart beats a
-// placeholder that fails to load.
+// Any resource, not a list: a kind refused here is deleted as an empty div, chart and all.
+// `visualisation` and `story` are the two kinds feeds carry, and the endpoint validates the pair:
+// a real id answers 200 and a wrong kind, an unknown kind or a fabricated id all answer 403.
 const safeResourceRegex = /^[a-z][a-z-]*$/
 const safeIdRegex = /^\d+$/
 
-// `template` is the exception: a real kind on the platform that has no embed form at all.
-// `flo.uri.sh/template/{id}/embed` answers 403 for a real template id, and the SDK routes the
-// kind to `app.flourish.studio/template/{id}/preview` instead of building an iframe (probed
-// 2026-08-16). Carrying it would mint a placeholder that cannot load, which is the one case
-// where refusing beats carrying.
+// `template` has no embed form: its `/embed` answers 403 for a real id.
 const nonEmbeddableResource = 'template'
 
 // The div names its chart by a relative `{resource}/{id}` path, at most with a cache-busting
 // query. A full URL or any other shape is dropped.
 const widgetSrcRegex = /^([a-z]+)\/(\d+)(?:\?.*)?$/
 
-// `flo.uri.sh` is the canonical player: `public.flourish.studio/{resource}/{id}/embed` answers
-// with a shim whose only job is to rewrite the location to it. Both hosts are matched on the
-// way in and only the canonical one is minted.
-//
-// The id carries its resource because the two share an id space in the url and not in the
-// platform, so a bare number addresses neither endpoint on its own, and `EnrichEmbedFn`
-// receives nothing but the provider and the id.
 const composeEmbed = (resource: string, id: string): EmbedResolverResult | undefined => {
   if (!safeResourceRegex.test(resource) || resource === nonEmbeddableResource) {
     return
@@ -47,16 +34,14 @@ const composeEmbed = (resource: string, id: string): EmbedResolverResult | undef
 
   return {
     provider,
+    // Kinds share an id space in the url, not in the platform, so a bare number addresses nothing.
     id: `${resource}/${id}`,
     src: `https://flo.uri.sh/${resource}/${id}/embed`,
     url: `https://public.flourish.studio/${resource}/${id}/`,
   }
 }
 
-// Flourish ships a chart as `<div class="flourish-embed" data-src="{resource}/{id}">` plus an
-// SDK script that builds the iframe at runtime, so a reader shows nothing at all. The div
-// usually wraps a static thumbnail img (bare or inside a <noscript>). When present it becomes
-// the placeholder's thumbnail.
+// Flourish ships a chart as an empty div its SDK script builds into an iframe at runtime.
 export const flourishWidgetEmbedResolver = createMarkupEmbedResolver(
   'div.flourish-embed[data-src]',
   (element) => {
@@ -67,6 +52,7 @@ export const flourishWidgetEmbedResolver = createMarkupEmbedResolver(
     }
 
     const result = composeEmbed(match[1], match[2])
+    // The div usually wraps a static thumbnail img, bare or inside a <noscript>.
     const thumbnail = attr(element.querySelector('img'), 'src')
 
     if (result && thumbnail) {
@@ -77,10 +63,8 @@ export const flourishWidgetEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
-// The rendered form, which reaches a feed when the publisher pasted the iframe rather than the
-// script snippet. The WordPress oEmbed wrapper points at the same url with a `#?secret=`
-// fragment appended. That belongs to WordPress's postMessage handshake, not to the player, so
-// the minted url drops it.
+// The pasted player iframe, the form that reaches a feed when the publisher skipped the script.
+// The WordPress oEmbed wrapper points at the same url with a `#?secret=` fragment appended.
 export const flourishResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url)
 
@@ -98,9 +82,8 @@ export const flourishIframeEmbedResolver = createUrlEmbedResolver(
   flourishResolveEmbed,
 )
 
-// The chart posts its rendered height unasked, as a JSON string and not an object, so the payload
-// is parsed before it is read. It settles rather than arriving final: 400 and then 324.0625 on one
-// chart (2026-09-07), so the value can be fractional and the last message is the one to draw.
+// The chart posts its rendered height unasked, as a JSON string and not an object. The value
+// settles over several messages and can be fractional, 400 and then 324.0625 on one chart.
 export const readFlourishHeight = (data: unknown): number | undefined => {
   if (typeof data !== 'string') {
     return
@@ -115,14 +98,11 @@ export const readFlourishHeight = (data: unknown): number | undefined => {
   } catch {}
 }
 
-// `auto=1` is what switches the height reporting on: without it the frame posts nothing at all.
-// It stays off the minted `src` because it also changes what the chart draws. Under `auto=1` the
-// chart lays itself out at the height it wants and leaves the box to the parent, so at 600x340 it
-// clips the axis labels and the credit line that the bare url fits (measured 2026-09-08).
-//
-// A story's `#play-on-load` is a fragment, not a query parameter, so there is no `autoplayParams`.
+// No `autoplayParams`: a story's `#play-on-load` is a fragment, not a query parameter.
 export const flourishRenderHint: EmbedRenderHint = {
   provider,
+  // Kept off the minted src: under `auto=1` the chart clips its axis labels and credit line.
+  // `auto=1` switches the height reporting on, and without it the frame posts nothing at all.
   params: { auto: '1' },
   readHeight: readFlourishHeight,
 }

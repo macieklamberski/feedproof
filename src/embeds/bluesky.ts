@@ -7,40 +7,28 @@ import { atUsername, createMarkupEmbedResolver, createUrlEmbedResolver } from '.
 
 const provider = 'bluesky'
 
-// The AppView front ends serve the identical `/profile/{authority}/post/{rkey}` path, and both
-// answer 200 for a real post. The minted player is `embed.bsky.app` either way, so naming them
-// only widens what is read, the way the Twitter resolver already names its mirrors. They differ
-// in provenance: `main.bsky.dev` is first-party, listed beside `bsky.app` in bskyweb's own CORS
-// origins, while `deer.social` is a third-party soft fork. The fork is safe to name because the
-// host only recognises the url: authority and rkey are regex-gated before anything is built, and
-// the frame is always fetched from `embed.bsky.app`, so its cost is drift if it changes its
-// paths, not a security surface.
+// The fork host only widens what is read: the player is always minted on embed.bsky.app.
+// `main.bsky.dev` is first-party and `deer.social` a third-party soft fork, and both serve the
+// same `/profile/{authority}/post/{rkey}` path.
 export const blueskyHosts = ['bsky.app', 'deer.social', 'main.bsky.dev']
 
-// Images come off `cdn.bsky.app` today and off `cdn.bsky.social` in older records. Both are
-// plain paths with no signature and no expiry (checked live 2026-08-13: 200, public,
-// `cache-control: max-age=604800`), so one can be written into a placeholder and still
-// resolve later.
+// Images come off `cdn.bsky.app` today and off `cdn.bsky.social` in older records, both plain
+// paths with no signature and no expiry.
 const blueskyMediaHosts = ['bsky.app', 'bsky.social']
 
 // An AT URI addresses a record as `at://{authority}/{collection}/{rkey}`, and only the post
 // collection is embeddable. WHATWG url parsing is no use here: `at://did:plc:x/…` reads the
 // colon in the authority as a port and fails, so the URI is split by hand.
 const postCollection = 'app.bsky.feed.post'
+// at://{authority}/{collection}/{rkey}.
 const atUriRegex = /^at:\/\/([^/]+)\/([^/]+)\/([^/?#]+)/
 
-// The authority is either a DID (`did:plc:…`, `did:web:…`) or a handle, which is a domain
-// name. The record key is base32-sortable in practice. The wider charset here is the whole
-// of what a record key may hold. Both are interpolated into urls, so anything outside these
-// alphabets is refused, not escaped. The AT URI comes off raw attribute text, so nothing has
-// folded a dot segment away before it gets here, and a record key of `.` or `..` would climb out
-// of the collection in the minted player url. The AT Protocol forbids exactly those two keys, so
-// refusing them costs no real post.
+// A DID or a handle, which is a domain name.
 const safeAuthorityRegex = /^(?:did:[a-z]+:[\w.:%-]+|[a-z\d-]+(?:\.[a-z\d-]+)+)$/i
+// A record key, never `.` or `..`: the protocol forbids them and they would climb out of the path.
 const safeRecordKeyRegex = /^(?!\.{1,2}$)[\w.~-]+$/
 
-// The author label sits between the post text and the date link, and the leading separator is
-// whatever the snippet generator emitted: `&mdash;`, an en dash, or a plain `--`.
+// Whitespace, an en dash, an em dash or a hyphen.
 const authorSeparatorRegex = /^[\s–—-]+/
 
 // Bluesky's own fallback for media the blockquote cannot render, e.g. `[image or embed]`. It
@@ -68,6 +56,7 @@ const composePost = (authority: string, rkey: string): BlueskyPost | undefined =
 }
 
 const extractBlueskyPost = (uri: string): BlueskyPost | undefined => {
+  // Not `new URL`: it reads the colon in a DID authority as a port and fails.
   const match = uri.match(atUriRegex)
 
   if (!match || match[2] !== postCollection) {
@@ -77,11 +66,6 @@ const extractBlueskyPost = (uri: string): BlueskyPost | undefined => {
   return composePost(match[1], match[3])
 }
 
-// The two url spellings of the same post: `bsky.app/profile/{authority}/post/{rkey}` is the
-// permalink the blockquote's own anchors carry, and
-// `embed.bsky.app/embed/{authority}/app.bsky.feed.post/{rkey}` is the player the embed script
-// builds. The host is checked, not the path shape, so a url that merely spells one of
-// these paths on its own host names no post.
 const extractBlueskyPostFromUrl = (link: string): BlueskyPost | undefined => {
   const parsed = parseUrlOnHosts(link, blueskyHosts)
 
@@ -95,6 +79,8 @@ const extractBlueskyPostFromUrl = (link: string): BlueskyPost | undefined => {
     return
   }
 
+  // `bsky.app/profile/{authority}/post/{rkey}` is the permalink the blockquote's anchors carry,
+  // and `embed.bsky.app/embed/{authority}/app.bsky.feed.post/{rkey}` is the player.
   if (
     (root === 'profile' && collection === 'post') ||
     (root === 'embed' && collection === postCollection)
@@ -103,25 +89,13 @@ const extractBlueskyPostFromUrl = (link: string): BlueskyPost | undefined => {
   }
 }
 
-// `EnrichEmbedFn` is handed `{provider, id}` and nothing else, so the id has to address the
-// post on its own. A record key does not: it is unique only within one repository, and every
-// endpoint that answers for a post, the AT URI, the permalink, the player, is keyed by the
-// authority as well. So the id is the pair, and both endpoints rebuild from it.
-//
-// The authority is whichever form the markup gave. `getPostThread` and oEmbed both answer a
-// handle-form post directly, so the id addresses the post either way (checked live
-// 2026-08-13). Only `getPosts` needs a DID.
-//
-// The player is composed the same way for both forms, even though it takes a DID today and
-// answers 400 to a handle (checked live 2026-08-13). The handle form is one file in 200 and
-// comes from a single newsletter platform whose custom element carries no DID anywhere, so the
-// alternative is either dropping those posts or writing a url that is a different kind of
-// thing into the field that names the player. Keeping the shape uniform means the day the
-// player resolves handles itself, those embeds start working with no change here.
 const composeEmbedResult = (post: BlueskyPost): EmbedResolverResult => {
   return {
     provider,
+    // A record key is unique only inside one repository, and every endpoint keys on the authority.
+    // `getPostThread` and oEmbed answer a handle-form post, and only `getPosts` needs a DID.
     id: `${post.authority}/${post.rkey}`,
+    // The player takes a DID today and answers 400 to the handle form <bluesky-post> ships.
     src: `https://embed.bsky.app/embed/${post.authority}/${postCollection}/${post.rkey}`,
     url: `https://bsky.app/profile/${post.authority}/post/${post.rkey}`,
   }
@@ -143,6 +117,7 @@ const composeAuthor = (name?: string, handle?: string): string | undefined => {
 const findPostAnchor = (element: Element): Element | undefined => {
   let found: Element | undefined
 
+  // The last one: a media marker links the post too, and the date link is always later.
   for (const anchor of element.querySelectorAll('a[href]')) {
     if (extractBlueskyPostFromUrl(attr(anchor, 'href') ?? '')) {
       found = anchor
@@ -166,8 +141,7 @@ const readAuthor = (anchor: Element): string | undefined => {
 
   const author = label.replace(authorSeparatorRegex, '').trim()
 
-  // Every footer names the handle, so a run with no `@` in it is body text rather than an
-  // author label.
+  // Every footer names the handle, so a run with no `@` in it is body text.
   return author.includes('@') ? author : undefined
 }
 
@@ -200,10 +174,6 @@ const readPostText = (element: Element, postAnchor: Element | undefined): string
   return body.trim() || undefined
 }
 
-// The blockquote is what a reader sees until Bluesky's script replaces it, and it holds the
-// post text, the author and the date. Replacing it with a placeholder that carried only an id
-// would lose all three, so they are read out of it first. The `<bluesky-post>` custom element
-// ships the same fallback markup, so both carriers read it the same way.
 const readQuotedPost = (
   element: Element,
 ): { post?: BlueskyPost; fields: Partial<EmbedResolverResult> } => {
@@ -220,27 +190,20 @@ const readQuotedPost = (
   }
 }
 
-// The canonical embed, and the one every CMS wrapper holds: WordPress's Gutenberg figure,
-// Ghost's card, the theme divs, Daily Kos's editor block and the entity-encoded feeds all
-// carry this same blockquote inside. The wrapper is left standing and only the blockquote is
-// replaced, so no wrapper needs naming here.
-//
-// The AT URI is the declared identifier, but one feed shape ships the blockquote with the
-// data attributes stripped, so the permalink in the footer is read as a second source. The
-// opposite stripping happens too: some feeds drop the class and keep the attributes, so the
-// second selector half claims the quote by its declared AT URI.
-// Both carriers name the post in one attribute and hold their text in the same place, so only
-// the attribute separates them.
 const extractQuotedPost = (
   element: Element,
   attribute: string,
 ): EmbedResolverResult | undefined => {
   const quoted = readQuotedPost(element)
+  // Some feeds strip the blockquote's data attributes, and others drop its class and keep them.
   const post = extractBlueskyPost(attr(element, attribute) ?? '') ?? quoted.post
 
   return post ? { ...composeEmbedResult(post), ...quoted.fields } : undefined
 }
 
+// Bluesky's post blockquote, the fallback its embed script replaces and no reader runs.
+// Every CMS wrapper holds it: WordPress's Gutenberg figure, Ghost's card and Daily Kos's editor
+// block all carry this same blockquote inside.
 export const blueskyBlockquoteEmbedResolver = createMarkupEmbedResolver(
   'blockquote.bluesky-embed, blockquote[data-bluesky-uri]',
   (element) => extractQuotedPost(element, 'data-bluesky-uri'),
@@ -270,9 +233,7 @@ const readSubstackPost = (element: Element): Partial<EmbedResolverResult> => {
   }
 }
 
-// The player the embed script builds at runtime, saved into the feed by a CMS that ran the
-// script first (Substack) or pasted by hand (Ghost, TinyMCE). Same post, same placeholder:
-// only the carrier differs.
+// The embed.bsky.app player iframe, saved by a CMS that ran the script or pasted by hand.
 export const blueskyIframeEmbedResolver = createUrlEmbedResolver(blueskyHosts, (url, element) => {
   const post = extractBlueskyPostFromUrl(url)
 
@@ -283,9 +244,7 @@ export const blueskyIframeEmbedResolver = createUrlEmbedResolver(blueskyHosts, (
   return { ...composeEmbedResult(post), ...readSubstackPost(element) }
 })
 
-// Forum software renders a post through the s9e MediaEmbed helper page, which is hosted on
-// `s9e.github.io`, not on Bluesky. The post is named in the url fragment, so the
-// placeholder points back at Bluesky's own player like every other carrier.
+// A forum's s9e MediaEmbed helper iframe on s9e.github.io, naming the post in its url fragment.
 export const blueskyS9eEmbedResolver = createMarkupEmbedResolver(
   'iframe[data-s9e-mediaembed="bluesky"]',
   (element) => {
@@ -301,9 +260,8 @@ export const blueskyS9eEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
-// A newsletter platform ships the post as a custom element with a declarative shadow root,
-// which no reader mounts. Its `src` is an AT URI written with the author's handle, not their
-// DID, and the fallback blockquote inside it holds the post text.
+// A newsletter's <bluesky-post> custom element, a declarative shadow root no reader mounts.
+// Its `src` is an AT URI spelled with the author's handle. The blockquote inside holds the post.
 export const blueskyPostElementEmbedResolver = createMarkupEmbedResolver(
   'bluesky-post[src]',
   (element) => extractQuotedPost(element, 'src'),
