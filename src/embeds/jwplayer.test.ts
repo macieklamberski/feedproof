@@ -167,11 +167,14 @@ describeForEachParser('jwplayerScriptEmbedResolver', (parseHtml) => {
 describeForEachParser('jwplayerAmpEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, jwplayerAmpEmbedResolver)
 
+  // AMP's documented snippet states the player's shape in `width` and `height`, so the pair is
+  // the 16/9 it spells and not a sixteen-pixel box for a reader to reserve.
   it('should resolve the AMP element to the default-player placeholder', async () => {
     const value = html`
       <amp-jwplayer
         data-media-id="H4GXr873"
         data-player-id="abc12345"
+        layout="responsive"
         width="16"
         height="9"
       ></amp-jwplayer>
@@ -181,8 +184,29 @@ describeForEachParser('jwplayerAmpEmbedResolver', (parseHtml) => {
       id: 'H4GXr873',
       src: 'https://cdn.jwplayer.com/players/H4GXr873.html',
       thumbnail: 'https://cdn.jwplayer.com/v2/media/H4GXr873/poster.jpg',
-      width: 16,
-      height: 9,
+      ratio: '16/9',
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
+  // A pair above the ceiling is a box the publisher laid out, and it stays one.
+  it('should keep a stated pixel box on the AMP element', async () => {
+    const value = html`
+      <amp-jwplayer
+        data-media-id="H4GXr873"
+        data-player-id="abc12345"
+        width="640"
+        height="360"
+      ></amp-jwplayer>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'jwplayer',
+      id: 'H4GXr873',
+      src: 'https://cdn.jwplayer.com/players/H4GXr873.html',
+      thumbnail: 'https://cdn.jwplayer.com/v2/media/H4GXr873/poster.jpg',
+      width: 640,
+      height: 360,
     }
 
     expect(await extract(value)).toEqual(expected)

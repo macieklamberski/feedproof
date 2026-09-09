@@ -3,8 +3,10 @@ import type { EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// A video id is a run of letters and digits, twelve of them on every specimen seen.
-const safeVideoIdRegex = /^[a-zA-Z0-9]{8,24}$/
+// The id goes into both minted urls, so it is letters and digits and nothing else. No width: the
+// route word at segment 0 is what tells a video from a channel or a profile, and a band measured
+// off today's ids would only refuse the ones BitChute mints next.
+const safeVideoIdRegex = /^[a-zA-Z0-9]+$/
 
 const bitchuteHosts = ['bitchute.com']
 

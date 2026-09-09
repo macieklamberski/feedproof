@@ -646,6 +646,37 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(await transform(value, context)).toEqualHtml(expected)
     })
 
+    // The size keyword is read off the path, so a segment naming a member every object inherits
+    // reaches that table too. Read as a rank it outranks nothing and decides nothing, which
+    // leaves the no-query url to settle the pair, exactly as the unknown segment below does.
+    it('should let no size keyword decide when a segment names an inherited member', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/photos/constructor/small.jpg?v=2', type: 'image/jpeg' },
+        { url: 'https://example.com/photos/constructor', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/photos/constructor" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    it('should let no size keyword decide when a segment is one nothing ranks', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        { url: 'https://example.com/photos/sunset/small.jpg?v=2', type: 'image/jpeg' },
+        { url: 'https://example.com/photos/sunset', type: 'image/jpeg' },
+      ])
+      const expected = html`
+        <img src="https://example.com/photos/sunset" data-enclosure="">
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
     it('should prefer the no-query URL when colliding variants have no size to compare', async () => {
       const value = '<p>Content</p>'
       const context = withEnclosures([
@@ -796,6 +827,27 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
           controls
           data-enclosure=""
         ></audio>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
+    // A hidden or lazy player frame declares a zero, which is not a height to reserve.
+    it('should ignore a zero the player frame declares', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        {
+          playerEmbed:
+            '<iframe src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3" width="0" height="0"></iframe>',
+        },
+        { url: 'https://example.com/ep.mp3', type: 'audio/mpeg' },
+      ])
+      const expected = html`
+        <div
+          data-embed-src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3"
+          data-enclosure=""
+        ></div>
         <p>Content</p>
       `
 

@@ -37,7 +37,7 @@ import { aparatIframeEmbedResolver, aparatScriptEmbedResolver } from '../embeds/
 import { appleEmbedResolver } from '../embeds/apple.js'
 import { archiveFlashEmbedResolver, archiveIframeEmbedResolver } from '../embeds/archive.js'
 import { arteEmbedResolver } from '../embeds/arte.js'
-import { audioboomEmbedResolver, audioboomPlayerEmbedResolver } from '../embeds/audioboom.js'
+import { audioboomIframeEmbedResolver, audioboomWidgetEmbedResolver } from '../embeds/audioboom.js'
 import { audiomackEmbedResolver } from '../embeds/audiomack.js'
 import { aushaEmbedResolver } from '../embeds/ausha.js'
 import { bandcampEmbedResolver } from '../embeds/bandcamp.js'
@@ -110,7 +110,7 @@ import { libsynEmbedResolver } from '../embeds/libsyn.js'
 import { linkedinEmbedResolver } from '../embeds/linkedin.js'
 import { mailruEmbedResolver } from '../embeds/mailru.js'
 import { mastodonEmbedResolver } from '../embeds/mastodon.js'
-import { mediavineEmbedResolver, mediavineScriptEmbedResolver } from '../embeds/mediavine.js'
+import { mediavineScriptEmbedResolver, mediavineWidgetEmbedResolver } from '../embeds/mediavine.js'
 import { megaphoneEmbedResolver } from '../embeds/megaphone.js'
 import { megatvEmbedResolver } from '../embeds/megatv.js'
 import { mixcloudEmbedResolver } from '../embeds/mixcloud.js'
@@ -122,7 +122,7 @@ import { omnyEmbedResolver } from '../embeds/omny.js'
 import { padletEmbedResolver } from '../embeds/padlet.js'
 import { podbeanEmbedResolver } from '../embeds/podbean.js'
 import { podetizeIframeEmbedResolver, podetizeScriptEmbedResolver } from '../embeds/podetize.js'
-import { podigeeEmbedResolver, podigeeIframeEmbedResolver } from '../embeds/podigee.js'
+import { podigeeIframeEmbedResolver, podigeeScriptEmbedResolver } from '../embeds/podigee.js'
 import { podomaticEmbedResolver } from '../embeds/podomatic.js'
 import { redcircleIframeEmbedResolver, redcircleScriptEmbedResolver } from '../embeds/redcircle.js'
 import { redditIframeEmbedResolver, redditWidgetEmbedResolver } from '../embeds/reddit.js'
@@ -228,7 +228,7 @@ const embedResolvers: Array<EmbedResolver> = [
   facebookBlockquoteEmbedResolver,
   facebookXfbmlEmbedResolver,
   facebookAmpEmbedResolver,
-  mediavineEmbedResolver,
+  mediavineWidgetEmbedResolver,
   mediavineScriptEmbedResolver,
   mixcloudEmbedResolver,
   podbeanEmbedResolver,
@@ -236,7 +236,7 @@ const embedResolvers: Array<EmbedResolver> = [
   podetizeScriptEmbedResolver,
   podetizeIframeEmbedResolver,
   megatvEmbedResolver,
-  podigeeEmbedResolver,
+  podigeeScriptEmbedResolver,
   podigeeIframeEmbedResolver,
   podomaticEmbedResolver,
   redcircleScriptEmbedResolver,
@@ -285,10 +285,10 @@ const embedResolvers: Array<EmbedResolver> = [
   blueskyIframeEmbedResolver,
   blueskyS9eEmbedResolver,
   blueskyPostElementEmbedResolver,
-  audioboomEmbedResolver,
+  audioboomIframeEmbedResolver,
   audiomackEmbedResolver,
   aushaEmbedResolver,
-  audioboomPlayerEmbedResolver,
+  audioboomWidgetEmbedResolver,
   notecomIframeEmbedResolver,
   nytimesIframeEmbedResolver,
   omnyEmbedResolver,

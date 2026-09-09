@@ -1,4 +1,4 @@
-import { type Nullish, startsWithAnyOf } from 'trousse'
+import { type Nullish, startsWithAnyOf, toMap } from 'trousse'
 import type { CiteKind, CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
@@ -8,7 +8,7 @@ import { attr, find, text } from '../utils/dom.js'
 // The class carries a `u-` or `p-` prefix depending on whether the value is a URL or the
 // nested h-cite itself (WordPress Post Kinds emits `p-in-reply-to`), so both prefixes are
 // accepted for every property.
-const citeKindByResponseProperty: Record<string, CiteKind> = {
+const citeKindByResponseProperty: ReadonlyMap<string, CiteKind> = toMap({
   'bookmark-of': 'bookmark',
   'repost-of': 'repost',
   'like-of': 'like',
@@ -16,7 +16,7 @@ const citeKindByResponseProperty: Record<string, CiteKind> = {
   'read-of': 'read',
   'listen-of': 'listen',
   'watch-of': 'watch',
-}
+})
 
 const responsePrefixes = ['u-', 'p-']
 
@@ -78,11 +78,10 @@ export const microformatsCiteResolver: CiteResolver = {
     const author = find(element, '.p-author')
     const published = find(element, '.dt-published', notInAuthor)
 
-    const responseProperty = Array.from(element.classList)
+    const kind = Array.from(element.classList)
       .filter((name) => startsWithAnyOf(name, responsePrefixes))
-      .map((name) => name.slice(2))
-      .find((property) => Object.hasOwn(citeKindByResponseProperty, property))
-    const kind = responseProperty ? citeKindByResponseProperty[responseProperty] : undefined
+      .map((name) => citeKindByResponseProperty.get(name.slice(2)))
+      .find((named) => named !== undefined)
 
     return buildCite({
       provider: 'microformats',

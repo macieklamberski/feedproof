@@ -1,7 +1,13 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { pickUrlParams, splitStrayParams } from '../utils/urls.js'
+import {
+  composeQuery,
+  parseUrlOnHosts,
+  pickUrlParams,
+  placeholderBaseUrl,
+  splitStrayParams,
+} from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'youtube'
@@ -69,7 +75,7 @@ export const composeThumbnailUrl = (videoId: string): string => {
 // not as a ready query string, so they get encoded here, and one carrying an `&` cannot open a
 // parameter of its own.
 export const composeEmbedUrl = (videoId: string, params?: Record<string, string>): string => {
-  const query = params && Object.keys(params).length ? `?${new URLSearchParams(params)}` : ''
+  const query = composeQuery(params)
 
   return `https://www.youtube.com/embed/${videoId}${query}`
 }
@@ -93,7 +99,7 @@ const readPathId = (url: URL): string | undefined => {
 }
 
 export const extractVideoId = (link: string): string | undefined => {
-  const url = parseUrl(link)
+  const url = parseUrl(link, placeholderBaseUrl)
 
   if (!url) {
     return
@@ -119,6 +125,15 @@ export const extractVideoId = (link: string): string | undefined => {
       )
       .find((candidate) => !!candidate && isVideoId(candidate))
   )
+}
+
+// The player url for a caller holding a url nothing has checked: a page builder stores whatever
+// the publisher pasted, so the host is checked here the way the factory checks it for a carrier.
+export const readYoutubeEmbedSrc = (link: string): string | undefined => {
+  const url = parseUrlOnHosts(link, youtubeHosts)
+  const videoId = url && extractVideoId(url.href)
+
+  return videoId ? composeEmbedUrl(videoId) : undefined
 }
 
 // Parameters that change what the player shows; everything else the publisher wrote, autoplay,
@@ -225,16 +240,14 @@ const resolveCollectionEmbed = (
   return listType === 'user_uploads' ? composeUploadsEmbed(list) : composeListEmbed(list)
 }
 
-// YouTube's oEmbed html writes the video's own title on the iframe, and a url carries no name of
-// any kind. Taken as stated, player labels included: they are localised into every language
-// YouTube serves and some name the plugin rather than the platform, so a list of them goes stale.
-export const youtubeResolveEmbed = (
-  url: string,
-  element?: Element,
-): EmbedResolverResult | undefined => {
-  const parsed = parseUrl(url)
+// The carrier's `title` is not read. Only 37% of the 113,837 YouTube carriers in the corpus state
+// one at all, and 43% of those are the player's own label instead of the video's name, so the
+// attribute names the video for about a fifth of the embeds and misnames it for a sixth. The label
+// is localised, so nothing separates the two on the string alone. The title comes from enrichment,
+// which is where the other four fifths already got it.
+export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+  const parsed = parseUrl(url, placeholderBaseUrl)
   const segments = parsed ? getPathSegments(parsed) : []
-  const title = element ? attr(element, 'title') : undefined
 
   if (segments[0] === 'embed' && parsed) {
     const embed = resolveCollectionEmbed(parsed, segments)
@@ -242,7 +255,7 @@ export const youtubeResolveEmbed = (
     // A `/embed/{id}` path names a video and falls through; the rest of the embed paths name
     // their content here or name nothing resolvable.
     if (embed || segments.length === 1 || nonVideoIds.has(segments[1])) {
-      return embed && { ...embed, title }
+      return embed
     }
   }
 
@@ -252,9 +265,7 @@ export const youtubeResolveEmbed = (
   if (segments[0] === 'p') {
     const list = splitStrayParams(segments[1] ?? '').head
 
-    return legacyPlaylistIdRegex.test(list)
-      ? { ...composeListEmbed(`PL${list}`), title }
-      : undefined
+    return legacyPlaylistIdRegex.test(list) ? composeListEmbed(`PL${list}`) : undefined
   }
 
   const videoId = extractVideoId(url)
@@ -270,7 +281,6 @@ export const youtubeResolveEmbed = (
     url: `https://www.youtube.com/watch?v=${videoId}`,
     thumbnail: composeThumbnailUrl(videoId),
     ratio: playerRatio,
-    title,
   }
 }
 

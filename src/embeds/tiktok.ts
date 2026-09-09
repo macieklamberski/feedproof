@@ -3,7 +3,7 @@ import type { EmbedResolverResult } from '../types.js'
 import { attr, find, keepIfMatches, parsePixelSize, text, textNode } from '../utils/dom.js'
 import * as styles from '../utils/styles.js'
 import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
-import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
+import { atUsername, createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const tiktokHosts = ['tiktok.com']
 
@@ -134,11 +134,16 @@ const resolveClip = (element: Element): EmbedResolverResult | undefined => {
   const authorHandle = author?.slice(1)
   const handle = cited.handle ?? linked.handle ?? keepIfMatches(authorHandle, safeHandleRegex)
 
+  // The watch page is the path the id already spells, so it is mintable from the same two halves
+  // wherever a handle survives: a blockquote whose only source is a body anchor names both. The
+  // cite comes first where it still names the clip, since that is the url the publisher wrote.
+  const watchPath = handle ? `@${handle}/video/${videoId}` : undefined
+
   return {
     provider: 'tiktok',
-    id: handle ? `@${handle}/video/${videoId}` : videoId,
+    id: watchPath ?? videoId,
     src: `https://www.tiktok.com/embed/v2/${videoId}`,
-    url: cited.videoId ? cite : undefined,
+    url: cited.videoId ? cite : watchPath && `https://www.tiktok.com/${watchPath}`,
     description: text(caption),
     author,
     ...clipSize(element),
@@ -188,10 +193,10 @@ const resolveAccount = (element: Element): EmbedResolverResult | undefined => {
 
   return {
     provider: 'tiktok',
-    id: `@${handle}`,
+    id: atUsername(handle),
     src: `https://www.tiktok.com/embed/@${handle}`,
     url: isCitedProfile ? cite : `https://www.tiktok.com/@${handle}`,
-    author: `@${handle}`,
+    author: atUsername(handle),
     description: textNode(element),
   }
 }
@@ -205,9 +210,16 @@ const resolveAccount = (element: Element): EmbedResolverResult | undefined => {
 // markup still names. The clip is the more specific claim and is tried first. The account is
 // what a blockquote naming no clip anywhere still identifies, so it is never a substitute for
 // a clip but the only content left in the markup.
+//
+// `preferResolverSize: true` for the same reason the pasted player carries it: a blockquote that
+// states a box states the snippet's landscape one, and the clip branch always answers a height of
+// its own, the hydrated iframe's measurement where there is one and the player's 738 otherwise.
+// The account branch states no size, and a resolver that states none falls back to the carrier
+// whatever this is set to, so the option cannot leave that shape sizeless.
 export const tiktokBlockquoteEmbedResolver = createMarkupEmbedResolver(
   'blockquote.tiktok-embed',
   (element) => resolveClip(element) ?? resolveAccount(element),
+  { preferResolverSize: true },
 )
 
 // The pasted player itself, with no blockquote around it. The src is kept as the publisher

@@ -74,6 +74,25 @@ describeForEachParser('tedEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should take the talk name off the stated title', async () => {
+      const value = html`
+        <iframe
+          title="Ethan Zuckerman: Listening to global voices"
+          src="https://embed.ted.com/talks/ethan_zuckerman"
+          scrolling="no"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'ted',
+        id: 'ethan_zuckerman',
+        src: 'https://embed.ted.com/embed/ethan_zuckerman',
+        url: 'https://www.ted.com/talks/ethan_zuckerman',
+        title: 'Ethan Zuckerman: Listening to global voices',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {

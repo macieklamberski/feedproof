@@ -1,3 +1,4 @@
+import { toMap } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { hasAncestorWithTagName, isElement, isText, text, walkElements } from '../../utils/dom.js'
 // Token -> display-label map for the languages feedsweep recognizes (canonical
@@ -8,10 +9,10 @@ import labels from './highlightCode.json' with { type: 'json' }
 
 // The languages feedsweep recognizes, keyed by token (and alias). Used both to
 // disambiguate the wrapper-class detection paths below and to label the badge.
-const supportedLabels = labels as Record<string, string>
+const supportedLabels = toMap(labels)
 
 const isSupportedLanguage = (token: string): boolean => {
-  return supportedLabels[token.toLowerCase()] !== undefined
+  return supportedLabels.has(token.toLowerCase())
 }
 
 const languageRegex = /(?:language|lang)-(\S+)/
@@ -197,7 +198,7 @@ const preTag = new Set(['pre'])
 // back to its capitalized form.
 const labelForLanguage = (language: string): string => {
   const key = language.toLowerCase()
-  return supportedLabels[key] ?? key.charAt(0).toUpperCase() + key.slice(1)
+  return supportedLabels.get(key) ?? key.charAt(0).toUpperCase() + key.slice(1)
 }
 
 // Block-level elements that some highlighters and editors use to lay out one

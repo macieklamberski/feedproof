@@ -1,6 +1,6 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, trimObject } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { keepIfMatches, parsePixelSize } from '../utils/dom.js'
+import { attr, keepIfMatches, parsePixelSize } from '../utils/dom.js'
 import { isPlayerJsReady, playerJsPlayRequest } from '../utils/hints.js'
 import { isMediaFile, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
@@ -46,9 +46,15 @@ export const extractPodbeanId = (link: string): string | undefined => {
 //
 // No metadata worth having. `api.podbean.com/v1/oembed` does answer key-free, but its whole
 // payload is `version, provider_name, provider_url, width, height, type, html`: no title, no
-// thumbnail, no author (checked 2026-08-11). So height and the repaired url are what this
-// resolver is for, and enrichment would add nothing.
-export const podbeanResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+// thumbnail, no author (checked 2026-08-11). So height, the repaired url and the carrier's own
+// title are what this resolver is for, and enrichment would add nothing.
+//
+// The title names the episode rather than the player: across 161 titled frames in a 1/16 corpus
+// sample the commonest value covered 1% of them.
+export const podbeanResolveEmbed = (
+  url: string,
+  element?: Element,
+): EmbedResolverResult | undefined => {
   const id = extractPodbeanId(url)
 
   if (!id) {
@@ -57,12 +63,14 @@ export const podbeanResolveEmbed = (url: string): EmbedResolverResult | undefine
 
   const stated = parseUrl(url, placeholderBaseUrl)?.searchParams.get('size')
   const height = parsePixelSize(stated) ?? defaultPlayerHeight
+  const title = attr(element, 'title')
 
   return {
     provider,
     id,
     src: `https://www.podbean.com/player-v2/?i=${id}`,
     height,
+    ...trimObject({ title }, Boolean),
   }
 }
 

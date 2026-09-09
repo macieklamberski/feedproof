@@ -2,10 +2,10 @@ import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { mediavineEmbedResolver, mediavineScriptEmbedResolver } from './mediavine.js'
+import { mediavineScriptEmbedResolver, mediavineWidgetEmbedResolver } from './mediavine.js'
 
-describeForEachParser('mediavineEmbedResolver', (parseHtml) => {
-  const extract = resolverExtractor(parseHtml, mediavineEmbedResolver)
+describeForEachParser('mediavineWidgetEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, mediavineWidgetEmbedResolver)
 
   describe('happy paths', () => {
     it('should mint the embed player url from the video id', async () => {

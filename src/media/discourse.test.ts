@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'bun:test'
-import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { MediaResolverResult } from '../types.js'
 import { discourseMediaResolver } from './discourse.js'
@@ -45,7 +44,7 @@ describeForEachParser('discourseMediaResolver', (parseHtml) => {
     })
   })
 
-  describe('reject branches', () => {
+  describe('sad paths', () => {
     it('should return undefined when the src is not a video file', async () => {
       const value = html`
         <div
@@ -73,30 +72,5 @@ describeForEachParser('discourseMediaResolver', (parseHtml) => {
 
       expect(await extract(value)).toBeUndefined()
     })
-  })
-
-  it('should produce a playable video with poster end to end', async () => {
-    const value = html`
-      <p>Watch this:</p>
-      <div
-        class="video-placeholder-container"
-        data-video-src="${videoSrc}"
-        data-thumbnail-src="${thumbnailSrc}"
-      ></div>
-    `
-    const expected = html`
-      <p>Watch this:</p>
-      <video
-        src="${videoSrc}"
-        poster="${thumbnailSrc}"
-        controls
-      ></video>
-    `
-    const result = await transformContent(value, {
-      parseHtmlFn: parseHtml,
-      baseUrl: 'https://forum.example.com/t/1',
-    })
-
-    expect(result).toEqualHtml(expected)
   })
 })

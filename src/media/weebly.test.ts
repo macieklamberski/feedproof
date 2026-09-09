@@ -7,22 +7,25 @@ import { weeblyMediaResolver } from './weebly.js'
 describeForEachParser('weeblyMediaResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, weeblyMediaResolver)
 
-  const facade = (style: string) => html`
-    <div class="wsite-video-wrapper wsite-video-height-282">
-      <div id="wsite-video-container-807467334470573958" class="wsite-video-container">
-        <iframe frameborder="0" id="video-iframe-807467334470573958" src="about:blank"></iframe>
-        <style>${style}</style>
-      </div>
-    </div>
-  `
-
   describe('happy paths', () => {
     // Weebly stores the video and its poster under the same name, so the poster carries both
     // the directory and the file name.
     it('should build the video url from the poster', async () => {
-      const value = facade(
-        '#wsite-video-container-807467334470573958{ background: url(//www.weebly.com/uploads/b/5005989-475656185621122208/delaware_behaving_badly_176.jpg); }',
-      )
+      const value = html`
+        <div class="wsite-video-wrapper wsite-video-height-282">
+          <div
+            id="wsite-video-container-807467334470573958"
+            class="wsite-video-container"
+          >
+            <iframe
+              frameborder="0"
+              id="video-iframe-807467334470573958"
+              src="about:blank"
+            ></iframe>
+            <style>#wsite-video-container-807467334470573958{ background: url(//www.weebly.com/uploads/b/5005989-475656185621122208/delaware_behaving_badly_176.jpg); }</style>
+          </div>
+        </div>
+      `
       const expected: MediaResolverResult = {
         tag: 'video',
         src: '//www.weebly.com/uploads/b/5005989-475656185621122208/delaware_behaving_badly_176.mp4',
@@ -35,9 +38,21 @@ describeForEachParser('weeblyMediaResolver', (parseHtml) => {
 
     // The play icon on Weebly's CDN sits in the same style block and is not the poster.
     it('should take the uploads url rather than the play icon', async () => {
-      const value = facade(
-        '#video-iframe-807467334470573958{ background: url(//cdn2.editmysite.com/images/util/videojs/play.png); } #wsite-video-container-807467334470573958{ background: url(//www.weebly.com/uploads/b/1/clip_176.jpg); }',
-      )
+      const value = html`
+        <div class="wsite-video-wrapper wsite-video-height-282">
+          <div
+            id="wsite-video-container-807467334470573958"
+            class="wsite-video-container"
+          >
+            <iframe
+              frameborder="0"
+              id="video-iframe-807467334470573958"
+              src="about:blank"
+            ></iframe>
+            <style>#video-iframe-807467334470573958{ background: url(//cdn2.editmysite.com/images/util/videojs/play.png); } #wsite-video-container-807467334470573958{ background: url(//www.weebly.com/uploads/b/1/clip_176.jpg); }</style>
+          </div>
+        </div>
+      `
       const expected: MediaResolverResult = {
         tag: 'video',
         src: '//www.weebly.com/uploads/b/1/clip_176.mp4',
@@ -48,9 +63,21 @@ describeForEachParser('weeblyMediaResolver', (parseHtml) => {
     })
 
     it('should keep a name whose size suffix looks like an extension', async () => {
-      const value = facade(
-        '#wsite-video-container-807467334470573958{ background: url(//www.weebly.com/uploads/b/1/03.05.2022_12.10.58_rec_649.jpg); }',
-      )
+      const value = html`
+        <div class="wsite-video-wrapper wsite-video-height-282">
+          <div
+            id="wsite-video-container-807467334470573958"
+            class="wsite-video-container"
+          >
+            <iframe
+              frameborder="0"
+              id="video-iframe-807467334470573958"
+              src="about:blank"
+            ></iframe>
+            <style>#wsite-video-container-807467334470573958{ background: url(//www.weebly.com/uploads/b/1/03.05.2022_12.10.58_rec_649.jpg); }</style>
+          </div>
+        </div>
+      `
       const expected: MediaResolverResult = {
         tag: 'video',
         src: '//www.weebly.com/uploads/b/1/03.05.2022_12.10.58_rec_649.mp4',
@@ -59,19 +86,72 @@ describeForEachParser('weeblyMediaResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // The style block writes a cache-buster after the file name, and the video keeps it: the
+    // extension is what changes between the two files and nothing else is the resolver's to edit.
+    it('should build the video url from a poster carrying a cache-buster', async () => {
+      const value = html`
+        <div class="wsite-video-wrapper wsite-video-height-282">
+          <div
+            id="wsite-video-container-807467334470573958"
+            class="wsite-video-container"
+          >
+            <iframe
+              frameborder="0"
+              id="video-iframe-807467334470573958"
+              src="about:blank"
+            ></iframe>
+            <style>#wsite-video-container-807467334470573958{ background: url(//www.weebly.com/uploads/b/1/clip_176.jpg?1600); }</style>
+          </div>
+        </div>
+      `
+      const expected: MediaResolverResult = {
+        tag: 'video',
+        src: '//www.weebly.com/uploads/b/1/clip_176.mp4?1600',
+        poster: '//www.weebly.com/uploads/b/1/clip_176.jpg?1600',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
     it('should ignore a facade carrying no poster', async () => {
-      const value = facade('#wsite-video-container-807467334470573958{ background: none; }')
+      const value = html`
+        <div class="wsite-video-wrapper wsite-video-height-282">
+          <div
+            id="wsite-video-container-807467334470573958"
+            class="wsite-video-container"
+          >
+            <iframe
+              frameborder="0"
+              id="video-iframe-807467334470573958"
+              src="about:blank"
+            ></iframe>
+            <style>#wsite-video-container-807467334470573958{ background: none; }</style>
+          </div>
+        </div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should ignore a poster that is not an upload', async () => {
-      const value = facade(
-        '#wsite-video-container-807467334470573958{ background: url(//cdn2.editmysite.com/images/util/videojs/play.png); }',
-      )
+      const value = html`
+        <div class="wsite-video-wrapper wsite-video-height-282">
+          <div
+            id="wsite-video-container-807467334470573958"
+            class="wsite-video-container"
+          >
+            <iframe
+              frameborder="0"
+              id="video-iframe-807467334470573958"
+              src="about:blank"
+            ></iframe>
+            <style>#wsite-video-container-807467334470573958{ background: url(//cdn2.editmysite.com/images/util/videojs/play.png); }</style>
+          </div>
+        </div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -100,19 +180,39 @@ describeForEachParser('weeblyMediaResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
   })
+})
 
-  describe('through the pipeline', () => {
-    // The resolver hands on the protocol-relative url the style block states, and both fields
-    // come out with a scheme.
-    it('should give the video and its poster a scheme', async () => {
-      const value = facade(
-        '#wsite-video-container-807467334470573958{ background: url(//www.weebly.com/uploads/b/1/clip_176.jpg); }',
-      )
-      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+// The resolver hands on the protocol-relative url the style block states, so the scheme both
+// fields come out with is the pipeline's answer and not the resolver's.
+describeForEachParser('weebly urls the pipeline gives a scheme', (parseHtml) => {
+  const convert = (value: string) => {
+    return transformContent(value, { parseHtmlFn: parseHtml })
+  }
 
-      expect(result).toContainHtml(
-        '<video src="https://www.weebly.com/uploads/b/1/clip_176.mp4" poster="https://www.weebly.com/uploads/b/1/clip_176.jpg" controls></video>',
-      )
-    })
+  it('should give the video and its poster a scheme', async () => {
+    const value = html`
+      <div class="wsite-video-wrapper wsite-video-height-282">
+        <div
+          id="wsite-video-container-807467334470573958"
+          class="wsite-video-container"
+        >
+          <iframe
+            frameborder="0"
+            id="video-iframe-807467334470573958"
+            src="about:blank"
+          ></iframe>
+          <style>#wsite-video-container-807467334470573958{ background: url(//www.weebly.com/uploads/b/1/clip_176.jpg); }</style>
+        </div>
+      </div>
+    `
+    const expected = html`
+      <video
+        poster="https://www.weebly.com/uploads/b/1/clip_176.jpg"
+        controls
+        src="https://www.weebly.com/uploads/b/1/clip_176.mp4"
+      ></video>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
   })
 })

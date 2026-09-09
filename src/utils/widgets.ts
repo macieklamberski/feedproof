@@ -1,4 +1,4 @@
-import type { MaybePromise } from 'trousse'
+import { type MaybePromise, trimObject } from 'trousse'
 import type {
   CiteResolverResult,
   EmbedResolver,
@@ -13,6 +13,7 @@ import type {
 import {
   type GeneratedWrapperType,
   getElementDimensions,
+  getPairRatio,
   getStylePairRatio,
   getWrapperRatio,
 } from './dom.js'
@@ -27,6 +28,15 @@ const parseOrKeepDate = (
   parseDateFn: ParseDateFn | undefined,
 ): string | undefined => {
   return date ? (parseDateFn?.(date) ?? date) : undefined
+}
+
+const leadingAtRegex = /^@+/
+
+// An account name in the display form the platform itself writes, for the platforms whose own
+// naming carries the sigil. Only a leading run is stripped, so a full Mastodon handle keeps the
+// `@` that separates its instance. On a platform that writes bare names it invents a handle.
+export const atUsername = (name: string): string => {
+  return `@${name.replace(leadingAtRegex, '')}`
 }
 
 // The elements that carry a third-party URL for someone else to render, each with the
@@ -155,11 +165,24 @@ export const getEmbedSize = (element: Element, wrapperDepth?: number): EmbedSize
 
   const dimensions = getElementDimensions(element)
 
-  if (hasDimensions(dimensions)) {
-    return {
-      ...(!!dimensions.width && { width: dimensions.width }),
-      ...(!!dimensions.height && { height: dimensions.height }),
-    }
+  // A pair too small to be a box is the shape it spells, whichever way the carrier wrote it. AMP
+  // states an element's aspect ratio in the same two attributes a plain iframe states pixels in,
+  // so `<amp-jwplayer width="16" height="9">` asks a reader to reserve sixteen pixels unless the
+  // pair is read as the 16/9 it means.
+  const pairRatio = getPairRatio(dimensions.width, dimensions.height)
+
+  if (pairRatio) {
+    return { ratio: pairRatio }
+  }
+
+  // The pair is not handed back whole. A carrier that states `width="0" height="360"` has
+  // claimed a height and nothing else, so the zero is left out rather than travelling as a
+  // dimension nobody stated. Flickr folds this answer into a query the endpoint honours
+  // literally, and a zero reaching it renders nothing.
+  const size = trimObject(dimensions, Boolean)
+
+  if (size) {
+    return size
   }
 
   const ratio = getWrapperRatio(element, wrapperDepth)

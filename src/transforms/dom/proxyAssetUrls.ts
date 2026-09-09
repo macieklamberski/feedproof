@@ -138,7 +138,7 @@ export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
     for (const element of elements) {
       const name = element.localName
 
-      for (const { attribute, asset } of tagAttributes[name] ?? []) {
+      for (const { attribute, asset } of tagAttributes.get(name) ?? []) {
         // An SVG <image> spells its reference either way, and a CSS attribute selector cannot
         // hold the colon, so the spelling is read off the element.
         const spelling = attribute === 'href' ? svgHrefAttribute(element) : attribute

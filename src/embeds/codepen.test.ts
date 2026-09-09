@@ -839,6 +839,22 @@ describeForEachParser('codepenIframeEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // A zero is a height nobody laid out, so the player takes the default as if it stated none.
+    it('should treat a height of zero as no height at all', async () => {
+      const value = '<iframe src="https://codepen.io/argyleink/embed/XJpKqXm?height=0"></iframe>'
+      const expected: EmbedResolverResult = {
+        provider: 'codepen',
+        id: 'XJpKqXm',
+        src: 'https://codepen.io/argyleink/embed/XJpKqXm?height=0',
+        url: 'https://codepen.io/argyleink/pen/XJpKqXm',
+        thumbnail: 'https://shots.codepen.io/argyleink/pen/XJpKqXm-512.jpg',
+        author: '@argyleink',
+        height: 300,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // A carrier that states a width and no height neither takes the default nor gets paired with
     // it: 800 by the default height would describe a box the publisher never asked for, and 800
     // on its own is a number the reader lays nothing out from.

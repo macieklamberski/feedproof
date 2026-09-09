@@ -6,7 +6,7 @@ import { svgTagNames } from 'svg-tag-names'
 // (`<dependency>`, `<groupId>`, `<T>`, `<host>`) are absent, so config/XML fragments, code
 // generics, and command placeholders are left as text. SVG names are mixed-case in the spec
 // (`clipPath`), so the set is lowercased to match the lowercased parsed names.
-const decodableTags = new Set<string>(
+const decodableTags = new Set(
   [...htmlTagNames, ...svgTagNames, ...mathmlTagNames].map((tag) => tag.toLowerCase()),
 )
 

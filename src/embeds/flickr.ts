@@ -152,6 +152,9 @@ const readLegacySubject = (parsed: URL): FlickrSubject => {
 // `photostreams/{owner}` for a stream.
 const composeEmbed = (subject: FlickrSubject): EmbedResolverResult | undefined => {
   const owner = keepIfMatches(subject.owner, safeOwnerRegex)
+  // Only the path alias is a name. The NSID spelling of the same owner names nobody a reader
+  // could read, and the album and photostream oEmbed answers `author_name` for both anyway.
+  const author = owner && !safeNsidRegex.test(owner) ? owner : undefined
 
   if (subject.setId && safeSetIdRegex.test(subject.setId)) {
     // The album page path starts with the owner, and `/sets/{id}` is kept as the markup spells
@@ -162,6 +165,7 @@ const composeEmbed = (subject: FlickrSubject): EmbedResolverResult | undefined =
           id: `${owner}/${subject.setId}`,
           src: composeAlbumPlayer(subject.setId),
           url: `https://www.flickr.com/photos/${owner}/sets/${subject.setId}`,
+          author,
         }
       : {
           provider: 'flickr',
@@ -188,6 +192,7 @@ const composeEmbed = (subject: FlickrSubject): EmbedResolverResult | undefined =
       id: `photostreams/${owner}`,
       src: safeNsidRegex.test(owner) ? composeStreamPlayer(owner) : composeAliasStreamPlayer(owner),
       url: `https://www.flickr.com/photos/${owner}/`,
+      author,
     }
   }
 }

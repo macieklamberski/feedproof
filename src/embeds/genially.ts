@@ -1,6 +1,6 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { keepIfMatches } from '../utils/dom.js'
+import { attr, keepIfMatches } from '../utils/dom.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 // The view id is a dashless 24-character hex id.
@@ -26,17 +26,25 @@ export const extractGeniallyViewId = (link: string): string | undefined => {
   return keepIfMatches(viewId, safeViewIdRegex)
 }
 
-export const geniallyResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+// The carrier's title names the deck rather than the player: across 45 titled frames in a 1/16
+// corpus sample the commonest value covered 2% of them.
+export const geniallyResolveEmbed = (
+  url: string,
+  element?: Element,
+): EmbedResolverResult | undefined => {
   const viewId = extractGeniallyViewId(url)
 
   if (!viewId) {
     return
   }
 
+  const title = attr(element, 'title')
+
   return {
     provider: 'genially',
     id: viewId,
     src: `https://view.genially.com/${viewId}`,
+    ...trimObject({ title }, Boolean),
   }
 }
 

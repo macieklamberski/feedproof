@@ -68,6 +68,23 @@ describeForEachParser('notecomIframeEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    // The route names the id's position, so anything the publisher appended after it stays out
+    // of the read. Taken off the end of the path instead, the trailing segment fails the note id
+    // shape and the whole post is refused.
+    it('should read the id at its own position when the path runs past it', async () => {
+      const value = html`
+        <iframe src="https://note.com/katayuma/n/nf938ce640465/summary"></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'notecom',
+        id: 'nf938ce640465',
+        src: 'https://note.com/embed/notes/nf938ce640465',
+        url: 'https://note.com/katayuma/n/nf938ce640465/summary',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
@@ -94,6 +111,16 @@ describeForEachParser('notecomIframeEmbedResolver', (parseHtml) => {
 
     it('should state nothing for another note.com page', async () => {
       const value = html`<iframe src="https://note.com/katayuma"></iframe>`
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    // The player route names its id in the third segment too, so a path running past it does not
+    // hand the trailing segment over as the note.
+    it('should state nothing for a player path whose id is not a note id', async () => {
+      const value = html`
+        <iframe src="https://note.com/embed/notes/katayuma/nf938ce640465"></iframe>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })

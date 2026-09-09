@@ -1,6 +1,6 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, trimObject } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { flashVars, keepIfMatches } from '../utils/dom.js'
+import { attr, flashVars, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -75,6 +75,9 @@ const readFlashTalk = (
 // platform research) but it is a lookup, so an iframe carrier leaves it to the enrichment hook,
 // which needs exactly the provider and id tagged here. Only the Flash carrier states one, in its
 // own configuration.
+//
+// The carrier's title names the talk rather than the player: across 26 titled frames in a 1/16
+// corpus sample the commonest value covered 12% of them.
 export const tedResolveEmbed = (
   url: string,
   element?: Element,
@@ -86,12 +89,14 @@ export const tedResolveEmbed = (
     return
   }
 
+  const title = attr(element, 'title')
+
   return {
     provider,
     id: talk.slug,
     src: `https://embed.ted.com/embed/${talk.slug}`,
     url: `https://www.ted.com/talks/${talk.slug}`,
-    ...(talk.thumbnail && { thumbnail: talk.thumbnail }),
+    ...trimObject({ thumbnail: talk.thumbnail, title }, Boolean),
   }
 }
 

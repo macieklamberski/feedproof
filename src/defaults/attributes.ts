@@ -73,7 +73,9 @@ export const defaultLazyIframeAttributes = [
   'data-opt-src', // Image/embed optimizers.
   // Invision Community forums defer embeds two ways: an iframe with no src at all, or one whose
   // src points at the forum's own blank interface page. FixLazyIframes treats that page as a
-  // placeholder so this attribute wins in both shapes.
+  // placeholder so this attribute wins in both shapes. convertWidgets mints the same name onto its
+  // own embed placeholders, and the two never collide: fixLazyIframes reads this list off <iframe>
+  // elements only, and a placeholder is a <div>.
   'data-embed-src', // Invision Community deferred embeds.
   // Avada's privacy-embed facade (data-privacy-type is a taxonomy: YouTube, Vimeo, …), NOT a
   // cookie banner: it defers a real video the author embedded. Recovering it yields a privacy-safe

@@ -1,5 +1,5 @@
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { attr, flashVars } from '../utils/dom.js'
+import { attr, flashVar } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -85,9 +85,7 @@ export const cnnFlashResolveEmbed = (
     return
   }
 
-  const stated = new URLSearchParams(flashVars(element) ?? '').get('videoId')
-
-  return resolveVideoId(parsed.searchParams.get('videoId') ?? stated)
+  return resolveVideoId(parsed.searchParams.get('videoId') ?? flashVar(element, 'videoId'))
 }
 
 // 85% of the swf carriers state a box the old chrome made, 416 by 374 on most of them, against

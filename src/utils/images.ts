@@ -1,6 +1,6 @@
 import { addMissingProtocol, normalizeUrl, resolveUrl } from 'feedcanon'
 import { parseSrcset as parseRawSrcset } from 'srcset'
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, toMap } from 'trousse'
 import type { CleanUrlFn } from '../types.js'
 import { pixelDimensionLimit } from './dom.js'
 import { placeholderBaseUrl } from './urls.js'
@@ -56,7 +56,7 @@ export const widestSrcsetUrl = (srcset: string | null | undefined): string | und
 // match would drop a genuine image. (wide/full are still covered when paired with
 // dimensions, e.g. "wide__148x84", via dimensionLeaf.) Add a keyword here only if it
 // earns its keep against that false-match risk.
-const sizeKeywordRanks: Record<string, number> = {
+const sizeKeywordRanks = toMap({
   thumb: 1,
   thumbnail: 1,
   xsmall: 2,
@@ -67,8 +67,8 @@ const sizeKeywordRanks: Record<string, number> = {
   orig: 7,
   original: 7,
   preview: 0, // Ambiguous: a "preview" is a thumbnail on one host and full-size on another.
-}
-export const sizeKeywordLiterals = Object.keys(sizeKeywordRanks)
+})
+export const sizeKeywordLiterals = [...sizeKeywordRanks.keys()]
 const sizeKeywordLeaf = new RegExp(`^(?:${sizeKeywordLiterals.join('|')})(\\.[a-z0-9]+)?$`, 'i')
 
 const decodeUrlPart = (value: string): string => {
@@ -367,7 +367,7 @@ export const getSizeKeywordRank = (url: string): number => {
   // segments from the leaf outwards and take the first one the table knows.
   for (const segment of [...getPathSegments(parsed)].reverse()) {
     const stem = segment.replace(leafExtensionRegex, '').toLowerCase()
-    const rank = sizeKeywordRanks[stem]
+    const rank = sizeKeywordRanks.get(stem)
 
     if (rank !== undefined) {
       return rank

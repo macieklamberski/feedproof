@@ -102,7 +102,7 @@ export const neutralizeUnsafeUrls: DomTransform = ({ isSafeUrlFn }) => {
 
       const name = element.localName
 
-      for (const { attribute, role } of tagAttributes[name] ?? []) {
+      for (const { attribute, role } of tagAttributes.get(name) ?? []) {
         // Walking the DOM rather than running a selector is what lets this pass reach an
         // xlink:href, on an <a> as well as on an SVG <image>: a colon cannot appear in a CSS
         // attribute selector, so a pass driven by one only ever sees the plain spelling.

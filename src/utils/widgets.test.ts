@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { baseContext, describeForEachParser, html } from '../tests.js'
 import type { CiteResolverResult, EmbedResolverResult, MediaResolverResult } from '../types.js'
 import {
+  atUsername,
   createCitePlaceholder,
   createEmbedPlaceholder,
   createIframe,
@@ -11,6 +12,7 @@ import {
   createMediaElement,
   createPlaceholder,
   createUrlEmbedResolver,
+  getEmbedSize,
   normalizeEmbedFields,
   prepareCiteMetadata,
   prepareEmbedMetadata,
@@ -347,6 +349,38 @@ describeForEachParser('updateCitePlaceholder', (parseHtml) => {
     } as Partial<CiteResolverResult>)
 
     expect(element.outerHTML).toEqualHtml('<div data-cite-title="Post title"></div>')
+  })
+})
+
+describe('atUsername', () => {
+  it('should add the sigil to a bare name', () => {
+    const value = 'durov'
+
+    expect(atUsername(value)).toBe('@durov')
+  })
+
+  it('should keep a name that already carries the sigil', () => {
+    const value = '@durov'
+
+    expect(atUsername(value)).toBe('@durov')
+  })
+
+  it('should collapse a repeated leading sigil', () => {
+    const value = '@@@durov'
+
+    expect(atUsername(value)).toBe('@durov')
+  })
+
+  it('should leave a full Mastodon handle unchanged', () => {
+    const value = '@Gargron@mastodon.social'
+
+    expect(atUsername(value)).toBe('@Gargron@mastodon.social')
+  })
+
+  it('should return the bare sigil for an empty name', () => {
+    const value = ''
+
+    expect(atUsername(value)).toBe('@')
   })
 })
 
@@ -1029,6 +1063,51 @@ describeForEachParser('preferResolverSize', (parseHtml) => {
       })
     })
 
+    // AMP states an element's aspect ratio in the same two attributes a plain iframe states pixels
+    // in, so a carrier declaring `16` by `9` is declaring a shape. Read as pixels it would ask a
+    // reader to reserve sixteen of them.
+    describe('a pair too small to be a box', () => {
+      it('should read a small carrier pair as the shape it spells', () => {
+        const value = html`
+          <div
+            class="player"
+            width="16"
+            height="9"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...base, ratio: '16/9' }
+
+        expect(build(withHeight, value)).toEqual(expected)
+      })
+
+      it('should keep a pair above the ceiling as the box it is', () => {
+        const value = html`
+          <div
+            class="player"
+            width="100"
+            height="60"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...base, width: 100, height: 60 }
+
+        expect(build(withRatio, value)).toEqual(expected)
+      })
+
+      // A fixed-height bar states a real width beside a small height, and that is a box.
+      it('should keep a small height beside a real width', () => {
+        const value = html`
+          <div
+            class="player"
+            width="350"
+            height="30"
+          ></div>
+        `
+        const expected: EmbedResolverResult = { ...base, width: 350, height: 30 }
+
+        expect(build(withRatio, value)).toEqual(expected)
+      })
+    })
+
     // A size the carrier states in a form nothing can read is the same as stating none, so the
     // resolver's own pair survives intact.
     describe('a size the carrier states unreadably', () => {
@@ -1086,6 +1165,46 @@ describeForEachParser('preferResolverSize', (parseHtml) => {
         expect(build(withRatio, value)).toEqual(expected)
       })
     })
+  })
+})
+
+// What a carrier states about its own size, read straight rather than through the merge below it.
+// `getElementDimensions` reads a 0 through so removeTrackingPixels can find a 0 by 2 image, so a
+// zero reaches here and is dropped: a carrier stating one has claimed the other half and nothing
+// else. Only the width half of that shows up in the merged result, since a lone height and a lone
+// width are already treated differently there, so the height half is pinned at this layer or
+// nowhere. Flickr and archive.org both read this answer directly.
+describeForEachParser('getEmbedSize', (parseHtml) => {
+  const build = (markup: string) => {
+    const element = parseHtml(markup).querySelector('div.player')
+
+    return element ? getEmbedSize(element, 0) : undefined
+  }
+
+  it('should drop a zero width and keep the height the carrier states', () => {
+    const value = html`
+      <div
+        class="player"
+        width="0"
+        height="360"
+      ></div>
+    `
+    const expected = { height: 360 }
+
+    expect(build(value)).toEqual(expected)
+  })
+
+  it('should drop a zero height and keep the width the carrier states', () => {
+    const value = html`
+      <div
+        class="player"
+        width="640"
+        height="0"
+      ></div>
+    `
+    const expected = { width: 640 }
+
+    expect(build(value)).toEqual(expected)
   })
 })
 

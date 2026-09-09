@@ -8,6 +8,8 @@ import {
   mediaElements,
 } from '../../utils/dom.js'
 
+// One entry longer than the same-named list in convertBreaksToParagraphs: `figure` is here because
+// a figure's bare caption text needs a <p> to carry spacing and caption styling.
 const processContainersSelector =
   'body, div, blockquote, td, li, article, section, main, header, footer, aside, figure'
 

@@ -55,8 +55,9 @@ describeForEachParser('YouTube', (parseHtml) => {
   })
 
   // The snippet YouTube's own oEmbed returns, which is what a WordPress oEmbed cache stores and
-  // republishes into the feed. The title is the only place the video is named.
-  it('should carry the title an oEmbed snippet states onto the placeholder', async () => {
+  // republishes into the feed. The stated title reaches no placeholder attribute, because the
+  // same attribute carries the player's label on a comparable share of carriers.
+  it('should not carry a title an oEmbed snippet states onto the placeholder', async () => {
     const value = html`
       <iframe
         width="560"
@@ -75,7 +76,33 @@ describeForEachParser('YouTube', (parseHtml) => {
         data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
         data-embed-ratio="16/9"
-        data-embed-title="Kraftwerk - Autobahn (1974)"
+      ></div>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
+  // The same snippet with the label YouTube writes when the copy-embed dialog has no name to
+  // put there. The placeholder still carries everything the url yields.
+  it('should resolve a carrier titled with the player label', async () => {
+    const value = html`
+      <iframe
+        width="560"
+        height="315"
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        title="YouTube video player"
+        frameborder="0"
+        allowfullscreen
+      ></iframe>
+    `
+    const expected = html`
+      <div
+        data-embed-provider="youtube"
+        data-embed-id="dQw4w9WgXcQ"
+        data-embed-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        data-embed-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        data-embed-thumbnail="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+        data-embed-ratio="16/9"
       ></div>
     `
 

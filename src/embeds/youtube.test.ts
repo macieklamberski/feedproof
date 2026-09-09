@@ -48,6 +48,9 @@ const videoUrls = [
   'https://m.youtube.com/watch?v=dQw4w9WgXcQ',
   'https://music.youtube.com/watch?v=dQw4w9WgXcQ',
   'https://youtube.com/watch?v=dQw4w9WgXcQ',
+  // A page builder keeps the url inside a JSON payload that no url pass rewrites, so the
+  // protocol-relative spelling arrives exactly as the publisher wrote it.
+  '//www.youtube.com/watch?v=dQw4w9WgXcQ',
   // The stray quote Steam news leaks into embed srcs.
   'https://www.youtube-nocookie.com/embed/"dQw4w9WgXcQ?fs=1&rel=0',
 ]
@@ -547,8 +550,9 @@ describeForEachParser('youtubeIframeEmbedResolver', (parseHtml) => {
   })
 
   // YouTube's own oEmbed html, which is what a WordPress oEmbed cache stores and republishes.
-  // The title is the only place the video is named: nothing in the url says it.
-  it('should take the video name out of the stated title', async () => {
+  // The stated title is the video's real name here, and it is still not read: the same attribute
+  // carries the player's label on a comparable share of carriers and nothing tells them apart.
+  it('should not take a title the carrier states, even a real one', async () => {
     const value = html`
       <iframe
         width="560"
@@ -565,16 +569,12 @@ describeForEachParser('youtubeIframeEmbedResolver', (parseHtml) => {
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       ratio: '16/9',
-      title: 'Kraftwerk - Autobahn (1974)',
     }
 
     expect(await extract(value)).toEqual(expected)
   })
 
-  // A player label rather than a name, and it is carried anyway: the labels are localised into
-  // every language YouTube serves and some name the plugin, so a list of them goes stale and
-  // starts eating real titles. What the markup states is what the placeholder carries.
-  it('should carry a player label stated as the title', async () => {
+  it('should not take the player label the carrier states', async () => {
     const value = html`
       <iframe
         src="https://www.youtube.com/embed/dQw4w9WgXcQ"
@@ -588,14 +588,13 @@ describeForEachParser('youtubeIframeEmbedResolver', (parseHtml) => {
       url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
       ratio: '16/9',
-      title: 'YouTube video player',
     }
 
     expect(await extract(value)).toEqual(expected)
   })
 
-  // A playlist embed names nothing in its url either, and the snippet titles it the same way.
-  it('should take a playlist name out of the stated title', async () => {
+  // A playlist embed goes through the same branch, so it drops the stated title too.
+  it('should not take a title the playlist carrier states', async () => {
     const value = html`
       <iframe
         src="https://www.youtube.com/embed/videoseries?list=PLabc123"
@@ -608,7 +607,6 @@ describeForEachParser('youtubeIframeEmbedResolver', (parseHtml) => {
       src: 'https://www.youtube.com/embed/videoseries?list=PLabc123',
       url: 'https://www.youtube.com/playlist?list=PLabc123',
       ratio: '16/9',
-      title: 'Ambient works, 1992',
     }
 
     expect(await extract(value)).toEqual(expected)

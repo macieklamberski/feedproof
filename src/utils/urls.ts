@@ -101,6 +101,7 @@ export const urlAttributes: Array<UrlAttribute> = [
   { attribute: 'data-cite-icon', role: 'media', asset: 'image' },
   { attribute: 'data-cite-thumbnail', role: 'media', asset: 'image' },
   { tag: 'a', attribute: 'href', role: 'link' },
+  { tag: 'form', attribute: 'action', role: 'link' },
   { tag: 'img', attribute: 'src', role: 'media', asset: 'image' },
   { tag: 'video', attribute: 'src', role: 'media', asset: 'video' },
   { tag: 'video', attribute: 'poster', role: 'media', asset: 'image' },
@@ -118,12 +119,12 @@ export const urlAttributes: Array<UrlAttribute> = [
 // pass reads those on every element and filters for them separately.
 export const groupUrlAttributesByTag = <Attribute extends UrlAttribute>(
   attributes: ReadonlyArray<Attribute>,
-): Record<string, Array<Attribute>> => {
-  const grouped: Record<string, Array<Attribute>> = {}
+): ReadonlyMap<string, Array<Attribute>> => {
+  const grouped = new Map<string, Array<Attribute>>()
 
   for (const attribute of attributes) {
     if (attribute.tag) {
-      grouped[attribute.tag] = [...(grouped[attribute.tag] ?? []), attribute]
+      grouped.set(attribute.tag, [...(grouped.get(attribute.tag) ?? []), attribute])
     }
   }
 
@@ -205,29 +206,20 @@ export const pickQueryParams = (
   return picked
 }
 
+// The other half of `pickQueryParams`: the pairs it returns, back into a query ready to append.
+// A resolver that has nothing to carry over gets an empty string, so its src stays bare rather
+// than ending on a lone `?`.
+export const composeQuery = (params?: Record<string, string>): string => {
+  const query = new URLSearchParams(params).toString()
+
+  return query ? `?${query}` : ''
+}
+
 // The query string an embed resolver carries over when it rebuilds a src from the video id:
 // only the parameters that change what plays. Returns it ready to append, so a src with
 // nothing worth keeping stays bare.
 export const pickUrlParams = (url: string, names: ReadonlyArray<string>): string => {
-  const params = parseUrl(url)?.searchParams
-
-  if (!params) {
-    return ''
-  }
-
-  const kept = new URLSearchParams()
-
-  for (const name of names) {
-    const value = params.get(name)
-
-    if (value) {
-      kept.set(name, value)
-    }
-  }
-
-  const query = kept.toString()
-
-  return query ? `?${query}` : ''
+  return composeQuery(pickQueryParams(parseUrl(url)?.search ?? '', names))
 }
 
 // The two answers to a url that will not resolve. Which one a call site wants is a policy

@@ -1,4 +1,4 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, toMap } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { jsonAttr, keepIfMatches } from '../utils/dom.js'
 import { isOnHosts, parseUrlOnHosts, pickUrlParams } from '../utils/urls.js'
@@ -20,23 +20,20 @@ const podcastIdPrefixRegex = /^id/
 // the id, so anything else, a separator or a dot segment included, is refused.
 const trackIdRegex = /^\d+$/
 
-// The player is fluid-width and fixed-height, and one item gets a much shorter box than a
-// collection. These are the heights the players render at, measured across widths, and they are
-// a fallback for the shapes that ship no size at all: a height the markup declares is the
+// The player is fluid-width, and one item gets a much shorter box than a collection. These are a
+// fallback for the shapes that ship no size at all: a height the markup declares is the
 // publisher's choice and wins over these. Apple's own embed code declares 150 for a song, which
 // cuts 25px off the player it opens. A music video is the one kind that keeps a 16:9 picture
 // instead, so it has none. The map doubles as the set of kinds that embed.
 //
-// Re-measured 2026-09-07 in Chrome. Music could not be: `embed.music.apple.com` sat at its grey
-// placeholder with an empty `<main>` for 16 seconds, at top level and inside a frame, so the
-// "measured across widths" above carries no widths, no date and no check. Podcasts rendered. The
-// show player at `podcast/the-daily/id1200361736` fills any frame it gets and has a floor that
-// tracks the width: 180 at 320 wide, 360 at 640, 422 at 1280, inside a 100-tall frame. The
-// episode player, `?i=1000788126765`, has a fixed floor of 160 at all three widths and fills
-// 175 and 450 alike. So 450 and 175 are frames the player fits, not heights it renders on its
-// own, and each fires only when the carrier states no size, since `decideSize` takes the
-// carrier's first.
-const appleHeights: Record<string, number | undefined> = {
+// None of these numbers is a height a player was seen to render. The five music heights are
+// unmeasured: `embed.music.apple.com` sits at its grey placeholder with an empty `<main>`, at top
+// level and inside a frame alike. Podcasts render, and what they render is a ratio: in Chrome on
+// 2026-09-07 the show player at `podcast/the-daily/id1200361736` filled any frame it was given
+// and floored at 180 at 320 wide, 360 at 640 and 422 at 1280, so 450 is a frame it fits rather
+// than a height it asks for. The episode player, `?i=1000788126765`, floored at 160 at all three
+// widths and filled 175 and 450 alike. Changing any of them needs a browser at two widths.
+const appleHeights = toMap({
   album: 450,
   artist: 450,
   playlist: 450,
@@ -44,7 +41,7 @@ const appleHeights: Record<string, number | undefined> = {
   station: 450,
   song: 175,
   'music-video': undefined,
-}
+})
 
 export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, appleHosts)
@@ -57,7 +54,7 @@ export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined 
   const [kind, ...rest] = storefrontRegex.test(segments[0] ?? '') ? segments.slice(1) : segments
   const pathId = rest[rest.length - 1]
 
-  if (!kind || !pathId || !Object.hasOwn(appleHeights, kind) || !safeIdRegex.test(pathId)) {
+  if (!kind || !pathId || !appleHeights.has(kind) || !safeIdRegex.test(pathId)) {
     return
   }
 
@@ -78,7 +75,7 @@ export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined 
     id: `${kind}/${id}`,
     src: `https://embed.${host}${parsed.pathname}${query}`,
     url: `https://${host}${parsed.pathname}${query}`,
-    height: appleHeights[trackId ? 'song' : kind],
+    height: appleHeights.get(trackId ? 'song' : kind),
   }
 }
 

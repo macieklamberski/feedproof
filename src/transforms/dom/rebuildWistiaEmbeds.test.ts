@@ -118,6 +118,14 @@ describeForEachParser('rebuildWistiaEmbeds', (parseHtml) => {
     expect(await transform(value)).toEqualHtml(expected)
   })
 
+  // The selector matches the loader on its path alone, so the host check inside the reader is
+  // the only thing between a foreign path spelling the route and a minted Wistia player.
+  it('should leave a loader script on a foreign host untouched', async () => {
+    const value = '<script src="https://cdn.evil.test/embed/medias/zyl6xrmj10.jsonp"></script>'
+
+    expect(await transform(value)).toEqualHtml(value)
+  })
+
   it('should not duplicate the player when a real iframe already names the media', async () => {
     const value = html`
       <script src="https://fast.wistia.com/embed/medias/zyl6xrmj10.jsonp"></script>

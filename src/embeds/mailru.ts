@@ -1,5 +1,5 @@
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { flashVars } from '../utils/dom.js'
+import { flashVar } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -49,6 +49,7 @@ const composeSubject = (subject: string): EmbedResolverResult | undefined => {
     id: `${type}/${user}/${album}/${counter}`,
     src: `https://my.mail.ru/${type}/${user}/video/embed/${album}/${counter}`,
     url: `https://my.mail.ru/${type}/${user}/video/${album}/${counter}.html`,
+    author: user,
   }
 }
 
@@ -67,8 +68,7 @@ export const mailruResolveEmbed = (
       return
     }
 
-    const movieSrc =
-      parsed.searchParams.get('movieSrc') ?? new URLSearchParams(flashVars(element)).get('movieSrc')
+    const movieSrc = parsed.searchParams.get('movieSrc') ?? flashVar(element, 'movieSrc')
 
     return movieSrc ? composeSubject(movieSrc) : undefined
   }

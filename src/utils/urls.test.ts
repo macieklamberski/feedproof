@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { baseContext } from '../tests.js'
 import {
   cleanUrl,
+  composeQuery,
   decodeSegment,
   parseUrlOnHosts,
   pickQueryParams,
@@ -265,6 +266,47 @@ describe('pickQueryParams', () => {
   })
 })
 
+describe('composeQuery', () => {
+  it('should return an empty string for an empty record', () => {
+    expect(composeQuery({})).toBe('')
+  })
+
+  it('should return an empty string when nothing is passed', () => {
+    expect(composeQuery()).toBe('')
+  })
+
+  it('should prefix a single parameter with a question mark', () => {
+    const value = { start: '90' }
+    const expected = '?start=90'
+
+    expect(composeQuery(value)).toBe(expected)
+  })
+
+  it('should join several parameters in the order given', () => {
+    const value = { start: '90', list: 'PLabc', index: '4' }
+    const expected = '?start=90&list=PLabc&index=4'
+
+    expect(composeQuery(value)).toBe(expected)
+  })
+
+  it('should encode a value that needs it', () => {
+    const value = { clipt: 'a+b/c' }
+    const expected = '?clipt=a%2Bb%2Fc'
+
+    expect(composeQuery(value)).toBe(expected)
+  })
+
+  // `pickQueryParams` drops an empty value, so this only arrives from a caller that built the
+  // record itself. The pair is still stated, since the platform's player may read the parameter's
+  // presence rather than its value.
+  it('should state a parameter whose value is empty', () => {
+    const value = { theme: '' }
+    const expected = '?theme='
+
+    expect(composeQuery(value)).toBe(expected)
+  })
+})
+
 describe('pickUrlParams', () => {
   it('should keep only the named parameters, in the order given', () => {
     const value = 'https://example.com/e/x?utm_source=feed&index=4&list=PLabc&start=90'
@@ -290,6 +332,10 @@ describe('pickUrlParams', () => {
 
   it('should return an empty string for an unparseable url', () => {
     expect(pickUrlParams('not a url', ['start'])).toBe('')
+  })
+
+  it('should return an empty string for a protocol-relative url', () => {
+    expect(pickUrlParams('//example.com/e/x?start=90', ['start'])).toBe('')
   })
 
   it('should encode a value that needs it', () => {

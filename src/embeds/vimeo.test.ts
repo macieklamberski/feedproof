@@ -10,6 +10,9 @@ const videoUrls = [
   'https://player.vimeo.com/video/76979871',
   'https://vimeo.com/channels/staffpicks/76979871',
   'https://vimeo.com/groups/motion/videos/76979871',
+  // A page builder keeps the url inside a JSON payload that no url pass rewrites, so the
+  // protocol-relative spelling arrives exactly as the publisher wrote it.
+  '//vimeo.com/76979871',
   // The Flash player carried no id in the path at all, and shipped its options beside it.
   'http://vimeo.com/moogaloop.swf?clip_id=76979871',
   'http://vimeo.com/moogaloop.swf?clip_id=76979871&force_embed=1&server=vimeo.com&color=00adef',

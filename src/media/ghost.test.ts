@@ -96,6 +96,54 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should read the thumbnail off the video background when the figure states none', async () => {
+      const value = html`
+        <figure class="kg-card kg-video-card">
+          <div class="kg-video-container">
+            <video
+              src="https://www.game-makers.xyz/content/media/2022/02/IMG_0046.mp4"
+              poster="https://img.spacergif.org/v1/1920x1080/0a/spacer.png"
+              width="1920"
+              height="1080"
+              playsinline
+              preload="metadata"
+              style="background: transparent url(&apos;https://www.game-makers.xyz/content/images/2022/02/media-thumbnail-ember1913.jpg&apos;) 50% 50% / cover no-repeat;"
+            ></video>
+            <div class="kg-video-overlay"></div>
+          </div>
+        </figure>
+      `
+      const expected: MediaResolverResult = {
+        tag: 'video',
+        src: 'https://www.game-makers.xyz/content/media/2022/02/IMG_0046.mp4',
+        poster: 'https://www.game-makers.xyz/content/images/2022/02/media-thumbnail-ember1913.jpg',
+        width: 1920,
+        height: 1080,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should prefer the figure thumbnail over the video background', async () => {
+      const value = html`
+        <figure class="kg-video-card" data-kg-thumbnail="https://example.com/thumb.jpg">
+          <div class="kg-video-container">
+            <video
+              src="https://example.com/clip.mp4"
+              style="background: transparent url('https://example.com/background.jpg') 50% 50% / cover no-repeat;"
+            ></video>
+          </div>
+        </figure>
+      `
+      const expected: MediaResolverResult = {
+        tag: 'video',
+        src: 'https://example.com/clip.mp4',
+        poster: 'https://example.com/thumb.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should leave the spacer poster behind when no thumbnail is available', async () => {
       const value = html`
         <figure class="kg-video-card">
@@ -159,10 +207,14 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
   })
 
   describe('audio cards', () => {
-    it('should resolve the upload and drop the card chrome', async () => {
+    it('should replace the chrome container but keep the cover image', async () => {
       const value = html`
         <div class="kg-card kg-audio-card">
-          <img src="https://example.com/thumb.jpg" alt="audio-thumbnail" class="kg-audio-thumbnail" />
+          <img
+            src="https://example.com/thumb.jpg"
+            alt="audio-thumbnail"
+            class="kg-audio-thumbnail"
+          />
           <div class="kg-audio-player-container">
             <audio src="https://example.com/content/media/track.mp3" preload="metadata"></audio>
             <div class="kg-audio-title">Track title</div>
@@ -174,17 +226,126 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
         </div>
       `
       const expected = html`
-        <audio
-          src="https://example.com/content/media/track.mp3"
-          controls
-        ></audio>
+        <div class="kg-card kg-audio-card">
+          <img
+            src="https://example.com/thumb.jpg"
+            alt="audio-thumbnail"
+            class="kg-audio-thumbnail"
+          />
+          <figure>
+            <audio
+              src="https://example.com/content/media/track.mp3"
+              controls
+            ></audio>
+            <figcaption>Track title</figcaption>
+          </figure>
+        </div>
       `
 
       expect(await transform(value)).toEqualHtml(expected)
     })
 
-    it('should return undefined for a card without an audio element', async () => {
-      const value = '<div class="kg-audio-card"><div class="kg-audio-player"></div></div>'
+    it('should read the track title beside the file', async () => {
+      const value = html`
+        <div class="kg-card kg-audio-card">
+          <div class="kg-audio-player-container">
+            <audio src="https://example.com/content/media/track.mp3" preload="metadata"></audio>
+            <div class="kg-audio-title">Episode 17</div>
+            <div class="kg-audio-player">
+              <span>0:00</span>
+            </div>
+          </div>
+        </div>
+      `
+      const expected: MediaResolverResult = {
+        tag: 'audio',
+        src: 'https://example.com/content/media/track.mp3',
+        title: 'Episode 17',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should state no title for a card that prints none', async () => {
+      const value = html`
+        <div class="kg-card kg-audio-card">
+          <div class="kg-audio-player-container">
+            <audio src="https://example.com/content/media/track.mp3" preload="metadata"></audio>
+            <div class="kg-audio-player">
+              <span>0:00</span>
+            </div>
+          </div>
+        </div>
+      `
+      const expected: MediaResolverResult = {
+        tag: 'audio',
+        src: 'https://example.com/content/media/track.mp3',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should state no title for a card whose title is blank', async () => {
+      const value = html`
+        <div class="kg-card kg-audio-card">
+          <div class="kg-audio-player-container">
+            <audio src="https://example.com/content/media/track.mp3" preload="metadata"></audio>
+            <div class="kg-audio-title"> </div>
+            <div class="kg-audio-player">
+              <span>0:00</span>
+            </div>
+          </div>
+        </div>
+      `
+      const expected: MediaResolverResult = {
+        tag: 'audio',
+        src: 'https://example.com/content/media/track.mp3',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should mint a bare audio element for a card that prints no title', async () => {
+      const value = html`
+        <div class="kg-card kg-audio-card">
+          <div class="kg-audio-player-container">
+            <audio src="https://example.com/content/media/track.mp3" preload="metadata"></audio>
+            <div class="kg-audio-player">
+              <span>0:00</span>
+            </div>
+          </div>
+        </div>
+      `
+      const expected = html`
+        <div class="kg-card kg-audio-card">
+          <audio
+            src="https://example.com/content/media/track.mp3"
+            controls
+          ></audio>
+        </div>
+      `
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should return undefined for a container without an audio element', async () => {
+      const value = html`
+        <div class="kg-card kg-audio-card">
+          <div class="kg-audio-player-container">
+            <div class="kg-audio-player"></div>
+          </div>
+        </div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should not match the cleaned form', async () => {
+      const value = html`
+        <div class="kg-card kg-audio-card">
+          <audio src="https://example.com/content/media/track.mp3" preload="metadata" controls></audio>
+        </div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })

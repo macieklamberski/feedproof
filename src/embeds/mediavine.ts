@@ -1,3 +1,4 @@
+import { trimObject } from 'trousse'
 import { attr, parseRatio } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver } from '../utils/widgets.js'
@@ -16,7 +17,7 @@ const composeEmbedUrl = (videoId: string): string => {
 // data-video-id="{id}">` that its script builds into a player, so a reader shows nothing at
 // all. The player page is mintable from the id alone, and a fabricated id answers 404 there.
 // Mediavine has no public watch page, so the placeholder carries no `url`.
-export const mediavineEmbedResolver = createMarkupEmbedResolver(
+export const mediavineWidgetEmbedResolver = createMarkupEmbedResolver(
   'div.mv-video-target[data-video-id]',
   (element) => {
     const videoId = attr(element, 'data-video-id')
@@ -32,7 +33,7 @@ export const mediavineEmbedResolver = createMarkupEmbedResolver(
       provider: 'mediavine',
       id: videoId,
       src: composeEmbedUrl(videoId),
-      ...(ratio && { ratio }),
+      ...trimObject({ ratio }, Boolean),
     }
   },
 )
@@ -72,7 +73,7 @@ export const mediavineScriptEmbedResolver = createMarkupEmbedResolver(
       provider: 'mediavine',
       id: videoId,
       src: composeEmbedUrl(videoId),
-      ...(ratio && { ratio }),
+      ...trimObject({ ratio }, Boolean),
     }
   },
 )

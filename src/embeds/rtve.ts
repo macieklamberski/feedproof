@@ -1,13 +1,13 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { attr, flashVars } from '../utils/dom.js'
+import { attr, flashVar } from '../utils/dom.js'
 import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// `irtve.es` is the older spelling of the same broadcaster's asset domain and carries the
-// Flash player under the same path.
 const provider = 'rtve'
 
+// `irtve.es` is the older spelling of the same broadcaster's asset domain and carries the
+// Flash player under the same path.
 const rtveHosts = ['rtve.es', 'irtve.es']
 
 type Kind = 'audio' | 'video'
@@ -110,9 +110,7 @@ export const rtveFlashResolveEmbed = (
     return
   }
 
-  const asset =
-    parsed.searchParams.get('assetID') ??
-    new URLSearchParams(flashVars(element) ?? '').get('assetID')
+  const asset = parsed.searchParams.get('assetID') ?? flashVar(element, 'assetID')
   const match = asset?.match(flashAssetRegex)
 
   if (!match) {

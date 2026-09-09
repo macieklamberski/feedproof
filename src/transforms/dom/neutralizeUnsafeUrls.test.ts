@@ -141,6 +141,19 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
 
       expect(await transform(value)).toEqualHtml(expected)
     })
+
+    it('should neutralize a javascript: form action', async () => {
+      const value = '<form action="javascript:alert(1)"><button>go</button></form>'
+      const expected = '<form action="#unsafe-link"><button>go</button></form>'
+
+      expect(await transform(value)).toEqualHtml(expected)
+    })
+
+    it('should leave a safe form action untouched', async () => {
+      const value = '<form action="https://ok.test/submit"><button>go</button></form>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
   })
 
   describe('with a caller isSafeUrlFn', () => {
@@ -251,6 +264,21 @@ describeForEachParser('neutralizeUnsafeUrls', (parseHtml) => {
 
     it('should leave a document with no url attributes untouched', async () => {
       const value = '<p>text</p>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    // Every element is walked and its tag name looked up in the role maps, so a feed naming a
+    // tag after a member every object inherits reaches those maps with it. It has to answer the
+    // way it answers a tag it does not know.
+    it('should leave an element named after an inherited member untouched', async () => {
+      const value = '<constructor href="javascript:alert(1)">text</constructor>'
+
+      expect(await transform(value)).toEqualHtml(value)
+    })
+
+    it('should leave an element with an unknown tag name untouched', async () => {
+      const value = '<sunset href="javascript:alert(1)">text</sunset>'
 
       expect(await transform(value)).toEqualHtml(value)
     })

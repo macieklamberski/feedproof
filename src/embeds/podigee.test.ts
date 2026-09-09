@@ -2,10 +2,10 @@ import { describe, expect, it } from 'bun:test'
 import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
-import { podigeeEmbedResolver, podigeeResolveEmbed, readPodigeeHeight } from './podigee.js'
+import { podigeeResolveEmbed, podigeeScriptEmbedResolver, readPodigeeHeight } from './podigee.js'
 
-describeForEachParser('podigeeEmbedResolver', (parseHtml) => {
-  const extract = resolverExtractor(parseHtml, podigeeEmbedResolver)
+describeForEachParser('podigeeScriptEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, podigeeScriptEmbedResolver)
 
   const script = (configuration: string) =>
     `<script class="podigee-podcast-player" src="https://player.podigee-cdn.net/podcast-player/javascripts/podigee-podcast-player.js" data-configuration="${configuration}"></script>`

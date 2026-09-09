@@ -1,6 +1,7 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, trimObject } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { decodeSegment, placeholderBaseUrl } from '../utils/urls.js'
+import { attr } from '../utils/dom.js'
+import { decodeSegment, isFileName, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'mixcloud'
@@ -86,7 +87,15 @@ export const extractMixcloudShow = (link: string): string | undefined => {
   const feed = parsed?.searchParams.get('feed')
   const source = feed ? parseUrl(feed, placeholderBaseUrl) : parsed
 
-  return source ? readShowPath(getPathSegments(source)) : undefined
+  // Mixcloud serves the show audio and the artwork from subdomains of the same domain, which the
+  // host list admits, and a file path carries exactly the two segments a show does. Every kind of
+  // file is refused and not only the playable ones: a claimed enclosure loses its element to a
+  // click-to-load box naming a show that does not exist, the artwork as much as the audio.
+  if (!source || isFileName(source.pathname)) {
+    return
+  }
+
+  return readShowPath(getPathSegments(source))
 }
 
 // The widget's display options, in the order they are written back. Each is a flag the
@@ -110,7 +119,13 @@ const playerHeight = 160
 // The `www` widget url is what publishers write and what Mixcloud documents. It 301s to
 // `player-widget.mixcloud.com`, so it is kept instead of pre-resolved to a host that is one
 // redirect away from changing.
-export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+//
+// The carrier's title names the show rather than the player: across 77 titled frames in a 1/16
+// corpus sample the commonest value covered 3% of them.
+export const mixcloudResolveEmbed = (
+  url: string,
+  element?: Element,
+): EmbedResolverResult | undefined => {
   const show = extractMixcloudShow(url)
 
   if (!show) {
@@ -125,13 +140,18 @@ export const mixcloudResolveEmbed = (url: string): EmbedResolverResult | undefin
     query.set(option, '1')
   }
 
+  const title = attr(element, 'title')
+  const [author] = show.split('/')
+
   return {
     provider,
     id: show,
     src: `https://www.mixcloud.com/widget/iframe/?${query}`,
     url: `https://www.mixcloud.com/${show}/`,
+    author,
     height:
       options.includes('mini') && options.includes('hide_cover') ? miniPlayerHeight : playerHeight,
+    ...trimObject({ title }, Boolean),
   }
 }
 

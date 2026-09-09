@@ -4,72 +4,87 @@ import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { MediaResolverResult } from '../types.js'
 import { podloveMediaResolver } from './podlove.js'
 
-// The corpus shape: a player div of custom elements, then a script carrying the whole config.
-const makePlayer = (config: string, playerId = 'player-6a7b24b4e645d'): string => {
-  return html`
-    <div id="${playerId}" class="podlove-web-player">
-      <root>
-        <tab-chapters></tab-chapters>
-        <subscribe-button></subscribe-button>
-      </root>
-    </div>
-    <script>
-      document.addEventListener("DOMContentLoaded", function() {
-        var player = document.getElementById("${playerId}");
-        podlovePlayerCache.add(${config})
-      })
-    </script>
-  `
-}
-
-const episodeConfig = JSON.stringify([
-  {
-    url: 'https://300hertz.de/wp-json/podlove-web-player/shortcode/publisher/480',
-    data: {
-      version: 5,
-      title: 'Schallwellentherapie',
-      poster: 'https://300hertz.de/podlove/image/deadbeef/500/0/0/300hertz',
-      audio: [
-        {
-          url: 'https://300hertz.de/podlove/file/1036/s/webplayer/c/website/300Hertz_E043.mp3',
-          size: '141373154',
-          title: 'MP3 Audio (mp3)',
-          mimeType: 'audio/mpeg',
-        },
-      ],
-    },
-  },
-])
-
 describeForEachParser('podloveMediaResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, podloveMediaResolver)
 
   describe('happy paths', () => {
-    it('should read the audio file and poster out of the inlined config', async () => {
-      const value = makePlayer(episodeConfig)
+    it('should read the audio file and title out of the inlined config', async () => {
+      const config = JSON.stringify([
+        {
+          url: 'https://example.com/wp-json/podlove-web-player/shortcode/publisher/480',
+          data: {
+            version: 5,
+            title: 'Schallwellentherapie',
+            poster: 'https://example.com/podlove/image/deadbeef/500/0/0/300hertz',
+            audio: [
+              {
+                url: 'https://example.com/podlove/file/1036/s/webplayer/c/website/E043.mp3',
+                size: '141373154',
+                title: 'MP3 Audio (mp3)',
+                mimeType: 'audio/mpeg',
+              },
+            ],
+          },
+        },
+      ])
+      const value = html`
+        <div
+          id="player-6a7b24b4e645d"
+          class="podlove-web-player"
+        >
+          <root>
+            <tab-chapters></tab-chapters>
+            <subscribe-button></subscribe-button>
+          </root>
+        </div>
+        <script>
+          document.addEventListener("DOMContentLoaded", function() {
+            var player = document.getElementById("player-6a7b24b4e645d");
+            podlovePlayerCache.add(${config})
+          })
+        </script>
+      `
       const expected: MediaResolverResult = {
         tag: 'audio',
-        src: 'https://300hertz.de/podlove/file/1036/s/webplayer/c/website/300Hertz_E043.mp3',
-        poster: 'https://300hertz.de/podlove/image/deadbeef/500/0/0/300hertz',
+        src: 'https://example.com/podlove/file/1036/s/webplayer/c/website/E043.mp3',
+        title: 'Schallwellentherapie',
       }
 
       expect(await extract(value)).toEqual(expected)
     })
 
-    it('should fall back to the show poster when the episode has none', async () => {
+    // The config states a poster for the episode and another for the show, and an episode is
+    // audio, which HTML gives no poster attribute. Neither reaches a reader, so neither is read.
+    it('should state no poster for an episode the config gives one', async () => {
       const config = JSON.stringify([
         {
           data: {
+            poster: 'https://example.com/episode.jpg',
             show: { poster: 'https://example.com/show.jpg' },
             audio: [{ url: 'https://example.com/e.mp3', mimeType: 'audio/mpeg' }],
           },
         },
       ])
-      const value = makePlayer(config)
+      const value = html`
+        <div
+          id="player-6a7b24b4e645d"
+          class="podlove-web-player"
+        >
+          <root>
+            <tab-chapters></tab-chapters>
+            <subscribe-button></subscribe-button>
+          </root>
+        </div>
+        <script>
+          document.addEventListener("DOMContentLoaded", function() {
+            var player = document.getElementById("player-6a7b24b4e645d");
+            podlovePlayerCache.add(${config})
+          })
+        </script>
+      `
       const expected: MediaResolverResult = {
         tag: 'audio',
         src: 'https://example.com/e.mp3',
-        poster: 'https://example.com/show.jpg',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -86,7 +101,23 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
           },
         },
       ])
-      const value = makePlayer(config)
+      const value = html`
+        <div
+          id="player-6a7b24b4e645d"
+          class="podlove-web-player"
+        >
+          <root>
+            <tab-chapters></tab-chapters>
+            <subscribe-button></subscribe-button>
+          </root>
+        </div>
+        <script>
+          document.addEventListener("DOMContentLoaded", function() {
+            var player = document.getElementById("player-6a7b24b4e645d");
+            podlovePlayerCache.add(${config})
+          })
+        </script>
+      `
       const expected: MediaResolverResult = {
         tag: 'audio',
         src: 'https://example.com/e.mp3',
@@ -108,7 +139,23 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
           },
         },
       ])
-      const value = makePlayer(config)
+      const value = html`
+        <div
+          id="player-6a7b24b4e645d"
+          class="podlove-web-player"
+        >
+          <root>
+            <tab-chapters></tab-chapters>
+            <subscribe-button></subscribe-button>
+          </root>
+        </div>
+        <script>
+          document.addEventListener("DOMContentLoaded", function() {
+            var player = document.getElementById("player-6a7b24b4e645d");
+            podlovePlayerCache.add(${config})
+          })
+        </script>
+      `
       const expected: MediaResolverResult = {
         tag: 'audio',
         src: 'https://example.com/e.m4a',
@@ -129,7 +176,23 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
           },
         },
       ])
-      const value = makePlayer(config)
+      const value = html`
+        <div
+          id="player-6a7b24b4e645d"
+          class="podlove-web-player"
+        >
+          <root>
+            <tab-chapters></tab-chapters>
+            <subscribe-button></subscribe-button>
+          </root>
+        </div>
+        <script>
+          document.addEventListener("DOMContentLoaded", function() {
+            var player = document.getElementById("player-6a7b24b4e645d");
+            podlovePlayerCache.add(${config})
+          })
+        </script>
+      `
       const expected: MediaResolverResult = {
         tag: 'audio',
         src: 'https://example.com/e.opus',
@@ -146,7 +209,23 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
       const config = JSON.stringify([
         { data: { audio: [{ url: 'https://example.com/e.mp3', mimeType: 'audio/mpeg' }] } },
       ])
-      const value = makePlayer(config)
+      const value = html`
+        <div
+          id="player-6a7b24b4e645d"
+          class="podlove-web-player"
+        >
+          <root>
+            <tab-chapters></tab-chapters>
+            <subscribe-button></subscribe-button>
+          </root>
+        </div>
+        <script>
+          document.addEventListener("DOMContentLoaded", function() {
+            var player = document.getElementById("player-6a7b24b4e645d");
+            podlovePlayerCache.add(${config})
+          })
+        </script>
+      `
       const expected: MediaResolverResult = {
         tag: 'audio',
         src: 'https://example.com/e.mp3',
@@ -156,7 +235,7 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
     })
   })
 
-  describe('rejections', () => {
+  describe('sad paths', () => {
     it.todo('should return undefined when the id names no config entry', () => {
       // The id lookup runs and finds nothing, which is separate from there being no script.
     })
@@ -182,25 +261,50 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
 
-    it('should return undefined when no audio entry names a file', async () => {
-      const config = JSON.stringify([{ data: { audio: [{ mimeType: 'audio/mpeg' }] } }])
-      const value = makePlayer(config)
-
-      expect(await extract(value)).toBeUndefined()
-    })
-
     it('should return undefined when the entry is not audio', async () => {
       const config = JSON.stringify([
         { data: { audio: [{ url: 'https://example.com/e.mp4', mimeType: 'video/mp4' }] } },
       ])
-      const value = makePlayer(config)
+      const value = html`
+        <div
+          id="player-6a7b24b4e645d"
+          class="podlove-web-player"
+        >
+          <root>
+            <tab-chapters></tab-chapters>
+            <subscribe-button></subscribe-button>
+          </root>
+        </div>
+        <script>
+          document.addEventListener("DOMContentLoaded", function() {
+            var player = document.getElementById("player-6a7b24b4e645d");
+            podlovePlayerCache.add(${config})
+          })
+        </script>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
 
     it('should return undefined when the audio entry states no url', async () => {
       const config = JSON.stringify([{ data: { audio: [{ mimeType: 'audio/mpeg' }] } }])
-      const value = makePlayer(config)
+      const value = html`
+        <div
+          id="player-6a7b24b4e645d"
+          class="podlove-web-player"
+        >
+          <root>
+            <tab-chapters></tab-chapters>
+            <subscribe-button></subscribe-button>
+          </root>
+        </div>
+        <script>
+          document.addEventListener("DOMContentLoaded", function() {
+            var player = document.getElementById("player-6a7b24b4e645d");
+            podlovePlayerCache.add(${config})
+          })
+        </script>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })
@@ -211,74 +315,161 @@ describeForEachParser('podloveMediaResolver', (parseHtml) => {
       expect(await extract(value)).toBeUndefined()
     })
   })
+})
 
-  // The resolver alone cannot see this. `wrapBareInlineInParagraphs` runs before the widget
-  // pass and puts the bare script in a `<p>`, so the player's sibling is that paragraph rather
-  // than the script, and a player carrying no id has no other route to its config.
-  describe('through the pipeline', () => {
-    it('should recover an episode whose script the paragraph pass has wrapped', async () => {
-      const config = JSON.stringify([
-        { data: { audio: [{ url: 'https://example.com/episode.mp3', mimeType: 'audio/mpeg' }] } },
-      ])
-      const value = html`
-        <div class="podlove-web-player"></div>
+// The resolver alone cannot see either of these. `wrapBareInlineInParagraphs` runs before the
+// widget pass and puts a bare script in a `<p>`, so the player's sibling is that paragraph
+// rather than the script, and the config states its url the way the markup around it would, so
+// only the pipeline gives one a scheme or a base.
+describeForEachParser('podlove shapes the pipeline repairs first', (parseHtml) => {
+  const convert = (value: string, baseUrl?: string) => {
+    return transformContent(value, { parseHtmlFn: parseHtml, baseUrl })
+  }
+
+  it('should recover an episode whose script the paragraph pass has wrapped', async () => {
+    const config = JSON.stringify([
+      { data: { audio: [{ url: 'https://example.com/episode.mp3', mimeType: 'audio/mpeg' }] } },
+    ])
+    const value = html`
+      <div class="podlove-web-player"></div>
+      <script>
+        podlovePlayerCache.add(${config})
+      </script>
+    `
+    const expected = html`
+      <audio
+        controls
+        src="https://example.com/episode.mp3"
+      ></audio>
+      <p>
         <script>
           podlovePlayerCache.add(${config})
         </script>
-      `
-      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+      </p>
+    `
 
-      expect(result).toContainHtml('<audio src="https://example.com/episode.mp3" controls></audio>')
-    })
+    expect(await convert(value)).toEqualHtml(expected)
+  })
 
-    // The config states the url the way the markup around it would, so it earns the same
-    // treatment: a scheme when it names a host, the feed's base when it names a path.
-    it('should give a protocol-relative config url a scheme', async () => {
-      const config = JSON.stringify([
-        { data: { audio: [{ url: '//cdn.example.com/episode.mp3', mimeType: 'audio/mpeg' }] } },
-      ])
-      const value = makePlayer(config)
-      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+  // A native <audio> has nowhere to put the episode name, so the pass gives it a figcaption.
+  it('should hang the episode title off the player it mints', async () => {
+    const config = JSON.stringify([
+      {
+        data: {
+          title: 'Schallwellentherapie',
+          audio: [{ url: 'https://example.com/episode.mp3', mimeType: 'audio/mpeg' }],
+        },
+      },
+    ])
+    const value = html`
+      <div
+        id="player-6a7b24b4e645d"
+        class="podlove-web-player"
+      >
+        <root>
+          <tab-chapters></tab-chapters>
+        </root>
+      </div>
+      <script>
+        podlovePlayerCache.add(${config})
+      </script>
+    `
+    const expected = html`
+      <figure>
+        <audio
+          controls
+          src="https://example.com/episode.mp3"
+        ></audio>
+        <figcaption>Schallwellentherapie</figcaption>
+      </figure>
+      <p>
+        <script>
+          podlovePlayerCache.add(${config})
+        </script>
+      </p>
+    `
 
-      expect(result).toContainHtml(
-        '<audio src="https://cdn.example.com/episode.mp3" controls></audio>',
-      )
-    })
+    expect(await convert(value)).toEqualHtml(expected)
+  })
 
-    it('should resolve a feed-relative config url against the base', async () => {
-      const config = JSON.stringify([
-        { data: { audio: [{ url: '/audio/episode.mp3', mimeType: 'audio/mpeg' }] } },
-      ])
-      const value = makePlayer(config)
-      const result = await transformContent(value, {
-        parseHtmlFn: parseHtml,
-        baseUrl: 'https://example.com/posts/1',
-      })
+  // The config states the url the way the markup around it would, so it earns the same
+  // treatment: a scheme when it names a host, the feed's base when it names a path.
+  it('should give a protocol-relative config url a scheme', async () => {
+    const config = JSON.stringify([
+      { data: { audio: [{ url: '//cdn.example.com/episode.mp3', mimeType: 'audio/mpeg' }] } },
+    ])
+    const value = html`
+      <div class="podlove-web-player"></div>
+      <script>
+        podlovePlayerCache.add(${config})
+      </script>
+    `
+    const expected = html`
+      <audio
+        controls
+        src="https://cdn.example.com/episode.mp3"
+      ></audio>
+      <p>
+        <script>
+          podlovePlayerCache.add(${config})
+        </script>
+      </p>
+    `
 
-      expect(result).toContainHtml(
-        '<audio src="https://example.com/audio/episode.mp3" controls></audio>',
-      )
-    })
+    expect(await convert(value)).toEqualHtml(expected)
+  })
 
-    // The url is interpolated into the document, so a scriptable one must never reach it.
-    it('should build no player from a scriptable url', async () => {
-      const config = JSON.stringify([
-        { data: { audio: [{ url: 'javascript:alert(1)', mimeType: 'audio/mpeg' }] } },
-      ])
-      const value = makePlayer(config)
-      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+  it('should resolve a feed-relative config url against the base', async () => {
+    const config = JSON.stringify([
+      { data: { audio: [{ url: '/audio/episode.mp3', mimeType: 'audio/mpeg' }] } },
+    ])
+    const value = html`
+      <div class="podlove-web-player"></div>
+      <script>
+        podlovePlayerCache.add(${config})
+      </script>
+    `
+    const expected = html`
+      <audio
+        controls
+        src="https://example.com/audio/episode.mp3"
+      ></audio>
+      <p>
+        <script>
+          podlovePlayerCache.add(${config})
+        </script>
+      </p>
+    `
 
-      expect(result).not.toContain('<audio')
-    })
+    expect(await convert(value, 'https://example.com/posts/1')).toEqualHtml(expected)
+  })
 
-    it('should build no player from a feed-relative url with no base to resolve it', async () => {
-      const config = JSON.stringify([
-        { data: { audio: [{ url: '/audio/episode.mp3', mimeType: 'audio/mpeg' }] } },
-      ])
-      const value = makePlayer(config)
-      const result = await transformContent(value, { parseHtmlFn: parseHtml })
+  // The url is interpolated into the document, so a scriptable one must never reach it.
+  it('should build no player from a scriptable url', async () => {
+    const config = JSON.stringify([
+      { data: { audio: [{ url: 'javascript:alert(1)', mimeType: 'audio/mpeg' }] } },
+    ])
+    const value = html`
+      <div class="podlove-web-player"></div>
+      <script>
+        podlovePlayerCache.add(${config})
+      </script>
+    `
 
-      expect(result).not.toContain('<audio')
-    })
+    expect(await convert(value)).not.toContain('<audio')
+  })
+
+  it('should build no player from a feed-relative url with no base to resolve it', async () => {
+    const config = JSON.stringify([
+      { data: { audio: [{ url: '/audio/episode.mp3', mimeType: 'audio/mpeg' }] } },
+    ])
+    const value = html`
+      <div class="podlove-web-player"></div>
+      <script>
+        podlovePlayerCache.add(${config})
+      </script>
+    `
+
+    expect(await convert(value)).not.toContain('<audio')
   })
 })

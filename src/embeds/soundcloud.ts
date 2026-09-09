@@ -1,8 +1,10 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, trimObject } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, jsonAttr, text } from '../utils/dom.js'
 import { isFileName, parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
+
+const provider = 'soundcloud'
 
 // SoundCloud's embed is an iframe whose `url=` query names the track as an
 // `api.soundcloud.com/tracks/{id}` reference. Some feeds name the id twice in it, as a bare
@@ -147,23 +149,27 @@ type SubstackTrackAttributes = {
   targetUrl?: string
 }
 
-const readSubstackTrack = (element: Element): Partial<EmbedResolverResult> => {
+const readSubstackTrack = (element: Element): Partial<EmbedResolverResult> | undefined => {
   const wrapper = element.closest('[data-component-name="SoundcloudToDOM"]')
   const attributes = jsonAttr<SubstackTrackAttributes>(wrapper, 'data-attrs')
 
   if (!attributes) {
-    return {}
+    return
   }
 
-  // Absent fields stay absent: an explicit undefined would ride through Object.assign in the
-  // caller and erase what the iframe itself stated, most often its title.
-  return {
-    ...(attributes.title && { title: attributes.title }),
-    ...(attributes.description && { description: attributes.description }),
-    ...(attributes.thumbnail_url && { thumbnail: attributes.thumbnail_url }),
-    ...(attributes.author_name && { author: attributes.author_name }),
-    ...(attributes.targetUrl && { url: attributes.targetUrl }),
-  }
+  // Absent and blank fields stay absent: an explicit undefined or an empty string would ride
+  // through Object.assign in the caller and erase what the iframe itself stated, most often its
+  // title.
+  return trimObject(
+    {
+      title: attributes.title,
+      description: attributes.description,
+      thumbnail: attributes.thumbnail_url,
+      author: attributes.author_name,
+      url: attributes.targetUrl,
+    },
+    Boolean,
+  )
 }
 
 // The reference the iframe names the track by is not human-clickable, so the iframe alone yields
@@ -183,7 +189,7 @@ export const soundcloudResolveEmbed = (
   const inner = params?.get('url')
   const reference = inner?.match(referenceRegex)
   const streamTrackId = parsed?.pathname.match(streamPathRegex)?.[1]
-  const result: EmbedResolverResult = { provider: 'soundcloud', src }
+  const result: EmbedResolverResult = { provider, src }
 
   if (reference) {
     result.id = `${reference[1]}/${reference[2]}`
@@ -263,10 +269,15 @@ export const soundcloudResolveEmbed = (
 
   Object.assign(result, readSubstackTrack(element))
 
+  // Both anchors are permalinks, so they are matched on the page hosts: a substring of the href
+  // takes `evil.test/soundcloud.com/b` for the track page, and two of those write the author,
+  // the title and the url before the block is deleted.
   const sibling = element.nextElementSibling
-  const anchors = Array.from(sibling?.querySelectorAll('a[href*="soundcloud.com"]') ?? []).filter(
-    (anchor) => !anchor.getAttribute('href')?.includes('api.soundcloud.com'),
-  )
+  const anchors = Array.from(sibling?.querySelectorAll('a[href]') ?? []).filter((anchor) => {
+    const page = parseUrlOnHosts(attr(anchor, 'href'), soundcloudHosts)
+
+    return page && pageHostRegex.test(page.hostname)
+  })
 
   // The snippet's shape is fixed: artist first, track second. Anything else is not the
   // share snippet, so the sibling stays untouched.
@@ -287,6 +298,6 @@ export const soundcloudEmbedResolver = createUrlEmbedResolver(
 
 // Starts playback on the click that loads the widget.
 export const soundcloudRenderHint: EmbedRenderHint = {
-  provider: 'soundcloud',
+  provider,
   autoplayParams: { auto_play: 'true' },
 }

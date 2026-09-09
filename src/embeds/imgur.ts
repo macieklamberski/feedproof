@@ -5,6 +5,8 @@ import { readPixels } from '../utils/hints.js'
 import { placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
+const provider = 'imgur'
+
 const imgurHosts = ['imgur.com']
 
 // `i.imgur.com` is the media CDN and `s.imgur.com` the embed script, so neither names a post, and
@@ -17,40 +19,64 @@ const imgurHosts = ['imgur.com']
 const imgurPageHosts = ['imgur.com', 'www.imgur.com', 'm.imgur.com']
 
 // The routes that name an album: the prefix the platform's own script writes, and the gallery
-// path the older share links took.
+// path both the older share links and the current slugged ones take.
 const albumRoutes = new Set(['a', 'gallery'])
+
+// `imgur.com/t/{tag}/{slug}-{id}` served byte-for-byte the same page as `imgur.com/gallery/{id}`
+// on 2026-09-08, and served it under a tag that does not exist, so the tag is decoration in
+// front of a post one segment deeper. `imgur.com/t/{tag}` alone names no post.
+const tagRoute = 't'
 
 // Imgur's own pages sit at the same depth as a post, so a first segment is a site page as often
 // as it is an id. The longer ones are live pages that pass the id shape, which is why the shape
-// alone let `imgur.com/upload` mint a post called `upload`. The short ones, `r`, `t` and `user`,
-// are refused by the id length today and are named here anyway, so that dropping the length band
-// cannot quietly turn a subreddit, a tag or a profile into a post.
+// alone let `imgur.com/upload` mint a post called `upload`. The short ones, `r` and `user`, are
+// refused by the id length today and are named here anyway, so that dropping the length band
+// cannot quietly turn a subreddit or a profile into a post.
+// No route word can pin the id's position instead: the post page is `imgur.com/{id}` with the id
+// as the whole path. So each word is here because the platform answered for it, not because it
+// reads like one. `memes`, `tools` and `viral` all read like site pages and are posts a person
+// uploaded, which is why they are absent; `topics` serves the same not-found shell as an id
+// nobody has taken.
 const sitePathSegments = new Set([
   'about',
   'account',
   'apps',
+  'contact',
+  'download',
   'emerald',
+  'login',
   'memegen',
   'new',
   'privacy',
   'r',
   'register',
+  'rules',
   'search',
   'signin',
-  't',
   'tos',
+  'trending',
   'upload',
   'user',
   'vidgif',
 ])
 
 // The gallery's own listings sit where an album id would, so they are refused the same way.
-const galleryListingSegments = new Set(['hot', 'new', 'top'])
+// All four served the ~138 kB listing shell on 2026-09-08, against 9.9 kB for a real post and
+// 6.7 kB for an id nobody has taken. `trending` is the one that also passes the id shape, so
+// without it `imgur.com/gallery/trending` minted a post called `a/trending`.
+const galleryListingSegments = new Set(['hot', 'new', 'top', 'trending'])
 
 // Post ids are short alphanumerics. The album form is the same id behind an `a/` prefix, which
 // is how the platform's own script tells the two apart.
 const safePostIdRegex = /^[a-zA-Z0-9]{5,12}$/
 const albumPrefix = 'a/'
+
+// A share link puts a title slug in front of the id, `gallery/{slug}-{id}`. The id was the last
+// hyphen-separated word in all 600 posts the platform's own listing API named on 2026-09-08, and
+// the slug alone addresses nothing: `gallery/pikachu-face` redirects to the home page while
+// `gallery/pikachu-face-BnabGVX` and `gallery/BnabGVX` served the same bytes. The hyphen is what
+// pins the id, not the band: without it a longer word reads as its own last twelve characters.
+const sluggedPostIdRegex = /(?:^|-)([a-zA-Z0-9]{5,12})$/
 
 type ImgurPost = {
   id: string
@@ -70,7 +96,7 @@ const composeEmbed = (post: ImgurPost, title?: string): EmbedResolverResult => {
   const path = post.isAlbum ? `${albumPrefix}${post.id}` : post.id
 
   const result: EmbedResolverResult = {
-    provider: 'imgur',
+    provider,
     // The prefix travels because it is what addresses the post: an album and a single image can
     // hold the same id, and only the prefix separates them.
     id: path,
@@ -85,6 +111,18 @@ const composeEmbed = (post: ImgurPost, title?: string): EmbedResolverResult => {
   }
 
   return title ? { ...result, title } : result
+}
+
+// Only a route word puts the id at a known depth, so only behind one can a slug in front of the
+// id be read off. The bare post page has nothing to say where the id starts.
+const composeAlbumEmbed = (segment: string | undefined): EmbedResolverResult | undefined => {
+  if (!segment || galleryListingSegments.has(segment)) {
+    return
+  }
+
+  const id = segment.match(sluggedPostIdRegex)?.[1]
+
+  return id ? composeEmbed({ id, isAlbum: true }) : undefined
 }
 
 // Imgur's embed is a blockquote plus `s.imgur.com/min/embed.js`, and the script is what turns it
@@ -117,15 +155,23 @@ export const imgurResolveEmbed = (url: string): EmbedResolverResult | undefined 
     return
   }
 
-  const segments = getPathSegments(parsed)
-  const isAlbum = albumRoutes.has(segments[0] ?? '')
-  const id = isAlbum ? segments[1] : segments[0]
+  const [route, second, third] = getPathSegments(parsed)
 
-  if (!id || (isAlbum ? galleryListingSegments : sitePathSegments).has(id)) {
+  // A tag sits between its route and the post, so a tagged url names the post one segment deeper
+  // than an album route does.
+  if (route === tagRoute) {
+    return composeAlbumEmbed(third)
+  }
+
+  if (albumRoutes.has(route ?? '')) {
+    return composeAlbumEmbed(second)
+  }
+
+  if (!route || sitePathSegments.has(route)) {
     return
   }
 
-  const post = parsePost(isAlbum ? `${albumPrefix}${id}` : id)
+  const post = parsePost(route)
 
   return post ? composeEmbed(post) : undefined
 }
@@ -156,7 +202,7 @@ export const readImgurHeight = (data: unknown): number | undefined => {
 }
 
 export const imgurRenderHint: EmbedRenderHint = {
-  provider: 'imgur',
+  provider,
   origin: 'https://imgur.com',
   readHeight: readImgurHeight,
 }

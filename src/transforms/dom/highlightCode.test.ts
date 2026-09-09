@@ -256,6 +256,14 @@ describe('detectLanguage', () => {
       expect(detectLanguage(pre, code)).toBeUndefined()
     })
 
+    // The sibling token is whatever the publisher wrote, and `constructor` names a member every
+    // object inherits, so the label table has to refuse it the way it refuses `selected`.
+    it('should ignore a highlight class whose sibling token names an inherited member', () => {
+      const { pre, code } = createElement('<pre class="highlight constructor"><code>x</code></pre>')
+
+      expect(detectLanguage(pre, code)).toBeUndefined()
+    })
+
     it('should ignore a bare highlight class with no language token', () => {
       const { pre, code } = createElement('<pre class="highlight"><code>x</code></pre>')
 

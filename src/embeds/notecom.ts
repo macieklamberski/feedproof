@@ -54,22 +54,20 @@ type NoteUrl = { noteId: string; kind: 'post' | 'player' }
 const readNoteUrl = (link: string): NoteUrl | undefined => {
   const parsed = parseUrlOnHosts(link, notecomHosts)
   const segments = parsed ? getPathSegments(parsed) : []
-  const noteId = segments.at(-1)
 
-  if (!noteId) {
-    return
-  }
-
-  if (segments[1] === 'n' && segments.length > 2) {
-    return { noteId, kind: 'post' }
+  // Each route names the position its id sits in, and each reads it there rather than off the end
+  // of the path. A canonical post with anything after the id, a tracking segment or a trailing
+  // slug, otherwise hands that segment over as the note and the whole embed is refused.
+  if (segments[1] === 'n' && segments[2]) {
+    return { noteId: segments[2], kind: 'post' }
   }
 
   if (segments[0] === 'n' && segments.length === 2) {
-    return { noteId, kind: 'post' }
+    return { noteId: segments[1], kind: 'post' }
   }
 
-  if (segments[0] === 'embed' && segments[1] === 'notes') {
-    return { noteId, kind: 'player' }
+  if (segments[0] === 'embed' && segments[1] === 'notes' && segments[2]) {
+    return { noteId: segments[2], kind: 'player' }
   }
 }
 

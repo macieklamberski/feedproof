@@ -1254,6 +1254,18 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
       expect(keys).toEqual(keys.map((key) => key.toLowerCase()))
     })
+
+    // An alt is free text, and `constructor` names a member every object inherits, so the table
+    // has to refuse it the way it refuses any other word it does not carry.
+    it('should keep a smilie whose alt names an inherited member', async () => {
+      const value = html`
+        <p>
+          <img src="https://example.com/smilies/happy.png" class="smilie" alt="constructor">
+        </p>
+      `
+
+      expect(await transformKeeping(value)).toEqualHtml(value)
+    })
   })
 
   describe('platform filename tables', () => {
@@ -1297,6 +1309,18 @@ describeForEachParser('unwrapEmojiImages', (parseHtml) => {
 
     it('should merge the shipped platforms without conflict', () => {
       expect(() => mergeEmojiNames(emojiPlatforms)).not.toThrow()
+    })
+
+    // The stem is whatever the file is called, and `constructor` names a member every object
+    // inherits, so the merged table has to refuse it the way it refuses any unmapped name.
+    it('should keep a smilie whose filename names an inherited member', async () => {
+      const value = html`
+        <p>
+          <img src="https://example.com/smilies/constructor.png" class="smilie" alt=":sk21_d1:">
+        </p>
+      `
+
+      expect(await transformKeeping(value)).toEqualHtml(value)
     })
   })
 

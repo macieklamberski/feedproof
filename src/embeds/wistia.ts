@@ -1,4 +1,4 @@
-import { getPathSegments } from 'trousse'
+import { getPathSegments, toMap } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
@@ -25,13 +25,13 @@ const wistiaHosts = ['wistia.net', 'wistia.com']
 // a frame that would otherwise show a login screen. A channel has no vanity slug anywhere in the
 // url space: the segment is the same hashed id every route shares, which is what lets one id
 // grammar stand guard for all of them.
-const playerRoutes: Record<string, string | undefined> = {
+const playerRoutes = toMap({
   iframe: 'iframe',
   medias: 'iframe',
   channel: 'channel',
   channels: 'channel',
   playlists: 'playlists',
-}
+})
 
 // The player url every caller that recovers an id has to build, on the route `playerRoutes`
 // names.
@@ -44,7 +44,8 @@ export const extractWistiaEmbed = (
 ): { route: string; id: string; page?: string } | undefined => {
   const segments = getPathSegments(link)
   const start = segments[0] === 'embed' ? 1 : 0
-  const route = playerRoutes[segments[start] ?? '']
+  const named = segments[start] ?? ''
+  const route = playerRoutes.get(named)
   const id = keepIfMatches(segments[start + 1]?.replace(jsonpSuffixRegex, ''), safeMediaIdRegex)
 
   if (!route || !id) {
@@ -56,6 +57,15 @@ export const extractWistiaEmbed = (
   const host = segments[0] === 'medias' ? parseUrlOnHosts(link, wistiaHosts)?.hostname : undefined
 
   return { route, id, page: host ? `https://${host}/medias/${id}` : undefined }
+}
+
+// The media a `src` names, for the carriers the factory never sees: a `<script>` and an `<iframe>`
+// are matched on a substring of their path, so the host is the only thing telling Wistia's own
+// `/embed/medias/{id}` from a foreign path that spells it.
+export const readSrcMediaId = (src: string | undefined): string | undefined => {
+  const url = parseUrlOnHosts(src, wistiaHosts)
+
+  return url ? extractWistiaEmbed(url.href)?.id : undefined
 }
 
 // No thumbnail: the poster needs Wistia's media JSON hop.

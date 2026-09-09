@@ -169,6 +169,7 @@ export type CiteResolver = {
 export type MediaResolverResult = {
   tag: 'video' | 'audio'
   src: string
+  title?: string
   poster?: string
   width?: number
   height?: number

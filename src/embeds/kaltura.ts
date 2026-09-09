@@ -5,12 +5,10 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 const provider = 'kaltura'
 
-// A Kaltura entry id is a namespace counter, an underscore and lowercase letters or digits,
-// `1_w0bwzism`. Every id Kaltura documents is `0_` or `1_`, but the counter is not a fixed pair,
-// so any digit is taken, and the tail is eight characters today but not checked for it: a wrong
-// id fails the same whether it is minted or passed through, and a bound would refuse the next id
-// space. The partner is the number after `/p/` in every player url.
-const safeEntryIdRegex = /^\d_[a-z0-9]+$/
+// An entry id is a namespace counter, an underscore and lowercase letters or digits,
+// `1_w0bwzism`. The shape is what makes it safe to mint into the thumbnail path. Neither half
+// carries a width, because that would refuse the next id space.
+const safeEntryIdRegex = /^\d+_[a-z0-9]+$/
 const partnerPathRegex = /^\/p\/(\d+)\//
 
 const kalturaHost = 'kaltura.com'
@@ -23,7 +21,9 @@ const saasHosts = new Set(['kaltura.com', 'www.kaltura.com', 'cdnapi.kaltura.com
 // gives the iframe. The player options in `flashvars[…]` travel with the rebuilt url.
 const scriptOnlyParams = ['autoembed', 'playerId', 'cache_st', 'width', 'height']
 
-// KMS writes this label on every iframe it produces, so it never names the video.
+// The label a generated Kaltura iframe carries in place of the video's name. None of the 16
+// carriers measured states a title of any kind, so the suppression has nothing to fire on and no
+// localised spelling to extend it to. Sixteen is too thin to say the label never appears.
 const boilerplateTitle = 'Kaltura Player'
 
 type Entry = {

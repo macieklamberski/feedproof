@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, toMap, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, text } from '../utils/dom.js'
 import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
@@ -32,7 +32,7 @@ const sizeRegex = /^size=([a-z0-9_]+)$/
 // track, does not move with the width, and the tracklist below it stretches into whatever height
 // is left. A player naming both is an album player opened on a track, so the album decides. The
 // eight `size=tall` carriers in the corpus declare 295 and 270, a couple of pixels more.
-const presetHeights: Record<string, number> = {
+const presetHeights = toMap({
   venti: 100,
   grande: 100,
   grande2: 355,
@@ -44,7 +44,7 @@ const presetHeights: Record<string, number> = {
   'tall/album': 295,
   'tall/track': 270,
   tall2: 450,
-}
+})
 const releaseKinds = ['album', 'track']
 const numericIdRegex = /^\d+$/
 
@@ -161,7 +161,8 @@ export const bandcampResolveEmbed = (
     .join('')
   const isAlbum = releases.some(([named]) => named === 'album')
   const tallKey = isAlbum ? 'tall/album' : 'tall/track'
-  const height = preset ? presetHeights[preset === 'tall' ? tallKey : preset] : undefined
+  const presetKey = preset === 'tall' ? tallKey : preset
+  const height = presetHeights.get(presetKey ?? '')
   const anchor = parseFallback(element)
   const url = attr(anchor, 'href')
   // Bandcamp writes the label as "{title} by {artist}". It is kept whole instead of split
@@ -174,9 +175,7 @@ export const bandcampResolveEmbed = (
     src: isVideo
       ? `https://bandcamp.com/VideoEmbed?${kind}=${id}`
       : `https://bandcamp.com/EmbeddedPlayer/${selection}${size}`,
-    ...(height && { height }),
-    ...(url && { url }),
-    ...(title && { title }),
+    ...trimObject({ height, url, title }, Boolean),
   }
 }
 

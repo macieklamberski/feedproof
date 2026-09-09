@@ -1,7 +1,7 @@
-import { getPathSegments, isHostOf, parseUrl } from 'trousse'
+import { getPathSegments, isHostOf, parseUrl, trimObject } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches, parsePixelSize, text } from '../utils/dom.js'
-import { placeholderBaseUrl } from '../utils/urls.js'
+import { composeQuery, placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // `blog.codepen.io` is the marketing blog and `cdpn.io` serves a pen's raw output, so neither
@@ -141,32 +141,31 @@ const parseTarget = (value: string | undefined): CodepenTarget | undefined => {
 
   return {
     kind,
-    user,
-    ownerPath: user && (isTeam ? `team/${user}` : user),
-    ...(Object.keys(grants).length > 0 && { grants }),
-    ...(height !== undefined && { height }),
     slug,
+    ...trimObject(
+      {
+        user,
+        ownerPath: user && (isTeam ? `team/${user}` : user),
+        grants: trimObject(grants, Boolean),
+        height,
+      },
+      Boolean,
+    ),
   }
 }
 
-// The pen's own page takes what unlocks it and nothing else: it has no panes to choose. The
-// player takes the panes and the theme as well, and the loader spells the panes plural in the
-// url it builds whatever the attribute is called: `?default-tabs=css%2Cresult` is what a
-// rendered block carries.
-const composeQuery = (target: CodepenTarget, forPlayer: boolean): string => {
-  const params = new URLSearchParams(target.grants)
-
-  if (forPlayer && target.defaultTab) {
-    params.set('default-tabs', target.defaultTab)
+// The loader spells the panes plural in the url it builds whatever the attribute is called:
+// `?default-tabs=css%2Cresult` is what a rendered block carries.
+const composePenQuery = (target: CodepenTarget, forPlayer: boolean): string => {
+  if (!forPlayer) {
+    return composeQuery(target.grants)
   }
 
-  if (forPlayer && target.themeId) {
-    params.set('theme-id', target.themeId)
-  }
-
-  const query = params.toString()
-
-  return query ? `?${query}` : ''
+  return composeQuery({
+    ...target.grants,
+    ...(target.defaultTab && { 'default-tabs': target.defaultTab }),
+    ...(target.themeId && { 'theme-id': target.themeId }),
+  })
 }
 
 // A pen renders itself into a screenshot on demand, so this needs no key and no fetch. The slug
@@ -191,11 +190,11 @@ const composeEmbed = (
   return {
     provider: 'codepen',
     id: target.slug,
-    src: `https://codepen.io/${owner}/embed/${target.slug}${composeQuery(target, true)}`,
+    src: `https://codepen.io/${owner}/embed/${target.slug}${composePenQuery(target, true)}`,
     // The public page is the one address the author's name really selects: an embed built with
     // the wrong one still plays, but the page it links to belongs to whoever holds that handle.
     ...(target.ownerPath && {
-      url: `https://codepen.io/${target.ownerPath}/pen/${target.slug}${composeQuery(target, false)}`,
+      url: `https://codepen.io/${target.ownerPath}/pen/${target.slug}${composePenQuery(target, false)}`,
     }),
     thumbnail: composeThumbnail(target),
     height: target.height ?? defaultPenHeight,

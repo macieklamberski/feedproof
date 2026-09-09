@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import { extractMixcloudShow, mixcloudEmbedResolver, mixcloudResolveEmbed } from './mixcloud.js'
@@ -128,6 +129,16 @@ describe('extractMixcloudShow', () => {
 
     expect(extractMixcloudShow(value)).toBeUndefined()
   })
+
+  // The audio, the artwork and their subdomains are all on the host list, and each file path
+  // carries the two segments a show does, so nothing but the file name tells them apart.
+  it.each([
+    'https://audio.mixcloud.com/x/y.m4a',
+    'https://stream.mixcloud.com/c/set.mp3',
+    'https://thumbnailer.mixcloud.com/unsafe/cover.jpg',
+  ])('should return undefined for the file %s', (value) => {
+    expect(extractMixcloudShow(value)).toBeUndefined()
+  })
 })
 
 describe('mixcloudResolveEmbed', () => {
@@ -138,6 +149,7 @@ describe('mixcloudResolveEmbed', () => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      author: 'photogmusic',
       height: 160,
     }
 
@@ -153,6 +165,7 @@ describe('mixcloudResolveEmbed', () => {
       id: 'djgavinboyd/soul-has-no-tempo',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fdjgavinboyd%2Fsoul-has-no-tempo%2F&mini=1&hide_cover=1&light=1',
       url: 'https://www.mixcloud.com/djgavinboyd/soul-has-no-tempo/',
+      author: 'djgavinboyd',
       height: 60,
     }
 
@@ -169,6 +182,7 @@ describe('mixcloudResolveEmbed', () => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F&mini=1',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      author: 'photogmusic',
       height: 160,
     }
 
@@ -186,6 +200,7 @@ describe('mixcloudResolveEmbed', () => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      author: 'photogmusic',
       height: 160,
     }
 
@@ -210,7 +225,28 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      author: 'photogmusic',
       height: 160,
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
+  it('should take the show name off the stated title', async () => {
+    const value = html`
+      <iframe
+        title="Dark Synthesis #25"
+        src="https://www.mixcloud.com/widget/iframe/?feed=%2Fdjselarom%2Fdark-synthesis-25%2F&hide_cover=1"
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'mixcloud',
+      id: 'djselarom/dark-synthesis-25',
+      src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fdjselarom%2Fdark-synthesis-25%2F&hide_cover=1',
+      url: 'https://www.mixcloud.com/djselarom/dark-synthesis-25/',
+      author: 'djselarom',
+      height: 160,
+      title: 'Dark Synthesis #25',
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -230,6 +266,7 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
       id: 'FakeIDRadio/4-natty-champs',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2FFakeIDRadio%2F4-natty-champs%2F',
       url: 'https://www.mixcloud.com/FakeIDRadio/4-natty-champs/',
+      author: 'FakeIDRadio',
       height: 160,
     }
 
@@ -251,9 +288,48 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      author: 'photogmusic',
       height: 160,
     }
 
     expect(await extract(value)).toEqual(expected)
+  })
+})
+
+// The resolver reaches a feed's own enclosures only through the registered default list, so this
+// is the only place the cost of claiming a media url shows up.
+describeForEachParser('mixcloud through the pipeline', (parseHtml) => {
+  const convert = (value: string, enclosures?: Array<{ url: string; type: string }>) => {
+    return transformContent(value, {
+      parseHtmlFn: parseHtml,
+      baseUrl: 'https://example.com/post',
+      enclosures,
+    })
+  }
+
+  it('should claim a show page framed as an embed', async () => {
+    const value = '<iframe src="https://www.mixcloud.com/photogmusic/no-filter/"></iframe>'
+    const expected = html`
+      <div
+        data-embed-src="https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F"
+        data-embed-provider="mixcloud"
+        data-embed-id="photogmusic/no-filter"
+        data-embed-url="https://www.mixcloud.com/photogmusic/no-filter/"
+        data-embed-height="160"
+        data-embed-author="photogmusic"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
+  })
+
+  it('should leave a mixcloud audio enclosure playable', async () => {
+    const enclosures = [{ url: 'https://audio.mixcloud.com/x/y.m4a', type: 'audio/mp4' }]
+    const expected = html`
+      <audio data-enclosure="" controls src="https://audio.mixcloud.com/x/y.m4a"></audio>
+      <p>Body</p>
+    `
+
+    expect(await convert('<p>Body</p>', enclosures)).toEqualHtml(expected)
   })
 })

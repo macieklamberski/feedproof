@@ -2,7 +2,7 @@ import { getPathSegments, isPlainObject } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, parsePixelSize } from '../utils/dom.js'
 import { readPixels } from '../utils/hints.js'
-import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
+import { atUsername, createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'telegram'
 
@@ -30,7 +30,7 @@ const composePost = (channel: string, messageId: string): EmbedResolverResult =>
     id: `${channel}/${messageId}`,
     src: `https://t.me/${channel}/${messageId}?embed=1`,
     url: `https://t.me/${channel}/${messageId}`,
-    author: channel,
+    author: atUsername(channel),
   }
 }
 

@@ -44,7 +44,13 @@ const composeEmbed = (podcastId: string, episodeId?: string): EmbedResolverResul
   }
 }
 
-export const buzzsproutResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+// The iframe carrier's title names the episode rather than the player: across 11 titled frames in
+// a 1/16 corpus sample the commonest value covered 9% of them. The script carrier has no title to
+// read, so only this half of the platform gains one.
+export const buzzsproutResolveEmbed = (
+  url: string,
+  element?: Element,
+): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, buzzsproutHosts)
 
   if (!parsed) {
@@ -57,7 +63,10 @@ export const buzzsproutResolveEmbed = (url: string): EmbedResolverResult | undef
     return
   }
 
-  return composeEmbed(match[1], match[2])
+  const title = attr(element, 'title')
+  const result = composeEmbed(match[1], match[2])
+
+  return title ? { ...result, title } : result
 }
 
 export const buzzsproutIframeEmbedResolver: EmbedResolver = createUrlEmbedResolver(

@@ -39,6 +39,7 @@ export const standfmResolveEmbed = (url: string): EmbedResolverResult | undefine
     id: `${kind}/${id}`,
     src: `https://stand.fm/embed/${kind}/${id}`,
     url: `https://stand.fm/${kind}/${id}`,
+    // Gated on the kind, not on the value, so this stays a spread and not a trimObject field.
     ...(kind === 'episodes' && { height: episodePlayerHeight }),
   }
 }

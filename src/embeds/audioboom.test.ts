@@ -3,8 +3,8 @@ import { transformContent } from '../index.js'
 import { describeForEachParser, html, resolverExtractor } from '../tests.js'
 import type { EmbedResolverResult } from '../types.js'
 import {
-  audioboomPlayerEmbedResolver,
   audioboomResolveEmbed,
+  audioboomWidgetEmbedResolver,
   extractAudioboomPost,
 } from './audioboom.js'
 
@@ -110,8 +110,8 @@ describe('audioboomResolveEmbed', () => {
   })
 })
 
-describeForEachParser('audioboomPlayerEmbedResolver', (parseHtml) => {
-  const extract = resolverExtractor(parseHtml, audioboomPlayerEmbedResolver)
+describeForEachParser('audioboomWidgetEmbedResolver', (parseHtml) => {
+  const extract = resolverExtractor(parseHtml, audioboomWidgetEmbedResolver)
 
   describe('happy paths', () => {
     it('should read the player url the plugin parks on its own div', async () => {
