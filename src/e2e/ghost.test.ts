@@ -91,23 +91,48 @@ describeForEachParser('Ghost', (parseHtml) => {
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
   })
 
-  // The audio card is matched whole, so the thumbnail and the player chrome go with it and the
-  // track name is the one piece of content carried over.
-  it('should rebuild an audio card into a playable audio', async () => {
+  // Only the player container is replaced, so the cover the author uploaded survives beside the
+  // rebuilt player. Ghost prints the track name inside that container, so it comes back as the
+  // figcaption. The empty-state icon Ghost hangs beside the cover is an inline SVG in an
+  // otherwise empty div, which the pipeline drops on its own.
+  it('should rebuild an audio card into a playable audio beside its cover', async () => {
     const value = html`
       <div class="kg-card kg-audio-card">
-        <img src="https://example.com/content/images/thumb.jpg" alt="audio-thumbnail" class="kg-audio-thumbnail" />
+        <img
+          src="https://example.com/content/images/thumb.jpg"
+          alt="audio-thumbnail"
+          class="kg-audio-thumbnail"
+        />
+        <div class="kg-audio-thumbnail placeholder kg-audio-hide">
+          <svg
+            width="24"
+            height="24"
+            fill="none"
+          >
+            <path d="M7.5 15.33a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Z"></path>
+          </svg>
+        </div>
         <div class="kg-audio-player-container">
           <audio src="https://example.com/content/media/track.mp3" preload="metadata"></audio>
           <div class="kg-audio-title">Episode 17</div>
           <div class="kg-audio-player">
-            <span>0:00</span>
-            <span>125.94</span>
+            <button class="kg-audio-play-icon" aria-label="Play audio">
+              <svg viewBox="0 0 24 24">
+                <path d="M23.14 10.608 2.253.164Z"></path>
+              </svg>
+            </button>
+            <span class="kg-audio-current-time">0:00</span>
+            <span class="kg-audio-duration">2:05</span>
           </div>
         </div>
       </div>
     `
     const expected = html`
+      <img
+        src="https://example.com/content/images/thumb.jpg"
+        alt="audio-thumbnail"
+        class="kg-audio-thumbnail"
+      />
       <figure>
         <audio
           src="https://example.com/content/media/track.mp3"
@@ -115,6 +140,25 @@ describeForEachParser('Ghost', (parseHtml) => {
         ></audio>
         <figcaption>Episode 17</figcaption>
       </figure>
+    `
+
+    expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
+  })
+
+  // Ghost's own RSS cleanup unwraps the player container and adds `controls`, so the card arrives
+  // playable with nothing left to rebuild.
+  it('should leave a cleaned audio card alone', async () => {
+    const value = html`
+      <div class="kg-card kg-audio-card">
+        <audio src="https://example.com/content/media/track.mp3" preload="metadata" controls></audio>
+      </div>
+    `
+    const expected = html`
+      <audio
+        src="https://example.com/content/media/track.mp3"
+        preload="metadata"
+        controls
+      ></audio>
     `
 
     expect(await transformContent(value, { parseHtmlFn: parseHtml })).toEqualHtml(expected)
