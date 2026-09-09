@@ -341,28 +341,60 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // An episode card states the show's own act, which is a person as often as a network, so it
+    // answers who made the show and not who publishes it.
+    it('should carry an episode card act as the author', async () => {
+      const episodeCardAttrs = jsonAttrValue({
+        image: 'https://i.scdn.co/image/ab6765630000ba8a9f41b6a60769dfb6bd6b41e7',
+        title: '2. Tim Ingold: Ecologies of Perception',
+        subtitle: 'Peter Holliday',
+        description: 'Episode',
+        url: 'https://open.spotify.com/episode/2UkLIeyl69vt0cVJcqLljy',
+      })
+      const value = html`
+        <iframe
+          class="spotify-wrap podcast"
+          data-attrs="${episodeCardAttrs}"
+          src="https://open.spotify.com/embed/episode/2UkLIeyl69vt0cVJcqLljy"
+          data-component-name="Spotify2ToDOM"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'episode/2UkLIeyl69vt0cVJcqLljy',
+        src: 'https://open.spotify.com/embed/episode/2UkLIeyl69vt0cVJcqLljy',
+        url: 'https://open.spotify.com/episode/2UkLIeyl69vt0cVJcqLljy',
+        height: 152,
+        title: '2. Tim Ingold: Ecologies of Perception',
+        author: 'Peter Holliday',
+        thumbnail: 'https://i.scdn.co/image/ab6765630000ba8a9f41b6a60769dfb6bd6b41e7',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // The card prints the type where a description would go, which the id already states.
     it('should state no description when the card holds only the type', async () => {
       const typeOnlyCardAttrs = jsonAttrValue({
-        title: 'An interview',
-        subtitle: 'A host',
+        title: 'Counterrevolution in Egypt (S. 15, Ep. 10)',
+        subtitle: 'Marc Lynch',
         description: 'Episode',
       })
       const value = html`
         <iframe
           class="spotify-wrap podcast"
           data-attrs="${typeOnlyCardAttrs}"
-          src="https://open.spotify.com/embed/episode/1taJsFyMEbsljV14QAt409"
+          src="https://open.spotify.com/embed/episode/4BZArSMbp2VXkvtemKg8wX"
         ></iframe>
       `
       const expected: EmbedResolverResult = {
         provider: 'spotify',
-        id: 'episode/1taJsFyMEbsljV14QAt409',
-        src: 'https://open.spotify.com/embed/episode/1taJsFyMEbsljV14QAt409',
-        url: 'https://open.spotify.com/episode/1taJsFyMEbsljV14QAt409',
+        id: 'episode/4BZArSMbp2VXkvtemKg8wX',
+        src: 'https://open.spotify.com/embed/episode/4BZArSMbp2VXkvtemKg8wX',
+        url: 'https://open.spotify.com/episode/4BZArSMbp2VXkvtemKg8wX',
         height: 152,
-        title: 'An interview',
-        author: 'A host',
+        title: 'Counterrevolution in Egypt (S. 15, Ep. 10)',
+        author: 'Marc Lynch',
       }
 
       expect(await extract(value)).toEqual(expected)
