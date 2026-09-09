@@ -3,7 +3,7 @@ import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, isBlockElement, isBr, isElement, jsonAttr, text } from '../utils/dom.js'
 import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
-import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
+import { atUsername, createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'bluesky'
 
@@ -132,10 +132,10 @@ const composeEmbedResult = (post: BlueskyPost): EmbedResolverResult => {
 // into it, so one author reads the same whichever carrier it came from.
 const composeAuthor = (name?: string, handle?: string): string | undefined => {
   if (name && handle) {
-    return `${name} (@${handle})`
+    return `${name} (${atUsername(handle)})`
   }
 
-  return name || (handle && `@${handle}`) || undefined
+  return name || (handle && atUsername(handle)) || undefined
 }
 
 // The last permalink in the element. A post carrying media links itself twice, once from the

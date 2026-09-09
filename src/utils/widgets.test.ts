@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { baseContext, describeForEachParser, html } from '../tests.js'
 import type { CiteResolverResult, EmbedResolverResult, MediaResolverResult } from '../types.js'
 import {
+  atUsername,
   createCitePlaceholder,
   createEmbedPlaceholder,
   createIframe,
@@ -348,6 +349,38 @@ describeForEachParser('updateCitePlaceholder', (parseHtml) => {
     } as Partial<CiteResolverResult>)
 
     expect(element.outerHTML).toEqualHtml('<div data-cite-title="Post title"></div>')
+  })
+})
+
+describe('atUsername', () => {
+  it('should add the sigil to a bare name', () => {
+    const value = 'durov'
+
+    expect(atUsername(value)).toBe('@durov')
+  })
+
+  it('should keep a name that already carries the sigil', () => {
+    const value = '@durov'
+
+    expect(atUsername(value)).toBe('@durov')
+  })
+
+  it('should collapse a repeated leading sigil', () => {
+    const value = '@@@durov'
+
+    expect(atUsername(value)).toBe('@durov')
+  })
+
+  it('should leave a full Mastodon handle unchanged', () => {
+    const value = '@Gargron@mastodon.social'
+
+    expect(atUsername(value)).toBe('@Gargron@mastodon.social')
+  })
+
+  it('should return the bare sigil for an empty name', () => {
+    const value = ''
+
+    expect(atUsername(value)).toBe('@')
   })
 })
 

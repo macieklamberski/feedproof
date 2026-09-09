@@ -30,6 +30,15 @@ const parseOrKeepDate = (
   return date ? (parseDateFn?.(date) ?? date) : undefined
 }
 
+const leadingAtRegex = /^@+/
+
+// An account name in the display form the platform itself writes, for the platforms whose own
+// naming carries the sigil. Only a leading run is stripped, so a full Mastodon handle keeps the
+// `@` that separates its instance. On a platform that writes bare names it invents a handle.
+export const atUsername = (name: string): string => {
+  return `@${name.replace(leadingAtRegex, '')}`
+}
+
 // The elements that carry a third-party URL for someone else to render, each with the
 // attribute holding it: `<object>` names that URL `data` while the other two use `src`, and
 // that is the only difference between them. Adding a carrier is one line here, because both

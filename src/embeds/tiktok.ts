@@ -3,7 +3,7 @@ import type { EmbedResolverResult } from '../types.js'
 import { attr, find, keepIfMatches, parsePixelSize, text, textNode } from '../utils/dom.js'
 import * as styles from '../utils/styles.js'
 import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
-import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
+import { atUsername, createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const tiktokHosts = ['tiktok.com']
 
@@ -193,10 +193,10 @@ const resolveAccount = (element: Element): EmbedResolverResult | undefined => {
 
   return {
     provider: 'tiktok',
-    id: `@${handle}`,
+    id: atUsername(handle),
     src: `https://www.tiktok.com/embed/@${handle}`,
     url: isCitedProfile ? cite : `https://www.tiktok.com/@${handle}`,
-    author: `@${handle}`,
+    author: atUsername(handle),
     description: textNode(element),
   }
 }

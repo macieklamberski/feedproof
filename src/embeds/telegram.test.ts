@@ -26,7 +26,7 @@ describeForEachParser('telegramScriptEmbedResolver', (parseHtml) => {
         id: 'tochkapress/111424',
         src: 'https://t.me/tochkapress/111424?embed=1',
         url: 'https://t.me/tochkapress/111424',
-        author: 'tochkapress',
+        author: '@tochkapress',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -39,7 +39,7 @@ describeForEachParser('telegramScriptEmbedResolver', (parseHtml) => {
         id: 'rybar/54321',
         src: 'https://t.me/rybar/54321?embed=1',
         url: 'https://t.me/rybar/54321',
-        author: 'rybar',
+        author: '@rybar',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -55,7 +55,7 @@ describeForEachParser('telegramScriptEmbedResolver', (parseHtml) => {
         id: 'nft/3',
         src: 'https://t.me/nft/3?embed=1',
         url: 'https://t.me/nft/3',
-        author: 'nft',
+        author: '@nft',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -74,7 +74,7 @@ describeForEachParser('telegramScriptEmbedResolver', (parseHtml) => {
         id: 'letletlet_warplanes2/9',
         src: 'https://t.me/letletlet_warplanes2/9?embed=1',
         url: 'https://t.me/letletlet_warplanes2/9',
-        author: 'letletlet_warplanes2',
+        author: '@letletlet_warplanes2',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -88,7 +88,7 @@ describeForEachParser('telegramScriptEmbedResolver', (parseHtml) => {
         id: 'international_documentary_festival_news/42',
         src: 'https://t.me/international_documentary_festival_news/42?embed=1',
         url: 'https://t.me/international_documentary_festival_news/42',
-        author: 'international_documentary_festival_news',
+        author: '@international_documentary_festival_news',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -110,7 +110,7 @@ describeForEachParser('telegramScriptEmbedResolver', (parseHtml) => {
         id: 'tochkapress/111424',
         src: 'https://t.me/tochkapress/111424?embed=1',
         url: 'https://t.me/tochkapress/111424',
-        author: 'tochkapress',
+        author: '@tochkapress',
         width: 480,
       }
 
@@ -131,7 +131,7 @@ describeForEachParser('telegramScriptEmbedResolver', (parseHtml) => {
         id: 'tochkapress/111424',
         src: 'https://t.me/tochkapress/111424?embed=1',
         url: 'https://t.me/tochkapress/111424',
-        author: 'tochkapress',
+        author: '@tochkapress',
         width: 480,
       }
 
@@ -154,7 +154,7 @@ describeForEachParser('telegramScriptEmbedResolver', (parseHtml) => {
         id: 'tochkapress/111424',
         src: 'https://t.me/tochkapress/111424?embed=1',
         url: 'https://t.me/tochkapress/111424',
-        author: 'tochkapress',
+        author: '@tochkapress',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -176,7 +176,7 @@ describeForEachParser('telegramScriptEmbedResolver', (parseHtml) => {
         id: 'tochkapress/111424',
         src: 'https://t.me/tochkapress/111424?embed=1',
         url: 'https://t.me/tochkapress/111424',
-        author: 'tochkapress',
+        author: '@tochkapress',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -275,7 +275,7 @@ describeForEachParser('telegramIframeEmbedResolver', (parseHtml) => {
         id: 'rvvoenkor/12345',
         src: 'https://t.me/rvvoenkor/12345?embed=1',
         url: 'https://t.me/rvvoenkor/12345',
-        author: 'rvvoenkor',
+        author: '@rvvoenkor',
         height: 500,
       }
 
@@ -291,7 +291,7 @@ describeForEachParser('telegramIframeEmbedResolver', (parseHtml) => {
         id: 'rvvoenkor/12345',
         src: 'https://t.me/rvvoenkor/12345?embed=1',
         url: 'https://t.me/rvvoenkor/12345',
-        author: 'rvvoenkor',
+        author: '@rvvoenkor',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -305,7 +305,7 @@ describeForEachParser('telegramIframeEmbedResolver', (parseHtml) => {
         id: 'rvvoenkor/12345',
         src: 'https://t.me/rvvoenkor/12345?embed=1',
         url: 'https://t.me/rvvoenkor/12345',
-        author: 'rvvoenkor',
+        author: '@rvvoenkor',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -319,7 +319,7 @@ describeForEachParser('telegramIframeEmbedResolver', (parseHtml) => {
         id: 'rvvoenkor/12345',
         src: 'https://t.me/rvvoenkor/12345?embed=1',
         url: 'https://t.me/rvvoenkor/12345',
-        author: 'rvvoenkor',
+        author: '@rvvoenkor',
       }
 
       expect(await extract(value)).toEqual(expected)
