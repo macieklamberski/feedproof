@@ -12,6 +12,17 @@ const provider = 'cnn'
 // properties served from the same CDN (`/v5cache/TBS/`, numeric ids) out of it.
 const videoIdRegex = /^(?:[a-z0-9-]+\/)+\d{4}\/\d{2}\/\d{2}\/[\w.-]+\.cnn$/
 
+// The three segments in front of the slug date the video. A path states a day and not a moment,
+// so `date` carries the calendar day alone, and a month or a day outside the calendar leaves it
+// unstated.
+const videoDateRegex = /\/(\d{4})\/(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/[^/]+$/
+
+const readDate = (id: string): string | undefined => {
+  const parts = id.match(videoDateRegex)
+
+  return parts ? `${parts[1]}-${parts[2]}-${parts[3]}` : undefined
+}
+
 const cnnHosts = ['cnn.com', 'cnn.io']
 const cdnHosts = ['cdn.turner.com']
 
@@ -36,6 +47,7 @@ const composeEmbed = (id: string): EmbedResolverResult => {
     src: `https://fave.api.cnn.io/v1/fav/?video=${id}&customer=cnn&edition=domestic&env=prod`,
     url: `https://www.cnn.com/videos/${id}`,
     ratio: playerRatio,
+    date: readDate(id),
   }
 }
 
