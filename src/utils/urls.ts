@@ -1,5 +1,5 @@
 import { isHostOf, isSubdomainOf, parseUrl } from 'trousse'
-import type { ResolveUrlFn, TransformContext } from '../types.js'
+import type { AssetType, ResolveUrlFn, TransformContext, UrlRole } from '../types.js'
 
 // Each helper names the slice of the context it actually reads, so a caller holding only a
 // cleaner can still reach the cleaning step, and a whole context satisfies either one.
@@ -60,6 +60,76 @@ export const isFileName = (value: string): boolean => {
 // what tells the current id space from the legacy eight hex characters, so a looser class would
 // read a legacy id as a current one and speak it to the wrong host.
 export const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// One attribute carrying one url, on one element. The two passes that act on a url by its element
+// and attribute, neutralizeUnsafeUrls and proxyAssetUrls, filter the table below for their own
+// list, so an attribute is declared once and neither can quietly fall behind the other.
+//
+// Two passes and no more. resolveRelativeUrls stays out because it asks nothing of the tag: it
+// matches `src` on any element at all, which several widget resolvers rely on to reach a
+// `script[src]` carrier, and it keeps its own list. `srcset` stays out because it is not one url
+// but a list of them: both passes rewrite the whole attribute, and each does so on terms this
+// table cannot state, neutralizeUnsafeUrls dropping the unsafe candidates and proxyAssetUrls
+// rewriting only when the proxy changed one.
+export type UrlAttribute = {
+  // Element carrying the attribute. Absent where any element can carry it: an embed or cite
+  // placeholder parks its urls on data-* attributes of whatever element it replaced.
+  tag?: string
+  attribute: string
+  // Safety class of the value, which picks the sentinel neutralizeUnsafeUrls swaps an unsafe
+  // url for.
+  role: UrlRole
+  // Kind of asset proxyAssetUrls hands to the caller's proxy, absent where the value is not an
+  // asset a proxy can serve. This is the only place that distinction is written down.
+  //
+  // `fromParent` is not a kind but the instruction to go and find one: a <source> or <track> is a
+  // video track inside a <video> and an audio one inside an <audio>, so nothing about the row
+  // itself can answer, and only the pass, holding the element, can.
+  asset?: AssetType | 'fromParent'
+}
+
+// The url-carrying attributes of the two passes. The tag-less rows come first: they are the embed
+// and cite placeholder attributes, which sit on whatever element the placeholder replaced, so a
+// pass reads them on every element it visits.
+export const urlAttributes: Array<UrlAttribute> = [
+  { attribute: 'data-embed-url', role: 'link' },
+  { attribute: 'data-cite-url', role: 'link' },
+  { attribute: 'formaction', role: 'link' },
+  { attribute: 'data-embed-src', role: 'media' },
+  { attribute: 'data-embed-thumbnail', role: 'media', asset: 'image' },
+  { attribute: 'data-embed-avatar', role: 'media', asset: 'image' },
+  { attribute: 'data-cite-icon', role: 'media', asset: 'image' },
+  { attribute: 'data-cite-thumbnail', role: 'media', asset: 'image' },
+  { tag: 'a', attribute: 'href', role: 'link' },
+  { tag: 'form', attribute: 'action', role: 'link' },
+  { tag: 'img', attribute: 'src', role: 'media', asset: 'image' },
+  { tag: 'video', attribute: 'src', role: 'media', asset: 'video' },
+  { tag: 'video', attribute: 'poster', role: 'media', asset: 'image' },
+  { tag: 'audio', attribute: 'src', role: 'media', asset: 'audio' },
+  { tag: 'source', attribute: 'src', role: 'media', asset: 'fromParent' },
+  { tag: 'track', attribute: 'src', role: 'media', asset: 'fromParent' },
+  { tag: 'iframe', attribute: 'src', role: 'media' },
+  { tag: 'embed', attribute: 'src', role: 'media' },
+  { tag: 'object', attribute: 'data', role: 'media' },
+  { tag: 'image', attribute: 'href', role: 'media', asset: 'image' },
+]
+
+// Keys the rows that name a tag by that tag, so a pass walking the DOM looks up an element's
+// attributes by its local name instead of scanning the table. Tag-less rows are left out; a
+// pass reads those on every element and filters for them separately.
+export const groupUrlAttributesByTag = <Attribute extends UrlAttribute>(
+  attributes: ReadonlyArray<Attribute>,
+): ReadonlyMap<string, Array<Attribute>> => {
+  const grouped = new Map<string, Array<Attribute>>()
+
+  for (const attribute of attributes) {
+    if (attribute.tag) {
+      grouped.set(attribute.tag, [...(grouped.get(attribute.tag) ?? []), attribute])
+    }
+  }
+
+  return grouped
+}
 
 // A real, loadable src, not empty and not the `about:blank` lazy placeholder.
 export const isUsableSrc = (src: string | null): src is string => {
