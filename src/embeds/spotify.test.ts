@@ -371,6 +371,71 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // Substack prefixes a playlist card's act with `By`, and Spotify's own player names that
+    // account bare.
+    it('should carry a playlist card act as the owner Spotify names', async () => {
+      const playlistCardAttrs = jsonAttrValue({
+        image: 'https://mosaic.scdn.co/640/ab67616d00001e023db0d2f9b81433439fe63ba9',
+        title: 'Click Beta 13',
+        subtitle: 'By Dave Nadig',
+        description: 'Playlist',
+        url: 'https://open.spotify.com/playlist/4NM9DCtK1XdJ177Bu6ov0Q',
+      })
+      const value = html`
+        <iframe
+          class="spotify-wrap playlist"
+          data-attrs="${playlistCardAttrs}"
+          src="https://open.spotify.com/embed/playlist/4NM9DCtK1XdJ177Bu6ov0Q"
+          data-component-name="Spotify2ToDOM"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'playlist/4NM9DCtK1XdJ177Bu6ov0Q',
+        src: 'https://open.spotify.com/embed/playlist/4NM9DCtK1XdJ177Bu6ov0Q',
+        url: 'https://open.spotify.com/playlist/4NM9DCtK1XdJ177Bu6ov0Q',
+        height: 352,
+        title: 'Click Beta 13',
+        author: 'Dave Nadig',
+        thumbnail: 'https://mosaic.scdn.co/640/ab67616d00001e023db0d2f9b81433439fe63ba9',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // A second playlist card shape names the opening track and its artist, with the playlist and
+    // its owner spelled out where a description goes.
+    it('should carry a playlist card act that states no prefix as it stands', async () => {
+      const trackShapedCardAttrs = jsonAttrValue({
+        image: 'https://i.scdn.co/image/ab67706c0000bebb3463194d462b129b0bbe5ee0',
+        title: 'He Is the Voice I Hear',
+        subtitle: 'The Blessed Madonna',
+        description: 'We Still Believe  by The Blessed Madonna',
+        url: 'https://open.spotify.com/playlist/3237XsfR0Cj19KeN4T3Rxr',
+      })
+      const value = html`
+        <iframe
+          class="spotify-wrap playlist"
+          data-attrs="${trackShapedCardAttrs}"
+          src="https://open.spotify.com/embed/playlist/3237XsfR0Cj19KeN4T3Rxr"
+          data-component-name="Spotify2ToDOM"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'playlist/3237XsfR0Cj19KeN4T3Rxr',
+        src: 'https://open.spotify.com/embed/playlist/3237XsfR0Cj19KeN4T3Rxr',
+        url: 'https://open.spotify.com/playlist/3237XsfR0Cj19KeN4T3Rxr',
+        height: 352,
+        title: 'He Is the Voice I Hear',
+        author: 'The Blessed Madonna',
+        description: 'We Still Believe  by The Blessed Madonna',
+        thumbnail: 'https://i.scdn.co/image/ab67706c0000bebb3463194d462b129b0bbe5ee0',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // The card prints the type where a description would go, which the id already states.
     it('should state no description when the card holds only the type', async () => {
       const typeOnlyCardAttrs = jsonAttrValue({

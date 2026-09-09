@@ -29,6 +29,9 @@ const pathPrefixRegex = /^(?:embed|embed-podcast|intl-[a-z]{2})$/
 const legacyUriRegex = /^spotify:(?:.*:)?([a-z]+):([a-zA-Z0-9]+)$/
 // The snippet writes the title as `Spotify Embed: {name}`.
 const titlePrefixRegex = /^Spotify Embed:\s*/
+// Substack writes `By {owner}` where a playlist card's act goes, and Spotify names that same
+// account bare on its own player.
+const ownerPrefixRegex = /^By /
 
 type SubstackItemAttributes = {
   image?: string
@@ -58,10 +61,12 @@ const readSubstackItem = (element: Element, type: string): Partial<EmbedResolver
 
   const description = attributes.description?.trim()
   const isPublisherType = publisherTypes.has(type)
+  const act =
+    type === 'playlist' ? attributes.subtitle?.replace(ownerPrefixRegex, '') : attributes.subtitle
 
   return {
     title: attributes.title,
-    author: isPublisherType ? undefined : attributes.subtitle,
+    author: isPublisherType ? undefined : act,
     publisher: isPublisherType ? attributes.subtitle : undefined,
     description:
       description && !typeLabels.has(description.toLowerCase()) ? description : undefined,
