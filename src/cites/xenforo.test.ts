@@ -66,15 +66,13 @@ describeForEachParser('xenforoCiteResolver', (parseHtml) => {
   })
 
   describe('themes shipping no js-unfurl hooks', () => {
-    // 21 feeds carry only the theme classes.
+    // 21 feeds carry only the theme classes, which used to yield no cite at all.
     it('should read the title and description from the theme classes', async () => {
       const value = html`
         <div class="bbCodeBlock bbCodeBlock--unfurl" data-url="https://example.com/page" data-host="example.com">
           <div class="contentRow">
             <div class="contentRow-main">
-              <h3 class="contentRow-title">
-                <a href="https://example.com/page">Page title</a>
-              </h3>
+              <h3 class="contentRow-title"><a href="https://example.com/page">Page title</a></h3>
               <div class="contentRow-snippet">Preview text</div>
             </div>
           </div>
