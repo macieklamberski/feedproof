@@ -24,10 +24,10 @@ const readVideoHash = (url: string | undefined, pathRegex: RegExp): string | und
   return parseUrlOnHosts(url, aparatHosts)?.pathname.match(pathRegex)?.[1]
 }
 
-const aparatResolveEmbed = (link: string): EmbedResolverResult | undefined => {
+const aparatResolveEmbed = (link: string, element: Element): EmbedResolverResult | undefined => {
   const videoHash = readVideoHash(link, framePathRegex)
 
-  return videoHash ? composeEmbed(videoHash) : undefined
+  return videoHash ? { ...composeEmbed(videoHash), title: attr(element, 'title') } : undefined
 }
 
 // Aparat's player iframe.
