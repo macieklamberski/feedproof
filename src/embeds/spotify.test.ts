@@ -335,7 +335,6 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
         height: 152,
         title: 'History Impossible',
         publisher: 'Alexander von Sternberg',
-        description: 'Podcast',
         thumbnail: 'https://i.scdn.co/image/ab6765630000ba8a67fda8c427b5b687fc2e1122',
       }
 
@@ -396,6 +395,37 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
         height: 152,
         title: 'Counterrevolution in Egypt (S. 15, Ep. 10)',
         author: 'Marc Lynch',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // Substack's word for a show is `Podcast`, which is not the url's type word.
+    it('should state no description when a show card holds only the type', async () => {
+      const showLabelCardAttrs = jsonAttrValue({
+        image: 'https://i.scdn.co/image/ab6765630000ba8afdd9d1a708b5dfd667da4f70',
+        title: 'Hello Monday with Jessi Hempel',
+        subtitle: 'LinkedIn',
+        description: 'Podcast',
+        url: 'https://open.spotify.com/show/1UpjOrXiDCANThT21viw4E',
+      })
+      const value = html`
+        <iframe
+          class="spotify-wrap podcast"
+          data-attrs="${showLabelCardAttrs}"
+          src="https://open.spotify.com/embed/show/1UpjOrXiDCANThT21viw4E"
+          data-component-name="Spotify2ToDOM"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'show/1UpjOrXiDCANThT21viw4E',
+        src: 'https://open.spotify.com/embed/show/1UpjOrXiDCANThT21viw4E',
+        url: 'https://open.spotify.com/show/1UpjOrXiDCANThT21viw4E',
+        height: 152,
+        title: 'Hello Monday with Jessi Hempel',
+        publisher: 'LinkedIn',
+        thumbnail: 'https://i.scdn.co/image/ab6765630000ba8afdd9d1a708b5dfd667da4f70',
       }
 
       expect(await extract(value)).toEqual(expected)

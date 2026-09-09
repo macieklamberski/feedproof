@@ -40,13 +40,12 @@ type SubstackItemAttributes = {
 const spotifyHosts = ['spotify.com']
 const spotifyImageHosts = ['scdn.co']
 
-// The card prints the item's type where a description would go, so that field usually repeats
-// what the id already says.
-const typeLabels = new Set([...spotifyHeights.keys(), 'podcast episode'])
+// Substack prints its own word for the type where a description would go, and that word is not
+// the url's type word: a show card says `Podcast`, and a track card says nothing at all.
+const typeLabels = new Set(['album', 'episode', 'playlist', 'podcast', 'podcast episode'])
 
 // Substack renders the player inside its own iframe and hangs the item's card on the same
-// element as JSON: the artwork, the title and the act. The description is kept only when it is
-// not one of those labels, which it almost always is.
+// element as JSON: the artwork, the title and the act.
 const readSubstackItem = (element: Element, type: string): Partial<EmbedResolverResult> => {
   const attributes = jsonAttr<SubstackItemAttributes>(element, 'data-attrs')
 
