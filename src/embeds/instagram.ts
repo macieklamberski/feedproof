@@ -3,7 +3,7 @@ import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, find, jsonAttr, parsePixelSize, text } from '../utils/dom.js'
 import { readPixels } from '../utils/hints.js'
 import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
-import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
+import { atUsername, createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'instagram'
 
@@ -196,7 +196,7 @@ const readContent = (element: Element): Partial<EmbedResolverResult> => {
     description: text(caption),
     // The display name sits behind a localized "A post shared by" prefix in the shape that
     // still carries it, so the handle is the half every era spells the same way.
-    author: handle ? `@${handle}` : undefined,
+    author: handle ? atUsername(handle) : undefined,
     date: attr(time, 'datetime') ?? text(time),
   }
 }
@@ -262,15 +262,6 @@ const readRehostedUrl = (url: string | null | undefined): string | undefined => 
   return url?.includes('__ss-rehost__') ? url : undefined
 }
 
-// The handle arrives bare in the older payloads and `@`-prefixed in the current ones.
-const composeHandle = (handle: string | null | undefined): string | undefined => {
-  if (!handle) {
-    return
-  }
-
-  return handle.startsWith('@') ? handle : `@${handle}`
-}
-
 // Substack renders an Instagram post server-side and ships the wrapper div childless, with the
 // whole card as JSON in `data-attrs`: the shortcode, the post's page title, the author and a
 // thumbnail Substack rehosted to its own storage. Left alone the div is dropped as empty markup
@@ -292,7 +283,8 @@ export const instagramSubstackEmbedResolver = createMarkupEmbedResolver(
     // frame addresses the shortcode through `/p/`.
     return composeEmbed({ kind: 'p', shortcode }, false, {
       description: title && !boilerplateTitleRegex.test(title) ? title : undefined,
-      author: composeHandle(attributes.author_name),
+      // The handle arrives bare in the older payloads and `@`-prefixed in the current ones.
+      author: attributes.author_name ? atUsername(attributes.author_name) : undefined,
       avatar: readRehostedUrl(attributes.profile_pic_url),
       thumbnail: readRehostedUrl(attributes.thumbnail_url),
       date: attributes.timestamp ?? undefined,
