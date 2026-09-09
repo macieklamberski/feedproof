@@ -44,7 +44,7 @@ export const geniallyResolveEmbed = (
     provider: 'genially',
     id: viewId,
     src: `https://view.genially.com/${viewId}`,
-    ...trimObject({ title }),
+    ...trimObject({ title }, Boolean),
   }
 }
 

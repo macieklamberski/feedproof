@@ -175,7 +175,7 @@ export const bandcampResolveEmbed = (
     src: isVideo
       ? `https://bandcamp.com/VideoEmbed?${kind}=${id}`
       : `https://bandcamp.com/EmbeddedPlayer/${selection}${size}`,
-    ...trimObject({ height, url, title }),
+    ...trimObject({ height, url, title }, Boolean),
   }
 }
 

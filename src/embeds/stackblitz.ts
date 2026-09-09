@@ -67,7 +67,7 @@ export const stackblitzResolveEmbed = (
     src: `${project}${target.query}`,
     url: project,
     height: defaultProjectHeight,
-    ...trimObject({ title }),
+    ...trimObject({ title }, Boolean),
   }
 }
 

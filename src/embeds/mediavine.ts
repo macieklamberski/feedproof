@@ -33,7 +33,7 @@ export const mediavineWidgetEmbedResolver = createMarkupEmbedResolver(
       provider: 'mediavine',
       id: videoId,
       src: composeEmbedUrl(videoId),
-      ...trimObject({ ratio }),
+      ...trimObject({ ratio }, Boolean),
     }
   },
 )
@@ -73,7 +73,7 @@ export const mediavineScriptEmbedResolver = createMarkupEmbedResolver(
       provider: 'mediavine',
       id: videoId,
       src: composeEmbedUrl(videoId),
-      ...trimObject({ ratio }),
+      ...trimObject({ ratio }, Boolean),
     }
   },
 )
