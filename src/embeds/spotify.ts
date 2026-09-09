@@ -69,7 +69,7 @@ const typeLabels = new Set([...spotifyHeights.keys(), 'podcast episode'])
 // Substack renders the player inside its own iframe and hangs the item's card on the same
 // element as JSON: the artwork, the title and the act. The description is kept only when it is
 // not one of those labels, which it almost always is.
-const readSubstackItem = (element: Element): Partial<EmbedResolverResult> => {
+const readSubstackItem = (element: Element, type: string): Partial<EmbedResolverResult> => {
   const attributes = jsonAttr<SubstackItemAttributes>(element, 'data-attrs')
 
   if (!attributes) {
@@ -77,10 +77,15 @@ const readSubstackItem = (element: Element): Partial<EmbedResolverResult> => {
   }
 
   const description = attributes.description?.trim()
+  // The card states the act under the title, and which field it is depends on the type:
+  // Spotify's own show page names the publisher there and its track and album pages the
+  // artist (checked 2026-09-09).
+  const isShow = type === 'show'
 
   return {
     title: attributes.title,
-    author: attributes.subtitle,
+    author: isShow ? undefined : attributes.subtitle,
+    publisher: isShow ? attributes.subtitle : undefined,
     description:
       description && !typeLabels.has(description.toLowerCase()) ? description : undefined,
     thumbnail: parseUrlOnHosts(attributes.image, spotifyImageHosts) ? attributes.image : undefined,
@@ -126,7 +131,7 @@ export const spotifyResolveEmbed = (
     return
   }
 
-  const card = element ? readSubstackItem(element) : {}
+  const card = element ? readSubstackItem(element, type) : {}
   const stated = attr(element, 'title')?.replace(titlePrefixRegex, '').trim()
 
   return {
@@ -139,6 +144,7 @@ export const spotifyResolveEmbed = (
     // through to the stated one instead of shadowing it.
     title: card.title?.trim() || stated,
     author: card.author,
+    publisher: card.publisher,
     description: card.description,
     thumbnail: card.thumbnail,
   }
