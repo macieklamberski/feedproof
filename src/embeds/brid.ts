@@ -95,6 +95,8 @@ export const bridEmbedResolver = createMarkupEmbedResolver(
       // Brid's own `/video/{video}/{player}` order, which is the platform's, not ours.
       id: `${playerId}/${videoId}`,
       src: `https://services.brid.tv/services/iframe/video/${videoId}/${playerId}`,
+      // Gated before decoding, since decodeURIComponent(undefined) is the string "undefined", so
+      // this stays a spread and not a trimObject field.
       ...(title && { title: decodeTitle(title) }),
       ...readEmbedSize(config),
     }

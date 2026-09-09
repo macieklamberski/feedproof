@@ -63,6 +63,7 @@ export const aushaResolveEmbed = (url: string): EmbedResolverResult | undefined 
     // matching route for a show, so the kind says which of the two an enricher is holding.
     id: `${kind}/${id}`,
     src: url,
+    // Gated on the kind, not on the value, so this stays a spread and not a trimObject field.
     ...(isPlayer && { height: vertical ? verticalHeight : playerHeight }),
   }
 }

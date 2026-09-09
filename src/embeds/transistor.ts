@@ -83,6 +83,7 @@ export const transistorResolveEmbed = (url: string): EmbedResolverResult | undef
     // A show mode names no page of its own. The embed slug is not the show's website
     // subdomain, so `/e/build-your-saas/playlist` plays while `build-your-saas.transistor.fm`
     // answers 404 and the show sits at `saas.transistor.fm` (probed 2026-09-07).
+    // Gated on the kind, not on the value, so this stays a spread and not a trimObject field.
     ...(embed.kind === 'e' && { url: `https://share.transistor.fm/s/${embed.id}` }),
     height: playerHeights[embed.kind],
   }

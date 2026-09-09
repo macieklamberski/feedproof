@@ -47,6 +47,7 @@ const composeJwplayerEmbed = (id: string, isPlaylist = false): EmbedResolverResu
     // (`{mediaId}-.html`, which 404s) is dropped and the URL loads the default player.
     // JW Player has no public watch page, so no `url`: the placeholder anchors to the src.
     src: `https://cdn.jwplayer.com/players/${id}.html`,
+    // Gated on the kind, not on the value, so this stays a spread and not a trimObject field.
     ...(!isPlaylist && { thumbnail: `https://cdn.jwplayer.com/v2/media/${id}/poster.jpg` }),
   }
 }
