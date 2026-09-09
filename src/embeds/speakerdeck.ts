@@ -1,7 +1,7 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr, parseRatio } from '../utils/dom.js'
-import { placeholderBaseUrl } from '../utils/urls.js'
+import { composeQuery, placeholderBaseUrl } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 // Ids are lowercase hex, in two lengths already. 32 chars is the current dashless UUID. 24 is
@@ -42,12 +42,13 @@ const composeEmbed = (
   deckId: string,
   { slide, title }: { slide?: string; title?: string },
 ): EmbedResolverResult => {
-  const hasSlide = Boolean(slide && safeSlideRegex.test(slide))
+  const safeSlide = slide && safeSlideRegex.test(slide) ? slide : undefined
+  const query = composeQuery(safeSlide ? { slide: safeSlide } : undefined)
 
   return {
     provider: 'speakerdeck',
-    id: hasSlide ? `${deckId}/${slide}` : deckId,
-    src: `https://speakerdeck.com/player/${deckId}${hasSlide ? `?slide=${slide}` : ''}`,
+    id: safeSlide ? `${deckId}/${safeSlide}` : deckId,
+    src: `https://speakerdeck.com/player/${deckId}${query}`,
     title,
   }
 }
