@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { flashVars, keepIfMatches } from '../utils/dom.js'
+import { flashVar, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts, pickUrlParams, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -89,10 +89,7 @@ const videopressFlashResolveEmbed = (
 
   // Each guid is validated on its own: the Flash carrier states one in its flashvars and one on
   // its src, and the two disagree often enough that neither can be trusted to be the good one.
-  const safeGuid = [
-    new URLSearchParams(flashVars(element)).get('guid'),
-    parsed.searchParams.get('guid'),
-  ]
+  const safeGuid = [flashVar(element, 'guid'), parsed.searchParams.get('guid')]
     .map((guid) => keepIfMatches(guid, safeGuidRegex))
     .find(Boolean)
 

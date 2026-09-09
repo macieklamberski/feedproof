@@ -1,5 +1,5 @@
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
-import { flashVars } from '../utils/dom.js'
+import { flashVar } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -68,8 +68,7 @@ export const mailruResolveEmbed = (
       return
     }
 
-    const movieSrc =
-      parsed.searchParams.get('movieSrc') ?? new URLSearchParams(flashVars(element)).get('movieSrc')
+    const movieSrc = parsed.searchParams.get('movieSrc') ?? flashVar(element, 'movieSrc')
 
     return movieSrc ? composeSubject(movieSrc) : undefined
   }

@@ -1,6 +1,6 @@
 import { getPathSegments, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
-import { attr, flashVars, keepIfMatches, parseRatio } from '../utils/dom.js'
+import { attr, flashVar, keepIfMatches, parseRatio } from '../utils/dom.js'
 import { parseUrlOnHosts, placeholderBaseUrl } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -98,9 +98,7 @@ export const scribdFlashResolveEmbed = (
     return
   }
 
-  const document =
-    parsed.searchParams.get('document_id') ??
-    new URLSearchParams(flashVars(element) ?? '').get('document_id')
+  const document = parsed.searchParams.get('document_id') ?? flashVar(element, 'document_id')
 
   return document && safeDocumentIdRegex.test(document) ? composeEmbed(document) : undefined
 }
