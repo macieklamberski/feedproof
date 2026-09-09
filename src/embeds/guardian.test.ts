@@ -14,6 +14,22 @@ describe('guardianResolveEmbed', () => {
         src: 'https://embed.theguardian.com/embed/video/society/video/2015/jun/18/superbugs-la-mrsa-pigs-antibiotics-video',
         url: 'https://www.theguardian.com/society/video/2015/jun/18/superbugs-la-mrsa-pigs-antibiotics-video',
         ratio: '16/9',
+        date: '2015-06-18',
+      }
+
+      expect(guardianResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should date the video from a path naming a double-digit month', () => {
+      const value =
+        'https://embed.theguardian.com/embed/video/world/video/2015/oct/08/ashton-carter-nato-syria-video'
+      const expected: EmbedResolverResult = {
+        provider: 'guardian',
+        id: 'world/video/2015/oct/08/ashton-carter-nato-syria-video',
+        src: 'https://embed.theguardian.com/embed/video/world/video/2015/oct/08/ashton-carter-nato-syria-video',
+        url: 'https://www.theguardian.com/world/video/2015/oct/08/ashton-carter-nato-syria-video',
+        ratio: '16/9',
+        date: '2015-10-08',
       }
 
       expect(guardianResolveEmbed(value)).toEqual(expected)
@@ -41,6 +57,36 @@ describe('guardianResolveEmbed', () => {
       expect(guardianResolveEmbed(value)).toBeUndefined()
     })
   })
+
+  describe('edge cases', () => {
+    it('should state no date for a month name outside the twelve', () => {
+      const value =
+        'https://embed.theguardian.com/embed/video/society/video/2015/jou/18/superbugs-video'
+      const expected: EmbedResolverResult = {
+        provider: 'guardian',
+        id: 'society/video/2015/jou/18/superbugs-video',
+        src: 'https://embed.theguardian.com/embed/video/society/video/2015/jou/18/superbugs-video',
+        url: 'https://www.theguardian.com/society/video/2015/jou/18/superbugs-video',
+        ratio: '16/9',
+      }
+
+      expect(guardianResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should state no date for a day outside the calendar', () => {
+      const value =
+        'https://embed.theguardian.com/embed/video/society/video/2015/jun/45/superbugs-video'
+      const expected: EmbedResolverResult = {
+        provider: 'guardian',
+        id: 'society/video/2015/jun/45/superbugs-video',
+        src: 'https://embed.theguardian.com/embed/video/society/video/2015/jun/45/superbugs-video',
+        url: 'https://www.theguardian.com/society/video/2015/jun/45/superbugs-video',
+        ratio: '16/9',
+      }
+
+      expect(guardianResolveEmbed(value)).toEqual(expected)
+    })
+  })
 })
 
 describeForEachParser('guardianEmbedResolver', (parseHtml) => {
@@ -62,6 +108,7 @@ describeForEachParser('guardianEmbedResolver', (parseHtml) => {
       url: 'https://www.theguardian.com/world/video/2015/oct/08/ashton-carter-nato-russian-forces-behaving-unprofessionally-syria-video',
       width: 560,
       height: 315,
+      date: '2015-10-08',
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -79,6 +126,7 @@ describeForEachParser('guardianEmbedResolver', (parseHtml) => {
       src: 'https://embed.theguardian.com/embed/video/world/video/2015/oct/08/ashton-carter-nato-russian-forces-behaving-unprofessionally-syria-video',
       url: 'https://www.theguardian.com/world/video/2015/oct/08/ashton-carter-nato-russian-forces-behaving-unprofessionally-syria-video',
       ratio: '16/9',
+      date: '2015-10-08',
     }
 
     expect(await extract(value)).toEqual(expected)

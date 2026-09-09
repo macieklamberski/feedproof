@@ -235,6 +235,27 @@ describeForEachParser('redditWidgetEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should not read the embed generation stamp as the post date', async () => {
+      const value = html`
+        <div
+          class="reddit-embed"
+          data-embed-created="2019-02-05T12:00:00.000Z"
+          data-embed-showedits="false"
+        >
+          <a href="https://www.reddit.com/r/AskSample/comments/mn5r3t/what_is_this/dxyz123/"></a>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'reddit',
+        id: 'r/AskSample/comments/mn5r3t/comment/dxyz123',
+        src: 'https://embed.reddit.com/r/AskSample/comments/mn5r3t/comment/dxyz123/',
+        url: 'https://www.reddit.com/r/AskSample/comments/mn5r3t/comment/dxyz123/',
+        publisher: 'r/AskSample',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('a widget naming a subreddit and nothing in it', () => {

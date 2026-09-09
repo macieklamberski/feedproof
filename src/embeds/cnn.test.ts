@@ -20,6 +20,7 @@ describe('cnnResolveEmbed', () => {
         src: 'https://fave.api.cnn.io/v1/fav/?video=arts/2018/07/09/spencer-tunick-nude-art-melbourne.cnn&customer=cnn&edition=domestic&env=prod',
         url: 'https://www.cnn.com/videos/arts/2018/07/09/spencer-tunick-nude-art-melbourne.cnn',
         ratio: '16/9',
+        date: '2018-07-09',
       }
 
       expect(cnnResolveEmbed(value)).toEqual(expected)
@@ -34,6 +35,7 @@ describe('cnnResolveEmbed', () => {
         src: 'https://fave.api.cnn.io/v1/fav/?video=living/2014/01/11/ac-intv-fallon-neuroscientist-finds-psychopathy.cnn&customer=cnn&edition=domestic&env=prod',
         url: 'https://www.cnn.com/videos/living/2014/01/11/ac-intv-fallon-neuroscientist-finds-psychopathy.cnn',
         ratio: '16/9',
+        date: '2014-01-11',
       }
 
       expect(cnnResolveEmbed(value)).toEqual(expected)
@@ -48,6 +50,7 @@ describe('cnnResolveEmbed', () => {
         src: 'https://fave.api.cnn.io/v1/fav/?video=business/2008/04/22/tucker.nau.nola.cnn&customer=cnn&edition=domestic&env=prod',
         url: 'https://www.cnn.com/videos/business/2008/04/22/tucker.nau.nola.cnn',
         ratio: '16/9',
+        date: '2008-04-22',
       }
 
       expect(cnnResolveEmbed(value)).toEqual(expected)
@@ -81,6 +84,35 @@ describe('cnnResolveEmbed', () => {
       expect(cnnResolveEmbed(value)).toBeUndefined()
     })
   })
+
+  describe('edge cases', () => {
+    it('should state no date for a month outside the calendar', () => {
+      const value = 'https://fave.api.cnn.io/v1/fav/?video=arts/2018/13/09/spencer-tunick.cnn'
+      const expected: EmbedResolverResult = {
+        provider: 'cnn',
+        id: 'arts/2018/13/09/spencer-tunick.cnn',
+        src: 'https://fave.api.cnn.io/v1/fav/?video=arts/2018/13/09/spencer-tunick.cnn&customer=cnn&edition=domestic&env=prod',
+        url: 'https://www.cnn.com/videos/arts/2018/13/09/spencer-tunick.cnn',
+        ratio: '16/9',
+      }
+
+      expect(cnnResolveEmbed(value)).toEqual(expected)
+    })
+
+    it('should date the video from the segments in front of the slug, not from an earlier year', () => {
+      const value = 'https://fave.api.cnn.io/v1/fav/?video=specials/2016/2018/07/09/retro.cnn'
+      const expected: EmbedResolverResult = {
+        provider: 'cnn',
+        id: 'specials/2016/2018/07/09/retro.cnn',
+        src: 'https://fave.api.cnn.io/v1/fav/?video=specials/2016/2018/07/09/retro.cnn&customer=cnn&edition=domestic&env=prod',
+        url: 'https://www.cnn.com/videos/specials/2016/2018/07/09/retro.cnn',
+        ratio: '16/9',
+        date: '2018-07-09',
+      }
+
+      expect(cnnResolveEmbed(value)).toEqual(expected)
+    })
+  })
 })
 
 describe('cnnFlashResolveEmbed', () => {
@@ -94,6 +126,7 @@ describe('cnnFlashResolveEmbed', () => {
         src: 'https://fave.api.cnn.io/v1/fav/?video=politics/2011/02/27/rs.book.google.power.cnn&customer=cnn&edition=domestic&env=prod',
         url: 'https://www.cnn.com/videos/politics/2011/02/27/rs.book.google.power.cnn',
         ratio: '16/9',
+        date: '2011-02-27',
       }
 
       expect(cnnFlashResolveEmbed(value)).toEqual(expected)
@@ -135,6 +168,7 @@ describeForEachParser('cnnIframeEmbedResolver', (parseHtml) => {
       url: 'https://www.cnn.com/videos/us/2018/06/24/finding-hope-suicide-special-report-full-show.cnn',
       width: 416,
       height: 234,
+      date: '2018-06-24',
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -152,6 +186,7 @@ describeForEachParser('cnnIframeEmbedResolver', (parseHtml) => {
       src: 'https://fave.api.cnn.io/v1/fav/?video=us/2018/06/24/finding-hope-suicide-special-report-full-show.cnn&customer=cnn&edition=domestic&env=prod',
       url: 'https://www.cnn.com/videos/us/2018/06/24/finding-hope-suicide-special-report-full-show.cnn',
       ratio: '16/9',
+      date: '2018-06-24',
     }
 
     expect(await extract(value)).toEqual(expected)
@@ -184,6 +219,7 @@ describeForEachParser('cnnFlashEmbedResolver', (parseHtml) => {
         src: 'https://fave.api.cnn.io/v1/fav/?video=politics/2011/02/27/rs.book.google.power.cnn&customer=cnn&edition=domestic&env=prod',
         url: 'https://www.cnn.com/videos/politics/2011/02/27/rs.book.google.power.cnn',
         ratio: '16/9',
+        date: '2011-02-27',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -202,6 +238,7 @@ describeForEachParser('cnnFlashEmbedResolver', (parseHtml) => {
         src: 'https://fave.api.cnn.io/v1/fav/?video=us/2012/01/14/pkg-candiotti-gay-man-faces-deportation.cnn&customer=cnn&edition=domestic&env=prod',
         url: 'https://www.cnn.com/videos/us/2012/01/14/pkg-candiotti-gay-man-faces-deportation.cnn',
         ratio: '16/9',
+        date: '2012-01-14',
       }
 
       expect(await extract(value)).toEqual(expected)
@@ -235,6 +272,7 @@ describeForEachParser('cnnScriptEmbedResolver', (parseHtml) => {
         src: 'https://fave.api.cnn.io/v1/fav/?video=politics/2009/05/21/obama.guantanamo.cnn&customer=cnn&edition=domestic&env=prod',
         url: 'https://www.cnn.com/videos/politics/2009/05/21/obama.guantanamo.cnn',
         ratio: '16/9',
+        date: '2009-05-21',
       }
 
       expect(await extract(value)).toEqual(expected)

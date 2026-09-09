@@ -140,6 +140,10 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
     return
   }
 
+  // Neither `data-embed-created` nor `data-card-created` is the post's date: the loader pushes
+  // either into the player's `created` query beside `showedits`, which hides the edits made after
+  // the embed code was generated. So both stamp the embed, and neither reaches `date`.
+
   // The height Reddit's own dialog states, which the loader passes to the player. The modern
   // widget spells it as an inline style as well, and the declared-size pass reads that one for
   // free. Neither states a width and the placeholder must not invent one: a lone height is the
