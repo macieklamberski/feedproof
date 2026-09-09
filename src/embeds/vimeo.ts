@@ -1,4 +1,4 @@
-import { getPathSegments, parseUrl } from 'trousse'
+import { getPathSegments, parseUrl, trimObject } from 'trousse'
 import type { EmbedRenderHint, EmbedResolverResult } from '../types.js'
 import { attr, keepIfMatches } from '../utils/dom.js'
 import {
@@ -214,7 +214,7 @@ export const vimeoResolveEmbed = (
   const { id: videoId, hash } = reference
   const title = element ? attr(element, 'title') : undefined
   const params = {
-    ...(hash && { h: hash }),
+    ...trimObject({ h: hash }, Boolean),
     ...pickQueryParams(parseUrl(url, placeholderBaseUrl)?.search ?? '', vimeoEmbedParams),
   }
 

@@ -269,6 +269,35 @@ describeForEachParser('soundcloudEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should keep the iframe title when the payload title is empty', async () => {
+      const blankTitleCardAttrs = jsonAttrValue({
+        title: '',
+        thumbnail_url: 'https://i1.sndcdn.com/artworks-Xy2ab-t500x500.jpg',
+      })
+      const value = html`
+        <div
+          class="soundcloud-wrap"
+          data-attrs="${blankTitleCardAttrs}"
+          data-component-name="SoundcloudToDOM"
+        >
+          <iframe
+            title="Real Track Name"
+            src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F12345"
+          ></iframe>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'soundcloud',
+        id: 'tracks/12345',
+        src: 'https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F12345',
+        height: 166,
+        title: 'Real Track Name',
+        thumbnail: 'https://i1.sndcdn.com/artworks-Xy2ab-t500x500.jpg',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should let the payload title override the one the iframe states', async () => {
       const titledCardAttrs = jsonAttrValue({
         title: 'Golden Hour (Extended Mix)',
