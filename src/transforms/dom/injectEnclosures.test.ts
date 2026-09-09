@@ -833,6 +833,27 @@ describeForEachParser('injectEnclosures', (parseHtml) => {
       expect(await transform(value, context)).toEqualHtml(expected)
     })
 
+    // A hidden or lazy player frame declares a zero, which is not a height to reserve.
+    it('should ignore a zero the player frame declares', async () => {
+      const value = '<p>Content</p>'
+      const context = withEnclosures([
+        {
+          playerEmbed:
+            '<iframe src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3" width="0" height="0"></iframe>',
+        },
+        { url: 'https://example.com/ep.mp3', type: 'audio/mpeg' },
+      ])
+      const expected = html`
+        <div
+          data-embed-src="https://player.example.com/?media_url=https%3A%2F%2Fexample.com%2Fep.mp3"
+          data-enclosure=""
+        ></div>
+        <p>Content</p>
+      `
+
+      expect(await transform(value, context)).toEqualHtml(expected)
+    })
+
     it('should parse a playerEmbed enclosure and merge it with its media file', async () => {
       const value = '<p>Content</p>'
       const context = withEnclosures([
