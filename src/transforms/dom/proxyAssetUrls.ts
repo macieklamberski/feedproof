@@ -37,19 +37,11 @@ const isProxyableUrl = (url: string): boolean => {
 const dataPrefixRegex = /^data-/
 const colonRegex = /:/g
 
-// Preserves the pre-proxy value of a source attribute as `data-proxied-<name>`: a leading
-// `data-` is dropped and colons become hyphens, so `src` → `data-proxied-src`,
-// `data-embed-thumbnail` → `data-proxied-embed-thumbnail`, `xlink:href` →
-// `data-proxied-xlink-href`. A reader can fall back to the original when the proxied URL
-// fails (link-rot self-heal), or use it for dedup.
 const preservedAttribute = (attribute: string): string => {
   return `data-proxied-${attribute.replace(dataPrefixRegex, '').replace(colonRegex, '-')}`
 }
 
-// Stamps the original URL only if the proxy actually changed the value. The change guard
-// keeps the transform idempotent: on a second run the value is already proxied, an
-// idempotent assetProxyFn returns it unchanged, so the first run's original is not
-// overwritten with the proxied URL.
+// Stamping on an unchanged value overwrites the original with the proxied url on a second run.
 const proxyAttribute = async (
   element: Element,
   attribute: string,
@@ -107,11 +99,7 @@ const proxySrcset = async (
   element.setAttribute('srcset', stringifySrcset(rewritten))
 }
 
-// Rewrites asset URLs through the caller's `assetProxyFn`, keeping each proxied URL's
-// pre-proxy value in a `data-proxied-<name>` attribute (see preservedAttribute). The function
-// must be idempotent (return an already-proxied URL unchanged): this transform applies it to
-// every matching URL on each run and does not detect already-proxied URLs, so a wrapping
-// proxy that double-encodes would not be idempotent.
+// An asset url served from the publisher's host, which the reader is to fetch through its proxy.
 export const proxyAssetUrls: DomTransform = ({ assetProxyFn }) => {
   if (!assetProxyFn) {
     return () => {}

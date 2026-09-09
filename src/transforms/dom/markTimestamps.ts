@@ -6,14 +6,8 @@ const timestampIgnoreTags = new Set(['a', 'pre', 'code', 'kbd', 'samp', 'var', '
 // MM:SS or HH:MM:SS, with the seconds always two digits.
 const timestampToken = '(?:\\d{1,2}:)?\\d{1,2}:\\d{2}'
 
-// Matches the token anchored to a line boundary: either starting the line (optionally after
-// leading whitespace) or ending it (optionally before trailing whitespace). Anchoring to a
-// boundary avoids turning incidental "12:30" mentions in the middle of prose into markers.
-//
-// The token is captured in one of two groups: at a line start (optional whitespace
-// prefix consumed ahead of it) or before a line end (trailing whitespace in a zero-width
-// lookahead). The prefix is consumed, not matched in a variable-length lookbehind, so a
-// long whitespace run is scanned once, with no re-scan per position.
+// The token at a line start after optional whitespace, or at a line end before it.
+// An incidental "12:30" in the middle of prose is not a marker.
 const lineBoundaryTimestampRegex = new RegExp(
   `(?:^|\\n)[ \\t]*(${timestampToken})|(${timestampToken})(?=[ \\t]*(?:\\n|$))`,
   'g',
@@ -21,10 +15,8 @@ const lineBoundaryTimestampRegex = new RegExp(
 
 const numericPartRegex = /^\d+$/
 
-// Parse a "MM:SS" or "HH:MM:SS" timestamp into total seconds. Returns undefined
-// for anything that is not a valid timestamp: wrong number of parts, non-numeric
-// parts, or seconds (and minutes in the HH:MM:SS form) outside 0-59. Minutes are
-// unbounded in the MM:SS form (e.g. "90:00").
+// The seconds a MM:SS or HH:MM:SS timestamp names, or undefined when a part is out of range.
+// Minutes are unbounded in the MM:SS form, so 90:00 is valid.
 export const parseTimestampSeconds = (timestamp: string): number | undefined => {
   const parts = timestamp.split(':')
 
@@ -59,14 +51,10 @@ const shouldSkipElement = (element: Element): boolean => {
   )
 }
 
-// Wraps line-boundary YouTube-style timestamps (e.g. "01:21 - Title" or
-// "Title - 01:21") in a span carrying the time in seconds, so the reader can
-// later seek a player to that point. The visible text is left as-is. Only the
-// seconds attribute is added.
+// A chapter list of MM:SS timestamps, plain text a reader cannot seek a player to.
 export const markTimestamps: DomTransform = () => {
   return (document) => {
-    // Walk from document (not documentElement) so linkedom fragment siblings are
-    // reachable. documentElement only points to the first root-level element.
+    // documentElement is only the first root-level element in a linkedom fragment.
     const textNodes = collectTextNodes(document, shouldSkipElement) as Array<ChildNode>
 
     for (const node of textNodes) {
@@ -95,8 +83,7 @@ export const markTimestamps: DomTransform = () => {
           continue
         }
 
-        // The line-start branch consumes a whitespace prefix, so the token sits at
-        // the end of the overall match. Derive its offset from the match end.
+        // match.index sits before the consumed whitespace prefix, not at the token.
         const tokenStart = (match.index ?? 0) + match[0].length - token.length
 
         if (tokenStart > lastIndex) {

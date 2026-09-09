@@ -5,10 +5,8 @@ const isRule = (node: Node | null): boolean => {
   return isElement(node) && node.localName === 'hr'
 }
 
-// A run of thematic breaks separates nothing the first one has not already separated, so
-// only the first survives. Runs arrive two ways in roughly equal numbers: authored, where
-// an editor emits a separator block twice over, and manufactured here, where a rule sits on
-// each side of a block the pipeline strips and removing it leaves the two rules touching.
+// A run of <hr> elements separates nothing the first one has not already separated.
+// An editor emits a separator twice over, or a stripped block leaves the rules around it touching.
 export const stripDuplicateRules: DomTransform = () => {
   return (document) => {
     for (const rule of document.querySelectorAll('hr')) {

@@ -47,12 +47,6 @@ const isAvatarEnclosure = (url: string, avatarHosts: ReadonlyArray<string>): boo
   return isOnHosts(url, avatarHosts)
 }
 
-// Run resolvers against a synthesized iframe carrying the enclosure URL so that
-// iframe-shaped resolvers (YouTube etc.) can claim platform-specific enclosures.
-//
-// The feed's dimensions ride along on the probe, which puts them in the same tier as the size a
-// publisher states on a carrier in the content: they win over the resolver's, unless the resolver
-// measured the platform better and opted out of declared sizes.
 const resolveEnclosure = async (
   url: string,
   enclosure: Enclosure,
@@ -77,9 +71,7 @@ const resolveEnclosure = async (
   }
 }
 
-// TODO: render Enclosure `title` and `description` somehow. Neither <audio> nor <video>
-// have a native caption slot, and the chosen approach (figure/figcaption wrapper,
-// aria-label, data-* attributes, etc.) needs a separate design pass.
+// TODO: render the enclosure title and description, <audio> and <video> have no caption slot.
 const createNativeMediaElement = (
   document: Document,
   tag: 'audio' | 'video',
@@ -118,14 +110,8 @@ const injectImageEnclosure = (
   })
 }
 
-// Layers the enclosure's own metadata over the resolver result, preferring the feed's
-// values for the display fields. The resolver only has URL-derived guesses (e.g. YouTube's
-// composed hqdefault thumbnail), while the feed carries the publisher's real thumbnail,
-// title, and duration. Identity fields (provider/id/src/url) stay from the resolver.
-//
-// The size is settled before this: a resolver read the feed's dimensions off the probe, whole,
-// through the rule that governs content markup too. Where no resolver claimed the enclosure, the
-// feed's dimensions are the only ones there are.
+// The feed carries the publisher's real thumbnail, title and duration, where a resolver only
+// composes a thumbnail from the url, like YouTube's hqdefault.
 const mergeEnclosureMetadata = (
   resolved: EmbedResolverResult | undefined,
   enclosure: Enclosure,
@@ -139,12 +125,6 @@ const mergeEnclosureMetadata = (
   }
 }
 
-// Whether `incoming` is a better variant of the same image to keep than `kept`. A URL
-// with no size encoded in it (`hint === 0`) is treated as the full-res original and
-// preferred over any sized copy (a bare `photo.jpg` outranks `photo-800x450.jpg`).
-// Between two sized variants the larger wins. When neither encodes a size, two ranked
-// size keywords decide (`large.jpg` beside `small.jpg`), the way pickLargerImageUrl
-// reads the same pair. On a true tie the no-query URL wins, else the first stays.
 const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
   const incomingUrl = incoming.url ?? ''
   const keptUrl = kept.url ?? ''
@@ -161,8 +141,8 @@ const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
     return incomingHint > keptHint
   }
 
-  // A rank of 0 is a keyword the table cannot order (`preview` is a thumbnail on one host
-  // and full-size on another) or none at all, so it decides nothing and falls through.
+  // A rank of 0 is a keyword the table cannot order, so it must not lose to a ranked one:
+  // preview is a thumbnail on one host and full-size on another.
   if (incomingIsOriginal && keptIsOriginal) {
     const incomingRank = getSizeKeywordRank(incomingUrl)
     const keptRank = getSizeKeywordRank(keptUrl)
@@ -175,13 +155,8 @@ const isPreferredVariant = (incoming: Enclosure, kept: Enclosure): boolean => {
   return keptUrl.includes('?') && !incomingUrl.includes('?')
 }
 
-// Collapse image enclosures that are the same picture at a different size or render:
-// a scaled copy, a CDN-proxied variant, or just a `?w=` query (a feed often lists one
-// image as a native enclosure plus a media:content). Without this they each inject as a
-// stacked copy. Keyed by getImageFingerprint (the same size-agnostic key the duplicate
-// stripper uses), keeping the largest variant, then the no-query original, then the
-// first. Only images collapse: audio/video query strings often carry identity (podcast
-// proxies), so those pass through untouched.
+// A feed often lists one image twice, as an enclosure and a media:content at another size or
+// with a ?w= query. An audio or video query string often carries identity, as on a podcast proxy.
 const dedupeImageEnclosures = (
   enclosures: ReadonlyArray<Enclosure>,
   cleanUrlFn?: CleanUrlFn,
@@ -232,10 +207,8 @@ const extractNestedUrls = (url: string): Array<string> => {
   return nested
 }
 
-// A player sometimes arrives as raw embed HTML (e.g. rawvoice:embed) instead of a
-// URL. Parse it through the DOM so entity decoding and attribute quoting are
-// handled properly, and turn the entry into a plain player page entry (url plus
-// display size) that mergePlayerEnclosures can pair with its media file.
+// rawvoice:embed carries the player as raw embed HTML: an iframe, or a native <audio> for the
+// enclosure's own file, or plain text.
 const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): Enclosure => {
   if (!enclosure.playerEmbed) {
     return enclosure
@@ -245,10 +218,6 @@ const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): En
   const container = document.createElement('div')
   container.innerHTML = playerEmbed
 
-  // In real feeds (corpus sample, July 2026) rawvoice:embed is an iframe player in 36 of
-  // 40 feeds. The rest wrap a native <audio> for the same file as the enclosure, or plain
-  // text. Only frame-able elements count as players, so those others fall through and the
-  // enclosure itself still renders.
   const frame = container.querySelector('iframe[src], embed[src]')
 
   if (!frame) {
@@ -256,10 +225,8 @@ const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): En
   }
 
   // The size moves whole from whichever source states one, the enclosure's own Media RSS
-  // dimensions first and the frame's otherwise. Merging them field by field would put a width the
-  // feed stated beside a height the player's iframe stated, which is a box neither of them
-  // describes. A lone height is still a size, since that is what a fixed-height fluid-width player
-  // states, so what travels together is the source rather than both fields.
+  // dimensions first and the frame's otherwise: a width the feed stated beside a height the
+  // iframe stated is a box neither describes. A lone height is the size a fixed-height player states.
   const frameSize = getEmbedSize(frame, 0)
   const stated = rest.width || rest.height ? rest : frameSize
 
@@ -271,10 +238,6 @@ const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): En
   }
 }
 
-// An enclosure in the shape the rest of the pass works with: its player embed folded in, both
-// urls absolute. Absolute here rather than at each use, because the fingerprint that collapses
-// duplicate images and the gravatar check both read the url as it stands, and one naming no
-// host keys as itself and matches nothing.
 const readEnclosure = (
   enclosure: Enclosure,
   document: Document,
@@ -295,12 +258,8 @@ const getInjectedSource = (element: Element): string | null => {
   return element.getAttribute('src') ?? element.getAttribute('data-embed-src')
 }
 
-// A feed sometimes lists the same media twice: once as the raw file and once as a
-// player page carrying the file URL in a query param (podcast hosts pair a plain
-// <enclosure> with a player entry like …/?media_url=<file>; the param name varies
-// by host, so any URL-shaped param value counts). Collapse such pairs into the
-// file entry with the player page as its playerUrl, so the item renders one
-// embedded player instead of a player iframe next to a bare audio element.
+// A podcast host pairs a plain <enclosure> with a player page carrying the file url in a query
+// param, like …/?media_url=<file>, and the param name varies by host.
 const mergePlayerEnclosures = (
   enclosures: ReadonlyArray<Enclosure>,
   cleanUrlFn?: CleanUrlFn,
@@ -334,11 +293,8 @@ const mergePlayerEnclosures = (
         continue
       }
 
-      // Keep the file entry's own fields and fill only what it lacks from the
-      // player entry (a player page often carries the display size the file
-      // doesn't). The earlier position of the two is kept so injection order
-      // stays stable.
       const file = result[fileIndex]
+      // A player page often carries the display size the file entry lacks.
       const merged: Enclosure = { ...player, ...file, playerUrl: file.playerUrl ?? player.url }
 
       result[Math.min(playerIndex, fileIndex)] = merged
@@ -350,6 +306,7 @@ const mergePlayerEnclosures = (
   return result.filter((_, index) => !removed.has(index))
 }
 
+// An enclosure rides outside the item body, so the content alone never shows its media.
 export const injectEnclosures: DomTransform = (context) => {
   const enclosures = context.enclosures
 
@@ -364,11 +321,6 @@ export const injectEnclosures: DomTransform = (context) => {
   return async (document) => {
     const created: Array<HTMLElement> = []
 
-    // An image enclosure is almost always the same picture as the lead content image,
-    // just a scaled or cropped copy on a different URL, so injecting it stacks a visible
-    // duplicate. Only inject it when the content has no image of its own, the case where
-    // the enclosure supplies the missing visual (e.g. an image-only feed with no body
-    // markup). Audio and video enclosures have no inline equivalent, so they always inject.
     const hasContentImage = !!document.querySelector('img[src], picture, [data-embed-thumbnail]')
 
     const resolvedEnclosures = enclosures.map((enclosure) => {
@@ -429,10 +381,8 @@ export const injectEnclosures: DomTransform = (context) => {
         continue
       }
 
-      // WordPress attaches the author's gravatar as a per-item media:content image, and
-      // Substack fills the enclosure of a post with no cover with the publication logo.
-      // Neither is post imagery, so never inject one as the lead image of an otherwise
-      // imageless item.
+      // WordPress attaches the author's gravatar as a per-item media:content image, and Substack
+      // fills the enclosure of a post with no cover with the publication logo.
       if (
         isImageEnclosure(enclosure) &&
         (isAvatarEnclosure(embedSource, context.avatarImageHosts) ||
@@ -441,6 +391,7 @@ export const injectEnclosures: DomTransform = (context) => {
         continue
       }
 
+      // An image enclosure is almost always the lead image, scaled or cropped, on another url.
       if (hasContentImage) {
         continue
       }
@@ -474,8 +425,7 @@ export const injectEnclosures: DomTransform = (context) => {
       element.setAttribute(enclosureMarker, '')
     }
 
-    // Prepend ahead of the existing content while preserving enclosure order. A
-    // per-item prepend would reverse the order of multi-enclosure items.
+    // A forward loop of prepends reverses the enclosure order.
     for (let index = injected.length - 1; index >= 0; index--) {
       document.body.prepend(injected[index])
     }

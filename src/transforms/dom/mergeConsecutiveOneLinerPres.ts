@@ -5,17 +5,13 @@ const trailingBrRegex = /<br\s*\/?>\s*$/i
 const surroundingNewlinesRegex = /^\n+|\n+$/g
 const classTokenSeparatorRegex = /\s+/
 
-// Read from a sole <code> child so consecutive <pre><code> lines merge into one
-// block instead of a stack of <code> elements.
 const contentElement = (element: Element): Element => {
   const children = element.children
 
   return children.length === 1 && children[0].localName === 'code' ? children[0] : element
 }
 
-// Feeds like Medium wrap each code line in its own <pre>, which renders as
-// a stack of separate boxes instead of a unified code block. This merges
-// consecutive single-line <pre> siblings into one <pre> joined by newlines.
+// Medium ships each code line in its own <pre>, which renders as a stack of separate boxes.
 export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses }) => {
   const preservedSet = new Set(preservedPreClasses)
 
@@ -81,8 +77,7 @@ export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses
         continue
       }
 
-      // Only merge if every <pre> in the run is a single line.
-      // Strip only surrounding newlines (not spaces) since whitespace is meaningful in <pre>.
+      // A trim() would eat the leading spaces that <pre> renders.
       const isSingleLine = (element: Element) => {
         return !contentElement(element)
           .innerHTML.replace(surroundingNewlinesRegex, '')
@@ -101,8 +96,6 @@ export const mergeConsecutiveOneLinerPres: DomTransform = ({ preservedPreClasses
         )
         .join('\n')
 
-      // Write into the first <pre>'s <code> (when present) so a merged run of
-      // <pre><code> lines stays a single <pre><code> instead of losing the <code>.
       contentElement(pre).innerHTML = merged
 
       for (const element of run.slice(1)) {

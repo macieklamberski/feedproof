@@ -45,12 +45,7 @@ const firstSourceWithSrcset = (picture: Element): Element | undefined => {
   }
 }
 
-// Collapse each <picture> to a single <img>. When a modern format-only <source>
-// (AVIF/WebP, no media query) is present, its srcset is promoted onto the img so
-// the lighter format survives. The publisher's WebP/AVIF is the whole point of
-// most feed <picture> elements. Art-direction sources (with media) are left to
-// the plain <img> fallback. A <picture> missing its <img> (invalid, but seen in
-// feeds) gets one synthesized from the best available source.
+// A <picture> whose AVIF or WebP lives only in a <source>, sometimes with no <img> fallback.
 export const flattenPictureElements: DomTransform = () => {
   return (document) => {
     const pictures = document.querySelectorAll('picture')
@@ -78,8 +73,7 @@ export const flattenPictureElements: DomTransform = () => {
           }
         }
 
-        // sizes="auto" collapses a lifted image to 0x0 in renderers using
-        // width:auto. Drop it, but keep a real sizes value intact.
+        // Left in place, sizes="auto" renders the lifted img at 0x0 under width:auto.
         if (existing.getAttribute('sizes') === 'auto') {
           existing.removeAttribute('sizes')
         }

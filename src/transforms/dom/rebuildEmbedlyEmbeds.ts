@@ -3,16 +3,6 @@ import { attr, jsonAttr } from '../../utils/dom.js'
 import { isUrlShaped } from '../../utils/urls.js'
 import { createIframe } from '../../utils/widgets.js'
 
-// Embedly wraps a third-party embed in two carriers, and both name the real target and its poster
-// without a fetch. The rendered one is a wrapper iframe whose own query holds them:
-// `<iframe src="cdn.embedly.com/widgets/media.html?src=<inner>&image=<poster>&url=<canonical>">`.
-// The unrendered one is an empty `<div data-type="embedly">` carrying an oEmbed payload in `data`,
-// which only the publishing platform's own client fills in.
-//
-// Both unwrap to a plain iframe so the provider transforms below handle them instead of an Embedly
-// shell: a Datawrapper inner becomes a static image, a YouTube inner is placeholdered. The poster
-// rides along as `data-thumbnail`, which convertWidgets prefers over a resolver's url-derived
-// guess.
 const embedlyCarrierSelector = [
   'iframe[src*="cdn.embedly.com/widgets/media.html"]',
   'div[data-type="embedly"]',
@@ -38,11 +28,12 @@ const composeIframe = (document: Document, source: string, poster?: string): Ele
   return iframe
 }
 
+// Embedly ships an embed as a wrapper iframe or as an empty div only the publishing client fills.
 export const rebuildEmbedlyEmbeds: DomTransform = () => (document) => {
   for (const element of document.querySelectorAll(embedlyCarrierSelector)) {
     if (element.localName === 'iframe') {
-      // URLSearchParams reads (and percent-decodes) the query without throwing on a malformed src,
-      // so no full URL parse is needed: the protocol-relative `//cdn.embedly.com` form works too.
+      // The wrapper's query holds the embed as src, its poster as image and the canonical as url.
+      // A full URL parse throws on the protocol-relative //cdn.embedly.com form.
       const params = new URLSearchParams(attr(element, 'src')?.split('?')[1] ?? '')
       const inner = params.get('src')
 
@@ -56,10 +47,10 @@ export const rebuildEmbedlyEmbeds: DomTransform = () => (document) => {
       continue
     }
 
+    // The div's data attribute carries an oEmbed payload.
     const payload = jsonAttr<EmbedlyPayload>(element, 'data')
 
-    // A payload naming `link`, or naming no type at all, is the cite pass's to claim: a link
-    // preview is a cite, and turning it into an iframe would take it away from that resolver.
+    // A link payload, or one with no type, is a cite the cite pass claims.
     if (payload && (payload.type === undefined || payload.type === 'link')) {
       continue
     }

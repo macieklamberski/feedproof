@@ -3,10 +3,7 @@ import { hasAncestorWithTagName } from '../../utils/dom.js'
 
 const tableTags = new Set(['table'])
 
-// Wraps every top-level <table> in a <div data-table> so downstream styling has
-// a stable hook to make wide tables scroll horizontally instead of stretching
-// the layout. Tables nested in another table's cell are skipped. Idempotent via
-// the existing-wrapper check.
+// A wide <table>, which stretches the layout unless a wrapper lets it scroll horizontally.
 export const wrapTablesForScroll: DomTransform = () => {
   return (document) => {
     const tables = document.querySelectorAll('table')

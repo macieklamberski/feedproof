@@ -1,9 +1,7 @@
 import type { DomTransform } from '../../types.js'
 import { isUrlShaped, isUsableSrc } from '../../utils/urls.js'
 
-// Promote a lazy <audio> src (the real clip URL parked in a data-* attribute) into
-// `src`, so a no-JS reader can play it. Only the <audio> element itself is fixed here:
-// lazy <source> children are already handled by fixLazyImages.
+// An <audio> whose clip url sits in a lazy data-* attribute, so nothing plays without JS.
 export const fixLazyAudios: DomTransform = (context) => (document) => {
   for (const audio of document.querySelectorAll('audio')) {
     // Promote a lazy src only when the element itself has nothing to play from: a

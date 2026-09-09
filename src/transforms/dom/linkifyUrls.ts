@@ -9,16 +9,12 @@ const shouldSkipElement = (element: Element): boolean => {
   return linkifyIgnoreTags.has(element.tagName.toLowerCase())
 }
 
-// Walks text nodes in the already-parsed DOM and wraps bare URLs in <a> tags.
-// Uses linkifyjs for URL detection instead of linkify-html, avoiding a redundant
-// HTML re-parse (~25% pipeline speedup). Skips text inside tags like <a>, <pre>,
-// <code> etc. via collectTextNodes.
+// A bare url in running text, which the feed never wrapped in an anchor.
 export const linkifyUrls: DomTransform = (context) => {
   const cleanUrlFn = context.cleanUrlFn
 
   return (document) => {
-    // Walk from document (not documentElement) so linkedom fragment siblings are
-    // reachable. documentElement only points to the first root-level element.
+    // documentElement is only the first root-level element in a linkedom fragment.
     const textNodes = collectTextNodes(document, shouldSkipElement) as Array<ChildNode>
 
     for (const node of textNodes) {
@@ -47,9 +43,7 @@ export const linkifyUrls: DomTransform = (context) => {
           parts.push(document.createTextNode(text.slice(lastIndex, link.start)))
         }
 
-        // These anchors are minted long after cleanAnchorUrls, so they are the one link
-        // shape the caller's cleanUrlFn would otherwise never reach: including for the
-        // safety pass, which would judge a bare redirect wrapper by its own host.
+        // cleanAnchorUrls ran before these anchors existed, so this is their only cleaning pass.
         const cleaned = cleanUrlFn?.(link.href) ?? link.href
         const anchor = document.createElement('a')
         anchor.setAttribute('href', cleaned)

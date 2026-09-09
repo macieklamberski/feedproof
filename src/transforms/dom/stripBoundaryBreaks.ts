@@ -1,9 +1,8 @@
 import type { DomTransform } from '../../types.js'
 import { isBlockElement, isBr, isComment, isElement, isWhitespaceText } from '../../utils/dom.js'
 
-// Flow-content blocks where a boundary <br> is redundant. Structural
-// members (td, th, dt, dd) are omitted: emptying one (e.g. <td><br></td>)
-// lets stripEmptyTags delete it, misaligning tables / breaking dl pairs.
+// Adding td, th, dt or dd empties cells that stripEmptyTags then deletes, misaligning the table.
+// An emptied dt or dd breaks its dl pair the same way.
 const boundaryBreakSelectors = [
   'p',
   'h1',
@@ -39,10 +38,8 @@ const isVisuallyEmpty = (node: Node): boolean => {
   return true
 }
 
-// Caps the descent into nested edge wrappers. Real content never nests inline
-// wrappers anywhere near this deep. The bound keeps a pathologically nested
-// document from overflowing the call stack (the deepest wrappers keep their
-// boundary <br>s, which is invisible).
+// Without the cap a pathologically nested document overflows the call stack.
+// Real content never nests inline wrappers anywhere near this deep.
 const maxEdgeWrapperDepth = 200
 
 // Strip boundary <br>s from one edge of `container`, descending through inline
@@ -105,6 +102,7 @@ const stripEdge = (container: Node, trailing: boolean, depth = 0): void => {
   removePending()
 }
 
+// A <br> at the start or end of a block doubles the line break the block edge already renders.
 export const stripBoundaryBreaks: DomTransform = () => {
   return (document) => {
     for (const element of document.querySelectorAll(boundaryBreakSelectors.join(', '))) {

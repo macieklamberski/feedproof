@@ -20,6 +20,7 @@ const getTitleText = (document: Document, value: string): string => {
   return container.textContent ?? ''
 }
 
+// A body that opens with a heading repeating the item title shows the title twice in a reader.
 export const stripDuplicateTitleHeading: DomTransform = (context) => {
   const articleTitle = context.articleTitle?.trim() ?? ''
 

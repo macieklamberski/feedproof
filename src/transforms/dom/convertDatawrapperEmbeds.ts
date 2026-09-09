@@ -13,14 +13,8 @@ const getChartId = (url: string | null | undefined): string | undefined => {
   return url?.match(chartIdRegex)?.[1]
 }
 
-// Builds the chart as a linked <img>: the chart inline, its interactive version one click away,
-// so the downstream dimension and proxy passes treat it like any other image.
-//
-// Datawrapper publishes a complete static PNG render of every chart at `dwcdn.net/<id>/full.png`,
-// derivable from the chart id alone, and names that same file in the `<noscript>` of its own
-// embed, so this is the platform's declared fallback rather than a guess. It shows the chart
-// immediately whichever carrier the feed used: the script form shows nothing without JS, and the
-// iframe form renders only by loading a third-party frame the reader may not allow.
+// Datawrapper publishes a static PNG of every chart at dwcdn.net/<id>/full.png and names that
+// same file in the <noscript> of its own embed.
 const buildChartImage = (document: Document, chartId: string, alt?: string): HTMLElement => {
   return createLinkedImage(document, {
     src: `https://datawrapper.dwcdn.net/${chartId}/full.png`,
@@ -29,6 +23,8 @@ const buildChartImage = (document: Document, chartId: string, alt?: string): HTM
   })
 }
 
+// A Datawrapper chart as a script loader, an iframe or a bare link: the script needs JS, the
+// iframe a third-party frame a reader may block, and the link shows no chart at all.
 export const convertDatawrapperEmbeds: DomTransform = () => (document) => {
   // Responsive iframe (the dominant form): `<iframe src="dwcdn.net/<id>/<ver>/">`. The alt
   // comes from the iframe's title. Skip `#?secret=` preview URLs: the chart is unpublished,
@@ -37,6 +33,7 @@ export const convertDatawrapperEmbeds: DomTransform = () => (document) => {
     const src = iframe.getAttribute('src')
     const chartId = getChartId(src)
 
+    // A secret= preview url is an unpublished chart whose full.png 404s.
     if (!chartId || src?.includes('secret=')) {
       continue
     }
@@ -44,10 +41,8 @@ export const convertDatawrapperEmbeds: DomTransform = () => (document) => {
     iframe.replaceWith(buildChartImage(document, chartId, attr(iframe, 'title')))
   }
 
-  // Script / web-component form: `<div id="datawrapper-vis-<id>">` wrapping the embed.js loader
-  // and a `<noscript><img full.png>` fallback. The id segment carries the chart id, so this
-  // works whether or not the noscript survived. Replace the whole wrapper (loader script and
-  // fallback go with it). Take the alt from the fallback img when present.
+  // Script form: <div id="datawrapper-vis-<id>"> wrapping the embed.js loader and a
+  // <noscript><img full.png> fallback.
   for (const wrapper of document.querySelectorAll('[id^="datawrapper-vis-"]')) {
     const chartId = wrapper.id.match(visWrapperIdRegex)?.[1]
 
@@ -61,13 +56,11 @@ export const convertDatawrapperEmbeds: DomTransform = () => (document) => {
 
   // A `data-frame-src` chart embed (Texas Tribune / @newswire/frames) is already an <iframe> by
   // now: rebuildDeferredIframes materialized it upstream, so the iframe pass above handles it.
-
-  // Link form: some feeds ship only `<div class="datawrapper-embed"><a href="dwcdn/<id>/">`.
-  // The img-child guard keeps a converted image (also an `a[href*=dwcdn]`) from being
-  // reprocessed when it happens to sit inside a `datawrapper-embed` wrapper.
+  // Link form: some feeds ship only <div class="datawrapper-embed"><a href="dwcdn/<id>/">.
   for (const wrapper of document.querySelectorAll('.datawrapper-embed')) {
     const anchor = wrapper.querySelector('a[href*="datawrapper.dwcdn.net/"]')
 
+    // A converted image is itself an a[href*=dwcdn] and would be reminted without the img check.
     if (!anchor || anchor.querySelector('img')) {
       continue
     }

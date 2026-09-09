@@ -21,11 +21,8 @@ const leadingWhitespaceRegex = /^\s+/
 // U+202F, U+205F, U+3000, …) is fixed-width and renders as indentation.
 const nonCollapsingWhitespaceRegex = /[^ \t\n\f\r]/
 
-// Some feeds fake indentation by prefixing block text with non-breaking spaces
-// (e.g. `<p>&nbsp;&nbsp;&nbsp;Lorem…`). Ordinary leading whitespace collapses at
-// the start of a block, so it renders no indent and is left alone. Non-collapsing
-// spaces (nbsp and the other fixed-width Unicode spaces) do render as a hard left
-// indent, so the leading run is stripped whenever it contains one.
+// Block text prefixed with &nbsp; runs to fake an indent, which renders as a hard left margin.
+// Ordinary leading whitespace collapses at the start of a block and renders no indent.
 export const stripLeadingIndentation: DomTransform = () => {
   return (document) => {
     for (const block of document.querySelectorAll(targetSelector)) {
@@ -37,9 +34,7 @@ export const stripLeadingIndentation: DomTransform = () => {
         node = node.firstChild
       }
 
-      // Consecutive entities (`&nbsp;&nbsp;`) parse to adjacent text nodes, so the
-      // leading run can span several. Walk them, accumulating the combined leading
-      // whitespace, until a node carries real content or the siblings end.
+      // Consecutive entities parse to adjacent text nodes, so one node never holds the whole run.
       let combinedLeading = ''
       const whitespaceNodes = []
       let boundaryNode = null

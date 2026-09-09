@@ -1,8 +1,6 @@
 import type { DomTransform } from '../../types.js'
 
-// Clean anchor hrefs with the caller-provided cleanUrlFn: unwrapping redirect
-// wrappers and stripping tracking params is delegated to the injected
-// function (e.g. urlpurify's cleanUrl). Skipped when no function is provided.
+// Anchor hrefs as the publisher pasted them, redirect wrappers and tracking params included.
 export const cleanAnchorUrls: DomTransform = (context) => {
   return (document) => {
     const cleanUrlFn = context.cleanUrlFn

@@ -6,9 +6,9 @@ import { enclosureMarker } from './injectEnclosures.js'
 const existingMediaSelector =
   'audio[src], video[src], iframe[src], source[src], img[src], [data-embed-src]'
 
-// Audio/video/embed have no scaled variants, and their identity often lives in the
-// query (podcast proxies like `…/play.mp3?url={episode}`), so the image key's
-// query-drop would collapse distinct episodes. Match them on the exact cleaned URL.
+// The image key drops the query, which is what tells podcast proxy episodes apart.
+// A podcast proxy's audio url is `…/play.mp3?url={episode}`, so its identity lives in the query.
+// Audio, video and embeds have no scaled variants.
 const buildMediaKey = (element: Element, cleanUrlFn?: CleanUrlFn): string => {
   const src = element.getAttribute('src') ?? element.getAttribute('data-embed-src') ?? ''
 
@@ -19,9 +19,7 @@ const buildMediaKey = (element: Element, cleanUrlFn?: CleanUrlFn): string => {
   return cleanUrlFn ? cleanUrlFn(src) : src
 }
 
-// Removes an injected enclosure media element that duplicates inline content:
-// an image already present (in any size variant) or an audio/video/embed with the
-// same URL. Runs after injectEnclosures, which marks the elements it injects.
+// An injected enclosure the body already carries inline shows the same media twice.
 export const stripDuplicateEnclosures: DomTransform = (context) => (document) => {
   // Look for injected enclosures first (see walkElements). When there are none:
   // the common case: skip the media scan and fingerprinting altogether.

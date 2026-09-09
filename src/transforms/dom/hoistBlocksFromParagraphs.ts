@@ -10,12 +10,6 @@ const hasRenderableContent = (element: Element): boolean => {
   return hasText(element) || element.querySelector(mediaSelector) !== null
 }
 
-// Moves a block-level element out of the paragraph enclosing it. A block cannot live
-// inside a <p>: a browser reparses `<p>x<div></div>y</p>` into a split paragraph, a
-// hoisted block, bare text where `y` was, and a stray empty paragraph. The split is done
-// here instead, so the emitted markup already matches the tree a browser would build. The
-// chain of inline ancestors up to the paragraph is cloned around the block, the block
-// lands between the halves, and a half with nothing left to render is dropped.
 const hoistBlockFromParagraph = (block: Element): void => {
   const paragraph = block.parentElement?.closest('p')
 
@@ -70,11 +64,7 @@ const hoistBlockFromParagraph = (block: Element): void => {
   }
 }
 
-// Runs last so it covers every block an earlier transform inserted, whatever the route: a
-// placeholder replacing an inline iframe, a <pre> promoted around a loose <code>, a
-// wrapper built around a table. Those transforms move elements through the DOM API, which
-// enforces no nesting rules, so a block can end up inside a <p> that only a browser would
-// later take apart.
+// A block inside a <p>: a browser reparses it into a split paragraph plus a stray empty one.
 export const hoistBlocksFromParagraphs: DomTransform = () => {
   return (document) => {
     // Document order puts an outer block before the inner ones it holds, so hoisting it

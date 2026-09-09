@@ -4,31 +4,29 @@ import { attr, walkElements } from '../../utils/dom.js'
 import vocabularies from './unwrapEmojiImages.json' with { type: 'json' }
 import { type EmojiPlatform, emojiPlatforms } from './unwrapEmojiImages.platforms.js'
 
-// `title` is deliberately absent: XenForo's is `Big grin    :D`, phpBB's the English `Smile`,
-// Khoros' localized. All three are prose where a glyph belongs.
+// The title attribute is prose on every platform, never a glyph, so it is not read.
+// XenForo's is `Big grin    :D`, phpBB's the English `Smile`, Khoros' localized.
 type EmojiImage = {
   src: string
   alt: string | undefined
   shortname: string | undefined
   hasKnownVocabulary: boolean
-  // Evidence that does not come from a directory name. A smilie directory is matched loosely
-  // on purpose, so a banner sitting in one must not be marked when it fails to resolve.
   isNamedEmoji: boolean
 }
 
 const emojiSequenceParts = [
-  '\\p{Extended_Pictographic}', // The pictures themselves.
-  '\\p{Emoji_Modifier}', // Skin tones.
-  '\\p{Regional_Indicator}', // The pair of letters that makes a flag.
-  '[\\u200d\\ufe0f\\u20e3#*0-9\\s]', // Joiner, variation selector, keycap mark and its bases.
-  '[\\u{e0020}-\\u{e007f}]', // Tag characters, which spell out a subdivision flag.
+  '\\p{Extended_Pictographic}', // The pictures themselves
+  '\\p{Emoji_Modifier}', // Skin tones
+  '\\p{Regional_Indicator}', // The pair of letters that makes a flag
+  '[\\u200d\\ufe0f\\u20e3#*0-9\\s]', // Joiner, variation selector, keycap mark and its bases
+  '[\\u{e0020}-\\u{e007f}]', // Tag characters, which spell out a subdivision flag
 ]
 const emojiSequenceRegex = new RegExp(`^(?:${emojiSequenceParts.join('|')})+$`, 'u')
 
 const emojiPictureParts = [
-  '\\p{Extended_Pictographic}', // The pictures themselves.
-  '\\p{Regional_Indicator}', // The pair of letters that makes a flag.
-  '[0-9#*]\\ufe0f?\\u20e3', // A keycap: base, optional selector, enclosing mark.
+  '\\p{Extended_Pictographic}', // The pictures themselves
+  '\\p{Regional_Indicator}', // The pair of letters that makes a flag
+  '[0-9#*]\\ufe0f?\\u20e3', // A keycap: base, optional selector, enclosing mark
 ]
 const emojiPictureRegex = new RegExp(emojiPictureParts.join('|'), 'u')
 
@@ -38,9 +36,8 @@ const isEmojiShaped = (text: string): boolean => {
 
 const shortcodes = toMap(vocabularies.shortcodes)
 
-// Two platforms shipping the same filename is fine while they agree on what it depicts. When
-// they disagree the filename cannot be resolved without knowing which engine produced it, and
-// the markers are many-to-many with engines, so the name has to be left unmapped in both.
+// One name table across every platform, refusing a filename two engines draw differently, since
+// nothing in the markup says which engine produced a given image.
 export const mergeEmojiNames = (platforms: Array<EmojiPlatform>): Record<string, string> => {
   const merged: Record<string, string> = {}
 
@@ -71,23 +68,22 @@ const shortcodePathSegments = [
   ...new Set(emojiPlatforms.flatMap((platform) => platform.paths ?? [])),
 ]
 
-// Read for a glyph alt only, never a shortcode: platforms using this class have namespaces of
-// their own (Discourse's `:slight_smile:`), so the shared table must not be reached through it.
+// Folding this into shortcodeClasses would send Discourse's own shortcode namespace to the table.
 const genericEmojiClasses = [
-  'emoji', // Discourse, Vanilla, NodeBB, newer WordPress.
+  'emoji', // Discourse, Vanilla, NodeBB, newer WordPress
 ]
 
 // Sets with no Unicode equivalent at all, recognized so they can be marked, not converted.
 // Nothing here ever resolves to a glyph.
 const customEmojiClasses = [
-  'emojione', // Mastodon.
-  'custom-emoji', // Mastodon, newer.
+  'emojione', // Mastodon
+  'custom-emoji', // Mastodon, newer
 ]
 const customEmojiPathSegments = [
-  '/custom_emojis/', // Mastodon.
-  'sinaimg.cn/m/emoticon/', // Weibo.
-  'stat100.ameba.jp/blog/ucs/img/char/', // Ameba's built-in set, also served from c.stat100.
-  'emoji.ameba.jp/img/', // Ameba emoji uploaded by the blog's author.
+  '/custom_emojis/', // Mastodon
+  'sinaimg.cn/m/emoticon/', // Weibo
+  'stat100.ameba.jp/blog/ucs/img/char/', // Ameba's built-in set, also served from c.stat100
+  'emoji.ameba.jp/img/', // Ameba emoji uploaded by the blog's author
 ]
 
 // Left on an emoji image that keeps its picture, so the reader can size it like text and keep
@@ -97,7 +93,7 @@ export const emojiImageAttribute = 'data-emoji'
 // Wrappers holding a standard emoji as the fallback. A reader cannot fetch the custom asset,
 // and a sanitizer dropping unknown elements would take the fallback with it.
 const customEmojiTags = [
-  'tg-emoji', // Telegram.
+  'tg-emoji', // Telegram
 ]
 
 // Applied to a filename in turn: the query and hash split, then the stock-file, icon-set and
@@ -106,8 +102,7 @@ const queryOrHashRegex = /[?#]/
 const namePrefixRegex = /^(?:default_|face-|smiley-|sf-)/
 const nameVariantRegex = /@[0-9]+x$/
 
-// A short `data:` URI renders nothing in a reader: it is the 1x1 GIF a CSS sprite sheet sits
-// behind, and no site CSS is loaded. The bound keeps real inlined PNGs out of this case.
+// A 1x1 sprite GIF data URI is under 256 bytes, and a real inlined PNG is not.
 const rendersNothing = (src: string): boolean => {
   return src.startsWith('data:') && src.length <= 256
 }
@@ -120,9 +115,8 @@ const getFileStem = (src: string): string => {
   return extension === -1 ? name : name.slice(0, extension)
 }
 
-// Read for any engine the tables already cover, not one in particular: WoltLab happens to name
-// its whole default set this way. The length bound is also the safety check, since five hex
-// digits max is 0xFFFFF, below the 0x10FFFF where fromCodePoint throws.
+// Five hex digits tops out at 0xFFFFF, so fromCodePoint never sees a value that throws.
+// WoltLab names its whole default set by codepoint.
 const codepointNameRegex = /^[0-9a-f]{4,5}(?:[-_][0-9a-f]{4,5})*$/
 const codepointSeparatorRegex = /[-_]/
 
@@ -134,7 +128,7 @@ const glyphFromCodepoints = (stem: string): string | undefined => {
   const codepoints = stem.split(codepointSeparatorRegex).map((part) => Number.parseInt(part, 16))
   const glyph = String.fromCodePoint(...codepoints)
 
-  // Hex-shaped is not emoji-shaped: `2000` is a space and `dead` a lone surrogate.
+  // A hex-shaped stem like `2000` or `dead` decodes to a space or a lone surrogate.
   return isEmojiShaped(glyph) ? glyph : undefined
 }
 
@@ -146,8 +140,7 @@ const glyphFromVocabularies = (token: string | undefined, src: string): string |
     return byShortcode
   }
 
-  // A `data:` URI has no filename. Base64 may contain `/`, so a stem taken from one is a slice
-  // of the payload, which can match a real name by accident.
+  // Base64 can contain `/`, so a stem taken from a data URI can match a real name by accident.
   if (src.startsWith('data:')) {
     return
   }
@@ -206,16 +199,10 @@ const resolveGlyph = (image: EmojiImage): string | undefined => {
   return glyph ?? mapped
 }
 
-// The literal token the author typed, for a sprite that paints nothing even when it loads. A
-// picture that merely fails to load is left alone like any other dead image, and turning a
-// working smilie into text would be worse still, so a CDN image with no usable alt keeps its
-// picture. Needs no isNamedEmoji bar: nothing reaches here without a data-URI sprite src.
 const resolveFallbackText = (image: EmojiImage): string | undefined => {
   return rendersNothing(image.src) ? (image.shortname ?? image.alt) : undefined
 }
 
-// Marked like an emoji image that keeps its picture: both are things a reader may want to style
-// as emoji rather than as prose.
 const wrapFallbackText = (document: Document, text: string): Element => {
   const span = document.createElement('span')
 
@@ -225,6 +212,7 @@ const wrapFallbackText = (document: Document, text: string): Element => {
   return span
 }
 
+// Forum smilie images and CSS-sprite emoji, which render oversized or as nothing without site CSS.
 export const unwrapEmojiImages: DomTransform = (context) => {
   return (document) => {
     walkElements(document, (element) => {

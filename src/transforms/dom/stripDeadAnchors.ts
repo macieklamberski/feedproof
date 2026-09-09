@@ -2,11 +2,8 @@ import type { DomTransform } from '../../types.js'
 
 const javascriptSchemeRegex = /^javascript:/i
 
-// Some feeds carry anchors whose href has no navigation target: empty,
-// fragment-only, or javascript: pseudo-protocol left over from interactive
-// widgets. Once the surrounding script context is gone, the link looks
-// clickable but does nothing. This unwraps those anchors so their text
-// stays visible and any URLs inside become eligible for `linkifyUrls`.
+// An anchor with an empty, bare # or javascript: href looks clickable and goes nowhere.
+// A javascript: href is left over from an interactive widget whose script context is gone.
 export const stripDeadAnchors: DomTransform = () => {
   return (document) => {
     const anchors = document.querySelectorAll('a')
@@ -14,8 +11,7 @@ export const stripDeadAnchors: DomTransform = () => {
     for (const anchor of anchors) {
       const href = anchor.getAttribute('href')
 
-      // Anchors without an href attribute are kept: they can be named-anchor
-      // targets (`<a id="top">`, `<a name="top">`) used for in-page navigation.
+      // An anchor with no href is a named target other links scroll to.
       if (href === null) {
         continue
       }
@@ -28,10 +24,7 @@ export const stripDeadAnchors: DomTransform = () => {
         continue
       }
 
-      // Even with a dead href, anchors carrying `id` or `name` are still
-      // navigation targets: other elements link to them via `#fragment` or
-      // ARIA attributes (`aria-controls`, `aria-labelledby`). Unwrapping
-      // destroys the target and breaks all those references.
+      // Unwrapping an anchor with an id or name breaks the #fragment and aria-* links to it.
       if (anchor.hasAttribute('id') || anchor.hasAttribute('name')) {
         continue
       }

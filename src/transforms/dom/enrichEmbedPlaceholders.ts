@@ -5,6 +5,7 @@ import {
   updateEmbedPlaceholder,
 } from '../../utils/widgets.js'
 
+// An embed placeholder carrying only the provider and id the feed markup gave it.
 export const enrichEmbedPlaceholders: DomTransform = (context) => {
   const { enrichEmbedFn } = context
 
@@ -19,9 +20,7 @@ export const enrichEmbedPlaceholders: DomTransform = (context) => {
       id: element.getAttribute('data-embed-id') ?? '',
     }),
     enrichEmbedFn,
-    // A payload arrives from a platform's API rather than from the feed, and it overwrites what
-    // the resolver read, so its urls go through the same preparation as a resolver's: resolved
-    // against the base, the canonical one cleaned.
+    // The payload's urls arrive from the platform API unresolved and uncleaned.
     (element, data) => {
       updateEmbedPlaceholder(element, prepareEmbedMetadata(data, context))
     },
