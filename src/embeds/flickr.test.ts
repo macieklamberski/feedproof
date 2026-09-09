@@ -7,6 +7,8 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
   const extract = resolverExtractor(parseHtml, flickrEmbedResolver)
 
   describe('the slideshow object and embed pair', () => {
+    // The NSID spelling of the owner names nobody, so it fills no author, where the path
+    // alias in the case below does.
     it('should map the dead player onto the album the flashvars name', async () => {
       const value = html`
         <object width="400" height="300">
@@ -50,6 +52,7 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
         id: 'bees/72157624341',
         src: 'https://embedr.flickr.com/photosets/72157624341?width=640&height=480',
         url: 'https://www.flickr.com/photos/bees/sets/72157624341',
+        author: 'bees',
         width: 640,
         height: 480,
       }
@@ -71,6 +74,7 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
         id: 'bees/72157624341',
         src: 'https://embedr.flickr.com/photosets/72157624341?width=400&height=300',
         url: 'https://www.flickr.com/photos/bees/sets/72157624341',
+        author: 'bees',
         width: 400,
         height: 300,
       }
@@ -280,6 +284,7 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
         id: 'photostreams/bees',
         src: 'https://www.flickr.com/photos/bees/player?width=400&height=300',
         url: 'https://www.flickr.com/photos/bees/',
+        author: 'bees',
         width: 400,
         height: 300,
       }
@@ -351,6 +356,7 @@ describeForEachParser('flickrEmbedResolver', (parseHtml) => {
         id: 'bees/72157623516208778',
         src: 'https://embedr.flickr.com/photosets/72157623516208778?width=400&height=300',
         url: 'https://www.flickr.com/photos/bees/sets/72157623516208778',
+        author: 'bees',
         width: 400,
         height: 300,
       }
