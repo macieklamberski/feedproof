@@ -14,34 +14,30 @@ const provider = 'youtube'
 
 const safeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
 
-// Some feeds (Steam news) leak the opening quote of the source `[previewyoutube="id]`
-// bbcode into the embed src, so it arrives as `/embed/"{id}`: the quote reaches the id
-// as a literal `"` (from a param) or percent-encoded `%22` (from a path segment). Strip a
-// leading stray quote so the real 11-char id still resolves instead of the video being
-// dropped to the generic iframe handler.
+// Steam feeds leak a bbcode quote into the src as /embed/"{id}, and the video drops without it.
+// The quote reaches the id as a literal `"` from a param or percent-encoded `%22` from a path
+// segment.
 const strayLeadingQuoteRegex = /^(?:%22|")/
 
-// `videoseries` (playlist embeds) and `live_stream` (channel live embeds) are YouTube embed
-// path-words, not video ids, but each is coincidentally 11 valid id chars, so it passes
-// safeVideoIdRegex. Excluded here so extractVideoId never mistakes one for a video (a bogus
-// watch url and thumbnail). youtubeResolveEmbed handles them as playlist/live embeds below.
+// `videoseries` and `live_stream` are YouTube embed path words, and each is eleven legal id
+// characters.
 const nonVideoIds = new Set(['videoseries', 'live_stream'])
 
-// Segments that name a route rather than a video. A url can stack two of them: `/embed/watch?v=`
-// and `/embed/shorts/{id}` are authoring mistakes that YouTube answers with a player page which
-// cues nothing, and each still names the video after the stack.
+// A url can stack two of these: `/embed/watch?v=` and `/embed/shorts/{id}` are authoring mistakes
+// that YouTube answers with a player page which cues nothing, and each still names the video
+// after the stack.
 const pathWords = new Set([
   'shorts',
   'embed',
   'live',
   'watch',
-  'video', // The old share url; redirects to /watch today.
-  'v', // The Flash player path, shipped in pre-2010 object/embed markup.
-  'e', // A short-lived embed alias from the same era.
-  'w', // A watch alias of the same era; still serves the video today.
+  'video', // The old share url; redirects to /watch today
+  'v', // The Flash player path, shipped in pre-2010 object/embed markup
+  'e', // A short-lived embed alias from the same era
+  'w', // A watch alias of the same era; still serves the video today
   'watch_popup',
   'apiplayer', // The Flash-era chromeless players. Both endpoints are dead, and both
-  'get_video_info', // name the video in the query rather than the path.
+  'get_video_info', // name the video in the query rather than the path
 ])
 
 const queryIdParams = ['v', 'vi', 'video_id']
@@ -62,11 +58,8 @@ export const isVideoId = (value: string): boolean => {
   return safeVideoIdRegex.test(value) && !nonVideoIds.has(value)
 }
 
-// hqdefault always exists for a video, so it's the safe default. Higher-res variants
-// (maxresdefault, sddefault) give a sharper poster but only exist for some videos, so
-// we can't pick them blindly.
-// TODO: detect and prefer a higher-res thumbnail when present. The best available
-// resolution varies per video, so it needs a probe (HEAD request) rather than a guess.
+// hqdefault exists for every video, and maxresdefault and sddefault only for some.
+// TODO: prefer a higher-res thumbnail where one exists, which needs a HEAD probe per video.
 export const composeThumbnailUrl = (videoId: string): string => {
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
 }
@@ -105,9 +98,6 @@ export const extractVideoId = (link: string): string | undefined => {
     return
   }
 
-  // Every place a url can name its video, in the order the platform's own forms prefer. Each is
-  // checked on its own, so a segment that looks like an id but is not, as a channel name does,
-  // falls through to the next rather than ending the search.
   const candidates = [
     readPathId(url),
     ...queryIdParams.map((param) => url.searchParams.get(param)),
@@ -115,16 +105,12 @@ export const extractVideoId = (link: string): string | undefined => {
     url.hash.match(gridFragmentIdRegex)?.[1],
   ]
 
-  return (
-    candidates
-      // The Flash player wrote `/v/{id}&hl=en_US&fs=1`, so the id is the segment's head.
-      .map((candidate) =>
-        candidate
-          ? splitStrayParams(candidate.replace(strayLeadingQuoteRegex, '')).head
-          : undefined,
-      )
-      .find((candidate) => !!candidate && isVideoId(candidate))
-  )
+  // The Flash player wrote `/v/{id}&hl=en_US&fs=1`, so the id is the segment's head.
+  return candidates
+    .map((candidate) =>
+      candidate ? splitStrayParams(candidate.replace(strayLeadingQuoteRegex, '')).head : undefined,
+    )
+    .find((candidate) => !!candidate && isVideoId(candidate))
 }
 
 // The player url for a caller holding a url nothing has checked: a page builder stores whatever
@@ -136,10 +122,8 @@ export const readYoutubeEmbedSrc = (link: string): string | undefined => {
   return videoId ? composeEmbedUrl(videoId) : undefined
 }
 
-// Parameters that change what the player shows; everything else the publisher wrote, autoplay,
-// `rel`, `si` and other tracking, is dropped with the rest of the original query. A clip embed
-// needs both `clip` and `clipt`, and `loop` does nothing without `playlist`, which in the wild
-// is almost always the video's own id: YouTube's documented way to loop a single video.
+// A clip embed needs both `clip` and `clipt`, and `loop` does nothing without `playlist`, which in
+// the wild is almost always the video's own id: YouTube's documented way to loop a single video.
 export const youtubeEmbedParams = [
   'start',
   'end',
@@ -155,29 +139,16 @@ export const youtubeEmbedParams = [
 // length/prefix one: it only keeps a stray value out of the rebuilt url and the enrichment key.
 const safePlaylistChannelIdRegex = /^[a-zA-Z0-9_-]+$/
 
-// The Flash-era playlist player wrote `youtube.com/p/{id}`, where the id is the same playlist
-// the modern url spells as `list=PL{id}`: 262 of the 263 distinct ids in the corpus are exactly
-// 16 uppercase hex characters, and the odd one is a bare `/p/` naming nothing. Probed 2026-09-06:
-// `playlist?list=PL7BE4DDAC0A0D31AF` opens the playlist the specimen's post is about, while the
-// same id without the prefix 404s.
+// The Flash-era playlist player wrote `youtube.com/p/{id}`, where the id is the same playlist the
+// modern url spells as `list=PL{id}`.
 const legacyPlaylistIdRegex = /^[0-9A-F]{16}$/
 
-// The shape of the frame, not of the video. YouTube serves every embed through the same
-// landscape player and fits the clip inside it, so a vertical Short gets the same box as a film:
-// checked 2026-09-07 on `Kp5HTcGZsx0`, whose original-aspect still (`oardefault.jpg`) is
-// 1080x1920 while its `maxresdefault.jpg` and `hq720.jpg` are both 1280x720 and oEmbed
-// recommends 200x113 for it. That is why the ratio outranks the carrier: whatever box a
-// publisher wrote, the player they get is 16:9, and a portrait box would reserve height the
-// frame never fills.
+// A Short gets the same landscape player as a film, so a carrier's portrait box never fills.
 const playerRatio = '16/9'
 
-// A playlist or channel live embed is not a single video: it has no video id, no single poster
-// and no `watch?v=` page. Each keeps a working src and a canonical url, posterless, and its
-// list, channel or username becomes the enrichment key (a playlist resolves title and poster
-// through YouTube's keyless oEmbed, a channel through the Data API). Each key names the route it
-// addresses, because the three id spaces overlap: `PBS` is a legal playlist id, channel id and
-// legacy username at once, and enrichment receives the provider and the id alone. A video keeps
-// its bare eleven characters.
+// `PBS` is a legal playlist id, channel id and legacy username at once, so each key names its
+// route. A playlist resolves title and poster through YouTube's keyless oEmbed, a channel through
+// the Data API.
 const composeListEmbed = (list: string): EmbedResolverResult => {
   return {
     provider,
@@ -188,8 +159,7 @@ const composeListEmbed = (list: string): EmbedResolverResult => {
   }
 }
 
-// `listType=user_uploads` takes a legacy username in place of a playlist id, so the src stays
-// in the form the player understands rather than becoming a videoseries url.
+// `listType=user_uploads` takes a legacy username in place of a playlist id.
 const composeUploadsEmbed = (user: string): EmbedResolverResult => {
   return {
     provider,
@@ -210,9 +180,6 @@ const composeChannelEmbed = (channel: string): EmbedResolverResult => {
   }
 }
 
-// The playlist and channel embeds, which name their content in the query rather than in a video
-// id. `/embed/videoseries?list=` and the bare `/embed/?list=` some WordPress plugins emit are the
-// same playlist spelled two ways.
 const resolveCollectionEmbed = (
   parsed: URL,
   segments: Array<string>,
@@ -227,6 +194,8 @@ const resolveCollectionEmbed = (
       : undefined
   }
 
+  // `/embed/videoseries?list=` and the bare `/embed/?list=` some WordPress plugins emit are the
+  // same playlist spelled two ways.
   if (segments[1] !== 'videoseries' && segments.length !== 1) {
     return
   }
@@ -240,11 +209,7 @@ const resolveCollectionEmbed = (
   return listType === 'user_uploads' ? composeUploadsEmbed(list) : composeListEmbed(list)
 }
 
-// The carrier's `title` is not read. Only 37% of the 113,837 YouTube carriers in the corpus state
-// one at all, and 43% of those are the player's own label instead of the video's name, so the
-// attribute names the video for about a fifth of the embeds and misnames it for a sixth. The label
-// is localised, so nothing separates the two on the string alone. The title comes from enrichment,
-// which is where the other four fifths already got it.
+// The carrier's title is not read: it is the player's own localised label as often as a name.
 export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url, placeholderBaseUrl)
   const segments = parsed ? getPathSegments(parsed) : []
@@ -284,24 +249,21 @@ export const youtubeResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 }
 
+// A YouTube player iframe, a frame of a watch, shorts or playlist page, or the Flash player.
 export const youtubeIframeEmbedResolver = createUrlEmbedResolver(
   youtubeHosts,
   youtubeResolveEmbed,
   { preferResolverSize: true },
 )
 
-// AMP's own YouTube element. It renders nothing without the AMP runtime, and the id it names in
-// `data-videoid` is the entire embed. AMP hands player parameters to the iframe as
-// `data-param-{name}`, which are the same query parameters an ordinary embed url spells, so the
-// same set is carried over and the rest is dropped the same way.
+// AMP's amp-youtube names the video in data-videoid and renders nothing without the AMP runtime.
 export const youtubeAmpEmbedResolver = createMarkupEmbedResolver(
   'amp-youtube[data-videoid], amp-youtube[data-live-channelid]',
   (element) => {
     const videoId = attr(element, 'data-videoid')
 
     // `data-live-channelid` is AMP's spelling of the channel live embed, and the element states
-    // one or the other. A malformed video id is refused rather than falling back to the channel:
-    // the element named a video, so the channel would be a guess at what was meant.
+    // one or the other.
     if (!videoId) {
       const channel = attr(element, 'data-live-channelid')
 
@@ -316,6 +278,8 @@ export const youtubeAmpEmbedResolver = createMarkupEmbedResolver(
 
     const params: Record<string, string> = {}
 
+    // AMP hands player parameters to the iframe as `data-param-{name}`, which are the same query
+    // parameters an ordinary embed url spells.
     for (const name of youtubeEmbedParams) {
       const value = attr(element, `data-param-${name}`)
 

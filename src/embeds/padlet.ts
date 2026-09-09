@@ -2,16 +2,8 @@ import type { EmbedResolverResult } from '../types.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// A board id is a run of lowercase letters and digits, twelve or sixteen characters in the wild.
-// The length is not checked: both routes below are exact and take an id and nothing else, so a
-// bound would only refuse the next length Padlet mints. It was not keeping site pages out either,
-// which is the job it looked like it was doing: `padlet.com/embed/dashboard` is nine characters
-// and resolved under the old bound. Nothing needs keeping out, because Padlet serves nothing but
-// a board behind `/embed/` — checked 2026-09-07, `dashboard`, `gallery`, `settings`, `help` and
-// `about` all answer 404 at nine bytes there, the same as an invented id, while the site's own
-// pages live at the first path segment this resolver never reads. What the alphabet does do is
-// exclude the dot, which is what keeps a media file on the host playable, since the enclosure
-// probe offers every attachment a feed carries to this resolver.
+// Padlet serves nothing but a board behind /embed/: dashboard and its siblings answer 404 there.
+// The enclosure probe offers every attachment a feed carries to this resolver.
 const safeBoardIdRegex = /^[a-z0-9]+$/
 
 const padletHosts = ['padlet.com']
@@ -22,11 +14,6 @@ const previewPathRegex = /^\/padlets\/([^/]+)\/embeds\/preview_embed\/?$/
 // repeats that; the preview form sizes itself `height: 100%` and so states nothing usable.
 const boardHeight = 608
 
-// The social preview is addressed by the board id alone: a real board answers a 240 KB render,
-// a fabricated id a 7 KB placeholder, both 200 `image/jpeg` (2026-09-06). The embed route itself
-// discriminates, 200 real and 404 fabricated. The board's page is `padlet.com/{user}/{slug}-{id}`
-// and neither half is in the embed url, so no page url is minted. The slideshow view of a board
-// is a different presentation and is left as the publisher wrote it.
 export const padletResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, padletHosts)
   const boardId =
@@ -36,6 +23,9 @@ export const padletResolveEmbed = (url: string): EmbedResolverResult | undefined
     return
   }
 
+  // The social preview answers 200 image/jpeg for any id, a placeholder for a fabricated one, and
+  // the embed route 404s it. The board page is padlet.com/{user}/{slug}-{id}, and neither half is
+  // in the embed url.
   return {
     provider: 'padlet',
     id: boardId,
@@ -45,4 +35,5 @@ export const padletResolveEmbed = (url: string): EmbedResolverResult | undefined
   }
 }
 
+// The padlet.com/embed/{board} iframe, and its preview form, which sizes itself height: 100%.
 export const padletEmbedResolver = createUrlEmbedResolver(padletHosts, padletResolveEmbed)

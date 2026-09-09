@@ -3,14 +3,9 @@ import { findConfigScript, formatRatio } from '../utils/dom.js'
 import { decodeOrKeep } from '../utils/urls.js'
 import { createMarkupEmbedResolver } from '../utils/widgets.js'
 
-// The config the inline script hands the loader, in one of its two spellings:
-//
-//   $bp("Brid_19464537", {"id":"26602","width":"540","height":"300","video":"755958"});
-//   _bp.push({ "div": "Brid_1178…", "obj": {"id":"23442","title":"FEAR%20STREET","video":"820211",
-//              "width":"16","height":"9"}});
-//
-// `id` is the player, `video` the video, and the title is percent-encoded. The fields are read
-// from the text after the div's own id, so a script holding several configs yields the right one.
+// The inline script's config comes in two spellings, `$bp("Brid_{n}", {...})` and
+// `_bp.push({"div": "Brid_{n}", "obj": {...}})`. `id` is the player, `video` the video, and the
+// title is percent-encoded.
 const containerIdRegex = /Brid_[\w-]+/g
 const playerIdRegex = /"id"\s*:\s*"?(\d+)"?/
 const videoIdRegex = /"video"\s*:\s*"?(\d+)"?/
@@ -46,24 +41,14 @@ const readEmbedSize = (config: string): Pick<EmbedResolverResult, 'width' | 'hei
   return readSize(config.match(widthRegex)?.[1], config.match(heightRegex)?.[1])
 }
 
-// Brid.tv (now TargetVideo) embeds a player as an empty `<div class="brid" id="Brid_…">`, an
-// inline script naming the player and the video, and the loader script. Nothing runs in a
-// reader, so the div dies as an empty tag and the video is deleted outright: 193 census feeds
-// carry the loader and none holds a Brid iframe. `services.brid.tv/services/iframe/video/{video}/
-// {player}` is the page the loader's own code recognises as its iframe player, and it answers
-// with the player for 16 of 20 corpus pairs and an error page for an invented video (checked
-// 2026-09-06). A retired player id falls back to the partner's current one, a retired partner
-// does not. The poster lives under a partner id the markup never names, so it is left to
-// enrichment.
-//
-// The div's own `style="width: 16; height: 9;"` mirrors the config, ratio spelling included. It
-// is a shape rather than a box and the carrier tier reads it as one, so nothing is stated here
-// when the config names no size.
+// Brid.tv embeds a player as an empty div plus an inline config script no reader runs.
+// The poster lives under a partner id the markup never names.
 export const bridEmbedResolver = createMarkupEmbedResolver(
   'div.brid[id^="Brid_"]',
   (element) => {
     const script = findConfigScript(element)
     const text = script?.textContent ?? ''
+    // Read after the div's own id, so a script holding several configs yields the right one.
     const config = text.slice(text.indexOf(element.id))
     const playerId = config.match(playerIdRegex)?.[1]
     const videoId = config.match(videoIdRegex)?.[1]
@@ -72,9 +57,7 @@ export const bridEmbedResolver = createMarkupEmbedResolver(
       return
     }
 
-    // One script often configures every container on the page, so it is dropped only once it
-    // has nothing left to say. Removing it on the first container took the other containers'
-    // configs with it and deleted their videos.
+    // Removed only once it has nothing left to say: one script often configures every container.
     if ((text.match(containerIdRegex)?.length ?? 0) < 2) {
       script?.remove()
     }
@@ -87,6 +70,9 @@ export const bridEmbedResolver = createMarkupEmbedResolver(
       // id, which is the order every other two-part id in the tree uses. The minted url keeps
       // Brid's own `/video/{video}/{player}` order, which is the platform's, not ours.
       id: `${playerId}/${videoId}`,
+      // The url keeps Brid's own video-then-player order, the reverse of the id.
+      // It is the page the loader's own code opens as its iframe player. A retired player id falls
+      // back to the partner's current one, and a retired partner does not.
       src: `https://services.brid.tv/services/iframe/video/${videoId}/${playerId}`,
       title: decodeOrKeep(title),
       ...readEmbedSize(config),

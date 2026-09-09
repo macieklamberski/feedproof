@@ -5,17 +5,12 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeIdRegex = /^\d+$/
 
+// PowerPress, Blubrry's WordPress plugin, renders the same player on the publisher's own domain
+// as `{site}/?powerpress_embed={postId}-{feed}`, with no Blubrry host in the url at all.
 const blubrryHosts = ['blubrry.com']
 
-// The player is a fixed height on a fluid width. Blubrry publishes no oEmbed, so this and the
-// provider tag are what the resolver adds.
-//
-// Measured 2026-09-07 in Chrome against `player.blubrry.com/id/153989314/` and the `?media_url=`
-// form: 164 at 320, 640 and 1280 wide, and still 164 inside a 100-tall frame. Publishers write one
-// more than that, and nearly all of them write something: of 13,604 `player.blubrry.com` iframes
-// across 305 corpus feeds, 13,001 state 165, 311 state 138, and exactly one states no height at
-// all. This number reaches that carrier and every one stating a width and no height, since a lone
-// carrier width does not outrank a resolver's size.
+// The player is 164 tall, one less than the 165 publishers write.
+// A fixed height on a fluid width, and still 164 inside a 100-tall frame.
 const playerHeight = 164
 
 // Two forms: `/id/{episodeId}/` names the episode, while `/?media_url={mp3}` names the file
@@ -36,12 +31,11 @@ export const extractBlubrryEmbed = (link: string): string | undefined => {
 
   const mediaUrl = parsed.searchParams.get('media_url')
 
+  // Not promoted to a native audio: a provider's player iframe stays an embed placeholder.
   return mediaUrl || undefined
 }
 
-// PowerPress, Blubrry's WordPress plugin, can render the same player on the publisher's own
-// domain (`{site}/?powerpress_embed={postId}-{feed}`) with no Blubrry host in the url at all.
-// Host matching cannot reach those, and they keep the generic placeholder.
+// Blubrry's player iframe, by episode id or by media url, with no oEmbed to size it.
 export const blubrryResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const id = extractBlubrryEmbed(url)
 
@@ -61,8 +55,6 @@ export const blubrryResolveEmbed = (url: string): EmbedResolverResult | undefine
   }
 }
 
+// No render hint: the player listens for a bare number and `-1` flips the button to playing, but
+// the audio never starts from it.
 export const blubrryEmbedResolver = createUrlEmbedResolver(blubrryHosts, blubrryResolveEmbed)
-
-// No play request. The page listens for a bare number, `-1` clicks Play, and the button flips
-// to its playing state, but loaded in Chrome by a click the audio never started from it. Nothing
-// to send until it does.

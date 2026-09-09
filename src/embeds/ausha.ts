@@ -5,16 +5,10 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const aushaHost = 'ausha.co'
 
-// Letters and digits in both cases, with no separator, since the id goes into the `kind/id` key.
-// Not the twelve characters every id has today: a wrong id fails the same whether it is minted
-// or passed through, and a bound would refuse the next id space.
+// No length: every id is twelve characters today, and a bound would refuse the next id space.
 const safeIdRegex = /^[A-Za-z0-9]+$/
 
-// The v3 player is a fixed height on a fluid width: measured in Chrome at 1200 and 400 pixels
-// wide it is 220 both times, and 501 both times with `display=vertical`. The corpus agrees on the
-// first, with 174 of its 263 player frames stating 220 and none of them stating a width, and
-// disagrees on the second, where 15 frames say 420. A frame that declares a height keeps it, so
-// the numbers here are for the 74 player frames that declare none.
+// The v3 player is a fixed height on a fluid width: 220, and 501 with `display=vertical`.
 const playerHeight = 220
 const verticalHeight = 501
 
@@ -63,9 +57,9 @@ export const aushaResolveEmbed = (url: string): EmbedResolverResult | undefined 
     // matching route for a show, so the kind says which of the two an enricher is holding.
     id: `${kind}/${id}`,
     src: url,
-    // Gated on the kind, not on the value, so this stays a spread and not a trimObject field.
     ...(isPlayer && { height: vertical ? verticalHeight : playerHeight }),
   }
 }
 
+// Ausha's v3 player iframe and the v2 widget, both naming the episode or show in the query.
 export const aushaEmbedResolver = createUrlEmbedResolver([aushaHost], aushaResolveEmbed)

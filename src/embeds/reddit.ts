@@ -9,14 +9,9 @@ const provider = 'reddit'
 
 const redditHosts = ['reddit.com', 'redditmedia.com']
 
-// Subreddit and account names are letters, digits, underscore and hyphen, and a post or a comment
-// is named by a base36 id. Both are interpolated into the minted url, so the alphabet is the
-// guard: neither admits a slash or a dot, so an id cannot climb out of the minted path or name a
-// file on the host. Neither length is checked. `r` or `user` sits in front of a name and
-// `comments` in front of an id, so a bound refuses nothing but what Reddit has already minted,
-// and the post counter started at one base36 character in 2005: two-character permalinks are
-// still linked from real feeds today.
 const safeNameRegex = /^[A-Za-z0-9_-]+$/
+// The post counter started at one base36 character in 2005, and two-character permalinks are still
+// linked from real feeds.
 const safeThingIdRegex = /^[a-z0-9]+$/i
 
 // What a permalink names. A post carries a title, a comment does not, and a subreddit names
@@ -29,8 +24,6 @@ type RedditTarget = {
   publisher: string
 }
 
-// A relative href has no host to check, so it falls out here rather than being resolved
-// against the feed's own base: a permalink is always written in full.
 const parseRedditPath = (value: string | undefined): Array<string> | undefined => {
   const parsed = parseUrlOnHosts(value, redditHosts)
 
@@ -41,14 +34,6 @@ const parseRedditPath = (value: string | undefined): Array<string> | undefined =
   return getPathSegments(parsed)
 }
 
-// The permalink shapes the platform's own loader accepts, minus the account profile: it will
-// build `embed.reddit.com/user/{name}/` from a bare profile link and that address answers 404,
-// while `/user/{name}/comments/{id}/` is a profile post and renders like any other.
-//
-// The subreddit in a post path is not checked by the player: the post id alone selects the
-// post, but it is not optional either: `embed.reddit.com/comments/{id}/` serves the not-found
-// shell. So the whole path travels as the id, which is also what lets the id address Reddit's
-// oEmbed endpoint, the one enrichment source that answers without a key.
 const parseTarget = (value: string | undefined): RedditTarget | undefined => {
   const segments = parseRedditPath(value)
 
@@ -64,6 +49,8 @@ const parseTarget = (value: string | undefined): RedditTarget | undefined => {
 
   const publisher = scope === 'r' ? `r/${name}` : `u/${name}`
 
+  // A bare profile is not a target: embed.reddit.com/user/{name}/ answers 404.
+  // A profile post, /user/{name}/comments/{id}/, renders like any other.
   if (comments === undefined) {
     return scope === 'r' ? { kind: 'subreddit', path: `r/${name}`, publisher } : undefined
   }
@@ -72,6 +59,8 @@ const parseTarget = (value: string | undefined): RedditTarget | undefined => {
     return
   }
 
+  // The whole path travels: embed.reddit.com/comments/{id}/ serves the not-found shell.
+  // The player ignores the subreddit in the path, the id alone selects the post.
   const post = `${scope}/${name}/comments/${postId}`
   // A sixth segment is the comment the widget quotes, sitting behind the title slug. Reddit
   // writes `/comment/{id}/` in place of that slug on its own permalinks and serves both, so
@@ -125,10 +114,9 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
 
     target ??= anchorTarget
 
-    // The post's title sits on the anchor naming the post: a comment widget links the comment
-    // first and the discussion it came from second, and only the second carries a title. The
-    // first anchor of a comment widget reads "Comment", a label the dialog writes in the
-    // reader's own language, which is why the kind decides this, not the position.
+    // A comment widget's first anchor reads "Comment" in the dialog's language, not the title.
+    // A comment widget links the comment first and its discussion second, and only the second
+    // carries the title.
     if (anchorTarget?.kind === 'post') {
       title ??= text(anchor)
     }
@@ -144,38 +132,29 @@ const readWidget = (element: Element): EmbedResolverResult | undefined => {
   // either into the player's `created` query beside `showedits`, which hides the edits made after
   // the embed code was generated. So both stamp the embed, and neither reaches `date`.
 
-  // The height Reddit's own dialog states, which the loader passes to the player. The modern
-  // widget spells it as an inline style as well, and the declared-size pass reads that one for
-  // free. Neither states a width and the placeholder must not invent one: a lone height is the
-  // fixed box this player is, and a made-up number beside it describes a box nobody measured.
+  // data-embed-height is the height Reddit's dialog states, spelled as an inline style as well, and
+  // neither states a width.
   const height = parsePixelSize(attr(element, 'data-embed-height'))
 
   return composeEmbed(target, { title, author, height })
 }
 
-// Reddit ships the post as a blockquote holding its title, its poster and its subreddit as
-// links, then an `embed.reddit.com/widgets.js` loader that turns the quote into the player.
-// Without the script a reader gets the bare links, so the card never appears and nothing
-// downstream can tell which platform they belong to.
-//
-// Three classes, one loader: `reddit-embed-bq` is what the current dialog writes,
-// `reddit-card` is the generation before it, and `reddit-embed` is the div its comment embed
-// used. `embedly-card` is claimed by the same loader and is left alone, because that class
-// names Embedly's card and carries whatever url the publisher gave it.
+// Reddit's snippet: a blockquote of links that only the widgets.js loader turns into the card.
+// reddit-embed-bq is the current dialog's class, reddit-card the generation before it and
+// reddit-embed its comment embed's div. embedly-card names Embedly's card.
 export const redditWidgetEmbedResolver = createMarkupEmbedResolver(
   ['.reddit-embed-bq', '.reddit-card', '.reddit-embed'].join(', '),
   readWidget,
 )
 
-// The frame the loader builds, kept by exports that stored the page after it rendered. The
-// legacy host redirects to the modern one path for path, so both mint the same player, and
-// the query it carries describes the embedding page rather than the post.
 export const redditResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const target = parseTarget(url)
 
   return target ? composeEmbed(target) : undefined
 }
 
+// The embed.reddit.com frame the loader builds, kept by exports that stored the rendered page.
+// redditmedia.com redirects to embed.reddit.com path for path.
 export const redditIframeEmbedResolver = createUrlEmbedResolver(redditHosts, redditResolveEmbed)
 
 // The player reports its height under a `resize.embed` type, first as 0 and then as the rendered

@@ -13,17 +13,12 @@ const safeIdRegex = /^[\w-]+$/
 
 const acastHosts = ['embed.acast.com', 'player.acast.com']
 
-// Every carrier form redirects to the one current player, and that player is 190 tall: Acast's
-// share code writes `height="190px"` and its pages state `twitter:player:height` 190. Recent
-// snippets agree, while the other heights feeds carry, 110 (mostly the retired
-// `player.acast.com` host) and 120, sized players that no longer exist. So the resolver's
-// height stands over what a carrier states.
+// Acast's share code writes `height="190px"` and its pages state `twitter:player:height` 190.
 const playerHeight = 190
 
-// The three spellings a feed carries all redirect to the plain `embed.acast.com/{show}/{episode}`
-// form (checked live 2026-08-15): the current embed code `embed.acast.com/$/{show}/{episode}`,
-// the same path without the `$`, and the older `player.acast.com/{show}/episodes/{episode}`.
-// A show alone on the embed host, with or without the `$`, is the playlist player.
+// The three spellings all redirect to `embed.acast.com/{show}/{episode}`: the current embed code
+// `embed.acast.com/$/{show}/{episode}`, the same path without the `$`, and the older
+// `player.acast.com/{show}/episodes/{episode}`. A show alone is the playlist player.
 const extractAcastEmbed = (link: string): { show: string; episode?: string } | undefined => {
   const parsed = parseUrl(link, placeholderBaseUrl)
   const allSegments = parsed ? getPathSegments(parsed) : []
@@ -64,7 +59,9 @@ const acastResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   }
 }
 
+// Acast's player iframe, spelled three ways across the embed host and the retired player host.
 export const acastEmbedResolver = createUrlEmbedResolver(acastHosts, acastResolveEmbed, {
+  // Carriers state 110 and 120 for players that no longer exist, and the current one is 190.
   preferResolverSize: true,
 })
 

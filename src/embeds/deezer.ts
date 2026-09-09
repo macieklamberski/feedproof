@@ -7,15 +7,8 @@ const provider = 'deezer'
 
 const deezerHosts = ['deezer.com']
 
-// The types the widget serves, each with the height the corpus's own widget frames give it.
-// Both numbers are corpus-typical rather than measured, because the widget has no natural
-// height: it fills the box it is given at every width, so what is left to state is the box
-// publishers chose. 69 of the 75 track frames say 150 and 99 of the 113 playlist frames say
-// 300, against a width that is `100%` in 128 of 200. So it is a fixed height on a fluid width.
-//
-// `artist` is deliberately absent. The widget answers 200 for `/widget/dark/artist/27` and
-// renders nothing at all: no heading, no controls. Refusing it leaves the generic placeholder,
-// which is the honest outcome for a frame that has no player behind it.
+// No artist: the widget answers 200 for one and renders nothing.
+// The widget fills the box it is given at every width, so these are the heights publishers write.
 const deezerHeights = toMap({
   track: 150,
   album: 300,
@@ -67,9 +60,8 @@ const readResource = (url: URL): Resource | undefined => {
     return { type: route[2] ?? '', id: route[3] ?? '', theme: route[1] ?? '' }
   }
 
-  // The classic plugin player, `deezer.com/plugins/player?type={type}&id={id}`. It answers 200
-  // and renders Deezer's own "Page not found" for every id, real ones included, which is why
-  // this is a repair rather than a label: without it those frames click through to nothing.
+  // The classic plugin player, `deezer.com/plugins/player?type={type}&id={id}`. It answers 200 and
+  // renders Deezer's own "Page not found" for every id, real ones included.
   if (route[0] === 'plugins' && route[1] === 'player') {
     return { type: pluginTypes.get(query('type')) ?? '', id: query('id'), theme }
   }
@@ -108,14 +100,10 @@ export const deezerResolveEmbed = (url: string): EmbedResolverResult | undefined
   }
 }
 
+// Deezer's widget iframe, plus the plugin player and the Flash swfs, which play nothing today.
 export const deezerEmbedResolver = createUrlEmbedResolver(deezerHosts, deezerResolveEmbed)
 
-// Starts playback on the click that loads the widget, and the value is what makes it work: the
-// widget parses its own query and tests `autoplay:"1"===f`, so `autoplay=true` matches nothing.
-// Verified live 2026-09-07 by framing both urls and logging what each posted. The bare
-// `/widget/dark/album/6924049` posted `{"action":"pause"}` and stopped there; the same url with
-// `?autoplay=1` posted `{"action":"pause"}` and then `{"action":"play"}`, which is the player's
-// own play callback, the one that also calls `s.play()`.
+// The widget tests `autoplay === "1"`, so `autoplay=true` matches nothing.
 export const deezerRenderHint: EmbedRenderHint = {
   provider,
   autoplayParams: { autoplay: '1' },
