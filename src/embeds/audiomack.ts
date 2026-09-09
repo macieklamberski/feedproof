@@ -79,6 +79,7 @@ export const audiomackResolveEmbed = (url: string): EmbedResolverResult | undefi
     id: path,
     src: `https://audiomack.com/embed/${path}${search}`,
     url: `https://audiomack.com/${path}`,
+    author: artist,
     height: audiomackHeights.get(kind),
   }
 }
