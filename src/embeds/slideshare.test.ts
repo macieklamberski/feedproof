@@ -138,6 +138,31 @@ describeForEachParser('slideshareFlashEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // The title measurement covered the iframe carrier, so the Flash one still takes its name
+    // from the caption alone.
+    it('should leave a title on the flash carrier unread', async () => {
+      const value = html`
+        <div id="__ss_6435157">
+          <embed
+            src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=quotes-phpapp01"
+            type="application/x-shockwave-flash"
+            title="Business Quotes for 2011"
+            width="425"
+            height="355"
+          ></embed>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '6435157',
+        src: 'https://www.slideshare.net/slideshow/embed_code/6435157',
+        width: 425,
+        height: 355,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should compose the deck page from the swf query when the wrapper links nowhere', async () => {
       const value = html`
         <div id="__ss_6435157">
@@ -468,6 +493,32 @@ describeForEachParser('slideshareIframeEmbedResolver', (parseHtml) => {
     expect(await extract(value)).toEqual(expected)
   })
 
+  it('should take the deck name off the carrier the current dialog writes', async () => {
+    const value = html`
+      <iframe
+        src="https://www.slideshare.net/slideshow/embed_code/key/hK2vDqTQ0Nz9Wm"
+        width="476"
+        height="400"
+        frameborder="0"
+        marginwidth="0"
+        marginheight="0"
+        scrolling="no"
+        title="Designing Accessible Forms"
+        allowfullscreen
+      ></iframe>
+    `
+    const expected: EmbedResolverResult = {
+      provider: 'slideshare',
+      id: 'hK2vDqTQ0Nz9Wm',
+      src: 'https://www.slideshare.net/slideshow/embed_code/key/hK2vDqTQ0Nz9Wm',
+      title: 'Designing Accessible Forms',
+      width: 476,
+      height: 400,
+    }
+
+    expect(await extract(value)).toEqual(expected)
+  })
+
   it('should ignore a slideshare url that names no deck', async () => {
     const value = '<iframe src="https://www.slideshare.net/haraldf"></iframe>'
 
@@ -676,6 +727,37 @@ describeForEachParser('slideshareIframeEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should keep the caption name over the one the carrier states', async () => {
+      const value = html`
+        <div>
+          <iframe
+            src="https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAY"
+            title="Business Quotes for 2011 by Harald Felgner"
+          ></iframe>
+          <div>
+            <strong>
+              <a
+                href="https://www.slideshare.net/haraldf/business-quotes-for-2011"
+                title="Business Quotes for 2011"
+                >Business Quotes for 2011</a
+              >
+            </strong>
+            from <strong><a href="https://www.slideshare.net/haraldf">Harald Felgner</a></strong>
+          </div>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'slideshare',
+        id: '6PCWPGFw9SwsAY',
+        src: 'https://www.slideshare.net/slideshow/embed_code/key/6PCWPGFw9SwsAY',
+        url: 'https://www.slideshare.net/haraldf/business-quotes-for-2011',
+        title: 'Business Quotes for 2011',
+        author: 'Harald Felgner',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 })
 
@@ -744,6 +826,25 @@ describeForEachParser('slideshare through the pipeline', (parseHtml) => {
     ]
 
     expect(placeholders(await convert(value), parseHtml)).toEqual(expected)
+  })
+
+  it('should carry the deck name the carrier states into the placeholder', async () => {
+    const value = html`
+      <iframe
+        src="https://www.slideshare.net/slideshow/embed_code/key/hK2vDqTQ0Nz9Wm"
+        title="Designing Accessible Forms"
+      ></iframe>
+    `
+    const expected = html`
+      <div
+        data-embed-title="Designing Accessible Forms"
+        data-embed-id="hK2vDqTQ0Nz9Wm"
+        data-embed-provider="slideshare"
+        data-embed-src="https://www.slideshare.net/slideshow/embed_code/key/hK2vDqTQ0Nz9Wm"
+      ></div>
+    `
+
+    expect(await convert(value)).toEqualHtml(expected)
   })
 
   // The placeholder carries the deck's name and its owner, so a caption block left in the
