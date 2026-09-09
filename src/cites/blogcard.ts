@@ -2,15 +2,9 @@ import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
-// A hyphenated `blog-card-*` link-card vocabulary emitted by several WordPress themes, distinct
-// from Cocoon's unhyphenated `blogcard-*` one. A card cannot be attributed to a theme from its
-// markup, so they share one resolver. Two dialects name the same three fields differently, so
-// each is read from every spelling. `blog-card-title` is the only class every card carries.
-//
-// Where the url sits varies with the dialect: some themes make the card itself the anchor, others
-// link only the title, others wrap the whole card body in one anchor. The Hatena bookmark button
-// most cards carry is excluded throughout, since its href is the target url behind
-// `b.hatena.ne.jp/entry/` and would resolve to the wrong host.
+// Where the url sits varies with the theme: some make the card itself the anchor, others link
+// only the title, others wrap the whole card body in one anchor. Most cards also carry a Hatena
+// bookmark button, .blog-card-hatebu, whose href is the target behind b.hatena.ne.jp/entry/.
 const cardUrl = (element: Element): string | undefined => {
   return (
     attr(element, 'href') ??
@@ -19,6 +13,8 @@ const cardUrl = (element: Element): string | undefined => {
   )
 }
 
+// The hyphenated blog-card several WordPress themes emit: divs whose layout lives in theme CSS.
+// Cocoon's unhyphenated blogcard-* classes are a different card.
 export const blogCardCiteResolver: CiteResolver = {
   kind: 'cite',
   selector: '.blog-card',
@@ -26,6 +22,7 @@ export const blogCardCiteResolver: CiteResolver = {
     return buildCite({
       provider: 'blogcard',
       url: cardUrl(element),
+      // blog-card-title is the only field class every card carries.
       title: text(element, '.blog-card-title'),
       description: text(element, '.blog-card-excerpt, .blog-card-text'),
       publisher: text(element, '.blog-card-site, .blog-card-site-title'),

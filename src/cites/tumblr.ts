@@ -17,21 +17,14 @@ type TumblrLinkData = {
 // Comparable form of a URL, or of anchor text showing one: Tumblr drops the scheme and may
 // truncate with an ellipsis when it renders a link as its own label.
 const urlScheme = /^https?:\/\//
-const urlTail = /[…/]+$/
+const urlTail = /[…/]+$/ // Trailing ellipsis (U+2026) or slash characters
 
 const bareUrl = (value: string): string => {
   return value.replace(urlScheme, '').replace(urlTail, '')
 }
 
-// Tumblr's NPF (Neue Post Format) link block reaches feeds in two shapes. `.npf_link` is a
-// bare anchor with the whole card alongside it in `data-npf`, as scraped Open Graph data.
-// The visible markup carries only the link, so everything except the URL comes from the
-// JSON. `.npf-link-block` is the card painted as markup instead, with the poster as a CSS
-// `background-image` and no `<img>` anywhere.
-//
-// The URL is usually wrapped in one of Tumblr's outbound redirectors (`t.umblr.com/redirect`
-// or `href.li`), sometimes nested. Unwrapping is left to the injected cleanUrlFn, which
-// already handles wrappers and nesting.
+// Tumblr's NPF link block: a bare anchor with the card as JSON, or a painted card, poster in CSS.
+// The url is usually wrapped in t.umblr.com/redirect or href.li, sometimes nested.
 export const tumblrCiteResolver: CiteResolver = {
   kind: 'cite',
   selector: '.npf_link, .npf-link-block',
@@ -65,12 +58,13 @@ export const tumblrCiteResolver: CiteResolver = {
     return buildCite({
       provider: 'tumblr',
       url,
+      // The anchor shows the link itself when there is no title, so without the check that link
+      // text becomes the title.
       title: data.title?.trim() || (isLinkText ? undefined : anchorText),
       description: data.description,
       author: data.author,
       publisher: data.site_name,
-      // Recent posts describe the poster by `media_key` only, with no URL to resolve it to.
-      // Older ones carry a real one.
+      // Recent posts list posters by media_key only, so the first entry can carry no url.
       thumbnail: data.poster?.find((poster) => poster.url)?.url,
     })
   },

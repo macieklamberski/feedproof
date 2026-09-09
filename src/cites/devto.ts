@@ -7,15 +7,13 @@ import { attr, find, keepIfMatches, text, textNode } from '../utils/dom.js'
 // dates spelling a year ("Aug 21, 2025", "Nov 6 '22") are worth passing through.
 const yearRegex = /\b(19|20)\d{2}\b|'\d{2}\b/
 
+// A yearless "Jul 25" is one whose year matched the save year, which nothing can recover.
 const dateWithYear = (value: string | undefined): string | undefined => {
   return keepIfMatches(value, yearRegex)
 }
 
-// dev.to (Forem) turns a pasted link into an embed card. Forem compiles its liquid tags to
-// HTML when the article is saved, so the card is already in the stored body by the time the
-// feed renders, and the feed sanitizer's allowlist keeps `div`, `class` and `id` intact.
-// An external link becomes `.c-embed`. A link to another dev.to post becomes one of the two
-// shapes below.
+// Forem's embed card for an external link, compiled into the stored body as bare divs.
+// The feed sanitizer's allowlist keeps div, class and id intact.
 export const devtoLinkCiteResolver: CiteResolver = {
   kind: 'cite',
   selector: '.c-embed',
@@ -37,9 +35,7 @@ export const devtoLinkCiteResolver: CiteResolver = {
   },
 }
 
-// A card for another dev.to post. Because Forem freezes the compiled HTML at save time, an
-// article keeps whatever markup its generator emitted, so both this shape and the older one
-// below stay in circulation indefinitely and each needs its own resolver.
+// Forem's card for another dev.to post, frozen at save time in the markup its generator emitted.
 export const devtoPostCiteResolver: CiteResolver = {
   kind: 'cite',
   selector: '.ltag__link--embedded',
@@ -57,10 +53,8 @@ export const devtoPostCiteResolver: CiteResolver = {
       description:
         text(element, '.crayons-article__context-note') ??
         text(element, '.crayons-story__contentpreview'),
-      // Author and organization share a class. The author comes first in the document, and
-      // the organization is the one wrapped in the `for <org>` span. Forem renders the author
-      // anchor unconditionally and the organization only after it, so the first match is never
-      // the organization.
+      // The author anchor always precedes the organization's, so the first match is never the org.
+      // Forem always renders the author anchor and wraps the organization's in a "for <org>" span.
       author: text(element, 'a.crayons-story__secondary'),
       publisher: text(element, 'span > a.crayons-story__secondary'),
       date: dateWithYear(text(element, 'time')),
@@ -71,8 +65,9 @@ export const devtoPostCiteResolver: CiteResolver = {
 
 // The shape the same card had from 2019 until March 2026. Its byline packs author and date
 // into one text node (`Name ・ Aug 25 '22`, with a reading time appended on older posts).
-const authorSeparator = '・'
+const authorSeparator = '・' // Katakana middle dot, U+30FB
 
+// The dev.to post card Forem shipped before March 2026, still frozen in the bodies saved then.
 export const devtoLegacyPostCiteResolver: CiteResolver = {
   kind: 'cite',
   selector: '.ltag__link',
