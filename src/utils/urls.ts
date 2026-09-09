@@ -149,25 +149,7 @@ export const composeQuery = (params?: Record<string, string>): string => {
 // only the parameters that change what plays. Returns it ready to append, so a src with
 // nothing worth keeping stays bare.
 export const pickUrlParams = (url: string, names: ReadonlyArray<string>): string => {
-  const params = parseUrl(url)?.searchParams
-
-  if (!params) {
-    return ''
-  }
-
-  const kept = new URLSearchParams()
-
-  for (const name of names) {
-    const value = params.get(name)
-
-    if (value) {
-      kept.set(name, value)
-    }
-  }
-
-  const query = kept.toString()
-
-  return query ? `?${query}` : ''
+  return composeQuery(pickQueryParams(parseUrl(url)?.search ?? '', names))
 }
 
 // The two answers to a url that will not resolve. Which one a call site wants is a policy

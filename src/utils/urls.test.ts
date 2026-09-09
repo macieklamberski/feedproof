@@ -334,6 +334,10 @@ describe('pickUrlParams', () => {
     expect(pickUrlParams('not a url', ['start'])).toBe('')
   })
 
+  it('should return an empty string for a protocol-relative url', () => {
+    expect(pickUrlParams('//example.com/e/x?start=90', ['start'])).toBe('')
+  })
+
   it('should encode a value that needs it', () => {
     const value = 'https://example.com/e/x?clipt=a%2Bb%2Fc'
     const expected = '?clipt=a%2Bb%2Fc'

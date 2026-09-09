@@ -1,7 +1,7 @@
 import { getPathSegments, isAnyOf, parseUrl } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
 import { attr } from '../utils/dom.js'
-import { isFileName, parseUrlOnHosts } from '../utils/urls.js'
+import { composeQuery, isFileName, parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
 const issuuHosts = ['issuu.com']
@@ -49,12 +49,13 @@ const composeDocumentEmbed = (
     return
   }
 
-  const pageQuery = page && pageNumberRegex.test(page) ? `&p=${page}` : ''
+  const safePage = page && pageNumberRegex.test(page) ? { p: page } : undefined
+  const query = composeQuery({ u: publisher, d: documentName, ...safePage })
 
   return {
     provider: 'issuu',
     id: `${publisher}/${documentName}`,
-    src: `https://e.issuu.com/embed.html?u=${publisher}&d=${documentName}${pageQuery}`,
+    src: `https://e.issuu.com/embed.html${query}`,
     url: `https://issuu.com/${publisher}/docs/${documentName}`,
   }
 }
