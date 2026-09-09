@@ -141,12 +141,14 @@ export const mixcloudResolveEmbed = (
   }
 
   const title = attr(element, 'title')
+  const [author] = show.split('/')
 
   return {
     provider,
     id: show,
     src: `https://www.mixcloud.com/widget/iframe/?${query}`,
     url: `https://www.mixcloud.com/${show}/`,
+    author,
     height:
       options.includes('mini') && options.includes('hide_cover') ? miniPlayerHeight : playerHeight,
     ...trimObject({ title }, Boolean),

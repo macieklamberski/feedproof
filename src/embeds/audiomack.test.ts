@@ -13,6 +13,7 @@ describe('audiomackResolveEmbed', () => {
         id: 'larrynorman/song/burn-2',
         src: 'https://audiomack.com/embed/larrynorman/song/burn-2',
         url: 'https://audiomack.com/larrynorman/song/burn-2',
+        author: 'larrynorman',
         height: 252,
       }
 
@@ -26,6 +27,7 @@ describe('audiomackResolveEmbed', () => {
         id: 'chuuwee/album/cool-world',
         src: 'https://audiomack.com/embed/chuuwee/album/cool-world',
         url: 'https://audiomack.com/chuuwee/album/cool-world',
+        author: 'chuuwee',
         height: 400,
       }
 
@@ -93,6 +95,7 @@ describe('audiomackResolveEmbed', () => {
         id: 'larrynorman/song/burn-2',
         src: 'https://audiomack.com/embed/larrynorman/song/burn-2',
         url: 'https://audiomack.com/larrynorman/song/burn-2',
+        author: 'larrynorman',
         height: 252,
       }
 
@@ -106,6 +109,7 @@ describe('audiomackResolveEmbed', () => {
         id: 'mlgmusiz/song/new-year-new-glory',
         src: 'https://audiomack.com/embed/mlgmusiz/song/new-year-new-glory?background=1',
         url: 'https://audiomack.com/mlgmusiz/song/new-year-new-glory',
+        author: 'mlgmusiz',
         height: 252,
       }
 
@@ -121,6 +125,7 @@ describe('audiomackResolveEmbed', () => {
         id: 'toString/song/burn-2',
         src: 'https://audiomack.com/embed/toString/song/burn-2',
         url: 'https://audiomack.com/toString/song/burn-2',
+        author: 'toString',
         height: 252,
       }
 
@@ -134,6 +139,7 @@ describe('audiomackResolveEmbed', () => {
         id: 'team-bigga-rankin/playlist/paper',
         src: 'https://audiomack.com/embed/team-bigga-rankin/playlist/paper',
         url: 'https://audiomack.com/team-bigga-rankin/playlist/paper',
+        author: 'team-bigga-rankin',
         height: 400,
       }
 
@@ -149,6 +155,7 @@ describe('audiomackResolveEmbed', () => {
         id: 'hhs1987/song/pound-cake-freestyle-2',
         src: 'https://audiomack.com/embed/hhs1987/song/pound-cake-freestyle-2',
         url: 'https://audiomack.com/hhs1987/song/pound-cake-freestyle-2',
+        author: 'hhs1987',
         height: 252,
       }
 
@@ -162,6 +169,7 @@ describe('audiomackResolveEmbed', () => {
         id: 'chuuwee/album/cool-world',
         src: 'https://audiomack.com/embed/chuuwee/album/cool-world',
         url: 'https://audiomack.com/chuuwee/album/cool-world',
+        author: 'chuuwee',
         height: 400,
       }
 
@@ -175,6 +183,7 @@ describe('audiomackResolveEmbed', () => {
         id: 'costill8nine/song/happy-dirty',
         src: 'https://audiomack.com/embed/costill8nine/song/happy-dirty',
         url: 'https://audiomack.com/costill8nine/song/happy-dirty',
+        author: 'costill8nine',
         height: 252,
       }
 
@@ -189,6 +198,7 @@ describe('audiomackResolveEmbed', () => {
         id: 'creative-soul-music-group-1/album/satisfaction-ep',
         src: 'https://audiomack.com/embed/creative-soul-music-group-1/album/satisfaction-ep',
         url: 'https://audiomack.com/creative-soul-music-group-1/album/satisfaction-ep',
+        author: 'creative-soul-music-group-1',
         height: 400,
       }
 
@@ -202,6 +212,7 @@ describe('audiomackResolveEmbed', () => {
         id: 'jhoss/song/til-the-morn',
         src: 'https://audiomack.com/embed/jhoss/song/til-the-morn',
         url: 'https://audiomack.com/jhoss/song/til-the-morn',
+        author: 'jhoss',
         height: 252,
       }
 
@@ -222,6 +233,7 @@ describeForEachParser('audiomackEmbedResolver', (parseHtml) => {
         id: 'larrynorman/song/burn-2',
         src: 'https://audiomack.com/embed/larrynorman/song/burn-2?background=1',
         url: 'https://audiomack.com/larrynorman/song/burn-2',
+        author: 'larrynorman',
         height: 252,
       }
 
@@ -237,6 +249,7 @@ describeForEachParser('audiomackEmbedResolver', (parseHtml) => {
         id: 'billnass/song/hallo',
         src: 'https://audiomack.com/embed/billnass/song/hallo',
         url: 'https://audiomack.com/billnass/song/hallo',
+        author: 'billnass',
         height: 252,
       }
 
@@ -267,6 +280,7 @@ describeForEachParser('audiomackEmbedResolver', (parseHtml) => {
         id: 'chuuwee/album/cool-world',
         src: 'https://audiomack.com/embed/chuuwee/album/cool-world',
         url: 'https://audiomack.com/chuuwee/album/cool-world',
+        author: 'chuuwee',
         width: 649,
         height: 1200,
       }
@@ -296,6 +310,7 @@ describeForEachParser('audiomack through the pipeline', (parseHtml) => {
         data-embed-src="https://audiomack.com/embed/chuuwee/album/cool-world"
         data-embed-url="https://audiomack.com/chuuwee/album/cool-world"
         data-embed-height="400"
+        data-embed-author="chuuwee"
       ></div>
     `
 
